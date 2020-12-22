@@ -27,8 +27,6 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     const pvar_table_entry_t *info;
     MPIR_T_pvar_handle_t *hnd;
 
-    MPIR_CHKPMEM_DECL(1);
-
     info = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
 
     if (info->get_count == NULL) {
@@ -53,8 +51,12 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     }
 
     /* Allocate memory and bzero it */
-    MPIR_CHKPMEM_CALLOC(hnd, MPIR_T_pvar_handle_t *, sizeof(*hnd) + extra,
-                        mpi_errno, "performance variable handle", MPL_MEM_MPIT);
+    hnd = MPL_malloc(sizeof(MPIR_T_pvar_handle_t) + extra, MPL_MEM_MPIT);
+    if (!hnd) {
+        *handle = MPI_T_PVAR_HANDLE_NULL;
+        mpi_errno = MPI_T_ERR_OUT_OF_HANDLES;
+        goto fn_fail;
+    }
 #ifdef HAVE_ERROR_CHECKING
     hnd->kind = MPIR_T_PVAR_HANDLE;
 #endif
@@ -136,11 +138,9 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     *handle = hnd;
     *count = cnt;
 
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -401,12 +401,13 @@ int MPIR_T_pvar_reset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session * session)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKPMEM_DECL(1);
 
-    *session = MPI_T_PVAR_SESSION_NULL;
-
-    MPIR_CHKPMEM_MALLOC(*session, MPI_T_pvar_session, sizeof(**session), mpi_errno,
-                        "performance var session", MPL_MEM_MPIT);
+    *session = MPL_malloc(sizeof(MPI_T_pvar_session), MPL_MEM_MPIT);
+    if (!*session) {
+        *session = MPI_T_PVAR_SESSION_NULL;
+        mpi_errno = MPI_T_ERR_OUT_OF_SESSIONS;
+        goto fn_fail;
+    }
 
     /* essential for utlist to work */
     (*session)->hlist = NULL;
@@ -415,11 +416,9 @@ int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session * session)
     (*session)->kind = MPIR_T_PVAR_SESSION;
 #endif
 
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 

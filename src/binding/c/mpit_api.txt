@@ -151,6 +151,7 @@ MPI_T_cvar_get_num:
 MPI_T_cvar_handle_alloc:
     .desc: Allocate a handle for a control variable
     .skip: validate-TOOL_MPI_OBJ
+    .error: MPI_T_ERR_OUT_OF_HANDLES
 
 MPI_T_cvar_handle_free:
     .desc: Free an existing handle for a control variable
@@ -327,7 +328,7 @@ MPI_T_pvar_get_num:
 MPI_T_pvar_handle_alloc:
     .desc: Allocate a handle for a performance variable
     .skip: validate-TOOL_MPI_OBJ
-    .error: MPI_T_ERR_INVALID_INDEX
+    .error: MPI_T_ERR_INVALID_INDEX, MPI_T_ERR_OUT_OF_HANDLES
 { -- error_check -- pvar_index
     pvar_table_entry_t *entry;
     entry = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
@@ -417,6 +418,7 @@ MPI_T_pvar_reset:
 
 MPI_T_pvar_session_create:
     .desc: Create a new session for accessing performance variables
+    .error: MPI_T_ERR_OUT_OF_SESSIONS
 
 MPI_T_pvar_session_free:
     .desc: Free an existing performance variable session
