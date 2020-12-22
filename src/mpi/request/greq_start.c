@@ -100,7 +100,7 @@ int MPI_Grequest_start(MPI_Grequest_query_function * query_fn,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Grequest_start(query_fn, free_fn, cancel_fn, extra_state, &request_ptr);
+    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, extra_state, &request_ptr);
     if (mpi_errno)
         goto fn_fail;
 
@@ -165,7 +165,7 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function * query_fn,
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     /* ... body of routine ... */
-    mpi_errno = MPIX_Grequest_class_create_impl(query_fn, free_fn, cancel_fn, poll_fn, wait_fn,
+    mpi_errno = MPIR_Grequest_class_create_impl(query_fn, free_fn, cancel_fn, poll_fn, wait_fn,
                                                 greq_class);
     if (mpi_errno) {
         goto fn_fail;
@@ -219,7 +219,14 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     /* ... body of routine ... */
-    mpi_errno = MPIX_Grequest_class_allocate_impl(greq_class, extra_state, request);
+    MPIR_Request *request_ptr = NULL;
+    mpi_errno = MPIR_Grequest_class_allocate_impl(greq_class, extra_state, &request_ptr);
+
+    if (request_ptr) {
+        MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
+    } else {
+        *request = MPI_REQUEST_NULL;
+    }
 
     /* ... end of body of routine ... */
 
@@ -261,21 +268,24 @@ int MPIX_Grequest_start(MPI_Grequest_query_function * query_fn,
                         void *extra_state, MPI_Request * request)
 {
     int mpi_errno;
-    MPIR_Request *lrequest_ptr;
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     /* ... body of routine ... */
-    *request = MPI_REQUEST_NULL;
-    mpi_errno =
-        MPIX_Grequest_start_impl(query_fn, free_fn, cancel_fn, poll_fn, wait_fn, extra_state,
-                                 &lrequest_ptr);
-
-    if (mpi_errno == MPI_SUCCESS) {
-        *request = lrequest_ptr->handle;
+    MPIR_Request *request_ptr = NULL;
+    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, extra_state, &request_ptr);
+    if (mpi_errno) {
+        goto fn_fail;
     }
+    request_ptr->u.ureq.greq_fns->poll_fn = poll_fn;
+    request_ptr->u.ureq.greq_fns->wait_fn = wait_fn;
+    *request = request_ptr->handle;
 
     /* ... end of body of routine ... */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

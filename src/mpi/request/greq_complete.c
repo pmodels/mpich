@@ -86,27 +86,28 @@ int MPI_Grequest_complete(MPI_Request request)
 
     /* ... body of routine ...  */
 
-    MPIR_Grequest_complete(request_ptr);
+    mpi_errno = MPIR_Grequest_complete_impl(request_ptr);
+    if (mpi_errno) {
+        return fn_fail;
+    }
 
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GREQUEST_COMPLETE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
-  fn_fail:
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_grequest_complete", "**mpi_grequest_complete %R", request);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
-    goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
+    goto fn_exit;
 }
