@@ -349,13 +349,15 @@ def process_func_parameters(func, mapping):
             validation_list.append({'kind': 'RANK', 'name': name})
         elif RE.match(r'(POLY)?(XFER_NUM_ELEM|DTYPE_NUM_ELEM_NNI|DTYPE_PACK_SIZE)', kind):
             validation_list.append({'kind': "COUNT", 'name': name})
-        elif RE.match(r'WINDOW_SIZE|WIN_ATTACH_SIZE|ALLOC_MEM_NUM_BYTES', kind):
+        elif RE.match(r'WINDOW_SIZE|WIN_ATTACH_SIZE', kind):
+            validation_list.append({'kind': "WIN_SIZE", 'name': name})
+        elif RE.match(r'ALLOC_MEM_NUM_BYTES', kind):
             validation_list.append({'kind': "ARGNEG", 'name': name})
         elif RE.match(r'(C_)?BUFFER', kind) and RE.match(r'MPI_Win_(allocate|create|attach)', func_name):
             validation_list.append({'kind': "WINBUFFER", 'name': name})
         elif RE.match(r'(POLY)?(RMA_DISPLACEMENT)', kind):
             if name == 'disp_unit':
-                validation_list.append({'kind': "ARGNONPOS", 'name': name})
+                validation_list.append({'kind': "WIN_DISPUNIT", 'name': name})
             else:
                 validation_list.append({'kind': "RMADISP", 'name': name})
         elif RE.match(r'(.*_NNI|ARRAY_LENGTH|INFO_VALUE_LENGTH|KEY_INDEX|INDEX|NUM_DIMS|DIMENSION|COMM_SIZE)', kind):
@@ -1157,6 +1159,12 @@ def dump_validation(func, t):
     elif kind == "COUNT":
         G.err_codes['MPI_ERR_COUNT'] = 1
         G.out.append("MPIR_ERRTEST_COUNT(%s, mpi_errno);" % name)
+    elif kind == "WIN_SIZE":
+        G.err_codes['MPI_ERR_SIZE'] = 1
+        G.out.append("MPIR_ERRTEST_WIN_SIZE(%s, mpi_errno);" % name)
+    elif kind == "WIN_DISPUNIT":
+        G.err_codes['MPI_ERR_DISP'] = 1
+        G.out.append("MPIR_ERRTEST_WIN_DISPUNIT(%s, mpi_errno);" % name)
     elif kind == "RMADISP":
         G.err_codes['MPI_ERR_DISP'] = 1
         G.out.append("if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC) {")

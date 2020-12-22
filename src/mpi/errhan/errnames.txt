@@ -415,6 +415,8 @@ be in the range 0 to %d
 **rmasync:Wrong synchronization of RMA calls 
 **rmasize:Invalid size argument in RMA call
 **rmasize %d:Invalid size argument in RMA call (value is %d)
+**dispunit:disp_unit argument is not positive integer
+**dispunit %d:disp_unit argument is not positive integer (value is %d)
 **rmadisp:Invalid displacement argument in RMA call 
 **rmareqcancel:Request-based RMA operation cannot be cancelled
 **rmareqop:Error in request-based RMA operation
