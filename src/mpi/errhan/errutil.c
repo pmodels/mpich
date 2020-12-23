@@ -16,12 +16,6 @@
    is used in only a few places, here and potentially in ROMIO) */
 #define USE_ERR_CODE_VALIST
 
-/* errcodes.h contains the macros used to access fields within an error
-   code and a description of the bits in an error code.  A brief
-   version of that description is included below */
-
-#include "errcodes.h"
-
 /* defmsg is generated automatically from the source files and contains
    all of the error messages, both the generic and specific.  Depending
    on the value of MPICH_ERROR_MSG_LEVEL, different amounts of message
@@ -99,12 +93,12 @@ cvars:
  * A major subgroup in this section is the code to handle the instance-specific
  * messages (MPICH_ERROR_MSG__ALL only).
  *
- * An MPI error code is made up of a number of fields (see errcodes.h)
+ * An MPI error code is made up of a number of fields (see mpir_errcodes.h)
  * These ar
  *   is-dynamic? specific-msg-sequence# specific-msg-index
  *                                            generic-code is-fatal? class
  *
- * There are macros (defined in errcodes.h) that define these fields,
+ * There are macros (defined in mpir_errcodes.h) that define these fields,
  * their sizes, and masks and shifts that may be used to extract them.
  */
 
