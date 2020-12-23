@@ -70,7 +70,7 @@ int MPIX_Delete_error_string(int errorcode)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Err_delete_msg(errorcode);
+    mpi_errno = MPIR_Delete_error_string_impl(errorcode);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 

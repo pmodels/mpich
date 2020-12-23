@@ -68,10 +68,10 @@ int MPI_Add_error_code(int errorclass, int *errorcode)
 
     /* ... body of routine ...  */
 
-    new_code = MPIR_Err_add_code(errorclass);
-    MPIR_ERR_CHKANDJUMP(new_code < 0, mpi_errno, MPI_ERR_OTHER, "**noerrcodes");
-
-    *errorcode = new_code;
+    mpi_errno = MPIR_Add_error_code_impl(errorclass, errorcode);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
 
     /* ... end of body of routine ... */
 

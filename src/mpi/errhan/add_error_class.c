@@ -42,7 +42,6 @@ Output Parameters:
 int MPI_Add_error_class(int *errorclass)
 {
     int mpi_errno = MPI_SUCCESS;
-    int new_class;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ADD_ERROR_CLASS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -63,14 +62,9 @@ int MPI_Add_error_class(int *errorclass)
 
     /* ... body of routine ...  */
 
-    new_class = MPIR_Err_add_class();
-    MPIR_ERR_CHKANDJUMP(new_class < 0, mpi_errno, MPI_ERR_OTHER, "**noerrclasses");
-
-    *errorclass = ERROR_DYN_MASK | new_class;
-
-    /* FIXME why isn't this done in MPIR_Err_add_class? */
-    if (*errorclass > MPIR_Process.attrs.lastusedcode) {
-        MPIR_Process.attrs.lastusedcode = *errorclass;
+    mpi_errno = MPIR_Add_error_class_impl(errorclass);
+    if (mpi_errno) {
+        goto fn_fail;
     }
 
     /* ... end of body of routine ... */
