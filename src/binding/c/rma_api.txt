@@ -60,7 +60,7 @@ MPI_Compare_and_swap:
 /*
     Notes:
     This operation is atomic with respect to other "accumulate" operations.
-    
+
     The parameter datatype must belong to one of the following categories of
     predefined datatypes: C integer, Fortran integer, Logical, Multi-language
     types, or Byte as specified in Section 5.9.2 on page 176. The origin and result
@@ -83,12 +83,12 @@ MPI_Fetch_and_op:
 /*
     Notes:
     This operations is atomic with respect to other "accumulate" operations.
-    
+
     The generic functionality of 'MPI_Get_accumulate' might limit the performance of
     fetch-and-increment or fetch-and-add calls that might be supported by special
     hardware operations. 'MPI_Fetch_and_op' thus allows for a fast implementation
     of a commonly used subset of the functionality of 'MPI_Get_accumulate'.
-    
+
     The origin and result buffers (origin_addr and result_addr) must be disjoint.
     Any of the predefined operations for 'MPI_Reduce', as well as 'MPI_NO_OP' or
     'MPI_REPLACE', can be specified as op; user-defined functions cannot be used. The
@@ -124,11 +124,11 @@ MPI_Get_accumulate:
 /*
     Notes:
     This operations is atomic with respect to other "accumulate" operations.
-    
+
     The get and accumulate steps are executed atomically for each basic element in
     the datatype (see MPI 3.0 Section 11.7 for details). The predefined operation
     'MPI_REPLACE' provides fetch-and-set behavior.
-    
+
     The origin and result buffers (origin_addr and result_addr) must be disjoint.
     Each datatype argument must be a predefined datatype or a derived datatype
     where all basic components are of the same predefined datatype. All datatype
@@ -136,7 +136,7 @@ MPI_Get_accumulate:
     operation op applies to elements of that predefined type. target_datatype must
     not specify overlapping entries, and the target buffer must fit in the target
     window or in attached memory in a dynamic window.
-    
+
     Any of the predefined operations for 'MPI_Reduce', as well as 'MPI_NO_OP' or
     'MPI_REPLACE' can be specified as op. User-defined functions cannot be used. A
     new predefined operation, 'MPI_NO_OP', is defined. It corresponds to the
@@ -181,11 +181,11 @@ MPI_Rget_accumulate:
 /*
     Notes:
     This operations is atomic with respect to other "accumulate" operations.
-    
+
     The get and accumulate steps are executed atomically for each basic element in
     the datatype (see MPI 3.0 Section 11.7 for details). The predefined operation
     'MPI_REPLACE' provides fetch-and-set behavior.
-    
+
     The basic components of both the origin and target datatype must be the same
     predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
 */
@@ -245,25 +245,25 @@ MPI_Win_create:
     .impl: mpid
 /*
     Notes:
-    
+
     The displacement unit argument is provided to facilitate address arithmetic in
     RMA operations: the target displacement argument of an RMA operation is scaled
     by the factor disp_unit specified by the target process, at window creation.
-    
+
     The info argument provides optimization hints to the runtime about the expected
     usage pattern of the window. The following info keys are predefined.
-    
+
     . no_locks - If set to true, then the implementation may assume that passive
         target synchronization (i.e., 'MPI_Win_lock', 'MPI_Win_lock_all') will not be used on
         the given window. This implies that this window is not used for 3-party
         communication, and RMA can be implemented with no (less) asynchronous agent
         activity at this process.
-    
+
     . accumulate_ordering - Controls the ordering of accumulate operations at the
         target.  The argument string should contain a comma-separated list of the
         following read/write ordering rules, where e.g. "raw" means read-after-write:
         "rar,raw,war,waw".
-    
+
     . accumulate_ops - If set to same_op, the implementation will assume that all
         concurrent accumulate calls to the same target address will use the same
         operation. If set to same_op_no_op, then the implementation will assume that
@@ -279,11 +279,11 @@ MPI_Win_create_dynamic:
     .impl: mpid
 /*
     Notes:
-    
+
     Users are cautioned that displacement arithmetic can overflow in variables of
     type 'MPI_Aint' and result in unexpected values on some platforms. This issue may
     be addressed in a future version of MPI.
-    
+
     Memory in this window may not be used as the target of one-sided accesses in
     this window until it is attached using the function 'MPI_Win_attach'. That is, in
     addition to using 'MPI_Win_create_dynamic' to create an MPI window, the user must
@@ -409,7 +409,7 @@ MPI_Win_get_info:
     .impl: mpid
 /*
     Notes:
-    
+
     The info object returned in info_used will contain all hints currently active
     for this window. This set of hints may be greater or smaller than the set of
     hints specified when the window was created, as the system may not recognize
@@ -463,20 +463,20 @@ MPI_Win_lock_all:
     .impl: mpid
 /*
     Notes:
-    
+
     This call is not collective.
-    
+
     The 'assert' argument is used to indicate special conditions for the fence that
     an implementation may use to optimize the 'MPI_Win_lock_all' operation.  The
     value zero is always correct.  Other assertion values may be or''ed together.
     Assertions that are valid for 'MPI_Win_lock_all' are\:
-    
+
     . 'MPI_MODE_NOCHECK' - No other process holds, or will attempt to acquire a
       conflicting lock, while the caller holds the window lock. This is useful
       when mutual exclusion is achieved by other means, but the coherence
       operations that may be attached to the lock and unlock calls are still
       required.
-    
+
     There may be additional overheads associated with using 'MPI_Win_lock' and
     'MPI_Win_lock_all' concurrently on the same window. These overheads could be
     avoided by specifying the assertion 'MPI_MODE_NOCHECK' when possible
@@ -517,7 +517,7 @@ MPI_Win_set_info:
     .impl: mpid
 /*
     Notes:
-    
+
     Some info items that an implementation can use when it creates a window cannot
     easily be changed once the window has been created. Thus, an implementation may
     ignore hints issued in this call that it would have accepted in a creation
@@ -534,6 +534,11 @@ MPI_Win_shared_query:
     .desc: Query the size and base pointer for a patch of a shared memory window
     .seealso: MPI_Win_allocate_shared
     .impl: mpid
+/*
+    Notes:
+    The returned baseptr points to the calling process' address space of the
+    shared segment belonging to the target rank.
+*/
 
 MPI_Win_start:
     .desc: Start an RMA access epoch for MPI
