@@ -157,12 +157,16 @@ static int progress_send(int blocking)
     return mpi_errno;
 }
 
-int MPIDI_POSIX_progress(int blocking)
+int MPIDI_POSIX_progress(int vci, int blocking)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_PROGRESS);
 
     int mpi_errno = MPI_SUCCESS;
+
+    if (vci != 0) {
+        goto fn_exit;
+    }
 
     mpi_errno = progress_recv(blocking);
     MPIR_ERR_CHECK(mpi_errno);

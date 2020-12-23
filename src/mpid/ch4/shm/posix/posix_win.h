@@ -323,4 +323,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_op_cs_exit_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
+/* non-inlined function prototypes */
+
+int MPIDI_POSIX_shm_win_init_hook(MPIR_Win * win);
+
 #endif /* POSIX_WIN_H_INCLUDED */
