@@ -41,6 +41,21 @@ class MPI_API_Global:
         'GREQUEST_CLASS': "MPIR_Grequest_class",
     }
 
+    handle_error_codes = {
+        'COMMUNICATOR': "MPI_ERR_COMM",
+        'GROUP': "MPI_ERR_GROUP",
+        'DATATYPE': "MPI_ERR_TYPE",
+        'ERRHANDLER': "MPI_ERR_ARG",
+        'OPERATION': "MPI_ERR_OP",
+        'INFO': "MPI_ERR_INFO",
+        'WINDOW': "MPI_ERR_WIN",
+        'KEYVAL': "MPI_ERR_KEYVAL",
+        'REQUEST': "MPI_ERR_REQUEST",
+        'MESSAGE': "MPI_ERR_REQUEST",
+        'SESSION': "MPI_ERR_SESSION",
+        'GREQUEST_CLASS': "",
+    }
+
     handle_out_do_ptrs = {
         'COMMUNICATOR': 1,
         'GROUP': 1,

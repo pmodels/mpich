@@ -18,6 +18,10 @@ def dump_mpi_c(func, mapping):
     filter_c_parameters(func)
     check_params_with_large_only(func, mapping)
     process_func_parameters(func, mapping)
+    # collect error codes additional from auto generated ones
+    if 'error' in func:
+        for a in func['error'].split(", "):
+            G.err_codes[a] = 1
     # -- "dump" accumulates output lines in G.out
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("")
@@ -345,13 +349,15 @@ def process_func_parameters(func, mapping):
             validation_list.append({'kind': 'RANK', 'name': name})
         elif RE.match(r'(POLY)?(XFER_NUM_ELEM|DTYPE_NUM_ELEM_NNI|DTYPE_PACK_SIZE)', kind):
             validation_list.append({'kind': "COUNT", 'name': name})
-        elif RE.match(r'WINDOW_SIZE|WIN_ATTACH_SIZE|ALLOC_MEM_NUM_BYTES', kind):
+        elif RE.match(r'WINDOW_SIZE|WIN_ATTACH_SIZE', kind):
+            validation_list.append({'kind': "WIN_SIZE", 'name': name})
+        elif RE.match(r'ALLOC_MEM_NUM_BYTES', kind):
             validation_list.append({'kind': "ARGNEG", 'name': name})
         elif RE.match(r'(C_)?BUFFER', kind) and RE.match(r'MPI_Win_(allocate|create|attach)', func_name):
             validation_list.append({'kind': "WINBUFFER", 'name': name})
         elif RE.match(r'(POLY)?(RMA_DISPLACEMENT)', kind):
             if name == 'disp_unit':
-                validation_list.append({'kind': "ARGNONPOS", 'name': name})
+                validation_list.append({'kind': "WIN_DISPUNIT", 'name': name})
             else:
                 validation_list.append({'kind': "RMADISP", 'name': name})
         elif RE.match(r'(.*_NNI|ARRAY_LENGTH|INFO_VALUE_LENGTH|KEY_INDEX|INDEX|NUM_DIMS|DIMENSION|COMM_SIZE)', kind):
@@ -445,7 +451,7 @@ def dump_profiling(func, mapping):
     G.out.append("#pragma _CRI duplicate %s as P%s" % (func_name, func_name))
     G.out.append("#elif defined(HAVE_WEAK_ATTRIBUTE)")
     s = get_declare_function(func, mapping)
-    G.out.append(s + " __attribute__ ((weak, alias(\"P%s\")));" % (func_name))
+    dump_line_with_break(s, " __attribute__ ((weak, alias(\"P%s\")));" % (func_name))
     G.out.append("#endif")
     G.out.append("/* -- End Profiling Symbol Block */")
 
@@ -562,7 +568,7 @@ def dump_function(func, mapping, kind):
         func['impl_arg_list'].append(RE.m.group(1))
         func['impl_param_list'].append(extra_param)
 
-    G.out.append(s)
+    dump_line_with_break(s)
     G.out.append("{")
     G.out.append("INDENT")
 
@@ -749,9 +755,9 @@ def dump_body_coll(func):
         G.out.append("MPIR_Errflag_t errflag = MPIR_ERR_NONE;")
         args = args + ", " + "&errflag"
     G.out.append("if (%s || (%s && %s)) {" % (cond_a, cond_b1, cond_b2))
-    G.out.append("    mpi_errno = MPID_%s(%s);" % (name, args))
+    dump_line_with_break("    mpi_errno = MPID_%s(%s);" % (name, args))
     G.out.append("} else {")
-    G.out.append("    mpi_errno = MPIR_%s_impl(%s);" % (name, args))
+    dump_line_with_break("    mpi_errno = MPIR_%s_impl(%s);" % (name, args))
     G.out.append("}")
     dump_error_check("")
     if name.startswith('I'):
@@ -781,20 +787,20 @@ def dump_body_impl(func, prefix='mpir'):
         impl = func['name'] + "_impl"
         impl = re.sub(r'^MPIX?_', 'MPIR_', impl)
     args = ", ".join(func['impl_arg_list'])
-    G.out.append("mpi_errno = %s(%s);" % (impl, args))
+    dump_line_with_break("mpi_errno = %s(%s);" % (impl, args))
     dump_error_check("")
 
     if '_has_handle_out' in func:
         # assuming we are creating new handle(s)
         for p in func['_has_handle_out']:
             (name, kind) = (p['name'], p['kind'])
-            G.out.append("if (%s_ptr) {" % name)
+            dump_if_open("%s_ptr" % name)
             if name == 'win':
                 G.out.append("/* Initialize a few fields that have specific defaults */")
                 G.out.append("win_ptr->name[0] = 0;")
                 G.out.append("win_ptr->errhandler = 0;")
-            G.out.append("    MPIR_OBJ_PUBLISH_HANDLE(*%s, %s_ptr->handle);" % (name, name))
-            G.out.append("}")
+            G.out.append("MPIR_OBJ_PUBLISH_HANDLE(*%s, %s_ptr->handle);" % (name, name))
+            dump_if_close()
     elif '_has_handle_inout' in func:
         # assuming we the func is free the handle
         p = func['_has_handle_inout']
@@ -835,12 +841,12 @@ def dump_mpi_fn_fail(func, mapping):
     else:
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
         s = get_fn_fail_create_code(func, mapping)
-        G.out.append(s)
+        dump_line_with_break(s)
         G.out.append("#endif")
-        if '_has_win' in func:
-            G.out.append("mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);")
-        elif '_has_comm' in func:
+        if '_has_comm' in func:
             G.out.append("mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);")
+        elif '_has_win' in func:
+            G.out.append("mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);")
         else:
             G.out.append("mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);")
 
@@ -1068,6 +1074,7 @@ def dump_validate_handle_ptr(func, p):
         name = "*" + p['name']
     mpir = G.handle_mpir_types[kind]
     if kind == "REQUEST" and p['length']:
+        G.err_codes['MPI_ERR_REQUEST'] = 1
         if p['_request_array'] == "startall":
             ptr = p['_ptrs_name'] + '[i]'
             G.out.append("for (int i = 0; i < %s; i++) {" % p['length'])
@@ -1078,6 +1085,7 @@ def dump_validate_handle_ptr(func, p):
                 G.out.append("    MPIR_ERRTEST_PERSISTENT_ACTIVE(%s, mpi_errno);" % ptr)
             G.out.append("}")
     elif p['kind'] == "MESSAGE":
+        G.err_codes['MPI_ERR_REQUEST'] = 1
         G.out.append("if (%s != MPI_MESSAGE_NO_PROC) {" % name)
         G.out.append("    MPIR_Request_valid_ptr(%s, mpi_errno);" % ptr_name)
         dump_error_check("    ")
@@ -1088,6 +1096,7 @@ def dump_validate_handle_ptr(func, p):
         # use custom code in func['cond-error_check']
         pass
     elif kind == "COMMUNICATOR":
+        G.err_codes['MPI_ERR_COMM'] = 1
         G.out.append("MPIR_Comm_valid_ptr(%s, mpi_errno, %s);" % (ptr_name, func['_comm_valid_ptr_flag']))
         dump_error_check("")
 
@@ -1105,6 +1114,9 @@ def dump_validate_handle_ptr(func, p):
 
         if kind == "WINDOW" and RE.match(r'mpi_win_shared_query', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_WIN_FLAVOR(win_ptr, MPI_WIN_FLAVOR_SHARED, mpi_errno);")
+
+        if G.handle_error_codes[kind]:
+            G.err_codes[G.handle_error_codes[kind]] = 1
 
 def dump_validation(func, t):
     func_name = func['name']
@@ -1147,6 +1159,12 @@ def dump_validation(func, t):
     elif kind == "COUNT":
         G.err_codes['MPI_ERR_COUNT'] = 1
         G.out.append("MPIR_ERRTEST_COUNT(%s, mpi_errno);" % name)
+    elif kind == "WIN_SIZE":
+        G.err_codes['MPI_ERR_SIZE'] = 1
+        G.out.append("MPIR_ERRTEST_WIN_SIZE(%s, mpi_errno);" % name)
+    elif kind == "WIN_DISPUNIT":
+        G.err_codes['MPI_ERR_DISP'] = 1
+        G.out.append("MPIR_ERRTEST_WIN_DISPUNIT(%s, mpi_errno);" % name)
     elif kind == "RMADISP":
         G.err_codes['MPI_ERR_DISP'] = 1
         G.out.append("if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC) {")
@@ -1212,10 +1230,15 @@ def dump_validate_userbuffer_simple(func, buf, ct, dt):
     if check_no_op:
         dump_if_open("op != MPI_NO_OP")
     G.out.append("MPIR_ERRTEST_COUNT(%s, mpi_errno);" % ct)
-    dump_if_open("%s > 0" % ct)
-    dump_validate_datatype(func, dt)
-    G.out.append("MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
-    dump_if_close()
+    if func['dir'] == 'rma':
+        # RMA doesn't make sense to have zero-count message, always validate datatype
+        dump_validate_datatype(func, dt)
+        G.out.append("MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
+    else:
+        dump_if_open("%s > 0" % ct)
+        dump_validate_datatype(func, dt)
+        G.out.append("MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
+        dump_if_close()
     if check_no_op:
         dump_if_close()
 
@@ -1574,3 +1597,52 @@ def dump_if_open(cond):
 def dump_if_close():
     G.out.append("DEDENT")
     G.out.append("}")
+
+def dump_line_with_break(s, tail=''):
+    tlist = []
+    n = 0
+
+    # by default, segments indent by additional 4 spaces
+    if RE.match(r'(\s*)', s):
+        n_lead = len(RE.m.group(1)) + 4
+
+    if len(s) < 100:
+        tlist.append(s)
+        n = len(s)
+    elif RE.match(r'(.*?\()(.*)', s):
+        # line with function pattern, match indent at openning parenthesis
+        s_lead, s_next = RE.m.group(1,2)
+        n_lead = len(s_lead)
+
+        for a in s_next.split(', '):
+            if n == 0:
+                # first line
+                tlist = [s_lead, a]
+                n = n_lead + len(a)
+            elif n + 2 + len(a) < 100:
+                # just append to tlist
+                tlist.append(', ')
+                tlist.append(a)
+                n += 2 + len(a)
+            else:
+                # break the line
+                tlist.append(',')
+                G.out.append(''.join(tlist))
+                # start new line with leading spaces
+                tlist = [' ' * n_lead, a]
+                n = n_lead + len(a)
+        # leave last segment with tail
+    else:
+        # only break long function declaration or call for now
+        tlist.append(s)
+        n = len(s)
+
+    # tail is mostly for "__attribute__ ((weak, alias(...))));"
+    if tail:
+        if n + 1 + len(tail) < 100:
+            G.out.append(''.join(tlist) + ' ' + tail)
+        else:
+            G.out.append(''.join(tlist))
+            G.out.append(' ' * n_lead + tail)
+    else:
+        G.out.append(''.join(tlist))
