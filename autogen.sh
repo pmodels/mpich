@@ -1119,6 +1119,15 @@ if [ "$do_build_configure" = "yes" ] ; then
     done
 fi
 
+echo
+echo
+echo "###########################################################"
+echo "## Generating CH4 API boilerplates"
+echo "###########################################################"
+echo
+
+echo_n "generating ch4 API boilerplates... "
+$PYTHON ./maint/gen_ch4_api.py
 
 echo
 echo
