@@ -83,9 +83,9 @@ int MPI_Errhandler_free(MPI_Errhandler * errhandler)
 
     /* ... body of routine ...  */
 
-    MPIR_Errhandler_release_ref(errhan_ptr, &in_use);
-    if (!in_use) {
-        MPIR_Handle_obj_free(&MPIR_Errhandler_mem, errhan_ptr);
+    mpi_errno = MPIR_Errhandler_free_impl(errhan_ptr);
+    if (mpi_errno) {
+        goto fn_fail;
     }
     *errhandler = MPI_ERRHANDLER_NULL;
 

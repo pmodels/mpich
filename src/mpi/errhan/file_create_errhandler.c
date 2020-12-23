@@ -72,9 +72,11 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_File_create_errhandler_impl(file_errhandler_fn, errhandler);
+    MPIR_Errhandler *errhan_ptr = NULL;
+    mpi_errno = MPIR_File_create_errhandler_impl(file_errhandler_fn, &errhan_ptr);
     if (mpi_errno)
         goto fn_fail;
+    MPIR_OBJ_PUBLISH_HANDLE(*errhandler, errhan_ptr->handle);
 
     /* ... end of body of routine ... */
 

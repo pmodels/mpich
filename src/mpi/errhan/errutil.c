@@ -146,11 +146,6 @@ MPIR_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, MPIR_ERRHANDLER,
     NULL
 };
 
-void MPIR_Errhandler_free(MPIR_Errhandler * errhan_ptr)
-{
-    MPIR_Handle_obj_free(&MPIR_Errhandler_mem, errhan_ptr);
-}
-
 void MPIR_Err_init(void)
 {
     /* these are "stub" objects, so the other fields (which are statically
