@@ -64,8 +64,10 @@ int MPIX_Delete_error_code(int errorcode)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Err_delete_code(errorcode);
-    MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**predeferrcode");
+    mpi_errno = MPIR_Delete_error_code_impl(errorcode);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
 
     /* ... end of body of routine ... */
 

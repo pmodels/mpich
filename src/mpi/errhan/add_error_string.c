@@ -76,7 +76,7 @@ int MPI_Add_error_string(int errorcode, const char *string)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Err_set_msg(errorcode, (const char *) string);
+    mpi_errno = MPIR_Add_error_string_impl(errorcode, (const char *) string);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 

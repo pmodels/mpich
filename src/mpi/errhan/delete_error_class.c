@@ -63,8 +63,10 @@ int MPIX_Delete_error_class(int errorclass)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Err_delete_class(errorclass & ~ERROR_DYN_MASK);
-    MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**predeferrclass");
+    mpi_errno = MPIR_Delete_error_class_impl(errorclass);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
 
     /* ... end of body of routine ... */
 
