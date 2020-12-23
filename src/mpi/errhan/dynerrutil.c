@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "errcodes.h"
 #include "uthash.h"
 #include <string.h>
 

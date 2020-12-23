@@ -35,8 +35,7 @@ mpi_core_sources +=             \
     src/mpi/errhan/dynerrutil.c
 
 noinst_HEADERS +=             \
-    src/mpi/errhan/defmsg.h   \
-    src/mpi/errhan/errcodes.h
+    src/mpi/errhan/defmsg.h
 
 errnames_txt_files += src/mpi/errhan/errnames.txt
 

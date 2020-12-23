@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "errcodes.h"
 
 /* -- Begin Profiling Symbol Block for routine MPIX_Delete_error_code */
 #if defined(HAVE_PRAGMA_WEAK)
