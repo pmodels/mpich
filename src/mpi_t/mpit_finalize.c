@@ -5,26 +5,6 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPI_T_finalize */
-#if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_T_finalize = PMPI_T_finalize
-#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_T_finalize  MPI_T_finalize
-#elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_T_finalize as PMPI_T_finalize
-#elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_finalize(void) __attribute__ ((weak, alias("PMPI_T_finalize")));
-#endif
-/* -- End Profiling Symbol Block */
-
-/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
-   the MPI routines */
-#ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_T_finalize
-#define MPI_T_finalize PMPI_T_finalize
-
-/* any non-MPI functions go here, especially non-static ones */
-
 static void MPIR_T_enum_env_finalize(void)
 {
     unsigned int i, j;
@@ -164,72 +144,4 @@ void MPIR_T_env_finalize(void)
     MPIR_T_cvar_env_finalize();
     MPIR_T_pvar_env_finalize();
     MPIR_T_cat_env_finalize();
-}
-
-#endif /* MPICH_MPI_FROM_PMPI */
-
-/*@
-MPI_T_finalize - Finalize the MPI tool information interface
-
-Notes:
-This routine may be called as often as the corresponding MPI_T_init_thread() routine
-up to the current point of execution. Calling it more times returns a corresponding
-error code. As long as the number of calls to MPI_T_finalize() is smaller than the
-number of calls to MPI_T_init_thread() up to the current point of execution, the MPI
-tool information interface remains initialized and calls to its routines are permissible.
-Further, additional calls to MPI_T_init_thread() after one or more calls to MPI_T_finalize()
-are permissible. Once MPI_T_finalize() is called the same number of times as the routine
-MPI_T_init_thread() up to the current point of execution, the MPI tool information
-interface is no longer initialized. The interface can be reinitialized by subsequent calls
-to MPI_T_init_thread().
-
-At the end of the program execution, unless MPI_Abort() is called, an application must
-have called MPI_T_init_thread() and MPI_T_finalize() an equal number of times.
-
-.N ThreadSafe
-
-.N Errors
-.N MPI_SUCCESS
-.N MPI_T_ERR_NOT_INITIALIZED
-
-.seealso MPI_T_init_thread
-@*/
-int MPI_T_finalize(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_FINALIZE);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_FINALIZE);
-
-    /* ... body of routine ...  */
-
-    --MPIR_T_init_balance;
-    if (MPIR_T_init_balance < 0) {
-        mpi_errno = MPI_T_ERR_NOT_INITIALIZED;
-        goto fn_fail;
-    }
-
-    if (MPIR_T_init_balance == 0) {
-        MPIR_T_THREAD_CS_FINALIZE();
-        MPIR_T_env_finalize();
-    }
-
-    /* ... end of body of routine ... */
-
-  fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_FINALIZE);
-    return mpi_errno;
-
-  fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_finalize", NULL);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

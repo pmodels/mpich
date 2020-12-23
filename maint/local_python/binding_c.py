@@ -50,6 +50,9 @@ def get_func_file_path(func, root_dir):
         os.mkdir(dir_path)
     if 'file' in func:
         file_path = dir_path + '/' + func['file'] + ".c"
+    elif RE.match(r'MPI_T_(\w+)', func['name'], re.IGNORECASE):
+        name = RE.m.group(1)
+        file_path = dir_path + '/' + name.lower() + ".c"
     elif RE.match(r'MPIX?_(\w+)', func['name'], re.IGNORECASE):
         name = RE.m.group(1)
         file_path = dir_path + '/' + name.lower() + ".c"
@@ -139,6 +142,9 @@ def check_func_directives(func):
         func['skip'] = ""
     if 'extra' not in func:
         func['extra'] = ""
+
+    if func['dir'] == "mpit":
+        func['_skip_Fortran'] = 1
 
     if RE.search(r'ThreadSafe', func['skip'], re.IGNORECASE):
         func['_skip_ThreadSafe'] = 1
@@ -366,6 +372,27 @@ def process_func_parameters(func, mapping):
             validation_list.append({'kind': "ARGNONPOS", 'name': name})
         elif kind == "STRING" and name == "key":
             validation_list.append({'kind': "infokey", 'name': name})
+        elif RE.match(r'(CAT|CVAR|PVAR)_INDEX', kind):
+            validation_list.append({'kind': "mpit_%s_index" % RE.m.group(1), 'name': name})
+        elif RE.match(r'(CVAR|PVAR|TOOLS_ENUM)$', kind):
+            if kind == "CVAR" or kind == "PVAR":
+                t_kind = "mpit_" + kind.lower() + "_handle"
+            else:
+                t_kind = "mpit_enum_handle"
+            t_name = name
+            if RE.search(r'direction=inout', p['t']):
+                t_name = '*' + name
+            validation_list.append({'kind': t_kind, 'name': t_name})
+        elif kind == "TOOLENUM_INDEX":
+            # MPI_T_enum_get_item, assume 1st param is enumtype
+            validation_list.append({'kind': "mpit_enum_item", 'name': "enumtype, " + name})
+        elif kind == "PVAR_SESSION":
+            t_name = name
+            if RE.search(r'direction=inout', p['t']):
+                t_name = '*' + name
+            validation_list.append({'kind': "mpit_pvar_session", 'name': t_name})
+        elif kind == "PVAR_CLASS":
+            validation_list.append({'kind': "mpit_pvar_class", 'name': name})
         elif RE.match(r'(ERROR_CLASS|ERROR_CODE|FILE|FUNCTION|ATTRIBUTE_VAL|EXTRA_STATE|LOGICAL)', kind):
             # no validation for these kinds
             pass
@@ -627,12 +654,18 @@ def dump_function_normal(func, state_name, mapping):
 
     if not '_skip_initcheck' in func:
         G.out.append("")
-        G.out.append("MPIR_ERRTEST_INITIALIZED_ORDIE();")
+        if func['dir'] == "mpit":
+            G.err_codes['MPI_T_ERR_NOT_INITIALIZED'] = 1
+            G.out.append("MPIT_ERRTEST_MPIT_INITIALIZED();")
+        else:
+            G.out.append("MPIR_ERRTEST_INITIALIZED_ORDIE();")
 
     if not '_skip_global_cs' in func:
         G.out.append("")
-        G.out.append("MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
-
+        if func['dir'] == 'mpit':
+            G.out.append("MPIR_T_THREAD_CS_ENTER();")
+        else:
+            G.out.append("MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
     G.out.append("MPIR_FUNC_TERSE_ENTER(%s);" % state_name)
     if 'handle_ptr_list' in func:
         G.out.append("")
@@ -705,12 +738,18 @@ def dump_function_normal(func, state_name, mapping):
     G.out.append("MPIR_FUNC_TERSE_EXIT(%s);" % state_name)
 
     if not '_skip_global_cs' in func:
-        G.out.append("MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
-
+        if func['dir'] == 'mpit':
+            G.out.append("MPIR_T_THREAD_CS_EXIT();")
+        else:
+            G.out.append("MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
     G.out.append("return mpi_errno;")
     G.out.append("")
     G.out.append("fn_fail:")
-    dump_mpi_fn_fail(func, mapping)
+    if func['dir'] == 'mpit':
+        # MPI_T always return the mpi_errno
+        pass
+    else:
+        dump_mpi_fn_fail(func, mapping)
     G.out.append("goto fn_exit;")
 
 def push_impl_decl(func, impl_name=None):
@@ -1190,11 +1229,19 @@ def dump_validation(func, t):
         else:
             dump_validate_userbuffer_coll(func, kind, p[0], p[1], p[2], "")
     elif RE.match(r'(ARGNULL)$', kind):
-        G.err_codes['MPI_ERR_ARG'] = 1
-        G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
+        if func['dir'] == 'mpit':
+            G.err_codes['MPI_T_ERR_INVALID'] = 1
+            G.out.append("MPIT_ERRTEST_ARGNULL(%s);" % name)
+        else:
+            G.err_codes['MPI_ERR_ARG'] = 1
+            G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
     elif RE.match(r'(ARGNEG)$', kind):
-        G.err_codes['MPI_ERR_ARG'] = 1
-        G.out.append("MPIR_ERRTEST_ARGNEG(%s, \"%s\", mpi_errno);" % (name, name))
+        if func['dir'] == 'mpit':
+            G.err_codes['MPI_T_ERR_INVALID'] = 1
+            G.out.append("MPIT_ERRTEST_ARGNEG(%s);" % name)
+        else:
+            G.err_codes['MPI_ERR_ARG'] = 1
+            G.out.append("MPIR_ERRTEST_ARGNEG(%s, \"%s\", mpi_errno);" % (name, name))
     elif RE.match(r'(ARGNONPOS)$', kind):
         G.err_codes['MPI_ERR_ARG'] = 1
         G.out.append("MPIR_ERRTEST_ARGNONPOS(%s, \"%s\", mpi_errno, MPI_ERR_ARG);" % (name, name))
@@ -1220,6 +1267,24 @@ def dump_validation(func, t):
         G.out.append("int keylen = (int) strlen(%s);" % name)
         G.out.append("MPIR_ERR_CHKANDJUMP((keylen > MPI_MAX_INFO_KEY), mpi_errno, MPI_ERR_INFO_KEY, \"**infokeylong\");")
         G.out.append("MPIR_ERR_CHKANDJUMP((keylen == 0), mpi_errno, MPI_ERR_INFO_KEY, \"**infokeyempty\");")
+    elif RE.match(r'mpit_(cat|cvar|pvar)_index', kind, re.I):
+        T = RE.m.group(1).upper()
+        G.err_codes['MPI_T_ERR_INVALID_INDEX'] = 1
+        G.out.append("MPIT_ERRTEST_%s_INDEX(%s);" % (T, name))
+    elif RE.match(r'mpit_(enum|cvar|pvar)_handle', kind, re.I):
+        T = RE.m.group(1).upper()
+        G.err_codes['MPI_T_ERR_INVALID_HANDLE'] = 1
+        G.out.append("MPIT_ERRTEST_%s_HANDLE(%s);" % (T, name))
+    elif kind == "mpit_enum_item":
+        # note: name is "enum_, index_"
+        G.err_codes['MPI_T_ERR_INVALID_ITEM'] = 1
+        G.out.append("MPIT_ERRTEST_ENUM_ITEM(%s);" % name)
+    elif kind == "mpit_pvar_session":
+        G.err_codes['MPI_T_ERR_INVALID_SESSION'] = 1
+        G.out.append("MPIT_ERRTEST_PVAR_SESSION(%s);" % name)
+    elif kind == "mpit_pvar_class":
+        G.err_codes['MPI_T_ERR_INVALID_NAME'] = 1
+        G.out.append("MPIT_ERRTEST_PVAR_CLASS(%s);" % name)
     else:
         print("Unhandled validation kind: %s - %s" % (kind, name), file=sys.stderr)
 

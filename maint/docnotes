@@ -528,6 +528,10 @@ N*/
 . MPI_T_ERR_PVAR_NO_ATOMIC - The performance variable can not be read/write atomically.
 N*/
 
+/*N MPI_T_ERR_INVALID
+. MPI_T_ERR_INVALID - Invalid use of the interface or bad parameter values(s).
+N*/
+
 /*N NULL
 Null Handles:
 The MPI 1.1 specification, in the section on opaque objects, explicitly
