@@ -88,7 +88,7 @@ int MPI_Comm_disconnect(MPI_Comm * comm)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Comm_disconnect(comm_ptr);
+    mpi_errno = MPIR_Comm_disconnect_impl(comm_ptr);
     if (mpi_errno) {
         goto fn_fail;
     }

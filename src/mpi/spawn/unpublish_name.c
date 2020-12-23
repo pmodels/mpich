@@ -87,7 +87,7 @@ int MPI_Unpublish_name(const char *service_name, MPI_Info info, const char *port
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    mpi_errno = MPIR_Unpublish_name(service_name, info_ptr, port_name);
+    mpi_errno = MPIR_Unpublish_name_impl(service_name, info_ptr, port_name);
     if (mpi_errno) {
         goto fn_fail;
     }

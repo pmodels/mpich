@@ -78,7 +78,7 @@ static int MPIR_fd_recv(int fd, void *buffer, int length)
     return 0;
 }
 
-int MPIR_Comm_join(int fd, MPI_Comm * intercomm)
+int MPIR_Comm_join_impl(int fd, MPIR_Comm ** p_intercomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int err;
@@ -122,7 +122,7 @@ int MPIR_Comm_join(int fd, MPI_Comm * intercomm)
     mpi_errno = MPIR_Close_port_impl(local_port);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_OBJ_PUBLISH_HANDLE(*intercomm, intercomm_ptr->handle);
+    *p_intercomm_ptr = intercomm_ptr;
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
@@ -131,11 +131,31 @@ int MPIR_Comm_join(int fd, MPI_Comm * intercomm)
     goto fn_exit;
 }
 
-/* One of these routines needs to define the global handle.  Since
-   Most routines will use lookup (if they use any of the name publishing
-   interface at all), we place this in MPI_Lookup_name.
-*/
-MPID_NS_Handle MPIR_Namepub = 0;
+int MPIR_Comm_spawn_impl(const char *command, char *argv[], int maxprocs, MPIR_Info * info_ptr,
+                         int root, MPIR_Comm * comm_ptr, MPIR_Comm ** p_intercomm_ptr,
+                         int array_of_errcodes[])
+{
+    return MPID_Comm_spawn_multiple(1, (char **) &command, &argv, &maxprocs, &info_ptr, root,
+                                    comm_ptr, p_intercomm_ptr, array_of_errcodes);
+}
+
+int MPIR_Comm_spawn_multiple_impl(int count, char *array_of_commands[], char **array_of_argv[],
+                                  const int array_of_maxprocs[], MPIR_Info * array_of_info_ptrs[],
+                                  int root, MPIR_Comm * comm_ptr, MPIR_Comm ** p_intercomm_ptr,
+                                  int array_of_errcodes[])
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPID_Comm_spawn_multiple(count, array_of_commands,
+                                         array_of_argv,
+                                         array_of_maxprocs,
+                                         array_of_info_ptrs, root,
+                                         comm_ptr, p_intercomm_ptr, array_of_errcodes);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name)
 {
@@ -159,7 +179,7 @@ int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root
     return MPID_Comm_connect(port_name, info_ptr, root, comm_ptr, newcomm_ptr);
 }
 
-int MPIR_Comm_disconnect(MPIR_Comm * comm_ptr)
+int MPIR_Comm_disconnect_impl(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     /*
@@ -195,7 +215,41 @@ int MPIR_Comm_disconnect(MPIR_Comm * comm_ptr)
     goto fn_exit;
 }
 
-int MPIR_Publish_name(const char *service_name, MPIR_Info * info_ptr, const char *port_name)
+/* global for NAMEPUB_SERVICE */
+MPID_NS_Handle MPIR_Namepub = 0;
+
+int MPIR_Lookup_name_impl(const char *service_name, MPIR_Info * info_ptr, char *port_name)
+{
+    int mpi_errno = MPI_SUCCESS;
+#ifdef HAVE_NAMEPUB_SERVICE
+    if (!MPIR_Namepub) {
+        mpi_errno = MPID_NS_Create(info_ptr, &MPIR_Namepub);
+        /* FIXME: change **fail to something more meaningful */
+        MPIR_ERR_CHKANDJUMP((mpi_errno != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, "**fail");
+        MPIR_Add_finalize((int (*)(void *)) MPID_NS_Free, &MPIR_Namepub, 9);
+    }
+
+    mpi_errno = MPID_NS_Lookup(MPIR_Namepub, info_ptr, (const char *) service_name, port_name);
+    /* FIXME: change **fail to something more meaningful */
+    /* Note: Jump on *any* error, not just errors other than MPI_ERR_NAME.
+     * The usual MPI rules on errors apply - the error handler on the
+     * communicator (file etc.) is invoked; MPI_COMM_WORLD is used
+     * if there is no obvious communicator. A previous version of
+     * this routine erroneously did not invoke the error handler
+     * when the error was of class MPI_ERR_NAME. */
+    MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**fail");
+#else
+    /* No name publishing service available */
+    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nonamepub");
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Publish_name_impl(const char *service_name, MPIR_Info * info_ptr, const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -227,7 +281,7 @@ int MPIR_Publish_name(const char *service_name, MPIR_Info * info_ptr, const char
     goto fn_exit;
 }
 
-int MPIR_Unpublish_name(const char *service_name, MPIR_Info * info_ptr, const char *port_name)
+int MPIR_Unpublish_name_impl(const char *service_name, MPIR_Info * info_ptr, const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
 

@@ -94,31 +94,10 @@ int MPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name)
 
     /* ... body of routine ...  */
 
-#ifdef HAVE_NAMEPUB_SERVICE
-    {
-        if (!MPIR_Namepub) {
-            mpi_errno = MPID_NS_Create(info_ptr, &MPIR_Namepub);
-            /* FIXME: change **fail to something more meaningful */
-            MPIR_ERR_CHKANDJUMP((mpi_errno != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, "**fail");
-            MPIR_Add_finalize((int (*)(void *)) MPID_NS_Free, &MPIR_Namepub, 9);
-        }
-
-        mpi_errno = MPID_NS_Lookup(MPIR_Namepub, info_ptr, (const char *) service_name, port_name);
-        /* FIXME: change **fail to something more meaningful */
-        /* Note: Jump on *any* error, not just errors other than MPI_ERR_NAME.
-         * The usual MPI rules on errors apply - the error handler on the
-         * communicator (file etc.) is invoked; MPI_COMM_WORLD is used
-         * if there is no obvious communicator. A previous version of
-         * this routine erroneously did not invoke the error handler
-         * when the error was of class MPI_ERR_NAME. */
-        MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**fail");
+    mpi_errno = MPIR_Lookup_name_impl(service_name, info_ptr, port_name);
+    if (mpi_errno) {
+        goto fn_fail;
     }
-#else
-    {
-        /* No name publishing service available */
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nonamepub");
-    }
-#endif
 
     /* ... end of body of routine ... */
 
