@@ -112,9 +112,8 @@ int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info inf
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Comm_spawn_multiple(1, (char **) &command, &argv,
-                                         &maxprocs, &info_ptr, root,
-                                         comm_ptr, &intercomm_ptr, array_of_errcodes);
+    mpi_errno = MPIR_Comm_spawn_impl(command, argv, maxprocs, info_ptr, root,
+                                     comm_ptr, &intercomm_ptr, array_of_errcodes);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 

@@ -91,7 +91,7 @@ int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_n
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Publish_name(service_name, info_ptr, port_name);
+    mpi_errno = MPIR_Publish_name_impl(service_name, info_ptr, port_name);
     if (mpi_errno) {
         goto fn_fail;
     }

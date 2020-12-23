@@ -60,9 +60,16 @@ int MPI_Comm_join(int fd, MPI_Comm * intercomm)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Comm_join(fd, intercomm);
+    MPIR_Comm *intercomm_ptr = NULL;
+    mpi_errno = MPIR_Comm_join_impl(fd, &intercomm_ptr);
     if (mpi_errno) {
         goto fn_fail;
+    }
+
+    if (intercomm_ptr) {
+        MPIR_OBJ_PUBLISH_HANDLE(*intercomm, intercomm_ptr->handle);
+    } else {
+        *intercomm = MPI_COMM_NULL;
     }
 
     /* ... end of body of routine ... */

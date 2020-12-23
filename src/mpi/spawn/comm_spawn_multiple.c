@@ -130,11 +130,11 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
 
     /* TODO: add error check to see if this collective function is
      * being called from multiple threads. */
-    mpi_errno = MPID_Comm_spawn_multiple(count, array_of_commands,
-                                         array_of_argv,
-                                         array_of_maxprocs,
-                                         array_of_info_ptrs, root,
-                                         comm_ptr, &intercomm_ptr, array_of_errcodes);
+    mpi_errno = MPIR_Comm_spawn_multiple_impl(count, array_of_commands,
+                                              array_of_argv,
+                                              array_of_maxprocs,
+                                              array_of_info_ptrs, root,
+                                              comm_ptr, &intercomm_ptr, array_of_errcodes);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
