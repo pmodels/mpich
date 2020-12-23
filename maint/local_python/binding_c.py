@@ -1230,10 +1230,15 @@ def dump_validate_userbuffer_simple(func, buf, ct, dt):
     if check_no_op:
         dump_if_open("op != MPI_NO_OP")
     G.out.append("MPIR_ERRTEST_COUNT(%s, mpi_errno);" % ct)
-    dump_if_open("%s > 0" % ct)
-    dump_validate_datatype(func, dt)
-    G.out.append("MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
-    dump_if_close()
+    if func['dir'] == 'rma':
+        # RMA doesn't make sense to have zero-count message, always validate datatype
+        dump_validate_datatype(func, dt)
+        G.out.append("MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
+    else:
+        dump_if_open("%s > 0" % ct)
+        dump_validate_datatype(func, dt)
+        G.out.append("MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
+        dump_if_close()
     if check_no_op:
         dump_if_close()
 
