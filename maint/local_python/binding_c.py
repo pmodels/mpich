@@ -1074,7 +1074,7 @@ def dump_validate_handle(func, p):
         G.err_codes['MPI_ERR_OP'] = 1
         G.out.append("MPIR_ERRTEST_OP(%s, mpi_errno);" % name)
     elif kind == "INFO":
-        G.err_codes['MPI_ERR_ARG'] = 1
+        G.err_codes['MPI_ERR_INFO'] = 1
         if 'can_be_null' in p:
             G.out.append("MPIR_ERRTEST_INFO_OR_NULL(%s, mpi_errno);" % name)
         else:
