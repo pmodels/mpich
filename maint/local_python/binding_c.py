@@ -1004,6 +1004,7 @@ def dump_validate_handle(func, p):
     (kind, name) = (p['kind'], p['name'])
     if '_pointer' in p:
         name = "*" + p['name']
+        G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (p['name'], p['name']))
 
     if kind == "COMMUNICATOR":
         if name == 'peer_comm':
