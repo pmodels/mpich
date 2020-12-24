@@ -393,7 +393,13 @@ def process_func_parameters(func, mapping):
             validation_list.append({'kind': "mpit_pvar_session", 'name': t_name})
         elif kind == "PVAR_CLASS":
             validation_list.append({'kind': "mpit_pvar_class", 'name': name})
-        elif RE.match(r'(ERROR_CLASS|ERROR_CODE|FILE|FUNCTION|ATTRIBUTE_VAL|EXTRA_STATE|LOGICAL)', kind):
+        elif RE.match(r'(FUNCTION)', kind):
+            if RE.match(r'mpi_(keyval_create|\w+_create_keyval)', func_name, re.IGNORECASE):
+                # MPI_NULL_COPY_FN etc are defined as NULL
+                pass
+            else:
+                validation_list.append({'kind': "ARGNULL", 'name': name})
+        elif RE.match(r'(ERROR_CLASS|ERROR_CODE|FILE|ATTRIBUTE_VAL|EXTRA_STATE|LOGICAL)', kind):
             # no validation for these kinds
             pass
         elif RE.match(r'(POLY)?(DTYPE_NUM_ELEM|DTYPE_STRIDE_BYTES|DISPLACEMENT_AINT_COUNT)$', kind):
