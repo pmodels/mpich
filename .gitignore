@@ -613,3 +613,7 @@ Makefile.am-stamp
 /test/mpi/rma/testlist.dtp
 /test/mpi/cxx/attr/testlist.gpu
 /test/mpi/cxx/datatype/testlist.gpu
+
+# /src/binding/c/
+/src/binding/c/Makefile.mk
+/src/binding/c/pt2pt
