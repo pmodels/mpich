@@ -461,7 +461,7 @@ def process_func_parameters(func, mapping):
             impl_param_list.append(get_C_param(p, mapping))
         i += 1
 
-    if RE.match(r'MPI_(Wait|Test)', func_name):
+    if RE.match(r'MPI_(Wait|Test)$', func_name):
         func['_has_comm'] = "comm_ptr"
         func['_comm_from_request'] = 1
 
@@ -1129,6 +1129,7 @@ def dump_convert_handle(func, p):
 
         if kind == "REQUEST" and "_comm_from_request" in func:
             G.out.append("if (%s) {" % ptr_name)
+            G.out.append("    /* Because %s may be freed, save a copy of comm_ptr for use at fn_fail */")
             G.out.append("    comm_ptr = %s->comm;" % ptr_name)
             G.out.append("}")
 
