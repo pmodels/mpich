@@ -194,6 +194,10 @@ def check_func_directives(func):
         for a in func['errorcodes'].replace(' ', '').split(','):
             G.err_codes[a] = 1
 
+    # additional exit_routines (clean up)
+    if 'code-clean_up' not in func:
+        func['code-clean_up'] = []
+
 def filter_c_parameters(func):
     c_params = []
     for p in func['parameters']:
@@ -445,8 +449,13 @@ def process_func_parameters(func, mapping):
             else:
                 print("Unhandled handle array: " + name, file=sys.stderr)
         elif "code-handle_ptr-tail" in func and name in func['code-handle_ptr-tail']:
-            impl_arg_list.append(name + "_ptr")
-            impl_param_list.append("%s *%s_ptr" % (G.handle_mpir_types[kind], name))
+            mpir_type = G.handle_mpir_types[kind]
+            if p['length']:
+                impl_arg_list.append(name + "_ptrs")
+                impl_param_list.append("%s **%s_ptrs" % (mpir_type, name))
+            else:
+                impl_arg_list.append(name + "_ptr")
+                impl_param_list.append("%s *%s_ptr" % (mpir_type, name))
         else:
             impl_arg_list.append(name)
             impl_param_list.append(get_C_param(p, mapping))
@@ -652,7 +661,6 @@ def dump_function_polymorph(func, mapping):
     G.out.append("}")
 
 def dump_function_normal(func, state_name, mapping):
-    func['exit_routines'] = []
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     if 'handle_ptr_list' in func:
         for p in func['handle_ptr_list']:
@@ -743,7 +751,7 @@ def dump_function_normal(func, state_name, mapping):
     G.out.append("/* ... end of body of routine ... */")
     G.out.append("")
     G.out.append("fn_exit:")
-    for l in func['exit_routines']:
+    for l in func['code-clean_up']:
         G.out.append(l)
     G.out.append("MPIR_FUNC_TERSE_EXIT(%s);" % state_name)
 
@@ -1093,9 +1101,9 @@ def dump_convert_handle(func, p):
         G.out.append("        goto fn_fail;")
         G.out.append("    }")
         G.out.append("}")
-        func['exit_routines'].append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % (p['length']))
-        func['exit_routines'].append("    MPL_free(request_ptrs);")
-        func['exit_routines'].append("}")
+        func['code-clean_up'].append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % (p['length']))
+        func['code-clean_up'].append("    MPL_free(request_ptrs);")
+        func['code-clean_up'].append("}")
 
         if p['_request_array'] == "startall":
             G.out.append("")
