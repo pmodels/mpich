@@ -372,6 +372,8 @@ def process_func_parameters(func, mapping):
             if p['param_direction'] == 'inout':
                 validation_list.append({'kind': "ARGNULL", 'name': name})
                 validation_list.append({'kind': "ARGNEG", 'name': "*" + name})
+            elif RE.search(r'count', name):
+                validation_list.append({'kind': "COUNT", 'name': name})
             else:
                 validation_list.append({'kind': "ARGNEG", 'name': name})
         elif RE.match(r'(.*_PI)', kind):
