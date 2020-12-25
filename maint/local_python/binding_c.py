@@ -750,22 +750,6 @@ def dump_function(func, mapping, kind):
     else:
         push_impl_decl(func)
 
-def dump_function_polymorph(func, mapping):
-    """Same as dump_function, but use `MPII_` prefix and with extra parameters."""
-    func_name = get_function_name(func, mapping);
-    state_name = "MPID_STATE_" + func_name.upper()
-
-    G.out.append(get_declare_function(func, mapping))
-    G.out.append("{")
-    G.out.append("INDENT")
-    if 'replace' in func and 'body' not in func:
-        if RE.search(r'with\s+(\w+)', func['replace']):
-            dump_function_replace(func, state_name, "P%s" % RE.m.group(1))
-    else:
-        dump_function_normal(func, state_name, mapping)
-    G.out.append("DEDENT")
-    G.out.append("}")
-
 def dump_function_normal(func, state_name, mapping):
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     if 'handle_ptr_list' in func:
