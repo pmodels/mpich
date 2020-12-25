@@ -54,10 +54,10 @@ static void MPIR_Bsend_dump(void);
 static struct BsendBuffer {
     void *buffer;               /* Pointer to the begining of the user-
                                  * provided buffer */
-    size_t buffer_size;         /* Size of the user-provided buffer */
+    MPI_Aint buffer_size;       /* Size of the user-provided buffer */
     void *origbuffer;           /* Pointer to the buffer provided by
                                  * the user */
-    size_t origbuffer_size;     /* Size of the buffer as provided
+    MPI_Aint origbuffer_size;   /* Size of the buffer as provided
                                  * by the user */
     MPII_Bsend_data_t *avail;   /* Pointer to the first available block
                                  * of space */
@@ -85,7 +85,7 @@ static void MPIR_Bsend_free_segment(MPII_Bsend_data_t *);
  * Attach a buffer.  This checks for the error conditions and then
  * initialized the avail buffer.
  */
-int MPIR_Bsend_attach(void *buffer, int buffer_size)
+int MPIR_Bsend_attach(void *buffer, MPI_Aint buffer_size)
 {
     MPII_Bsend_data_t *p;
     size_t offset, align_sz;
@@ -159,7 +159,7 @@ int MPIR_Bsend_attach(void *buffer, int buffer_size)
  * argument as an "int" (the definition predates that of ssize_t as a
  * standard type).
  */
-int MPIR_Bsend_detach(void *bufferp, int *size)
+int MPIR_Bsend_detach(void *bufferp, MPI_Aint * size)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -185,9 +185,7 @@ int MPIR_Bsend_detach(void *bufferp, int *size)
 
 /* Note that this works even when the buffer does not exist */
     *(void **) bufferp = BsendBuffer.origbuffer;
-    /* This cast to int will work because the user must use an int to describe
-     * the buffer size */
-    *size = (int) BsendBuffer.origbuffer_size;
+    *size = (MPI_Aint) BsendBuffer.origbuffer_size;
     BsendBuffer.origbuffer = NULL;
     BsendBuffer.origbuffer_size = 0;
     BsendBuffer.buffer = 0;
@@ -604,7 +602,7 @@ static int MPIR_Bsend_finalize(void *p ATTRIBUTE((unused)))
 {
     /* No lock since this is inside MPI_Finalize */
     void *b;
-    int s;
+    MPI_Aint s;
 
     MPL_UNREFERENCED_ARG(p);
 
@@ -652,3 +650,8 @@ static void MPIR_Bsend_dump(void)
     MPL_DBG_MSG(MPIR_DBG_BSEND, TYPICAL, "end of list");
 }
 #endif
+
+int MPIR_Buffer_detach_impl(void *buffer_addr, MPI_Aint * size)
+{
+    return MPIR_Bsend_detach(buffer_addr, size);
+}
