@@ -1208,10 +1208,10 @@ def dump_early_return_pt2pt_proc_null(func):
             request_kind = "MPIR_REQUEST_KIND__RMA"
         else:
             raise Exception("Unexpected %s for pt2pt_proc_null" % func['name'])
-        G.out.append("MPIR_Request *request_ptr = MPIR_Request_create_complete(%s);" % request_kind)
-        G.out.append("MPIR_ERR_CHKANDSTMT(request_ptr == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,")
+        G.out.append("MPIR_Request *lw_req = MPIR_Request_create_complete(%s);" % request_kind)
+        G.out.append("MPIR_ERR_CHKANDSTMT(lw_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,")
         G.out.append("                    \"**nomemreq\");")
-        G.out.append("*request = request_ptr->handle;")
+        G.out.append("*request = lw_req->handle;")
     if has_message:
         G.out.append("*message = MPI_MESSAGE_NO_PROC;")
     if has_status:
