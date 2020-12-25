@@ -564,19 +564,19 @@ def process_func_parameters(func, mapping):
         func['_has_comm'] = "comm"
         func['_comm_from_request'] = 1
 
-    func['need_validation'] = 0
+    func['_need_validation'] = 0
     if len(validation_list):
-        func['validation_list'] = validation_list
-        func['need_validation'] = 1
+        func['_validation_list'] = validation_list
+        func['_need_validation'] = 1
     if len(handle_ptr_list):
-        func['handle_ptr_list'] = handle_ptr_list
-        func['need_validation'] = 1
+        func['_handle_ptr_list'] = handle_ptr_list
+        func['_need_validation'] = 1
     if 'code-error_check' in func:
-        func['need_validation'] = 1
-    func['impl_arg_list'] = impl_arg_list
-    func['impl_param_list'] = impl_param_list
+        func['_need_validation'] = 1
+    func['_impl_arg_list'] = impl_arg_list
+    func['_impl_param_list'] = impl_param_list
     if len(pointertag_list):
-        func['pointertag_list'] = pointertag_list
+        func['_pointertag_list'] = pointertag_list
 
 # ---- simple parts ----
 
@@ -712,8 +712,8 @@ def dump_function(func, mapping, kind):
         s = re.sub(r'\)$', ', '+extra_param+')', s)
         # prepare for the latter body of routines calling MPIR impl
         RE.search(r'(\w+)$', extra_param)
-        func['impl_arg_list'].append(RE.m.group(1))
-        func['impl_param_list'].append(extra_param)
+        func['_impl_arg_list'].append(RE.m.group(1))
+        func['_impl_param_list'].append(extra_param)
 
     dump_line_with_break(s)
     G.out.append("{")
@@ -752,8 +752,8 @@ def dump_function(func, mapping, kind):
 
 def dump_function_normal(func, state_name, mapping):
     G.out.append("int mpi_errno = MPI_SUCCESS;")
-    if 'handle_ptr_list' in func:
-        for p in func['handle_ptr_list']:
+    if '_handle_ptr_list' in func:
+        for p in func['_handle_ptr_list']:
             dump_handle_ptr_var(func, p)
     if '_comm_from_request' in func:
         G.out.append("MPIR_Comm *comm_ptr = NULL;")
@@ -778,7 +778,7 @@ def dump_function_normal(func, state_name, mapping):
         else:
             G.out.append("MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
     G.out.append("MPIR_FUNC_TERSE_ENTER(%s);" % state_name)
-    if 'handle_ptr_list' in func:
+    if '_handle_ptr_list' in func:
         G.out.append("")
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
         G.out.append("{")
@@ -786,7 +786,7 @@ def dump_function_normal(func, state_name, mapping):
         G.out.append("    {")
         G.out.append("INDENT")
         G.out.append("INDENT")
-        for p in func['handle_ptr_list']:
+        for p in func['_handle_ptr_list']:
             dump_validate_handle(func, p)
         G.out.append("DEDENT")
         G.out.append("DEDENT")
@@ -795,12 +795,12 @@ def dump_function_normal(func, state_name, mapping):
         G.out.append("}")
         G.out.append("#endif \x2f* HAVE_ERROR_CHECKING */")
         G.out.append("")
-        for p in func['handle_ptr_list']:
+        for p in func['_handle_ptr_list']:
             dump_convert_handle(func, p)
     if 'code-handle_ptr' in func:
         for l in func['code-handle_ptr']:
             G.out.append(l)
-    if func['need_validation']:
+    if func['_need_validation']:
         G.out.append("")
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
         G.out.append("{")
@@ -808,11 +808,11 @@ def dump_function_normal(func, state_name, mapping):
         G.out.append("    {")
         G.out.append("INDENT")
         G.out.append("INDENT")
-        if 'handle_ptr_list' in func:
-            for p in func['handle_ptr_list']:
+        if '_handle_ptr_list' in func:
+            for p in func['_handle_ptr_list']:
                 dump_validate_handle_ptr(func, p)
-        if 'validation_list' in func:
-            for t in func['validation_list']:
+        if '_validation_list' in func:
+            for t in func['_validation_list']:
                 dump_validation(func, t)
         if 'code-error_check' in func:
             for l in func['code-error_check']:
@@ -871,8 +871,8 @@ def dump_function_normal(func, state_name, mapping):
 def push_impl_decl(func, impl_name=None):
     if not impl_name:
         impl_name = re.sub(r'^MPIX?_', 'MPIR_', func['name']) + "_impl"
-    if func['impl_param_list']:
-        params = ', '.join(func['impl_param_list'])
+    if func['_impl_param_list']:
+        params = ', '.join(func['_impl_param_list'])
         if func['dir'] == 'coll':
             # All collective impl function use MPI_Aint counts
             params = re.sub(r' int (count|sendcount|recvcount),', r' MPI_Aint \1,', params)
@@ -921,7 +921,7 @@ def dump_body_coll(func):
         G.out.append("}")
 
     def dump_v_swap(func):
-        args = ", ".join(func['impl_arg_list'])
+        args = ", ".join(func['_impl_arg_list'])
         if RE.match(r'mpi_i?neighbor_', func['name'], re.IGNORECASE):
             # neighborhood collectives
             G.out.append("int indegree, outdegree, weighted;")
@@ -1006,7 +1006,7 @@ def dump_body_coll(func):
     if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter\b)', func['name'], re.IGNORECASE):
         args = dump_v_swap(func)
     else:
-        args = ", ".join(func['impl_arg_list'])
+        args = ", ".join(func['_impl_arg_list'])
 
     if RE.match(r'MPI_(I.*|.*_init)$', func['name'], re.IGNORECASE):
         # non-blocking collectives
@@ -1031,7 +1031,7 @@ def dump_body_topo_fns(func, method):
     comm_ptr = func['_has_comm'] + "_ptr"
     dump_if_open("%s->topo_fns && %s->topo_fns->%s" % (comm_ptr, comm_ptr, method))
     # The extension will output `MPI_Comm *` rather than `MPIR_Comm **`
-    args = re.sub(r'&(\w+)_ptr', r'\1', ", ".join(func['impl_arg_list']))
+    args = re.sub(r'&(\w+)_ptr', r'\1', ", ".join(func['_impl_arg_list']))
     dump_line_with_break("mpi_errno = %s->topo_fns->%s(%s);" % (comm_ptr, method, args))
     dump_error_check("")
     dump_else()
@@ -1058,7 +1058,7 @@ def dump_body_impl(func, prefix='mpir'):
     else:
         impl = func['name'] + "_impl"
         impl = re.sub(r'^MPIX?_', 'MPIR_', impl)
-    args = ", ".join(func['impl_arg_list'])
+    args = ", ".join(func['_impl_arg_list'])
     dump_line_with_break("mpi_errno = %s(%s);" % (impl, args))
     dump_error_check("")
 
@@ -1861,8 +1861,8 @@ def get_declare_function(func, mapping, kind=""):
     s = "%s %s(%s)" % (ret, name, s_param)
 
     if kind == 'proto':
-        if 'pointertag_list' in func:
-            for t in func['pointertag_list']:
+        if '_pointertag_list' in func:
+            for t in func['_pointertag_list']:
                 s += " MPICH_ATTR_POINTER_WITH_TYPE_TAG(%s)" % t
         s += " MPICH_API_PUBLIC"
     return s
