@@ -31,6 +31,7 @@ def main():
         dump_noinline_h("src/mpid/ch4/netmod/%s/%s_noinline.h" % (m, m), m, True)
     dump_noinline_h("src/mpid/ch4/shm/src/shm_noinline.h", 'shm', False)
     dump_noinline_h("src/mpid/ch4/shm/posix/posix_noinline.h", 'posix', False)
+    dump_noinline_h("src/mpid/ch4/shm/stubshm/shm_noinline.h", 'stubshm', False)
 
 # ---- subroutines --------------------------------------------
 def load_ch4_api(ch4_api_txt):
