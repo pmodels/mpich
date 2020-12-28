@@ -137,9 +137,6 @@ int MPIR_Err_is_fatal(int);
 void MPIR_Err_init(void);
 void MPIR_Err_preOrPostInit(void);
 
-int MPIR_Err_set_msg(int code, const char *msg_string);
-int MPIR_Err_delete_msg(int code);
-
 /* This routine is called when there is a fatal error. Now public because file
  * error handling is defined in a separate file from comm and win, but all
  * three need to call it */

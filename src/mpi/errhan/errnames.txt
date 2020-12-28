@@ -996,18 +996,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_cart_map %C %d %p %p %p:MPI_Cart_map(%C, ndims=%d, dims=%p, periods=%p, newrank=%p) failed
 **mpi_graph_map:MPI_Graph_map failed
 **mpi_graph_map %C %d %p %p %p:MPI_Graph_map(%C, nnodes=%d, index=%p, edges=%p, newrank=%p) failed
-**mpi_errhandler_create:MPI_Errhandler_create failed
-**mpi_errhandler_create %p %p:MPI_Errhandler_create(function=%p, errhandler=%p) failed
-**mpi_errhandler_set:MPI_Errhandler_set failed
-**mpi_errhandler_set %C %E:MPI_Errhandler_set(%C, %E) failed
-**mpi_errhandler_get:MPI_Errhandler_get failed
-**mpi_errhandler_get %C %p:MPI_Errhandler_get(%C, errhandler=%p) failed
-**mpi_errhandler_free:MPI_Errhandler_free failed
-**mpi_errhandler_free %p:MPI_Errhandler_free(errhandler=%p) failed
-**mpi_error_string:MPI_Error_string failed
-**mpi_error_string %d %s %p:MPI_Error_string(errorcode=%d, string=%s, resultlen=%p) failed
-**mpi_error_class:MPI_Error_class failed
-**mpi_error_class %d %p:MPI_Error_class(errorcode=%d, errorclass=%p) failed
 **mpi_close_port:MPI_Close_port failed
 **mpi_close_port %s:MPI_Close_port(port=\"%s\") failed
 **mpi_comm_accept:MPI_Comm_accept failed
@@ -1036,22 +1024,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_alltoallw %p %p %p %p %p %p %p %p %C:MPI_Alltoallw(sbuf=%p, scnts=%p, sdispls=%p, stypes=%p, rbuf=%p, rcnts=%p, rdispls=%p, rtypes=%p, %C) failed
 **mpi_exscan:MPI_Exscan failed
 **mpi_exscan %p %p %d %D %O %C:MPI_Exscan(sbuf=%p, rbuf=%p, count=%d, %D, %O, %C) failed
-**mpi_add_error_class:MPI_Add_error_class failed
-**mpi_add_error_class %p:MPI_Add_error_class(errorclass=%p) failed
-**mpi_delete_error_class:MPI_Delete_error_class failed
-**mpi_delete_error_class %d:MPI_Delete_error_class(errorclass=%d) failed
-**mpi_add_error_code:MPI_Add_error_code failed
-**mpi_add_error_code %d %p:MPI_Add_error_code(errorclass=%d, errorcode=%p) failed
-**mpi_delete_error_code:MPI_Delete_error_code failed
-**mpi_delete_error_code %d:MPI_Delete_error_code(errorcode=%d) failed
-**mpi_add_error_string:MPI_Add_error_string failed
-**mpi_add_error_string %d %s:MPI_Add_error_string(code=%d, str=\"%s\") failed
-**mpi_delete_error_string:MPI_Delete_error_string failed
-**mpi_delete_error_string %d:MPI_Delete_error_string(code=%d) failed
-**mpi_comm_call_errhandler:MPI_Comm_call_errhandler failed
-**mpi_comm_call_errhandler %C %d:MPI_Comm_call_errhandler(%C, errorcode=%d) failed
-**mpi_file_call_errhandler:MPI_File_call_errhandler failed
-**mpi_file_call_errhandler %F %d:MPI_File_call_errhandler(%F, errorcode=%d) failed
 **mpi_grequest_complete:MPI_Grequest_complete failed
 **mpi_grequest_complete %R:MPI_Grequest_complete(%R) failed
 **mpi_grequest_start:MPI_Grequest_start failed
@@ -1074,20 +1046,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_type_set_name %D %s:MPI_Type_set_name(%D, type_name=%s) failed
 **mpi_type_match_size:MPI_Type_match_size failed
 **mpi_type_match_size %d %d %p:MPI_Type_match_size(typeclass=%d, size=%d, datatype=%p) failed
-**mpi_win_call_errhandler:MPI_Win_call_errhandler failed
-**mpi_win_call_errhandler %W %d:MPI_Win_call_errhandler(%W, errorcode=%d) failed
-**mpi_comm_create_errhandler:MPI_Comm_create_errhandler failed
-**mpi_comm_create_errhandler %p %p:MPI_Comm_create_errhandler(function=%p, errhandler=%p) failed
-**mpi_comm_get_errhandler:MPI_Comm_get_errhandler failed
-**mpi_comm_get_errhandler %C %p:MPI_Comm_get_errhandler(%C, errhandler=%p) failed
-**mpi_comm_set_errhandler:MPI_Comm_set_errhandler failed
-**mpi_comm_set_errhandler %C %E:MPI_Comm_set_errhandler(%C, %E) failed
-**mpi_file_create_errhandler:MPI_File_create_errhandler failed
-**mpi_file_create_errhandler %p %p:MPI_File_create_errhandler(function=%p, errhandler=%p) failed
-**mpi_file_get_errhandler:MPI_File_get_errhandler failed
-**mpi_file_get_errhandler %F %p:MPI_File_get_errhandler(%F, errhandler=%p) failed
-**mpi_file_set_errhandler:MPI_File_set_errhandler failed
-**mpi_file_set_errhandler %F %E:MPI_File_set_errhandler(%F, %E) failed
 **mpi_get_address:MPI_Get_address failed
 **mpi_get_address %p %p:MPI_Get_address(location=%p, address=%p) failed
 **mpi_pack_external:MPI_Pack_external failed
@@ -1118,12 +1076,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_type_get_true_extent %D %p %p:MPI_Type_get_true_extent(%D, lb=%p, true_extent=%p) failed
 **mpi_unpack_external:MPI_Unpack_external failed
 **mpi_unpack_external %s %p %d %p %p %d %D:MPI_Unpack_external(datarep=%s, inbuf=%p, insize=%d, position=%p, outbuf=%p, outcount=%d, %D) failed
-**mpi_win_create_errhandler:MPI_Win_create_errhandler failed
-**mpi_win_create_errhandler %p %p:MPI_Win_create_errhandler(function=%p, errhandler=%p) failed
-**mpi_win_get_errhandler:MPI_Win_get_errhandler failed
-**mpi_win_get_errhandler %W %p:MPI_Win_get_errhandler(%W, errhandler=%p) failed
-**mpi_win_set_errhandler:MPI_Win_set_errhandler failed
-**mpi_win_set_errhandler %W %E:MPI_Win_set_errhandler(%W, %E) failed
 **mpi_register_datarep:MPI_Register_datarep failed
 **mpi_register_datarep %s %p %p %p %p:MPI_Register_datarep(datarep=%s, read_conversion_fn=%p, write_conversion_fn=%p, dtype_file_extent_fn=%p, extra_state=%p) failed
 **mpi_dist_graph_create: MPI_Dist_graph_create failed
