@@ -633,6 +633,18 @@ int MPID_Init(int requested, int *provided)
     goto fn_exit;
 }
 
+int MPID_Init_local(int requested, int *provided)
+{
+    int mpi_errno = MPI_SUCCESS;
+    return mpi_errno;
+}
+
+int MPID_Init_world(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    return mpi_errno;
+}
+
 int MPID_InitCompleted(void)
 {
     int mpi_errno = MPI_SUCCESS;
