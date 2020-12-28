@@ -3,15 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef ERRCODES_H_INCLUDED
-#define ERRCODES_H_INCLUDED
+#ifndef MPIR_ERRCODES_H_INCLUDED
+#define MPIR_ERRCODES_H_INCLUDED
 
 /* Prototypes for internal routines for the errhandling module */
-int MPIR_Err_set_msg(int, const char *);
-int MPIR_Err_add_class(void);
-int MPIR_Err_delete_class(int errclass);
-int MPIR_Err_add_code(int);
-int MPIR_Err_delete_code(int code);
+int MPIR_Add_error_string_impl(int errorcode, const char *string);
+int MPIR_Delete_error_string_impl(int errorcode);
+int MPIR_Add_error_class_impl(int *errorclass);
+int MPIR_Delete_error_class_impl(int errorclass);
+int MPIR_Add_error_code_impl(int errorclass, int *errorcode);
+int MPIR_Delete_error_code_impl(int code);
 
 /*
    This file contains the definitions of the error code fields
@@ -64,4 +65,4 @@ int MPIR_Err_delete_code(int code);
 /* These must correspond to the masks defined above */
 #define ERROR_MAX_NCLASS ERROR_CLASS_SIZE
 #define ERROR_MAX_NCODE  8192
-#endif /* ERRCODES_H_INCLUDED */
+#endif /* MPIR_ERRCODES_H_INCLUDED */
