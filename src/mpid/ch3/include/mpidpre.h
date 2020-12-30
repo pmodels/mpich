@@ -638,6 +638,17 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
 int MPID_Cancel_send(MPIR_Request *);
 int MPID_Cancel_recv(MPIR_Request *);
 
+int MPID_Psend_init(void *buf, int partitions, MPI_Count count, MPI_Datatype datatype,
+                    int dest, int tag, MPIR_Comm *comm, MPIR_Info *info,
+                    MPIR_Request **request );
+int MPID_Precv_init(void *buf, int partitions, MPI_Count count, MPI_Datatype datatype,
+                    int source, int tag, MPIR_Comm *comm, MPIR_Info *info,
+                    MPIR_Request **request );
+
+int MPID_Pready_range(int partition_low, int partition_high, MPIR_Request *sreq);
+int MPID_Pready_list(int length, int array_of_partitions[], MPIR_Request *sreq);
+int MPID_Parrived(MPIR_Request *rreq, int partition, int *flag);
+
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp);
 
 MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
