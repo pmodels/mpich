@@ -530,3 +530,9 @@ MPI_Ssend_init:
     /* return the handle of the request to the user */
     MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
 }
+
+MPI_Isendrecv:
+    .desc: Starts a nonblocking send and receive
+
+MPI_Isendrecv_replace:
+    .desc: Starts a nonblocking send and receive with a single buffer
