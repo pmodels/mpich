@@ -24,6 +24,8 @@ noinst_PROGRAMS =  \
     isendself      \
     issendselfcancel \
     isendirecv     \
+    isendrecv      \
+    isendrecv_replace \
     eagerdt        \
     isendselfprobe \
     bsendfrag      \
