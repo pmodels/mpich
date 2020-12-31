@@ -94,18 +94,20 @@ static HYD_status list_to_nodes(char *str)
 
     /* compile group-0 regex for old format: "[h00-h12,h14] | h00-h12 | h14" */
     regcomp(&gmatch_old[0],
-            "(,|^)(\\[[-,a-z0-9]+\\]|[a-z]+[0-9]+-[a-z]+[0-9]+|[a-z]+[0-9]+)(,|$)",
+            "(,|^)(\\[[-,a-z0-9]+\\]|[a-z0-9]*[a-z][0-9]+-[a-z0-9]*[a-z][0-9]+|[a-z0-9]*[a-z][0-9]+)(,|$)",
             REG_EXTENDED | REG_ICASE);
 
     /* compile group-1 regex for old format: "h00-h12 | h14" */
     regcomp(&gmatch_old[1],
-            "([[,]|^)([a-z]+[0-9]+-[a-z]+[0-9]+|[a-z]+[0-9]+)([],]|$)", REG_EXTENDED | REG_ICASE);
+            "([[,]|^)([a-z0-9]*[a-z][0-9]+-[a-z0-9]*[a-z][0-9]+|[a-z0-9]*[a-z][0-9]+)([],]|$)",
+            REG_EXTENDED | REG_ICASE);
 
     /* compile range regex for old format: "h00-h12" */
-    regcomp(&rmatch_old, "([a-z]+)([0-9]+)-([a-z]+)([0-9]+)", REG_EXTENDED | REG_ICASE);
+    regcomp(&rmatch_old, "([a-z0-9]*[a-z])([0-9]+)-([a-z0-9]*[a-z])([0-9]+)",
+            REG_EXTENDED | REG_ICASE);
 
     /* compile element regex for old format: "h14" */
-    regcomp(&ematch_old, "([a-z]+[0-9]+)", REG_EXTENDED | REG_ICASE);
+    regcomp(&ematch_old, "([a-z0-9]*[a-z][0-9]+)", REG_EXTENDED | REG_ICASE);
 
     /* compile group-0 regex for new format: "h00-[00-12,14] | h00[00-12,14] | h00-14 | h0014" */
     regcomp(&gmatch_new[0], "(,|^)([a-z0-9][\\.a-z0-9-]+)(\\[[-,0-9]+\\])?(,|$)",
