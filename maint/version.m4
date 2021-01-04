@@ -35,6 +35,6 @@ m4_define([MPICH_RELEASE_DATE_m4],[unreleased development copy])dnl
 # libmpi so version only includes functionality defined in the MPI
 # standard, and does not include MPIX_ functions and C++ bindings.
 
-m4_define([libmpi_so_version_m4],[13:7:1])dnl
+m4_define([libmpi_so_version_m4],[13:9:1])dnl
 
 [#] end of __file__
