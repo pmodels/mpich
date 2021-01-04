@@ -2,9 +2,10 @@
                                Changes in 3.4
 ===============================================================================
 
-# ch4 replaces ch3 as the default device configuration. Users must
-  select a netmod in order to build ch4, else configure will prompt
-  the user to choose.
+# ch4 replaces ch3 as the default device configuration. If no network
+  module is specified at configuration-time, MPICH will search the
+  user environment in order to select one to build. The user will be
+  prompted to choose if no preferred network library is dectected.
 
 # Add support for Yaksa datatype engine (default in ch4).
 
