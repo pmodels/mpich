@@ -160,6 +160,7 @@ Info_get
 Info_get_nkeys
 Info_get_nthkey
 Info_get_valuelen
+Info_get_string
 Info_set
 Initialized
 Intercomm_create

@@ -244,6 +244,7 @@ my $line_limit = 80; # Max line length
           'Request_get_status-2' => 'bool',
           'Status_set_cancelled-2' => 'bool',
           'Info_get-5' => 'bool',
+          'Info_get_string-5' => 'bool',
           'Type_create_indexed_block-3' => 'int[]',
           'Type_create_darray-4' => 'int[]',
           'Type_create_darray-5' => 'int[]',
