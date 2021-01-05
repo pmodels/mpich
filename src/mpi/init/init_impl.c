@@ -21,6 +21,19 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+/* Global variables */
+#ifndef MPIR_SESSION_PREALLOC
+#define MPIR_SESSION_PREALLOC 2
+#endif
+
+MPIR_Session MPIR_Session_direct[MPIR_SESSION_PREALLOC];
+
+MPIR_Object_alloc_t MPIR_Session_mem = { 0, 0, 0, 0,
+    MPIR_SESSION, sizeof(MPIR_Session),
+    MPIR_Session_direct, MPIR_SESSION_PREALLOC,
+    NULL
+};
+
 int MPIR_Abort_impl(MPIR_Comm * comm_ptr, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;

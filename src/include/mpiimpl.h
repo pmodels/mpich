@@ -162,6 +162,8 @@ typedef struct MPIR_Group MPIR_Group;
 struct MPIR_Topology;
 typedef struct MPIR_Topology MPIR_Topology;
 
+struct MPIR_Session;
+typedef struct MPIR_Session MPIR_Session;
 
 /*****************************************************************************/
 /******************* PART 3: DEVICE INDEPENDENT HEADERS **********************/
