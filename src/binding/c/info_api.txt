@@ -51,3 +51,7 @@ MPI_Info_set:
     MPIR_ERR_CHKANDJUMP((strlen(value) > MPI_MAX_INFO_VAL), mpi_errno, MPI_ERR_INFO_VALUE,
                         "**infovallong");
 }
+
+MPI_Info_get_string:
+    .desc: Retrieves the value associated with a key
+    .skip: initcheck
