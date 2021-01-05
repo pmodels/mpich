@@ -64,18 +64,32 @@ static int finalize_failed_procs_group(void *param)
 
 int MPID_Init(int requested, int *provided)
 {
-    int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
-    int has_parent;
-    MPIDI_PG_t * pg=NULL;
-    int pg_rank=-1;
-    int pg_size;
-    MPIR_Comm * comm;
-    int p;
-    int val;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
-
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
+
+    mpi_errno = MPID_Init_local(requested, provided);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPID_Init_world();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
+    return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+int MPID_Init_local(int requested, int *provided)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_LOCAL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_LOCAL);
+    int pmi_errno;
 
     if (MPICH_THREAD_LEVEL >= requested)
         *provided = requested;
@@ -95,6 +109,7 @@ int MPID_Init(int requested, int *provided)
 #ifdef USE_PMI2_API
     MPIDI_failed_procs_string = MPL_malloc(sizeof(char) * PMI2_MAX_VALLEN, MPL_MEM_STRINGS);
 #else
+    int val;
     pmi_errno = PMI_KVS_Get_value_length_max(&val);
     if (pmi_errno != PMI_SUCCESS)
     {
@@ -114,13 +129,13 @@ int MPID_Init(int requested, int *provided)
     /*
      * Perform channel-independent PMI initialization
      */
+    MPIDI_PG_t * pg=NULL;
+    int has_parent, pg_rank;
     mpi_errno = init_pg(&has_parent, &pg_rank, &pg);
     if (mpi_errno) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
     
-    /* FIXME: Why are pg_size and pg_rank handled differently? */
-    pg_size = MPIDI_PG_Get_size(pg);
     MPIDI_Process.my_pg = pg;  /* brad : this is rework for shared memories 
 				* because they need this set earlier
                                 * for getting the business card
@@ -153,12 +168,29 @@ int MPID_Init(int requested, int *provided)
     MPIDI_CH3_DBG_REFCOUNT = MPL_dbg_class_alloc("REFCOUNT", "refcount");
 #endif /* MPL_USE_DBG_LOGGING */
 
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_LOCAL);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_Init_world(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Comm *comm;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_WORLD);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_WORLD);
     /*
      * Let the channel perform any necessary initialization
      * The channel init should assume that PMI_Init has been called and that
      * the basic information about the job has been extracted from PMI (e.g.,
      * the size and rank of this process, and the process group id)
      */
+    MPIDI_PG_t *pg = MPIDI_Process.my_pg;
+    int has_parent = MPIR_Process.has_parent;
+    int pg_rank = MPIR_Process.rank;
+    int pg_size = MPIR_Process.size;
     mpi_errno = MPIDI_CH3_Init(has_parent, pg, pg_rank);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
@@ -189,7 +221,7 @@ int MPID_Init(int requested, int *provided)
 
     /* Initialize the connection table on COMM_WORLD from the process group's
        connection table */
-    for (p = 0; p < pg_size; p++)
+    for (int p = 0; p < pg_size; p++)
     {
 	MPIDI_VCR_Dup(&pg->vct[p], &comm->dev.vcrt->vcr_table[p]);
     }
@@ -244,7 +276,7 @@ int MPID_Init(int requested, int *provided)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_WORLD);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

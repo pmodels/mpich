@@ -466,12 +466,30 @@ static int generic_init(void)
 
 int MPID_Init(int requested, int *provided)
 {
-    int mpi_errno = MPI_SUCCESS, rank, size, appnum;
-    MPIR_Comm *init_comm = NULL;
-    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
-
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
+
+    mpi_errno = MPID_Init_local(requested, provided);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPID_Init_world();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_Init_local(int requested, int *provided)
+{
+    int mpi_errno = MPI_SUCCESS;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_LOCAL);
+
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_LOCAL);
 
     switch (requested) {
         case MPI_THREAD_SINGLE:
@@ -507,10 +525,6 @@ int MPID_Init(int requested, int *provided)
 
     mpi_errno = MPIR_pmi_init();
     MPIR_ERR_CHECK(mpi_errno);
-
-    rank = MPIR_Process.rank;
-    size = MPIR_Process.size;
-    appnum = MPIR_Process.appnum;
 
     int err;
     MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
@@ -551,16 +565,6 @@ int MPID_Init(int requested, int *provided)
     mpi_errno = generic_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* setup receive queue statistics */
-    mpi_errno = MPIDIG_recvq_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = create_init_comm(&init_comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIDU_Init_shm_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Initialize multiple VCIs */
     /* TODO: add checks to ensure MPIDI_vci_t is padded or aligned to MPL_CACHELINE_SIZE */
     MPIDI_global.n_vcis = 1;
@@ -582,7 +586,35 @@ int MPID_Init(int requested, int *provided)
         /* TODO: workq */
     }
 
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_LOCAL);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_Init_world(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Comm *init_comm = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_WORLD);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_WORLD);
+
+    /* setup receive queue statistics */
+    mpi_errno = MPIDIG_recvq_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = create_init_comm(&init_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDU_Init_shm_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
     {
+        int rank = MPIR_Process.rank;
+        int size = MPIR_Process.size;
+        int appnum = MPIR_Process.appnum;
+
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &shm_tag_bits);
@@ -617,7 +649,7 @@ int MPID_Init(int requested, int *provided)
     MPIDI_global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
     MPIR_Comm_fns = &MPIDI_global.MPIR_Comm_fns_store;
 
-    MPIR_Process.attrs.appnum = appnum;
+    MPIR_Process.attrs.appnum = MPIR_Process.appnum;
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
 
     destroy_init_comm(&init_comm);
@@ -627,7 +659,7 @@ int MPID_Init(int requested, int *provided)
     MPIDI_global.is_initialized = 0;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_WORLD);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
