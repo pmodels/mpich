@@ -18,5 +18,6 @@ noinst_PROGRAMS = \
     infomany      \
     infomany2     \
     infotest      \
-    infoget      \
+    infoget       \
+    infogetstring \
     infoenv
