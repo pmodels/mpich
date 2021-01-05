@@ -25,10 +25,10 @@ my @kind_table = qw(
     KEYVAL
     ATTR
     REQUEST
-    PROCGROUP
     VCONN
-    WORKQ_ELEM
     GREQ_CLASS
+    SESSION
+    INTERNAL
 );
 
 my @type_table = qw(
@@ -73,10 +73,10 @@ while (scalar @ARGV) {
 ##   MPID_KEYVAL     = 0x9,
 ##   MPIR_ATTR       = 0xa,
 ##   MPIR_REQUEST    = 0xb,
-##   MPIR_PROCGROUP  = 0xc,               /* These are internal device objects */
-##   MPIR_VCONN      = 0xd,
-##   MPIR_WORKQ_ELEM = 0xe,
-##   MPIR_GREQ_CLASS = 0xf
+##   MPIR_VCONN      = 0xc,
+##   MPIR_GREQ_CLASS = 0xd,
+##   MPIR_SESSION    = 0xe,
+##   MPIR_INTERNAL   = 0xf,
 ##   } MPII_Object_kind;
 ##
 ## #define HANDLE_MPI_KIND_SHIFT 26
