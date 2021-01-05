@@ -1112,6 +1112,12 @@ EXPORTS
 	mpi_info_get__=pmpi_info_get__
 	_mpi_info_get_=pmpi_info_get__
 	mpi_info_get_=pmpi_info_get__
+	pmpi_info_get_string__
+	pmpi_info_get_string_=pmpi_info_get_string__
+	_pmpi_info_get_string_=pmpi_info_get_string__
+	mpi_info_get_string__=pmpi_info_get_string__
+	_mpi_info_get_string_=pmpi_info_get_string__
+	mpi_info_get_string_=pmpi_info_get_string__
 	pmpi_info_get_nkeys__
 	pmpi_info_get_nkeys_=pmpi_info_get_nkeys__
 	_pmpi_info_get_nkeys_=pmpi_info_get_nkeys__

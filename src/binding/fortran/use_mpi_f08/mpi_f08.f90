@@ -2468,6 +2468,19 @@ interface MPI_Info_get
     end subroutine MPI_Info_get_f08
 end interface MPI_Info_get
 
+interface MPI_Info_get_string
+    subroutine MPI_Info_get_string_f08(info, key, buflen, value, flag, ierror)
+        use :: mpi_f08_types, only : MPI_Info
+        implicit none
+        type(MPI_Info), intent(in) :: info
+        character(len=*), intent(in) :: key
+        integer, intent(inout) :: buflen
+        character(len=*), intent(out) :: value
+        logical, intent(out) :: flag
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Info_get_string_f08
+end interface MPI_Info_get_string
+
 interface MPI_Info_get_nkeys
     subroutine MPI_Info_get_nkeys_f08(info, nkeys, ierror)
         use :: mpi_f08_types, only : MPI_Info

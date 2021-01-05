@@ -1671,6 +1671,19 @@ function MPIR_Info_get_c(info, key, valuelen, value, flag) &
     integer(c_int) :: ierror
 end function MPIR_Info_get_c
 
+function MPIR_Info_get_string_c(info, key, buflen, value, flag) &
+    bind(C, name="PMPI_Info_get_string") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int, c_char
+    use :: mpi_c_interface_types, only : c_Info
+    implicit none
+    integer(c_Info), value, intent(in) :: info
+    character(kind=c_char), intent(in) :: key(*)
+    integer(c_int), intent(inout) :: buflen
+    character(kind=c_char), intent(out) :: value(*)
+    integer(c_int), intent(out) :: flag
+    integer(c_int) :: ierror
+end function MPIR_Info_get_string_c
+
 function MPIR_Info_get_nkeys_c(info, nkeys) &
     bind(C, name="PMPI_Info_get_nkeys") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
