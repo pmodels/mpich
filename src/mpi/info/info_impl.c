@@ -208,3 +208,33 @@ int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
   fn_fail:
     goto fn_exit;
 }
+
+int MPIR_Info_get_string_impl(MPIR_Info * info_ptr, const char *key, int *buflen, char *value,
+                              int *flag)
+{
+    MPIR_Info *curr_ptr;
+
+    curr_ptr = info_ptr->next;
+    *flag = 0;
+
+    while (curr_ptr) {
+        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
+            int old_buflen = *buflen;
+            /* It needs to include a terminator. */
+            int new_buflen = (int) (strlen(curr_ptr->value) + 1);
+            if (old_buflen > 0) {
+                /* Copy the value. */
+                MPL_strncpy(value, curr_ptr->value, old_buflen);
+                /* No matter whether MPL_strncpy() returns an error or not
+                 * (i.e., whether curr_ptr->value fits value or not),
+                 * it is not an error. */
+            }
+            *buflen = new_buflen;
+            *flag = 1;
+            break;
+        }
+        curr_ptr = curr_ptr->next;
+    }
+
+    return MPI_SUCCESS;
+}

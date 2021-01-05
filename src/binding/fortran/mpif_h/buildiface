@@ -314,6 +314,7 @@ foreach $_ (@ARGV) {
 	      'info_get_nkeys' => 'infognk',
 	      'info_get_nthkey' => 'infognthk',
 	      'info_get_valuelen' => 'infovallen',
+	      'info_get_string' => 'infogetstr',
 	      'intercomm_create' => 'iccreate',
 	      'intercomm_merge' => 'icmerge',
 	      'is_thread_main' => 'isthrmain',
@@ -597,6 +598,11 @@ foreach $_ (@ARGV) {
     'Info_get_nthkey' => '3', 'Info_get_nthkey-3' => 'out:blankpad',
     'Info_get_valuelen' => '2:4', 'Info_get_valuelen-2' => 'in:addnull',
 		  'Info_get_valuelen-4' => 'out:logical',
+    'Info_get_string' => '2:3:4:5',
+		  'Info_get_string-2' => 'in:addnull',
+		  'Info_get_string-3' => 'inout:addsubone',
+		  'Info_get_string-4' => 'out:blankpadonflag:(l5 && x3 > 0)',
+		  'Info_get_string-5' => 'out:logical',
     'Info_delete' => '2', 'Info_delete-2' => 'in:addnull',
     'Lookup_name' => '1:3', 'Lookup_name-1' => 'in:addnull', 
 		  'Lookup_name-3' => 'out:blankpad',
@@ -3167,7 +3173,7 @@ sub blankpad_ctof {
     $clean_up .= "    $free( $cvar );\n";
 }
 #
-# Blankpad strings if a flag is true (for info_get, perhaps others?)
+# Blankpad strings if a flag is true (for info_get and info_get_string)
 # This is complicated by the fact that the Fortran strings do not contain
 # null terminators and the MPI definitions of string lengths, such as
 # MPI_MAX_PORT_NAME, are one smaller in Fortran than in C (see 4.12.9
@@ -3207,6 +3213,32 @@ sub blankpadonflag_ctof {
     }
 ";
     $clean_up .= "    $free( $cvar );\n";
+}
+
+# ---------------------------------------------------------------------------
+# Add 1 before the call and subtract 1 after the call if a value is positive.
+# This function is required for MPI_Info_get_string()
+sub addsubone_inout_decl {
+    my $count = $_[0];
+    print $OUTFD "    int p$count, x$count;\n";
+}
+sub addsubone_inout_ftoc {
+    my $count = $_[0];
+    print $OUTFD "\n";
+    print $OUTFD "    x$count = *v$count;\n";
+    print $OUTFD "    p$count = (x$count == 0) ? 0 : (x$count + 1);\n";
+}
+sub addsubone_inout_arg {
+    my $count = $_[0];
+    print $OUTFD "&p$count";
+}
+sub addsubone_inout_ctof {
+    my $count = $_[0];
+    my $pvar = $count;
+    $pvar =~ s/^l/p/;
+    my $vvar = $count;
+    $vvar =~ s/^l/v/;
+    print $OUTFD "    *$vvar = (MPI_Fint)(($pvar == 0) ? 0 : ($pvar - 1));\n";
 }
 
 # ---------------------------------------------------------------------------
