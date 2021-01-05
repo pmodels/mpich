@@ -1302,6 +1302,7 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int 
 int MPI_Info_get_nkeys(MPI_Info info, int *nkeys) MPICH_API_PUBLIC;
 int MPI_Info_get_nthkey(MPI_Info info, int n, char *key) MPICH_API_PUBLIC;
 int MPI_Info_get_valuelen(MPI_Info info, const char *key, int *valuelen, int *flag) MPICH_API_PUBLIC;
+int MPI_Info_get_string(MPI_Info info, const char *key, int *buflen, char *value, int *flag) MPICH_API_PUBLIC;
 int MPI_Info_set(MPI_Info info, const char *key, const char *value) MPICH_API_PUBLIC;
 int MPI_Pack_external(const char datarep[], const void *inbuf, int incount,
                       MPI_Datatype datatype, void *outbuf, MPI_Aint outsize, MPI_Aint *position)
@@ -1957,6 +1958,7 @@ int PMPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int
 int PMPI_Info_get_nkeys(MPI_Info info, int *nkeys) MPICH_API_PUBLIC;
 int PMPI_Info_get_nthkey(MPI_Info info, int n, char *key) MPICH_API_PUBLIC;
 int PMPI_Info_get_valuelen(MPI_Info info, const char *key, int *valuelen, int *flag) MPICH_API_PUBLIC;
+int PMPI_Info_get_string(MPI_Info info, const char *key, int *buflen, char *value, int *flag) MPICH_API_PUBLIC;
 int PMPI_Info_set(MPI_Info info, const char *key, const char *value) MPICH_API_PUBLIC;
 int PMPI_Pack_external(const char datarep[], const void *inbuf, int incount,
                        MPI_Datatype datatype, void *outbuf, MPI_Aint outsize, MPI_Aint *position)
