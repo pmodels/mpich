@@ -124,6 +124,9 @@ typedef struct MPIR_Grequest_class {
     struct MPIR_Grequest_class *next;
 } MPIR_Grequest_class;
 
+extern MPIR_Grequest_class MPIR_Grequest_class_direct[];
+extern MPIR_Object_alloc_t MPIR_Grequest_class_mem;
+
 #define MPIR_Request_extract_status(request_ptr_, status_)              \
     {                                                                   \
         if ((status_) != MPI_STATUS_IGNORE)                             \
@@ -564,25 +567,6 @@ int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete);
 int MPIR_Grequest_query(MPIR_Request * request_ptr);
 int MPIR_Grequest_free(MPIR_Request * request_ptr);
 
-void MPIR_Grequest_complete(MPIR_Request * request_ptr);
-int MPIR_Grequest_start(MPI_Grequest_query_function * query_fn,
-                        MPI_Grequest_free_function * free_fn,
-                        MPI_Grequest_cancel_function * cancel_fn,
-                        void *extra_state, MPIR_Request ** request_ptr);
-int MPIX_Grequest_start_impl(MPI_Grequest_query_function *,
-                             MPI_Grequest_free_function *,
-                             MPI_Grequest_cancel_function *,
-                             MPIX_Grequest_poll_function *,
-                             MPIX_Grequest_wait_function *, void *, MPIR_Request **);
-int MPIX_Grequest_class_create_impl(MPI_Grequest_query_function * query_fn,
-                                    MPI_Grequest_free_function * free_fn,
-                                    MPI_Grequest_cancel_function * cancel_fn,
-                                    MPIX_Grequest_poll_function * poll_fn,
-                                    MPIX_Grequest_wait_function * wait_fn,
-                                    MPIX_Grequest_class * greq_class);
-int MPIX_Grequest_class_allocate_impl(MPIX_Grequest_class greq_class,
-                                      void *extra_state, MPI_Request * request);
-
 /* These routines below are helpers for the Extended generalized requests. */
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Request_has_poll_fn(MPIR_Request * request_ptr)
@@ -618,6 +602,9 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_poll(MPIR_Request * request_ptr, MPI_
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 }
+
+/* local reuqest array size in MPI_Start_all and MPI_{Test,Wait}{all,any,some} */
+#define MPIR_REQUEST_PTR_ARRAY_SIZE 64
 
 int MPIR_Test_state(MPIR_Request * request, int *flag, MPI_Status * status,
                     MPID_Progress_state * state);

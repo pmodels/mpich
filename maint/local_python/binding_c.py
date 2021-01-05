@@ -194,6 +194,10 @@ def check_func_directives(func):
         for a in func['errorcodes'].replace(' ', '').split(','):
             G.err_codes[a] = 1
 
+    # additional exit_routines (clean up)
+    if 'code-clean_up' not in func:
+        func['code-clean_up'] = []
+
 def filter_c_parameters(func):
     c_params = []
     for p in func['parameters']:
@@ -305,10 +309,8 @@ def process_func_parameters(func, mapping):
             if kind == "REQUEST":
                 if RE.match(r'mpi_startall', func_name, re.IGNORECASE):
                     do_handle_ptr = 3
-                    p['_request_array'] = 'startall'
                 elif RE.match(r'mpi_(wait|test)', func_name, re.IGNORECASE):
                     do_handle_ptr = 3
-                    p['_request_array'] = 'waitall'
             elif kind == "RANK":
                 validation_list.append({'kind': "RANK-ARRAY", 'name': name})
             else:
@@ -370,6 +372,8 @@ def process_func_parameters(func, mapping):
             if p['param_direction'] == 'inout':
                 validation_list.append({'kind': "ARGNULL", 'name': name})
                 validation_list.append({'kind': "ARGNEG", 'name': "*" + name})
+            elif RE.search(r'count', name):
+                validation_list.append({'kind': "COUNT", 'name': name})
             else:
                 validation_list.append({'kind': "ARGNEG", 'name': name})
         elif RE.match(r'(.*_PI)', kind):
@@ -414,7 +418,7 @@ def process_func_parameters(func, mapping):
         elif is_pointer_type(p):
             validation_list.append({'kind': "ARGNULL", 'name': name})
         else:
-            print("Missing error checking: %s" % kind, file=sys.stderr)
+            print("Missing error checking: func=%s, name=%s, kind=%s" % (func_name, name, kind), file=sys.stderr)
 
         if do_handle_ptr == 1:
             if p['param_direction'] == 'inout':
@@ -439,20 +443,25 @@ def process_func_parameters(func, mapping):
             if kind == "REQUEST":
                 ptrs_name = "request_ptrs"
                 p['_ptrs_name'] = ptrs_name
-                if p['_request_array'] == 'startall':
+                if RE.match(r'mpi_startall', func['name'], re.IGNORECASE):
                     impl_arg_list.append(ptrs_name)
                     impl_param_list.append("MPIR_Request **%s" % ptrs_name)
             else:
                 print("Unhandled handle array: " + name, file=sys.stderr)
         elif "code-handle_ptr-tail" in func and name in func['code-handle_ptr-tail']:
-            impl_arg_list.append(name + "_ptr")
-            impl_param_list.append("%s *%s_ptr" % (G.handle_mpir_types[kind], name))
+            mpir_type = G.handle_mpir_types[kind]
+            if p['length']:
+                impl_arg_list.append(name + "_ptrs")
+                impl_param_list.append("%s **%s_ptrs" % (mpir_type, name))
+            else:
+                impl_arg_list.append(name + "_ptr")
+                impl_param_list.append("%s *%s_ptr" % (mpir_type, name))
         else:
             impl_arg_list.append(name)
             impl_param_list.append(get_C_param(p, mapping))
         i += 1
 
-    if RE.match(r'MPI_(Wait|Test)', func_name):
+    if RE.match(r'MPI_(Wait|Test)$', func_name):
         func['_has_comm'] = "comm_ptr"
         func['_comm_from_request'] = 1
 
@@ -652,7 +661,6 @@ def dump_function_polymorph(func, mapping):
     G.out.append("}")
 
 def dump_function_normal(func, state_name, mapping):
-    func['exit_routines'] = []
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     if 'handle_ptr_list' in func:
         for p in func['handle_ptr_list']:
@@ -743,7 +751,7 @@ def dump_function_normal(func, state_name, mapping):
     G.out.append("/* ... end of body of routine ... */")
     G.out.append("")
     G.out.append("fn_exit:")
-    for l in func['exit_routines']:
+    for l in func['code-clean_up']:
         G.out.append(l)
     G.out.append("MPIR_FUNC_TERSE_EXIT(%s);" % state_name)
 
@@ -1003,8 +1011,13 @@ def dump_early_return_pt2pt_proc_null(func):
 def dump_handle_ptr_var(func, p):
     (kind, name) = (p['kind'], p['name'])
     if kind == "REQUEST" and p['length']:
-        G.out.append("MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];")
-        G.out.append("MPIR_Request **request_ptrs = request_ptr_array;")
+        if RE.match(r'mpi_(test|wait)all', func['name'], re.IGNORECASE):
+            # FIXME:we do not convert pointers for MPI_Testall and MPI_Waitall
+            #       (for performance reasons). This probably this can be changed
+            pass
+        else:
+            G.out.append("MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];")
+            G.out.append("MPIR_Request **request_ptrs = request_ptr_array;")
     else:
         mpir = G.handle_mpir_types[kind]
         G.out.append("%s *%s_ptr = NULL;" % (mpir, name))
@@ -1035,17 +1048,15 @@ def dump_validate_handle(func, p):
     elif kind == "REQUEST":
         G.err_codes['MPI_ERR_REQUEST'] = 1
         if p['length']:
-            G.out.append("if (%s > 0) {" % p['length'])
-            G.out.append("INDENT")
+            dump_if_open("%s > 0" % p['length'])
             G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
-            G.out.append("for (int i = 0; i < %s; i++) {" % p['length'])
-            if p['_request_array'] == 'startall':
-                G.out.append("    MPIR_ERRTEST_REQUEST(%s[i], mpi_errno);" % name)
-            elif p['_request_array'] == 'waitall':
-                G.out.append("    MPIR_ERRTEST_ARRAYREQUEST_OR_NULL(%s[i], i, mpi_errno);" % name)
-            G.out.append("}")
-            G.out.append("DEDENT")
-            G.out.append("}")
+            dump_for_open('i', p['length'])
+            if RE.match(r'mpi_startall', func['name'], re.IGNORECASE):
+                G.out.append("MPIR_ERRTEST_REQUEST(%s[i], mpi_errno);" % name)
+            else:
+                G.out.append("MPIR_ERRTEST_ARRAYREQUEST_OR_NULL(%s[i], i, mpi_errno);" % name)
+            dump_for_close()
+            dump_if_close()
         else:
             if 'can_be_null' in p:
                 G.out.append("MPIR_ERRTEST_REQUEST_OR_NULL(%s, mpi_errno);" % name)
@@ -1061,7 +1072,7 @@ def dump_validate_handle(func, p):
         G.err_codes['MPI_ERR_OP'] = 1
         G.out.append("MPIR_ERRTEST_OP(%s, mpi_errno);" % name)
     elif kind == "INFO":
-        G.err_codes['MPI_ERR_ARG'] = 1
+        G.err_codes['MPI_ERR_INFO'] = 1
         if 'can_be_null' in p:
             G.out.append("MPIR_ERRTEST_INFO_OR_NULL(%s, mpi_errno);" % name)
         else:
@@ -1085,23 +1096,26 @@ def dump_convert_handle(func, p):
         name = "*" + p['name']
 
     if kind == "REQUEST" and p['length']:
-        G.out.append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % p['length'])
-        G.out.append("    int nbytes = %s * sizeof(MPIR_Request *);" % p['length'])
-        G.out.append("    request_ptrs = (MPIR_Request **) MPL_malloc(nbytes, MPL_MEM_OBJECT);")
-        G.out.append("    if (request_ptrs == NULL) {")
-        G.out.append("        MPIR_CHKMEM_SETERR(mpi_errno, nbytes, \"request pointers\");")
-        G.out.append("        goto fn_fail;")
-        G.out.append("    }")
-        G.out.append("}")
-        func['exit_routines'].append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % (p['length']))
-        func['exit_routines'].append("    MPL_free(request_ptrs);")
-        func['exit_routines'].append("}")
-
-        if p['_request_array'] == "startall":
-            G.out.append("")
-            G.out.append("for (int i = 0; i < %s; i++) {" % p['length'])
-            G.out.append("    MPIR_Request_get_ptr(%s[i], request_ptrs[i]);" % name)
+        if RE.match(r'mpi_(test|wait)all', func['name'], re.IGNORECASE):
+            # We do not convert pointers for MPI_Testall and MPI_Waitall
+            pass
+        else:
+            G.out.append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % p['length'])
+            G.out.append("    int nbytes = %s * sizeof(MPIR_Request *);" % p['length'])
+            G.out.append("    request_ptrs = (MPIR_Request **) MPL_malloc(nbytes, MPL_MEM_OBJECT);")
+            G.out.append("    if (request_ptrs == NULL) {")
+            G.out.append("        MPIR_CHKMEM_SETERR(mpi_errno, nbytes, \"request pointers\");")
+            G.out.append("        goto fn_fail;")
+            G.out.append("    }")
             G.out.append("}")
+            func['code-clean_up'].append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % (p['length']))
+            func['code-clean_up'].append("    MPL_free(request_ptrs);")
+            func['code-clean_up'].append("}")
+
+            G.out.append("")
+            dump_for_open('i', p['length'])
+            G.out.append("MPIR_Request_get_ptr(%s[i], request_ptrs[i]);" % name)
+            dump_for_close()
     else:
         mpir = G.handle_mpir_types[kind]
         if "can_be_null" in p:
@@ -1113,6 +1127,7 @@ def dump_convert_handle(func, p):
 
         if kind == "REQUEST" and "_comm_from_request" in func:
             G.out.append("if (%s) {" % ptr_name)
+            G.out.append("    /* Because %s may be freed, save a copy of comm_ptr for use at fn_fail */")
             G.out.append("    comm_ptr = %s->comm;" % ptr_name)
             G.out.append("}")
 
@@ -1125,15 +1140,23 @@ def dump_validate_handle_ptr(func, p):
     mpir = G.handle_mpir_types[kind]
     if kind == "REQUEST" and p['length']:
         G.err_codes['MPI_ERR_REQUEST'] = 1
-        if p['_request_array'] == "startall":
+        if RE.match(r'mpi_(test|wait)all', func['name'], re.IGNORECASE):
+            # MPI_Testall and MPI_Waitall do pointer conversion inside MPIR_{Test,Wait}all
+            pass
+        else:
             ptr = p['_ptrs_name'] + '[i]'
-            G.out.append("for (int i = 0; i < %s; i++) {" % p['length'])
-            G.out.append("    MPIR_Request_valid_ptr(%s, mpi_errno);" % ptr)
-            dump_error_check("    ")
-            if func_name == "MPI_Startall":
-                G.out.append("    MPIR_ERRTEST_PERSISTENT(%s, mpi_errno);" % ptr)
-                G.out.append("    MPIR_ERRTEST_PERSISTENT_ACTIVE(%s, mpi_errno);" % ptr)
-            G.out.append("}")
+            dump_for_open('i', p['length'])
+            if RE.match(r'mpi_startall', func['name'], re.IGNORECASE):
+                G.out.append("MPIR_Request_valid_ptr(%s, mpi_errno);" % ptr)
+                dump_error_check("")
+                G.out.append("MPIR_ERRTEST_PERSISTENT(%s, mpi_errno);" % ptr)
+                G.out.append("MPIR_ERRTEST_PERSISTENT_ACTIVE(%s, mpi_errno);" % ptr)
+            else:
+                dump_if_open("%s[i] != MPI_REQUEST_NULL" % name)
+                G.out.append("MPIR_Request_valid_ptr(%s, mpi_errno);" % ptr)
+                dump_error_check("")
+                dump_if_close()
+            dump_for_close()
     elif p['kind'] == "MESSAGE":
         G.err_codes['MPI_ERR_REQUEST'] = 1
         G.out.append("if (%s != MPI_MESSAGE_NO_PROC) {" % name)
@@ -1161,6 +1184,10 @@ def dump_validate_handle_ptr(func, p):
         else:
             G.out.append("%s_valid_ptr(%s, mpi_errno);" % (mpir, ptr_name))
             dump_error_check("")
+
+        if kind == "REQUEST" and RE.match(r'mpi_start', func_name, re.IGNORECASE):
+            G.out.append("    MPIR_ERRTEST_PERSISTENT(%s, mpi_errno);" % ptr_name)
+            G.out.append("    MPIR_ERRTEST_PERSISTENT_ACTIVE(%s, mpi_errno);" % ptr_name)
 
         if kind == "WINDOW" and RE.match(r'mpi_win_shared_query', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_WIN_FLAVOR(win_ptr, MPI_WIN_FLAVOR_SHARED, mpi_errno);")
@@ -1327,16 +1354,14 @@ def dump_validate_userbuffer_neighbor_vw(func, kind, buf, ct, dt, disp):
     if not RE.search(r'-w$', kind):
         dump_validate_datatype(func, dt)
 
-    G.out.append("for (int i = 0; i < %s; i++) {" % size)
-    G.out.append("INDENT")
+    dump_for_open('i', size)
     ct += '[i]'
     if RE.search(r'-w$', kind):
         dt += '[i]'
         dump_validate_datatype(func, dt)
     G.out.append("MPIR_ERRTEST_COUNT(%s, mpi_errno);" % ct)
     G.out.append("MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
-    G.out.append("DEDENT")
-    G.out.append("}")
+    dump_for_close()
 
 def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
     cond_intra = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM"
@@ -1389,10 +1414,10 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         if RE.search(r'reduce_scatter$', func['name'], re.IGNORECASE):
             dump_validate_get_comm_size(func)
             G.out.append("int sum = 0;")
-            G.out.append("for (int i = 0; i < comm_size; i++) {")
-            G.out.append("    MPIR_ERRTEST_COUNT(%s[i], mpi_errno);" % ct)
-            G.out.append("    sum += %s[i];" % ct)
-            G.out.append("}")
+            dump_for_open('i', comm_size)
+            G.out.append("MPIR_ERRTEST_COUNT(%s[i], mpi_errno);" % ct)
+            G.out.append("sum += %s[i];" % ct)
+            dump_for_close()
             sct = "sum"
             rct = ct + "[comm_ptr->rank]"
         G.out.append("MPIR_ERRTEST_RECVBUF_INPLACE(%s, %s, mpi_errno);" % (rbuf, rct))
@@ -1446,8 +1471,7 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
         dump_validate_datatype(func, dt)
 
     if with_vw:
-        G.out.append("for (int i = 0; i < comm_size; i++) {")
-        G.out.append("INDENT")
+        dump_for_open('i', 'comm_size')
         ct += '[i]'
         if RE.search(r'-w$', kind):
             dt += '[i]'
@@ -1469,9 +1493,7 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
     G.out.append("MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
 
     if with_vw:
-        # for i=0:comm_size
-        G.out.append("DEDENT")
-        G.out.append("}")
+        dump_for_close() # i = 0:comm_size
 
     if check_alias:
         G.out.append("if (%s) {" % check_alias)
@@ -1671,6 +1693,14 @@ def dump_if_open(cond):
     G.out.append("INDENT")
 
 def dump_if_close():
+    G.out.append("DEDENT")
+    G.out.append("}")
+
+def dump_for_open(idx, count):
+    G.out.append("for (int %s = 0; %s < %s; %s++) {" % (idx, idx, count, idx))
+    G.out.append("INDENT")
+
+def dump_for_close():
     G.out.append("DEDENT")
     G.out.append("}")
 
