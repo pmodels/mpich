@@ -367,7 +367,11 @@ def process_func_parameters(func, mapping):
             else:
                 validation_list.append({'kind': "RMADISP", 'name': name})
         elif RE.match(r'(.*_NNI|ARRAY_LENGTH|INFO_VALUE_LENGTH|KEY_INDEX|INDEX|NUM_DIMS|DIMENSION|COMM_SIZE)', kind):
-            validation_list.append({'kind': "ARGNEG", 'name': name})
+            if p['param_direction'] == 'inout':
+                validation_list.append({'kind': "ARGNULL", 'name': name})
+                validation_list.append({'kind': "ARGNEG", 'name': "*" + name})
+            else:
+                validation_list.append({'kind': "ARGNEG", 'name': name})
         elif RE.match(r'(.*_PI)', kind):
             validation_list.append({'kind': "ARGNONPOS", 'name': name})
         elif kind == "STRING" and name == "key":
