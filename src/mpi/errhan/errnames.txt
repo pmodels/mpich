@@ -854,32 +854,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 #
 **mpi_get_count:MPI_Get_count failed
 **mpi_get_count %p %D %p:MPI_Get_count(status=%p, %D, count=%p) failed
-**mpi_wait:MPI_Wait failed
-**mpi_wait %p %p:MPI_Wait(request=%p, status=%p) failed
-**mpi_test:MPI_Test failed
-**mpi_test %p %p %p:MPI_Test(request=%p, flag=%p, status=%p) failed
-**mpi_request_free:MPI_Request_free failed
-**mpi_request_free %p:MPI_Request_free(request=%p) failed
-**mpi_waitany:MPI_Waitany failed
-**mpi_waitany %d %p %p %p:MPI_Waitany(count=%d, req_array=%p, index=%p, status=%p) failed
-**mpi_testany:MPI_Testany failed
-**mpi_testany %d %p %p %p %p:MPI_Testany(count=%d, req_array=%p, index=%p, flag=%p, status=%p) failed
-**mpi_waitall:MPI_Waitall failed
-**mpi_waitall %d %p %p:MPI_Waitall(count=%d, req_array=%p, status_array=%p) failed
-**mpi_testall:MPI_Testall failed
-**mpi_testall %d %p %p %p:MPI_Testall(count=%d, req_array=%p, flag=%p, status_array=%p) failed
-**mpi_waitsome:MPI_Waitsome failed
-**mpi_waitsome %d %p %p %p %p:MPI_Waitsome(count=%d, req_array=%p, out_count=%p, indices=%p, status_array=%p) failed
-**mpi_testsome:MPI_Testsome failed
-**mpi_testsome %d %p %p %p %p:MPI_Testsome(count=%d, req_array=%p, out_count=%p, indices=%p, status_array=%p) failed
-**mpi_cancel:MPI_Cancel failed
-**mpi_cancel %p:MPI_Cancel(request=%p) failed
-**mpi_test_cancelled:MPI_Test_cancelled failed
-**mpi_test_cancelled %p %p:MPI_Test_cancelled(status=%p, flag=%p) failed
-**mpi_start:MPI_Start failed
-**mpi_start %p:MPI_Start(request=%p) failed
-**mpi_startall:MPI_Start_all failed
-**mpi_startall %d %p:MPI_Startall(count=%d, req_array=%p) failed
 **mpi_type_contiguous:MPI_Type_continuous failed
 **mpi_type_contiguous %d %D %p:MPI_Type_contiguous(count=%d, %D, new_type_p=%p) failed
 **mpi_type_vector:MPI_Type_vector failed
@@ -996,42 +970,10 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_cart_map %C %d %p %p %p:MPI_Cart_map(%C, ndims=%d, dims=%p, periods=%p, newrank=%p) failed
 **mpi_graph_map:MPI_Graph_map failed
 **mpi_graph_map %C %d %p %p %p:MPI_Graph_map(%C, nnodes=%d, index=%p, edges=%p, newrank=%p) failed
-**mpi_close_port:MPI_Close_port failed
-**mpi_close_port %s:MPI_Close_port(port=\"%s\") failed
-**mpi_comm_accept:MPI_Comm_accept failed
-**mpi_comm_accept %s %I %d %C %p:MPI_Comm_accept(port=\"%s\", %I, root=%d, %C, newcomm=%p) failed
-**mpi_comm_connect:MPI_Comm_connect failed
-**mpi_comm_connect %s %I %d %C %p:MPI_Comm_connect(port=\"%s\", %I, root=%d, %C, newcomm=%p) failed
-**mpi_comm_disconnect:MPI_Comm_disconnect failed
-**mpi_comm_disconnect %C:MPI_Comm_disconnect(comm=%C) failed
-**mpi_comm_get_parent:MPI_Comm_get_parent failed
-**mpi_comm_get_parent %p:MPI_Comm_get_parent(comm=%p) failed
-**mpi_comm_join:MPI_Comm_join failed
-**mpi_comm_join %d %p:MPI_Comm_join(fd=%d, intercomm=%p) failed
-**mpi_comm_spawn:MPI_Comm_spawn failed
-**mpi_comm_spawn %s %p %d %I %d %C %p %p:MPI_Comm_spawn(cmd=\"%s\", argv=%p, maxprocs=%d, %I, root=%d, %C, intercomm=%p, errors=%p) failed
-**mpi_comm_spawn_multiple:MPI_Comm_spawn_multiple failed
-**mpi_comm_spawn_multiple %d %p %p %p %p %d %C %p %p:MPI_Comm_spawn_multiple(count=%d, cmds=%p, argvs=%p, maxprocs=%p, infos=%p, root=%d, %C, intercomm=%p, errors=%p) failed
-**mpi_lookup_name:MPI_Lookup_name failed
-**mpi_lookup_name %s %I:MPI_Lookup_name(service=\"%s\", %I) failed
-**mpi_open_port:MPI_Open_port failed
-**mpi_open_port %I %p:MPI_Open_port(%I, port=%p) failed
-**mpi_publish_name:MPI_Publish_name failed
-**mpi_publish_name %s %I %s:MPI_Publish_name(service=\"%s\", %I, port=\"%s\") failed
-**mpi_unpublish_name:MPI_Unpublish_name failed
-**mpi_unpublish_name %s %I %s:MPI_Unpublish_name(service=\"%s\", %I, port=\"%s\") failed
 **mpi_alltoallw:MPI_Alltoallw failed
 **mpi_alltoallw %p %p %p %p %p %p %p %p %C:MPI_Alltoallw(sbuf=%p, scnts=%p, sdispls=%p, stypes=%p, rbuf=%p, rcnts=%p, rdispls=%p, rtypes=%p, %C) failed
 **mpi_exscan:MPI_Exscan failed
 **mpi_exscan %p %p %d %D %O %C:MPI_Exscan(sbuf=%p, rbuf=%p, count=%d, %D, %O, %C) failed
-**mpi_grequest_complete:MPI_Grequest_complete failed
-**mpi_grequest_complete %R:MPI_Grequest_complete(%R) failed
-**mpi_grequest_start:MPI_Grequest_start failed
-**mpi_grequest_start %p %p %p %p %p:MPI_Grequest_start(query_fn=%p, free_fn=%p, cancel_fn=%p, extra_state=%p, request=%p) failed
-**mpix_grequest_class_create: MPIX_Grequest_class_create failed
-**mpix_grequest_class_create %p %p %p %p %p:MPIX_Grequest_class_create(query_fn=%p, free_fn=%p, cancel_fn=%p, %poll_fn=%p, wait_fn=%p) failed
-**mpi_status_set_cancelled:MPI_Status_set_cancelled failed
-**mpi_status_set_cancelled %p %d:MPI_Status_set_cancelled(status=%p, flag=%d) failed
 **mpi_status_set_elements:MPI_Status_set_elements failed
 **mpi_status_set_elements %p %D %d:MPI_Status_set_elements(status=%p, %D, count=%d) failed
 **mpi_type_dup:MPI_Type_dup failed
@@ -1052,8 +994,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_pack_external %s %p %d %D %p %d %p:MPI_Pack_external(datarep=%s, inbuf=%p, incount=%d, %D, outbuf=%p, outcount=%d, position=%p) failed
 **mpi_pack_external_size:MPI_Pack_external_size failed
 **mpi_pack_external_size %s %d %D %p:MPI_Pack_external_size(datarep=%s, incount=%d, %D, size=%p) failed
-**mpi_request_get_status:MPI_Request_get_status failed
-**mpi_request_get_status %R %p %p:MPI_Request_get_status(%R, flag=%p, status=%p) failed
 **mpi_type_create_darray:MPI_Type_create_darray failed
 **mpi_type_create_darray %d %d %d %p %p %p %p %d %D %p:MPI_Type_create_darray(size=%d, rank=%d, ndims=%d, array_of_gsizes=%p, array_of_distribs=%p, array_of_dargs=%p, array_of_psizes=%p, order=%d, %D, newtype=%p) failed
 **mpi_type_create_hindexed:MPI_Type_create_hindexed failed

@@ -1,5 +1,7 @@
 This documents how the C interface functions are generated.
 
+## Rationale
+
 We used to manually maintain individual source file for each mpi-level
 function. For example, src/mpi/pt2pt/send.c for MPI_Send. Starting with
 PR #4846, we are generating all these code with a python script and a set
@@ -10,6 +12,8 @@ inside the autogen.sh. It loads master config file, then loads per category
 custom config files and generate one file for each configured function in
 the src/binding/c folder, as well as necessary src/binding/c/Makefile.mk,
 src/binding/c/errnames.txt, and src/include/mpir_impl.h.
+
+## Master API config file
 
 The master config file -- maint/mpi_standards_api.txt is a direct
 transcription from mpi-standard repository. It contains entries as follwing:
@@ -27,6 +31,8 @@ MPI_Send:
 Essentially for each function followed with a list a parameters. Each parameter
 starts with the variable name, followed by a "kind", then a set of optional 
 attributes, finally a description inside the square brackets.
+
+## Language specific kind mapping
 
 The mapping from parameter "kind" to language specific type is listed in
 maint/api_mapping.txt with a simple format as:
@@ -50,6 +56,13 @@ BIG_C_KIND_MAP:
 
 I.e. a map type heading followed with a set of kind: type listings. `BASE_C_KIND_MAP`
 is only used to avoid duplication between SMALL and BIG versions.
+
+Typically we should use the exact mapping from mpi standard, i.e. maint/api_mapping.txt
+should be kept in-sync with upstream. But sometime, e.g. MPIX functions, we may need to
+define our own kind mappings. We do that in `src/binding/custom_mapping.txt.
+
+
+## Custom API config files
 
 For any function to be generated, it has to be listed in one of the custom config
 files in the src/binding/c folder, e.g. src/binding/c/pt2pt_api.txt. The filename
@@ -145,5 +158,3 @@ Supported directives include:
 It is easy to extend with extra special directives. Simply specify it in the config
 files with a `.name`, then implement it in `maint/local_python/binding_c.py`. The
 difficult part is to keep it documented.
-
-

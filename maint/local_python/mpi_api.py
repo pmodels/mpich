@@ -6,6 +6,7 @@
 from local_python import RE
 from local_python import MPI_API_Global as G
 
+import sys
 import re
 import copy
 
@@ -70,6 +71,10 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                     G.FUNCS[key] = cur_func
                 if gen_in_dir:
                     cur_func['dir'] = gen_in_dir
+            elif RE.match(r'(\w+)', line):
+                print("Unexpected leading word [%s] in %s" % (RE.m.group(1), api_txt), file=sys.stderr)
+                # anything with unexpected unindented word resets stage
+                stage=''
             # -- per-stage parsing --
             elif stage == "FUNC":
                 if RE.match(r'\s+\.(\w+):\s*(.*)', line):
