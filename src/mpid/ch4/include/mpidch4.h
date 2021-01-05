@@ -13,6 +13,8 @@
  */
 
 int MPID_Init(int, int *);
+int MPID_Init_local(int requested, int *provided);
+int MPID_Init_world(void);
 int MPID_InitCompleted(void);
 MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Cancel_send(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
