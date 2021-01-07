@@ -596,6 +596,9 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     /* FI_MULTI_RECV may pack the message at lesser alignment, copy the header
      * when that's the case */
 #define MAX_HDR_SIZE 256        /* need accommodate MPIDI_AMTYPE_RDMA_READ */
+    /* if has_alignment_copy is 0 and the message contains extended header, the
+     * header needs to be copied out for alignment to access */
+    int has_alignment_copy = 0;
     char temp[MAX_HDR_SIZE] MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
     if ((intptr_t) am_hdr & (MAX_ALIGNMENT - 1)) {
         int temp_size = MAX_HDR_SIZE;
@@ -652,15 +655,27 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
             break;
 
         case MPIDI_AMTYPE_RDMA_READ:
-            /* buffer always copied together (there is no payload, just LMT header) */
-            p_data = (char *) orig_buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
-            mpi_errno = MPIDI_OFI_handle_rdma_read(am_hdr, am_hdr + 1,
-                                                   (MPIDI_OFI_lmt_msg_payload_t *) p_data);
+            {
+                /* buffer always copied together (there is no payload, just LMT header) */
+#if NEEDS_STRICT_ALIGNMENT
+                MPIDI_OFI_lmt_msg_payload_t temp_rdma_lmt_msg;
+                if (!has_alignment_copy) {
+                    memcpy(&temp_rdma_lmt_msg,
+                           (char *) orig_buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz,
+                           sizeof(MPIDI_OFI_lmt_msg_payload_t));
+                    p_data = (void *) &temp_rdma_lmt_msg;
+                } else
+#endif
+                {
+                    p_data = (char *) orig_buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
+                }
+                mpi_errno = MPIDI_OFI_handle_rdma_read(am_hdr, am_hdr + 1,
+                                                       (MPIDI_OFI_lmt_msg_payload_t *) p_data);
 
-            MPIR_ERR_CHECK(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
-            break;
-
+                break;
+            }
         default:
             MPIR_Assert(0);
     }
@@ -674,6 +689,11 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     if ((uo_msg = MPIDI_OFI_am_claim_unordered_msg(fi_src_addr, next_seqno)) != NULL) {
         am_hdr = &uo_msg->am_hdr;
         orig_buf = am_hdr;
+#if NEEDS_STRICT_ALIGNMENT
+        /* alignment is ensured for this unordered message as it copies to a temporary buffer
+         * in MPIDI_OFI_am_enqueue_unordered_msg */
+        has_alignment_copy = 1;
+#endif
         goto repeat;
     }
 
