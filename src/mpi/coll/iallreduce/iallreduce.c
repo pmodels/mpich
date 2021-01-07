@@ -479,13 +479,8 @@ int MPIR_Iallreduce(const void *sendbuf, void *recvbuf, int count,
         mpi_errno = MPIR_Iallreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
     }
 
-    /* Copy out data from host recv buffer to GPU buffer */
-    if (host_recvbuf) {
-        recvbuf = in_recvbuf;
-        MPIR_Localcopy(host_recvbuf, count, datatype, recvbuf, count, datatype);
-    }
-
-    MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);
+    MPII_COLL_HOST_BUFFER_SWAP_BACK(host_sendbuf, host_recvbuf, in_recvbuf, count, datatype,
+                                    request);
 
     return mpi_errno;
 }
