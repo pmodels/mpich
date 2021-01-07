@@ -360,6 +360,9 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
                 break;
             case MPIR_REQUEST_KIND__COLL:
                 req->u.nbc.errflag = MPIR_ERR_NONE;
+                req->u.nbc.coll.host_sendbuf = NULL;
+                req->u.nbc.coll.host_recvbuf = NULL;
+                req->u.nbc.coll.datatype = MPI_DATATYPE_NULL;
                 break;
             default:
                 break;
