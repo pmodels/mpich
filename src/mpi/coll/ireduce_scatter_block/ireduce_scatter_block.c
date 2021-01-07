@@ -382,13 +382,8 @@ int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                     comm_ptr, request);
     }
 
-    /* Copy out data from host recv buffer to GPU buffer */
-    if (host_recvbuf) {
-        recvbuf = in_recvbuf;
-        MPIR_Localcopy(host_recvbuf, recvcount, datatype, recvbuf, recvcount, datatype);
-    }
-
-    MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);
+    MPII_COLL_HOST_BUFFER_SWAP_BACK(host_sendbuf, host_recvbuf, in_recvbuf, recvcount, datatype,
+                                    request);
 
     return mpi_errno;
 }
