@@ -56,8 +56,10 @@ MPI_Comm_spawn_multiple:
     .extra: errtest_comm_intra
     .skip: validate-STRING_ARRAY, validate-STRING_2DARRAY, validate-COMM_SIZE, validate-INFO, validate-ERROR_CODE
     .error: MPI_ERR_INFO
-{ -- handle_ptr -- array_of_info
+{ -- declare --
     MPIR_Info **array_of_info_ptrs = NULL;
+}
+{ -- handle_ptr -- array_of_info
     if (comm_ptr->rank == root) {
         array_of_info_ptrs = MPL_malloc(count * sizeof(MPIR_Info *), MPL_MEM_OTHER);
         for (int i = 0; i < count; i++) {
