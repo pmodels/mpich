@@ -52,6 +52,17 @@ enum {
 typedef struct MPII_Coll_req_t {
     void *sched;                /* pointer to the schedule */
 
+    /*
+     * Fields used by GPU-aware fallback path for op collectives. GPU buffers
+     * are swapped for host buffers for collective execution. If the user
+     * recv buffer is on the GPU, data is copied to it at completion.
+     */
+    void *host_sendbuf;         /* temporary host buffer */
+    void *host_recvbuf;         /* temporary recv buffer */
+    void *user_recvbuf;         /* pointer to user recv buffer */
+    MPI_Aint count;             /* recv count */
+    MPI_Datatype datatype;      /* recv datatype */
+
     struct MPII_Coll_req_t *next;       /* linked-list next pointer */
     struct MPII_Coll_req_t *prev;       /* linked-list prev pointer */
 } MPII_Coll_req_t;
