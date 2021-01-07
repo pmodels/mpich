@@ -667,6 +667,9 @@ def dump_function_normal(func, state_name, mapping):
             dump_handle_ptr_var(func, p)
     if '_comm_from_request' in func:
         G.out.append("MPIR_Comm *comm_ptr = NULL;")
+    if 'code-declare' in func:
+        for l in func['code-declare']:
+            G.out.append(l)
 
     G.out.append("MPIR_FUNC_TERSE_STATE_DECL(%s);" % state_name)
 
