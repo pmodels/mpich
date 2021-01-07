@@ -646,14 +646,14 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 
             break;
         case MPIDI_AMTYPE_PIPELINE:
-            p_data = (char *) wc->buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
+            p_data = (char *) orig_buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
             mpi_errno = MPIDI_OFI_handle_pipeline(am_hdr, am_hdr + 1, p_data);
             MPIR_ERR_CHECK(mpi_errno);
             break;
 
         case MPIDI_AMTYPE_RDMA_READ:
             /* buffer always copied together (there is no payload, just LMT header) */
-            p_data = (char *) am_hdr + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
+            p_data = (char *) orig_buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
             mpi_errno = MPIDI_OFI_handle_rdma_read(am_hdr, am_hdr + 1,
                                                    (MPIDI_OFI_lmt_msg_payload_t *) p_data);
 
