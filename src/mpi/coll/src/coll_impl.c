@@ -218,7 +218,7 @@ void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_A
     MPI_Aint extent = 0;
 
     if (sendbuf != MPI_IN_PLACE) {
-        MPL_gpu_query_pointer_attr(sendbuf, &attr);
+        MPIR_GPU_query_pointer_attr(sendbuf, &attr);
         if (attr.type == MPL_GPU_POINTER_DEV) {
             MPI_Aint true_extent;
             MPI_Aint true_lb;
@@ -233,7 +233,7 @@ void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_A
         }
     }
 
-    MPL_gpu_query_pointer_attr(recvbuf, &attr);
+    MPIR_GPU_query_pointer_attr(recvbuf, &attr);
     if (attr.type == MPL_GPU_POINTER_DEV) {
         if (!extent) {
             MPI_Aint true_extent;
