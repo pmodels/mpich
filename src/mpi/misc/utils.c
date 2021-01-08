@@ -66,8 +66,8 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
         intptr_t sfirst;
         intptr_t rfirst;
 
-        MPL_gpu_query_pointer_attr(sendbuf, &send_attr);
-        MPL_gpu_query_pointer_attr(recvbuf, &recv_attr);
+        MPIR_GPU_query_pointer_attr(sendbuf, &send_attr);
+        MPIR_GPU_query_pointer_attr(recvbuf, &recv_attr);
 
         if (send_attr.type == MPL_GPU_POINTER_DEV && recv_attr.type == MPL_GPU_POINTER_DEV) {
             MPL_gpu_malloc((void **) &buf, COPY_BUFFER_SZ, recv_attr.device);
