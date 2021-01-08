@@ -48,9 +48,9 @@ typedef struct MPLI_gavl_tree_node {
             struct MPLI_gavl_tree_node *parent;
             struct MPLI_gavl_tree_node *left;
             struct MPLI_gavl_tree_node *right;
-        };
+        } s;
         struct MPLI_gavl_tree_node *next;
-    };
+    } u;
     uintptr_t height;
     uintptr_t addr;
     uintptr_t len;
@@ -147,9 +147,9 @@ MPL_STATIC_INLINE_PREFIX int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, con
             *val = (void *) cur_node->val;
             break;
         } else if (cmp_ret == MPLI_GAVL_SEARCH_LEFT) {
-            cur_node = cur_node->left;
+            cur_node = cur_node->u.s.left;
         } else {
-            cur_node = cur_node->right;
+            cur_node = cur_node->u.s.right;
         }
     }
 
