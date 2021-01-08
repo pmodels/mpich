@@ -7,12 +7,7 @@
 #include "mpir_info.h"
 #include "datatype.h"
 #include "mpi_init.h"
-#ifdef HAVE_CRTDBG_H
-#include <crtdbg.h>
-#endif
-#ifdef HAVE_USLEEP
-#include <unistd.h>
-#endif
+#include <strings.h>
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
