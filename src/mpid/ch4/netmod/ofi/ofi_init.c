@@ -598,6 +598,28 @@ static int dynproc_send_disconnect(int conn_id)
     goto fn_exit;
 }
 
+int MPIDI_OFI_init_local(int *tag_bits)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *tag_bits = MPIDI_OFI_TAG_BITS;
+
+    return mpi_errno;
+}
+
+int MPIDI_OFI_init_world(MPIR_Comm * init_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int tmp = MPIR_Process.tag_bits;
+    mpi_errno = MPIDI_OFI_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.appnum,
+                                        &tmp, init_comm);
+    /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
+    MPIR_Assert(tmp == MPIR_Process.tag_bits);
+
+    return mpi_errno;
+}
+
 int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
 {
     int mpi_errno = MPI_SUCCESS, i;
@@ -776,8 +798,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIDI_OFI_global.deferred_am_isend_q = NULL;
 
   fn_exit:
-    *tag_bits = MPIDI_OFI_TAG_BITS;
-
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:

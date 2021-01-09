@@ -175,9 +175,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
     mpi_errno = MPIDI_POSIX_eager_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* There is no restriction on the tag_bits from the posix shmod side */
-    *tag_bits = MPIR_TAG_BITS_DEFAULT;
-
     mpi_errno = MPIDI_POSIX_coll_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 

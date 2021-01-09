@@ -202,6 +202,28 @@ static int all_vnis_address_exchange(void)
     goto fn_exit;
 }
 
+int MPIDI_UCX_init_local(int *tag_bits)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *tag_bits = MPIR_TAG_BITS_DEFAULT;
+
+    return mpi_errno;
+}
+
+int MPIDI_UCX_init_world(MPIR_Comm * init_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int tmp = MPIR_Process.tag_bits;
+    mpi_errno = MPIDI_UCX_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.appnum,
+                                        &tmp, init_comm);
+    /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
+    MPIR_Assert(tmp == MPIR_Process.tag_bits);
+
+    return mpi_errno;
+}
+
 int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -248,8 +270,6 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     mpi_errno = initial_address_exchange(init_comm);
     MPIR_ERR_CHECK(mpi_errno);
-
-    *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);

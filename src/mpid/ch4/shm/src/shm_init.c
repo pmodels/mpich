@@ -8,12 +8,32 @@
 #include "../posix/posix_noinline.h"
 #include "../ipc/src/ipc_noinline.h"
 
+int MPIDI_SHM_init_local(int *tag_bits)
+{
+    /* There is no restriction on the tag_bits from the posix shmod side */
+    *tag_bits = MPIR_TAG_BITS_DEFAULT;
+    return MPI_SUCCESS;
+}
+
+int MPIDI_SHM_init_world(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int tmp = MPIR_Process.tag_bits;
+    mpi_errno = MPIDI_SHM_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, &tmp);
+    /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
+    MPIR_Assert(tmp == MPIR_Process.tag_bits);
+
+    return mpi_errno;
+}
+
 int MPIDI_SHM_mpi_init_hook(int rank, int size, int *tag_bits)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
+
 
     ret = MPIDI_POSIX_mpi_init_hook(rank, size, tag_bits);
     MPIR_ERR_CHECK(ret);
