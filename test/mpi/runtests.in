@@ -425,15 +425,6 @@ sub ProcessDir {
 sub RunList { 
     my $LIST = "LIST$depth"; $depth++;
     my $listfile = $_[0];
-    my @TYPES = "";
-    my $DTP_SWITCH = "@DTP_SWITCH@";
-
-    if (! defined $ENV{"DTP_RUNTIME_TYPES"}) {
-        @TYPES = split ' ', "MPI_INT MPI_DOUBLE";
-    }
-    else {
-        @TYPES = split ' ', $ENV{"DTP_RUNTIME_TYPES"};
-    }
 
     # eg: runtests -tests='testlist,testlist.dtp'
     my @all_listfiles = split /,\s*/, $listfile;
@@ -486,14 +477,6 @@ sub RunList {
             my $requiresStrict = "";
             my $requiresMPIX   = "";
 
-            my $dtp_match_type = 0;
-            my $dtp_test_type = "";    # this test type
-            # get the type of this test
-            if ($programname =~ /BASIC/) {
-                $dtp_test_type = "BASIC";
-            } elsif ($programname =~ /STRUCT/) {
-                $dtp_test_type = "STRUCT";
-            }
             if ($#args >= 1) { $np = $args[1]; }
             # Process the key=value arguments
             for (my $i=2; $i <= $#args; $i++) {
@@ -504,14 +487,6 @@ sub RunList {
                         $test_opt->{$key} = $value;
                     }
                     elsif ($key eq "arg") {
-                        # match allowed datatypes here
-                        for my $j (@TYPES) {
-                            if ($value eq "-type=$j") {
-                                $dtp_match_type=1;
-                                break;
-                            }
-                        }
-
                         push @{$test_opt->{args}}, $value;
                     }
                     elsif ($key eq "mpiexecarg") {
@@ -534,18 +509,6 @@ sub RunList {
 
             if (defined $test_opt->{xfail} and !$test_opt->{xfail}) {
                 print STDERR "\"xfail=\" requires an argument\n";
-            }
-
-            if ($DTP_SWITCH eq "ON") {
-                # if dtpools tests are ON only run matching types for basic tests
-                if ($dtp_test_type eq "BASIC" && $dtp_match_type == 0) {
-                    $programname = "";
-                }
-            } else {
-                # if dtpools tests are OFF only disable dtpools tests, run the rest
-                if ($dtp_test_type eq "BASIC" || $dtp_test_type eq "STRUCT") {
-                    $programname = "";
-                }
             }
 
             # skip empty lines

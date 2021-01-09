@@ -4,7 +4,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-# Generate testlist.gpu for cases not covered under gentests-dtop.sh
+# Generate testlist.gpu for cases not covered under gentests-dtp.sh
 # and test_coll_algos.sh
 # Reads input from the input file in format "testpath/testname:procs"
 # and creates test combinations for (host, device) and (device, device).
