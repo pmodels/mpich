@@ -1,4 +1,10 @@
 Non Native API:
+  init_local: int
+      NM : tag_bits
+     SHM : tag_bits
+  init_world: int
+      NM : init_comm
+     SHM : void
   mpi_init_hook : int
       NM : rank, size, appnum, tag_bits, init_comm
      SHM : rank, size, tag_bits
