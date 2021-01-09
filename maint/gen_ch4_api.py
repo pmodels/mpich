@@ -53,11 +53,6 @@ def load_ch4_api(ch4_api_txt):
                     name, ret = RE.m.group(1, 2)
                     cur_api = {'name': name, 'ret': ret}
                     G.apis.append(cur_api)
-                    func_name = name
-                    if RE.search(r'mpi_(init|finalize)_hook', func_name):
-                        init = RE.m.group(1)
-                        func_name = "mpi_%s" % (init)
-                    cur_api['func_name'] = func_name
 
                     if re.match(r'Native API', flag):
                         cur_api['native'] = 1
@@ -96,14 +91,14 @@ def dump_netmod_h(h_file):
             s = "typedef "
             s += a['ret']
             s += get_space_after_type(a['ret'])
-            s += "(*MPIDI_NM_%s_t) (" % (a['func_name'])
+            s += "(*MPIDI_NM_%s_t) (" % (a['name'])
             dump_s_param_tail(Out, s, a['nm_params'], ");")
         print("", file=Out)
         print("typedef struct MPIDI_NM_funcs {", file=Out)
         for a in api_list:
             if not a['native']:
                 s = "    "
-                s += "MPIDI_NM_%s_t %s;" % (a['func_name'], a['func_name'])
+                s += "MPIDI_NM_%s_t %s;" % (a['name'], a['name'])
                 print(s, file=Out)
         print("} MPIDI_NM_funcs_t;", file=Out)
         print("", file=Out)
@@ -111,7 +106,7 @@ def dump_netmod_h(h_file):
         for a in api_list:
             if a['native']:
                 s = "    "
-                s += "MPIDI_NM_%s_t %s;" % (a['func_name'], a['func_name'])
+                s += "MPIDI_NM_%s_t %s;" % (a['name'], a['name'])
                 print(s, file=Out)
         print("} MPIDI_NM_native_funcs_t;", file=Out)
         print("", file=Out)
@@ -196,9 +191,9 @@ def dump_netmod_impl_h(h_file):
             if use_ret:
                 s += "ret = "
             if a['native']:
-                s += "MPIDI_NM_native_func->%s(" % (a['func_name'])
+                s += "MPIDI_NM_native_func->%s(" % (a['name'])
             else:
-                s += "MPIDI_NM_func->%s(" % (a['func_name'])
+                s += "MPIDI_NM_func->%s(" % (a['name'])
             dump_s_param_tail(Out, s, a['nm_params'], ");", 1)
             print("", file=Out)
 
@@ -257,9 +252,9 @@ def dump_netmod_impl_c(c_file):
             if use_ret:
                 s += "ret = "
             if a['native']:
-                s += "MPIDI_NM_native_func->%s(" % (a['func_name'])
+                s += "MPIDI_NM_native_func->%s(" % (a['name'])
             else:
-                s += "MPIDI_NM_func->%s(" % (a['func_name'])
+                s += "MPIDI_NM_func->%s(" % (a['name'])
             dump_s_param_tail(Out, s, a['nm_params'], ");", 1)
             print("", file=Out)
 
@@ -292,9 +287,9 @@ def dump_func_table_c(c_file, mod):
                 continue
             if not a['native']:
                 if a['nm_inline']:
-                    print("    .%s = MPIDI_NM_%s," % (a['func_name'], a['name']), file=Out)
+                    print("    .%s = MPIDI_NM_%s," % (a['name'], a['name']), file=Out)
                 else:
-                    print("    .%s = MPIDI_%s_%s," % (a['func_name'], MOD, a['name']), file=Out)
+                    print("    .%s = MPIDI_%s_%s," % (a['name'], MOD, a['name']), file=Out)
         print("};", file=Out)
         print("", file=Out)
         print("MPIDI_NM_native_funcs_t MPIDI_NM_native_%s_funcs = {" % mod, file=Out)
@@ -303,9 +298,9 @@ def dump_func_table_c(c_file, mod):
                 continue
             if a['native']:
                 if a['nm_inline']:
-                    print("    .%s = MPIDI_NM_%s," % (a['func_name'], a['name']), file=Out)
+                    print("    .%s = MPIDI_NM_%s," % (a['name'], a['name']), file=Out)
                 else:
-                    print("    .%s = MPIDI_%s_%s," % (a['func_name'], MOD, a['name']), file=Out)
+                    print("    .%s = MPIDI_%s_%s," % (a['name'], MOD, a['name']), file=Out)
         print("};", file=Out)
         print("#endif", file=Out)
 
