@@ -54,6 +54,7 @@ our $g_opt = {};   # global options. TODO: migrate global option vars into the h
 $g_opt->{memory_total} = 20;      # Total memory in GB
 $g_opt->{memory_multiplier} = 1;  # No of simutaneous jobs
 $g_opt->{cleanup} = 1;            # Whether to remove the compiled programs
+$g_opt->{start_time} = time();    # So we can track accumulative test duration
 
 # Total number of tests checked and run
 our $g_total_run = 0;
@@ -437,7 +438,10 @@ sub RunList {
             # just skip, do not complain missing unless it is "testlist"
             next;
         }
-        print "Looking in $curdir/$_f\n" if $debug;
+        # add a timestamp to have a quick idea of how long the tests ran
+        my @tm_list = gmtime(time() - $g_opt->{start_time});
+        my $timestamp = sprintf("%02d:%02d:%02d", $tm_list[2], $tm_list[1], $tm_list[0]);
+        print "Looking in $curdir/$_f \t[$timestamp]\n" if $debug;
         open( $LIST, "<$listfileSource" ) || die "Could not open $listfileSource\n";
         while (<$LIST>) {
             # Check for stop file
