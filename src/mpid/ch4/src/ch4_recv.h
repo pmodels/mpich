@@ -272,15 +272,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_MRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_MRECV);
 
-    *rreq = NULL;
-
-    if (message == NULL || message->handle == MPIR_REQUEST_NULL_RECV) {
-        /* treat as though MPI_MESSAGE_NO_PROC was passed */
-        MPIR_Status_set_procnull(status);
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
-
     MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     message->kind = MPIR_REQUEST_KIND__RECV;
     *rreq = message;
@@ -302,11 +293,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IMRECV);
-
-    if (message == NULL) {
-        *rreqp = MPIR_Request_create_null_recv();
-        goto fn_exit;
-    }
 
     MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     message->kind = MPIR_REQUEST_KIND__RECV;
