@@ -406,13 +406,6 @@ MPI_Waitany:
     *indx = MPI_UNDEFINED;
 
     for (int i = 0; i < count; i++) {
-#ifdef HAVE_ERROR_CHECKING
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_ARRAYREQUEST_OR_NULL(array_of_requests[i], i, mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-#endif /* HAVE_ERROR_CHECKING */
         if (array_of_requests[i] != MPI_REQUEST_NULL) {
             if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                 last_disabled_anysource = i;
