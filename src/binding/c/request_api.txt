@@ -189,11 +189,6 @@ MPI_Testany:
     'array_of_requests', such an action is considered erroneous and may cause the
     program to unexecpectedly terminate or produce incorrect results.
 */
-{ -- error_check --
-    if (count > 0) {
-        MPIR_ERRTEST_ARGNULL(array_of_requests, "array_of_requests", mpi_errno);
-    }
-}
 {
     int n_inactive = 0;
     int last_disabled_anysource = -1;
