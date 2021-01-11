@@ -11,8 +11,9 @@
 /* Rationale:
  *   MPI Tool interface need work even before MPI_Init or after MPI_FINALIZE,
  *   and it should never abort -- otherwise, it interferes normal MPI functions.
- *   MPIR_ERR_... routines will call MPIR_Err_preOrPostInit, and it defaults to
- *   abort on failure, therefore, inapprorate for MPI tool interfaces.
+ *   MPIR_ERR_... routines will abort on failure by default. In addition,
+ *   setting error code that relying on MPI error utility functions are also
+ *   inapproprate, therefore, we have separate error macros for MPI tool interfaces.
  *
  *   On the other hand, due to the contraints, the error handling in tool
  *   interface are rather simplified. Since it cannot fail, the failing diagnosis
