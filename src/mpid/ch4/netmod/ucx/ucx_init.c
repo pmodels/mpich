@@ -206,9 +206,49 @@ int MPIDI_UCX_init_local(int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    ucp_config_t *config;
+    ucs_status_t ucx_status;
+    uint64_t features = 0;
+    ucp_params_t ucp_params;
+
+    init_num_vnis();
+
+    /* unable to support extended context id in current match bit configuration */
+    MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_TAG_BITS);
+
+    ucx_status = ucp_config_read(NULL, NULL, &config);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
+
+    /* For now use only the tag feature */
+    features = UCP_FEATURE_TAG | UCP_FEATURE_RMA;
+    ucp_params.features = features;
+    ucp_params.request_size = sizeof(MPIDI_UCX_ucp_request_t);
+    ucp_params.request_init = request_init_callback;
+    ucp_params.request_cleanup = NULL;
+    ucp_params.estimated_num_eps = MPIR_Process.size;
+
+    ucp_params.field_mask = UCP_PARAM_FIELD_FEATURES |
+        UCP_PARAM_FIELD_REQUEST_SIZE |
+        UCP_PARAM_FIELD_ESTIMATED_NUM_EPS | UCP_PARAM_FIELD_REQUEST_INIT;
+
+    if (MPIDI_UCX_global.num_vnis > 1) {
+        ucp_params.mt_workers_shared = 1;
+        ucp_params.field_mask |= UCP_PARAM_FIELD_MT_WORKERS_SHARED;
+    }
+
+    ucx_status = ucp_init(&ucp_params, config, &MPIDI_UCX_global.context);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
+    ucp_config_release(config);
+
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    if (MPIDI_UCX_global.context != NULL)
+        ucp_cleanup(MPIDI_UCX_global.context);
+
+    goto fn_exit;
 }
 
 int MPIDI_UCX_init_world(MPIR_Comm * init_comm)
@@ -227,42 +267,8 @@ int MPIDI_UCX_init_world(MPIR_Comm * init_comm)
 int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    ucp_config_t *config;
-    ucs_status_t ucx_status;
-    uint64_t features = 0;
-    ucp_params_t ucp_params;
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
-
-    init_num_vnis();
-
-    /* unable to support extended context id in current match bit configuration */
-    MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_TAG_BITS);
-
-    ucx_status = ucp_config_read(NULL, NULL, &config);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-
-    /* For now use only the tag feature */
-    features = UCP_FEATURE_TAG | UCP_FEATURE_RMA;
-    ucp_params.features = features;
-    ucp_params.request_size = sizeof(MPIDI_UCX_ucp_request_t);
-    ucp_params.request_init = request_init_callback;
-    ucp_params.request_cleanup = NULL;
-    ucp_params.estimated_num_eps = size;
-
-    ucp_params.field_mask = UCP_PARAM_FIELD_FEATURES |
-        UCP_PARAM_FIELD_REQUEST_SIZE |
-        UCP_PARAM_FIELD_ESTIMATED_NUM_EPS | UCP_PARAM_FIELD_REQUEST_INIT;
-
-    if (MPIDI_UCX_global.num_vnis > 1) {
-        ucp_params.mt_workers_shared = 1;
-        ucp_params.field_mask |= UCP_PARAM_FIELD_MT_WORKERS_SHARED;
-    }
-
-    ucx_status = ucp_init(&ucp_params, config, &MPIDI_UCX_global.context);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-    ucp_config_release(config);
 
     /* initialize worker for vni 0 */
     mpi_errno = init_worker(0);
@@ -277,9 +283,6 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
   fn_fail:
     if (MPIDI_UCX_global.ctx[0].worker != NULL)
         ucp_worker_destroy(MPIDI_UCX_global.ctx[0].worker);
-
-    if (MPIDI_UCX_global.context != NULL)
-        ucp_cleanup(MPIDI_UCX_global.context);
 
     goto fn_exit;
 }
