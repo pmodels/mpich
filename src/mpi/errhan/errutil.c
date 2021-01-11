@@ -199,9 +199,9 @@ void MPII_Errhandler_set_fc(MPI_Errhandler errhand)
 /* --BEGIN ERROR HANDLING-- */
 void MPIR_Err_preOrPostInit(void)
 {
-    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT) {
+    if (MPL_atomic_load_int(&MPIR_mpich_state) == MPICH_MPI_STATE__PRE_INIT) {
         MPL_error_printf("Attempting to use an MPI routine before initializing MPICH\n");
-    } else if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) {
+    } else if (MPL_atomic_load_int(&MPIR_mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) {
         MPL_error_printf("Attempting to use an MPI routine after finalizing MPICH\n");
     } else {
         MPL_error_printf
@@ -215,7 +215,7 @@ void MPIR_Err_preOrPostInit(void)
 /* Return true if the error util is initialized */
 int MPIR_Errutil_is_initialized(void)
 {
-    int state = MPL_atomic_load_int(&MPIR_process.mpich_state);
+    int state = MPL_atomic_load_int(&MPIR_mpich_state);
     return (state != MPICH_MPI_STATE__PRE_INIT && state != MPICH_MPI_STATE__POST_FINALIZED);
 }
 

@@ -1016,8 +1016,8 @@ cvars:
 #ifdef HAVE_ERROR_CHECKING
 #define MPIR_ERRTEST_INITIALIZED_ORDIE()                                \
     do {                                                                \
-        if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT || \
-            MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) \
+        if (MPL_atomic_load_int(&MPIR_mpich_state) == MPICH_MPI_STATE__PRE_INIT || \
+            MPL_atomic_load_int(&MPIR_mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) \
             {                                                           \
                 MPIR_Err_preOrPostInit();                               \
             }                                                           \

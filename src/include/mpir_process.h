@@ -27,8 +27,6 @@ extern MPIR_Session MPIR_Session_direct[];
 extern MPIR_Object_alloc_t MPIR_Session_mem;
 
 typedef struct MPIR_Process_t {
-    MPL_atomic_int_t mpich_state;       /* Need use atomics due to MPI_Initialized() etc.
-                                         * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
     int init_counter;
     /* Fields to be initialized by MPIR_pmi_init() */
     int has_parent;
@@ -80,6 +78,7 @@ typedef struct MPIR_Process_t {
 } MPIR_Process_t;
 extern MPIR_Process_t MPIR_Process;
 
+extern MPL_atomic_int_t MPIR_mpich_state;
 extern MPL_atomic_int_t MPIR_world_model_state;
 
 /* use spin lock to control access to init/finalize */
