@@ -29,22 +29,20 @@ static int parse_filename(const char *path, char **_obj_name, char **_cont_name)
     fname = basename(f1);
     cont_name = dirname(f2);
 
-    if (cont_name[0] == '.') {
+    if (cont_name[0] != '/') {
         char *ptr;
-        char cwd[PATH_MAX];
+        char buf[PATH_MAX];
 
-        ptr = getcwd(cwd, PATH_MAX);
+        ptr = realpath(cont_name, buf);
         if (ptr == NULL) {
             rc = errno;
             goto out;
         }
 
-        if (strcmp(cont_name, ".") == 0) {
-            cont_name = ADIOI_Strdup(cwd);
-            if (cont_name == NULL) {
-                rc = ENOMEM;
-                goto out;
-            }
+        cont_name = ADIOI_Strdup(ptr);
+        if (cont_name == NULL) {
+            rc = ENOMEM;
+            goto out;
         }
         *_cont_name = cont_name;
     } else {
