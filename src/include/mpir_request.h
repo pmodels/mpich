@@ -299,8 +299,15 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
 {
     if (req_ptr == NULL)
         return 0;
-    else
-        return (!MPIR_Request_is_persistent(req_ptr) || (req_ptr)->u.persist.real_request != NULL);
+    else {
+        switch (req_ptr->kind) {
+            case MPIR_REQUEST_KIND__PREQUEST_SEND:
+            case MPIR_REQUEST_KIND__PREQUEST_RECV:
+                return (req_ptr)->u.persist.real_request != NULL;
+            default:
+                return 1;       /* regular request is always active */
+        }
+    }
 }
 
 #define MPIR_REQUESTS_PROPERTY__NO_NULL        (1 << 1)
