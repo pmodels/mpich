@@ -744,8 +744,8 @@ if test "X${pac_have_cuda}" = "Xyes" ; then
         else
             cuda_LDFLAGS="-L${with_cuda}/lib"
         fi
-        cuda_LIBS="-lcudart"
     fi
+    cuda_LIBS="-lcudart"
 fi
 AM_CONDITIONAL([HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
 AC_SUBST([cuda_CPPFLAGS])
@@ -768,8 +768,8 @@ if test "$have_gpu" = "no" ; then
             else
                 ze_LDFLAGS="-L${with_ze}/lib"
             fi
-            ze_LIBS="-lze_loader"
         fi
+        ze_LIBS="-lze_loader"
     fi
     AC_SUBST([ze_CPPFLAGS])
     AC_SUBST([ze_LDFLAGS])
