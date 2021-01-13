@@ -1025,6 +1025,17 @@ cvars:
 #define MPIR_ERRTEST_INITIALIZED_ORDIE() do {} while (0)
 #endif
 
+/* used after MPIR_Handle_obj_alloc to check handle object allocation */
+#define MPIR_ERR_CHKHANDLEMEM(ptr_) \
+    do { \
+        if (!(ptr_)) { \
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, \
+                                             __func__, __LINE__, MPI_ERR_OTHER, \
+                                             "**nomem", 0); \
+            goto fn_fail; \
+        } \
+    } while (0)
+
 /* ------------------------------------------------------------------------- */
 /* end of mpir_err.h */
 /* ------------------------------------------------------------------------- */
