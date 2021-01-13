@@ -18,6 +18,7 @@
 #include "mpl_env.h"
 #include "mpl_sock.h"
 #include "mpl_sockaddr.h"
+#include "mpl_spinlock.h"
 #include "mpl_msg.h"
 #include "mpl_iov.h"
 #include "mpl_bt.h"
