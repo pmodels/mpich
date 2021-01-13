@@ -28,9 +28,13 @@ def main():
         dump_func_table_c("src/mpid/ch4/netmod/%s/func_table.c" % (m), m)
 
     for m in "ofi", "ucx", "stubnm":
-        dump_noinline_h("src/mpid/ch4/netmod/%s/%s_noinline.h" % (m, m), m, True)
-    dump_noinline_h("src/mpid/ch4/shm/src/shm_noinline.h", 'shm', False)
-    dump_noinline_h("src/mpid/ch4/shm/posix/posix_noinline.h", 'posix', False)
+        dump_noinline_h("src/mpid/ch4/netmod/%s/%s_noinline.h" % (m, m), m, is_nm=True)
+    dump_noinline_h("src/mpid/ch4/shm/src/shm_noinline.h", 'shm', is_nm=False)
+    dump_noinline_h("src/mpid/ch4/shm/posix/posix_noinline.h", 'posix', is_nm=False)
+    dump_noinline_h("src/mpid/ch4/shm/stubshm/shm_noinline.h", 'stubshm', is_nm=False)
+
+    dump_stub("src/mpid/ch4/netmod/stubnm", 'stubnm', is_nm=True)
+    dump_stub("src/mpid/ch4/shm/stubshm", 'stubshm', is_nm=False)
 
 # ---- subroutines --------------------------------------------
 def load_ch4_api(ch4_api_txt):
@@ -40,24 +44,21 @@ def load_ch4_api(ch4_api_txt):
             if RE.match(r'(.*API|PARAM):', line):
                 flag = RE.m.group(1)
             elif re.search(r'API$', flag):
-                if RE.match(r'\s+(NM|SHM)(\*?)\s*:\s*(.+)', line):
+                if RE.match(r'\s+(NM|SHM|MPIDIG)(\*?)\s*:\s*(.+)', line):
                     nm, inline, t = RE.m.group(1, 2, 3)
                     tlist = re.split(r',\s*', t)
                     if nm == "NM":
                         cur_api['nm_params'] = tlist
                         cur_api['nm_inline'] = inline
-                    else:
+                    elif nm == 'SHM':
                         cur_api['shm_params'] = tlist
                         cur_api['shm_inline'] = inline
+                    elif nm == 'MPIDIG':
+                        cur_api['mpidig_params'] = tlist
                 elif RE.match(r'\s+(\w+)\s*:\s*(.+)', line):
                     name, ret = RE.m.group(1, 2)
                     cur_api = {'name': name, 'ret': ret}
                     G.apis.append(cur_api)
-                    func_name = name
-                    if RE.search(r'mpi_(init|finalize)_hook', func_name):
-                        init = RE.m.group(1)
-                        func_name = "mpi_%s" % (init)
-                    cur_api['func_name'] = func_name
 
                     if re.match(r'Native API', flag):
                         cur_api['native'] = 1
@@ -96,14 +97,14 @@ def dump_netmod_h(h_file):
             s = "typedef "
             s += a['ret']
             s += get_space_after_type(a['ret'])
-            s += "(*MPIDI_NM_%s_t) (" % (a['func_name'])
+            s += "(*MPIDI_NM_%s_t) (" % (a['name'])
             dump_s_param_tail(Out, s, a['nm_params'], ");")
         print("", file=Out)
         print("typedef struct MPIDI_NM_funcs {", file=Out)
         for a in api_list:
             if not a['native']:
                 s = "    "
-                s += "MPIDI_NM_%s_t %s;" % (a['func_name'], a['func_name'])
+                s += "MPIDI_NM_%s_t %s;" % (a['name'], a['name'])
                 print(s, file=Out)
         print("} MPIDI_NM_funcs_t;", file=Out)
         print("", file=Out)
@@ -111,7 +112,7 @@ def dump_netmod_h(h_file):
         for a in api_list:
             if a['native']:
                 s = "    "
-                s += "MPIDI_NM_%s_t %s;" % (a['func_name'], a['func_name'])
+                s += "MPIDI_NM_%s_t %s;" % (a['name'], a['name'])
                 print(s, file=Out)
         print("} MPIDI_NM_native_funcs_t;", file=Out)
         print("", file=Out)
@@ -196,9 +197,9 @@ def dump_netmod_impl_h(h_file):
             if use_ret:
                 s += "ret = "
             if a['native']:
-                s += "MPIDI_NM_native_func->%s(" % (a['func_name'])
+                s += "MPIDI_NM_native_func->%s(" % (a['name'])
             else:
-                s += "MPIDI_NM_func->%s(" % (a['func_name'])
+                s += "MPIDI_NM_func->%s(" % (a['name'])
             dump_s_param_tail(Out, s, a['nm_params'], ");", 1)
             print("", file=Out)
 
@@ -257,9 +258,9 @@ def dump_netmod_impl_c(c_file):
             if use_ret:
                 s += "ret = "
             if a['native']:
-                s += "MPIDI_NM_native_func->%s(" % (a['func_name'])
+                s += "MPIDI_NM_native_func->%s(" % (a['name'])
             else:
-                s += "MPIDI_NM_func->%s(" % (a['func_name'])
+                s += "MPIDI_NM_func->%s(" % (a['name'])
             dump_s_param_tail(Out, s, a['nm_params'], ");", 1)
             print("", file=Out)
 
@@ -292,9 +293,9 @@ def dump_func_table_c(c_file, mod):
                 continue
             if not a['native']:
                 if a['nm_inline']:
-                    print("    .%s = MPIDI_NM_%s," % (a['func_name'], a['name']), file=Out)
+                    print("    .%s = MPIDI_NM_%s," % (a['name'], a['name']), file=Out)
                 else:
-                    print("    .%s = MPIDI_%s_%s," % (a['func_name'], MOD, a['name']), file=Out)
+                    print("    .%s = MPIDI_%s_%s," % (a['name'], MOD, a['name']), file=Out)
         print("};", file=Out)
         print("", file=Out)
         print("MPIDI_NM_native_funcs_t MPIDI_NM_native_%s_funcs = {" % mod, file=Out)
@@ -303,9 +304,9 @@ def dump_func_table_c(c_file, mod):
                 continue
             if a['native']:
                 if a['nm_inline']:
-                    print("    .%s = MPIDI_NM_%s," % (a['func_name'], a['name']), file=Out)
+                    print("    .%s = MPIDI_NM_%s," % (a['name'], a['name']), file=Out)
                 else:
-                    print("    .%s = MPIDI_%s_%s," % (a['func_name'], MOD, a['name']), file=Out)
+                    print("    .%s = MPIDI_%s_%s," % (a['name'], MOD, a['name']), file=Out)
         print("};", file=Out)
         print("#endif", file=Out)
 
@@ -350,6 +351,82 @@ def dump_noinline_h(h_file, mod, is_nm=True):
 
         print("#endif /* %s */" % INC, file=Out)
 
+def dump_stub_file(stub_file, mod, is_inline, is_nm):
+    """Dumps boilerplate stub implementations"""
+    api_list = []
+    for a in G.apis:
+        if is_nm:
+            if 'nm_params' not in a:
+                continue
+            a_is_inline = a['nm_inline']
+        else:
+            if 'shm_params' not in a:
+                continue
+            a_is_inline = a['shm_inline']
+        if is_inline and (not a_is_inline):
+            continue
+        elif (not is_inline) and a_is_inline:
+            continue
+
+        api_list.append(a)
+
+    MOD = mod.upper()
+    print("  --> [%s]" % stub_file)
+    with open(stub_file, "w") as Out:
+        dump_copyright(Out)
+        if is_inline:
+            INC = get_include_guard(stub_file)
+            print("#ifndef %s" % INC, file=Out)
+            print("#define %s" % INC, file=Out)
+            print("", file=Out)
+        print("#include <mpidimpl.h>", file=Out)
+
+        for a in api_list:
+            print("", file=Out)
+            s = ""
+            if is_inline:
+                s += "MPL_STATIC_INLINE_PREFIX "
+            s += a['ret'] + get_space_after_type(a['ret'])
+            if is_inline:
+                if is_nm:
+                    s += "MPIDI_NM_%s(" % (a['name'])
+                else:
+                    s += "MPIDI_SHM_%s(" % (a['name'])
+            else:
+                s += "MPIDI_%s_%s(" % (MOD, a['name'])
+            if is_nm:
+                params = a['nm_params']
+            else:
+                params = a['shm_params']
+            dump_s_param_tail(Out, s, params, ")")
+            print("{", file=Out)
+            if a['ret'] == 'int':
+                if 'mpidig_params' in a:
+                    s = "    return MPIDIG_%s(" % a['name']
+                    dump_s_param_tail(Out, s, a['mpidig_params'], ");", is_arg=True)
+                else:
+                    print("    int mpi_errno = MPI_SUCCESS;", file=Out)
+                    print("    return mpi_errno;", file=Out)
+            elif a['ret'] == 'void':
+                print("    return;", file=Out)
+            else:
+                print("    return 0;", file=Out)
+            print("}", file=Out)
+        if is_inline:
+            print("", file=Out)
+            print("/* Not-inlined %s netmod functions */" % MOD, file=Out)
+            print("#include \"%s_noinline.h\"" % mod, file=Out)
+            print("", file=Out)
+            print("#endif /* %s */" % INC, file=Out)
+
+def dump_stub(stub_dir, mod, is_nm):
+    if is_nm:
+        dump_stub_file("%s/netmod_inline.h" % stub_dir, mod, True, is_nm)
+    else:
+        dump_stub_file("%s/shm_inline.h" % stub_dir, mod, True, is_nm)
+    dump_stub_file("%s/%s_noinline.c" % (stub_dir, mod), mod, False, is_nm)
+
+# ---- utils ------------------------------------------------------------
 def dump_copyright(out):
     print("/*", file=out)
     print(" * Copyright (C) by Argonne National Laboratory", file=out)
@@ -370,7 +447,7 @@ def get_space_after_type(type):
     else:
         return ' '
 
-def dump_s_param_tail(out, s, params, tail, is_arg=0):
+def dump_s_param_tail(out, s, params, tail, is_arg=False):
     """Print to file out a function declaration or a function call. 
     Essentially it will print a string as a concatenation of s, params, and tail.
     It will expand params to the correct type depend on whether it is a declaration
