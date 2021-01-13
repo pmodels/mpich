@@ -123,12 +123,15 @@ Native API:
   mpi_isend : int
       NM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
      SHM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
+     MPIDIG: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
   isend_coll : int
       NM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request, errflag
      SHM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request, errflag
+     MPIDIG: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request, errflag
   mpi_issend : int
       NM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
      SHM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
+     MPIDIG: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
   mpi_cancel_send : int
       NM*: sreq
      SHM*: sreq
@@ -144,120 +147,157 @@ Native API:
   mpi_alloc_mem : void *
       NM : size-3, info_ptr
      SHM : size-3, info_ptr
+     MPIDIG: size-3, info_ptr
   mpi_free_mem : int
       NM : ptr
      SHM : ptr
+     MPIDIG: ptr
   mpi_improbe : int
       NM*: source, tag, comm, context_offset, addr, flag, message-2, status
      SHM*: source, tag, comm, context_offset, flag, message-2, status
+     MPIDIG: source, tag, comm, context_offset, flag, message-2, status
   mpi_iprobe : int
       NM*: source, tag, comm, context_offset, addr, flag, status
      SHM*: source, tag, comm, context_offset, flag, status
+     MPIDIG: source, tag, comm, context_offset, flag, status
   mpi_win_set_info : int
       NM : win, info
      SHM : win, info
+     MPIDIG: win, info
   mpi_win_shared_query : int
       NM*: win, rank, size-4, disp_unit, baseptr
      SHM*: win, rank, size-4, disp_unit, baseptr
+     MPIDIG: win, rank, size-4, disp_unit, baseptr
   mpi_put : int
       NM*: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, addr, winattr
      SHM*: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, winattr
+     MPIDIG: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win
   mpi_win_start : int
       NM*: group, assert, win
      SHM*: group, assert, win
+     MPIDIG: group, assert, win
   mpi_win_complete : int
       NM*: win
      SHM*: win
+     MPIDIG: win
   mpi_win_post : int
       NM*: group, assert, win
      SHM*: group, assert, win
+     MPIDIG: group, assert, win
   mpi_win_wait : int
       NM*: win
      SHM*: win
+     MPIDIG: win
   mpi_win_test : int
       NM*: win, flag
      SHM*: win, flag
+     MPIDIG: win, flag
   mpi_win_lock : int
       NM*: lock_type, rank, assert, win, addr
      SHM*: lock_type, rank, assert, win
+     MPIDIG: lock_type, rank, assert, win
   mpi_win_unlock : int
       NM*: rank, win, addr
      SHM*: rank, win
+     MPIDIG: rank, win
   mpi_win_get_info : int
       NM : win, info_p_p
      SHM : win, info_p_p
+     MPIDIG: win, info_p_p
   mpi_get : int
       NM*: origin_addr-2, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, addr, winattr
      SHM*: origin_addr-2, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, winattr
+     MPIDIG: origin_addr-2, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win
   mpi_win_free : int
       NM : win_ptr
      SHM : win_ptr
+     MPIDIG: win_ptr
   mpi_win_fence : int
       NM*: assert, win
      SHM*: assert, win
+     MPIDIG: assert, win
   mpi_win_create : int
       NM : base, length, disp_unit-2, info, comm_ptr, win_ptr
      SHM : base, length, disp_unit-2, info, comm_ptr, win_ptr
+     MPIDIG: base, length, disp_unit-2, info, comm_ptr, win_ptr
   mpi_accumulate : int
       NM*: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, op, win, addr, winattr
      SHM*: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, op, win, winattr
+     MPIDIG: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, op, win
   mpi_win_attach : int
       NM : win, base, size-2
      SHM : win, base, size-2
+     MPIDIG: win, base, size-2
   mpi_win_allocate_shared : int
       NM : size-2, disp_unit-2, info_ptr, comm_ptr, base_ptr, win_ptr
      SHM : size-2, disp_unit-2, info_ptr, comm_ptr, base_ptr, win_ptr
+     MPIDIG: size-2, disp_unit-2, info_ptr, comm_ptr, base_ptr, win_ptr
   mpi_rput : int
       NM*: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, addr, winattr, request
      SHM*: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, winattr, request
+     MPIDIG: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, request
   mpi_win_flush_local : int
       NM*: rank, win, addr
      SHM*: rank, win
+     MPIDIG: rank, win
   mpi_win_detach : int
       NM : win, base-2
      SHM : win, base-2
+     MPIDIG: win, base-2
   mpi_compare_and_swap : int
       NM*: origin_addr, compare_addr, result_addr, datatype, target_rank, target_disp, win, addr, winattr
      SHM*: origin_addr, compare_addr, result_addr, datatype, target_rank, target_disp, win, winattr
+     MPIDIG: origin_addr, compare_addr, result_addr, datatype, target_rank, target_disp, win
   mpi_raccumulate : int
       NM*: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, op, win, addr, winattr, request
      SHM*: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, op, win, winattr, request
+     MPIDIG: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, op, win, request
   mpi_rget_accumulate : int
       NM*: origin_addr, origin_count, origin_datatype, result_addr, result_count, result_datatype, target_rank, target_disp, target_count, target_datatype, op, win, addr, winattr, request
      SHM*: origin_addr, origin_count, origin_datatype, result_addr, result_count, result_datatype, target_rank, target_disp, target_count, target_datatype, op, win, winattr, request
+     MPIDIG: origin_addr, origin_count, origin_datatype, result_addr, result_count, result_datatype, target_rank, target_disp, target_count, target_datatype, op, win, request
   mpi_fetch_and_op : int
       NM*: origin_addr, result_addr, datatype, target_rank, target_disp, op, win, addr, winattr
      SHM*: origin_addr, result_addr, datatype, target_rank, target_disp, op, win, winattr
+     MPIDIG: origin_addr, result_addr, datatype, target_rank, target_disp, op, win
   mpi_win_allocate : int
       NM : size-2, disp_unit-2, info, comm, baseptr, win-2
      SHM : size-2, disp_unit-2, info, comm, baseptr, win-2
+     MPIDIG : size-2, disp_unit-2, info, comm, baseptr, win-2
   mpi_win_flush : int
       NM*: rank, win, addr
      SHM*: rank, win
   mpi_win_flush_local_all : int
       NM*: win
      SHM*: win
+     MPIDIG: win
   mpi_win_unlock_all : int
       NM*: win
      SHM*: win
   mpi_win_create_dynamic : int
       NM : info, comm, win-2
      SHM : info, comm, win-2
+     MPIDIG : info, comm, win-2
   mpi_rget : int
       NM*: origin_addr-2, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, addr, winattr, request
      SHM*: origin_addr-2, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, winattr, request
+     MPIDIG: origin_addr-2, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, request
   mpi_win_sync : int
       NM*: win
      SHM*: win
+     MPIDIG: win
   mpi_win_flush_all : int
       NM*: win
      SHM*: win
+     MPIDIG: win
   mpi_get_accumulate : int
       NM*: origin_addr, origin_count, origin_datatype, result_addr, result_count, result_datatype, target_rank, target_disp, target_count, target_datatype, op, win, addr, winattr
      SHM*: origin_addr, origin_count, origin_datatype, result_addr, result_count, result_datatype, target_rank, target_disp, target_count, target_datatype, op, win, winattr
+     MPIDIG: origin_addr, origin_count, origin_datatype, result_addr, result_count, result_datatype, target_rank, target_disp, target_count, target_datatype, op, win
   mpi_win_lock_all : int
       NM*: assert, win
      SHM*: assert, win
+     MPIDIG: assert, win
   rank_is_local : int
       NM*: target, comm
   av_is_local : int
