@@ -46,6 +46,9 @@ void MPII_init_request(void)
     }
     MPII_REQUEST_CLEAR_DBG(&MPIR_Request_builtins[MPIR_REQUEST_KIND__SEND]);
     MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.errflag = MPIR_ERR_NONE;
+    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_sendbuf = NULL;
+    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_recvbuf = NULL;
+    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.datatype = MPI_DATATYPE_NULL;
 
     /* for recv from MPI_PROC_NULL */
     req = MPIR_Request_builtins + HANDLE_INDEX(MPIR_REQUEST_NULL_RECV);
@@ -72,8 +75,21 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                 MPII_SENDQ_FORGET(request_ptr);
                 break;
             }
-        case MPIR_REQUEST_KIND__RECV:
         case MPIR_REQUEST_KIND__COLL:
+            {
+                MPII_Coll_req_t *coll = &request_ptr->u.nbc.coll;
+                if (coll->host_recvbuf) {
+                    MPIR_Localcopy(coll->host_recvbuf, coll->count, coll->datatype,
+                                   coll->user_recvbuf, coll->count, coll->datatype);
+                }
+                MPIR_Coll_host_buffer_free(coll->host_sendbuf, coll->host_recvbuf);
+                MPIR_Datatype_release_if_not_builtin(coll->datatype);
+
+                MPIR_Request_extract_status(request_ptr, status);
+                mpi_errno = request_ptr->status.MPI_ERROR;
+                break;
+            }
+        case MPIR_REQUEST_KIND__RECV:
         case MPIR_REQUEST_KIND__RMA:
             {
                 MPIR_Request_extract_status(request_ptr, status);
