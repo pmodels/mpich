@@ -330,7 +330,7 @@ int cdesc_create_datatype(CFI_cdesc_t *cdesc, int oldcount, MPI_Datatype oldtype
     {
         int size;
         MPIR_Assert(cdesc->rank <= MAX_RANK);
-        MPI_Type_size(oldtype, &size);
+        PMPI_Type_size(oldtype, &size);
         /* When cdesc->elem_len != size, things suddenly become complicated. Generally, it is hard to create
          * a composite datatype based on two datatypes. Currently we don't support it and doubt it is usefull.
          */
@@ -360,15 +360,15 @@ int cdesc_create_datatype(CFI_cdesc_t *cdesc, int oldcount, MPI_Datatype oldtype
         }
 
         if (cdesc->dim[i].sm == accum_sm) {
-            mpi_errno = MPI_Type_contiguous(extent, types[i], &types[i+1]);
+            mpi_errno = PMPI_Type_contiguous(extent, types[i], &types[i+1]);
         } else {
-            mpi_errno = MPI_Type_create_hvector(extent, 1, cdesc->dim[i].sm, types[i], &types[i+1]);
+            mpi_errno = PMPI_Type_create_hvector(extent, 1, cdesc->dim[i].sm, types[i], &types[i+1]);
         }
         if (mpi_errno != MPI_SUCCESS) {
             last = i; goto fn_fail;
         }
 
-        mpi_errno = MPI_Type_commit(&types[i+1]);
+        mpi_errno = PMPI_Type_commit(&types[i+1]);
         if (mpi_errno != MPI_SUCCESS) {
             last = i + 1; goto fn_fail;
         }
@@ -392,7 +392,7 @@ int cdesc_create_datatype(CFI_cdesc_t *cdesc, int oldcount, MPI_Datatype oldtype
 
 fn_exit:
     for (j = 1; j <= last; j++)
-        MPI_Type_free(&types[j]);
+        PMPI_Type_free(&types[j]);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -625,7 +625,7 @@ EOT
         # Free newly created datatypes if any
         for (my $i = 0; $i < $#vec; $i += 3) {
             if ($vec[$i + 1] >= 0) {
-                print CFILE "    if (dtype$vec[$i] != x$vec[$i+2])  MPI_Type_free(&dtype$vec[$i]);\n";
+                print CFILE "    if (dtype$vec[$i] != x$vec[$i+2])  PMPI_Type_free(&dtype$vec[$i]);\n";
             }
         }
 
