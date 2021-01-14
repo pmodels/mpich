@@ -34,7 +34,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
     if test "${ucx_embedded}" = "yes" ; then
         PAC_PUSH_ALL_FLAGS()
         PAC_RESET_ALL_FLAGS()
-        PAC_CONFIG_SUBDIR_ARGS([modules/ucx],[--disable-static --enable-embedded],[],[AC_MSG_ERROR(ucx configure failed)])
+        PAC_CONFIG_SUBDIR_ARGS([modules/ucx],[--disable-static --enable-embedded --with-java=no],[],[AC_MSG_ERROR(ucx configure failed)])
         PAC_POP_ALL_FLAGS()
         PAC_APPEND_FLAG([-I${main_top_builddir}/modules/ucx/src], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/ucx/src], [CPPFLAGS])
