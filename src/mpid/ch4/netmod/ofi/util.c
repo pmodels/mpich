@@ -7,6 +7,8 @@
 #include "ofi_impl.h"
 #include "ofi_events.h"
 
+#define MPIDI_OFI_MR_KEY_PREFIX_SHIFT 63
+
 int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
 {
     int mpi_errno;
@@ -60,46 +62,99 @@ int MPIDI_OFI_mr_key_allocator_init(void)
         val >>= shift##ULL;                               \
         nval += shift;                                    \
     }
-uint64_t MPIDI_OFI_mr_key_alloc()
+
+/* when key_type is MPIDI_OFI_LOCAL_MR_KEY, the input requested_key is ignored
+ * and can be passed as MPIDI_OFI_INVALID_MR_KEY because mr key allocator will
+ * decide which key to use. When key_type is MPIDI_OFI_COLL_MR_KEY, user should
+ * pass a collectively unique key as requested_key and mr key allocator will mark
+ * coll bit of the key and return to user.
+ * we use highest bit of key to distinguish coll (user-specific key) and local
+ * (auto-generated) 64-bits key; since the highest bit is reserved for key type,
+ * a valid key has maximal 63 bits. */
+uint64_t MPIDI_OFI_mr_key_alloc(int key_type, uint64_t requested_key)
 {
-    uint64_t i;
-    for (i = mr_key_allocator.last_free_mr_key; i < mr_key_allocator.num_ints; i++) {
-        if (mr_key_allocator.bitmask[i]) {
-            register uint64_t val, nval;
-            val = mr_key_allocator.bitmask[i];
-            nval = 2;
-            MPIDI_OFI_INDEX_CALC(val, nval, 32, 0xFFFFFFFFULL);
-            MPIDI_OFI_INDEX_CALC(val, nval, 16, 0xFFFFULL);
-            MPIDI_OFI_INDEX_CALC(val, nval, 8, 0xFFULL);
-            MPIDI_OFI_INDEX_CALC(val, nval, 4, 0xFULL);
-            MPIDI_OFI_INDEX_CALC(val, nval, 2, 0x3ULL);
-            nval -= val & 0x1ULL;
-            mr_key_allocator.bitmask[i] &= ~(0x1ULL << (nval - 1));
-            mr_key_allocator.last_free_mr_key = i;
-            return i * sizeof(uint64_t) * 8 + (nval - 1);
-        }
-        if (i == mr_key_allocator.num_ints - 1) {
-            mr_key_allocator.num_ints += mr_key_allocator.chunk_size;
-            mr_key_allocator.bitmask = MPL_realloc(mr_key_allocator.bitmask,
-                                                   sizeof(uint64_t) * mr_key_allocator.num_ints,
-                                                   MPL_MEM_RMA);
-            MPIR_Assert(mr_key_allocator.bitmask);
-            memset(&mr_key_allocator.bitmask[i + 1], 0xFF,
-                   sizeof(uint64_t) * mr_key_allocator.chunk_size);
-        }
+    uint64_t ret_key = MPIDI_OFI_INVALID_MR_KEY;
+
+    switch (key_type) {
+        case MPIDI_OFI_LOCAL_MR_KEY:
+            {
+                uint64_t i;
+                for (i = mr_key_allocator.last_free_mr_key; i < mr_key_allocator.num_ints; i++) {
+                    if (mr_key_allocator.bitmask[i]) {
+                        register uint64_t val, nval;
+                        val = mr_key_allocator.bitmask[i];
+                        nval = 2;
+                        MPIDI_OFI_INDEX_CALC(val, nval, 32, 0xFFFFFFFFULL);
+                        MPIDI_OFI_INDEX_CALC(val, nval, 16, 0xFFFFULL);
+                        MPIDI_OFI_INDEX_CALC(val, nval, 8, 0xFFULL);
+                        MPIDI_OFI_INDEX_CALC(val, nval, 4, 0xFULL);
+                        MPIDI_OFI_INDEX_CALC(val, nval, 2, 0x3ULL);
+                        nval -= val & 0x1ULL;
+                        mr_key_allocator.bitmask[i] &= ~(0x1ULL << (nval - 1));
+                        mr_key_allocator.last_free_mr_key = i;
+                        ret_key = i * sizeof(uint64_t) * 8 + (nval - 1);
+                        /* assert local key does not exceed its range */
+                        MPIR_Assert((ret_key & (1ULL << MPIDI_OFI_MR_KEY_PREFIX_SHIFT)) == 0);
+                        break;
+                    }
+                    if (i == mr_key_allocator.num_ints - 1) {
+                        mr_key_allocator.num_ints += mr_key_allocator.chunk_size;
+                        mr_key_allocator.bitmask = MPL_realloc(mr_key_allocator.bitmask,
+                                                               sizeof(uint64_t) *
+                                                               mr_key_allocator.num_ints,
+                                                               MPL_MEM_RMA);
+                        MPIR_Assert(mr_key_allocator.bitmask);
+                        memset(&mr_key_allocator.bitmask[i + 1], 0xFF,
+                               sizeof(uint64_t) * mr_key_allocator.chunk_size);
+                    }
+                }
+                break;
+            }
+
+        case MPIDI_OFI_COLL_MR_KEY:
+            {
+                MPIR_Assert(requested_key != MPIDI_OFI_INVALID_MR_KEY);
+                ret_key = requested_key | (1ULL << MPIDI_OFI_MR_KEY_PREFIX_SHIFT);
+                break;
+            }
+
+        default:
+            {
+                MPIR_Assert(0);
+            }
     }
-    return -1;
+
+    return ret_key;
 }
 
-void MPIDI_OFI_mr_key_free(uint64_t idx)
+void MPIDI_OFI_mr_key_free(int key_type, uint64_t alloc_key)
 {
-    uint64_t int_index, bitpos, numbits;
-    numbits = sizeof(uint64_t) * 8;
-    int_index = (idx + 1) / numbits;
-    bitpos = idx % numbits;
 
-    mr_key_allocator.last_free_mr_key = MPL_MIN(int_index, mr_key_allocator.last_free_mr_key);
-    mr_key_allocator.bitmask[int_index] |= (0x1ULL << bitpos);
+    switch (key_type) {
+        case MPIDI_OFI_LOCAL_MR_KEY:
+            {
+                uint64_t int_index, bitpos, numbits;
+
+                numbits = sizeof(uint64_t) * 8;
+                int_index = alloc_key / numbits;
+                bitpos = alloc_key % numbits;
+                mr_key_allocator.last_free_mr_key =
+                    MPL_MIN(int_index, mr_key_allocator.last_free_mr_key);
+                mr_key_allocator.bitmask[int_index] |= (0x1ULL << bitpos);
+                break;
+            }
+
+        case MPIDI_OFI_COLL_MR_KEY:
+            {
+                MPIR_Assert(alloc_key != MPIDI_OFI_INVALID_MR_KEY);
+                break;
+            }
+
+        default:
+            {
+                MPIR_Assert(0);
+            }
+    }
 }
 
 void MPIDI_OFI_mr_key_allocator_destroy()
