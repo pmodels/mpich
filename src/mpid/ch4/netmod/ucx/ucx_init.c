@@ -202,16 +202,14 @@ static int all_vnis_address_exchange(void)
     goto fn_exit;
 }
 
-int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
+int MPIDI_UCX_init_local(int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
+
     ucp_config_t *config;
     ucs_status_t ucx_status;
     uint64_t features = 0;
     ucp_params_t ucp_params;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
 
     init_num_vnis();
 
@@ -227,7 +225,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     ucp_params.request_size = sizeof(MPIDI_UCX_ucp_request_t);
     ucp_params.request_init = request_init_callback;
     ucp_params.request_cleanup = NULL;
-    ucp_params.estimated_num_eps = size;
+    ucp_params.estimated_num_eps = MPIR_Process.size;
 
     ucp_params.field_mask = UCP_PARAM_FIELD_FEATURES |
         UCP_PARAM_FIELD_REQUEST_SIZE |
@@ -242,6 +240,36 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
 
+    *tag_bits = MPIR_TAG_BITS_DEFAULT;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    if (MPIDI_UCX_global.context != NULL)
+        ucp_cleanup(MPIDI_UCX_global.context);
+
+    goto fn_exit;
+}
+
+int MPIDI_UCX_init_world(MPIR_Comm * init_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int tmp = MPIR_Process.tag_bits;
+    mpi_errno = MPIDI_UCX_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.appnum,
+                                        &tmp, init_comm);
+    /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
+    MPIR_Assert(tmp == MPIR_Process.tag_bits);
+
+    return mpi_errno;
+}
+
+int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
+
     /* initialize worker for vni 0 */
     mpi_errno = init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
@@ -249,17 +277,12 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     mpi_errno = initial_address_exchange(init_comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    *tag_bits = MPIR_TAG_BITS_DEFAULT;
-
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:
     if (MPIDI_UCX_global.ctx[0].worker != NULL)
         ucp_worker_destroy(MPIDI_UCX_global.ctx[0].worker);
-
-    if (MPIDI_UCX_global.context != NULL)
-        ucp_cleanup(MPIDI_UCX_global.context);
 
     goto fn_exit;
 }
