@@ -441,48 +441,6 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
 
     new_dtp->typerep.handle = NULL;
 
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        MPI_Aint el_sz = MPIR_Datatype_get_basic_size(oldtype);
-
-        new_dtp->size = count * el_sz;
-        new_dtp->true_lb = 0;
-        new_dtp->lb = 0;
-        new_dtp->true_ub = count * el_sz;
-        new_dtp->ub = new_dtp->true_ub;
-        new_dtp->extent = new_dtp->ub - new_dtp->lb;
-
-        new_dtp->alignsize = el_sz;
-        new_dtp->n_builtin_elements = count;
-        new_dtp->builtin_element_size = el_sz;
-        new_dtp->basic_type = oldtype;
-        new_dtp->is_contig = 1;
-    } else {
-        /* user-defined base type (oldtype) */
-        MPIR_Datatype *old_dtp;
-
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-
-        new_dtp->size = count * old_dtp->size;
-
-        MPII_DATATYPE_CONTIG_LB_UB((MPI_Aint) count,
-                                   old_dtp->lb,
-                                   old_dtp->ub, old_dtp->extent, new_dtp->lb, new_dtp->ub);
-
-        /* easiest to calc true lb/ub relative to lb/ub; doesn't matter
-         * if there are sticky lb/ubs or not when doing this.
-         */
-        new_dtp->true_lb = new_dtp->lb + (old_dtp->true_lb - old_dtp->lb);
-        new_dtp->true_ub = new_dtp->ub + (old_dtp->true_ub - old_dtp->ub);
-        new_dtp->extent = new_dtp->ub - new_dtp->lb;
-
-        new_dtp->alignsize = old_dtp->alignsize;
-        new_dtp->n_builtin_elements = count * old_dtp->n_builtin_elements;
-        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
-        new_dtp->basic_type = old_dtp->basic_type;
-
-        MPIR_Datatype_is_contig(oldtype, &new_dtp->is_contig);
-    }
-
     mpi_errno = MPIR_Typerep_create_contig(count, oldtype, new_dtp);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -930,44 +888,6 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     new_dtp->flattened = NULL;
 
     new_dtp->typerep.handle = NULL;
-
-    /* if oldtype is a basic, we build a contiguous typerep of count = 1 */
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        int oldsize = MPIR_Datatype_get_basic_size(oldtype);
-
-        new_dtp->size = oldsize;
-        new_dtp->true_lb = 0;
-        new_dtp->lb = lb;
-        new_dtp->true_ub = oldsize;
-        new_dtp->ub = lb + extent;
-        new_dtp->extent = extent;
-        new_dtp->alignsize = oldsize;   /* FIXME ??? */
-        new_dtp->n_builtin_elements = 1;
-        new_dtp->builtin_element_size = oldsize;
-        new_dtp->is_contig = (extent == oldsize) ? 1 : 0;
-        new_dtp->basic_type = oldtype;
-    } else {
-        /* user-defined base type */
-        MPIR_Datatype *old_dtp;
-
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-
-        new_dtp->size = old_dtp->size;
-        new_dtp->true_lb = old_dtp->true_lb;
-        new_dtp->lb = lb;
-        new_dtp->true_ub = old_dtp->true_ub;
-        new_dtp->ub = lb + extent;
-        new_dtp->extent = extent;
-        new_dtp->alignsize = old_dtp->alignsize;
-        new_dtp->n_builtin_elements = old_dtp->n_builtin_elements;
-        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
-        new_dtp->basic_type = old_dtp->basic_type;
-
-        if (extent == old_dtp->size)
-            MPIR_Datatype_is_contig(oldtype, &new_dtp->is_contig);
-        else
-            new_dtp->is_contig = 0;
-    }
 
     mpi_errno = MPIR_Typerep_create_resized(oldtype, lb, extent, new_dtp);
     MPIR_ERR_CHECK(mpi_errno);
@@ -1576,13 +1496,7 @@ int MPIR_Type_indexed(int count,
                       int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    int old_is_contig;
     int i;
-    MPI_Aint contig_count;
-    MPI_Aint el_ct, old_ct, old_sz;
-    MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
-    MPI_Aint min_lb = 0, max_ub = 0, eff_disp;
-
     MPIR_Datatype *new_dtp;
 
     if (count == 0)
@@ -1615,49 +1529,6 @@ int MPIR_Type_indexed(int count,
 
     new_dtp->typerep.handle = NULL;
 
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        /* builtins are handled differently than user-defined types because
-         * they have no associated typerep or datatype structure.
-         */
-        MPI_Aint el_sz = MPIR_Datatype_get_basic_size(oldtype);
-        old_sz = el_sz;
-        el_ct = 1;
-
-        old_lb = 0;
-        old_true_lb = 0;
-        old_ub = (MPI_Aint) el_sz;
-        old_true_ub = (MPI_Aint) el_sz;
-        old_extent = (MPI_Aint) el_sz;
-        old_is_contig = 1;
-
-        MPIR_Assign_trunc(new_dtp->alignsize, el_sz, MPI_Aint);
-        new_dtp->builtin_element_size = el_sz;
-        new_dtp->basic_type = oldtype;
-    } else {
-        /* user-defined base type (oldtype) */
-        MPIR_Datatype *old_dtp;
-
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-
-        /* Ensure that "builtin_element_size" fits into an int datatype. */
-        MPIR_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
-
-        old_sz = old_dtp->size;
-        el_ct = old_dtp->n_builtin_elements;
-
-        old_lb = old_dtp->lb;
-        old_true_lb = old_dtp->true_lb;
-        old_ub = old_dtp->ub;
-        old_true_ub = old_dtp->true_ub;
-        old_extent = old_dtp->extent;
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
-
-        new_dtp->alignsize = old_dtp->alignsize;
-        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
-        new_dtp->basic_type = old_dtp->basic_type;
-    }
-
-    /* find the first nonzero blocklength element */
     i = 0;
     while (i < count && blocklength_array[i] == 0)
         i++;
@@ -1665,67 +1536,6 @@ int MPIR_Type_indexed(int count,
     if (i == count) {
         MPIR_Handle_obj_free(&MPIR_Datatype_mem, new_dtp);
         return MPII_Type_zerolen(newtype);
-    }
-
-    /* priming for loop */
-    old_ct = blocklength_array[i];
-    eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[i] :
-        (((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
-
-    MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
-                              eff_disp, old_lb, old_ub, old_extent, min_lb, max_ub);
-
-    /* determine min lb, max ub, and count of old types in remaining
-     * nonzero size blocks
-     */
-    for (i++; i < count; i++) {
-        MPI_Aint tmp_lb, tmp_ub;
-
-        if (blocklength_array[i] > 0) {
-            old_ct += blocklength_array[i];     /* add more oldtypes */
-
-            eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[i] :
-                (((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
-
-            /* calculate ub and lb for this block */
-            MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) (blocklength_array[i]),
-                                      eff_disp, old_lb, old_ub, old_extent, tmp_lb, tmp_ub);
-
-            if (tmp_lb < min_lb)
-                min_lb = tmp_lb;
-            if (tmp_ub > max_ub)
-                max_ub = tmp_ub;
-        }
-    }
-
-    new_dtp->size = old_ct * old_sz;
-
-    new_dtp->lb = min_lb;
-    new_dtp->ub = max_ub;
-    new_dtp->true_lb = min_lb + (old_true_lb - old_lb);
-    new_dtp->true_ub = max_ub + (old_true_ub - old_ub);
-    new_dtp->extent = max_ub - min_lb;
-
-    new_dtp->n_builtin_elements = old_ct * el_ct;
-
-    /* new type is only contig for N types if it's all one big
-     * block, its size and extent are the same, and the old type
-     * was also contiguous.
-     */
-    new_dtp->is_contig = 0;
-    if (old_is_contig) {
-        MPI_Aint *blklens = MPL_malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-        MPIR_Assert(blklens != NULL);
-        for (i = 0; i < count; i++)
-            blklens[i] = blocklength_array[i];
-        contig_count = MPII_Datatype_indexed_count_contig(count,
-                                                          blklens,
-                                                          displacement_array, dispinbytes,
-                                                          old_extent);
-        if ((contig_count == 1) && ((MPI_Aint) new_dtp->size == new_dtp->extent)) {
-            new_dtp->is_contig = 1;
-        }
-        MPL_free(blklens);
     }
 
     if (dispinbytes) {
@@ -1814,37 +1624,13 @@ int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size)
     return mpi_errno;
 }
 
-static MPI_Aint struct_alignsize(int count, const MPI_Datatype * oldtype_array)
-{
-    MPI_Aint max_alignsize = 0, tmp_alignsize;
-
-    for (int i = 0; i < count; i++) {
-        if (HANDLE_IS_BUILTIN(oldtype_array[i])) {
-            tmp_alignsize = MPIR_Datatype_builtintype_alignment(oldtype_array[i]);
-        } else {
-            MPIR_Datatype *dtp;
-            MPIR_Datatype_get_ptr(oldtype_array[i], dtp);
-            tmp_alignsize = dtp->alignsize;
-        }
-        if (max_alignsize < tmp_alignsize)
-            max_alignsize = tmp_alignsize;
-    }
-
-    return max_alignsize;
-}
-
 static int type_struct(int count,
                        const int *blocklength_array,
                        const MPI_Aint * displacement_array,
                        const MPI_Datatype * oldtype_array, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, old_are_contig = 1, definitely_not_contig = 0;
-    int found_true_lb = 0, found_true_ub = 0, found_el_type = 0, found_lb = 0, found_ub = 0;
-    MPI_Aint el_sz = 0;
-    MPI_Aint size = 0;
-    MPI_Datatype el_type = MPI_DATATYPE_NULL;
-    MPI_Aint true_lb_disp = 0, true_ub_disp = 0, lb_disp = 0, ub_disp = 0;
+    int i;
 
     MPIR_Datatype *new_dtp;
 
@@ -1886,144 +1672,6 @@ static int type_struct(int count,
     if (i == count) {
         MPIR_Handle_obj_free(&MPIR_Datatype_mem, new_dtp);
         return MPII_Type_zerolen(newtype);
-    }
-
-    for (i = 0; i < count; i++) {
-        MPI_Aint tmp_lb, tmp_ub, tmp_true_lb, tmp_true_ub;
-        MPI_Aint tmp_el_sz;
-        MPI_Datatype tmp_el_type;
-        MPIR_Datatype *old_dtp = NULL;
-        int old_is_contig;
-
-        /* Interpreting typemap to not include 0 blklen things. -- Rob
-         * Ross, 10/31/2005
-         */
-        if (blocklength_array[i] == 0)
-            continue;
-
-        if (HANDLE_IS_BUILTIN(oldtype_array[i])) {
-            tmp_el_sz = MPIR_Datatype_get_basic_size(oldtype_array[i]);
-            tmp_el_type = oldtype_array[i];
-
-            MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) (blocklength_array[i]),
-                                      displacement_array[i],
-                                      0, tmp_el_sz, tmp_el_sz, tmp_lb, tmp_ub);
-            tmp_true_lb = tmp_lb;
-            tmp_true_ub = tmp_ub;
-
-            size += tmp_el_sz * blocklength_array[i];
-        } else {
-            MPIR_Datatype_get_ptr(oldtype_array[i], old_dtp);
-
-            /* Ensure that "builtin_element_size" fits into an int datatype. */
-            MPIR_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
-
-            tmp_el_sz = old_dtp->builtin_element_size;
-            tmp_el_type = old_dtp->basic_type;
-
-            MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
-                                      displacement_array[i],
-                                      old_dtp->lb, old_dtp->ub, old_dtp->extent, tmp_lb, tmp_ub);
-            tmp_true_lb = tmp_lb + (old_dtp->true_lb - old_dtp->lb);
-            tmp_true_ub = tmp_ub + (old_dtp->true_ub - old_dtp->ub);
-
-            size += old_dtp->size * blocklength_array[i];
-        }
-
-        /* element size and type */
-        if (found_el_type == 0) {
-            el_sz = tmp_el_sz;
-            el_type = tmp_el_type;
-            found_el_type = 1;
-        } else if (el_sz != tmp_el_sz) {
-            el_sz = -1;
-            el_type = MPI_DATATYPE_NULL;
-        } else if (el_type != tmp_el_type) {
-            /* Q: should we set el_sz = -1 even though the same? */
-            el_type = MPI_DATATYPE_NULL;
-        }
-
-        /* keep lowest lb/true_lb and highest ub/true_ub
-         *
-         * note: checking for contiguity at the same time, to avoid
-         *       yet another pass over the arrays
-         */
-        if (!found_true_lb) {
-            found_true_lb = 1;
-            true_lb_disp = tmp_true_lb;
-        } else if (true_lb_disp > tmp_true_lb) {
-            /* element starts before previous */
-            true_lb_disp = tmp_true_lb;
-            definitely_not_contig = 1;
-        }
-
-        if (!found_lb) {
-            found_lb = 1;
-            lb_disp = tmp_lb;
-        } else if (lb_disp > tmp_lb) {
-            /* lb before previous */
-            lb_disp = tmp_lb;
-            definitely_not_contig = 1;
-        }
-
-        if (!found_true_ub) {
-            found_true_ub = 1;
-            true_ub_disp = tmp_true_ub;
-        } else if (true_ub_disp < tmp_true_ub) {
-            true_ub_disp = tmp_true_ub;
-        } else {
-            /* element ends before previous ended */
-            definitely_not_contig = 1;
-        }
-
-        if (!found_ub) {
-            found_ub = 1;
-            ub_disp = tmp_ub;
-        } else if (ub_disp < tmp_ub) {
-            ub_disp = tmp_ub;
-        } else {
-            /* ub before previous */
-            definitely_not_contig = 1;
-        }
-
-        MPIR_Datatype_is_contig(oldtype_array[i], &old_is_contig);
-        if (!old_is_contig)
-            old_are_contig = 0;
-    }
-
-    new_dtp->n_builtin_elements = -1;   /* TODO */
-    new_dtp->builtin_element_size = el_sz;
-    new_dtp->basic_type = el_type;
-
-    new_dtp->true_lb = true_lb_disp;
-    new_dtp->lb = lb_disp;
-
-    new_dtp->true_ub = true_ub_disp;
-    new_dtp->ub = ub_disp;
-
-    new_dtp->alignsize = struct_alignsize(count, oldtype_array);
-
-    new_dtp->extent = new_dtp->ub - new_dtp->lb;
-    /* account for padding */
-    MPI_Aint epsilon = (new_dtp->alignsize > 0) ?
-        new_dtp->extent % ((MPI_Aint) (new_dtp->alignsize)) : 0;
-
-    if (epsilon) {
-        new_dtp->ub += ((MPI_Aint) (new_dtp->alignsize) - epsilon);
-        new_dtp->extent = new_dtp->ub - new_dtp->lb;
-    }
-
-    new_dtp->size = size;
-
-    /* new type is contig for N types if its size and extent are the
-     * same, and the old type was also contiguous, and we didn't see
-     * something noncontiguous based on true ub/ub.
-     */
-    if (((MPI_Aint) (new_dtp->size) == new_dtp->extent) &&
-        old_are_contig && (!definitely_not_contig)) {
-        new_dtp->is_contig = 1;
-    } else {
-        new_dtp->is_contig = 0;
     }
 
     mpi_errno = MPIR_Typerep_create_struct(count, blocklength_array, displacement_array,
@@ -2154,10 +1802,6 @@ int MPIR_Type_vector(int count,
                      int strideinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    int old_is_contig;
-    MPI_Aint old_sz;
-    MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub, eff_stride;
-
     MPIR_Datatype *new_dtp;
 
     if (count == 0)
@@ -2182,68 +1826,6 @@ int MPIR_Type_vector(int count,
     new_dtp->flattened = NULL;
 
     new_dtp->typerep.handle = NULL;
-
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        MPI_Aint el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
-
-        old_lb = 0;
-        old_true_lb = 0;
-        old_ub = el_sz;
-        old_true_ub = el_sz;
-        old_sz = el_sz;
-        old_extent = el_sz;
-        old_is_contig = 1;
-
-        new_dtp->size = (MPI_Aint) count *(MPI_Aint) blocklength *el_sz;
-
-        new_dtp->alignsize = el_sz;     /* ??? */
-        new_dtp->n_builtin_elements = count * blocklength;
-        new_dtp->builtin_element_size = el_sz;
-        new_dtp->basic_type = oldtype;
-
-        eff_stride = (strideinbytes) ? stride : (stride * el_sz);
-    } else {    /* user-defined base type (oldtype) */
-
-        MPIR_Datatype *old_dtp;
-
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-
-        old_lb = old_dtp->lb;
-        old_true_lb = old_dtp->true_lb;
-        old_ub = old_dtp->ub;
-        old_true_ub = old_dtp->true_ub;
-        old_sz = old_dtp->size;
-        old_extent = old_dtp->extent;
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
-
-        new_dtp->size = count * blocklength * old_dtp->size;
-
-        new_dtp->alignsize = old_dtp->alignsize;
-        new_dtp->n_builtin_elements = count * blocklength * old_dtp->n_builtin_elements;
-        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
-        new_dtp->basic_type = old_dtp->basic_type;
-
-        eff_stride = (strideinbytes) ? stride : (stride * old_dtp->extent);
-    }
-
-    MPII_DATATYPE_VECTOR_LB_UB((MPI_Aint) count,
-                               eff_stride,
-                               (MPI_Aint) blocklength,
-                               old_lb, old_ub, old_extent, new_dtp->lb, new_dtp->ub);
-    new_dtp->true_lb = new_dtp->lb + (old_true_lb - old_lb);
-    new_dtp->true_ub = new_dtp->ub + (old_true_ub - old_ub);
-    new_dtp->extent = new_dtp->ub - new_dtp->lb;
-
-    /* new type is only contig for N types if old one was, and
-     * size and extent of new type are equivalent, and stride is
-     * equal to blocklength * size of old type.
-     */
-    if ((MPI_Aint) (new_dtp->size) == new_dtp->extent &&
-        eff_stride == (MPI_Aint) blocklength * old_sz && old_is_contig) {
-        new_dtp->is_contig = 1;
-    } else {
-        new_dtp->is_contig = 0;
-    }
 
     if (strideinbytes) {
         mpi_errno = MPIR_Typerep_create_hvector(count, blocklength, stride, oldtype, new_dtp);
