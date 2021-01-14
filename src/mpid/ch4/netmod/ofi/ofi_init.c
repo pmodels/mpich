@@ -598,13 +598,9 @@ static int dynproc_send_disconnect(int conn_id)
     goto fn_exit;
 }
 
-int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
+int MPIDI_OFI_init_local(int *tag_bits)
 {
-    int mpi_errno = MPI_SUCCESS, i;
-    size_t optlen;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
+    int mpi_errno = MPI_SUCCESS;
 
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
@@ -675,10 +671,69 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     /* Creating the additional vni contexts.
      * This code maybe moved to a later stage */
-    for (i = 1; i < MPIDI_OFI_global.num_vnis; i++) {
+    for (int i = 1; i < MPIDI_OFI_global.num_vnis; i++) {
         mpi_errno = create_vni_context(i);
         MPIR_ERR_CHECK(mpi_errno);
     }
+
+    /* -------------------------------- */
+    /* Create the id to object maps     */
+    /* -------------------------------- */
+    MPIDIU_map_create(&MPIDI_OFI_global.win_map, MPL_MEM_RMA);
+    MPIDIU_map_create(&MPIDI_OFI_global.req_map, MPL_MEM_OTHER);
+
+    /* Create pack buffer pool */
+    mpi_errno =
+        MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE,
+                                              MPIR_CVAR_CH4_OFI_NUM_PACK_BUFFERS_PER_CHUNK,
+                                              MPIR_CVAR_CH4_OFI_MAX_NUM_PACK_BUFFERS,
+                                              host_alloc_registered,
+                                              host_free_registered,
+                                              &MPIDI_OFI_global.pack_buf_pool);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Initalize RMA keys allocator */
+    MPIDI_OFI_mr_key_allocator_init();
+
+    /* ------------------------------------------------- */
+    /* Initialize Connection Manager for Dynamic Tasking */
+    /* ------------------------------------------------- */
+    conn_manager_init();
+
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGAIN, "eagain", NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+
+    /* index datatypes for RMA atomics */
+    MPIDI_OFI_index_datatypes();
+
+    MPIDI_OFI_global.deferred_am_isend_q = NULL;
+
+  fn_exit:
+    *tag_bits = MPIDI_OFI_TAG_BITS;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_OFI_init_world(MPIR_Comm * init_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int tmp = MPIR_Process.tag_bits;
+    mpi_errno = MPIDI_OFI_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.appnum,
+                                        &tmp, init_comm);
+    /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
+    MPIR_Assert(tmp == MPIR_Process.tag_bits);
+
+    return mpi_errno;
+}
+
+int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    size_t optlen;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
 
     /* ------------------------------------------------------------------------ */
     /* Address exchange (essentially activating the vnis)                       */
@@ -688,12 +743,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         mpi_errno = addr_exchange_root_vni(init_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
-
-    /* -------------------------------- */
-    /* Create the id to object maps     */
-    /* -------------------------------- */
-    MPIDIU_map_create(&MPIDI_OFI_global.win_map, MPL_MEM_RMA);
-    MPIDIU_map_create(&MPIDI_OFI_global.req_map, MPL_MEM_OTHER);
 
     /* ---------------------------------- */
     /* Initialize Active Message          */
@@ -727,7 +776,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         MPIDIU_map_create(&MPIDI_OFI_global.am_send_seq_tracker, MPL_MEM_BUFFER);
         MPIDI_OFI_global.am_unordered_msgs = NULL;
 
-        for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
+        for (int i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
             MPL_gpu_malloc_host(&(MPIDI_OFI_global.am_bufs[i]), MPIDI_OFI_AM_BUFF_SZ);
             MPIDI_OFI_global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
             MPIDI_OFI_global.am_reqs[i].index = i;
@@ -750,34 +799,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
     MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
 
-    /* Create pack buffer pool */
-    mpi_errno =
-        MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE,
-                                              MPIR_CVAR_CH4_OFI_NUM_PACK_BUFFERS_PER_CHUNK,
-                                              MPIR_CVAR_CH4_OFI_MAX_NUM_PACK_BUFFERS,
-                                              host_alloc_registered,
-                                              host_free_registered,
-                                              &MPIDI_OFI_global.pack_buf_pool);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Initalize RMA keys allocator */
-    MPIDI_OFI_mr_key_allocator_init();
-
-    /* ------------------------------------------------- */
-    /* Initialize Connection Manager for Dynamic Tasking */
-    /* ------------------------------------------------- */
-    conn_manager_init();
-
-    MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGAIN, "eagain", NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
-
-    /* index datatypes for RMA atomics */
-    MPIDI_OFI_index_datatypes();
-
-    MPIDI_OFI_global.deferred_am_isend_q = NULL;
-
   fn_exit:
-    *tag_bits = MPIDI_OFI_TAG_BITS;
-
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:

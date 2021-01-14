@@ -585,7 +585,24 @@ int MPID_Init_local(int requested, int *provided)
 
         /* TODO: workq */
     }
+    {
+        int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno = MPIDI_SHM_init_local(&shm_tag_bits);
 
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
+#endif
+
+        mpi_errno = MPIDI_NM_init_local(&nm_tag_bits);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
+
+        /* Use the minimum tag_bits from the netmod and shmod */
+        MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
+    }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_LOCAL);
     return mpi_errno;
@@ -611,26 +628,18 @@ int MPID_Init_world(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     {
-        int rank = MPIR_Process.rank;
-        int size = MPIR_Process.size;
-        int appnum = MPIR_Process.appnum;
-
-        int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &shm_tag_bits);
+        mpi_errno = MPIDI_SHM_init_world();
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 #endif
 
-        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits, init_comm);
+        mpi_errno = MPIDI_NM_init_world(init_comm);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
-
-        /* Use the minimum tag_bits from the netmod and shmod */
-        MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
 
     MPIDIG_am_check_init();
