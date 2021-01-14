@@ -627,7 +627,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     }
 
     /* Received an expected message */
-  repeat:
+  fn_repeat:
     fi_src_addr = am_hdr->fi_src_addr;
     next_seqno = am_hdr->seqno + 1;
 
@@ -694,7 +694,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
          * in MPIDI_OFI_am_enqueue_unordered_msg */
         has_alignment_copy = 1;
 #endif
-        goto repeat;
+        goto fn_repeat;
     }
 
     /* Record the next expected sequence number from fi_src_addr */
