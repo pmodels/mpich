@@ -512,7 +512,12 @@ static int win_init(MPIR_Win * win)
     memset(&MPIDI_OFI_WIN(win), 0, sizeof(MPIDI_OFI_win_t));
 
     MPIDI_OFI_WIN(win).win_id =
-        MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
+        MPIDI_OFI_mr_key_alloc(MPIDI_OFI_COLL_MR_KEY, win->comm_ptr->context_id);
+    if (MPIDI_OFI_WIN(win).win_id == -1ULL) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to get global mr key.\n");
+        mpi_errno = MPIDI_OFI_ENAVAIL;
+        goto fn_exit;
+    }
 
     MPIDIU_map_set(MPIDI_OFI_global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
@@ -975,7 +980,7 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_FREE_HOOK);
 
     if (MPIDI_OFI_ENABLE_RMA) {
-        MPIDI_OFI_mr_key_free(MPIDI_OFI_WIN(win).win_id);
+        MPIDI_OFI_mr_key_free(MPIDI_OFI_COLL_MR_KEY, MPIDI_OFI_WIN(win).win_id);
         MPIDIU_map_erase(MPIDI_OFI_global.win_map, MPIDI_OFI_WIN(win).win_id);
         /* For scalable EP: push transmit context index back into available pool. */
         if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {
