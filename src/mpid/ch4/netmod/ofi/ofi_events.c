@@ -353,7 +353,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         /* Clean up the memory region */
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             uint64_t key = fi_mr_key(huge_send_mr);
-            MPIDI_OFI_mr_key_free(key);
+            MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, key);
         }
         MPIDI_OFI_CALL(fi_close(&huge_send_mr->fid), mr_unreg);
 
