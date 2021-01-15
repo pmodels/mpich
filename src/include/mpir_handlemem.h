@@ -345,12 +345,13 @@ static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t * objmem, void *obje
 {
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
-    MPIR_Handle_obj_free_unsafe(objmem, object);
+    MPIR_Handle_obj_free_unsafe(objmem, object, /* not info */ FALSE);
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
 }
 
-static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t * objmem, void *object)
+static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t * objmem, void *object,
+                                               bool is_info)
 {
     MPIR_Handle_common *obj = (MPIR_Handle_common *) object;
 
@@ -397,6 +398,15 @@ static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t * objmem, voi
     obj->next = objmem->avail;
     objmem->avail = obj;
     objmem->num_avail++;
+
+    if (is_info) {
+        /* This option slows down this routine.  This active garbage collection
+         * is for MPI_Info, which cannot be freed on finalization. */
+        if (objmem->num_avail == objmem->num_allocated) {
+            /* All memory has been released.  Free and initialize objmem. */
+            MPIR_Handle_free(objmem);
+        }
+    }
 }
 
 /*
