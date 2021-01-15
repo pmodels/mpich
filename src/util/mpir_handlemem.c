@@ -183,6 +183,9 @@ static MPL_initlock_t info_handle_obj_lock = MPL_INITLOCK_INITIALIZER;
   +*/
 void *MPIR_Info_handle_obj_alloc(MPIR_Object_alloc_t * objmem)
 {
+    /* Non-MPI_Info objects must call MPIR_Handle_obj_alloc(). */
+    MPIR_Assert(objmem->kind == MPIR_INFO);
+
     void *ret;
     MPL_initlock_lock(&info_handle_obj_lock);
     ret = MPIR_Handle_obj_alloc_unsafe(objmem, HANDLE_NUM_BLOCKS, HANDLE_NUM_INDICES);
@@ -202,6 +205,8 @@ void *MPIR_Info_handle_obj_alloc(MPIR_Object_alloc_t * objmem)
   +*/
 void MPIR_Info_handle_obj_free(MPIR_Object_alloc_t * objmem, void *object)
 {
+    MPIR_Assert(objmem->kind == MPIR_INFO);
+
     MPL_initlock_lock(&info_handle_obj_lock);
     MPIR_Handle_obj_free_unsafe(objmem, object, /* info object */ TRUE);
     MPL_initlock_unlock(&info_handle_obj_lock);
