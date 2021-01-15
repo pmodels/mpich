@@ -53,6 +53,10 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr);
 
    None of these routines is thread-safe.  Any routine that uses them
    must ensure that only one thread at a time may call them.
+
+   As of MPI-4, MPI_Info handles can be created and freed before MPI_Init() and
+   after MPI_Finalize(), so some internal functions below may be called before
+   MPI_Init() and after MPI_Finalize().
 */
 
 /* This routine is called by finalize when MPI exits */
