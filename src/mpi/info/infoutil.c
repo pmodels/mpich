@@ -37,8 +37,10 @@ int MPIR_Info_free_impl(MPIR_Info * info_ptr)
     /* printf("Returning info %x\n", info_ptr->id); */
     /* First, free the string storage */
     while (curr_ptr) {
-        MPL_free(curr_ptr->key);
-        MPL_free(curr_ptr->value);
+        /* MPI_Info objects are allocated by normal MPL_direct_xxx() functions, so
+         * they need to be freed by MPL_direct_free(), not MPL_free(). */
+        MPL_direct_free(curr_ptr->key);
+        MPL_direct_free(curr_ptr->value);
         last_ptr = curr_ptr;
         curr_ptr = curr_ptr->next;
         MPIR_Info_handle_obj_free(&MPIR_Info_mem, last_ptr);

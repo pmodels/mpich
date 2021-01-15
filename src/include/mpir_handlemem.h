@@ -74,10 +74,19 @@ static inline void MPIR_Handle_free(MPIR_Object_alloc_t * objmem)
     }
 
     /* Remove any allocated storage */
-    for (i = 0; i < objmem->indirect_size; i++) {
-        MPL_free((objmem->indirect)[i]);
+    if (objmem->kind != MPIR_INFO) {
+        for (i = 0; i < objmem->indirect_size; i++) {
+            MPL_free((objmem->indirect)[i]);
+        }
+        MPL_free(objmem->indirect);
+    } else {
+        /* MPI_Info objects are allocated by MPL_direct_malloc(), so they need to be
+         * freed by MPL_direct_free(), not MPL_free(). */
+        for (i = 0; i < objmem->indirect_size; i++) {
+            MPL_direct_free((objmem->indirect)[i]);
+        }
+        MPL_direct_free(objmem->indirect);
     }
-    MPL_free(objmem->indirect);
 
     /* Clean up variables so that it can be reinitialized. */
     objmem->avail = NULL;
@@ -153,8 +162,12 @@ static inline void *MPIR_Handle_indirect_init(MPIR_Object_alloc_t * objmem,
     /* Create the table */
     if (!objmem->indirect) {
         /* printf("Creating indirect table with %d pointers to blocks in it\n", indirect_num_blocks); */
-        objmem->indirect =
-            (void **) MPL_calloc(indirect_num_blocks, sizeof(void *), MPL_MEM_OBJECT);
+        if (objmem->kind != MPIR_INFO) {
+            objmem->indirect =
+                (void **) MPL_calloc(indirect_num_blocks, sizeof(void *), MPL_MEM_OBJECT);
+        } else {
+            objmem->indirect = (void **) MPL_direct_calloc(indirect_num_blocks, sizeof(void *));
+        }
         if (!objmem->indirect) {
             return 0;
         }
@@ -169,7 +182,11 @@ static inline void *MPIR_Handle_indirect_init(MPIR_Object_alloc_t * objmem,
 
     /* Create the next block */
     /* printf("Creating indirect block number %d with %d objects in it\n", objmem->indirect_size, indirect_num_indices); */
-    block_ptr = (void *) MPL_calloc(indirect_num_indices, objmem->size, MPL_MEM_OBJECT);
+    if (objmem->kind != MPIR_INFO) {
+        block_ptr = (void *) MPL_calloc(indirect_num_indices, objmem->size, MPL_MEM_OBJECT);
+    } else {
+        block_ptr = (void *) MPL_direct_calloc(indirect_num_indices, objmem->size);
+    }
     if (!block_ptr) {
         return 0;
     }
