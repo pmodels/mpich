@@ -56,18 +56,35 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr);
 */
 
 /* This routine is called by finalize when MPI exits */
-static inline int MPIR_Handle_free(void **indirect, int indirect_size)
+static inline void MPIR_Handle_free(MPIR_Object_alloc_t * objmem)
 {
     int i;
 
-    /* Remove any allocated storage */
-    for (i = 0; i < indirect_size; i++) {
-        MPL_free((indirect)[i]);
+    /* Clean up all registered blocks. */
+    if (MPL_VG_RUNNING_ON_VALGRIND()) {
+        MPIR_Handle_common *ptr = objmem->avail;
+        while (ptr) {
+            MPL_VG_DISCARD(ptr);
+            ptr = ptr->next;
+        }
     }
-    MPL_free(indirect);
-    /* This does *not* remove any objects that the user created
-     * and then did not destroy */
-    return 0;
+
+    /* Remove any allocated storage */
+    for (i = 0; i < objmem->indirect_size; i++) {
+        MPL_free((objmem->indirect)[i]);
+    }
+    MPL_free(objmem->indirect);
+
+    /* Clean up variables so that it can be reinitialized. */
+    objmem->avail = NULL;
+    objmem->initialized = 0;
+    objmem->indirect = NULL;
+    objmem->indirect_size = 0;
+    objmem->num_allocated = 0;
+    objmem->num_avail = 0;
+
+    /* at this point we are done with the memory pool, inform valgrind */
+    MPL_VG_DESTROY_MEMPOOL(objmem);
 }
 
 #if defined(MPL_VG_AVAILABLE)
@@ -180,13 +197,9 @@ static inline int MPIR_Handle_finalize(void *objmem_ptr)
 {
     MPIR_Object_alloc_t *objmem = (MPIR_Object_alloc_t *) objmem_ptr;
 
-    (void) MPIR_Handle_free(objmem->indirect, objmem->indirect_size);
+    MPIR_Handle_free(objmem);
     /* This does *not* remove any Info objects that the user created
      * and then did not destroy */
-
-    /* at this point we are done with the memory pool, inform valgrind */
-    MPL_VG_DESTROY_MEMPOOL(objmem_ptr);
-
     return 0;
 }
 
