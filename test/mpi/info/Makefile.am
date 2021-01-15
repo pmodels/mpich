@@ -20,4 +20,5 @@ noinst_PROGRAMS = \
     infotest      \
     infoget       \
     infogetstring \
-    infoenv
+    infoenv       \
+    info_no_init
