@@ -89,38 +89,34 @@ static inline int MPIR_Handle_free(void **indirect, int indirect_size)
 #define HANDLE_VG_LABEL(objptr_, objsize_, handle_type_, is_direct_) do {} while (0)
 #endif
 
-static inline void *MPIR_Handle_direct_init(void *direct,
-                                            int direct_size, int obj_size, int handle_type)
+static inline void *MPIR_Handle_direct_init(MPIR_Object_alloc_t * objmem)
 {
     int i;
     MPIR_Handle_common *hptr = 0;
-    char *ptr = (char *) direct;
+    char *ptr = (char *) objmem->direct;
 
-    for (i = 0; i < direct_size; i++) {
-        /* printf("Adding %p in %d\n", ptr, handle_type); */
+    for (i = 0; i < objmem->direct_size; i++) {
+        /* printf("Adding %p in %d\n", ptr, objmem->kind); */
         /* First cast to (void*) to avoid false warnings about alignment
          * (consider that a requirement of the input parameters) */
         hptr = (MPIR_Handle_common *) (void *) ptr;
-        ptr = ptr + obj_size;
+        ptr = ptr + objmem->size;
         hptr->next = ptr;
         hptr->handle = ((unsigned) HANDLE_KIND_DIRECT << HANDLE_KIND_SHIFT) |
-            (handle_type << HANDLE_MPI_KIND_SHIFT) | i;
+            (objmem->kind << HANDLE_MPI_KIND_SHIFT) | i;
 
-        HANDLE_VG_LABEL(hptr, obj_size, handle_type, 1);
+        HANDLE_VG_LABEL(hptr, objmem->size, objmem->kind, 1);
     }
 
     if (hptr)
         hptr->next = 0;
-    return direct;
+    return objmem->direct;
 }
 
 /* indirect is a pointer to a pointer table of block_ptrs
  * and a block_ptr points to a block of objects */
-static inline void *MPIR_Handle_indirect_init(void ***indirect,
-                                              int *indirect_size,
-                                              int indirect_num_blocks,
-                                              int indirect_num_indices,
-                                              int obj_size, int handle_type)
+static inline void *MPIR_Handle_indirect_init(MPIR_Object_alloc_t * objmem,
+                                              int indirect_num_blocks, int indirect_num_indices)
 {
     void *block_ptr;
     MPIR_Handle_common *hptr = 0;
@@ -132,24 +128,25 @@ static inline void *MPIR_Handle_indirect_init(void ***indirect,
 
     /* Must create new storage for dynamically allocated objects */
     /* Create the table */
-    if (!*indirect) {
+    if (!objmem->indirect) {
         /* printf("Creating indirect table with %d pointers to blocks in it\n", indirect_num_blocks); */
-        *indirect = (void **) MPL_calloc(indirect_num_blocks, sizeof(void *), MPL_MEM_OBJECT);
-        if (!*indirect) {
+        objmem->indirect =
+            (void **) MPL_calloc(indirect_num_blocks, sizeof(void *), MPL_MEM_OBJECT);
+        if (!objmem->indirect) {
             return 0;
         }
-        *indirect_size = 0;
+        objmem->indirect_size = 0;
     }
 
     /* See if we can allocate another block */
-    if (*indirect_size >= indirect_num_blocks) {
+    if (objmem->indirect_size >= indirect_num_blocks) {
         /* printf("Out of space in indirect table\n"); */
         return 0;
     }
 
     /* Create the next block */
-    /* printf("Creating indirect block number %d with %d objects in it\n", *indirect_size, indirect_num_indices); */
-    block_ptr = (void *) MPL_calloc(indirect_num_indices, obj_size, MPL_MEM_OBJECT);
+    /* printf("Creating indirect block number %d with %d objects in it\n", objmem->indirect_size, indirect_num_indices); */
+    block_ptr = (void *) MPL_calloc(indirect_num_indices, objmem->size, MPL_MEM_OBJECT);
     if (!block_ptr) {
         return 0;
     }
@@ -157,20 +154,21 @@ static inline void *MPIR_Handle_indirect_init(void ***indirect,
     for (i = 0; i < indirect_num_indices; i++) {
         /* Cast to (void*) to avoid false warning about alignment */
         hptr = (MPIR_Handle_common *) (void *) ptr;
-        ptr = ptr + obj_size;
+        ptr = ptr + objmem->size;
         hptr->next = ptr;
         hptr->handle = ((unsigned) HANDLE_KIND_INDIRECT << HANDLE_KIND_SHIFT) |
-            (handle_type << HANDLE_MPI_KIND_SHIFT) | (*indirect_size << HANDLE_INDIRECT_SHIFT) | i;
-        /* printf("handle=%#x handle_type=%x *indirect_size=%d i=%d\n", hptr->handle, handle_type, *indirect_size, i); */
+            (objmem->
+             kind << HANDLE_MPI_KIND_SHIFT) | (objmem->indirect_size << HANDLE_INDIRECT_SHIFT) | i;
+        /* printf("handle=%#x handle_type=%x indirect_size=%d i=%d\n", hptr->handle, objmem->kind, objmem->indirect_size, i); */
 
-        HANDLE_VG_LABEL(hptr, obj_size, handle_type, 0);
+        HANDLE_VG_LABEL(hptr, objmem->size, objmem->kind, 0);
     }
     hptr->next = 0;
     /* We're here because avail is null, so there is no need to set
      * the last block ptr to avail */
-    /* printf("loc of update is %x\n", &(**indirect)[*indirect_size]);  */
-    (*indirect)[*indirect_size] = block_ptr;
-    *indirect_size = *indirect_size + 1;
+    /* printf("loc of update is %x\n", &(objmem->indirect)[objmem->indirect_size]);  */
+    objmem->indirect[objmem->indirect_size] = block_ptr;
+    objmem->indirect_size = objmem->indirect_size + 1;
     return block_ptr;
 }
 
@@ -245,11 +243,6 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem,
          * for the production/default case */
     } else {
         /* slow path */
-        int objsize, objkind;
-
-        objsize = objmem->size;
-        objkind = objmem->kind;
-
         ptr = NULL;
         if (!objmem->initialized) {
             MPL_VG_CREATE_MEMPOOL(objmem, 0 /*rzB */ , 0 /*is_zeroed */);
@@ -258,7 +251,7 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem,
              * jobs do not need to include any of the Info code if no
              * Info-using routines are used */
             objmem->initialized = 1;
-            ptr = MPIR_Handle_direct_init(objmem->direct, objmem->direct_size, objsize, objkind);
+            ptr = MPIR_Handle_direct_init(objmem);
             if (ptr) {
                 objmem->avail = ptr->next;
             }
@@ -274,8 +267,7 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem,
 
         if (!ptr) {
             /* setup a new indirect block (index at objmem->indirect_size). */
-            ptr = MPIR_Handle_indirect_init(&objmem->indirect, &objmem->indirect_size,
-                                            max_blocks, max_indices, objsize, objkind);
+            ptr = MPIR_Handle_indirect_init(objmem, max_blocks, max_indices);
             if (ptr) {
                 objmem->avail = ptr->next;
             }
