@@ -233,6 +233,9 @@ Input Parameters:
   +*/
 static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t * objmem)
 {
+    /* MPI_Info must call MPIR_Info_handle_obj_alloc(). */
+    MPIR_Assert(objmem->kind != MPIR_INFO);
+
     void *ret;
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
@@ -354,6 +357,9 @@ Input Parameters:
   +*/
 static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t * objmem, void *object)
 {
+    /* MPI_Info must call MPIR_Info_handle_obj_free(). */
+    MPIR_Assert(objmem->kind != MPIR_INFO);
+
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
     MPIR_Handle_obj_free_unsafe(objmem, object, /* not info */ FALSE);
@@ -418,6 +424,8 @@ static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t * objmem, voi
             MPIR_Handle_free(objmem);
         }
     }
+    /* Currently is_info must be enabled for MPI_Info. */
+    MPIR_Assert(is_info || objmem->kind != MPIR_INFO);
 }
 
 /*
