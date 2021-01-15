@@ -107,6 +107,8 @@ static inline void *MPIR_Handle_direct_init(MPIR_Object_alloc_t * objmem)
 
         HANDLE_VG_LABEL(hptr, objmem->size, objmem->kind, 1);
     }
+    objmem->num_allocated += objmem->direct_size;
+    objmem->num_avail += objmem->direct_size;
 
     if (hptr)
         hptr->next = 0;
@@ -169,6 +171,8 @@ static inline void *MPIR_Handle_indirect_init(MPIR_Object_alloc_t * objmem,
     /* printf("loc of update is %x\n", &(objmem->indirect)[objmem->indirect_size]);  */
     objmem->indirect[objmem->indirect_size] = block_ptr;
     objmem->indirect_size = objmem->indirect_size + 1;
+    objmem->num_allocated += indirect_num_indices;
+    objmem->num_avail += indirect_num_indices;
     return block_ptr;
 }
 
@@ -309,6 +313,7 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem,
                                                    ptr, ptr->handle));
     }
 
+    objmem->num_avail--;
     return ptr;
 }
 
@@ -378,6 +383,7 @@ static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t * objmem, voi
 
     obj->next = objmem->avail;
     objmem->avail = obj;
+    objmem->num_avail++;
 }
 
 /*
