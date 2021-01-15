@@ -1043,7 +1043,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
     void *in_targetbuf = target_buf;
     void *host_targetbuf = NULL;
     MPL_pointer_attr_t attr;
-    MPL_gpu_query_pointer_attr(target_buf, &attr);
+    MPIR_GPU_query_pointer_attr(target_buf, &attr);
     /* FIXME: use typerep/yaksa GPU-aware accumulate when available */
     if (attr.type == MPL_GPU_POINTER_DEV) {
         MPI_Aint extent, true_extent;
