@@ -432,9 +432,11 @@ typedef struct MPIR_Object_alloc_t {
                                  */
 } MPIR_Object_alloc_t;
 static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t *);
+void *MPIR_Info_handle_obj_alloc(MPIR_Object_alloc_t *);
 static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t *,
                                                  int max_blocks, int max_indices);
 static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t *, void *);
+void MPIR_Info_handle_obj_free(MPIR_Object_alloc_t *, void *);
 static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t *, void *, bool is_info);
 static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
 
