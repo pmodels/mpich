@@ -32,7 +32,7 @@ int MPIR_Info_free_impl(MPIR_Info * info_ptr)
     curr_ptr = info_ptr->next;
     last_ptr = NULL;
 
-    MPIR_Handle_obj_free(&MPIR_Info_mem, info_ptr);
+    MPIR_Info_handle_obj_free(&MPIR_Info_mem, info_ptr);
 
     /* printf("Returning info %x\n", info_ptr->id); */
     /* First, free the string storage */
@@ -41,7 +41,7 @@ int MPIR_Info_free_impl(MPIR_Info * info_ptr)
         MPL_free(curr_ptr->value);
         last_ptr = curr_ptr;
         curr_ptr = curr_ptr->next;
-        MPIR_Handle_obj_free(&MPIR_Info_mem, last_ptr);
+        MPIR_Info_handle_obj_free(&MPIR_Info_mem, last_ptr);
     }
     return MPI_SUCCESS;
 }
@@ -52,7 +52,7 @@ int MPIR_Info_free_impl(MPIR_Info * info_ptr)
 int MPIR_Info_alloc(MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    *info_p_p = (MPIR_Info *) MPIR_Handle_obj_alloc(&MPIR_Info_mem);
+    *info_p_p = (MPIR_Info *) MPIR_Info_handle_obj_alloc(&MPIR_Info_mem);
     MPIR_ERR_CHKANDJUMP1(!*info_p_p, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPI_Info");
 
     MPIR_Object_set_ref(*info_p_p, 0);
