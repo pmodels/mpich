@@ -1,5 +1,6 @@
 sendrecv2 2
 sendrecv3 2
+sendrecv3 2 arg=-isendrecv
 sendflood 8
 sendall 4
 anyall 2
