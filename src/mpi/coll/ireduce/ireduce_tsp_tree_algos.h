@@ -26,7 +26,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     int is_commutative;
     int size;
     int rank;
-    int num_children;
+    int num_children = 0;
     int tree_root;              /* Root of the tree over which reduction is performed.
                                  * This can be different from root of the collective operation.
                                  * When root is non-zero and op is non-commutative, the reduction
@@ -133,10 +133,12 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     /* initialize arrays to store graph vertex indices */
     MPIR_CHKLMEM_MALLOC(vtcs, int *, sizeof(int) * (num_children + 1),
                         mpi_errno, "vtcs buffer", MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(reduce_id, int *, sizeof(int) * num_children,
-                        mpi_errno, "reduce_id buffer", MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * num_children,
-                        mpi_errno, "recv_id buffer", MPL_MEM_COLL);
+    if (num_children > 0) {
+        MPIR_CHKLMEM_MALLOC(reduce_id, int *, sizeof(int) * num_children,
+                            mpi_errno, "reduce_id buffer", MPL_MEM_COLL);
+        MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * num_children,
+                            mpi_errno, "recv_id buffer", MPL_MEM_COLL);
+    }
 
     /* do pipelined reduce */
     /* NOTE: Make sure you are handling non-contiguous datatypes
