@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 
+/* All the MPIR_Info routines may be called before initialization or after finalization of MPI. */
 int MPIR_Info_delete_impl(MPIR_Info * info_ptr, const char *key)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -18,7 +19,7 @@ int MPIR_Info_delete_impl(MPIR_Info * info_ptr, const char *key)
             MPL_free(curr_ptr->key);
             MPL_free(curr_ptr->value);
             prev_ptr->next = curr_ptr->next;
-            MPIR_Handle_obj_free(&MPIR_Info_mem, curr_ptr);
+            MPIR_Info_handle_obj_free(&MPIR_Info_mem, curr_ptr);
             break;
         }
         prev_ptr = curr_ptr;
