@@ -39,7 +39,7 @@ static inline int MPIR_Algo_calculate_pipeline_chunk_info(MPI_Aint chunk_size, M
 
     maxelems = chunk_size / type_size;
 
-    if (maxelems == 0 || maxelems >= count) {   /* disable pipelining */
+    if (chunk_size <= 0 || maxelems >= count) { /* disable pipelining */
         *num_segments = 1;
         *segsize_floor = *segsize_ceil = count;
         goto fn_exit;
