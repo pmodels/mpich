@@ -272,14 +272,21 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem,
             if (ptr) {
                 objmem->avail = ptr->next;
             }
+            /* MPI_Info allocation/deallocation must be always available
+             * regardless of MPI initialization and finalization phases from
+             * MPI-4.  Since there is no guarantee that all MPI_Info objects are
+             * freed before MPI_Finalize(), we may not call MPIR_Handle_finalize
+             * for MPI_Info in MPI_Finalize(). */
+            if (objmem->kind != MPIR_INFO) {
 #ifdef MPICH_DEBUG_HANDLEALLOC
-            /* The priority of these callbacks must be greater than
-             * the priority of the callback that frees the objmem direct and
-             * indirect storage. */
-            MPIR_Add_finalize(MPIR_check_handles_on_finalize, objmem,
-                              MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO);
+                /* The priority of these callbacks must be greater than
+                 * the priority of the callback that frees the objmem direct and
+                 * indirect storage. */
+                MPIR_Add_finalize(MPIR_check_handles_on_finalize, objmem,
+                                  MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO);
 #endif
-            MPIR_Add_finalize(MPIR_Handle_finalize, objmem, 0);
+                MPIR_Add_finalize(MPIR_Handle_finalize, objmem, 0);
+            }
         }
 
         if (!ptr) {
