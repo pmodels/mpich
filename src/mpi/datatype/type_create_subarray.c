@@ -122,7 +122,8 @@ int MPI_Type_create_subarray(int ndims,
                                                  MPIR_ERR_RECOVERABLE,
                                                  __func__,
                                                  __LINE__,
-                                                 MPI_ERR_ARG, "**arg", "**arg %s", "order");
+                                                 MPI_ERR_ARG, "**storageorder",
+                                                 "**storageorder %d", order);
                 goto fn_fail;
             }
 
