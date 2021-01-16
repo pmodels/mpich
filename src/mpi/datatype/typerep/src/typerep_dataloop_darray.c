@@ -137,7 +137,7 @@ int MPII_Typerep_convert_darray(int size, int rank, int ndims, const int *array_
     MPL_free(st_offsets);
     MPL_free(coords);
 
-    mpi_errno = MPIR_Type_struct_impl(3, blklens, disps, types, newtype);
+    mpi_errno = MPIR_Type_create_struct_impl(3, blklens, disps, types, newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Type_free_impl(&type_new);
@@ -272,7 +272,7 @@ static int type_cyclic(const int *array_of_gsizes, int dim, int ndims, int nproc
         blklens[0] = 1;
         blklens[1] = rem;
 
-        mpi_errno = MPIR_Type_struct_impl(2, blklens, disps, types, &type_tmp);
+        mpi_errno = MPIR_Type_create_struct_impl(2, blklens, disps, types, &type_tmp);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_Type_free_impl(type_new);
@@ -291,7 +291,7 @@ static int type_cyclic(const int *array_of_gsizes, int dim, int ndims, int nproc
         disps[2] = orig_extent * ((MPI_Aint) (array_of_gsizes[dim]));
         blklens[0] = blklens[1] = blklens[2] = 1;
 
-        mpi_errno = MPIR_Type_struct_impl(3, blklens, disps, types, &type_tmp);
+        mpi_errno = MPIR_Type_create_struct_impl(3, blklens, disps, types, &type_tmp);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_Type_free_impl(type_new);

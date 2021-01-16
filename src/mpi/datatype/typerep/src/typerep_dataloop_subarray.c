@@ -91,7 +91,7 @@ int MPII_Typerep_convert_subarray(int ndims, int *array_of_sizes, int *array_of_
     types[1] = tmp1;
     types[2] = MPI_UB;
 
-    mpi_errno = MPIR_Type_struct_impl(3, blklens, disps, types, newtype);
+    mpi_errno = MPIR_Type_create_struct_impl(3, blklens, disps, types, newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Type_free_impl(&tmp1);
