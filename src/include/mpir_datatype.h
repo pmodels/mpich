@@ -529,23 +529,23 @@ void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size);
 void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement);
 
 /* Datatype functions */
-int MPIR_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
-                             MPI_Datatype * new_type);
-int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype);
-int MPIR_Type_struct(int count, const int *blocklength_array, const MPI_Aint * displacement_array,
-                     const MPI_Datatype * oldtype_array, MPI_Datatype * newtype);
-int MPIR_Type_indexed(int count, const int *blocklength_array, const void *displacement_array,
-                      int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPII_Type_zerolen(MPI_Datatype * newtype);
+int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
+
+int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_vector(int count, int blocklength, MPI_Aint stride, int strideinbytes,
                      MPI_Datatype oldtype, MPI_Datatype * newtype);
-int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_blockindexed(int count,
                            int blocklength,
                            const void *displacement_array,
                            int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype);
-
-int MPII_Type_zerolen(MPI_Datatype * newtype);
-int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
+int MPIR_Type_indexed(int count, const int *blocklength_array, const void *displacement_array,
+                      int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_struct(int count, const int *blocklength_array, const MPI_Aint * displacement_array,
+                     const MPI_Datatype * oldtype_array, MPI_Datatype * newtype);
+int MPIR_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
+                             MPI_Datatype * new_type);
+int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype);
 
 /* debugging helper functions */
 char *MPIR_Datatype_builtin_to_string(MPI_Datatype type);
