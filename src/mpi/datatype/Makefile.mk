@@ -16,6 +16,10 @@ noinst_HEADERS += src/mpi/datatype/datatype.h
 mpi_core_sources +=                              \
     src/mpi/datatype/datatype_impl.c             \
     src/mpi/datatype/typeutil.c                  \
-    src/mpi/datatype/type_blockindexed.c         \
+    src/mpi/datatype/type_contents.c             \
+    src/mpi/datatype/get_elements_x.c            \
+    src/mpi/datatype/type_create.c               \
+    src/mpi/datatype/type_create_darray.c        \
+    src/mpi/datatype/type_create_subarray.c      \
     src/mpi/datatype/type_create_pairtype.c      \
     src/mpi/datatype/type_debug.c
