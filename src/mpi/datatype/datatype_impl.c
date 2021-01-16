@@ -1809,6 +1809,33 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
     goto fn_exit;
 }
 
+int MPIR_Type_create_resized_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
+                                  MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPIR_Datatype *new_dtp;
+    MPI_Aint aints[2];
+
+    mpi_errno = MPIR_Type_create_resized(oldtype, lb, extent, &new_handle);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    aints[0] = lb;
+    aints[1] = extent;
+
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_RESIZED, 0, 2, /* Aints */
+                                           1, NULL, aints, &oldtype);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
