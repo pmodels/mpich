@@ -416,6 +416,9 @@ typedef struct MPIR_Object_alloc_t {
     int initialized;            /* */
     void **indirect;            /* Pointer to indirect object blocks */
     int indirect_size;          /* Number of allocated indirect blocks */
+    int num_allocated;          /* Total capacity of this allocator including both
+                                 * direct and indirect */
+    int num_avail;              /* Number of available objects including both direct and indirect */
     MPII_Object_kind kind;      /* Kind of object this is for */
     int size;                   /* Size of an individual object */
     void *direct;               /* Pointer to direct block, used
@@ -429,10 +432,12 @@ typedef struct MPIR_Object_alloc_t {
                                  */
 } MPIR_Object_alloc_t;
 static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t *);
+void *MPIR_Info_handle_obj_alloc(MPIR_Object_alloc_t *);
 static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t *,
                                                  int max_blocks, int max_indices);
 static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t *, void *);
-static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t *, void *);
+void MPIR_Info_handle_obj_free(MPIR_Object_alloc_t *, void *);
+static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t *, void *, bool is_info);
 static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
 
 

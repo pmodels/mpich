@@ -135,6 +135,7 @@
 #define MPL_VG_CHECK_MEM_IS_ADDRESSABLE(addr_,len_) VALGRIND_CHECK_WRITABLE((addr_),(len_))
 #endif
 #define MPL_VG_CREATE_BLOCK(addr_,len_,desc_)       do { (void) VALGRIND_CREATE_BLOCK((addr_),(len_),(desc_)); } while (0)
+#define MPL_VG_DISCARD(addr_)                       do { (void) VALGRIND_DISCARD(addr_); } while (0)
 #define MPL_VG_RUNNING_ON_VALGRIND()                RUNNING_ON_VALGRIND
 #define MPL_VG_PRINTF_BACKTRACE                     VALGRIND_PRINTF_BACKTRACE
 /* Valgrind has a bug
@@ -160,6 +161,7 @@
 #define MPL_VG_CHECK_MEM_IS_DEFINED(addr_,len_)     do {} while (0)
 #define MPL_VG_CHECK_MEM_IS_ADDRESSABLE(addr_,len_) do {} while (0)
 #define MPL_VG_CREATE_BLOCK(addr_,len_,desc_)       do {} while (0)
+#define MPL_VG_DISCARD(addr_)                       do {} while (0)
 #define MPL_VG_RUNNING_ON_VALGRIND()                (0) /*always false */
 #define MPL_VG_MEM_INIT(addr_,len_)                 do {} while (0)
 #if defined(MPL_HAVE_MACRO_VA_ARGS)

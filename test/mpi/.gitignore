@@ -1061,6 +1061,7 @@
 /info/infoorder
 /info/infotest
 /info/infovallen
+/info/info_no_init
 /init/attrself
 /init/exitst1
 /init/exitst2

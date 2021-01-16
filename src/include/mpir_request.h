@@ -474,10 +474,10 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
 
         if (need_safety) {
             MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-            MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
+            MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req, /* not info */ FALSE);
             MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
         } else {
-            MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
+            MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req, /* not info */ FALSE);
         }
     }
     if (need_safety) {

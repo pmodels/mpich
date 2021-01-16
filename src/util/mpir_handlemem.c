@@ -169,3 +169,45 @@ const char *MPIR_Handle_get_kind_str(int kind)
     }
 #undef mpiu_name_case_
 }
+
+static MPL_initlock_t info_handle_obj_lock = MPL_INITLOCK_INITIALIZER;
+/*+
+  MPIR_Info_handle_obj_alloc - Create an INFO object using the handle allocator
+                               even before MPI_Init() or after MPI_Finalize().
+
+  This routine has an independent "static" lock that is different from
+  MPIR_THREAD_POBJ_HANDLE_MUTEX and MPIR_THREAD_VCI_HANDLE_MUTEX.  Since this
+  routine does not share the lock with MPIR_Handle_obj_alloc() and MPIR_Handle_obj_free(),
+  this routine may not update any global data that can be updated by MPIR_Handle_obj_alloc()
+  and MPIR_Handle_obj_free().
+  +*/
+void *MPIR_Info_handle_obj_alloc(MPIR_Object_alloc_t * objmem)
+{
+    /* Non-MPI_Info objects must call MPIR_Handle_obj_alloc(). */
+    MPIR_Assert(objmem->kind == MPIR_INFO);
+
+    void *ret;
+    MPL_initlock_lock(&info_handle_obj_lock);
+    ret = MPIR_Handle_obj_alloc_unsafe(objmem, HANDLE_NUM_BLOCKS, HANDLE_NUM_INDICES);
+    MPL_initlock_unlock(&info_handle_obj_lock);
+    return ret;
+}
+
+/*+
+  MPIR_Info_handle_obj_free - Free an INFO object allocated by MPIR_Info_handle_obj_alloc()
+                              even before MPI_Init() or after MPI_Finalize().
+
+  This routine has an independent "static" lock that is different from
+  MPIR_THREAD_POBJ_HANDLE_MUTEX and MPIR_THREAD_VCI_HANDLE_MUTEX.  Since this
+  routine does not share the lock with MPIR_Handle_obj_alloc() and MPIR_Handle_obj_free(),
+  this routine may not update any global data that can be updated by MPIR_Handle_obj_alloc()
+  and MPIR_Handle_obj_free().
+  +*/
+void MPIR_Info_handle_obj_free(MPIR_Object_alloc_t * objmem, void *object)
+{
+    MPIR_Assert(objmem->kind == MPIR_INFO);
+
+    MPL_initlock_lock(&info_handle_obj_lock);
+    MPIR_Handle_obj_free_unsafe(objmem, object, /* info object */ TRUE);
+    MPL_initlock_unlock(&info_handle_obj_lock);
+}
