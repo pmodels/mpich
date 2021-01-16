@@ -367,7 +367,7 @@ int MPIR_Status_set_elements_x_impl(MPI_Status * status, MPI_Datatype datatype, 
     return mpi_errno;
 }
 
-int MPIR_Type_commit(MPI_Datatype * datatype_p)
+int MPIR_Type_commit_impl(MPI_Datatype * datatype_p)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *datatype_ptr;
@@ -388,28 +388,6 @@ int MPIR_Type_commit(MPI_Datatype * datatype_p)
 
     }
     return mpi_errno;
-}
-
-int MPIR_Type_commit_impl(MPI_Datatype * datatype)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (HANDLE_IS_BUILTIN(*datatype))
-        goto fn_exit;
-
-    /* pair types stored as real types are a special case */
-    if (*datatype == MPI_FLOAT_INT ||
-        *datatype == MPI_DOUBLE_INT ||
-        *datatype == MPI_LONG_INT || *datatype == MPI_SHORT_INT || *datatype == MPI_LONG_DOUBLE_INT)
-        goto fn_exit;
-
-    mpi_errno = MPIR_Type_commit(datatype);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)

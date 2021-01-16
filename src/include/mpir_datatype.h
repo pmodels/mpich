@@ -573,7 +573,6 @@ int MPIR_Type_blockindexed(int count,
                            const void *displacement_array,
                            int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype);
 
-int MPIR_Type_commit(MPI_Datatype * type);
 int MPII_Type_zerolen(MPI_Datatype * newtype);
 int MPIR_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
                              MPI_Datatype * newtype);
