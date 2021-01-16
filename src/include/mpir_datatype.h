@@ -578,6 +578,7 @@ int MPIR_Type_get_contents_impl(MPI_Datatype datatype, int max_integers, int max
                                 int max_datatypes, int array_of_integers[],
                                 MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[]);
 int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
+int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype);
 
 /* debugging helper functions */
 char *MPIR_Datatype_builtin_to_string(MPI_Datatype type);
