@@ -81,6 +81,15 @@ int MPI_Type_commit(MPI_Datatype * datatype)
 
     /* ... body of routine ... */
 
+    if (HANDLE_IS_BUILTIN(*datatype))
+        goto fn_exit;
+
+    /* pair types stored as real types are a special case */
+    if (*datatype == MPI_FLOAT_INT ||
+        *datatype == MPI_DOUBLE_INT ||
+        *datatype == MPI_LONG_INT || *datatype == MPI_SHORT_INT || *datatype == MPI_LONG_DOUBLE_INT)
+        goto fn_exit;
+
     mpi_errno = MPIR_Type_commit_impl(datatype);
     MPIR_ERR_CHECK(mpi_errno);
 
