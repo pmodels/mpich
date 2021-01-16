@@ -19,6 +19,7 @@
 /* Undefine these in case they were set to 'error' */
 #undef malloc
 #undef calloc
+#undef realloc
 #undef free
 #undef strdup
 #undef mmap
@@ -992,3 +993,31 @@ char *MPL_strdup_no_spaces(const char *str)
 
     return newstr;
 }
+
+#ifdef MPL_USE_MEMORY_TRACING
+/* Direct functions. */
+void *MPL_direct_malloc(size_t size)
+{
+    return malloc(size);
+}
+
+void *MPL_direct_calloc(size_t nmemb, size_t size)
+{
+    return calloc(nmemb, size);
+}
+
+void *MPL_direct_realloc(void *ptr, size_t size)
+{
+    return realloc(ptr, size);
+}
+
+char *MPL_direct_strdup(const char *s)
+{
+    return strdup(s);
+}
+
+void MPL_direct_free(void *ptr)
+{
+    free(ptr);
+}
+#endif

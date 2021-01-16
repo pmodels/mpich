@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 
+/* All the MPIR_Info routines may be called before initialization or after finalization of MPI. */
 int MPIR_Info_delete_impl(MPIR_Info * info_ptr, const char *key)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -15,10 +16,12 @@ int MPIR_Info_delete_impl(MPIR_Info * info_ptr, const char *key)
 
     while (curr_ptr) {
         if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-            MPL_free(curr_ptr->key);
-            MPL_free(curr_ptr->value);
+            /* MPI_Info objects are allocated by MPL_direct_malloc(), so they need to be
+             * freed by MPL_direct_free(), not MPL_free(). */
+            MPL_direct_free(curr_ptr->key);
+            MPL_direct_free(curr_ptr->value);
             prev_ptr->next = curr_ptr->next;
-            MPIR_Handle_obj_free(&MPIR_Info_mem, curr_ptr);
+            MPIR_Info_handle_obj_free(&MPIR_Info_mem, curr_ptr);
             break;
         }
         prev_ptr = curr_ptr;
@@ -60,8 +63,12 @@ int MPIR_Info_dup_impl(MPIR_Info * info_ptr, MPIR_Info ** new_info_ptr)
         MPIR_ERR_CHECK(mpi_errno);
 
         curr_new = curr_new->next;
-        curr_new->key = MPL_strdup(curr_old->key);
-        curr_new->value = MPL_strdup(curr_old->value);
+        /* MPI_Info objects may not be allocated by MPL_strdup() since MPL_strdup() may not be
+         * called before MPI_Init() and the allocated memory must have been freed before
+         * MPI_Finalize() while MPI-4 allows calling MPI_Info routines before MPI_Init() and
+         * after MPI_Finalize(). */
+        curr_new->key = MPL_direct_strdup(curr_old->key);
+        curr_new->value = MPL_direct_strdup(curr_old->value);
 
         curr_old = curr_old->next;
     }
@@ -182,8 +189,13 @@ int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
     while (curr_ptr) {
         if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
             /* Key already present; replace value */
-            MPL_free(curr_ptr->value);
-            curr_ptr->value = MPL_strdup(value);
+
+            /* MPI_Info objects may not be allocated by MPL_strdup() since MPL_strdup() may not be
+             * called before MPI_Init() and the allocated memory must have been freed before
+             * MPI_Finalize() while MPI-4 allows calling MPI_Info routines before MPI_Init() and
+             * after MPI_Finalize().  For the same reason, we need to use free, not MPL_free(). */
+            MPL_direct_free(curr_ptr->value);
+            curr_ptr->value = MPL_direct_strdup(value);
             break;
         }
         prev_ptr = curr_ptr;
@@ -197,8 +209,10 @@ int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
 
         /*printf("Inserting new elm %x at %x\n", curr_ptr->id, prev_ptr->id); */
         prev_ptr->next = curr_ptr;
-        curr_ptr->key = MPL_strdup(key);
-        curr_ptr->value = MPL_strdup(value);
+        /* MPI_Info objects must be allocated by MPL_direct_strdup(), not MPL_strdup() because
+         * this function may be called before MPI_Init() and after MPI_Finalize(). */
+        curr_ptr->key = MPL_direct_strdup(key);
+        curr_ptr->value = MPL_direct_strdup(value);
     }
 
   fn_exit:

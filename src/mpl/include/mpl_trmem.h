@@ -256,6 +256,14 @@ typedef struct {
 #define MPL_mmap(a,b,c,d,e,f,g) MPL_trmmap((a),(b),(c),(d),(e),(f),(g),__LINE__,__FILE__)
 #define MPL_munmap(a,b,c) MPL_trmunmap((a),(b),(c),__LINE__,__FILE__)
 
+/* Directly call malloc/calloc/realloc, so those memory segments are not
+ * checked in MPI_Finalize() */
+void *MPL_direct_malloc(size_t size);
+void *MPL_direct_calloc(size_t nmemb, size_t size);
+void *MPL_direct_realloc(void *ptr, size_t size);
+char *MPL_direct_strdup(const char *s);
+void MPL_direct_free(void *ptr);
+
 #ifdef MPL_DEFINE_ALIGNED_ALLOC
 #define MPL_aligned_alloc(a,b,c) MPL_traligned_alloc((a),(b),(c),__LINE__,__FILE__)
 #endif /* #ifdef MPL_DEFINE_ALIGNED_ALLOC */
@@ -296,6 +304,12 @@ static inline void *MPL_realloc(void *ptr, size_t size, MPL_memory_class memclas
 #define MPL_free(a)      free((void *)(a))
 #define MPL_mmap(a,b,c,d,e,f,g) mmap((void *)(a),(size_t)(b),(int)(c),(int)(d),(int)(e),(off_t)(f))
 #define MPL_munmap(a,b,c)  munmap((void *)(a),(size_t)(b))
+
+#define MPL_direct_malloc   malloc
+#define MPL_direct_calloc   calloc
+#define MPL_direct_realloc  realloc
+#define MPL_direct_strdup   strdup
+#define MPL_direct_free     free
 
 #ifdef MPL_DEFINE_ALIGNED_ALLOC
 MPL_STATIC_INLINE_PREFIX void *MPL_aligned_alloc(size_t alignment, size_t size,
