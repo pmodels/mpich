@@ -188,7 +188,7 @@ static int type_block(const int *array_of_gsizes, int dim, int ndims, int nprocs
         } else {
             for (i = 0; i < dim; i++)
                 stride *= (MPI_Aint) (array_of_gsizes[i]);
-            mpi_errno = MPIR_Type_hvector_impl(mysize, 1, stride, type_old, type_new);
+            mpi_errno = MPIR_Type_create_hvector_impl(mysize, 1, stride, type_old, type_new);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
@@ -198,7 +198,7 @@ static int type_block(const int *array_of_gsizes, int dim, int ndims, int nprocs
         } else {
             for (i = ndims - 1; i > dim; i--)
                 stride *= (MPI_Aint) (array_of_gsizes[i]);
-            mpi_errno = MPIR_Type_hvector_impl(mysize, 1, stride, type_old, type_new);
+            mpi_errno = MPIR_Type_create_hvector_impl(mysize, 1, stride, type_old, type_new);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -258,7 +258,7 @@ static int type_cyclic(const int *array_of_gsizes, int dim, int ndims, int nproc
         for (i = ndims - 1; i > dim; i--)
             stride *= (MPI_Aint) (array_of_gsizes[i]);
 
-    mpi_errno = MPIR_Type_hvector_impl(count, blksize, stride, type_old, type_new);
+    mpi_errno = MPIR_Type_create_hvector_impl(count, blksize, stride, type_old, type_new);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (rem) {

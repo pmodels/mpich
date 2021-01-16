@@ -1435,8 +1435,8 @@ void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb
     }
 }
 
-int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                           MPI_Datatype * newtype)
+int MPIR_Type_create_hvector_impl(int count, int blocklength, MPI_Aint stride,
+                                  MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
