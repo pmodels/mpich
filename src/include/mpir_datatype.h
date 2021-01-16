@@ -558,6 +558,8 @@ void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size);
 void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement);
 
 /* Datatype functions */
+int MPIR_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
+                             MPI_Datatype * new_type);
 int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_struct(int count, const int *blocklength_array, const MPI_Aint * displacement_array,
                      const MPI_Datatype * oldtype_array, MPI_Datatype * newtype);
@@ -572,8 +574,8 @@ int MPIR_Type_blockindexed(int count,
                            int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype);
 
 int MPII_Type_zerolen(MPI_Datatype * newtype);
-int MPIR_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
-                             MPI_Datatype * newtype);
+int MPIR_Type_create_resized_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
+                                  MPI_Datatype * newtype);
 int MPIR_Type_get_contents_impl(MPI_Datatype datatype, int max_integers, int max_addresses,
                                 int max_datatypes, int array_of_integers[],
                                 MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[]);
