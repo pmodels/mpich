@@ -522,6 +522,9 @@ int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size);
 
 void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_Aint * count);
 int MPIR_Type_commit_impl(MPI_Datatype * datatype);
+int MPIR_Type_create_hindexed_impl(int count, const int array_of_blocklengths[],
+                                   const MPI_Aint array_of_displacements[],
+                                   MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_create_struct_impl(int count,
                                  const int array_of_blocklengths[],
                                  const MPI_Aint array_of_displacements[],
