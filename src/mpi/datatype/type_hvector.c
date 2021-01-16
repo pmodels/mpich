@@ -85,7 +85,7 @@ int MPI_Type_hvector(int count,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Type_hvector_impl(count, blocklength, stride, oldtype, newtype);
+    mpi_errno = MPIR_Type_create_hvector_impl(count, blocklength, stride, oldtype, newtype);
     if (mpi_errno)
         goto fn_fail;
 
