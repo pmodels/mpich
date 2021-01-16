@@ -141,8 +141,8 @@ int MPI_Type_struct(int count,
     /* ... body of routine ...  */
 
     mpi_errno =
-        MPIR_Type_struct_impl(count, array_of_blocklengths, array_of_displacements, array_of_types,
-                              newtype);
+        MPIR_Type_create_struct_impl(count, array_of_blocklengths, array_of_displacements,
+                                     array_of_types, newtype);
     if (mpi_errno)
         goto fn_fail;
 
