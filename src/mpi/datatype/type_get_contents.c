@@ -122,11 +122,9 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Type_get_contents(datatype,
-                                       max_integers,
-                                       max_addresses,
-                                       max_datatypes,
-                                       array_of_integers, array_of_addresses, array_of_datatypes);
+    mpi_errno = MPIR_Type_get_contents_impl(datatype, max_integers, max_addresses, max_datatypes,
+                                            array_of_integers, array_of_addresses,
+                                            array_of_datatypes);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
