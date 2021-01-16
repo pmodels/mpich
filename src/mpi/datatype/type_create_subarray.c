@@ -163,8 +163,8 @@ int MPI_Type_create_subarray(int ndims,
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
-    mpi_errno = MPIR_Type_create_subarray(ndims, array_of_sizes, array_of_subsizes,
-                                          array_of_starts, order, oldtype, newtype);
+    mpi_errno = MPIR_Type_create_subarray_impl(ndims, array_of_sizes, array_of_subsizes,
+                                               array_of_starts, order, oldtype, newtype);
     if (mpi_errno) {
         goto fn_fail;
     }
