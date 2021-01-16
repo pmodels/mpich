@@ -260,6 +260,8 @@ be in the range 0 to %d
 **errhandlernull:Null errhandler 
 **errhandnotfile:Error handler is not a file error handler
 **errhandnotwin:Error handler is not a win error handler
+**storageorder:Invalid storage order
+**storageorder %d: Invalid storage order (%d)
 **darraydist:For MPI_DISTRIBUTE_NONE, the number of processes in that \
       dimension of the grid must be 1
 **darraydist %d %d:For MPI_DISTRIBUTE_NONE, the value of array_of_psizes[%d] \
