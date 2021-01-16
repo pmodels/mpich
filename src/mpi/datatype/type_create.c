@@ -24,6 +24,19 @@
 
 /* ---- MPIR_Xxx type creation routines ---- */
 
+#define CREATE_NEW_DTP(new_dtp) \
+    do { \
+        new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem); \
+        MPIR_ERR_CHKHANDLEMEM(new_dtp); \
+        MPIR_Object_set_ref(new_dtp, 1); \
+        new_dtp->is_committed = 0; \
+        new_dtp->attributes = NULL; \
+        new_dtp->name[0] = 0; \
+        new_dtp->contents = NULL; \
+        new_dtp->flattened = NULL; \
+        new_dtp->typerep.handle = NULL; \
+    } while (0)
+
 int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -32,26 +45,7 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
     if (count == 0)
         return MPII_Type_zerolen(newtype);
 
-    /* allocate new datatype object and handle */
-    new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-    /* --BEGIN ERROR HANDLING-- */
-    if (!new_dtp) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         "MPIR_Type_contiguous",
-                                         __LINE__, MPI_ERR_OTHER, "**nomem", 0);
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
-
-    /* handle is filled in by MPIR_Handle_obj_alloc() */
-    MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_committed = 0;
-    new_dtp->attributes = NULL;
-    new_dtp->name[0] = 0;
-    new_dtp->contents = NULL;
-    new_dtp->flattened = NULL;
-
-    new_dtp->typerep.handle = NULL;
+    CREATE_NEW_DTP(new_dtp);
 
     mpi_errno = MPIR_Typerep_create_contig(count, oldtype, new_dtp);
     MPIR_ERR_CHECK(mpi_errno);
@@ -76,25 +70,7 @@ int MPIR_Type_vector(int count, int blocklength, MPI_Aint stride,
     if (count == 0)
         return MPII_Type_zerolen(newtype);
 
-    /* allocate new datatype object and handle */
-    new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-    if (!new_dtp) {
-        /* --BEGIN ERROR HANDLING-- */
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         "MPIR_Type_vector", __LINE__, MPI_ERR_OTHER, "**nomem", 0);
-        return mpi_errno;
-        /* --END ERROR HANDLING-- */
-    }
-
-    /* handle is filled in by MPIR_Handle_obj_alloc() */
-    MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_committed = 0;
-    new_dtp->attributes = NULL;
-    new_dtp->name[0] = 0;
-    new_dtp->contents = NULL;
-    new_dtp->flattened = NULL;
-
-    new_dtp->typerep.handle = NULL;
+    CREATE_NEW_DTP(new_dtp);
 
     if (strideinbytes) {
         mpi_errno = MPIR_Typerep_create_hvector(count, blocklength, stride, oldtype, new_dtp);
@@ -125,25 +101,7 @@ int MPIR_Type_blockindexed(int count, int blocklength, const void *displacement_
     if (count == 0)
         return MPII_Type_zerolen(newtype);
 
-    /* allocate new datatype object and handle */
-    new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-    /* --BEGIN ERROR HANDLING-- */
-    if (!new_dtp) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         "MPIR_Type_vector", __LINE__, MPI_ERR_OTHER, "**nomem", 0);
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
-
-    /* handle is filled in by MPIR_Handle_obj_alloc() */
-    MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_committed = 0;
-    new_dtp->attributes = NULL;
-    new_dtp->name[0] = 0;
-    new_dtp->contents = NULL;
-    new_dtp->flattened = NULL;
-
-    new_dtp->typerep.handle = NULL;
+    CREATE_NEW_DTP(new_dtp);
 
     if (dispinbytes) {
         mpi_errno = MPIR_Typerep_create_hindexed_block(count, blocklength, displacement_array,
@@ -179,27 +137,7 @@ int MPIR_Type_indexed(int count, const int *blocklength_array, const void *displ
         MPIR_Assert(blocklength_array[i] >= 0);
     }
 
-    /* allocate new datatype object and handle */
-    new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-    /* --BEGIN ERROR HANDLING-- */
-    if (!new_dtp) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                         MPIR_ERR_RECOVERABLE,
-                                         "MPIR_Type_indexed",
-                                         __LINE__, MPI_ERR_OTHER, "**nomem", 0);
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
-
-    /* handle is filled in by MPIR_Handle_obj_alloc() */
-    MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_committed = 0;
-    new_dtp->attributes = NULL;
-    new_dtp->name[0] = 0;
-    new_dtp->contents = NULL;
-    new_dtp->flattened = NULL;
-
-    new_dtp->typerep.handle = NULL;
+    CREATE_NEW_DTP(new_dtp);
 
     i = 0;
     while (i < count && blocklength_array[i] == 0)
@@ -251,25 +189,7 @@ static int type_struct(int count,
     }
 #endif
 
-    /* allocate new datatype object and handle */
-    new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-    /* --BEGIN ERROR HANDLING-- */
-    if (!new_dtp) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         "MPIR_Type_struct", __LINE__, MPI_ERR_OTHER, "**nomem", 0);
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
-
-    /* handle is filled in by MPIR_Handle_obj_alloc() */
-    MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_committed = 0;
-    new_dtp->attributes = NULL;
-    new_dtp->name[0] = 0;
-    new_dtp->contents = NULL;
-    new_dtp->flattened = NULL;
-
-    new_dtp->typerep.handle = NULL;
+    CREATE_NEW_DTP(new_dtp);
 
     /* check for junk struct with all zero blocks */
     for (i = 0; i < count; i++)
@@ -374,31 +294,10 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         mpi_errno = MPIR_Type_contiguous(1, oldtype, newtype);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        /* allocate new datatype object and handle */
-        new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-        if (!new_dtp) {
-            /* --BEGIN ERROR HANDLING-- */
-            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                             "MPIR_Type_dup", __LINE__, MPI_ERR_OTHER,
-                                             "**nomem", 0);
-            goto fn_fail;
-            /* --END ERROR HANDLING-- */
-        }
+        CREATE_NEW_DTP(new_dtp);
 
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
-
-        /* fill in datatype */
-        MPIR_Object_set_ref(new_dtp, 1);
-        /* new_dtp->handle is filled in by MPIR_Handle_obj_alloc() */
         new_dtp->is_committed = old_dtp->is_committed;
-
-        new_dtp->attributes = NULL;     /* Attributes are copied in the
-                                         * top-level MPI_Type_dup routine */
-        new_dtp->name[0] = 0;   /* The Object name is not copied on
-                                 * a dup */
-
-        new_dtp->typerep.handle = NULL;
-        *newtype = new_dtp->handle;
 
         mpi_errno = MPIR_Typerep_create_dup(oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
@@ -408,6 +307,8 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         if (old_dtp->is_committed) {
             MPID_Type_commit_hook(new_dtp);
         }
+
+        *newtype = new_dtp->handle;
     }
 
     MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, VERBOSE, "dup type %x created.", *newtype);
@@ -422,25 +323,7 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *new_dtp;
 
-    new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-    /* --BEGIN ERROR HANDLING-- */
-    if (!new_dtp) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         "MPIR_Type_create_resized",
-                                         __LINE__, MPI_ERR_OTHER, "**nomem", 0);
-        goto fn_fail;
-    }
-    /* --END ERROR HANDLING-- */
-
-    /* handle is filled in by MPIR_Handle_obj_alloc() */
-    MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_committed = 0;
-    new_dtp->attributes = 0;
-    new_dtp->name[0] = 0;
-    new_dtp->contents = 0;
-    new_dtp->flattened = NULL;
-
-    new_dtp->typerep.handle = NULL;
+    CREATE_NEW_DTP(new_dtp);
 
     mpi_errno = MPIR_Typerep_create_resized(oldtype, lb, extent, new_dtp);
     MPIR_ERR_CHECK(mpi_errno);
