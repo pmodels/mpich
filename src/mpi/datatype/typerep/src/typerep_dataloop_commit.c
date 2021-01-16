@@ -199,7 +199,7 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             if (cp->nr_counts == 0) {
                 MPIR_Dataloop_create_contiguous(ints[0], types[0], (void **) dlp_p);
             } else {
-                MPIR_Assert(0);
+                MPIR_Dataloop_create_contiguous(counts[0], types[0], (void **) dlp_p);
             }
             break;
         case MPI_COMBINER_VECTOR:

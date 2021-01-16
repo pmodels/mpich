@@ -113,7 +113,7 @@ int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI
     goto fn_exit;
 }
 
-int MPIR_Typerep_create_contig(int count, MPI_Datatype oldtype, MPIR_Datatype * newtype)
+int MPIR_Typerep_create_contig(MPI_Aint count, MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_CONTIG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_CONTIG);
@@ -122,6 +122,8 @@ int MPIR_Typerep_create_contig(int count, MPI_Datatype oldtype, MPIR_Datatype * 
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
+    /* FIXME: add yaksa support for large count */
+    MPIR_Assert(count <= INT_MAX);
     int rc =
         yaksa_type_create_contig(count, type, NULL, (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
