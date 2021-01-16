@@ -27,6 +27,8 @@
 **remove_shar_mem %s %s:unable to remove shared memory - %s %s
 **detach_shar_mem:unable to detach shared memory
 **detach_shar_mem %s %s:unable to detach shared memory - %s %s
+**need_get_envelope_c:use MPI_Type_get_envelope_c to query large count datatype
+**need_get_contents_c:use MPI_Type_get_contents_c to query large count datatype
 **notimpl:Function not implemented
 **notimpl %s:Function %s not implemented
 **nullptr:Null pointer
