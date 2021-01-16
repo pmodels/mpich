@@ -369,7 +369,7 @@ int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI
     return MPI_SUCCESS;
 }
 
-int MPIR_Typerep_create_contig(int count, MPI_Datatype oldtype, MPIR_Datatype * newtype)
+int MPIR_Typerep_create_contig(MPI_Aint count, MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     if (HANDLE_IS_BUILTIN(oldtype)) {
         MPI_Aint el_sz = MPIR_Datatype_get_basic_size(oldtype);
@@ -394,9 +394,8 @@ int MPIR_Typerep_create_contig(int count, MPI_Datatype oldtype, MPIR_Datatype * 
 
         newtype->size = count * old_dtp->size;
 
-        MPII_DATATYPE_CONTIG_LB_UB((MPI_Aint) count,
-                                   old_dtp->lb,
-                                   old_dtp->ub, old_dtp->extent, newtype->lb, newtype->ub);
+        MPII_DATATYPE_CONTIG_LB_UB(count, old_dtp->lb, old_dtp->ub, old_dtp->extent,
+                                   newtype->lb, newtype->ub);
 
         /* easiest to calc true lb/ub relative to lb/ub; doesn't matter
          * if there are sticky lb/ubs or not when doing this.

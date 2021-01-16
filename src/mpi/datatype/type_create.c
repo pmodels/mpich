@@ -37,7 +37,7 @@
         new_dtp->typerep.handle = NULL; \
     } while (0)
 
-int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_contiguous(MPI_Aint count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *new_dtp;
@@ -354,6 +354,35 @@ int MPIR_Type_contiguous_impl(int count, MPI_Datatype oldtype, MPI_Datatype * ne
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_CONTIGUOUS,
                                            1, 0, 0, 1, &count, NULL, NULL, &oldtype);
+
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+
+    goto fn_exit;
+}
+
+int MPIR_Type_contiguous_c_impl(MPI_Aint count, MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Datatype *new_dtp;
+    MPI_Datatype new_handle;
+
+    mpi_errno = MPIR_Type_contiguous(count, oldtype, &new_handle);
+
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    MPI_Aint counts[1];
+    counts[0] = count;
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_CONTIGUOUS,
+                                           0, 0, 1, 1, NULL, NULL, counts, &oldtype);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
