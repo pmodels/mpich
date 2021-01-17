@@ -1414,3 +1414,24 @@ int MPIR_Waitsome(int incount, MPI_Request array_of_requests[], MPIR_Request * r
   fn_fail:
     goto fn_exit;
 }
+
+int MPIR_Parrived(MPI_Request * request, MPIR_Request * request_ptr, int partition, int *flag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (*request == MPI_REQUEST_NULL) {
+        *flag = TRUE;
+        goto fn_exit;
+    }
+
+    /* For non-NULL request, query device layer */
+    MPIR_Assert(request_ptr != NULL);
+
+    mpi_errno = MPID_Parrived(request_ptr, partition, flag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
