@@ -25,6 +25,13 @@ int MPIR_Type_get_contents_impl(MPI_Datatype datatype, int max_integers, int max
     cp = dtp->contents;
     MPIR_Assert(cp != NULL);
 
+    if (cp->nr_counts > 0) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                         __func__, __LINE__, MPI_ERR_OTHER,
+                                         "**need_get_contents_c", 0);
+        return mpi_errno;
+    }
+
     /* --BEGIN ERROR HANDLING-- */
     if (max_integers < cp->nr_ints || max_addresses < cp->nr_aints || max_datatypes < cp->nr_types) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -59,6 +66,8 @@ int MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
                                 int *num_integers,
                                 int *num_addresses, int *num_datatypes, int *combiner)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
         *combiner = MPI_COMBINER_NAMED;
         *num_integers = 0;
@@ -68,6 +77,13 @@ int MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
         MPIR_Datatype *dtp;
 
         MPIR_Datatype_get_ptr(datatype, dtp);
+
+        if (dtp->contents->nr_counts > 0) {
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                             __func__, __LINE__, MPI_ERR_OTHER,
+                                             "**need_get_envelope_c", 0);
+            return mpi_errno;
+        }
 
         *combiner = dtp->contents->combiner;
         *num_integers = dtp->contents->nr_ints;

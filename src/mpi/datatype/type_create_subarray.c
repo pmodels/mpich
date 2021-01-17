@@ -133,10 +133,8 @@ int MPIR_Type_create_subarray_impl(int ndims, const int array_of_sizes[],
     ints[3 * ndims + 1] = order;
 
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_SUBARRAY, 3 * ndims + 2,       /* ints */
-                                           0,   /* aints */
-                                           1,   /* types */
-                                           ints, NULL, &oldtype);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_SUBARRAY,
+                                           3 * ndims + 2, 0, 0, 1, ints, NULL, NULL, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Typerep_create_subarray(ndims, array_of_sizes, array_of_subsizes,
