@@ -333,6 +333,9 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
             case MPIR_REQUEST_KIND__PREQUEST_SEND:
             case MPIR_REQUEST_KIND__PREQUEST_RECV:
                 return (req_ptr)->u.persist.real_request != NULL;
+            case MPIR_REQUEST_KIND__PART_SEND:
+            case MPIR_REQUEST_KIND__PART_RECV:
+                return MPIR_Part_request_is_active(req_ptr);
             default:
                 return 1;       /* regular request is always active */
         }
