@@ -55,9 +55,9 @@ int MPIR_Type_get_contents_impl(MPI_Datatype datatype, int max_integers, int max
     return MPI_SUCCESS;
 }
 
-void MPIR_Type_get_envelope(MPI_Datatype datatype,
-                            int *num_integers,
-                            int *num_addresses, int *num_datatypes, int *combiner)
+int MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
+                                int *num_integers,
+                                int *num_addresses, int *num_datatypes, int *combiner)
 {
     if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
         *combiner = MPI_COMBINER_NAMED;
@@ -74,5 +74,5 @@ void MPIR_Type_get_envelope(MPI_Datatype datatype,
         *num_addresses = dtp->contents->nr_aints;
         *num_datatypes = dtp->contents->nr_types;
     }
-
+    return MPI_SUCCESS;
 }

@@ -522,8 +522,6 @@ int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype old_type, MPI_Data
 void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * extent);
 void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
                                     MPI_Aint * true_extent);
-void MPIR_Type_get_envelope(MPI_Datatype datatype, int *num_integers, int *num_addresses,
-                            int *num_datatypes, int *combiner);
 void MPIR_Type_free_impl(MPI_Datatype * datatype);
 void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size);
 void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement);

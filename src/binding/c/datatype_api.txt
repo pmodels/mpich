@@ -302,9 +302,6 @@ MPI_Type_get_contents:
 MPI_Type_get_envelope:
     .desc: get type envelope
     .skip: ThreadSafe
-{
-    MPIR_Type_get_envelope(datatype, num_integers, num_addresses, num_datatypes, combiner);
-}
 
 MPI_Type_get_extent:
     .desc: Get the lower bound and extent for a Datatype
