@@ -694,5 +694,6 @@ int MPIR_Waitany(int count, MPI_Request array_of_requests[], MPIR_Request * requ
                  int *indx, MPI_Status * status);
 int MPIR_Waitsome(int incount, MPI_Request array_of_requests[], MPIR_Request * request_ptrs[],
                   int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
+int MPIR_Parrived(MPI_Request * request, MPIR_Request * request_ptr, int partition, int *flag);
 
 #endif /* MPIR_REQUEST_H_INCLUDED */
