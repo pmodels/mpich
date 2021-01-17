@@ -96,7 +96,8 @@ int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
         }
 
         MPIR_Datatype_get_ptr(type->d, new_dtp);
-        mpi_errno = MPIR_Datatype_set_contents(new_dtp, combiner, nvals, 0, 0, vals, NULL, NULL);
+        mpi_errno = MPIR_Datatype_set_contents(new_dtp, combiner, nvals, 0, 0, 0,
+                                               vals, NULL, NULL, NULL);
         MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef NDEBUG
@@ -202,7 +203,8 @@ static int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
         }
 
         MPIR_Datatype_get_ptr(*new_ptr, new_dtp);
-        mpi_errno = MPIR_Datatype_set_contents(new_dtp, combiner, nvals, 0, 0, vals, NULL, NULL);
+        mpi_errno = MPIR_Datatype_set_contents(new_dtp, combiner, nvals, 0, 0, 0,
+                                               vals, NULL, NULL, NULL);
     }
 
     return mpi_errno;

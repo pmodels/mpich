@@ -352,8 +352,8 @@ int MPIR_Type_contiguous_impl(int count, MPI_Datatype oldtype, MPI_Datatype * ne
         goto fn_fail;
 
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_CONTIGUOUS, 1, /* ints (count) */
-                                           0, 1, &count, NULL, &oldtype);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_CONTIGUOUS,
+                                           1, 0, 0, 1, &count, NULL, NULL, &oldtype);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -384,10 +384,8 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
     ints[1] = blocklength;
     ints[2] = stride;
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_VECTOR, 3,     /* ints (cnt, blklen, str) */
-                                           0,   /* aints */
-                                           1,   /* types */
-                                           ints, NULL, &oldtype);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_VECTOR,
+                                           3, 0, 0, 1, ints, NULL, NULL, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
@@ -413,10 +411,8 @@ int MPIR_Type_create_hvector_impl(int count, int blocklength, MPI_Aint stride,
     ints[0] = count;
     ints[1] = blocklength;
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HVECTOR, 2,    /* ints (count, blocklength) */
-                                           1,   /* aints */
-                                           1,   /* types */
-                                           ints, &stride, &oldtype);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HVECTOR,
+                                           2, 1, 0, 1, ints, &stride, NULL, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
@@ -452,10 +448,8 @@ int MPIR_Type_create_indexed_block_impl(int count,
         ints[i + 2] = array_of_displacements[i];
 
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_INDEXED_BLOCK, count + 2,      /* ints */
-                                           0,   /* aints */
-                                           1,   /* types */
-                                           ints, NULL, &oldtype);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_INDEXED_BLOCK,
+                                           count + 2, 0, 0, 1, ints, NULL, NULL, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
@@ -484,10 +478,9 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
     ints[1] = blocklength;
 
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HINDEXED_BLOCK, 2,     /* ints */
-                                           count,       /* aints */
-                                           1,   /* types */
-                                           ints, array_of_displacements, &oldtype);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HINDEXED_BLOCK,
+                                           2, count, 0, 1,
+                                           ints, array_of_displacements, NULL, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
@@ -527,10 +520,8 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
         ints[i + count + 1] = array_of_displacements[i];
     }
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_INDEXED, 2 * count + 1,        /* ints */
-                                           0,   /* aints  */
-                                           1,   /* types */
-                                           ints, NULL, &oldtype);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_INDEXED,
+                                           2 * count + 1, 0, 0, 1, ints, NULL, NULL, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
@@ -563,10 +554,9 @@ int MPIR_Type_create_hindexed_impl(int count, const int array_of_blocklengths[],
         ints[i + 1] = array_of_blocklengths[i];
     }
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HINDEXED, count + 1,   /* ints (count, blocklengths) */
-                                           count,       /* aints (displacements) */
-                                           1,   /* types */
-                                           ints, array_of_displacements, &oldtype);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HINDEXED,
+                                           count + 1, count, 0, 1,
+                                           ints, array_of_displacements, NULL, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
@@ -602,10 +592,9 @@ int MPIR_Type_create_struct_impl(int count, const int *array_of_blocklengths,
     }
 
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_STRUCT, count + 1,     /* ints (count, blocklengths) */
-                                           count,       /* aints (displacements) */
-                                           count,       /* types */
-                                           ints, array_of_displacements, array_of_types);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_STRUCT,
+                                           count + 1, count, 0, count,
+                                           ints, array_of_displacements, NULL, array_of_types);
 
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -630,10 +619,8 @@ int MPIR_Type_dup_impl(MPI_Datatype oldtype, MPI_Datatype * newtype)
         goto fn_fail;
 
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_DUP, 0,        /* ints */
-                                           0,   /* aints */
-                                           1,   /* types */
-                                           NULL, NULL, &oldtype);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_DUP,
+                                           0, 0, 0, 1, NULL, NULL, NULL, &oldtype);
 
     mpi_errno = MPIR_Type_commit_impl(&new_handle);
     MPIR_ERR_CHECK(mpi_errno);
@@ -678,8 +665,8 @@ int MPIR_Type_create_resized_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint ex
     aints[1] = extent;
 
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_RESIZED, 0, 2, /* Aints */
-                                           1, NULL, aints, &oldtype);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_RESIZED,
+                                           0, 2, 0, 1, NULL, aints, NULL, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);

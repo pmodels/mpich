@@ -30,9 +30,10 @@
   S*/
 typedef struct MPIR_Datatype_contents {
     int combiner;
-    int nr_ints;
-    int nr_aints;
-    int nr_types;
+    MPI_Aint nr_ints;
+    MPI_Aint nr_aints;
+    MPI_Aint nr_counts;
+    MPI_Aint nr_types;
     /* space allocated beyond structure used to store the types[],
      * ints[], and aints[], in that order.
      */
@@ -390,15 +391,17 @@ static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
   @*/
 static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
                                              int combiner,
-                                             int nr_ints,
-                                             int nr_aints,
-                                             int nr_types,
+                                             MPI_Aint nr_ints,
+                                             MPI_Aint nr_aints,
+                                             MPI_Aint nr_counts,
+                                             MPI_Aint nr_types,
                                              int array_of_ints[],
                                              const MPI_Aint array_of_aints[],
+                                             const MPI_Aint array_of_counts[],
                                              const MPI_Datatype array_of_types[])
 {
-    int i, contents_size, epsilon, mpi_errno;
-    int struct_sz, ints_sz, aints_sz, types_sz;
+    int mpi_errno;
+    MPI_Aint struct_sz, ints_sz, aints_sz, counts_sz, types_sz, contents_size;
     MPIR_Datatype_contents *cp;
     MPIR_Datatype *old_dtp;
     char *ptr;
@@ -407,12 +410,15 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
     types_sz = nr_types * sizeof(MPI_Datatype);
     ints_sz = nr_ints * sizeof(int);
     aints_sz = nr_aints * sizeof(MPI_Aint);
+    counts_sz = nr_counts * sizeof(MPI_Aint);
 
     /* pad the struct, types, and ints before we allocate.
      *
-     * note: it's not necessary that we pad the aints,
+     * note: it's not necessary that we pad the counts,
      *       because they are last in the region.
+     *       Padding it anyway for readability.
      */
+    MPI_Aint epsilon;
     if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
         struct_sz += MAX_ALIGNMENT - epsilon;
     }
@@ -422,8 +428,14 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
     if ((epsilon = ints_sz % MAX_ALIGNMENT)) {
         ints_sz += MAX_ALIGNMENT - epsilon;
     }
+    if ((epsilon = aints_sz % MAX_ALIGNMENT)) {
+        aints_sz += MAX_ALIGNMENT - epsilon;
+    }
+    if ((epsilon = counts_sz % MAX_ALIGNMENT)) {
+        counts_sz += MAX_ALIGNMENT - epsilon;
+    }
 
-    contents_size = struct_sz + types_sz + ints_sz + aints_sz;
+    contents_size = struct_sz + types_sz + ints_sz + aints_sz + counts_sz;
 
     cp = (MPIR_Datatype_contents *) MPL_malloc(contents_size, MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
@@ -440,6 +452,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
     cp->nr_ints = nr_ints;
     cp->nr_aints = nr_aints;
     cp->nr_types = nr_types;
+    cp->nr_counts = nr_counts;
 
     /* arrays are stored in the following order: types, ints, aints,
      * following the structure itself.
@@ -459,11 +472,17 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
     if (nr_aints > 0) {
         MPIR_Memcpy(ptr, array_of_aints, nr_aints * sizeof(MPI_Aint));
     }
+
+    ptr = ((char *) cp) + struct_sz + types_sz + ints_sz + aints_sz;
+    if (nr_counts > 0) {
+        MPIR_Memcpy(ptr, array_of_counts, nr_counts * sizeof(MPI_Aint));
+    }
+
     new_dtp->contents = cp;
     new_dtp->flattened = NULL;
 
     /* increment reference counts on all the derived types used here */
-    for (i = 0; i < nr_types; i++) {
+    for (MPI_Aint i = 0; i < nr_types; i++) {
         if (!HANDLE_IS_BUILTIN(array_of_types[i])) {
             MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
             MPIR_Datatype_ptr_add_ref(old_dtp);

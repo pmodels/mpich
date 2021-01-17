@@ -474,7 +474,7 @@ int MPIR_Type_create_darray_impl(int size, int rank, int ndims,
     MPIR_Datatype_get_ptr(new_handle, datatype_ptr);
     mpi_errno = MPIR_Datatype_set_contents(datatype_ptr,
                                            MPI_COMBINER_DARRAY,
-                                           4 * ndims + 4, 0, 1, ints, NULL, &oldtype);
+                                           4 * ndims + 4, 0, 0, 1, ints, NULL, NULL, &oldtype);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
