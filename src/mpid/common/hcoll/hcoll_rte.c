@@ -354,10 +354,8 @@ static int get_mpi_type_envelope(void *mpi_type, int *num_integers,
                                  int *num_addresses, int *num_datatypes,
                                  hcoll_mpi_type_combiner_t * combiner)
 {
-    int mpi_combiner;
     MPI_Datatype dt_handle = (MPI_Datatype) (intptr_t) mpi_type;
-
-    MPIR_Type_get_envelope(dt_handle, num_integers, num_addresses, num_datatypes, &mpi_combiner);
+    int mpi_combiner = MPIR_Type_get_combiner(dt_handle);
 
     *combiner = mpi_combiner_2_hcoll_combiner(mpi_combiner);
 

@@ -87,14 +87,13 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     int i;
     int err ATTRIBUTE((unused));
 
-    int nr_ints, nr_aints, nr_types, combiner;
     MPI_Datatype *types;
     int *ints;
     MPI_Aint *aints;
 
     void *old_dlp;
 
-    int dummy1, dummy2, dummy3, type0_combiner, ndims;
+    int ndims;
     MPI_Datatype tmptype;
 
     MPI_Aint stride;
@@ -111,7 +110,7 @@ void MPIR_Typerep_commit(MPI_Datatype type)
         return;
     }
 
-    MPIR_Type_get_envelope(type, &nr_ints, &nr_aints, &nr_types, &combiner);
+    int combiner = MPIR_Type_get_combiner(type);
 
     /* some named types do need dataloops; handle separately. */
     if (combiner == MPI_COMBINER_NAMED) {
@@ -162,7 +161,7 @@ void MPIR_Typerep_commit(MPI_Datatype type)
      * note: in the struct case below we'll handle any additional
      *       types "below" the current one.
      */
-    MPIR_Type_get_envelope(types[0], &dummy1, &dummy2, &dummy3, &type0_combiner);
+    int type0_combiner = MPIR_Type_get_combiner(types[0]);
     if (type0_combiner != MPI_COMBINER_NAMED) {
         MPIR_DATALOOP_GET_LOOPPTR(types[0], old_dlp);
         if (old_dlp == NULL) {
@@ -251,8 +250,7 @@ void MPIR_Typerep_commit(MPI_Datatype type)
         case MPI_COMBINER_STRUCT_INTEGER:
         case MPI_COMBINER_STRUCT:
             for (i = 1; i < ints[0]; i++) {
-                int type_combiner;
-                MPIR_Type_get_envelope(types[i], &dummy1, &dummy2, &dummy3, &type_combiner);
+                int type_combiner = MPIR_Type_get_combiner(types[i]);
 
                 if (type_combiner != MPI_COMBINER_NAMED) {
                     MPIR_DATALOOP_GET_LOOPPTR(types[i], old_dlp);

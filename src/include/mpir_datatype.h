@@ -473,6 +473,17 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
     return MPI_SUCCESS;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIR_Type_get_combiner(MPI_Datatype datatype)
+{
+    if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
+        return MPI_COMBINER_NAMED;
+    } else {
+        MPIR_Datatype *dtp;
+        MPIR_Datatype_get_ptr(datatype, dtp);
+        return dtp->contents->combiner;
+    }
+}
+
 MPL_STATIC_INLINE_PREFIX MPI_Datatype MPIR_Datatype_predefined_get_type(uint32_t index)
 {
     MPIR_Assert(index < MPIR_DATATYPE_N_PREDEFINED);

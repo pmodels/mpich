@@ -779,7 +779,7 @@ void MPIR_Type_access_contents(MPI_Datatype type,
     MPIR_Datatype *dtp;
     MPIR_Datatype_contents *cp;
 
-    MPIR_Type_get_envelope(type, &nr_ints, &nr_aints, &nr_types, &combiner);
+    MPIR_Type_get_envelope_impl(type, &nr_ints, &nr_aints, &nr_types, &combiner);
 
     /* hardcoded handling of MPICH contents format... */
     MPIR_Datatype_get_ptr(type, dtp);
