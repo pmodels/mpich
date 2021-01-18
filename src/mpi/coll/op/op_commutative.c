@@ -73,7 +73,10 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
 
     /* ... body of routine ...  */
 
-    MPIR_Op_commutative(op_ptr, commute);
+    mpi_errno = MPIR_Op_commutative(op_ptr, commute);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
 
     /* ... end of body of routine ... */
 

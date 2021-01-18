@@ -190,9 +190,10 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
     int blocks[2] = { 1, 1 };
     MPI_Aint disps[2];
     MPI_Datatype types[2], maxloc_type = MPI_DATATYPE_NULL;
-    MPI_Op maxloc_op = MPI_OP_NULL;
     ull_maxloc_t maxloc, maxloc_result;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+
+    MPIR_Op *maxloc_op = NULL;
 
     types[0] = MPI_UNSIGNED_LONG_LONG;
     types[1] = MPI_INT;
@@ -211,7 +212,8 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
     maxloc.sz = (unsigned long long) mysz;
     maxloc.loc = myloc;
 
-    mpi_errno = MPIR_Allreduce(&maxloc, &maxloc_result, 1, maxloc_type, maxloc_op, comm, &errflag);
+    mpi_errno =
+        MPIR_Allreduce(&maxloc, &maxloc_result, 1, maxloc_type, maxloc_op->handle, comm, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     *maxsz_loc = maxloc_result.loc;
@@ -220,8 +222,8 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
   fn_exit:
     if (maxloc_type != MPI_DATATYPE_NULL)
         MPIR_Type_free_impl(&maxloc_type);
-    if (maxloc_op != MPI_OP_NULL)
-        MPIR_Op_free_impl(&maxloc_op);
+    if (maxloc_op)
+        MPIR_Op_free_impl(maxloc_op);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
