@@ -45,8 +45,7 @@ void MPII_Op_set_fc(MPI_Op op)
 }
 #endif
 
-
-int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
+int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPIR_Op ** p_op_ptr)
 {
     MPIR_Op *op_ptr;
     int mpi_errno = MPI_SUCCESS;
@@ -67,9 +66,9 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
                                             const int *, const MPI_Datatype *)) user_fn;
     MPIR_Object_set_ref(op_ptr, 1);
 
-    MPIR_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
-
     MPID_Op_commit_hook(op_ptr);
+
+    *p_op_ptr = op_ptr;
 
   fn_exit:
     return mpi_errno;
@@ -77,20 +76,17 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
     goto fn_exit;
 }
 
-void MPIR_Op_free_impl(MPI_Op * op)
+int MPIR_Op_free_impl(MPIR_Op * op_ptr)
 {
-    MPIR_Op *op_ptr = NULL;
     int in_use;
-
-    MPIR_Op_get_ptr(*op, op_ptr);
-    MPIR_Assert(op_ptr);
 
     MPIR_Op_ptr_release_ref(op_ptr, &in_use);
     if (!in_use) {
         MPIR_Handle_obj_free(&MPIR_Op_mem, op_ptr);
         MPID_Op_free_hook(op_ptr);
     }
-    *op = MPI_OP_NULL;
+
+    return MPI_SUCCESS;
 }
 
 /* TODO with a modest amount of work in the handle allocator code we should be
@@ -113,7 +109,7 @@ int MPIR_Op_is_commutative(MPI_Op op)
     }
 }
 
-int MPIR_Op_commutative(MPIR_Op * op_ptr, int *commute)
+int MPIR_Op_commutative_impl(MPIR_Op * op_ptr, int *commute)
 {
     int mpi_errno = MPI_SUCCESS;
 

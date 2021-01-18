@@ -70,9 +70,11 @@ int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Op_create_impl(user_fn, commute, op);
+    MPIR_Op *op_ptr = NULL;
+    mpi_errno = MPIR_Op_create_impl(user_fn, commute, &op_ptr);
     if (mpi_errno)
         goto fn_fail;
+    MPIR_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
 
     /* ... end of body of routine ... */
 

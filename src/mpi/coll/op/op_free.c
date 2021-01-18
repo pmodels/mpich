@@ -50,6 +50,7 @@ Input Parameters:
 int MPI_Op_free(MPI_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Op *op_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -61,7 +62,6 @@ int MPI_Op_free(MPI_Op * op)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Op *op_ptr = NULL;
             MPIR_Op_get_ptr(*op, op_ptr);
             MPIR_Op_valid_ptr(op_ptr, mpi_errno);
             if (!mpi_errno) {
@@ -80,7 +80,11 @@ int MPI_Op_free(MPI_Op * op)
 
     /* ... body of routine ...  */
 
-    MPIR_Op_free_impl(op);
+    mpi_errno = MPIR_Op_free_impl(op_ptr);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+    *op = MPI_OP_NULL;
 
     /* ... end of body of routine ... */
 
