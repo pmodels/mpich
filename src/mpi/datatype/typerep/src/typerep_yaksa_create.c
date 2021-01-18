@@ -65,8 +65,8 @@ static int update_yaksa_type(MPIR_Datatype * newtype, MPI_Datatype oldtype, MPI_
     goto fn_exit;
 }
 
-int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datatype oldtype,
-                               MPIR_Datatype * newtype)
+int MPIR_Typerep_create_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                               MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_VECTOR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_VECTOR);
@@ -75,7 +75,11 @@ int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datat
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
-    int rc = yaksa_type_create_vector(count, blocklength, stride, type,
+    /* FIXME: make yaksa to use intptr_t */
+    MPIR_Assert(count <= INT_MAX);
+    MPIR_Assert(blocklength <= INT_MAX);
+    MPIR_Assert(stride <= INT_MAX);
+    int rc = yaksa_type_create_vector((int) count, (int) blocklength, (int) stride, type,
                                       NULL, (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
@@ -89,8 +93,8 @@ int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datat
     goto fn_exit;
 }
 
-int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                                MPIR_Datatype * newtype)
+int MPIR_Typerep_create_hvector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                                MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_HVECTOR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_HVECTOR);
@@ -99,7 +103,10 @@ int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
-    int rc = yaksa_type_create_hvector(count, blocklength, stride, type,
+    /* FIXME: make yaksa to use intptr_t */
+    MPIR_Assert(count <= INT_MAX);
+    MPIR_Assert(blocklength <= INT_MAX);
+    int rc = yaksa_type_create_hvector((int) count, (int) blocklength, stride, type,
                                        NULL, (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 

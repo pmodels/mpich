@@ -589,7 +589,7 @@ int MPII_Type_zerolen(MPI_Datatype * newtype);
 int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
 
 int MPIR_Type_contiguous(MPI_Aint count, MPI_Datatype oldtype, MPI_Datatype * newtype);
-int MPIR_Type_vector(int count, int blocklength, MPI_Aint stride, int strideinbytes,
+int MPIR_Type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride, bool strideinbytes,
                      MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_blockindexed(int count,
                            int blocklength,
@@ -629,5 +629,9 @@ int MPIR_Type_get_contents_c_impl(MPI_Datatype datatype, MPI_Aint max_integers,
                                   MPI_Aint array_of_addresses[], MPI_Count array_of_counts[],
                                   MPI_Datatype array_of_datatypes[]);
 int MPIR_Type_contiguous_c_impl(MPI_Aint count, MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_vector_c_impl(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                            MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_create_hvector_c_impl(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                                    MPI_Datatype oldtype, MPI_Datatype * newtype);
 
 #endif /* MPIR_DATATYPE_H_INCLUDED */

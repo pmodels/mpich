@@ -11,10 +11,10 @@
 void MPIR_Typerep_init(void);
 void MPIR_Typerep_finalize(void);
 
-int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datatype oldtype,
-                               MPIR_Datatype * newtype);
-int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                                MPIR_Datatype * newtype);
+int MPIR_Typerep_create_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                               MPI_Datatype oldtype, MPIR_Datatype * newtype);
+int MPIR_Typerep_create_hvector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                                MPI_Datatype oldtype, MPIR_Datatype * newtype);
 int MPIR_Typerep_create_contig(MPI_Aint count, MPI_Datatype oldtype, MPIR_Datatype * newtype);
 int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype);
 int MPIR_Typerep_create_indexed_block(int count, int blocklength, const int *array_of_displacements,

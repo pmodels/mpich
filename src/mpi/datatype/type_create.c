@@ -61,8 +61,8 @@ int MPIR_Type_contiguous(MPI_Aint count, MPI_Datatype oldtype, MPI_Datatype * ne
 }
 
 /* common routine for vector and hvector, distinguished by dispinbytes */
-int MPIR_Type_vector(int count, int blocklength, MPI_Aint stride,
-                     int strideinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                     bool strideinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *new_dtp;
@@ -402,13 +402,13 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
     MPIR_Datatype *new_dtp;
-    int ints[3];
 
     mpi_errno = MPIR_Type_vector(count, blocklength, (MPI_Aint) stride, 0,      /* stride not in bytes, in extents */
                                  oldtype, &new_handle);
 
     MPIR_ERR_CHECK(mpi_errno);
 
+    int ints[3];
     ints[0] = count;
     ints[1] = blocklength;
     ints[2] = stride;
@@ -425,23 +425,80 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
     goto fn_exit;
 }
 
+int MPIR_Type_vector_c_impl(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                            MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPIR_Datatype *new_dtp;
+
+    mpi_errno = MPIR_Type_vector(count, blocklength, stride, 0, /* stride not in bytes, in extents */
+                                 oldtype, &new_handle);
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPI_Aint counts[3];
+    counts[0] = count;
+    counts[1] = blocklength;
+    counts[2] = stride;
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_VECTOR,
+                                           0, 0, 3, 1, NULL, NULL, counts, &oldtype);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Type_create_hvector_impl(int count, int blocklength, MPI_Aint stride,
                                   MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
     MPIR_Datatype *new_dtp;
-    int ints[2];
 
-    mpi_errno = MPIR_Type_vector(count, blocklength, (MPI_Aint) stride, 1,      /* stride in bytes */
+    mpi_errno = MPIR_Type_vector(count, blocklength, stride, 1, /* stride in bytes */
                                  oldtype, &new_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
+    int ints[2];
     ints[0] = count;
     ints[1] = blocklength;
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HVECTOR,
                                            2, 1, 0, 1, ints, &stride, NULL, &oldtype);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Type_create_hvector_c_impl(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                                    MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPIR_Datatype *new_dtp;
+
+    mpi_errno = MPIR_Type_vector(count, blocklength, stride, 1, /* stride in bytes */
+                                 oldtype, &new_handle);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPI_Aint counts[3];
+    counts[0] = count;
+    counts[1] = blocklength;
+    counts[2] = stride;
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HVECTOR,
+                                           0, 0, 3, 1, NULL, NULL, counts, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
