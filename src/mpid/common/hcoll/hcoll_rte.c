@@ -371,11 +371,9 @@ static int get_mpi_type_contents(void *mpi_type, int max_integers, int max_addre
     int ret;
     MPI_Datatype dt_handle = (MPI_Datatype) (intptr_t) mpi_type;
 
-    ret = MPIR_Type_get_contents(dt_handle,
-                                 max_integers, max_addresses, max_datatypes,
-                                 array_of_integers,
-                                 (MPI_Aint *) array_of_addresses,
-                                 (MPI_Datatype *) array_of_datatypes);
+    ret = MPIR_Type_get_contents_impl(dt_handle, max_integers, max_addresses, max_datatypes,
+                                      array_of_integers, (MPI_Aint *) array_of_addresses,
+                                      (MPI_Datatype *) array_of_datatypes);
 
     return ret == MPI_SUCCESS ? HCOLL_SUCCESS : HCOLL_ERROR;
 }
