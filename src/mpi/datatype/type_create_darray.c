@@ -135,8 +135,9 @@ static int MPIR_Type_cyclic(const int *array_of_gsizes,
 {
 /* nprocs = no. of processes in dimension dim of grid
    rank = coordinate of this process in dimension dim */
-    int mpi_errno, blksize, i, blklens[3], st_index, end_index, local_size, rem, count;
-    MPI_Aint stride, disps[3];
+    int mpi_errno;
+    MPI_Aint blksize, i, st_index, end_index, local_size, rem, count;
+    MPI_Aint stride, blklens[3], disps[3];
     MPI_Datatype type_tmp, type_indexed, types[3];
 
     if (darg == MPI_DISTRIBUTE_DFLT_DARG)

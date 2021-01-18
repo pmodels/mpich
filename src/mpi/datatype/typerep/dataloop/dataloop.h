@@ -64,7 +64,7 @@ int MPIR_Dataloop_create_blockindexed(MPI_Aint count, MPI_Aint blklen, const MPI
 int MPIR_Dataloop_create_indexed(MPI_Aint count, const MPI_Aint * blocklength_array,
                                  const MPI_Aint * displacement_array, int dispinbytes,
                                  MPI_Datatype oldtype, void **dlp_p);
-int MPIR_Dataloop_create_struct(MPI_Aint count, const int *blklen_array,
+int MPIR_Dataloop_create_struct(MPI_Aint count, const MPI_Aint * blklen_array,
                                 const MPI_Aint * disp_array, const MPI_Datatype * oldtype_array,
                                 void **dlp_p);
 

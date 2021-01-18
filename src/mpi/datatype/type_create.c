@@ -171,13 +171,13 @@ int MPIR_Type_indexed(MPI_Aint count, const MPI_Aint * blocklength_array,
 }
 
 /* begin struct */
-static int type_struct(int count,
-                       const int *blocklength_array,
+static int type_struct(MPI_Aint count,
+                       const MPI_Aint * blocklength_array,
                        const MPI_Aint * displacement_array,
                        const MPI_Datatype * oldtype_array, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
+    MPI_Aint i;
 
     MPIR_Datatype *new_dtp;
 
@@ -215,8 +215,8 @@ static int type_struct(int count,
     goto fn_exit;
 }
 
-int MPIR_Type_struct(int count,
-                     const int *blocklength_array,
+int MPIR_Type_struct(MPI_Aint count,
+                     const MPI_Aint * blocklength_array,
                      const MPI_Aint * displacement_array,
                      const MPI_Datatype * oldtype_array, MPI_Datatype * newtype)
 {
@@ -224,7 +224,7 @@ int MPIR_Type_struct(int count,
 
     /* detect if the old MPI_LB/MPI_UB API is used */
     bool using_old_api = false;
-    for (int i = 0; i < count; i++) {
+    for (MPI_Aint i = 0; i < count; i++) {
         if (oldtype_array[i] == MPI_LB || oldtype_array[i] == MPI_UB) {
             using_old_api = true;
             break;
@@ -236,14 +236,15 @@ int MPIR_Type_struct(int count,
             type_struct(count, blocklength_array, displacement_array, oldtype_array, newtype);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        int *real_blocklength_array = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_DATATYPE);
+        MPI_Aint *real_blocklength_array = (MPI_Aint *) MPL_malloc(count * sizeof(MPI_Aint),
+                                                                   MPL_MEM_DATATYPE);
         MPI_Aint *real_displacement_array = (MPI_Aint *) MPL_malloc(count * sizeof(MPI_Aint),
                                                                     MPL_MEM_DATATYPE);
         MPI_Datatype *real_oldtype_array = (MPI_Datatype *) MPL_malloc(count * sizeof(MPI_Datatype),
                                                                        MPL_MEM_DATATYPE);
 
-        int real_count = 0;
-        for (int i = 0; i < count; i++) {
+        MPI_Aint real_count = 0;
+        for (MPI_Aint i = 0; i < count; i++) {
             if (oldtype_array[i] != MPI_LB && oldtype_array[i] != MPI_UB) {
                 real_blocklength_array[real_count] = blocklength_array[i];
                 real_displacement_array[real_count] = displacement_array[i];
@@ -265,7 +266,7 @@ int MPIR_Type_struct(int count,
         MPIR_Datatype_get_ptr(tmptype, tmptype_ptr);
 
         MPI_Aint lb = tmptype_ptr->lb, ub = tmptype_ptr->ub;
-        for (int i = 0; i < count; i++) {
+        for (MPI_Aint i = 0; i < count; i++) {
             if (oldtype_array[i] == MPI_LB)
                 lb = displacement_array[i];
             else if (oldtype_array[i] == MPI_UB)
@@ -841,18 +842,70 @@ int MPIR_Type_create_hindexed_c_impl(MPI_Aint count,
     goto fn_exit;
 }
 
+int MPIR_Type_create_struct_c_impl(MPI_Aint count,
+                                   const MPI_Aint * array_of_blocklengths,
+                                   const MPI_Aint * array_of_displacements,
+                                   const MPI_Datatype * array_of_types, MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPIR_Datatype *new_dtp;
+    MPI_Aint *counts;
+    MPIR_CHKLMEM_DECL(1);
+
+    mpi_errno = MPIR_Type_struct(count, array_of_blocklengths,
+                                 array_of_displacements, array_of_types, &new_handle);
+    MPIR_ERR_CHECK(mpi_errno);
+
+
+    MPIR_CHKLMEM_MALLOC(counts, MPI_Aint *, (count * 2 + 1) * sizeof(MPI_Aint), mpi_errno,
+                        "contents counts array", MPL_MEM_BUFFER);
+
+    counts[0] = count;
+    for (MPI_Aint i = 0; i < count; i++) {
+        counts[i + 1] = array_of_blocklengths[i];
+    }
+    for (MPI_Aint i = 0; i < count; i++) {
+        counts[i + count + 1] = array_of_displacements[i];
+    }
+
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_STRUCT,
+                                           0, 0, count * 2 + 1, count,
+                                           NULL, NULL, counts, array_of_types);
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Type_create_struct_impl(int count, const int *array_of_blocklengths,
                                  const MPI_Aint * array_of_displacements,
                                  const MPI_Datatype * array_of_types, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
-    int i, *ints;
     MPIR_Datatype *new_dtp;
-    MPIR_CHKLMEM_DECL(1);
+    MPI_Aint *p_blkl;
+    int *ints;
+    MPIR_CHKLMEM_DECL(2);
 
-    mpi_errno = MPIR_Type_struct(count,
-                                 array_of_blocklengths,
+    if (sizeof(MPI_Aint) == sizeof(int)) {
+        p_blkl = (MPI_Aint *) array_of_blocklengths;
+    } else {
+        MPIR_CHKLMEM_MALLOC_ORJUMP(p_blkl, MPI_Aint *, count * sizeof(MPI_Aint), mpi_errno,
+                                   "aint blocklengths array", MPL_MEM_BUFFER);
+        for (int i = 0; i < count; i++) {
+            p_blkl[i] = array_of_blocklengths[i];
+        }
+    }
+    mpi_errno = MPIR_Type_struct(count, p_blkl,
                                  array_of_displacements, array_of_types, &new_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -861,7 +914,7 @@ int MPIR_Type_create_struct_impl(int count, const int *array_of_blocklengths,
                         MPL_MEM_BUFFER);
 
     ints[0] = count;
-    for (i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
         ints[i + 1] = array_of_blocklengths[i];
     }
 

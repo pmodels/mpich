@@ -31,7 +31,7 @@ int MPIR_Typerep_create_hindexed(MPI_Aint count, const MPI_Aint * array_of_block
                                  MPIR_Datatype * newtype);
 int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
                                 MPIR_Datatype * newtype);
-int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
+int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blocklengths,
                                const MPI_Aint * array_of_displacements,
                                const MPI_Datatype * array_of_types, MPIR_Datatype * newtype);
 int MPIR_Typerep_create_subarray(int ndims, const int *array_of_sizes, const int *array_of_subsizes,

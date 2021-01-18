@@ -46,7 +46,7 @@ create_pairtype - create dataloop for a pairtype
 @*/
 static int create_pairtype(MPI_Datatype type)
 {
-    int blocks[2] = { 1, 1 };
+    MPI_Aint blocks[2] = { 1, 1 };
     MPI_Aint disps[2];
     MPI_Datatype types[2];
 
@@ -84,9 +84,6 @@ static void create_named(MPI_Datatype type);
 
 void MPIR_Typerep_commit(MPI_Datatype type)
 {
-    int i;
-    int err ATTRIBUTE((unused));
-
     MPI_Datatype *types;
     int *ints;
     MPI_Aint *aints;
@@ -279,8 +276,15 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             }
             break;
         case MPI_COMBINER_STRUCT:
-            if (cp->nr_counts == 0) {
-                for (i = 1; i < ints[0]; i++) {
+            {
+                int n;
+                if (cp->nr_counts == 0) {
+                    n = ints[0];
+                } else {
+                    n = counts[0];
+                }
+                /* commit each subtypes */
+                for (MPI_Aint i = 1; i < n; i++) {
                     int type_combiner = MPIR_Type_get_combiner(types[i]);
 
                     if (type_combiner != MPI_COMBINER_NAMED) {
@@ -292,12 +296,21 @@ void MPIR_Typerep_commit(MPI_Datatype type)
                         }
                     }
                 }
-                err = MPIR_Dataloop_create_struct(ints[0], &ints[1], aints, types, (void **) dlp_p);
-                /* TODO if/when this function returns error codes, propagate this failure instead */
-                MPIR_Assert(0 == err);
-                /* if (err) return err; */
-            } else {
-                MPIR_Assert(0);
+                if (cp->nr_counts == 0) {
+                    MPI_Aint *blkls = MPL_malloc(n * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                    for (int i = 0; i < n; i++) {
+                        blkls[i] = ints[1 + i];
+                    }
+                    MPI_Aint *disps = aints;
+                    int err = MPIR_Dataloop_create_struct(n, blkls, disps, types, (void **) dlp_p);
+                    MPIR_Assert(0 == err);
+                    MPL_free(blkls);
+                } else {
+                    MPI_Aint *blkls = counts + 1;
+                    MPI_Aint *disps = counts + 1 + n;
+                    int err = MPIR_Dataloop_create_struct(n, blkls, disps, types, (void **) dlp_p);
+                    MPIR_Assert(0 == err);
+                }
             }
             break;
         case MPI_COMBINER_SUBARRAY:

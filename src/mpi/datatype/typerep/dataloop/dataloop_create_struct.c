@@ -8,16 +8,16 @@
 
 static int create_struct_memory_error(void);
 static int create_unique_type_struct(MPI_Aint count,
-                                     const int *blklens,
+                                     const MPI_Aint * blklens,
                                      const MPI_Aint * disps,
                                      const MPI_Datatype * oldtypes,
                                      int type_pos, MPII_Dataloop ** dlp_p);
 static int create_basic_all_bytes_struct(MPI_Aint count,
-                                         const int *blklens,
+                                         const MPI_Aint * blklens,
                                          const MPI_Aint * disps,
                                          const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p);
 static int create_flattened_struct(MPI_Aint count,
-                                   const int *blklens,
+                                   const MPI_Aint * blklens,
                                    const MPI_Aint * disps,
                                    const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p);
 
@@ -46,7 +46,7 @@ Output Parameters:
 
 @*/
 int MPIR_Dataloop_create_struct(MPI_Aint count,
-                                const int *blklens,
+                                const MPI_Aint * blklens,
                                 const MPI_Aint * disps, const MPI_Datatype * oldtypes, void **dlp_p)
 {
     int err, i, nr_basics = 0, nr_derived = 0, type_pos = 0;
@@ -163,7 +163,7 @@ static int create_struct_memory_error(void)
 /* --END ERROR HANDLING-- */
 
 static int create_unique_type_struct(MPI_Aint count,
-                                     const int *blklens,
+                                     const MPI_Aint * blklens,
                                      const MPI_Aint * disps,
                                      const MPI_Datatype * oldtypes,
                                      int type_pos, MPII_Dataloop ** dlp_p)
@@ -213,7 +213,7 @@ static int create_unique_type_struct(MPI_Aint count,
 }
 
 static int create_basic_all_bytes_struct(MPI_Aint count,
-                                         const int *blklens,
+                                         const MPI_Aint * blklens,
                                          const MPI_Aint * disps,
                                          const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p)
 {
@@ -259,7 +259,7 @@ static int create_basic_all_bytes_struct(MPI_Aint count,
 }
 
 static int create_flattened_struct(MPI_Aint count,
-                                   const int *blklens,
+                                   const MPI_Aint * blklens,
                                    const MPI_Aint * disps,
                                    const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p)
 {

@@ -359,7 +359,7 @@ int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint exte
     goto fn_exit;
 }
 
-int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
+int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blocklengths,
                                const MPI_Aint * array_of_displacements,
                                const MPI_Datatype * array_of_types, MPIR_Datatype * newtype)
 {
@@ -370,13 +370,29 @@ int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
     yaksa_type_t *array_of_yaksa_types = (yaksa_type_t *) MPL_malloc(count * sizeof(yaksa_type_t),
                                                                      MPL_MEM_DATATYPE);
 
-    for (int i = 0; i < count; i++) {
+    for (MPI_Aint i = 0; i < count; i++) {
         array_of_yaksa_types[i] = MPII_Typerep_get_yaksa_type(array_of_types[i]);
     }
 
-    int rc = yaksa_type_create_struct(count, array_of_blocklengths, array_of_displacements,
+    /* FIXME: update yaksa to use intptr_t */
+    MPIR_Assert(count <= INT_MAX);
+    int *p_blkl;
+    if (sizeof(MPI_Aint) != sizeof(int)) {
+        p_blkl = MPL_malloc(count * sizeof(int), MPL_MEM_DATATYPE);
+        MPIR_Assert(p_blkl);
+        for (MPI_Aint i = 0; i < count; i++) {
+            MPIR_Assert(array_of_blocklengths[i] <= INT_MAX);
+            p_blkl[i] = array_of_blocklengths[i];
+        }
+    } else {
+        p_blkl = (int *) array_of_blocklengths;
+    }
+    int rc = yaksa_type_create_struct((int) count, p_blkl, array_of_displacements,
                                       array_of_yaksa_types, NULL,
                                       (yaksa_type_t *) & newtype->typerep.handle);
+    if (sizeof(MPI_Aint) != sizeof(int)) {
+        MPL_free(p_blkl);
+    }
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
     mpi_errno = update_yaksa_type(newtype, MPI_DATATYPE_NULL, 0);
