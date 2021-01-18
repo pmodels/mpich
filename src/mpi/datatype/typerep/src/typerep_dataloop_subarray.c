@@ -32,7 +32,8 @@ int MPII_Typerep_convert_subarray(int ndims, int *array_of_sizes, int *array_of_
             size = (MPI_Aint) (array_of_sizes[0]) * extent;
             for (i = 2; i < ndims; i++) {
                 size *= (MPI_Aint) (array_of_sizes[i - 1]);
-                mpi_errno = MPIR_Type_hvector_impl(array_of_subsizes[i], 1, size, tmp1, &tmp2);
+                mpi_errno = MPIR_Type_create_hvector_impl(array_of_subsizes[i], 1, size, tmp1,
+                                                          &tmp2);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_Type_free_impl(&tmp1);
                 tmp1 = tmp2;
@@ -61,7 +62,8 @@ int MPII_Typerep_convert_subarray(int ndims, int *array_of_sizes, int *array_of_
             size = (MPI_Aint) (array_of_sizes[ndims - 1]) * extent;
             for (i = ndims - 3; i >= 0; i--) {
                 size *= (MPI_Aint) (array_of_sizes[i + 1]);
-                mpi_errno = MPIR_Type_hvector_impl(array_of_subsizes[i], 1, size, tmp1, &tmp2);
+                mpi_errno = MPIR_Type_create_hvector_impl(array_of_subsizes[i], 1, size, tmp1,
+                                                          &tmp2);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_Type_free_impl(&tmp1);
                 tmp1 = tmp2;
@@ -89,7 +91,7 @@ int MPII_Typerep_convert_subarray(int ndims, int *array_of_sizes, int *array_of_
     types[1] = tmp1;
     types[2] = MPI_UB;
 
-    mpi_errno = MPIR_Type_struct_impl(3, blklens, disps, types, newtype);
+    mpi_errno = MPIR_Type_create_struct_impl(3, blklens, disps, types, newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Type_free_impl(&tmp1);

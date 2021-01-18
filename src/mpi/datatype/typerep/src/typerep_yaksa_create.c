@@ -33,7 +33,7 @@ static int update_yaksa_type(MPIR_Datatype * newtype, MPI_Datatype oldtype, MPI_
         newtype->typerep.num_contig_blocks = (MPI_Aint) num_contig_blocks / cnt;
     }
 
-    rc = yaksa_type_get_size(dt, &newtype->size);
+    rc = yaksa_type_get_size(dt, (uintptr_t *) & newtype->size);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
     rc = yaksa_type_get_extent(dt, &newtype->lb, &newtype->extent);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");

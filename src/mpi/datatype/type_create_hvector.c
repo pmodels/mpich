@@ -54,9 +54,6 @@ int MPI_Type_create_hvector(int count,
                             MPI_Aint stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Datatype new_handle;
-    MPIR_Datatype *new_dtp;
-    int ints[2];
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_HVECTOR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -88,23 +85,10 @@ int MPI_Type_create_hvector(int count,
 
     /* ... body of routine ... */
 
-    mpi_errno = MPIR_Type_vector(count, blocklength, stride, 1, /* stride in bytes */
-                                 oldtype, &new_handle);
-    if (mpi_errno != MPI_SUCCESS)
+    mpi_errno = MPIR_Type_create_hvector_impl(count, blocklength, stride, oldtype, newtype);
+    if (mpi_errno)
         goto fn_fail;
 
-    ints[0] = count;
-    ints[1] = blocklength;
-    MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HVECTOR, 2,    /* ints (count, blocklength) */
-                                           1,   /* aints */
-                                           1,   /* types */
-                                           ints, &stride, &oldtype);
-
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:

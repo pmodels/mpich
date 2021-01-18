@@ -115,7 +115,8 @@ int MPI_Type_create_darray(int size,
                                                  MPIR_ERR_RECOVERABLE,
                                                  __func__,
                                                  __LINE__,
-                                                 MPI_ERR_ARG, "**arg", "**arg %s", "order");
+                                                 MPI_ERR_ARG, "**storageorder",
+                                                 "**storageorder %d", order);
                 goto fn_fail;
             }
 
@@ -198,8 +199,8 @@ int MPI_Type_create_darray(int size,
     /* ... body of routine ... */
 
     mpi_errno =
-        MPIR_Type_create_darray(size, rank, ndims, array_of_gsizes, array_of_distribs,
-                                array_of_dargs, array_of_psizes, order, oldtype, newtype);
+        MPIR_Type_create_darray_impl(size, rank, ndims, array_of_gsizes, array_of_distribs,
+                                     array_of_dargs, array_of_psizes, order, oldtype, newtype);
     if (mpi_errno)
         goto fn_fail;
     /* ... end of body of routine ... */

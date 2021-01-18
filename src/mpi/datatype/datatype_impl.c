@@ -367,7 +367,7 @@ int MPIR_Status_set_elements_x_impl(MPI_Status * status, MPI_Datatype datatype, 
     return mpi_errno;
 }
 
-int MPIR_Type_commit(MPI_Datatype * datatype_p)
+int MPIR_Type_commit_impl(MPI_Datatype * datatype_p)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *datatype_ptr;
@@ -388,28 +388,6 @@ int MPIR_Type_commit(MPI_Datatype * datatype_p)
 
     }
     return mpi_errno;
-}
-
-int MPIR_Type_commit_impl(MPI_Datatype * datatype)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (HANDLE_IS_BUILTIN(*datatype))
-        goto fn_exit;
-
-    /* pair types stored as real types are a special case */
-    if (*datatype == MPI_FLOAT_INT ||
-        *datatype == MPI_DOUBLE_INT ||
-        *datatype == MPI_LONG_INT || *datatype == MPI_SHORT_INT || *datatype == MPI_LONG_DOUBLE_INT)
-        goto fn_exit;
-
-    mpi_errno = MPIR_Type_commit(datatype);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
@@ -902,51 +880,10 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     goto fn_exit;
 }
 
-int MPIR_Type_create_struct_impl(int count,
-                                 const int array_of_blocklengths[],
-                                 const MPI_Aint array_of_displacements[],
-                                 const MPI_Datatype array_of_types[], MPI_Datatype * newtype)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int i, *ints;
-    MPI_Datatype new_handle;
-    MPIR_Datatype *new_dtp;
-    MPIR_CHKLMEM_DECL(1);
-
-    mpi_errno = MPIR_Type_struct(count,
-                                 array_of_blocklengths,
-                                 array_of_displacements, array_of_types, &new_handle);
-
-    MPIR_ERR_CHECK(mpi_errno);
-
-
-    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno,
-                               "content description", MPL_MEM_BUFFER);
-
-    ints[0] = count;
-    for (i = 0; i < count; i++)
-        ints[i + 1] = array_of_blocklengths[i];
-
-    MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_STRUCT, count + 1,     /* ints (cnt,blklen) */
-                                           count,       /* aints (disps) */
-                                           count,       /* types */
-                                           ints, array_of_displacements, array_of_types);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
-
-  fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Type_create_darray(int size, int rank, int ndims,
-                            const int array_of_gsizes[], const int array_of_distribs[],
-                            const int array_of_dargs[], const int array_of_psizes[],
-                            int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_create_darray_impl(int size, int rank, int ndims,
+                                 const int array_of_gsizes[], const int array_of_distribs[],
+                                 const int array_of_dargs[], const int array_of_psizes[],
+                                 int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -1168,9 +1105,9 @@ int MPIR_Type_create_darray(int size, int rank, int ndims,
     goto fn_exit;
 }
 
-int MPIR_Type_create_subarray(int ndims, const int array_of_sizes[],
-                              const int array_of_subsizes[], const int array_of_starts[],
-                              int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_create_subarray_impl(int ndims, const int array_of_sizes[],
+                                   const int array_of_subsizes[], const int array_of_starts[],
+                                   int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -1325,12 +1262,9 @@ void MPIR_Type_free_impl(MPI_Datatype * datatype)
     *datatype = MPI_DATATYPE_NULL;
 }
 
-int MPIR_Type_get_contents(MPI_Datatype datatype,
-                           int max_integers,
-                           int max_addresses,
-                           int max_datatypes,
-                           int array_of_integers[],
-                           MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
+int MPIR_Type_get_contents_impl(MPI_Datatype datatype, int max_integers, int max_addresses,
+                                int max_datatypes, int array_of_integers[],
+                                MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
 {
     int i, mpi_errno;
     MPIR_Datatype *dtp;
@@ -1354,8 +1288,7 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
     /* --BEGIN ERROR HANDLING-- */
     if (max_integers < cp->nr_ints || max_addresses < cp->nr_aints || max_datatypes < cp->nr_types) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         "MPIR_Type_get_contents", __LINE__,
-                                         MPI_ERR_OTHER, "**dtype", 0);
+                                         __func__, __LINE__, MPI_ERR_OTHER, "**dtype", 0);
         return mpi_errno;
     }
     /* --END ERROR HANDLING-- */
@@ -1461,8 +1394,8 @@ void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb
     }
 }
 
-int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                           MPI_Datatype * newtype)
+int MPIR_Type_create_hvector_impl(int count, int blocklength, MPI_Aint stride,
+                                  MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -1755,9 +1688,9 @@ int MPIR_Type_struct(int count,
     goto fn_exit;
 }
 
-int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
-                          const MPI_Aint * array_of_displacements,
-                          const MPI_Datatype * array_of_types, MPI_Datatype * newtype)
+int MPIR_Type_create_struct_impl(int count, const int *array_of_blocklengths,
+                                 const MPI_Aint * array_of_displacements,
+                                 const MPI_Datatype * array_of_types, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -1787,6 +1720,41 @@ int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
 
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Type_create_hindexed_impl(int count, const int array_of_blocklengths[],
+                                   const MPI_Aint array_of_displacements[],
+                                   MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPIR_Datatype *new_dtp;
+    int *ints;
+    MPIR_CHKLMEM_DECL(1);
+
+    mpi_errno = MPIR_Type_indexed(count, array_of_blocklengths, array_of_displacements, 1,      /* displacements in bytes */
+                                  oldtype, &new_handle);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno,
+                               "content description", MPL_MEM_BUFFER);
+    ints[0] = count;
+
+    for (int i = 0; i < count; i++) {
+        ints[i + 1] = array_of_blocklengths[i];
+    }
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HINDEXED, count + 1,   /* ints (count, blocklengths) */
+                                           count,       /* aints (displacements) */
+                                           1,   /* types */
+                                           ints, array_of_displacements, &oldtype);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
   fn_exit:
@@ -1869,6 +1837,248 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Type_create_resized_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
+                                  MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPIR_Datatype *new_dtp;
+    MPI_Aint aints[2];
+
+    mpi_errno = MPIR_Type_create_resized(oldtype, lb, extent, &new_handle);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    aints[0] = lb;
+    aints[1] = extent;
+
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_RESIZED, 0, 2, /* Aints */
+                                           1, NULL, aints, &oldtype);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Datatype *new_dtp = 0, *old_dtp;
+
+    if (HANDLE_IS_BUILTIN(oldtype)) {
+        /* create a new type and commit it. */
+        mpi_errno = MPIR_Type_contiguous(1, oldtype, newtype);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        /* allocate new datatype object and handle */
+        new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
+        if (!new_dtp) {
+            /* --BEGIN ERROR HANDLING-- */
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                             "MPIR_Type_dup", __LINE__, MPI_ERR_OTHER,
+                                             "**nomem", 0);
+            goto fn_fail;
+            /* --END ERROR HANDLING-- */
+        }
+
+        MPIR_Datatype_get_ptr(oldtype, old_dtp);
+
+        /* fill in datatype */
+        MPIR_Object_set_ref(new_dtp, 1);
+        /* new_dtp->handle is filled in by MPIR_Handle_obj_alloc() */
+        new_dtp->is_committed = old_dtp->is_committed;
+
+        new_dtp->attributes = NULL;     /* Attributes are copied in the
+                                         * top-level MPI_Type_dup routine */
+        new_dtp->name[0] = 0;   /* The Object name is not copied on
+                                 * a dup */
+
+        new_dtp->typerep.handle = NULL;
+        *newtype = new_dtp->handle;
+
+        mpi_errno = MPIR_Typerep_create_dup(oldtype, new_dtp);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* if old_dtp is commited, user will not call `MPI_Type_commit` on the new type,
+         * but the device still need be notified (e.g. ucx need register the type) */
+        if (old_dtp->is_committed) {
+            MPID_Type_commit_hook(new_dtp);
+        }
+    }
+
+    MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, VERBOSE, "dup type %x created.", *newtype);
+
+  fn_fail:
+    return mpi_errno;
+}
+
+int MPIR_Type_dup_impl(MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPIR_Datatype *new_dtp;
+
+    mpi_errno = MPIR_Type_dup(oldtype, &new_handle);
+
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_DUP, 0,        /* ints */
+                                           0,   /* aints */
+                                           1,   /* types */
+                                           NULL, NULL, &oldtype);
+
+    mpi_errno = MPIR_Type_commit_impl(&new_handle);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Copy attributes, executing the attribute copy functions */
+    /* This accesses the attribute dup function through the perprocess
+     * structure to prevent type_dup from forcing the linking of the
+     * attribute functions.  The actual function is (by default)
+     * MPIR_Attr_dup_list
+     */
+    MPIR_Datatype *old_dtp;
+    MPIR_Datatype_get_ptr(oldtype, old_dtp);
+    if (MPIR_Process.attr_dup) {
+        new_dtp->attributes = 0;
+        mpi_errno = MPIR_Process.attr_dup(oldtype, old_dtp->attributes, &new_dtp->attributes);
+        if (mpi_errno) {
+            MPIR_Datatype_ptr_release(new_dtp);
+            goto fn_fail;
+        }
+    }
+
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
+{
+    int mpi_errno = MPI_SUCCESS;
+#ifdef HAVE_ERROR_CHECKING
+    const char *tname = NULL;
+#endif
+    /* Note that all of the datatype have values, even if the type is
+     * not available. We test for that case separately.  We also
+     * prefer the Fortran types to the C type, if they are available */
+    static MPI_Datatype real_types[] = {
+        MPI_REAL4, MPI_REAL8, MPI_REAL16,
+        MPI_REAL, MPI_DOUBLE_PRECISION,
+        MPI_FLOAT, MPI_DOUBLE, MPI_LONG_DOUBLE
+    };
+    static MPI_Datatype int_types[] = {
+        MPI_INTEGER1, MPI_INTEGER2, MPI_INTEGER4, MPI_INTEGER8, MPI_INTEGER16,
+        MPI_INTEGER,
+        MPI_CHAR, MPI_SHORT, MPI_INT,
+        MPI_LONG, MPI_LONG_LONG
+    };
+    static MPI_Datatype complex_types[] = {
+        MPI_COMPLEX8, MPI_COMPLEX16, MPI_COMPLEX32,
+        MPI_COMPLEX, MPI_DOUBLE_COMPLEX,
+        MPI_C_COMPLEX, MPI_C_DOUBLE_COMPLEX, MPI_C_LONG_DOUBLE_COMPLEX,
+    };
+    MPI_Datatype matched_datatype = MPI_DATATYPE_NULL;
+    int i;
+    MPI_Aint tsize;
+
+    /* The following implementation follows the suggestion in the
+     * MPI-2 standard.
+     * The version in the MPI-2 spec makes use of the Fortran optional types;
+     * currently, we don't support these from C (see mpi.h.in).
+     * Thus, we look at the candidate types and make use of the first fit.
+     * Note that the standard doesn't require that this routine return
+     * any particular choice of MPI datatype; e.g., it is not required
+     * to return MPI_INTEGER4 if a 4-byte integer is requested.
+     */
+    switch (typeclass) {
+        case MPI_TYPECLASS_REAL:
+            {
+                int nRealTypes = sizeof(real_types) / sizeof(MPI_Datatype);
+#ifdef HAVE_ERROR_CHECKING
+                tname = "MPI_TYPECLASS_REAL";
+#endif
+                for (i = 0; i < nRealTypes; i++) {
+                    if (real_types[i] == MPI_DATATYPE_NULL) {
+                        continue;
+                    }
+                    MPIR_Datatype_get_size_macro(real_types[i], tsize);
+                    if (tsize == size) {
+                        matched_datatype = real_types[i];
+                        break;
+                    }
+                }
+            }
+            break;
+        case MPI_TYPECLASS_INTEGER:
+            {
+                int nIntTypes = sizeof(int_types) / sizeof(MPI_Datatype);
+#ifdef HAVE_ERROR_CHECKING
+                tname = "MPI_TYPECLASS_INTEGER";
+#endif
+                for (i = 0; i < nIntTypes; i++) {
+                    if (int_types[i] == MPI_DATATYPE_NULL) {
+                        continue;
+                    }
+                    MPIR_Datatype_get_size_macro(int_types[i], tsize);
+                    if (tsize == size) {
+                        matched_datatype = int_types[i];
+                        break;
+                    }
+                }
+            }
+            break;
+        case MPI_TYPECLASS_COMPLEX:
+            {
+                int nComplexTypes = sizeof(complex_types) / sizeof(MPI_Datatype);
+#ifdef HAVE_ERROR_CHECKING
+                tname = "MPI_TYPECLASS_COMPLEX";
+#endif
+                for (i = 0; i < nComplexTypes; i++) {
+                    if (complex_types[i] == MPI_DATATYPE_NULL) {
+                        continue;
+                    }
+                    MPIR_Datatype_get_size_macro(complex_types[i], tsize);
+                    if (tsize == size) {
+                        matched_datatype = complex_types[i];
+                        break;
+                    }
+                }
+            }
+            break;
+        default:
+            /* --BEGIN ERROR HANDLING-- */
+            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, break, "**typematchnoclass");
+            /* --END ERROR HANDLING-- */
+    }
+
+    if (mpi_errno == MPI_SUCCESS) {
+        if (matched_datatype == MPI_DATATYPE_NULL) {
+            /* --BEGIN ERROR HANDLING-- */
+            MPIR_ERR_SETANDSTMT2(mpi_errno, MPI_ERR_ARG,;, "**typematchsize",
+                                 "**typematchsize %s %d", tname, size);
+            /* --END ERROR HANDLING-- */
+        } else {
+            *datatype = matched_datatype;
+        }
+    }
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
   fn_exit:
     return mpi_errno;
