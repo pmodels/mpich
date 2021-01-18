@@ -91,8 +91,9 @@ int MPIR_Type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
 }
 
 /* common routine for indexed_block and hindexed_block, distinguished by dispinbytes */
-int MPIR_Type_blockindexed(int count, int blocklength, const void *displacement_array,
-                           int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
+                           const MPI_Aint displacement_array[], bool dispinbytes,
+                           MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -515,12 +516,22 @@ int MPIR_Type_create_indexed_block_impl(int count,
                                         MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKLMEM_DECL(1);
     MPI_Datatype new_handle;
     MPIR_Datatype *new_dtp;
-    int i, *ints;
+    MPI_Aint *p_disp;
+    int *ints;
+    MPIR_CHKLMEM_DECL(2);
 
-    mpi_errno = MPIR_Type_blockindexed(count, blocklength, array_of_displacements, 0,   /* dispinbytes */
+    if (sizeof(MPI_Aint) == sizeof(int)) {
+        p_disp = (MPI_Aint *) array_of_displacements;
+    } else {
+        MPIR_CHKLMEM_MALLOC_ORJUMP(p_disp, MPI_Aint *, count * sizeof(MPI_Aint), mpi_errno,
+                                   "aint displacment array", MPL_MEM_BUFFER);
+        for (int i = 0; i < count; i++) {
+            p_disp[i] = array_of_displacements[i];
+        }
+    }
+    mpi_errno = MPIR_Type_blockindexed(count, blocklength, p_disp, 0,   /* dispinbytes */
                                        oldtype, &new_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -530,12 +541,49 @@ int MPIR_Type_create_indexed_block_impl(int count,
     ints[0] = count;
     ints[1] = blocklength;
 
-    for (i = 0; i < count; i++)
+    for (int i = 0; i < count; i++)
         ints[i + 2] = array_of_displacements[i];
 
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_INDEXED_BLOCK,
                                            count + 2, 0, 0, 1, ints, NULL, NULL, &oldtype);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Type_create_indexed_block_c_impl(MPI_Aint count, MPI_Aint blocklength,
+                                          const MPI_Aint array_of_displacements[],
+                                          MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPIR_Datatype *new_dtp;
+    MPI_Aint *counts;
+    MPIR_CHKLMEM_DECL(1);
+
+    mpi_errno = MPIR_Type_blockindexed(count, blocklength, array_of_displacements, 0,   /* dispinbytes */
+                                       oldtype, &new_handle);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_CHKLMEM_MALLOC_ORJUMP(counts, MPI_Aint *, (count + 2) * sizeof(MPI_Aint), mpi_errno,
+                               "content description", MPL_MEM_BUFFER);
+
+    counts[0] = count;
+    counts[1] = blocklength;
+
+    for (MPI_Aint i = 0; i < count; i++)
+        counts[i + 2] = array_of_displacements[i];
+
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_INDEXED_BLOCK,
+                                           0, 0, count + 2, 1, NULL, NULL, counts, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
@@ -572,6 +620,41 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
   fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Type_create_hindexed_block_c_impl(MPI_Aint count, MPI_Aint blocklength,
+                                           const MPI_Aint array_of_displacements[],
+                                           MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPIR_Datatype *new_dtp;
+    MPI_Aint *counts;
+    MPIR_CHKLMEM_DECL(1);
+
+    mpi_errno = MPIR_Type_blockindexed(count, blocklength, array_of_displacements,
+                                       1, oldtype, &new_handle);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_CHKLMEM_MALLOC_ORJUMP(counts, MPI_Aint *, (count + 2) * sizeof(MPI_Aint), mpi_errno,
+                               "content description", MPL_MEM_BUFFER);
+    counts[0] = count;
+    counts[1] = blocklength;
+    for (MPI_Aint i = 0; i < count; i++)
+        counts[i + 2] = array_of_displacements[i];
+
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HINDEXED_BLOCK,
+                                           0, 0, count + 2, 1, NULL, NULL, counts, &oldtype);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;

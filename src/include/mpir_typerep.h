@@ -17,9 +17,10 @@ int MPIR_Typerep_create_hvector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint s
                                 MPI_Datatype oldtype, MPIR_Datatype * newtype);
 int MPIR_Typerep_create_contig(MPI_Aint count, MPI_Datatype oldtype, MPIR_Datatype * newtype);
 int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype);
-int MPIR_Typerep_create_indexed_block(int count, int blocklength, const int *array_of_displacements,
-                                      MPI_Datatype oldtype, MPIR_Datatype * newtype);
-int MPIR_Typerep_create_hindexed_block(int count, int blocklength,
+int MPIR_Typerep_create_indexed_block(MPI_Aint count, MPI_Aint blocklength,
+                                      const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
+                                      MPIR_Datatype * newtype);
+int MPIR_Typerep_create_hindexed_block(MPI_Aint count, MPI_Aint blocklength,
                                        const MPI_Aint * array_of_displacements,
                                        MPI_Datatype oldtype, MPIR_Datatype * newtype);
 int MPIR_Typerep_create_indexed(int count, const int *array_of_blocklengths,

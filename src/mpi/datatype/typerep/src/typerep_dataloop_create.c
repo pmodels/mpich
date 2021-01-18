@@ -198,17 +198,19 @@ static void update_type_indexed(int count, const int *blocklength_array,
 
 }
 
-static void update_type_blockindexed(int count, int blocklength, const void *displacement_array,
-                                     MPI_Datatype oldtype, MPIR_Datatype * newtype, int dispinbytes)
+static void update_type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
+                                     const MPI_Aint displacement_array[],
+                                     MPI_Datatype oldtype, MPIR_Datatype * newtype,
+                                     bool dispinbytes)
 {
-    int i;
+    MPI_Aint i;
     int old_is_contig;
     MPI_Aint contig_count;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
     MPI_Aint min_lb = 0, max_ub = 0, eff_disp;
 
     if (HANDLE_IS_BUILTIN(oldtype)) {
-        MPI_Aint el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
+        MPI_Aint el_sz = MPIR_Datatype_get_basic_size(oldtype);
 
         old_lb = 0;
         old_true_lb = 0;
@@ -217,7 +219,7 @@ static void update_type_blockindexed(int count, int blocklength, const void *dis
         old_extent = el_sz;
         old_is_contig = 1;
 
-        newtype->size = (MPI_Aint) count *(MPI_Aint) blocklength *el_sz;
+        newtype->size = count * blocklength * el_sz;
 
         newtype->alignsize = el_sz;     /* ??? */
         newtype->n_builtin_elements = count * blocklength;
@@ -236,7 +238,7 @@ static void update_type_blockindexed(int count, int blocklength, const void *dis
         old_extent = old_dtp->extent;
         MPIR_Datatype_is_contig(oldtype, &old_is_contig);
 
-        newtype->size = (MPI_Aint) count *(MPI_Aint) blocklength *(MPI_Aint) old_dtp->size;
+        newtype->size = count * blocklength * old_dtp->size;
 
         newtype->alignsize = old_dtp->alignsize;
         newtype->n_builtin_elements = count * blocklength * old_dtp->n_builtin_elements;
@@ -245,18 +247,15 @@ static void update_type_blockindexed(int count, int blocklength, const void *dis
     }
 
     /* priming for loop */
-    eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[0] :
-        (((MPI_Aint) ((int *) displacement_array)[0]) * old_extent);
-    MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength,
-                              eff_disp, old_lb, old_ub, old_extent, min_lb, max_ub);
+    eff_disp = (dispinbytes) ? displacement_array[0] : displacement_array[0] * old_extent;
+    MPII_DATATYPE_BLOCK_LB_UB(blocklength, eff_disp, old_lb, old_ub, old_extent, min_lb, max_ub);
 
     /* determine new min lb and max ub */
     for (i = 1; i < count; i++) {
         MPI_Aint tmp_lb, tmp_ub;
 
-        eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[i] :
-            (((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
-        MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength,
+        eff_disp = (dispinbytes) ? displacement_array[i] : displacement_array[i] * old_extent;
+        MPII_DATATYPE_BLOCK_LB_UB(blocklength,
                                   eff_disp, old_lb, old_ub, old_extent, tmp_lb, tmp_ub);
 
         if (tmp_lb < min_lb)
@@ -281,7 +280,7 @@ static void update_type_blockindexed(int count, int blocklength, const void *dis
                                                                blocklength,
                                                                displacement_array,
                                                                dispinbytes, old_extent);
-        if ((contig_count == 1) && ((MPI_Aint) newtype->size == newtype->extent)) {
+        if ((contig_count == 1) && (newtype->size == newtype->extent)) {
             newtype->is_contig = 1;
         }
     }
@@ -448,7 +447,8 @@ int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype)
     return MPI_SUCCESS;
 }
 
-int MPIR_Typerep_create_indexed_block(int count, int blocklength, const int *array_of_displacements,
+int MPIR_Typerep_create_indexed_block(MPI_Aint count, MPI_Aint blocklength,
+                                      const MPI_Aint array_of_displacements[],
                                       MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     int old_is_contig;
@@ -459,7 +459,7 @@ int MPIR_Typerep_create_indexed_block(int count, int blocklength, const int *arr
     if (HANDLE_IS_BUILTIN(oldtype)) {
         newtype->typerep.num_contig_blocks = count;
         old_is_contig = 1;
-        old_extent = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
+        old_extent = MPIR_Datatype_get_basic_size(oldtype);
     } else {
         MPIR_Datatype *old_dtp;
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
@@ -480,7 +480,7 @@ int MPIR_Typerep_create_indexed_block(int count, int blocklength, const int *arr
     return MPI_SUCCESS;
 }
 
-int MPIR_Typerep_create_hindexed_block(int count, int blocklength,
+int MPIR_Typerep_create_hindexed_block(MPI_Aint count, MPI_Aint blocklength,
                                        const MPI_Aint * array_of_displacements,
                                        MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
@@ -492,7 +492,7 @@ int MPIR_Typerep_create_hindexed_block(int count, int blocklength,
     if (HANDLE_IS_BUILTIN(oldtype)) {
         newtype->typerep.num_contig_blocks = count;
         old_is_contig = 1;
-        old_extent = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
+        old_extent = MPIR_Datatype_get_basic_size(oldtype);
     } else {
         MPIR_Datatype *old_dtp;
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
@@ -505,8 +505,7 @@ int MPIR_Typerep_create_hindexed_block(int count, int blocklength,
 
     if (old_is_contig) {
         newtype->typerep.num_contig_blocks =
-            MPII_Datatype_blockindexed_count_contig(count, blocklength,
-                                                    (const void *) array_of_displacements,
+            MPII_Datatype_blockindexed_count_contig(count, blocklength, array_of_displacements,
                                                     1, old_extent);
     }
 
