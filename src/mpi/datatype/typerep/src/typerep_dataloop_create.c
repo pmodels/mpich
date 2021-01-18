@@ -278,11 +278,11 @@ static void update_type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
     }
 }
 
-static MPI_Aint struct_alignsize(int count, const MPI_Datatype * oldtype_array)
+static MPI_Aint struct_alignsize(MPI_Aint count, const MPI_Datatype * oldtype_array)
 {
     MPI_Aint max_alignsize = 0, tmp_alignsize;
 
-    for (int i = 0; i < count; i++) {
+    for (MPI_Aint i = 0; i < count; i++) {
         if (HANDLE_IS_BUILTIN(oldtype_array[i])) {
             tmp_alignsize = MPIR_Datatype_builtintype_alignment(oldtype_array[i]);
         } else {
@@ -617,18 +617,18 @@ int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint exte
     return MPI_SUCCESS;
 }
 
-int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
+int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blocklengths,
                                const MPI_Aint * array_of_displacements,
                                const MPI_Datatype * array_of_types, MPIR_Datatype * newtype)
 {
-    int i, old_are_contig = 1, definitely_not_contig = 0;
+    int old_are_contig = 1, definitely_not_contig = 0;
     int found_true_lb = 0, found_true_ub = 0, found_el_type = 0, found_lb = 0, found_ub = 0;
     MPI_Aint el_sz = 0;
     MPI_Aint size = 0;
     MPI_Datatype el_type = MPI_DATATYPE_NULL;
     MPI_Aint true_lb_disp = 0, true_ub_disp = 0, lb_disp = 0, ub_disp = 0;
 
-    for (i = 0; i < count; i++) {
+    for (MPI_Aint i = 0; i < count; i++) {
         MPI_Aint tmp_lb, tmp_ub, tmp_true_lb, tmp_true_ub;
         MPI_Aint tmp_el_sz;
         MPI_Datatype tmp_el_type;
@@ -645,7 +645,7 @@ int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
             tmp_el_sz = MPIR_Datatype_get_basic_size(array_of_types[i]);
             tmp_el_type = array_of_types[i];
 
-            MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) (array_of_blocklengths[i]),
+            MPII_DATATYPE_BLOCK_LB_UB(array_of_blocklengths[i],
                                       array_of_displacements[i],
                                       0, tmp_el_sz, tmp_el_sz, tmp_lb, tmp_ub);
             tmp_true_lb = tmp_lb;
@@ -661,7 +661,7 @@ int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
             tmp_el_sz = old_dtp->builtin_element_size;
             tmp_el_type = old_dtp->basic_type;
 
-            MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) array_of_blocklengths[i],
+            MPII_DATATYPE_BLOCK_LB_UB(array_of_blocklengths[i],
                                       array_of_displacements[i],
                                       old_dtp->lb, old_dtp->ub, old_dtp->extent, tmp_lb, tmp_ub);
             tmp_true_lb = tmp_lb + (old_dtp->true_lb - old_dtp->lb);
@@ -759,14 +759,13 @@ int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
      * same, and the old type was also contiguous, and we didn't see
      * something noncontiguous based on true ub/ub.
      */
-    if (((MPI_Aint) (newtype->size) == newtype->extent) &&
-        old_are_contig && (!definitely_not_contig)) {
+    if ((newtype->size == newtype->extent) && old_are_contig && (!definitely_not_contig)) {
         newtype->is_contig = 1;
     } else {
         newtype->is_contig = 0;
     }
     newtype->typerep.num_contig_blocks = 0;
-    for (i = 0; i < count; i++) {
+    for (MPI_Aint i = 0; i < count; i++) {
         if (HANDLE_IS_BUILTIN(array_of_types[i])) {
             newtype->typerep.num_contig_blocks++;
         } else {
