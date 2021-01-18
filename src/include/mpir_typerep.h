@@ -23,10 +23,10 @@ int MPIR_Typerep_create_indexed_block(MPI_Aint count, MPI_Aint blocklength,
 int MPIR_Typerep_create_hindexed_block(MPI_Aint count, MPI_Aint blocklength,
                                        const MPI_Aint * array_of_displacements,
                                        MPI_Datatype oldtype, MPIR_Datatype * newtype);
-int MPIR_Typerep_create_indexed(int count, const int *array_of_blocklengths,
-                                const int *array_of_displacements, MPI_Datatype oldtype,
+int MPIR_Typerep_create_indexed(MPI_Aint count, const MPI_Aint * array_of_blocklengths,
+                                const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
                                 MPIR_Datatype * newtype);
-int MPIR_Typerep_create_hindexed(int count, const int *array_of_blocklengths,
+int MPIR_Typerep_create_hindexed(MPI_Aint count, const MPI_Aint * array_of_blocklengths,
                                  const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
                                  MPIR_Datatype * newtype);
 int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,

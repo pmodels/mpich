@@ -594,8 +594,9 @@ int MPIR_Type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride, bool
 int MPIR_Type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
                            const MPI_Aint displacement_array[],
                            bool dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype);
-int MPIR_Type_indexed(int count, const int *blocklength_array, const void *displacement_array,
-                      int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_indexed(MPI_Aint count, const MPI_Aint * blocklength_array,
+                      const MPI_Aint * displacement_array,
+                      bool dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_struct(int count, const int *blocklength_array, const MPI_Aint * displacement_array,
                      const MPI_Datatype * oldtype_array, MPI_Datatype * newtype);
 int MPIR_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
@@ -609,7 +610,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct);
 
 MPI_Aint MPII_Datatype_indexed_count_contig(MPI_Aint count,
                                             const MPI_Aint * blocklength_array,
-                                            const void *displacement_array,
+                                            const MPI_Aint * displacement_array,
                                             int dispinbytes, MPI_Aint old_extent);
 
 MPI_Aint MPII_Datatype_blockindexed_count_contig(MPI_Aint count,
@@ -638,5 +639,13 @@ int MPIR_Type_create_indexed_block_c_impl(MPI_Aint count, MPI_Aint blocklength,
 int MPIR_Type_create_hindexed_block_c_impl(MPI_Aint count, MPI_Aint blocklength,
                                            const MPI_Aint array_of_displacements[],
                                            MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_indexed_c_impl(MPI_Aint count,
+                             const MPI_Aint * array_of_blocklengths,
+                             const MPI_Aint * array_of_displacements,
+                             MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_create_hindexed_c_impl(MPI_Aint count,
+                                     const MPI_Aint array_of_blocklengths[],
+                                     const MPI_Aint array_of_displacements[],
+                                     MPI_Datatype oldtype, MPI_Datatype * newtype);
 
 #endif /* MPIR_DATATYPE_H_INCLUDED */
