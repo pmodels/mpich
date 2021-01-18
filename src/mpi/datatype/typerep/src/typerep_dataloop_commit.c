@@ -207,7 +207,8 @@ void MPIR_Typerep_commit(MPI_Datatype type)
                 MPIR_Dataloop_create_vector(ints[0], ints[1], ints[2], 0, types[0],
                                             (void **) dlp_p);
             } else {
-                MPIR_Assert(0);
+                MPIR_Dataloop_create_vector(counts[0], counts[1], counts[2], 0, types[0],
+                                            (void **) dlp_p);
             }
             break;
         case MPI_COMBINER_HVECTOR:
@@ -215,7 +216,8 @@ void MPIR_Typerep_commit(MPI_Datatype type)
                 MPIR_Dataloop_create_vector(ints[0], ints[1], aints[0], 1, types[0],
                                             (void **) dlp_p);
             } else {
-                MPIR_Assert(0);
+                MPIR_Dataloop_create_vector(counts[0], counts[1], counts[2], 1, types[0],
+                                            (void **) dlp_p);
             }
             break;
         case MPI_COMBINER_INDEXED_BLOCK:

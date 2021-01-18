@@ -8,8 +8,8 @@
 #include "dataloop.h"
 #include "mpir_typerep.h"
 
-static void update_type_vector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                               MPIR_Datatype * newtype, int strideinbytes)
+static void update_type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                               MPI_Datatype oldtype, MPIR_Datatype * newtype, bool strideinbytes)
 {
     int old_is_contig;
     MPI_Aint old_sz;
@@ -26,7 +26,7 @@ static void update_type_vector(int count, int blocklength, MPI_Aint stride, MPI_
         old_extent = el_sz;
         old_is_contig = 1;
 
-        newtype->size = (MPI_Aint) count *(MPI_Aint) blocklength *el_sz;
+        newtype->size = count * blocklength * el_sz;
 
         newtype->alignsize = el_sz;     /* ??? */
         newtype->n_builtin_elements = count * blocklength;
@@ -58,9 +58,7 @@ static void update_type_vector(int count, int blocklength, MPI_Aint stride, MPI_
         eff_stride = (strideinbytes) ? stride : (stride * old_dtp->extent);
     }
 
-    MPII_DATATYPE_VECTOR_LB_UB((MPI_Aint) count,
-                               eff_stride,
-                               (MPI_Aint) blocklength,
+    MPII_DATATYPE_VECTOR_LB_UB(count, eff_stride, blocklength,
                                old_lb, old_ub, old_extent, newtype->lb, newtype->ub);
     newtype->true_lb = newtype->lb + (old_true_lb - old_lb);
     newtype->true_ub = newtype->ub + (old_true_ub - old_ub);
@@ -70,8 +68,7 @@ static void update_type_vector(int count, int blocklength, MPI_Aint stride, MPI_
      * size and extent of new type are equivalent, and stride is
      * equal to blocklength * size of old type.
      */
-    if ((MPI_Aint) (newtype->size) == newtype->extent &&
-        eff_stride == (MPI_Aint) blocklength * old_sz && old_is_contig) {
+    if (newtype->size == newtype->extent && eff_stride == blocklength * old_sz && old_is_contig) {
         newtype->is_contig = 1;
     } else {
         newtype->is_contig = 0;
@@ -311,8 +308,8 @@ static MPI_Aint struct_alignsize(int count, const MPI_Datatype * oldtype_array)
 
 /* end static functions */
 
-int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datatype oldtype,
-                               MPIR_Datatype * newtype)
+int MPIR_Typerep_create_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                               MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     int old_is_contig;
     MPI_Aint old_extent;
@@ -340,8 +337,8 @@ int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datat
     return MPI_SUCCESS;
 }
 
-int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                                MPIR_Datatype * newtype)
+int MPIR_Typerep_create_hvector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                                MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     int old_is_contig;
     MPI_Aint old_extent;
