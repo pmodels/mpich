@@ -97,7 +97,6 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     int ndims;
     MPI_Datatype tmptype;
 
-    MPI_Aint *disps;
     MPI_Aint *blklen;
 
     MPIR_Datatype *typeptr;
@@ -222,22 +221,26 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             break;
         case MPI_COMBINER_INDEXED_BLOCK:
             if (cp->nr_counts == 0) {
-                MPIR_Dataloop_create_blockindexed(ints[0], ints[1], &ints[2], 0, types[0],
+                MPI_Aint *disps = MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                MPIR_Assert(disps);
+                for (int i = 0; i < ints[0]; i++) {
+                    disps[i] = ints[2 + i];
+                }
+                MPIR_Dataloop_create_blockindexed(ints[0], ints[1], disps, 0, types[0],
                                                   (void **) dlp_p);
+                MPL_free(disps);
             } else {
-                MPIR_Assert(0);
+                MPIR_Dataloop_create_blockindexed(counts[0], counts[1], &counts[2], 0, types[0],
+                                                  (void **) dlp_p);
             }
             break;
         case MPI_COMBINER_HINDEXED_BLOCK:
             if (cp->nr_counts == 0) {
-                disps = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-                for (i = 0; i < ints[0]; i++)
-                    disps[i] = aints[i];
-                MPIR_Dataloop_create_blockindexed(ints[0], ints[1], disps, 1, types[0],
+                MPIR_Dataloop_create_blockindexed(ints[0], ints[1], aints, 1, types[0],
                                                   (void **) dlp_p);
-                MPL_free(disps);
             } else {
-                MPIR_Assert(0);
+                MPIR_Dataloop_create_blockindexed(counts[0], counts[1], &counts[2], 1, types[0],
+                                                  (void **) dlp_p);
             }
             break;
         case MPI_COMBINER_INDEXED:

@@ -56,7 +56,7 @@ struct MPIR_Datatype;
 int MPIR_Dataloop_create_contiguous(MPI_Aint count, MPI_Datatype oldtype, void **dlp_p);
 int MPIR_Dataloop_create_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
                                 int strideinbytes, MPI_Datatype oldtype, void **dlp_p);
-int MPIR_Dataloop_create_blockindexed(MPI_Aint count, MPI_Aint blklen, const void *disp_array,
+int MPIR_Dataloop_create_blockindexed(MPI_Aint count, MPI_Aint blklen, const MPI_Aint * disp_array,
                                       int dispinbytes, MPI_Datatype oldtype, void **dlp_p);
 /* we bump up the size of the blocklength array because create_struct might use
  * create_indexed in an optimization, and in course of doing so, generate a
