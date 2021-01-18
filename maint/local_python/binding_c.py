@@ -1449,7 +1449,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         if RE.search(r'reduce_scatter$', func['name'], re.IGNORECASE):
             dump_validate_get_comm_size(func)
             G.out.append("int sum = 0;")
-            dump_for_open('i', comm_size)
+            dump_for_open('i', 'comm_size')
             G.out.append("MPIR_ERRTEST_COUNT(%s[i], mpi_errno);" % ct)
             G.out.append("sum += %s[i];" % ct)
             dump_for_close()
