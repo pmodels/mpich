@@ -97,8 +97,6 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     int ndims;
     MPI_Datatype tmptype;
 
-    MPI_Aint *blklen;
-
     MPIR_Datatype *typeptr;
     MPIR_Datatype_get_ptr(type, typeptr);
     void **dlp_p = (void **) &typeptr->typerep.handle;
@@ -245,26 +243,39 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             break;
         case MPI_COMBINER_INDEXED:
             if (cp->nr_counts == 0) {
-                blklen = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-                for (i = 0; i < ints[0]; i++)
-                    blklen[i] = ints[1 + i];
-                MPIR_Dataloop_create_indexed(ints[0], blklen, &ints[ints[0] + 1], 0, types[0],
-                                             (void **) dlp_p);
-                MPL_free(blklen);
+                int n = ints[0];
+                MPI_Aint *blkls = MPL_malloc(n * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                MPI_Aint *disps = MPL_malloc(n * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                for (int i = 0; i < n; i++) {
+                    blkls[i] = ints[1 + i];
+                    disps[i] = ints[1 + n + i];
+                }
+                MPIR_Dataloop_create_indexed(n, blkls, disps, 0, types[0], (void **) dlp_p);
+                MPL_free(blkls);
+                MPL_free(disps);
             } else {
-                MPIR_Assert(0);
+                int n = counts[0];
+                MPI_Aint *blkls = counts + 1;
+                MPI_Aint *disps = counts + 1 + n;
+                MPIR_Dataloop_create_indexed(n, blkls, disps, 0, types[0], (void **) dlp_p);
             }
             break;
         case MPI_COMBINER_HINDEXED:
             if (cp->nr_counts == 0) {
-                blklen = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-                for (i = 0; i < ints[0]; i++)
-                    blklen[i] = (MPI_Aint) ints[1 + i];
-                MPIR_Dataloop_create_indexed(ints[0], blklen, aints, 1, types[0], (void **) dlp_p);
+                int n = ints[0];
+                MPI_Aint *blkls = MPL_malloc(n * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                MPI_Aint *disps = aints;
+                for (int i = 0; i < n; i++) {
+                    blkls[i] = ints[1 + i];
+                }
+                MPIR_Dataloop_create_indexed(n, blkls, disps, 1, types[0], (void **) dlp_p);
 
-                MPL_free(blklen);
+                MPL_free(blkls);
             } else {
-                MPIR_Assert(0);
+                int n = counts[0];
+                MPI_Aint *blkls = counts + 1;
+                MPI_Aint *disps = counts + 1 + n;
+                MPIR_Dataloop_create_indexed(n, blkls, disps, 1, types[0], (void **) dlp_p);
             }
             break;
         case MPI_COMBINER_STRUCT:

@@ -75,12 +75,12 @@ static void update_type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint st
     }
 }
 
-static void update_type_indexed(int count, const int *blocklength_array,
-                                const void *displacement_array, MPI_Datatype oldtype,
-                                MPIR_Datatype * newtype, int dispinbytes)
+static void update_type_indexed(MPI_Aint count, const MPI_Aint * blocklength_array,
+                                const MPI_Aint * displacement_array, MPI_Datatype oldtype,
+                                MPIR_Datatype * newtype, bool dispinbytes)
 {
     int old_is_contig;
-    int i;
+    MPI_Aint i;
     MPI_Aint contig_count;
     MPI_Aint el_ct, old_ct, old_sz;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
@@ -96,9 +96,9 @@ static void update_type_indexed(int count, const int *blocklength_array,
 
         old_lb = 0;
         old_true_lb = 0;
-        old_ub = (MPI_Aint) el_sz;
-        old_true_ub = (MPI_Aint) el_sz;
-        old_extent = (MPI_Aint) el_sz;
+        old_ub = el_sz;
+        old_true_ub = el_sz;
+        old_extent = el_sz;
         old_is_contig = 1;
 
         MPIR_Assign_trunc(newtype->alignsize, el_sz, MPI_Aint);
@@ -137,10 +137,9 @@ static void update_type_indexed(int count, const int *blocklength_array,
 
     /* priming for loop */
     old_ct = blocklength_array[i];
-    eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[i] :
-        (((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
+    eff_disp = (dispinbytes) ? displacement_array[i] : displacement_array[i] * old_extent;
 
-    MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
+    MPII_DATATYPE_BLOCK_LB_UB(blocklength_array[i],
                               eff_disp, old_lb, old_ub, old_extent, min_lb, max_ub);
 
     /* determine min lb, max ub, and count of old types in remaining
@@ -152,11 +151,10 @@ static void update_type_indexed(int count, const int *blocklength_array,
         if (blocklength_array[i] > 0) {
             old_ct += blocklength_array[i];     /* add more oldtypes */
 
-            eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[i] :
-                (((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
+            eff_disp = (dispinbytes) ? displacement_array[i] : displacement_array[i] * old_extent;
 
             /* calculate ub and lb for this block */
-            MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) (blocklength_array[i]),
+            MPII_DATATYPE_BLOCK_LB_UB(blocklength_array[i],
                                       eff_disp, old_lb, old_ub, old_extent, tmp_lb, tmp_ub);
 
             if (tmp_lb < min_lb)
@@ -182,20 +180,14 @@ static void update_type_indexed(int count, const int *blocklength_array,
      */
     newtype->is_contig = 0;
     if (old_is_contig) {
-        MPI_Aint *blklens = MPL_malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-        MPIR_Assert(blklens != NULL);
-        for (i = 0; i < count; i++)
-            blklens[i] = blocklength_array[i];
         contig_count = MPII_Datatype_indexed_count_contig(count,
-                                                          blklens,
+                                                          blocklength_array,
                                                           displacement_array, dispinbytes,
                                                           old_extent);
-        if ((contig_count == 1) && ((MPI_Aint) newtype->size == newtype->extent)) {
+        if ((contig_count == 1) && (newtype->size == newtype->extent)) {
             newtype->is_contig = 1;
         }
-        MPL_free(blklens);
     }
-
 }
 
 static void update_type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
@@ -512,8 +504,8 @@ int MPIR_Typerep_create_hindexed_block(MPI_Aint count, MPI_Aint blocklength,
     return MPI_SUCCESS;
 }
 
-int MPIR_Typerep_create_indexed(int count, const int *array_of_blocklengths,
-                                const int *array_of_displacements, MPI_Datatype oldtype,
+int MPIR_Typerep_create_indexed(MPI_Aint count, const MPI_Aint * array_of_blocklengths,
+                                const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
                                 MPIR_Datatype * newtype)
 {
     int old_is_contig;
@@ -524,13 +516,13 @@ int MPIR_Typerep_create_indexed(int count, const int *array_of_blocklengths,
     if (HANDLE_IS_BUILTIN(oldtype)) {
         newtype->typerep.num_contig_blocks = count;
         old_is_contig = 1;
-        old_extent = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
+        old_extent = MPIR_Datatype_get_basic_size(oldtype);
     } else {
         MPIR_Datatype *old_dtp;
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
 
         newtype->typerep.num_contig_blocks = 0;
-        for (int i = 0; i < count; i++)
+        for (MPI_Aint i = 0; i < count; i++)
             newtype->typerep.num_contig_blocks +=
                 old_dtp->typerep.num_contig_blocks * array_of_blocklengths[i];
 
@@ -539,21 +531,15 @@ int MPIR_Typerep_create_indexed(int count, const int *array_of_blocklengths,
     }
 
     if (old_is_contig) {
-        MPI_Aint *blklens = MPL_malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-        MPIR_Assert(blklens != NULL);
-        for (int i = 0; i < count; i++)
-            blklens[i] = (MPI_Aint) array_of_blocklengths[i];
         newtype->typerep.num_contig_blocks =
-            MPII_Datatype_indexed_count_contig(count, blklens,
-                                               (const void *) array_of_displacements, 0,
-                                               old_extent);
-        MPL_free(blklens);
+            MPII_Datatype_indexed_count_contig(count, array_of_blocklengths,
+                                               array_of_displacements, 0, old_extent);
     }
 
     return MPI_SUCCESS;
 }
 
-int MPIR_Typerep_create_hindexed(int count, const int *array_of_blocklengths,
+int MPIR_Typerep_create_hindexed(MPI_Aint count, const MPI_Aint * array_of_blocklengths,
                                  const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
                                  MPIR_Datatype * newtype)
 {
@@ -565,7 +551,7 @@ int MPIR_Typerep_create_hindexed(int count, const int *array_of_blocklengths,
     if (HANDLE_IS_BUILTIN(oldtype)) {
         newtype->typerep.num_contig_blocks = count;
         old_is_contig = 1;
-        old_extent = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
+        old_extent = MPIR_Datatype_get_basic_size(oldtype);
     } else {
         MPIR_Datatype *old_dtp;
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
@@ -580,15 +566,9 @@ int MPIR_Typerep_create_hindexed(int count, const int *array_of_blocklengths,
     }
 
     if (old_is_contig) {
-        MPI_Aint *blklens = MPL_malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-        MPIR_Assert(blklens != NULL);
-        for (int i = 0; i < count; i++)
-            blklens[i] = (MPI_Aint) array_of_blocklengths[i];
         newtype->typerep.num_contig_blocks =
-            MPII_Datatype_indexed_count_contig(count, blklens,
-                                               (const void *) array_of_displacements, 1,
-                                               old_extent);
-        MPL_free(blklens);
+            MPII_Datatype_indexed_count_contig(count, array_of_blocklengths,
+                                               array_of_displacements, 1, old_extent);
     }
 
     return MPI_SUCCESS;
