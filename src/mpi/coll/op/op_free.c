@@ -23,23 +23,6 @@ int MPI_Op_free(MPI_Op * op) __attribute__ ((weak, alias("PMPI_Op_free")));
 #undef MPI_Op_free
 #define MPI_Op_free PMPI_Op_free
 
-
-void MPIR_Op_free_impl(MPI_Op * op)
-{
-    MPIR_Op *op_ptr = NULL;
-    int in_use;
-
-    MPIR_Op_get_ptr(*op, op_ptr);
-    MPIR_Assert(op_ptr);
-
-    MPIR_Op_ptr_release_ref(op_ptr, &in_use);
-    if (!in_use) {
-        MPIR_Handle_obj_free(&MPIR_Op_mem, op_ptr);
-        MPID_Op_free_hook(op_ptr);
-    }
-    *op = MPI_OP_NULL;
-}
-
 #endif
 
 /*@

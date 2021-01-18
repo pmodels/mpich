@@ -26,43 +26,6 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
 
 #endif
 
-/* TODO with a modest amount of work in the handle allocator code we should be
- * able to encode commutativity in the handle value and greatly simplify this
- * routine */
-/* returns TRUE iff the given op is commutative */
-int MPIR_Op_is_commutative(MPI_Op op)
-{
-    MPIR_Op *op_ptr;
-
-    if (HANDLE_IS_BUILTIN(op)) {
-        return TRUE;
-    } else {
-        MPIR_Op_get_ptr(op, op_ptr);
-        MPIR_Assert(op_ptr != NULL);
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
-            return FALSE;
-        else
-            return TRUE;
-    }
-}
-
-int MPIR_Op_commutative(MPIR_Op * op_ptr, int *commute)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* Built-in op */
-    if (MPIR_OP_KIND__USER_NONCOMMUTE > op_ptr->kind) {
-        *commute = 1;
-    } else {
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
-            *commute = 0;
-        else
-            *commute = 1;
-    }
-
-    return mpi_errno;
-}
-
 /*@
   MPI_Op_commute - Queries an MPI reduction operation for its commutativity.
 
