@@ -131,6 +131,8 @@ int adio_daos_poh_insert(uuid_t uuid, daos_handle_t poh, struct adio_daos_hdl **
 int adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl)
 {
     struct adio_daos_hdl *phdl;
+    char *group = NULL;
+    daos_pool_info_t pool_info;
     int rc;
 
     phdl = adio_daos_poh_lookup(uuid);
@@ -146,11 +148,12 @@ int adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl)
     phdl->type = DAOS_POOL;
     uuid_copy(phdl->uuid, uuid);
 
-    /** Get the SVCL and Server group from env variables. This is temp as those
-     * won't be needed later */
+    /** Get the DAOS system name group from env variable */
+    group = getenv("DAOS_GROUP");
+
+#if !defined(DAOS_API_VERSION_MAJOR) || DAOS_API_VERSION_MAJOR < 1
+    /** Get the SVCL from env variable */
     char *svcl_str = NULL;
-    char *group = NULL;
-    daos_pool_info_t pool_info;
     d_rank_list_t *svcl = NULL;
 
     svcl_str = getenv("DAOS_SVCL");
@@ -162,10 +165,12 @@ int adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl)
             goto free_hdl;
         }
     }
-    group = getenv("DAOS_GROUP");
 
     rc = daos_pool_connect(uuid, group, svcl, DAOS_PC_RW, &phdl->open_hdl, &pool_info, NULL);
     d_rank_list_free(svcl);
+#else
+    rc = daos_pool_connect(uuid, group, DAOS_PC_RW, &phdl->open_hdl, &pool_info, NULL);
+#endif
     if (rc < 0) {
         PRINT_MSG(stderr, "Failed to connect to pool (%d)\n", rc);
         goto free_hdl;
