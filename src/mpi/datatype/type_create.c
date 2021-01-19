@@ -1004,9 +1004,34 @@ int MPIR_Type_create_resized_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint ex
     goto fn_exit;
 }
 
-/* ---- MPIR_Xxx_x_impl larget count routines ---- */
+int MPIR_Type_create_resized_c_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
+                                    MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPIR_Datatype *new_dtp;
+    MPI_Aint counts[2];
 
-/* FIXME: make MPIR_Type_contiguous support large type natively */
+    mpi_errno = MPIR_Type_create_resized(oldtype, lb, extent, &new_handle);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    counts[0] = lb;
+    counts[1] = extent;
+
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_RESIZED,
+                                           0, 0, 2, 1, NULL, NULL, counts, &oldtype);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* FIXME: replace this routine with MPIR_Type_contiguous_c_impl -- require yaksa large count support */
 int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     /* to make 'count' fit MPI-3 type processing routines (which take integer

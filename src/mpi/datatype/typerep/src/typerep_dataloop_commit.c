@@ -183,7 +183,7 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             } else if (cp->nr_counts == 0) {
                 MPIR_Dataloop_create_resized(types[0], aints[1], (void **) dlp_p);
             } else {
-                MPIR_Assert(0);
+                MPIR_Dataloop_create_resized(types[0], counts[1], (void **) dlp_p);
             }
             break;
         case MPI_COMBINER_CONTIGUOUS:
