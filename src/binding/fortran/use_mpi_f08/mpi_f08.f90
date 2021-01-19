@@ -2426,6 +2426,15 @@ interface MPI_Info_create
     end subroutine MPI_Info_create_f08
 end interface MPI_Info_create
 
+interface MPI_Info_create_env
+    subroutine MPI_Info_create_env_f08(info, ierror)
+        use :: mpi_f08_types, only : MPI_Info
+        implicit none
+        type(MPI_Info), intent(out) :: info
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Info_create_env_f08
+end interface MPI_Info_create_env
+
 interface MPI_Info_delete
     subroutine MPI_Info_delete_f08(info, key, ierror)
         use :: mpi_f08_types, only : MPI_Info
