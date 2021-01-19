@@ -77,6 +77,7 @@ def dump_c_file(f, lines):
                 print(".N MPI_SUCCESS\n", file=Out)
                 for err in sorted (G.err_codes.keys()):
                     print(".N %s" % (err), file=Out)
+                print(".N MPI_ERR_OTHER\n", file=Out)
             elif RE.match(r'(INDENT|DEDENT)', l):
                 # indentations
                 a = RE.m.group(1)
