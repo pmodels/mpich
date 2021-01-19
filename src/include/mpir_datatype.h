@@ -652,5 +652,9 @@ int MPIR_Type_create_struct_c_impl(MPI_Aint count,
                                    const MPI_Aint * array_of_blocklengths,
                                    const MPI_Aint * array_of_displacements,
                                    const MPI_Datatype * array_of_types, MPI_Datatype * newtype);
+int MPIR_Type_create_darray_c_impl(int size, int rank, int ndims,
+                                   const MPI_Aint array_of_gsizes[], const int array_of_distribs[],
+                                   const int array_of_dargs[], const int array_of_psizes[],
+                                   int order, MPI_Datatype oldtype, MPI_Datatype * newtype);
 
 #endif /* MPIR_DATATYPE_H_INCLUDED */

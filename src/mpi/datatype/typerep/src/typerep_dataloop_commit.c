@@ -334,24 +334,34 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             MPIR_Type_free_impl(&tmptype);
             break;
         case MPI_COMBINER_DARRAY:
-            if (cp->nr_counts == 0) {
-                ndims = ints[2];
-                MPII_Typerep_convert_darray(ints[0], ints[1], ndims, &ints[3], &ints[3 + ndims],
-                                            &ints[3 + 2 * ndims], &ints[3 + 3 * ndims],
-                                            ints[3 + 4 * ndims], types[0], &tmptype);
-            } else {
-                MPIR_Assert(0);
-            }
-
-            MPIR_Typerep_commit(tmptype);
-
             {
-                void *tmploop;
-                MPIR_DATALOOP_GET_LOOPPTR(tmptype, tmploop);
-                MPIR_Dataloop_dup(tmploop, dlp_p);
-            }
+                MPI_Datatype tmptype;
+                if (cp->nr_counts == 0) {
+                    int n = ints[2];
+                    MPI_Aint *p_gsizes = MPL_malloc(n * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                    for (int i = 0; i < n; i++) {
+                        p_gsizes[i] = ints[3 + i];
+                    }
+                    MPII_Typerep_convert_darray(ints[0], ints[1], n, p_gsizes, &ints[3 + n],
+                                                &ints[3 + 2 * n], &ints[3 + 3 * n],
+                                                ints[3 + 4 * n], types[0], &tmptype);
+                    MPL_free(p_gsizes);
+                } else {
+                    int n = ints[2];
+                    MPII_Typerep_convert_darray(ints[0], ints[1], n, counts, &ints[3],
+                                                &ints[3 + n], &ints[3 + 2 * n],
+                                                ints[3 + 3 * n], types[0], &tmptype);
+                }
+                MPIR_Typerep_commit(tmptype);
 
-            MPIR_Type_free_impl(&tmptype);
+                {
+                    void *tmploop;
+                    MPIR_DATALOOP_GET_LOOPPTR(tmptype, tmploop);
+                    MPIR_Dataloop_dup(tmploop, dlp_p);
+                }
+
+                MPIR_Type_free_impl(&tmptype);
+            }
             break;
         default:
             MPIR_Assert(0);

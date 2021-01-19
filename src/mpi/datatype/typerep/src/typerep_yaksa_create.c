@@ -456,18 +456,6 @@ int MPIR_Typerep_create_subarray(int ndims, const int *array_of_sizes, const int
     return MPI_SUCCESS;
 }
 
-int MPIR_Typerep_create_darray(int size, int rank, int ndims, const int *array_of_gsizes,
-                               const int *array_of_distribs, const int *array_of_dargs,
-                               const int *array_of_psizes, int order, MPI_Datatype oldtype,
-                               MPIR_Datatype * newtype)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_DARRAY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_DARRAY);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_DARRAY);
-    return MPI_SUCCESS;
-}
-
 int MPIR_Typerep_create_pairtype(MPI_Datatype type, MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_PAIRTYPE);
