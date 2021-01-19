@@ -1273,8 +1273,8 @@ def dump_validate_handle_ptr(func, p):
             if RE.match(r'mpi_startall', func['name'], re.IGNORECASE):
                 G.out.append("MPIR_Request_valid_ptr(%s, mpi_errno);" % ptr)
                 dump_error_check("")
-                G.out.append("MPIR_ERRTEST_PERSISTENT(%s, mpi_errno);" % ptr)
-                G.out.append("MPIR_ERRTEST_PERSISTENT_ACTIVE(%s, mpi_errno);" % ptr)
+                G.out.append("MPIR_ERRTEST_STARTREQ(%s, mpi_errno);" % ptr)
+                G.out.append("MPIR_ERRTEST_STARTREQ_ACTIVE(%s, mpi_errno);" % ptr)
             else:
                 dump_if_open("%s[i] != MPI_REQUEST_NULL" % name)
                 G.out.append("MPIR_Request_valid_ptr(%s, mpi_errno);" % ptr)
@@ -1310,8 +1310,8 @@ def dump_validate_handle_ptr(func, p):
             dump_error_check("")
 
         if kind == "REQUEST" and RE.match(r'mpi_start', func_name, re.IGNORECASE):
-            G.out.append("MPIR_ERRTEST_PERSISTENT(%s, mpi_errno);" % ptr_name)
-            G.out.append("MPIR_ERRTEST_PERSISTENT_ACTIVE(%s, mpi_errno);" % ptr_name)
+            G.out.append("MPIR_ERRTEST_STARTREQ(%s, mpi_errno);" % ptr_name)
+            G.out.append("MPIR_ERRTEST_STARTREQ_ACTIVE(%s, mpi_errno);" % ptr_name)
 
         if kind == "WINDOW" and RE.match(r'mpi_win_shared_query', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_WIN_FLAVOR(win_ptr, MPI_WIN_FLAVOR_SHARED, mpi_errno);")

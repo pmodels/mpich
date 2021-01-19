@@ -326,8 +326,9 @@ be in the range 0 to %d
 **msgnotreq: Invalid MPI_Request (MPI_Message passed)
 **msgnotreq %d: Invalid MPI_Request at array index %d (MPI_Message passed)
 **requestnull:Null MPI_Request 
-**requestnotpersist:Request is not persistent in MPI_Start or MPI_Startall.
+**requestinvalidstart:Request is neither persistent nor partitioned in MPI_Start or MPI_Startall.
 **requestpersistactive:Persistent request passed to MPI_Start or MPI_Startall is already active.
+**requestpartactive:Partitioned request passed to MPI_Start or MPI_Startall is already active.
 **fileaccess:Access denied to file
 **fileaccess %s:Access denied to file %s
 **fileamode:Invalid amode value in MPI_File_open 
