@@ -153,6 +153,7 @@ Group_translate_ranks
 Group_union
 Ibsend
 Info_create
+Info_create_env
 Info_delete
 Info_dup
 Info_free
