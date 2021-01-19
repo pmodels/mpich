@@ -65,3 +65,12 @@ int MPIR_Info_alloc(MPIR_Info ** info_p_p)
   fn_fail:
     return mpi_errno;
 }
+
+/* Set up MPI_INFO_ENV.  This may be called before initialization and after
+ * finalization by MPI_Info_create_env().  This routine must be thread-safe. */
+void MPIR_Info_setup_env(MPIR_Info * info_ptr)
+{
+    /* FIXME: Currently this info object is left empty, we need to add data to
+     * this as defined by the standard. */
+    (void) info_ptr;
+}

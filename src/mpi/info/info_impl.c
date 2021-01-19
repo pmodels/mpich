@@ -252,3 +252,23 @@ int MPIR_Info_get_string_impl(MPIR_Info * info_ptr, const char *key, int *buflen
 
     return MPI_SUCCESS;
 }
+
+int MPIR_Info_create_env_impl(int *argc, char ***argv, MPIR_Info ** new_info_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Allocate an empty info object. */
+    MPIR_Info *info_ptr = NULL;
+    mpi_errno = MPIR_Info_alloc(&info_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+    /* Set up the info value. */
+    MPIR_Info_setup_env(info_ptr);
+
+    *new_info_ptr = info_ptr;
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}

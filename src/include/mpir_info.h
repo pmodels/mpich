@@ -92,5 +92,6 @@ extern MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN];
 extern MPIR_Info MPIR_Info_direct[];
 
 int MPIR_Info_alloc(MPIR_Info ** info_p_p);
+void MPIR_Info_setup_env(MPIR_Info * info_ptr);
 
 #endif /* MPIR_INFO_H_INCLUDED */

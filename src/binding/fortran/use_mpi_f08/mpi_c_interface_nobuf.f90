@@ -1629,6 +1629,15 @@ function MPIR_Info_create_c(info) &
     integer(c_int) :: ierror
 end function MPIR_Info_create_c
 
+function MPIR_Info_create_env_c(info) &
+    bind(C, name="PMPI_Info_create_env") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Info
+    implicit none
+    integer(c_Info), intent(out) :: info
+    integer(c_int) :: ierror
+end function MPIR_Info_create_env_c
+
 function MPIR_Info_delete_c(info, key) &
     bind(C, name="PMPI_Info_delete") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int, c_char

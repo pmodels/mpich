@@ -55,3 +55,19 @@ MPI_Info_set:
 MPI_Info_get_string:
     .desc: Retrieves the value associated with a key
     .skip: initcheck
+
+MPI_Info_create_env:
+    .desc: Creates an info object containing information about the application
+    .skip: initcheck, validate-ARGUMENT_COUNT, validate-ARGUMENT_LIST
+/*
+    Notes for C:
+        'MPI_Info_create_env' accepts NULL as input parameters. Doing so impacts
+        the returned value.
+
+    Notes for Fortran:
+        The Fortran binding for 'MPI_Info_create_env' does not take argc and argv.
+        .vb
+            subroutine MPI_INFO_CREATE_ENV(info, ierr)
+            integer info, ierr
+        .ve
+*/

@@ -379,6 +379,7 @@ foreach $_ (@ARGV) {
 		      'Type_create_f90_complex' => 1,
 		      'Aint_add' => 1,
 		      'Aint_diff' => 1,
+		      'Info_create_env' => 1,
 		      );
 
 # Some routines have special needs and must call a different routine.  For
@@ -4698,6 +4699,24 @@ int MPI_Status_c2f( const MPI_Status *c_status, MPI_Fint *f_status )
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
 
+    $OUTFD = "INFOCRENV";
+    $filename = "infocrenv.c";
+    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
+    $files[$#files+1] = $filename;
+    &print_header( "mpi_", "MPI_Info_create_env", "info_create_env", "MPI_Fint *" );
+
+    &print_routine_type_decl( $OUTFD, $out_prefix, "info_create_env" );
+    $args = "MPI_Fint * v1";
+    &print_args( $OUTFD, $args, 0, "info_create_env" );
+    # If an attribute can be added before the code, then do that here.
+    # Gcc only allows attributes on the prototypes, not the function
+    # definitions
+    print $OUTFD "{\n";
+    print $OUTFD "    *ierr = MPI_Info_create_env( 0, 0, (MPI_Info *)(v1) );\n";
+    print $OUTFD "}\n";
+    close ($OUTFD);
+    &ReplaceIfDifferent( $filename, $filename . ".new" );
+    &AddPrototype( $out_prefix, "info_create_env", $args );
 }
 
 sub print_mpif_int {
