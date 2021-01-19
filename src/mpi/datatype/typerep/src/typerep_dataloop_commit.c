@@ -91,9 +91,6 @@ void MPIR_Typerep_commit(MPI_Datatype type)
 
     void *old_dlp;
 
-    int ndims;
-    MPI_Datatype tmptype;
-
     MPIR_Datatype *typeptr;
     MPIR_Datatype_get_ptr(type, typeptr);
     void **dlp_p = (void **) &typeptr->typerep.handle;
@@ -314,24 +311,41 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             }
             break;
         case MPI_COMBINER_SUBARRAY:
-            if (cp->nr_counts == 0) {
-                ndims = ints[0];
-                MPII_Typerep_convert_subarray(ndims, &ints[1], &ints[1 + ndims],
-                                              &ints[1 + 2 * ndims], ints[1 + 3 * ndims], types[0],
-                                              &tmptype);
-            } else {
-                MPIR_Assert(0);
-            }
-
-            MPIR_Typerep_commit(tmptype);
-
             {
-                void *tmploop;
-                MPIR_DATALOOP_GET_LOOPPTR(tmptype, tmploop);
-                MPIR_Dataloop_dup(tmploop, dlp_p);
-            }
+                MPI_Datatype tmptype;
+                if (cp->nr_counts == 0) {
+                    int n = ints[0];
+                    MPI_Aint *p_sizes = MPL_malloc(n * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                    MPI_Aint *p_subsizes = MPL_malloc(n * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                    MPI_Aint *p_starts = MPL_malloc(n * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                    for (int i = 0; i < n; i++) {
+                        p_sizes[i] = ints[1 + i];
+                        p_subsizes[i] = ints[1 + n + i];
+                        p_starts[i] = ints[1 + 2 * n + i];
+                    }
+                    MPII_Typerep_convert_subarray(n, p_sizes, p_subsizes, p_starts,
+                                                  ints[1 + 3 * n], types[0], &tmptype);
+                    MPL_free(p_sizes);
+                    MPL_free(p_subsizes);
+                    MPL_free(p_starts);
+                } else {
+                    int n = ints[0];
+                    MPI_Aint *p_sizes = counts;
+                    MPI_Aint *p_subsizes = counts + n;
+                    MPI_Aint *p_starts = counts + n * 2;
+                    MPII_Typerep_convert_subarray(n, p_sizes, p_subsizes, p_starts,
+                                                  ints[1], types[0], &tmptype);
+                }
+                MPIR_Typerep_commit(tmptype);
 
-            MPIR_Type_free_impl(&tmptype);
+                {
+                    void *tmploop;
+                    MPIR_DATALOOP_GET_LOOPPTR(tmptype, tmploop);
+                    MPIR_Dataloop_dup(tmploop, dlp_p);
+                }
+
+                MPIR_Type_free_impl(&tmptype);
+            }
             break;
         case MPI_COMBINER_DARRAY:
             {

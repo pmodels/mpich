@@ -779,13 +779,6 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
     return MPI_SUCCESS;
 }
 
-int MPIR_Typerep_create_subarray(int ndims, const int *array_of_sizes, const int *array_of_subsizes,
-                                 const int *array_of_starts, int order,
-                                 MPI_Datatype oldtype, MPIR_Datatype * newtype)
-{
-    return MPI_SUCCESS;
-}
-
 int MPIR_Typerep_create_pairtype(MPI_Datatype type, MPIR_Datatype * newtype)
 {
     int alignsize;
