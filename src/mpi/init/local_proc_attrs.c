@@ -114,12 +114,12 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
     MPII_COMML_REMEMBER(MPIR_Process.comm_self);
 
     /* create MPI_INFO_NULL object */
-    /* FIXME: Currently this info object is empty, we need to add data to this
-     * as defined by the standard. */
     MPIR_Info *info_ptr;
     info_ptr = MPIR_Info_builtin + 1;
     info_ptr->handle = MPI_INFO_ENV;
     MPIR_Object_set_ref(info_ptr, 1);
+    /* Add data to MPI_INFO_ENV. */
+    MPIR_Info_setup_env(info_ptr);
     info_ptr->next = NULL;
     info_ptr->key = NULL;
     info_ptr->value = NULL;
