@@ -1088,6 +1088,12 @@ EXPORTS
 	mpi_info_create__=pmpi_info_create__
 	_mpi_info_create_=pmpi_info_create__
 	mpi_info_create_=pmpi_info_create__
+	pmpi_info_create_env__
+	pmpi_info_create_env_=pmpi_info_create_env__
+	_pmpi_info_create_env_=pmpi_info_create_env__
+	mpi_info_create_env__=pmpi_info_create_env__
+	_mpi_info_create_env_=pmpi_info_create_env__
+	mpi_info_create_env_=pmpi_info_create_env__
 	pmpi_info_delete__
 	pmpi_info_delete_=pmpi_info_delete__
 	_pmpi_info_delete_=pmpi_info_delete__
