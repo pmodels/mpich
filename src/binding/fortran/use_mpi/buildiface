@@ -262,7 +262,7 @@ my $line_limit = 80; # Max line length
 
 # Some routines must be skipped (custom code is provided for them)
 %skip_routines = ( 'Init' => 1, 'Init_thread' => 1, 'Status_c2f' => 1,
-           'Status_f2c' => 1, 'Pcontrol' => 1,
+           'Status_f2c' => 1, 'Pcontrol' => 1, 'Info_create_env' => 1,
            );
 
 # Some routines *may* be skipped if we don't want to handle the possibility
@@ -566,6 +566,11 @@ if ($is_MPI) {
             INTEGER(KIND=MPI_ADDRESS_KIND) EXTRA_STATE, ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT
             LOGICAL FLAG
         END SUBROUTINE MPI_WIN_NULL_COPY_FN
+
+        SUBROUTINE MPI_INFO_CREATE_ENV(info,ierror)
+            INTEGER info
+            INTEGER ierror
+        END SUBROUTINE MPI_INFO_CREATE_ENV
 ";
 }
 # Here's where we need to place the interface definitions for the functions
