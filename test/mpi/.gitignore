@@ -561,6 +561,7 @@
 /f08/ext/ctypesfromc.c
 /f08/ext/ctypesinf90
 /f08/hello_usempif08
+/f08/info/infocrenvf90
 /f08/info/infogetstrf90
 /f08/info/infotest2f90
 /f08/info/infotestf90
@@ -711,6 +712,7 @@
 /f77/ext/c2fmult
 /f77/ext/ctypesinf
 /f77/ext/testlist
+/f77/info/infocrenvf
 /f77/info/infogetstrf
 /f77/info/infotest
 /f77/info/infotest2f
@@ -896,6 +898,7 @@
 /f90/info/
 /f90/info/Makefile.sm
 /f90/info/infotest
+/f90/info/infocrenvf90.f90
 /f90/info/infogetstrf90.f90
 /f90/info/infotest2f90.f90
 /f90/info/infotestf90.f90
@@ -1051,6 +1054,7 @@
 /impls/mpich/testlist
 /impls/mpich/comm/testlist
 /impls/testlist
+/info/infocreateenv
 /info/infodel
 /info/infodup
 /info/infoenv

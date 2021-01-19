@@ -10,3 +10,4 @@ infoget 1
 infogetstring 1
 infoenv 1
 info_no_init 1
+infocreateenv 1
