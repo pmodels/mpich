@@ -166,7 +166,6 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
                 break;
             case MPI_COMBINER_CONTIGUOUS:
             case MPI_COMBINER_VECTOR:
-            case MPI_COMBINER_HVECTOR_INTEGER:
             case MPI_COMBINER_HVECTOR:
             case MPI_COMBINER_SUBARRAY:
                 /* count is first in ints array */
@@ -178,7 +177,6 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
                 return MPIR_Type_get_elements(bytes_p, count * ints[0] * ints[1], *types);
                 break;
             case MPI_COMBINER_INDEXED:
-            case MPI_COMBINER_HINDEXED_INTEGER:
             case MPI_COMBINER_HINDEXED:
                 for (i = 0; i < (*ints); i++) {
                     /* add up the blocklengths to get a max. # of the next type */
@@ -186,7 +184,6 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
                 }
                 return MPIR_Type_get_elements(bytes_p, count * typecount, *types);
                 break;
-            case MPI_COMBINER_STRUCT_INTEGER:
             case MPI_COMBINER_STRUCT:
                 /* In this case we can't simply multiply the count of the next
                  * type by the count of the current type, because we need to
@@ -221,6 +218,9 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
             case MPI_COMBINER_F90_REAL:
             case MPI_COMBINER_F90_COMPLEX:
             case MPI_COMBINER_F90_INTEGER:
+            case MPI_COMBINER_HVECTOR_INTEGER:
+            case MPI_COMBINER_HINDEXED_INTEGER:
+            case MPI_COMBINER_STRUCT_INTEGER:
             default:
                 /* --BEGIN ERROR HANDLING-- */
                 MPIR_Assert(0);

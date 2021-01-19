@@ -96,7 +96,6 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     int ndims;
     MPI_Datatype tmptype;
 
-    MPI_Aint stride;
     MPI_Aint *disps;
     MPI_Aint *blklen;
 
@@ -137,19 +136,21 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     switch (combiner) {
         case MPI_COMBINER_CONTIGUOUS:
         case MPI_COMBINER_VECTOR:
-        case MPI_COMBINER_HVECTOR_INTEGER:
         case MPI_COMBINER_HVECTOR:
         case MPI_COMBINER_INDEXED_BLOCK:
         case MPI_COMBINER_HINDEXED_BLOCK:
         case MPI_COMBINER_INDEXED:
-        case MPI_COMBINER_HINDEXED_INTEGER:
         case MPI_COMBINER_HINDEXED:
-        case MPI_COMBINER_STRUCT_INTEGER:
         case MPI_COMBINER_STRUCT:
             if (ints[0] == 0) {
                 MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
                 goto clean_exit;
             }
+            break;
+        case MPI_COMBINER_HVECTOR_INTEGER:
+        case MPI_COMBINER_HINDEXED_INTEGER:
+        case MPI_COMBINER_STRUCT_INTEGER:
+            MPIR_Assert(0 && "wrong combiner");
             break;
         default:
             break;
@@ -193,16 +194,8 @@ void MPIR_Typerep_commit(MPI_Datatype type)
         case MPI_COMBINER_VECTOR:
             MPIR_Dataloop_create_vector(ints[0], ints[1], ints[2], 0, types[0], (void **) dlp_p);
             break;
-        case MPI_COMBINER_HVECTOR_INTEGER:
         case MPI_COMBINER_HVECTOR:
-            /* fortran hvector has integer stride in bytes */
-            if (combiner == MPI_COMBINER_HVECTOR_INTEGER) {
-                stride = (MPI_Aint) ints[2];
-            } else {
-                stride = aints[0];
-            }
-
-            MPIR_Dataloop_create_vector(ints[0], ints[1], stride, 1, types[0], (void **) dlp_p);
+            MPIR_Dataloop_create_vector(ints[0], ints[1], aints[0], 1, types[0], (void **) dlp_p);
             break;
         case MPI_COMBINER_INDEXED_BLOCK:
             MPIR_Dataloop_create_blockindexed(ints[0], ints[1], &ints[2], 0, types[0],
@@ -224,30 +217,15 @@ void MPIR_Typerep_commit(MPI_Datatype type)
                                          (void **) dlp_p);
             MPL_free(blklen);
             break;
-        case MPI_COMBINER_HINDEXED_INTEGER:
         case MPI_COMBINER_HINDEXED:
-            if (combiner == MPI_COMBINER_HINDEXED_INTEGER) {
-                disps = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-
-                for (i = 0; i < ints[0]; i++) {
-                    disps[i] = (MPI_Aint) ints[ints[0] + 1 + i];
-                }
-            } else {
-                disps = aints;
-            }
-
             blklen = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
             for (i = 0; i < ints[0]; i++)
                 blklen[i] = (MPI_Aint) ints[1 + i];
-            MPIR_Dataloop_create_indexed(ints[0], blklen, disps, 1, types[0], (void **) dlp_p);
+            MPIR_Dataloop_create_indexed(ints[0], blklen, aints, 1, types[0], (void **) dlp_p);
 
-            if (combiner == MPI_COMBINER_HINDEXED_INTEGER) {
-                MPL_free(disps);
-            }
             MPL_free(blklen);
 
             break;
-        case MPI_COMBINER_STRUCT_INTEGER:
         case MPI_COMBINER_STRUCT:
             for (i = 1; i < ints[0]; i++) {
                 int type_combiner = MPIR_Type_get_combiner(types[i]);
@@ -261,24 +239,11 @@ void MPIR_Typerep_commit(MPI_Datatype type)
                     }
                 }
             }
-            if (combiner == MPI_COMBINER_STRUCT_INTEGER) {
-                disps = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-
-                for (i = 0; i < ints[0]; i++) {
-                    disps[i] = (MPI_Aint) ints[ints[0] + 1 + i];
-                }
-            } else {
-                disps = aints;
-            }
-
-            err = MPIR_Dataloop_create_struct(ints[0], &ints[1], disps, types, (void **) dlp_p);
+            err = MPIR_Dataloop_create_struct(ints[0], &ints[1], aints, types, (void **) dlp_p);
             /* TODO if/when this function returns error codes, propagate this failure instead */
             MPIR_Assert(0 == err);
             /* if (err) return err; */
 
-            if (combiner == MPI_COMBINER_STRUCT_INTEGER) {
-                MPL_free(disps);
-            }
             break;
         case MPI_COMBINER_SUBARRAY:
             ndims = ints[0];
