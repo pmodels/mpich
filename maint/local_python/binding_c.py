@@ -544,8 +544,8 @@ def dump_manpage(func):
             inout_list.append(p)
         else:
             input_list.append(p)
-    dump_manpage_list(inout_list, "Input/Output Parameters")
     dump_manpage_list(input_list, "Input Parameters")
+    dump_manpage_list(inout_list, "Input/Output Parameters")
     dump_manpage_list(output_list, "Output Parameters")
 
     # Add the custom notes (specified in e.g. pt2pt_api.txt) as is.
