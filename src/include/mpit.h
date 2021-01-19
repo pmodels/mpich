@@ -38,6 +38,7 @@ extern int MPIR_T_cat_add_pvar(const char *cat_name, int pvar_index);
 extern int MPIR_T_cat_add_cvar(const char *cat_name, int cvar_index);
 extern int MPIR_T_cat_add_subcat(const char *parent_name, const char *child_name);
 extern int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc);
+extern int MPIR_T_cat_add_event(const char *cat_name, int event_index);
 
 static inline cvar_table_entry_t *LOOKUP_CVAR_BY_NAME(const char *cvar_name)
 {
