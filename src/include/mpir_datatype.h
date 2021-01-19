@@ -656,5 +656,9 @@ int MPIR_Type_create_darray_c_impl(int size, int rank, int ndims,
                                    const MPI_Aint array_of_gsizes[], const int array_of_distribs[],
                                    const int array_of_dargs[], const int array_of_psizes[],
                                    int order, MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_create_subarray_c_impl(int ndims, const MPI_Aint array_of_sizes[],
+                                     const MPI_Aint array_of_subsizes[],
+                                     const MPI_Aint array_of_starts[], int order,
+                                     MPI_Datatype oldtype, MPI_Datatype * newtype);
 
 #endif /* MPIR_DATATYPE_H_INCLUDED */
