@@ -881,9 +881,11 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 
 #define MPI_ERR_SESSION             75  /* Invalid session handle */
 
+#define MPI_T_ERR_NOT_SUPPORTED     76  /* Requested functionality not supported */
+
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
-#define MPICH_ERR_LAST_CLASS 75     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 76     /* It is also helpful to know the
 				       last valid class */
 
 #define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
