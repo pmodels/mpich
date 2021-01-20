@@ -24,6 +24,9 @@ def dump_mpi_c(func, mapping):
             G.err_codes[a] = 1
     # -- "dump" accumulates output lines in G.out
     G.out.append("#include \"mpiimpl.h\"")
+    if 'include' in func:
+        for a in func['include'].replace(',', ' ').split():
+            G.out.append("#include \"%s\"" % a)
     G.out.append("")
     dump_profiling(func, mapping)
 
