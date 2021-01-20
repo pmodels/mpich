@@ -151,12 +151,17 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
         int i, j, *ints;
         MPI_Count typecount = 0, nr_elements = 0, last_nr_elements;
         MPI_Aint *aints;
+        MPI_Aint *counts;
         MPI_Datatype *types;
 
         /* Establish locations of arrays */
-        MPIR_Type_access_contents(datatype_ptr->handle, &ints, &aints, &types);
+        MPIR_Datatype_contents *cp = datatype_ptr->contents;
+        MPIR_Datatype_access_contents(cp, &ints, &aints, &counts, &types);
         if (!ints || !aints || !types)
             return MPI_ERR_TYPE;
+
+        /* temporary. FIXME after all large count type creations are in */
+        MPIR_Assert(cp->nr_counts == 0);
 
         switch (datatype_ptr->contents->combiner) {
             case MPI_COMBINER_NAMED:

@@ -90,6 +90,7 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     MPI_Datatype *types;
     int *ints;
     MPI_Aint *aints;
+    MPI_Aint *counts;
 
     void *old_dlp;
 
@@ -130,7 +131,8 @@ void MPIR_Typerep_commit(MPI_Datatype type)
         return;
     }
 
-    MPIR_Type_access_contents(type, &ints, &aints, &types);
+    MPIR_Datatype_contents *cp = typeptr->contents;
+    MPIR_Datatype_access_contents(cp, &ints, &aints, &counts, &types);
 
     /* first check for zero count on types where that makes sense */
     switch (combiner) {
@@ -142,7 +144,8 @@ void MPIR_Typerep_commit(MPI_Datatype type)
         case MPI_COMBINER_INDEXED:
         case MPI_COMBINER_HINDEXED:
         case MPI_COMBINER_STRUCT:
-            if (ints[0] == 0) {
+            /* check ints[0] for normal types and counts[0] for large count types */
+            if ((cp->nr_ints > 0 && ints[0] == 0) || (cp->nr_counts > 0 && counts[0] == 0)) {
                 MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
                 goto clean_exit;
             }
@@ -156,6 +159,8 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             break;
     }
 
+    /* temporary, FIXME after all the large types are updated */
+    MPIR_Assert(cp->nr_counts == 0);
     /* recurse, processing types "below" this one before processing
      * this one, if those type don't already have dataloops.
      *
@@ -282,9 +287,6 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     }
 
   clean_exit:
-
-    MPIR_Type_release_contents(type, &ints, &aints, &types);
-
     /* for now we just leave the intermediate dataloops in place.
      * could remove them to save space if we wanted.
      */
