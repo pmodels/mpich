@@ -148,8 +148,7 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
         /* we have bytes left and still don't have a single element size; must
          * recurse.
          */
-        int i, j, *ints;
-        MPI_Count typecount = 0, nr_elements = 0, last_nr_elements;
+        int *ints;
         MPI_Aint *aints;
         MPI_Aint *counts;
         MPI_Datatype *types;
@@ -159,9 +158,6 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
         MPIR_Datatype_access_contents(cp, &ints, &aints, &counts, &types);
         if (!ints || !aints || !types)
             return MPI_ERR_TYPE;
-
-        /* temporary. FIXME after all large count type creations are in */
-        MPIR_Assert(cp->nr_counts == 0);
 
         switch (datatype_ptr->contents->combiner) {
             case MPI_COMBINER_NAMED:
@@ -173,21 +169,37 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
             case MPI_COMBINER_VECTOR:
             case MPI_COMBINER_HVECTOR:
             case MPI_COMBINER_SUBARRAY:
-                /* count is first in ints array */
-                return MPIR_Type_get_elements(bytes_p, count * (*ints), *types);
+                if (cp->nr_counts == 0) {
+                    /* count is first in ints array */
+                    return MPIR_Type_get_elements(bytes_p, count * ints[0], *types);
+                } else {
+                    return MPIR_Type_get_elements(bytes_p, count * counts[0], *types);
+                }
                 break;
             case MPI_COMBINER_INDEXED_BLOCK:
             case MPI_COMBINER_HINDEXED_BLOCK:
-                /* count is first in ints array, blocklength is second */
-                return MPIR_Type_get_elements(bytes_p, count * ints[0] * ints[1], *types);
+                if (cp->nr_counts == 0) {
+                    /* count is first in ints array, blocklength is second */
+                    return MPIR_Type_get_elements(bytes_p, count * ints[0] * ints[1], *types);
+                } else {
+                    return MPIR_Type_get_elements(bytes_p, count * counts[0] * counts[1], *types);
+                }
                 break;
             case MPI_COMBINER_INDEXED:
             case MPI_COMBINER_HINDEXED:
-                for (i = 0; i < (*ints); i++) {
-                    /* add up the blocklengths to get a max. # of the next type */
-                    typecount += ints[i + 1];
+                {
+                    MPI_Aint typecount = 0;     /* total number of subtypes */
+                    if (cp->nr_counts == 0) {
+                        for (int i = 0; i < ints[0]; i++) {
+                            typecount += ints[i + 1];
+                        }
+                    } else {
+                        for (MPI_Aint i = 0; i < counts[0]; i++) {
+                            typecount += counts[i + 1];
+                        }
+                    }
+                    return MPIR_Type_get_elements(bytes_p, count * typecount, *types);
                 }
-                return MPIR_Type_get_elements(bytes_p, count * typecount, *types);
                 break;
             case MPI_COMBINER_STRUCT:
                 /* In this case we can't simply multiply the count of the next
@@ -198,26 +210,51 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
                  * We need to keep going until we get less elements than expected
                  * or we run out of bytes.
                  */
+                if (cp->nr_counts == 0) {
+                    MPI_Count nr_elements = 0;
+                    MPI_Count last_nr_elements = 1;     /* seed value */
+                    for (MPI_Aint j = 0;
+                         (count < 0 || j < count) && *bytes_p > 0 && last_nr_elements > 0; j++) {
+                        /* recurse on each type; bytes are reduced in calls */
+                        for (int i = 0; i < ints[0]; i++) {
+                            /* skip zero-count elements of the struct */
+                            if (ints[i + 1] == 0)
+                                continue;
 
+                            last_nr_elements =
+                                MPIR_Type_get_elements(bytes_p, ints[i + 1], types[i]);
+                            nr_elements += last_nr_elements;
 
-                last_nr_elements = 1;   /* seed value */
-                for (j = 0; (count < 0 || j < count) && *bytes_p > 0 && last_nr_elements > 0; j++) {
-                    /* recurse on each type; bytes are reduced in calls */
-                    for (i = 0; i < (*ints); i++) {
-                        /* skip zero-count elements of the struct */
-                        if (ints[i + 1] == 0)
-                            continue;
+                            MPIR_Assert(last_nr_elements >= 0);
 
-                        last_nr_elements = MPIR_Type_get_elements(bytes_p, ints[i + 1], types[i]);
-                        nr_elements += last_nr_elements;
-
-                        MPIR_Assert(last_nr_elements >= 0);
-
-                        if (last_nr_elements < ints[i + 1])
-                            break;
+                            if (last_nr_elements < ints[i + 1])
+                                break;
+                        }
                     }
+                    return nr_elements;
+                } else {
+                    MPI_Count nr_elements = 0;
+                    MPI_Count last_nr_elements = 1;     /* seed value */
+                    for (MPI_Aint j = 0;
+                         (count < 0 || j < count) && *bytes_p > 0 && last_nr_elements > 0; j++) {
+                        /* recurse on each type; bytes are reduced in calls */
+                        for (int i = 0; i < counts[0]; i++) {
+                            /* skip zero-count elements of the struct */
+                            if (counts[i + 1] == 0)
+                                continue;
+
+                            last_nr_elements =
+                                MPIR_Type_get_elements(bytes_p, counts[i + 1], types[i]);
+                            nr_elements += last_nr_elements;
+
+                            MPIR_Assert(last_nr_elements >= 0);
+
+                            if (last_nr_elements < counts[i + 1])
+                                break;
+                        }
+                    }
+                    return nr_elements;
                 }
-                return nr_elements;
                 break;
             case MPI_COMBINER_DARRAY:
             case MPI_COMBINER_F90_REAL:
