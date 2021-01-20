@@ -5,190 +5,149 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPI_Type_create_subarray */
-#if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_Type_create_subarray = PMPI_Type_create_subarray
-#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_Type_create_subarray  MPI_Type_create_subarray
-#elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_Type_create_subarray as PMPI_Type_create_subarray
-#elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Type_create_subarray(int ndims, const int array_of_sizes[],
-                             const int array_of_subsizes[], const int array_of_starts[],
-                             int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
-    __attribute__ ((weak, alias("PMPI_Type_create_subarray")));
-#endif
-/* -- End Profiling Symbol Block */
-
-/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
-   the MPI routines */
-#ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Type_create_subarray
-#define MPI_Type_create_subarray PMPI_Type_create_subarray
-
-#endif
-
-/*@
-   MPI_Type_create_subarray - Create a datatype for a subarray of a regular,
-    multidimensional array
-
-Input Parameters:
-+ ndims - number of array dimensions (positive integer)
-. array_of_sizes - number of elements of type oldtype in each dimension of the
-  full array (array of positive integers)
-. array_of_subsizes - number of elements of type oldtype in each dimension of
-  the subarray (array of positive integers)
-. array_of_starts - starting coordinates of the subarray in each dimension
-  (array of nonnegative integers)
-. order - array storage order flag (state)
-- oldtype - array element datatype (handle)
-
-Output Parameters:
-. newtype - new datatype (handle)
-
-.N ThreadSafe
-
-.N Fortran
-
-.N Errors
-.N MPI_SUCCESS
-.N MPI_ERR_TYPE
-.N MPI_ERR_ARG
-@*/
-int MPI_Type_create_subarray(int ndims,
-                             const int array_of_sizes[],
-                             const int array_of_subsizes[],
-                             const int array_of_starts[],
-                             int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_create_subarray_impl(int ndims, const int array_of_sizes[],
+                                   const int array_of_subsizes[], const int array_of_starts[],
+                                   int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
-    int mpi_errno = MPI_SUCCESS, i;
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    MPI_Datatype new_handle;
+    MPI_Datatype tmp1, tmp2;
 
-    MPI_Aint extent;
-#ifdef HAVE_ERROR_CHECKING
-    MPI_Aint size_with_aint;
-    MPI_Offset size_with_offset;
-#endif
+    /* these variables are from the original version in ROMIO */
+    MPI_Aint size, extent, disps[3];
 
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
+    /* for saving contents */
+    int *ints;
+    MPIR_Datatype *new_dtp;
 
-    MPIR_ERRTEST_INITIALIZED_ORDIE();
+    MPIR_CHKLMEM_DECL(1);
+    /* TODO: CHECK THE ERROR RETURNS FROM ALL THESE!!! */
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
+    /* TODO: GRAB EXTENT WITH A MACRO OR SOMETHING FASTER */
+    MPIR_Datatype_get_extent_macro(oldtype, extent);
 
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_Datatype *datatype_ptr = NULL;
+    if (order == MPI_ORDER_FORTRAN) {
+        if (ndims == 1)
+            mpi_errno = MPIR_Type_contiguous(array_of_subsizes[0], oldtype, &tmp1);
+        else {
+            mpi_errno = MPIR_Type_vector(array_of_subsizes[1], array_of_subsizes[0], (MPI_Aint) (array_of_sizes[0]), 0, /* stride in types */
+                                         oldtype, &tmp1);
+            MPIR_ERR_CHECK(mpi_errno);
 
-            /* Check parameters */
-            MPIR_ERRTEST_ARGNONPOS(ndims, "ndims", mpi_errno, MPI_ERR_DIMS);
-            MPIR_ERRTEST_ARGNULL(array_of_sizes, "array_of_sizes", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(array_of_subsizes, "array_of_subsizes", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(array_of_starts, "array_of_starts", mpi_errno);
-            for (i = 0; mpi_errno == MPI_SUCCESS && i < ndims; i++) {
-                MPIR_ERRTEST_ARGNONPOS(array_of_sizes[i], "size", mpi_errno, MPI_ERR_ARG);
-                MPIR_ERRTEST_ARGNONPOS(array_of_subsizes[i], "subsize", mpi_errno, MPI_ERR_ARG);
-                MPIR_ERRTEST_ARGNEG(array_of_starts[i], "start", mpi_errno);
-                if (array_of_subsizes[i] > array_of_sizes[i]) {
-                    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                     MPIR_ERR_RECOVERABLE,
-                                                     __func__,
-                                                     __LINE__,
-                                                     MPI_ERR_ARG,
-                                                     "**argrange",
-                                                     "**argrange %s %d %d",
-                                                     "array_of_subsizes",
-                                                     array_of_subsizes[i], array_of_sizes[i]);
-                    goto fn_fail;
-                }
-                if (array_of_starts[i] > (array_of_sizes[i] - array_of_subsizes[i])) {
-                    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                     MPIR_ERR_RECOVERABLE,
-                                                     __func__,
-                                                     __LINE__,
-                                                     MPI_ERR_ARG,
-                                                     "**argrange",
-                                                     "**argrange %s %d %d",
-                                                     "array_of_starts",
-                                                     array_of_starts[i],
-                                                     array_of_sizes[i] - array_of_subsizes[i]);
-                    goto fn_fail;
-                }
+            size = ((MPI_Aint) (array_of_sizes[0])) * extent;
+            for (i = 2; i < ndims; i++) {
+                size *= (MPI_Aint) (array_of_sizes[i - 1]);
+                mpi_errno = MPIR_Type_vector(array_of_subsizes[i], 1, size, 1,  /* stride in bytes */
+                                             tmp1, &tmp2);
+                MPIR_ERR_CHECK(mpi_errno);
+                MPIR_Type_free_impl(&tmp1);
+                tmp1 = tmp2;
             }
-            if (order != MPI_ORDER_FORTRAN && order != MPI_ORDER_C) {
-                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                 MPIR_ERR_RECOVERABLE,
-                                                 __func__,
-                                                 __LINE__,
-                                                 MPI_ERR_ARG, "**storageorder",
-                                                 "**storageorder %d", order);
-                goto fn_fail;
-            }
-
-            MPIR_Datatype_get_extent_macro(oldtype, extent);
-
-            /* check if MPI_Aint is large enough for size of global array.
-             * if not, complain. */
-
-            size_with_aint = extent;
-            for (i = 0; i < ndims; i++)
-                size_with_aint *= array_of_sizes[i];
-            size_with_offset = extent;
-            for (i = 0; i < ndims; i++)
-                size_with_offset *= array_of_sizes[i];
-            if (size_with_aint != size_with_offset) {
-                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                 MPIR_ERR_FATAL,
-                                                 __func__,
-                                                 __LINE__,
-                                                 MPI_ERR_ARG,
-                                                 "**subarrayoflow",
-                                                 "**subarrayoflow %L", size_with_offset);
-                goto fn_fail;
-            }
-
-            /* Get handles to MPI objects. */
-            MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
-
-            /* Validate datatype_ptr */
-            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-            /* If datatype_ptr is not valid, it will be reset to null */
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
         }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+        MPIR_ERR_CHECK(mpi_errno);
 
-    /* ... body of routine ... */
-    mpi_errno = MPIR_Type_create_subarray_impl(ndims, array_of_sizes, array_of_subsizes,
-                                               array_of_starts, order, oldtype, newtype);
-    if (mpi_errno) {
-        goto fn_fail;
+        /* add displacement and UB */
+
+        disps[1] = (MPI_Aint) (array_of_starts[0]);
+        size = 1;
+        for (i = 1; i < ndims; i++) {
+            size *= (MPI_Aint) (array_of_sizes[i - 1]);
+            disps[1] += size * (MPI_Aint) (array_of_starts[i]);
+        }
+        /* rest done below for both Fortran and C order */
+    } else {    /* MPI_ORDER_C */
+
+        /* dimension ndims-1 changes fastest */
+        if (ndims == 1) {
+            mpi_errno = MPIR_Type_contiguous(array_of_subsizes[0], oldtype, &tmp1);
+            MPIR_ERR_CHECK(mpi_errno);
+
+        } else {
+            mpi_errno = MPIR_Type_vector(array_of_subsizes[ndims - 2], array_of_subsizes[ndims - 1], (MPI_Aint) (array_of_sizes[ndims - 1]), 0, /* stride in types */
+                                         oldtype, &tmp1);
+            MPIR_ERR_CHECK(mpi_errno);
+
+            size = (MPI_Aint) (array_of_sizes[ndims - 1]) * extent;
+            for (i = ndims - 3; i >= 0; i--) {
+                size *= (MPI_Aint) (array_of_sizes[i + 1]);
+                mpi_errno = MPIR_Type_vector(array_of_subsizes[i], 1,   /* blocklen */
+                                             size,      /* stride */
+                                             1, /* stride in bytes */
+                                             tmp1,      /* old type */
+                                             &tmp2);
+                MPIR_ERR_CHECK(mpi_errno);
+
+                MPIR_Type_free_impl(&tmp1);
+                tmp1 = tmp2;
+            }
+        }
+
+        /* add displacement and UB */
+
+        disps[1] = (MPI_Aint) (array_of_starts[ndims - 1]);
+        size = 1;
+        for (i = ndims - 2; i >= 0; i--) {
+            size *= (MPI_Aint) (array_of_sizes[i + 1]);
+            disps[1] += size * (MPI_Aint) (array_of_starts[i]);
+        }
     }
 
-    /* ... end of body of routine ... */
+    disps[1] *= extent;
+
+    disps[2] = extent;
+    for (i = 0; i < ndims; i++)
+        disps[2] *= (MPI_Aint) (array_of_sizes[i]);
+
+    disps[0] = 0;
+
+    mpi_errno = MPIR_Type_blockindexed(1, 1, &disps[1], 1,      /* 1 means disp is in bytes */
+                                       tmp1, &tmp2);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Type_create_resized(tmp2, 0, disps[2], &new_handle);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Type_free_impl(&tmp1);
+    MPIR_Type_free_impl(&tmp2);
+
+    /* at this point we have the new type, and we've cleaned up any
+     * intermediate types created in the process.  we just need to save
+     * all our contents/envelope information.
+     */
+
+    /* Save contents */
+    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (3 * ndims + 2) * sizeof(int), mpi_errno,
+                               "content description", MPL_MEM_BUFFER);
+
+    ints[0] = ndims;
+    for (i = 0; i < ndims; i++) {
+        ints[i + 1] = array_of_sizes[i];
+    }
+    for (i = 0; i < ndims; i++) {
+        ints[i + ndims + 1] = array_of_subsizes[i];
+    }
+    for (i = 0; i < ndims; i++) {
+        ints[i + 2 * ndims + 1] = array_of_starts[i];
+    }
+    ints[3 * ndims + 1] = order;
+
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_SUBARRAY, 3 * ndims + 2,       /* ints */
+                                           0,   /* aints */
+                                           1,   /* types */
+                                           ints, NULL, &oldtype);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Typerep_create_subarray(ndims, array_of_sizes, array_of_subsizes,
+                                             array_of_starts, order, oldtype, new_dtp);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
-
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_type_create_subarray",
-                                 "**mpi_type_create_subarray %d %p %p %p %d %D %p", ndims,
-                                 array_of_sizes, array_of_subsizes, array_of_starts, order, oldtype,
-                                 newtype);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
