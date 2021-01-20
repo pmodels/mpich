@@ -284,9 +284,12 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
 static void gpu_free_hooks_cb(void *dptr)
 {
     gpu_free_hook_s *current = free_hook_chain;
-    while (current) {
-        current->free_hook(dptr);
-        current = current->next;
+    if (dptr != NULL) {
+        /* we call gpu hook only when dptr != NULL */
+        while (current) {
+            current->free_hook(dptr);
+            current = current->next;
+        }
     }
     return;
 }

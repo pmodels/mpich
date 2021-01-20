@@ -20,8 +20,8 @@ int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes)
     }
 
     MPL_pointer_attr_t inattr, outattr;
-    MPL_gpu_query_pointer_attr(inbuf, &inattr);
-    MPL_gpu_query_pointer_attr(outbuf, &outattr);
+    MPIR_GPU_query_pointer_attr(inbuf, &inattr);
+    MPIR_GPU_query_pointer_attr(outbuf, &outattr);
 
     if ((inattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
          inattr.type == MPL_GPU_POINTER_REGISTERED_HOST) &&
@@ -63,8 +63,8 @@ static inline bool fastpath_memcpy(const void *inbuf, void *outbuf, MPI_Datatype
      * true_lb) into the MPIR_Datatype structure */
     if (HANDLE_IS_BUILTIN(type)) {
         MPL_pointer_attr_t inattr, outattr;
-        MPL_gpu_query_pointer_attr(inbuf, &inattr);
-        MPL_gpu_query_pointer_attr(outbuf, &outattr);
+        MPIR_GPU_query_pointer_attr(inbuf, &inattr);
+        MPIR_GPU_query_pointer_attr(outbuf, &outattr);
 
         if ((inattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
              inattr.type == MPL_GPU_POINTER_REGISTERED_HOST) &&
@@ -86,11 +86,11 @@ static inline bool fastpath_memcpy(const void *inbuf, void *outbuf, MPI_Datatype
             MPL_pointer_attr_t inattr, outattr;
 
             if (dir == MEMCPY_DIR__PACK) {
-                MPL_gpu_query_pointer_attr((const char *) inbuf + dtp->true_lb + offset, &inattr);
-                MPL_gpu_query_pointer_attr(outbuf, &outattr);
+                MPIR_GPU_query_pointer_attr((const char *) inbuf + dtp->true_lb + offset, &inattr);
+                MPIR_GPU_query_pointer_attr(outbuf, &outattr);
             } else {
-                MPL_gpu_query_pointer_attr(inbuf, &inattr);
-                MPL_gpu_query_pointer_attr((char *) outbuf + dtp->true_lb + offset, &outattr);
+                MPIR_GPU_query_pointer_attr(inbuf, &inattr);
+                MPIR_GPU_query_pointer_attr((char *) outbuf + dtp->true_lb + offset, &outattr);
             }
 
             if ((inattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||

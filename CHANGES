@@ -1,4 +1,18 @@
 ===============================================================================
+                               Changes in 3.4.1
+===============================================================================
+
+# Fix bug in GPU memory hooks that caused failures with NCCL
+
+# Fix bug in GPU-aware nonblocking op collectives
+
+# Hide symbols from embedded json-c module
+
+# Removed anonymous struct/union usage in MPL
+
+# Disable Java support in embedded UCX module
+
+===============================================================================
                                Changes in 3.4
 ===============================================================================
 

@@ -33,6 +33,14 @@ cvars:
 
 extern int MPIR_CVAR_ENABLE_GPU;
 
+#undef ENABLE_GPU
+
+#ifdef MPL_HAVE_GPU
+#define ENABLE_GPU MPIR_CVAR_ENABLE_GPU
+#else
+#define ENABLE_GPU FALSE
+#endif
+
 MPL_STATIC_INLINE_PREFIX int MPIR_GPU_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
@@ -40,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_GPU_query_pointer_attr(const void *ptr, MPL_po
     /* Skip query if GPU support is disabled by CVAR. Because we assume
      * no GPU buffer is used. If the user disables GPU at configure time
      * (e.g., --without-cuda), then MPL fallback will handle the query. */
-    if (MPIR_CVAR_ENABLE_GPU) {
+    if (ENABLE_GPU) {
         mpl_err = MPL_gpu_query_pointer_attr(ptr, attr);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_query_ptr");
     } else {
@@ -56,7 +64,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_GPU_query_pointer_attr(const void *ptr, MPL_po
 
 MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_dev(const void *ptr)
 {
-    if (MPIR_CVAR_ENABLE_GPU && ptr != NULL) {
+    if (ENABLE_GPU && ptr != NULL) {
         MPL_pointer_attr_t attr;
         MPL_gpu_query_pointer_attr(ptr, &attr);
 
