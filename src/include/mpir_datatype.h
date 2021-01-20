@@ -358,31 +358,6 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
      (type == MPI_LONG_INT) || (type == MPI_SHORT_INT) || \
      (type == MPI_LONG_DOUBLE_INT))
 
-static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
-{
-    int i, struct_sz = sizeof(MPIR_Datatype_contents);
-    int epsilon;
-    MPIR_Datatype *old_dtp;
-    MPI_Datatype *array_of_types;
-
-    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
-        struct_sz += MAX_ALIGNMENT - epsilon;
-    }
-
-    /* note: relies on types being first after structure */
-    array_of_types = (MPI_Datatype *) ((char *) dtp->contents + struct_sz);
-
-    for (i = 0; i < dtp->contents->nr_types; i++) {
-        if (!HANDLE_IS_BUILTIN(array_of_types[i])) {
-            MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
-            MPIR_Datatype_ptr_release(old_dtp);
-        }
-    }
-
-    MPL_free(dtp->contents);
-    dtp->contents = NULL;
-}
-
 /*@
   MPIR_Datatype_set_contents - store contents information for use in
   MPI_Type_get_contents.
@@ -527,6 +502,28 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Datatype_access_contents(MPIR_Datatype_conten
     *p_ints = (void *) ((char *) cp + struct_sz + types_sz);
     *p_aints = (void *) ((char *) cp + struct_sz + types_sz + ints_sz);
     *p_counts = (void *) ((char *) cp + struct_sz + types_sz + ints_sz + aints_sz);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
+{
+    MPIR_Datatype_contents *cp = dtp->contents;
+
+    int *ints;
+    MPI_Aint *aints, *counts;
+    MPI_Datatype *types;
+
+    MPIR_Datatype_access_contents(cp, &ints, &aints, &counts, &types);
+
+    for (int i = 0; i < cp->nr_types; i++) {
+        if (!HANDLE_IS_BUILTIN(types[i])) {
+            MPIR_Datatype *old_dtp;
+            MPIR_Datatype_get_ptr(types[i], old_dtp);
+            MPIR_Datatype_ptr_release(old_dtp);
+        }
+    }
+
+    MPL_free(cp);
+    dtp->contents = NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Type_get_combiner(MPI_Datatype datatype)
