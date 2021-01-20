@@ -492,6 +492,43 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
     return MPI_SUCCESS;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIR_Datatype_access_contents(MPIR_Datatype_contents * cp,
+                                                            int **p_ints,
+                                                            MPI_Aint ** p_aints,
+                                                            MPI_Aint ** p_counts,
+                                                            MPI_Datatype ** p_types)
+{
+    MPI_Aint struct_sz, ints_sz, aints_sz, counts_sz, types_sz;
+
+    struct_sz = sizeof(MPIR_Datatype_contents);
+    types_sz = cp->nr_types * sizeof(MPI_Datatype);
+    ints_sz = cp->nr_ints * sizeof(int);
+    aints_sz = cp->nr_aints * sizeof(MPI_Aint);
+    counts_sz = cp->nr_counts * sizeof(MPI_Aint);
+
+    MPI_Aint epsilon;
+    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
+        struct_sz += MAX_ALIGNMENT - epsilon;
+    }
+    if ((epsilon = types_sz % MAX_ALIGNMENT)) {
+        types_sz += MAX_ALIGNMENT - epsilon;
+    }
+    if ((epsilon = ints_sz % MAX_ALIGNMENT)) {
+        ints_sz += MAX_ALIGNMENT - epsilon;
+    }
+    if ((epsilon = ints_sz % MAX_ALIGNMENT)) {
+        aints_sz += MAX_ALIGNMENT - epsilon;
+    }
+    if ((epsilon = counts_sz % MAX_ALIGNMENT)) {
+        counts_sz += MAX_ALIGNMENT - epsilon;
+    }
+
+    *p_types = (void *) ((char *) cp + struct_sz);
+    *p_ints = (void *) ((char *) cp + struct_sz + types_sz);
+    *p_aints = (void *) ((char *) cp + struct_sz + types_sz + ints_sz);
+    *p_counts = (void *) ((char *) cp + struct_sz + types_sz + ints_sz + aints_sz);
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIR_Type_get_combiner(MPI_Datatype datatype)
 {
     if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
