@@ -566,12 +566,6 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Datatype_predefined_get_index(MPI_Datatype dat
     return dtype_index;
 }
 
-/* contents accessor functions */
-void MPIR_Type_access_contents(MPI_Datatype type, int **ints_p, MPI_Aint ** aints_p,
-                               MPI_Datatype ** types_p);
-void MPIR_Type_release_contents(MPI_Datatype type, int **ints_p, MPI_Aint ** aints_p,
-                                MPI_Datatype ** types_p);
-
 /* This routine is used to install an attribute free routine for datatypes
    at finalize-time */
 void MPII_Datatype_attr_finalize(void);
