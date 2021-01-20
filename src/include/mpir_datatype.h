@@ -618,4 +618,15 @@ MPI_Aint MPII_Datatype_blockindexed_count_contig(MPI_Aint count,
                                                  const void *disp_array,
                                                  int dispinbytes, MPI_Aint old_extent);
 
+/* large count prototypes */
+int MPIR_Type_get_envelope_c_impl(MPI_Datatype datatype,
+                                  MPI_Aint * num_integers, MPI_Aint * num_addresses,
+                                  MPI_Aint * num_large_counts, MPI_Aint * num_datatypes,
+                                  int *combiner);
+int MPIR_Type_get_contents_c_impl(MPI_Datatype datatype, MPI_Aint max_integers,
+                                  MPI_Aint max_addresses, MPI_Aint max_counts,
+                                  MPI_Aint max_datatypes, int array_of_integers[],
+                                  MPI_Aint array_of_addresses[], MPI_Count array_of_counts[],
+                                  MPI_Datatype array_of_datatypes[]);
+
 #endif /* MPIR_DATATYPE_H_INCLUDED */
