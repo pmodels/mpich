@@ -1257,10 +1257,14 @@ def dump_validation(func, t):
         G.out.append("    MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
         G.out.append("}")
     elif RE.search(r'USERBUFFER', kind):
+        G.err_codes['MPI_ERR_BUFFER'] = 1
+        G.err_codes['MPI_ERR_COUNT'] = 1
+        G.err_codes['MPI_ERR_TYPE'] = 1
         p = name.split(',')
         if kind == "USERBUFFER-simple":
             dump_validate_userbuffer_simple(func, p[0], p[1], p[2])
         elif kind == "USERBUFFER-reduce":
+            G.err_codes['MPI_ERR_OP'] = 1
             dump_validate_userbuffer_reduce(func, p[0], p[1], p[2], p[3], p[4])
         elif kind == "USERBUFFER-neighbor":
             dump_validate_userbuffer_simple(func, p[0], p[1], p[2])
