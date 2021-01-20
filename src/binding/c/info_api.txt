@@ -30,6 +30,10 @@ MPI_Info_free:
 MPI_Info_get:
     .desc: Retrieves the value associated with a key
     .skip: initcheck
+/*
+.N Deprecated
+   'MPI_Info_get_string' should be used instead of this routine.
+*/
 
 MPI_Info_get_nkeys:
     .desc: Returns the number of currently defined keys in info
@@ -42,6 +46,10 @@ MPI_Info_get_nthkey:
 MPI_Info_get_valuelen:
     .desc: Retrieves the length of the value associated with a key
     .skip: initcheck
+/*
+.N Deprecated
+   'MPI_Info_get_string' should be used instead of this routine.
+*/
 
 MPI_Info_set:
     .desc: Adds a (key,value) pair to info
