@@ -159,8 +159,6 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             break;
     }
 
-    /* temporary, FIXME after all the large types are updated */
-    MPIR_Assert(cp->nr_counts == 0);
     /* recurse, processing types "below" this one before processing
      * this one, if those type don't already have dataloops.
      *
@@ -182,78 +180,119 @@ void MPIR_Typerep_commit(MPI_Datatype type)
         case MPI_COMBINER_DUP:
             if (type0_combiner != MPI_COMBINER_NAMED) {
                 MPIR_Dataloop_dup(old_dlp, (void **) dlp_p);
-            } else {
+            } else if (cp->nr_counts == 0) {
                 MPIR_Dataloop_create_contiguous(1, types[0], (void **) dlp_p);
+            } else {
+                MPIR_Assert(0);
             }
             break;
         case MPI_COMBINER_RESIZED:
             if (type0_combiner != MPI_COMBINER_NAMED) {
                 MPIR_Dataloop_dup(old_dlp, (void **) dlp_p);
-            } else {
+            } else if (cp->nr_counts == 0) {
                 MPIR_Dataloop_create_resized(types[0], aints[1], (void **) dlp_p);
+            } else {
+                MPIR_Assert(0);
             }
             break;
         case MPI_COMBINER_CONTIGUOUS:
-            MPIR_Dataloop_create_contiguous(ints[0], types[0], (void **) dlp_p);
+            if (cp->nr_counts == 0) {
+                MPIR_Dataloop_create_contiguous(ints[0], types[0], (void **) dlp_p);
+            } else {
+                MPIR_Assert(0);
+            }
             break;
         case MPI_COMBINER_VECTOR:
-            MPIR_Dataloop_create_vector(ints[0], ints[1], ints[2], 0, types[0], (void **) dlp_p);
+            if (cp->nr_counts == 0) {
+                MPIR_Dataloop_create_vector(ints[0], ints[1], ints[2], 0, types[0],
+                                            (void **) dlp_p);
+            } else {
+                MPIR_Assert(0);
+            }
             break;
         case MPI_COMBINER_HVECTOR:
-            MPIR_Dataloop_create_vector(ints[0], ints[1], aints[0], 1, types[0], (void **) dlp_p);
+            if (cp->nr_counts == 0) {
+                MPIR_Dataloop_create_vector(ints[0], ints[1], aints[0], 1, types[0],
+                                            (void **) dlp_p);
+            } else {
+                MPIR_Assert(0);
+            }
             break;
         case MPI_COMBINER_INDEXED_BLOCK:
-            MPIR_Dataloop_create_blockindexed(ints[0], ints[1], &ints[2], 0, types[0],
-                                              (void **) dlp_p);
+            if (cp->nr_counts == 0) {
+                MPIR_Dataloop_create_blockindexed(ints[0], ints[1], &ints[2], 0, types[0],
+                                                  (void **) dlp_p);
+            } else {
+                MPIR_Assert(0);
+            }
             break;
         case MPI_COMBINER_HINDEXED_BLOCK:
-            disps = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-            for (i = 0; i < ints[0]; i++)
-                disps[i] = aints[i];
-            MPIR_Dataloop_create_blockindexed(ints[0], ints[1], disps, 1, types[0],
-                                              (void **) dlp_p);
-            MPL_free(disps);
+            if (cp->nr_counts == 0) {
+                disps = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                for (i = 0; i < ints[0]; i++)
+                    disps[i] = aints[i];
+                MPIR_Dataloop_create_blockindexed(ints[0], ints[1], disps, 1, types[0],
+                                                  (void **) dlp_p);
+                MPL_free(disps);
+            } else {
+                MPIR_Assert(0);
+            }
             break;
         case MPI_COMBINER_INDEXED:
-            blklen = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-            for (i = 0; i < ints[0]; i++)
-                blklen[i] = ints[1 + i];
-            MPIR_Dataloop_create_indexed(ints[0], blklen, &ints[ints[0] + 1], 0, types[0],
-                                         (void **) dlp_p);
-            MPL_free(blklen);
+            if (cp->nr_counts == 0) {
+                blklen = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                for (i = 0; i < ints[0]; i++)
+                    blklen[i] = ints[1 + i];
+                MPIR_Dataloop_create_indexed(ints[0], blklen, &ints[ints[0] + 1], 0, types[0],
+                                             (void **) dlp_p);
+                MPL_free(blklen);
+            } else {
+                MPIR_Assert(0);
+            }
             break;
         case MPI_COMBINER_HINDEXED:
-            blklen = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
-            for (i = 0; i < ints[0]; i++)
-                blklen[i] = (MPI_Aint) ints[1 + i];
-            MPIR_Dataloop_create_indexed(ints[0], blklen, aints, 1, types[0], (void **) dlp_p);
+            if (cp->nr_counts == 0) {
+                blklen = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                for (i = 0; i < ints[0]; i++)
+                    blklen[i] = (MPI_Aint) ints[1 + i];
+                MPIR_Dataloop_create_indexed(ints[0], blklen, aints, 1, types[0], (void **) dlp_p);
 
-            MPL_free(blklen);
-
+                MPL_free(blklen);
+            } else {
+                MPIR_Assert(0);
+            }
             break;
         case MPI_COMBINER_STRUCT:
-            for (i = 1; i < ints[0]; i++) {
-                int type_combiner = MPIR_Type_get_combiner(types[i]);
+            if (cp->nr_counts == 0) {
+                for (i = 1; i < ints[0]; i++) {
+                    int type_combiner = MPIR_Type_get_combiner(types[i]);
 
-                if (type_combiner != MPI_COMBINER_NAMED) {
-                    MPIR_DATALOOP_GET_LOOPPTR(types[i], old_dlp);
-                    if (old_dlp == NULL) {
-                        MPIR_Typerep_commit(types[i]);
+                    if (type_combiner != MPI_COMBINER_NAMED) {
                         MPIR_DATALOOP_GET_LOOPPTR(types[i], old_dlp);
-                        assert(old_dlp);
+                        if (old_dlp == NULL) {
+                            MPIR_Typerep_commit(types[i]);
+                            MPIR_DATALOOP_GET_LOOPPTR(types[i], old_dlp);
+                            assert(old_dlp);
+                        }
                     }
                 }
+                err = MPIR_Dataloop_create_struct(ints[0], &ints[1], aints, types, (void **) dlp_p);
+                /* TODO if/when this function returns error codes, propagate this failure instead */
+                MPIR_Assert(0 == err);
+                /* if (err) return err; */
+            } else {
+                MPIR_Assert(0);
             }
-            err = MPIR_Dataloop_create_struct(ints[0], &ints[1], aints, types, (void **) dlp_p);
-            /* TODO if/when this function returns error codes, propagate this failure instead */
-            MPIR_Assert(0 == err);
-            /* if (err) return err; */
-
             break;
         case MPI_COMBINER_SUBARRAY:
-            ndims = ints[0];
-            MPII_Typerep_convert_subarray(ndims, &ints[1], &ints[1 + ndims], &ints[1 + 2 * ndims],
-                                          ints[1 + 3 * ndims], types[0], &tmptype);
+            if (cp->nr_counts == 0) {
+                ndims = ints[0];
+                MPII_Typerep_convert_subarray(ndims, &ints[1], &ints[1 + ndims],
+                                              &ints[1 + 2 * ndims], ints[1 + 3 * ndims], types[0],
+                                              &tmptype);
+            } else {
+                MPIR_Assert(0);
+            }
 
             MPIR_Typerep_commit(tmptype);
 
@@ -266,10 +305,14 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             MPIR_Type_free_impl(&tmptype);
             break;
         case MPI_COMBINER_DARRAY:
-            ndims = ints[2];
-            MPII_Typerep_convert_darray(ints[0], ints[1], ndims, &ints[3], &ints[3 + ndims],
-                                        &ints[3 + 2 * ndims], &ints[3 + 3 * ndims],
-                                        ints[3 + 4 * ndims], types[0], &tmptype);
+            if (cp->nr_counts == 0) {
+                ndims = ints[2];
+                MPII_Typerep_convert_darray(ints[0], ints[1], ndims, &ints[3], &ints[3 + ndims],
+                                            &ints[3 + 2 * ndims], &ints[3 + 3 * ndims],
+                                            ints[3 + 4 * ndims], types[0], &tmptype);
+            } else {
+                MPIR_Assert(0);
+            }
 
             MPIR_Typerep_commit(tmptype);
 
