@@ -136,10 +136,7 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
     /* if we have gotten down to a type with only one element type,
      * call MPIR_Type_get_basic_type_elements() and return.
      */
-    if (HANDLE_IS_BUILTIN(datatype) ||
-        datatype == MPI_FLOAT_INT ||
-        datatype == MPI_DOUBLE_INT ||
-        datatype == MPI_LONG_INT || datatype == MPI_SHORT_INT || datatype == MPI_LONG_DOUBLE_INT) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
         return MPIR_Type_get_basic_type_elements(bytes_p, count, datatype);
     } else if (datatype_ptr->builtin_element_size >= 0) {
         MPI_Datatype basic_type = MPI_DATATYPE_NULL;

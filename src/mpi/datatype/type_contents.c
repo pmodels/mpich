@@ -18,11 +18,7 @@ int MPIR_Type_get_contents_impl(MPI_Datatype datatype, int max_integers, int max
     /* these are checked at the MPI layer, so I feel that asserts
      * are appropriate.
      */
-    MPIR_Assert(!HANDLE_IS_BUILTIN(datatype));
-    MPIR_Assert(datatype != MPI_FLOAT_INT &&
-                datatype != MPI_DOUBLE_INT &&
-                datatype != MPI_LONG_INT &&
-                datatype != MPI_SHORT_INT && datatype != MPI_LONG_DOUBLE_INT);
+    MPIR_Assert(!MPIR_DATATYPE_IS_PREDEFINED(datatype));
     /* --END ERROR HANDLING-- */
 
     MPIR_Datatype_get_ptr(datatype, dtp);
@@ -63,10 +59,7 @@ void MPIR_Type_get_envelope(MPI_Datatype datatype,
                             int *num_integers,
                             int *num_addresses, int *num_datatypes, int *combiner)
 {
-    if (HANDLE_IS_BUILTIN(datatype) ||
-        datatype == MPI_FLOAT_INT ||
-        datatype == MPI_DOUBLE_INT ||
-        datatype == MPI_LONG_INT || datatype == MPI_SHORT_INT || datatype == MPI_LONG_DOUBLE_INT) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
         *combiner = MPI_COMBINER_NAMED;
         *num_integers = 0;
         *num_addresses = 0;
