@@ -77,6 +77,7 @@ def dump_c_file(f, lines):
                 print(".N MPI_SUCCESS\n", file=Out)
                 for err in sorted (G.err_codes.keys()):
                     print(".N %s" % (err), file=Out)
+                print(".N MPI_ERR_OTHER\n", file=Out)
             elif RE.match(r'(INDENT|DEDENT)', l):
                 # indentations
                 a = RE.m.group(1)
@@ -313,6 +314,16 @@ def process_func_parameters(func, mapping):
                     do_handle_ptr = 3
             elif kind == "RANK":
                 validation_list.append({'kind': "RANK-ARRAY", 'name': name})
+            elif RE.match(r'\w+$', p['length']):
+                if RE.match(r'(POLY)?DTYPE_NUM_ELEM_NNI', kind):
+                    validation_list.append({'kind':"COUNT-ARRAY", 'name': name, 'length': p['length']})
+                elif RE.match(r'DATATYPE', kind):
+                    validation_list.append({'kind':"TYPE-ARRAY", 'name': name, 'length': p['length']})
+                elif RE.match(r'(POLY)?DISPLACEMENT.*_COUNT', kind):
+                    validation_list.append({'kind':"DISP-ARRAY", 'name': name, 'length': p['length']})
+                else:
+                    # FIXME
+                    pass
             else:
                 # FIXME
                 pass
@@ -357,6 +368,9 @@ def process_func_parameters(func, mapping):
             validation_list.append({'kind': 'RANK', 'name': name})
         elif RE.match(r'(POLY)?(XFER_NUM_ELEM|DTYPE_NUM_ELEM_NNI|DTYPE_PACK_SIZE)', kind):
             validation_list.append({'kind': "COUNT", 'name': name})
+        elif RE.match(r'(POLY)?DTYPE_NUM_ELEM', kind):
+            if name != 'stride': # NOTE: fragile
+                validation_list.append({'kind': "COUNT", 'name': name})
         elif RE.match(r'WINDOW_SIZE|WIN_ATTACH_SIZE', kind):
             validation_list.append({'kind': "WIN_SIZE", 'name': name})
         elif RE.match(r'ALLOC_MEM_NUM_BYTES', kind):
@@ -410,11 +424,9 @@ def process_func_parameters(func, mapping):
         elif RE.match(r'(ERROR_CLASS|ERROR_CODE|FILE|ATTRIBUTE_VAL|EXTRA_STATE|LOGICAL)', kind):
             # no validation for these kinds
             pass
-        elif RE.match(r'(POLY)?(DTYPE_NUM_ELEM|DTYPE_STRIDE_BYTES|DISPLACEMENT_AINT_COUNT)$', kind):
+        elif RE.match(r'(POLY)?(DTYPE_STRIDE_BYTES|DISPLACEMENT_AINT_COUNT)$', kind):
             # e.g. stride in MPI_Type_vector, MPI_Type_create_resized
             pass
-        elif p['length']:
-            print("Not sure how to check ARGNULL against array %s" % name, file=sys.stderr)
         elif is_pointer_type(p):
             validation_list.append({'kind': "ARGNULL", 'name': name})
         else:
@@ -533,8 +545,8 @@ def dump_manpage(func):
             inout_list.append(p)
         else:
             input_list.append(p)
-    dump_manpage_list(inout_list, "Input/Output Parameters")
     dump_manpage_list(input_list, "Input Parameters")
+    dump_manpage_list(inout_list, "Input/Output Parameters")
     dump_manpage_list(output_list, "Output Parameters")
 
     # Add the custom notes (specified in e.g. pt2pt_api.txt) as is.
@@ -1218,9 +1230,6 @@ def dump_validation(func, t):
             G.out.append("MPIR_ERRTEST_SEND_RANK(%s, %s, mpi_errno);" % (comm_ptr, name))
         else:
             G.out.append("MPIR_ERRTEST_RANK(%s, %s, mpi_errno);" % (comm_ptr, name))
-    elif kind == "RANK-ARRAY":
-        # FIXME
-        pass
     elif kind == "TAG":
         G.err_codes['MPI_ERR_TAG'] = 1
         if RE.match(r'mpi_(i?m?probe|i?recv|recv_init)$', func_name, re.IGNORECASE) or name == "recvtag":
@@ -1326,6 +1335,37 @@ def dump_validation(func, t):
     elif kind == "mpit_pvar_class":
         G.err_codes['MPI_T_ERR_INVALID_NAME'] = 1
         G.out.append("MPIT_ERRTEST_PVAR_CLASS(%s);" % name)
+    elif kind == "RANK-ARRAY":
+        # FIXME
+        pass
+    elif kind == "DISP-ARRAY":
+        G.err_codes['MPI_ERR_ARG'] = 1
+        dump_if_open("%s > 0" % t['length'])
+        G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
+        dump_if_close()
+    elif kind == "COUNT-ARRAY":
+        G.err_codes['MPI_ERR_ARG'] = 1
+        G.err_codes['MPI_ERR_COUNT'] = 1
+        dump_if_open("%s > 0" % t['length'])
+        G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
+        dump_for_open('i', t['length'])
+        G.out.append("MPIR_ERRTEST_COUNT(%s[i], mpi_errno);" % name)
+        dump_for_close()
+        dump_if_close()
+    elif kind == "TYPE-ARRAY":
+        G.err_codes['MPI_ERR_ARG'] = 1
+        G.err_codes['MPI_ERR_TYPE'] = 1
+        dump_if_open("%s > 0" % t['length'])
+        G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
+        dump_for_open('i', t['length'])
+        dump_if_open("%s[i] != MPI_DATATYPE_NULL && !HANDLE_IS_BUILTIN(%s[i])" % (name, name))
+        G.out.append("MPIR_Datatype *datatype_ptr;")
+        G.out.append("MPIR_Datatype_get_ptr(%s[i], datatype_ptr);" % name)
+        G.out.append("MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);")
+        dump_error_check('')
+        dump_if_close()
+        dump_for_close()
+        dump_if_close()
     else:
         print("Unhandled validation kind: %s - %s" % (kind, name), file=sys.stderr)
 

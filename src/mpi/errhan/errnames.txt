@@ -854,42 +854,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 #
 # mpi functions
 #
-**mpi_get_count:MPI_Get_count failed
-**mpi_get_count %p %D %p:MPI_Get_count(status=%p, %D, count=%p) failed
-**mpi_type_contiguous:MPI_Type_continuous failed
-**mpi_type_contiguous %d %D %p:MPI_Type_contiguous(count=%d, %D, new_type_p=%p) failed
-**mpi_type_vector:MPI_Type_vector failed
-**mpi_type_vector %d %d %d %D %p:MPI_Type_vector(count=%d, blocklength=%d, stride=%d, %D, new_type_p=%p) failed
-**mpi_type_hvector:MPI_Type_hvector failed
-**mpi_type_hvector %d %d %d %D %p:MPI_Type_hvector(count=%d, blocklen=%d, stride=%d, %D, new_type_p=%p) failed
-**mpi_type_indexed:MPI_Type_indexed failed
-**mpi_type_indexed %d %p %p %D %p:MPI_Type_indexed(count=%d, blocklens=%p, indices=%p, %D, new_type_p=%p) failed
-**mpi_type_hindexed:MPI_Type_hindexed failed
-**mpi_type_hindexed %d %p %p %D %p:MPI_Type_hindexed(count=%d, blocklens=%p, indices=%p, %D, new_type_p=%p) failed
-**mpi_type_struct:MPI_Type_struct failed
-**mpi_type_struct %d %p %p %p %p:MPI_Type_struct(count=%d, blocklens=%p, indices=%p, old_types=%p, new_type_p=%p) failed
 **mpi_address:MPI_Address failed
 **mpi_address %p %p:MPI_Address(location=%p, address=%p) failed
-**mpi_type_extent:MPI_Type_extent failed
-**mpi_type_extent %D %p:MPI_Type_extent(%D, extent=%p) failed
-**mpi_type_size:MPI_Type_size failed
-**mpi_type_size %D %p:MPI_Type_size(%D) failed
-**mpi_type_lb:MPI_Type_lb failed
-**mpi_type_lb %D %p:MPI_Type_lb(%D, displacement=%p) failed
-**mpi_type_ub:MPI_Type_ub failed
-**mpi_type_ub %D %p:MPI_Type_ub(%D, displacement=%p) failed
-**mpi_type_commit:MPI_Type_commit failed
-**mpi_type_commit %p:MPI_Type_commit(datatype_p=%p) failed
-**mpi_type_free:MPI_Type_free failed
-**mpi_type_free %p:MPI_Type_free(datatype_p=%p) failed
-**mpi_get_elements:MPI_Get_elements failed
-**mpi_get_elements %p %D %p:MPI_Get_elements(status=%p, %D, elements=%p) failed
-**mpi_pack:MPI_Pack failed
-**mpi_pack %p %d %D %p %d %p %C:MPI_Pack(inbuf=%p, incount=%d, %D, outbuf=%p, outcount=%d, position=%p, %C) failed
-**mpi_unpack:MPI_Unpack failed
-**mpi_unpack %p %d %p %p %d %D %C:MPI_Unpack(inbuf=%p, insize=%d, position=%p, outbuf=%p, outcount=%d, %D, %C) failed
-**mpi_pack_size:MPI_Pack_size failed
-**mpi_pack_size %d %D %C %p:MPI_Pack_size(count=%d, %D, %C, size=%p) failed
 **mpi_barrier:MPI_Barrier failed
 **mpi_barrier %C:MPI_Barrier(comm=%C) failed
 **mpi_bcast:MPI_Bcast failed
@@ -976,48 +942,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_alltoallw %p %p %p %p %p %p %p %p %C:MPI_Alltoallw(sbuf=%p, scnts=%p, sdispls=%p, stypes=%p, rbuf=%p, rcnts=%p, rdispls=%p, rtypes=%p, %C) failed
 **mpi_exscan:MPI_Exscan failed
 **mpi_exscan %p %p %d %D %O %C:MPI_Exscan(sbuf=%p, rbuf=%p, count=%d, %D, %O, %C) failed
-**mpi_status_set_elements:MPI_Status_set_elements failed
-**mpi_status_set_elements %p %D %d:MPI_Status_set_elements(status=%p, %D, count=%d) failed
-**mpi_type_dup:MPI_Type_dup failed
-**mpi_type_dup %D %p:MPI_Type_dup(%D, newtype=%p) failed
-**mpi_type_get_contents:MPI_Type_get_contents failed
-**mpi_type_get_contents %D %d %d %d %p %p %p:MPI_Type_get_contents(%D, max_integers=%d, max_addresses=%d, max_datatypes=%d, array_of_integers=%p, array_of_addresses=%p, array_of_datatypes=%p) failed
-**mpi_type_get_envelope:MPI_Type_get_envelope failed
-**mpi_type_get_envelope %D %p %p %p %p:MPI_Type_get_envelope(%D, num_integers=%p, num_addresses=%p, num_datatypes=%p, combiner=%p) failed
-**mpi_type_get_name:MPI_Type_get_name failed
-**mpi_type_get_name %D %p %p:MPI_Type_get_name(%D, type_name=%p, resultlen=%p) failed
-**mpi_type_set_name:MPI_Type_set_name failed
-**mpi_type_set_name %D %s:MPI_Type_set_name(%D, type_name=%s) failed
-**mpi_type_match_size:MPI_Type_match_size failed
-**mpi_type_match_size %d %d %p:MPI_Type_match_size(typeclass=%d, size=%d, datatype=%p) failed
-**mpi_get_address:MPI_Get_address failed
-**mpi_get_address %p %p:MPI_Get_address(location=%p, address=%p) failed
-**mpi_pack_external:MPI_Pack_external failed
-**mpi_pack_external %s %p %d %D %p %d %p:MPI_Pack_external(datarep=%s, inbuf=%p, incount=%d, %D, outbuf=%p, outcount=%d, position=%p) failed
-**mpi_pack_external_size:MPI_Pack_external_size failed
-**mpi_pack_external_size %s %d %D %p:MPI_Pack_external_size(datarep=%s, incount=%d, %D, size=%p) failed
-**mpi_type_create_darray:MPI_Type_create_darray failed
-**mpi_type_create_darray %d %d %d %p %p %p %p %d %D %p:MPI_Type_create_darray(size=%d, rank=%d, ndims=%d, array_of_gsizes=%p, array_of_distribs=%p, array_of_dargs=%p, array_of_psizes=%p, order=%d, %D, newtype=%p) failed
-**mpi_type_create_hindexed:MPI_Type_create_hindexed failed
-**mpi_type_create_hindexed %d %p %p %D %p:MPI_Type_create_hindexed(count=%d, array_of_blocklengths=%p, array_of_displacements=%p, %D, newtype=%p) failed
-**mpi_type_create_hvector:MPI_Type_create_hvector failed
-**mpi_type_create_hvector %d %d %d %D %p:MPI_Type_create_hvector(count=%d, blocklength=%d, stride=%d, %D, newtype=%p) failed
-**mpi_type_create_indexed_block:MPI_Type_create_indexed_block failed
-**mpi_type_create_indexed_block %d %d %p %D %p:MPI_Type_create_indexed_block(count=%d, blocklength=%d, array_of_displacements=%p, %D, newtype=%p) failed
-**mpi_type_create_hindexed_block:MPI_Type_create_hindexed_block failed
-**mpi_type_create_hindexed_block %d %d %p %D %p:MPI_Type_create_hindexed_block(count=%d, blocklength=%d, array_of_displacements=%p, %D, newtype=%p) failed
-**mpi_type_create_resized:MPI_Type_create_resized failed
-**mpi_type_create_resized %D %L %L %p:MPI_Type_create_resized(%D, lb=%L, extent=%L, newtype=%p) failed
-**mpi_type_create_struct:MPI_Type_create_struct failed
-**mpi_type_create_struct %d %p %p %p %p:MPI_Type_create_struct(count=%d, array_of_blocklengths=%p, array_of_displacements=%p, array_of_types=%p, newtype=%p) failed
-**mpi_type_create_subarray:MPI_Type_create_subarray failed
-**mpi_type_create_subarray %d %p %p %p %d %D %p:MPI_Type_create_subarray(ndims=%d, array_of_sizes=%p, array_of_subsizes=%p, array_of_starts=%p, order=%d, %D, newtype=%p) failed
-**mpi_type_get_extent:MPI_Type_get_extent failed
-**mpi_type_get_extent %D %p %p:MPI_Type_get_extent(%D, lb=%p, extent=%p) failed
-**mpi_type_get_true_extent:MPI_Type_get_true_extent failed
-**mpi_type_get_true_extent %D %p %p:MPI_Type_get_true_extent(%D, lb=%p, true_extent=%p) failed
-**mpi_unpack_external:MPI_Unpack_external failed
-**mpi_unpack_external %s %p %d %p %p %d %D:MPI_Unpack_external(datarep=%s, inbuf=%p, insize=%d, position=%p, outbuf=%p, outcount=%d, %D) failed
 **mpi_register_datarep:MPI_Register_datarep failed
 **mpi_register_datarep %s %p %p %p %p:MPI_Register_datarep(datarep=%s, read_conversion_fn=%p, write_conversion_fn=%p, dtype_file_extent_fn=%p, extra_state=%p) failed
 **mpi_dist_graph_create: MPI_Dist_graph_create failed
@@ -1095,18 +1019,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_neighbor_alltoallv %p %p %p %D %p %p %p %D %C: MPI_Neighbor_alltoallv(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtype=%D, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtype=%D, comm=%C)
 **mpi_neighbor_alltoallw: MPI_Neighbor_alltoallw failed
 **mpi_neighbor_alltoallw %p %p %p %p %p %p %p %p %C: MPI_Neighbor_alltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C)
-
-## MPI-3 "large count" functions
-**mpi_type_size_x: MPI_Type_size_x failed
-**mpi_type_size_x %D %p: MPI_Type_size_x(datatype=%D, size=%p)
-**mpi_type_get_extent_x: MPI_Type_get_extent_x failed
-**mpi_type_get_extent_x %D %p %p: MPI_Type_get_extent_x(datatype=%D, lb=%p, extent=%p)
-**mpi_type_get_true_extent_x: MPI_Type_get_true_extent_x failed
-**mpi_type_get_true_extent_x %D %p %p: MPI_Type_get_true_extent_x(datatype=%D, lb=%p, extent=%p)
-**mpi_get_elements_x: MPI_Get_elements_x failed
-**mpi_get_elements_x %p %D %p: MPI_Get_elements_x(status=%p, datatype=%D, count=%p)
-**mpi_status_set_elements_x: MPI_Status_set_elements_x failed
-**mpi_status_set_elements_x %p %D %c: MPI_Status_set_elements_x(status=%p, datatype=%D, count=%c)
 
 # Datarep conversion function not supported by ROMIO (Temproary until implemented)
 **drconvnotsupported:Read and Write datarep conversions are currently not supported by MPI-IO
