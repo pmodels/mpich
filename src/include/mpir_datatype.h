@@ -351,6 +351,12 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
     }                                                               \
     } while (0)
 
+#define MPIR_DATATYPE_IS_PREDEFINED(type) \
+    ((HANDLE_IS_BUILTIN((type))) || \
+     (type == MPI_FLOAT_INT) || (type == MPI_DOUBLE_INT) || \
+     (type == MPI_LONG_INT) || (type == MPI_SHORT_INT) || \
+     (type == MPI_LONG_DOUBLE_INT))
+
 static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
 {
     int i, struct_sz = sizeof(MPIR_Datatype_contents);
@@ -506,12 +512,6 @@ void MPIR_Type_release_contents(MPI_Datatype type, int **ints_p, MPI_Aint ** ain
    at finalize-time */
 void MPII_Datatype_attr_finalize(void);
 int MPII_Type_zerolen(MPI_Datatype * newtype);
-
-#define MPIR_DATATYPE_IS_PREDEFINED(type) \
-    ((HANDLE_IS_BUILTIN((type))) || \
-     (type == MPI_FLOAT_INT) || (type == MPI_DOUBLE_INT) || \
-     (type == MPI_LONG_INT) || (type == MPI_SHORT_INT) || \
-     (type == MPI_LONG_DOUBLE_INT))
 
 int MPIR_Get_elements_x_impl(MPI_Count * bytes, MPI_Datatype datatype, MPI_Count * elements);
 void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * extent);

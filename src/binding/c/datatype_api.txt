@@ -218,12 +218,7 @@ MPI_Status_set_elements_x:
 MPI_Type_commit:
     .desc: Commits the datatype
 { -- early_return --
-    if (HANDLE_IS_BUILTIN(*datatype)) {
-        goto fn_exit;
-    }
-    if (*datatype == MPI_FLOAT_INT || *datatype == MPI_DOUBLE_INT ||
-        *datatype == MPI_LONG_INT || *datatype == MPI_SHORT_INT ||
-        *datatype == MPI_LONG_DOUBLE_INT) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(*datatype)) {
         goto fn_exit;
     }
 }
@@ -241,15 +236,7 @@ MPI_Type_free:
     it clear that it is an error to free a null datatype.
 */
 { -- error_check --
-    if (HANDLE_IS_BUILTIN(*datatype)) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         __func__, __LINE__, MPI_ERR_TYPE,
-                                         "**dtypeperm", 0);
-        goto fn_fail;
-    }
-    if (*datatype == MPI_FLOAT_INT || *datatype == MPI_DOUBLE_INT ||
-        *datatype == MPI_LONG_INT || *datatype == MPI_SHORT_INT ||
-        *datatype == MPI_LONG_DOUBLE_INT) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(*datatype)) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                          __func__, __LINE__, MPI_ERR_TYPE,
                                          "**dtypeperm", 0);
@@ -306,9 +293,7 @@ MPI_Type_get_contents:
     if (max_datatypes > 0) {
         MPIR_ERRTEST_ARGNULL(array_of_datatypes, "array_of_datatypes", mpi_errno);
     }
-    if (HANDLE_IS_BUILTIN(datatype) || datatype == MPI_FLOAT_INT ||
-        datatype == MPI_DOUBLE_INT || datatype == MPI_LONG_INT ||
-        datatype == MPI_SHORT_INT || datatype == MPI_LONG_DOUBLE_INT) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE, "**contentspredef", 0);
         goto fn_fail;
     }
