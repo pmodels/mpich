@@ -9,6 +9,10 @@
 **initialized:MPI not initialized. Call MPI_Init or MPI_Init_thread first
 **finalized:MPI has already called MPI_Finalize
 **inittwice:Cannot call MPI_INIT or MPI_INIT_THREAD more than once
+**psetinvalidn:Invalid pset number
+**psetinvalidname:Invalid pset name
+**session:Invalid MPI_Session handle
+**sessionnull: NULL MPI_Session
 **nomem:Out of memory
 **nomem %s %d:Out of memory (unable to allocate a '%s' of size %d)
 **nomem %s:Out of memory (unable to allocate a '%s')

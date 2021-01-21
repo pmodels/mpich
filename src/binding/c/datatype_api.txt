@@ -353,7 +353,7 @@ MPI_Type_size:
     .desc: Return the number of bytes occupied by entries in the datatype
     .skip: global_cs
 {
-    MPI_Aint size_x;
+    MPI_Count size_x;
     mpi_errno = MPIR_Type_size_x_impl(datatype, &size_x);
     MPIR_ERR_CHECK(mpi_errno);
 
