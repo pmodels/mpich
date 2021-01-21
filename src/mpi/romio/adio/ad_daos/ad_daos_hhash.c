@@ -148,7 +148,7 @@ int adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl)
 
     char *group = NULL;
     daos_pool_info_t pool_info;
-#if DAOS_API_VERSION_MAJOR < 1
+#if !defined(DAOS_API_VERSION_MAJOR) || DAOS_API_VERSION_MAJOR < 1
     /** Get the SVCL and Server group from env variables. This is temp as those
      * won't be needed later */
     char *svcl_str = NULL;
@@ -166,7 +166,7 @@ int adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl)
 #endif
     group = getenv("DAOS_GROUP");
 
-#if DAOS_API_VERSION_MAJOR < 1
+#if !defined(DAOS_API_VERSION_MAJOR) || DAOS_API_VERSION_MAJOR < 1
     rc = daos_pool_connect(uuid, group, svcl, DAOS_PC_RW, &phdl->open_hdl, &pool_info, NULL);
     d_rank_list_free(svcl);
 #else

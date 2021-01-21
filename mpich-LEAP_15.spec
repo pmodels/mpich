@@ -15,7 +15,7 @@
 # Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
 
-%global daos_major 0
+%global daos_major 1
 
 # Static libraries are disabled by default
 # for non HPC builds
@@ -62,7 +62,7 @@
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        3
+Release:        4
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
@@ -460,6 +460,9 @@ fi
 %endif # !testsuite
 
 %changelog
+* Wed Jan 20 2021 Kenneth Cain <kenneth.c.cain@intel.com> - 3.4~a2-4
+- Update packaging for building with libdaos.so.1
+
 * Mon Jun 22 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-3
 - Add Requires: daos-devel to devel subpackage
 
