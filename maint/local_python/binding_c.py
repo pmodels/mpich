@@ -811,32 +811,24 @@ def dump_CHECKENUM(var, errname, t, type="ENUM"):
     dump_if_close()
 
 def dump_body_coll(func):
-    # collectives call either MPID or MPIR depending on CVARs
+    # collectives call MPIR_Xxx
     RE.match(r'MPI_(\w+)', func['name'])
     name = RE.m.group(1)
 
-    if name.startswith('I'):
-        G.out.append("MPIR_Request *request_ptr = NULL;")
-
-    cond_a = "MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all"
-    cond_b1 = "MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll"
-    cond_b2 = "MPIR_CVAR_%s_DEVICE_COLLECTIVE" % name.upper()
-
     args = ", ".join(func['impl_arg_list'])
-    if not name.startswith('I'):
-        G.out.append("MPIR_Errflag_t errflag = MPIR_ERR_NONE;")
-        args = args + ", " + "&errflag"
-    G.out.append("if (%s || (%s && %s)) {" % (cond_a, cond_b1, cond_b2))
-    dump_line_with_break("    mpi_errno = MPID_%s(%s);" % (name, args))
-    G.out.append("} else {")
-    dump_line_with_break("    mpi_errno = MPIR_%s_impl(%s);" % (name, args))
-    G.out.append("}")
-    dump_error_check("")
     if name.startswith('I'):
+        # non-blocking collectives
+        G.out.append("MPIR_Request *request_ptr = NULL;")
+        dump_line_with_break("mpi_errno = MPIR_%s(%s);" % (name, args))
+        dump_error_check("")
         G.out.append("if (!request_ptr) {")
         G.out.append("    request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);")
         G.out.append("}")
         G.out.append("*request = request_ptr->handle;")
+    else:
+        # blocking collectives
+        G.out.append("MPIR_Errflag_t errflag = MPIR_ERR_NONE;")
+        dump_line_with_break("mpi_errno = MPIR_%s(%s, &errflag);" % (name, args))
 
 def dump_body_impl(func, prefix='mpir'):
     # mpi_errno = MPIR_Xxx_impl(...);
@@ -1265,10 +1257,14 @@ def dump_validation(func, t):
         G.out.append("    MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
         G.out.append("}")
     elif RE.search(r'USERBUFFER', kind):
+        G.err_codes['MPI_ERR_BUFFER'] = 1
+        G.err_codes['MPI_ERR_COUNT'] = 1
+        G.err_codes['MPI_ERR_TYPE'] = 1
         p = name.split(',')
         if kind == "USERBUFFER-simple":
             dump_validate_userbuffer_simple(func, p[0], p[1], p[2])
         elif kind == "USERBUFFER-reduce":
+            G.err_codes['MPI_ERR_OP'] = 1
             dump_validate_userbuffer_reduce(func, p[0], p[1], p[2], p[3], p[4])
         elif kind == "USERBUFFER-neighbor":
             dump_validate_userbuffer_simple(func, p[0], p[1], p[2])
@@ -1457,7 +1453,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         if RE.search(r'reduce_scatter$', func['name'], re.IGNORECASE):
             dump_validate_get_comm_size(func)
             G.out.append("int sum = 0;")
-            dump_for_open('i', comm_size)
+            dump_for_open('i', 'comm_size')
             G.out.append("MPIR_ERRTEST_COUNT(%s[i], mpi_errno);" % ct)
             G.out.append("sum += %s[i];" % ct)
             dump_for_close()
