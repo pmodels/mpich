@@ -229,6 +229,12 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **invalidmembind %d: cannot bind memory to object (%d). \
 A memory object id was expected but a non-memory object id was passed instead
 
+**partitionsneg: Negative partitions
+**partitionsneg %d: Negative partitions, value is %d
+**partitioninvalid: Invalid partition
+**partitioninvalid %d: Invalid partition, value is %d 
+**partitioninvalid %d %d: Invalid partition range, values are %d %d
+
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.
 #
@@ -329,6 +335,8 @@ be in the range 0 to %d
 **requestinvalidstart:Request is neither persistent nor partitioned in MPI_Start or MPI_Startall.
 **requestpersistactive:Persistent request passed to MPI_Start or MPI_Startall is already active.
 **requestpartactive:Partitioned request passed to MPI_Start or MPI_Startall is already active.
+**requestinvalidpready: Invalid or inactive partitioned send request passed to MPI_Pready, MPI_Pready_range or MPI_Pready_list.
+**requestinvalidparrived: Invalid or inactive partitioned receive request passed to MPI_Parrived.
 **fileaccess:Access denied to file
 **fileaccess %s:Access denied to file %s
 **fileamode:Invalid amode value in MPI_File_open 
