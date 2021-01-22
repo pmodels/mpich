@@ -980,6 +980,13 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, int 
 int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
                          int sendtag, int source, int recvtag, MPI_Comm comm,
                          MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_API_PUBLIC;
+int MPI_Isendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest,
+                  int sendtag, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                  int source, int recvtag, MPI_Comm comm, MPI_Request *request)
+                  MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_ATTR_POINTER_WITH_TYPE_TAG(6,8) MPICH_API_PUBLIC;
+int MPI_Isendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
+                          int sendtag, int source, int recvtag, MPI_Comm comm,
+                          MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_API_PUBLIC;
 int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype *newtype) MPICH_API_PUBLIC;
 int MPI_Type_vector(int count, int blocklength, int stride, MPI_Datatype oldtype,
                     MPI_Datatype *newtype) MPICH_API_PUBLIC;
@@ -1639,6 +1646,14 @@ int PMPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, int
 int PMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
                           int sendtag, int source, int recvtag, MPI_Comm comm,
                           MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_API_PUBLIC;
+int PMPI_Isendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest,
+                   int sendtag, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                   int source, int recvtag, MPI_Comm comm, MPI_Request *request)
+                   MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3)
+                   MPICH_ATTR_POINTER_WITH_TYPE_TAG(6,8) MPICH_API_PUBLIC;
+int PMPI_Isendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
+                           int sendtag, int source, int recvtag, MPI_Comm comm,
+                           MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_API_PUBLIC;
 int PMPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype *newtype) MPICH_API_PUBLIC;
 int PMPI_Type_vector(int count, int blocklength, int stride, MPI_Datatype oldtype,
                      MPI_Datatype *newtype) MPICH_API_PUBLIC;
