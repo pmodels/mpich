@@ -19,6 +19,8 @@ enum MPIDU_Sched_entry_type {
     /* _SEND_DEFER is easily implemented via _SEND */
     MPIDU_SCHED_ENTRY_RECV,
     /* _RECV_STATUS is easily implemented via _RECV */
+    MPIDU_SCHED_ENTRY_PT2PT_SEND,
+    MPIDU_SCHED_ENTRY_PT2PT_RECV,
     MPIDU_SCHED_ENTRY_REDUCE,
     MPIDU_SCHED_ENTRY_COPY,
     MPIDU_SCHED_ENTRY_NOP,
@@ -31,6 +33,7 @@ struct MPIDU_Sched_send {
     MPI_Aint count;
     const MPI_Aint *count_p;
     MPI_Datatype datatype;
+    int tag;                    /* only used for _PT2PT_SEND */
     int dest;
     struct MPIR_Comm *comm;
     struct MPIR_Request *sreq;
@@ -41,6 +44,7 @@ struct MPIDU_Sched_recv {
     void *buf;
     MPI_Aint count;
     MPI_Datatype datatype;
+    int tag;                    /* only used for _PT2PT_RECV */
     int src;
     struct MPIR_Comm *comm;
     struct MPIR_Request *rreq;
@@ -129,6 +133,10 @@ int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
                      struct MPIR_Comm *comm, MPIR_Sched_t s);
 int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
                      struct MPIR_Comm *comm, MPIR_Sched_t s);
+int MPIDU_Sched_pt2pt_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                           int tag, int dest, struct MPIR_Comm *comm, MPIR_Sched_t s);
+int MPIDU_Sched_pt2pt_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                           int tag, int src, struct MPIR_Comm *comm, MPIR_Sched_t s);
 int MPIR_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
                      struct MPIR_Comm *comm, MPIR_Sched_t s);
 int MPIR_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,

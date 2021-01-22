@@ -173,3 +173,116 @@ int MPIR_Sendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int 
   fn_fail:
     goto fn_exit;
 }
+
+int MPIR_Isendrecv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                        int dest, int sendtag,
+                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                        int source, int recvtag, MPIR_Comm * comm_ptr, MPIR_Request ** p_req)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (unlikely(source == MPI_PROC_NULL)) {
+        /* recv from MPI_PROC_NULL, just send */
+        mpi_errno = MPID_Isend(sendbuf, sendcount, sendtype, dest, sendtag, comm_ptr,
+                               MPIR_CONTEXT_INTRA_PT2PT, p_req);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    } else if (unlikely(dest == MPI_PROC_NULL)) {
+        /* send to MPI_PROC_NULL, just recv */
+        mpi_errno = MPID_Irecv(recvbuf, recvcount, recvtype, source, recvtag, comm_ptr,
+                               MPIR_CONTEXT_INTRA_PT2PT, p_req);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
+
+    MPIR_Sched_t s = MPIR_SCHED_NULL;
+
+    mpi_errno = MPIR_Sched_create(&s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Sched_pt2pt_send(sendbuf, sendcount, sendtype, sendtag, dest, comm_ptr, s);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Sched_pt2pt_recv(recvbuf, recvcount, recvtype, recvtag, source, comm_ptr, s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* note: we are not using collective tag, so passing in 0 as a dummy */
+    mpi_errno = MPIR_Sched_start(&s, comm_ptr, 0, p_req);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int release_temp_buffer(MPIR_Comm * comm_ptr, int tag, void *state)
+{
+    MPL_free(state);
+    return MPI_SUCCESS;
+}
+
+int MPIR_Isendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag,
+                                int source, int recvtag, MPIR_Comm * comm_ptr,
+                                MPIR_Request ** p_req)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (unlikely(source == MPI_PROC_NULL)) {
+        /* recv from MPI_PROC_NULL, just send */
+        mpi_errno = MPID_Isend(buf, count, datatype, dest, sendtag, comm_ptr,
+                               MPIR_CONTEXT_INTRA_PT2PT, p_req);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    } else if (unlikely(dest == MPI_PROC_NULL)) {
+        /* send to MPI_PROC_NULL, just recv */
+        mpi_errno = MPID_Irecv(buf, count, datatype, source, recvtag, comm_ptr,
+                               MPIR_CONTEXT_INTRA_PT2PT, p_req);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
+
+    void *tmpbuf = NULL;
+    if (count > 0 && dest != MPI_PROC_NULL) {
+        MPI_Aint tmpbuf_size = 0;
+        MPI_Aint actual_pack_bytes;
+        MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);
+
+        tmpbuf = MPL_malloc(tmpbuf_size, MPL_MEM_BUFFER);
+        if (!tmpbuf) {
+            MPIR_CHKMEM_SETERR(mpi_errno, tmpbuf_size, "temporary send buffer");
+            goto fn_fail;
+        }
+
+        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, tmpbuf, tmpbuf_size,
+                                      &actual_pack_bytes);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(tmpbuf_size == actual_pack_bytes);
+    }
+
+    MPIR_Sched_t s = MPIR_SCHED_NULL;
+    int sched_tag;
+
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &sched_tag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Sched_create(&s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Sched_pt2pt_send(tmpbuf, count, datatype, sendtag, dest, comm_ptr, s);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Sched_pt2pt_recv(buf, count, datatype, recvtag, source, comm_ptr, s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Sched_barrier(s);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Sched_cb(&release_temp_buffer, tmpbuf, s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Sched_start(&s, comm_ptr, sched_tag, p_req);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}

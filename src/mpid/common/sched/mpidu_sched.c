@@ -275,6 +275,26 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                 e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
             }
             break;
+        case MPIDU_SCHED_ENTRY_PT2PT_SEND:
+            ret_errno = MPID_Isend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
+                                   e->u.send.dest, e->u.send.tag, e->u.send.comm,
+                                   MPIR_CONTEXT_INTRA_PT2PT, &e->u.send.sreq);
+            if (unlikely(ret_errno)) {
+                e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+            } else {
+                e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
+            }
+            break;
+        case MPIDU_SCHED_ENTRY_PT2PT_RECV:
+            ret_errno = MPID_Irecv(e->u.recv.buf, e->u.recv.count, e->u.recv.datatype,
+                                   e->u.recv.src, e->u.recv.tag, e->u.recv.comm,
+                                   MPIR_CONTEXT_INTRA_PT2PT, &e->u.recv.rreq);
+            if (unlikely(ret_errno)) {
+                e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+            } else {
+                e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
+            }
+            break;
         case MPIDU_SCHED_ENTRY_REDUCE:
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "starting REDUCE entry %d\n", (int) idx);
             mpi_errno =
@@ -586,6 +606,40 @@ int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
     goto fn_exit;
 }
 
+int MPIDU_Sched_pt2pt_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                           int tag, int dest, MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct MPIDU_Sched_entry *e = NULL;
+
+    mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    e->type = MPIDU_SCHED_ENTRY_PT2PT_SEND;
+    e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
+    e->is_barrier = FALSE;
+
+    e->u.send.buf = buf;
+    e->u.send.count = count;
+    e->u.send.count_p = NULL;
+    e->u.send.datatype = datatype;
+    e->u.send.dest = dest;
+    e->u.send.sreq = NULL;      /* will be populated by _start_entry */
+    e->u.send.comm = comm;
+    e->u.send.is_sync = FALSE;
+    e->u.send.tag = tag;
+
+    /* the user may free the comm & type after initiating but before the
+     * underlying send is actually posted, so we must add a reference here and
+     * release it at entry completion time */
+    MPIR_Comm_add_ref(comm);
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 int MPIDU_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
                       MPIR_Comm * comm, MPIR_Sched_t s)
@@ -706,6 +760,37 @@ int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, 
     e->u.recv.rreq = NULL;      /* will be populated by _start_entry */
     e->u.recv.comm = comm;
     e->u.recv.status = MPI_STATUS_IGNORE;
+
+    MPIR_Comm_add_ref(comm);
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDU_Sched_pt2pt_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                           int tag, int src, MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct MPIDU_Sched_entry *e = NULL;
+
+    mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    e->type = MPIDU_SCHED_ENTRY_PT2PT_RECV;
+    e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
+    e->is_barrier = FALSE;
+
+    e->u.recv.buf = buf;
+    e->u.recv.count = count;
+    e->u.recv.datatype = datatype;
+    e->u.recv.src = src;
+    e->u.recv.rreq = NULL;      /* will be populated by _start_entry */
+    e->u.recv.comm = comm;
+    e->u.recv.status = MPI_STATUS_IGNORE;
+    e->u.recv.tag = tag;
 
     MPIR_Comm_add_ref(comm);
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
@@ -916,6 +1001,32 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                             e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
                         else
                             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
+                        MPIR_Request_free(e->u.recv.rreq);
+                        e->u.recv.rreq = NULL;
+                        MPIR_Comm_release(e->u.recv.comm);
+                        MPIR_Datatype_release_if_not_builtin(e->u.recv.datatype);
+                    }
+                    break;
+                case MPIDU_SCHED_ENTRY_PT2PT_SEND:
+                    if (e->u.send.sreq != NULL && MPIR_Request_is_complete(e->u.send.sreq)) {
+                        if (s->req->status.MPI_ERROR) {
+                            e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                        } else {
+                            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
+                        }
+                        MPIR_Request_free(e->u.send.sreq);
+                        e->u.send.sreq = NULL;
+                        MPIR_Comm_release(e->u.send.comm);
+                        MPIR_Datatype_release_if_not_builtin(e->u.send.datatype);
+                    }
+                    break;
+                case MPIDU_SCHED_ENTRY_PT2PT_RECV:
+                    if (e->u.recv.rreq != NULL && MPIR_Request_is_complete(e->u.recv.rreq)) {
+                        if (s->req->status.MPI_ERROR) {
+                            e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                        } else {
+                            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
+                        }
                         MPIR_Request_free(e->u.recv.rreq);
                         e->u.recv.rreq = NULL;
                         MPIR_Comm_release(e->u.recv.comm);
