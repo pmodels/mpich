@@ -6,6 +6,8 @@
 **ch4|badmsgtype:request contained an invalid message type
 **ch4|badreqtype %d:request contained an invalid request type (%d)
 **ch4|badreqtype:request contained an invalid request type
+**ch4|badstartreq %d:start an invalid request kind (%d)
+**ch4|badstartreq:start an invalid request kind
 **ch4|cancelreq:failure occurred while sending remote cancellation request packet
 **ch4|cancelresp:failure occurred while attempting to send cancel response packet
 **ch4|cancelrndv:failure occurred while performing local cancellation of a rendezvous message
