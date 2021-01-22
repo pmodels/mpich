@@ -1313,6 +1313,12 @@ def dump_validate_handle_ptr(func, p):
             G.out.append("MPIR_ERRTEST_STARTREQ(%s, mpi_errno);" % ptr_name)
             G.out.append("MPIR_ERRTEST_STARTREQ_ACTIVE(%s, mpi_errno);" % ptr_name)
 
+        if kind == "REQUEST" and RE.match(r'mpi_pready(_range|_list)?$', func_name, re.IGNORECASE):
+            G.out.append("MPIR_ERRTEST_PREADYREQ(%s, mpi_errno);" % ptr_name)
+
+        if kind == "REQUEST" and RE.match(r'mpi_parrived', func_name, re.IGNORECASE):
+            G.out.append("MPIR_ERRTEST_PARRIVEDREQ(%s, mpi_errno);" % ptr_name)
+
         if kind == "WINDOW" and RE.match(r'mpi_win_shared_query', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_WIN_FLAVOR(win_ptr, MPI_WIN_FLAVOR_SHARED, mpi_errno);")
 
