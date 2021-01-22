@@ -256,3 +256,27 @@ void MPIR_Coll_host_buffer_free(void *host_sendbuf, void *host_recvbuf)
     MPL_free(host_sendbuf);
     MPL_free(host_recvbuf);
 }
+
+void MPIR_Coll_host_buffer_swap_back(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
+                                     MPI_Aint count, MPI_Datatype datatype, MPIR_Request * request)
+{
+    if (host_recvbuf == NULL) {
+        /* no copy at completion necessary, just return */
+        return;
+    }
+
+    if (request == NULL || MPIR_Request_is_complete(request)) {
+        /* operation is complete, copy the data and return */
+        MPIR_Localcopy(host_recvbuf, count, datatype, in_recvbuf, count, datatype);
+        MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);
+        return;
+    }
+
+    /* data will be copied later during request completion */
+    request->u.nbc.coll.host_sendbuf = host_sendbuf;
+    request->u.nbc.coll.host_recvbuf = host_recvbuf;
+    request->u.nbc.coll.user_recvbuf = in_recvbuf;
+    request->u.nbc.coll.count = count;
+    request->u.nbc.coll.datatype = datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+}
