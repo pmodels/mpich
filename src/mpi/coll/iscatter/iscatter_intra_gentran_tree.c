@@ -10,8 +10,8 @@
 #include "iscatter_tsp_tree_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Iscatter_intra_gentran_tree(const void *sendbuf, int sendcount,
-                                     MPI_Datatype sendtype, void *recvbuf, int recvcount,
+int MPIR_Iscatter_intra_gentran_tree(const void *sendbuf, MPI_Aint sendcount,
+                                     MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                      MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr, int k,
                                      MPIR_Request ** request)
 {

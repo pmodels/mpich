@@ -56,7 +56,7 @@ cvars:
 */
 
 
-int MPIR_Ineighbor_allgatherv_allcomm_auto(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgatherv_allcomm_auto(const void *sendbuf, MPI_Aint sendcount,
                                            MPI_Datatype sendtype, void *recvbuf,
                                            const int recvcounts[], const int displs[],
                                            MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -113,7 +113,7 @@ int MPIR_Ineighbor_allgatherv_allcomm_auto(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-int MPIR_Ineighbor_allgatherv_intra_sched_auto(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgatherv_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount,
                                                MPI_Datatype sendtype, void *recvbuf,
                                                const int recvcounts[], const int displs[],
                                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -133,7 +133,7 @@ int MPIR_Ineighbor_allgatherv_intra_sched_auto(const void *sendbuf, int sendcoun
     goto fn_exit;
 }
 
-int MPIR_Ineighbor_allgatherv_inter_sched_auto(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgatherv_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount,
                                                MPI_Datatype sendtype, void *recvbuf,
                                                const int recvcounts[], const int displs[],
                                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -153,7 +153,7 @@ int MPIR_Ineighbor_allgatherv_inter_sched_auto(const void *sendbuf, int sendcoun
     goto fn_exit;
 }
 
-int MPIR_Ineighbor_allgatherv_sched_auto(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgatherv_sched_auto(const void *sendbuf, MPI_Aint sendcount,
                                          MPI_Datatype sendtype, void *recvbuf,
                                          const int recvcounts[], const int displs[],
                                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -174,7 +174,7 @@ int MPIR_Ineighbor_allgatherv_sched_auto(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
-int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, MPI_Aint sendcount,
                                    MPI_Datatype sendtype, void *recvbuf,
                                    const int recvcounts[], const int displs[],
                                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -260,7 +260,7 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-int MPIR_Ineighbor_allgatherv(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgatherv(const void *sendbuf, MPI_Aint sendcount,
                               MPI_Datatype sendtype, void *recvbuf,
                               const int recvcounts[], const int displs[],
                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Request ** request)

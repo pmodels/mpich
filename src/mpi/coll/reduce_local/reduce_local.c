@@ -8,7 +8,7 @@
 /* any utility functions should go here, usually prefixed with PMPI_LOCAL to
  * correctly handle weak symbols and the profiling interface */
 
-int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype,
+int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
                       MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -114,10 +114,10 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
 }
 
 int
-MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                      MPIR_Comm * comm, MPIR_TSP_sched_t * sched, int k,
-                                      int buffer_per_phase)
+MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
+                                      MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                      MPI_Datatype recvtype, MPIR_Comm * comm,
+                                      MPIR_TSP_sched_t * sched, int k, int buffer_per_phase)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;
@@ -378,8 +378,8 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
 }
 
 /* Non-blocking brucks based Alltoall */
-int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                     MPIR_Comm * comm_ptr, MPIR_Request ** req, int k,
                                     int buffer_per_phase)
 {

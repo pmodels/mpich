@@ -14,7 +14,7 @@
 
 int MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(const void *sendbuf,
                                                                         void *recvbuf,
-                                                                        int recvcount,
+                                                                        MPI_Aint recvcount,
                                                                         MPI_Datatype datatype,
                                                                         MPI_Op op,
                                                                         MPIR_Comm * comm_ptr,

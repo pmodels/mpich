@@ -32,9 +32,9 @@
    Cost = (2.floor(lgp)+1).alpha + (2.((p-1)/p) + 1).n.beta +
            n.(1+(p-1)/p).gamma
 */
-int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *recvbuf, int count,
-                                                   MPI_Datatype datatype, MPI_Op op, int root,
-                                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *recvbuf,
+                                                   MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
+                                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j, comm_size, rank, pof2, is_commutative ATTRIBUTE((unused));

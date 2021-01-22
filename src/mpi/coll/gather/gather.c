@@ -66,8 +66,8 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-int MPIR_Gather_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                             void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
+int MPIR_Gather_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                             void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
                              MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -121,8 +121,8 @@ int MPIR_Gather_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype se
     return mpi_errno;
 }
 
-int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Gather_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                     void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                      int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -183,8 +183,8 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     goto fn_exit;
 }
 
-int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Gather(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                 int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;

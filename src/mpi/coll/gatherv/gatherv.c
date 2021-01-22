@@ -53,7 +53,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-int MPIR_Gatherv_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Gatherv_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                               void *recvbuf, const int *recvcounts, const int *displs,
                               MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                               MPIR_Errflag_t * errflag)
@@ -97,7 +97,7 @@ int MPIR_Gatherv_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype s
     return mpi_errno;
 }
 
-int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
+int MPIR_Gatherv_impl(const void *sendbuf, MPI_Aint sendcount,
                       MPI_Datatype sendtype, void *recvbuf,
                       const int *recvcounts, const int *displs,
                       MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -157,7 +157,7 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-int MPIR_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Gatherv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                  void *recvbuf, const int *recvcounts, const int *displs,
                  MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {

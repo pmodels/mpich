@@ -26,7 +26,7 @@
  * Total Cost = 2.lgp.alpha + 2.n.((p-1)/p).beta
 */
 int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
-                                                          int count,
+                                                          MPI_Aint count,
                                                           MPI_Datatype datatype,
                                                           int root,
                                                           MPIR_Comm * comm_ptr,

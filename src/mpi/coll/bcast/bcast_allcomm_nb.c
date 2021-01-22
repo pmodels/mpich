@@ -5,7 +5,7 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Bcast_allcomm_nb(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Bcast_allcomm_nb(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                           MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;

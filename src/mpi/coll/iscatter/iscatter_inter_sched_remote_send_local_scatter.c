@@ -14,9 +14,9 @@
  * where n is the total size of the data to be scattered from the root.
  */
 
-int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, int sendcount,
+int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI_Aint sendcount,
                                                         MPI_Datatype sendtype, void *recvbuf,
-                                                        int recvcount, MPI_Datatype recvtype,
+                                                        MPI_Aint recvcount, MPI_Datatype recvtype,
                                                         int root, MPIR_Comm * comm_ptr,
                                                         MPIR_Sched_t s)
 {

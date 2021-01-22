@@ -885,8 +885,12 @@ def push_impl_decl(func, impl_name=None):
         impl_name = re.sub(r'^MPIX?_', 'MPIR_', func['name']) + "_impl"
     if func['impl_param_list']:
         params = ', '.join(func['impl_param_list'])
-        if func['dir'] == 'coll' and not RE.match(r'MPI_(I|Neighbor)', func['name']):
-            params = params + ", MPIR_Errflag_t *errflag"
+        if func['dir'] == 'coll':
+            # All collective impl function use MPI_Aint counts
+            params = re.sub(r' int (count|sendcount|recvcount),', r' MPI_Aint \1,', params)
+            # block collective use an extra errflag
+            if not RE.match(r'MPI_(I|Neighbor)', func['name']):
+                params = params + ", MPIR_Errflag_t *errflag"
     else:
         params="void"
 

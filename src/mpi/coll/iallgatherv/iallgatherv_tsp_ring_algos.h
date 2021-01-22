@@ -11,7 +11,7 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a recursive exchange based allgatherv */
-int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
+int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
                                           MPI_Datatype sendtype, void *recvbuf,
                                           const int *recvcounts, const int *displs,
                                           MPI_Datatype recvtype, MPIR_Comm * comm,
@@ -147,7 +147,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
 
 
 /* Non-blocking ring based Allgatherv */
-int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                     void *recvbuf, const int *recvcounts, const int *displs,
                                     MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req)
 {

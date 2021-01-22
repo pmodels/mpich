@@ -14,10 +14,10 @@
 #undef MPIR_TSP_Iscan_sched_intra_recursive_doubling
 #define MPIR_TSP_Iscan_sched_intra_recursive_doubling                MPIR_TSP_NAMESPACE(Iscan_sched_intra_recursive_doubling)
 
-int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
-                                                  MPI_Datatype datatype, MPI_Op op,
+int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
+                                                  MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
                                                   MPIR_Comm * comm_ptr, MPIR_TSP_sched_t * s);
 
-int MPIR_TSP_Iscan_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Iscan_intra_recursive_doubling(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                             MPI_Datatype datatype, MPI_Op op,
                                             MPIR_Comm * comm_ptr, MPIR_Request ** req);

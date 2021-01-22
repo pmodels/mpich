@@ -118,8 +118,9 @@ cvars:
 */
 
 
-int MPIR_Ireduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                              MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Request ** request)
+int MPIR_Ireduce_allcomm_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                              MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
+                              MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -199,7 +200,7 @@ int MPIR_Ireduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI
     goto fn_exit;
 }
 
-int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                   MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
                                   MPIR_Sched_t s)
 {
@@ -244,7 +245,7 @@ int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
 }
 
 int MPIR_Ireduce_inter_sched_auto(const void *sendbuf, void *recvbuf,
-                                  int count, MPI_Datatype datatype, MPI_Op op, int root,
+                                  MPI_Aint count, MPI_Datatype datatype, MPI_Op op, int root,
                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -255,8 +256,9 @@ int MPIR_Ireduce_inter_sched_auto(const void *sendbuf, void *recvbuf,
     return mpi_errno;
 }
 
-int MPIR_Ireduce_sched_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                            MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                            MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
+                            MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -271,7 +273,7 @@ int MPIR_Ireduce_sched_auto(const void *sendbuf, void *recvbuf, int count, MPI_D
     return mpi_errno;
 }
 
-int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, MPI_Aint count,
                       MPI_Datatype datatype, MPI_Op op, int root,
                       MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
@@ -373,7 +375,7 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-int MPIR_Ireduce(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce(const void *sendbuf, void *recvbuf, MPI_Aint count,
                  MPI_Datatype datatype, MPI_Op op, int root,
                  MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {

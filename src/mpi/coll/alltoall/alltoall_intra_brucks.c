@@ -19,10 +19,10 @@
  * other processes.
  */
 int MPIR_Alltoall_intra_brucks(const void *sendbuf,
-                               int sendcount,
+                               MPI_Aint sendcount,
                                MPI_Datatype sendtype,
                                void *recvbuf,
-                               int recvcount,
+                               MPI_Aint recvcount,
                                MPI_Datatype recvtype,
                                MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
