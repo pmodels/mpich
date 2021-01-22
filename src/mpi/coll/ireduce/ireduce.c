@@ -417,8 +417,8 @@ int MPIR_Ireduce(const void *sendbuf, void *recvbuf, int count,
                                       request);
     }
 
-    MPII_COLL_HOST_BUFFER_SWAP_BACK(host_sendbuf, host_recvbuf, in_recvbuf, count, datatype,
-                                    request);
+    MPIR_Coll_host_buffer_swap_back(host_sendbuf, host_recvbuf, in_recvbuf, count, datatype,
+                                    *request);
 
     return mpi_errno;
 }

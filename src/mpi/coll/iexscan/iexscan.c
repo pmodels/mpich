@@ -175,8 +175,8 @@ int MPIR_Iexscan(const void *sendbuf, void *recvbuf, int count,
         mpi_errno = MPIR_Iexscan_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
     }
 
-    MPII_COLL_HOST_BUFFER_SWAP_BACK(host_sendbuf, host_recvbuf, in_recvbuf, count, datatype,
-                                    request);
+    MPIR_Coll_host_buffer_swap_back(host_sendbuf, host_recvbuf, in_recvbuf, count, datatype,
+                                    *request);
 
     return mpi_errno;
 }
