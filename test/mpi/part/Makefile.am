@@ -18,7 +18,9 @@ noinst_PROGRAMS =  \
     start_pready_list_non_consecutive       \
     parrived                       \
     parrived_wait                  \
-    parrived_pready_out_of_order
+    parrived_pready_out_of_order   \
+    pingping
+
 
 start_pready_wait_CPPFLAGS = -DTEST_WAIT $(AM_CPPFLAGS)
 start_pready_wait_SOURCES  = start_pready.c
