@@ -66,6 +66,11 @@ static void MPIR_Call_finalize_callbacks(int min_prio, int max_prio)
     }
 }
 
+int MPII_Finalize(MPIR_Session * session_ptr)
+{
+    return MPI_SUCCESS;
+}
+
 int MPIR_Finalize_impl(void)
 {
     int mpi_errno = MPI_SUCCESS;

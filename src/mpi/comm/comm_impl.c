@@ -5,6 +5,48 @@
 
 #include "mpiimpl.h"
 
+/* temporary declaration until auto-generated */
+int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringtag,
+                                     MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_ptr,
+                                     MPIR_Comm ** newcomm_ptr);
+
+/* used in MPIR_Comm_group_impl and MPIR_Comm_create_group_impl */
+static int comm_create_local_group(MPIR_Comm * comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Group *group_ptr;
+    int n = comm_ptr->local_size;
+
+    mpi_errno = MPIR_Group_create(n, &group_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    group_ptr->is_local_dense_monotonic = TRUE;
+
+    int comm_world_size = MPIR_Process.comm_world->local_size;
+    for (int i = 0; i < n; i++) {
+        int lpid;
+        (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, FALSE);
+        group_ptr->lrank_to_lpid[i].lpid = lpid;
+        if (lpid > comm_world_size || (i > 0 && group_ptr->lrank_to_lpid[i - 1].lpid != (lpid - 1))) {
+            group_ptr->is_local_dense_monotonic = FALSE;
+        }
+    }
+
+    group_ptr->size = n;
+    group_ptr->rank = comm_ptr->rank;
+    group_ptr->idx_of_first_lpid = -1;
+
+    comm_ptr->local_group = group_ptr;
+
+    /* FIXME : Add a sanity check that the size of the group is the same as
+     * the size of the communicator.  This helps catch corrupted
+     * communicators */
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 int MPIR_Comm_agree_impl(MPIR_Comm * comm_ptr, int *flag)
 {
@@ -678,6 +720,77 @@ int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Co
     goto fn_exit;
 }
 
+/* MPIR_Comm_create_from_group_impl uses a string as tag (from MPI specification), we
+ * need translate the string into an integer tag using hash function */
+static int get_tag_from_stringtag(const char *stringtag)
+{
+    unsigned hash;
+    int n = strlen(stringtag);
+    HASH_VALUE(stringtag, n, hash);
+
+    return hash % (MPIR_Process.attrs.tag_ub);
+}
+
+int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringtag,
+                                     MPIR_Info * info_ptr, MPIR_Errhandler * errhan_ptr,
+                                     MPIR_Comm ** p_newcom_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* This implementation assumes an internal MPI_COMM_WORLD already exist.
+     *
+     * Refer to TODOs below inside the branches:
+     * The next implementation will relax but assume the first call to this function will
+     * either from a "world" pset or "self" pset, during former a comm world will be created.
+     *
+     * The final implementation will further relax and allow partial initializations.
+     */
+
+    /* NOTE: tag will be used with MPIR_TAG_COLL_BIT on, ref. MPIR_Get_contextid_sparse_group */
+    int tag = get_tag_from_stringtag(stringtag);
+
+    if (MPIR_Process.comm_world) {
+        /* Because the group_ptr may not be derived from a communicator, local_group in
+         * comm_world may not have been created */
+        if (!MPIR_Process.comm_world->local_group) {
+            mpi_errno = comm_create_local_group(MPIR_Process.comm_world);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
+    } else if (group_ptr->pset_name && strcmp(group_ptr->pset_name, "mpi://WORLD") == 0) {
+        /* TODO: once we init process is split into local init and world init, we need call
+         * world-init in this branch and then call MPIR_Comm_dup_impl(MPIR_Process.comm_world, ...)
+         */
+        MPIR_Assert(0 && "not implemented");
+        goto fn_fail;
+    } else if (group_ptr->pset_name && strcmp(group_ptr->pset_name, "mpi://SELF") == 0) {
+        /* TODO: We need refactor a function to create a self-comm as local-only operation,
+         * then just call the self-comm-creation here. */
+        /* TODO: Ideally, a single process application never need world-init and we should
+         * be able to do on-demand dynamic connections afterwards. Essentially world-init will
+         * be replaced with dynamic init. This is needed in next branch. */
+        MPIR_Assert(0 && "not implemented");
+        goto fn_fail;
+    } else {
+        /* TODO: dynamically check and establish connections */
+        MPIR_Assert(0 && "not implemented");
+        goto fn_fail;
+    }
+
+    if (info_ptr) {
+        MPII_Comm_set_hints(*p_newcom_ptr, info_ptr);
+    }
+
+    if (errhan_ptr) {
+        MPIR_Comm_set_errhandler_impl(*p_newcom_ptr, errhan_ptr);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr)
 {
     return MPIR_Comm_release(comm_ptr);
@@ -711,42 +824,17 @@ int MPIR_Comm_get_name_impl(MPIR_Comm * comm_ptr, char *comm_name, int *resultle
 int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, lpid, n;
-    int comm_world_size = MPIR_Process.comm_world->local_size;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_GROUP_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_GROUP_IMPL);
-    /* Create a group if necessary and populate it with the
-     * local process ids */
+    /* Create a local group if necessary */
     if (!comm_ptr->local_group) {
-        n = comm_ptr->local_size;
-        mpi_errno = MPIR_Group_create(n, group_ptr);
+        mpi_errno = comm_create_local_group(comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
-
-        (*group_ptr)->is_local_dense_monotonic = TRUE;
-        for (i = 0; i < n; i++) {
-            (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, FALSE);
-            (*group_ptr)->lrank_to_lpid[i].lpid = lpid;
-            if (lpid > comm_world_size ||
-                (i > 0 && (*group_ptr)->lrank_to_lpid[i - 1].lpid != (lpid - 1))) {
-                (*group_ptr)->is_local_dense_monotonic = FALSE;
-            }
-        }
-
-        (*group_ptr)->size = n;
-        (*group_ptr)->rank = comm_ptr->rank;
-        (*group_ptr)->idx_of_first_lpid = -1;
-
-        comm_ptr->local_group = *group_ptr;
-    } else {
-        *group_ptr = comm_ptr->local_group;
     }
+    *group_ptr = comm_ptr->local_group;
 
-    /* FIXME : Add a sanity check that the size of the group is the same as
-     * the size of the communicator.  This helps catch corrupted
-     * communicators */
-
-    MPIR_Group_add_ref(comm_ptr->local_group);
+    MPIR_Group_add_ref(*group_ptr);
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_GROUP_IMPL);
