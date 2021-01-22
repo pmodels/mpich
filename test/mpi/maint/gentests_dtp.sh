@@ -141,7 +141,7 @@ while read -r line ; do
             fi
             gputestsize=$((testsize / 2)) # reduce GPU test iteration to avoid timeouts
 
-            if [ $testdir = "pt2pt" ] ; then # only send/recv comm can use types from different pools
+            if [ $testdir = "pt2pt" ] || [ $testdir = "part" ]; then # only send/recv or partitioned comm can use types from different pools
                 # do combination of different send recv count where recv count >= send count
                 # limit the mixed pool case to only one
                 # TODO: this should be defined in the config file
