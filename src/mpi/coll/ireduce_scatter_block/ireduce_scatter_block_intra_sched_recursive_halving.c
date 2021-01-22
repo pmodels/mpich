@@ -8,9 +8,9 @@
 /* A recursive halving MPI_Ireduce_scatter_block algorithm.  Requires that op is
  * commutative.  Typically yields better performance for shorter messages. */
 int MPIR_Ireduce_scatter_block_intra_sched_recursive_halving(const void *sendbuf, void *recvbuf,
-                                                             int recvcount, MPI_Datatype datatype,
-                                                             MPI_Op op, MPIR_Comm * comm_ptr,
-                                                             MPIR_Sched_t s)
+                                                             MPI_Aint recvcount,
+                                                             MPI_Datatype datatype, MPI_Op op,
+                                                             MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;

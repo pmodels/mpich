@@ -10,9 +10,9 @@
 #include "ineighbor_allgather_tsp_linear_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Ineighbor_allgather_allcomm_gentran_linear(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgather_allcomm_gentran_linear(const void *sendbuf, MPI_Aint sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
-                                                    int recvcount, MPI_Datatype recvtype,
+                                                    MPI_Aint recvcount, MPI_Datatype recvtype,
                                                     MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;

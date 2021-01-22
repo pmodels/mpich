@@ -98,10 +98,10 @@ cvars:
 */
 
 int MPIR_Alltoall_allcomm_auto(const void *sendbuf,
-                               int sendcount,
+                               MPI_Aint sendcount,
                                MPI_Datatype sendtype,
                                void *recvbuf,
-                               int recvcount,
+                               MPI_Aint recvcount,
                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                MPIR_Errflag_t * errflag)
 {
@@ -172,8 +172,8 @@ int MPIR_Alltoall_allcomm_auto(const void *sendbuf,
     goto fn_exit;
 }
 
-int MPIR_Alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Alltoall_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                       void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                        MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -245,8 +245,8 @@ int MPIR_Alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     goto fn_exit;
 }
 
-int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Alltoall(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;

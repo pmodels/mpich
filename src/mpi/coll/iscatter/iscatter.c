@@ -76,8 +76,8 @@ struct shared_state {
 
 /* any non-MPI functions go here, especially non-static ones */
 
-int MPIR_Iscatter_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                               void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
+int MPIR_Iscatter_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                               void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
                                MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -142,8 +142,8 @@ int MPIR_Iscatter_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype 
     goto fn_exit;
 }
 
-int MPIR_Iscatter_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Iscatter_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                    int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -160,8 +160,8 @@ int MPIR_Iscatter_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datat
     goto fn_exit;
 }
 
-int MPIR_Iscatter_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Iscatter_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                    int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int local_size, remote_size, sendtype_size, recvtype_size, nbytes;
@@ -197,8 +197,8 @@ int MPIR_Iscatter_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datat
     goto fn_exit;
 }
 
-int MPIR_Iscatter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                             void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Iscatter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                             void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                              int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -214,8 +214,8 @@ int MPIR_Iscatter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype se
     return mpi_errno;
 }
 
-int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
-                       MPI_Datatype sendtype, void *recvbuf, int recvcount,
+int MPIR_Iscatter_impl(const void *sendbuf, MPI_Aint sendcount,
+                       MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                        MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                        MPIR_Request ** request)
 {
@@ -292,8 +292,8 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-int MPIR_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Iscatter(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                   int root, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;

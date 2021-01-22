@@ -37,9 +37,10 @@ copy (buf1)<--recv (buf1)            send (buf2)   /
 */
 
 /* Routine to schedule a ring based allgather */
-int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                        MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
+int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
+                                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                        MPI_Datatype recvtype, MPIR_Comm * comm,
+                                        MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst, copy_dst;
@@ -180,8 +181,8 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
 }
 
 /* Non-blocking ring based Alltoall */
-int MPIR_TSP_Ialltoall_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_TSP_Ialltoall_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                   MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -117,7 +117,7 @@ cvars:
    End Algorithm: MPI_Allgatherv
 */
 
-int MPIR_Iallgatherv_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, const int *recvcounts, const int *displs,
                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                   MPIR_Request ** request)
@@ -217,9 +217,10 @@ int MPIR_Iallgatherv_allcomm_auto(const void *sendbuf, int sendcount, MPI_Dataty
     goto fn_exit;
 }
 
-int MPIR_Iallgatherv_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                      void *recvbuf, const int recvcounts[], const int displs[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallgatherv_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount,
+                                      MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                                      const int displs[], MPI_Datatype recvtype,
+                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, comm_size, total_count, recvtype_size;
@@ -265,9 +266,10 @@ int MPIR_Iallgatherv_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Da
     goto fn_exit;
 }
 
-int MPIR_Iallgatherv_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                      void *recvbuf, const int recvcounts[], const int displs[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallgatherv_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount,
+                                      MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                                      const int displs[], MPI_Datatype recvtype,
+                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -279,7 +281,7 @@ int MPIR_Iallgatherv_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Da
     return mpi_errno;
 }
 
-int MPIR_Iallgatherv_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                 void *recvbuf, const int recvcounts[], const int displs[],
                                 MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -298,7 +300,7 @@ int MPIR_Iallgatherv_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype
     return mpi_errno;
 }
 
-int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                           void *recvbuf, const int recvcounts[], const int displs[],
                           MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
@@ -430,7 +432,7 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
     goto fn_exit;
 }
 
-int MPIR_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                      void *recvbuf, const int recvcounts[], const int displs[],
                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {

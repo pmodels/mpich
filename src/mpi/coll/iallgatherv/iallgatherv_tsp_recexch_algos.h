@@ -214,7 +214,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int *step1_
 }
 
 /* Routine to schedule a recursive exchange based allgather */
-int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
+int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                                              MPI_Datatype sendtype, void *recvbuf,
                                              const int *recvcounts, const int *displs,
                                              MPI_Datatype recvtype, MPIR_Comm * comm,
@@ -326,10 +326,10 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
 
 
 /* Non-blocking recexch based Allgather */
-int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                       void *recvbuf, const int *recvcounts, const int *displs,
-                                       MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req,
-                                       int algo_type, int k)
+int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
+                                       MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
+                                       const int *displs, MPI_Datatype recvtype, MPIR_Comm * comm,
+                                       MPIR_Request ** req, int algo_type, int k)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;

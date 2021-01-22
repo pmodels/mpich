@@ -11,7 +11,7 @@
  */
 int MPIR_Reduce_intra_binomial(const void *sendbuf,
                                void *recvbuf,
-                               int count,
+                               MPI_Aint count,
                                MPI_Datatype datatype,
                                MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {

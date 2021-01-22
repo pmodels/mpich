@@ -5,7 +5,7 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Reduce_scatter_block_allcomm_nb(const void *sendbuf, void *recvbuf, int recvcount,
+int MPIR_Reduce_scatter_block_allcomm_nb(const void *sendbuf, void *recvbuf, MPI_Aint recvcount,
                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                          MPIR_Errflag_t * errflag)
 {

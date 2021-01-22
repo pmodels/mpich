@@ -66,8 +66,8 @@ cvars:
 */
 
 
-int MPIR_Scatter_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                              void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
+int MPIR_Scatter_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                              void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -120,8 +120,8 @@ int MPIR_Scatter_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype s
     return mpi_errno;
 }
 
-int MPIR_Scatter_impl(const void *sendbuf, int sendcount,
-                      MPI_Datatype sendtype, void *recvbuf, int recvcount,
+int MPIR_Scatter_impl(const void *sendbuf, MPI_Aint sendcount,
+                      MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                       MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                       MPIR_Errflag_t * errflag)
 {
@@ -185,8 +185,8 @@ int MPIR_Scatter_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                 void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
+int MPIR_Scatter(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                 void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;

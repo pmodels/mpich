@@ -26,8 +26,8 @@
 
 
 /* not declared static because a machine-specific function may call this one in some cases */
-int MPIR_Scatter_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
+int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     MPI_Status status;

@@ -13,7 +13,7 @@
 #include "iallreduce_tsp_recursive_exchange_common_prototypes.h"
 
 /* Routine to schedule a recursive exchange based allreduce */
-int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                             MPI_Datatype datatype, MPI_Op op,
                                             MPIR_Comm * comm, int per_nbr_buffer, int k,
                                             MPIR_TSP_sched_t * sched)
@@ -310,7 +310,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 
 
 /* Non-blocking recexch based ALLREDUCE */
-int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                       MPIR_Request ** req, int recexch_type, int k)
 {

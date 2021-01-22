@@ -10,9 +10,9 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a ring based allgather */
-int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
+int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
                                          MPI_Datatype sendtype, void *recvbuf,
-                                         int recvcount, MPI_Datatype recvtype,
+                                         MPI_Aint recvcount, MPI_Datatype recvtype,
                                          MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -148,8 +148,8 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
 }
 
 /* Non-blocking ring based Allgather */
-int MPIR_TSP_Iallgather_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_TSP_Iallgather_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                    MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

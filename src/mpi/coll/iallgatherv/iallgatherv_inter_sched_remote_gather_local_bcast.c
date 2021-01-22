@@ -16,7 +16,7 @@
  * intracommunicator broadcast.
  */
 
-int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(const void *sendbuf, int sendcount,
+int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(const void *sendbuf, MPI_Aint sendcount,
                                                            MPI_Datatype sendtype, void *recvbuf,
                                                            const int recvcounts[],
                                                            const int displs[],

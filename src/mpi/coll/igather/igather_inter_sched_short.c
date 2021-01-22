@@ -13,9 +13,9 @@
  *
  * Cost: (lgp+1).alpha + n.((p-1)/p).beta + n.beta
  */
-int MPIR_Igather_inter_sched_short(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                   void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
-                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;

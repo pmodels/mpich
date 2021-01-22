@@ -14,12 +14,12 @@
 #undef MPIR_TSP_Iallreduce_sched_intra_recexch
 #define MPIR_TSP_Iallreduce_sched_intra_recexch                MPIR_TSP_NAMESPACE(Iallreduce_sched_intra_recexch)
 
-int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                             MPI_Datatype datatype, MPI_Op op,
                                             MPIR_Comm * comm, int recexch_type, int k,
                                             MPIR_TSP_sched_t * sched);
 
-int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                       MPI_Datatype datatype, MPI_Op op,
                                       MPIR_Comm * comm, MPIR_Request ** req, int recexch_type,
                                       int k);
