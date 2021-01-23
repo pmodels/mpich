@@ -229,10 +229,53 @@ def check_params_with_large_only(func, mapping):
         else:
             func['c_parameters'] = func['params_large']
 
+def get_userbuffer_group(func, i):
+    """internal function used by process_func_parameters"""
+    p = func['c_parameters'][i]
+    p2 = func['c_parameters'][i + 1]
+    p3 = func['c_parameters'][i + 2]
+    func_name = func['name']
+    if RE.match(r'mpi_i?(alltoall|allgather|gather|scatter)', func_name, re.IGNORECASE):
+        type = "inplace"
+        if RE.search(r'send', p['name'], re.IGNORECASE) and RE.search(r'scatter', func_name, re.IGNORECASE):
+            type = "noinplace"
+        elif RE.search(r'recv', p['name'], re.IGNORECASE) and not RE.search(r'scatter', func_name, re.IGNORECASE):
+            type = "noinplace"
+
+        if RE.search(r'alltoallw', func_name, re.IGNORECASE):
+            group_kind = "USERBUFFER-%s-w" % (type)
+            group_count = 4
+        elif p3['kind'] == "DATATYPE":
+            group_kind = "USERBUFFER-%s" % (type)
+            group_count = 3
+        else:
+            group_kind = "USERBUFFER-%s-v" % (type)
+            group_count = 4
+    elif RE.match(r'mpi_i?neighbor', func_name, re.IGNORECASE):
+        if RE.search(r'alltoallw', func_name, re.IGNORECASE):
+            group_kind = "USERBUFFER-neighbor-w"
+            group_count = 4
+        elif p3['kind'] == "DATATYPE":
+            group_kind = "USERBUFFER-neighbor"
+            group_count = 3
+        else:
+            group_kind = "USERBUFFER-neighbor-v"
+            group_count = 4
+    elif RE.match(r'mpi_i?(allreduce|reduce|scan|exscan)', func_name, re.IGNORECASE):
+        group_kind = "USERBUFFER-reduce"
+        group_count = 5
+    elif RE.search(r'XFER_NUM_ELEM', p2['kind']) and RE.search(r'DATATYPE', p3['kind']):
+        group_kind = "USERBUFFER-simple"
+        group_count = 3
+    else:
+        group_kind, group_count = None, 0
+    return (group_kind, group_count)
+
 def process_func_parameters(func, mapping):
     """ Scan parameters and populate a few lists to facilitate generation."""
     # Note: we'll attach the lists to func at the end
     validation_list, handle_ptr_list, impl_arg_list, impl_param_list = [], [], [], []
+    pointertag_list = []  # needed to annotate MPICH_ATTR_POINTER_WITH_TYPE_TAG
 
     func_name = func['name']
     n = len(func['c_parameters'])
@@ -241,40 +284,7 @@ def process_func_parameters(func, mapping):
         p = func['c_parameters'][i]
         (group_kind, group_count) = ("", 0)
         if i + 3 <= n and RE.search(r'BUFFER', p['kind']):
-            p2 = func['c_parameters'][i + 1]
-            p3 = func['c_parameters'][i + 2]
-            if RE.match(r'mpi_i?(alltoall|allgather|gather|scatter)', func_name, re.IGNORECASE):
-                type = "inplace"
-                if RE.search(r'send', p['name'], re.IGNORECASE) and RE.search(r'scatter', func_name, re.IGNORECASE):
-                    type = "noinplace"
-                elif RE.search(r'recv', p['name'], re.IGNORECASE) and not RE.search(r'scatter', func_name, re.IGNORECASE):
-                    type = "noinplace"
-
-                if RE.search(r'alltoallw', func_name, re.IGNORECASE):
-                    group_kind = "USERBUFFER-%s-w" % (type)
-                    group_count = 4
-                elif p3['kind'] == "DATATYPE":
-                    group_kind = "USERBUFFER-%s" % (type)
-                    group_count = 3
-                else:
-                    group_kind = "USERBUFFER-%s-v" % (type)
-                    group_count = 4
-            elif RE.match(r'mpi_i?neighbor', func_name, re.IGNORECASE):
-                if RE.search(r'alltoallw', func_name, re.IGNORECASE):
-                    group_kind = "USERBUFFER-neighbor-w"
-                    group_count = 4
-                elif p3['kind'] == "DATATYPE":
-                    group_kind = "USERBUFFER-neighbor"
-                    group_count = 3
-                else:
-                    group_kind = "USERBUFFER-neighbor-v"
-                    group_count = 4
-            elif RE.match(r'mpi_i?(allreduce|reduce|scan|exscan)', func_name, re.IGNORECASE):
-                group_kind = "USERBUFFER-reduce"
-                group_count = 5
-            elif RE.search(r'XFER_NUM_ELEM', p2['kind']) and RE.search(r'DATATYPE', p3['kind']):
-                group_kind = "USERBUFFER-simple"
-                group_count = 3
+            group_kind, group_count = get_userbuffer_group(func, i)
         if group_count > 0:
             t = ''
             for j in range(group_count):
@@ -285,6 +295,17 @@ def process_func_parameters(func, mapping):
                 impl_arg_list.append(temp_p['name'])
                 impl_param_list.append(get_C_param(temp_p, mapping))
             validation_list.append({'kind': group_kind, 'name': t})
+            # -- pointertag_list
+            if re.search(r'alltoallw', func_name, re.IGNORECASE):
+                pass
+            elif group_count == 3:
+                pointertag_list.append("%d,%d" % (i + 1, i + 3))
+            elif group_count == 4:
+                pointertag_list.append("%d,%d" % (i + 1, i + 4))
+            elif group_count == 5:
+                pointertag_list.append("%d,%d" % (i + 1, i + 4))
+                pointertag_list.append("%d,%d" % (i + 2, i + 4))
+            # -- skip to next
             i += group_count
             continue
 
@@ -491,6 +512,8 @@ def process_func_parameters(func, mapping):
         func['need_validation'] = 1
     func['impl_arg_list'] = impl_arg_list
     func['impl_param_list'] = impl_param_list
+    if len(pointertag_list):
+        func['pointertag_list'] = pointertag_list
 
 # ---- simple parts ----
 
