@@ -8,7 +8,7 @@
 # mpi.h
 #
 # Here are the steps:
-# 1) Find the prototypes in mpi.h.in (Look for *Begin Prototypes*)
+# 1) Find the prototypes in mpi_proto.h (Look for *Begin Prototypes*)
 # 2) For each function, match the name and args:
 #    int MPI_xxxx( ... )
 # 3) By groups, create a new file with the name {catname}.h containing 
@@ -841,7 +841,7 @@ $arg_string = join( ' ', @ARGV );
 # Here begins more executable code.  Read the definitions of the 
 # routines.  The argument list for routine xxx is placed into the hash
 # mpi_routine{xxx}.
-&ReadInterface( "../../include/mpi.h.in" );
+&ReadInterface( "../../include/mpi_proto.h" );
 # Special case:  Add Pcontrol
 $mpi_routine{'Pcontrol'} = "int,...";
 

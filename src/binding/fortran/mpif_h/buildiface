@@ -72,7 +72,8 @@ $do_logical = 1;
 $do_weak    = 1;
 $do_subdecls = 1;
 $do_bufptr = 1;
-$prototype_file = "../../../include/mpi.h.in";
+our $prototype_file_a = "../../../include/mpi.h.in";
+our $prototype_file_b = "../../../include/mpi_proto.h";
 
 # Global hashes used for definitions and to record the locations of the
 # defintions.
@@ -125,7 +126,8 @@ foreach $_ (@ARGV) {
     if (/-noprototypes/) { $build_prototypes = 0; }
     elsif (/-infile=(.*)/) {
         # Special arg to help with debugging
-        $prototype_file = $1;
+        $prototype_file_a = $1;
+        $prototype_file_b = $1;
         $write_mpif = 0;
         $build_prototypes = 0;
         $do_weak    = 0;
@@ -976,7 +978,7 @@ if ($build_prototypes) {
 }
 
 %skipBlocks = ();
-&ReadAndProcessInterface( $prototype_file, 0 );
+&ReadAndProcessInterface( $prototype_file_b, 0 );
 
 # if doing MPI2, we also need to read the MPI-2 protottypes
 if ( -s "../../../mpi/romio/include/mpio.h.in" && $build_io) {
@@ -1036,7 +1038,7 @@ EXTRA_DIST += src/binding/fortran/mpif_h/buildiface
 if MAINTAINER_MODE
 \$(top_srcdir)/src/binding/fortran/mpif_h/Makefile.mk: src/binding/fortran/mpif_h/buildiface-stamp
 
-src/binding/fortran/mpif_h/buildiface-stamp: \$(top_srcdir)/src/binding/fortran/mpif_h/buildiface \$(top_srcdir)/src/include/mpi.h.in
+src/binding/fortran/mpif_h/buildiface-stamp: \$(top_srcdir)/src/binding/fortran/mpif_h/buildiface \$(top_srcdir)/src/include/mpi_proto.h
 	( cd \$(top_srcdir)/src/binding/fortran/mpif_h && ./buildiface )
 endif MAINTAINER_MODE
 
@@ -3748,10 +3750,10 @@ sub print_special_decls {
 # Create mpif.h.in from mpi.h
 #
 # Need to put this into a routine similar to the ReadInterface routine
-# in the c++ version.  This will allow us to read both mpi.h.in
+# in the c++ version.  This will allow us to read both mpi_proto.h
 # and mpio.h.in (or other files)
 
-&ReadInterfaceForDefinitions( $prototype_file );
+&ReadInterfaceForDefinitions( $prototype_file_a );
 if ( -s "../../../mpi/romio/include/mpio.h.in" && $build_io) {
     %skipBlocks = ( 'HAVE_MPI_DARRAY_SUBARRAY' => 1,
                    'HAVE_MPI_INFO' => 1,
