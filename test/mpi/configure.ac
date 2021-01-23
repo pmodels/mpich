@@ -1776,6 +1776,7 @@ AC_OUTPUT(maint/testmerge \
           threads/coll/Makefile \
           threads/coll/testlist \
           threads/perf/Makefile \
+          threads/part/Makefile  \
           errors/Makefile \
           errors/attr/Makefile \
           errors/basic/Makefile \
