@@ -34,7 +34,7 @@ require "$mydir/binding.sub";
 $arg_string = join( ' ', @ARGV );
 $gDebug = 0;
 
-$prototype_file = "../../../include/mpi.h.in";
+$prototype_file = "../../../include/mpi_proto.h";
 $is_MPI = 1;
 $buildMPIX = 0;
 $routine_prefix = "MPI_";
@@ -331,7 +331,7 @@ if ($definition_file) {
 $ucoutfile_prefix = uc( $outfile_prefix );
 
 #
-# Read the interface file (e.g., mpi.h.in) and file in the various
+# Read the interface file (e.g., mpi_proto.h) and file in the various
 # data structures (they're in global variables)
 &ReadInterface( $prototype_file, $routine_prefix, $routine_pattern, "mpi_routines" );
 if ( -s "../../mpi/romio/include/mpio.h.in" && $build_io) {
@@ -926,7 +926,7 @@ EXTRA_DIST += src/binding/fortran/use_mpi/binding.sub src/binding/fortran/use_mp
 if MAINTAINER_MODE
 \$(top_srcdir)/src/binding/fortran/use_mpi/Makefile.mk: src/binding/fortran/use_mpi/buildiface-stamp
 
-src/binding/fortran/use_mpi/buildiface-stamp: \$(top_srcdir)/src/binding/fortran/use_mpi/buildiface \$(top_srcdir)/src/include/mpi.h.in
+src/binding/fortran/use_mpi/buildiface-stamp: \$(top_srcdir)/src/binding/fortran/use_mpi/buildiface \$(top_srcdir)/src/include/mpi_proto.h
 \t( cd \$(top_srcdir)/src/binding/fortran/use_mpi && ./buildiface )
 endif MAINTAINER_MODE
 

@@ -830,8 +830,8 @@ if [ $do_bindings = "yes" ] ; then
 	( cd src/binding/fortran/use_mpi_f08 && chmod a+x ./buildiface && ./buildiface )
         # Delete the old Makefile.mk
         ( rm -f src/binding/fortran/use_mpi_f08/wrappers_c/Makefile.mk )
-        # Execute once for mpi.h.in ...
-	( cd src/binding/fortran/use_mpi_f08/wrappers_c && chmod a+x ./buildiface && ./buildiface ../../../../include/mpi.h.in )
+        # Execute once for mpi_proto.h ...
+	( cd src/binding/fortran/use_mpi_f08/wrappers_c && chmod a+x ./buildiface && ./buildiface ../../../../include/mpi_proto.h )
         # ... and once for mpio.h.in
 	( cd src/binding/fortran/use_mpi_f08/wrappers_c && chmod a+x ./buildiface && ./buildiface ../../../../mpi/romio/include/mpio.h.in )
 	echo "done"
