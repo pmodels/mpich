@@ -27,7 +27,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-int MPIR_Cart_coords(MPIR_Comm * comm_ptr, int rank, int maxdims, int coords[])
+int MPIR_Cart_coords_impl(MPIR_Comm * comm_ptr, int rank, int maxdims, int coords[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *cart_ptr;
@@ -173,7 +173,7 @@ int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
     goto fn_exit;
 }
 
-int MPIR_Cart_get(MPIR_Comm * comm_ptr, int maxdims, int dims[], int periods[], int coords[])
+int MPIR_Cart_get_impl(MPIR_Comm * comm_ptr, int maxdims, int dims[], int periods[], int coords[])
 {
     int mpi_errno = MPI_SUCCESS;
     int i, n, *vals;
@@ -237,10 +237,16 @@ int MPIR_Cart_map_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
     goto fn_exit;
 }
 
-void MPIR_Cart_rank_impl(MPIR_Topology * cart_ptr, const int coords[], int *rank)
+int MPIR_Cart_rank_impl(MPIR_Comm * comm_ptr, const int coords[], int *rank)
 {
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Topology *cart_ptr;
     int i, ndims, coord, multiplier;
 
+    cart_ptr = MPIR_Topology_get(comm_ptr);
+    MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART),
+                        mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
     ndims = cart_ptr->topo.cart.ndims;
     *rank = 0;
     multiplier = 1;
@@ -258,7 +264,11 @@ void MPIR_Cart_rank_impl(MPIR_Topology * cart_ptr, const int coords[], int *rank
         *rank += multiplier * coord;
         multiplier *= cart_ptr->topo.cart.dims[i];
     }
-    return;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Cart_shift_impl(MPIR_Comm * comm_ptr, int direction, int disp, int *rank_source,
@@ -270,9 +280,9 @@ int MPIR_Cart_shift_impl(MPIR_Comm * comm_ptr, int direction, int disp, int *ran
     int pos[MAX_CART_DIM];
 
     cart_ptr = MPIR_Topology_get(comm_ptr);
+    MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART),
+                        mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
 
-    MPIR_ERR_CHKANDJUMP((!cart_ptr ||
-                         cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
     MPIR_ERR_CHKANDJUMP((cart_ptr->topo.cart.ndims == 0), mpi_errno, MPI_ERR_TOPOLOGY,
                         "**dimszero");
     MPIR_ERR_CHKANDJUMP2((direction >= cart_ptr->topo.cart.ndims), mpi_errno, MPI_ERR_ARG,
@@ -296,7 +306,7 @@ int MPIR_Cart_shift_impl(MPIR_Comm * comm_ptr, int direction, int disp, int *ran
             (pos[direction] >= cart_ptr->topo.cart.dims[direction] || pos[direction] < 0)) {
             *rank_dest = MPI_PROC_NULL;
         } else {
-            MPIR_Cart_rank_impl(cart_ptr, pos, rank_dest);
+            MPIR_Cart_rank_impl(comm_ptr, pos, rank_dest);
         }
 
         pos[direction] = cart_ptr->topo.cart.position[direction] - disp;
@@ -304,7 +314,7 @@ int MPIR_Cart_shift_impl(MPIR_Comm * comm_ptr, int direction, int disp, int *ran
             (pos[direction] >= cart_ptr->topo.cart.dims[direction] || pos[direction] < 0)) {
             *rank_source = MPI_PROC_NULL;
         } else {
-            MPIR_Cart_rank_impl(cart_ptr, pos, rank_source);
+            MPIR_Cart_rank_impl(comm_ptr, pos, rank_source);
         }
     }
 
@@ -315,7 +325,7 @@ int MPIR_Cart_shift_impl(MPIR_Comm * comm_ptr, int direction, int disp, int *ran
     goto fn_exit;
 }
 
-int MPIR_Cart_sub(MPIR_Comm * comm_ptr, const int remain_dims[], MPI_Comm * newcomm)
+int MPIR_Cart_sub_impl(MPIR_Comm * comm_ptr, const int remain_dims[], MPIR_Comm ** p_newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int all_false;
@@ -344,7 +354,7 @@ int MPIR_Cart_sub(MPIR_Comm * comm_ptr, const int remain_dims[], MPI_Comm * newc
     if (all_false) {
         /* ndims=0, or all entries in remain_dims are false.
          * MPI 2.1 says return a 0D Cartesian topology. */
-        mpi_errno = MPIR_Cart_create_impl(comm_ptr, 0, NULL, NULL, 0, newcomm);
+        mpi_errno = MPIR_Cart_create_impl(comm_ptr, 0, NULL, NULL, 0, p_newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* Determine the number of remaining dimensions */
@@ -371,7 +381,7 @@ int MPIR_Cart_sub(MPIR_Comm * comm_ptr, const int remain_dims[], MPI_Comm * newc
         mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, &newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
-        *newcomm = newcomm_ptr->handle;
+        *p_newcomm_ptr = newcomm_ptr;
 
         /* Save the topology of this new communicator */
         MPIR_CHKPMEM_MALLOC(toponew_ptr, MPIR_Topology *, sizeof(MPIR_Topology),
@@ -422,6 +432,21 @@ int MPIR_Cart_sub(MPIR_Comm * comm_ptr, const int remain_dims[], MPI_Comm * newc
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
+    goto fn_exit;
+}
+
+int MPIR_Cartdim_get_impl(MPIR_Comm * comm_ptr, int *ndims)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Topology *cart_ptr = MPIR_Topology_get(comm_ptr);
+    MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART),
+                        mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
+    *ndims = cart_ptr->topo.cart.ndims;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
     goto fn_exit;
 }
 
@@ -1688,14 +1713,12 @@ int MPIR_Graph_create_impl(MPIR_Comm * comm_ptr, int nnodes,
 
   fn_exit:
     return mpi_errno;
-
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
-int MPIR_Graph_get(MPIR_Comm * comm_ptr, int maxindex, int maxedges, int indx[], int edges[])
+int MPIR_Graph_get_impl(MPIR_Comm * comm_ptr, int maxindex, int maxedges, int indx[], int edges[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *topo_ptr;
@@ -1800,4 +1823,30 @@ int MPIR_Graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int rank, int *nneighb
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Graphdims_get_impl(MPIR_Comm * comm_ptr, int *nnodes, int *nedges)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Topology *topo_ptr = MPIR_Topology_get(comm_ptr);
+    MPIR_ERR_CHKANDJUMP((!topo_ptr || topo_ptr->kind != MPI_GRAPH),
+                        mpi_errno, MPI_ERR_TOPOLOGY, "**notgraphtopo");
+    *nnodes = topo_ptr->topo.graph.nnodes;
+    *nedges = topo_ptr->topo.graph.nedges;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Topo_test_impl(MPIR_Comm * comm_ptr, int *status)
+{
+    MPIR_Topology *topo_ptr = MPIR_Topology_get(comm_ptr);
+    if (topo_ptr) {
+        *status = (int) (topo_ptr->kind);
+    } else {
+        *status = MPI_UNDEFINED;
+    }
+    return MPI_SUCCESS;
 }

@@ -93,7 +93,7 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, int indx[], int edg
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    mpi_errno = MPIR_Graph_get(comm_ptr, maxindex, maxedges, indx, edges);
+    mpi_errno = MPIR_Graph_get_impl(comm_ptr, maxindex, maxedges, indx, edges);
     if (mpi_errno) {
         goto fn_fail;
     }

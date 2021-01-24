@@ -182,8 +182,6 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
     }
 #endif /* HAVE_ERROR_CHECKING */
 
-    /* ... body of routine ...  */
-
     /* Test for empty communicator */
     if (nnodes == 0) {
         *comm_graph = MPI_COMM_NULL;

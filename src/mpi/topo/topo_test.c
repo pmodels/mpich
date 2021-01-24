@@ -52,7 +52,6 @@ int MPI_Topo_test(MPI_Comm comm, int *status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Topology *topo_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TOPO_TEST);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -91,11 +90,9 @@ int MPI_Topo_test(MPI_Comm comm, int *status)
 
     /* ... body of routine ...  */
 
-    topo_ptr = MPIR_Topology_get(comm_ptr);
-    if (topo_ptr) {
-        *status = (int) (topo_ptr->kind);
-    } else {
-        *status = MPI_UNDEFINED;
+    mpi_errno = MPIR_Topo_test_impl(comm_ptr, status);
+    if (mpi_errno) {
+        goto fn_fail;
     }
 
     /* ... end of body of routine ... */

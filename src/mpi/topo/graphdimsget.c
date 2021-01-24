@@ -52,7 +52,6 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Topology *topo_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GRAPHDIMS_GET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -92,17 +91,10 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
 
     /* ... body of routine ...  */
 
-    topo_ptr = MPIR_Topology_get(comm_ptr);
-
-    MPIR_ERR_CHKANDJUMP((!topo_ptr ||
-                         topo_ptr->kind != MPI_GRAPH), mpi_errno, MPI_ERR_TOPOLOGY,
-                        "**notgraphtopo");
-
-    /* Set nnodes */
-    *nnodes = topo_ptr->topo.graph.nnodes;
-
-    /* Set nedges */
-    *nedges = topo_ptr->topo.graph.nedges;
+    mpi_errno = MPIR_Graphdims_get_impl(comm_ptr, nnodes, nedges);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
 
     /* ... end of body of routine ... */
 

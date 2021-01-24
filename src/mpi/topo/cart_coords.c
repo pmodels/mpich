@@ -113,7 +113,7 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    mpi_errno = MPIR_Cart_coords(comm_ptr, rank, maxdims, coords);
+    mpi_errno = MPIR_Cart_coords_impl(comm_ptr, rank, maxdims, coords);
     if (mpi_errno) {
         goto fn_fail;
     }
