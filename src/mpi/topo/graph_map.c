@@ -95,9 +95,16 @@ int MPI_Graph_map(MPI_Comm comm, int nnodes, const int indx[], const int edges[]
 
     MPIR_ERR_CHKANDJUMP(comm_ptr->local_size < nnodes, mpi_errno, MPI_ERR_ARG, "**graphnnodes");
 
-    mpi_errno = MPIR_Graph_map_impl(comm_ptr, nnodes, (const int *) indx,
-                                    (const int *) edges, newrank);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->graphMap != NULL) {
+        /* --BEGIN USEREXTENSION-- */
+        mpi_errno = comm_ptr->topo_fns->graphMap(comm_ptr, nnodes, indx, edges, newrank);
+        /* --END USEREXTENSION-- */
+    } else {
+        mpi_errno = MPIR_Graph_map_impl(comm_ptr, nnodes, indx, edges, newrank);
+    }
+    if (mpi_errno) {
+        goto fn_fail;
+    }
 
     /* ... end of body of routine ... */
 

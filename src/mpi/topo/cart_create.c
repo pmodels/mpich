@@ -120,11 +120,24 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Cart_create_impl(comm_ptr, ndims,
-                                      (const int *) dims,
-                                      (const int *) periods, reorder, comm_cart);
-    if (mpi_errno)
-        goto fn_fail;
+    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartCreate != NULL) {
+        /* --BEGIN USEREXTENSION-- */
+        mpi_errno = comm_ptr->topo_fns->cartCreate(comm_ptr, ndims,
+                                                   dims, periods, reorder, comm_cart);
+        if (mpi_errno) {
+            goto fn_fail;
+        }
+        /* --END USEREXTENSION-- */
+    } else {
+        MPIR_Comm *newcomm_ptr = NULL;
+        mpi_errno = MPIR_Cart_create_impl(comm_ptr, ndims, dims, periods, reorder, &newcomm_ptr);
+        if (mpi_errno) {
+            goto fn_fail;
+        }
+        if (newcomm_ptr) {
+            MPIR_OBJ_PUBLISH_HANDLE(*comm_cart, newcomm_ptr->handle);
+        }
+    }
     /* ... end of body of routine ... */
 
   fn_exit:
