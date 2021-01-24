@@ -290,7 +290,7 @@ def process_func_parameters(func, mapping):
 
         do_handle_ptr = 0
         (kind, name) = (p['kind'], p['name'])
-        if name == "comm":
+        if '_has_comm' not in func and kind == "COMMUNICATOR" and p['param_direction'] == 'in':
             func['_has_comm'] = name
         elif name == "win":
             func['_has_win'] = name
@@ -477,7 +477,7 @@ def process_func_parameters(func, mapping):
         i += 1
 
     if RE.match(r'MPI_(Wait|Test)$', func_name):
-        func['_has_comm'] = "comm_ptr"
+        func['_has_comm'] = "comm"
         func['_comm_from_request'] = 1
 
     func['need_validation'] = 0
@@ -911,7 +911,7 @@ def dump_mpi_fn_fail(func, mapping):
         dump_line_with_break(s)
         G.out.append("#endif")
         if '_has_comm' in func:
-            G.out.append("mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);")
+            G.out.append("mpi_errno = MPIR_Err_return_comm(%s_ptr, __func__, mpi_errno);" % func['_has_comm'])
         elif '_has_win' in func:
             G.out.append("mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);")
         else:
@@ -1211,7 +1211,7 @@ def dump_validation(func, t):
     if kind == "RANK":
         G.err_codes['MPI_ERR_RANK'] = 1
         if '_has_comm' in func:
-            comm_ptr = "comm_ptr"
+            comm_ptr = func['_has_comm'] + '_ptr'
         elif '_has_win' in func:
             comm_ptr = "win_ptr->comm_ptr"
         else:
