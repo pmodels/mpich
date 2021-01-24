@@ -49,7 +49,6 @@ int MPI_Cartdim_get(MPI_Comm comm, int *ndims)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Topology *cart_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_CARTDIM_GET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -88,13 +87,9 @@ int MPI_Cartdim_get(MPI_Comm comm, int *ndims)
 
     /* ... body of routine ...  */
 
-    cart_ptr = MPIR_Topology_get(comm_ptr);
-
-    MPIR_ERR_CHKANDJUMP((!cart_ptr ||
-                         cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
-
-    *ndims = cart_ptr->topo.cart.ndims;
-
+    mpi_errno = MPIR_Cartdim_get_impl(comm_ptr, ndims);
+    if (mpi_errno)
+        goto fn_fail;
     /* ... end of body of routine ... */
 
   fn_exit:

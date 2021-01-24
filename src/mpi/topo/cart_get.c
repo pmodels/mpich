@@ -118,7 +118,7 @@ int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coor
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Cart_get(comm_ptr, maxdims, dims, periods, coords);
+    mpi_errno = MPIR_Cart_get_impl(comm_ptr, maxdims, dims, periods, coords);
     if (mpi_errno) {
         goto fn_fail;
     }

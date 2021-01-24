@@ -122,7 +122,10 @@ int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank)
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    MPIR_Cart_rank_impl(cart_ptr, coords, rank);
+    mpi_errno = MPIR_Cart_rank_impl(comm_ptr, coords, rank);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
     /* ... end of body of routine ... */
 
   fn_exit:

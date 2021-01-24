@@ -93,10 +93,13 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Cart_sub(comm_ptr, remain_dims, newcomm);
+    MPIR_Comm *newcomm_ptr = NULL;
+    mpi_errno = MPIR_Cart_sub_impl(comm_ptr, remain_dims, &newcomm_ptr);
     if (mpi_errno) {
         goto fn_fail;
     }
+    if (newcomm_ptr)
+        MPIR_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:
