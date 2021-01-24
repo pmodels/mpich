@@ -65,7 +65,7 @@ static void *host_alloc_buffer_registered(uintptr_t size)
 {
     void *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
     MPIR_Assert(ptr);
-    MPL_gpu_register_host(ptr, size);
+    MPIR_gpu_register_host(ptr, size);
     return ptr;
 }
 
@@ -76,7 +76,7 @@ static void host_free(void *ptr)
 
 static void host_free_buffer_registered(void *ptr)
 {
-    MPL_gpu_unregister_host(ptr);
+    MPIR_gpu_unregister_host(ptr);
     MPL_free(ptr);
 }
 

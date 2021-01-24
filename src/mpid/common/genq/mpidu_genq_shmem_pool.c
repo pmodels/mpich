@@ -80,7 +80,7 @@ int MPIDU_genq_shmem_pool_create_unsafe(uintptr_t cell_size, uintptr_t cells_per
     rc = MPIDU_Init_shm_alloc(slab_size, &pool_obj->slab);
     MPIR_ERR_CHECK(rc);
 
-    rc = MPL_gpu_register_host(pool_obj->slab, slab_size);
+    rc = MPIR_gpu_register_host(pool_obj->slab, slab_size);
     MPIR_ERR_CHECK(rc);
 
     pool_obj->cell_header_base = (MPIDU_genqi_shmem_cell_header_s *) pool_obj->slab;
