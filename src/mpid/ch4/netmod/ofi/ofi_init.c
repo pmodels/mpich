@@ -397,7 +397,7 @@ static void *host_alloc_registered(uintptr_t size)
 {
     void *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
     MPIR_Assert(ptr);
-    MPL_gpu_register_host(ptr, size);
+    MPIR_gpu_register_host(ptr, size);
     return ptr;
 }
 
@@ -408,7 +408,7 @@ static void host_free(void *ptr)
 
 static void host_free_registered(void *ptr)
 {
-    MPL_gpu_unregister_host(ptr);
+    MPIR_gpu_unregister_host(ptr);
     MPL_free(ptr);
 }
 
@@ -597,7 +597,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         MPIDI_OFI_global.am_unordered_msgs = NULL;
 
         for (int i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
-            MPL_gpu_malloc_host(&(MPIDI_OFI_global.am_bufs[i]), MPIDI_OFI_AM_BUFF_SZ);
+            MPIR_gpu_malloc_host(&(MPIDI_OFI_global.am_bufs[i]), MPIDI_OFI_AM_BUFF_SZ);
             MPIDI_OFI_global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
             MPIDI_OFI_global.am_reqs[i].index = i;
             MPIR_Assert(MPIDI_OFI_global.am_bufs[i]);
@@ -768,7 +768,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         MPIDIU_map_destroy(MPIDI_OFI_global.am_recv_seq_tracker);
 
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
-            MPL_gpu_free_host(MPIDI_OFI_global.am_bufs[i]);
+            MPIR_gpu_free_host(MPIDI_OFI_global.am_bufs[i]);
 
         MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.am_hdr_buf_pool);
 
