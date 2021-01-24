@@ -107,4 +107,16 @@ int MPIR_Cart_get(MPIR_Comm * comm_ptr, int maxdims, int dims[], int periods[], 
 int MPIR_Cart_sub(MPIR_Comm * comm_ptr, const int remain_dims[], MPI_Comm * newcomm);
 int MPIR_Graph_get(MPIR_Comm * comm_ptr, int maxindex, int maxedges, int indx[], int edges[]);
 
+int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
+                                int n, const int sources[], const int degrees[],
+                                const int destinations[], const int weights[],
+                                MPIR_Info * info_ptr, int reorder,
+                                MPIR_Comm ** p_comm_dist_graph_ptr);
+int MPIR_Dist_graph_create_adjacent_impl(MPIR_Comm comm_ptr,
+                                         int indegree, const int sources[],
+                                         const int sourceweights[], int outdegree,
+                                         const int destinations[], const int destweights[],
+                                         MPIR_Info * info_ptr, int reorder,
+                                         MPIR_Comm ** p_comm_dist_graph);
+
 #endif /* MPIR_TOPO_H_INCLUDED */
