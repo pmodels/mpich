@@ -656,7 +656,12 @@ def dump_function(func, mapping, kind):
 
     if "decl" in func:
         push_impl_decl(func, func['decl'])
-    elif 'body' not in func and 'impl' not in func:
+    elif 'impl' in func:
+        if RE.match(r'topo_fns->', func['impl']):
+            push_impl_decl(func)
+    elif 'body' in func:
+        pass
+    else:
         push_impl_decl(func)
 
 def dump_function_polymorph(func, mapping):
@@ -759,8 +764,13 @@ def dump_function_normal(func, state_name, mapping):
     if 'body' in func:
         for l in func['body']:
             G.out.append(l)
-    elif 'impl' in func and RE.match(r'mpid', func['impl'], re.IGNORECASE):
-        dump_body_impl(func, "mpid")
+    elif 'impl' in func:
+        if RE.match(r'mpid', func['impl'], re.IGNORECASE):
+            dump_body_impl(func, "mpid")
+        elif RE.match(r'topo_fns->(\w+)', func['impl'], re.IGNORECASE):
+            dump_body_topo_fns(func, RE.m.group(1))
+        else:
+            print("Error: unhandled special impl: [%s]" % func['impl'])
     elif func['dir'] == 'coll':
         dump_body_coll(func)
     else:
@@ -832,6 +842,17 @@ def dump_body_coll(func):
         # blocking collectives
         G.out.append("MPIR_Errflag_t errflag = MPIR_ERR_NONE;")
         dump_line_with_break("mpi_errno = MPIR_%s(%s, &errflag);" % (name, args))
+
+def dump_body_topo_fns(func, method):
+    comm_ptr = func['_has_comm'] + "_ptr"
+    dump_if_open("%s->topo_fns && %s->topo_fns->%s" % (comm_ptr, comm_ptr, method))
+    # The extension will output `MPI_Comm *` rather than `MPIR_Comm **`
+    args = re.sub(r'&(\w+)_ptr', r'\1', ", ".join(func['impl_arg_list']))
+    dump_line_with_break("mpi_errno = %s->topo_fns->%s(%s);" % (comm_ptr, method, args))
+    dump_error_check("")
+    dump_else()
+    dump_body_impl(func)
+    dump_if_close()
 
 def dump_body_impl(func, prefix='mpir'):
     # mpi_errno = MPIR_Xxx_impl(...);
@@ -1732,6 +1753,11 @@ def dump_error_check(sp):
 
 def dump_if_open(cond):
     G.out.append("if (%s) {" % cond)
+    G.out.append("INDENT")
+
+def dump_else():
+    G.out.append("DEDENT")
+    G.out.append("} else {")
     G.out.append("INDENT")
 
 def dump_if_close():
