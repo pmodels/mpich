@@ -982,17 +982,19 @@ AC_SUBST(libmpl_so_versionflags)
 #######################################################################
 have_gpu="no"
 # Check CUDA availability
-PAC_SET_HEADER_LIB_PATH([cuda])
-PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cudart=yes],[have_cudart=no])
-PAC_CHECK_HEADER_LIB([cuda.h],[cuda],[cuMemGetAddressRange],[have_cuda=yes],[have_cuda=no])
-if test "X${have_cudart}" = "Xyes" -a \
-    "X${have_cuda}" = "Xyes" ; then
-    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
-    have_gpu="yes"
+if test -n "$with_cuda" -a "$with_cuda" != "no" ; then
+    PAC_SET_HEADER_LIB_PATH([cuda])
+    PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cudart=yes],[have_cudart=no])
+    PAC_CHECK_HEADER_LIB([cuda.h],[cuda],[cuMemGetAddressRange],[have_cuda=yes],[have_cuda=no])
+    if test "X${have_cudart}" = "Xyes" -a \
+        "X${have_cuda}" = "Xyes" ; then
+        AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
+        have_gpu="yes"
+    fi
 fi
 AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${have_cudart}" = "Xyes" -a "X${have_cuda}" = "Xyes"])
 
-if test "$have_gpu" = "no" ; then
+if test "$have_gpu" = "no" -a -n "$with_ze" -a "$with_ze" != "no"; then
     # Check Level Zero availability when no other GPU library is available
     PAC_SET_HEADER_LIB_PATH([ze])
     PAC_CHECK_HEADER_LIB([level_zero/ze_api.h],[ze_loader],[zeInit],[have_ze=yes],[have_ze=no])
