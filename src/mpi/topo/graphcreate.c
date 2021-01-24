@@ -192,16 +192,20 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
 
     if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->graphCreate != NULL) {
         /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->topo_fns->graphCreate(comm_ptr, nnodes,
-                                                    (const int *) indx,
-                                                    (const int *) edges, reorder, comm_graph);
+        mpi_errno = comm_ptr->topo_fns->graphCreate(comm_ptr, nnodes, indx, edges, reorder,
+                                                    comm_graph);
+        if (mpi_errno)
+            goto fn_fail;
         /* --END USEREXTENSION-- */
     } else {
-        mpi_errno = MPIR_Graph_create(comm_ptr, nnodes,
-                                      (const int *) indx, (const int *) edges, reorder, comm_graph);
+        MPIR_Comm *newcomm_ptr = NULL;
+        mpi_errno = MPIR_Graph_create_impl(comm_ptr, nnodes, indx, edges, reorder, &newcomm_ptr);
+        if (mpi_errno)
+            goto fn_fail;
+        if (newcomm_ptr) {
+            MPIR_OBJ_PUBLISH_HANDLE(*comm_graph, newcomm_ptr->handle);
+        }
     }
-    if (mpi_errno)
-        goto fn_fail;
 
     /* ... end of body of routine ... */
 

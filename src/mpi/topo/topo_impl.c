@@ -48,17 +48,14 @@ int MPIR_Cart_coords(MPIR_Comm * comm_ptr, int rank, int maxdims, int coords[])
     goto fn_exit;
 }
 
-int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
-                     const int periods[], int reorder, MPI_Comm * comm_cart)
+int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
+                          const int periods[], int reorder, MPIR_Comm ** comm_cart_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, newsize, rank, nranks;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Topology *cart_ptr = NULL;
     MPIR_CHKPMEM_DECL(4);
-
-    /* Set this as null incase we exit with an error */
-    *comm_cart = MPI_COMM_NULL;
 
     /* Check for invalid arguments */
     newsize = 1;
@@ -101,7 +98,7 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
             MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.position, int *, sizeof(int),
                                 mpi_errno, "cart.position", MPL_MEM_COMM);
         } else {
-            *comm_cart = MPI_COMM_NULL;
+            *comm_cart_ptr = NULL;
             goto fn_exit;
         }
     } else {
@@ -133,7 +130,7 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
         /* If this process is not in the resulting communicator, return a
          * null communicator and exit */
         if (rank >= newsize || rank == MPI_UNDEFINED) {
-            *comm_cart = MPI_COMM_NULL;
+            *comm_cart_ptr = NULL;
             goto fn_exit;
         }
 
@@ -166,39 +163,13 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
     mpi_errno = MPIR_Topology_put(newcomm_ptr, cart_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_OBJ_PUBLISH_HANDLE(*comm_cart, newcomm_ptr->handle);
+    *comm_cart_ptr = newcomm_ptr;
 
   fn_exit:
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
     MPIR_CHKPMEM_REAP();
-    /* --END ERROR HANDLING-- */
-    goto fn_exit;
-}
-
-int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
-                          const int periods[], int reorder, MPI_Comm * comm_cart)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartCreate != NULL) {
-        /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->topo_fns->cartCreate(comm_ptr, ndims,
-                                                   (const int *) dims,
-                                                   (const int *) periods, reorder, comm_cart);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Cart_create(comm_ptr, ndims,
-                                     (const int *) dims, (const int *) periods, reorder, comm_cart);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
     goto fn_exit;
 }
 
@@ -230,12 +201,12 @@ int MPIR_Cart_get(MPIR_Comm * comm_ptr, int maxdims, int dims[], int periods[], 
     goto fn_exit;
 }
 
-int MPIR_Cart_map(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
-                  const int periodic[], int *newrank)
+int MPIR_Cart_map_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
+                       const int periods[], int *newrank)
 {
     int rank, nranks, i, size, mpi_errno = MPI_SUCCESS;
 
-    MPL_UNREFERENCED_ARG(periodic);
+    MPL_UNREFERENCED_ARG(periods);
 
     /* Determine number of processes needed for topology */
     if (ndims == 0) {
@@ -259,29 +230,6 @@ int MPIR_Cart_map(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
         *newrank = rank;
     else
         *newrank = MPI_UNDEFINED;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Cart_map_impl(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
-                       const int periods[], int *newrank)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartMap != NULL) {
-        /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->topo_fns->cartMap(comm_ptr, ndims,
-                                                (const int *) dims, (const int *) periods, newrank);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Cart_map(comm_ptr, ndims,
-                                  (const int *) dims, (const int *) periods, newrank);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 
   fn_exit:
     return mpi_errno;
@@ -1676,17 +1624,15 @@ int MPIR_Dist_graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int *indegree, in
     goto fn_exit;
 }
 
-int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
-                      const int indx[], const int edges[], int reorder, MPI_Comm * comm_graph)
+int MPIR_Graph_create_impl(MPIR_Comm * comm_ptr, int nnodes,
+                           const int indx[], const int edges[], int reorder,
+                           MPIR_Comm ** comm_graph_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, nedges;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Topology *graph_ptr = NULL;
     MPIR_CHKPMEM_DECL(3);
-
-    /* Set this to null in case there is an error */
-    *comm_graph = MPI_COMM_NULL;
 
     /* Create a new communicator */
     if (reorder) {
@@ -1713,7 +1659,7 @@ int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
     /* If this process is not in the resulting communicator, return a
      * null communicator and exit */
     if (!newcomm_ptr) {
-        *comm_graph = MPI_COMM_NULL;
+        *comm_graph_ptr = NULL;
         goto fn_exit;
     }
 
@@ -1736,12 +1682,9 @@ int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
     /* Finally, place the topology onto the new communicator and return the
      * handle */
     mpi_errno = MPIR_Topology_put(newcomm_ptr, graph_ptr);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
+    MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_OBJ_PUBLISH_HANDLE(*comm_graph, newcomm_ptr->handle);
-
-    /* ... end of body of routine ... */
+    *comm_graph_ptr = newcomm_ptr;
 
   fn_exit:
     return mpi_errno;
@@ -1749,17 +1692,7 @@ int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     MPIR_CHKPMEM_REAP();
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_graph_create", "**mpi_graph_create %C %d %p %p %d %p",
-                                 comm_ptr->handle, nnodes, indx, edges, reorder, comm_graph);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm((MPIR_Comm *) comm_ptr, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 int MPIR_Graph_get(MPIR_Comm * comm_ptr, int maxindex, int maxedges, int indx[], int edges[])
@@ -1798,9 +1731,8 @@ int MPIR_Graph_get(MPIR_Comm * comm_ptr, int maxindex, int maxedges, int indx[],
     goto fn_exit;
 }
 
-int MPIR_Graph_map(const MPIR_Comm * comm_ptr, int nnodes,
-                   const int indx[]ATTRIBUTE((unused)),
-                   const int edges[]ATTRIBUTE((unused)), int *newrank)
+int MPIR_Graph_map_impl(MPIR_Comm * comm_ptr, int nnodes,
+                        const int indx[], const int edges[], int *newrank)
 {
     MPL_UNREFERENCED_ARG(indx);
     MPL_UNREFERENCED_ARG(edges);
@@ -1813,31 +1745,6 @@ int MPIR_Graph_map(const MPIR_Comm * comm_ptr, int nnodes,
     }
     return MPI_SUCCESS;
 }
-
-int MPIR_Graph_map_impl(const MPIR_Comm * comm_ptr, int nnodes,
-                        const int indx[], const int edges[], int *newrank)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->graphMap != NULL) {
-        /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->topo_fns->graphMap(comm_ptr, nnodes,
-                                                 (const int *) indx, (const int *) edges, newrank);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Graph_map(comm_ptr, nnodes,
-                                   (const int *) indx, (const int *) edges, newrank);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* any non-MPI functions go here, especially non-static ones */
 
 int MPIR_Graph_neighbors_impl(MPIR_Comm * comm_ptr, int rank, int maxneighbors, int neighbors[])
 {

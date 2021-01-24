@@ -100,9 +100,16 @@ int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[]
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    mpi_errno = MPIR_Cart_map_impl(comm_ptr, ndims,
-                                   (const int *) dims, (const int *) periods, newrank);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartMap != NULL) {
+        /* --BEGIN USEREXTENSION-- */
+        mpi_errno = comm_ptr->topo_fns->cartMap(comm_ptr, ndims, dims, periods, newrank);
+        /* --END USEREXTENSION-- */
+    } else {
+        mpi_errno = MPIR_Cart_map_impl(comm_ptr, ndims, dims, periods, newrank);
+    }
+    if (mpi_errno) {
+        goto fn_fail;
+    }
     /* ... end of body of routine ... */
 
   fn_exit:
