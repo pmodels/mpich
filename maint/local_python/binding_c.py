@@ -24,6 +24,9 @@ def dump_mpi_c(func, mapping):
             G.err_codes[a] = 1
     # -- "dump" accumulates output lines in G.out
     G.out.append("#include \"mpiimpl.h\"")
+    if 'include' in func:
+        for a in func['include'].replace(',', ' ').split():
+            G.out.append("#include \"%s\"" % a)
     G.out.append("")
     dump_profiling(func, mapping)
 
@@ -895,7 +898,7 @@ def dump_mpi_fn_fail(func, mapping):
 
     if RE.match(r'mpi_(finalized|initialized)', func['name'], re.IGNORECASE):
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
-        cond = "MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT" + " && " + "MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__POST_FINALIZED"
+        cond = "MPIR_Errutil_is_initialized()"
         dump_if_open(cond)
         s = get_fn_fail_create_code(func, mapping)
         G.out.append(s)
