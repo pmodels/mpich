@@ -471,9 +471,9 @@ int MPIR_Cart_sub(MPIR_Comm * comm_ptr, const int remain_dims[], MPI_Comm * newc
     }
 
   fn_exit:
-    MPIR_CHKPMEM_REAP();
     return mpi_errno;
   fn_fail:
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
