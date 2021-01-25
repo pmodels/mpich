@@ -59,6 +59,8 @@ void MPII_init_dbg_logging(void);
 int MPII_init_async(void);
 int MPII_finalize_async(void);
 
+void MPII_Call_finalize_callbacks(int min_prio, int max_prio);
+
 static inline void MPII_pre_init_memory_tracing(void)
 {
 #ifdef USE_MEMORY_TRACING

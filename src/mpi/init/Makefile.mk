@@ -5,6 +5,7 @@
 
 mpi_core_sources += \
     src/mpi/init/init_impl.c      \
+    src/mpi/init/init_util.c      \
     src/mpi/init/mpir_init.c      \
     src/mpi/init/mpir_finalize.c  \
     src/mpi/init/globals.c        \
