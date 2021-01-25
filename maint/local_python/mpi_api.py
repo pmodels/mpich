@@ -149,7 +149,7 @@ def parse_param_attributes(p):
     if RE.search(r'length\s*=\s*\[(.*)\]', p['t']):
         # only the case of MPI_Group_range_{excl,incl} where length=[n, 3]
         p['length'] = RE.m.group(1).replace(' ', '').split(',')
-    elif RE.search(r'length\s*=\s*([^,\s]+)', p['t']):
+    elif RE.search(r'length\s*=\s*([^,\s]*)', p['t']):
         p['length'] = RE.m.group(1)
     else:
         p['length'] = None
