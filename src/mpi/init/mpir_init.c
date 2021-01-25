@@ -52,6 +52,19 @@ cvars:
    how MPICH was configured. */
 extern const char MPII_Version_device[];
 
+/* MPIR_world_model_state tracks so we only init and finalize once in world model */
+MPL_atomic_int_t MPIR_world_model_state = MPL_ATOMIC_INT_T_INITIALIZER(0);
+
+/* Use init_lock to protect concurrent init/finalize (include session init/finalize) */
+static MPL_initlock_t init_lock = MPL_INITLOCK_INITIALIZER;
+
+/* Use init_counter to track when we are initilizing for the first time or
+ * when we are finalize for the last time and need cleanup states */
+/* Note: we are not using atomic variable since it is always accessed under init_lock */
+static int init_counter;
+
+/* ------------ Init ------------------- */
+
 int MPIR_Init_impl(int *argc, char ***argv)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -91,6 +104,12 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     int required = user_required;
     int err;
 
+    MPL_initlock_lock(&init_lock);
+    init_counter++;
+    if (init_counter > 1) {
+        *provided = MPIR_ThreadInfo.thread_provided;
+        goto fn_exit;
+    }
     /**********************************************************************/
     /* Section 1: base components that other components rely on.
      * These need to be intialized first.  They have strong
@@ -150,7 +169,7 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
      * handling routines that core services are available. */
     /**********************************************************************/
 
-    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__MPIR_INITIALIZED);
 
 
     /**********************************************************************/
@@ -164,8 +183,6 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
 #ifdef MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = 0;
 #endif
-
-    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
@@ -202,7 +219,7 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     mpi_errno = MPID_InitCompleted();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__INITIALIZED);
 
 
     /**********************************************************************/
@@ -221,10 +238,89 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     if (provided)
         *provided = MPIR_ThreadInfo.thread_provided;
 
+  fn_exit:
+    MPII_world_set_initilized();
+    MPL_initlock_unlock(&init_lock);
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
+    goto fn_exit;
+}
+
+/* ------------ Finalize ------------------- */
+
+int MPII_Finalize(MPIR_Session * session_ptr)
+{
+    return MPI_SUCCESS;
+}
+
+int MPIR_Finalize_impl(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int rank = MPIR_Process.comm_world->rank;
+
+    MPL_initlock_lock(&init_lock);
+    init_counter--;
+    if (init_counter > 0) {
+        goto fn_exit;
+    }
+
+    mpi_errno = MPII_finalize_async();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Setting isThreaded to 0 to trick any operations used within
+     * MPI_Finalize to think that we are running in a single threaded
+     * environment. */
+#ifdef MPICH_IS_THREADED
+    MPIR_ThreadInfo.isThreaded = 0;
+#endif
+
+    mpi_errno = MPII_finalize_local_proc_attrs();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPII_Timer_finalize();
+
+    /* Call the high-priority callbacks */
+    MPII_Call_finalize_callbacks(MPIR_FINALIZE_CALLBACK_PRIO + 1, MPIR_FINALIZE_CALLBACK_MAX_PRIO);
+
+    /* Signal the debugger that we are about to exit. */
+    MPIR_Debugger_set_aborting(NULL);
+
+    mpi_errno = MPID_Finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPII_Coll_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Call the low-priority (post Finalize) callbacks */
+    MPII_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
+
+    MPII_hwtopo_finalize();
+    MPII_nettopo_finalize();
+
+    /* Users did not call MPI_T_init_thread(), so we free memories allocated to
+     * MPIR_T during MPI_Init here. Otherwise, free them in MPI_T_finalize() */
+    if (!MPIR_T_is_initialized())
+        MPIR_T_env_finalize();
+
+    /* If performing coverage analysis, make each process sleep for
+     * rank * 100 ms, to give time for the coverage tool to write out
+     * any files.  It would be better if the coverage tool and runtime
+     * was more careful about file updates, though the lack of OS support
+     * for atomic file updates makes this harder. */
+    MPII_final_coverage_delay(rank);
+
+    /* All memory should be freed at this point */
+    MPII_finalize_memory_tracing();
+
+    MPII_thread_mutex_destroy();
+    MPIR_Typerep_finalize();
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__UNINITIALIZED);
+
+  fn_exit:
+    MPII_world_set_finalized();
+    MPL_initlock_unlock(&init_lock);
     return mpi_errno;
-    /* --END ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
 }

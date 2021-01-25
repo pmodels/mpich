@@ -197,20 +197,21 @@ void MPII_Errhandler_set_fc(MPI_Errhandler errhand)
 /* Special error handler to call if we are not yet initialized, or if we
    have finalized */
 /* --BEGIN ERROR HANDLING-- */
-void MPIR_Err_preOrPostInit(void)
+void MPIR_Err_Uninitialized(const char *funcname)
 {
-    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT) {
-        MPL_error_printf("Attempting to use an MPI routine before initializing MPICH\n");
-    } else if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) {
-        MPL_error_printf("Attempting to use an MPI routine after finalizing MPICH\n");
-    } else {
-        MPL_error_printf
-            ("Internal Error: Unknown state of MPI (neither initialized nor finalized)\n");
-    }
+    MPL_error_printf
+        ("Attempting to use an MPI routine (%s) before initializing or after finalizing MPICH\n",
+         funcname);
     exit(1);
 }
 
 /* --END ERROR HANDLING-- */
+
+/* Return true if the error util is initialized */
+int MPIR_Errutil_is_initialized(void)
+{
+    return (MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__UNINITIALIZED);
+}
 
 /* Return true if the error code indicates a fatal error */
 int MPIR_Err_is_fatal(int errcode)
@@ -231,8 +232,7 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
     checkValidErrcode(error_class, fcname, &errcode);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT ||
-        MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) {
+    if (!MPIR_Errutil_is_initialized()) {
         /* for whatever reason, we aren't initialized (perhaps error
          * during MPI_Init) */
         MPIR_Handle_fatal_error(MPIR_Process.comm_world, fcname, errcode);
