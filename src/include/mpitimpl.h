@@ -30,7 +30,8 @@ typedef enum {
     MPIR_T_PVAR_HANDLE,
     MPIR_T_PVAR_SESSION,
     MPIR_T_SOURCE,
-    MPIR_T_EVENT
+    MPIR_T_EVENT,
+    MPIR_T_EVENT_REG
 } MPIR_T_object_kind;
 #endif
 
@@ -1279,6 +1280,9 @@ typedef struct MPIR_T_event_s {
     char *desc;
     MPIR_T_bind_t bind;
 
+    struct MPIR_T_event_registration_s *reg_list_head;
+    struct MPIR_T_event_registration_s *reg_list_tail;
+
     UT_hash_handle hh;          /* Makes this structure hashable */
 } MPIR_T_event_t;
 
@@ -1286,5 +1290,22 @@ void MPIR_T_register_event(int source_index, const char *name, MPIR_T_verbosity_
                            MPI_Datatype array_of_datatypes[], MPI_Aint array_of_displacements[],
                            MPI_Aint num_elements, const char *desc, MPIR_T_bind_t bind,
                            const char *category, int *index);
+
+typedef struct MPIR_T_event_cb_s {
+    MPI_T_event_cb_function *cb_function;
+    void *user_data;
+} MPIR_T_event_cb_t;
+
+typedef struct MPIR_T_event_registration_s {
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_T_object_kind kind;
+#endif
+    MPIR_T_event_t *event;
+    void *obj_handle;
+    MPIR_T_event_cb_t callbacks[4];     /* one for each safety level */
+    MPI_T_event_dropped_cb_function *dropped_cb;
+
+    struct MPIR_T_event_registration_s *next;
+} MPIR_T_event_registration_t;
 
 #endif /* MPITIMPL_H_INCLUDED */
