@@ -33,14 +33,16 @@ MPI_Finalize:
 MPI_Finalized:
     .desc: Indicates whether 'MPI_Finalize' has been called.
     .skip: initcheck
+    .include: mpi_init.h
 {
-    *flag = (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED);
+    *flag = MPII_world_is_finalized();
 }
 
 MPI_Init:
     .desc: Initialize the MPI execution environment
     .skip: ThreadSafe, Fortran, initcheck, validate-ARGUMENT_COUNT, validate-ARGUMENT_LIST
     .seealso: MPI_Init_thread, MPI_Finalize
+    .include: mpi_init.h
 /*
     Notes:
        The MPI standard does not say what a program can do before an 'MPI_INIT' or
@@ -65,25 +67,22 @@ MPI_Init:
     .ve
 */
 { -- error_check --
-    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPI_Init", __LINE__, MPI_ERR_OTHER, "**inittwice", 0);
-        if (mpi_errno) {
-            goto fn_fail;
-        }
-    }
+    MPIR_ERRTEST_INITTWICE();
 }
 
 MPI_Initialized:
     .desc: Indicates whether 'MPI_Init' has been called.
     .skip: initcheck
+    .include: mpi_init.h
 {
-    *flag = (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT);
+    *flag = MPII_world_is_initialized();
 }
 
 MPI_Init_thread:
     .desc: Initialize the MPI execution environment
     .skip: ThreadSafe, Fortran, initcheck, validate-THREAD_LEVEL, validate-ARGUMENT_COUNT, validate-ARGUMENT_LIST
     .seealso: MPI_Init, MPI_Finalize
+    .include: mpi_init.h
 /*
     Command line arguments:
     MPI specifies no command-line arguments but does allow an MPI
@@ -107,12 +106,7 @@ MPI_Init_thread:
     'argv' arguments. ('MPI_INIT_THREAD(required, provided, ierror)')
 */
 { -- error_check --
-    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPI_Init_thread", __LINE__, MPI_ERR_OTHER, "**inittwice", 0);
-        if (mpi_errno) {
-            goto fn_fail;
-        }
-    }
+    MPIR_ERRTEST_INITTWICE();
 }
 
 MPI_Is_thread_main:
