@@ -1724,7 +1724,7 @@ def get_C_param(param, mapping):
                 want_star = 3
             elif param['pointer'] is not None and not param['pointer']:
                 want_bracket = 1
-            elif param['length'] and kind != "STRING":
+            elif param['length'] is not None and kind != "STRING":
                 want_bracket = 1
             else:
                 want_star = 1
