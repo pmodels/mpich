@@ -730,22 +730,24 @@ PAC_PUSH_FLAG([LDFLAGS])
 PAC_PUSH_FLAG([LIBS])
 
 # Check CUDA availability
-PAC_SET_HEADER_LIB_PATH([cuda])
-PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
 cuda_CPPFLAGS=""
 cuda_LDFLAGS=""
 cuda_LIBS=""
-if test "X${have_cuda}" = "Xyes" ; then
-    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
-    have_gpu="yes"
-    if test -n "${with_cuda}" ; then
-        cuda_CPPFLAGS="-I${with_cuda}/include"
-        if test -d ${with_cuda}/lib64 ; then
-            cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
-        else
-            cuda_LDFLAGS="-L${with_cuda}/lib"
+if test -n "$with_cuda" -a "$with_cuda" != "no" ; then
+    PAC_SET_HEADER_LIB_PATH([cuda])
+    PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
+    if test "X${have_cuda}" = "Xyes" ; then
+        AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
+        have_gpu="yes"
+        if test -n "${with_cuda}" ; then
+            cuda_CPPFLAGS="-I${with_cuda}/include"
+            if test -d ${with_cuda}/lib64 ; then
+                cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
+            else
+                cuda_LDFLAGS="-L${with_cuda}/lib"
+            fi
+            cuda_LIBS="-lcudart"
         fi
-        cuda_LIBS="-lcudart"
     fi
 fi
 AM_CONDITIONAL([HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
@@ -753,7 +755,7 @@ AC_SUBST([cuda_CPPFLAGS])
 AC_SUBST([cuda_LDFLAGS])
 AC_SUBST([cuda_LIBS])
 
-if test "$have_gpu" = "no" ; then
+if test "$have_gpu" = "no" -a -n "$with_ze" -a "$with_ze" != "no" ; then
     # Check Level Zero availability when no other GPU library is available
     PAC_SET_HEADER_LIB_PATH([ze])
     PAC_CHECK_HEADER_LIB([level_zero/ze_api.h],[ze_loader],[zeInit],[have_ze=yes],[have_ze=no])
