@@ -33,6 +33,10 @@ void MPIR_T_register_event(int source_index, const char *name, MPIR_T_verbosity_
     event->desc = MPL_strdup(desc);
     event->bind = bind;
 
+    /* initialize registration handle list */
+    event->reg_list_head = NULL;
+    event->reg_list_tail = NULL;
+
     /* stash structure in hash table */
     HASH_ADD_INT(events, index, event, MPL_MEM_MPIT);
 
@@ -107,13 +111,29 @@ void MPIR_T_events_finalize(void)
 int MPIR_T_event_callback_get_info_impl(MPI_T_event_registration event_registration,
                                         MPI_T_cb_safety cb_safety, MPIR_Info ** info_used_ptr)
 {
-    return MPI_T_ERR_INVALID_HANDLE;
+#ifdef HAVE_ERROR_CHECKING
+    if (event_registration->kind != MPIR_T_EVENT_REG) {
+        return MPI_T_ERR_INVALID_HANDLE;
+    }
+#endif
+
+    /* no info support */
+    *info_used_ptr = NULL;
+
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_event_callback_set_info_impl(MPI_T_event_registration event_registration,
                                         MPI_T_cb_safety cb_safety, MPIR_Info * info_ptr)
 {
-    return MPI_T_ERR_INVALID_HANDLE;
+#ifdef HAVE_ERROR_CHECKING
+    if (event_registration->kind != MPIR_T_EVENT_REG) {
+        return MPI_T_ERR_INVALID_HANDLE;
+    }
+#endif
+
+    /* no info support */
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_event_copy_impl(MPI_T_event_instance event_instance, void *buffer)
@@ -123,6 +143,14 @@ int MPIR_T_event_copy_impl(MPI_T_event_instance event_instance, void *buffer)
 
 int MPIR_T_event_get_index_impl(const char *name, int *event_index)
 {
+    MPIR_T_event_t *event, *etmp;
+    HASH_ITER(hh, events, event, etmp) {
+        if (strcmp(name, event->name) == 0) {
+            *event_index = event->index;
+            return MPI_SUCCESS;
+        }
+    }
+
     return MPI_T_ERR_INVALID_NAME;
 }
 
@@ -178,25 +206,75 @@ int MPIR_T_event_get_timestamp_impl(MPI_T_event_instance event_instance,
 int MPIR_T_event_handle_alloc_impl(int event_index, void *obj_handle, MPIR_Info * info_ptr,
                                    MPI_T_event_registration * event_registration)
 {
-    return MPI_T_ERR_INVALID_INDEX;
+    MPIR_T_event_t *event;
+    HASH_FIND_INT(events, &event_index, event);
+    if (event == NULL) {
+        return MPI_T_ERR_INVALID_INDEX;
+    }
+
+    MPIR_T_event_registration_t *event_reg =
+        MPL_malloc(sizeof(MPIR_T_event_registration_t), MPL_MEM_MPIT);
+#ifdef HAVE_ERROR_CHECKING
+    event_reg->kind = MPIR_T_EVENT_REG;
+#endif
+    event_reg->event = event;
+    LL_APPEND(event->reg_list_head, event->reg_list_tail, event_reg);
+    if (event->bind != MPI_T_BIND_NO_OBJECT)
+        event_reg->obj_handle = obj_handle;
+
+    /* initialize callbacks */
+    memset(event_reg->callbacks, 0, sizeof(event_reg->callbacks));
+    event_reg->dropped_cb = NULL;
+    event_reg->dropped_count = 0;
+
+    *event_registration = event_reg;
+
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_event_handle_free_impl(MPI_T_event_registration event_registration, void *user_data,
                                   MPI_T_event_free_cb_function free_cb_function)
 {
-    return MPI_T_ERR_INVALID_HANDLE;
+#ifdef HAVE_ERROR_CHECKING
+    if (event_registration->kind != MPIR_T_EVENT_REG) {
+        return MPI_T_ERR_INVALID_HANDLE;
+    }
+#endif
+
+    LL_DELETE(event_registration->event->reg_list_head, event_registration->event->reg_list_tail,
+              event_registration);
+    (free_cb_function) (event_registration, MPI_T_CB_REQUIRE_NONE, user_data);
+    MPL_free(event_registration);
+
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_event_handle_get_info_impl(MPI_T_event_registration event_registration,
                                       MPIR_Info ** info_used_ptr)
 {
-    return MPI_T_ERR_INVALID_HANDLE;
+#ifdef HAVE_ERROR_CHECKING
+    if (event_registration->kind != MPIR_T_EVENT_REG) {
+        return MPI_T_ERR_INVALID_HANDLE;
+    }
+#endif
+
+    /* no info support */
+    *info_used_ptr = NULL;
+
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_event_handle_set_info_impl(MPI_T_event_registration event_registration,
                                       MPIR_Info * info_ptr)
 {
-    return MPI_T_ERR_INVALID_HANDLE;
+#ifdef HAVE_ERROR_CHECKING
+    if (event_registration->kind != MPIR_T_EVENT_REG) {
+        return MPI_T_ERR_INVALID_HANDLE;
+    }
+#endif
+
+    /* no info support */
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_event_read_impl(MPI_T_event_instance event_instance, int element_index, void *buffer)
@@ -208,13 +286,30 @@ int MPIR_T_event_register_callback_impl(MPI_T_event_registration event_registrat
                                         MPI_T_cb_safety cb_safety, MPIR_Info * info_ptr,
                                         void *user_data, MPI_T_event_cb_function event_cb_function)
 {
-    return MPI_T_ERR_INVALID_HANDLE;
+#ifdef HAVE_ERROR_CHECKING
+    if (event_registration->kind != MPIR_T_EVENT_REG) {
+        return MPI_T_ERR_INVALID_HANDLE;
+    }
+#endif
+
+    event_registration->callbacks[cb_safety].cb_function = event_cb_function;
+    event_registration->callbacks[cb_safety].user_data = user_data;
+
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_event_set_dropped_handler_impl(MPI_T_event_registration event_registration,
                                           MPI_T_event_dropped_cb_function dropped_cb_function)
 {
-    return MPI_T_ERR_INVALID_HANDLE;
+#ifdef HAVE_ERROR_CHECKING
+    if (event_registration->kind != MPIR_T_EVENT_REG) {
+        return MPI_T_ERR_INVALID_HANDLE;
+    }
+#endif
+
+    event_registration->dropped_cb = dropped_cb_function;
+
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_source_get_info_impl(int source_index, char *name, int *name_len, char *desc,
