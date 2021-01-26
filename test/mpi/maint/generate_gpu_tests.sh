@@ -65,4 +65,5 @@ while read -r line ; do
         echo "${testname} $procs arg=-evenmemtype=reg_host arg=-oddmemtype=device" >> ${builddir}/${testdir}/testlist.gpu
         echo "${testname} $procs arg=-evenmemtype=device arg=-oddmemtype=device" >> ${builddir}/${testdir}/testlist.gpu
     fi
+    printf "done\n"
 done < ${srcdir}/gpu-test-config.txt
