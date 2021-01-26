@@ -97,6 +97,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
                 mpi_errno = MPIDI_prequest_start(preq);
                 break;
 
+            case MPIR_REQUEST_KIND__PREQUEST_COLL:
+                mpi_errno = MPIR_Persist_coll_start(preq);
+                break;
+
             case MPIR_REQUEST_KIND__PART_SEND:
             case MPIR_REQUEST_KIND__PART_RECV:
                 mpi_errno = MPIDI_part_start(preq);
@@ -107,11 +111,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
                                                  __LINE__, MPI_ERR_INTERN, "**ch4|badstartreq",
                                                  "**ch4|badstartreq %d", preq->kind);
         }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_STARTALL);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* CH4_STARTALL_H_INCLUDED */
