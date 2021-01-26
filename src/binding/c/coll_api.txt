@@ -70,6 +70,9 @@ MPI_Barrier:
 MPI_Bcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator
 
+MPI_Bcast_init:
+    .desc: Creates a persistent request for broadcast
+
 MPI_Exscan:
     .desc: Computes the exclusive scan (partial reductions) of data on a collection of processes
     .docnotes: collops
