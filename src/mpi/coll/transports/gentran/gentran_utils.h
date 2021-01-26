@@ -36,4 +36,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 /* Hook to make progress on nonblocking collective operations  */
 int MPII_Genutil_progress_hook(int *);
 
+/* Function to reset a schedule for reuse */
+int MPII_Genutil_sched_reset(MPII_Genutil_sched_t * sched);
+
 #endif /* GENTRAN_UTILS_H_INCLUDED */
