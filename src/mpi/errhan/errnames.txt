@@ -872,48 +872,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_attr_get %C %d %p %p:MPI_Attr_get(%C, keyval=%d, attr_value=%p, flag=%p) failed
 **mpi_attr_delete:MPI_Attr_delete failed
 **mpi_attr_delete %C %d:MPI_Attr_delete(%C, keyval=%d) failed
-**mpi_topo_test:MPI_Topo_test failed
-**mpi_topo_test %C %p:MPI_Topo_test(%C, topo_type=%p) failed
-**mpi_cart_create:MPI_Cart_create failed
-**mpi_cart_create %C %d %p %p %d %p:MPI_Cart_create(%C, ndims=%d, dims=%p, periods=%p, reorder=%d, comm_cart=%p) failed
-**mpi_dims_create:MPI_Dims_create failed
-**mpi_dims_create %d %d %p:MPI_Dims_create(nnodes=%d, ndims=%d, dims=%p) failed
-**mpi_graph_create:MPI_Graph_create failed
-**mpi_graph_create %C %d %p %p %d %p:MPI_Graph_create(%C, nnodes=%d, index=%p, edges=%p, reorder=%d, comm_graph=%p) failed
-**mpi_graphdims_get:MPI_Graphdims_get failed
-**mpi_graphdims_get %C %p %p:MPI_Graphdims_get(%C, nnodes=%p, nedges=%p) failed
-**mpi_graph_get:MPI_Graph_get failed
-**mpi_graph_get %C %d %d %p %p:MPI_Graph_get(%C, maxindex=%d, maxedges=%d, index=%p, edges=%p) failed
-**mpi_cartdim_get:MPI_Cartdim_get failed
-**mpi_cartdim_get %C %p:MPI_Cartdim_get(%C, ndims=%p) failed
-**mpi_cart_get:MPI_Cart_get failed
-**mpi_cart_get %C %d %p %p %p:MPI_Cart_get(%C, maxdims=%d, dims=%p, periods=%p, coords=%p) failed
-**mpi_cart_rank:MPI_Cart_rank failed
-**mpi_cart_rank %C %p %p:MPI_Cart_rank(%C, coords=%p, rank=%p) failed
-**mpi_cart_coords:MPI_Cart_coords failed
-**mpi_cart_coords %C %d %d %p:MPI_Cart_coords(%C, rank=%d, maxdims=%d, coords=%p) failed
-**mpi_graph_neighbors_count:MPI_Graph_neighbors_count failed
-**mpi_graph_neighbors_count %C %d %p:MPI_Graph_neighbors_count(%C, rank=%d, nneighbors=%p) failed
-**mpi_graph_neighbors:MPI_Graph_neighbors failed
-**mpi_graph_neighbors %C %d %d %p:MPI_Graph_neighbors(%C, rank=%d, maxneighbors=%d, neighbors=%p) failed
-**mpi_cart_shift:MPI_Cart_shift failed
-**mpi_cart_shift %C %d %d %p %p:MPI_Cart_shift(%C, direction=%d, displ=%d, source=%p, dest=%p) failed
-**mpi_cart_sub:MPI_Cart_sub failed
-**mpi_cart_sub %C %p %p:MPI_Cart_sub(%C, remain_dims=%p, comm_new=%p) failed
-**mpi_cart_map:MPI_Cart_map failed
-**mpi_cart_map %C %d %p %p %p:MPI_Cart_map(%C, ndims=%d, dims=%p, periods=%p, newrank=%p) failed
-**mpi_graph_map:MPI_Graph_map failed
-**mpi_graph_map %C %d %p %p %p:MPI_Graph_map(%C, nnodes=%d, index=%p, edges=%p, newrank=%p) failed
 **mpi_register_datarep:MPI_Register_datarep failed
 **mpi_register_datarep %s %p %p %p %p:MPI_Register_datarep(datarep=%s, read_conversion_fn=%p, write_conversion_fn=%p, dtype_file_extent_fn=%p, extra_state=%p) failed
-**mpi_dist_graph_create: MPI_Dist_graph_create failed
-**mpi_dist_graph_create %C %d %p %p %p %p %I %d %p: MPI_Dist_graph_create(%C, n=%d, sources=%p, degrees=%p, destinations=%p, weights=%p, info=%I, reorder=%d, comm_dist_graph=%p) failed
-**mpi_dist_graph_create_adjacent: MPI_Dist_graph_create_adjacent failed
-**mpi_dist_graph_create_adjacent %C %d %p %p %d %p %p %I %d %p: MPI_Dist_graph_create_adjacent(%C, indegree=%d, sources=%p, sourceweights=%p, outdegree=%d, destinations=%p, destweights=%p, %I, %d, comm_dist_graph=%p) failed
-**mpi_dist_graph_neighbors_count: MPI_Dist_graph_neighbors_count failed
-**mpi_dist_graph_neighbors_count %C %p %p %p: MPI_Dist_graph_neighbors_count(%C, indegree=%p, outdegree=%p, weighted=%p) failed
-**mpi_dist_graph_neighbors: MPI_Dist_graph_neighbors failed
-**mpi_dist_graph_neighbors %C %d %p %p %d %p %p: MPI_Dist_graph_neighbors(%C, maxindegree=%d, sources=%p, sourceweights=%p, maxoutdegree=%d, destinations=%p, destweights=%p) failed
 
 # MPIR functions
 
