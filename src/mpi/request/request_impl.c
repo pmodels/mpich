@@ -129,6 +129,9 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
                 MPIR_Request_free(request_ptr->u.persist.real_request);
             }
             break;
+        case MPIR_REQUEST_KIND__PREQUEST_COLL:
+            MPIR_Persist_coll_free_cb(request_ptr);
+            break;
         case MPIR_REQUEST_KIND__GREQUEST:
             mpi_errno = MPIR_Grequest_free(request_ptr);
             break;
@@ -207,6 +210,7 @@ int MPIR_Request_get_status_impl(MPIR_Request * request_ptr, int *flag, MPI_Stat
                 }
                 break;
             case MPIR_REQUEST_KIND__PREQUEST_RECV:
+            case MPIR_REQUEST_KIND__PREQUEST_COLL:
                 prequest_ptr = request_ptr->u.persist.real_request;
                 if (prequest_ptr != NULL) {
                     MPIR_Request_extract_status(prequest_ptr, status);
