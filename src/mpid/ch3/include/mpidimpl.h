@@ -327,7 +327,7 @@ extern MPIDI_Process_t MPIDI_Process;
     (req_)->dev.state |= ((flag_) << MPIDI_REQUEST_SYNC_SEND_SHIFT) & MPIDI_REQUEST_SYNC_SEND_MASK;\
 }
 
-#define MPIDI_REQUEST_TYPE_MASK (0xF << MPIDI_REQUEST_TYPE_SHIFT)
+#define MPIDI_REQUEST_TYPE_MASK (0x3F << MPIDI_REQUEST_TYPE_SHIFT)
 #define MPIDI_REQUEST_TYPE_SHIFT 4
 #define MPIDI_REQUEST_TYPE_RECV 0
 #define MPIDI_REQUEST_TYPE_SEND 1
@@ -346,6 +346,8 @@ extern MPIDI_Process_t MPIDI_Process;
 #define MPIDI_REQUEST_TYPE_GET_ACCUM_RESP 13             /* target is sending GACC response data */
 #define MPIDI_REQUEST_TYPE_FOP_RECV 14                   /* target is receiving FOP data */
 #define MPIDI_REQUEST_TYPE_FOP_RESP 15                   /* target is sending FOP response data */
+/* Request types for persistent collectives */
+#define MPIDI_REQUEST_TYPE_PERSISTENT_COLL 16
 
 
 #define MPIDI_Request_get_type(req_)						\
