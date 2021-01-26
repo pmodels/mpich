@@ -141,7 +141,7 @@ int MPII_Typerep_convert_darray(int size, int rank, int ndims, const MPI_Aint * 
     MPL_free(st_offsets);
     MPL_free(coords);
 
-    mpi_errno = MPIR_Type_struct(3, blklens, disps, types, newtype);
+    mpi_errno = MPIR_Type_create_struct_c_impl(3, blklens, disps, types, newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Type_free_impl(&type_new);
@@ -187,22 +187,22 @@ static int type_block(const MPI_Aint * array_of_gsizes, int dim, int ndims, int 
     stride = orig_extent;
     if (order == MPI_ORDER_FORTRAN) {
         if (dim == 0) {
-            mpi_errno = MPIR_Type_contiguous_impl(mysize, type_old, type_new);
+            mpi_errno = MPIR_Type_contiguous_c_impl(mysize, type_old, type_new);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             for (int i = 0; i < dim; i++)
                 stride *= (MPI_Aint) (array_of_gsizes[i]);
-            mpi_errno = MPIR_Type_create_hvector_impl(mysize, 1, stride, type_old, type_new);
+            mpi_errno = MPIR_Type_create_hvector_c_impl(mysize, 1, stride, type_old, type_new);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
         if (dim == ndims - 1) {
-            mpi_errno = MPIR_Type_contiguous_impl(mysize, type_old, type_new);
+            mpi_errno = MPIR_Type_contiguous_c_impl(mysize, type_old, type_new);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             for (int i = ndims - 1; i > dim; i--)
                 stride *= (MPI_Aint) (array_of_gsizes[i]);
-            mpi_errno = MPIR_Type_create_hvector_impl(mysize, 1, stride, type_old, type_new);
+            mpi_errno = MPIR_Type_create_hvector_c_impl(mysize, 1, stride, type_old, type_new);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -262,7 +262,7 @@ static int type_cyclic(const MPI_Aint * array_of_gsizes, int dim, int ndims, int
         for (int i = ndims - 1; i > dim; i--)
             stride *= (MPI_Aint) (array_of_gsizes[i]);
 
-    mpi_errno = MPIR_Type_create_hvector_impl(count, blksize, stride, type_old, type_new);
+    mpi_errno = MPIR_Type_create_hvector_c_impl(count, blksize, stride, type_old, type_new);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (rem) {
@@ -276,7 +276,7 @@ static int type_cyclic(const MPI_Aint * array_of_gsizes, int dim, int ndims, int
         blklens[0] = 1;
         blklens[1] = rem;
 
-        mpi_errno = MPIR_Type_struct(2, blklens, disps, types, &type_tmp);
+        mpi_errno = MPIR_Type_create_struct_c_impl(2, blklens, disps, types, &type_tmp);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_Type_free_impl(type_new);
@@ -295,7 +295,7 @@ static int type_cyclic(const MPI_Aint * array_of_gsizes, int dim, int ndims, int
         disps[2] = orig_extent * ((MPI_Aint) (array_of_gsizes[dim]));
         blklens[0] = blklens[1] = blklens[2] = 1;
 
-        mpi_errno = MPIR_Type_struct(3, blklens, disps, types, &type_tmp);
+        mpi_errno = MPIR_Type_create_struct_c_impl(3, blklens, disps, types, &type_tmp);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_Type_free_impl(type_new);
