@@ -305,6 +305,10 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     mpi_errno = MPID_Finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
+#ifdef ENABLE_QMPI
+    MPII_qmpi_teardown();
+#endif
+
     mpi_errno = MPII_Coll_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
