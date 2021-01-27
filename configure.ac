@@ -2864,7 +2864,7 @@ fi
 if test "$MPID_NO_FLOAT16" != "yes" ; then
     AC_CACHE_CHECK([whether _Float16 is supported],
     pac_cv_have_float16,[
-    AC_TRY_COMPILE(,[_Float16 a;],
+    AC_TRY_COMPILE(,[_Float16 a=1;_Float16 b=1;_Float16 c=a+b;],
     pac_cv_have_float16=yes,pac_cv_have_float16=no)])
     if test "$pac_cv_have_float16" = "yes" ; then
         AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
