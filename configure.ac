@@ -2864,7 +2864,10 @@ fi
 if test "$MPID_NO_FLOAT16" != "yes" ; then
     AC_CACHE_CHECK([whether _Float16 is supported],
     pac_cv_have_float16,[
-    AC_TRY_COMPILE(,[_Float16 a;],
+    # The compiler might optimize out _Float16 usage and give a false
+    # positive for this test (observed with clang 6 on Linux with -O2).
+    # We use volatile as a way to disable optimizations.
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([],[volatile _Float16 a=1; return (int)a;])],
     pac_cv_have_float16=yes,pac_cv_have_float16=no)])
     if test "$pac_cv_have_float16" = "yes" ; then
         AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
