@@ -361,8 +361,8 @@ int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                     comm_ptr, request);
     }
 
-    MPII_COLL_HOST_BUFFER_SWAP_BACK(host_sendbuf, host_recvbuf, in_recvbuf, recvcount, datatype,
-                                    request);
+    MPIR_Coll_host_buffer_swap_back(host_sendbuf, host_recvbuf, in_recvbuf, recvcount, datatype,
+                                    *request);
 
     return mpi_errno;
 }

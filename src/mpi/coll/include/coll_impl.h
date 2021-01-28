@@ -104,28 +104,7 @@ int MPII_Coll_finalize(void);
 void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_Aint count,
                                  MPI_Datatype datatype, void **host_sendbuf, void **host_recvbuf);
 void MPIR_Coll_host_buffer_free(void *host_sendbuf, void *host_recvbuf);
-
-#define MPII_COLL_HOST_BUFFER_SWAP_BACK(host_sendbuf_, host_recvbuf_, in_recvbuf_, count_, datatype_, request_) \
-    do {                                                                                      \
-        if (host_recvbuf_ == NULL) {                                                          \
-            /* no copy at completion necessary, just return */                                \
-            return mpi_errno;                                                                 \
-        }                                                                                     \
-                                                                                              \
-        if (*request_ == NULL || MPIR_Request_is_complete(*request_)) {                       \
-            /* operation is complete, copy the data and return */                             \
-            MPIR_Localcopy(host_recvbuf_, count_, datatype_, in_recvbuf_, count_, datatype_); \
-            MPIR_Coll_host_buffer_free(host_sendbuf_, host_recvbuf_);                         \
-            return mpi_errno;                                                                 \
-        }                                                                                     \
-                                                                                              \
-        /* data will be copied later during request completion */                             \
-        (*request_)->u.nbc.coll.host_sendbuf = host_sendbuf_;                                 \
-        (*request_)->u.nbc.coll.host_recvbuf = host_recvbuf_;                                 \
-        (*request_)->u.nbc.coll.user_recvbuf = in_recvbuf_;                                   \
-        (*request_)->u.nbc.coll.count = count_;                                               \
-        (*request_)->u.nbc.coll.datatype = datatype_;                                         \
-        MPIR_Datatype_add_ref_if_not_builtin(datatype_);                                      \
-    } while (0)
+void MPIR_Coll_host_buffer_swap_back(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
+                                     MPI_Aint count, MPI_Datatype datatype, MPIR_Request * request);
 
 #endif /* COLL_IMPL_H_INCLUDED */
