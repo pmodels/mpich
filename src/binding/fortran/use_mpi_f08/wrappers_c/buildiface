@@ -609,12 +609,29 @@ EOT
             if ($i) { print CFILE ", "; }
             if ($arglist[$i] =~ /CFI_cdesc_t\*/) {
                 my $j = 0;
+
+                # print buf
                 while ($vec[$j] != $i) { $j++; }
+                print CFILE "buf$vec[$j]";
+                $i++;
+
+                # replace with count if defined
                 if ($vec[$j + 1] >= 0) {
-                    print CFILE "buf$i, count$i, dtype$i";
-                    $i += 3;
-                } else {
-                    print CFILE "buf$i";
+                    while ($vec[$j + 1] != $i) {
+                      print CFILE ", x$i";
+                      $i++;
+                    }
+                    print CFILE ", count$vec[$j]";
+                    $i++;
+                }
+
+                # replace with dtype if defined
+                if ($vec[$j + 2] >= 0) {
+                    while ($vec[$j + 2] != $i) {
+                      print CFILE ", x$i";
+                      $i++;
+                    }
+                    print CFILE ", dtype$vec[$j]";
                     $i++;
                 }
             } else {
