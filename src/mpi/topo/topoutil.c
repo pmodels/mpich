@@ -33,8 +33,8 @@ MPIR_Topology *MPIR_Topology_get(MPIR_Comm * comm_ptr)
         return 0;
     }
 
-    mpi_errno = MPII_Comm_get_attr(comm_ptr->handle, MPIR_Topology_keyval,
-                                   &topo_ptr, &flag, MPIR_ATTR_PTR);
+    mpi_errno = MPIR_Comm_get_attr_impl(comm_ptr, MPIR_Topology_keyval,
+                                        &topo_ptr, &flag, MPIR_ATTR_PTR);
     if (mpi_errno)
         return NULL;
 
