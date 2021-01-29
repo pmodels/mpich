@@ -185,7 +185,7 @@ def dump_netmod_impl_h(h_file):
 
             print("{", file=Out)
             use_ret = ''
-            if re.search(r'int|size_t', a['ret']):
+            if not re.match(r'void\s*$', a['ret']):
                 use_ret = 1
                 print("    %s ret;" % a['ret'], file=Out)
                 print("", file=Out)
@@ -246,7 +246,7 @@ def dump_netmod_impl_c(c_file):
 
             print("{", file=Out)
             use_ret = ''
-            if re.search(r'int|size_t', a['ret']):
+            if not re.match(r'void\s*$', a['ret']):
                 use_ret = 1
                 print("    %s ret;" % a['ret'], file=Out)
                 print("", file=Out)
