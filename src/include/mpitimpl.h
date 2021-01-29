@@ -31,7 +31,8 @@ typedef enum {
     MPIR_T_PVAR_SESSION,
     MPIR_T_SOURCE,
     MPIR_T_EVENT,
-    MPIR_T_EVENT_REG
+    MPIR_T_EVENT_REG,
+    MPIR_T_EVENT_INSTANCE
 } MPIR_T_object_kind;
 #endif
 
@@ -1304,8 +1305,20 @@ typedef struct MPIR_T_event_registration_s {
     void *obj_handle;
     MPIR_T_event_cb_t callbacks[4];     /* one for each safety level */
     MPI_T_event_dropped_cb_function *dropped_cb;
+    int dropped_count;
 
     struct MPIR_T_event_registration_s *next;
 } MPIR_T_event_registration_t;
+
+typedef struct MPIR_T_event_instance_s {
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_T_object_kind kind;
+#endif
+    MPIR_T_event_t *event;
+    MPI_Count timestamp;
+    void *data;
+} MPIR_T_event_instance_t;
+
+void MPIR_T_event_instance(int event_index, MPI_T_cb_safety cb_safety, void *data);
 
 #endif /* MPITIMPL_H_INCLUDED */
