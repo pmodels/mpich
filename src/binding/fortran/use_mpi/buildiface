@@ -690,9 +690,9 @@ $PRIVATEVAR = "";
 print MPIFD <<EOT;
         TYPE$BINDACCESS :: MPI_Status
            $BINDDEF
-           INTEGER$PUBLICVAR :: MPI_SOURCE, MPI_TAG, MPI_ERROR
            INTEGER$PRIVATEVAR :: count_lo
            INTEGER$PRIVATEVAR :: count_hi_and_cancelled
+           INTEGER$PUBLICVAR :: MPI_SOURCE, MPI_TAG, MPI_ERROR
         END TYPE MPI_Status
 EOT
 
