@@ -2,3 +2,4 @@ mpi_t_str 1
 mpit_vars 1
 cvarwrite 1
 getindex 1
+qmpi_test 2 env=MPIR_CVAR_QMPI_TOOL_LIST=test_tool:test_tool
