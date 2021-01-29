@@ -76,6 +76,55 @@ void MPIR_T_register_source(const char *name, const char *desc, MPI_T_source_ord
     *index = source->index;
 }
 
+void MPIR_T_event_instance(int event_index, MPI_T_cb_safety cb_safety, void *data)
+{
+    MPIR_T_event_t *event;
+    HASH_FIND_INT(events, &event_index, event);
+    if (event == NULL) {
+        return;
+    }
+
+    /* iterate over all registration handles for this event */
+    for (MPIR_T_event_registration_t * event_reg = event->reg_list_head; event_reg;
+         event_reg = event_reg->next) {
+        int i;
+        /* search for callback with appropriate safety */
+        for (i = cb_safety; i < 4; i++) {
+            if (event_reg->callbacks[i].cb_function != NULL) {
+                /* handle any previously dropped events */
+                if (event_reg->dropped_count > 0) {
+                    event_reg->dropped_cb(event_reg->dropped_count, event_reg,
+                                          event_reg->event->source_index, cb_safety,
+                                          event_reg->callbacks[i].user_data);
+
+                    /* reset dropped counter */
+                    event_reg->dropped_count = 0;
+                }
+
+                MPIR_T_source_t *source;
+                MPIR_T_event_instance_t event_instance;
+                HASH_FIND_INT(sources, &event->source_index, source);
+                event_instance.kind = MPIR_T_EVENT_INSTANCE;
+                event_instance.event = event;
+                MPIR_T_source_get_timestamp_impl(event->source_index, &event_instance.timestamp);
+                event_instance.data = data;
+                event_reg->callbacks[i].cb_function(&event_instance, event_reg, cb_safety,
+                                                    event_reg->callbacks[i].user_data);
+
+                /* callback was found and executed */
+                break;
+            }
+        }
+
+        /* if no callback was executed, increment the dropped count */
+        if (i == 4 && event_reg->dropped_cb != NULL) {
+            event_reg->dropped_count++;
+        }
+    }
+
+    return;
+}
+
 static MPI_Count default_timestamp(void)
 {
     MPL_time_t t;
@@ -138,7 +187,24 @@ int MPIR_T_event_callback_set_info_impl(MPI_T_event_registration event_registrat
 
 int MPIR_T_event_copy_impl(MPI_T_event_instance event_instance, void *buffer)
 {
-    return MPI_T_ERR_INVALID_HANDLE;
+#ifdef HAVE_ERROR_CHECKING
+    if (event_instance->kind != MPIR_T_EVENT_INSTANCE) {
+        return MPI_T_ERR_INVALID_HANDLE;
+    }
+#endif
+
+    MPIR_T_event_t *event = event_instance->event;
+
+    /* should we create a struct type? */
+    for (int i = 0; i < event->num_elements; i++) {
+        MPI_Datatype dt = event->array_of_datatypes[i];
+        MPI_Aint displ = event->array_of_displacements[i];
+
+        MPIR_Localcopy((char *) event_instance->data + displ, 1, dt, (char *) buffer + displ, 1,
+                       dt);
+    }
+
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_event_get_index_impl(const char *name, int *event_index)
@@ -194,13 +260,29 @@ int MPIR_T_event_get_num_impl(int *num_events)
 
 int MPIR_T_event_get_source_impl(MPI_T_event_instance event_instance, int *source_index)
 {
-    return MPI_T_ERR_INVALID_HANDLE;
+#ifdef HAVE_ERROR_CHECKING
+    if (event_instance->kind != MPIR_T_EVENT_INSTANCE) {
+        return MPI_T_ERR_INVALID_HANDLE;
+    }
+#endif
+
+    *source_index = event_instance->event->source_index;
+
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_event_get_timestamp_impl(MPI_T_event_instance event_instance,
                                     MPI_Count * event_timestamp)
 {
-    return MPI_T_ERR_INVALID_HANDLE;
+#ifdef HAVE_ERROR_CHECKING
+    if (event_instance->kind != MPIR_T_EVENT_INSTANCE) {
+        return MPI_T_ERR_INVALID_HANDLE;
+    }
+#endif
+
+    *event_timestamp = event_instance->timestamp;
+
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_event_handle_alloc_impl(int event_index, void *obj_handle, MPIR_Info * info_ptr,
@@ -279,7 +361,22 @@ int MPIR_T_event_handle_set_info_impl(MPI_T_event_registration event_registratio
 
 int MPIR_T_event_read_impl(MPI_T_event_instance event_instance, int element_index, void *buffer)
 {
-    return MPI_T_ERR_INVALID_HANDLE;
+#ifdef HAVE_ERROR_CHECKING
+    if (event_instance->kind != MPIR_T_EVENT_INSTANCE) {
+        return MPI_T_ERR_INVALID_HANDLE;
+    }
+#endif
+
+    MPIR_T_event_t *event = event_instance->event;
+    if (element_index >= event->num_elements) {
+        return MPI_T_ERR_INVALID_INDEX;
+    }
+
+    MPI_Datatype dt = event->array_of_datatypes[element_index];
+    MPIR_Localcopy((char *) event_instance->data + event->array_of_displacements[element_index], 1,
+                   dt, buffer, 1, dt);
+
+    return MPI_SUCCESS;
 }
 
 int MPIR_T_event_register_callback_impl(MPI_T_event_registration event_registration,
