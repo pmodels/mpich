@@ -41,6 +41,14 @@ int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
     return MPL_SUCCESS;
 }
 
+int MPL_wtime_to_ticks(MPL_time_t * t, long long int *val)
+{
+    *val = t->tv_sec * 1000000;
+    *val += t->tv_usec;
+
+    return MPL_SUCCESS;
+}
+
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = (double) t->tv_sec + .000001 * (double) t->tv_usec;
