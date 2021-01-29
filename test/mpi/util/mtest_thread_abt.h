@@ -193,8 +193,21 @@ void MTest_init_thread_pkg(void)
 
     ABT_init(0, NULL);
 
+    /* Get the main pool of the primary execution stream.
+     *
+     * When MPI_Init_thread() is called before MTest_init_thread_pkg() e.g.
+     * threads/spawn/th_taskmanager, so some threads (e.g., asynchronous
+     * progress threads) can be associated with the current main pool of the
+     * primary execution stream.  Since we cannot update the scheduler of the
+     * primary execution stream in that case, the default scheduler and its pool
+     * are used for the primary execution stream. */
+    ret = ABT_xstream_self(&xstreams[0]);
+    MTEST_ABT_ERROR(ret, "ABT_xstream_self");
+    ret = ABT_xstream_get_main_pools(xstreams[0], 1, &pools[0]);
+    MTEST_ABT_ERROR(ret, "ABT_xstream_get_main_pools");
+
     /* Create pools */
-    for (i = 0; i < MTEST_NUM_XSTREAMS; i++) {
+    for (i = 1; i < MTEST_NUM_XSTREAMS; i++) {
         ret = ABT_pool_create_basic(ABT_POOL_FIFO, ABT_POOL_ACCESS_MPMC, ABT_TRUE, &pools[i]);
         MTEST_ABT_ERROR(ret, "ABT_pool_create_basic");
     }
@@ -202,7 +215,8 @@ void MTest_init_thread_pkg(void)
     /* Create schedulers */
     ABT_pool my_pools[MTEST_NUM_XSTREAMS];
     num_xstreams = MTEST_NUM_XSTREAMS;
-    for (i = 0; i < num_xstreams; i++) {
+    scheds[0] = ABT_SCHED_NULL;
+    for (i = 1; i < num_xstreams; i++) {
         for (k = 0; k < num_xstreams; k++) {
             my_pools[k] = pools[(i + k) % num_xstreams];
         }
@@ -213,10 +227,6 @@ void MTest_init_thread_pkg(void)
     }
 
     /* Create Execution Streams */
-    ret = ABT_xstream_self(&xstreams[0]);
-    MTEST_ABT_ERROR(ret, "ABT_xstream_self");
-    ret = ABT_xstream_set_main_sched(xstreams[0], scheds[0]);
-    MTEST_ABT_ERROR(ret, "ABT_xstream_set_main_sched");
     for (i = 1; i < num_xstreams; i++) {
         ret = ABT_xstream_create(scheds[i], &xstreams[i]);
         MTEST_ABT_ERROR(ret, "ABT_xstream_create");
