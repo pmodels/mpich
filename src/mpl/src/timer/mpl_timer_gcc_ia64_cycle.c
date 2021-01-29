@@ -65,6 +65,13 @@ int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
     return MPL_SUCCESS;
 }
 
+int MPL_wtime_to_ticks(MPL_time_t * t, long long int *val)
+{
+    *val = *t;
+
+    return MPL_SUCCESS;
+}
+
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     /* This returns the number of cycles as the "time".  This isn't correct

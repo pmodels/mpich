@@ -163,6 +163,21 @@ int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3);
 int MPL_wtime_touint(MPL_time_t * timeval, unsigned int *val);
 
 /*@
+  MPL_wtime_to_ticks - Converts a timestamp to raw clock ticks.
+  Input Parameter:
+. timeval - 'MPL_time_t' time stamp
+
+  Output Parameter:
+. val - long long int generated from the timestamp.
+
+  Notes:
+  This routine is intended to be used as an integer timestamp.
+
+
+  @*/
+int MPL_wtime_to_ticks(MPL_time_t * timeval, long long int *val);
+
+/*@
   MPL_wtime_todouble - Converts a timestamp to a double
 
   Input Parameter:
