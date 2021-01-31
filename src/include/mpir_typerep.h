@@ -11,35 +11,29 @@
 void MPIR_Typerep_init(void);
 void MPIR_Typerep_finalize(void);
 
-int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datatype oldtype,
-                               MPIR_Datatype * newtype);
-int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                                MPIR_Datatype * newtype);
-int MPIR_Typerep_create_contig(int count, MPI_Datatype oldtype, MPIR_Datatype * newtype);
+int MPIR_Typerep_create_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                               MPI_Datatype oldtype, MPIR_Datatype * newtype);
+int MPIR_Typerep_create_hvector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                                MPI_Datatype oldtype, MPIR_Datatype * newtype);
+int MPIR_Typerep_create_contig(MPI_Aint count, MPI_Datatype oldtype, MPIR_Datatype * newtype);
 int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype);
-int MPIR_Typerep_create_indexed_block(int count, int blocklength, const int *array_of_displacements,
-                                      MPI_Datatype oldtype, MPIR_Datatype * newtype);
-int MPIR_Typerep_create_hindexed_block(int count, int blocklength,
+int MPIR_Typerep_create_indexed_block(MPI_Aint count, MPI_Aint blocklength,
+                                      const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
+                                      MPIR_Datatype * newtype);
+int MPIR_Typerep_create_hindexed_block(MPI_Aint count, MPI_Aint blocklength,
                                        const MPI_Aint * array_of_displacements,
                                        MPI_Datatype oldtype, MPIR_Datatype * newtype);
-int MPIR_Typerep_create_indexed(int count, const int *array_of_blocklengths,
-                                const int *array_of_displacements, MPI_Datatype oldtype,
+int MPIR_Typerep_create_indexed(MPI_Aint count, const MPI_Aint * array_of_blocklengths,
+                                const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
                                 MPIR_Datatype * newtype);
-int MPIR_Typerep_create_hindexed(int count, const int *array_of_blocklengths,
+int MPIR_Typerep_create_hindexed(MPI_Aint count, const MPI_Aint * array_of_blocklengths,
                                  const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
                                  MPIR_Datatype * newtype);
 int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
                                 MPIR_Datatype * newtype);
-int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
+int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blocklengths,
                                const MPI_Aint * array_of_displacements,
                                const MPI_Datatype * array_of_types, MPIR_Datatype * newtype);
-int MPIR_Typerep_create_subarray(int ndims, const int *array_of_sizes, const int *array_of_subsizes,
-                                 const int *array_of_starts, int order, MPI_Datatype oldtype,
-                                 MPIR_Datatype * newtype);
-int MPIR_Typerep_create_darray(int size, int rank, int ndims, const int *array_of_gsizes,
-                               const int *array_of_distribs, const int *array_of_dargs,
-                               const int *array_of_psizes, int order, MPI_Datatype oldtype,
-                               MPIR_Datatype * newtype);
 int MPIR_Typerep_create_pairtype(MPI_Datatype type, MPIR_Datatype * newtype);
 
 void MPIR_Typerep_commit(MPI_Datatype type);

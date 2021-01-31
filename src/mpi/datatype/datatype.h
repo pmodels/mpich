@@ -119,8 +119,5 @@ extern void MPIR_Datatype_iscontig(MPI_Datatype, int *);
 /* internal debugging functions */
 void MPII_Datatype_printf(MPI_Datatype type, int depth, MPI_Aint displacement, int blocklength,
                           int header);
-void MPII_Datatype_get_contents_ints(MPIR_Datatype_contents * cp, int *user_ints);
-void MPII_Datatype_get_contents_aints(MPIR_Datatype_contents * cp, MPI_Aint * user_aints);
-void MPII_Datatype_get_contents_types(MPIR_Datatype_contents * cp, MPI_Datatype * user_types);
 
 #endif /* DATATYPE_H_INCLUDED */
