@@ -95,11 +95,6 @@ int MPIR_Init_impl(int *argc, char ***argv)
 int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
                      MPIR_Session ** p_session_ptr)
 {
-    return MPI_SUCCESS;
-}
-
-int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provided)
-{
     int mpi_errno = MPI_SUCCESS;
     int required = user_required;
     int err;
@@ -247,14 +242,14 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     goto fn_exit;
 }
 
+int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provided)
+{
+    return MPII_Init_thread(argc, argv, user_required, provided, NULL);
+}
+
 /* ------------ Finalize ------------------- */
 
 int MPII_Finalize(MPIR_Session * session_ptr)
-{
-    return MPI_SUCCESS;
-}
-
-int MPIR_Finalize_impl(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = MPIR_Process.comm_world->rank;
@@ -323,4 +318,9 @@ int MPIR_Finalize_impl(void)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Finalize_impl(void)
+{
+    return MPII_Finalize(NULL);
 }
