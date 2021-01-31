@@ -19,7 +19,8 @@ noinst_PROGRAMS =  \
     parrived                       \
     parrived_wait                  \
     parrived_pready_out_of_order   \
-    pingping
+    pingping                       \
+    multipart
 
 
 start_pready_wait_CPPFLAGS = -DTEST_WAIT $(AM_CPPFLAGS)
