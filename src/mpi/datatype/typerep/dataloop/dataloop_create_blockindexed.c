@@ -10,7 +10,7 @@
 
 
 static void blockindexed_array_copy(MPI_Aint count,
-                                    const void *disp_array,
+                                    const MPI_Aint * disp_array,
                                     MPI_Aint * out_disp_array,
                                     int dispinbytes, MPI_Aint old_extent);
 
@@ -29,7 +29,7 @@ static void blockindexed_array_copy(MPI_Aint count,
 @*/
 int MPIR_Dataloop_create_blockindexed(MPI_Aint icount,
                                       MPI_Aint iblklen,
-                                      const void *disp_array,
+                                      const MPI_Aint * disp_array,
                                       int dispinbytes, MPI_Datatype oldtype, void **dlp_p)
 {
     int err, is_builtin, is_vectorizable = 1;
@@ -66,9 +66,7 @@ int MPIR_Dataloop_create_blockindexed(MPI_Aint icount,
      * if contig_count == 1 and block starts at displacement 0,
      * store it as a contiguous rather than a blockindexed dataloop.
      */
-    if ((contig_count == 1) &&
-        ((!dispinbytes && ((int *) disp_array)[0] == 0) ||
-         (dispinbytes && ((MPI_Aint *) disp_array)[0] == 0))) {
+    if ((contig_count == 1) && disp_array[0] == 0) {
         err = MPIR_Dataloop_create_contiguous(icount * iblklen, oldtype, (void **) dlp_p);
         return err;
     }
@@ -91,20 +89,15 @@ int MPIR_Dataloop_create_blockindexed(MPI_Aint icount,
      * if displacements start at zero and result in a fixed stride,
      * store it as a vector rather than a blockindexed dataloop.
      */
-    eff_disp0 = (dispinbytes) ? ((MPI_Aint) ((MPI_Aint *) disp_array)[0]) :
-        (((MPI_Aint) ((int *) disp_array)[0]) * old_extent);
+    eff_disp0 = (dispinbytes) ? disp_array[0] : disp_array[0] * old_extent;
 
     if (count > 1 && eff_disp0 == (MPI_Aint) 0) {
-        eff_disp1 = (dispinbytes) ?
-            ((MPI_Aint) ((MPI_Aint *) disp_array)[1]) :
-            (((MPI_Aint) ((int *) disp_array)[1]) * old_extent);
+        eff_disp1 = (dispinbytes) ? disp_array[1] : disp_array[1] * old_extent;
         last_stride = eff_disp1 - eff_disp0;
 
         for (i = 2; i < count; i++) {
             eff_disp0 = eff_disp1;
-            eff_disp1 = (dispinbytes) ?
-                ((MPI_Aint) ((MPI_Aint *) disp_array)[i]) :
-                (((MPI_Aint) ((int *) disp_array)[i]) * old_extent);
+            eff_disp1 = (dispinbytes) ? disp_array[i] : disp_array[i] * old_extent;
             if (eff_disp1 - eff_disp0 != last_stride) {
                 is_vectorizable = 0;
                 break;
@@ -191,17 +184,17 @@ int MPIR_Dataloop_create_blockindexed(MPI_Aint icount,
  * blocks, because that would really mess up the blockindexed type!
  */
 static void blockindexed_array_copy(MPI_Aint count,
-                                    const void *in_disp_array,
+                                    const MPI_Aint * in_disp_array,
                                     MPI_Aint * out_disp_array, int dispinbytes, MPI_Aint old_extent)
 {
     int i;
     if (!dispinbytes) {
         for (i = 0; i < count; i++) {
-            out_disp_array[i] = ((MPI_Aint) ((int *) in_disp_array)[i]) * old_extent;
+            out_disp_array[i] = in_disp_array[i] * old_extent;
         }
     } else {
         for (i = 0; i < count; i++) {
-            out_disp_array[i] = ((MPI_Aint) ((MPI_Aint *) in_disp_array)[i]);
+            out_disp_array[i] = in_disp_array[i];
         }
     }
     return;

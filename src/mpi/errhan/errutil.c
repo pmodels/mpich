@@ -1364,7 +1364,7 @@ static const char *GetAssertString(int d)
 static const char *GetDTypeString(MPI_Datatype d)
 {
     static char default_str[64];
-    int num_integers, num_addresses, num_datatypes, combiner = 0;
+    int combiner = 0;
     char *str;
 
     if (HANDLE_GET_MPI_KIND(d) != MPIR_DATATYPE ||
@@ -1380,7 +1380,7 @@ static const char *GetDTypeString(MPI_Datatype d)
         return default_str;
     }
 
-    MPIR_Type_get_envelope(d, &num_integers, &num_addresses, &num_datatypes, &combiner);
+    combiner = MPIR_Type_get_combiner(d);
     if (combiner == MPI_COMBINER_NAMED) {
         str = MPIR_Datatype_builtin_to_string(d);
         if (str == NULL) {
