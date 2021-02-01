@@ -17,11 +17,11 @@ typedef struct PreDefined_attrs {
     int wtime_is_global;        /* Wtime is global over processes in COMM_WORLD */
 } PreDefined_attrs;
 
-typedef struct MPIR_Session {
+struct MPIR_Session {
     MPIR_OBJECT_HEADER;
     int thread_level;
     void *dummy;                /* hack to insure pointer alignment (for MPIR_Handle_common access) */
-} MPIR_Session;
+};
 
 extern MPIR_Session MPIR_Session_direct[];
 extern MPIR_Object_alloc_t MPIR_Session_mem;

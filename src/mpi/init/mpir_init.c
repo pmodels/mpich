@@ -63,6 +63,12 @@ static MPL_initlock_t init_lock = MPL_INITLOCK_INITIALIZER;
 /* Note: we are not using atomic variable since it is always accessed under init_lock */
 static int init_counter;
 
+/* TODO: currently the world model is not distinguished with session model, neither between
+ * sessions, in that there is no session pointer attached to communicators, datatypes, etc.
+ * To properly reflect the session semantics, we may need to always assoicate a session
+ * pointer to all MPI objects (other than info) and add runtime validation checks everywhere.
+ */
+
 /* ------------ Init ------------------- */
 
 int MPIR_Init_impl(int *argc, char ***argv)
@@ -87,7 +93,7 @@ int MPIR_Init_impl(int *argc, char ***argv)
     }
 
     int provided;
-    mpi_errno = MPIR_Init_thread_impl(argc, argv, threadLevel, &provided);
+    mpi_errno = MPII_Init_thread(argc, argv, threadLevel, &provided, NULL);
 
     return mpi_errno;
 }
@@ -95,16 +101,18 @@ int MPIR_Init_impl(int *argc, char ***argv)
 int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
                      MPIR_Session ** p_session_ptr)
 {
-    return MPI_SUCCESS;
-}
-
-int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provided)
-{
     int mpi_errno = MPI_SUCCESS;
     int required = user_required;
+    bool is_world_model = (p_session_ptr == NULL);
     int err;
 
     MPL_initlock_lock(&init_lock);
+
+    if (!is_world_model) {
+        *p_session_ptr = (MPIR_Session *) MPIR_Handle_obj_alloc(&MPIR_Session_mem);
+        MPIR_ERR_CHKHANDLEMEM(*p_session_ptr);
+    }
+
     init_counter++;
     if (init_counter > 1) {
         *provided = MPIR_ThreadInfo.thread_provided;
@@ -239,7 +247,9 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
         *provided = MPIR_ThreadInfo.thread_provided;
 
   fn_exit:
-    MPII_world_set_initilized();
+    if (is_world_model) {
+        MPII_world_set_initilized();
+    }
     MPL_initlock_unlock(&init_lock);
     return mpi_errno;
 
@@ -247,19 +257,26 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     goto fn_exit;
 }
 
+int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provided)
+{
+    return MPII_Init_thread(argc, argv, user_required, provided, NULL);
+}
+
 /* ------------ Finalize ------------------- */
 
 int MPII_Finalize(MPIR_Session * session_ptr)
 {
-    return MPI_SUCCESS;
-}
-
-int MPIR_Finalize_impl(void)
-{
     int mpi_errno = MPI_SUCCESS;
     int rank = MPIR_Process.comm_world->rank;
+    bool is_world_model = (session_ptr == NULL);
 
     MPL_initlock_lock(&init_lock);
+
+    if (!is_world_model) {
+        /* handle any clean up on session */
+        MPIR_Handle_obj_free(&MPIR_Session_mem, session_ptr);
+    }
+
     init_counter--;
     if (init_counter > 0) {
         goto fn_exit;
@@ -318,9 +335,16 @@ int MPIR_Finalize_impl(void)
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__UNINITIALIZED);
 
   fn_exit:
-    MPII_world_set_finalized();
+    if (is_world_model) {
+        MPII_world_set_finalized();
+    }
     MPL_initlock_unlock(&init_lock);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Finalize_impl(void)
+{
+    return MPII_Finalize(NULL);
 }
