@@ -1131,6 +1131,14 @@ int MPI_Init(int *argc, char ***argv) MPICH_API_PUBLIC;
 int MPI_Finalize(void) MPICH_API_PUBLIC;
 int MPI_Initialized(int *flag) MPICH_API_PUBLIC;
 int MPI_Abort(MPI_Comm comm, int errorcode) MPICH_API_PUBLIC;
+int MPI_Session_init(MPI_Info info, MPI_Errhandler errhandler, MPI_Session *session) MPICH_API_PUBLIC;
+int MPI_Session_finalize(MPI_Session *session) MPICH_API_PUBLIC;
+int MPI_Session_get_num_psets(MPI_Session session, MPI_Info info, int *pset_names) MPICH_API_PUBLIC;
+int MPI_Session_get_nth_pset(MPI_Session session, MPI_Info info, int n, int *pset_len, char *pset_name) MPICH_API_PUBLIC;
+int MPI_Session_get_info(MPI_Session session, MPI_Info *info_used) MPICH_API_PUBLIC;
+int MPI_Session_get_pset_info(MPI_Session session, const char *pset_name, MPI_Info *info) MPICH_API_PUBLIC;
+int MPI_Group_from_session_pset(MPI_Session session, const char *pset_name, MPI_Group *group) MPICH_API_PUBLIC;
+int MPI_Comm_create_from_group(MPI_Group group, const char *stringtag, MPI_Info info, MPI_Errhandler errhandler, MPI_Comm *newcomm) MPICH_API_PUBLIC;
 
 /* Note that we may need to define a @PCONTROL_LIST@ depending on whether
    stdargs are supported */
@@ -1798,6 +1806,14 @@ int PMPI_Init(int *argc, char ***argv) MPICH_API_PUBLIC;
 int PMPI_Finalize(void) MPICH_API_PUBLIC;
 int PMPI_Initialized(int *flag) MPICH_API_PUBLIC;
 int PMPI_Abort(MPI_Comm comm, int errorcode) MPICH_API_PUBLIC;
+int PMPI_Session_init(MPI_Info info, MPI_Errhandler errhandler, MPI_Session *session) MPICH_API_PUBLIC;
+int PMPI_Session_finalize(MPI_Session *session) MPICH_API_PUBLIC;
+int PMPI_Session_get_num_psets(MPI_Session session, MPI_Info info, int *pset_names) MPICH_API_PUBLIC;
+int PMPI_Session_get_nth_pset(MPI_Session session, MPI_Info info, int n, int *pset_len, char *pset_name) MPICH_API_PUBLIC;
+int PMPI_Session_get_info(MPI_Session session, MPI_Info *info_used) MPICH_API_PUBLIC;
+int PMPI_Session_get_pset_info(MPI_Session session, const char *pset_name, MPI_Info *info) MPICH_API_PUBLIC;
+int PMPI_Group_from_session_pset(MPI_Session session, const char *pset_name, MPI_Group *group) MPICH_API_PUBLIC;
+int PMPI_Comm_create_from_group(MPI_Group group, const char *stringtag, MPI_Info info, MPI_Errhandler errhandler, MPI_Comm *newcomm) MPICH_API_PUBLIC;
 
 /* Note that we may need to define a @PCONTROL_LIST@ depending on whether
    stdargs are supported */
