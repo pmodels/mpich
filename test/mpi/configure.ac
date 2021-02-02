@@ -730,15 +730,14 @@ PAC_PUSH_FLAG([LDFLAGS])
 PAC_PUSH_FLAG([LIBS])
 
 # Check CUDA availability
-PAC_SET_HEADER_LIB_PATH([cuda])
-PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
+PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSynchronize])
 cuda_CPPFLAGS=""
 cuda_LDFLAGS=""
 cuda_LIBS=""
-if test "X${have_cuda}" = "Xyes" ; then
+if test "X${pac_have_cuda}" = "Xyes" ; then
     AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
     have_gpu="yes"
-    if test -n "${with_cuda}" ; then
+    if test -n "${with_cuda}" -a "$with_cuda" != "no" ; then
         cuda_CPPFLAGS="-I${with_cuda}/include"
         if test -d ${with_cuda}/lib64 ; then
             cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
@@ -748,22 +747,21 @@ if test "X${have_cuda}" = "Xyes" ; then
         cuda_LIBS="-lcudart"
     fi
 fi
-AM_CONDITIONAL([HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
+AM_CONDITIONAL([HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
 AC_SUBST([cuda_CPPFLAGS])
 AC_SUBST([cuda_LDFLAGS])
 AC_SUBST([cuda_LIBS])
 
 if test "$have_gpu" = "no" ; then
     # Check Level Zero availability when no other GPU library is available
-    PAC_SET_HEADER_LIB_PATH([ze])
-    PAC_CHECK_HEADER_LIB([level_zero/ze_api.h],[ze_loader],[zeInit],[have_ze=yes],[have_ze=no])
+    PAC_CHECK_HEADER_LIB_OPTIONAL([ze],[level_zero/ze_api.h],[ze_loader],[zeInit])
     ze_CPPFLAGS=""
     ze_LDFLAGS=""
     ze_LIBS=""
-    if test "X${have_ze}" = "Xyes" ; then
+    if test "X${pac_have_ze}" = "Xyes" ; then
         AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
         have_gpu="yes"
-        if test -n "${with_ze}" ; then
+        if test -n "${with_ze}" -a "$with_ze" != "no" ; then
             ze_CPPFLAGS="-I${with_ze}/include"
             if test -d ${with_ze}/lib64 ; then
                 ze_LDFLAGS="-L${with_ze}/lib64 -L${with_ze}/lib"
@@ -777,7 +775,7 @@ if test "$have_gpu" = "no" ; then
     AC_SUBST([ze_LDFLAGS])
     AC_SUBST([ze_LIBS])
 fi
-AM_CONDITIONAL([HAVE_ZE],[test "X${have_ze}" = "Xyes"])
+AM_CONDITIONAL([HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
 
 PAC_POP_FLAG([CPPFLAGS])
 PAC_POP_FLAG([LDFLAGS])
