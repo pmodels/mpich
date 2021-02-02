@@ -160,6 +160,10 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
      * should come here. */
     /**********************************************************************/
 
+    /* MPIR_Process.attr.tag_ub depends on tag_bits set by the device */
+    mpi_errno = MPII_init_tag_ub();
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* pairtypes might need device hooks to be activated so the device
      * can keep track of their creation.  that's why we need to do
      * this after the device initialization.  */
