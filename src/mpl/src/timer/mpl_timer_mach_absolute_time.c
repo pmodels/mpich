@@ -79,4 +79,15 @@ int MPL_wtick(double *wtick)
     return MPL_SUCCESS;
 }
 
+int MPL_ticks_per_second(long long int *ticks_per_second)
+{
+    mach_timebase_info_data_t info;
+    mach_timebase_info(&info);
+
+    /* use timebase to convert 1 billion nanoseconds to ticks */
+    *ticks_per_second = (1000000000 * info.denom) / info.numer;
+
+    return MPL_SUCCESS;
+}
+
 #endif
