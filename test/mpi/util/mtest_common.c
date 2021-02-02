@@ -206,6 +206,7 @@ int device_id = -1;
 #ifdef HAVE_ZE
 #include "level_zero/ze_api.h"
 ze_driver_handle_t driver = NULL;
+ze_context_handle_t context = NULL;
 ze_device_handle_t *device = NULL;
 ze_result_t zerr = ZE_RESULT_SUCCESS;
 ze_command_list_handle_t *command_lists = NULL;
@@ -285,30 +286,58 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
 
         free(all_drivers);
 
+        ze_context_desc_t contextDesc = {
+            .stype = ZE_STRUCTURE_TYPE_CONTEXT_DESC,
+            .pNext = NULL,
+            .flags = 0,
+        };
+        zerr = zeContextCreate(driver, &contextDesc, &context);
+        assert(zerr == ZE_RESULT_SUCCESS);
+
         /* Create command list, command queue, event pool and event, for device 0 only. */
         ze_command_queue_desc_t descriptor;
-        descriptor.version = ZE_COMMAND_QUEUE_DESC_VERSION_CURRENT;
+        descriptor.stype = ZE_STRUCTURE_TYPE_COMMAND_QUEUE_DESC;
+        descriptor.pNext = NULL;
         descriptor.flags = 0;
+        descriptor.index = 0;
         descriptor.mode = ZE_COMMAND_QUEUE_MODE_ASYNCHRONOUS;
         descriptor.priority = ZE_COMMAND_QUEUE_PRIORITY_NORMAL;
-        descriptor.ordinal = 0; /* computeQueueGroupOrdinal */
+
+        uint32_t numQueueGroups = 0;
+        zerr = zeDeviceGetCommandQueueGroupProperties(device[device_id], &numQueueGroups, NULL);
+        assert(zerr == ZE_RESULT_SUCCESS && numQueueGroups);
+        ze_command_queue_group_properties_t *queueProperties =
+            (ze_command_queue_group_properties_t *)
+            malloc(sizeof(ze_command_queue_group_properties_t) * numQueueGroups);
+        zerr =
+            zeDeviceGetCommandQueueGroupProperties(device[device_id], &numQueueGroups,
+                                                   queueProperties);
+        descriptor.ordinal = -1;
+        for (int i = 0; i < numQueueGroups; i++) {
+            if (queueProperties[i].flags & ZE_COMMAND_QUEUE_GROUP_PROPERTY_FLAG_COMPUTE) {
+                descriptor.ordinal = i;
+                break;
+            }
+        }
+        assert(descriptor.ordinal != -1);
 
         command_lists =
             (ze_command_list_handle_t *) malloc(sizeof(ze_command_list_handle_t) * ndevices);
         for (int i = 0; i < ndevices; i++) {
-            zerr = zeCommandListCreateImmediate(device[i], &descriptor, &command_lists[i]);
+            zerr = zeCommandListCreateImmediate(context, device[i], &descriptor, &command_lists[i]);
             assert(zerr == ZE_RESULT_SUCCESS);
         }
 
         /* Create event pool and event */
         ze_event_pool_desc_t pool_desc;
-        pool_desc.version = ZE_EVENT_POOL_DESC_VERSION_CURRENT;
+        pool_desc.stype = ZE_STRUCTURE_TYPE_EVENT_POOL_DESC;
+        pool_desc.pNext = NULL;
         pool_desc.flags = 0;
         pool_desc.count = 1;
 
         event_pools = (ze_event_pool_handle_t *) malloc(sizeof(ze_event_pool_handle_t) * ndevices);
         for (int i = 0; i < ndevices; i++) {
-            zerr = zeEventPoolCreate(driver, &pool_desc, 1, &(device[i]), &event_pools[i]);
+            zerr = zeEventPoolCreate(context, &pool_desc, 1, &(device[i]), &event_pools[i]);
             assert(zerr == ZE_RESULT_SUCCESS);
         }
     }
@@ -349,13 +378,14 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
     } else if (type == MTEST_MEM_TYPE__REGISTERED_HOST) {
         size_t mem_alignment;
         ze_host_mem_alloc_desc_t host_desc;
-        host_desc.flags = ZE_HOST_MEM_ALLOC_FLAG_DEFAULT;
-        host_desc.version = ZE_HOST_MEM_ALLOC_DESC_VERSION_CURRENT;
+        host_desc.stype = ZE_STRUCTURE_TYPE_HOST_MEM_ALLOC_DESC;
+        host_desc.pNext = NULL;
+        host_desc.flags = 0;
 
         /* Currently ZE ignores this augument and uses an internal alignment
          * value. However, this behavior can change in the future. */
         mem_alignment = 1;
-        zerr = zeDriverAllocHostMem(driver, &host_desc, size, mem_alignment, devicebuf);
+        zerr = zeMemAllocHost(context, &host_desc, size, mem_alignment, devicebuf);
         assert(zerr == ZE_RESULT_SUCCESS);
         if (is_calloc)
             memset(*devicebuf, 0, size);
@@ -365,22 +395,24 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
     } else if (type == MTEST_MEM_TYPE__DEVICE) {
         size_t mem_alignment;
         ze_device_mem_alloc_desc_t device_desc;
-        device_desc.flags = ZE_DEVICE_MEM_ALLOC_FLAG_DEFAULT;
+        device_desc.stype = ZE_STRUCTURE_TYPE_DEVICE_MEM_ALLOC_DESC;
+        device_desc.pNext = NULL;
+        device_desc.flags = 0;
         device_desc.ordinal = 0;        /* We currently support a single memory type */
-        device_desc.version = ZE_DEVICE_MEM_ALLOC_DESC_VERSION_CURRENT;
         /* Currently ZE ignores this augument and uses an internal alignment
          * value. However, this behavior can change in the future. */
         mem_alignment = 1;
         zerr =
-            zeDriverAllocDeviceMem(driver, &device_desc, size, mem_alignment, device[device_id],
-                                   devicebuf);
+            zeMemAllocDevice(context, &device_desc, size, mem_alignment, device[device_id],
+                             devicebuf);
         assert(zerr == ZE_RESULT_SUCCESS);
 
         if (hostbuf) {
             ze_host_mem_alloc_desc_t host_desc;
-            host_desc.flags = ZE_HOST_MEM_ALLOC_FLAG_DEFAULT;
-            host_desc.version = ZE_HOST_MEM_ALLOC_DESC_VERSION_CURRENT;
-            zerr = zeDriverAllocHostMem(driver, &host_desc, size, mem_alignment, hostbuf);
+            host_desc.stype = ZE_STRUCTURE_TYPE_HOST_MEM_ALLOC_DESC;
+            host_desc.pNext = NULL;
+            host_desc.flags = 0;
+            zerr = zeMemAllocHost(context, &host_desc, size, mem_alignment, hostbuf);
             assert(zerr == ZE_RESULT_SUCCESS);
             if (is_calloc)
                 memset(*hostbuf, 0, size);
@@ -391,17 +423,19 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         size_t mem_alignment;
         ze_device_mem_alloc_desc_t device_desc;
         ze_host_mem_alloc_desc_t host_desc;
-        device_desc.flags = ZE_DEVICE_MEM_ALLOC_FLAG_DEFAULT;
+        device_desc.stype = ZE_STRUCTURE_TYPE_DEVICE_MEM_ALLOC_DESC;
+        device_desc.pNext = NULL;
+        device_desc.flags = 0;
         device_desc.ordinal = 0;        /* We currently support a single memory type */
-        device_desc.version = ZE_DEVICE_MEM_ALLOC_DESC_VERSION_CURRENT;
-        host_desc.flags = ZE_HOST_MEM_ALLOC_FLAG_DEFAULT;
-        host_desc.version = ZE_HOST_MEM_ALLOC_DESC_VERSION_CURRENT;
+        host_desc.stype = ZE_STRUCTURE_TYPE_HOST_MEM_ALLOC_DESC;
+        host_desc.pNext = NULL;
+        host_desc.flags = 0;
         /* Currently ZE ignores this augument and uses an internal alignment
          * value. However, this behavior can change in the future. */
         mem_alignment = 1;
         zerr =
-            zeDriverAllocSharedMem(driver, &device_desc, &host_desc, size, mem_alignment,
-                                   device[device_id], devicebuf);
+            zeMemAllocShared(context, &device_desc, &host_desc, size, mem_alignment,
+                             device[device_id], devicebuf);
         assert(zerr == ZE_RESULT_SUCCESS);
         if (hostbuf)
             *hostbuf = *devicebuf;
@@ -429,17 +463,17 @@ void MTestFree(mtest_mem_type_e type, void *hostbuf, void *devicebuf)
 #endif
 #ifdef HAVE_ZE
     } else if (type == MTEST_MEM_TYPE__REGISTERED_HOST) {
-        zerr = zeDriverFreeMem(driver, devicebuf);
+        zerr = zeMemFree(context, devicebuf);
         assert(zerr == ZE_RESULT_SUCCESS);
     } else if (type == MTEST_MEM_TYPE__DEVICE) {
-        zerr = zeDriverFreeMem(driver, devicebuf);
+        zerr = zeMemFree(context, devicebuf);
         assert(zerr == ZE_RESULT_SUCCESS);
         if (hostbuf) {
-            zerr = zeDriverFreeMem(driver, hostbuf);
+            zerr = zeMemFree(context, hostbuf);
             assert(zerr == ZE_RESULT_SUCCESS);
         }
     } else if (type == MTEST_MEM_TYPE__SHARED) {
-        zerr = zeDriverFreeMem(driver, devicebuf);
+        zerr = zeMemFree(context, devicebuf);
         assert(zerr == ZE_RESULT_SUCCESS);
 #endif
     }
@@ -457,7 +491,7 @@ void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_
             ze_memory_allocation_properties_t prop;
             ze_device_handle_t device;
         } s_attr, d_attr;
-        zerr = zeDriverGetMemAllocProperties(driver, sbuf, &s_attr.prop, &s_attr.device);
+        zerr = zeMemGetAllocProperties(context, sbuf, &s_attr.prop, &s_attr.device);
         assert(zerr == ZE_RESULT_SUCCESS);
         if (s_attr.device) {
             for (int i = 0; i < ndevices; i++) {
@@ -467,7 +501,7 @@ void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_
                 }
             }
         }
-        zerr = zeDriverGetMemAllocProperties(driver, dbuf, &d_attr.prop, &d_attr.device);
+        zerr = zeMemGetAllocProperties(context, dbuf, &d_attr.prop, &d_attr.device);
         assert(zerr == ZE_RESULT_SUCCESS);
         if (d_attr.device) {
             for (int i = 0; i < ndevices; i++) {
@@ -491,19 +525,19 @@ void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_
 
         ze_event_handle_t event;
         ze_event_desc_t event_desc = {
-            ZE_EVENT_DESC_VERSION_CURRENT,
-            0,
-            ZE_EVENT_SCOPE_FLAG_NONE,
-            ZE_EVENT_SCOPE_FLAG_HOST
+            .stype = ZE_STRUCTURE_TYPE_EVENT_DESC,
+            .pNext = NULL,
+            .index = 0,
+            .signal = ZE_EVENT_SCOPE_FLAG_HOST,
+            .wait = ZE_EVENT_SCOPE_FLAG_HOST
         };
         zerr = zeEventCreate(event_pools[dev_id], &event_desc, &event);
         assert(zerr == ZE_RESULT_SUCCESS);
 
         zerr = zeCommandListReset(command_lists[dev_id]);
         assert(zerr == ZE_RESULT_SUCCESS);
-        zerr = zeCommandListAppendMemoryCopy(command_lists[dev_id], dbuf, sbuf, size, NULL);
-        assert(zerr == ZE_RESULT_SUCCESS);
-        zerr = zeCommandListAppendSignalEvent(command_lists[dev_id], event);
+        zerr =
+            zeCommandListAppendMemoryCopy(command_lists[dev_id], dbuf, sbuf, size, event, 0, NULL);
         assert(zerr == ZE_RESULT_SUCCESS);
         zerr = zeEventHostSynchronize(event, UINT32_MAX);
         assert(zerr == ZE_RESULT_SUCCESS);
@@ -529,6 +563,7 @@ void MTest_finalize_gpu()
         }
         free(event_pools);
         free(command_lists);
+        zerr = zeContextDestroy(context);
     }
 #endif
 }
