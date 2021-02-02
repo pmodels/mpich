@@ -213,7 +213,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
 
     lmt_info->sreq_ptr = sreq;
     if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-        lmt_info->rma_key = MPIDI_OFI_mr_key_alloc();
+        lmt_info->rma_key =
+            MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
     } else {
         lmt_info->rma_key = 0;
     }
