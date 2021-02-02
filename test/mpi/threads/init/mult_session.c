@@ -18,6 +18,7 @@ MTEST_THREAD_RETURN_TYPE library_foo_test(void *p);
 int main(int argc, char *argv[])
 {
     int provided;
+    MTest_init_thread_pkg();
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     for (int i = 1; i < NTHREADS; i++) {
@@ -30,6 +31,7 @@ int main(int argc, char *argv[])
 
     MTest_Join_threads();
     MPI_Finalize();
+    MTest_finalize_thread_pkg();
 
     int errs = 0;
     for (int i = 0; i < NTHREADS; i++) {
