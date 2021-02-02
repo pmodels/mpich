@@ -16,8 +16,12 @@ def dump_mpi_c(func, mapping):
     """Dumps the function's C source code to G.out array"""
     check_func_directives(func)
     filter_c_parameters(func)
+
     check_params_with_large_only(func, mapping)
     process_func_parameters(func, mapping)
+
+    G.mpi_declares.append(get_declare_function(func, mapping, "proto"))
+
     # collect error codes additional from auto generated ones
     if 'error' in func:
         for a in func['error'].split(", "):
@@ -130,6 +134,61 @@ def dump_mpir_impl_h(f):
         print("", file=Out)
         print("#endif /* MPIR_IMPL_H_INCLUDED */", file=Out)
 
+def dump_mpi_proto_h(f):
+    def dump_proto_line(l, Out):
+        if RE.match(r'(.*?\))\s+(MPICH.*)', l):
+            s, tail = RE.m.group(1,2)
+            tlist = split_line_with_break(s, tail + ';', 100)
+            for l in tlist:
+                print(l, file=Out)
+
+    # -- sort the prototypes into groups --
+    list_a = []  # prototypes the fortran needs
+    list_b = []  # tool prototypes
+    list_c = []  # large prototypes
+    for l in G.mpi_declares:
+        if re.match(r'int (MPI_T_|MPIX_Grequest_)', l):
+            list_b.append(l)
+        elif re.match(r'int MPI_\w+_c\(', l):
+            list_c.append(l)
+        else:
+            list_a.append(l)
+
+    # -- dump the file --
+    print("  --> [%s]" %f)
+    with open(f, "w") as Out:
+        for l in G.copyright_c:
+            print(l, file=Out)
+        print("#ifndef MPI_PROTO_H_INCLUDED", file=Out)
+        print("#define MPI_PROTO_H_INCLUDED", file=Out)
+        print("", file=Out)
+
+        # -- mpi prototypes --
+        print("/* Begin Prototypes */", file=Out)
+        for l in list_a:
+            dump_proto_line(l, Out)
+        print("/* End Prototypes */", file=Out)
+        print("", file=Out)
+
+        # -- tool prototypes --
+        for l in list_b:
+            dump_proto_line(l, Out)
+        print("", file=Out)
+
+        # -- large prototypes --
+        for l in list_c:
+            dump_proto_line(l, Out)
+        print("", file=Out)
+
+        # -- PMPI prototypes --
+        for l in G.mpi_declares:
+            if re.match(r'int MPI_DUP_FN', l):
+                continue
+            dump_proto_line(re.sub(' MPI', ' PMPI', l, 1), Out)
+        print("", file=Out)
+
+        print("#endif /* MPI_PROTO_H_INCLUDED */", file=Out)
+
 def dump_errnames_txt(f):
     print("  --> [%s]" % f)
     with open(f, "w") as Out:
@@ -229,10 +288,53 @@ def check_params_with_large_only(func, mapping):
         else:
             func['c_parameters'] = func['params_large']
 
+def get_userbuffer_group(func, i):
+    """internal function used by process_func_parameters"""
+    p = func['c_parameters'][i]
+    p2 = func['c_parameters'][i + 1]
+    p3 = func['c_parameters'][i + 2]
+    func_name = func['name']
+    if RE.match(r'mpi_i?(alltoall|allgather|gather|scatter)', func_name, re.IGNORECASE):
+        type = "inplace"
+        if RE.search(r'send', p['name'], re.IGNORECASE) and RE.search(r'scatter', func_name, re.IGNORECASE):
+            type = "noinplace"
+        elif RE.search(r'recv', p['name'], re.IGNORECASE) and not RE.search(r'scatter', func_name, re.IGNORECASE):
+            type = "noinplace"
+
+        if RE.search(r'alltoallw', func_name, re.IGNORECASE):
+            group_kind = "USERBUFFER-%s-w" % (type)
+            group_count = 4
+        elif p3['kind'] == "DATATYPE":
+            group_kind = "USERBUFFER-%s" % (type)
+            group_count = 3
+        else:
+            group_kind = "USERBUFFER-%s-v" % (type)
+            group_count = 4
+    elif RE.match(r'mpi_i?neighbor', func_name, re.IGNORECASE):
+        if RE.search(r'alltoallw', func_name, re.IGNORECASE):
+            group_kind = "USERBUFFER-neighbor-w"
+            group_count = 4
+        elif p3['kind'] == "DATATYPE":
+            group_kind = "USERBUFFER-neighbor"
+            group_count = 3
+        else:
+            group_kind = "USERBUFFER-neighbor-v"
+            group_count = 4
+    elif RE.match(r'mpi_i?(allreduce|reduce|scan|exscan)', func_name, re.IGNORECASE):
+        group_kind = "USERBUFFER-reduce"
+        group_count = 5
+    elif RE.search(r'XFER_NUM_ELEM', p2['kind']) and RE.search(r'DATATYPE', p3['kind']):
+        group_kind = "USERBUFFER-simple"
+        group_count = 3
+    else:
+        group_kind, group_count = None, 0
+    return (group_kind, group_count)
+
 def process_func_parameters(func, mapping):
     """ Scan parameters and populate a few lists to facilitate generation."""
     # Note: we'll attach the lists to func at the end
     validation_list, handle_ptr_list, impl_arg_list, impl_param_list = [], [], [], []
+    pointertag_list = []  # needed to annotate MPICH_ATTR_POINTER_WITH_TYPE_TAG
 
     func_name = func['name']
     n = len(func['c_parameters'])
@@ -241,40 +343,7 @@ def process_func_parameters(func, mapping):
         p = func['c_parameters'][i]
         (group_kind, group_count) = ("", 0)
         if i + 3 <= n and RE.search(r'BUFFER', p['kind']):
-            p2 = func['c_parameters'][i + 1]
-            p3 = func['c_parameters'][i + 2]
-            if RE.match(r'mpi_i?(alltoall|allgather|gather|scatter)', func_name, re.IGNORECASE):
-                type = "inplace"
-                if RE.search(r'send', p['name'], re.IGNORECASE) and RE.search(r'scatter', func_name, re.IGNORECASE):
-                    type = "noinplace"
-                elif RE.search(r'recv', p['name'], re.IGNORECASE) and not RE.search(r'scatter', func_name, re.IGNORECASE):
-                    type = "noinplace"
-
-                if RE.search(r'alltoallw', func_name, re.IGNORECASE):
-                    group_kind = "USERBUFFER-%s-w" % (type)
-                    group_count = 4
-                elif p3['kind'] == "DATATYPE":
-                    group_kind = "USERBUFFER-%s" % (type)
-                    group_count = 3
-                else:
-                    group_kind = "USERBUFFER-%s-v" % (type)
-                    group_count = 4
-            elif RE.match(r'mpi_i?neighbor', func_name, re.IGNORECASE):
-                if RE.search(r'alltoallw', func_name, re.IGNORECASE):
-                    group_kind = "USERBUFFER-neighbor-w"
-                    group_count = 4
-                elif p3['kind'] == "DATATYPE":
-                    group_kind = "USERBUFFER-neighbor"
-                    group_count = 3
-                else:
-                    group_kind = "USERBUFFER-neighbor-v"
-                    group_count = 4
-            elif RE.match(r'mpi_i?(allreduce|reduce|scan|exscan)', func_name, re.IGNORECASE):
-                group_kind = "USERBUFFER-reduce"
-                group_count = 5
-            elif RE.search(r'XFER_NUM_ELEM', p2['kind']) and RE.search(r'DATATYPE', p3['kind']):
-                group_kind = "USERBUFFER-simple"
-                group_count = 3
+            group_kind, group_count = get_userbuffer_group(func, i)
         if group_count > 0:
             t = ''
             for j in range(group_count):
@@ -285,6 +354,17 @@ def process_func_parameters(func, mapping):
                 impl_arg_list.append(temp_p['name'])
                 impl_param_list.append(get_C_param(temp_p, mapping))
             validation_list.append({'kind': group_kind, 'name': t})
+            # -- pointertag_list
+            if re.search(r'alltoallw', func_name, re.IGNORECASE):
+                pass
+            elif group_count == 3:
+                pointertag_list.append("%d,%d" % (i + 1, i + 3))
+            elif group_count == 4:
+                pointertag_list.append("%d,%d" % (i + 1, i + 4))
+            elif group_count == 5:
+                pointertag_list.append("%d,%d" % (i + 1, i + 4))
+                pointertag_list.append("%d,%d" % (i + 2, i + 4))
+            # -- skip to next
             i += group_count
             continue
 
@@ -491,6 +571,8 @@ def process_func_parameters(func, mapping):
         func['need_validation'] = 1
     func['impl_arg_list'] = impl_arg_list
     func['impl_param_list'] = impl_param_list
+    if len(pointertag_list):
+        func['pointertag_list'] = pointertag_list
 
 # ---- simple parts ----
 
@@ -1653,7 +1735,7 @@ def get_function_args(func):
         arg_list.append(p['name'])
     return ', '.join(arg_list)
 
-def get_declare_function(func, mapping):
+def get_declare_function(func, mapping, kind=""):
     name = get_function_name(func, mapping)
 
     ret = "int"
@@ -1663,6 +1745,12 @@ def get_declare_function(func, mapping):
     params = get_C_params(func, mapping)
     s_param = ', '.join(params)
     s = "%s %s(%s)" % (ret, name, s_param)
+
+    if kind == 'proto':
+        if 'pointertag_list' in func:
+            for t in func['pointertag_list']:
+                s += " MPICH_ATTR_POINTER_WITH_TYPE_TAG(%s)" % t
+        s += " MPICH_API_PUBLIC"
     return s
 
     G.out.append(s)
@@ -1701,7 +1789,7 @@ def get_C_param(param, mapping):
                 want_star = 3
             elif param['pointer'] is not None and not param['pointer']:
                 want_bracket = 1
-            elif param['length'] and kind != "STRING":
+            elif param['length'] is not None and kind != "STRING":
                 want_bracket = 1
             else:
                 want_star = 1
@@ -1772,7 +1860,12 @@ def dump_for_close():
     G.out.append("DEDENT")
     G.out.append("}")
 
-def dump_line_with_break(s, tail=''):
+def split_line_with_break(s, tail, N=100):
+    """Breaks a long line with proper indentations.
+    This simplistic routine splits on ", ", thus only works with function declarations
+    and simple function calls such as those generated by this script. """
+    out_list = []
+
     tlist = []
     n = 0
 
@@ -1780,7 +1873,7 @@ def dump_line_with_break(s, tail=''):
     if RE.match(r'(\s*)', s):
         n_lead = len(RE.m.group(1)) + 4
 
-    if len(s) < 100:
+    if len(s) < N:
         tlist.append(s)
         n = len(s)
     elif RE.match(r'(.*?\()(.*)', s):
@@ -1793,7 +1886,7 @@ def dump_line_with_break(s, tail=''):
                 # first line
                 tlist = [s_lead, a]
                 n = n_lead + len(a)
-            elif n + 2 + len(a) < 100:
+            elif n + 2 + len(a) < N:
                 # just append to tlist
                 tlist.append(', ')
                 tlist.append(a)
@@ -1801,7 +1894,7 @@ def dump_line_with_break(s, tail=''):
             else:
                 # break the line
                 tlist.append(',')
-                G.out.append(''.join(tlist))
+                out_list.append(''.join(tlist))
                 # start new line with leading spaces
                 tlist = [' ' * n_lead, a]
                 n = n_lead + len(a)
@@ -1811,12 +1904,19 @@ def dump_line_with_break(s, tail=''):
         tlist.append(s)
         n = len(s)
 
-    # tail is mostly for "__attribute__ ((weak, alias(...))));"
+    # tail is mostly for "__attribute__ ((weak, alias(...))));",
+    # which contains , that we do not desire to break
     if tail:
         if n + 1 + len(tail) < 100:
-            G.out.append(''.join(tlist) + ' ' + tail)
+            out_list.append(''.join(tlist) + ' ' + tail)
         else:
-            G.out.append(''.join(tlist))
-            G.out.append(' ' * n_lead + tail)
+            out_list.append(''.join(tlist))
+            out_list.append(' ' * n_lead + tail)
     else:
-        G.out.append(''.join(tlist))
+        out_list.append(''.join(tlist))
+
+    return out_list
+
+def dump_line_with_break(s, tail=''):
+    tlist = split_line_with_break(s, tail, 100)
+    G.out.extend(tlist)

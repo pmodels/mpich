@@ -23,6 +23,7 @@ class MPI_API_Global:
     default_descriptions = {}
     err_codes = {}
     mpi_sources = []
+    mpi_declares = []
     impl_declares = []
     mpi_errnames = []
 
