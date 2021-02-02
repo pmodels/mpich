@@ -80,6 +80,14 @@ int MPL_wtick(double *wtick)
     return MPL_SUCCESS;
 }
 
+int MPL_ticks_per_second(long long int *ticks_per_second)
+{
+    /* microseconds */
+    *ticks_per_second = 1000000;
+
+    return MPL_SUCCESS;
+}
+
 int MPL_wtime_init(void)
 {
     if (is_initialized)

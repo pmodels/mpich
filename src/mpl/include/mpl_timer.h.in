@@ -212,6 +212,21 @@ int MPL_wtime_todouble(MPL_time_t * timeval, double *seconds);
 int MPL_wtick(double *);
 
 /*@
+  MPL_ticks_per_second - Provide the number of raw ticks per second
+
+  Return value:
+  Number of raw ticks representing a second of wall time.
+
+  Note that in some cases, the value may be estimated.  No application
+  should expect either the same estimate in different runs or the same
+  value on different processes.
+
+  Module:
+  Timer
+  @*/
+int MPL_ticks_per_second(long long int *ticks_per_second);
+
+/*@
   MPL_wtime_init - Initialize the timer
 
   Note:

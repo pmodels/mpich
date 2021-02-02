@@ -21,6 +21,13 @@ int MPL_wtick(double *wtick)
     return MPL_SUCCESS;
 }
 
+int MPL_ticks_per_second(long long int *ticks_per_second)
+{
+    *ticks_per_second = 1.0 / seconds_per_tick;
+
+    return MPL_SUCCESS;
+}
+
 int MPL_wtime_init(void)
 {
     unsigned long long t1, t2;
