@@ -17,7 +17,7 @@
 
 typedef ABT_mutex MPL_thread_mutex_t;
 typedef ABT_cond MPL_thread_cond_t;
-typedef ABT_thread MPL_thread_id_t;
+typedef uintptr_t MPL_thread_id_t;
 typedef ABT_key MPL_thread_tls_key_t;
 
 /* ======================================================================
@@ -52,9 +52,43 @@ typedef void (*MPL_thread_func_t) (void *data);
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp, int *errp);
 
 #define MPL_thread_exit()
-#define MPL_thread_self(idp_) ABT_thread_self(idp_)
-#define MPL_thread_join(id_) ABT_thread_free(&id_)
-#define MPL_thread_same(idp1_, idp2_, same_)  ABT_thread_equal(*idp1_, *idp2_, same_)
+#define MPL_thread_self(idp_)                                                 \
+    do {                                                                      \
+        ABT_thread self_thread_tmp_ = ABT_THREAD_NULL;                        \
+        ABT_thread_self(&self_thread_tmp_);                                   \
+        uintptr_t id_tmp_;                                                    \
+        if (self_thread_tmp_ == ABT_THREAD_NULL) {                            \
+            /* It seems that an external thread calls this function. */       \
+            /* Use Pthreads ID instead. */                                    \
+            id_tmp_ = (uintptr_t)pthread_self();                              \
+            /* Set a bit to the last bit.                                     \
+             * Note that the following shifts bits first because pthread_t    \
+             * might use the last bit if, for example, pthread_t saves an ID  \
+             * starting from zero; overwriting the last bit can cause a       \
+             * conflict.  The last bit that is shifted out is less likely to  \
+             * be significant. */                                             \
+            id_tmp_ = (id_tmp_ << 1) | (uintptr_t)0x1;                        \
+        } else {                                                              \
+            id_tmp_ = (uintptr_t)self_thread_tmp_;                            \
+            /* If ID is that of Argobots, the last bit is not set because     \
+             * ABT_thread points to an aligned memory region.  Since          \
+             * ABT_thread is not modified, this ID can be directly used by    \
+             * MPL_thread_join().  Let's check it. */                         \
+            assert(!(id_tmp_ & (uintptr_t)0x1));                              \
+        }                                                                     \
+        *(idp_) = id_tmp_;                                                    \
+    } while (0)
+#define MPL_thread_join(id_) ABT_thread_free((ABT_thread *)&(id_))
+#define MPL_thread_same(idp1_, idp2_, same_)                                  \
+    do {                                                                      \
+        /*                                                                    \
+         * TODO: strictly speaking, Pthread-Pthread and Pthread-Argobots IDs  \
+         * are not arithmetically comparable, while it is okay on most        \
+         * platforms.  This should be fixed.  Note that Argobots-Argobots ID  \
+         * comparison is okay.                                                \
+         */                                                                   \
+        *(same_) = (*(idp1_) == *(idp2_)) ? TRUE : FALSE;                     \
+    } while (0)
 
 /* ======================================================================
  *    Scheduling
