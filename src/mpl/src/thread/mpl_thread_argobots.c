@@ -52,7 +52,10 @@ static int thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * i
     info->func = func;
     info->data = data;
     /* Push this thread to the current ES's first pool. */
-    int err = ABT_thread_create(pool, thread_start, info, ABT_THREAD_ATTR_NULL, idp);
+    int err = ABT_thread_create(pool, thread_start, info, ABT_THREAD_ATTR_NULL, (ABT_thread *) idp);
+    /* We assume that the last bit of MPL_thread_id_t is 0 if it points to an
+     * Argobots thread.  Let's check it. */
+    assert(!(*idp & (MPL_thread_id_t) 0x1));
     return (err == ABT_SUCCESS) ? MPL_SUCCESS : MPL_ERR_THREAD;
 }
 
