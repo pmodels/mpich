@@ -11,11 +11,12 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a recursive exchange based alltoallv */
-int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendcounts[],
-                                            const int sdispls[], const MPI_Datatype sendtypes[],
-                                            void *recvbuf, const int recvcounts[],
-                                            const int rdispls[], const MPI_Datatype recvtypes[],
-                                            MPIR_Comm * comm, int bblock, MPIR_TSP_sched_t * sched)
+int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint sendcounts[],
+                                            const MPI_Aint sdispls[],
+                                            const MPI_Datatype sendtypes[], void *recvbuf,
+                                            const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
+                                            const MPI_Datatype recvtypes[], MPIR_Comm * comm,
+                                            int bblock, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
@@ -81,11 +82,11 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendc
 
 
 /* Non-blocking blocked based ALLTOALLW */
-int MPIR_TSP_Ialltoallw_intra_blocked(const void *sendbuf, const int sendcounts[],
-                                      const int sdispls[], const MPI_Datatype sendtypes[],
-                                      void *recvbuf, const int recvcounts[], const int rdispls[],
-                                      const MPI_Datatype recvtypes[], MPIR_Comm * comm, int bblock,
-                                      MPIR_Request ** req)
+int MPIR_TSP_Ialltoallw_intra_blocked(const void *sendbuf, const MPI_Aint sendcounts[],
+                                      const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                      void *recvbuf, const MPI_Aint recvcounts[],
+                                      const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                      MPIR_Comm * comm, int bblock, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;

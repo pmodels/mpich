@@ -54,9 +54,10 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-int MPIR_Alltoallv_allcomm_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
-                                MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
-                                const int *rdispls, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+int MPIR_Alltoallv_allcomm_auto(const void *sendbuf, const MPI_Aint * sendcounts,
+                                const MPI_Aint * sdispls, MPI_Datatype sendtype, void *recvbuf,
+                                const MPI_Aint * recvcounts, const MPI_Aint * rdispls,
+                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                 MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -116,9 +117,9 @@ int MPIR_Alltoallv_allcomm_auto(const void *sendbuf, const int *sendcounts, cons
     goto fn_exit;
 }
 
-int MPIR_Alltoallv_impl(const void *sendbuf, const int *sendcounts, const int *sdispls,
-                        MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
-                        const int *rdispls, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+int MPIR_Alltoallv_impl(const void *sendbuf, const MPI_Aint * sendcounts, const MPI_Aint * sdispls,
+                        MPI_Datatype sendtype, void *recvbuf, const MPI_Aint * recvcounts,
+                        const MPI_Aint * rdispls, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                         MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -182,9 +183,10 @@ int MPIR_Alltoallv_impl(const void *sendbuf, const int *sendcounts, const int *s
     goto fn_exit;
 }
 
-int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls,
-                   MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls,
-                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+int MPIR_Alltoallv(const void *sendbuf, const MPI_Aint * sendcounts, const MPI_Aint * sdispls,
+                   MPI_Datatype sendtype, void *recvbuf, const MPI_Aint * recvcounts,
+                   const MPI_Aint * rdispls, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                   MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 

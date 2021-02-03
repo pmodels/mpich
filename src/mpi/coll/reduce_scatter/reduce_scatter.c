@@ -79,9 +79,9 @@ cvars:
 */
 
 
-int MPIR_Reduce_scatter_allcomm_auto(const void *sendbuf, void *recvbuf, const int *recvcounts,
-                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                     MPIR_Errflag_t * errflag)
+int MPIR_Reduce_scatter_allcomm_auto(const void *sendbuf, void *recvbuf,
+                                     const MPI_Aint * recvcounts, MPI_Datatype datatype, MPI_Op op,
+                                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -148,7 +148,7 @@ int MPIR_Reduce_scatter_allcomm_auto(const void *sendbuf, void *recvbuf, const i
 }
 
 int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf,
-                             const int recvcounts[], MPI_Datatype datatype,
+                             const MPI_Aint recvcounts[], MPI_Datatype datatype,
                              MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -220,7 +220,7 @@ int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf,
 }
 
 int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf,
-                        const int recvcounts[], MPI_Datatype datatype,
+                        const MPI_Aint recvcounts[], MPI_Datatype datatype,
                         MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;

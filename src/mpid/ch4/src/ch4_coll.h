@@ -216,7 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
 
 MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendcount,
                                              MPI_Datatype sendtype, void *recvbuf,
-                                             const int *recvcounts, const int *displs,
+                                             const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                              MPI_Datatype recvtype, MPIR_Comm * comm,
                                              MPIR_Errflag_t * errflag)
 {
@@ -321,8 +321,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendcounts,
-                                           const int *displs, MPI_Datatype sendtype,
+MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint * sendcounts,
+                                           const MPI_Aint * displs, MPI_Datatype sendtype,
                                            void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                            int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
@@ -430,7 +430,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, MPI_Aint sendcount
 
 MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcount,
                                           MPI_Datatype sendtype, void *recvbuf,
-                                          const int *recvcounts, const int *displs,
+                                          const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                           MPI_Datatype recvtype, int root, MPIR_Comm * comm,
                                           MPIR_Errflag_t * errflag)
 {
@@ -534,10 +534,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, MPI_Aint sendcou
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const int *sendcounts,
-                                            const int *sdispls, MPI_Datatype sendtype,
-                                            void *recvbuf, const int *recvcounts,
-                                            const int *rdispls, MPI_Datatype recvtype,
+MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint * sendcounts,
+                                            const MPI_Aint * sdispls, MPI_Datatype sendtype,
+                                            void *recvbuf, const MPI_Aint * recvcounts,
+                                            const MPI_Aint * rdispls, MPI_Datatype recvtype,
                                             MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -590,11 +590,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const int *send
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendcounts[],
-                                            const int sdispls[], const MPI_Datatype sendtypes[],
-                                            void *recvbuf, const int recvcounts[],
-                                            const int rdispls[], const MPI_Datatype recvtypes[],
-                                            MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint sendcounts[],
+                                            const MPI_Aint sdispls[],
+                                            const MPI_Datatype sendtypes[], void *recvbuf,
+                                            const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
+                                            const MPI_Datatype recvtypes[], MPIR_Comm * comm,
+                                            MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
@@ -706,7 +707,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recvbuf,
-                                                 const int recvcounts[], MPI_Datatype datatype,
+                                                 const MPI_Aint recvcounts[], MPI_Datatype datatype,
                                                  MPI_Op op, MPIR_Comm * comm,
                                                  MPIR_Errflag_t * errflag)
 {
@@ -926,7 +927,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_allgather(const void *sendbuf, MPI_Ai
 
 MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_allgatherv(const void *sendbuf, MPI_Aint sendcount,
                                                       MPI_Datatype sendtype, void *recvbuf,
-                                                      const int *recvcounts, const int *displs,
+                                                      const MPI_Aint * recvcounts,
+                                                      const MPI_Aint * displs,
                                                       MPI_Datatype recvtype, MPIR_Comm * comm)
 {
     int ret;
@@ -941,11 +943,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_allgatherv(const void *sendbuf, MPI_A
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallv(const void *sendbuf, const int *sendcounts,
-                                                     const int *sdispls, MPI_Datatype sendtype,
-                                                     void *recvbuf, const int *recvcounts,
-                                                     const int *rdispls, MPI_Datatype recvtype,
-                                                     MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallv(const void *sendbuf,
+                                                     const MPI_Aint * sendcounts,
+                                                     const MPI_Aint * sdispls,
+                                                     MPI_Datatype sendtype, void *recvbuf,
+                                                     const MPI_Aint * recvcounts,
+                                                     const MPI_Aint * rdispls,
+                                                     MPI_Datatype recvtype, MPIR_Comm * comm)
 {
     int ret;
 
@@ -959,10 +963,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallv(const void *sendbuf, const 
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallw(const void *sendbuf, const int *sendcounts,
+MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallw(const void *sendbuf,
+                                                     const MPI_Aint * sendcounts,
                                                      const MPI_Aint * sdispls,
                                                      const MPI_Datatype * sendtypes, void *recvbuf,
-                                                     const int *recvcounts,
+                                                     const MPI_Aint * recvcounts,
                                                      const MPI_Aint * rdispls,
                                                      const MPI_Datatype * recvtypes,
                                                      MPIR_Comm * comm)
@@ -1015,7 +1020,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_allgather(const void *sendbuf, MPI_A
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_allgatherv(const void *sendbuf, MPI_Aint sendcount,
                                                        MPI_Datatype sendtype, void *recvbuf,
-                                                       const int *recvcounts, const int *displs,
+                                                       const MPI_Aint * recvcounts,
+                                                       const MPI_Aint * displs,
                                                        MPI_Datatype recvtype, MPIR_Comm * comm,
                                                        MPIR_Request ** req)
 {
@@ -1048,11 +1054,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoall(const void *sendbuf, MPI_Ai
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallv(const void *sendbuf, const int *sendcounts,
-                                                      const int *sdispls, MPI_Datatype sendtype,
-                                                      void *recvbuf, const int *recvcounts,
-                                                      const int *rdispls, MPI_Datatype recvtype,
-                                                      MPIR_Comm * comm, MPIR_Request ** req)
+MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallv(const void *sendbuf,
+                                                      const MPI_Aint * sendcounts,
+                                                      const MPI_Aint * sdispls,
+                                                      MPI_Datatype sendtype, void *recvbuf,
+                                                      const MPI_Aint * recvcounts,
+                                                      const MPI_Aint * rdispls,
+                                                      MPI_Datatype recvtype, MPIR_Comm * comm,
+                                                      MPIR_Request ** req)
 {
     int ret;
 
@@ -1067,10 +1076,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallv(const void *sendbuf, const
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallw(const void *sendbuf, const int *sendcounts,
+MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallw(const void *sendbuf,
+                                                      const MPI_Aint * sendcounts,
                                                       const MPI_Aint * sdispls,
-                                                      const MPI_Datatype * sendtypes,
-                                                      void *recvbuf, const int *recvcounts,
+                                                      const MPI_Datatype * sendtypes, void *recvbuf,
+                                                      const MPI_Aint * recvcounts,
                                                       const MPI_Aint * rdispls,
                                                       const MPI_Datatype * recvtypes,
                                                       MPIR_Comm * comm, MPIR_Request ** req)
@@ -1134,7 +1144,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iallgather(const void *sendbuf, MPI_Aint sendc
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iallgatherv(const void *sendbuf, MPI_Aint sendcount,
                                               MPI_Datatype sendtype, void *recvbuf,
-                                              const int *recvcounts, const int *displs,
+                                              const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                               MPI_Datatype recvtype, MPIR_Comm * comm,
                                               MPIR_Request ** req)
 {
@@ -1182,10 +1192,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ialltoall(const void *sendbuf, MPI_Aint sendco
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallv(const void *sendbuf, const int *sendcounts,
-                                             const int *sdispls, MPI_Datatype sendtype,
-                                             void *recvbuf, const int *recvcounts,
-                                             const int *rdispls, MPI_Datatype recvtype,
+MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallv(const void *sendbuf, const MPI_Aint * sendcounts,
+                                             const MPI_Aint * sdispls, MPI_Datatype sendtype,
+                                             void *recvbuf, const MPI_Aint * recvcounts,
+                                             const MPI_Aint * rdispls, MPI_Datatype recvtype,
                                              MPIR_Comm * comm, MPIR_Request ** req)
 {
     int ret;
@@ -1200,11 +1210,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallv(const void *sendbuf, const int *sen
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallw(const void *sendbuf, const int *sendcounts,
-                                             const int *sdispls, const MPI_Datatype * sendtypes,
-                                             void *recvbuf, const int *recvcounts,
-                                             const int *rdispls, const MPI_Datatype * recvtypes,
-                                             MPIR_Comm * comm, MPIR_Request ** req)
+MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallw(const void *sendbuf, const MPI_Aint * sendcounts,
+                                             const MPI_Aint * sdispls,
+                                             const MPI_Datatype * sendtypes, void *recvbuf,
+                                             const MPI_Aint * recvcounts, const MPI_Aint * rdispls,
+                                             const MPI_Datatype * recvtypes, MPIR_Comm * comm,
+                                             MPIR_Request ** req)
 {
     int ret;
 
@@ -1252,7 +1263,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Igather(const void *sendbuf, MPI_Aint sendcoun
 
 MPL_STATIC_INLINE_PREFIX int MPID_Igatherv(const void *sendbuf, MPI_Aint sendcount,
                                            MPI_Datatype sendtype, void *recvbuf,
-                                           const int *recvcounts, const int *displs,
+                                           const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                            MPI_Datatype recvtype, int root, MPIR_Comm * comm,
                                            MPIR_Request ** req)
 {
@@ -1285,8 +1296,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter_block(const void *sendbuf, voi
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter(const void *sendbuf, void *recvbuf,
-                                                  const int *recvcounts, MPI_Datatype datatype,
-                                                  MPI_Op op, MPIR_Comm * comm, MPIR_Request ** req)
+                                                  const MPI_Aint * recvcounts,
+                                                  MPI_Datatype datatype, MPI_Op op,
+                                                  MPIR_Comm * comm, MPIR_Request ** req)
 {
     int ret;
 
@@ -1346,8 +1358,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iscatter(const void *sendbuf, MPI_Aint sendcou
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Iscatterv(const void *sendbuf, const int *sendcounts,
-                                            const int *displs, MPI_Datatype sendtype,
+MPL_STATIC_INLINE_PREFIX int MPID_Iscatterv(const void *sendbuf, const MPI_Aint * sendcounts,
+                                            const MPI_Aint * displs, MPI_Datatype sendtype,
                                             void *recvbuf, MPI_Aint recvcount,
                                             MPI_Datatype recvtype, int root, MPIR_Comm * comm,
                                             MPIR_Request ** req)

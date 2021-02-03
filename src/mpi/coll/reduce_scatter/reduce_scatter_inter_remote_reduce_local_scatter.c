@@ -13,7 +13,7 @@
  */
 
 int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, void *recvbuf,
-                                                          const int recvcounts[],
+                                                          const MPI_Aint recvcounts[],
                                                           MPI_Datatype datatype, MPI_Op op,
                                                           MPIR_Comm * comm_ptr,
                                                           MPIR_Errflag_t * errflag)
@@ -22,7 +22,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb = 0, extent;
     void *tmp_buf = NULL;
-    int *disps = NULL;
+    MPI_Aint *disps = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL(2);
 
@@ -37,7 +37,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
         /* In each group, rank 0 allocates a temp. buffer for the
          * reduce */
 
-        MPIR_CHKLMEM_MALLOC(disps, int *, local_size * sizeof(int), mpi_errno, "disps",
+        MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, local_size * sizeof(MPI_Aint), mpi_errno, "disps",
                             MPL_MEM_BUFFER);
 
         total_count = 0;
