@@ -12,7 +12,7 @@
 
 int MPIR_Igatherv_allcomm_gentran_linear(const void *sendbuf, MPI_Aint sendcount,
                                          MPI_Datatype sendtype, void *recvbuf,
-                                         const int recvcounts[], const int displs[],
+                                         const MPI_Aint recvcounts[], const MPI_Aint displs[],
                                          MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                          MPIR_Request ** request)
 {

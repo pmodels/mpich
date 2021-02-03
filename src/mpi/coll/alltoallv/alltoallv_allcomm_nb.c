@@ -5,10 +5,10 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Alltoallv_allcomm_nb(const void *sendbuf, const int *sendcounts, const int *sdispls,
-                              MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
-                              const int *rdispls, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                              MPIR_Errflag_t * errflag)
+int MPIR_Alltoallv_allcomm_nb(const void *sendbuf, const MPI_Aint * sendcounts,
+                              const MPI_Aint * sdispls, MPI_Datatype sendtype, void *recvbuf,
+                              const MPI_Aint * recvcounts, const MPI_Aint * rdispls,
+                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Request req = MPI_REQUEST_NULL;

@@ -14,14 +14,16 @@
 #undef MPIR_TSP_Ineighor_alltoallv_sched_allcomm_linear
 #define MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear  MPIR_TSP_NAMESPACE(Ineighbor_alltoallv_sched_allcomm_linear)
 
-int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
-                                                      const int sdispls[], MPI_Datatype sendtype,
-                                                      void *recvbuf, const int recvcounts[],
-                                                      const int rdispls[], MPI_Datatype recvtype,
-                                                      MPIR_Comm * comm_ptr,
+int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf,
+                                                      const MPI_Aint sendcounts[],
+                                                      const MPI_Aint sdispls[],
+                                                      MPI_Datatype sendtype, void *recvbuf,
+                                                      const MPI_Aint recvcounts[],
+                                                      const MPI_Aint rdispls[],
+                                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                                       MPIR_TSP_sched_t * sched);
-int MPIR_TSP_Ineighbor_alltoallv_allcomm_linear(const void *sendbuf, const int sendcounts[],
-                                                const int sdispls[], MPI_Datatype sendtype,
-                                                void *recvbuf, const int recvcounts[],
-                                                const int rdispls[], MPI_Datatype recvtype,
+int MPIR_TSP_Ineighbor_alltoallv_allcomm_linear(const void *sendbuf, const MPI_Aint sendcounts[],
+                                                const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                                void *recvbuf, const MPI_Aint recvcounts[],
+                                                const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                                 MPIR_Comm * comm_ptr, MPIR_Request ** req);

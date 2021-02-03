@@ -5,10 +5,10 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Ialltoallv_inter_sched_pairwise_exchange(const void *sendbuf, const int sendcounts[],
-                                                  const int sdispls[], MPI_Datatype sendtype,
-                                                  void *recvbuf, const int recvcounts[],
-                                                  const int rdispls[], MPI_Datatype recvtype,
+int MPIR_Ialltoallv_inter_sched_pairwise_exchange(const void *sendbuf, const MPI_Aint sendcounts[],
+                                                  const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                                  void *recvbuf, const MPI_Aint recvcounts[],
+                                                  const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     /* Intercommunicator alltoallv. We use a pairwise exchange algorithm

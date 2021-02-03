@@ -12,9 +12,9 @@
 
 int MPIR_Iallgatherv_intra_gentran_recexch_halving(const void *sendbuf, MPI_Aint sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
-                                                   const int *recvcounts, const int *displs,
-                                                   MPI_Datatype recvtype, MPIR_Comm * comm, int k,
-                                                   MPIR_Request ** req)
+                                                   const MPI_Aint * recvcounts,
+                                                   const MPI_Aint * displs, MPI_Datatype recvtype,
+                                                   MPIR_Comm * comm, int k, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
 

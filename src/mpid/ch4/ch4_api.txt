@@ -500,7 +500,7 @@ PARAM:
     datatype_p: MPIR_Datatype *
     disp_unit: int
     disp_unit_p: int *
-    displs: const int *
+    displs: const MPI_Aint *
     errflag: MPIR_Errflag_t *
     flag: int *
     group: MPIR_Group *
@@ -532,11 +532,11 @@ PARAM:
     port_name-2: char *
     ptr: void *
     rank: int
-    rdispls: const int *
+    rdispls: const MPI_Aint *
     rdispls-2: const MPI_Aint *
     recvbuf: void *
     recvcount: MPI_Aint
-    recvcounts: const int *
+    recvcounts: const MPI_Aint *
     recvtype: MPI_Datatype
     recvtypes: const MPI_Datatype[]
     remote_lupids: int **
@@ -549,11 +549,11 @@ PARAM:
     result_datatype: MPI_Datatype
     root: int
     rreq: MPIR_Request *
-    sdispls: const int *
+    sdispls: const MPI_Aint *
     sdispls-2: const MPI_Aint *
     sendbuf: const void *
     sendcount: MPI_Aint
-    sendcounts: const int *
+    sendcounts: const MPI_Aint *
     sendtype: MPI_Datatype
     sendtypes: const MPI_Datatype[]
     size: int
