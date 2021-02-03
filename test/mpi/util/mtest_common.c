@@ -369,7 +369,7 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         device_id %= ndevices;
     } else if (type == MTEST_MEM_TYPE__SHARED) {
         cudaSetDevice(device_id);
-        cudaMallocManaged(devicebuf, size);
+        cudaMallocManaged(devicebuf, size, cudaMemAttachGlobal);
         if (hostbuf)
             *hostbuf = *devicebuf;
 #endif
