@@ -46,6 +46,13 @@ int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
     return MPL_SUCCESS;
 }
 
+int MPL_wtime_to_ticks(MPL_time_t * t, long long int *val)
+{
+    *val = *t;
+
+    return MPL_SUCCESS;
+}
+
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = 1.0e-9 * (*t);
@@ -65,6 +72,14 @@ int MPL_wtick(double *wtick)
     /* According to the documentation, ticks should be in nanoseconds.  This
      * is untested */
     *wtick = 1.0e-9;
+
+    return MPL_SUCCESS;
+}
+
+int MPL_ticks_per_second(long long int *ticks_per_second)
+{
+    /* nanoseconds */
+    *ticks_per_second = 1000000000;
 
     return MPL_SUCCESS;
 }
