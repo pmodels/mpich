@@ -227,6 +227,19 @@ typedef struct MPIDI_prequest {
     MPI_Datatype datatype;
 } MPIDI_prequest_t;
 
+typedef struct MPIDI_part_request {
+    /* partitioned attributes */
+    void *buffer;
+    int partitions;
+    MPI_Aint count;             /* count per partition */
+    int rank;
+    int tag;
+    MPIR_Context_id_t context_id;       /* temporarily store send context_id in unexp_rreq.
+                                         * Valid also in posted_rreq so that single dequeue
+                                         * routine can be used. See MPIDIG_part_dequeue. */
+    MPI_Datatype datatype;
+} MPIDI_part_request_t;
+
 typedef struct {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
@@ -242,6 +255,9 @@ typedef struct {
 
         /* Used by pt2pt persistent communication */
         MPIDI_prequest_t preq;
+
+        /* Used by partitioned communication */
+        MPIDI_part_request_t part_req;
 
         /* Used by the netmod direct apis */
         union {
@@ -261,6 +277,7 @@ typedef struct {
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDIG_REQUEST(req,field)       (((req)->dev.ch4.am).field)
 #define MPIDI_PREQUEST(req,field)       (((req)->dev.ch4.preq).field)
+#define MPIDI_PART_REQUEST(req,field)   (((req)->dev.ch4.part_req).field)
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
 /* `(r)->dev.ch4.am.req` might not be allocated right after SHM_mpi_recv when
