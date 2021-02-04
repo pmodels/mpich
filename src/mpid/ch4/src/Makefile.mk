@@ -16,6 +16,7 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4_rma.h      \
                   src/mpid/ch4/src/ch4_win.h      \
                   src/mpid/ch4/src/ch4_wait.h     \
+                  src/mpid/ch4/src/ch4_part.h     \
                   src/mpid/ch4/src/ch4r_probe.h   \
                   src/mpid/ch4/src/ch4r_rma.h     \
                   src/mpid/ch4/src/ch4r_win.h     \
@@ -36,6 +37,7 @@ mpi_core_sources += src/mpid/ch4/src/ch4_globals.c        \
                     src/mpid/ch4/src/ch4_spawn.c          \
                     src/mpid/ch4/src/ch4_progress.c       \
                     src/mpid/ch4/src/ch4_win.c            \
+                    src/mpid/ch4/src/ch4_part.c           \
                     src/mpid/ch4/src/ch4i_comm.c          \
                     src/mpid/ch4/src/ch4r_init.c          \
                     src/mpid/ch4/src/ch4r_proc.c          \
