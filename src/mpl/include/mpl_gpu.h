@@ -75,5 +75,6 @@ int MPL_gpu_get_global_dev_ids(int *global_ids, int count);
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len);
 
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr));
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id);
 
 #endif /* ifndef MPL_GPU_H_INCLUDED */
