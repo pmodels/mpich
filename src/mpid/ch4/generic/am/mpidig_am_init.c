@@ -129,6 +129,8 @@ int MPIDIG_am_init(void)
     MPIDI_global.posted_list = NULL;
     MPIDI_global.unexp_list = NULL;
 #endif
+    MPIDI_global.part_posted_list = NULL;
+    MPIDI_global.part_unexp_list = NULL;
 
     MPIDI_global.cmpl_list = NULL;
     MPL_atomic_store_uint64(&MPIDI_global.exp_seq_no, 0);
