@@ -147,6 +147,24 @@ Native API:
   mpi_cancel_recv : int
       NM*: rreq
      SHM*: rreq
+  mpi_psend_init : int
+      NM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
+     SHM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
+  mpi_precv_init : int
+      NM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
+     SHM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
+  part_start : int
+      NM*: req
+      SHM*: req
+  mpi_pready_range : int
+      NM*: partition_low, partition_high, sreq
+     SHM*: partition_low, partition_high, sreq
+  mpi_pready_list : int
+      NM*: length-2, array_of_partitions, sreq
+     SHM*: length-2, array_of_partitions, sreq
+  mpi_parrived : int
+      NM*: rreq, partition, flag
+     SHM*: rreq, partition, flag
   mpi_alloc_mem : void *
       NM : size-2, info
      SHM : size-2, info
@@ -494,6 +512,7 @@ PARAM:
     iov_len: size_t
     is_remote: bool
     length: MPI_Aint
+    length-2: int
     local_upid_size: size_t **
     local_upids: char **
     lock_type: int
@@ -558,3 +577,8 @@ PARAM:
     win: MPIR_Win *
     win_p: MPIR_Win **
     winattr: MPIDI_winattr_t
+    partitions: int
+    partition: int
+    partition_low: int
+    partition_high: int
+    array_of_partitions: int[]
