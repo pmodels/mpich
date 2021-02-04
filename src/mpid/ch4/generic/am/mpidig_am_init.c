@@ -162,6 +162,12 @@ int MPIDIG_am_init(void)
                      &MPIDIG_send_data_origin_cb, &MPIDIG_send_data_target_msg_cb);
 
     MPIDIG_am_reg_cb(MPIDIG_SSEND_ACK, NULL, &MPIDIG_ssend_ack_target_msg_cb);
+
+    MPIDIG_am_reg_cb(MPIDIG_PART_SEND_INIT, NULL, &MPIDIG_part_send_init_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_PART_CTS, NULL, &MPIDIG_part_cts_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_PART_SEND_DATA, &MPIDIG_part_send_data_origin_cb,
+                     &MPIDIG_part_send_data_target_msg_cb);
+
     MPIDIG_am_reg_cb(MPIDIG_PUT_REQ, &MPIDIG_put_origin_cb, &MPIDIG_put_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_ACK, NULL, &MPIDIG_put_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_GET_REQ, &MPIDIG_get_origin_cb, &MPIDIG_get_target_msg_cb);

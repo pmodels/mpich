@@ -99,6 +99,10 @@ typedef struct MPIDIG_rreq_t {
     struct MPIDIG_rreq_t *prev, *next;
 } MPIDIG_rreq_t;
 
+typedef struct MPIDIG_part_am_req_t {
+    MPIR_Request *part_req_ptr;
+} MPIDIG_part_am_req_t;
+
 typedef struct MPIDIG_put_req_t {
     MPIR_Win *win_ptr;
     MPIR_Request *preq_ptr;
@@ -186,6 +190,7 @@ typedef struct MPIDIG_req_ext_t {
         MPIDIG_get_req_t greq;
         MPIDIG_cswap_req_t creq;
         MPIDIG_acc_req_t areq;
+        MPIDIG_part_am_req_t part_am_req;
     };
 
     MPIDIG_rreq_async_t recv_async;

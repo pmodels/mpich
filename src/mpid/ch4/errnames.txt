@@ -56,3 +56,6 @@
 # Partitioned errors
 #
 **ch4|partitionsync: Wrong synchronization of partitioned calls 
+**ch4|partmismatchsize: Partitioned send and receive buﬀers are not identical in size
+**ch4|partmismatchsize %d %d %d %d: Partitioned send and receive buﬀers are not identical in size; \
+%d bytes received but receive buffer size is %d
