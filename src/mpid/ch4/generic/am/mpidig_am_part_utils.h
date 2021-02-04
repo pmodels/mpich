@@ -32,6 +32,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_PART_REQ_INC_FETCH_STATUS(MPIR_Request * par
     return prev_stat + 1;
 }
 
+#ifdef HAVE_ERROR_CHECKING
+#define MPIDIG_PART_CHECK_RREQ_CTS(req)                                                 \
+    do {                                                                                \
+        MPID_BEGIN_ERROR_CHECKS;                                                        \
+        if (MPL_atomic_load_int(&MPIDIG_PART_REQUEST(req, status))                      \
+                   != MPIDIG_PART_REQ_CTS) {                                            \
+            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_OTHER, goto fn_fail, "**ch4|partitionsync"); \
+        }                                                                               \
+        MPID_END_ERROR_CHECKS;                                                          \
+    } while (0);
+#else
+#define MPIDIG_PART_CHECK_RREQ_CTS(rreq)
+#endif
+
 MPL_STATIC_INLINE_PREFIX int MPIDIG_part_match(int rank, int tag,
                                                MPIR_Context_id_t context_id, MPIR_Request * req)
 {
