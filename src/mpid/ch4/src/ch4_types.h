@@ -250,6 +250,8 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDIG_rreq_t *posted_list;
     MPIDIG_rreq_t *unexp_list;
 #endif
+    MPIDIG_part_rreq_t *part_posted_list;
+    MPIDIG_part_rreq_t *part_unexp_list;
     MPIDIG_req_ext_t *cmpl_list;
     MPL_atomic_uint64_t exp_seq_no;
     MPL_atomic_uint64_t nxt_seq_no;
