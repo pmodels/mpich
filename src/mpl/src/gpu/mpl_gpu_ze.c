@@ -33,7 +33,7 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
 {
     int ret = MPL_SUCCESS;
     if (!gpu_initialized) {
-        ret = MPL_gpu_init(&device_count, &max_dev_id);
+        ret = MPL_gpu_init();
     }
 
     *dev_cnt = device_count;
@@ -41,14 +41,14 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
     return ret;
 }
 
-int MPL_gpu_init(int *device_count_ptr, int *max_dev_id_ptr)
+int MPL_gpu_init()
 {
     int ret_error;
     ret_error = gpu_ze_init_driver();
     if (ret_error != MPL_SUCCESS)
         goto fn_fail;
 
-    *max_dev_id_ptr = *device_count_ptr = global_ze_device_count;
+    max_dev_id = device_count = global_ze_device_count;
     gpu_initialized = 1;
 
   fn_exit:
