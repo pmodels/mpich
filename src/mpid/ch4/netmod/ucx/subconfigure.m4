@@ -26,12 +26,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
     ucxlib=""
     AC_SUBST([ucxlib])
 
-    ucx_embedded=""
-    if test $have_ucx = no ; then
-        ucx_embedded="yes"
+    if test "$pac_have_ucx" = "no" ; then
+        with_ucx=embedded
     fi
-    
-    if test "${ucx_embedded}" = "yes" ; then
+    if test "$with_ucx" = "embedded" ; then
         PAC_PUSH_ALL_FLAGS()
         PAC_RESET_ALL_FLAGS()
         PAC_CONFIG_SUBDIR_ARGS([modules/ucx],[--disable-static --enable-embedded --with-java=no],[],[AC_MSG_ERROR(ucx configure failed)])
@@ -46,8 +44,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
         have_ucp_put_nb=yes
         have_ucp_get_nb=yes
     else
-        PAC_APPEND_FLAG([-lucp -lucs],[WRAPPER_LIBS])
-
+        dnl PAC_PROBE_HEADER_LIB must've been successful
+        AC_MSG_NOTICE([CH4 UCX Netmod:  Using an external ucx])
+        PAC_LIBS_ADD([-lucp -lucs])
         # ucp_put_nb and ucp_get_nb are added only from ucx 1.4.
         PAC_CHECK_HEADER_LIB([ucp/api/ucp.h],[ucp],[ucp_put_nb], [have_ucp_put_nb=yes], [have_ucp_put_nb=no])
         PAC_CHECK_HEADER_LIB([ucp/api/ucp.h],[ucp],[ucp_get_nb], [have_ucp_get_nb=yes], [have_ucp_get_nb=no])

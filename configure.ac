@@ -271,6 +271,10 @@ PAC_PREFIX_ALL_FLAGS(USER)
 # added to the MPICH wrappers (mpicc and friends) as well.
 PAC_PREFIX_ALL_FLAGS(WRAPPER)
 
+# confdb routines are used in multiple components. Let the macros know
+# whether WRAPPER FLAGS are used.
+m4_define([use_wrapper_flags], [1])
+
 # MPICH_MPIx_FLAGS are used by mpicc and friends.  They are like
 # WRAPPER flags, but these are provided by the user.
 AC_SUBST(MPICH_MPICC_CPPFLAGS)
@@ -825,7 +829,6 @@ export LIBS
 export MPILIBNAME
 export PMPILIBNAME
 export OPALIBNAME
-export MPLLIBNAME
 # ----------------------------------------------------------------------------
 # with-device
 #
@@ -995,43 +998,22 @@ if test "$enable_extended_context_bits" = "yes" ; then
 fi
 
 # MPL
-AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
-MPLLIBNAME=${MPLLIBNAME:-"mpl"}
-export MPLLIBNAME
-AC_SUBST(MPLLIBNAME)
-AC_ARG_WITH([mpl-prefix],
-            [AS_HELP_STRING([[--with-mpl-prefix[=DIR]]],
-                            [use the MPL library installed in DIR,
-                             rather than the one included in src/mpl.  Pass
-                             "embedded" to force usage of the MPL source
-                             distributed with MPICH.])],
-            [],dnl action-if-given
-            [with_mpl_prefix=embedded]) dnl action-if-not-given
 mplsrcdir=""
 AC_SUBST([mplsrcdir])
 mpllibdir=""
 AC_SUBST([mpllibdir])
 mpllib=""
 AC_SUBST([mpllib])
-if test "$with_mpl_prefix" = "embedded" ; then
-    # no need for libtool versioning when embedding MPL
-    mpl_subdir_args="--disable-versioning --enable-embedded"
-    PAC_CONFIG_SUBDIR_ARGS([src/mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-    PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
-    PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
 
-    mplsrcdir="src/mpl"
-    mpllib="src/mpl/lib${MPLLIBNAME}.la"
-else
-    # The user specified an already-installed MPL; just sanity check, don't
-    # subconfigure it
-    AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
-          [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
-    PAC_APPEND_FLAG([-I${with_mpl_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[WRAPPER_LIBS])
-    PAC_APPEND_FLAG([-L${with_mpl_prefix}/lib],[WRAPPER_LDFLAGS])
-    mpllibdir="-L${with_mpl_prefix}/lib"
-fi
+# NOTE: we only support embedded mpl now
+# no need for libtool versioning when embedding MPL
+mpl_subdir_args="--disable-versioning --enable-embedded"
+PAC_CONFIG_SUBDIR_ARGS([src/mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
+PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
+PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
+
+mplsrcdir="src/mpl"
+mpllib="src/mpl/libmpl.la"
 
 # Izem
 
@@ -1044,16 +1026,6 @@ AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (de
 ZMLIBNAME=${ZMLIBNAME:-"zm"}
 export ZMLIBNAME
 AC_SUBST(ZMLIBNAME)
-AC_ARG_WITH([zm-prefix],
-[  --with-zm-prefix@<:@=ARG@:>@
-                          specify the Izem library to use. No argument implies "yes".
-                          Accepted values for ARG are:
-                          yes|embedded - use the embedded Izem
-                          system       - search system paths for an Izem installation
-                          no           - disable Izem
-                          <PATH>       - use the Izem at PATH],,
-[with_zm_prefix=no])
-
 zmsrcdir=""
 AC_SUBST([zmsrcdir])
 zmlibdir=""
@@ -1061,8 +1033,10 @@ AC_SUBST([zmlibdir])
 zmlib=""
 AC_SUBST([zmlib])
 
+m4_define([zm_embedded_dir],[modules/izem])
+PAC_CHECK_HEADER_LIB_EXPLICIT([zm],[lock/zm_ticket.h],[$ZMLIBNAME],[zm_ticket_init])
 if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; then
-    if test "$with_zm_prefix" = "yes" || test "$with_zm_prefix" = "embedded"; then
+    if test "$with_zm" = "embedded" ; then
         if test -e "${use_top_srcdir}/modules/izem" ; then
             zm_subdir_args="--enable-embedded"
             PAC_CONFIG_SUBDIR_ARGS([modules/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
@@ -1073,45 +1047,6 @@ if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; the
         else
             AC_MSG_WARN([Attempted to use the embedded Izem source tree in "modules/izem", but it is missing.  Configuration or compilation may fail later.])
         fi
-    elif test "$with_zm_prefix" = "system"; then
-        # check if an Izem installation exists on this system
-        PAC_PUSH_FLAG([LIBS])
-        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[LIBS])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "lock/zm_ticket.h"
-                                        ],
-                                        [zm_ticket_t lock;
-                                         zm_ticket_init(&lock);
-                                         zm_ticket_acquire(&lock);
-                                         zm_ticket_release(&lock);])],
-                       [AC_MSG_ERROR([No usable Izem installation was found on this system])],
-                       [PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[WRAPPER_LIBS])])
-        PAC_POP_FLAG([LIBS])
-    elif test "$with_zm_prefix" = "no"; then
-        AC_MSG_ERROR([Izem features were requested with --enable-izem but Izem was disabled.])
-    else
-        # The user specified an already-installed Izem; just sanity check, don't
-        # subconfigure it
-
-        AS_IF([test -s "${with_zm_prefix}/include/lock/zm_lock.h" -a -s "${with_zm_prefix}/include/cond/zm_cond.h"],
-              [:],[AC_MSG_ERROR([Izem headers at "${with_zm_prefix}/include" are missing])])
-        PAC_APPEND_FLAG([-I${with_zm_prefix}/include],[CPPFLAGS])
-
-        PAC_PUSH_FLAG([LIBS])
-        PAC_PUSH_FLAG([LDFLAGS])
-        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[LIBS])
-        PAC_APPEND_FLAG([-L${with_zm_prefix}/lib],[LDFLAGS])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "lock/zm_ticket.h"
-                                        ],
-                                        [zm_ticket_t lock;
-                                         zm_ticket_init(&lock);
-                                         zm_ticket_acquire(&lock);
-                                         zm_ticket_release(&lock);])],
-                       [],[AC_MSG_ERROR([The Izem installation at "${with_zm_prefix}" seems broken])])
-        PAC_POP_FLAG([LIBS])
-        PAC_POP_FLAG([LDFLAGS])
-        PAC_APPEND_FLAG([-L${with_zm_prefix}/lib],[WRAPPER_LDFLAGS])
-        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[WRAPPER_LIBS])
-        zmlibdir="-L${with_zm_prefix}/lib"
     fi
 fi
 
@@ -1158,105 +1093,39 @@ PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
 PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
 
 # ----------------------------------------------------------------------------
-# HWLOC
+# HWLOC / NETLOC
 # ----------------------------------------------------------------------------
-# Allow the user to override the hwloc location (from embedded to user
-# or system path)
-PAC_CHECK_PREFIX(hwloc)
 hwlocsrcdir=""
 AC_SUBST([hwlocsrcdir])
-hwloclibdir=""
-AC_SUBST([hwloclibdir])
 hwloclib=""
 AC_SUBST([hwloclib])
 
-if test "$with_hwloc_prefix" = "no" ; then
-   have_hwloc=no
-elif test "$with_hwloc_prefix" = "embedded" ; then
-   # Disable visibility when setting up hwloc
-   PAC_PUSH_FLAG([enable_visibility])
-   enable_visibility=no;
-   HWLOC_SETUP_CORE([modules/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
-   if test "$have_hwloc" = "yes" ; then
-      hwlocsrcdir="modules/hwloc"
-      hwloclib="$HWLOC_EMBEDDED_LDADD"
-      PAC_PREPEND_FLAG([$HWLOC_EMBEDDED_LIBS], [WRAPPER_LIBS])
-      PAC_APPEND_FLAG([$HWLOC_EMBEDDED_LDFLAGS], [WRAPPER_LDFLAGS])
-      # if possible, do not expose hwloc symbols in libmpi.so
-      PAC_PREPEND_FLAG([$VISIBILITY_CFLAGS], [HWLOC_CFLAGS])
-   fi
-   PAC_POP_FLAG([enable_visibility])
-else
-   AC_CHECK_HEADERS([hwloc.h])
-   PAC_PUSH_FLAG([LIBS])
-   # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our
-   # minimum required version
-   AC_CHECK_LIB([hwloc],[hwloc_topology_set_pid])
-   PAC_POP_FLAG([LIBS])
-   AC_MSG_CHECKING([if non-embedded hwloc works])
-   if test "$ac_cv_header_hwloc_h" = "yes" -a "$ac_cv_lib_hwloc_hwloc_topology_set_pid" = "yes" ; then
-      have_hwloc=yes
-      PAC_PREPEND_FLAG([-lhwloc], [WRAPPER_LIBS])
-   else
-      have_hwloc=no
-   fi
-   AC_MSG_RESULT([$have_hwloc])
-
-   # FIXME: Disable hwloc on Cygwin for now. The hwloc package,
-   # atleast as of 1.0.2, does not install correctly on Cygwin
-   AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
-
-   if test "$have_hwloc" = "yes" ; then
-      if test -d ${with_hwloc_prefix}/lib64 ; then
-         PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib64],[WRAPPER_LDFLAGS])
-      else
-         PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib],[WRAPPER_LDFLAGS])
-      fi
-   fi
+m4_define([hwloc_embedded_dir],[modules/hwloc])
+dnl minor difference from e.g. mpl and zm -- we'll prioritize system hwloc by default
+PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
+PAC_CHECK_HEADER_LIB_OPTIONAL([netloc],[netloc.h],[netloc],[netloc_get_all_host_nodes])
+if test "$pac_have_hwloc" = "no" ; then
+    with_hwloc=embedded
+    pac_have_hwloc=yes
+    dnl TODO: check and configure embedded netloc
 fi
 
-if test "$have_hwloc" = "yes" ; then
-   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
+if test "$with_hwloc" = "embedded" ; then
+    PAC_PUSH_FLAG([CFLAGS])
+    CFLAGS="$VISIBILITY_CFLAGS"
+    PAC_CONFIG_SUBDIR_ARGS([modules/hwloc], [--enable-embedded-mode --disable-visibility],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
+    PAC_POP_FLAG([CFLAGS])
+    hwlocsrcdir="${main_top_builddir}/modules/hwloc"
+    hwloclib="${main_top_builddir}/modules/hwloc/hwloc/libhwloc_embedded.la"
+    PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/hwloc/include],[CPPFLAGS])
+    PAC_APPEND_FLAG([-I${main_top_builddir}/modules/hwloc/include],[CPPFLAGS])
 fi
 
-HWLOC_DO_AM_CONDITIONALS
-
-# ----------------------------------------------------------------------------
-# NETLOC
-# ----------------------------------------------------------------------------
-AC_ARG_WITH([netloc-prefix],
-            [AS_HELP_STRING([[--with-netloc-prefix[=DIR]]],
-                            [use the NETLOC library installed in DIR]) or system to use the system library], [],
-                            [with_netloc_prefix=no])
-
-netloclibdir=""
-AC_SUBST([netloclibdir])
-
-if test "$have_hwloc" = "yes" ; then
-    if test "${with_netloc_prefix}" != "no" ; then
-        if test "${with_netloc_prefix}" != "system"; then
-            # The user specified an already-installed Netloc; just sanity check,
-            # don't subconfigure it
-            AS_IF([test -s "${with_netloc_prefix}/include/netloc.h"],
-              [:],[AC_MSG_ERROR([the Netloc installation in "${with_netloc_prefix}" appears broken])])
-            PAC_APPEND_FLAG([-I${with_netloc_prefix}/include],[CPPFLAGS])
-            PAC_APPEND_FLAG([-I${with_netloc_prefix}/include],[CFLAGS])
-            PAC_PREPEND_FLAG([-lnetloc],[WRAPPER_LIBS])
-            if test -d ${with_netloc_prefix}/lib64 ; then
-                PAC_APPEND_FLAG([-L${with_netloc_prefix}/lib64],[WRAPPER_LDFLAGS])
-                netloclibdir="-L${with_netloc_prefix}/lib64"
-            else
-                PAC_APPEND_FLAG([-L${with_netloc_prefix}/lib],[WRAPPER_LDFLAGS])
-                netloclibdir="-L${with_netloc_prefix}/lib"
-            fi
-       else
-           AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "netloc.h"
-                                   ],
-                                   [])],
-                          [AC_MSG_ERROR([the Netloc installation seems to be added from system path])], [])
-       fi
-       AC_DEFINE(HAVE_NETLOC,1,[Define if netloc is available in either user specified path or in system path])
-    fi
+if test "$pac_have_hwloc" = "yes" ; then
+    AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
+fi
+if test "$pac_have_netloc" = "yes" ; then
+    AC_DEFINE(HAVE_NETLOC,1,[Define if netloc is available])
 fi
 
 # ----------------------------------------------------------------------------
@@ -1609,17 +1478,14 @@ else
     # Make device_name available to subdirs
 fi
 
-if test -n "${with_pmix}" -a "${with_pmix}" != "no" ; then
+PAC_CHECK_HEADER_LIB_EXPLICIT(pmix, pmix.h, pmix, PMIx_Init)
+if test "$pac_have_pmix" = "yes" ; then
     # disable built-in PMI and process managers
     with_pmi="no"
     with_pm="no"
     if test "${device_name}" != "ch4" ; then
         AC_MSG_ERROR([$device_name does not support PMIx])
     fi
-    PAC_PUSH_FLAG([LIBS])
-    PAC_CHECK_HEADER_LIB_FATAL(pmix, pmix.h, pmix, PMIx_Init)
-    PAC_APPEND_FLAG([-lpmix],[WRAPPER_LIBS])
-    PAC_POP_FLAG([LIBS])
     AC_DEFINE(USE_PMIX_API, 1, [Define if PMIx API must be used])
 fi
 
@@ -4778,10 +4644,7 @@ fi
 AC_ARG_ENABLE(checkpointing,
     [AC_HELP_STRING([--enable-checkpointing], [Enable application checkpointing])],
     [ if test "$enableval" != "no" ; then
-	PAC_PUSH_FLAG([LIBS])
 	PAC_CHECK_HEADER_LIB_FATAL(blcr, libcr.h, cr, cr_init)
-	PAC_APPEND_FLAG([-lcr],[WRAPPER_LIBS])
-	PAC_POP_FLAG([LIBS])
         AC_DEFINE(ENABLE_CHECKPOINTING,1,[Application checkpointing enabled])
       fi ],
 )

@@ -13,25 +13,11 @@ AM_CONDITIONAL([BUILD_CH4],[test "$device_name" = "ch4"])
 AM_COND_IF([BUILD_CH4],[
 AC_MSG_NOTICE([RUNNING PREREQ FOR CH4 DEVICE])
 
-# check availability of libfabric
-if test x"$with_libfabric" != x"embedded" ; then
-    PAC_SET_HEADER_LIB_PATH(libfabric)
-    PAC_PUSH_FLAG(LIBS)
-    PAC_CHECK_HEADER_LIB([rdma/fabric.h], [fabric], [fi_getinfo], [have_libfabric=yes], [have_libfabric=no])
-    PAC_POP_FLAG(LIBS)
-else
-    have_libfabric=no
-fi
-
-# check availability of ucx
-if test x"$with_ucx" != x"embedded" ; then
-    PAC_SET_HEADER_LIB_PATH(ucx)
-    PAC_PUSH_FLAG(LIBS)
-    PAC_CHECK_HEADER_LIB([ucp/api/ucp.h], [ucp], [ucp_config_read], [have_ucx=yes], [have_ucx=no])
-    PAC_POP_FLAG(LIBS)
-else
-    have_ucx=no
-fi
+# check availability of libfabric, ucx (for purpose of setting default)
+m4_define([libfabric_embedded_dir],[modules/libfabric])
+m4_define([ucx_embedded_dir],[modules/ucx])
+PAC_PROBE_HEADER_LIB(libfabric,[rdma/fabric.h], [fabric], [fi_getinfo])
+PAC_PROBE_HEADER_LIB(ucx,[ucp/api/ucp.h], [ucp], [ucp_config_read])
 
 # the CH4 device depends on the common NBC scheduler code
 build_mpid_common_sched=yes
