@@ -11,9 +11,6 @@ AC_INIT([Hydra], MPICH_VERSION_m4)
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
 
-# needed by hwloc in embedded mode.  Must come very early to avoid
-# bizarre expansion ordering warnings
-AC_CANONICAL_TARGET
 AC_ARG_PROGRAM
 
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
@@ -25,15 +22,6 @@ AM_PROG_CC_C_O
 # also needed by hwloc in embedded mode, must also come early for expansion
 # ordering reasons
 AC_USE_SYSTEM_EXTENSIONS
-
-# Define -D_DARWIN_C_SOURCE on OS/X to ensure that hwloc will build even if we
-# are building under MPICH with --enable-strict that defined _POSIX_C_SOURCE.
-# Some standard Darwin headers don't build correctly under a strict posix
-# environment.
-AS_CASE([$host],
-    [*-*-darwin*], [PAC_APPEND_FLAG([-D_DARWIN_C_SOURCE],[CPPFLAGS])]
-)
-
 
 AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive -Werror foreign 1.12.3 subdir-objects])
 
@@ -49,6 +37,9 @@ PAC_RESET_LINK_FLAGS()
 WRAPPER_LIBS=""
 export WRAPPER_LIBS
 AC_SUBST(WRAPPER_LIBS)
+
+# let confdb macro know that we are using WRAPPER FLAGS
+m4_define([use_wrapper_flags], [1])
 
 PAC_ARG_STRICT
 
@@ -139,25 +130,17 @@ AC_SUBST([mpl_srcdir])
 AC_SUBST(mpl_dist_srcdir)
 mpl_includedir=""
 AC_SUBST([mpl_includedir])
-mpl_libdir=""
-AC_SUBST([mpl_libdir])
 mpl_lib=""
 AC_SUBST([mpl_lib])
-if test "$with_mpl_prefix" = "embedded" ; then
+m4_define([mpl_embedded_dir],[mpl])
+PAC_CHECK_HEADER_LIB_EXPLICIT([mpl],[mplconfig.h],[$MPLLIBNAME],[mpl_str_get_int_arg])
+if test "$with_mpl" = "embedded" ; then
     mpl_srcdir="mpl"
     mpl_dist_srcdir="mpl"
     mpl_lib="mpl/lib${MPLLIBNAME}.la"
     mpl_subdir_args="--disable-versioning --enable-embedded"
     PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
     mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
-else
-    # The user specified an already-installed MPL; just sanity check, don't
-    # subconfigure it
-    AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
-          [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
-    mpl_includedir="-I${with_mpl_prefix}/include"
-    mpl_libdir="-L${with_mpl_prefix}/lib"
-    mpl_lib="-l${MPLLIBNAME}"
 fi
 
 # Documentation
@@ -284,14 +267,9 @@ for hydra_bss_name in ${hydra_bss_names}; do
 	pbs)
 		hydra_bss_external=true
 		# Check if TM library support is available
-		PAC_SET_HEADER_LIB_PATH(pbs)
-		PAC_PUSH_FLAG(LIBS)
-		PAC_CHECK_HEADER_LIB(tm.h, torque, tm_init, have_pbs_launcher=yes,
-					   have_pbs_launcher=no)
-		PAC_POP_FLAG(LIBS)
-                if test "$have_pbs_launcher" = "yes" ; then
+		PAC_CHECK_HEADER_LIB_OPTIONAL(pbs, tm.h, torque, tm_init)
+                if test "$pac_have_pbs" = "yes" ; then
 		    available_launchers="$available_launchers pbs"
-		    PAC_APPEND_FLAG([-ltorque],[WRAPPER_LIBS])
                 fi
 		available_rmks="$available_rmks pbs"
 		;;
@@ -323,10 +301,10 @@ if test "$hydra_bss_persist" ; then
 fi
 
 ## Launchers
-if test "$have_pbs_launcher" = "yes" ; then
+if test "$pac_have_pbs" = "yes" ; then
    AC_DEFINE(HAVE_TM_H, 1, [Define if tm.h and library are usable.])
 fi
-AM_CONDITIONAL([hydra_pbs_launcher], [test "$have_pbs_launcher" = "yes"])
+AM_CONDITIONAL([hydra_pbs_launcher], [test "$pac_have_pbs" = "yes"])
 
 tmp_list=
 for hydra_launcher in ${available_launchers} ; do
@@ -400,13 +378,6 @@ AC_MSG_RESULT($hydra_ui)
 AC_SUBST(hydra_ui)
 AM_CONDITIONAL([hydra_ui_mpich], [test $hydra_ui = "mpich"])
 
-
-#########################################################################
-# System hwloc
-#########################################################################
-PAC_CHECK_PREFIX(hwloc)
-
-
 #########################################################################
 # Processor Topology
 #########################################################################
@@ -418,33 +389,32 @@ AC_MSG_RESULT([$hydra_topolib_list])
 
 hydra_topolibs="`echo $hydra_topolib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
-have_hwloc=no
+hwloc_srcdir=""
+hwloc_includedir=""
+hwloc_lib=""
+AC_SUBST([hwloc_srcdir])
+AC_SUBST([hwloc_includedir])
+AC_SUBST([hwloc_lib])
+
 for hydra_topolib in ${hydra_topolibs}; do
     case "$hydra_topolib" in
 	hwloc)
-		if test "$with_hwloc_prefix" = "embedded" ; then
-		   HWLOC_SETUP_CORE([tools/topo/hwloc/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
-		   # Only build hwloc in embedded mode
-		   if test "$have_hwloc" = "yes" ; then
-		      hydra_use_embedded_hwloc=yes
-		   fi
-                else
-                    AC_CHECK_HEADERS([hwloc.h])
-                    # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our minimum
-                    # required version
-                    AC_CHECK_LIB([hwloc],[hwloc_topology_set_pid])
-                    AC_MSG_CHECKING([if non-embedded hwloc works])
-                    if test "$ac_cv_header_hwloc_h" = "yes" -a "$ac_cv_lib_hwloc_hwloc_topology_set_pid" = "yes" ; then
-                        have_hwloc=yes
-                    fi
-                    AC_MSG_RESULT([$have_hwloc])
+                m4_define([hwloc_embedded_dir],[tools/topo/hwloc/hwloc])
+                PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
+                if test "$pac_have_hwloc" = "no" ; then
+                    with_hwloc=embedded
+                    pac_have_hwloc=yes
+                fi
+		if test "$with_hwloc" = "embedded" ; then
+                    hydra_use_embedded_hwloc=yes
+                    PAC_CONFIG_SUBDIR_ARGS([tools/topo/hwloc/hwloc], [--enable-embedded-mode --disable-visibility],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
+                    dnl Note that single quote is intentional to pass the variable as is
+                    hwloc_srcdir="tools/topo/hwloc/hwloc"
+                    hwloc_includedir='-I${srcdir}/${hwloc_srcdir}/include -I${builddir}/${hwloc_srcdir}/include'
+                    hwloc_lib='${builddir}/${hwloc_srcdir}/hwloc/libhwloc_embedded.la'
                 fi
 
-                # FIXME: Disable hwloc on Cygwin for now. The hwloc package, atleast as of 1.0.2,
-                # does not install correctly on Cygwin
-                AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
-
-		if test "$have_hwloc" = "yes" ; then
+		if test "$pac_have_hwloc" = "yes" ; then
 		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
 		   available_topolibs="$available_topolibs hwloc"
 		fi
@@ -474,9 +444,7 @@ else
    AC_DEFINE(HYDRA_DEFAULT_TOPOLIB,NULL,[Default processor topology library])
 fi
 
-HWLOC_DO_AM_CONDITIONALS
-AM_CONDITIONAL([HYDRA_HAVE_HWLOC], [test "${have_hwloc}" = "yes"])
-AM_CONDITIONAL([HYDRA_USE_EMBEDDED_HWLOC], [test "${hydra_use_embedded_hwloc}" = "yes"])
+AM_CONDITIONAL([HYDRA_HAVE_HWLOC], [test "${pac_have_hwloc}" = "yes"])
 
 AC_MSG_CHECKING([available processor topology libraries])
 AC_MSG_RESULT([$available_topolibs])
@@ -485,9 +453,8 @@ AC_MSG_RESULT([$available_topolibs])
 # Slurm hostlist parsing
 #########################################################################
 AC_CHECK_HEADERS(slurm/slurm.h)
-AC_CHECK_LIB([slurm],[slurm_hostlist_create],have_libslurm=yes)
-if test "$have_libslurm" = "yes" -a "$ac_cv_header_slurm_slurm_h" = "yes" ; then
-    PAC_PREPEND_FLAG([-lslurm],[LIBS])
+PAC_CHECK_HEADER_LIB_OPTIONAL([libslurm],[slurm/slurm.h],[slurm],[slurm_hostlist_create])
+if test "$pac_have_libslurm" = "yes" ; then
     AC_DEFINE(HAVE_LIBSLURM,1,[Define if libslurm is available])
 fi
 

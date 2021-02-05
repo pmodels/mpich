@@ -14,10 +14,7 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_NEMESIS_NETMOD_OFI],[
     AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:ofi])
 
-    PAC_PUSH_FLAG(LIBS)
     PAC_CHECK_HEADER_LIB_FATAL(ofi, rdma/fabric.h, fabric, fi_getinfo)
-    PAC_APPEND_FLAG([-lfabric],[WRAPPER_LIBS])
-    PAC_POP_FLAG(LIBS)
 
     AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions])
 ])dnl end AM_COND_IF(BUILD_NEMESIS_NETMOD_OFI,...)
