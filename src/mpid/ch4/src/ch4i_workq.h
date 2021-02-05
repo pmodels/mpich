@@ -28,10 +28,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *, MPI_Aint, MPI_Datatype, 
                                                 MPIR_Comm *, int, MPIDI_av_entry_t *,
                                                 MPIR_Request **);
 MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *, MPI_Aint, MPI_Datatype, MPIR_Request *);
-MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *, int, MPI_Datatype, int, MPI_Aint, int,
-                                              MPI_Datatype, MPIR_Win *);
-MPL_STATIC_INLINE_PREFIX int MPIDI_get_unsafe(void *, int, MPI_Datatype, int, MPI_Aint, int,
-                                              MPI_Datatype, MPIR_Win *);
+MPL_STATIC_INLINE_PREFIX int MPIDI_put(const void *, int, MPI_Datatype, int, MPI_Aint, int,
+                                       MPI_Datatype, MPIR_Win *);
+MPL_STATIC_INLINE_PREFIX int MPIDI_get(void *, int, MPI_Datatype, int, MPI_Aint, int,
+                                       MPI_Datatype, MPIR_Win *);
 MPL_STATIC_INLINE_PREFIX struct MPIDI_workq_elemt *MPIDI_workq_elemt_create(void)
 {
     return MPIR_Handle_obj_alloc(&MPIDI_workq_elemt_mem);
@@ -331,9 +331,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
                 struct MPIDI_workq_put *wd = &workq_elemt->params.rma.put;
                 origin_datatype = wd->origin_datatype;
                 target_datatype = wd->target_datatype;
-                MPIDI_put_unsafe(wd->origin_addr, wd->origin_count, wd->origin_datatype,
-                                 wd->target_rank, wd->target_disp,
-                                 wd->target_count, wd->target_datatype, wd->win_ptr);
+                MPIDI_put(wd->origin_addr, wd->origin_count, wd->origin_datatype,
+                          wd->target_rank, wd->target_disp,
+                          wd->target_count, wd->target_datatype, wd->win_ptr);
                 MPIR_Datatype_release_if_not_builtin(origin_datatype);
                 MPIR_Datatype_release_if_not_builtin(target_datatype);
                 MPIDI_workq_elemt_free(workq_elemt);
@@ -343,9 +343,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
                 struct MPIDI_workq_get *wd = &workq_elemt->params.rma.get;
                 origin_datatype = wd->origin_datatype;
                 target_datatype = wd->target_datatype;
-                MPIDI_get_unsafe(wd->origin_addr, wd->origin_count, wd->origin_datatype,
-                                 wd->target_rank, wd->target_disp,
-                                 wd->target_count, wd->target_datatype, wd->win_ptr);
+                MPIDI_get(wd->origin_addr, wd->origin_count, wd->origin_datatype,
+                          wd->target_rank, wd->target_disp,
+                          wd->target_count, wd->target_datatype, wd->win_ptr);
                 MPIR_Datatype_release_if_not_builtin(origin_datatype);
                 MPIR_Datatype_release_if_not_builtin(target_datatype);
                 MPIDI_workq_elemt_free(workq_elemt);
