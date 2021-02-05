@@ -218,7 +218,7 @@ static int run_test(MPI_Comm comm, MPI_Win win, DTP_obj_s orig_obj, void *origbu
         if (err != DTP_SUCCESS)
             errs++;
 
-        err = DTP_obj_buf_init(target_obj, targetbuf, 1, 2, count);
+        err = DTP_obj_buf_init(target_obj, targetbuf_h, 1, 2, count);
         if (err != DTP_SUCCESS)
             errs++;
 
