@@ -3301,7 +3301,7 @@ export MPIX_C_FLOAT16
 #
 # In addition, we need to look at a few additional constants that depend
 # on how the compiler sizes some datatypes.  These are:
-#    STATUS_SIZE, INTEGER_KIND, ADDRESS_KIND, and OFFSET_KIND
+#    INTEGER_KIND, ADDRESS_KIND, and OFFSET_KIND
 #
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = yes ; then
@@ -4879,57 +4879,8 @@ AC_SUBST([MPI_F77_COUNT])
 
 # ----------------------------------------------------------------------------
 
-#
-# Set size of MPI_Status.  Must come after MPI_Count determination.
-#
-
-#
-# The size of MPI_Status is needed for the Fortran interface.
-#
-# WARNING!!! this is a spot where we duplicate code from mpi.h.in and it *must*
-# be kept in sync in order to make a proper computation
-AC_CACHE_CHECK([for size of MPI_Status],[pac_cv_sizeof_mpi_status],[
-dnl "double-quote" (in m4), otherwise you end up with a heinous bug because of
-dnl the array subscripting below
-[
-    rm -f pac_mpi_status.h
-    cat > pac_mpi_status.h <<_EOF
-typedef struct {
-    int count_lo;
-    int count_hi_and_cancelled;
-    int MPI_SOURCE;
-    int MPI_TAG;
-    int MPI_ERROR;
-} MPI_Status;
-_EOF
-]
-
-dnl just compute it, since a 1s-complement or sign-and-magnitude machine is
-dnl *highly* unlikely.  Users will report the error if it is ever
-dnl encountered, which will be safer than attempting some never-tested
-dnl default fallback.
-    AC_COMPUTE_INT([pac_cv_sizeof_mpi_status],
-                   [sizeof(MPI_Status)],
-                   [#include "pac_mpi_status.h"],
-                   [AC_MSG_ERROR([unable to compute status size, are you compiling on a non-2s-complement host?])])
-    rm -f pac_mpi_status.h
-])
-
-SIZEOF_MPI_STATUS=$pac_cv_sizeof_mpi_status
-export SIZEOF_MPI_STATUS
-AC_SUBST([SIZEOF_MPI_STATUS])
-
-if test "$enable_f77" = yes -a -z "$MPI_STATUS_SIZE" ; then
-    if test -n "$SIZEOF_MPI_STATUS" ; then
-        # compute from the C sizeof
-        AS_VAR_ARITH([MPI_STATUS_SIZE],[$SIZEOF_MPI_STATUS / $ac_cv_sizeof_int])
-        if test "$MPI_STATUS_SIZE" = "0" ; then
-            AC_MSG_ERROR([Could not compute the size of MPI_Status])
-        fi
-    else
-        AC_MSG_ERROR([MPI_STATUS_SIZE was not defined!])
-    fi
-fi # enable_f77 and mpi_status_size not set
+# MPI_STATUS_SIZE is hardcoded and need to be synchronized with mpi.h
+MPI_STATUS_SIZE=5
 AC_SUBST([MPI_STATUS_SIZE])
 
 if test "$enable_f77" = yes ; then
