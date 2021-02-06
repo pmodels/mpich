@@ -76,10 +76,9 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc2_(char *an FORT_MIXED_LEN(d1) FORT_END_LE
 */
 
 #if defined(HAVE_C_MULTI_ATTR_ALIAS)
-#define MPIF_STATUS_SIZE @MPI_STATUS_SIZE@
 
 struct mpif_cmblk1_t_ {
-    MPI_Fint MPIF_STATUS_IGNORE[MPIF_STATUS_SIZE];
+    MPI_Fint MPIF_STATUS_IGNORE[MPI_F_STATUS_SIZE];
 };
 typedef struct mpif_cmblk1_t_ mpif_cmblk1_t;
 /* *INDENT-OFF* */
@@ -97,7 +96,7 @@ extern mpif_cmblk1_t mpifcmb1 __attribute__ ((alias("mpifcmb1r")));
 extern mpif_cmblk1_t mpifcmb1_ __attribute__ ((alias("mpifcmb1r")));
 
 struct mpif_cmblk2_t_ {
-    MPI_Fint MPIF_STATUSES_IGNORE[1][MPIF_STATUS_SIZE];
+    MPI_Fint MPIF_STATUSES_IGNORE[1][MPI_F_STATUS_SIZE];
 };
 typedef struct mpif_cmblk2_t_ mpif_cmblk2_t;
 /* *INDENT-OFF* */
