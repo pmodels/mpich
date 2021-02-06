@@ -10,6 +10,38 @@ import sys
 import re
 import copy
 import os
+import glob
+
+def load_C_func_list(binding_dir="src/binding"):
+    # -- Loading Standard APIs --
+    if os.path.exists("%s/apis.json" % binding_dir):
+        print("Loading %s/apis.json ..." % binding_dir)
+        load_mpi_json("%s/apis.json" % binding_dir)
+    else:
+        print("Loading %s/mpi_standard_api.txt ..." % binding_dir)
+        load_mpi_api("%s/mpi_standard_api.txt" % binding_dir)
+
+    print("Loading %s/apis_mapping.txt ..." % binding_dir)
+    load_mpi_mapping("%s/apis_mapping.txt" % binding_dir)
+    print("Loading %s/custom_mapping.txt ..." % binding_dir)
+    load_mpi_mapping("%s/custom_mapping.txt" % binding_dir)
+
+    # -- Loading MPICH APIs --
+
+    api_files = glob.glob("%s/c/*_api.txt" % binding_dir)
+    for f in api_files:
+        if RE.match(r'.*\/(\w+)_api.txt', f):
+            # The name in eg pt2pt_api.txt indicates the output folder.
+            # Only the api functions with output folder will get generated.
+            # This allows simple control of what functions to generate.
+            print("Loading %s ..." % f)
+            load_mpi_api(f, RE.m.group(1))
+
+    # -- filter and sort func_list --
+    func_list = [f for f in G.FUNCS.values() if 'dir' in f and 'not_implemented' not in f]
+    func_list.sort(key = lambda f: f['dir'])
+
+    return func_list
 
 def load_mpi_json(api_json):
     import json
