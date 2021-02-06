@@ -3785,12 +3785,16 @@ if ($write_mpif) {
     print MPIFFD "$cchar      \n";
     #
     # Status elements
+    my $status_size = $mpidef{MPI_F_STATUS_SIZE};
+    my $idx_source = $mpidef{MPI_F_SOURCE} + 1;
+    my $idx_tag = $mpidef{MPI_F_TAG} + 1;
+    my $idx_error = $mpidef{MPI_F_ERROR} + 1;
     # FIXME: The offsets for the status elements are hardwired.  If they
     # change in mpi.h.in, they need to change here as well.
     print MPIFFD "       INTEGER MPI_SOURCE, MPI_TAG, MPI_ERROR\n";
-    print MPIFFD "       PARAMETER (MPI_SOURCE=3,MPI_TAG=4,MPI_ERROR=5)\n";
+    print MPIFFD "       PARAMETER (MPI_SOURCE=$idx_source,MPI_TAG=$idx_tag,MPI_ERROR=$idx_error)\n";
     print MPIFFD "       INTEGER MPI_STATUS_SIZE\n";
-    print MPIFFD "       PARAMETER (MPI_STATUS_SIZE=\@MPI_STATUS_SIZE\@)\n";
+    print MPIFFD "       PARAMETER (MPI_STATUS_SIZE=$status_size)\n";
     # Temporary until configure handles these.  Define as arrays to keep
     # Fortran compilers from complaining excessively.
     print MPIFFD "       INTEGER MPI_STATUS_IGNORE(MPI_STATUS_SIZE)\n";
