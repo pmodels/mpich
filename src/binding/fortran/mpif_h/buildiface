@@ -2690,7 +2690,7 @@ sub status_array_ctof {
 "    if ($testFlag$coutvar != MPI_STATUSES_IGNORE) {
         int li;
         for (li=0; li<$ActSize; li++) {
-            MPI_Status_c2f($coutvar+li,$outvar+li*MPIF_STATUS_SIZE);
+            MPI_Status_c2f($coutvar+li,$outvar+li*MPI_F_STATUS_SIZE);
         }
     }\n";
         $clean_up .= "     if ($coutvar != MPI_STATUSES_IGNORE) { $free($coutvar); }\n";

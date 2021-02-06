@@ -4931,8 +4931,6 @@ if test "$enable_f77" = yes -a -z "$MPI_STATUS_SIZE" ; then
     fi
 fi # enable_f77 and mpi_status_size not set
 AC_SUBST([MPI_STATUS_SIZE])
-MPIF_STATUS_SIZE=$MPI_STATUS_SIZE
-AC_DEFINE_UNQUOTED([MPIF_STATUS_SIZE],[$MPIF_STATUS_SIZE],[Size of an MPI_STATUS, in Fortran, in Fortran integers])
 
 if test "$enable_f77" = yes ; then
     # Check if multiple __attribute__((alias)) is available
