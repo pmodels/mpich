@@ -12,7 +12,7 @@ implicit none
 public :: MPIR_Fortran_string_f2c
 public :: MPIR_Fortran_string_c2f
 
-public :: MPII_Comm_copy_attr_f08_proxy
+public :: MPIR_Comm_copy_attr_f08_proxy
 public :: MPIR_Comm_delete_attr_f08_proxy
 public :: MPIR_Type_copy_attr_f08_proxy
 public :: MPIR_Type_delete_attr_f08_proxy
@@ -96,7 +96,7 @@ subroutine MPIR_Fortran_string_c2f(cstring, fstring)
     end do
 end subroutine MPIR_Fortran_string_c2f
 
-function MPII_Comm_copy_attr_f08_proxy (user_function, oldcomm, comm_keyval, extra_state, &
+function MPIR_Comm_copy_attr_f08_proxy (user_function, oldcomm, comm_keyval, extra_state, &
         attr_type, attribute_val_in, attribute_val_out, flag) result(ierror)
 
     use :: iso_c_binding, only : c_int, c_intptr_t
@@ -134,7 +134,7 @@ function MPII_Comm_copy_attr_f08_proxy (user_function, oldcomm, comm_keyval, ext
     flag = merge(1, 0, flag_f)
     ierror = ierror_f
 
-end function MPII_Comm_copy_attr_f08_proxy
+end function MPIR_Comm_copy_attr_f08_proxy
 
 function MPIR_Comm_delete_attr_f08_proxy (user_function, comm, comm_keyval, attr_type, &
         attribute_val, extra_state) result(ierror)
