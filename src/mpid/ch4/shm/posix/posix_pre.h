@@ -92,7 +92,7 @@ typedef struct MPIDI_POSIX_am_request_header {
     /* For postponed operation */
     MPI_Datatype datatype;
     const void *buf;
-    MPI_Count count;
+    MPI_Aint count;
 
     /* Structure used with POSIX postponed_queue */
     MPIR_Request *request;      /* Store address of MPIR_Request* sreq */

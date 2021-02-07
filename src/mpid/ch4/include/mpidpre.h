@@ -79,7 +79,7 @@ typedef enum {
 typedef struct MPIDIG_sreq_t {
     /* persistent send fields */
     const void *src_buf;
-    MPI_Count count;
+    MPI_Aint count;
     MPI_Datatype datatype;
     int rank;
     MPIR_Context_id_t context_id;

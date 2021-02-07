@@ -725,7 +725,7 @@ void MPID_Request_free_hook(MPIR_Request *);
 void MPID_Request_destroy_hook(MPIR_Request *);
 int MPID_Request_complete(MPIR_Request *);
 
-void *MPID_Alloc_mem( size_t size, MPIR_Info *info );
+void *MPID_Alloc_mem(MPI_Aint size, MPIR_Info *info );
 int MPID_Free_mem( void *ptr );
 
 /* Prototypes and definitions for the node ID code.  This is used to support

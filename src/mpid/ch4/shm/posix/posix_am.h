@@ -14,7 +14,7 @@
 #define MPIDI_POSIX_RESIZE_TO_MAX_ALIGN(x) \
     ((((x) / MAX_ALIGNMENT) + !!((x) % MAX_ALIGNMENT)) * MAX_ALIGNMENT)
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_eager_limit(void)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_POSIX_am_eager_limit(void)
 {
     return MPIDI_POSIX_eager_payload_limit() - MAX_ALIGNMENT;
 }
@@ -25,15 +25,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_send_hdr(int grank,
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int rank,
                                                      MPIDI_POSIX_am_header_t * msg_hdr,
                                                      const void *am_hdr,
-                                                     size_t am_hdr_sz,
+                                                     MPI_Aint am_hdr_sz,
                                                      const void *data,
-                                                     MPI_Count count,
+                                                     MPI_Aint count,
                                                      MPI_Datatype datatype, MPIR_Request * sreq,
                                                      bool issue_deferred);
 
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, size_t am_hdr_sz,
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, MPI_Aint am_hdr_sz,
                                                             const int grank,
                                                             MPIDI_POSIX_am_header_t * msg_hdr_p,
                                                             MPIR_Request * sreq)
@@ -80,9 +80,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
                                                   MPIDI_POSIX_am_header_kind_t kind,
                                                   int handler_id,
                                                   const void *am_hdr,
-                                                  size_t am_hdr_sz,
+                                                  MPI_Aint am_hdr_sz,
                                                   const void *data,
-                                                  MPI_Count count,
+                                                  MPI_Aint count,
                                                   MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -110,12 +110,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
                                                    struct iovec *am_hdr,
                                                    size_t iov_len,
                                                    const void *data,
-                                                   MPI_Count count,
+                                                   MPI_Aint count,
                                                    MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_allocated;
-    size_t am_hdr_sz = 0;
+    MPI_Aint am_hdr_sz = 0;
     int i;
     uint8_t *am_hdr_buf = NULL;
 
@@ -161,9 +161,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t contex
                                                         MPIDI_POSIX_am_header_kind_t kind,
                                                         int handler_id,
                                                         const void *am_hdr,
-                                                        size_t am_hdr_sz,
+                                                        MPI_Aint am_hdr_sz,
                                                         const void *data,
-                                                        MPI_Count count,
+                                                        MPI_Aint count,
                                                         MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -179,24 +179,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t contex
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_POSIX_am_hdr_max_sz(void)
 {
     /* Maximum size that fits in short send */
 
-    size_t max_shortsend = MPIDI_POSIX_eager_payload_limit();
+    MPI_Aint max_shortsend = MPIDI_POSIX_eager_payload_limit();
 
     /* Maximum payload size representable by MPIDI_POSIX_am_header_t::am_hdr_sz field */
     return MPL_MIN(max_shortsend, MPIDI_POSIX_MAX_AM_HDR_SIZE);
 }
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_eager_buf_limit(void)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_POSIX_am_eager_buf_limit(void)
 {
     return MPIDI_POSIX_eager_buf_limit();
 }
 
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, size_t am_hdr_sz,
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, MPI_Aint am_hdr_sz,
                                                             const int grank,
                                                             MPIDI_POSIX_am_header_t * msg_hdr)
 {
@@ -232,7 +232,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
                                                      MPIR_Comm * comm,
                                                      MPIDI_POSIX_am_header_kind_t kind,
                                                      int handler_id,
-                                                     const void *am_hdr, size_t am_hdr_sz)
+                                                     const void *am_hdr, MPI_Aint am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_am_header_t msg_hdr;
@@ -300,7 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t con
                                                            int src_rank,
                                                            MPIDI_POSIX_am_header_kind_t kind,
                                                            int handler_id, const void *am_hdr,
-                                                           size_t am_hdr_sz)
+                                                           MPI_Aint am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -320,9 +320,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t con
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
                                                      MPIDI_POSIX_am_header_t * msg_hdr,
                                                      const void *am_hdr,
-                                                     size_t am_hdr_sz,
+                                                     MPI_Aint am_hdr_sz,
                                                      const void *data,
-                                                     MPI_Count count,
+                                                     MPI_Aint count,
                                                      MPI_Datatype datatype, MPIR_Request * sreq,
                                                      bool issue_deferred)
 {

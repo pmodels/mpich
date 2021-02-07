@@ -417,17 +417,12 @@ int MPIDI_UCX_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
     return MPI_SUCCESS;
 }
 
-int MPIDI_UCX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[])
-{
-    return MPI_SUCCESS;
-}
-
 int MPIDI_UCX_mpi_free_mem(void *ptr)
 {
     return MPIDIG_mpi_free_mem(ptr);
 }
 
-void *MPIDI_UCX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_UCX_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }

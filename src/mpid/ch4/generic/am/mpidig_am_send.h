@@ -13,7 +13,7 @@
 #define MPIDIG_AM_SEND_FLAGS_RTS (1 << 1)
 
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_check_eager(int is_local, MPI_Aint am_hdr_sz, MPI_Aint data_sz,
-                                                 const void *buf, MPI_Count count,
+                                                 const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, MPIR_Request * sreq)
 {
 #ifdef MPIDI_CH4_DIRECT_NETMOD
@@ -69,16 +69,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
 #endif
 
     int is_local = MPIDI_av_is_local(addr);
-    if (MPIDIG_check_eager(is_local, sizeof(am_hdr), data_sz, buf, count, datatype, sreq)) {
+    MPI_Aint am_hdr_sz = (MPI_Aint) sizeof(am_hdr);
+    if (MPIDIG_check_eager(is_local, am_hdr_sz, data_sz, buf, count, datatype, sreq)) {
         /* EAGER send */
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local) {
-            mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr), buf,
+            mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz, buf,
                                            count, datatype, sreq);
         } else
 #endif
         {
-            mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr), buf,
+            mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz, buf,
                                           count, datatype, sreq);
         }
     } else {
@@ -94,11 +95,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local) {
-            mpi_errno = MPIDI_SHM_am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr));
+            mpi_errno = MPIDI_SHM_am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz);
         } else
 #endif
         {
-            mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr));
+            mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);

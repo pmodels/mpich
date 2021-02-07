@@ -204,12 +204,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_complete(MPIR_Win * win)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_rank_is_local(peer, win->comm_ptr))
             mpi_errno = MPIDI_SHM_am_send_hdr(peer, win->comm_ptr,
-                                              MPIDIG_WIN_COMPLETE, &msg, sizeof(msg));
+                                              MPIDIG_WIN_COMPLETE, &msg, (MPI_Aint) sizeof(msg));
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
-                                             MPIDIG_WIN_COMPLETE, &msg, sizeof(msg));
+                                             MPIDIG_WIN_COMPLETE, &msg, (MPI_Aint) sizeof(msg));
         }
 
         if (mpi_errno != MPI_SUCCESS)
@@ -269,12 +269,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_post(MPIR_Group * group, int assert,
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_rank_is_local(peer, win->comm_ptr))
             mpi_errno = MPIDI_SHM_am_send_hdr(peer, win->comm_ptr,
-                                              MPIDIG_WIN_POST, &msg, sizeof(msg));
+                                              MPIDIG_WIN_POST, &msg, (MPI_Aint) sizeof(msg));
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
-                                             MPIDIG_WIN_POST, &msg, sizeof(msg));
+                                             MPIDIG_WIN_POST, &msg, (MPI_Aint) sizeof(msg));
         }
 
         if (mpi_errno != MPI_SUCCESS)
@@ -377,11 +377,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock(int lock_type, int rank, int as
     locked = slock->locked + 1;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_rank_is_local(rank, win->comm_ptr))
-        mpi_errno = MPIDI_SHM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_LOCK, &msg, sizeof(msg));
+        mpi_errno = MPIDI_SHM_am_send_hdr(rank, win->comm_ptr,
+                                          MPIDIG_WIN_LOCK, &msg, (MPI_Aint) sizeof(msg));
     else
 #endif
     {
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_LOCK, &msg, sizeof(msg));
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr,
+                                         MPIDIG_WIN_LOCK, &msg, (MPI_Aint) sizeof(msg));
     }
 
     if (mpi_errno != MPI_SUCCESS)
@@ -448,11 +450,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_rank_is_local(rank, win->comm_ptr))
         mpi_errno =
-            MPIDI_SHM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_UNLOCK, &msg, sizeof(msg));
+            MPIDI_SHM_am_send_hdr(rank, win->comm_ptr,
+                                  MPIDIG_WIN_UNLOCK, &msg, (MPI_Aint) sizeof(msg));
     else
 #endif
     {
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_UNLOCK, &msg, sizeof(msg));
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr,
+                                         MPIDIG_WIN_UNLOCK, &msg, (MPI_Aint) sizeof(msg));
     }
 
     if (mpi_errno != MPI_SUCCESS)
@@ -687,12 +691,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_rank_is_local(i, win->comm_ptr))
             mpi_errno = MPIDI_SHM_am_send_hdr(i, win->comm_ptr,
-                                              MPIDIG_WIN_UNLOCKALL, &msg, sizeof(msg));
+                                              MPIDIG_WIN_UNLOCKALL, &msg, (MPI_Aint) sizeof(msg));
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
-                                             MPIDIG_WIN_UNLOCKALL, &msg, sizeof(msg));
+                                             MPIDIG_WIN_UNLOCKALL, &msg, (MPI_Aint) sizeof(msg));
         }
 
         if (mpi_errno != MPI_SUCCESS)
@@ -830,12 +834,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_rank_is_local(i, win->comm_ptr))
             mpi_errno = MPIDI_SHM_am_send_hdr(i, win->comm_ptr,
-                                              MPIDIG_WIN_LOCKALL, &msg, sizeof(msg));
+                                              MPIDIG_WIN_LOCKALL, &msg, (MPI_Aint) sizeof(msg));
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
-                                             MPIDIG_WIN_LOCKALL, &msg, sizeof(msg));
+                                             MPIDIG_WIN_LOCKALL, &msg, (MPI_Aint) sizeof(msg));
         }
 
         if (mpi_errno != MPI_SUCCESS)
