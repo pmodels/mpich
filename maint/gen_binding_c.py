@@ -15,8 +15,6 @@ def main():
     c_dir = "src/binding/c"
     func_list = load_C_func_list(binding_dir)
 
-    load_mpix_txt()
-
     # -- Loading extra api prototypes (needed until other `buildiface` scripts are updated)
     G.mpi_declares = []
     proto_extra_h = "%s/mpi_proto_extra.h" % c_dir

@@ -3,6 +3,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+from local_python import MPI_API_Global as G
 from local_python import RE
 import re
 

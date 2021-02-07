@@ -41,6 +41,8 @@ def load_C_func_list(binding_dir="src/binding", silent=False):
     func_list = [f for f in G.FUNCS.values() if 'dir' in f and 'not_implemented' not in f]
     func_list.sort(key = lambda f: f['dir'])
 
+    load_mpix_txt()
+
     return func_list
 
 def load_mpi_json(api_json):
@@ -227,6 +229,11 @@ def parse_param_attributes(p):
         p['constant'] = True
     else:
         p['constant'] = False
+
+    if RE.search(r'asynchronous\s*=\s*True', p['t']):
+        p['asynchronous'] = True
+    else:
+        p['asynchronous'] = False
 
 def function_has_POLY_parameters(func):
     for p in func['parameters']:
