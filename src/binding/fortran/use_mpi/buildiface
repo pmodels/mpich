@@ -277,6 +277,10 @@ my $line_limit = 80;    # Max line length
     'Init_thread'     => 1,
     'Status_c2f'      => 1,
     'Status_f2c'      => 1,
+    'Status_f2f08'    => 1,
+    'Status_f082f'    => 1,
+    'Status_c2f08'    => 1,
+    'Status_f082c'    => 1,
     'Pcontrol'        => 1,
     'Info_create_env' => 1,
 );
