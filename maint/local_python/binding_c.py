@@ -323,12 +323,11 @@ def check_params_with_large_only(func):
         else:
             func['c_parameters'] = func['params_large']
 
-def get_userbuffer_group(func, i):
+def get_userbuffer_group(func_name, parameters, i):
     """internal function used by process_func_parameters"""
-    p = func['c_parameters'][i]
-    p2 = func['c_parameters'][i + 1]
-    p3 = func['c_parameters'][i + 2]
-    func_name = func['name']
+    p = parameters[i]
+    p2 = parameters[i + 1]
+    p3 = parameters[i + 2]
     if RE.match(r'mpi_i?(alltoall|allgather|gather|scatter)', func_name, re.IGNORECASE):
         type = "inplace"
         if RE.search(r'send', p['name'], re.IGNORECASE) and RE.search(r'scatter', func_name, re.IGNORECASE):
@@ -381,7 +380,7 @@ def process_func_parameters(func):
         p = func['c_parameters'][i]
         (group_kind, group_count) = ("", 0)
         if i + 3 <= n and RE.search(r'BUFFER', p['kind']):
-            group_kind, group_count = get_userbuffer_group(func, i)
+            group_kind, group_count = get_userbuffer_group(func_name, func['c_parameters'], i)
         if group_count > 0:
             t = ''
             for j in range(group_count):
