@@ -286,7 +286,7 @@ int MPIDI_POSIX_get_vci_attr(int vci)
     return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
-void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_POSIX_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }
@@ -304,12 +304,6 @@ int MPIDI_POSIX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, cha
 
 int MPIDI_POSIX_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
                                 int **remote_lupids)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-int MPIDI_POSIX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[])
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

@@ -911,7 +911,7 @@ int MPIDI_OFI_get_vci_attr(int vci)
     return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
-void *MPIDI_OFI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_OFI_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }

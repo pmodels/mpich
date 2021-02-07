@@ -867,7 +867,7 @@ typedef struct {
 
 static alloc_mem_container_s *alloc_mem_container_list = NULL;
 
-void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPID_Alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLOC_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLOC_MEM);
