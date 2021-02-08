@@ -803,11 +803,7 @@ if [ $do_bindings = "yes" ] ; then
         elif find src/binding/fortran/use_mpi -name 'buildiface' -newer 'src/binding/fortran/use_mpi/mpi_base.f90' >/dev/null 2>&1 ; then
 	    build_f90=yes
         fi
-        if [ ! -s src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.c ] ; then
-	    build_f08=yes
-        elif find src/binding/fortran/use_mpi_f08 -name 'buildiface' -newer 'src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.c' >/dev/null 2>&1 ; then
-	    build_f08=yes
-        fi
+        build_f08=yes
     fi
 
     if [ $build_f77 = "yes" ] ; then
@@ -828,12 +824,8 @@ if [ $do_bindings = "yes" ] ; then
 	echo_n "Building Fortran 08 interface... "
 	# Top-level files
 	( cd src/binding/fortran/use_mpi_f08 && chmod a+x ./buildiface && ./buildiface )
-        # Delete the old Makefile.mk
-        ( rm -f src/binding/fortran/use_mpi_f08/wrappers_c/Makefile.mk )
-        # Execute once for mpi_proto.h ...
-	( cd src/binding/fortran/use_mpi_f08/wrappers_c && chmod a+x ./buildiface && ./buildiface ../../../../include/mpi_proto.h )
-        # ... and once for mpio.h.in
-	( cd src/binding/fortran/use_mpi_f08/wrappers_c && chmod a+x ./buildiface && ./buildiface ../../../../mpi/romio/include/mpio.h.in )
+        # generate src/binding/fortran/use_mpi_f08/wrappers_c/...
+        $PYTHON maint/gen_binding_f08.py
 	echo "done"
     fi
 
