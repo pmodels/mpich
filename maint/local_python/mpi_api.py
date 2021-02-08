@@ -233,3 +233,76 @@ def function_has_POLY_parameters(func):
         if p['kind'].startswith('POLY'):
             return True
     return False
+
+# FIXME: until ROMIO interface are generated
+def get_mpiio_func_list():
+    io_func_name_list = [
+        "MPI_File_c2f",
+        "MPI_File_close",
+        "MPI_File_delete",
+        "MPI_File_errhandler_function",
+        "MPI_File_f2c",
+        "MPI_File_get_amode",
+        "MPI_File_get_atomicity",
+        "MPI_File_get_byte_offset",
+        "MPI_File_get_group",
+        "MPI_File_get_info",
+        "MPI_File_get_position",
+        "MPI_File_get_position_shared",
+        "MPI_File_get_size",
+        "MPI_File_get_type_extent",
+        "MPI_File_get_view",
+        "MPI_File_iread",
+        "MPI_File_iread_all",
+        "MPI_File_iread_at",
+        "MPI_File_iread_at_all",
+        "MPI_File_iread_shared",
+        "MPI_File_iwrite",
+        "MPI_File_iwrite_all",
+        "MPI_File_iwrite_at",
+        "MPI_File_iwrite_at_all",
+        "MPI_File_iwrite_shared",
+        "MPI_File_open",
+        "MPI_File_preallocate",
+        "MPI_File_read",
+        "MPI_File_read_all",
+        "MPI_File_read_all_begin",
+        "MPI_File_read_all_end",
+        "MPI_File_read_at",
+        "MPI_File_read_at_all",
+        "MPI_File_read_at_all_begin",
+        "MPI_File_read_at_all_end",
+        "MPI_File_read_ordered",
+        "MPI_File_read_ordered_begin",
+        "MPI_File_read_ordered_end",
+        "MPI_File_read_shared",
+        "MPI_File_seek",
+        "MPI_File_seek_shared",
+        "MPI_File_set_atomicity",
+        "MPI_File_set_info",
+        "MPI_File_set_size",
+        "MPI_File_set_view",
+        "MPI_File_sync",
+        "MPI_File_write",
+        "MPI_File_write_all",
+        "MPI_File_write_all_begin",
+        "MPI_File_write_all_end",
+        "MPI_File_write_at",
+        "MPI_File_write_at_all",
+        "MPI_File_write_at_all_begin",
+        "MPI_File_write_at_all_end",
+        "MPI_File_write_ordered",
+        "MPI_File_write_ordered_begin",
+        "MPI_File_write_ordered_end",
+        "MPI_File_write_shared",
+        "MPI_Register_datarep"
+    ]
+    return [G.FUNCS[a.lower()] for a in io_func_name_list]
+
+def get_type_create_f90_func_list():
+    type_func_name_list = [
+        "MPI_Type_create_f90_integer",
+        "MPI_Type_create_f90_real",
+        "MPI_Type_create_f90_complex",
+    ]
+    return [G.FUNCS[a.lower()] for a in type_func_name_list]
