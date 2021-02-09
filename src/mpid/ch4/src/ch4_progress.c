@@ -25,7 +25,7 @@ static int global_vci_poll_count = 0;
 MPL_STATIC_INLINE_PREFIX int do_global_progress(void)
 {
     if (MPIDI_global.n_vcis == 1) {
-        return 1;
+        return 0;
     } else {
         global_vci_poll_count++;
         return ((global_vci_poll_count & POLL_MASK) == 0);
@@ -157,6 +157,32 @@ int MPIDI_Progress_test(int flags)
     progress_state_init(&state, 0);
     state.flag = flags;
     return progress_test(&state, 0);
+}
+
+/* provide an internal direct progress function. This is used in e.g. RMA, where
+ * we need poke internal progress from inside a per-vci lock.
+ */
+int MPIDI_progress_test_vci(int vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (do_global_progress()) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+        mpi_errno = MPID_Progress_test(NULL);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    } else {
+        mpi_errno = MPIDI_NM_progress(vci, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno = MPIDI_SHM_progress(vci, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+#endif
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 void MPID_Progress_start(MPID_Progress_state * state)

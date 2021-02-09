@@ -12,6 +12,7 @@
 #include "ch4r_proc.h"
 
 int MPIDI_Progress_test(int flags);
+int MPIDI_progress_test_vci(int vci);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
@@ -437,55 +438,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank,
     return ret;
 }
 
-/* TODO: Several unbounded loops call this macro. One way to avoid holding the
- * ALLFUNC_MUTEX lock forever is to insert YIELD in each loop. We choose to
- * insert it here for simplicity, but this might not be the best place. One
- * needs to investigate the appropriate place to yield the lock. */
-/* NOTE: Taking off VCI lock is necessary to avoid recursive locking and allow
- * more granular per-vci locks */
-/* TODO: MPIDI_global.vci_lock probably will be changed into granular generic lock
+/* Following progress macros are currently used by window synchronization calls.
+ *
+ * CAUTION: the macro uses MPIR_ERR_CHECK, be careful of it escaping the
+ * critical section.
+ *
+ * NOTE: when used in a loop, we insert a yield of global lock to prevent
+ * blocking other progress (under global granularity).
  */
 
-#define MPIDIU_PROGRESS()                                   \
-    do {                                                        \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
-        mpi_errno = MPID_Progress_test(NULL);                       \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock); \
-        MPIR_ERR_CHECK(mpi_errno);  \
+#define MPIDIU_PROGRESS_WHILE(cond, vci)         \
+    while (cond) {                          \
+        mpi_errno = MPIDI_progress_test_vci(vci);   \
+        MPIR_ERR_CHECK(mpi_errno); \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
-    } while (0)
+    }
 
-/* Optimized versions to avoid exessive locking/unlocking */
-/* FIXME: use inline function rather macros for cleaner semantics */
-
-#define MPIDIU_PROGRESS_WHILE(cond)         \
-    do {                                        \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
-        while (cond) {                          \
-            mpi_errno = MPID_Progress_test(NULL);   \
-            if (mpi_errno) break;               \
-            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
-        } \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock); \
-        MPIR_ERR_CHECK(mpi_errno);              \
-    } while (0)
-
-/* This macro is refactored for original code that progress in a do-while loop
- * NOTE: it's already inside the progress lock and it is calling progress again.
- *       To avoid recursive locking, we yield the lock here.
- * TODO: Can we consolidate with previous macro? Double check the reasoning.
- */
-#define MPIDIU_PROGRESS_DO_WHILE(cond) \
-    do {                                        \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
-        do {                          \
-            mpi_errno = MPID_Progress_test(NULL);   \
-            if (mpi_errno) break;               \
-            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
-        } while (cond); \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock); \
-        MPIR_ERR_CHECK(mpi_errno);              \
-    } while (0)
+#define MPIDIU_PROGRESS_DO_WHILE(cond, vci) \
+    do { \
+        mpi_errno = MPIDI_progress_test_vci(vci); \
+        MPIR_ERR_CHECK(mpi_errno); \
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
+    } while (cond)
 
 #ifdef HAVE_ERROR_CHECKING
 #define MPIDIG_EPOCH_CHECK_SYNC(win, mpi_errno, stmt)               \
@@ -985,13 +959,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_win_rank_to_intra_rank(MPIR_Win * win, int r
 }
 
 /* Wait until active message acc ops are done. */
+/* NOTE: this function is currently only called from ofi_rma.h, it is being called
+ * outside per-vci critical section */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_wait_am_acc(MPIR_Win * win, int target_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, target_rank);
+    MPID_Progress_state state;
+    state.vci_count = 1;
+    state.vci[0] = 0;   /* MPIDIG only uses vci 0 for now */
+    state.flag = MPIDI_PROGRESS_ALL;
+    /* skip other state fields for MPID_Progress_test */
     while ((target_ptr && MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0) ||
            MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) != 0) {
-        MPIDIU_PROGRESS();
+        mpi_errno = MPID_Progress_test(&state);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
   fn_exit:
     return mpi_errno;
