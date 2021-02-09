@@ -18,6 +18,8 @@ extern unsigned long long PVAR_COUNTER_unexpected_recvq_match_attempts ATTRIBUTE
 extern MPIR_T_pvar_timer_t PVAR_TIMER_time_failed_matching_postedq ATTRIBUTE((unused));
 extern MPIR_T_pvar_timer_t PVAR_TIMER_time_matching_unexpectedq ATTRIBUTE((unused));
 
+extern int unexp_message_indices[2];
+
 int MPIDIG_recvq_init(void);
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_match_posted(int rank, int tag,
@@ -54,6 +56,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_enqueue_unexp(MPIR_Request * req, MPIDIG_rr
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
     MPIDIG_REQUEST(req, req->rreq.request) = req;
     DL_APPEND(*list, &req->dev.ch4.am.req->rreq);
+    MPIR_T_DO_EVENT(unexp_message_indices[0], MPI_T_CB_REQUIRE_MPI_RESTRICTED,
+                    &MPIDIG_REQUEST(req, tag));
     MPIR_T_PVAR_LEVEL_INC(RECVQ, unexpected_recvq_length, 1);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
 }
@@ -108,6 +112,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_unexp(int rank, int tag,
         req = curr->request;
         if (MPIDIG_match_unexp(rank, tag, context_id, req)) {
             DL_DELETE(*list, curr);
+            MPIR_T_DO_EVENT(unexp_message_indices[1], MPI_T_CB_REQUIRE_MPI_RESTRICTED, &tag);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
             break;
         }
