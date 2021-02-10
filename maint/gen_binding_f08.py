@@ -39,7 +39,7 @@ def main():
         if '_skip_fortran' in func:
             continue
         dump_f08_wrappers_f(func)
-    f = "%s/fortran/use_mpi_f08/wrappers_f/f08ts.f90" % binding_dir
+    f = "%s/wrappers_f/f08ts.f90" % f08_dir
     dump_f90_file(f, G.out)
 
     do_profiling = True
@@ -62,7 +62,7 @@ def main():
     f_sync_reg = {'name':"MPI_F_sync_reg", 'parameters':[{'name':"buf", 'kind':"BUFFER", 't':'', 'large_only':None, 'param_direction':"in"}]}
     dump_mpi_c_interface_cdesc(f_sync_reg)
     dump_interface_module_close("mpi_c_interface_cdesc")
-    f = "%s/fortran/use_mpi_f08/mpi_c_interface_cdesc.f90" % binding_dir
+    f = "%s/mpi_c_interface_cdesc.f90" % f08_dir
     dump_f90_file(f, G.out)
 
     G.out = []
@@ -73,7 +73,7 @@ def main():
         if not need_cdesc(func):
             dump_mpi_c_interface_nobuf(func)
     dump_interface_module_close("mpi_c_interface_nobuf")
-    f = "%s/fortran/use_mpi_f08/mpi_c_interface_nobuf.f90" % binding_dir
+    f = "%s/mpi_c_interface_nobuf.f90" % f08_dir
     dump_f90_file(f, G.out)
 
     # mpi_f08.f90 and pmpi_f08.f90
@@ -94,7 +94,7 @@ def main():
     G.out.append("")
     dump_F_module_close("mpi_f08")
 
-    f = "%s/fortran/use_mpi_f08/mpi_f08.f90" % binding_dir
+    f = "%s/mpi_f08.f90" % f08_dir
     dump_f90_file(f, G.out)
 
     if do_profiling:
