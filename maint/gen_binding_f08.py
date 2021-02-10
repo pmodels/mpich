@@ -40,7 +40,7 @@ def main():
             continue
         dump_f08_wrappers_f(func)
     f = "%s/fortran/use_mpi_f08/wrappers_f/f08ts.f90" % binding_dir
-    # dump_f90_file(f, G.out)
+    dump_f90_file(f, G.out)
 
     do_profiling = True
     if do_profiling:
@@ -48,7 +48,7 @@ def main():
         for l in G.out:
             temp_out.append(re.sub(r'(subroutine|function)\s+(MPIX?)_', r'\1 P\2R_', l, flags=re.IGNORECASE))
         f = "%s/wrappers_f/pf08ts.f90" % f08_dir
-        # dump_f90_file(f, temp_out)
+        dump_f90_file(f, temp_out)
         temp_out = None
 
     # mpi_c_interface_{cdesc,nobuf}.f90
@@ -63,7 +63,7 @@ def main():
     dump_mpi_c_interface_cdesc(f_sync_reg)
     dump_interface_module_close("mpi_c_interface_cdesc")
     f = "%s/fortran/use_mpi_f08/mpi_c_interface_cdesc.f90" % binding_dir
-    # dump_f90_file(f, G.out)
+    dump_f90_file(f, G.out)
 
     G.out = []
     dump_interface_module_open("mpi_c_interface_nobuf")
@@ -74,7 +74,7 @@ def main():
             dump_mpi_c_interface_nobuf(func)
     dump_interface_module_close("mpi_c_interface_nobuf")
     f = "%s/fortran/use_mpi_f08/mpi_c_interface_nobuf.f90" % binding_dir
-    # dump_f90_file(f, G.out)
+    dump_f90_file(f, G.out)
 
     # mpi_f08.f90 and pmpi_f08.f90
     G.out = []
@@ -95,7 +95,7 @@ def main():
     dump_F_module_close("mpi_f08")
 
     f = "%s/fortran/use_mpi_f08/mpi_f08.f90" % binding_dir
-    # dump_f90_file(f, G.out)
+    dump_f90_file(f, G.out)
 
     if do_profiling:
         temp_out = []
@@ -109,7 +109,7 @@ def main():
             else:
                 temp_out.append(re.sub(r'(subroutine|function)\s+(MPIX?)_', r'\1 P\2R_', l, flags=re.IGNORECASE))
         f = "%s/pmpi_f08.f90" % f08_dir
-        # dump_f90_file(f, temp_out)
+        dump_f90_file(f, temp_out)
         temp_out = None
 
 # ---------------------------------------------------------
