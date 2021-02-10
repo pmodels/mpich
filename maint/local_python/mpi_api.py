@@ -12,18 +12,18 @@ import copy
 import os
 import glob
 
-def load_C_func_list(binding_dir="src/binding"):
+def load_C_func_list(binding_dir="src/binding", silent=False):
     # -- Loading Standard APIs --
     if os.path.exists("%s/apis.json" % binding_dir):
-        print("Loading %s/apis.json ..." % binding_dir)
+        if not silent: print("Loading %s/apis.json ..." % binding_dir)
         load_mpi_json("%s/apis.json" % binding_dir)
     else:
-        print("Loading %s/mpi_standard_api.txt ..." % binding_dir)
+        if not silent: print("Loading %s/mpi_standard_api.txt ..." % binding_dir)
         load_mpi_api("%s/mpi_standard_api.txt" % binding_dir)
 
-    print("Loading %s/apis_mapping.txt ..." % binding_dir)
+    if not silent: print("Loading %s/apis_mapping.txt ..." % binding_dir)
     load_mpi_mapping("%s/apis_mapping.txt" % binding_dir)
-    print("Loading %s/custom_mapping.txt ..." % binding_dir)
+    if not silent: print("Loading %s/custom_mapping.txt ..." % binding_dir)
     load_mpi_mapping("%s/custom_mapping.txt" % binding_dir)
 
     # -- Loading MPICH APIs --
@@ -34,7 +34,7 @@ def load_C_func_list(binding_dir="src/binding"):
             # The name in eg pt2pt_api.txt indicates the output folder.
             # Only the api functions with output folder will get generated.
             # This allows simple control of what functions to generate.
-            print("Loading %s ..." % f)
+            if not silent: print("Loading %s ..." % f)
             load_mpi_api(f, RE.m.group(1))
 
     # -- filter and sort func_list --
