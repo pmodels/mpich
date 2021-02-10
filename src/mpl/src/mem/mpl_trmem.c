@@ -1021,3 +1021,51 @@ void MPL_direct_free(void *ptr)
     free(ptr);
 }
 #endif
+
+#ifdef MPL_DEFINE_ALIGNED_ALLOC
+/*
+ *  This used to be a static function in mpl_trmem.h, but there's a big
+ *  automake issue in how MPL_NEEDS_ALIGNED_ALLOC_DECL is determined vs
+ *  whether that value is correct later in C code that tries to use
+ *  aligned_alloc().
+ *
+ *  The problem is reproducible on RH7 when configuring with
+ *  CFLAGS=-Werror=implicit-function-declaration
+ *  WHat happens is
+ *  1. src/mpi/romio/mpl/include/config.h.in sets _GNU_SOURCE
+ *     so automake uses that in its detection of whether aligned_alloc()
+ *     is declared, and it detects that it is.
+ *  2. the MPL code is fine when viewed in a self-contained manner, eg
+ *     mpl.h still sets its _GNU_SOURCE before it includes other files
+ *     like stdlib.h
+ *  3. but to keep any C file from including stdlib.h before it includes
+ *     mpl.h puts an extraordinary burden on all .h and .c files, because
+ *     that rule would have to be applied recursively to anything that
+ *     includes something that includes mpl.h etc.
+ *
+ *  An easier solution is to isolate the location where aligned_alloc()
+ *  is called and then only that C file has to worry about the above.  The
+ *  only reason other files were affected by the original problem is
+ *  because of using static.
+ */
+#if defined MPL_NEEDS_ALIGNED_ALLOC_DECL
+extern void *aligned_alloc(size_t alignment, size_t size);
+#endif
+
+void *MPL_aligned_alloc(size_t alignment, size_t size, MPL_memory_class class)
+{
+#if defined (MPL_HAVE_ALIGNED_ALLOC)
+    return aligned_alloc(alignment, size);
+#elif defined (MPL_HAVE_POSIX_MEMALIGN)
+    void *ptr;
+    int ret;
+
+    ret = posix_memalign(&ptr, alignment, size);
+    if (ret != 0)
+        return NULL;
+    return ptr;
+#else
+#error "MPL_DEFINE_ALIGNED_ALLOC defined but no underlying support function found - should not reach here."
+#endif
+}
+#endif /* #ifdef MPL_DEFINE_ALIGNED_ALLOC */

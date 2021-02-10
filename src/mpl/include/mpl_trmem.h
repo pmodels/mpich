@@ -26,10 +26,6 @@ extern char *strdup(const char *);
 char *MPL_strdup(const char *str);
 #endif /* defined(MPL_USE_MEMORY_TRACING) || defined(MPL_HAVE_STRDUP) */
 
-#if defined MPL_NEEDS_ALIGNED_ALLOC_DECL
-extern void *aligned_alloc(size_t alignment, size_t size);
-#endif
-
 /* This list should match the array in mpl_trmem.c */
 typedef enum {
     MPL_MEM_ADDRESS,            /* Address information */
@@ -312,24 +308,8 @@ static inline void *MPL_realloc(void *ptr, size_t size, MPL_memory_class memclas
 #define MPL_direct_free     free
 
 #ifdef MPL_DEFINE_ALIGNED_ALLOC
-MPL_STATIC_INLINE_PREFIX void *MPL_aligned_alloc(size_t alignment, size_t size,
-                                                 MPL_memory_class class)
-{
-#if defined (MPL_HAVE_ALIGNED_ALLOC)
-    return aligned_alloc(alignment, size);
-#elif defined (MPL_HAVE_POSIX_MEMALIGN)
-    void *ptr;
-    int ret;
-
-    ret = posix_memalign(&ptr, alignment, size);
-    if (ret != 0)
-        return NULL;
-    return ptr;
-#else
-#error "MPL_DEFINE_ALIGNED_ALLOC defined but no underlying support function found - should not reach here."
+void *MPL_aligned_alloc(size_t alignment, size_t size, MPL_memory_class class);
 #endif
-}
-#endif /* #ifdef MPL_DEFINE_ALIGNED_ALLOC */
 
 #endif /* MPL_USE_MEMORY_TRACING */
 
