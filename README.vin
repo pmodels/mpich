@@ -6,7 +6,7 @@ For stage 5, you have to install autoconf, libtool, and automake in the same rep
 0. cd mpich_develop
 1. git clone https://github.com/QiaoK/mpich
 2. cd mpich
-3. git checkout ad_lustre_tam2
+3. git checkout ad_tam
 4. git submodule update --init
 5. ./autogen.sh
 6. cd src/mpi/romio/
