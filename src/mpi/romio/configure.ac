@@ -1554,7 +1554,7 @@ elif test $FROM_MPICH = yes ; then
    # set the compilers to the ones in MPICH bin directory (main_top_builddir/bin)
    TEST_CC='$(bindir)/mpicc'
    TEST_F77='$(bindir)/mpifort'
-   MPI_H_INCLUDE="-I${main_top_builddir}/src/include"
+   MPI_H_INCLUDE="-I${main_top_builddir}/src/include -I${main_top_srcdir}/src/include"
    ROMIO_INCLUDE=""
    USER_CFLAGS=""
    USER_FFLAGS=""
