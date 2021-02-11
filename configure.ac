@@ -404,6 +404,12 @@ AC_ARG_ENABLE([mpit-pvars],
         all      - All variables above
 ],[],[enable_mpit_pvars=none])
 
+AC_ARG_ENABLE([mpit-events],
+[ --enable-mpit-events=yes|no - Enable MPI_T events. (Default is "no"):
+        yes    - All available events
+        no     - No events
+],[],[enable_mpit_events=no])
+
 dnl We may want to force MPI_Aint to be the same size as MPI_Offset,
 dnl particularly on 32 bit systems with large (64 bit) file systems.
 AC_ARG_WITH(aint-size,
@@ -1735,6 +1741,13 @@ else
 fi
 AC_DEFINE_UNQUOTED(ENABLE_PVAR_DIMS,$status_dims_pvars,
           [Define to 1 to enable getdims-related MPI_T performance variables])
+
+# ---------------------------------------------------------------------------
+# Support for MPI_T Events
+if test "$enable_mpit_events" = "yes" ; then
+    AC_DEFINE(HAVE_MPIT_EVENTS, [1], [Define if MPI_T Events are enabled])
+fi
+
 # ---------------------------------------------------------------------------
 # Support for the language bindings: Fortran 77, Fortran 90, and C++
 #

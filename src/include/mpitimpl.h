@@ -1321,4 +1321,10 @@ typedef struct MPIR_T_event_instance_s {
 
 void MPIR_T_event_instance(int event_index, MPI_T_cb_safety cb_safety, void *data);
 
+#ifdef HAVE_MPIT_EVENTS
+#define MPIR_T_DO_EVENT(...) MPIR_T_event_instance(__VA_ARGS__)
+#else
+#define MPIR_T_DO_EVENT(...) do {} while (0)
+#endif
+
 #endif /* MPITIMPL_H_INCLUDED */
