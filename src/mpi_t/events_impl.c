@@ -15,6 +15,7 @@ void MPIR_T_register_event(int source_index, const char *name, MPIR_T_verbosity_
                            MPI_Aint num_elements, const char *desc, MPIR_T_bind_t bind,
                            const char *category, int *index)
 {
+#ifdef HAVE_MPIT_EVENTS
     MPIR_T_event_t *event = MPL_malloc(sizeof(MPIR_T_event_t), MPL_MEM_MPIT);
 
 #ifdef HAVE_ERROR_CHECKING
@@ -44,12 +45,14 @@ void MPIR_T_register_event(int source_index, const char *name, MPIR_T_verbosity_
     MPIR_T_cat_add_event(category, event->index);
 
     *index = event->index;
+#endif /* HAVE_MPIT_EVENTS */
 }
 
 void MPIR_T_register_source(const char *name, const char *desc, MPI_T_source_order ordering,
                             MPIR_T_timestamp_fn timestamp_fn, MPI_Count ticks_per_second,
                             MPI_Count max_ticks, int *index)
 {
+#ifdef HAVE_MPIT_EVENTS
     MPIR_T_source_t *source = MPL_malloc(sizeof(MPIR_T_source_t), MPL_MEM_MPIT);
 
 #ifdef HAVE_ERROR_CHECKING
@@ -74,6 +77,7 @@ void MPIR_T_register_source(const char *name, const char *desc, MPI_T_source_ord
     HASH_ADD_INT(sources, index, source, MPL_MEM_MPIT);
 
     *index = source->index;
+#endif /* HAVE_MPIT_EVENTS */
 }
 
 void MPIR_T_event_instance(int event_index, MPI_T_cb_safety cb_safety, void *data)
