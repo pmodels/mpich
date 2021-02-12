@@ -60,6 +60,10 @@ type, bind(C) :: MPI_Message
     integer :: MPI_VAL
 end type MPI_Message
 
+type, bind(C) :: MPI_Session
+    integer :: MPI_VAL
+end type MPI_Session
+
 ! MPI_File_f2c/c2f are implemented in C, so we do direct binding.
 interface
     function MPI_File_f2c(file) bind(C, name="MPI_File_f2c") result (res)
@@ -115,6 +119,7 @@ interface operator(==)
     module procedure MPI_Request_eq
     module procedure MPI_Win_eq
     module procedure MPI_Message_eq
+    module procedure MPI_Session_eq
 
     module procedure MPI_Comm_f08_eq_f
     module procedure MPI_Comm_f_eq_f08
@@ -136,6 +141,8 @@ interface operator(==)
     module procedure MPI_Win_f_eq_f08
     module procedure MPI_Message_f08_eq_f
     module procedure MPI_Message_f_eq_f08
+    module procedure MPI_Session_f08_eq_f
+    module procedure MPI_Session_f_eq_f08
 end interface
 
 private :: MPI_Comm_eq
@@ -148,6 +155,7 @@ private :: MPI_Op_eq
 private :: MPI_Request_eq
 private :: MPI_Win_eq
 private :: MPI_Message_eq
+private :: MPI_Session_eq
 
 private :: MPI_Comm_f08_eq_f
 private :: MPI_Comm_f_eq_f08
@@ -169,6 +177,8 @@ private :: MPI_Win_f08_eq_f
 private :: MPI_Win_f_eq_f08
 private :: MPI_Message_f08_eq_f
 private :: MPI_Message_f_eq_f08
+private :: MPI_Session_f08_eq_f
+private :: MPI_Session_f_eq_f08
 
 interface operator(/=)
     module procedure MPI_Comm_neq
@@ -181,6 +191,7 @@ interface operator(/=)
     module procedure MPI_Request_neq
     module procedure MPI_Win_neq
     module procedure MPI_Message_neq
+    module procedure MPI_Session_neq
 
     module procedure MPI_Comm_f08_ne_f
     module procedure MPI_Comm_f_ne_f08
@@ -202,6 +213,8 @@ interface operator(/=)
     module procedure MPI_Win_f_ne_f08
     module procedure MPI_Message_f08_ne_f
     module procedure MPI_Message_f_ne_f08
+    module procedure MPI_Session_f08_ne_f
+    module procedure MPI_Session_f_ne_f08
 end interface
 
 private :: MPI_Comm_neq
@@ -214,6 +227,7 @@ private :: MPI_Op_neq
 private :: MPI_Request_neq
 private :: MPI_Win_neq
 private :: MPI_Message_neq
+private :: MPI_Session_neq
 
 private :: MPI_Comm_f08_ne_f
 private :: MPI_Comm_f_ne_f08
@@ -235,6 +249,8 @@ private :: MPI_Win_f08_ne_f
 private :: MPI_Win_f_ne_f08
 private :: MPI_Message_f08_ne_f
 private :: MPI_Message_f_ne_f08
+private :: MPI_Session_f08_ne_f
+private :: MPI_Session_f_ne_f08
 
 ! MPI_Sizeof in 17.1.9
 
@@ -572,6 +588,12 @@ function MPI_Message_eq (x, y) result(res)
     res = (x%MPI_VAL == y%MPI_VAL)
 end function MPI_Message_eq
 
+function MPI_Session_eq (x, y) result(res)
+    type(MPI_Session), intent(in) :: x, y
+    logical :: res
+    res = (x%MPI_VAL == y%MPI_VAL)
+end function MPI_Session_eq
+
 function MPI_Comm_f08_eq_f (f08, f) result(res)
     ! Defined comparison for MPI_Comm and integer handles
     type(MPI_Comm),intent(in) :: f08
@@ -732,6 +754,22 @@ function MPI_Message_f_eq_f08 (f, f08) result(res)
     res = f08%MPI_VAL == f
 end function MPI_Message_f_eq_f08
 
+function MPI_Session_f08_eq_f (f08, f) result(res)
+    ! Defined comparison for MPI_Session and integer handles
+    type(MPI_Session),intent(in) :: f08
+    integer,intent(in)        :: f
+    logical                   :: res
+    res = f08%MPI_VAL == f
+end function MPI_Session_f08_eq_f
+
+function MPI_Session_f_eq_f08 (f, f08) result(res)
+    ! Defined comparison for MPI_Session and integer handles
+    type(MPI_Session),intent(in) :: f08
+    integer,intent(in)        :: f
+    logical                   :: res
+    res = f08%MPI_VAL == f
+end function MPI_Session_f_eq_f08
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !  Non-equal part
@@ -797,6 +835,12 @@ function MPI_Message_neq (x, y) result(res)
     logical :: res
     res = (x%MPI_VAL /= y%MPI_VAL)
 end function MPI_Message_neq
+
+function MPI_Session_neq (x, y) result(res)
+    type(MPI_Session), intent(in) :: x, y
+    logical :: res
+    res = (x%MPI_VAL /= y%MPI_VAL)
+end function MPI_Session_neq
 
 function MPI_Comm_f08_ne_f (f08, f) result(res)
     ! Defined comparison for MPI_Comm and integer handles
@@ -958,6 +1002,22 @@ function MPI_Message_f_ne_f08 (f, f08) result(res)
     res = f08%MPI_VAL /= f
 end function MPI_Message_f_ne_f08
 
+function MPI_Session_f08_ne_f (f08, f) result(res)
+    ! Defined comparison for MPI_Session and integer handles
+    type(MPI_Session),intent(in) :: f08
+    integer,intent(in)        :: f
+    logical                   :: res
+    res = f08%MPI_VAL /= f
+end function MPI_Session_f08_ne_f
+
+function MPI_Session_f_ne_f08 (f, f08) result(res)
+    ! Defined comparison for MPI_Session and integer handles
+    type(MPI_Session),intent(in) :: f08
+    integer,intent(in)        :: f
+    logical                   :: res
+    res = f08%MPI_VAL /= f
+end function MPI_Session_f_ne_f08
+
 ! 17.2.4 - Conversion functions between Fortran and C handles, which are only defined in
 ! the C interface and can be implemented as macros. We extend them to Fortran.
 ! TODO: Do we need the PMPI version? Probably not since they are not in standard.
@@ -1095,5 +1155,19 @@ function MPI_Message_c2f (message) result (res)
     integer :: res
     res = message
 end function MPI_Message_c2f
+
+function MPI_Session_f2c (message) result (res)
+    use mpi_c_interface_types, only: c_Session
+    integer,value :: message
+    integer(c_Session) :: res
+    res = message
+end function MPI_Session_f2c
+
+function MPI_Session_c2f (message) result (res)
+    use mpi_c_interface_types, only: c_Session
+    integer(c_Session),value :: message
+    integer :: res
+    res = message
+end function MPI_Session_c2f
 
 end module MPI_f08_types
