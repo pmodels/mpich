@@ -5,8 +5,9 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Allreduce_allcomm_nb(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                              MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+int MPIR_Allreduce_allcomm_nb(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                              MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Request req = MPI_REQUEST_NULL;

@@ -885,10 +885,20 @@ def push_impl_decl(func, impl_name=None):
         impl_name = re.sub(r'^MPIX?_', 'MPIR_', func['name']) + "_impl"
     if func['impl_param_list']:
         params = ', '.join(func['impl_param_list'])
-        if func['dir'] == 'coll' and not RE.match(r'MPI_I', func['name']):
-            params = params + ", MPIR_Errflag_t *errflag"
+        if func['dir'] == 'coll':
+            # All collective impl function use MPI_Aint counts
+            params = re.sub(r' int (count|sendcount|recvcount),', r' MPI_Aint \1,', params)
+            # block collective use an extra errflag
+            if not RE.match(r'MPI_(I|Neighbor)', func['name']):
+                params = params + ", MPIR_Errflag_t *errflag"
     else:
         params="void"
+
+    if func['dir'] == 'coll':
+        # collective also dump MPIR_Xxx(...)
+        mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
+        G.impl_declares.append("int %s(%s);" % (mpir_name, params))
+    # dump MPIR_Xxx_impl(...)
     G.impl_declares.append("int %s(%s);" % (impl_name, params))
 
 def dump_CHECKENUM(var, errname, t, type="ENUM"):
@@ -907,23 +917,24 @@ def dump_CHECKENUM(var, errname, t, type="ENUM"):
 
 def dump_body_coll(func):
     # collectives call MPIR_Xxx
-    RE.match(r'MPI_(\w+)', func['name'])
-    name = RE.m.group(1)
+    mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
 
     args = ", ".join(func['impl_arg_list'])
-    if name.startswith('I'):
+    if RE.match(r'mpi_i', func['name'], re.IGNORECASE):
         # non-blocking collectives
         G.out.append("MPIR_Request *request_ptr = NULL;")
-        dump_line_with_break("mpi_errno = MPIR_%s(%s);" % (name, args))
+        dump_line_with_break("mpi_errno = %s(%s);" % (mpir_name, args))
         dump_error_check("")
         G.out.append("if (!request_ptr) {")
         G.out.append("    request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);")
         G.out.append("}")
         G.out.append("*request = request_ptr->handle;")
+    elif RE.match(r'mpi_neighbor_', func['name'], re.IGNORECASE):
+        dump_line_with_break("mpi_errno = %s(%s);" % (mpir_name, args))
     else:
         # blocking collectives
         G.out.append("MPIR_Errflag_t errflag = MPIR_ERR_NONE;")
-        dump_line_with_break("mpi_errno = MPIR_%s(%s, &errflag);" % (name, args))
+        dump_line_with_break("mpi_errno = %s(%s, &errflag);" % (mpir_name, args))
 
 def dump_body_topo_fns(func, method):
     comm_ptr = func['_has_comm'] + "_ptr"

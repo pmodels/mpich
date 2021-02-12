@@ -105,8 +105,8 @@ cvars:
    End Algorithm: MPI_Alltoall
 */
 
-int MPIR_Ialltoall_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Ialltoall_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                 MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -197,8 +197,8 @@ int MPIR_Ialltoall_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype
     goto fn_exit;
 }
 
-int MPIR_Ialltoall_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Ialltoall_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -235,9 +235,9 @@ int MPIR_Ialltoall_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Data
 }
 
 
-int MPIR_Ialltoall_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype
-                                    sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ialltoall_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype
+                                    sendtype, void *recvbuf, MPI_Aint recvcount,
+                                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -248,8 +248,8 @@ int MPIR_Ialltoall_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Data
     return mpi_errno;
 }
 
-int MPIR_Ialltoall_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                              void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Ialltoall_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                              void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                               MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -265,8 +265,8 @@ int MPIR_Ialltoall_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype s
     return mpi_errno;
 }
 
-int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
-                        MPI_Datatype sendtype, void *recvbuf, int recvcount,
+int MPIR_Ialltoall_impl(const void *sendbuf, MPI_Aint sendcount,
+                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                         MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -371,8 +371,8 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-int MPIR_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_Ialltoall(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                    MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;

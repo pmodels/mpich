@@ -12,9 +12,9 @@
  * broadcast.
  */
 
-int MPIR_Allgather_inter_local_gather_remote_bcast(const void *sendbuf, int sendcount,
+int MPIR_Allgather_inter_local_gather_remote_bcast(const void *sendbuf, MPI_Aint sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
-                                                   int recvcount, MPI_Datatype recvtype,
+                                                   MPI_Aint recvcount, MPI_Datatype recvtype,
                                                    MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS, root;

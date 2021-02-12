@@ -10,7 +10,7 @@
 #include "iallreduce_tsp_ring_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Iallreduce_intra_gentran_ring(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_intra_gentran_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                        MPI_Datatype datatype, MPI_Op op,
                                        MPIR_Comm * comm, MPIR_Request ** req)
 {

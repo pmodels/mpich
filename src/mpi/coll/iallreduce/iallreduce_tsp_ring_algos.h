@@ -15,7 +15,7 @@
  * The implementation is based on Baidu's ring algorithm
  * for Machine Learning/Deep Learning. The algorithm is
  * explained here: http://andrew.gibiansky.com/ */
-int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                          MPI_Datatype datatype, MPI_Op op,
                                          MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
@@ -122,7 +122,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
 }
 
 /* Non-blocking ring based Allreduce */
-int MPIR_TSP_Iallreduce_intra_ring(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Iallreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                    MPIR_Request ** req)
 {

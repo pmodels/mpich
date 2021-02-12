@@ -17,7 +17,7 @@
  */
 
 int MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast(const void *sendbuf, void *recvbuf,
-                                                          int count, MPI_Datatype datatype,
+                                                          MPI_Aint count, MPI_Datatype datatype,
                                                           MPI_Op op, MPIR_Comm * comm_ptr,
                                                           MPIR_Sched_t s)
 {

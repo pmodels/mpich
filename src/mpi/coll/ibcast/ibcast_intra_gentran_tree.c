@@ -11,7 +11,7 @@
 #include "ibcast_tsp_tree_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Ibcast_intra_gentran_tree(void *buffer, int count,
+int MPIR_Ibcast_intra_gentran_tree(void *buffer, MPI_Aint count,
                                    MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
                                    int tree_type, int k, int chunk_size, MPIR_Request ** request)
 {

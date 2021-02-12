@@ -41,8 +41,9 @@ cvars:
 */
 
 
-int MPIR_Iexscan_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                              MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
+int MPIR_Iexscan_allcomm_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                              MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -81,7 +82,7 @@ int MPIR_Iexscan_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI
     goto fn_exit;
 }
 
-int MPIR_Iexscan_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iexscan_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                   MPIR_Sched_t s)
 {
@@ -99,7 +100,7 @@ int MPIR_Iexscan_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, MPI_Aint count,
                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                       MPIR_Request ** request)
 {
@@ -133,7 +134,7 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-int MPIR_Iexscan(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iexscan(const void *sendbuf, void *recvbuf, MPI_Aint count,
                  MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;

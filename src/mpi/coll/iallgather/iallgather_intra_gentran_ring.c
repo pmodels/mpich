@@ -10,9 +10,9 @@
 #include "iallgather_tsp_ring_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Iallgather_intra_gentran_ring(const void *sendbuf, int sendcount,
+int MPIR_Iallgather_intra_gentran_ring(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
-                                       int recvcount,
+                                       MPI_Aint recvcount,
                                        MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

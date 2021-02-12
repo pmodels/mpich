@@ -22,7 +22,7 @@
  * Total Cost = (lgp+p-1).alpha + 2.n.((p-1)/p).beta
  */
 int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
-                                            int count,
+                                            MPI_Aint count,
                                             MPI_Datatype datatype,
                                             int root,
                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)

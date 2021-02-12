@@ -11,9 +11,9 @@
 #include "tsp_namespace_def.h"
 
 int
-MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
+MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
-                                       int recvcount, MPI_Datatype recvtype,
+                                       MPI_Aint recvcount, MPI_Datatype recvtype,
                                        MPIR_Comm * comm, MPIR_TSP_sched_t * sched, int k)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -173,8 +173,8 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
 
 
 /* Non-blocking brucks based Allgather */
-int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                     void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                      MPIR_Comm * comm_ptr, MPIR_Request ** req, int k)
 {
     int mpi_errno = MPI_SUCCESS;

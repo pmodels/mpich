@@ -30,8 +30,9 @@
  */
 
 int
-MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                        void *recvbuf, const int recvcounts[], const int displs[],
+MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
+                                        MPI_Datatype sendtype, void *recvbuf,
+                                        const int recvcounts[], const int displs[],
                                         MPI_Datatype recvtype, MPIR_Comm * comm,
                                         MPIR_TSP_sched_t * sched, int k)
 {
@@ -315,10 +316,10 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_
 }
 
 /* Non-blocking brucks based Allgatherv */
-int MPIR_TSP_Iallgatherv_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                      void *recvbuf, const int recvcounts[], const int displs[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                      MPIR_Request ** req, int k)
+int MPIR_TSP_Iallgatherv_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
+                                      MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                                      const int displs[], MPI_Datatype recvtype,
+                                      MPIR_Comm * comm_ptr, MPIR_Request ** req, int k)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_BRUCKS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_BRUCKS);

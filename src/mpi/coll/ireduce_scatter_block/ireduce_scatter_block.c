@@ -68,7 +68,7 @@ cvars:
 */
 
 
-int MPIR_Ireduce_scatter_block_allcomm_auto(const void *sendbuf, void *recvbuf, int recvcount,
+int MPIR_Ireduce_scatter_block_allcomm_auto(const void *sendbuf, void *recvbuf, MPI_Aint recvcount,
                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                             MPIR_Request ** request)
 {
@@ -143,9 +143,9 @@ int MPIR_Ireduce_scatter_block_allcomm_auto(const void *sendbuf, void *recvbuf, 
     goto fn_exit;
 }
 
-int MPIR_Ireduce_scatter_block_intra_sched_auto(const void *sendbuf, void *recvbuf, int recvcount,
-                                                MPI_Datatype datatype, MPI_Op op,
-                                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_intra_sched_auto(const void *sendbuf, void *recvbuf,
+                                                MPI_Aint recvcount, MPI_Datatype datatype,
+                                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
@@ -198,9 +198,9 @@ int MPIR_Ireduce_scatter_block_intra_sched_auto(const void *sendbuf, void *recvb
 }
 
 
-int MPIR_Ireduce_scatter_block_inter_sched_auto(const void *sendbuf, void *recvbuf, int recvcount,
-                                                MPI_Datatype datatype, MPI_Op op,
-                                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_inter_sched_auto(const void *sendbuf, void *recvbuf,
+                                                MPI_Aint recvcount, MPI_Datatype datatype,
+                                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -212,7 +212,7 @@ int MPIR_Ireduce_scatter_block_inter_sched_auto(const void *sendbuf, void *recvb
     return mpi_errno;
 }
 
-int MPIR_Ireduce_scatter_block_sched_auto(const void *sendbuf, void *recvbuf, int recvcount,
+int MPIR_Ireduce_scatter_block_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint recvcount,
                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                           MPIR_Sched_t s)
 {
@@ -232,7 +232,7 @@ int MPIR_Ireduce_scatter_block_sched_auto(const void *sendbuf, void *recvbuf, in
 }
 
 int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
-                                    int recvcount, MPI_Datatype datatype,
+                                    MPI_Aint recvcount, MPI_Datatype datatype,
                                     MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -335,7 +335,7 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
 }
 
 int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
-                               int recvcount, MPI_Datatype datatype,
+                               MPI_Aint recvcount, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -11,8 +11,8 @@
 #include "tsp_undef.h"
 
 int MPIR_Iallreduce_intra_gentran_recexch_single_buffer(const void *sendbuf, void *recvbuf,
-                                                        int count, MPI_Datatype datatype, MPI_Op op,
-                                                        MPIR_Comm * comm, int k,
+                                                        MPI_Aint count, MPI_Datatype datatype,
+                                                        MPI_Op op, MPIR_Comm * comm, int k,
                                                         MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -10,8 +10,9 @@
 #include "igatherv_tsp_linear_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Igatherv_allcomm_gentran_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                         void *recvbuf, const int recvcounts[], const int displs[],
+int MPIR_Igatherv_allcomm_gentran_linear(const void *sendbuf, MPI_Aint sendcount,
+                                         MPI_Datatype sendtype, void *recvbuf,
+                                         const int recvcounts[], const int displs[],
                                          MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                          MPIR_Request ** request)
 {

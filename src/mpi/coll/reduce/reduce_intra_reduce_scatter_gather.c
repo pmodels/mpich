@@ -34,7 +34,7 @@
 */
 int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
                                             void *recvbuf,
-                                            int count,
+                                            MPI_Aint count,
                                             MPI_Datatype datatype,
                                             MPI_Op op,
                                             int root,

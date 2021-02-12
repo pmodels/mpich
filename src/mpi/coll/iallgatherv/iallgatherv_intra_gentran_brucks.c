@@ -10,8 +10,9 @@
 #include "iallgatherv_tsp_brucks_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Iallgatherv_intra_gentran_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                          void *recvbuf, const int recvcounts[], const int displs[],
+int MPIR_Iallgatherv_intra_gentran_brucks(const void *sendbuf, MPI_Aint sendcount,
+                                          MPI_Datatype sendtype, void *recvbuf,
+                                          const int recvcounts[], const int displs[],
                                           MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int k,
                                           MPIR_Request ** request)
 {

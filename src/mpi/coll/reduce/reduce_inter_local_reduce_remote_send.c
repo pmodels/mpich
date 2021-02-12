@@ -15,7 +15,7 @@
 
 int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
                                                void *recvbuf,
-                                               int count,
+                                               MPI_Aint count,
                                                MPI_Datatype datatype,
                                                MPI_Op op,
                                                int root,

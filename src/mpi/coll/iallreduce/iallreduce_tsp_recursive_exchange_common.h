@@ -42,7 +42,7 @@ Input Parameters:
 
 int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                                                   void *recvbuf,
-                                                  int count,
+                                                  MPI_Aint count,
                                                   MPI_Datatype datatype,
                                                   MPI_Op op, int is_commutative, int tag,
                                                   int extent, int dtcopy_id, int *recv_id,

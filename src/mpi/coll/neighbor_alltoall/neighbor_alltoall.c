@@ -54,9 +54,9 @@ cvars:
 /* any non-MPI functions go here, especially non-static ones */
 
 
-int MPIR_Neighbor_alltoall_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                        MPIR_Comm * comm_ptr)
+int MPIR_Neighbor_alltoall_allcomm_auto(const void *sendbuf, MPI_Aint sendcount,
+                                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -89,9 +89,9 @@ int MPIR_Neighbor_alltoall_allcomm_auto(const void *sendbuf, int sendcount, MPI_
     return mpi_errno;
 }
 
-int MPIR_Neighbor_alltoall_impl(const void *sendbuf, int sendcount,
+int MPIR_Neighbor_alltoall_impl(const void *sendbuf, MPI_Aint sendcount,
                                 MPI_Datatype sendtype, void *recvbuf,
-                                int recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
+                                MPI_Aint recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -134,8 +134,8 @@ int MPIR_Neighbor_alltoall_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-int MPIR_Neighbor_alltoall(const void *sendbuf, int sendcount,
-                           MPI_Datatype sendtype, void *recvbuf, int recvcount,
+int MPIR_Neighbor_alltoall(const void *sendbuf, MPI_Aint sendcount,
+                           MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                            MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

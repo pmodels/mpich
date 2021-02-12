@@ -12,7 +12,7 @@
 
 int MPIR_Iscatterv_allcomm_gentran_linear(const void *sendbuf, const int sendcounts[],
                                           const int displs[], MPI_Datatype sendtype, void *recvbuf,
-                                          int recvcount, MPI_Datatype recvtype, int root,
+                                          MPI_Aint recvcount, MPI_Datatype recvtype, int root,
                                           MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
