@@ -526,29 +526,15 @@ int MPID_Init_local(int requested, int *provided)
     mpi_errno = MPIR_pmi_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    int err;
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-#ifdef HAVE_LIBHCOLL
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-#endif
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
-    MPIR_Assert(err == 0);
+    /* Create all ch4-layer granular locks.
+     * Note: some locks (e.g. MPIDIU_THREAD_HCOLL_MUTEX) may be unused due to configuration.
+     * It is harmless to create them anyway rather than adding #ifdefs.
+     */
+    for (int i = 0; i < MAX_CH4_MUTEXES; i++) {
+        int err;
+        MPID_Thread_mutex_create(&MPIDI_global.m[i], &err);
+        MPIR_Assert(err == 0);
+    }
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = set_runtime_configurations();
@@ -577,6 +563,7 @@ int MPID_Init_local(int requested, int *provided)
     }
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        int err;
         MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
 
@@ -761,31 +748,14 @@ int MPID_Finalize(void)
 
     MPIR_pmi_finalize();
 
-    int err;
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_UTIL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-#ifdef HAVE_LIBHCOLL
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-#endif
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
-    MPIR_Assert(err == 0);
+    for (int i = 0; i < MAX_CH4_MUTEXES; i++) {
+        int err;
+        MPID_Thread_mutex_destroy(&MPIDI_global.m[i], &err);
+        MPIR_Assert(err == 0);
+    }
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        int err;
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
     }
