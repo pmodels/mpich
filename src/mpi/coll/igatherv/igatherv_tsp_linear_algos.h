@@ -21,7 +21,7 @@
 
    Cost = (p-1).alpha + n.((p-1)/p).beta
 */
-int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
                                            MPI_Datatype sendtype, void *recvbuf,
                                            const int recvcounts[], const int displs[],
                                            MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -93,7 +93,7 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount,
 }
 
 /* Non-blocking linear algorithm for gatherv */
-int MPIR_TSP_Igatherv_allcomm_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_TSP_Igatherv_allcomm_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, const int recvcounts[], const int displs[],
                                      MPI_Datatype recvtype, int root, MPIR_Comm * comm,
                                      MPIR_Request ** req)

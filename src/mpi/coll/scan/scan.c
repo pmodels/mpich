@@ -42,8 +42,9 @@ cvars:
 */
 
 
-int MPIR_Scan_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                           MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+int MPIR_Scan_allcomm_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                           MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -85,7 +86,7 @@ int MPIR_Scan_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI_Da
     return mpi_errno;
 }
 
-int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, MPI_Aint count,
                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -120,7 +121,7 @@ int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-int MPIR_Scan(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Scan(const void *sendbuf, void *recvbuf, MPI_Aint count,
               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;

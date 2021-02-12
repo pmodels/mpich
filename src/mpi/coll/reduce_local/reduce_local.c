@@ -8,7 +8,7 @@
 /* any utility functions should go here, usually prefixed with PMPI_LOCAL to
  * correctly handle weak symbols and the profiling interface */
 
-int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype,
+int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
                       MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -54,9 +54,12 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype
     }
 
     /* actually perform the reduction */
+    /* FIXME: properly support large count reduction */
+    MPIR_Assert(count <= INT_MAX);
+    int icount = (int) count;
 #ifdef HAVE_CXX_BINDING
     if (is_cxx_uop) {
-        (*MPIR_Process.cxx_call_op_fn) (inbuf, inoutbuf, count, datatype, uop);
+        (*MPIR_Process.cxx_call_op_fn) (inbuf, inoutbuf, icount, datatype, uop);
     } else
 #endif
     {
@@ -68,10 +71,10 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype
 
             (*uop_f77) ((void *) inbuf, inoutbuf, &lcount, &ldtype);
         } else {
-            (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
+            (*uop) ((void *) inbuf, inoutbuf, &icount, &datatype);
         }
 #else
-        (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
+        (*uop) ((void *) inbuf, inoutbuf, &icount, &datatype);
 #endif
     }
 

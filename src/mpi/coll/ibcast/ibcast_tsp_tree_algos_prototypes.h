@@ -14,9 +14,9 @@
 #undef MPIR_TSP_Ibcast_sched_intra_tree
 #define MPIR_TSP_Ibcast_sched_intra_tree                MPIR_TSP_NAMESPACE(Ibcast_sched_intra_tree)
 
-int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                                      MPIR_Comm * comm, int tree_type, int k, int segsize,
                                      MPIR_TSP_sched_t * sched);
-int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_TSP_Ibcast_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                                MPIR_Comm * comm, MPIR_Request ** req, int tree_type, int k,
                                int segsize);

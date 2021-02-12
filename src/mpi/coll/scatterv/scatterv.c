@@ -55,7 +55,7 @@ cvars:
 
 
 int MPIR_Scatterv_allcomm_auto(const void *sendbuf, const int *sendcounts, const int *displs,
-                               MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                               MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                MPIR_Errflag_t * errflag)
 {
@@ -100,7 +100,7 @@ int MPIR_Scatterv_allcomm_auto(const void *sendbuf, const int *sendcounts, const
 
 int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
                        const int *displs, MPI_Datatype sendtype, void *recvbuf,
-                       int recvcount, MPI_Datatype recvtype, int root,
+                       MPI_Aint recvcount, MPI_Datatype recvtype, int root,
                        MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -158,7 +158,7 @@ int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
 
 int MPIR_Scatterv(const void *sendbuf, const int *sendcounts,
                   const int *displs, MPI_Datatype sendtype, void *recvbuf,
-                  int recvcount, MPI_Datatype recvtype, int root,
+                  MPI_Aint recvcount, MPI_Datatype recvtype, int root,
                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;

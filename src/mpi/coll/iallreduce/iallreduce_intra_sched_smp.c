@@ -6,7 +6,7 @@
 #include "mpiimpl.h"
 
 
-int MPIR_Iallreduce_intra_sched_smp(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                     MPIR_Sched_t s)
 {

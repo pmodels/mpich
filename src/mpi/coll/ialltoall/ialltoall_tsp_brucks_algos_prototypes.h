@@ -14,11 +14,11 @@
 #undef MPIR_TSP_Ialltoall_sched_intra_brucks
 #define MPIR_TSP_Ialltoall_sched_intra_brucks           MPIR_TSP_NAMESPACE(Ialltoall_sched_intra_brucks)
 
-int MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                          MPIR_Comm * comm, MPIR_TSP_sched_t * s, int k,
-                                          int buffer_per_phase);
-int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
+                                          MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                          MPI_Datatype recvtype, MPIR_Comm * comm,
+                                          MPIR_TSP_sched_t * s, int k, int buffer_per_phase);
+int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                     MPIR_Comm * comm_ptr, MPIR_Request ** request, int k,
                                     int buffer_per_phase);

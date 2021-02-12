@@ -12,7 +12,7 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule linear algorithm fir neighbor_allgatherv */
-int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
                                                        MPI_Datatype sendtype, void *recvbuf,
                                                        const int recvcounts[], const int displs[],
                                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -64,7 +64,7 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int 
 
 
 /* Non-blocking linear algo based neighbor_allgatherv */
-int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  const int recvcounts[], const int displs[],
                                                  MPI_Datatype recvtype, MPIR_Comm * comm_ptr,

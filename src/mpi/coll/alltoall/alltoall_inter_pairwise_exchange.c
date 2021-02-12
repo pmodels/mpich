@@ -16,8 +16,8 @@
  * max_size if dst < remote_size.
  */
 
-int MPIR_Alltoall_inter_pairwise_exchange(const void *sendbuf, int sendcount,
-                                          MPI_Datatype sendtype, void *recvbuf, int recvcount,
+int MPIR_Alltoall_inter_pairwise_exchange(const void *sendbuf, MPI_Aint sendcount,
+                                          MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                           MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                           MPIR_Errflag_t * errflag)
 {

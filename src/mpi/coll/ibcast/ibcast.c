@@ -131,7 +131,7 @@ cvars:
  * hierarchy.  It will choose between several different algorithms
  * based on the given parameters. */
 
-int MPIR_Ibcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Ibcast_allcomm_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                              MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -222,7 +222,7 @@ int MPIR_Ibcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int
     goto fn_exit;
 }
 
-int MPIR_Ibcast_intra_sched_auto(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -272,7 +272,7 @@ int MPIR_Ibcast_intra_sched_auto(void *buffer, int count, MPI_Datatype datatype,
 /* Provides a "flat" broadcast for intercommunicators that doesn't
  * know anything about hierarchy.  It will choose between several
  * different algorithms based on the given parameters. */
-int MPIR_Ibcast_inter_sched_auto(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Ibcast_inter_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -282,7 +282,7 @@ int MPIR_Ibcast_inter_sched_auto(void *buffer, int count, MPI_Datatype datatype,
     return mpi_errno;
 }
 
-int MPIR_Ibcast_sched_auto(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Ibcast_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                            MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -296,7 +296,7 @@ int MPIR_Ibcast_sched_auto(void *buffer, int count, MPI_Datatype datatype, int r
     return mpi_errno;
 }
 
-int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Ibcast_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                      MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -396,7 +396,7 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
     goto fn_exit;
 }
 
-int MPIR_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
+int MPIR_Ibcast(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
                 MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;

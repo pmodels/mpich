@@ -5,7 +5,7 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Gatherv_allcomm_nb(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Gatherv_allcomm_nb(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                             void *recvbuf, const int *recvcounts, const int *displs,
                             MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                             MPIR_Errflag_t * errflag)

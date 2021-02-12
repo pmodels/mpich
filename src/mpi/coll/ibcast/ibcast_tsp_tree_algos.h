@@ -12,7 +12,7 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a pipelined tree based broadcast */
-int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                                      MPIR_Comm * comm, int tree_type, int k, int chunk_size,
                                      MPIR_TSP_sched_t * sched)
 {
@@ -96,7 +96,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
 
 
 /* Non-blocking tree based broadcast */
-int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_TSP_Ibcast_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                                MPIR_Comm * comm, MPIR_Request ** req, int tree_type, int k,
                                int chunk_size)
 {

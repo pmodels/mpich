@@ -17,11 +17,11 @@
    At the moment this function always scatters a buffer of nbytes starting at
    tmp_buf address. */
 int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
-                           int count ATTRIBUTE((unused)),
+                           MPI_Aint count ATTRIBUTE((unused)),
                            MPI_Datatype datatype ATTRIBUTE((unused)),
                            int root,
                            MPIR_Comm * comm_ptr,
-                           int nbytes, void *tmp_buf, int is_contig, MPIR_Errflag_t * errflag)
+                           MPI_Aint nbytes, void *tmp_buf, int is_contig, MPIR_Errflag_t * errflag)
 {
     MPI_Status status;
     int rank, comm_size, src, dst;

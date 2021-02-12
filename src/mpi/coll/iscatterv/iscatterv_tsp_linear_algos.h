@@ -13,8 +13,8 @@
 /* Routine to schedule a linear algorithm for scatterv */
 int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
                                             const int displs[], MPI_Datatype sendtype,
-                                            void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                            int root, MPIR_Comm * comm_ptr,
+                                            void *recvbuf, MPI_Aint recvcount,
+                                            MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                             MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -83,7 +83,7 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int sendc
 /* Non-blocking linear algorithm for scatterv */
 int MPIR_TSP_Iscatterv_allcomm_linear(const void *sendbuf, const int sendcounts[],
                                       const int displs[], MPI_Datatype sendtype, void *recvbuf,
-                                      int recvcount, MPI_Datatype recvtype, int root,
+                                      MPI_Aint recvcount, MPI_Datatype recvtype, int root,
                                       MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

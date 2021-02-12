@@ -14,10 +14,10 @@
 #undef MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv
 #define MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv       MPIR_TSP_NAMESPACE(Ibcast_sched_intra_scatterv_allgatherv)
 
-int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
+int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count,
                                                     MPI_Datatype datatype, int root,
                                                     MPIR_Comm * comm, int scatterv_k,
                                                     int allgatherv_k, MPIR_TSP_sched_t * sched);
-int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, int count, MPI_Datatype datatype,
+int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, MPI_Aint count, MPI_Datatype datatype,
                                               int root, MPIR_Comm * comm, int scatterv_k,
                                               int allgatherv_k, MPIR_Request ** req);

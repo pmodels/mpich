@@ -54,8 +54,9 @@ cvars:
 /* any non-MPI functions go here, especially non-static ones */
 
 
-int MPIR_Neighbor_allgatherv_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                          void *recvbuf, const int recvcounts[], const int displs[],
+int MPIR_Neighbor_allgatherv_allcomm_auto(const void *sendbuf, MPI_Aint sendcount,
+                                          MPI_Datatype sendtype, void *recvbuf,
+                                          const int recvcounts[], const int displs[],
                                           MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -90,7 +91,7 @@ int MPIR_Neighbor_allgatherv_allcomm_auto(const void *sendbuf, int sendcount, MP
     return mpi_errno;
 }
 
-int MPIR_Neighbor_allgatherv_impl(const void *sendbuf, int sendcount,
+int MPIR_Neighbor_allgatherv_impl(const void *sendbuf, MPI_Aint sendcount,
                                   MPI_Datatype sendtype, void *recvbuf,
                                   const int recvcounts[], const int displs[],
                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
@@ -136,7 +137,7 @@ int MPIR_Neighbor_allgatherv_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-int MPIR_Neighbor_allgatherv(const void *sendbuf, int sendcount,
+int MPIR_Neighbor_allgatherv(const void *sendbuf, MPI_Aint sendcount,
                              MPI_Datatype sendtype, void *recvbuf,
                              const int recvcounts[], const int displs[],
                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr)

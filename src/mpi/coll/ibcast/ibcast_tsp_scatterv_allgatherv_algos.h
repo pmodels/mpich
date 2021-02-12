@@ -12,7 +12,7 @@
 #include "../iallgatherv/iallgatherv_tsp_recexch_algos_prototypes.h"
 
 /* Routine to schedule a scatter followed by recursive exchange based broadcast */
-int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
+int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count,
                                                     MPI_Datatype datatype, int root,
                                                     MPIR_Comm * comm, int scatterv_k,
                                                     int allgatherv_k, MPIR_TSP_sched_t * sched)
@@ -194,7 +194,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
 
 
 /* Non-blocking scatter followed by recursive exchange allgather  based broadcast */
-int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, int count, MPI_Datatype datatype,
+int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, MPI_Aint count, MPI_Datatype datatype,
                                               int root, MPIR_Comm * comm, int scatterv_k,
                                               int allgatherv_k, MPIR_Request ** req)
 {

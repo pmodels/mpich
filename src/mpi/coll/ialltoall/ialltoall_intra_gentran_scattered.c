@@ -10,9 +10,9 @@
 #include "ialltoall_tsp_scattered_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Ialltoall_intra_gentran_scattered(const void *sendbuf, int sendcount,
+int MPIR_Ialltoall_intra_gentran_scattered(const void *sendbuf, MPI_Aint sendcount,
                                            MPI_Datatype sendtype, void *recvbuf,
-                                           int recvcount,
+                                           MPI_Aint recvcount,
                                            MPI_Datatype recvtype, MPIR_Comm * comm, int batch_size,
                                            int bblock, MPIR_Request ** req)
 {

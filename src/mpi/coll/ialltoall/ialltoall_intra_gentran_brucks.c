@@ -10,10 +10,10 @@
 #include "ialltoall_tsp_brucks_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Ialltoall_intra_gentran_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                        MPIR_Comm * comm_ptr, int k, int buffer_per_phase,
-                                        MPIR_Request ** request)
+int MPIR_Ialltoall_intra_gentran_brucks(const void *sendbuf, MPI_Aint sendcount,
+                                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int k,
+                                        int buffer_per_phase, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 

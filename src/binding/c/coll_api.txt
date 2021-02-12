@@ -169,55 +169,27 @@ MPI_Iscatterv:
     .desc: Scatters a buffer in parts to all processes in a communicator in a nonblocking way
 
 MPI_Neighbor_allgather:
-    .desc: In this function, each process i gathers data items from each process j if an edge (j,i) exists in the topology graph, and each process i sends the same data items to all processes j where an edge (i,j) exists. The send buffer is sent to each neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
-{
-    mpi_errno = MPIR_Neighbor_allgather(sendbuf, sendcount, sendtype, recvbuf,
-                                        recvcount, recvtype, comm_ptr);
-    if (mpi_errno) {
-        goto fn_fail;
-    }
-}
+    .desc: Gathers data from all neighboring processes and distribute the combined data to all neighboring processes
+/*
+    Notes:
+    In this function, each process i gathers data items from each process j if an edge (j,i) exists in the topology graph, and each process i sends the same data items to all processes j where an edge (i,j) exists. The send buffer is sent to each neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
+*/
 
 MPI_Neighbor_allgatherv:
     .desc: The vector variant of MPI_Neighbor_allgather.
-{
-    mpi_errno = MPIR_Neighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                         recvcounts, displs, recvtype, comm_ptr);
-    if (mpi_errno) {
-        goto fn_fail;
-    }
-}
 
 MPI_Neighbor_alltoall:
-    .desc: In this function, each process i receives data items from each process j if an edge (j,i) exists in the topology graph or Cartesian topology.  Similarly, each process i sends data items to all processes j where an edge (i,j) exists. This call is more general than MPI_NEIGHBOR_ALLGATHER in that different data items can be sent to each neighbor. The k-th block in send buffer is sent to the k-th neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
-{
-    mpi_errno = MPIR_Neighbor_alltoall(sendbuf, sendcount, sendtype, recvbuf,
-                                       recvcount, recvtype, comm_ptr);
-    if (mpi_errno) {
-        goto fn_fail;
-    }
-}
+    .desc: Sends and Receivs data from all neighboring processes
+/*
+    Notes:
+    In this function, each process i receives data items from each process j if an edge (j,i) exists in the topology graph or Cartesian topology.  Similarly, each process i sends data items to all processes j where an edge (i,j) exists. This call is more general than MPI_NEIGHBOR_ALLGATHER in that different data items can be sent to each neighbor. The k-th block in send buffer is sent to the k-th neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
+*/
 
 MPI_Neighbor_alltoallv:
     .desc: The vector variant of MPI_Neighbor_alltoall allows sending/receiving different numbers of elements to and from each neighbor.
-{
-    mpi_errno = MPIR_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype,
-                                        recvbuf, recvcounts, rdispls, recvtype, comm_ptr);
-    if (mpi_errno) {
-        goto fn_fail;
-    }
-}
 
 MPI_Neighbor_alltoallw:
     .desc: Like MPI_Neighbor_alltoallv but it allows one to send and receive with different types to and from each neighbor.
-{
-    mpi_errno = MPIR_Neighbor_alltoallw_impl(sendbuf, sendcounts, sdispls,
-                                             sendtypes, recvbuf, recvcounts,
-                                             rdispls, recvtypes, comm_ptr);
-    if (mpi_errno) {
-        goto fn_fail;
-    }
-}
 
 MPI_Reduce:
     .desc: Reduces values on all processes to a single value

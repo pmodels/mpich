@@ -10,7 +10,7 @@
  * from EuroPVM/MPI 2005.  This function currently only implements support for
  * the power-of-2 case. */
 int MPIR_Ireduce_scatter_block_intra_sched_noncommutative(const void *sendbuf, void *recvbuf,
-                                                          int recvcount, MPI_Datatype datatype,
+                                                          MPI_Aint recvcount, MPI_Datatype datatype,
                                                           MPI_Op op, MPIR_Comm * comm_ptr,
                                                           MPIR_Sched_t s)
 {

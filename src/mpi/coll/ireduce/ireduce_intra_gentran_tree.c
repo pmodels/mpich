@@ -10,7 +10,7 @@
 #include "ireduce_tsp_tree_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Ireduce_intra_gentran_tree(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_intra_gentran_tree(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                     MPI_Datatype datatype, MPI_Op op, int root,
                                     MPIR_Comm * comm_ptr, int tree_type, int k, int chunk_size,
                                     int buffer_per_child, MPIR_Request ** request)

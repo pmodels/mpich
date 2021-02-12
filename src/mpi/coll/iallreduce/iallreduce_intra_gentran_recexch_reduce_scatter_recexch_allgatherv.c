@@ -12,7 +12,7 @@
 
 int MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv(const void *sendbuf,
                                                                             void *recvbuf,
-                                                                            int count,
+                                                                            MPI_Aint count,
                                                                             MPI_Datatype datatype,
                                                                             MPI_Op op,
                                                                             MPIR_Comm * comm, int k,

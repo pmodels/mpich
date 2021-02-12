@@ -10,7 +10,7 @@
  * the cutoff points for these algorithms.  If I've done this right, you should
  * be able to make changes along these lines almost exclusively in this function
  * and some new functions. [goodell@ 2008/01/07] */
-int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                          MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;

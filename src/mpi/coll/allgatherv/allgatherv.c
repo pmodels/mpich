@@ -67,7 +67,7 @@ cvars:
 */
 
 int MPIR_Allgatherv_allcomm_auto(const void *sendbuf,
-                                 int sendcount,
+                                 MPI_Aint sendcount,
                                  MPI_Datatype sendtype,
                                  void *recvbuf,
                                  const int *recvcounts,
@@ -136,7 +136,7 @@ int MPIR_Allgatherv_allcomm_auto(const void *sendbuf,
     goto fn_exit;
 }
 
-int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Allgatherv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                          void *recvbuf, const int *recvcounts, const int *displs,
                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
@@ -205,7 +205,7 @@ int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendty
     goto fn_exit;
 }
 
-int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Allgatherv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                     void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {

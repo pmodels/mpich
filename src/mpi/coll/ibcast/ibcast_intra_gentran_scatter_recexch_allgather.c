@@ -11,7 +11,7 @@
 #include "ibcast_tsp_scatter_recexch_allgather_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Ibcast_intra_gentran_scatter_recexch_allgather(void *buffer, int count,
+int MPIR_Ibcast_intra_gentran_scatter_recexch_allgather(void *buffer, MPI_Aint count,
                                                         MPI_Datatype datatype, int root,
                                                         MPIR_Comm * comm_ptr,
                                                         MPIR_Request ** request)

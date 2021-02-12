@@ -11,9 +11,10 @@
  * 0 then sends data to root.
  */
 
-int MPIR_Ireduce_inter_sched_local_reduce_remote_send(const void *sendbuf, void *recvbuf, int count,
-                                                      MPI_Datatype datatype, MPI_Op op, int root,
-                                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_inter_sched_local_reduce_remote_send(const void *sendbuf, void *recvbuf,
+                                                      MPI_Aint count, MPI_Datatype datatype,
+                                                      MPI_Op op, int root, MPIR_Comm * comm_ptr,
+                                                      MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;

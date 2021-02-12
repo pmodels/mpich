@@ -14,12 +14,12 @@
 #undef MPIR_TSP_Ineighor_alltoall_sched_allcomm_linear
 #define MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear  MPIR_TSP_NAMESPACE(Ineighbor_alltoall_sched_allcomm_linear)
 
-int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
                                                      MPI_Datatype sendtype, void *recvbuf,
-                                                     int recvcount, MPI_Datatype recvtype,
+                                                     MPI_Aint recvcount, MPI_Datatype recvtype,
                                                      MPIR_Comm * comm_ptr,
                                                      MPIR_TSP_sched_t * sched);
-int MPIR_TSP_Ineighbor_alltoall_allcomm_linear(const void *sendbuf, int sendcount,
-                                               MPI_Datatype sendtype, void *recvbuf, int recvcount,
-                                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                               MPIR_Request ** req);
+int MPIR_TSP_Ineighbor_alltoall_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
+                                               MPI_Datatype sendtype, void *recvbuf,
+                                               MPI_Aint recvcount, MPI_Datatype recvtype,
+                                               MPIR_Comm * comm_ptr, MPIR_Request ** req);

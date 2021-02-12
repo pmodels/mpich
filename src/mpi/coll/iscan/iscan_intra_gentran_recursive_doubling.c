@@ -10,7 +10,7 @@
 #include "iscan_tsp_recursive_doubling_algos_prototypes.h"
 #include "tsp_undef.h"
 
-int MPIR_Iscan_intra_gentran_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iscan_intra_gentran_recursive_doubling(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                                 MPI_Datatype datatype, MPI_Op op,
                                                 MPIR_Comm * comm, MPIR_Request ** req)
 {

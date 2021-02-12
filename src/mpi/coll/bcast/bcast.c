@@ -128,7 +128,7 @@ cvars:
 */
 
 
-int MPIR_Bcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Bcast_allcomm_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -184,8 +184,8 @@ int MPIR_Bcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int 
     return mpi_errno;
 }
 
-int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
-                    MPIR_Errflag_t * errflag)
+int MPIR_Bcast_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                    MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -247,7 +247,7 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
     goto fn_exit;
 }
 
-int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
+int MPIR_Bcast(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
                MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -25,9 +25,10 @@
 
    End Algorithm: MPI_Gather
 */
-int MPIR_Igather_intra_sched_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                      void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
-                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
+                                      MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                      MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                                      MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank;

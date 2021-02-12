@@ -167,29 +167,29 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm *);
 int MPID_Comm_free_hook(MPIR_Comm *);
 int MPID_Comm_commit_post_hook(MPIR_Comm *);
 MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm *, MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *, int, MPI_Datatype, int, MPIR_Comm *,
+MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *, MPI_Aint, MPI_Datatype, int, MPIR_Comm *,
                                         MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *, void *, int, MPI_Datatype, MPI_Op,
+MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *, void *, MPI_Aint, MPI_Datatype, MPI_Op,
                                             MPIR_Comm *, MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *, int, MPI_Datatype, void *, int,
+MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *, MPI_Aint, MPI_Datatype, void *, MPI_Aint,
                                             MPI_Datatype, MPIR_Comm *,
                                             MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *, int, MPI_Datatype, void *, const int *,
-                                             const int *, MPI_Datatype, MPIR_Comm *,
+MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *, MPI_Aint, MPI_Datatype, void *,
+                                             const int *, const int *, MPI_Datatype, MPIR_Comm *,
                                              MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *, int, MPI_Datatype, void *, int,
+MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *, MPI_Aint, MPI_Datatype, void *, MPI_Aint,
                                           MPI_Datatype, int, MPIR_Comm *,
                                           MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *, const int *, const int *, MPI_Datatype,
-                                           void *, int, MPI_Datatype, int, MPIR_Comm *,
+                                           void *, MPI_Aint, MPI_Datatype, int, MPIR_Comm *,
                                            MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *, int, MPI_Datatype, void *, int, MPI_Datatype,
-                                         int, MPIR_Comm *,
+MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *, MPI_Aint, MPI_Datatype, void *, MPI_Aint,
+                                         MPI_Datatype, int, MPIR_Comm *,
                                          MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *, int, MPI_Datatype, void *, const int *,
+MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *, MPI_Aint, MPI_Datatype, void *, const int *,
                                           const int *, MPI_Datatype, int, MPIR_Comm *,
                                           MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *, int, MPI_Datatype, void *, int,
+MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *, MPI_Aint, MPI_Datatype, void *, MPI_Aint,
                                            MPI_Datatype, MPIR_Comm *,
                                            MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *, const int *, const int *, MPI_Datatype,
@@ -199,22 +199,22 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *, const int[], const int
                                             const MPI_Datatype[], void *, const int[], const int[],
                                             const MPI_Datatype[], MPIR_Comm *,
                                             MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *, void *, int, MPI_Datatype, MPI_Op, int,
+MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *, void *, MPI_Aint, MPI_Datatype, MPI_Op, int,
                                          MPIR_Comm *, MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *, void *, const int[], MPI_Datatype,
                                                  MPI_Op, MPIR_Comm *,
                                                  MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *, void *, int, MPI_Datatype,
+MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *, void *, MPI_Aint, MPI_Datatype,
                                                        MPI_Op, MPIR_Comm *,
                                                        MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *, void *, int, MPI_Datatype, MPI_Op, MPIR_Comm *,
-                                       MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *, void *, int, MPI_Datatype, MPI_Op,
+MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *, void *, MPI_Aint, MPI_Datatype, MPI_Op,
+                                       MPIR_Comm *, MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *, void *, MPI_Aint, MPI_Datatype, MPI_Op,
                                          MPIR_Comm *, MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_allgather(const void *, int, MPI_Datatype, void *, int,
-                                                     MPI_Datatype,
+MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_allgather(const void *, MPI_Aint, MPI_Datatype, void *,
+                                                     MPI_Aint, MPI_Datatype,
                                                      MPIR_Comm *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_allgatherv(const void *, int, MPI_Datatype, void *,
+MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_allgatherv(const void *, MPI_Aint, MPI_Datatype, void *,
                                                       const int[], const int[], MPI_Datatype,
                                                       MPIR_Comm *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallv(const void *, const int[], const int[],
@@ -225,18 +225,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallw(const void *, const int[], 
                                                      const MPI_Datatype[], void *, const int[],
                                                      const MPI_Aint[], const MPI_Datatype[],
                                                      MPIR_Comm *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoall(const void *, int, MPI_Datatype, void *, int,
-                                                    MPI_Datatype,
+MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoall(const void *, MPI_Aint, MPI_Datatype, void *,
+                                                    MPI_Aint, MPI_Datatype,
                                                     MPIR_Comm *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_allgather(const void *, int, MPI_Datatype, void *, int,
-                                                      MPI_Datatype, MPIR_Comm *,
+MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_allgather(const void *, MPI_Aint, MPI_Datatype, void *,
+                                                      MPI_Aint, MPI_Datatype, MPIR_Comm *,
                                                       MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_allgatherv(const void *, int, MPI_Datatype, void *,
+MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_allgatherv(const void *, MPI_Aint, MPI_Datatype, void *,
                                                        const int[], const int[], MPI_Datatype,
                                                        MPIR_Comm *,
                                                        MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoall(const void *, int, MPI_Datatype, void *, int,
-                                                     MPI_Datatype, MPIR_Comm *,
+MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoall(const void *, MPI_Aint, MPI_Datatype, void *,
+                                                     MPI_Aint, MPI_Datatype, MPIR_Comm *,
                                                      MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallv(const void *, const int[], const int[],
                                                       MPI_Datatype, void *, const int[],
@@ -248,17 +248,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallw(const void *, const int[],
                                                       MPIR_Comm *,
                                                       MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Ibarrier(MPIR_Comm *, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Ibcast(void *, int, MPI_Datatype, int, MPIR_Comm *,
+MPL_STATIC_INLINE_PREFIX int MPID_Ibcast(void *, MPI_Aint, MPI_Datatype, int, MPIR_Comm *,
                                          MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Iallgather(const void *, int, MPI_Datatype, void *, int,
+MPL_STATIC_INLINE_PREFIX int MPID_Iallgather(const void *, MPI_Aint, MPI_Datatype, void *, MPI_Aint,
                                              MPI_Datatype, MPIR_Comm *,
                                              MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Iallgatherv(const void *, int, MPI_Datatype, void *, const int *,
-                                              const int *, MPI_Datatype, MPIR_Comm *,
+MPL_STATIC_INLINE_PREFIX int MPID_Iallgatherv(const void *, MPI_Aint, MPI_Datatype, void *,
+                                              const int *, const int *, MPI_Datatype, MPIR_Comm *,
                                               MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Iallreduce(const void *, void *, int, MPI_Datatype, MPI_Op,
+MPL_STATIC_INLINE_PREFIX int MPID_Iallreduce(const void *, void *, MPI_Aint, MPI_Datatype, MPI_Op,
                                              MPIR_Comm *, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Ialltoall(const void *, int, MPI_Datatype, void *, int,
+MPL_STATIC_INLINE_PREFIX int MPID_Ialltoall(const void *, MPI_Aint, MPI_Datatype, void *, MPI_Aint,
                                             MPI_Datatype, MPIR_Comm *,
                                             MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallv(const void *, const int[], const int[], MPI_Datatype,
@@ -268,29 +268,29 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallw(const void *, const int[], const in
                                              const MPI_Datatype[], void *, const int[], const int[],
                                              const MPI_Datatype[], MPIR_Comm *,
                                              MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Iexscan(const void *, void *, int, MPI_Datatype, MPI_Op,
+MPL_STATIC_INLINE_PREFIX int MPID_Iexscan(const void *, void *, MPI_Aint, MPI_Datatype, MPI_Op,
                                           MPIR_Comm *, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Igather(const void *, int, MPI_Datatype, void *, int,
+MPL_STATIC_INLINE_PREFIX int MPID_Igather(const void *, MPI_Aint, MPI_Datatype, void *, MPI_Aint,
                                           MPI_Datatype, int, MPIR_Comm *,
                                           MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Igatherv(const void *, int, MPI_Datatype, void *, const int *,
-                                           const int *, MPI_Datatype, int, MPIR_Comm *,
+MPL_STATIC_INLINE_PREFIX int MPID_Igatherv(const void *, MPI_Aint, MPI_Datatype, void *,
+                                           const int *, const int *, MPI_Datatype, int, MPIR_Comm *,
                                            MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter_block(const void *, void *, int, MPI_Datatype,
-                                                        MPI_Op, MPIR_Comm *,
+MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter_block(const void *, void *, MPI_Aint,
+                                                        MPI_Datatype, MPI_Op, MPIR_Comm *,
                                                         MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter(const void *, void *, const int[], MPI_Datatype,
                                                   MPI_Op, MPIR_Comm *,
                                                   MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Ireduce(const void *, void *, int, MPI_Datatype, MPI_Op, int,
+MPL_STATIC_INLINE_PREFIX int MPID_Ireduce(const void *, void *, MPI_Aint, MPI_Datatype, MPI_Op, int,
                                           MPIR_Comm *, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Iscan(const void *, void *, int, MPI_Datatype, MPI_Op,
+MPL_STATIC_INLINE_PREFIX int MPID_Iscan(const void *, void *, MPI_Aint, MPI_Datatype, MPI_Op,
                                         MPIR_Comm *, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Iscatter(const void *, int, MPI_Datatype, void *, int,
+MPL_STATIC_INLINE_PREFIX int MPID_Iscatter(const void *, MPI_Aint, MPI_Datatype, void *, MPI_Aint,
                                            MPI_Datatype, int, MPIR_Comm *,
                                            MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Iscatterv(const void *, const int *, const int *, MPI_Datatype,
-                                            void *, int, MPI_Datatype, int, MPIR_Comm *,
+                                            void *, MPI_Aint, MPI_Datatype, int, MPIR_Comm *,
                                             MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Abort(struct MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg);
 

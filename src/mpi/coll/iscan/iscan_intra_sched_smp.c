@@ -6,8 +6,9 @@
 #include "mpiimpl.h"
 
 
-int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                               MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = comm_ptr->rank;
