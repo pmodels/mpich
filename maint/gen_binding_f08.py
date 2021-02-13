@@ -112,6 +112,12 @@ def main():
         dump_f90_file(f, temp_out)
         temp_out = None
 
+    # mpi_f08_types.f90
+    G.out = []
+    dump_mpi_f08_types()
+    f = "%s/mpi_f08_types.f90" % f08_dir
+    dump_f90_file(f, G.out)
+
 # ---------------------------------------------------------
 if __name__ == "__main__":
     main()
