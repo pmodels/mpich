@@ -8,7 +8,8 @@
       program main
       use mpi_f08
       integer errs, ierr, intsize
-      integer i, displs(10), counts(10)
+      integer i, counts(10)
+      integer(kind=MPI_ADDRESS_KIND) displs(10)
       TYPE(MPI_Datatype) dtype
       integer bufsize
       parameter (bufsize=100)
@@ -26,7 +27,7 @@
          displs(i) = (10-i)*intsize
          counts(i) = 1
       enddo
-      call mpi_type_hindexed( 10, counts, displs, MPI_INTEGER, dtype, &
+      call mpi_type_create_hindexed( 10, counts, displs, MPI_INTEGER, dtype, &
       &     ierr )
       call mpi_type_commit( dtype, ierr )
 !
