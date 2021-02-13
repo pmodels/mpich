@@ -250,6 +250,30 @@ cvars:
         goto fn_fail;                                           \
     }
 
+#define MPIR_ERRTEST_PARTITION(partition,reqp,err)              \
+    if ((partition) < 0 || (partition) >= (reqp)->u.part.partitions) { \
+        err = MPIR_Err_create_code(MPI_SUCCESS,                 \
+                                   MPIR_ERR_RECOVERABLE,        \
+                                   __func__, __LINE__,          \
+                                   MPI_ERR_OTHER,               \
+                                   "**partitioninvalid",        \
+                                   "**partitioninvalid %d",     \
+                                   partition);                  \
+        goto fn_fail;                                           \
+    }
+
+#define MPIR_ERRTEST_PARTITIONS(partitions,err)                 \
+    if ((partitions) < 0) {                                     \
+        err = MPIR_Err_create_code(MPI_SUCCESS,                 \
+                                   MPIR_ERR_RECOVERABLE,        \
+                                   __func__, __LINE__,          \
+                                   MPI_ERR_OTHER,               \
+                                   "**partitionsneg",           \
+                                   "**partitionsneg %d",        \
+                                   partitions);                 \
+        goto fn_fail;                                           \
+    }
+
 #define MPIR_ERRTEST_DISP(disp,err)                             \
     if ((disp) < 0) {                                           \
         err = MPIR_Err_create_code(MPI_SUCCESS,                 \
@@ -333,19 +357,41 @@ cvars:
         goto fn_fail;                                                   \
     }
 
-#define MPIR_ERRTEST_PERSISTENT(reqp,err)                               \
-    if ((reqp)->kind != MPIR_REQUEST_KIND__PREQUEST_SEND && (reqp)->kind != MPIR_REQUEST_KIND__PREQUEST_RECV) { \
+#define MPIR_ERRTEST_STARTREQ(reqp,err)                               \
+    if ((reqp)->kind != MPIR_REQUEST_KIND__PREQUEST_SEND && (reqp)->kind != MPIR_REQUEST_KIND__PREQUEST_RECV   \
+        && (reqp)->kind != MPIR_REQUEST_KIND__PART_SEND && (reqp)->kind != MPIR_REQUEST_KIND__PART_RECV) {     \
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
-                                   MPI_ERR_REQUEST, "**requestnotpersist", 0); \
+                                   MPI_ERR_REQUEST, "**requestinvalidstart", 0); \
         goto fn_fail;                                                   \
     }
 
-#define MPIR_ERRTEST_PERSISTENT_ACTIVE(reqp,err)                        \
+#define MPIR_ERRTEST_STARTREQ_ACTIVE(reqp,err)                        \
     if (((reqp)->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||            \
          (reqp)->kind == MPIR_REQUEST_KIND__PREQUEST_RECV) && (reqp)->u.persist.real_request != NULL) { \
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_REQUEST, "**requestpersistactive", 0); \
         goto fn_fail;                                                   \
+    } else if (((reqp)->kind == MPIR_REQUEST_KIND__PART_SEND ||                                \
+         (reqp)->kind == MPIR_REQUEST_KIND__PART_RECV) && MPIR_Part_request_is_active(reqp)) { \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
+                                   MPI_ERR_REQUEST, "**requestpartactive", 0);            \
+        goto fn_fail;                                                                     \
+    }
+
+#define MPIR_ERRTEST_PREADYREQ(reqp,err)                                                 \
+    if ((reqp)->kind != MPIR_REQUEST_KIND__PART_SEND ||                                  \
+                    !MPIR_Part_request_is_active(reqp)) {                                \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,\
+                                   MPI_ERR_REQUEST, "**requestinvalidpready", 0); \
+        goto fn_fail;                                                             \
+    }
+
+#define MPIR_ERRTEST_PARRIVEDREQ(reqp,err)                                                \
+    if ((reqp)->kind != MPIR_REQUEST_KIND__PART_RECV ||                                   \
+                    !MPIR_Part_request_is_active(reqp)) {                                 \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
+                                   MPI_ERR_REQUEST, "**requestinvalidparrived", 0); \
+        goto fn_fail;                                                             \
     }
 
 #define MPIR_ERRTEST_COMM_INTRA(comm_ptr, err)                          \

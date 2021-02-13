@@ -61,6 +61,9 @@ typedef enum MPIR_Request_kind_t {
     MPIR_REQUEST_KIND__RECV,
     MPIR_REQUEST_KIND__PREQUEST_SEND,
     MPIR_REQUEST_KIND__PREQUEST_RECV,
+    MPIR_REQUEST_KIND__PART_SEND,       /* Partitioned send req returned to user */
+    MPIR_REQUEST_KIND__PART_RECV,       /* Partitioned recv req returned to user */
+    MPIR_REQUEST_KIND__PART,    /* Partitioned pt2pt internal reqs */
     MPIR_REQUEST_KIND__GREQUEST,
     MPIR_REQUEST_KIND__COLL,
     MPIR_REQUEST_KIND__MPROBE,  /* see NOTE-R1 */
@@ -205,6 +208,11 @@ struct MPIR_Request {
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
         } persist;              /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV */
+        struct {
+            int partitions;     /* Needed for parameter error check */
+            MPL_atomic_int_t active_flag;       /* flag indicating whether in a start-complete active period.
+                                                 * Value is 0 or 1. */
+        } part;                 /* kind : MPIR_REQUEST_KIND__PART_SEND or MPIR_REQUEST_KIND__PART_RECV */
     } u;
 
     /* Other, device-specific information */
@@ -291,6 +299,27 @@ static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
             req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
 }
 
+static inline int MPIR_Request_is_partitioned(MPIR_Request * req_ptr)
+{
+    return (req_ptr->kind == MPIR_REQUEST_KIND__PART_SEND ||
+            req_ptr->kind == MPIR_REQUEST_KIND__PART_RECV);
+}
+
+static inline int MPIR_Part_request_is_active(MPIR_Request * req_ptr)
+{
+    return MPL_atomic_load_int(&req_ptr->u.part.active_flag);
+}
+
+static inline void MPIR_Part_request_inactivate(MPIR_Request * req_ptr)
+{
+    MPL_atomic_store_int(&req_ptr->u.part.active_flag, 0);
+}
+
+static inline void MPIR_Part_request_activate(MPIR_Request * req_ptr)
+{
+    MPL_atomic_store_int(&req_ptr->u.part.active_flag, 1);
+}
+
 /* Return whether a request is active.
  * A persistent request and the handle to it are "inactive"
  * if the request is not associated with any ongoing communication.
@@ -304,6 +333,9 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
             case MPIR_REQUEST_KIND__PREQUEST_SEND:
             case MPIR_REQUEST_KIND__PREQUEST_RECV:
                 return (req_ptr)->u.persist.real_request != NULL;
+            case MPIR_REQUEST_KIND__PART_SEND:
+            case MPIR_REQUEST_KIND__PART_RECV:
+                return MPIR_Part_request_is_active(req_ptr);
             default:
                 return 1;       /* regular request is always active */
         }
@@ -662,5 +694,6 @@ int MPIR_Waitany(int count, MPI_Request array_of_requests[], MPIR_Request * requ
                  int *indx, MPI_Status * status);
 int MPIR_Waitsome(int incount, MPI_Request array_of_requests[], MPIR_Request * request_ptrs[],
                   int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
+int MPIR_Parrived(MPI_Request * request, MPIR_Request * request_ptr, int partition, int *flag);
 
 #endif /* MPIR_REQUEST_H_INCLUDED */

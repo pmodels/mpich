@@ -132,6 +132,10 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
         case MPIR_REQUEST_KIND__GREQUEST:
             mpi_errno = MPIR_Grequest_free(request_ptr);
             break;
+        case MPIR_REQUEST_KIND__PART_SEND:
+        case MPIR_REQUEST_KIND__PART_RECV:
+            MPID_Part_request_free_hook(request_ptr);
+            break;
         default:
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __func__, __LINE__, MPI_ERR_OTHER,
@@ -289,7 +293,7 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
 
     if (*flag) {
         mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
-        if (!MPIR_Request_is_persistent(request_ptr)) {
+        if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
             MPIR_Request_free(request_ptr);
             *request = MPI_REQUEST_NULL;
         }
@@ -484,7 +488,8 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
         for (i = 0; i < count; i++) {
             if (request_ptrs[i] != NULL && MPIR_Request_is_complete(request_ptrs[i])) {
                 MPIR_Request_completion_processing(request_ptrs[i], MPI_STATUS_IGNORE);
-                if (!MPIR_Request_is_persistent(request_ptrs[i])) {
+                if (!MPIR_Request_is_persistent(request_ptrs[i]) &&
+                    !MPIR_Request_is_partitioned(request_ptrs[i])) {
                     MPIR_Request_free(request_ptrs[i]);
                     array_of_requests[i] = MPI_REQUEST_NULL;
                 }
@@ -498,7 +503,8 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
             if (MPIR_Request_is_complete(request_ptrs[i])) {
                 active_flag = MPIR_Request_is_active(request_ptrs[i]);
                 rc = MPIR_Request_completion_processing(request_ptrs[i], &array_of_statuses[i]);
-                if (!MPIR_Request_is_persistent(request_ptrs[i])) {
+                if (!MPIR_Request_is_persistent(request_ptrs[i]) &&
+                    !MPIR_Request_is_partitioned(request_ptrs[i])) {
                     MPIR_Request_free(request_ptrs[i]);
                     array_of_requests[i] = MPI_REQUEST_NULL;
                 }
@@ -644,7 +650,8 @@ int MPIR_Testany(int count, MPI_Request array_of_requests[], MPIR_Request * requ
 
     if (*indx != MPI_UNDEFINED) {
         mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status);
-        if (!MPIR_Request_is_persistent(request_ptrs[*indx])) {
+        if (!MPIR_Request_is_persistent(request_ptrs[*indx]) &&
+            !MPIR_Request_is_partitioned(request_ptrs[*indx])) {
             MPIR_Request_free(request_ptrs[*indx]);
             array_of_requests[*indx] = MPI_REQUEST_NULL;
         }
@@ -766,7 +773,8 @@ int MPIR_Testsome(int incount, MPI_Request array_of_requests[], MPIR_Request * r
         MPI_Status *status_ptr = (array_of_statuses == MPI_STATUSES_IGNORE) ?
             MPI_STATUS_IGNORE : &array_of_statuses[i];
         int rc = MPIR_Request_completion_processing(request_ptrs[idx], status_ptr);
-        if (!MPIR_Request_is_persistent(request_ptrs[idx])) {
+        if (!MPIR_Request_is_persistent(request_ptrs[idx]) &&
+            !MPIR_Request_is_partitioned(request_ptrs[idx])) {
             MPIR_Request_free(request_ptrs[idx]);
             array_of_requests[idx] = MPI_REQUEST_NULL;
         }
@@ -871,7 +879,7 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
     }
 
     mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
-    if (!MPIR_Request_is_persistent(request_ptr)) {
+    if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
         MPIR_Request_free(request_ptr);
         *request = MPI_REQUEST_NULL;
     }
@@ -1041,7 +1049,8 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                 if (request_ptrs[i] == NULL)
                     continue;
                 rc = MPIR_Request_completion_processing(request_ptrs[i], MPI_STATUS_IGNORE);
-                if (!MPIR_Request_is_persistent(request_ptrs[i])) {
+                if (!MPIR_Request_is_persistent(request_ptrs[i]) &&
+                    !MPIR_Request_is_partitioned(request_ptrs[i])) {
                     MPIR_Request_free(request_ptrs[i]);
                     array_of_requests[i] = MPI_REQUEST_NULL;
                 }
@@ -1057,7 +1066,8 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
             if (request_ptrs[i] == NULL)
                 continue;
             rc = MPIR_Request_completion_processing(request_ptrs[i], &array_of_statuses[i]);
-            if (!MPIR_Request_is_persistent(request_ptrs[i])) {
+            if (!MPIR_Request_is_persistent(request_ptrs[i]) &&
+                !MPIR_Request_is_partitioned(request_ptrs[i])) {
                 MPIR_Request_free(request_ptrs[i]);
                 array_of_requests[i] = MPI_REQUEST_NULL;
             }
@@ -1236,7 +1246,8 @@ int MPIR_Waitany(int count, MPI_Request array_of_requests[], MPIR_Request * requ
     }
 
     mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status);
-    if (!MPIR_Request_is_persistent(request_ptrs[*indx])) {
+    if (!MPIR_Request_is_persistent(request_ptrs[*indx]) &&
+        !MPIR_Request_is_partitioned(request_ptrs[*indx])) {
         MPIR_Request_free(request_ptrs[*indx]);
         array_of_requests[*indx] = MPI_REQUEST_NULL;
     }
@@ -1373,7 +1384,8 @@ int MPIR_Waitsome(int incount, MPI_Request array_of_requests[], MPIR_Request * r
         MPI_Status *status_ptr =
             (array_of_statuses != MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
         int rc = MPIR_Request_completion_processing(request_ptrs[idx], status_ptr);
-        if (!MPIR_Request_is_persistent(request_ptrs[idx])) {
+        if (!MPIR_Request_is_persistent(request_ptrs[idx]) &&
+            !MPIR_Request_is_partitioned(request_ptrs[idx])) {
             MPIR_Request_free(request_ptrs[idx]);
             array_of_requests[idx] = MPI_REQUEST_NULL;
         }
@@ -1396,6 +1408,27 @@ int MPIR_Waitsome(int incount, MPI_Request array_of_requests[], MPIR_Request * r
             }
         }
     }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Parrived(MPI_Request * request, MPIR_Request * request_ptr, int partition, int *flag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (*request == MPI_REQUEST_NULL) {
+        *flag = TRUE;
+        goto fn_exit;
+    }
+
+    /* For non-NULL request, query device layer */
+    MPIR_Assert(request_ptr != NULL);
+
+    mpi_errno = MPID_Parrived(request_ptr, partition, flag);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

@@ -1,0 +1,42 @@
+start_pready 2 arg=-spart=1 arg=-rpart=1 arg=-tot_count=64 arg=-range=1 arg=-iteration=5
+start_pready 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-range=2 arg=-iteration=5
+start_pready 2 arg=-spart=64 arg=-rpart=64 arg=-tot_count=64 arg=-range=4 arg=-iteration=5
+start_pready 2 arg=-spart=512 arg=-rpart=512 arg=-tot_count=4194304 arg=-range=64 arg=-iteration=5
+start_pready 2 arg=-spart=1 arg=-rpart=16 arg=-tot_count=64 arg=-range=1 arg=-iteration=5
+start_pready 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=64 arg=-range=2 arg=-iteration=5
+start_pready 2 arg=-spart=8192 arg=-rpart=512 arg=-tot_count=4194304 arg=-range=64 arg=-iteration=5
+
+start_pready_wait 2 arg=-spart=1 arg=-rpart=1 arg=-tot_count=64 arg=-range=1 arg=-iteration=5
+start_pready_wait 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-range=2 arg=-iteration=5
+start_pready_wait 2 arg=-spart=64 arg=-rpart=64 arg=-tot_count=64 arg=-range=4 arg=-iteration=5
+start_pready_wait 2 arg=-spart=512 arg=-rpart=512 arg=-tot_count=4194304 arg=-range=64 arg=-iteration=5
+start_pready_wait 2 arg=-spart=1 arg=-rpart=16 arg=-tot_count=64 arg=-range=1 arg=-iteration=5
+start_pready_wait 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=64 arg=-range=2 arg=-iteration=5
+start_pready_wait 2 arg=-spart=8192 arg=-rpart=512 arg=-tot_count=4194304 arg=-range=64 arg=-iteration=5
+
+start_pready_range 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=512 arg=-range=2 arg=-iteration=5
+
+start_pready_list 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=512 arg=-range=2 arg=-iteration=5
+
+start_pready_list_non_consecutive 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=512 arg=-range=2 arg=-iteration=5
+
+parrived 2 arg=-spart=1 arg=-rpart=1 arg=-tot_count=64 arg=-iteration=5
+parrived 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-iteration=5
+parrived 2 arg=-spart=64 arg=-rpart=64 arg=-tot_count=64 arg=-iteration=5
+parrived 2 arg=-spart=512 arg=-rpart=512 arg=-tot_count=4194304  arg=-iteration=5
+parrived 2 arg=-spart=1 arg=-rpart=16 arg=-tot_count=64 arg=-iteration=5
+parrived 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=64 arg=-iteration=5
+parrived 2 arg=-spart=8192 arg=-rpart=512 arg=-tot_count=4194304 arg=-iteration=5
+
+parrived_wait 2 arg=-spart=1 arg=-rpart=1 arg=-tot_count=64 arg=-iteration=5
+parrived_wait 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-iteration=5
+parrived_wait 2 arg=-spart=64 arg=-rpart=64 arg=-tot_count=64 arg=-iteration=5
+parrived_wait 2 arg=-spart=512 arg=-rpart=512 arg=-tot_count=4194304 arg=-iteration=5
+parrived_wait 2 arg=-spart=1 arg=-rpart=16 arg=-tot_count=64 arg=-iteration=5
+parrived_wait 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=64 arg=-iteration=5
+parrived_wait 2 arg=-spart=8192 arg=-rpart=512 arg=-tot_count=4194304 arg=-iteration=5
+
+parrived_pready_out_of_order 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=512 arg=-iteration=5
+
+multipart 2
+
