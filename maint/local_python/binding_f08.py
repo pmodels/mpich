@@ -899,6 +899,279 @@ def dump_fortran_line(s):
             tlist[i] = tlist[i] + ' &'
     G.out.extend(tlist)
 
+# ---- mpi_f08_types.f90 -------------------------
+G.f08_handle_list = ["Comm", "Datatype", "Errhandler", "File", "Group", "Info", "Op", "Request", "Win", "Message", "Session"]
+G.f08_sizeof_list = ["character", "logical", "xint8", "xint16", "xint32", "xint64", "xreal32", "xreal64", "xreal128", "xcomplex32", "xcomplex64", "xcomplex128"]
+
+def dump_mpi_f08_types():
+    status_fields = ["count_lo", "count_hi_and_cancelled", "MPI_SOURCE", "MPI_TAG", "MPI_ERROR"]
+    def dump_status_type():
+        # Status need be consistent with mpi.h
+        G.out.append("")
+        G.out.append("TYPE, bind(C) :: MPI_Status")
+        for field in status_fields:
+            G.out.append("    INTEGER :: %s" % field)
+        G.out.append("END TYPE MPI_Status")
+        G.out.append("")
+        G.out.append("INTEGER, parameter :: MPI_SOURCE = 3")
+        G.out.append("INTEGER, parameter :: MPI_TAG    = 4")
+        G.out.append("INTEGER, parameter :: MPI_ERROR  = 5")
+        G.out.append("INTEGER, parameter :: MPI_STATUS_SIZE = 5")
+
+    def dump_status_interface():
+        G.out.append("")
+        G.out.append("INTERFACE assignment(=)")
+        G.out.append("    module procedure MPI_Status_f08_assign_c")
+        G.out.append("    module procedure MPI_Status_c_assign_f08")
+        G.out.append("END INTERFACE")
+        G.out.append("")
+        G.out.append("private :: MPI_Status_f08_assign_c")
+        G.out.append("private :: MPI_Status_c_assign_f08")
+        G.out.append("private :: MPI_Status_f_assign_c")
+        G.out.append("private :: MPI_Status_c_assign_f")
+
+    def dump_status_routines():
+        # declare variable name of status in f, c, or f08
+        def dump_decl(intent, t, name):
+            if t == 'f':
+                G.out.append("INTEGER, INTENT(%s) :: %s(MPI_STATUS_SIZE)" % (intent, name))
+            elif t == 'c':
+                G.out.append("TYPE(c_Status), INTENT(%s) :: %s" % (intent, name))
+            else:
+                G.out.append("TYPE(MPI_Status), INTENT(%s) :: %s" % (intent, name))
+
+        # phrase of individual status field
+        def field(t, name, idx):
+            if t == 'f':
+                if idx < 2:
+                    return "%s(%d)" % (name, idx + 1)
+                else:
+                    return "%s(%s)" % (name, status_fields[idx])
+            else:
+                return "%s%%%s" % (name, status_fields[idx])
+
+        # body of the status conversion routines
+        def dump_convert(in_type, in_name, out_type, out_name, res):
+            dump_decl("in", in_type, in_name)
+            dump_decl("out", out_type, out_name)
+            if res == "ierror":
+                G.out.append("INTEGER, OPTIONAL, INTENT(out) :: ierror")
+            elif res == "res":
+                G.out.append("INTEGER(c_int) :: res")
+
+            G.out.append("")
+            if in_type == "f" or out_type == "f" or res is None:
+                for i in range(5):
+                    G.out.append("%s = %s" % (field(out_type, out_name, i), field(in_type, in_name, i)))
+            else:
+                G.out.append("%s = %s" % (out_name, in_name))
+
+            if res == "ierror":
+                G.out.append("IF (present(ierror)) ierror = 0")
+            elif res == "res":
+                G.out.append("res = 0")
+
+        # e.g. MPI_Status_f08_assign_c
+        def dump_convert_assign(in_type, out_type):
+            G.out.append("")
+            in_name = "status_%s" % in_type
+            out_name = "status_%s" % out_type
+
+            if in_type != 'f' and out_type != 'f':
+                G.out.append("elemental SUBROUTINE MPI_Status_%s_assign_%s(%s, %s)" % (out_type, in_type, out_name, in_name))
+            else:
+                G.out.append("SUBROUTINE MPI_Status_%s_assign_%s(%s, %s)" % (out_type, in_type, out_name, in_name))
+            G.out.append("INDENT")
+            dump_convert(in_type, in_name, out_type, out_name, None)
+            G.out.append("DEDENT")
+            G.out.append("END SUBROUTINE")
+
+        # e.g. MPI_Status_f082f
+        def dump_convert_2(in_type, out_type):
+            G.out.append("")
+            in_name = "%s_status" % in_type
+            out_name = "%s_status" % out_type
+
+            G.out.append("SUBROUTINE MPI_Status_%s2%s(%s, %s, ierror)" % (in_type, out_type, in_name, out_name))
+            G.out.append("INDENT")
+            dump_convert(in_type, in_name, out_type, out_name, "ierror")
+            G.out.append("DEDENT")
+            G.out.append("END SUBROUTINE")
+
+        # e.g. MPI_Status_f082c
+        def dump_convert_mpi(in_type, out_type, prefix):
+            G.out.append("")
+            # open
+            mpi_name = "%s_Status_%s2%s" % (prefix, in_type, out_type)
+            in_name = "status_%s" % in_type
+            out_name = "status_%s" % out_type
+
+            G.out.append("FUNCTION %s(%s, %s) &" % (mpi_name, in_name, out_name))
+            G.out.append("        bind(C, name=\"%s\") result (res)" % mpi_name)
+            G.out.append("INDENT")
+            G.out.append("USE, intrinsic :: iso_c_binding, ONLY: c_int")
+            dump_convert(in_type, in_name, out_type, out_name, "res")
+            G.out.append("DEDENT")
+            G.out.append("END FUNCTION %s" % mpi_name)
+
+        # ----
+        dump_convert_2("f08", "f")
+        dump_convert_2("f", "f08")
+        dump_convert_assign("f08", "c")
+        dump_convert_assign("c", "f08")
+        dump_convert_assign("f", "c")
+        dump_convert_assign("c", "f")
+        for prefix in ["MPI", "PMPI"]:
+            dump_convert_mpi("f08", "c", prefix)
+            dump_convert_mpi("c", "f08", prefix)
+
+    def dump_handle_types():
+        for a in G.f08_handle_list:
+            G.out.append("")
+            G.out.append("TYPE, bind(C) :: MPI_%s" % a)
+            G.out.append("    INTEGER :: MPI_VAL")
+            G.out.append("END TYPE MPI_%s" % a)
+
+    def dump_handle_interface():
+        for op in ["eq", "neq"]:
+            if op == "eq":
+                op_sym = "=="
+            else:
+                op_sym = "/="
+            G.out.append("")
+            G.out.append("INTERFACE operator(%s)" % op_sym)
+            for a in G.f08_handle_list:
+                G.out.append("    module procedure MPI_%s_%s" % (a, op))
+                G.out.append("    module procedure MPI_%s_f08_%s_f" % (a, op))
+                G.out.append("    module procedure MPI_%s_f_%s_f08" % (a, op))
+            G.out.append("END INTERFACE")
+            G.out.append("")
+            for a in G.f08_handle_list:
+                G.out.append("private :: MPI_%s_%s" % (a, op))
+                G.out.append("private :: MPI_%s_f08_%s_f" % (a, op))
+                G.out.append("private :: MPI_%s_f_%s_f08" % (a, op))
+
+    def dump_handle_routines():
+        for op in ["eq", "neq"]:
+            G.out.append("")
+            for a in G.f08_handle_list:
+                # e.g. MPI_Comm_eq
+                G.out.append("")
+                G.out.append("FUNCTION MPI_%s_%s(x, y) result(res)" % (a, op))
+                G.out.append("    TYPE(MPI_%s), INTENT(in) :: x, y" % a)
+                G.out.append("    LOGICAL :: res")
+                if op == "eq":
+                    G.out.append("    res = (x%MPI_VAL == y%MPI_VAL)")
+                else:
+                    G.out.append("    res = (x%MPI_VAL /= y%MPI_VAL)")
+                G.out.append("END FUNCTION MPI_%s_%s" % (a, op))
+                # e.g. MPI_Comm_f08_eq_f, MPI_Comm_f_eq_f08
+                G.out.append("")
+                for p in [("f08", "f"), ("f", "f08")]:
+                    func_name = "MPI_%s_%s_%s_%s" % (a, p[0], op, p[1])
+                    G.out.append("")
+                    G.out.append("FUNCTION %s(%s, %s) result(res)" % (func_name, p[0], p[1]))
+                    G.out.append("    TYPE(MPI_%s), INTENT(in) :: f08" % a)
+                    G.out.append("    INTEGER, INTENT(in) :: f")
+                    G.out.append("    LOGICAL :: res")
+                    if op == "eq":
+                        G.out.append("    res = (f08%MPI_VAL == f)")
+                    else:
+                        G.out.append("    res = (f08%MPI_VAL /= f)")
+                    G.out.append("END FUNCTION %s" % func_name)
+        # e.g. MPI_Comm_f2c
+        for a in G.f08_handle_list:
+            if a == "File":
+                continue
+            for p in [("f", "c"), ("c", "f")]:
+                func_name = "MPI_%s_%s2%s" % (a, p[0], p[1])
+                G.out.append("")
+                G.out.append("FUNCTION %s(x) result(res)" % func_name)
+                G.out.append("    USE mpi_c_interface_types, ONLY: c_%s" % a)
+                if p[0] == "f":
+                    G.out.append("    INTEGER, VALUE :: x")
+                    G.out.append("    INTEGER(c_%s) :: res" % a)
+                else:
+                    G.out.append("    INTEGER(c_%s), VALUE :: x" % a)
+                    G.out.append("    INTEGER :: res")
+                G.out.append("    res = x")
+                G.out.append("END FUNCTION %s" % func_name)
+
+    def dump_file_interface():
+        G.out.append("")
+        G.out.append("INTERFACE")
+        G.out.append("INDENT")
+        for p in [("f", "c"), ("c", "f")]:
+            func_name = "MPI_File_%s2%s" % (p[0], p[1])
+            G.out.append("")
+            G.out.append("FUNCTION %s(x) bind(C, name=\"%s\") result(res)" % (func_name, func_name))
+            G.out.append("    USE mpi_c_interface_types, ONLY: c_File")
+            if p[0] == "f":
+                G.out.append("    INTEGER, VALUE :: x")
+                G.out.append("    INTEGER(c_File) :: res")
+            else:
+                G.out.append("    INTEGER(c_File), VALUE :: x")
+                G.out.append("    INTEGER :: res")
+            G.out.append("END FUNCTION MPI_File_%s2%s" % (p[0], p[1]))
+        G.out.append("DEDENT")
+        G.out.append("END INTERFACE")
+
+    def dump_sizeof_interface():
+        G.out.append("")
+        G.out.append("INTERFACE MPI_Sizeof")
+        for a in G.f08_sizeof_list:
+            G.out.append("    module procedure MPI_Sizeof_%s" % a)
+        G.out.append("END INTERFACE")
+        G.out.append("")
+        for a in G.f08_sizeof_list:
+            G.out.append("private :: MPI_Sizeof_%s" % a)
+
+    def dump_sizeof_routines():
+        for a in G.f08_sizeof_list:
+            G.out.append("")
+            G.out.append("SUBROUTINE MPI_Sizeof_%s(x, size, ierror)" % a)
+            G.out.append("INDENT")
+            if RE.match(r'x(\w+?)(\d+)', a):
+                if RE.m.group(1) == 'int':
+                    t = 'int%s' % RE.m.group(2)
+                    T = "INTEGER(%s)" % t
+                else:
+                    t = 'real%s' % RE.m.group(2)
+                    T = "%s(%s)" % (RE.m.group(1), t)
+                G.out.append("USE, intrinsic :: iso_fortran_env, ONLY: %s" % t)
+                G.out.append("%s, dimension(..) :: x" % T)
+            else:
+                G.out.append("%s, dimension(..) :: x" % a)
+            G.out.append("INTEGER, INTENT(out) :: size")
+            G.out.append("INTEGER, OPTIONAL, INTENT(out) :: ierror")
+            G.out.append("")
+            G.out.append("size = storage_size(x)/8")
+            G.out.append("IF (present(ierror)) ierror = 0")
+            G.out.append("DEDENT")
+            G.out.append("END SUBROUTINE")
+
+    # ----
+    dump_F_module_open("mpi_f08_types")
+    G.out.append("USE, intrinsic :: iso_c_binding, ONLY: c_int")
+    G.out.append("USE :: mpi_c_interface_types, ONLY: c_Count, c_Status")
+    G.out.append("IMPLICIT NONE")
+    G.out.append("")
+    G.out.append("private :: c_int, c_Count, c_Status")
+    dump_handle_types()
+    dump_file_interface()
+    dump_status_type()
+    dump_status_interface()
+    dump_handle_interface()
+    dump_sizeof_interface()
+    G.out.append("")
+    G.out.append("contains")
+    G.out.append("")
+    dump_sizeof_routines()
+    dump_status_routines()
+    dump_handle_routines()
+    G.out.append("")
+    dump_F_module_close("mpi_f08_types")
+
 # -----------------------------
 def dump_cdesc_c(f, lines):
     print("  --> [%s]" % f)
