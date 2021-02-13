@@ -1,0 +1,2 @@
+parrived_wait 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-iteration=5
+parrived_wait 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=64 arg=-iteration=5

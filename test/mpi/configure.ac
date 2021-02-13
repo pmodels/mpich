@@ -1675,6 +1675,7 @@ AC_OUTPUT(maint/testmerge \
           init/Makefile \
           pt2pt/Makefile \
           pt2pt/testlist \
+          part/Makefile  \
           mpi_t/Makefile \
           rma/Makefile \
           rma/testlist \
@@ -1775,6 +1776,7 @@ AC_OUTPUT(maint/testmerge \
           threads/coll/Makefile \
           threads/coll/testlist \
           threads/perf/Makefile \
+          threads/part/Makefile  \
           errors/Makefile \
           errors/attr/Makefile \
           errors/basic/Makefile \

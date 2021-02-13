@@ -85,6 +85,23 @@ typedef struct MPIDIG_ssend_ack_msg_t {
     MPIR_Request *sreq_ptr;
 } MPIDIG_ssend_ack_msg_t;
 
+typedef struct MPIDIG_part_send_init_msg_t {
+    int src_rank;
+    int tag;
+    MPIR_Context_id_t context_id;
+    MPIR_Request *sreq_ptr;
+    MPI_Aint data_sz;           /* size of entire send data */
+} MPIDIG_part_send_init_msg_t;
+
+typedef struct MPIDIG_part_cts_msg_t {
+    MPIR_Request *sreq_ptr;
+    MPIR_Request *rreq_ptr;
+} MPIDIG_part_cts_msg_t;
+
+typedef struct MPIDIG_part_send_data_msg_t {
+    MPIR_Request *rreq_ptr;
+} MPIDIG_part_send_data_msg_t;
+
 typedef struct MPIDIG_win_cntrl_msg_t {
     uint64_t win_id;
     uint32_t origin_rank;
@@ -250,6 +267,8 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDIG_rreq_t *posted_list;
     MPIDIG_rreq_t *unexp_list;
 #endif
+    MPIDIG_part_rreq_t *part_posted_list;
+    MPIDIG_part_rreq_t *part_unexp_list;
     MPIDIG_req_ext_t *cmpl_list;
     MPL_atomic_uint64_t exp_seq_no;
     MPL_atomic_uint64_t nxt_seq_no;

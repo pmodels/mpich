@@ -22,5 +22,7 @@
 #include "mpidig_am_req_cache.h"
 #include "mpidig_am_recv.h"
 #include "mpidig_am_send.h"
+#include "mpidig_am_part.h"
+#include "mpidig_am_part_callbacks.h"
 
 #endif /* MPIDCH4R_H_INCLUDED */

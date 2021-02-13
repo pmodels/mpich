@@ -18,6 +18,7 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_probe.h     \
                   src/mpid/ch4/shm/posix/posix_request.h   \
                   src/mpid/ch4/shm/posix/posix_send.h      \
+                  src/mpid/ch4/shm/posix/posix_part.h      \
                   src/mpid/ch4/shm/posix/posix_unimpl.h    \
                   src/mpid/ch4/shm/posix/posix_am_impl.h   \
                   src/mpid/ch4/shm/posix/posix_pre.h       \
@@ -33,6 +34,7 @@ mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
                     src/mpid/ch4/shm/posix/posix_datatype.c \
                     src/mpid/ch4/shm/posix/posix_spawn.c \
                     src/mpid/ch4/shm/posix/posix_win.c \
+                    src/mpid/ch4/shm/posix/posix_part.c \
                     src/mpid/ch4/shm/posix/posix_eager_array.c
 
 include $(top_srcdir)/src/mpid/ch4/shm/posix/eager/Makefile.mk

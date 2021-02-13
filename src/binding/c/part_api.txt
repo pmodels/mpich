@@ -1,0 +1,99 @@
+MPI_Psend_init:
+    .desc: Creates a partitioned communication send request
+    .seealso: MPI_Pready, MPI_Pready_range, MPI_Pready_list, MPI_Start, MPI_Startall, MPI_Request_free
+{ -- error_check -- partitions
+    MPIR_ERRTEST_PARTITIONS(partitions, mpi_errno);
+}
+{
+    MPIR_Request *request_ptr = NULL;
+
+    MPIR_ERRTEST_PARTITIONS(partitions, mpi_errno);
+
+    mpi_errno = MPID_Psend_init(buf, partitions, count, datatype, dest, tag, comm_ptr,
+                                info_ptr, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    /* return the handle of the request to the user */
+    MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
+}
+
+MPI_Precv_init:
+    .desc: Creates a partitioned communication receive request
+    .seealso: MPI_Parrived, MPI_Request_free
+{ -- error_check -- partitions
+    MPIR_ERRTEST_PARTITIONS(partitions, mpi_errno);
+}
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Precv_init(buf, partitions, count, datatype, dest, tag, comm_ptr,
+                                info_ptr, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    /* return the handle of the request to the user */
+    MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
+}
+
+MPI_Pready:
+    .desc: Indicates that a given portion of the send buffer in a partitioned
+           communication call is ready to be transferred
+{ -- error_check -- partition
+    MPIR_ERRTEST_PARTITION(partition, request_ptr, mpi_errno);
+}
+{
+    mpi_errno = MPID_Pready_range(partition, partition, request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Pready_range:
+    .desc: Indicates that a given range of the send buffer in a partitioned
+           communication call is ready to be transferred
+{ -- error_check -- partition
+    MPIR_ERRTEST_PARTITION(partition_low, request_ptr, mpi_errno);
+    MPIR_ERRTEST_PARTITION(partition_high, request_ptr, mpi_errno);
+    if (partition_low > partition_high) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                   MPIR_ERR_RECOVERABLE,
+                                   __func__, __LINE__,
+                                   MPI_ERR_OTHER,
+                                   "**partitioninvalid", "**partitioninvalid %d %d",
+                                   partition_low, partition_high);
+        goto fn_fail;
+    }
+}
+{
+    mpi_errno = MPID_Pready_range(partition_low, partition_high, request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Pready_list:
+    .desc: Indicates that a list of portions of the send buffer in a partitioned
+           communication call is ready to be transferred
+{ -- error_check -- array_of_partitions
+    if (length > 0) {
+        MPIR_ERRTEST_ARGNULL(array_of_partitions, "array_of_partitions", mpi_errno);
+        for (int i = 0; i < length; i++) {
+            MPIR_ERRTEST_PARTITION(array_of_partitions[i], request_ptr, mpi_errno);
+        }
+    }
+}
+{
+    mpi_errno = MPID_Pready_list(length, array_of_partitions, request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Parrived:
+    .desc: Test partial completion of partitioned receive operations
+{ -- error_check -- partition
+    MPIR_ERRTEST_PARTITION(partition, request_ptr, mpi_errno);
+}
+{
+    mpi_errno = MPIR_Parrived(request, request_ptr, partition, flag);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}

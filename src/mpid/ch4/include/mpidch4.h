@@ -71,6 +71,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request *) MPL_STA
 MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX void MPID_Part_request_free_hook(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *,
                                        int, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *,
@@ -93,6 +94,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend_init(const void *, MPI_Aint, MPI_Datatyp
                                              MPIR_Comm *, int,
                                              MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Startall(int, MPIR_Request *[]) MPL_STATIC_INLINE_SUFFIX;
+
+int MPID_Psend_init(void *, int, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *,
+                    MPIR_Info *, MPIR_Request **);
+int MPID_Precv_init(void *, int, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *, MPIR_Info *,
+                    MPIR_Request **);
+MPL_STATIC_INLINE_PREFIX int MPID_Pready_range(int, int, MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Pready_list(int, int[], MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Parrived(MPIR_Request * rreq, int partition, int *flag);
+
 MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *, int, MPI_Datatype, int, MPI_Aint, int,
                                              MPI_Datatype, MPI_Op,
                                              MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
@@ -338,6 +348,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 #include "ch4_proc.h"
 #include "ch4_coll.h"
 #include "ch4_wait.h"
+#include "ch4_part.h"
 
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 extern int MPIDI_num_netmods;

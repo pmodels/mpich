@@ -52,3 +52,10 @@
 **ch4|nocheck_invalid:MPI_MODE_NOCHECK was specified, but the lock was not available at the target
 **ch4|rma_msg:RMA message operation failed
 **ch4|win_shared_comm:Cannot map shared memory using the given communicator
+#
+# Partitioned errors
+#
+**ch4|partitionsync: Wrong synchronization of partitioned calls 
+**ch4|partmismatchsize: Partitioned send and receive buﬀers are not identical in size
+**ch4|partmismatchsize %d %d %d %d: Partitioned send and receive buﬀers are not identical in size; \
+%d bytes received but receive buffer size is %d
