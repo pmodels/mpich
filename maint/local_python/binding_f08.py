@@ -162,16 +162,12 @@ def dump_f08_wrappers_f(func):
             convert_list_2.append("    call MPIR_Grequest_set_lang_fortran(%s)" % arg)
             convert_list_2.append("END IF")
 
-        def set_attr_proxy(arg, comm):
+        def set_attr_proxy(arg):
             # assume need_check_int_kind is False
-            copy_fn = "MPIR_%s_copy_attr_f08_proxy" % comm
-            del_fn = "MPIR_%s_delete_attr_f08_proxy" % comm
             uses['MPI_SUCCESS'] = 1
-            uses['MPII_Keyval_set_proxy'] = 1
-            uses[copy_fn] = 1
-            uses[del_fn] = 1
+            uses['MPII_Keyval_set_f90_proxy'] = 1
             convert_list_2.append("IF (ierror_c == MPI_SUCCESS) THEN")
-            convert_list_2.append("    call MPII_Keyval_set_proxy(%s, c_funloc(%s), c_funloc(%s))" % (arg, copy_fn, del_fn))
+            convert_list_2.append("    call MPII_Keyval_set_f90_proxy(%s)" % arg)
             convert_list_2.append("END IF")
 
         def check_proxy_requirement(func_name, p):
@@ -179,7 +175,7 @@ def dump_f08_wrappers_f(func):
                 set_grequest_lang(arg_2)
                 return True
             elif p['kind'] == "KEYVAL" and RE.match(r'mpi_(.*)_create_keyval', func_name, re.IGNORECASE):
-                set_attr_proxy(arg_2, RE.m.group(1))
+                set_attr_proxy(arg_2)
                 return True
             return False
 
@@ -837,7 +833,7 @@ def dump_F_uses(uses):
     for a in uses:
         if re.match(r'c_(int|char|ptr|loc|associated|null_ptr|null_funptr|funptr|funloc)', a, re.IGNORECASE):
             iso_c_binding_list.append(a)
-        elif a == "MPIR_ATTR_AINT":
+        elif re.match(r'MPIR_ATTR_AINT|MPII_.*_proxy|MPIR.*set_lang|MPIR_.*string_(f2c|c2f)', a):
             mpi_c_list_3.append(a)
         elif re.match(r'MPI_\w+_(function|FN|FN_NULL)$', a):
             mpi_f08_list_4.append(a)
