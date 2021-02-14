@@ -4,6 +4,8 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+autoreconf -ivf
+
 # Create and/or update the f90 tests
 printf "Create or update the Fortran 90 tests derived from the Fortran 77 tests... "
 for dir in f77/* ; do
