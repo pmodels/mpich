@@ -35,3 +35,5 @@ for dir in errors/f77/* ; do
     fi
 done
 echo "done"
+
+autoreconf -ivf
