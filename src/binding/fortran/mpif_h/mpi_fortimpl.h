@@ -229,4 +229,12 @@ typedef char *MPID_FCHAR_T;
 #endif
 #endif /* MPI_MODE_RDONLY */
 
+/* The F90 attr copy/delete function prototype and calling convention */
+typedef void (FORT_CALL F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
+                                           MPI_Aint *, MPI_Fint *, MPI_Fint *);
+typedef void (FORT_CALL F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
+                                             MPI_Fint *);
+
+void MPII_Keyval_set_f90_proxy(int keyval);
+
 #endif /* MPI_FORTIMPL_H_INCLUDED */
