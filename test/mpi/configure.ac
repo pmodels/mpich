@@ -350,6 +350,97 @@ if test "$with_config_args" != "no" ; then
     fi
 fi
 
+# Attach program prefix and suffix to executable names
+PAC_GET_EXENAME("mpicc", MPICC_NAME)
+PAC_GET_EXENAME("mpif77", MPIF77_NAME)
+PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
+PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
+PAC_GET_EXENAME("mpiexec", MPIEXEC_NAME)
+
+if test -n "$with_mpi" ; then
+    if test -z "$MPICC" ; then
+        CC=$with_mpi/bin/$MPICC_NAME
+    else
+        CC=$MPICC
+    fi
+    if test -z "$MPIF77" ; then
+        F77=$with_mpi/bin/$MPIF77_NAME
+    else
+        F77=$MPIF77
+    fi
+    if test -z "$MPIFC" ; then
+        FC=$with_mpi/bin/$MPIFORT_NAME
+    else
+        FC=$MPIFC
+    fi
+    if test -z "$MPICXX" ; then
+        CXX=$with_mpi/bin/$MPICXX_NAME
+    else
+        CXX=$MPICXX
+    fi
+    if test -z "$MPIEXEC" ; then
+        MPIEXEC=$with_mpi/bin/$MPIEXEC_NAME
+    fi
+else
+    # Try to use mpicc etc names
+    if test -z "$MPICC" ; then
+        AC_PATH_PROG(MPICC,$MPICC_NAME mpcc)
+    fi
+    if test "x$MPICC" != "x" ; then
+        CC=$MPICC
+    fi
+    if test -z "$MPIF77" ; then
+        AC_PATH_PROG(MPIF77,$MPIF77_NAME mpf77)
+    fi
+    if test "x$MPIF77" != "x" ; then
+        F77=$MPIF77
+    fi
+    if test -z "$MPIFC" ; then
+        AC_PATH_PROG(MPIFC,$MPIFORT_NAME mpftn)
+    fi
+    if test "x$MPIFC" != "x" ; then
+        FC=$MPIFC
+    fi
+    if test -z "$MPICXX" ; then
+        # We left mpiCC off of this list because mpicc and mpiCC are the
+        # same on Mac OSX systems.
+        AC_PATH_PROG(MPICXX,$MPICXX_NAME mpCC)
+    fi
+    if test "x$MPICXX" != "x" ; then
+        CXX=$MPICXX
+    fi
+    if test -z "$MPIEXEC" ; then
+        AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
+    fi
+fi
+# Make sure we export CC before configuring DTPools, since MPI is
+# needed to build the library.
+export CC
+AC_CONFIG_SUBDIRS([dtpools])
+
+# Running C compiler tests
+AC_PROG_CC
+AC_PROG_CC_C99
+AM_PROG_CC_C_O
+
+# Ensure that we can compile an MPI program before we go any further
+# We don't use a cached value here because this is a sanity check
+AC_MSG_CHECKING([whether we can compile and link MPI programs in C])
+AC_LINK_IFELSE([
+        AC_LANG_PROGRAM([#include "mpi.h"],[MPI_Init(0,0);MPI_Finalize();])
+    ],[mpi_compile_works=yes],[mpi_compile_works=no])
+AC_MSG_RESULT($mpi_compile_works)
+
+if test "$mpi_compile_works" != "yes" ; then
+    AC_MSG_ERROR([Unable to compile and/or link an MPI program!  Check config.log])
+fi
+
+# Check whether we are testing MPI derived from MPICH
+MPI_IS_MPICH=no
+AC_MSG_CHECKING([Is the MPI derived from MPICH])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[return 1 + MPICH;])],
+    [MPI_IS_MPICH=yes],[MPI_IS_MPICH=no])
+
 # First, determine whether we are/can support the language bindings
 #
 # Since F90/F90FLAGS are replaced by FC/FCFLAGS, rather than silently
@@ -525,97 +616,6 @@ AC_ARG_VAR([WRAPPER_LIBS],[])
 AC_ARG_VAR([WRAPPER_FFLAGS],[])
 AC_ARG_VAR([WRAPPER_FCFLAGS],[])
 AC_ARG_VAR([WRAPPER_CXXFLAGS],[])
-
-# Attach program prefix and suffix to executable names
-PAC_GET_EXENAME("mpicc", MPICC_NAME)
-PAC_GET_EXENAME("mpif77", MPIF77_NAME)
-PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
-PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
-PAC_GET_EXENAME("mpiexec", MPIEXEC_NAME)
-
-if test -n "$with_mpi" ; then
-    if test -z "$MPICC" ; then
-        CC=$with_mpi/bin/$MPICC_NAME
-    else
-        CC=$MPICC
-    fi
-    if test -z "$MPIF77" ; then
-        F77=$with_mpi/bin/$MPIF77_NAME
-    else
-        F77=$MPIF77
-    fi
-    if test -z "$MPIFC" ; then
-        FC=$with_mpi/bin/$MPIFORT_NAME
-    else
-        FC=$MPIFC
-    fi
-    if test -z "$MPICXX" ; then
-        CXX=$with_mpi/bin/$MPICXX_NAME
-    else
-        CXX=$MPICXX
-    fi
-    if test -z "$MPIEXEC" ; then
-        MPIEXEC=$with_mpi/bin/$MPIEXEC_NAME
-    fi
-else
-    # Try to use mpicc etc names
-    if test -z "$MPICC" ; then
-        AC_PATH_PROG(MPICC,$MPICC_NAME mpcc)
-    fi
-    if test "x$MPICC" != "x" ; then
-        CC=$MPICC
-    fi
-    if test -z "$MPIF77" ; then
-        AC_PATH_PROG(MPIF77,$MPIF77_NAME mpf77)
-    fi
-    if test "x$MPIF77" != "x" ; then
-        F77=$MPIF77
-    fi
-    if test -z "$MPIFC" ; then
-        AC_PATH_PROG(MPIFC,$MPIFORT_NAME mpftn)
-    fi
-    if test "x$MPIFC" != "x" ; then
-        FC=$MPIFC
-    fi
-    if test -z "$MPICXX" ; then
-        # We left mpiCC off of this list because mpicc and mpiCC are the
-        # same on Mac OSX systems.
-        AC_PATH_PROG(MPICXX,$MPICXX_NAME mpCC)
-    fi
-    if test "x$MPICXX" != "x" ; then
-        CXX=$MPICXX
-    fi
-    if test -z "$MPIEXEC" ; then
-        AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
-    fi
-fi
-# Make sure we export CC before configuring DTPools, since MPI is
-# needed to build the library.
-export CC
-AC_CONFIG_SUBDIRS([dtpools])
-
-# Running C compiler tests
-AC_PROG_CC
-AC_PROG_CC_C99
-AM_PROG_CC_C_O
-
-# Ensure that we can compile an MPI program before we go any further
-# We don't use a cached value here because this is a sanity check
-AC_MSG_CHECKING([whether we can compile and link MPI programs in C])
-AC_LINK_IFELSE([
-        AC_LANG_PROGRAM([#include "mpi.h"],[MPI_Init(0,0);MPI_Finalize();])
-    ],[mpi_compile_works=yes],[mpi_compile_works=no])
-AC_MSG_RESULT($mpi_compile_works)
-
-if test "$mpi_compile_works" != "yes" ; then
-    AC_MSG_ERROR([Unable to compile and/or link an MPI program!  Check config.log])
-fi
-
-# Check whether we are testing MPI derived from MPICH
-MPI_IS_MPICH=no
-AC_MSG_CHECKING([Is the MPI derived from MPICH])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[return 1 + MPICH;])],
-    [MPI_IS_MPICH=yes],[MPI_IS_MPICH=no])
 
 dnl We cannot use AC_C_LONG_DOUBLE
 dnl because it does not support cross-compilation.  Instead, we use the
