@@ -972,57 +972,6 @@ if test "$buildingF77" = "yes" ; then
         MPI_SIZEOF_AINT=$ac_cv_sizeof_void_p
     fi
     if test -z "$MPI_SIZEOF_OFFSET" ; then
-        # We have to try and get the size of offset anyway, since
-        # it is not the same as void * (it depends on the available
-        # file systems).  Since we want to avoid using the MPI linker,
-        # we could do the following:
-        #    Use the mpi compiler to compile the file, using the mpi
-        #    header but no MPI calls
-        #    Use the regular C linker to link the program
-        # However, we do this only if the environment variable BASECC
-        # has been provided.  Else we can try the following:
-        # use
-        #    sed -n 's/typedef \(.*\) MPI_Offset *;/\1/p' mpi.h
-        # to extract the type corresponding to MPI_Offset and then
-        # just use that.
-dnl         AC_CACHE_CHECK([the sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,[
-dnl              ac_cv_sizeof_MPI_Offset=unknown
-dnl              rm -f conftest*
-dnl              cat >>conftest.c <<EOF
-dnl #include "mpi.h"
-dnl #include <stdio.h>
-dnl int main( int argc, char **argv )
-dnl {
-dnl     MPI_Offset a;
-dnl     FILE *f = fopen("conftestval", "w" );
-dnl     if (! f) exit(1);
-dnl     fprintf( f, "%ld\n", (long)sizeof(MPI_Offset) );
-dnl     fclose(f);
-dnl     return 0;
-dnl }
-dnl EOF
-dnl             # FIXME.  Check for BASECC
-dnl             # Note: This assumes that CC has been set to the C compiler for
-dnl             # MPI Programs, and that either any necessary include paths are
-dnl             # already set or they are in CPPFLAGS (preferred) or CFLAGS.
-dnl             if AC_TRY_EVAL(ac_link) && test -s conftest$ac_exeext ; then
-dnl                 if ./conftest$ac_exeext ; then
-dnl                     #success
-dnl                     ac_cv_sizeof_MPI_Offset=`cat conftestval`
-dnl                 else
-dnl                     # failure
-dnl                     AC_MSG_WARN([Unable to run the program to determine the size of MPI_Offset])
-dnl                     echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
-dnl                     cat conftest.c >&AS_MESSAGE_LOG_FD
-dnl                 fi
-dnl             else
-dnl                 # failure
-dnl                 AC_MSG_WARN([Unable to build the program to determine the size of MPI_Offset])
-dnl                 echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
-dnl                 cat conftest.c >&AS_MESSAGE_LOG_FD
-dnl             fi
-dnl             rm -f conftest*
-dnl         ])
         AC_CHECK_SIZEOF([MPI_Offset],[],[#include "mpi.h"])
         if test "$ac_cv_sizeof_MPI_Offset" = "unknown" \
              -o "$ac_cv_sizeof_MPI_Offset" -eq 0 ; then
