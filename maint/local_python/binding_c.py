@@ -889,7 +889,7 @@ def push_impl_decl(func, impl_name=None):
             # All collective impl function use MPI_Aint counts
             params = re.sub(r' int (count|sendcount|recvcount),', r' MPI_Aint \1,', params)
             # block collective use an extra errflag
-            if not RE.match(r'MPI_(I|Neighbor)', func['name']):
+            if not RE.match(r'MPI_(I.*|Neighbor.*|.*_init)$', func['name']):
                 params = params + ", MPIR_Errflag_t *errflag"
     else:
         params="void"
@@ -900,6 +900,9 @@ def push_impl_decl(func, impl_name=None):
         G.impl_declares.append("int %s(%s);" % (mpir_name, params))
     # dump MPIR_Xxx_impl(...)
     G.impl_declares.append("int %s(%s);" % (impl_name, params))
+    if func['dir'] == 'coll':
+        mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
+        G.impl_declares.append("int %s(%s);" % (mpir_name, params))
 
 def dump_CHECKENUM(var, errname, t, type="ENUM"):
     val_list = t.split()
@@ -920,7 +923,7 @@ def dump_body_coll(func):
     mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
 
     args = ", ".join(func['impl_arg_list'])
-    if RE.match(r'mpi_i', func['name'], re.IGNORECASE):
+    if RE.match(r'MPI_(I.*|.*_init)$', func['name'], re.IGNORECASE):
         # non-blocking collectives
         G.out.append("MPIR_Request *request_ptr = NULL;")
         dump_line_with_break("mpi_errno = %s(%s);" % (mpir_name, args))
