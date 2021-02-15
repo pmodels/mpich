@@ -608,15 +608,6 @@ AC_SUBST(mpix)
 # to noninst_PROGRAMS to skip building the tests when we do strict MPI test
 AM_CONDITIONAL([BUILD_MPIX_TESTS], [test "$enable_strictmpi" = "no"])
 
-# preserve these values across a reconfigure
-AC_ARG_VAR([WRAPPER_CFLAGS],[])
-AC_ARG_VAR([WRAPPER_CPPFLAGS],[])
-AC_ARG_VAR([WRAPPER_LDFLAGS],[])
-AC_ARG_VAR([WRAPPER_LIBS],[])
-AC_ARG_VAR([WRAPPER_FFLAGS],[])
-AC_ARG_VAR([WRAPPER_FCFLAGS],[])
-AC_ARG_VAR([WRAPPER_CXXFLAGS],[])
-
 dnl We cannot use AC_C_LONG_DOUBLE
 dnl because it does not support cross-compilation.  Instead, we use the
 dnl same test in the MPICH configure.
