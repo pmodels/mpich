@@ -148,6 +148,11 @@ AC_ARG_ENABLE(romio,
         [AC_HELP_STRING([--enable-romio],[Enable ROMIO MPI I/O implementation])],,
         [enable_romio=yes])
 
+AC_ARG_ENABLE(namepub,
+        [AC_HELP_STRING([--enable-namepub],
+                [Enable tests of the dynamic process parts of MPI-2 (default)])],,
+        [enable_namepub=yes])
+
 AC_ARG_ENABLE(spawn,
         [AC_HELP_STRING([--enable-spawn],
                 [Enable tests of the dynamic process parts of MPI-2 (default)])],,
@@ -436,6 +441,12 @@ AC_SUBST(MPILIBLOC)
 # more variables that must be marked precious for proper re-configure operation
 AC_ARG_VAR([MPICH_ENABLE_FC],["yes" if the enclosing MPICH build supports modern Fortran])
 AC_ARG_VAR([MPICH_ENABLE_CXX],["yes" if the enclosing MPICH build supports C++])
+
+namepub_tests="#"
+if test "$enable_namepub" = "yes" ; then
+    namepub_tests=""
+fi
+AC_SUBST(namepub_tests)
 
 # Some MPI-2 implementations (including some of the MPICH shared-memory
 # channels and BG/L) leave out the dynamic process routines.  This
