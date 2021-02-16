@@ -16,25 +16,19 @@ import copy
 def dump_mpi_c(func, map_type="SMALL"):
     """Dumps the function's C source code to G.out array"""
 
-    # map_type may be "SMALL", "BIG", or "SMALL-poly"
-    if RE.match(r'SMALL', map_type):
-        mapping = G.MAPS['SMALL_C_KIND_MAP']
-    else:
-        mapping = G.MAPS['BIG_C_KIND_MAP']
-
-    # manpage and body-of-routines will check _map_type
+    # map_type may be "SMALL" or "BIG"
     func['_map_type'] = map_type
 
     check_func_directives(func)
     filter_c_parameters(func)
-    check_params_with_large_only(func, mapping)
+    check_params_with_large_only(func)
 
     # for poly functions, decide impl interface
     check_large_parameters(func)
 
-    process_func_parameters(func, mapping)
+    process_func_parameters(func)
 
-    G.mpi_declares.append(get_declare_function(func, mapping, "proto"))
+    G.mpi_declares.append(get_declare_function(func, map_type, "proto"))
 
     # collect error codes additional from auto generated ones
     if 'error' in func:
@@ -50,23 +44,23 @@ def dump_mpi_c(func, map_type="SMALL"):
                 G.out.append("#include \"%s\"" % a)
 
     G.out.append("")
-    dump_profiling(func, mapping)
+    dump_profiling(func)
 
     if 'polymorph' in func:
         # MPII_ function to support C/Fortran Polymorphism, eg MPI_Comm_get_attr
         # It needs go inside "#ifndef MPICH_MPI_FROM_PMPI"
         G.out.pop() # #endif from dump_profiling()
-        dump_function(func, mapping, kind="polymorph")
+        dump_function(func, kind="polymorph")
         G.out.append("#endif /* MPICH_MPI_FROM_PMPI */")
 
     G.out.append("")
     dump_manpage(func)
     if 'polymorph' in func:
-        dump_function(func, mapping, kind="call-polymorph")
+        dump_function(func, kind="call-polymorph")
     elif 'replace' in func and 'body' not in func:
-        dump_function(func, mapping, kind="call-replace")
+        dump_function(func, kind="call-replace")
     else:
-        dump_function(func, mapping, kind="normal")
+        dump_function(func, kind="normal")
 
 def get_func_file_path(func, root_dir):
     file_path = None
@@ -292,7 +286,7 @@ def filter_c_parameters(func):
             c_params.append(p)
     func['c_parameters'] = c_params
 
-def check_params_with_large_only(func, mapping):
+def check_params_with_large_only(func):
     if '_has_large_only' not in func:
         func['_has_large_only'] = 0
         for p in func['c_parameters']:
@@ -305,7 +299,7 @@ def check_params_with_large_only(func, mapping):
                 if not p['large_only']:
                     func['params_small'].append(p)
     if func['_has_large_only']:
-        if mapping['_name'].startswith('SMALL'):
+        if func['_map_type'] == "SMALL":
             func['c_parameters'] = func['params_small']
         else:
             func['c_parameters'] = func['params_large']
@@ -352,7 +346,7 @@ def get_userbuffer_group(func, i):
         group_kind, group_count = None, 0
     return (group_kind, group_count)
 
-def process_func_parameters(func, mapping):
+def process_func_parameters(func):
     """ Scan parameters and populate a few lists to facilitate generation."""
     # Note: we'll attach the lists to func at the end
     validation_list, handle_ptr_list, impl_arg_list, impl_param_list = [], [], [], []
@@ -377,7 +371,7 @@ def process_func_parameters(func, mapping):
                     t += ","
                 t += temp_p['name']
                 impl_arg_list.append(temp_p['name'])
-                impl_param_list.append(get_impl_param(func, temp_p, mapping))
+                impl_param_list.append(get_impl_param(func, temp_p))
             validation_list.append({'kind': group_kind, 'name': t})
             # -- pointertag_list
             if re.search(r'alltoallw', func_name, re.IGNORECASE):
@@ -580,7 +574,7 @@ def process_func_parameters(func, mapping):
                 impl_param_list.append("%s *%s_ptr" % (mpir_type, name))
         else:
             impl_arg_list.append(name)
-            impl_param_list.append(get_impl_param(func, p, mapping))
+            impl_param_list.append(get_impl_param(func, p))
         i += 1
 
     if RE.match(r'MPI_(Wait|Test)$', func_name):
@@ -610,8 +604,8 @@ def dump_copy_right():
     G.out.append(" */")
     G.out.append("")
 
-def dump_profiling(func, mapping):
-    func_name = get_function_name(func, mapping)
+def dump_profiling(func):
+    func_name = get_function_name(func, func['_map_type'])
     G.out.append("/* -- Begin Profiling Symbol Block for routine %s */" % func_name)
     G.out.append("#if defined(HAVE_PRAGMA_WEAK)")
     G.out.append("#pragma weak %s = P%s" % (func_name, func_name))
@@ -620,7 +614,7 @@ def dump_profiling(func, mapping):
     G.out.append("#elif defined(HAVE_PRAGMA_CRI_DUP)")
     G.out.append("#pragma _CRI duplicate %s as P%s" % (func_name, func_name))
     G.out.append("#elif defined(HAVE_WEAK_ATTRIBUTE)")
-    s = get_declare_function(func, mapping)
+    s = get_declare_function(func, func['_map_type'])
     dump_line_with_break(s, " __attribute__ ((weak, alias(\"P%s\")));" % (func_name))
     G.out.append("#endif")
     G.out.append("/* -- End Profiling Symbol Block */")
@@ -636,7 +630,7 @@ def dump_profiling(func, mapping):
 
 def dump_manpage(func):
     G.out.append("/*@")
-    G.out.append("   %s - %s" % (func['name'], func['desc']))
+    G.out.append("   %s - %s" % (get_function_name(func, func['_map_type']), func['desc']))
     G.out.append("")
     lis_map = G.MAPS['LIS_KIND_MAP']
     for p in func['c_parameters']:
@@ -722,12 +716,12 @@ def dump_manpage_list(list, header):
     G.out.append("")
 
 # ---- the function part ----
-def dump_function(func, mapping, kind):
+def dump_function(func, kind):
     """Appends to G.out array the MPI function implementation."""
-    func_name = get_function_name(func, mapping);
+    func_name = get_function_name(func, func['_map_type']);
     state_name = "MPID_STATE_" + func_name.upper()
 
-    s = get_declare_function(func, mapping)
+    s = get_declare_function(func, func['_map_type'])
     if kind == "polymorph":
         (extra_param, extra_arg) = get_polymorph_param_and_arg(func['polymorph'])
         s = re.sub(r'MPIX?_', 'MPII_', s, 1)
@@ -757,7 +751,7 @@ def dump_function(func, mapping, kind):
         repl_call = "mpi_errno = %s(%s);" % (repl_name, repl_args)
         dump_function_replace(func, state_name, repl_call)
     else:
-        dump_function_normal(func, state_name, mapping)
+        dump_function_normal(func, state_name)
 
     G.out.append("DEDENT")
     G.out.append("}")
@@ -816,7 +810,7 @@ def check_large_parameters(func):
             else:
                 func['_poly_in_list'].append(p)
 
-def dump_function_normal(func, state_name, mapping):
+def dump_function_normal(func, state_name):
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     if '_handle_ptr_list' in func:
         for p in func['_handle_ptr_list']:
@@ -973,7 +967,7 @@ def dump_function_normal(func, state_name, mapping):
         # MPI_T always return the mpi_errno
         pass
     else:
-        dump_mpi_fn_fail(func, mapping)
+        dump_mpi_fn_fail(func)
     G.out.append("goto fn_exit;")
 
 def replace_impl_arg_list(arg_list, old, new):
@@ -1322,21 +1316,21 @@ def dump_function_direct(func, state_name):
         G.out.append(l)
 
 # -- fn_fail ----
-def dump_mpi_fn_fail(func, mapping):
+def dump_mpi_fn_fail(func):
     G.out.append("/* --BEGIN ERROR HANDLINE-- */")
 
     if RE.match(r'mpi_(finalized|initialized)', func['name'], re.IGNORECASE):
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
         cond = "MPIR_Errutil_is_initialized()"
         dump_if_open(cond)
-        s = get_fn_fail_create_code(func, mapping)
+        s = get_fn_fail_create_code(func)
         G.out.append(s)
         G.out.append("mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);")
         dump_if_close()
         G.out.append("#endif")
     else:
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
-        s = get_fn_fail_create_code(func, mapping)
+        s = get_fn_fail_create_code(func)
         dump_line_with_break(s)
         G.out.append("#endif")
         if '_has_comm' in func:
@@ -1348,11 +1342,12 @@ def dump_mpi_fn_fail(func, mapping):
 
     G.out.append("/* --END ERROR HANDLING-- */")
 
-def get_fn_fail_create_code(func, mapping):
+def get_fn_fail_create_code(func):
     s = "mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,"
 
-    func_name = get_function_name(func, mapping)
+    func_name = get_function_name(func, func['_map_type'])
     err_name = func_name.lower()
+    mapping = get_mapping(func['_map_type'])
 
     (fmts, args, err_fmts) = ([], [], [])
     fmt_codes = {'RANK': "i", 'TAG': "t", 'COMMUNICATOR': "C", 'ASSERT': "A", 'DATATYPE': "D", 'ERRHANDLER': "E", 'FILE': "F", 'GROUP': "G", 'INFO': "I", 'OPERATION': "O", 'REQUEST': "R", 'WINDOW': "W", 'SESSION': "S", 'KEYVAL': "K", "GREQUEST_CLASS": "x"}
@@ -2059,10 +2054,17 @@ def dump_validate_get_topo_size(func):
         G.out.append("int indegree, outdegree, weighted;")
         G.out.append("mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);")
         func['_got_topo_size'] = 1
+
 # ---- supporting routines (reusable) ----
 
-def get_function_name(func, mapping):
-    if RE.search(r'BIG', mapping['_name']):
+def get_mapping(map_type):
+    if map_type == "SMALL":
+        return G.MAPS['SMALL_C_KIND_MAP']
+    else:
+        return G.MAPS['BIG_C_KIND_MAP']
+
+def get_function_name(func, map_type="SMALL"):
+    if map_type == "BIG":
         return func['name'] + "_c"
     else:
         return func['name']
@@ -2073,8 +2075,9 @@ def get_function_args(func):
         arg_list.append(p['name'])
     return ', '.join(arg_list)
 
-def get_declare_function(func, mapping, kind=""):
-    name = get_function_name(func, mapping)
+def get_declare_function(func, map_type="SMALL", kind=""):
+    name = get_function_name(func, map_type)
+    mapping = get_mapping(map_type)
 
     ret = "int"
     if 'return' in func:
@@ -2152,7 +2155,9 @@ def get_C_param(param, mapping):
 
     return s
 
-def get_impl_param(func, param, mapping):
+def get_impl_param(func, param):
+    mapping = get_mapping(func['_map_type'])
+
     s = get_C_param(param, mapping)
     if RE.match(r'POLY', param['kind']):
         if func['_map_type'] == "BIG":
