@@ -450,9 +450,7 @@ static int generic_init(void)
     return mpi_errno;
 }
 
-#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
-#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
-#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
@@ -526,29 +524,15 @@ int MPID_Init_local(int requested, int *provided)
     mpi_errno = MPIR_pmi_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    int err;
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-#ifdef HAVE_LIBHCOLL
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-#endif
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
-    MPIR_Assert(err == 0);
+    /* Create all ch4-layer granular locks.
+     * Note: some locks (e.g. MPIDIU_THREAD_HCOLL_MUTEX) may be unused due to configuration.
+     * It is harmless to create them anyway rather than adding #ifdefs.
+     */
+    for (int i = 0; i < MAX_CH4_MUTEXES; i++) {
+        int err;
+        MPID_Thread_mutex_create(&MPIDI_global.m[i], &err);
+        MPIR_Assert(err == 0);
+    }
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = set_runtime_configurations();
@@ -577,6 +561,7 @@ int MPID_Init_local(int requested, int *provided)
     }
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        int err;
         MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
 
@@ -761,31 +746,14 @@ int MPID_Finalize(void)
 
     MPIR_pmi_finalize();
 
-    int err;
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_UTIL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-#ifdef HAVE_LIBHCOLL
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-#endif
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
-    MPIR_Assert(err == 0);
+    for (int i = 0; i < MAX_CH4_MUTEXES; i++) {
+        int err;
+        MPID_Thread_mutex_destroy(&MPIDI_global.m[i], &err);
+        MPIR_Assert(err == 0);
+    }
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        int err;
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
     }
@@ -968,9 +936,9 @@ void *MPID_Alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
     container->buf_type = buf_type;
     container->size = size + alignment;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
     HASH_ADD_PTR(alloc_mem_container_list, user_buf, container, MPL_MEM_USER);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLOC_MEM);
@@ -985,11 +953,11 @@ int MPID_Free_mem(void *user_buf)
 
     alloc_mem_container_s *container;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
     HASH_FIND_PTR(alloc_mem_container_list, &user_buf, container);
     assert(container);
     HASH_DEL(alloc_mem_container_list, container);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
 
     switch (container->buf_type) {
         case ALLOC_MEM_BUF_TYPE__HBM:
