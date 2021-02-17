@@ -336,7 +336,7 @@ MPIR_hwtopo_type_e MPIR_hwtopo_get_type_id(const char *name)
     };
 
     for (int i = 0; node_info[i].val; i++) {
-        if (!strcmp(node_info[i].val, name)) {
+        if (!strcasecmp(node_info[i].val, name)) {
             query_type = node_info[i].type;
             break;
         }
