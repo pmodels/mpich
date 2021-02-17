@@ -1092,3 +1092,63 @@ int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
   fn_fail:
     goto fn_exit;
 }
+
+/* This function collectively compares hint_str to see whether all processes are having
+ * the same string. The result is set in output pointer info_args_are_equal.
+ */
+/* TODO: it is certainly not ideal that we have to run 4 Allreduce to do this check.
+ * Once we have an OP_EQUAL operator, a single Allreduce would suffice.
+ */
+int MPII_compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info_args_are_equal)
+{
+    int hint_str_size = strlen(hint_str);
+    int hint_str_size_max;
+    int hint_str_equal;
+    int hint_str_equal_global = 0;
+    char *hint_str_global = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+
+    /* Find the maximum hint_str size.  Each process locally compares
+     * its hint_str size to the global max, and makes sure that this
+     * comparison is successful on all processes. */
+    mpi_errno =
+        MPID_Allreduce(&hint_str_size, &hint_str_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    hint_str_equal = (hint_str_size == hint_str_size_max);
+
+    mpi_errno =
+        MPID_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
+                       comm_ptr, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (!hint_str_equal_global)
+        goto fn_exit;
+
+
+    /* Now that the sizes of the hint_strs match, check to make sure
+     * the actual hint_strs themselves are the equal */
+    hint_str_global = (char *) MPL_malloc(strlen(hint_str), MPL_MEM_OTHER);
+
+    mpi_errno =
+        MPID_Allreduce(hint_str, hint_str_global, strlen(hint_str), MPI_CHAR,
+                       MPI_MAX, comm_ptr, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    hint_str_equal = !memcmp(hint_str, hint_str_global, strlen(hint_str));
+
+    mpi_errno =
+        MPID_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
+                       comm_ptr, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPL_free(hint_str_global);
+
+    *info_args_are_equal = hint_str_equal_global;
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
