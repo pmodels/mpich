@@ -169,10 +169,10 @@ int MPIR_Type_create_subarray_impl(int ndims, const int array_of_sizes[],
     goto fn_exit;
 }
 
-int MPIR_Type_create_subarray_c_impl(int ndims, const MPI_Aint array_of_sizes[],
-                                     const MPI_Aint array_of_subsizes[],
-                                     const MPI_Aint array_of_starts[], int order,
-                                     MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_create_subarray_large_impl(int ndims, const MPI_Aint array_of_sizes[],
+                                         const MPI_Aint array_of_subsizes[],
+                                         const MPI_Aint array_of_starts[], int order,
+                                         MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
 

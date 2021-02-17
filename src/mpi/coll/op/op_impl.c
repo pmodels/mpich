@@ -76,7 +76,7 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPIR_Op ** p_o
     goto fn_exit;
 }
 
-int MPIR_Op_create_c_impl(MPI_User_function_c * user_fn, int commute, MPIR_Op ** p_op_ptr)
+int MPIR_Op_create_large_impl(MPI_User_function_c * user_fn, int commute, MPIR_Op ** p_op_ptr)
 {
     return MPIR_Op_create_impl((void *) user_fn, commute, p_op_ptr);
 }

@@ -1087,7 +1087,7 @@ def push_impl_decl(func, impl_name=None):
 
     if func['_map_type'] == "BIG":
         # add suffix to differentiate
-        impl_name = re.sub(r'_impl$', '_c_impl', impl_name)
+        impl_name = re.sub(r'_impl$', '_large_impl', impl_name)
 
     if func['_impl_param_list']:
         params = ', '.join(func['_impl_param_list'])
@@ -1270,7 +1270,7 @@ def dump_body_impl(func, prefix='mpir'):
 
     impl = func['name']
     if func['_map_type'] == "BIG" and func['_poly_impl'] == "separate":
-        impl += '_c'
+        impl += '_large'
     if prefix == 'mpid':
         impl = re.sub(r'^MPIX?_', 'MPID_', impl)
     else:
