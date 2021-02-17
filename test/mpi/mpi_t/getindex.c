@@ -4,6 +4,7 @@
  */
 
 /* Test MPI_T_xxx_get_index() for cvars, pvars and categories.
+ * 2021-02-17: added events
  */
 #include <stdio.h>
 #include "mpi.h"
@@ -84,6 +85,30 @@ int main(int argc, char *argv[])
     errno = MPI_T_category_get_index("AN INVALID CATEGORY NAME FOR TEST", &cat_index);
     if (errno != MPI_T_ERR_INVALID_NAME)
         errs++;
+
+#if MTEST_HAVE_MIN_MPI_VERSION(4,0)
+    /* Test MPI_T_event_get_index with both valid and bogus names */
+    int num_events;
+    int verbosity;
+    int bind;
+    int event_index;
+    MPI_T_event_get_num(&num_events);
+    if (verbose)
+        fprintf(stdout, "%d MPI_T events\n", num_events);
+    for (i = 0; i < num_events; i++) {
+        namelen = sizeof(name);
+        MPI_T_event_get_info(i, name, &namelen, &verbosity, NULL, NULL, NULL, NULL, NULL, NULL, 0,
+                             &bind);
+        if (namelen <= 128) {
+            errno = MPI_T_event_get_index(name, &event_index);
+            if (errno != MPI_SUCCESS || event_index != i)
+                errs++;
+        }
+    }
+    errno = MPI_T_event_get_index("AN INVALID EVENT NAME FOR TEST", &event_index);
+    if (errno != MPI_T_ERR_INVALID_NAME)
+        errs++;
+#endif
 
     MPI_T_finalize();
     MTest_Finalize(errs);
