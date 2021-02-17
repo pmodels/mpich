@@ -370,7 +370,7 @@ int MPIR_Type_contiguous_impl(int count, MPI_Datatype oldtype, MPI_Datatype * ne
     goto fn_exit;
 }
 
-int MPIR_Type_contiguous_c_impl(MPI_Aint count, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_contiguous_large_impl(MPI_Aint count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *new_dtp;
@@ -428,8 +428,8 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
     goto fn_exit;
 }
 
-int MPIR_Type_vector_c_impl(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
-                            MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_vector_large_impl(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                                MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -484,8 +484,8 @@ int MPIR_Type_create_hvector_impl(int count, int blocklength, MPI_Aint stride,
     goto fn_exit;
 }
 
-int MPIR_Type_create_hvector_c_impl(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
-                                    MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_create_hvector_large_impl(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
+                                        MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -560,9 +560,9 @@ int MPIR_Type_create_indexed_block_impl(int count,
     goto fn_exit;
 }
 
-int MPIR_Type_create_indexed_block_c_impl(MPI_Aint count, MPI_Aint blocklength,
-                                          const MPI_Aint array_of_displacements[],
-                                          MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_create_indexed_block_large_impl(MPI_Aint count, MPI_Aint blocklength,
+                                              const MPI_Aint array_of_displacements[],
+                                              MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -627,9 +627,9 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
     goto fn_exit;
 }
 
-int MPIR_Type_create_hindexed_block_c_impl(MPI_Aint count, MPI_Aint blocklength,
-                                           const MPI_Aint array_of_displacements[],
-                                           MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_create_hindexed_block_large_impl(MPI_Aint count, MPI_Aint blocklength,
+                                               const MPI_Aint array_of_displacements[],
+                                               MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -718,10 +718,10 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
     goto fn_exit;
 }
 
-int MPIR_Type_indexed_c_impl(MPI_Aint count,
-                             const MPI_Aint * array_of_blocklengths,
-                             const MPI_Aint * array_of_displacements,
-                             MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_indexed_large_impl(MPI_Aint count,
+                                 const MPI_Aint * array_of_blocklengths,
+                                 const MPI_Aint * array_of_displacements,
+                                 MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -805,10 +805,10 @@ int MPIR_Type_create_hindexed_impl(int count, const int array_of_blocklengths[],
     goto fn_exit;
 }
 
-int MPIR_Type_create_hindexed_c_impl(MPI_Aint count,
-                                     const MPI_Aint array_of_blocklengths[],
-                                     const MPI_Aint array_of_displacements[],
-                                     MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_create_hindexed_large_impl(MPI_Aint count,
+                                         const MPI_Aint array_of_blocklengths[],
+                                         const MPI_Aint array_of_displacements[],
+                                         MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -842,10 +842,10 @@ int MPIR_Type_create_hindexed_c_impl(MPI_Aint count,
     goto fn_exit;
 }
 
-int MPIR_Type_create_struct_c_impl(MPI_Aint count,
-                                   const MPI_Aint * array_of_blocklengths,
-                                   const MPI_Aint * array_of_displacements,
-                                   const MPI_Datatype * array_of_types, MPI_Datatype * newtype)
+int MPIR_Type_create_struct_large_impl(MPI_Aint count,
+                                       const MPI_Aint * array_of_blocklengths,
+                                       const MPI_Aint * array_of_displacements,
+                                       const MPI_Datatype * array_of_types, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -1004,8 +1004,8 @@ int MPIR_Type_create_resized_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint ex
     goto fn_exit;
 }
 
-int MPIR_Type_create_resized_c_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
-                                    MPI_Datatype * newtype)
+int MPIR_Type_create_resized_large_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
+                                        MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -1031,7 +1031,7 @@ int MPIR_Type_create_resized_c_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint 
     goto fn_exit;
 }
 
-/* FIXME: replace this routine with MPIR_Type_contiguous_c_impl -- require yaksa large count support */
+/* FIXME: replace this routine with MPIR_Type_contiguous_large_impl -- require yaksa large count support */
 int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     /* to make 'count' fit MPI-3 type processing routines (which take integer

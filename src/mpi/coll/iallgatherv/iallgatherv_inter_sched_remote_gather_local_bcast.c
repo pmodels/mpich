@@ -70,7 +70,7 @@ int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(const void *sendbuf, 
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Type_indexed_c_impl(remote_size, recvcounts, displs, recvtype, &newtype);
+    mpi_errno = MPIR_Type_indexed_large_impl(remote_size, recvcounts, displs, recvtype, &newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Type_commit_impl(&newtype);

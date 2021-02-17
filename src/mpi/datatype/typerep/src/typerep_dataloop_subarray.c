@@ -22,18 +22,18 @@ int MPII_Typerep_convert_subarray(int ndims, MPI_Aint * array_of_sizes,
     if (order == MPI_ORDER_FORTRAN) {
         /* dimension 0 changes fastest */
         if (ndims == 1) {
-            mpi_errno = MPIR_Type_contiguous_c_impl(array_of_subsizes[0], oldtype, &tmp1);
+            mpi_errno = MPIR_Type_contiguous_large_impl(array_of_subsizes[0], oldtype, &tmp1);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            mpi_errno = MPIR_Type_vector_c_impl(array_of_subsizes[1], array_of_subsizes[0],
-                                                array_of_sizes[0], oldtype, &tmp1);
+            mpi_errno = MPIR_Type_vector_large_impl(array_of_subsizes[1], array_of_subsizes[0],
+                                                    array_of_sizes[0], oldtype, &tmp1);
             MPIR_ERR_CHECK(mpi_errno);
 
             size = (MPI_Aint) (array_of_sizes[0]) * extent;
             for (i = 2; i < ndims; i++) {
                 size *= (MPI_Aint) (array_of_sizes[i - 1]);
                 mpi_errno =
-                    MPIR_Type_create_hvector_c_impl(array_of_subsizes[i], 1, size, tmp1, &tmp2);
+                    MPIR_Type_create_hvector_large_impl(array_of_subsizes[i], 1, size, tmp1, &tmp2);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_Type_free_impl(&tmp1);
                 tmp1 = tmp2;
@@ -51,19 +51,19 @@ int MPII_Typerep_convert_subarray(int ndims, MPI_Aint * array_of_sizes,
     } else {    /* order == MPI_ORDER_C */
         /* dimension ndims-1 changes fastest */
         if (ndims == 1) {
-            mpi_errno = MPIR_Type_contiguous_c_impl(array_of_subsizes[0], oldtype, &tmp1);
+            mpi_errno = MPIR_Type_contiguous_large_impl(array_of_subsizes[0], oldtype, &tmp1);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            mpi_errno = MPIR_Type_vector_c_impl(array_of_subsizes[ndims - 2],
-                                                array_of_subsizes[ndims - 1],
-                                                array_of_sizes[ndims - 1], oldtype, &tmp1);
+            mpi_errno = MPIR_Type_vector_large_impl(array_of_subsizes[ndims - 2],
+                                                    array_of_subsizes[ndims - 1],
+                                                    array_of_sizes[ndims - 1], oldtype, &tmp1);
             MPIR_ERR_CHECK(mpi_errno);
 
             size = (MPI_Aint) (array_of_sizes[ndims - 1]) * extent;
             for (i = ndims - 3; i >= 0; i--) {
                 size *= (MPI_Aint) (array_of_sizes[i + 1]);
                 mpi_errno =
-                    MPIR_Type_create_hvector_c_impl(array_of_subsizes[i], 1, size, tmp1, &tmp2);
+                    MPIR_Type_create_hvector_large_impl(array_of_subsizes[i], 1, size, tmp1, &tmp2);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_Type_free_impl(&tmp1);
                 tmp1 = tmp2;
@@ -91,7 +91,7 @@ int MPII_Typerep_convert_subarray(int ndims, MPI_Aint * array_of_sizes,
     types[1] = tmp1;
     types[2] = MPI_UB;
 
-    mpi_errno = MPIR_Type_create_struct_c_impl(3, blklens, disps, types, newtype);
+    mpi_errno = MPIR_Type_create_struct_large_impl(3, blklens, disps, types, newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Type_free_impl(&tmp1);

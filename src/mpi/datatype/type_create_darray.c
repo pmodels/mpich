@@ -504,10 +504,11 @@ int MPIR_Type_create_darray_impl(int size, int rank, int ndims,
     goto fn_exit;
 }
 
-int MPIR_Type_create_darray_c_impl(int size, int rank, int ndims,
-                                   const MPI_Aint array_of_gsizes[], const int array_of_distribs[],
-                                   const int array_of_dargs[], const int array_of_psizes[],
-                                   int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPIR_Type_create_darray_large_impl(int size, int rank, int ndims,
+                                       const MPI_Aint array_of_gsizes[],
+                                       const int array_of_distribs[], const int array_of_dargs[],
+                                       const int array_of_psizes[], int order, MPI_Datatype oldtype,
+                                       MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
 
