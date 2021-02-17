@@ -226,7 +226,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     MPIR_ERR_CHECK(mpi_errno);
 
     if (dtype != MPI_PACKED)
-        MPIR_Pack_size_impl(count, dtype, &packsize);
+        MPIR_Pack_size(count, dtype, &packsize);
     else
         packsize = count;
 

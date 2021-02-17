@@ -64,9 +64,6 @@ MPI_Get_count:
     size of 'datatype' (so that 'count' would not be integral), a 'count' of
     'MPI_UNDEFINED' is returned instead.
 */
-{
-    MPIR_Get_count_impl(status, datatype, &count_c);
-}
 
 MPI_Get_elements:
     .desc: Returns the number of basic elements
@@ -119,14 +116,6 @@ MPI_Pack:
     the communicator that will be subsequently used for sending the packed
     message.
 */
-{
-    MPI_Aint actual_pack_bytes;
-    void *buf = (void *) ((char *) outbuf + position_c);
-    mpi_errno = MPIR_Typerep_pack(inbuf, incount, datatype, 0, buf, outsize, &actual_pack_bytes);
-    if (mpi_errno)
-        goto fn_fail;
-    position_c += actual_pack_bytes;
-}
 
 MPI_Pack_external:
     .desc: Packs a datatype into contiguous memory, using the external32 format
@@ -136,21 +125,10 @@ MPI_Pack_external:
         goto fn_exit;
     }
 }
-{
-    MPI_Aint actual_pack_bytes;
-    void *buf = (void *) ((char *) outbuf + position_c);
-    mpi_errno = MPIR_Typerep_pack_external(inbuf, incount, datatype, buf, &actual_pack_bytes);
-    if (mpi_errno)
-        goto fn_fail;
-    position_c += actual_pack_bytes;
-}
 
 MPI_Pack_external_size:
     .desc: Returns the upper bound on the amount of space needed to pack a message using MPI_Pack_external.
     .poly_impl: use_aint
-{
-    size_c = (MPI_Aint) incount *(MPI_Aint) MPIR_Typerep_size_external32(datatype);
-}
 
 MPI_Pack_size:
     .desc: Returns the upper bound on the amount of space needed to pack a message
@@ -161,23 +139,11 @@ MPI_Pack_size:
     applies to both 'MPI_Pack' and 'MPI_Unpack'.  That is, the value 'size' is
     the maximum that is needed by either 'MPI_Pack' or 'MPI_Unpack'.
 */
-{
-    MPIR_Pack_size_impl(incount, datatype, &size_c);
-}
 
 MPI_Unpack:
     .desc: Unpack a buffer according to a datatype into contiguous memory
     .seealso: MPI_Pack, MPI_Pack_size
     .poly_impl: use_aint
-{
-    MPI_Aint actual_unpack_bytes;
-    void *buf = (void *) ((char *) inbuf + position_c);
-    mpi_errno = MPIR_Typerep_unpack(buf, insize, outbuf, outcount, datatype, 0, &actual_unpack_bytes);
-    if (mpi_errno)
-        goto fn_fail;
-
-    position_c += actual_unpack_bytes;
-}
 
 MPI_Unpack_external:
     .desc: Unpack a buffer (packed with MPI_Pack_external) according to a datatype into contiguous memory
@@ -186,14 +152,6 @@ MPI_Unpack_external:
     if (insize == 0) {
         goto fn_exit;
     }
-}
-{
-    MPI_Aint actual_unpack_bytes;
-    void *buf = (void *) ((char *) inbuf + position_c);
-    mpi_errno = MPIR_Typerep_unpack_external(buf, outbuf, outcount, datatype, &actual_unpack_bytes);
-    if (mpi_errno)
-        goto fn_fail;
-    position_c += actual_unpack_bytes;
 }
 
 MPI_Register_datarep: not_implemented
@@ -309,15 +267,7 @@ MPI_Type_get_envelope:
 MPI_Type_get_extent:
     .desc: Get the lower bound and extent for a Datatype
     .skip: global_cs
-{
-    MPIR_Type_get_extent_impl(datatype, lb, extent);
-}
-{ -- large_count --
-    MPI_Aint lb_c, extent_c;
-    MPIR_Type_get_extent_impl(datatype, &lb_c, &extent_c);
-    *lb = lb_c;
-    *extent = extent_c;
-}
+    .poly_impl: use_aint
 
 MPI_Type_get_extent_x:
     .desc: Get the lower bound and extent as MPI_Count values for a datatype
@@ -329,12 +279,7 @@ MPI_Type_get_extent_x:
 MPI_Type_get_true_extent:
     .desc: Get the true lower bound and extent for a datatype
     .skip: global_cs
-{
-    MPIR_Type_get_true_extent_impl(datatype, true_lb, true_extent);
-}
-{ -- large_count --
-    MPIR_Type_get_true_extent_x_impl(datatype, true_lb, true_extent);
-}
+    .poly_impl: use_aint
 
 MPI_Type_get_true_extent_x:
     .desc: Get the true lower bound and extent as MPI_Count values for a datatype
@@ -347,12 +292,6 @@ MPI_Type_size:
     .desc: Return the number of bytes occupied by entries in the datatype
     .skip: global_cs
     .poly_impl: use_aint
-{
-    mpi_errno = MPIR_Type_size_x_impl(datatype, &size_c);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Assert(size_c >= 0);
-}
 
 MPI_Type_size_x:
     .desc: Return the number of bytes occupied by entries in the datatype

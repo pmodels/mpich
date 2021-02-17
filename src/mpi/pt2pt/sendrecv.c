@@ -105,7 +105,7 @@ int MPIR_Sendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SENDRECV_REPLACE);
 
     if (count > 0 && dest != MPI_PROC_NULL) {
-        MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);
+        MPIR_Pack_size(count, datatype, &tmpbuf_size);
 
         MPIR_CHKLMEM_MALLOC_ORJUMP(tmpbuf, void *, tmpbuf_size, mpi_errno,
                                    "temporary send buffer", MPL_MEM_BUFFER);
@@ -245,7 +245,7 @@ int MPIR_Isendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int
     if (count > 0 && dest != MPI_PROC_NULL) {
         MPI_Aint tmpbuf_size = 0;
         MPI_Aint actual_pack_bytes;
-        MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);
+        MPIR_Pack_size(count, datatype, &tmpbuf_size);
 
         tmpbuf = MPL_malloc(tmpbuf_size, MPL_MEM_BUFFER);
         if (!tmpbuf) {

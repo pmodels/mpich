@@ -575,13 +575,9 @@ int MPIR_Get_elements_x_impl(MPI_Count * bytes, MPI_Datatype datatype, MPI_Count
 void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * extent);
 void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb,
                                       MPI_Count * true_extent);
-void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_Aint * count);
 int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype old_type, MPI_Datatype * new_type_p);
-void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * extent);
-void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
-                                    MPI_Aint * true_extent);
 void MPIR_Type_free_impl(MPI_Datatype * datatype);
-void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size);
+void MPIR_Pack_size(MPI_Aint incount, MPI_Datatype datatype, MPI_Aint * size);
 void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement);
 
 /* Datatype functions */
