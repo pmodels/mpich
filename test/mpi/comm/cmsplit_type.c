@@ -55,6 +55,63 @@ int main(int argc, char *argv[])
         MPI_Comm_free(&comm);
     }
 
+    /* Check to see if MPI_COMM_TYPE_HW_GUIDED works correctly */
+    for (i = 0; split_topo[i]; i++) {
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "mpi_hw_resource_type", split_topo[i]);
+        int ret;
+        ret = MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_GUIDED, 0, info, &comm);
+        /* result will depend on platform and process bindings, just check returns */
+        if (ret != MPI_SUCCESS) {
+            printf("MPI_COMM_TYPE_HW_GUIDED (%s) failed\n", split_topo[i]);
+            errs++;
+        } else if (comm != MPI_COMM_NULL) {
+            MPI_Comm_free(&comm);
+        }
+        MPI_Info_free(&info);
+    }
+
+    /* Test MPI_COMM_TYPE_HW_GUIDED: pass MPI_INFO_NULL, it must return MPI_COMM_NULL. */
+    info = MPI_INFO_NULL;
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_GUIDED, 0, info, &comm);
+    if (comm != MPI_COMM_NULL) {
+        printf("MPI_COMM_TYPE_HW_GUIDED with MPI_INFO_NULL didn't return MPI_COMM_NULL\n");
+        errs++;
+        MPI_Comm_free(&comm);
+    }
+
+    /* Test MPI_COMM_TYPE_HW_GUIDED: info without correct key, it must return MPI_COMM_NULL. */
+    MPI_Info_create(&info);
+    /* note: shmem_topo is the wrong key for MPI_COMM_TYPE_HW_GUIDED */
+    MPI_Info_set(info, "shmem_topo", split_topo[0]);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_GUIDED, 0, info, &comm);
+    if (comm != MPI_COMM_NULL) {
+        printf("MPI_COMM_TYPE_HW_GUIDED without correct key didn't return MPI_COMM_NULL\n");
+        errs++;
+        MPI_Comm_free(&comm);
+    }
+    MPI_Info_free(&info);
+
+    /* Check to see if MPI_COMM_TYPE_HW_UNGUIDED works correctly */
+    MPI_Info_create(&info);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_UNGUIDED, 0, info, &comm);
+    if (comm != MPI_COMM_NULL) {
+        int newsize;
+        MPI_Comm_size(comm, &newsize);
+        if (!(newsize < world_size)) {
+            printf("MPI_COMM_TYPE_HW_UNGUIDED: Expected comm to be a proper sub communicator\n");
+            errs++;
+        }
+        char resource_type[100] = "";
+        int has_key = 0;
+        MPI_Info_get(info, "mpi_hw_resource_type", 100, resource_type, &has_key);
+        if (!has_key || strlen(resource_type) == 0) {
+            printf("MPI_COMM_TYPE_HW_UNGUIDED: info for mpi_hw_resource_type not returned\n");
+            errs++;
+        }
+
+        MPI_Comm_free(&comm);
+    }
 
     /* test for topology hints: pass a valid info value, but do not
      * expect that the MPI implementation will respect it.  */
