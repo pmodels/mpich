@@ -4,12 +4,12 @@
  */
 
 #include "mpiimpl.h"
+#include "mpicomm.h"
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
 
 static int node_split(MPIR_Comm * comm_ptr, int key, const char *hint_str,
                       MPIR_Comm ** newcomm_ptr);
-static int compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info_args_are_equal);
 
 int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
                          MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
@@ -163,7 +163,8 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
         hint_str[0] = '\0';
     }
 
-    mpi_errno = compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
+    /* make sure all processes are using the same hint_str */
+    mpi_errno = MPII_compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
 
     MPIR_ERR_CHECK(mpi_errno);
 
