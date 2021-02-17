@@ -451,6 +451,8 @@ be in the range 0 to %d
 **assert %d:Invalid assert argument (%d)
 **locktype:Invalid locktype argument
 **locktype %d:Invalid locktype argument (%d)
+**splittype:Invalid split_type argument
+**splittype %d:Invalid split_type argument (%d)
 **winunlockrank:Invalid rank argument
 **winunlockrank %d %d:Invalid rank argument %d, should be %d
 **nomemreq:failure occurred while allocating memory for a request object

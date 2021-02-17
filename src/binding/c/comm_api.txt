@@ -189,6 +189,9 @@ MPI_Comm_split_type:
     Notes:
       The 'split_type' must be non-negative or 'MPI_UNDEFINED'.
 */
+{ -- error_check --
+    CHECKENUM: split_type, splittype, MPI_UNDEFINED MPI_COMM_TYPE_SHARED MPI_COMM_TYPE_HW_GUIDED MPI_COMM_TYPE_HW_UNGUIDED MPIX_COMM_TYPE_NEIGHBORHOOD
+}
 
 MPI_Comm_test_inter:
     .desc: Tests to see if a comm is an inter-communicator
