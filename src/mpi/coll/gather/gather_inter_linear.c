@@ -17,6 +17,7 @@ int MPIR_Gather_inter_linear(const void *sendbuf, int sendcount, MPI_Datatype se
                              void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                              MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
+     printf("MPIR_Gather_inter_linear used \n");
     int remote_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int i;

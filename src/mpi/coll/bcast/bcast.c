@@ -128,6 +128,7 @@ cvars:
 */
 
 
+
 int MPIR_Bcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int root,
                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
@@ -251,6 +252,37 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
                MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#ifdef HAVE_ERROR_CHECKING
+    int min_count, max_count, test_count, comm_size;
+    int * all_lengths;
+    int coll_length_flag = 0;
+
+    comm_size = comm_ptr->local_size;
+    all_lengths = (int*)malloc(comm_size*sizeof(int));
+    test_count = count * sizeof(datatype);
+    mpi_errno = MPIR_Gather_impl(&test_count, 1, MPI_INT,
+                        all_lengths, 1, MPI_INT, root,
+                        comm_ptr, errflag);
+
+    if(comm_ptr->rank == root){
+	    for(int i = 0; i < comm_size; ++i){
+			if(all_lengths[i] != test_count){
+				coll_length_flag = 1;
+			}
+	    }
+	}
+
+	mpi_errno = MPIR_Bcast_impl(&coll_length_flag, 1, MPI_INT, root,
+                        comm_ptr, errflag);
+
+	if (coll_length_flag && (*errflag == MPIR_ERR_NONE)){
+		*errflag = MPIR_ERR_OTHER;
+		MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
+		    "**collective_size_mismatch",
+		    "**collective_size_mismatch %d %d", min_count, max_count);
+	}
+#endif
 
     if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
         ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&

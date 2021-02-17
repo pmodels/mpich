@@ -41,6 +41,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
                                void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
+   // printf("MPIR_Gather_intra_binomial used \n");
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -52,6 +53,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
     MPI_Aint tmp_buf_size;
     void *tmp_buf = NULL;
     MPI_Status status;
+    MPI_Status *status_p;
     MPI_Aint extent = 0;        /* Datatype extent */
     int blocks[2];
     int displs[2];
@@ -60,7 +62,13 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
     int copy_offset = 0, copy_blks = 0;
     MPIR_CHKLMEM_DECL(1);
 
-
+#ifdef HAVE_ERROR_CHECKING
+    status_p = &status;
+    MPI_Aint recvd_size;
+#else
+    status_p = MPI_STATUS_IGNORE;
+#endif
+ 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
@@ -156,6 +164,8 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
                             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                         }
+
+ 
                     } else if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
                         /* small transfer size case. cast ok */
                         MPIR_Assert(recvblks * nbytes == (int) (recvblks * nbytes));
@@ -171,6 +181,8 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
                             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                         }
+
+
                         copy_offset = rank + mask;
                         copy_blks = recvblks;
                     } else {

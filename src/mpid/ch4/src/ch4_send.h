@@ -22,16 +22,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISEND_UNSAFE);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
+    //printf("DIRECT NETMOD \n");
     mpi_errno =
         MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
 #else
+        //printf("Not DIRECT NETMOD \n");
     int r;
-    if ((r = MPIDI_av_is_local(av)))
+    if ((r = MPIDI_av_is_local(av))){
         mpi_errno =
             MPIDI_SHM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
-    else
+            //printf("SHM \n");
+    }
+    else{
         mpi_errno =
             MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
+            //printf("NM \n");
+    }
     if (mpi_errno == MPI_SUCCESS)
         MPIDI_REQUEST(*request, is_local) = r;
 #endif
@@ -98,6 +104,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_unsafe(const void *buf,
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, av, req);
+    //printf("Unsafe netmod \n");
 #else
     int r;
     if ((r = MPIDI_av_is_local(av)))
@@ -109,6 +116,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_unsafe(const void *buf,
 
     if (mpi_errno == MPI_SUCCESS)
         MPIDI_REQUEST(*req, is_local) = r;
+    //printf("Unsafe no netmod \n");
 #endif
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -126,21 +134,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
                                               MPIR_Comm * comm, int context_offset,
                                               MPIDI_av_entry_t * av, MPIR_Request ** req)
 {
+
     int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISEND_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISEND_SAFE);
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
+    printf("Work queues uesed.\n");
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     *(req) = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, 0);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+
     MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
+ 
     MPIDI_workq_pt2pt_enqueue(ISEND, buf, NULL /*recv_buf */ , count, datatype,
                               rank, tag, comm, context_offset, av,
                               NULL /*status */ , *req, NULL /*flag */ ,
                               NULL /*message */ , NULL /*processed */);
+    
 #else
+    printf("Work queues unuesed.\n");
     *(req) = NULL;
     mpi_errno = MPIDI_isend_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req);
 #endif
@@ -162,19 +179,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_safe(const void *buf,
                                                    MPIDI_av_entry_t * av, MPIR_Request ** req,
                                                    MPIR_Errflag_t * errflag)
 {
+
     int mpi_errno = MPI_SUCCESS;
+
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISEND_COLL_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISEND_COLL_SAFE);
-
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     *(req) = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, 0);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+  
     MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+   
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    
     MPIDI_workq_csend_enqueue(ICSEND, buf, count, datatype, rank, tag, comm,
                               context_offset, av, *req, errflag);
+
+	
+	
 #else
     *(req) = NULL;
     mpi_errno = MPIDI_isend_coll_unsafe(buf, count, datatype, rank, tag, comm,

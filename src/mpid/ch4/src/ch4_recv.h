@@ -73,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av,
-                                   request, NULL);
+                                   request, NULL);    
 #else
     if (unlikely(rank == MPI_ANY_SOURCE)) {
         mpi_errno = anysource_irecv(buf, count, datatype, rank, tag, comm, context_offset,

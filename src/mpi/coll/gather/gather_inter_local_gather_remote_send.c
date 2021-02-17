@@ -18,6 +18,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
                                                MPI_Datatype recvtype, int root,
                                                MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
+    printf("MPIR_Gather_inter_local_gather_remote_send used \n");
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;

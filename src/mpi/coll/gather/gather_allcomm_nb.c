@@ -9,6 +9,7 @@ int MPIR_Gather_allcomm_nb(const void *sendbuf, int sendcount, MPI_Datatype send
                            int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                            MPIR_Errflag_t * errflag)
 {
+  printf("MPIR_Gather_allcomm_nb used \n");
     int mpi_errno = MPI_SUCCESS;
     MPI_Request req = MPI_REQUEST_NULL;
     MPIR_Request *req_ptr = NULL;

@@ -130,9 +130,9 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
         jnext = (comm_size + jnext - 1) % comm_size;
     }
 
-#ifdef HAVE_ERROR_CHECKING
+//#ifdef HAVE_ERROR_CHECKING
     /* check that we received as much as we expected */
-    if (curr_size != nbytes) {
+/*    if (curr_size != nbytes) {
         if (*errflag == MPIR_ERR_NONE)
             *errflag = MPIR_ERR_OTHER;
         MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
@@ -141,7 +141,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
 #endif
-
+*/
     if (!is_contig) {
         if (rank != root) {
             mpi_errno = MPIR_Localcopy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype);

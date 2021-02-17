@@ -1,0 +1,132 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
+/* -- THIS FILE IS AUTO-GENERATED -- */
+
+#include "mpiimpl.h"
+
+/* -- Begin Profiling Symbol Block for routine MPI_T_pvar_get_info */
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_T_pvar_get_info = PMPI_T_pvar_get_info
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_T_pvar_get_info  MPI_T_pvar_get_info
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_T_pvar_get_info as PMPI_T_pvar_get_info
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class,
+                        MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len,
+                        int *bind, int *readonly, int *continuous, int *atomic)
+                         __attribute__ ((weak, alias("PMPI_T_pvar_get_info")));
+#endif
+/* -- End Profiling Symbol Block */
+
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines */
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_T_pvar_get_info
+#define MPI_T_pvar_get_info PMPI_T_pvar_get_info
+
+#endif
+
+/*@
+   MPI_T_pvar_get_info - Get the inforamtion about a performance variable
+
+Input/Output Parameters:
++ name_len - length of the string and/or buffer for name (integer)
+- desc_len - length of the string and/or buffer for desc (integer)
+
+Input Parameters:
+. pvar_index - index of the performance variable to be queried between $0$ and $num_pvar-1$ (integer)
+
+Output Parameters:
++ name - buffer to return the string containing the name of the performance variable (string)
+. verbosity - verbosity level of this variable (integer)
+. var_class - class of performance variable (integer)
+. datatype - mpi datatype of the information stored in the performance variable (handle)
+. enumtype - optional descriptor for enumeration information (handle)
+. desc - buffer to return the string containing a description of the performance variable (string)
+. bind - type of mpi object to which this variable must be bound (integer)
+. readonly - flag indicating whether the variable can be written/reset (integer)
+. continuous - flag indicating whether the variable can be started and stopped or is continuously active (integer)
+- atomic - flag indicating whether the variable can be atomically read and reset (integer)
+
+.N ThreadSafe
+
+.N Errors
+.N MPI_SUCCESS
+
+.N MPI_T_ERR_INVALID_INDEX
+.N MPI_T_ERR_NOT_INITIALIZED
+@*/
+
+int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class,
+                        MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len,
+                        int *bind, int *readonly, int *continuous, int *atomic)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_GET_INFO);
+
+    MPIT_ERRTEST_MPIT_INITIALIZED();
+
+    MPIR_T_THREAD_CS_ENTER();
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_GET_INFO);
+
+#ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+            MPIT_ERRTEST_CVAR_INDEX(pvar_index);
+        }
+        MPID_END_ERROR_CHECKS;
+    }
+#endif /* HAVE_ERROR_CHECKING */
+
+    /* ... body of routine ... */
+    pvar_table_entry_t *entry;
+    entry = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
+    if (!entry->active) {
+        mpi_errno = MPI_T_ERR_INVALID_INDEX;
+        goto fn_fail;
+    }
+
+    pvar_table_entry_t *info;
+    info = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
+
+    MPIR_T_strncpy(name, info->name, name_len);
+    MPIR_T_strncpy(desc, info->desc, desc_len);
+
+    if (verbosity != NULL)
+        *verbosity = info->verbosity;
+
+    if (var_class != NULL)
+        *var_class = info->varclass;
+
+    if (datatype != NULL)
+        *datatype = info->datatype;
+
+    if (enumtype != NULL)
+        *enumtype = info->enumtype;
+
+    if (bind != NULL)
+        *bind = info->bind;
+
+    if (readonly != NULL)
+        *readonly = info->flags & MPIR_T_PVAR_FLAG_READONLY;
+
+    if (continuous != NULL)
+        *continuous = info->flags & MPIR_T_PVAR_FLAG_CONTINUOUS;
+
+    if (atomic != NULL)
+        *atomic = info->flags & MPIR_T_PVAR_FLAG_ATOMIC;
+    /* ... end of body of routine ... */
+
+  fn_exit:
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_PVAR_GET_INFO);
+    MPIR_T_THREAD_CS_EXIT();
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}

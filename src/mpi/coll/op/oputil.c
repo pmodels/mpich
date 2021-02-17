@@ -24,6 +24,7 @@ static op_name_t mpi_ops[] = {
     {MPI_MINLOC, "minloc"},
     {MPI_MAXLOC, "maxloc"},
     {MPI_REPLACE, "replace"},
+    {MPI_EQUAL, "equal"},
     {MPI_NO_OP, "no_op"}
 };
 

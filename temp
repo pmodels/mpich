@@ -1,0 +1,513 @@
+./maint/local_python/binding_c.py:            G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_COMM, \"communicator\", mpi_errno);" % name)
+./maint/local_python/binding_c.py:            G.out.append("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {")
+./maint/local_python/binding_c.py:            G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_COMM, \"%s\", mpi_errno);" % (name, name))
+./maint/local_python/binding_c.py:    cond_intra = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM"
+./maint/local_python/binding_c.py:    cond_inter = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM"
+./maint/local_python/binding_c.py:    cond_intra = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM"
+./maint/local_python/binding_c.py:    cond_inter = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM"
+./maint/local_python/binding_c.py:        G.out.append("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {")
+./maint/local_python/binding_c.py:            G.out.append("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {")
+./maint/decode_handle:##   MPIR_COMM       = 0x1,
+./src/util/mpir_localproc.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/util/mpir_localproc.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/include/mpir_objects.h:    MPIR_COMM = 0x1,
+./src/include/mpir_comm.h:#ifndef MPIR_COMM_H_INCLUDED
+./src/include/mpir_comm.h:#define MPIR_COMM_H_INCLUDED
+./src/include/mpir_comm.h:    MPIR_COMM_KIND__INTRACOMM = 0,
+./src/include/mpir_comm.h:    MPIR_COMM_KIND__INTERCOMM = 1
+./src/include/mpir_comm.h:    MPIR_COMM_HIERARCHY_KIND__FLAT = 0, /* no hierarchy */
+./src/include/mpir_comm.h:    MPIR_COMM_HIERARCHY_KIND__PARENT = 1,       /* has subcommunicators */
+./src/include/mpir_comm.h:    MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS = 2,   /* is the subcomm for node roots */
+./src/include/mpir_comm.h:    MPIR_COMM_HIERARCHY_KIND__NODE = 3, /* is the subcomm for a node */
+./src/include/mpir_comm.h:    MPIR_COMM_HIERARCHY_KIND__SIZE      /* cardinality of this enum */
+./src/include/mpir_comm.h:    MPIR_COMM_MAP_TYPE__DUP,
+./src/include/mpir_comm.h:    MPIR_COMM_MAP_TYPE__IRREGULAR
+./src/include/mpir_comm.h:    MPIR_COMM_MAP_DIR__L2L,
+./src/include/mpir_comm.h:    MPIR_COMM_MAP_DIR__L2R,
+./src/include/mpir_comm.h:    MPIR_COMM_MAP_DIR__R2L,
+./src/include/mpir_comm.h:    MPIR_COMM_MAP_DIR__R2R
+./src/include/mpir_comm.h:#define MPIR_COMM_HINT_TYPE_BOOL 0
+./src/include/mpir_comm.h:#define MPIR_COMM_HINT_TYPE_INT  1
+./src/include/mpir_comm.h:#define MPIR_COMM_HINT_ATTR_LOCAL 0x1
+./src/include/mpir_comm.h:#define MPIR_COMM_HINT_MAX 100
+./src/include/mpir_comm.h:enum MPIR_COMM_HINT_PREDEFINED_t {
+./src/include/mpir_comm.h:    MPIR_COMM_HINT_INVALID = 0,
+./src/include/mpir_comm.h:    MPIR_COMM_HINT_NO_ANY_TAG,
+./src/include/mpir_comm.h:    MPIR_COMM_HINT_NO_ANY_SOURCE,
+./src/include/mpir_comm.h:    MPIR_COMM_HINT_EXACT_LENGTH,
+./src/include/mpir_comm.h:    MPIR_COMM_HINT_ALLOW_OVERTAKING,
+./src/include/mpir_comm.h:    MPIR_COMM_HINT_EAGER_THRESH,        /* ch3 */
+./src/include/mpir_comm.h:    MPIR_COMM_HINT_EAGAIN,      /* ch4:ofi */
+./src/include/mpir_comm.h:    MPIR_COMM_HINT_PREDEFINED_COUNT
+./src/include/mpir_comm.h:    MPIR_Comm_kind_t comm_kind; /* MPIR_COMM_KIND__INTRACOMM or MPIR_COMM_KIND__INTERCOMM */
+./src/include/mpir_comm.h:    int hints[MPIR_COMM_HINT_MAX];      /* Hints to the communicator
+./src/include/mpir_comm.h:#define MPIR_COMM_N_BUILTIN 3
+./src/include/mpir_comm.h:extern MPIR_Comm MPIR_Comm_builtin[MPIR_COMM_N_BUILTIN];
+./src/include/mpir_comm.h:#endif /* MPIR_COMM_H_INCLUDED */
+./src/include/mpir_err.h:    if ((comm_ptr)->comm_kind != MPIR_COMM_KIND__INTRACOMM) {           \
+./src/include/mpir_err.h:            MPIR_ERRTEST_VALID_HANDLE((comm_), MPIR_COMM, (err_), MPI_ERR_COMM, "**comm"); \
+./src/binding/c/attr/comm_set_attr.c:            MPIR_ERRTEST_KEYVAL(comm_keyval, MPIR_COMM, "communicator", mpi_errno);
+./src/binding/c/attr/comm_get_attr.c:            MPIR_ERRTEST_KEYVAL(comm_keyval, MPIR_COMM, "comm_keyval", mpi_errno);
+./src/binding/c/attr/comm_delete_attr.c:            MPIR_ERRTEST_KEYVAL(comm_keyval, MPIR_COMM, "communicator", mpi_errno);
+./src/binding/c/attr/comm_free_keyval.c:            MPIR_ERRTEST_KEYVAL(*comm_keyval, MPIR_COMM, "communicator", mpi_errno);
+./src/binding/c/comm/intercomm_create.c:                    if (peer_comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/binding/c/comm/comm_test_inter.c:    *flag = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/binding/c/comm_api.txt:    *flag = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/binding/c/comm_api.txt:            if (peer_comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/mpi/init/local_proc_attrs.c:    MPIR_Process.comm_world->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+./src/mpi/init/local_proc_attrs.c:    MPIR_Process.comm_self->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+./src/mpi/init/local_proc_attrs.c:    MPIR_Process.icomm_world->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+./src/mpi/errhan/errhan_impl.c:    errhan_ptr->kind = MPIR_COMM;
+./src/mpi/attr/attr_impl.c:    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (MPIR_COMM << 22);
+./src/mpi/attr/attr_impl.c:    keyval_ptr->kind = MPIR_COMM;
+./src/mpi/attr/attr_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_GET_ATTR);
+./src/mpi/attr/attr_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_GET_ATTR);
+./src/mpi/attr/attr_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_GET_ATTR);
+./src/mpi/coll/iallreduce.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+./src/mpi/coll/iallreduce.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count != 0 &&
+./src/mpi/coll/alltoallv/alltoallv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iscan/iscan.c:    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
+./src/mpi/coll/scatterv/scatterv_allcomm_linear.c:    if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
+./src/mpi/coll/scatterv/scatterv_allcomm_linear.c:        ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
+./src/mpi/coll/scatterv/scatterv_allcomm_linear.c:        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/coll/scatterv/scatterv_allcomm_linear.c:                if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
+./src/mpi/coll/scatterv/scatterv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/gather/gather.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ialltoall.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/mpi/coll/alltoallw/alltoallw.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/gatherv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/gatherv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/bcast.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iallreduce/iallreduce.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/coll/iallreduce/iallreduce.c:    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT && MPIR_Op_is_commutative(op)) {
+./src/mpi/coll/iallreduce/iallreduce.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iallreduce/iallreduce.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iallreduce/iallreduce.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iallreduce/iallreduce_inter_sched_remote_reduce_local_bcast.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpi/coll/barrier/barrier.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/neighbor_allgather/neighbor_allgather.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/allreduce.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/iscatterv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iscatterv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/ineighbor_alltoall/ineighbor_alltoall.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ineighbor_alltoall/ineighbor_alltoall.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/scatter/scatter.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/neighbor_alltoallw/neighbor_alltoallw.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/reduce.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/reduce.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/ireduce.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ibcast/ibcast_inter_sched_flat.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpi/coll/ibcast/ibcast.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/coll/ibcast/ibcast.c:    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
+./src/mpi/coll/ibcast/ibcast.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ibcast/ibcast.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/alltoall/alltoall.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/alltoallv.c:            int check_send = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/mpi/coll/alltoallv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/alltoallv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM && sendbuf == MPI_IN_PLACE) {
+./src/mpi/coll/reduce/reduce.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/neighbor_alltoall/neighbor_alltoall.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iallgather.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && recvbuf != MPI_IN_PLACE &&
+./src/mpi/coll/gather.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/gather.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/igatherv/igatherv_tsp_linear_algos.h:    if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
+./src/mpi/coll/igatherv/igatherv_tsp_linear_algos.h:        ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
+./src/mpi/coll/igatherv/igatherv_tsp_linear_algos.h:        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/coll/igatherv/igatherv_tsp_linear_algos.h:                if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
+./src/mpi/coll/igatherv/igatherv_allcomm_sched_linear.c:    if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
+./src/mpi/coll/igatherv/igatherv_allcomm_sched_linear.c:        ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
+./src/mpi/coll/igatherv/igatherv_allcomm_sched_linear.c:        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/coll/igatherv/igatherv_allcomm_sched_linear.c:                if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
+./src/mpi/coll/igatherv/igatherv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/igatherv/igatherv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/reduce_scatter.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/bcast/bcast.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ireduce_scatter_block.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && sendbuf != MPI_IN_PLACE &&
+./src/mpi/coll/ialltoallv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/mpi/coll/ireduce_scatter.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && sendbuf != MPI_IN_PLACE &&
+./src/mpi/coll/reduce_scatter_block.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/helper_fns.c:    context_offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
+./src/mpi/coll/helper_fns.c:    context_offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
+./src/mpi/coll/helper_fns.c:    context_offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
+./src/mpi/coll/helper_fns.c:    context_offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
+./src/mpi/coll/helper_fns.c:    context_offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
+./src/mpi/coll/helper_fns.c:    context_offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
+./src/mpi/coll/helper_fns.c:    context_id = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
+./src/mpi/coll/helper_fns.c:    context_id = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
+./src/mpi/coll/helper_fns.c:    context_id = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
+./src/mpi/coll/alltoallw.c:            check_send = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/mpi/coll/alltoallw.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM && sendbuf == MPI_IN_PLACE) {
+./src/mpi/coll/alltoallw.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ialltoallv/ialltoallv.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/coll/ialltoallv/ialltoallv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ialltoallv/ialltoallv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ialltoallv/ialltoallv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ialltoallv/ialltoallv_inter_sched_pairwise_exchange.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpi/coll/allgatherv/allgatherv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/allreduce_group/allreduce_group.c:    MPIR_ERR_CHKANDJUMP(comm_ptr->comm_kind != MPIR_COMM_KIND__INTRACOMM, mpi_errno, MPI_ERR_OTHER,
+./src/mpi/coll/igather/igather_intra_sched_binomial.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/coll/igather/igather.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/igather/igather.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ineighbor_allgather/ineighbor_allgather.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ineighbor_allgather/ineighbor_allgather.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iscatter.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iscatter.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/neighbor_allgatherv/neighbor_allgatherv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ireduce_scatter/ireduce_scatter.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ireduce_scatter/ireduce_scatter.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ireduce_scatter/ireduce_scatter.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/allgather.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/ineighbor_alltoallv/ineighbor_alltoallv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ineighbor_alltoallv/ineighbor_alltoallv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iallgather/iallgather.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iallgather/iallgather.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/gatherv/gatherv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/gatherv/gatherv_allcomm_linear.c:    if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
+./src/mpi/coll/gatherv/gatherv_allcomm_linear.c:        ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
+./src/mpi/coll/gatherv/gatherv_allcomm_linear.c:        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/coll/gatherv/gatherv_allcomm_linear.c:                if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
+./src/mpi/coll/ireduce/ireduce.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/coll/ireduce/ireduce.c:    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT && MPIR_Op_is_commutative(op)) {
+./src/mpi/coll/ireduce/ireduce.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ireduce/ireduce.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ireduce/ireduce_intra_sched_binomial.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/coll/ireduce/ireduce_intra_sched_smp.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/coll/ireduce/ireduce_inter_sched_local_reduce_remote_send.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpi/coll/alltoall.c:                if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/mpi/coll/alltoall.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/ineighbor_alltoallw/ineighbor_alltoallw.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ineighbor_alltoallw/ineighbor_alltoallw.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/allreduce/allreduce.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/reduce_scatter/reduce_scatter.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ineighbor_allgatherv/ineighbor_allgatherv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ineighbor_allgatherv/ineighbor_allgatherv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iallgatherv.c:                if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/mpi/coll/ialltoallw/ialltoallw.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ialltoallw/ialltoallw.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ialltoallw/ialltoallw.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/allgather/allgather.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/igather.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/igather.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/ibarrier/ibarrier_intra_sched_recursive_doubling.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/coll/ibarrier/ibarrier_inter_sched_bcast.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpi/coll/ibarrier/ibarrier.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ibarrier/ibarrier.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iscatter/iscatter.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iscatter/iscatter.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iscatterv/iscatterv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iscatterv/iscatterv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iscatterv/iscatterv_tsp_linear_algos.h:    if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
+./src/mpi/coll/iscatterv/iscatterv_tsp_linear_algos.h:        ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
+./src/mpi/coll/iscatterv/iscatterv_tsp_linear_algos.h:        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/coll/iscatterv/iscatterv_tsp_linear_algos.h:                if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
+./src/mpi/coll/iscatterv/iscatterv_allcomm_sched_linear.c:    if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
+./src/mpi/coll/iscatterv/iscatterv_allcomm_sched_linear.c:        ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
+./src/mpi/coll/iscatterv/iscatterv_allcomm_sched_linear.c:        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/coll/iscatterv/iscatterv_allcomm_sched_linear.c:                if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
+./src/mpi/coll/ialltoall/ialltoall.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/ialltoall/ialltoall.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/igatherv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/igatherv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/iallgatherv/iallgatherv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iallgatherv/iallgatherv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/iallgatherv/iallgatherv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/scatterv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/scatterv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/ialltoallw.c:                if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/mpi/coll/ialltoallw.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM && sendbuf == MPI_IN_PLACE) {
+./src/mpi/coll/allgatherv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+./src/mpi/coll/allgatherv.c:                if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/mpi/coll/allgatherv.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/coll/reduce_scatter_block/reduce_scatter_block.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/scatter.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/scatter.c:            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/coll/neighbor_alltoallv/neighbor_alltoallv.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/coll/src/csel.c:            if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__PARENT)
+./src/mpi/coll/src/csel.c:            else if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS)
+./src/mpi/coll/src/csel.c:            else if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__NODE)
+./src/mpi/coll/src/csel.c:            else if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__FLAT)
+./src/mpi/coll/src/csel.c:            tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__PARENT;
+./src/mpi/coll/src/csel.c:            tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS;
+./src/mpi/coll/src/csel.c:            tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__NODE;
+./src/mpi/coll/src/csel.c:            tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__FLAT;
+./src/mpi/coll/src/csel.c:            tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__SIZE;
+./src/mpi/coll/src/csel.c:                if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/coll/src/csel.c:                if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+./src/mpi/coll/src/csel.c:                if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__SIZE)
+./src/mpi/coll/src/csel.c:                if (coll_info.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+./src/mpi/coll/src/csel.c:                if (coll_info.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+./src/mpi/coll/src/csel.c:                if (coll_info.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+./src/mpi/coll/src/csel.c:                if (coll_info.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+./src/mpi/coll/src/csel.c:                if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/coll/src/csel.c:                if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+./src/mpi/coll/src/csel.c:                if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__SIZE)
+./src/mpi/comm/contextid.c:        MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/comm/contextid.c:    if (st->gcn_cid_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/comm/contextid.c:    if (gcn_cid_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/comm/contextid.c:                               s, MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/comm/contextid.c:                               s, MPIR_COMM_KIND__INTERCOMM);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_AGREE);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_AGREE);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_AGREE);
+./src/mpi/comm/comm_impl.c:    } else if (comm_ptr1->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
+./src/mpi/comm/comm_impl.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
+./src/mpi/comm/comm_impl.c:                            local_n, MPIR_COMM_MAP_DIR__L2L, NULL);
+./src/mpi/comm/comm_impl.c:    if (mapping_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/comm/comm_impl.c:                                remote_n, MPIR_COMM_MAP_DIR__R2R, NULL);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTRA);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_INTRA);
+./src/mpi/comm/comm_impl.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTRA);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTER);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_INTER);
+./src/mpi/comm/comm_impl.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTER);
+./src/mpi/comm/comm_impl.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/comm/comm_impl.c:        MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_GROUP);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_GROUP);
+./src/mpi/comm/comm_impl.c:    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_GROUP);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_GROUP_IMPL);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_GROUP_IMPL);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_GROUP_IMPL);
+./src/mpi/comm/comm_impl.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_SHRINK);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_SHRINK);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_SHRINK);
+./src/mpi/comm/comm_impl.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/comm/comm_impl.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/comm/comm_impl.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/comm/comm_impl.c:        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/comm/comm_impl.c:                                    new_size, MPIR_COMM_MAP_DIR__L2L, &mapper);
+./src/mpi/comm/comm_impl.c:                                    new_remote_size, MPIR_COMM_MAP_DIR__R2R, &mapper);
+./src/mpi/comm/comm_impl.c:                                    new_size, MPIR_COMM_MAP_DIR__L2L, &mapper);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
+./src/mpi/comm/comm_impl.c:    (*new_intercomm_ptr)->comm_kind = MPIR_COMM_KIND__INTERCOMM;
+./src/mpi/comm/comm_impl.c:    MPIR_Comm_map_dup(*new_intercomm_ptr, local_comm_ptr, MPIR_COMM_MAP_DIR__L2L);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
+./src/mpi/comm/comm_impl.c:        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__R2L);
+./src/mpi/comm/comm_impl.c:        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
+./src/mpi/comm/comm_impl.c:        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
+./src/mpi/comm/comm_impl.c:        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__R2L);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
+./src/mpi/comm/comm_impl.c:    (*new_intracomm_ptr)->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+./src/mpi/comm/comm_impl.c:    (*new_intracomm_ptr)->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+./src/mpi/comm/comm_impl.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
+./src/mpi/comm/commutil.c:MPIR_Comm MPIR_Comm_builtin[MPIR_COMM_N_BUILTIN];
+./src/mpi/comm/commutil.c:    MPIR_COMM,
+./src/mpi/comm/commutil.c:static struct MPIR_HINT MPIR_comm_hint_list[MPIR_COMM_HINT_MAX];
+./src/mpi/comm/commutil.c:static int next_comm_hint_index = MPIR_COMM_HINT_PREDEFINED_COUNT;
+./src/mpi/comm/commutil.c:        MPIR_Assert(idx < MPIR_COMM_HINT_MAX);
+./src/mpi/comm/commutil.c:        MPIR_Assert(idx > 0 && idx < MPIR_COMM_HINT_PREDEFINED_COUNT);
+./src/mpi/comm/commutil.c:    if (type == MPIR_COMM_HINT_TYPE_BOOL) {
+./src/mpi/comm/commutil.c:    } else if (type == MPIR_COMM_HINT_TYPE_INT) {
+./src/mpi/comm/commutil.c:    if (type == MPIR_COMM_HINT_TYPE_BOOL) {
+./src/mpi/comm/commutil.c:    } else if (type == MPIR_COMM_HINT_TYPE_INT) {
+./src/mpi/comm/commutil.c:    MPIR_Comm_register_hint(MPIR_COMM_HINT_NO_ANY_TAG, "mpi_assert_no_any_tag",
+./src/mpi/comm/commutil.c:                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+./src/mpi/comm/commutil.c:    MPIR_Comm_register_hint(MPIR_COMM_HINT_NO_ANY_SOURCE, "mpi_assert_no_any_source",
+./src/mpi/comm/commutil.c:                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+./src/mpi/comm/commutil.c:    MPIR_Comm_register_hint(MPIR_COMM_HINT_EXACT_LENGTH, "mpi_assert_exact_length",
+./src/mpi/comm/commutil.c:                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+./src/mpi/comm/commutil.c:    MPIR_Comm_register_hint(MPIR_COMM_HINT_ALLOW_OVERTAKING, "mpi_assert_allow_overtaking",
+./src/mpi/comm/commutil.c:                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+./src/mpi/comm/commutil.c:    comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE);
+./src/mpi/comm/commutil.c:    localcomm_ptr->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+./src/mpi/comm/commutil.c:    MPIR_Comm_map_dup(localcomm_ptr, intercomm_ptr, MPIR_COMM_MAP_DIR__L2L);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
+./src/mpi/comm/commutil.c:    mapper->type = MPIR_COMM_MAP_TYPE__IRREGULAR;
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
+./src/mpi/comm/commutil.c:    mapper->type = MPIR_COMM_MAP_TYPE__DUP;
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_FREE);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_MAP_FREE);
+./src/mpi/comm/commutil.c:        if (mapper->type == MPIR_COMM_MAP_TYPE__IRREGULAR && mapper->free_mapping)
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_MAP_FREE);
+./src/mpi/comm/commutil.c:    if (comm->comm_kind != MPIR_COMM_KIND__INTRACOMM) {
+./src/mpi/comm/commutil.c:    } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
+./src/mpi/comm/commutil.c:    } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS) {
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COMMIT_INTERNAL);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COMMIT_INTERNAL);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COMMIT_INTERNAL);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_SUBCOMMS);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_SUBCOMMS);
+./src/mpi/comm/commutil.c:        comm->node_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+./src/mpi/comm/commutil.c:        comm->node_comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__NODE;
+./src/mpi/comm/commutil.c:                                MPIR_COMM_MAP_DIR__L2L, NULL);
+./src/mpi/comm/commutil.c:        comm->node_roots_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+./src/mpi/comm/commutil.c:        comm->node_roots_comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS;
+./src/mpi/comm/commutil.c:                                MPIR_COMM_MAP_DIR__L2L, NULL);
+./src/mpi/comm/commutil.c:    comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_SUBCOMMS);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COMMIT);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COMMIT);
+./src/mpi/comm/commutil.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {  /*make sure this is not a subcomm */
+./src/mpi/comm/commutil.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !comm->tainted) {
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COMMIT);
+./src/mpi/comm/commutil.c:    return (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COPY);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COPY);
+./src/mpi/comm/commutil.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/comm/commutil.c:        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/comm/commutil.c:            MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
+./src/mpi/comm/commutil.c:            MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__R2R);
+./src/mpi/comm/commutil.c:        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/comm/commutil.c:            MPIR_Comm_map_irregular(newcomm_ptr, comm_ptr, NULL, size, MPIR_COMM_MAP_DIR__L2L,
+./src/mpi/comm/commutil.c:            MPIR_Comm_map_irregular(newcomm_ptr, comm_ptr, NULL, size, MPIR_COMM_MAP_DIR__R2R,
+./src/mpi/comm/commutil.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/comm/commutil.c:        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
+./src/mpi/comm/commutil.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COPY);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COPY_DATA);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COPY_DATA);
+./src/mpi/comm/commutil.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpi/comm/commutil.c:        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
+./src/mpi/comm/commutil.c:        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__R2R);
+./src/mpi/comm/commutil.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpi/comm/commutil.c:        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COPY_DATA);
+./src/mpi/comm/commutil.c:        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm_ptr->local_comm)
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_RELEASE_ALWAYS);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_RELEASE_ALWAYS);
+./src/mpi/comm/commutil.c:    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_RELEASE_ALWAYS);
+./src/mpi/group/grouputil.c:    int vsize = comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM ? comm_ptr->local_size :
+./src/mpi/debugger/dbgstub.c:    TYPE_MPIR_COMM = 1,
+./src/mpi/debugger/dbgstub.c:    TYPE_MPIR_COMM_LIST = 2,
+./src/mpi/debugger/dbgstub.c:static int knownTypesArray[] = { TYPE_UNKNOWN, TYPE_MPIR_COMM,
+./src/mpi/debugger/dbgstub.c:    TYPE_MPIR_COMM_LIST, TYPE_MPIDI_REQUEST,
+./src/mpi/debugger/dbgstub.c:        curType = TYPE_MPIR_COMM;
+./src/mpi/debugger/dbgstub.c:        curType = TYPE_MPIR_COMM_LIST;
+./src/mpi/debugger/dbgstub.c:        case TYPE_MPIR_COMM:
+./src/mpi/debugger/dbgstub.c:        case TYPE_MPIR_COMM_LIST:
+./src/mpid/ch3/include/mpidimpl.h:        if ((comm)->hints[MPIR_COMM_HINT_EAGER_THRESH] != -1)                     \
+./src/mpid/ch3/include/mpidimpl.h:            *(eager_threshold_p) = (comm)->hints[MPIR_COMM_HINT_EAGER_THRESH];    \
+./src/mpid/ch3/src/mpid_irsend.c:    if (rank == comm->rank && comm->comm_kind != MPIR_COMM_KIND__INTERCOMM)
+./src/mpid/ch3/src/mpid_rsend.c:    if (rank == comm->rank && comm->comm_kind != MPIR_COMM_KIND__INTERCOMM)
+./src/mpid/ch3/src/mpid_ssend.c:    if (rank == comm->rank && comm->comm_kind != MPIR_COMM_KIND__INTERCOMM)
+./src/mpid/ch3/src/mpid_init.c:    MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGER_THRESH, "eager_rendezvous_threshold",
+./src/mpid/ch3/src/mpid_init.c:                            NULL, MPIR_COMM_HINT_TYPE_INT, 0);
+./src/mpid/ch3/src/ch3u_comm.c:    if (mapper->type == MPIR_COMM_MAP_TYPE__DUP && src_comm_size == vcrt_size) {
+./src/mpid/ch3/src/ch3u_comm.c:    else if (mapper->type == MPIR_COMM_MAP_TYPE__IRREGULAR &&
+./src/mpid/ch3/src/ch3u_comm.c:    if (mapper->type == MPIR_COMM_MAP_TYPE__DUP) {
+./src/mpid/ch3/src/ch3u_comm.c:    if (map.type == MPIR_COMM_MAP_TYPE__IRREGULAR)
+./src/mpid/ch3/src/ch3u_comm.c:    else if (map.dir == MPIR_COMM_MAP_DIR__L2L || map.dir == MPIR_COMM_MAP_DIR__L2R)
+./src/mpid/ch3/src/ch3u_comm.c:        if (mapper->src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpid/ch3/src/ch3u_comm.c:            MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+./src/mpid/ch3/src/ch3u_comm.c:                        mapper->dir == MPIR_COMM_MAP_DIR__L2R);
+./src/mpid/ch3/src/ch3u_comm.c:        if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpid/ch3/src/ch3u_comm.c:            MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+./src/mpid/ch3/src/ch3u_comm.c:                        mapper->dir == MPIR_COMM_MAP_DIR__R2L);
+./src/mpid/ch3/src/ch3u_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2R ||
+./src/mpid/ch3/src/ch3u_comm.c:            mapper->dir == MPIR_COMM_MAP_DIR__R2R)
+./src/mpid/ch3/src/ch3u_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2R ||
+./src/mpid/ch3/src/ch3u_comm.c:            mapper->dir == MPIR_COMM_MAP_DIR__R2R)
+./src/mpid/ch3/src/ch3u_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2L) {
+./src/mpid/ch3/src/ch3u_comm.c:            if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch3/src/ch3u_comm.c:            else if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+./src/mpid/ch3/src/ch3u_comm.c:            else if (src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch3/src/ch3u_comm.c:        else {  /* mapper->dir == MPIR_COMM_MAP_DIR__R2L */
+./src/mpid/ch3/src/ch3u_comm.c:            MPIR_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpid/ch3/src/ch3u_comm.c:            if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch3/src/ch3u_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+./src/mpid/ch3/src/ch3u_comm.c:            mapper->dir == MPIR_COMM_MAP_DIR__R2L)
+./src/mpid/ch3/src/ch3u_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+./src/mpid/ch3/src/ch3u_comm.c:            mapper->dir == MPIR_COMM_MAP_DIR__R2L)
+./src/mpid/ch3/src/ch3u_comm.c:        MPIR_Assert(comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpid/ch3/src/ch3u_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2R) {
+./src/mpid/ch3/src/ch3u_comm.c:            if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpid/ch3/src/ch3u_comm.c:        else {  /* mapper->dir == MPIR_COMM_MAP_DIR__R2R */
+./src/mpid/ch3/src/ch3u_comm.c:            MPIR_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpid/ch3/src/ch3u_comm.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpid/ch3/src/ch3u_comm.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpid/ch3/src/ch3u_comm.c:    if (comm->hints[MPIR_COMM_HINT_EAGER_THRESH] == 0) {
+./src/mpid/ch3/src/ch3u_comm.c:        comm->hints[MPIR_COMM_HINT_EAGER_THRESH] = -1;
+./src/mpid/ch3/src/ch3u_port.c:    tmp_comm->comm_kind    = MPIR_COMM_KIND__INTERCOMM;
+./src/mpid/ch3/src/ch3u_port.c:    intercomm->comm_kind    = MPIR_COMM_KIND__INTERCOMM;
+./src/mpid/ch3/src/mpid_send.c:    if (rank == comm->rank && comm->comm_kind != MPIR_COMM_KIND__INTERCOMM)
+./src/mpid/ch3/src/mpid_vc.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpid/ch3/src/mpid_issend.c:    if (rank == comm->rank && comm->comm_kind != MPIR_COMM_KIND__INTERCOMM)
+./src/mpid/ch3/src/ch3u_recvq.c:            offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_PT2PT : MPIR_CONTEXT_INTER_PT2PT;
+./src/mpid/ch3/src/ch3u_recvq.c:            offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
+./src/mpid/ch3/src/ch3u_recvq.c:            offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_PT2PT : MPIR_CONTEXT_INTER_PT2PT;
+./src/mpid/ch3/src/ch3u_recvq.c:            offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
+./src/mpid/ch3/src/ch3u_recvq.c:            offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_PT2PT : MPIR_CONTEXT_INTER_PT2PT;
+./src/mpid/ch3/src/ch3u_recvq.c:            offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
+./src/mpid/ch3/src/ch3u_recvq.c:            offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_PT2PT : MPIR_CONTEXT_INTER_PT2PT;
+./src/mpid/ch3/src/ch3u_recvq.c:            offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
+./src/mpid/ch3/src/mpid_isend.c:    if (rank == comm->rank && comm->comm_kind != MPIR_COMM_KIND__INTERCOMM)
+./src/mpid/ch4/netmod/ofi/ofi_spawn.c:    tmp_comm_ptr->comm_kind = MPIR_COMM_KIND__INTERCOMM;
+./src/mpid/ch4/netmod/ofi/ofi_comm.c:    if (comm->hints[MPIR_COMM_HINT_EAGAIN] == 0) {
+./src/mpid/ch4/netmod/ofi/ofi_comm.c:        comm->hints[MPIR_COMM_HINT_EAGAIN] = FALSE;
+./src/mpid/ch4/netmod/ofi/ofi_proc.h:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpid/ch4/netmod/ofi/ofi_init.c:    MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGAIN, "eagain", NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+./src/mpid/ch4/netmod/ofi/ofi_send.h:                         vni_local, tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
+./src/mpid/ch4/netmod/ucx/ucx_proc.h:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch4/shm/posix/posix_comm.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch4/shm/posix/posix_comm.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch4/generic/am/mpidig_am_comm_abort.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch4/generic/am/mpidig_am_comm_abort.c:        if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && dest == comm->rank)
+./src/mpid/ch4/generic/am/mpidig_am_comm_abort.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpid/ch4/src/ch4_globals.c:    if (NULL == comm || (MPIR_Comm_size(comm) == 1 && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM))
+./src/mpid/ch4/src/ch4i_comm.c:    if (map.type == MPIR_COMM_MAP_TYPE__IRREGULAR)
+./src/mpid/ch4/src/ch4i_comm.c:    else if (map.dir == MPIR_COMM_MAP_DIR__L2L || map.dir == MPIR_COMM_MAP_DIR__L2R)
+./src/mpid/ch4/src/ch4i_comm.c:    if (mapper->type == MPIR_COMM_MAP_TYPE__DUP && src_comm_size == total_mapper_size) {
+./src/mpid/ch4/src/ch4i_comm.c:    else if (mapper->type == MPIR_COMM_MAP_TYPE__IRREGULAR &&
+./src/mpid/ch4/src/ch4i_comm.c:    if (mapper->type == MPIR_COMM_MAP_TYPE__DUP) {
+./src/mpid/ch4/src/ch4i_comm.c:    } else {    /* mapper->type == MPIR_COMM_MAP_TYPE__IRREGULAR */
+./src/mpid/ch4/src/ch4i_comm.c:        if (mapper->src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch4/src/ch4i_comm.c:            MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+./src/mpid/ch4/src/ch4i_comm.c:                        mapper->dir == MPIR_COMM_MAP_DIR__L2R);
+./src/mpid/ch4/src/ch4i_comm.c:        if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch4/src/ch4i_comm.c:            MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+./src/mpid/ch4/src/ch4i_comm.c:                        mapper->dir == MPIR_COMM_MAP_DIR__R2L);
+./src/mpid/ch4/src/ch4i_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2R || mapper->dir == MPIR_COMM_MAP_DIR__R2R)
+./src/mpid/ch4/src/ch4i_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2R || mapper->dir == MPIR_COMM_MAP_DIR__R2R)
+./src/mpid/ch4/src/ch4i_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2L) {
+./src/mpid/ch4/src/ch4i_comm.c:            if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/mpid/ch4/src/ch4i_comm.c:                comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch4/src/ch4i_comm.c:            } else if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+./src/mpid/ch4/src/ch4i_comm.c:                       comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpid/ch4/src/ch4i_comm.c:            } else if (src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM &&
+./src/mpid/ch4/src/ch4i_comm.c:                       comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch4/src/ch4i_comm.c:            } else {    /* src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm->comm_kind == MPIR_COMM_KIND__INTERCOMM */
+./src/mpid/ch4/src/ch4i_comm.c:        } else {        /* mapper->dir == MPIR_COMM_MAP_DIR__R2L */
+./src/mpid/ch4/src/ch4i_comm.c:            MPIR_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpid/ch4/src/ch4i_comm.c:            if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch4/src/ch4i_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2L || mapper->dir == MPIR_COMM_MAP_DIR__R2L)
+./src/mpid/ch4/src/ch4i_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2L || mapper->dir == MPIR_COMM_MAP_DIR__R2L)
+./src/mpid/ch4/src/ch4i_comm.c:        MPIR_Assert(comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpid/ch4/src/ch4i_comm.c:        if (mapper->dir == MPIR_COMM_MAP_DIR__L2R) {
+./src/mpid/ch4/src/ch4i_comm.c:            if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch4/src/ch4i_comm.c:            } else {    /* src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM */
+./src/mpid/ch4/src/ch4i_comm.c:        } else {        /* mapper->dir == MPIR_COMM_MAP_DIR__R2R */
+./src/mpid/ch4/src/ch4i_comm.c:            MPIR_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+./src/mpid/ch4/src/ch4i_comm.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpid/ch4/src/ch4i_comm.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+./src/mpid/ch4/src/ch4i_comm.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+./src/mpid/ch4/src/ch4i_comm.c:    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm->local_size < 16) {
+./src/mpid/ch4/src/ch4_init.c:        init_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+./src/mpid/ch4/src/ch4_init.c:    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+./src/mpid/common/hcoll/hcoll_init.c:    if ((MPIR_COMM_KIND__INTRACOMM != comm_ptr->comm_kind) || (2 > num_ranks)
+./src/mpid/common/hcoll/hcoll_init.c:        || comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS
+./src/mpid/common/hcoll/hcoll_init.c:        || comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {

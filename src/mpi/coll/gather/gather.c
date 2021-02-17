@@ -66,6 +66,11 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+int MPIR_Datatype_Signature(int sendcount, MPI_Datatype sendtype){
+  //TODO: temp solution, should be a tuple(a, n)
+  return sendcount * sizeof(sendtype);
+}
+
 int MPIR_Gather_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                              void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                              MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -93,12 +98,16 @@ int MPIR_Gather_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype se
             mpi_errno =
                 MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                            recvtype, root, comm_ptr, errflag);
+
+            
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Gather_inter_linear:
             mpi_errno =
                 MPIR_Gather_inter_linear(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
                                          root, comm_ptr, errflag);
+
+          
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Gather_inter_local_gather_remote_send:
@@ -106,12 +115,14 @@ int MPIR_Gather_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype se
                 MPIR_Gather_inter_local_gather_remote_send(sendbuf, sendcount, sendtype, recvbuf,
                                                            recvcount, recvtype, root, comm_ptr,
                                                            errflag);
+
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Gather_allcomm_nb:
             mpi_errno =
                 MPIR_Gather_allcomm_nb(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
                                        root, comm_ptr, errflag);
+
             break;
 
         default:
@@ -188,6 +199,42 @@ int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+
+
+
+#ifdef HAVE_ERROR_CHECKING
+    int local_Datatype_Sig, local_Datatype_Sig_Verify, comm_size, counter;
+    int *global_Datatype_Sig;
+
+    local_Datatype_Sig = 0;
+    comm_size = comm_ptr->local_size;
+    global_Datatype_Sig = (int*)malloc( comm_size * sizeof(int));
+    local_Datatype_Sig = MPIR_Datatype_Signature(sendcount, sendtype);
+    mpi_errno = MPIR_Gather_impl(&local_Datatype_Sig, 1, MPI_INT,
+               global_Datatype_Sig, 1, MPI_INT, root, comm_ptr, errflag);
+
+    //mpi_errno = MPIR_Allgather(&local_Datatype_Sig, 1, MPI_INT,
+      //             global_Datatype_Sig, 1, MPI_INT,
+        //           comm_ptr, errflag);
+
+    if(comm_ptr->rank == root){
+      local_Datatype_Sig_Verify = 0;
+      for(counter = 0; counter < comm_size; ++counter){
+        local_Datatype_Sig_Verify += global_Datatype_Sig[counter];
+      }
+      local_Datatype_Sig *= comm_size;
+      //printf("Local: %d; global: %d \n", local_Datatype_Sig, local_Datatype_Sig_Verify);
+
+      if (local_Datatype_Sig != local_Datatype_Sig_Verify) {
+                if (*errflag == MPIR_ERR_NONE)
+                    *errflag = MPIR_ERR_OTHER;
+                MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
+                              "**collective_size_mismatch",
+                              "**collective_size_mismatch %d %d", local_Datatype_Sig_Verify, local_Datatype_Sig);
+                //MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+         }
+     }
+#endif
 
     if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
         ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&

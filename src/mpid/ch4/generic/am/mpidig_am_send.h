@@ -71,6 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     int is_local = MPIDI_av_is_local(addr);
     if (MPIDIG_check_eager(is_local, sizeof(am_hdr), data_sz, buf, count, datatype, sreq)) {
         /* EAGER send */
+         //printf("EAGER send\n");
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local) {
             mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr), buf,
@@ -78,11 +79,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
         } else
 #endif
         {
+           //printf("No direct netmod\n");
             mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr), buf,
                                           count, datatype, sreq);
         }
     } else {
         /* RNDV send */
+      //printf("RNDV send\n");
         MPIDIG_REQUEST(sreq, req->sreq).src_buf = buf;
         MPIDIG_REQUEST(sreq, req->sreq).count = count;
         MPIDIG_REQUEST(sreq, req->sreq).datatype = datatype;

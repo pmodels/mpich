@@ -326,6 +326,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
                                                      MPI_Datatype datatype, MPIR_Request * sreq,
                                                      bool issue_deferred)
 {
+      //double t0,t1, t2, t3, t4, t5;
+    //t0 = MPI_Wtime();
     int mpi_errno = MPI_SUCCESS;
     int rc = 0;
     MPI_Aint data_sz, send_size, offset = 0;
@@ -338,6 +340,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
      * we need to skip some code path in the scenario. Also am_hdr, am_hdr_sz and data_sz are
      * ignored when issue_deferred is set to true. They should have been saved in the request. */
 
+    //t1 = MPI_Wtime();
     if (!issue_deferred) {
         MPIDI_POSIX_AMREQUEST(sreq, req_hdr) = NULL;
 
@@ -359,6 +362,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
     if (!issue_deferred && MPIDI_POSIX_global.postponed_queue) {
         goto fn_deferred;
     }
+    //t2 = MPI_Wtime();
 
     send_size = MPIDIG_am_send_async_get_data_sz_left(sreq);
     offset = MPIDIG_am_send_async_get_offset(sreq);
@@ -379,13 +383,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
             goto fn_exit;
         }
     }
-
+    //t3 = MPI_Wtime();
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST,
                      "issue seg for req handle=0x%x send_size %ld", sreq->handle, send_size));
     MPIDIG_am_send_async_issue_seg(sreq, send_size);
     MPIDIG_am_send_async_finish_seg(sreq);
 
+    //t4 = MPI_Wtime();
     /* if there IS MORE DATA to be sent and we ARE NOT called for issue deferred op, enqueue.
      * if there NO MORE DATA and we ARE called for issuing deferred op, pipeline is done, dequeue
      * skip for all other cases */
@@ -405,6 +410,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
         mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
+    //t5 = MPI_Wtime();
+      //printf("POSIX_do_am_isend %f %f %f %f %f\n", (t1-t0)*1e6,(t2-t1)*1e6,(t3-t2)*1e6, (t4-t3)*1e6, (t5-t4)*1e6);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_AM_ISEND);

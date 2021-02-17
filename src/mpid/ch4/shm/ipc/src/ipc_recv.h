@@ -87,9 +87,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
                                                  int rank, int tag, MPIR_Comm * comm,
                                                  int context_offset, MPIR_Request ** request)
 {
+  //double t0,t1, t2, t3, t4;
+  //t0 = MPI_Wtime();
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_MPI_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_MPI_IRECV);
+   // t1 = MPI_Wtime();
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIR_Comm *root_comm = NULL;
@@ -106,7 +109,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
     /* Try to match with an unexpected receive request */
     root_comm = MPIDIG_context_id_to_comm(context_id);
     unexp_req = MPIDIG_dequeue_unexp(rank, tag, context_id, &MPIDIG_COMM(root_comm, unexp_list));
-
+   // t2 = t3 = t4 = MPI_Wtime();
     if (unexp_req) {
         *request = unexp_req;
         /* - Mark as DEQUEUED so that progress engine can complete a matched BUSY
@@ -120,6 +123,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
         mpi_errno = MPIDI_IPC_mpi_imrecv(buf, count, datatype, *request);
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         MPIR_ERR_CHECK(mpi_errno);
+      //  t3 = MPI_Wtime();
     } else {
         /* No matching request found, post the receive request  */
         MPIR_Request *rreq = NULL;
@@ -135,7 +139,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
 
         *request = rreq;
         MPIDI_POSIX_recv_posted_hook(*request, rank, comm);
+       // t4 = MPI_Wtime();
     }
+
+    //printf("RECV %f %f %f %f\n", (t1-t0)*1e6,(t2-t1)*1e6,(t3-t2)*1e6, (t4-t2)*1e6);
 
   fn_exit:
     MPIDI_REQUEST_SET_LOCAL(*request, 1, NULL);

@@ -66,21 +66,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_isend(const void *buf, MPI_Aint count
                                                  MPIR_Comm * comm, int context_offset,
                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
+    //double t0, t1, t2, t3;
+    //t0 = MPI_Wtime();
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_MPI_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_MPI_ISEND);
 
     bool done = false;
+    //t1 = MPI_Wtime();
     mpi_errno = MPIDI_IPCI_try_lmt_isend(buf, count, datatype, rank, tag, comm,
                                          context_offset, addr, request, &done);
     MPIR_ERR_CHECK(mpi_errno);
-
+    //t2 = MPI_Wtime();
     if (!done) {
         mpi_errno = MPIDI_POSIX_mpi_isend(buf, count, datatype, rank, tag, comm,
                                           context_offset, addr, request);
         MPIR_ERR_CHECK(mpi_errno);
     }
-
+  //t3 = MPI_Wtime();
+  //printf("SEND %f %f %f\n", (t1-t0)*1e6,(t2-t1)*1e6, (t3-t2)*1e6);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MPI_ISEND);
     return mpi_errno;

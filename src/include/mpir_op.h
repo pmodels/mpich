@@ -36,6 +36,7 @@ typedef enum MPIR_Op_kind {
     MPIR_OP_KIND__MINLOC = 12,
     MPIR_OP_KIND__REPLACE = 13,
     MPIR_OP_KIND__NO_OP = 14,
+    MPIR_OP_KIND__EQUAL = 15,
     MPIR_OP_KIND__USER_NONCOMMUTE = 32,
     MPIR_OP_KIND__USER = 33
 } MPIR_Op_kind;
@@ -106,7 +107,7 @@ typedef struct MPIR_Op {
      MPID_DEV_OP_DECL
 #endif
 } MPIR_Op;
-#define MPIR_OP_N_BUILTIN 14
+#define MPIR_OP_N_BUILTIN 15
 extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
 extern MPIR_Op MPIR_Op_direct[];
 extern MPIR_Object_alloc_t MPIR_Op_mem;
@@ -158,6 +159,7 @@ void MPIR_MAXLOC(void *, void *, int *, MPI_Datatype *);
 void MPIR_MINLOC(void *, void *, int *, MPI_Datatype *);
 void MPIR_REPLACE(void *, void *, int *, MPI_Datatype *);
 void MPIR_NO_OP(void *, void *, int *, MPI_Datatype *);
+void MPIR_EQUAL(void *, void *, int *, MPI_Datatype *);
 
 int MPIR_MAXF_check_dtype(MPI_Datatype);
 int MPIR_MINF_check_dtype(MPI_Datatype);
@@ -173,6 +175,7 @@ int MPIR_MAXLOC_check_dtype(MPI_Datatype);
 int MPIR_MINLOC_check_dtype(MPI_Datatype);
 int MPIR_REPLACE_check_dtype(MPI_Datatype);
 int MPIR_NO_OP_check_dtype(MPI_Datatype);
+int MPIR_EQUAL_check_dtype(MPI_Datatype);
 
 #define MPIR_Op_add_ref_if_not_builtin(op)               \
     do {                                                 \

@@ -109,9 +109,10 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
-#ifdef HAVE_ERROR_CHECKING
+
+//#ifdef HAVE_ERROR_CHECKING
             /* check that we received as much as we expected */
-            MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
+  /*         MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
             if (recvd_size != nbytes) {
                 if (*errflag == MPIR_ERR_NONE)
                     *errflag = MPIR_ERR_OTHER;
@@ -121,6 +122,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
 #endif
+*/
             break;
         }
         mask <<= 1;

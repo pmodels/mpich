@@ -257,6 +257,7 @@ Makefile.am-stamp
 /winbuild
 /man
 /README
+/build
 
 # /confdb/
 /confdb/www
