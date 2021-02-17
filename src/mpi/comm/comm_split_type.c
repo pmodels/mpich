@@ -91,14 +91,87 @@ int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcom
     goto fn_exit;
 }
 
+static const char *info_get_key(MPIR_Info * info_ptr, const char *key)
+{
+    MPIR_Info *curr_ptr = info_ptr->next;
+    while (curr_ptr) {
+        if (strcmp(curr_ptr->key, key) == 0) {
+            return curr_ptr->value;
+        }
+        curr_ptr = curr_ptr->next;
+    }
+    return NULL;
+}
+
 int MPIR_Comm_split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
                                    MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Comm *node_comm = NULL;
+    const char *resource_type = NULL;
 
-    *newcomm_ptr = NULL;
+    if (info_ptr != NULL) {
+        resource_type = info_get_key(info_ptr, "mpi_hw_resource_type");
+    }
 
+    if (!resource_type) {
+        /* we need compare the info hints regardless since it is collective */
+        resource_type = "";
+    }
+
+    /* Check all processes are using the same hints, return NULL if not.
+     * Note: since it is a collective checking, we need call this function
+     * even when info_ptr is NULL or the key is missing. */
+    int is_equal = 0;
+    mpi_errno = MPII_compare_info_hint(resource_type, comm_ptr, &is_equal);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_ERR_CHKANDJUMP1(!is_equal, mpi_errno, MPI_ERR_OTHER, "**infonoteq",
+                         "**infonoteq %s", "mpi_hw_resource_type");
+
+    if (resource_type[0] == '\0') {
+        /* return MPI_COMM_NULL if info key is missing */
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
+
+    if (strcmp(resource_type, "mpi_shared_memory") == 0) {
+        /* resource_type value "mpi_shared_memory" is equivalent to split_type
+         * MPI_COMM_TYPE_SHARED */
+        mpi_errno = MPIR_Comm_split_type_impl(comm_ptr, MPI_COMM_TYPE_SHARED, key, info_ptr,
+                                              newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
+
+    /* now we should proceed */
+    mpi_errno = MPIR_Comm_split_type_by_node(comm_ptr, key, &node_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (!MPIR_hwtopo_is_initialized()) {
+        /* if hwtopo is not available, return MPI_COMM_NULL */
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
+
+    /* only proceed when we have a proper gid, i.e. bindset belongs to a
+     * single instance of given resource_type */
+    MPIR_hwtopo_gid_t gid = MPIR_hwtopo_get_obj_by_name(resource_type);
+    if (gid != MPIR_HWTOPO_GID_ROOT) {
+        mpi_errno = MPIR_Comm_split_impl(node_comm, gid, key, newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
+
+  fn_exit:
+    if (node_comm) {
+        MPIR_Comm_free_impl(node_comm);
+    }
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Comm_split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
