@@ -378,6 +378,8 @@ be in the range 0 to %d
 **infonokey %s:MPI_Info key %s is not defined 
 **infonkey:Requested nth key does not exist
 **infonkey %d %d:Requested key %d but this MPI_Info only has %d keys
+**infonoteq:MPI_Info key value are not consistent for all processes
+**infonoteq %s:MPI_Info value with key %s is not consistent for all processes
 **io:Other I/O error 
 **io %s:Other I/O error %s
 **iobadoverlap: write voilates monotonically non-decreasing
