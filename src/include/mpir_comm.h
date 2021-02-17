@@ -312,6 +312,10 @@ int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root
                            MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
 
 int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
+                                   MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
+                                     MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type_node_topo(MPIR_Comm * comm_ptr, int key,
                                    MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
