@@ -4,6 +4,7 @@ MPI_Op_create:
     .desc: Creates a user-defined combination function handle
     .docnotes: collops
     .seealso: MPI_Op_free
+    .poly_impl: separate
 /*
     Notes on the user function:
     The calling list for the user function type is

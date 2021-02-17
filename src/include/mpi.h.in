@@ -447,9 +447,6 @@ typedef int MPI_Message;
 /* Generalized requests extensions */
 typedef int MPIX_Grequest_class;
 
-/* User combination function */
-typedef void (MPI_User_function) ( void *, void *, int *, MPI_Datatype * ); 
-
 /* MPI Attribute copy and delete functions */
 typedef int (MPI_Copy_function) ( MPI_Comm, int, void *, void *, void *, int * );
 typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
@@ -587,6 +584,10 @@ typedef struct MPI_Status {
     int MPI_TAG;
     int MPI_ERROR;
 } MPI_Status;
+
+/* User combination function */
+typedef void (MPI_User_function) ( void *, void *, int *, MPI_Datatype * );
+typedef void (MPI_User_function_c) ( void *, void *, MPI_Count *, MPI_Datatype * );
 
 /* types for the MPI_T_ interface */
 struct MPIR_T_enum_s;
