@@ -30,6 +30,12 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
     if (split_type == MPI_COMM_TYPE_SHARED) {
         mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
+    } else if (split_type == MPI_COMM_TYPE_HW_GUIDED) {
+        mpi_errno = MPIR_Comm_split_type_hw_guided(comm_ptr, key, info_ptr, newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else if (split_type == MPI_COMM_TYPE_HW_UNGUIDED) {
+        mpi_errno = MPIR_Comm_split_type_hw_unguided(comm_ptr, key, info_ptr, newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
         mpi_errno =
             MPIR_Comm_split_type_neighborhood(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
@@ -83,6 +89,26 @@ int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcom
 
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Comm_split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
+                                   MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *newcomm_ptr = NULL;
+
+    return mpi_errno;
+}
+
+int MPIR_Comm_split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
+                                     MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *newcomm_ptr = NULL;
+
+    return mpi_errno;
 }
 
 int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
