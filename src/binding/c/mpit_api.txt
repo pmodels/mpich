@@ -586,44 +586,33 @@ MPI_T_event_handle_alloc:
 
 MPI_T_event_handle_set_info:
     .desc: Updates the hints of the event-registration handle associated with event_registration
-    .error: MPI_T_ERR_INVALID_HANDLE
 
 MPI_T_event_handle_get_info:
     .desc: Returns a new info object containing the hints of the event-registration handle associated with event_registration
-    .error: MPI_T_ERR_INVALID_HANDLE
 
 MPI_T_event_register_callback:
     .desc: Associates a user-defined function with an allocated event-registration handle
-    .error: MPI_T_ERR_INVALID_HANDLE
 
 MPI_T_event_callback_set_info:
     .desc: Updates the hints of the callback function registered for the callback safety level specified by cb_safety of the event-registration handle associated with event_registration
-    .error: MPI_T_ERR_INVALID_HANDLE
 
 MPI_T_event_callback_get_info:
     .desc: Returns a new info object containing the hints of the callback function registered for the callback safety level specified by cb_safety of the event-registration handle associated with event_registration.
-    .error: MPI_T_ERR_INVALID_HANDLE
 
 MPI_T_event_handle_free:
     .desc: Initiates deallocation of the event-registration handle specified by event_registration
-    .error: MPI_T_ERR_INVALID_HANDLE
 
 MPI_T_event_set_dropped_handler:
     .desc: Registers a function to be called when event information is dropped for the registration handle specified in event_registration
-    .error: MPI_T_ERR_INVALID_HANDLE
 
 MPI_T_event_read:
     .desc: Copy one element of event data to a user-specified buffer
-    .error: MPI_T_ERR_INVALID_HANDLE
 
 MPI_T_event_copy:
     .desc: Copy event data as a whole into a user-specified buffer
-    .error: MPI_T_ERR_INVALID_HANDLE
 
 MPI_T_event_get_timestamp:
     .desc: Returns the timestamp of when the event was initially observed by the implementation
-    .error: MPI_T_ERR_INVALID_HANDLE
 
 MPI_T_event_get_source:
     .desc: Returns the index of the source of the event instance
-    .error: MPI_T_ERR_INVALID_HANDLE

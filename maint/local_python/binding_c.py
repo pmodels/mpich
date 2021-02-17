@@ -498,6 +498,10 @@ def process_func_parameters(func, mapping):
             validation_list.append({'kind': "mpit_pvar_session", 'name': t_name})
         elif kind == "PVAR_CLASS":
             validation_list.append({'kind': "mpit_pvar_class", 'name': name})
+        elif kind == "EVENT_REGISTRATION":
+            validation_list.append({'kind': "mpit_event_registration", 'name': name})
+        elif kind == "EVENT_INSTANCE":
+            validation_list.append({'kind': "mpit_event_instance", 'name': name})
         elif RE.match(r'(FUNCTION)', kind):
             if RE.match(r'mpi_(keyval_create|\w+_create_keyval)', func_name, re.IGNORECASE):
                 # MPI_NULL_COPY_FN etc are defined as NULL
@@ -1457,6 +1461,12 @@ def dump_validation(func, t):
     elif kind == "mpit_pvar_class":
         G.err_codes['MPI_T_ERR_INVALID_NAME'] = 1
         G.out.append("MPIT_ERRTEST_PVAR_CLASS(%s);" % name)
+    elif kind == "mpit_event_registration":
+        G.err_codes['MPI_T_ERR_INVALID_HANDLE'] = 1
+        G.out.append('MPIT_ERRTEST_EVENT_REG_HANDLE(%s);' % name)
+    elif kind == "mpit_event_instance":
+        G.err_codes['MPI_T_ERR_INVALID_HANDLE'] = 1
+        G.out.append('MPIT_ERRTEST_EVENT_INSTANCE_HANDLE(%s);' % name)
     elif kind == "RANK-ARRAY":
         # FIXME
         pass
