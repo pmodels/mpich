@@ -178,10 +178,61 @@ int MPIR_Comm_split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * 
                                      MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Comm *subcomm = NULL;
+    const char *resource_type = NULL;
 
+    int orig_size = MPIR_Comm_size(comm_ptr);
+
+    /* With HW_UNDGUIDED, we need find the most top-level topology that result in a proper
+     * subset of original comm_ptr. We'll try top-down until we hit upon a subset */
+
+    /* TODO: Once we added network topology, we should try network topology first before
+     * try splitting at node level.
+     */
+    mpi_errno = MPIR_Comm_split_type_by_node(comm_ptr, key, &subcomm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIR_Comm_size(subcomm) < orig_size) {
+        resource_type = "node";
+        *newcomm_ptr = subcomm;
+        goto fn_exit;
+    } else {
+        MPIR_Comm_free_impl(subcomm);
+    }
+
+    /* TODO: determine the "proper" hierarchy */
+    const char *topolist[] = {
+        "package",
+        "numanode",
+        "cpu",
+        "core",
+        "hwthread",
+    };
+
+    for (int i = 0; i < sizeof(topolist) / sizeof(topolist[0]); i++) {
+        mpi_errno = node_split(comm_ptr, key, topolist[i], &subcomm);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (MPIR_Comm_size(subcomm) < orig_size) {
+            /* found the first true sub-comm, return it */
+            resource_type = topolist[i];
+            *newcomm_ptr = subcomm;
+            goto fn_exit;
+        } else {
+            MPIR_Comm_free_impl(subcomm);
+        }
+    }
+
+    /* no strict subset, return MPI_COMM_NULL */
     *newcomm_ptr = NULL;
 
+  fn_exit:
+    if (info_ptr && *newcomm_ptr && resource_type) {
+        MPIR_Info_set_impl(info_ptr, "mpi_hw_resource_type", resource_type);
+    }
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
