@@ -362,6 +362,11 @@ void MPIR_Typerep_init(void)
 
     MPI_Aint size;
 
+    /* Yaksa API uses intptr_t, while we use MPI_Aint. They should be identical,
+     * but lets assert to just make sure.
+     */
+    MPIR_Assert(sizeof(MPI_Aint) == sizeof(intptr_t));
+
     yaksa_init(NULL);
 
     MPIR_Datatype_get_size_macro(MPI_REAL16, size);
