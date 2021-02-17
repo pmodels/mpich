@@ -39,18 +39,37 @@ typedef struct MPIR_longdoubleint_eqltype {
 } MPIR_longdoubleint_eqltype;
 #endif
 
-/* Note a subtlety in these two macros which avoids compiler warnings.
-   The compiler complains about using == on floats, but the standard
-   requires that we set loc to min of the locs if the two values are
-   equal.  So we do "if a<b {} else if a<=b Y" which is the same as
-   "if a<b X else if a==b Y" but avoids the warning. */
-#define MPIR_EQUAL_C_CASE(c_type_) {                    \
+#define MPIR_EQUAL_FLOAT_PRECISION 1e6
+#define MPIR_EQUAL_FLOAT_COMPARE(_aValue, _bValue)              \
+    (((_aValue <= _bValue + MPIR_EQUAL_FLOAT_PRECISION)         \
+    && (_aValue >= _bValue - MPIR_EQUAL_FLOAT_PRECISION))?      \
+    1:0)
+
+
+/* If a child found unequal, its parent sticks to unequal. */
+/* Values of isEqual: 2 init 1 equal 0 not equal*/
+#define MPIR_EQUAL_C_CASE_INT(c_type_) {                \
         c_type_ *a = (c_type_ *)inoutvec;               \
         c_type_ *b = (c_type_ *)invec;                  \
         for (i=0; i<len; i++) {                         \
             if (0 == b[i].isEqual){                     \
                 a[i].isEqual = b[i].isEqual;            \
             }else if (a[i].value != b[i].value){        \
+                a[i].isEqual = 0;                       \
+            }else{                                      \
+                a[i].isEqual = 1;                       \
+            }                                           \
+        }                                               \
+    }                                                   \
+    break
+
+#define MPIR_EQUAL_C_CASE_FLOAT(c_type_) {              \
+        c_type_ *a = (c_type_ *)inoutvec;               \
+        c_type_ *b = (c_type_ *)invec;                  \
+        for (i=0; i<len; i++) {                         \
+            if (0 == b[i].isEqual){                     \
+                a[i].isEqual = b[i].isEqual;            \
+            }else if (!MPIR_EQUAL_FLOAT_COMPARE(a[i].value, b[i].value)){        \
                 a[i].isEqual = 0;                       \
             }else{                                      \
                 a[i].isEqual = 1;                       \
@@ -87,19 +106,19 @@ void MPIR_EQUAL(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
     
     switch (*type) {
             /* first the C types */
-        case MPI_INT:
-            MPIR_EQUAL_C_CASE(MPIR_2int_eqltype);
+        case MPI_2INT:
+            MPIR_EQUAL_C_CASE_INT(MPIR_2int_eqltype);
         case MPI_FLOAT_INT:
-            MPIR_EQUAL_C_CASE(MPIR_floatint_eqltype);
+            MPIR_EQUAL_C_CASE_FLOAT(MPIR_floatint_eqltype);
         case MPI_LONG_INT:
-            MPIR_EQUAL_C_CASE(MPIR_longint_eqltype);
+            MPIR_EQUAL_C_CASE_INT(MPIR_longint_eqltype);
         case MPI_SHORT_INT:
-            MPIR_EQUAL_C_CASE(MPIR_shortint_eqltype);
+            MPIR_EQUAL_C_CASE_INT(MPIR_shortint_eqltype);
         case MPI_DOUBLE_INT:
-            MPIR_EQUAL_C_CASE(MPIR_doubleint_eqltype);
+            MPIR_EQUAL_C_CASE_FLOAT(MPIR_doubleint_eqltype);
 #if defined(HAVE_LONG_DOUBLE)
         case MPI_LONG_DOUBLE_INT:
-            MPIR_EQUAL_C_CASE(MPIR_longdoubleint_eqltype);
+            MPIR_EQUAL_C_CASE_FLOAT(MPIR_longdoubleint_eqltype);
 #endif
 
             /* now the Fortran types */
