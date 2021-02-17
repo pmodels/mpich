@@ -28,7 +28,7 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
     }
 
     if (split_type == MPI_COMM_TYPE_SHARED) {
-        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, split_type, key, newcomm_ptr);
+        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
         mpi_errno =
@@ -68,8 +68,7 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int split_type, int key,
-                              MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Comm *comm_self_ptr;
     int mpi_errno = MPI_SUCCESS;
@@ -86,8 +85,7 @@ int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int split_type, int key,
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int split_type, int key,
-                                 MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int color;
@@ -105,7 +103,7 @@ int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int split_type, int key,
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, int key,
+int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int key,
                                    MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Comm *comm_ptr;
@@ -115,7 +113,7 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     int info_args_are_equal;
     *newcomm_ptr = NULL;
 
-    mpi_errno = MPIR_Comm_split_type_by_node(user_comm_ptr, split_type, key, &comm_ptr);
+    mpi_errno = MPIR_Comm_split_type_by_node(user_comm_ptr, key, &comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (info_ptr) {
