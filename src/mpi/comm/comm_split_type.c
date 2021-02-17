@@ -68,22 +68,11 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key,
+int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int split_type, int key,
                               MPIR_Comm ** newcomm_ptr)
 {
-    MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *comm_self_ptr;
     int mpi_errno = MPI_SUCCESS;
-
-    /* split out the undefined processes */
-    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
-                                     key, &comm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (split_type == MPI_UNDEFINED) {
-        *newcomm_ptr = NULL;
-        goto fn_exit;
-    }
 
     MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
     mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, newcomm_ptr);
@@ -91,30 +80,17 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    if (comm_ptr)
-        MPIR_Comm_free_impl(comm_ptr);
     return mpi_errno;
 
   fn_fail:
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_by_node(MPIR_Comm * user_comm_ptr, int split_type, int key,
+int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int split_type, int key,
                                  MPIR_Comm ** newcomm_ptr)
 {
-    MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     int color;
-
-    /* split out the undefined processes */
-    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
-                                     key, &comm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (split_type == MPI_UNDEFINED) {
-        *newcomm_ptr = NULL;
-        goto fn_exit;
-    }
 
     mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
     MPIR_ERR_CHECK(mpi_errno);
@@ -123,8 +99,6 @@ int MPIR_Comm_split_type_by_node(MPIR_Comm * user_comm_ptr, int split_type, int 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    if (comm_ptr)
-        MPIR_Comm_free_impl(comm_ptr);
     return mpi_errno;
 
   fn_fail:
@@ -143,12 +117,6 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
 
     mpi_errno = MPIR_Comm_split_type_by_node(user_comm_ptr, split_type, key, &comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
-
-    if (comm_ptr == NULL) {
-        MPIR_Assert(split_type == MPI_UNDEFINED);
-        *newcomm_ptr = NULL;
-        goto fn_exit;
-    }
 
     if (info_ptr) {
         MPIR_Info_get_impl(info_ptr, SHMEM_INFO_KEY, MPI_MAX_INFO_VAL, hint_str, &flag);
