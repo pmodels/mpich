@@ -32,7 +32,7 @@ int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes)
         yaksa_request_t request;
         uintptr_t actual_pack_bytes;
         rc = yaksa_ipack(inbuf, num_bytes, YAKSA_TYPE__BYTE, 0, outbuf, num_bytes,
-                         &actual_pack_bytes, NULL, &request);
+                         &actual_pack_bytes, NULL, YAKSA_OP__REPLACE, &request);
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
         MPIR_Assert(actual_pack_bytes == num_bytes);
 
@@ -139,7 +139,7 @@ int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype
     yaksa_request_t request;
     uintptr_t real_pack_bytes;
     rc = yaksa_ipack(inbuf, incount, type, inoffset, outbuf, max_pack_bytes, &real_pack_bytes,
-                     NULL, &request);
+                     NULL, YAKSA_OP__REPLACE, &request);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
     rc = yaksa_request_wait(request);
@@ -187,7 +187,7 @@ int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, MPI_Ai
     yaksa_request_t request;
     uintptr_t real_unpack_bytes;
     rc = yaksa_iunpack(inbuf, real_insize, outbuf, outcount, type, outoffset, &real_unpack_bytes,
-                       NULL, &request);
+                       NULL, YAKSA_OP__REPLACE, &request);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
     rc = yaksa_request_wait(request);
