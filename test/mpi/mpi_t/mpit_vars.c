@@ -6,6 +6,7 @@
 /* To print out all MPI_T control variables, performance variables and their
    categories in the MPI implementation. But whether they function well as
    expected, is not tested.
+   2021-02-17: added sources and events
  */
 
 #include <stdio.h>
@@ -26,6 +27,8 @@ double perfvarReadDouble(int pvarIndex, int isContinuous, int *found);
 int PrintControlVars(FILE * fp);
 int PrintPerfVars(FILE * fp);
 int PrintCategories(FILE * fp);
+int PrintSources(FILE * fp);
+int PrintEvents(FILE * fp);
 
 static int verbose = 0;
 
@@ -50,12 +53,82 @@ int main(int argc, char *argv[])
 
     PrintCategories(stdout);
 
+    PrintSources(stdout);
+
+    PrintEvents(stdout);
+
     /* Put MPI_T_finalize() after MPI_Finalize() will cause mpich memory
      * tracing facility falsely reports memory leaks, though these memories
      * are freed in MPI_T_finalize().
      */
     MPI_T_finalize();
     MTest_Finalize(0);
+
+    return 0;
+}
+
+int PrintSources(FILE * fp)
+{
+#if MTEST_HAVE_MIN_MPI_VERSION(4,0)
+    int num_sources;
+    char name[128];
+    int name_len;
+    char desc[1024];
+    int desc_len;
+    int verbosity;
+    MPI_T_source_order ordering;
+    MPI_Count ticks_per_second;
+    MPI_Count max_ticks;
+
+    MPI_T_source_get_num(&num_sources);
+    if (verbose)
+        fprintf(fp, "%d MPI Event Sources\n", num_sources);
+    for (i = 0; i < num_sources; i++) {
+        name_len = sizeof(name);
+        desc_len = sizeof(desc);
+        MPI_T_source_get_info(i, name, &name_len, desc, &desc_len, &verbosity, &ordering,
+                              &ticks_per_second, &max_ticks, NULL);
+        if (verbose) {
+            fprintf(fp, "name: %s\n", name);
+            fprintf(fp, "desc: %s\n", desc);
+            fprintf(fp, "verbosity: %s\n", mpit_verbosityToStr(verbosity));
+            /* FIXME: convert ordering to string */
+            fprintf(fp, "ordering: %d\n", ordering);
+        }
+    }
+#endif
+
+    return 0;
+}
+
+int PrintEvents(FILE * fp)
+{
+#if MTEST_HAVE_MIN_MPI_VERSION(4,0)
+    int num_events;
+    char name[128];
+    int name_len;
+    int verbosity;
+    MPI_T_enum enumtype;
+    char desc[1024];
+    int desc_len;
+    int bind;
+
+    MPI_T_event_get_num(&num_events);
+    if (verbose)
+        fprintf(fp, "%d MPI Events\n", num_events);
+    for (i = 0; i < num_events; i++) {
+        name_len = sizeof(name);
+        desc_len = sizeof(desc);
+        MPI_T_event_get_info(i, name, &name_len, &verbosity, NULL, NULL, NULL, &enumtype, NULL,
+                             desc, &desc_len, &bind);
+        if (verbose) {
+            fprintf(fp, "name: %s\n", name);
+            fprintf(fp, "desc: %s\n", desc);
+            fprintf(fp, "verbosity: %s\n", mpit_verbosityToStr(verbosity));
+            fprintf(fp, "bind: %s\n", mpit_bindingToStr(bind));
+        }
+    }
+#endif
 
     return 0;
 }
