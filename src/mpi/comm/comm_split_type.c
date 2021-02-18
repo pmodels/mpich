@@ -28,6 +28,10 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
     }
 
     if (split_type == MPI_COMM_TYPE_SHARED) {
+        /* NOTE: MPIR_Comm_split_impl will typically call device layer fuction.
+         * Currently ch4 calls MPIR_Comm_split_type_by_node, which checks
+         * the "shmem_topo" infohints. Thus doesn't run the fallback code here.
+         * On the otherhand, ch3:sock will directly execute code here. */
         mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else if (split_type == MPI_COMM_TYPE_HW_GUIDED) {
