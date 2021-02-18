@@ -116,4 +116,16 @@
         goto fn_fail; \
     }
 
+#define MPIT_ERRTEST_EVENT_REG_HANDLE(handle_) \
+    if ((handle_)->kind != MPIR_T_EVENT_REG) { \
+        mpi_errno = MPI_T_ERR_INVALID_HANDLE; \
+        goto fn_fail; \
+    }
+
+#define MPIT_ERRTEST_EVENT_INSTANCE_HANDLE(handle_) \
+    if ((handle_)->kind != MPIR_T_EVENT_INSTANCE) { \
+        mpi_errno = MPI_T_ERR_INVALID_HANDLE; \
+        goto fn_fail; \
+    }
+
 #endif /* MPIT_ERR_H_INCLUDED */

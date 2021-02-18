@@ -85,6 +85,7 @@ static cat_table_entry_t *MPIR_T_cat_create(const char *cat_name)
     utarray_new(cat->cvar_indices, &ut_int_icd, MPL_MEM_MPIT);
     utarray_new(cat->pvar_indices, &ut_int_icd, MPL_MEM_MPIT);
     utarray_new(cat->subcat_indices, &ut_int_icd, MPL_MEM_MPIT);
+    utarray_new(cat->event_indices, &ut_int_icd, MPL_MEM_MPIT);
 
     /* Record <cat_name, cat_idx> in cat_hash */
     cat_idx = utarray_len(cat_table) - 1;
@@ -251,6 +252,38 @@ int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc)
     }
 
     return mpi_errno;
+}
+
+/* Add an event to an existing or new category
+ * IN: cat_name, name of the category
+ * IN: event_index, index of the event
+ * If cat_name is NULL or a empty string, nothing happpens.
+ */
+int MPIR_T_cat_add_event(const char *cat_name, int event_index)
+{
+    name2index_hash_t *hash_entry;
+    cat_table_entry_t *cat;
+
+    /* NULL or empty string are allowed */
+    if (cat_name == NULL || *cat_name == '\0')
+        return MPI_SUCCESS;
+
+    HASH_FIND_STR(cat_hash, cat_name, hash_entry);
+
+    if (hash_entry != NULL) {
+        /* Found it, i.e., category already exists */
+        int cat_idx = hash_entry->idx;
+        cat = (cat_table_entry_t *) utarray_eltptr(cat_table, cat_idx);
+        utarray_push_back(cat->event_indices, &event_index, MPL_MEM_MPIT);
+    } else {
+        /* Not found, so create a new category */
+        cat = MPIR_T_cat_create(cat_name);
+        utarray_push_back(cat->event_indices, &event_index, MPL_MEM_MPIT);
+        /* Notify categories have been changed */
+        cat_stamp++;
+    }
+
+    return MPI_SUCCESS;;
 }
 
 /* A low level, generic and internally used interface to register
