@@ -2157,6 +2157,7 @@ MPI_T_event_get_source:
     source_index: SOURCE_INDEX, direction=out, [index identifying the source]
 MPI_T_event_get_timestamp:
     event_instance: EVENT_INSTANCE, [event instance provided to the callback function]
+    event_timestamp: TOOLS_TICK_COUNT, direction=out, [timestamp the event was observed]
 MPI_T_event_handle_alloc:
     event_index: EVENT_INDEX, [index of event type for which the registration handle is to be allocated]
     obj_handle: TOOL_MPI_OBJ, [reference to a handle of the mpi object to which this event is supposed to be bound]
@@ -2257,6 +2258,7 @@ MPI_T_source_get_num:
     num_sources: SOURCE_INDEX, direction=out, [returns number of event sources]
 MPI_T_source_get_timestamp:
     source_index: SOURCE_INDEX, [index of the source]
+    timestamp: TOOLS_TICK_COUNT, direction=out, [current timestamp from specified source]
 MPI_Test:
     request: REQUEST, direction=inout
     flag: LOGICAL, direction=out, [true if operation completed]

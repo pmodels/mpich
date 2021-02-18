@@ -546,3 +546,73 @@ MPI_T_pvar_write:
         goto fn_fail;
     }
 }
+
+MPI_T_category_get_num_events:
+    .desc: Returns the number of event types contained in the queried category.
+    .error: MPI_T_ERR_INVALID_INDEX
+
+MPI_T_category_get_events:
+    .desc: Query which event types are contained in a particular category.
+    .error: MPI_T_ERR_INVALID_INDEX
+
+MPI_T_source_get_num:
+    .desc: Query the number of event sources
+
+MPI_T_source_get_info:
+    .desc: Returns additional information on the source identified by the source_index argument
+    .skip: validate-INFO
+    .error: MPI_T_ERR_INVALID_INDEX
+
+MPI_T_source_get_timestamp:
+    .desc: Returns a current timestamp from the source identified by the source_index argument
+    .error: MPI_T_ERR_INVALID_INDEX, MPI_T_ERR_NOT_SUPPORTED
+
+MPI_T_event_get_num:
+    .desc: Query the number of event types
+
+MPI_T_event_get_info:
+    .desc: Returns additional information about a specific event type
+    .skip: validate-STRING, validate-DATATYPE, validate-DISPLACEMENT_NNI, validate-ARRAY_LENGTH_NNI, validate-INFO
+    .error: MPI_T_ERR_INVALID_INDEX
+
+MPI_T_event_get_index:
+    .desc: Returns the index of an event type identified by a known event type name
+    .error: MPI_T_ERR_INVALID_NAME
+
+MPI_T_event_handle_alloc:
+    .desc: Creates a registration handle for the event type identified by event_index
+    .skip: validate-TOOL_MPI_OBJ
+    .error: MPI_T_ERR_INVALID_INDEX
+
+MPI_T_event_handle_set_info:
+    .desc: Updates the hints of the event-registration handle associated with event_registration
+
+MPI_T_event_handle_get_info:
+    .desc: Returns a new info object containing the hints of the event-registration handle associated with event_registration
+
+MPI_T_event_register_callback:
+    .desc: Associates a user-defined function with an allocated event-registration handle
+
+MPI_T_event_callback_set_info:
+    .desc: Updates the hints of the callback function registered for the callback safety level specified by cb_safety of the event-registration handle associated with event_registration
+
+MPI_T_event_callback_get_info:
+    .desc: Returns a new info object containing the hints of the callback function registered for the callback safety level specified by cb_safety of the event-registration handle associated with event_registration.
+
+MPI_T_event_handle_free:
+    .desc: Initiates deallocation of the event-registration handle specified by event_registration
+
+MPI_T_event_set_dropped_handler:
+    .desc: Registers a function to be called when event information is dropped for the registration handle specified in event_registration
+
+MPI_T_event_read:
+    .desc: Copy one element of event data to a user-specified buffer
+
+MPI_T_event_copy:
+    .desc: Copy event data as a whole into a user-specified buffer
+
+MPI_T_event_get_timestamp:
+    .desc: Returns the timestamp of when the event was initially observed by the implementation
+
+MPI_T_event_get_source:
+    .desc: Returns the index of the source of the event instance

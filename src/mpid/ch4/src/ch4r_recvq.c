@@ -6,6 +6,8 @@
 #include "mpidimpl.h"
 #include "ch4r_recvq.h"
 
+int unexp_message_indices[2];
+
 int MPIDIG_recvq_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -34,6 +36,21 @@ int MPIDIG_recvq_init(void)
 
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RECVQ, MPI_DOUBLE, time_matching_unexpectedq, MPI_T_VERBOSITY_USER_DETAIL, MPI_T_BIND_NO_OBJECT, (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS), "CH4",        /* category name */
                                       "total time spent on search passes on the unexpected receive queue");
+
+    int source_index;
+    MPIR_T_register_source("RECVQ", "active message receive queue", MPI_T_SOURCE_ORDERED, NULL, -1,
+                           -1, &source_index);
+
+    MPI_Datatype array_of_datatypes[1] = { MPI_INT };
+    MPI_Aint array_of_displacements[1] = { 0 };
+    MPIR_T_register_event(source_index, "unexp_message_enqueued", MPI_T_VERBOSITY_USER_BASIC,
+                          array_of_datatypes, array_of_displacements, 1,
+                          "message added to unexpected queue", MPI_T_BIND_NO_OBJECT, "CH4",
+                          &unexp_message_indices[0]);
+    MPIR_T_register_event(source_index, "unexp_message_dequeued", MPI_T_VERBOSITY_USER_BASIC,
+                          array_of_datatypes, array_of_displacements, 1,
+                          "message removed from unexpected queue", MPI_T_BIND_NO_OBJECT, "CH4",
+                          &unexp_message_indices[1]);
 
     return mpi_errno;
 }

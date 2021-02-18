@@ -46,6 +46,7 @@ static void MPIR_T_cat_env_finalize(void)
             utarray_free(cat->cvar_indices);
             utarray_free(cat->pvar_indices);
             utarray_free(cat->subcat_indices);
+            utarray_free(cat->event_indices);
         }
 
         /* Free cat_table itself */
@@ -144,4 +145,5 @@ void MPIR_T_env_finalize(void)
     MPIR_T_cvar_env_finalize();
     MPIR_T_pvar_env_finalize();
     MPIR_T_cat_env_finalize();
+    MPIR_T_events_finalize();
 }
