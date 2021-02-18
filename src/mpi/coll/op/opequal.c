@@ -39,7 +39,8 @@ typedef struct MPIR_longdoubleint_eqltype {
 } MPIR_longdoubleint_eqltype;
 #endif
 
-#define MPIR_EQUAL_FLOAT_PRECISION 1e6
+#define MPIR_EQUAL_FLOAT_PRECISION 1e-6
+
 #define MPIR_EQUAL_FLOAT_COMPARE(_aValue, _bValue)              \
     (((_aValue <= _bValue + MPIR_EQUAL_FLOAT_PRECISION)         \
     && (_aValue >= _bValue - MPIR_EQUAL_FLOAT_PRECISION))?      \
@@ -47,7 +48,7 @@ typedef struct MPIR_longdoubleint_eqltype {
 
 
 /* If a child found unequal, its parent sticks to unequal. */
-/* Values of isEqual: 2 init 1 equal 0 not equal*/
+/* Values of isEqual: 1 equal 0 not equal, init using any value other than 0.*/
 #define MPIR_EQUAL_C_CASE_INT(c_type_) {                \
         c_type_ *a = (c_type_ *)inoutvec;               \
         c_type_ *b = (c_type_ *)invec;                  \
