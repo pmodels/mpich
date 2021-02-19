@@ -271,6 +271,10 @@ PAC_PREFIX_ALL_FLAGS(USER)
 # added to the MPICH wrappers (mpicc and friends) as well.
 PAC_PREFIX_ALL_FLAGS(WRAPPER)
 
+# confdb routines are used in multiple components. Let the macros know
+# whether WRAPPER FLAGS are used.
+m4_define([use_wrapper_flags], [1])
+
 # MPICH_MPIx_FLAGS are used by mpicc and friends.  They are like
 # WRAPPER flags, but these are provided by the user.
 AC_SUBST(MPICH_MPICC_CPPFLAGS)
@@ -1657,10 +1661,8 @@ if test -n "${with_pmix}" -a "${with_pmix}" != "no" ; then
     if test "${device_name}" != "ch4" ; then
         AC_MSG_ERROR([$device_name does not support PMIx])
     fi
-    PAC_PUSH_FLAG([LIBS])
     PAC_CHECK_HEADER_LIB_FATAL(pmix, pmix.h, pmix, PMIx_Init)
-    PAC_APPEND_FLAG([-lpmix],[WRAPPER_LIBS])
-    PAC_POP_FLAG([LIBS])
+    PAC_LIBS_ADD([-lpmix])
     AC_DEFINE(USE_PMIX_API, 1, [Define if PMIx API must be used])
 fi
 
@@ -2905,7 +2907,10 @@ fi
 if test "$MPID_NO_FLOAT16" != "yes" ; then
     AC_CACHE_CHECK([whether _Float16 is supported],
     pac_cv_have_float16,[
-    AC_TRY_COMPILE(,[_Float16 a;],
+    # The compiler might optimize out _Float16 usage and give a false
+    # positive for this test (observed with clang 6 on Linux with -O2).
+    # We use volatile as a way to disable optimizations.
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([],[volatile _Float16 a=1; return (int)a;])],
     pac_cv_have_float16=yes,pac_cv_have_float16=no)])
     if test "$pac_cv_have_float16" = "yes" ; then
         AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
@@ -4816,10 +4821,8 @@ fi
 AC_ARG_ENABLE(checkpointing,
     [AC_HELP_STRING([--enable-checkpointing], [Enable application checkpointing])],
     [ if test "$enableval" != "no" ; then
-	PAC_PUSH_FLAG([LIBS])
 	PAC_CHECK_HEADER_LIB_FATAL(blcr, libcr.h, cr, cr_init)
-	PAC_APPEND_FLAG([-lcr],[WRAPPER_LIBS])
-	PAC_POP_FLAG([LIBS])
+	PAC_LIBS_ADD([-lcr])
         AC_DEFINE(ENABLE_CHECKPOINTING,1,[Application checkpointing enabled])
       fi ],
 )

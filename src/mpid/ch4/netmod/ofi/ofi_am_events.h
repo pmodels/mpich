@@ -301,7 +301,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * ms
 
     if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         uint64_t mr_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
-        MPIDI_OFI_mr_key_free(mr_key);
+        MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, mr_key);
     }
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
     MPL_atomic_fetch_sub_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 1);

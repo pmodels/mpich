@@ -219,6 +219,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 }
 
 /* Externs:  see util.c for definition */
+#define MPIDI_OFI_LOCAL_MR_KEY 0
+#define MPIDI_OFI_COLL_MR_KEY 1
+#define MPIDI_OFI_INVALID_MR_KEY 0xFFFFFFFFFFFFFFFFULL
 int MPIDI_OFI_handle_cq_error_util(int ep_idx, ssize_t ret);
 int MPIDI_OFI_retry_progress(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint data_sz,
@@ -226,8 +229,8 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
 int MPIDI_OFI_mr_key_allocator_init(void);
-uint64_t MPIDI_OFI_mr_key_alloc(void);
-void MPIDI_OFI_mr_key_free(uint64_t index);
+uint64_t MPIDI_OFI_mr_key_alloc(int key_type, uint64_t requested_key);
+void MPIDI_OFI_mr_key_free(int key_type, uint64_t index);
 void MPIDI_OFI_mr_key_allocator_destroy(void);
 
 /* RMA */

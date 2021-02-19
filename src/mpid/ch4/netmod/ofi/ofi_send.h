@@ -255,7 +255,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* Set up a memory region for the lmt data transfer */
-            ctrl.rma_key = MPIDI_OFI_mr_key_alloc();
+            ctrl.rma_key = MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
             rma_key = ctrl.rma_key;
         }
 
