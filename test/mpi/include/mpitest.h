@@ -8,6 +8,7 @@
 
 #include <string.h>
 #include <mpi.h>
+#include "mtest_mpix.h"
 #include "mpitestconf.h"
 #include "mpithreadtest.h"
 #include "mtest_common.h"

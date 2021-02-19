@@ -38,6 +38,8 @@ def main():
             print("Loading %s ..." % f)
             load_mpi_api(f, RE.m.group(1))
 
+    load_mpix_txt()
+
     # -- Loading extra api prototypes (needed until other `buildiface` scripts are updated)
     G.mpi_declares = []
     if os.path.exists("%s/mpi_proto_extra.h" % binding_dir):
@@ -76,6 +78,7 @@ def main():
     dump_mpir_impl_h("src/include/mpir_impl.h")
     dump_errnames_txt(binding_dir + "/errnames.txt")
     dump_mpi_proto_h("src/include/mpi_proto.h")
+    dump_mtest_mpix_h("test/mpi/include/mtest_mpix.h")
 
 # ---------------------------------------------------------
 if __name__ == "__main__":
