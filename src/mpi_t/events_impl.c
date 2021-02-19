@@ -132,12 +132,12 @@ void MPIR_T_event_instance(int event_index, MPI_T_cb_safety cb_safety, void *dat
 static MPI_Count default_timestamp(void)
 {
     MPL_time_t t;
-    MPI_Count ticks;
+    long long ticks;
 
     MPL_wtime(&t);
     MPL_wtime_to_ticks(&t, &ticks);
 
-    return ticks;
+    return (MPI_Count) ticks;
 }
 
 void MPIR_T_events_finalize(void)
