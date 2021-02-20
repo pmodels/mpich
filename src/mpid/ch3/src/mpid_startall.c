@@ -316,11 +316,12 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
     return mpi_errno;
 }
 
-int MPID_Bcast_init( void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-               MPIR_Comm *comm_ptr, MPIR_Info* info_ptr, MPIR_Request **request )
+int MPID_Bcast_init(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                    MPIR_Comm *comm_ptr, MPIR_Info* info_ptr, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BCAST_INIT);
 
     mpi_errno = MPIR_Bcast_init_impl(buffer, count, datatype, root, comm_ptr, info_ptr, request);
     MPIR_ERR_CHECK(mpi_errno);
