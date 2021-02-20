@@ -12,10 +12,11 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule linear algorithm for neighbor_alltoallw */
-int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
+int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf,
+                                                      const MPI_Aint sendcounts[],
                                                       const MPI_Aint sdispls[],
                                                       const MPI_Datatype sendtypes[], void *recvbuf,
-                                                      const int recvcounts[],
+                                                      const MPI_Aint recvcounts[],
                                                       const MPI_Aint rdispls[],
                                                       const MPI_Datatype recvtypes[],
                                                       MPIR_Comm * comm_ptr,
@@ -72,10 +73,11 @@ int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf, const
 
 
 /* Non-blocking linear algo based neighbor_alltoallw */
-int MPIR_TSP_Ineighbor_alltoallw_allcomm_linear(const void *sendbuf, const int sendcounts[],
+int MPIR_TSP_Ineighbor_alltoallw_allcomm_linear(const void *sendbuf, const MPI_Aint sendcounts[],
                                                 const MPI_Aint sdispls[],
                                                 const MPI_Datatype sendtypes[], void *recvbuf,
-                                                const int recvcounts[], const MPI_Aint rdispls[],
+                                                const MPI_Aint recvcounts[],
+                                                const MPI_Aint rdispls[],
                                                 const MPI_Datatype recvtypes[],
                                                 MPIR_Comm * comm_ptr, MPIR_Request ** req)
 {

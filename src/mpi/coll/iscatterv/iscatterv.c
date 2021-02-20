@@ -57,10 +57,10 @@ cvars:
 /* any non-MPI functions go here, especially non-static ones */
 
 
-int MPIR_Iscatterv_allcomm_auto(const void *sendbuf, const int *sendcounts, const int *displs,
-                                MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                                MPIR_Request ** request)
+int MPIR_Iscatterv_allcomm_auto(const void *sendbuf, const MPI_Aint * sendcounts,
+                                const MPI_Aint * displs, MPI_Datatype sendtype, void *recvbuf,
+                                MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                                MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -114,10 +114,10 @@ int MPIR_Iscatterv_allcomm_auto(const void *sendbuf, const int *sendcounts, cons
     goto fn_exit;
 }
 
-int MPIR_Iscatterv_intra_sched_auto(const void *sendbuf, const int sendcounts[], const int displs[],
-                                    MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                    MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                                    MPIR_Sched_t s)
+int MPIR_Iscatterv_intra_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
+                                    const MPI_Aint displs[], MPI_Datatype sendtype, void *recvbuf,
+                                    MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -133,10 +133,10 @@ int MPIR_Iscatterv_intra_sched_auto(const void *sendbuf, const int sendcounts[],
     goto fn_exit;
 }
 
-int MPIR_Iscatterv_inter_sched_auto(const void *sendbuf, const int sendcounts[], const int displs[],
-                                    MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                    MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                                    MPIR_Sched_t s)
+int MPIR_Iscatterv_inter_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
+                                    const MPI_Aint displs[], MPI_Datatype sendtype, void *recvbuf,
+                                    MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -152,9 +152,10 @@ int MPIR_Iscatterv_inter_sched_auto(const void *sendbuf, const int sendcounts[],
     goto fn_exit;
 }
 
-int MPIR_Iscatterv_sched_auto(const void *sendbuf, const int sendcounts[], const int displs[],
-                              MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                              MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscatterv_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
+                              const MPI_Aint displs[], MPI_Datatype sendtype, void *recvbuf,
+                              MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                              MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -175,7 +176,7 @@ int MPIR_Iscatterv_sched_auto(const void *sendbuf, const int sendcounts[], const
     goto fn_exit;
 }
 
-int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int displs[],
+int MPIR_Iscatterv_impl(const void *sendbuf, const MPI_Aint sendcounts[], const MPI_Aint displs[],
                         MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                         MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                         MPIR_Request ** request)
@@ -251,7 +252,7 @@ int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int d
     goto fn_exit;
 }
 
-int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[],
+int MPIR_Iscatterv(const void *sendbuf, const MPI_Aint sendcounts[], const MPI_Aint displs[],
                    MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                    MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {

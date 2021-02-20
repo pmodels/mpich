@@ -68,9 +68,9 @@ cvars:
 */
 
 
-int MPIR_Ireduce_scatter_allcomm_auto(const void *sendbuf, void *recvbuf, const int *recvcounts,
-                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                      MPIR_Request ** request)
+int MPIR_Ireduce_scatter_allcomm_auto(const void *sendbuf, void *recvbuf,
+                                      const MPI_Aint * recvcounts, MPI_Datatype datatype, MPI_Op op,
+                                      MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -144,8 +144,8 @@ int MPIR_Ireduce_scatter_allcomm_auto(const void *sendbuf, void *recvbuf, const 
 }
 
 int MPIR_Ireduce_scatter_intra_sched_auto(const void *sendbuf, void *recvbuf,
-                                          const int recvcounts[], MPI_Datatype datatype, MPI_Op op,
-                                          MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                          const MPI_Aint recvcounts[], MPI_Datatype datatype,
+                                          MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -209,8 +209,8 @@ int MPIR_Ireduce_scatter_intra_sched_auto(const void *sendbuf, void *recvbuf,
 }
 
 int MPIR_Ireduce_scatter_inter_sched_auto(const void *sendbuf, void *recvbuf,
-                                          const int recvcounts[], MPI_Datatype datatype, MPI_Op op,
-                                          MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                          const MPI_Aint recvcounts[], MPI_Datatype datatype,
+                                          MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -221,7 +221,7 @@ int MPIR_Ireduce_scatter_inter_sched_auto(const void *sendbuf, void *recvbuf,
     return mpi_errno;
 }
 
-int MPIR_Ireduce_scatter_sched_auto(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Ireduce_scatter_sched_auto(const void *sendbuf, void *recvbuf, const MPI_Aint recvcounts[],
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                     MPIR_Sched_t s)
 {
@@ -238,7 +238,7 @@ int MPIR_Ireduce_scatter_sched_auto(const void *sendbuf, void *recvbuf, const in
     return mpi_errno;
 }
 
-int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const MPI_Aint recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                               MPIR_Request ** request)
 {
@@ -339,7 +339,7 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
     goto fn_exit;
 }
 
-int MPIR_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Ireduce_scatter(const void *sendbuf, void *recvbuf, const MPI_Aint recvcounts[],
                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                          MPIR_Request ** request)
 {

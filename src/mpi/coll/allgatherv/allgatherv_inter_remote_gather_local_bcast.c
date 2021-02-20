@@ -17,8 +17,8 @@
 
 int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, MPI_Aint sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
-                                                    const int *recvcounts, const int
-                                                    *displs, MPI_Datatype recvtype,
+                                                    const MPI_Aint * recvcounts, const MPI_Aint
+                                                    * displs, MPI_Datatype recvtype,
                                                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int remote_size, mpi_errno, root, rank;
@@ -94,7 +94,7 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, MPI_Ain
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Type_indexed_impl(remote_size, recvcounts, displs, recvtype, &newtype);
+    mpi_errno = MPIR_Type_indexed_c_impl(remote_size, recvcounts, displs, recvtype, &newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Type_commit_impl(&newtype);

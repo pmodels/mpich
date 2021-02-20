@@ -17,10 +17,11 @@
  * single buffer across the whole loop.  Something like MADRE is probably the
  * best solution for the MPI_IN_PLACE scenario.
  */
-int MPIR_Alltoallw_intra_pairwise_sendrecv_replace(const void *sendbuf, const int sendcounts[],
-                                                   const int sdispls[],
+int MPIR_Alltoallw_intra_pairwise_sendrecv_replace(const void *sendbuf, const MPI_Aint sendcounts[],
+                                                   const MPI_Aint sdispls[],
                                                    const MPI_Datatype sendtypes[], void *recvbuf,
-                                                   const int recvcounts[], const int rdispls[],
+                                                   const MPI_Aint recvcounts[],
+                                                   const MPI_Aint rdispls[],
                                                    const MPI_Datatype recvtypes[],
                                                    MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {

@@ -54,9 +54,9 @@ cvars:
 /* any non-MPI functions go here, especially non-static ones */
 
 
-int MPIR_Neighbor_alltoallw_allcomm_auto(const void *sendbuf, const int sendcounts[],
+int MPIR_Neighbor_alltoallw_allcomm_auto(const void *sendbuf, const MPI_Aint sendcounts[],
                                          const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
-                                         void *recvbuf, const int recvcounts[],
+                                         void *recvbuf, const MPI_Aint recvcounts[],
                                          const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
                                          MPIR_Comm * comm_ptr)
 {
@@ -93,10 +93,10 @@ int MPIR_Neighbor_alltoallw_allcomm_auto(const void *sendbuf, const int sendcoun
     return mpi_errno;
 }
 
-int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
+int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const MPI_Aint sendcounts[],
                                  const MPI_Aint sdispls[],
                                  const MPI_Datatype sendtypes[], void *recvbuf,
-                                 const int recvcounts[],
+                                 const MPI_Aint recvcounts[],
                                  const MPI_Aint rdispls[],
                                  const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr)
 {
@@ -145,10 +145,10 @@ int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
     goto fn_exit;
 }
 
-int MPIR_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[],
+int MPIR_Neighbor_alltoallw(const void *sendbuf, const MPI_Aint sendcounts[],
                             const MPI_Aint sdispls[],
                             const MPI_Datatype sendtypes[], void *recvbuf,
-                            const int recvcounts[], const MPI_Aint rdispls[],
+                            const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
                             const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

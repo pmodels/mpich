@@ -16,10 +16,11 @@
 
 int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
                                           MPI_Datatype sendtype, void *recvbuf,
-                                          const int *recvcounts, const int *displs,
+                                          const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                           MPI_Datatype recvtype, MPIR_Comm * comm,
                                           MPIR_TSP_sched_t * sched);
 
 int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                                    void *recvbuf, const int *recvcounts, const int *displs,
-                                    MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req);
+                                    void *recvbuf, const MPI_Aint * recvcounts,
+                                    const MPI_Aint * displs, MPI_Datatype recvtype,
+                                    MPIR_Comm * comm, MPIR_Request ** req);
