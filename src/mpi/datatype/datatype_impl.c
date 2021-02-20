@@ -6,7 +6,7 @@
 #include "mpiimpl.h"
 #include "datatype.h"
 
-void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_Aint * count)
+int MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_Aint * count)
 {
     MPI_Aint size;
 
@@ -36,13 +36,95 @@ void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_A
             (*count) = 0;
         }
     }
+    return MPI_SUCCESS;
 }
 
-void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size)
+int MPIR_Pack_impl(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
+                   void *outbuf, MPI_Aint outsize, MPI_Aint * position, MPIR_Comm * comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Aint actual_pack_bytes;
+    void *buf = (void *) ((char *) outbuf + *position);
+    mpi_errno = MPIR_Typerep_pack(inbuf, incount, datatype, 0, buf, outsize, &actual_pack_bytes);
+    MPIR_ERR_CHECK(mpi_errno);
+    *position += actual_pack_bytes;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Pack_external_impl(const char datarep[],
+                            const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
+                            void *outbuf, MPI_Aint outsize, MPI_Aint * position)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Aint actual_pack_bytes;
+    void *buf = (void *) ((char *) outbuf + *position);
+    mpi_errno = MPIR_Typerep_pack_external(inbuf, incount, datatype, buf, &actual_pack_bytes);
+    MPIR_ERR_CHECK(mpi_errno);
+    *position += actual_pack_bytes;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_fail;
+}
+
+int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
+                     void *outbuf, MPI_Aint outcount, MPI_Datatype datatype, MPIR_Comm * comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Aint actual_unpack_bytes;
+    void *buf = (void *) ((char *) inbuf + *position);
+    mpi_errno =
+        MPIR_Typerep_unpack(buf, insize, outbuf, outcount, datatype, 0, &actual_unpack_bytes);
+    MPIR_ERR_CHECK(mpi_errno);
+    *position += actual_unpack_bytes;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_fail;
+}
+
+int MPIR_Unpack_external_impl(const char datarep[],
+                              const void *inbuf, MPI_Aint insize, MPI_Aint * position,
+                              void *outbuf, MPI_Aint outcount, MPI_Datatype datatype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Aint actual_unpack_bytes;
+    void *buf = (void *) ((char *) inbuf + *position);
+    mpi_errno = MPIR_Typerep_unpack_external(buf, outbuf, outcount, datatype, &actual_unpack_bytes);
+    MPIR_ERR_CHECK(mpi_errno);
+    *position += actual_unpack_bytes;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_fail;
+}
+
+void MPIR_Pack_size(MPI_Aint incount, MPI_Datatype datatype, MPI_Aint * size)
 {
     MPI_Aint typesize;
     MPIR_Datatype_get_size_macro(datatype, typesize);
     *size = incount * typesize;
+}
+
+int MPIR_Pack_size_impl(MPI_Aint incount, MPI_Datatype datatype, MPIR_Comm * comm_ptr,
+                        MPI_Aint * size)
+{
+    MPIR_Pack_size(incount, datatype, size);
+    return MPI_SUCCESS;
+}
+
+int MPIR_Pack_external_size_impl(const char *datarep,
+                                 MPI_Aint incount, MPI_Datatype datatype, MPI_Aint * size)
+{
+    *size = incount * MPIR_Typerep_size_external32(datatype);
+    return MPI_SUCCESS;
 }
 
 int MPIR_Status_set_elements_x_impl(MPI_Status * status, MPI_Datatype datatype, MPI_Count count)
@@ -96,16 +178,15 @@ void MPIR_Type_free_impl(MPI_Datatype * datatype)
     *datatype = MPI_DATATYPE_NULL;
 }
 
-void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * extent)
+int MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * extent)
 {
     MPI_Count lb_x, extent_x;
 
     MPIR_Type_get_extent_x_impl(datatype, &lb_x, &extent_x);
     *lb = (lb_x > MPIR_AINT_MAX) ? MPI_UNDEFINED : (MPI_Aint) lb_x;
     *extent = (extent_x > MPIR_AINT_MAX) ? MPI_UNDEFINED : (MPI_Aint) extent_x;
+    return MPI_SUCCESS;
 }
-
-/* any non-MPI functions go here, especially non-static ones */
 
 void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * extent)
 {
@@ -122,14 +203,15 @@ void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Coun
     }
 }
 
-void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
-                                    MPI_Aint * true_extent)
+int MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
+                                   MPI_Aint * true_extent)
 {
     MPI_Count true_lb_x, true_extent_x;
 
     MPIR_Type_get_true_extent_x_impl(datatype, &true_lb_x, &true_extent_x);
     *true_lb = (true_lb_x > MPIR_AINT_MAX) ? MPI_UNDEFINED : (MPI_Aint) true_lb_x;
     *true_extent = (true_extent_x > MPIR_AINT_MAX) ? MPI_UNDEFINED : (MPI_Aint) true_extent_x;
+    return MPI_SUCCESS;
 }
 
 /* any non-MPI functions go here, especially non-static ones */
@@ -161,7 +243,15 @@ void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement)
     }
 }
 
-/* any non-MPI functions go here, especially non-static ones */
+int MPIR_Type_size_impl(MPI_Datatype datatype, MPI_Aint * size)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Datatype_get_size_macro(datatype, *size);
+    MPIR_Assert(*size >= 0);
+
+    return mpi_errno;
+}
 
 int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size)
 {

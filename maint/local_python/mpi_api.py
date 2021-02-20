@@ -180,3 +180,9 @@ def parse_param_attributes(p):
         p['constant'] = True
     else:
         p['constant'] = False
+
+def function_has_POLY_parameters(func):
+    for p in func['parameters']:
+        if p['kind'].startswith('POLY'):
+            return True
+    return False

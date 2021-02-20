@@ -61,8 +61,8 @@ typedef struct MPII_Bsend_data {
 } MPII_Bsend_data_t;
 
 /* Function Prototypes for the bsend utility functions */
-int MPIR_Bsend_attach(void *, int);
-int MPIR_Bsend_detach(void *, int *);
+int MPIR_Bsend_attach(void *, MPI_Aint);
+int MPIR_Bsend_detach(void *, MPI_Aint *);
 int MPIR_Bsend_isend(const void *, int, MPI_Datatype, int, int, MPIR_Comm *, MPIR_Request **);
 int MPIR_Bsend_free_req_seg(MPIR_Request *);
 

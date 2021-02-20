@@ -150,11 +150,6 @@ MPI_Buffer_detach:
         really the address of a void pointer.  See the rationale in the
         standard for more details.
 */
-{
-    mpi_errno = MPIR_Bsend_detach(buffer_addr, size);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-}
 
 MPI_Ibsend:
     .desc: Starts a nonblocking buffered send
