@@ -1164,7 +1164,7 @@ def dump_poly_pre_filter(func):
                 replace_impl_arg_list(func['_impl_arg_list'], p['name'], "&%s_c" % p['name'])
 
     def filter_array():
-        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter\b)', func['name'], re.IGNORECASE):
+        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
             dump_coll_v_swap(func)
         elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
             dump_type_create_swap(func)
@@ -1207,7 +1207,7 @@ def dump_poly_post_filter(func):
                     G.out.append("*%s = %s;" % (p['name'], val))
 
     def filter_array(int_max):
-        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter\b)', func['name'], re.IGNORECASE):
+        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
             dump_coll_v_exit(func)
         elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
             dump_type_create_exit(func)
@@ -1349,7 +1349,7 @@ def dump_coll_v_swap(func):
             replace_arg('sendcounts', 'tmp_array')
             replace_arg('recvcounts', 'tmp_array + indegree')
     # classical collectives
-    elif RE.match(r'mpi_i?reduce_scatter\b', func['name'], re.IGNORECASE):
+    elif RE.match(r'(mpi_i?reduce_scatter(_init)?\b)', func['name'], re.IGNORECASE):
         G.out.append("int n = comm_ptr->local_size;")
         allocate_tmp_array("n")
         swap_one("n", "recvcounts")
@@ -2052,7 +2052,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         dump_validate_op(op, dt, True)
         dump_validate_datatype(func, dt)
         (sct, rct) = (ct, ct)
-        if RE.search(r'reduce_scatter$', func['name'], re.IGNORECASE):
+        if RE.search(r'reduce_scatter(_init)?$', func['name'], re.IGNORECASE):
             dump_validate_get_comm_size(func)
             G.out.append("int sum = 0;")
             dump_for_open('i', 'comm_size')
@@ -2148,7 +2148,7 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
             G.out.append("if (%s) {" % cond)
             G.out.append("    MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);")
             G.out.append("}")
-        elif RE.search(r'i?(allgather|gather|scatter)(v?)$', func_name, re.IGNORECASE):
+        elif RE.search(r'i?(allgather|gather|scatter)(v?)(_init)?$', func_name, re.IGNORECASE):
             t1, t2 = RE.m.group(1, 2)
             (a, b) = ("send", "recv")
             if RE.match(r'scatter', t1, re.IGNORECASE):
@@ -2202,7 +2202,7 @@ def dump_validate_op(op, dt, is_coll):
 
 def dump_validate_get_comm_size(func):
     if '_got_comm_size' not in func:
-        if RE.match(r'mpi_i?reduce_scatter\b', func['name'], re.IGNORECASE):
+        if RE.match(r'mpi_i?(reduce_scatter_init|reduce_scatter)\b', func['name'], re.IGNORECASE):
             G.out.append("int comm_size = comm_ptr->local_size;")
         else:
             G.out.append("int comm_size;")
