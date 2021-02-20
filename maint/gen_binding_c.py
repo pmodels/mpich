@@ -56,10 +56,15 @@ def main():
         else:
             G.out = []
             G.err_codes = {}
-            mapping = G.MAPS['SMALL_C_KIND_MAP']
 
             # dumps the code to G.out array
-            dump_mpi_c(func, mapping)
+            # Note: set func['_has_poly'] = False to skip embiggenning
+            func['_has_poly'] = function_has_POLY_parameters(func)
+            if func['_has_poly']:
+                dump_mpi_c(func, "SMALL")
+                dump_mpi_c(func, "BIG")
+            else:
+                dump_mpi_c(func, "SMALL")
 
             file_path = get_func_file_path(func, binding_dir)
             dump_c_file(file_path, G.out)

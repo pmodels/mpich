@@ -82,11 +82,11 @@ int MPIR_Type_get_contents_impl(MPI_Datatype datatype, int max_integers, int max
     return mpi_errno;
 }
 
-int MPIR_Type_get_contents_c_impl(MPI_Datatype datatype, MPI_Aint max_integers,
-                                  MPI_Aint max_addresses, MPI_Aint max_counts,
-                                  MPI_Aint max_datatypes, int array_of_integers[],
-                                  MPI_Aint array_of_addresses[], MPI_Count array_of_counts[],
-                                  MPI_Datatype array_of_datatypes[])
+int MPIR_Type_get_contents_large_impl(MPI_Datatype datatype, MPI_Aint max_integers,
+                                      MPI_Aint max_addresses, MPI_Aint max_counts,
+                                      MPI_Aint max_datatypes, int array_of_integers[],
+                                      MPI_Aint array_of_addresses[], MPI_Count array_of_counts[],
+                                      MPI_Datatype array_of_datatypes[])
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -158,10 +158,10 @@ int MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
     return mpi_errno;
 }
 
-int MPIR_Type_get_envelope_c_impl(MPI_Datatype datatype,
-                                  MPI_Aint * num_integers, MPI_Aint * num_addresses,
-                                  MPI_Aint * num_large_counts, MPI_Aint * num_datatypes,
-                                  int *combiner)
+int MPIR_Type_get_envelope_large_impl(MPI_Datatype datatype,
+                                      MPI_Aint * num_integers, MPI_Aint * num_addresses,
+                                      MPI_Aint * num_large_counts, MPI_Aint * num_datatypes,
+                                      int *combiner)
 {
     MPIR_Type_get_envelope(datatype, num_integers, num_addresses, num_large_counts,
                            num_datatypes, combiner);

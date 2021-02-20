@@ -35,6 +35,7 @@ noinst_PROGRAMS =             \
     large_type                \
     large_type_sendrec        \
     large_vec                 \
+    type_large	              \
     lbub                      \
     lbub_oldapi               \
     localpack                 \

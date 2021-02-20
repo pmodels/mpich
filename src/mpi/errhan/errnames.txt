@@ -29,6 +29,10 @@
 **detach_shar_mem %s %s:unable to detach shared memory - %s %s
 **need_get_envelope_c:use MPI_Type_get_envelope_c to query large count datatype
 **need_get_contents_c:use MPI_Type_get_contents_c to query large count datatype
+**too_big_for_input:The input is too big for internal routines
+**too_big_for_input %s:The input argument %s is too big to fit for internal routines
+**too_big_for_output:The result is too big to fit in the output argument
+**too_big_for_output %s:The result is too big to fit in the output argument - %s
 **notimpl:Function not implemented
 **notimpl %s:Function %s not implemented
 **nullptr:Null pointer

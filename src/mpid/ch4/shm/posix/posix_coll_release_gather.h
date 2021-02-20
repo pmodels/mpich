@@ -81,7 +81,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     if (is_contig) {
         MPIR_Datatype_get_size_macro(datatype, type_size);
     } else {
-        MPIR_Pack_size_impl(1, datatype, &type_size);
+        MPIR_Pack_size(1, datatype, &type_size);
     }
 
     if (!is_contig || type_size >= MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE) {
@@ -257,7 +257,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     if (is_contig) {
         MPIR_Datatype_get_size_macro(datatype, type_size);
     } else {
-        MPIR_Pack_size_impl(1, datatype, &type_size);
+        MPIR_Pack_size(1, datatype, &type_size);
     }
 
     if (sendbuf == MPI_IN_PLACE) {
@@ -382,7 +382,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     if (is_contig) {
         MPIR_Datatype_get_size_macro(datatype, type_size);
     } else {
-        MPIR_Pack_size_impl(1, datatype, &type_size);
+        MPIR_Pack_size(1, datatype, &type_size);
     }
 
     if (sendbuf == MPI_IN_PLACE) {
