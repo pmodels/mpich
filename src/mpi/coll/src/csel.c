@@ -831,7 +831,7 @@ static inline bool is_block_regular(MPIR_Csel_coll_sig_s coll_info)
 {
     bool is_regular = true;
     int i = 0;
-    const int *recvcounts = NULL;
+    const MPI_Aint *recvcounts = NULL;
 
     switch (coll_info.coll_type) {
         case MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER:

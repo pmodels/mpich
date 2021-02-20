@@ -11,7 +11,7 @@
 #include "tsp_undef.h"
 
 int MPIR_Ireduce_scatter_intra_gentran_recexch(const void *sendbuf, void *recvbuf,
-                                               const int *recvcounts, MPI_Datatype datatype,
+                                               const MPI_Aint * recvcounts, MPI_Datatype datatype,
                                                MPI_Op op, MPIR_Comm * comm, int k,
                                                MPIR_Request ** req)
 {

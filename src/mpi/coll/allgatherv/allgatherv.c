@@ -70,8 +70,8 @@ int MPIR_Allgatherv_allcomm_auto(const void *sendbuf,
                                  MPI_Aint sendcount,
                                  MPI_Datatype sendtype,
                                  void *recvbuf,
-                                 const int *recvcounts,
-                                 const int *displs,
+                                 const MPI_Aint * recvcounts,
+                                 const MPI_Aint * displs,
                                  MPI_Datatype recvtype,
                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
@@ -137,7 +137,7 @@ int MPIR_Allgatherv_allcomm_auto(const void *sendbuf,
 }
 
 int MPIR_Allgatherv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                         void *recvbuf, const int *recvcounts, const int *displs,
+                         void *recvbuf, const MPI_Aint * recvcounts, const MPI_Aint * displs,
                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -206,8 +206,8 @@ int MPIR_Allgatherv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype s
 }
 
 int MPIR_Allgatherv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                    void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
-                    MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                    void *recvbuf, const MPI_Aint * recvcounts, const MPI_Aint * displs,
+                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 

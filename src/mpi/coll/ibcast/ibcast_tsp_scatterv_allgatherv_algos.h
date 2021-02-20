@@ -23,7 +23,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     int size, rank, tag;
     int i, j, x, is_contig;
     void *tmp_buf = NULL;
-    int *cnts, *displs;
+    MPI_Aint *cnts, *displs;
     size_t nbytes;
     int tree_type;
     MPIR_Treealgo_tree_t my_tree, parents_tree;
@@ -56,8 +56,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     extent = MPL_MAX(extent, true_extent);
 
     nbytes = type_size * count;
-    MPIR_CHKLMEM_MALLOC(cnts, int *, sizeof(int) * size, mpi_errno, "cnts", MPL_MEM_COLL);      /* to store counts of each rank */
-    MPIR_CHKLMEM_MALLOC(displs, int *, sizeof(int) * size, mpi_errno, "displs", MPL_MEM_COLL);  /* to store displs of each rank */
+    MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, sizeof(MPI_Aint) * size, mpi_errno, "cnts", MPL_MEM_COLL);    /* to store counts of each rank */
+    MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, sizeof(MPI_Aint) * size, mpi_errno, "displs", MPL_MEM_COLL);        /* to store displs of each rank */
 
     total_count = 0;
     for (i = 0; i < size; i++)

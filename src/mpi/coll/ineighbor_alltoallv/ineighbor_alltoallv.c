@@ -56,11 +56,11 @@ cvars:
 */
 
 
-int MPIR_Ineighbor_alltoallv_allcomm_auto(const void *sendbuf, const int sendcounts[],
-                                          const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
-                                          const int recvcounts[], const int rdispls[],
-                                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                          MPIR_Request ** request)
+int MPIR_Ineighbor_alltoallv_allcomm_auto(const void *sendbuf, const MPI_Aint sendcounts[],
+                                          const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                          void *recvbuf, const MPI_Aint recvcounts[],
+                                          const MPI_Aint rdispls[], MPI_Datatype recvtype,
+                                          MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -118,10 +118,10 @@ int MPIR_Ineighbor_alltoallv_allcomm_auto(const void *sendbuf, const int sendcou
     goto fn_exit;
 }
 
-int MPIR_Ineighbor_alltoallv_intra_sched_auto(const void *sendbuf, const int sendcounts[],
-                                              const int sdispls[], MPI_Datatype sendtype,
-                                              void *recvbuf, const int recvcounts[],
-                                              const int rdispls[], MPI_Datatype recvtype,
+int MPIR_Ineighbor_alltoallv_intra_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
+                                              const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                              void *recvbuf, const MPI_Aint recvcounts[],
+                                              const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                               MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -139,10 +139,10 @@ int MPIR_Ineighbor_alltoallv_intra_sched_auto(const void *sendbuf, const int sen
     goto fn_exit;
 }
 
-int MPIR_Ineighbor_alltoallv_inter_sched_auto(const void *sendbuf, const int sendcounts[],
-                                              const int sdispls[], MPI_Datatype sendtype,
-                                              void *recvbuf, const int recvcounts[],
-                                              const int rdispls[], MPI_Datatype recvtype,
+int MPIR_Ineighbor_alltoallv_inter_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
+                                              const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                              void *recvbuf, const MPI_Aint recvcounts[],
+                                              const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                               MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -160,10 +160,10 @@ int MPIR_Ineighbor_alltoallv_inter_sched_auto(const void *sendbuf, const int sen
     goto fn_exit;
 }
 
-int MPIR_Ineighbor_alltoallv_sched_auto(const void *sendbuf, const int sendcounts[],
-                                        const int sdispls[], MPI_Datatype sendtype,
-                                        void *recvbuf, const int recvcounts[],
-                                        const int rdispls[], MPI_Datatype recvtype,
+int MPIR_Ineighbor_alltoallv_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
+                                        const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                        void *recvbuf, const MPI_Aint recvcounts[],
+                                        const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                         MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -183,10 +183,10 @@ int MPIR_Ineighbor_alltoallv_sched_auto(const void *sendbuf, const int sendcount
     return mpi_errno;
 }
 
-int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
-                                  const int sdispls[], MPI_Datatype sendtype,
-                                  void *recvbuf, const int recvcounts[],
-                                  const int rdispls[], MPI_Datatype recvtype,
+int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const MPI_Aint sendcounts[],
+                                  const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                  void *recvbuf, const MPI_Aint recvcounts[],
+                                  const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                   MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -271,10 +271,10 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
     goto fn_exit;
 }
 
-int MPIR_Ineighbor_alltoallv(const void *sendbuf, const int sendcounts[],
-                             const int sdispls[], MPI_Datatype sendtype,
-                             void *recvbuf, const int recvcounts[],
-                             const int rdispls[], MPI_Datatype recvtype,
+int MPIR_Ineighbor_alltoallv(const void *sendbuf, const MPI_Aint sendcounts[],
+                             const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                             void *recvbuf, const MPI_Aint recvcounts[],
+                             const MPI_Aint rdispls[], MPI_Datatype recvtype,
                              MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;

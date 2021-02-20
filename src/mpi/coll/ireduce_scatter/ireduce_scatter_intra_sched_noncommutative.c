@@ -21,8 +21,9 @@
  * Cost = lgp.alpha + n.(lgp-(p-1)/p).beta + n.(lgp-(p-1)/p).gamma
  */
 int MPIR_Ireduce_scatter_intra_sched_noncommutative(const void *sendbuf, void *recvbuf,
-                                                    const int recvcounts[], MPI_Datatype datatype,
-                                                    MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                    const MPI_Aint recvcounts[],
+                                                    MPI_Datatype datatype, MPI_Op op,
+                                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size = comm_ptr->local_size;

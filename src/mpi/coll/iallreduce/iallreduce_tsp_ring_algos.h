@@ -24,7 +24,8 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     int nranks, is_inplace, rank;
     size_t extent;
     MPI_Aint lb, true_extent;
-    int *cnts, *displs, recv_id, *reduce_id, nvtcs, vtcs;
+    MPI_Aint *cnts, *displs;
+    int recv_id, *reduce_id, nvtcs, vtcs;
     int send_rank, recv_rank, total_count;
     void *tmpbuf;
     int tag;
@@ -41,8 +42,10 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
 
-    MPIR_CHKLMEM_MALLOC(cnts, int *, nranks * sizeof(int), mpi_errno, "cnts", MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(displs, int *, nranks * sizeof(int), mpi_errno, "displs", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, nranks * sizeof(MPI_Aint), mpi_errno, "cnts",
+                        MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, nranks * sizeof(MPI_Aint), mpi_errno, "displs",
+                        MPL_MEM_COLL);
 
     for (i = 0; i < nranks; i++)
         cnts[i] = 0;

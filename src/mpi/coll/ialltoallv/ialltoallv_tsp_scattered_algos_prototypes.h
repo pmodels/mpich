@@ -14,15 +14,16 @@
 #undef MPIR_TSP_Ialltoallv_sched_intra_scattered
 #define MPIR_TSP_Ialltoallv_sched_intra_scattered           MPIR_TSP_NAMESPACE(Ialltoallv_sched_intra_scattered)
 
-int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sendcounts[],
-                                              const int sdispls[], MPI_Datatype sendtype,
-                                              void *recvbuf, const int recvcounts[],
-                                              const int rdispls[], MPI_Datatype recvtype,
+int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Aint sendcounts[],
+                                              const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                              void *recvbuf, const MPI_Aint recvcounts[],
+                                              const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                               MPIR_Comm * comm, int batch_size, int bblock,
                                               MPIR_TSP_sched_t * sched);
 
-int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcounts[],
-                                        const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
-                                        const int recvcounts[], const int rdispls[],
-                                        MPI_Datatype recvtype, MPIR_Comm * comm, int batch_size,
-                                        int bblock, MPIR_Request ** req);
+int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const MPI_Aint sendcounts[],
+                                        const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                        void *recvbuf, const MPI_Aint recvcounts[],
+                                        const MPI_Aint rdispls[], MPI_Datatype recvtype,
+                                        MPIR_Comm * comm, int batch_size, int bblock,
+                                        MPIR_Request ** req);

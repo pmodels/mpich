@@ -592,12 +592,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intra_composition_alpha(const void *sendbuf,
-                                                                     const int *sendcounts,
-                                                                     const int *sdispls,
+                                                                     const MPI_Aint * sendcounts,
+                                                                     const MPI_Aint * sdispls,
                                                                      MPI_Datatype sendtype,
                                                                      void *recvbuf,
-                                                                     const int *recvcounts,
-                                                                     const int *rdispls,
+                                                                     const MPI_Aint * recvcounts,
+                                                                     const MPI_Aint * rdispls,
                                                                      MPI_Datatype recvtype,
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag)
@@ -616,13 +616,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intra_composition_alpha(const void 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void *sendbuf,
-                                                                     const int sendcounts[],
-                                                                     const int sdispls[],
+                                                                     const MPI_Aint sendcounts[],
+                                                                     const MPI_Aint sdispls[],
                                                                      const MPI_Datatype
                                                                      sendtypes[],
                                                                      void *recvbuf,
-                                                                     const int recvcounts[],
-                                                                     const int rdispls[],
+                                                                     const MPI_Aint recvcounts[],
+                                                                     const MPI_Aint rdispls[],
                                                                      const MPI_Datatype
                                                                      recvtypes[],
                                                                      MPIR_Comm * comm_ptr,
@@ -668,8 +668,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void
                                                                       MPI_Aint sendcount,
                                                                       MPI_Datatype sendtype,
                                                                       void *recvbuf,
-                                                                      const int *recvcounts,
-                                                                      const int *displs,
+                                                                      const MPI_Aint * recvcounts,
+                                                                      const MPI_Aint * displs,
                                                                       MPI_Datatype recvtype,
                                                                       MPIR_Comm * comm_ptr,
                                                                       MPIR_Errflag_t * errflag)
@@ -712,8 +712,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_intra_composition_alpha(const void *s
                                                                    MPI_Aint sendcount,
                                                                    MPI_Datatype sendtype,
                                                                    void *recvbuf,
-                                                                   const int *recvcounts,
-                                                                   const int *displs,
+                                                                   const MPI_Aint * recvcounts,
+                                                                   const MPI_Aint * displs,
                                                                    MPI_Datatype recvtype,
                                                                    int root, MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag)
@@ -754,8 +754,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intra_composition_alpha(const void *s
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_composition_alpha(const void *sendbuf,
-                                                                    const int *sendcounts,
-                                                                    const int *displs,
+                                                                    const MPI_Aint * sendcounts,
+                                                                    const MPI_Aint * displs,
                                                                     MPI_Datatype sendtype,
                                                                     void *recvbuf,
                                                                     MPI_Aint recvcount,
@@ -778,7 +778,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_composition_alpha(const void *
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_composition_alpha(const void *sendbuf,
                                                                           void *recvbuf,
-                                                                          const int
+                                                                          const MPI_Aint
                                                                           recvcounts[],
                                                                           MPI_Datatype
                                                                           datatype, MPI_Op op,

@@ -57,8 +57,8 @@ int MPIDU_bc_allgather(MPIR_Comm * allgather_comm, void *bc, int bc_len, int sam
         return mpi_errno;
     }
 
-    int *recv_cnts = MPL_calloc(num_nodes, sizeof(int), MPL_MEM_OTHER);
-    int *recv_offs = MPL_calloc(num_nodes, sizeof(int), MPL_MEM_OTHER);
+    MPI_Aint *recv_cnts = MPL_calloc(num_nodes, sizeof(MPI_Aint), MPL_MEM_OTHER);
+    MPI_Aint *recv_offs = MPL_calloc(num_nodes, sizeof(MPI_Aint), MPL_MEM_OTHER);
     for (i = 0; i < size; i++) {
         int node_id = MPIR_Process.node_map[i];
         recv_cnts[node_id]++;

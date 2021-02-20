@@ -24,7 +24,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     ucp_mem_h mem_h;
     int cntr = 0;
     size_t rkey_size = 0;
-    int *rkey_sizes = NULL, *recv_disps = NULL, i;
+    MPI_Aint *rkey_sizes = NULL, *recv_disps = NULL, i;
     char *rkey_buffer = NULL, *rkey_recv_buff = NULL;
     struct ucx_share *share_data = NULL;
     ucp_mem_map_params_t mem_map_params;
@@ -68,13 +68,13 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
         MPIDI_UCX_CHK_STATUS(status);
     }
 
-    rkey_sizes = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size, MPL_MEM_OTHER);
-    rkey_sizes[comm_ptr->rank] = (int) rkey_size;
-    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 1, MPI_INT, rkey_sizes, 1, MPI_INT, comm_ptr, &err);
+    rkey_sizes = (MPI_Aint *) MPL_malloc(sizeof(MPI_Aint) * comm_ptr->local_size, MPL_MEM_OTHER);
+    rkey_sizes[comm_ptr->rank] = (MPI_Aint) rkey_size;
+    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 1, MPI_AINT, rkey_sizes, 1, MPI_AINT, comm_ptr, &err);
 
     MPIR_ERR_CHECK(mpi_errno);
 
-    recv_disps = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size, MPL_MEM_OTHER);
+    recv_disps = (MPI_Aint *) MPL_malloc(sizeof(MPI_Aint) * comm_ptr->local_size, MPL_MEM_OTHER);
 
 
     for (i = 0; i < comm_ptr->local_size; i++) {

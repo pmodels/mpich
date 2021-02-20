@@ -75,8 +75,8 @@ typedef struct {
             MPI_Aint sendcount;
             MPI_Datatype sendtype;
             void *recvbuf;
-            const int *recvcounts;
-            const int *displs;
+            const MPI_Aint *recvcounts;
+            const MPI_Aint *displs;
             MPI_Datatype recvtype;
         } allgatherv, iallgatherv, neighbor_allgatherv, ineighbor_allgatherv;
         struct {
@@ -96,31 +96,31 @@ typedef struct {
         } alltoall, ialltoall, neighbor_alltoall, ineighbor_alltoall;
         struct {
             const void *sendbuf;
-            const int *sendcounts;
-            const int *sdispls;
+            const MPI_Aint *sendcounts;
+            const MPI_Aint *sdispls;
             MPI_Datatype sendtype;
             void *recvbuf;
-            const int *recvcounts;
-            const int *rdispls;
+            const MPI_Aint *recvcounts;
+            const MPI_Aint *rdispls;
             MPI_Datatype recvtype;
         } alltoallv, ialltoallv, neighbor_alltoallv, ineighbor_alltoallv;
         struct {
             const void *sendbuf;
-            const int *sendcounts;
-            const int *sdispls;
+            const MPI_Aint *sendcounts;
+            const MPI_Aint *sdispls;
             const MPI_Datatype *sendtypes;
             void *recvbuf;
-            const int *recvcounts;
-            const int *rdispls;
+            const MPI_Aint *recvcounts;
+            const MPI_Aint *rdispls;
             const MPI_Datatype *recvtypes;
         } alltoallw, ialltoallw;
         struct {
             const void *sendbuf;
-            const int *sendcounts;
+            const MPI_Aint *sendcounts;
             const MPI_Aint *sdispls;
             const MPI_Datatype *sendtypes;
             void *recvbuf;
-            const int *recvcounts;
+            const MPI_Aint *recvcounts;
             const MPI_Aint *rdispls;
             const MPI_Datatype *recvtypes;
         } neighbor_alltoallw, ineighbor_alltoallw;
@@ -154,8 +154,8 @@ typedef struct {
             MPI_Aint sendcount;
             MPI_Datatype sendtype;
             void *recvbuf;
-            const int *recvcounts;
-            const int *displs;
+            const MPI_Aint *recvcounts;
+            const MPI_Aint *displs;
             MPI_Datatype recvtype;
             int root;
         } gatherv, igatherv;
@@ -170,7 +170,7 @@ typedef struct {
         struct {
             const void *sendbuf;
             void *recvbuf;
-            const int *recvcounts;
+            const MPI_Aint *recvcounts;
             MPI_Datatype datatype;
             MPI_Op op;
         } reduce_scatter, ireduce_scatter;
@@ -190,8 +190,8 @@ typedef struct {
         } scan, iscan;
         struct {
             const void *sendbuf;
-            const int *sendcounts;
-            const int *displs;
+            const MPI_Aint *sendcounts;
+            const MPI_Aint *displs;
             MPI_Datatype sendtype;
             MPI_Aint recvcount;
             void *recvbuf;

@@ -15,10 +15,10 @@
  *
  * Cost = (p-1).alpha + n.((p-1)/p).beta
 */
-int MPIR_Iscatterv_allcomm_sched_linear(const void *sendbuf, const int sendcounts[],
-                                        const int displs[], MPI_Datatype sendtype, void *recvbuf,
-                                        MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscatterv_allcomm_sched_linear(const void *sendbuf, const MPI_Aint sendcounts[],
+                                        const MPI_Aint displs[], MPI_Datatype sendtype,
+                                        void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                                        int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
