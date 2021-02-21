@@ -167,9 +167,9 @@ def dump_mpi_proto_h(f):
     list_b = []  # tool prototypes
     list_c = []  # large prototypes
     for l in G.mpi_declares:
-        if re.match(r'int (MPI_T_|MPIX_Grequest_)', l):
+        if re.match(r'int (MPIX?_T_|MPIX_Grequest_)', l):
             list_b.append(l)
-        elif re.match(r'int MPI_\w+_c\(', l):
+        elif re.match(r'int MPIX?_\w+_c\(', l):
             list_c.append(l)
         else:
             list_a.append(l)
