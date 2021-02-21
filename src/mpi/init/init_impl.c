@@ -65,14 +65,12 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     int mpi_errno = MPI_SUCCESS;
     MPIR_Session *session_ptr = NULL;
 
-    /* Until we identify all the functions that may share states across sessions and
-     * protect them approprately, we require THREAD_MULTIPLE to support sessions */
-
     int provided;
+    /* Let's try ask for MPI_THREAD_MULTIPLE, but it probably still works with
+     * MPI_THREAD_SINGLE since we use MPL_Initlock_lock for cross-session locks.
+     */
     mpi_errno = MPII_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &provided, &session_ptr);
     MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Assert(provided == MPI_THREAD_MULTIPLE);
 
     session_ptr->thread_level = provided;
 
