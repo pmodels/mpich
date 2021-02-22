@@ -523,8 +523,8 @@ typedef int MPI_Info;
 #define MPI_MAX_INFO_VAL      1024
 
 /* for session */
-typedef int MPI_Session;
-#define MPI_SESSION_NULL     ((MPI_Session)0x38000000)
+typedef int MPIX_Session;
+#define MPIX_SESSION_NULL     ((MPIX_Session)0x38000000)
 
 /* for subarray and darray constructors */
 #define MPI_ORDER_C              56
