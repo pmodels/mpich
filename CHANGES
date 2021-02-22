@@ -1,4 +1,30 @@
 ===============================================================================
+                               Changes in 4.0a1
+===============================================================================
+
+# Implemented basic MPI-4 session API using MPIX interface.
+
+# Implemented basic MPI-4 partitioned communication API using MPIX interface.
+
+# Implemented MPI-4 large-count API using MPIX interface.
+
+# Implemented MPI-4 Tool events API using MPIX_T interface.
+
+# Implemented MPI-4 persistent bcast -- MPIX_Bcast_init.
+
+# Implemented MPIX_Isendrecv and MPIX_Isendrecv_replace.
+
+# Implemented MPIX_Comm_idup_with_info.
+
+# Implemented MPIX_Delete_error_{class,code,string}.
+
+# Implemented MPIX_Info_get_string.
+
+# MPI_Info objects can be accessed before MPI_Init{_thread}.
+
+# Support explict --without-cuda configure option.
+
+===============================================================================
                                Changes in 3.4
 ===============================================================================
 
