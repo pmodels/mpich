@@ -108,7 +108,9 @@ void MPIR_T_event_instance(int event_index, MPI_T_cb_safety cb_safety, void *dat
                 MPIR_T_source_t *source;
                 MPIR_T_event_instance_t event_instance;
                 HASH_FIND_INT(sources, &event->source_index, source);
+#ifdef HAVE_ERROR_CHECKING
                 event_instance.kind = MPIR_T_EVENT_INSTANCE;
+#endif
                 event_instance.event = event;
                 MPIR_T_source_get_timestamp_impl(event->source_index, &event_instance.timestamp);
                 event_instance.data = data;
