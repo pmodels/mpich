@@ -212,19 +212,6 @@ system(qq(perl -p -i -e 's/\\[MPICH_RELEASE_DATE_m4\\],\\[unreleased development
 # above modifications
 print("done\n");
 
-# Remove content that is not being released
-print("===> Removing content that is not being released... ");
-chdir($expdir);
-
-chdir("${expdir}/src/mpid/ch3/channels/nemesis/netmod");
-my @nem_modules = qw(elan);
-run_cmd("rm -rf ".join(' ', @nem_modules));
-for my $module (@nem_modules) {
-    run_cmd("rm -rf $module");
-    run_cmd(q{perl -p -i -e '$_="" if m|^\s*include \$.*netmod/}.${module}.q{/Makefile.mk|' Makefile.mk});
-}
-print("done\n");
-
 # Create configure
 print("===> Creating configure in the main codebase... ");
 chdir($expdir);
