@@ -1305,7 +1305,7 @@ typedef struct MPIR_T_event_registration_s {
     void *obj_handle;
     MPIR_T_event_cb_t callbacks[4];     /* one for each safety level */
     MPI_T_event_dropped_cb_function *dropped_cb;
-    int dropped_count;
+    MPI_Count dropped_count;
 
     struct MPIR_T_event_registration_s *next;
 } MPIR_T_event_registration_t;
