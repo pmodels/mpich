@@ -569,11 +569,20 @@ EOT
             print CFILE "#ifdef MPI_MODE_RDONLY\n"
         }
 
-        if (!exists($bufpos{$routine})) {
+        my @vec;
+        if (exists $bufpos{$routine}) {
+            @vec = @{$bufpos{$routine}}; # directly copy since @vec is small
+        } elsif ($routine =~ /^MPIX_/) {
+            # some of the future APIs are defined with MPIX
+            my $key = $routine;
+            $key =~ s/^MPIX_/MPI_/;
+            if (exists $bufpos{$key}) {
+                @vec = @{$bufpos{$key}};
+            }
+        }
+        if (!@vec) {
             die "Error: $routine has choice buffer(s) but is not defined in bufpos!\n";
         }
-
-        my @vec = @{$bufpos{$routine}}; # directly copy since @vec is small
 
         # Temp variable declaration
         for (my $i = 0; $i < $#vec; $i += 3) {
