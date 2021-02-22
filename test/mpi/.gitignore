@@ -138,6 +138,13 @@
 /coll/opsum
 /coll/p_bcast
 /coll/p_bcast2
+/coll/p_allred
+/coll/p_red
+/coll/p_alltoall
+/coll/p_allgather
+/coll/p_allgatherv
+/coll/p_alltoallv
+/coll/p_alltoallw
 /coll/red3
 /coll/red4
 /coll/red_scat_block

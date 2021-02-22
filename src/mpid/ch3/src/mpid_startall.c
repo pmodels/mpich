@@ -520,7 +520,7 @@ int MPID_Reduce_scatter_init(const void *sendbuf, void *recvbuf, const MPI_Aint 
 }
 
 int MPID_Scan_init(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                   MPI_Op op, MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request);
+                   MPI_Op op, MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCAN_INIT);
