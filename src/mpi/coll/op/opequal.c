@@ -53,8 +53,8 @@ typedef struct MPIR_longdoubleint_eqltype {
         c_type_ *a = (c_type_ *)inoutvec;               \
         c_type_ *b = (c_type_ *)invec;                  \
         for (i=0; i<len; i++) {                         \
-            if (0 == b[i].isEqual){                     \
-                a[i].isEqual = b[i].isEqual;            \
+            if (0 == b[i].isEqual || 0 == a[i].isEqual){    \
+                a[i].isEqual = 0;            			\
             }else if (a[i].value != b[i].value){        \
                 a[i].isEqual = 0;                       \
             }else{                                      \
@@ -68,8 +68,8 @@ typedef struct MPIR_longdoubleint_eqltype {
         c_type_ *a = (c_type_ *)inoutvec;               \
         c_type_ *b = (c_type_ *)invec;                  \
         for (i=0; i<len; i++) {                         \
-            if (0 == b[i].isEqual){                     \
-                a[i].isEqual = b[i].isEqual;            \
+            if (0 == b[i].isEqual || 0 == a[i].isEqual){    \
+                a[i].isEqual = 0;            			\
             }else if (!MPIR_EQUAL_FLOAT_COMPARE(a[i].value, b[i].value)){        \
                 a[i].isEqual = 0;                       \
             }else{                                      \
@@ -83,8 +83,8 @@ typedef struct MPIR_longdoubleint_eqltype {
         f_type_ *a = (f_type_ *)inoutvec;               \
         f_type_ *b = (f_type_ *)invec;                  \
         for (i=0; i<flen; i+=2) {                       \
-            if(0 == b[i+1]){                            \
-                a[i+1] = b[i+1];                        \
+            if(0 == b[i+1] || 0 == a[i+1]){             \
+                a[i+1] = 0;                        		\
             }else if (a[i] != b[i]){                    \
                 a[i+1] = 0;                             \
             }else{                                      \

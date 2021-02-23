@@ -254,6 +254,19 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
     int mpi_errno = MPI_SUCCESS;
 
 #ifdef HAVE_ERROR_CHECKING
+
+    struct { 
+        int count; 
+        int isEqual; 
+    } localCountInfo, globalCountInfo; 
+
+    localCountInfo.count = count;
+    localCountInfo.isEqual = 1;
+
+    mpi_errno = MPIR_Allreduce_impl(&localCountInfo, &globalCountInfo, 1, MPI_2INT,
+                        MPI_EQUAL, comm_ptr, errflag);
+
+/*
     int min_count, max_count, test_count, comm_size;
     int * all_lengths;
     int coll_length_flag = 0;
@@ -282,6 +295,15 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
 		    "**collective_size_mismatch",
 		    "**collective_size_mismatch %d %d", min_count, max_count);
 	}
+	*/
+
+    if(globalCountInfo.isEqual == 0 && (*errflag == MPIR_ERR_NONE)){
+    	*errflag = MPIR_ERR_OTHER;
+		MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
+		    "**collective_size_mismatch",
+		    "**collective_size_mismatch %d %d", localCountInfo.count, globalCountInfo.count);
+    }
+    //printf("**collective_size_mismatch **collective_size_mismatch %d %d\n", localCountInfo.count, globalCountInfo.count);
 #endif
 
     if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||

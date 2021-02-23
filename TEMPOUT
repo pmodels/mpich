@@ -1,0 +1,736 @@
+       JobID    JobName      User  Partition  AllocCPUS      State               Start                 End 
+------------ ---------- --------- ---------- ---------- ---------- ------------------- ------------------- 
+1957223            bash  jie.yang     bdwall          1 CANCELLED+ 2021-01-07T16:43:28 2021-01-07T16:43:28 
+1957226            bash  jie.yang     bdwall         36 CANCELLED+ 2021-01-07T16:48:45 2021-01-07T16:51:40 
+1957226.0          bash                               1 CANCELLED+ 2021-01-07T16:50:13 2021-01-07T16:50:54 
+1966682      gatherTes+  jie.yang     bdwall         36     FAILED 2021-01-18T09:43:24 2021-01-18T09:43:26 
+1966682.bat+      batch                              36     FAILED 2021-01-18T09:43:24 2021-01-18T09:43:26 
+1966682.0    hydra_pmi+                               1  COMPLETED 2021-01-18T09:43:25 2021-01-18T09:43:26 
+1966706      gatherTes+  jie.yang     bdwall         36  COMPLETED 2021-01-18T09:53:52 2021-01-18T09:53:53 
+1966706.bat+      batch                              36  COMPLETED 2021-01-18T09:53:52 2021-01-18T09:53:53 
+1966706.0    hydra_pmi+                               1  COMPLETED 2021-01-18T09:53:52 2021-01-18T09:53:53 
+1966708      gatherTes+  jie.yang     bdwall         36  COMPLETED 2021-01-18T09:55:05 2021-01-18T09:55:07 
+1966708.bat+      batch                              36  COMPLETED 2021-01-18T09:55:05 2021-01-18T09:55:07 
+1966708.0    hydra_pmi+                               1  COMPLETED 2021-01-18T09:55:05 2021-01-18T09:55:07 
+1966709      gatherTes+  jie.yang     bdwall         36  COMPLETED 2021-01-18T10:02:05 2021-01-18T10:02:07 
+1966709.bat+      batch                              36  COMPLETED 2021-01-18T10:02:05 2021-01-18T10:02:07 
+1966709.0    hydra_pmi+                               1  COMPLETED 2021-01-18T10:02:05 2021-01-18T10:02:07 
+1966710      gatherTes+  jie.yang     bdwall         72  COMPLETED 2021-01-18T10:15:00 2021-01-18T10:15:02 
+1966710.bat+      batch                              36  COMPLETED 2021-01-18T10:15:00 2021-01-18T10:15:02 
+1966710.0    hydra_pmi+                               2  COMPLETED 2021-01-18T10:15:00 2021-01-18T10:15:02 
+1966713      gatherTes+  jie.yang     bdwall         40     FAILED 2021-01-18T10:22:49 2021-01-18T10:22:49 
+1966714      gatherTes+  jie.yang     bdwall         36     FAILED 2021-01-18T10:23:18 2021-01-18T10:23:21 
+1966714.bat+      batch                              36     FAILED 2021-01-18T10:23:18 2021-01-18T10:23:21 
+1966714.0    hydra_pmi+                               1     FAILED 2021-01-18T10:23:18 2021-01-18T10:23:21 
+1966715      gatherTes+  jie.yang     bdwall         36     FAILED 2021-01-18T10:25:11 2021-01-18T10:25:14 
+1966715.bat+      batch                              36     FAILED 2021-01-18T10:25:11 2021-01-18T10:25:14 
+1966715.0    hydra_pmi+                               1     FAILED 2021-01-18T10:25:12 2021-01-18T10:25:14 
+1966718      gatherTes+  jie.yang     bdwall         72  COMPLETED 2021-01-18T10:28:46 2021-01-18T10:28:49 
+1966718.bat+      batch                              36  COMPLETED 2021-01-18T10:28:46 2021-01-18T10:28:49 
+1966718.0    hydra_pmi+                               2  COMPLETED 2021-01-18T10:28:46 2021-01-18T10:28:49 
+1966720      gatherTes+  jie.yang     bdwall        108  COMPLETED 2021-01-18T10:29:26 2021-01-18T10:29:29 
+1966720.bat+      batch                              36  COMPLETED 2021-01-18T10:29:26 2021-01-18T10:29:29 
+1966720.0    hydra_pmi+                               3  COMPLETED 2021-01-18T10:29:27 2021-01-18T10:29:29 
+1966784      gatherTes+  jie.yang     bdwall         72  COMPLETED 2021-01-18T11:00:54 2021-01-18T11:00:57 
+1966784.bat+      batch                              36  COMPLETED 2021-01-18T11:00:54 2021-01-18T11:00:57 
+1966784.0    hydra_pmi+                               2  COMPLETED 2021-01-18T11:00:54 2021-01-18T11:00:57 
+1966785      gatherTes+  jie.yang     bdwall         72  COMPLETED 2021-01-18T11:03:23 2021-01-18T11:03:25 
+1966785.bat+      batch                              36  COMPLETED 2021-01-18T11:03:23 2021-01-18T11:03:25 
+1966785.0    hydra_pmi+                               2  COMPLETED 2021-01-18T11:03:23 2021-01-18T11:03:25 
+1966838      gatherTes+  jie.yang     bdwall         72  COMPLETED 2021-01-18T11:07:53 2021-01-18T11:07:55 
+1966838.bat+      batch                              36  COMPLETED 2021-01-18T11:07:53 2021-01-18T11:07:55 
+1966838.0    hydra_pmi+                               2  COMPLETED 2021-01-18T11:07:53 2021-01-18T11:07:55 
+1966843      gatherTes+  jie.yang     bdwall         40     FAILED 2021-01-18T11:15:04 2021-01-18T11:15:04 
+1966844      gatherTes+  jie.yang     bdwall         36     FAILED 2021-01-18T11:15:23 2021-01-18T11:15:26 
+1966844.bat+      batch                              36     FAILED 2021-01-18T11:15:23 2021-01-18T11:15:26 
+1966844.0    hydra_pmi+                               1     FAILED 2021-01-18T11:15:24 2021-01-18T11:15:26 
+1966904      gatherTes+  jie.yang     bdwall         36     FAILED 2021-01-18T11:32:30 2021-01-18T11:32:32 
+1966904.bat+      batch                              36     FAILED 2021-01-18T11:32:30 2021-01-18T11:32:32 
+1966904.0    hydra_pmi+                               1     FAILED 2021-01-18T11:32:30 2021-01-18T11:32:32 
+1966912      gatherTes+  jie.yang     bdwall         36  COMPLETED 2021-01-18T11:35:28 2021-01-18T11:35:33 
+1966912.bat+      batch                              36  COMPLETED 2021-01-18T11:35:28 2021-01-18T11:35:33 
+1966912.0    hydra_pmi+                               1  COMPLETED 2021-01-18T11:35:29 2021-01-18T11:35:33 
+1966921      gatherTes+  jie.yang     bdwall         36  COMPLETED 2021-01-18T11:42:09 2021-01-18T11:42:14 
+1966921.bat+      batch                              36  COMPLETED 2021-01-18T11:42:09 2021-01-18T11:42:14 
+1966921.0    hydra_pmi+                               1  COMPLETED 2021-01-18T11:42:10 2021-01-18T11:42:14 
+1967014      Test_2Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-18T13:08:45 2021-01-18T13:08:46 
+1967014.bat+      batch                              36  COMPLETED 2021-01-18T13:08:45 2021-01-18T13:08:46 
+1967014.0    hydra_pmi+                               1  COMPLETED 2021-01-18T13:08:45 2021-01-18T13:08:46 
+1967015      Test_4Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-18T13:09:01 2021-01-18T13:09:02 
+1967015.bat+      batch                              36  COMPLETED 2021-01-18T13:09:01 2021-01-18T13:09:02 
+1967015.0    hydra_pmi+                               1  COMPLETED 2021-01-18T13:09:01 2021-01-18T13:09:02 
+1967016      Test_8Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-18T13:09:12 2021-01-18T13:09:14 
+1967016.bat+      batch                              36  COMPLETED 2021-01-18T13:09:12 2021-01-18T13:09:14 
+1967016.0    hydra_pmi+                               1  COMPLETED 2021-01-18T13:09:12 2021-01-18T13:09:14 
+1967017      Test_16Pr+  jie.yang     bdwall         36  COMPLETED 2021-01-18T13:09:29 2021-01-18T13:09:30 
+1967017.bat+      batch                              36  COMPLETED 2021-01-18T13:09:29 2021-01-18T13:09:30 
+1967017.0    hydra_pmi+                               1  COMPLETED 2021-01-18T13:09:29 2021-01-18T13:09:30 
+1967021      Test_32Pr+  jie.yang     bdwall         36  COMPLETED 2021-01-18T13:10:54 2021-01-18T13:10:56 
+1967021.bat+      batch                              36  COMPLETED 2021-01-18T13:10:54 2021-01-18T13:10:56 
+1967021.0    hydra_pmi+                               1  COMPLETED 2021-01-18T13:10:54 2021-01-18T13:10:56 
+1967022      Test_64Pr+  jie.yang     bdwall         72  COMPLETED 2021-01-18T13:11:11 2021-01-18T13:11:14 
+1967022.bat+      batch                              36  COMPLETED 2021-01-18T13:11:11 2021-01-18T13:11:14 
+1967022.0    hydra_pmi+                               2  COMPLETED 2021-01-18T13:11:11 2021-01-18T13:11:14 
+1967023      Test_128P+  jie.yang     bdwall        144  COMPLETED 2021-01-18T13:11:29 2021-01-18T13:11:32 
+1967023.bat+      batch                              36  COMPLETED 2021-01-18T13:11:29 2021-01-18T13:11:32 
+1967023.0    hydra_pmi+                               4  COMPLETED 2021-01-18T13:11:29 2021-01-18T13:11:32 
+1967077      Toy_8Proc+  jie.yang     bdwall         36     FAILED 2021-01-18T13:53:00 2021-01-18T13:56:56 
+1967077.bat+      batch                              36     FAILED 2021-01-18T13:53:00 2021-01-18T13:56:56 
+1967077.0    hydra_pmi+                               1  COMPLETED 2021-01-18T13:53:01 2021-01-18T13:56:56 
+1967970      Toy_8Proc+  jie.yang     bdwall         72  COMPLETED 2021-01-19T10:05:37 2021-01-19T10:05:40 
+1967970.bat+      batch                              36  COMPLETED 2021-01-19T10:05:37 2021-01-19T10:05:40 
+1967970.0    hydra_pmi+                               2  COMPLETED 2021-01-19T10:05:38 2021-01-19T10:05:40 
+1968175      Toy_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-19T16:53:36 2021-01-19T16:54:32 
+1968175.bat+      batch                              36  COMPLETED 2021-01-19T16:53:36 2021-01-19T16:54:32 
+1968175.0    hydra_pmi+                               1  COMPLETED 2021-01-19T16:53:37 2021-01-19T16:54:32 
+1968365      SJ_2Proce+  jie.yang     bdwall         36     FAILED 2021-01-19T20:16:16 2021-01-19T20:17:15 
+1968365.bat+      batch                              36     FAILED 2021-01-19T20:16:16 2021-01-19T20:17:15 
+1968365.0    hydra_pmi+                               1  COMPLETED 2021-01-19T20:16:18 2021-01-19T20:17:15 
+1968396      SJ_2Proce+  jie.yang     bdwall         36  COMPLETED 2021-01-19T21:28:47 2021-01-19T21:29:47 
+1968396.bat+      batch                              36  COMPLETED 2021-01-19T21:28:47 2021-01-19T21:29:47 
+1968396.0    hydra_pmi+                               1  COMPLETED 2021-01-19T21:28:49 2021-01-19T21:29:47 
+1976573      Sig_8Proc+  jie.yang     bdwall         36     FAILED 2021-01-26T23:30:20 2021-01-26T23:30:23 
+1976573.bat+      batch                              36     FAILED 2021-01-26T23:30:20 2021-01-26T23:30:23 
+1976573.0    hydra_pmi+                               1  COMPLETED 2021-01-26T23:30:21 2021-01-26T23:30:23 
+1976575      Sig_8Proc+  jie.yang     bdwall         36     FAILED 2021-01-26T23:32:23 2021-01-26T23:32:25 
+1976575.bat+      batch                              36     FAILED 2021-01-26T23:32:23 2021-01-26T23:32:25 
+1976575.0    hydra_pmi+                               1  COMPLETED 2021-01-26T23:32:24 2021-01-26T23:32:25 
+1976578      Sig_8Proc+  jie.yang     bdwall         36     FAILED 2021-01-26T23:37:44 2021-01-26T23:37:46 
+1976578.bat+      batch                              36     FAILED 2021-01-26T23:37:44 2021-01-26T23:37:46 
+1976578.0    hydra_pmi+                               1     FAILED 2021-01-26T23:37:46 2021-01-26T23:37:47 
+1976610      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-27T00:03:45 2021-01-27T00:03:47 
+1976610.bat+      batch                              36  COMPLETED 2021-01-27T00:03:45 2021-01-27T00:03:47 
+1976610.0    hydra_pmi+                               1  COMPLETED 2021-01-27T00:03:45 2021-01-27T00:03:47 
+1976617      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-27T00:03:45 2021-01-27T00:03:47 
+1976617.bat+      batch                              36  COMPLETED 2021-01-27T00:03:45 2021-01-27T00:03:47 
+1976617.0    hydra_pmi+                               1  COMPLETED 2021-01-27T00:03:45 2021-01-27T00:03:47 
+1976743      Sig_8Proc+  jie.yang     bdwall         36     FAILED 2021-01-27T08:03:47 2021-01-27T08:03:49 
+1976743.bat+      batch                              36     FAILED 2021-01-27T08:03:47 2021-01-27T08:03:49 
+1976743.0    hydra_pmi+                               1  COMPLETED 2021-01-27T08:03:48 2021-01-27T08:03:49 
+1976744      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-27T08:12:45 2021-01-27T08:12:47 
+1976744.bat+      batch                              36  COMPLETED 2021-01-27T08:12:45 2021-01-27T08:12:47 
+1976744.0    hydra_pmi+                               1  COMPLETED 2021-01-27T08:12:46 2021-01-27T08:12:47 
+1976746      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-27T08:21:45 2021-01-27T08:21:47 
+1976746.bat+      batch                              36  COMPLETED 2021-01-27T08:21:45 2021-01-27T08:21:47 
+1976746.0    hydra_pmi+                               1  COMPLETED 2021-01-27T08:21:46 2021-01-27T08:21:47 
+1976753      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-27T08:33:03 2021-01-27T08:33:05 
+1976753.bat+      batch                              36  COMPLETED 2021-01-27T08:33:03 2021-01-27T08:33:05 
+1976753.0    hydra_pmi+                               1  COMPLETED 2021-01-27T08:33:04 2021-01-27T08:33:05 
+1976754      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-27T08:35:56 2021-01-27T08:35:58 
+1976754.bat+      batch                              36  COMPLETED 2021-01-27T08:35:56 2021-01-27T08:35:58 
+1976754.0    hydra_pmi+                               1  COMPLETED 2021-01-27T08:35:57 2021-01-27T08:35:58 
+1977868      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-27T23:55:25 2021-01-27T23:55:28 
+1977868.bat+      batch                              36  COMPLETED 2021-01-27T23:55:25 2021-01-27T23:55:28 
+1977868.0    hydra_pmi+                               1  COMPLETED 2021-01-27T23:55:27 2021-01-27T23:55:28 
+1977869      Sig_16Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-27T23:56:00 2021-01-27T23:56:02 
+1977869.bat+      batch                              36  COMPLETED 2021-01-27T23:56:00 2021-01-27T23:56:02 
+1977869.0    hydra_pmi+                               1  COMPLETED 2021-01-27T23:56:01 2021-01-27T23:56:02 
+1977870      Sig_32Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-27T23:56:26 2021-01-27T23:56:29 
+1977870.bat+      batch                              36  COMPLETED 2021-01-27T23:56:26 2021-01-27T23:56:29 
+1977870.0    hydra_pmi+                               1  COMPLETED 2021-01-27T23:56:27 2021-01-27T23:56:29 
+1977871      Sig_64Pro+  jie.yang     bdwall         72  COMPLETED 2021-01-27T23:57:10 2021-01-27T23:57:13 
+1977871.bat+      batch                              36  COMPLETED 2021-01-27T23:57:10 2021-01-27T23:57:13 
+1977871.0    hydra_pmi+                               2  COMPLETED 2021-01-27T23:57:10 2021-01-27T23:57:13 
+1977874      Sig_128Pr+  jie.yang     bdwall        144  COMPLETED 2021-01-28T00:02:35 2021-01-28T00:02:39 
+1977874.bat+      batch                              36  COMPLETED 2021-01-28T00:02:35 2021-01-28T00:02:39 
+1977874.0    hydra_pmi+                               4  COMPLETED 2021-01-28T00:02:36 2021-01-28T00:02:39 
+1977875      Sig_4Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-27T23:58:18 2021-01-27T23:58:20 
+1977875.bat+      batch                              36  COMPLETED 2021-01-27T23:58:18 2021-01-27T23:58:20 
+1977875.0    hydra_pmi+                               1  COMPLETED 2021-01-27T23:58:20 2021-01-27T23:58:20 
+1977876      Sig_2Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-27T23:58:48 2021-01-27T23:58:50 
+1977876.bat+      batch                              36  COMPLETED 2021-01-27T23:58:48 2021-01-27T23:58:50 
+1977876.0    hydra_pmi+                               1  COMPLETED 2021-01-27T23:58:49 2021-01-27T23:58:50 
+1978163      Sig_2Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T08:55:38 2021-01-28T08:55:39 
+1978163.bat+      batch                              36  COMPLETED 2021-01-28T08:55:38 2021-01-28T08:55:39 
+1978163.0    hydra_pmi+                               1  COMPLETED 2021-01-28T08:55:39 2021-01-28T08:55:39 
+1978268      Sig_2Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:28 
+1978268.bat+      batch                              36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:28 
+1978268.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:06:28 2021-01-28T09:06:28 
+1978269      Sig_2Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:28 
+1978269.bat+      batch                              36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:28 
+1978269.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:28 
+1978270      Sig_2Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:28 
+1978270.bat+      batch                              36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:28 
+1978270.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:06:28 2021-01-28T09:06:28 
+1978271      Sig_2Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:29 
+1978271.bat+      batch                              36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:29 
+1978271.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:06:28 2021-01-28T09:06:29 
+1978272      Sig_2Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:28 
+1978272.bat+      batch                              36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:28 
+1978272.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:06:28 2021-01-28T09:06:28 
+1978273      Sig_4Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:28 
+1978273.bat+      batch                              36  COMPLETED 2021-01-28T09:06:27 2021-01-28T09:06:28 
+1978273.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:06:28 2021-01-28T09:06:28 
+1978274      Sig_4Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:13:56 2021-01-28T09:13:58 
+1978274.bat+      batch                              36  COMPLETED 2021-01-28T09:13:56 2021-01-28T09:13:58 
+1978274.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:13:57 2021-01-28T09:13:58 
+1978275      Sig_4Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:31 2021-01-28T09:14:32 
+1978275.bat+      batch                              36  COMPLETED 2021-01-28T09:14:31 2021-01-28T09:14:32 
+1978275.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:32 2021-01-28T09:14:32 
+1978276      Sig_4Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:31 2021-01-28T09:14:33 
+1978276.bat+      batch                              36  COMPLETED 2021-01-28T09:14:31 2021-01-28T09:14:33 
+1978276.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:32 2021-01-28T09:14:33 
+1978277      Sig_4Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978277.bat+      batch                              36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978277.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:42 2021-01-28T09:14:43 
+1978278      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978278.bat+      batch                              36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978278.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:42 2021-01-28T09:14:43 
+1978279      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978279.bat+      batch                              36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978279.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:42 2021-01-28T09:14:43 
+1978280      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978280.bat+      batch                              36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978280.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:42 2021-01-28T09:14:43 
+1978281      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978281.bat+      batch                              36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978281.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:42 2021-01-28T09:14:43 
+1978282      Sig_8Proc+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978282.bat+      batch                              36  COMPLETED 2021-01-28T09:14:41 2021-01-28T09:14:43 
+1978282.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:42 2021-01-28T09:14:43 
+1978283      Sig_16Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:46 2021-01-28T09:14:47 
+1978283.bat+      batch                              36  COMPLETED 2021-01-28T09:14:46 2021-01-28T09:14:47 
+1978283.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:46 2021-01-28T09:14:47 
+1978284      Sig_16Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:46 2021-01-28T09:14:48 
+1978284.bat+      batch                              36  COMPLETED 2021-01-28T09:14:46 2021-01-28T09:14:48 
+1978284.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:46 2021-01-28T09:14:48 
+1978285      Sig_16Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:46 2021-01-28T09:14:48 
+1978285.bat+      batch                              36  COMPLETED 2021-01-28T09:14:46 2021-01-28T09:14:48 
+1978285.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:47 2021-01-28T09:14:48 
+1978286      Sig_16Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:46 2021-01-28T09:14:48 
+1978286.bat+      batch                              36  COMPLETED 2021-01-28T09:14:46 2021-01-28T09:14:48 
+1978286.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:47 2021-01-28T09:14:48 
+1978287      Sig_16Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:47 2021-01-28T09:14:49 
+1978287.bat+      batch                              36  COMPLETED 2021-01-28T09:14:47 2021-01-28T09:14:49 
+1978287.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:48 2021-01-28T09:14:49 
+1978288      Sig_32Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:48 2021-01-28T09:14:50 
+1978288.bat+      batch                              36  COMPLETED 2021-01-28T09:14:48 2021-01-28T09:14:50 
+1978288.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:48 2021-01-28T09:14:50 
+1978289      Sig_32Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:49 2021-01-28T09:14:52 
+1978289.bat+      batch                              36  COMPLETED 2021-01-28T09:14:49 2021-01-28T09:14:52 
+1978289.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:50 2021-01-28T09:14:52 
+1978290      Sig_32Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:49 2021-01-28T09:14:52 
+1978290.bat+      batch                              36  COMPLETED 2021-01-28T09:14:49 2021-01-28T09:14:52 
+1978290.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:50 2021-01-28T09:14:52 
+1978291      Sig_32Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:58 2021-01-28T09:15:00 
+1978291.bat+      batch                              36  COMPLETED 2021-01-28T09:14:58 2021-01-28T09:15:00 
+1978291.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:58 2021-01-28T09:15:00 
+1978292      Sig_32Pro+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:14:58 2021-01-28T09:15:00 
+1978292.bat+      batch                              36  COMPLETED 2021-01-28T09:14:58 2021-01-28T09:15:00 
+1978292.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:14:58 2021-01-28T09:15:00 
+1978293      Sig_64Pro+  jie.yang     bdwall         72  COMPLETED 2021-01-28T09:13:56 2021-01-28T09:14:00 
+1978293.bat+      batch                              36  COMPLETED 2021-01-28T09:13:56 2021-01-28T09:14:00 
+1978293.0    hydra_pmi+                               2  COMPLETED 2021-01-28T09:13:57 2021-01-28T09:14:00 
+1978294      Sig_64Pro+  jie.yang     bdwall         72  COMPLETED 2021-01-28T09:14:23 2021-01-28T09:14:26 
+1978294.bat+      batch                              36  COMPLETED 2021-01-28T09:14:23 2021-01-28T09:14:26 
+1978294.0    hydra_pmi+                               2  COMPLETED 2021-01-28T09:14:24 2021-01-28T09:14:26 
+1978295      Sig_64Pro+  jie.yang     bdwall         72  COMPLETED 2021-01-28T09:14:28 2021-01-28T09:14:30 
+1978295.bat+      batch                              36  COMPLETED 2021-01-28T09:14:28 2021-01-28T09:14:30 
+1978295.0    hydra_pmi+                               2  COMPLETED 2021-01-28T09:14:28 2021-01-28T09:14:30 
+1978296      Sig_64Pro+  jie.yang     bdwall         72  COMPLETED 2021-01-28T09:14:28 2021-01-28T09:14:31 
+1978296.bat+      batch                              36  COMPLETED 2021-01-28T09:14:28 2021-01-28T09:14:31 
+1978296.0    hydra_pmi+                               2  COMPLETED 2021-01-28T09:14:29 2021-01-28T09:14:31 
+1978297      Sig_64Pro+  jie.yang     bdwall         72  COMPLETED 2021-01-28T09:14:31 2021-01-28T09:14:34 
+1978297.bat+      batch                              36  COMPLETED 2021-01-28T09:14:31 2021-01-28T09:14:34 
+1978297.0    hydra_pmi+                               2  COMPLETED 2021-01-28T09:14:32 2021-01-28T09:14:34 
+1978298      Sig_128Pr+  jie.yang     bdwall        144  COMPLETED 2021-01-28T09:13:47 2021-01-28T09:13:50 
+1978298.bat+      batch                              36  COMPLETED 2021-01-28T09:13:47 2021-01-28T09:13:50 
+1978298.0    hydra_pmi+                               4  COMPLETED 2021-01-28T09:13:47 2021-01-28T09:13:50 
+1978299      Sig_128Pr+  jie.yang     bdwall        144  COMPLETED 2021-01-28T09:14:05 2021-01-28T09:14:08 
+1978299.bat+      batch                              36  COMPLETED 2021-01-28T09:14:05 2021-01-28T09:14:08 
+1978299.0    hydra_pmi+                               4  COMPLETED 2021-01-28T09:14:06 2021-01-28T09:14:08 
+1978300      Sig_128Pr+  jie.yang     bdwall        144  COMPLETED 2021-01-28T09:14:09 2021-01-28T09:14:13 
+1978300.bat+      batch                              36  COMPLETED 2021-01-28T09:14:09 2021-01-28T09:14:13 
+1978300.0    hydra_pmi+                               4  COMPLETED 2021-01-28T09:14:10 2021-01-28T09:14:13 
+1978301      Sig_128Pr+  jie.yang     bdwall        144  COMPLETED 2021-01-28T09:14:13 2021-01-28T09:14:16 
+1978301.bat+      batch                              36  COMPLETED 2021-01-28T09:14:13 2021-01-28T09:14:16 
+1978301.0    hydra_pmi+                               4  COMPLETED 2021-01-28T09:14:13 2021-01-28T09:14:16 
+1978302      Sig_128Pr+  jie.yang     bdwall        144  COMPLETED 2021-01-28T09:14:23 2021-01-28T09:14:26 
+1978302.bat+      batch                              36  COMPLETED 2021-01-28T09:14:23 2021-01-28T09:14:26 
+1978302.0    hydra_pmi+                               4  COMPLETED 2021-01-28T09:14:24 2021-01-28T09:14:26 
+1978305      Com_Sig_1+  jie.yang     bdwall        144  COMPLETED 2021-01-28T09:24:43 2021-01-28T09:24:47 
+1978305.bat+      batch                              36  COMPLETED 2021-01-28T09:24:43 2021-01-28T09:24:47 
+1978305.0    hydra_pmi+                               4  COMPLETED 2021-01-28T09:24:44 2021-01-28T09:24:47 
+1978306      Com_Sig_1+  jie.yang     bdwall        144  COMPLETED 2021-01-28T09:25:02 2021-01-28T09:25:06 
+1978306.bat+      batch                              36  COMPLETED 2021-01-28T09:25:02 2021-01-28T09:25:06 
+1978306.0    hydra_pmi+                               4  COMPLETED 2021-01-28T09:25:03 2021-01-28T09:25:06 
+1978307      Com_Sig_1+  jie.yang     bdwall        144  COMPLETED 2021-01-28T09:25:21 2021-01-28T09:25:24 
+1978307.bat+      batch                              36  COMPLETED 2021-01-28T09:25:21 2021-01-28T09:25:24 
+1978307.0    hydra_pmi+                               4  COMPLETED 2021-01-28T09:25:21 2021-01-28T09:25:24 
+1978308      Com_Sig_1+  jie.yang     bdwall        144  COMPLETED 2021-01-28T09:25:39 2021-01-28T09:25:42 
+1978308.bat+      batch                              36  COMPLETED 2021-01-28T09:25:39 2021-01-28T09:25:42 
+1978308.0    hydra_pmi+                               4  COMPLETED 2021-01-28T09:25:39 2021-01-28T09:25:42 
+1978309      Com_Sig_1+  jie.yang     bdwall        144  COMPLETED 2021-01-28T09:25:57 2021-01-28T09:26:01 
+1978309.bat+      batch                              36  COMPLETED 2021-01-28T09:25:57 2021-01-28T09:26:01 
+1978309.0    hydra_pmi+                               4  COMPLETED 2021-01-28T09:25:58 2021-01-28T09:26:01 
+1978312      Com_Sig_6+  jie.yang     bdwall         72  COMPLETED 2021-01-28T09:30:08 2021-01-28T09:30:12 
+1978312.bat+      batch                              36  COMPLETED 2021-01-28T09:30:08 2021-01-28T09:30:12 
+1978312.0    hydra_pmi+                               2  COMPLETED 2021-01-28T09:30:09 2021-01-28T09:30:12 
+1978313      Com_Sig_6+  jie.yang     bdwall         72  COMPLETED 2021-01-28T09:30:08 2021-01-28T09:30:12 
+1978313.bat+      batch                              36  COMPLETED 2021-01-28T09:30:08 2021-01-28T09:30:12 
+1978313.0    hydra_pmi+                               2  COMPLETED 2021-01-28T09:30:09 2021-01-28T09:30:12 
+1978314      Com_Sig_6+  jie.yang     bdwall         72  COMPLETED 2021-01-28T09:30:08 2021-01-28T09:30:12 
+1978314.bat+      batch                              36  COMPLETED 2021-01-28T09:30:08 2021-01-28T09:30:12 
+1978314.0    hydra_pmi+                               2  COMPLETED 2021-01-28T09:30:09 2021-01-28T09:30:12 
+1978315      Com_Sig_6+  jie.yang     bdwall         72  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:30 
+1978315.bat+      batch                              36  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:30 
+1978315.0    hydra_pmi+                               2  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:29 
+1978316      Com_Sig_6+  jie.yang     bdwall         72  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:30 
+1978316.bat+      batch                              36  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:30 
+1978316.0    hydra_pmi+                               2  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:30 
+1978317      Com_Sig_3+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:31 
+1978317.bat+      batch                              36  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:31 
+1978317.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:30:29 2021-01-28T09:30:31 
+1978318      Com_Sig_3+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:30 
+1978318.bat+      batch                              36  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:30 
+1978318.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:30:28 2021-01-28T09:30:30 
+1978319      Com_Sig_3+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:31 
+1978319.bat+      batch                              36  COMPLETED 2021-01-28T09:30:27 2021-01-28T09:30:31 
+1978319.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:30:28 2021-01-28T09:30:31 
+1978320      Com_Sig_3+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:30:45 2021-01-28T09:30:47 
+1978320.bat+      batch                              36  COMPLETED 2021-01-28T09:30:45 2021-01-28T09:30:47 
+1978320.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:30:45 2021-01-28T09:30:47 
+1978321      Com_Sig_3+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:30:45 2021-01-28T09:30:47 
+1978321.bat+      batch                              36  COMPLETED 2021-01-28T09:30:45 2021-01-28T09:30:47 
+1978321.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:30:46 2021-01-28T09:30:47 
+1978322      Com_Sig_1+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:30:45 2021-01-28T09:30:47 
+1978322.bat+      batch                              36  COMPLETED 2021-01-28T09:30:45 2021-01-28T09:30:47 
+1978322.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:30:46 2021-01-28T09:30:47 
+1978323      Com_Sig_1+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:30:46 2021-01-28T09:30:47 
+1978323.bat+      batch                              36  COMPLETED 2021-01-28T09:30:46 2021-01-28T09:30:47 
+1978323.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:30:46 2021-01-28T09:30:47 
+1978324      Com_Sig_1+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:30:49 2021-01-28T09:30:51 
+1978324.bat+      batch                              36  COMPLETED 2021-01-28T09:30:49 2021-01-28T09:30:51 
+1978324.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:30:49 2021-01-28T09:30:50 
+1978325      Com_Sig_1+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:30:49 2021-01-28T09:30:51 
+1978325.bat+      batch                              36  COMPLETED 2021-01-28T09:30:49 2021-01-28T09:30:51 
+1978325.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:30:50 2021-01-28T09:30:51 
+1978326      Com_Sig_1+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:30:49 2021-01-28T09:30:51 
+1978326.bat+      batch                              36  COMPLETED 2021-01-28T09:30:49 2021-01-28T09:30:51 
+1978326.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:30:49 2021-01-28T09:30:51 
+1978327      Com_Sig_8+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:31:12 2021-01-28T09:31:14 
+1978327.bat+      batch                              36  COMPLETED 2021-01-28T09:31:12 2021-01-28T09:31:14 
+1978327.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:31:13 2021-01-28T09:31:14 
+1978328      Com_Sig_8+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:31:15 2021-01-28T09:31:17 
+1978328.bat+      batch                              36  COMPLETED 2021-01-28T09:31:15 2021-01-28T09:31:17 
+1978328.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:31:16 2021-01-28T09:31:17 
+1978329      Com_Sig_8+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:31:15 2021-01-28T09:31:16 
+1978329.bat+      batch                              36  COMPLETED 2021-01-28T09:31:15 2021-01-28T09:31:16 
+1978329.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:31:16 2021-01-28T09:31:16 
+1978330      Com_Sig_8+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:31:15 2021-01-28T09:31:16 
+1978330.bat+      batch                              36  COMPLETED 2021-01-28T09:31:15 2021-01-28T09:31:16 
+1978330.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:31:16 2021-01-28T09:31:16 
+1978331      Com_Sig_8+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:31:22 2021-01-28T09:31:24 
+1978331.bat+      batch                              36  COMPLETED 2021-01-28T09:31:22 2021-01-28T09:31:24 
+1978331.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:31:23 2021-01-28T09:31:24 
+1978332      Com_Sig_4+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:31:40 2021-01-28T09:31:41 
+1978332.bat+      batch                              36  COMPLETED 2021-01-28T09:31:40 2021-01-28T09:31:41 
+1978332.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:31:40 2021-01-28T09:31:41 
+1978333      Com_Sig_4+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:31:43 2021-01-28T09:31:44 
+1978333.bat+      batch                              36  COMPLETED 2021-01-28T09:31:43 2021-01-28T09:31:44 
+1978333.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:31:43 2021-01-28T09:31:44 
+1978334      Com_Sig_4+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:31:43 2021-01-28T09:31:45 
+1978334.bat+      batch                              36  COMPLETED 2021-01-28T09:31:43 2021-01-28T09:31:45 
+1978334.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:31:44 2021-01-28T09:31:45 
+1978335      Com_Sig_4+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:31:43 2021-01-28T09:31:44 
+1978335.bat+      batch                              36  COMPLETED 2021-01-28T09:31:43 2021-01-28T09:31:44 
+1978335.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:31:43 2021-01-28T09:31:44 
+1978336      Com_Sig_4+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:31:43 2021-01-28T09:31:45 
+1978336.bat+      batch                              36  COMPLETED 2021-01-28T09:31:43 2021-01-28T09:31:45 
+1978336.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:31:44 2021-01-28T09:31:45 
+1978337      Com_Sig_2+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:32:08 2021-01-28T09:32:09 
+1978337.bat+      batch                              36  COMPLETED 2021-01-28T09:32:08 2021-01-28T09:32:09 
+1978337.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:32:08 2021-01-28T09:32:09 
+1978338      Com_Sig_2+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:32:08 2021-01-28T09:32:09 
+1978338.bat+      batch                              36  COMPLETED 2021-01-28T09:32:08 2021-01-28T09:32:09 
+1978338.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:32:09 2021-01-28T09:32:09 
+1978339      Com_Sig_2+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:32:09 2021-01-28T09:32:10 
+1978339.bat+      batch                              36  COMPLETED 2021-01-28T09:32:09 2021-01-28T09:32:10 
+1978339.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:32:10 2021-01-28T09:32:10 
+1978340      Com_Sig_2+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:32:24 2021-01-28T09:32:26 
+1978340.bat+      batch                              36  COMPLETED 2021-01-28T09:32:24 2021-01-28T09:32:26 
+1978340.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:32:25 2021-01-28T09:32:26 
+1978341      Com_Sig_2+  jie.yang     bdwall         36  COMPLETED 2021-01-28T09:32:24 2021-01-28T09:32:25 
+1978341.bat+      batch                              36  COMPLETED 2021-01-28T09:32:24 2021-01-28T09:32:25 
+1978341.0    hydra_pmi+                               1  COMPLETED 2021-01-28T09:32:25 2021-01-28T09:32:25 
+1981525      SJ_2Proce+  jie.yang     bdwall         36  COMPLETED 2021-01-31T19:29:33 2021-01-31T19:30:27 
+1981525.bat+      batch                              36  COMPLETED 2021-01-31T19:29:33 2021-01-31T19:30:27 
+1981525.0    hydra_pmi+                               1  COMPLETED 2021-01-31T19:29:34 2021-01-31T19:30:27 
+1983361      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-02T22:18:48 2021-02-02T22:18:51 
+1983361.bat+      batch                              36  COMPLETED 2021-02-02T22:18:48 2021-02-02T22:18:51 
+1983361.0    hydra_pmi+                               1  COMPLETED 2021-02-02T22:18:50 2021-02-02T22:18:51 
+1983362      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-02T22:19:30 2021-02-02T22:19:31 
+1983362.bat+      batch                              36  COMPLETED 2021-02-02T22:19:30 2021-02-02T22:19:31 
+1983362.0    hydra_pmi+                               1  COMPLETED 2021-02-02T22:19:30 2021-02-02T22:19:31 
+1983363      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-02T22:19:41 2021-02-02T22:19:43 
+1983363.bat+      batch                              36  COMPLETED 2021-02-02T22:19:41 2021-02-02T22:19:43 
+1983363.0    hydra_pmi+                               1  COMPLETED 2021-02-02T22:19:41 2021-02-02T22:19:43 
+1983364      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-02T22:19:53 2021-02-02T22:19:56 
+1983364.bat+      batch                              36  COMPLETED 2021-02-02T22:19:53 2021-02-02T22:19:56 
+1983364.0    hydra_pmi+                               1  COMPLETED 2021-02-02T22:19:53 2021-02-02T22:19:56 
+1983365      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-02T22:20:08 2021-02-02T22:20:12 
+1983365.bat+      batch                              36  COMPLETED 2021-02-02T22:20:08 2021-02-02T22:20:12 
+1983365.0    hydra_pmi+                               1  COMPLETED 2021-02-02T22:20:08 2021-02-02T22:20:12 
+1983367      Gather_Er+  jie.yang     bdwall         72  COMPLETED 2021-02-02T22:20:21 2021-02-02T22:20:28 
+1983367.bat+      batch                              36  COMPLETED 2021-02-02T22:20:21 2021-02-02T22:20:28 
+1983367.0    hydra_pmi+                               2  COMPLETED 2021-02-02T22:20:22 2021-02-02T22:20:28 
+1983368      Gather_Er+  jie.yang     bdwall        144  COMPLETED 2021-02-02T22:20:33 2021-02-02T22:20:43 
+1983368.bat+      batch                              36  COMPLETED 2021-02-02T22:20:33 2021-02-02T22:20:43 
+1983368.0    hydra_pmi+                               4  COMPLETED 2021-02-02T22:20:34 2021-02-02T22:20:43 
+1983378      Gather_Er+  jie.yang     bdwall        144  COMPLETED 2021-02-02T23:40:25 2021-02-02T23:40:36 
+1983378.bat+      batch                              36  COMPLETED 2021-02-02T23:40:25 2021-02-02T23:40:36 
+1983378.0    hydra_pmi+                               4  COMPLETED 2021-02-02T23:40:27 2021-02-02T23:40:36 
+1983379      Gather_Er+  jie.yang     bdwall         72  COMPLETED 2021-02-02T23:32:04 2021-02-02T23:32:12 
+1983379.bat+      batch                              36  COMPLETED 2021-02-02T23:32:04 2021-02-02T23:32:12 
+1983379.0    hydra_pmi+                               2  COMPLETED 2021-02-02T23:32:05 2021-02-02T23:32:12 
+1983380      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-02T23:28:06 2021-02-02T23:28:12 
+1983380.bat+      batch                              36  COMPLETED 2021-02-02T23:28:06 2021-02-02T23:28:12 
+1983380.0    hydra_pmi+                               1  COMPLETED 2021-02-02T23:28:07 2021-02-02T23:28:12 
+1983382      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-02T23:34:36 2021-02-02T23:34:39 
+1983382.bat+      batch                              36  COMPLETED 2021-02-02T23:34:36 2021-02-02T23:34:39 
+1983382.0    hydra_pmi+                               1  COMPLETED 2021-02-02T23:34:37 2021-02-02T23:34:39 
+1983383      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-02T23:35:06 2021-02-02T23:35:08 
+1983383.bat+      batch                              36  COMPLETED 2021-02-02T23:35:06 2021-02-02T23:35:08 
+1983383.0    hydra_pmi+                               1  COMPLETED 2021-02-02T23:35:07 2021-02-02T23:35:08 
+1983384      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-02T23:35:36 2021-02-02T23:35:39 
+1983384.bat+      batch                              36  COMPLETED 2021-02-02T23:35:36 2021-02-02T23:35:39 
+1983384.0    hydra_pmi+                               1  COMPLETED 2021-02-02T23:35:38 2021-02-02T23:35:39 
+1983385      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-02T23:35:36 2021-02-02T23:35:39 
+1983385.bat+      batch                              36  COMPLETED 2021-02-02T23:35:36 2021-02-02T23:35:39 
+1983385.0    hydra_pmi+                               1  COMPLETED 2021-02-02T23:35:38 2021-02-02T23:35:39 
+1983750      Gather_Er+  jie.yang     bdwall        144  COMPLETED 2021-02-03T15:33:33 2021-02-03T15:33:45 
+1983750.bat+      batch                              36  COMPLETED 2021-02-03T15:33:33 2021-02-03T15:33:45 
+1983750.0    hydra_pmi+                               4  COMPLETED 2021-02-03T15:33:34 2021-02-03T15:33:45 
+1983751      Gather_Er+  jie.yang     bdwall         72  COMPLETED 2021-02-03T15:33:33 2021-02-03T15:33:41 
+1983751.bat+      batch                              36  COMPLETED 2021-02-03T15:33:33 2021-02-03T15:33:41 
+1983751.0    hydra_pmi+                               2  COMPLETED 2021-02-03T15:33:35 2021-02-03T15:33:41 
+1983752      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-03T15:33:33 2021-02-03T15:33:39 
+1983752.bat+      batch                              36  COMPLETED 2021-02-03T15:33:33 2021-02-03T15:33:39 
+1983752.0    hydra_pmi+                               1  COMPLETED 2021-02-03T15:33:34 2021-02-03T15:33:39 
+1983753      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-03T15:33:33 2021-02-03T15:33:37 
+1983753.bat+      batch                              36  COMPLETED 2021-02-03T15:33:33 2021-02-03T15:33:37 
+1983753.0    hydra_pmi+                               1  COMPLETED 2021-02-03T15:33:34 2021-02-03T15:33:37 
+1983754      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-03T15:33:33 2021-02-03T15:33:36 
+1983754.bat+      batch                              36  COMPLETED 2021-02-03T15:33:33 2021-02-03T15:33:36 
+1983754.0    hydra_pmi+                               1  COMPLETED 2021-02-03T15:33:34 2021-02-03T15:33:36 
+1983755      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-03T15:33:34 2021-02-03T15:33:36 
+1983755.bat+      batch                              36  COMPLETED 2021-02-03T15:33:34 2021-02-03T15:33:36 
+1983755.0    hydra_pmi+                               1  COMPLETED 2021-02-03T15:33:34 2021-02-03T15:33:36 
+1983756      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-03T15:33:34 2021-02-03T15:33:35 
+1983756.bat+      batch                              36  COMPLETED 2021-02-03T15:33:34 2021-02-03T15:33:35 
+1983756.0    hydra_pmi+                               1  COMPLETED 2021-02-03T15:33:34 2021-02-03T15:33:35 
+1983790      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-03T16:32:55 2021-02-03T16:32:57 
+1983790.bat+      batch                              36  COMPLETED 2021-02-03T16:32:55 2021-02-03T16:32:57 
+1983790.0    hydra_pmi+                               1  COMPLETED 2021-02-03T16:32:56 2021-02-03T16:32:57 
+1983793      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-03T16:33:37 2021-02-03T16:33:40 
+1983793.bat+      batch                              36  COMPLETED 2021-02-03T16:33:37 2021-02-03T16:33:40 
+1983793.0    hydra_pmi+                               1  COMPLETED 2021-02-03T16:33:39 2021-02-03T16:33:40 
+1983794      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-03T16:33:45 2021-02-03T16:33:48 
+1983794.bat+      batch                              36  COMPLETED 2021-02-03T16:33:45 2021-02-03T16:33:48 
+1983794.0    hydra_pmi+                               1  COMPLETED 2021-02-03T16:33:46 2021-02-03T16:33:48 
+1983795      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-03T16:33:53 2021-02-03T16:33:59 
+1983795.bat+      batch                              36  COMPLETED 2021-02-03T16:33:53 2021-02-03T16:33:59 
+1983795.0    hydra_pmi+                               1  COMPLETED 2021-02-03T16:33:57 2021-02-03T16:33:59 
+1983796      Gather_Er+  jie.yang     bdwall         36  COMPLETED 2021-02-03T16:34:01 2021-02-03T16:34:06 
+1983796.bat+      batch                              36  COMPLETED 2021-02-03T16:34:01 2021-02-03T16:34:06 
+1983796.0    hydra_pmi+                               1  COMPLETED 2021-02-03T16:34:02 2021-02-03T16:34:06 
+1983797      Gather_Er+  jie.yang     bdwall         72  COMPLETED 2021-02-03T16:34:12 2021-02-03T16:34:20 
+1983797.bat+      batch                              36  COMPLETED 2021-02-03T16:34:12 2021-02-03T16:34:20 
+1983797.0    hydra_pmi+                               2  COMPLETED 2021-02-03T16:34:14 2021-02-03T16:34:20 
+1983798      Gather_Er+  jie.yang     bdwall        144  COMPLETED 2021-02-03T16:34:25 2021-02-03T16:34:35 
+1983798.bat+      batch                              36  COMPLETED 2021-02-03T16:34:25 2021-02-03T16:34:35 
+1983798.0    hydra_pmi+                               4  COMPLETED 2021-02-03T16:34:25 2021-02-03T16:34:35 
+1984177      SJ_2Proce+  jie.yang     bdwall         36     FAILED 2021-02-03T21:52:51 2021-02-03T21:53:50 
+1984177.bat+      batch                              36     FAILED 2021-02-03T21:52:51 2021-02-03T21:53:50 
+1984177.0    hydra_pmi+                               1  COMPLETED 2021-02-03T21:52:53 2021-02-03T21:53:50 
+1984183      SJ_2Proce+  jie.yang     bdwall         36     FAILED 2021-02-03T21:58:29 2021-02-03T21:59:28 
+1984183.bat+      batch                              36     FAILED 2021-02-03T21:58:29 2021-02-03T21:59:28 
+1984183.0    hydra_pmi+                               1  COMPLETED 2021-02-03T21:58:31 2021-02-03T21:59:28 
+1984203      SJ_2Proce+  jie.yang     bdwall         36  COMPLETED 2021-02-03T22:25:19 2021-02-03T22:26:14 
+1984203.bat+      batch                              36  COMPLETED 2021-02-03T22:25:19 2021-02-03T22:26:14 
+1984203.0    hydra_pmi+                               1  COMPLETED 2021-02-03T22:25:21 2021-02-03T22:26:14 
+1984204      SJ_2Proce+  jie.yang     bdwall         36  COMPLETED 2021-02-03T22:36:01 2021-02-03T22:36:54 
+1984204.bat+      batch                              36  COMPLETED 2021-02-03T22:36:01 2021-02-03T22:36:54 
+1984204.0    hydra_pmi+                               1  COMPLETED 2021-02-03T22:36:03 2021-02-03T22:36:54 
+1985401      Warmup_2P+  jie.yang     bdwall         36  COMPLETED 2021-02-04T23:52:42 2021-02-04T23:52:45 
+1985401.bat+      batch                              36  COMPLETED 2021-02-04T23:52:42 2021-02-04T23:52:45 
+1985401.0    hydra_pmi+                               1  COMPLETED 2021-02-04T23:52:44 2021-02-04T23:52:45 
+1985406      Warmup_2P+  jie.yang     bdwall         36  COMPLETED 2021-02-04T23:54:13 2021-02-04T23:54:15 
+1985406.bat+      batch                              36  COMPLETED 2021-02-04T23:54:13 2021-02-04T23:54:15 
+1985406.0    hydra_pmi+                               1  COMPLETED 2021-02-04T23:54:14 2021-02-04T23:54:15 
+1988818      Test_2Pro+  jie.yang     bdwall         36  COMPLETED 2021-02-08T22:20:47 2021-02-08T22:20:49 
+1988818.bat+      batch                              36  COMPLETED 2021-02-08T22:20:47 2021-02-08T22:20:49 
+1988818.0    hydra_pmi+                               1  COMPLETED 2021-02-08T22:20:48 2021-02-08T22:20:49 
+1988820      Test_2Pro+  jie.yang     bdwall         36  COMPLETED 2021-02-08T22:24:32 2021-02-08T22:24:36 
+1988820.bat+      batch                              36  COMPLETED 2021-02-08T22:24:32 2021-02-08T22:24:36 
+1988820.0    hydra_pmi+                               1  COMPLETED 2021-02-08T22:24:35 2021-02-08T22:24:36 
+1990070      Test_2Pro+  jie.yang     bdwall         36  COMPLETED 2021-02-09T17:33:27 2021-02-09T17:33:30 
+1990070.bat+      batch                              36  COMPLETED 2021-02-09T17:33:27 2021-02-09T17:33:30 
+1990070.0    hydra_pmi+                               1  COMPLETED 2021-02-09T17:33:29 2021-02-09T17:33:30 
+1990076      Test_2Pro+  jie.yang     bdwall         36  COMPLETED 2021-02-09T17:55:35 2021-02-09T17:55:37 
+1990076.bat+      batch                              36  COMPLETED 2021-02-09T17:55:35 2021-02-09T17:55:37 
+1990076.0    hydra_pmi+                               1  COMPLETED 2021-02-09T17:55:36 2021-02-09T17:55:37 
+1990078      Test_8Pro+  jie.yang     bdwall         36  COMPLETED 2021-02-09T17:55:58 2021-02-09T17:56:01 
+1990078.bat+      batch                              36  COMPLETED 2021-02-09T17:55:58 2021-02-09T17:56:01 
+1990078.0    hydra_pmi+                               1  COMPLETED 2021-02-09T17:55:59 2021-02-09T17:56:01 
+1990143      Warmup_2P+  jie.yang     bdwall         36  COMPLETED 2021-02-09T20:42:41 2021-02-09T20:42:45 
+1990143.bat+      batch                              36  COMPLETED 2021-02-09T20:42:41 2021-02-09T20:42:45 
+1990143.0    hydra_pmi+                               1  COMPLETED 2021-02-09T20:42:43 2021-02-09T20:42:45 
+1990145      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-09T20:42:41 2021-02-09T20:42:45 
+1990145.bat+      batch                              36  COMPLETED 2021-02-09T20:42:41 2021-02-09T20:42:45 
+1990145.0    hydra_pmi+                               2  COMPLETED 2021-02-09T20:42:43 2021-02-09T20:42:45 
+1990146      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-09T20:42:41 2021-02-09T20:42:47 
+1990146.bat+      batch                              36  COMPLETED 2021-02-09T20:42:41 2021-02-09T20:42:47 
+1990146.0    hydra_pmi+                               2  COMPLETED 2021-02-09T20:42:43 2021-02-09T20:42:47 
+1990147      Warmup_4P+  jie.yang     bdwall         36  COMPLETED 2021-02-09T20:43:00 2021-02-09T20:43:06 
+1990147.bat+      batch                              36  COMPLETED 2021-02-09T20:43:00 2021-02-09T20:43:06 
+1990147.0    hydra_pmi+                               1  COMPLETED 2021-02-09T20:43:01 2021-02-09T20:43:06 
+1990152      Warmup_4P+  jie.yang     bdwall         36  COMPLETED 2021-02-09T21:09:22 2021-02-09T21:09:28 
+1990152.bat+      batch                              36  COMPLETED 2021-02-09T21:09:22 2021-02-09T21:09:28 
+1990152.0    hydra_pmi+                               1  COMPLETED 2021-02-09T21:09:23 2021-02-09T21:09:28 
+1990229      Warmup_4P+  jie.yang     bdwall         36  COMPLETED 2021-02-09T22:22:54 2021-02-09T22:23:01 
+1990229.bat+      batch                              36  COMPLETED 2021-02-09T22:22:54 2021-02-09T22:23:01 
+1990229.0    hydra_pmi+                               1  COMPLETED 2021-02-09T22:22:57 2021-02-09T22:23:01 
+1990230      Warmup_2P+  jie.yang     bdwall         36  COMPLETED 2021-02-09T22:23:24 2021-02-09T22:23:27 
+1990230.bat+      batch                              36  COMPLETED 2021-02-09T22:23:24 2021-02-09T22:23:27 
+1990230.0    hydra_pmi+                               1  COMPLETED 2021-02-09T22:23:25 2021-02-09T22:23:27 
+1990232      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-09T22:25:56 2021-02-09T22:25:59 
+1990232.bat+      batch                              36  COMPLETED 2021-02-09T22:25:56 2021-02-09T22:25:59 
+1990232.0    hydra_pmi+                               2  COMPLETED 2021-02-09T22:25:57 2021-02-09T22:25:59 
+1990233      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-09T22:25:56 2021-02-09T22:26:01 
+1990233.bat+      batch                              36  COMPLETED 2021-02-09T22:25:56 2021-02-09T22:26:01 
+1990233.0    hydra_pmi+                               2  COMPLETED 2021-02-09T22:25:57 2021-02-09T22:26:01 
+1991360      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-10T18:28:02 2021-02-10T18:28:07 
+1991360.bat+      batch                              36  COMPLETED 2021-02-10T18:28:02 2021-02-10T18:28:07 
+1991360.0    hydra_pmi+                               1  COMPLETED 2021-02-10T18:28:04 2021-02-10T18:28:07 
+1991368      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-10T18:46:47 2021-02-10T18:46:51 
+1991368.bat+      batch                              36  COMPLETED 2021-02-10T18:46:47 2021-02-10T18:46:51 
+1991368.0    hydra_pmi+                               1  COMPLETED 2021-02-10T18:46:49 2021-02-10T18:46:51 
+1991400      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-10T19:07:34 2021-02-10T19:07:37 
+1991400.bat+      batch                              36  COMPLETED 2021-02-10T19:07:34 2021-02-10T19:07:37 
+1991400.0    hydra_pmi+                               1  COMPLETED 2021-02-10T19:07:35 2021-02-10T19:07:37 
+1991402      SJ_2Proce+  jie.yang     bdwall         36     FAILED 2021-02-10T19:12:12 2021-02-10T19:13:09 
+1991402.bat+      batch                              36     FAILED 2021-02-10T19:12:12 2021-02-10T19:13:09 
+1991402.0    hydra_pmi+                               1  COMPLETED 2021-02-10T19:12:12 2021-02-10T19:13:09 
+1991405      SJ_2Proce+  jie.yang     bdwall         36  COMPLETED 2021-02-10T19:15:58 2021-02-10T19:16:52 
+1991405.bat+      batch                              36  COMPLETED 2021-02-10T19:15:58 2021-02-10T19:16:52 
+1991405.0    hydra_pmi+                               1  COMPLETED 2021-02-10T19:16:00 2021-02-10T19:16:52 
+1991418      SJ_2Proce+  jie.yang     bdwall         36     FAILED 2021-02-10T19:34:20 2021-02-10T19:35:13 
+1991418.bat+      batch                              36     FAILED 2021-02-10T19:34:20 2021-02-10T19:35:13 
+1991418.0    hydra_pmi+                               1  COMPLETED 2021-02-10T19:34:22 2021-02-10T19:35:13 
+1991429      SJ_2Proce+  jie.yang     bdwall         36  COMPLETED 2021-02-10T20:17:55 2021-02-10T20:18:48 
+1991429.bat+      batch                              36  COMPLETED 2021-02-10T20:17:55 2021-02-10T20:18:48 
+1991429.0    hydra_pmi+                               1  COMPLETED 2021-02-10T20:17:57 2021-02-10T20:18:48 
+1991433      SJ_2Proce+  jie.yang     bdwall         36     FAILED 2021-02-10T20:31:08 2021-02-10T20:32:05 
+1991433.bat+      batch                              36     FAILED 2021-02-10T20:31:08 2021-02-10T20:32:05 
+1991433.0    hydra_pmi+                               1  COMPLETED 2021-02-10T20:31:09 2021-02-10T20:32:05 
+1991434      SJ_2Proce+  jie.yang     bdwall         36  COMPLETED 2021-02-10T20:33:10 2021-02-10T20:34:03 
+1991434.bat+      batch                              36  COMPLETED 2021-02-10T20:33:10 2021-02-10T20:34:03 
+1991434.0    hydra_pmi+                               1  COMPLETED 2021-02-10T20:33:11 2021-02-10T20:34:03 
+1991437      SJ_2Proce+  jie.yang     bdwall         36  COMPLETED 2021-02-10T21:08:21 2021-02-10T21:09:14 
+1991437.bat+      batch                              36  COMPLETED 2021-02-10T21:08:21 2021-02-10T21:09:14 
+1991437.0    hydra_pmi+                               1  COMPLETED 2021-02-10T21:08:22 2021-02-10T21:09:14 
+1991444      SJ_2Proce+  jie.yang     bdwall         36     FAILED 2021-02-10T21:41:08 2021-02-10T21:42:05 
+1991444.bat+      batch                              36     FAILED 2021-02-10T21:41:08 2021-02-10T21:42:05 
+1991444.0    hydra_pmi+                               1  COMPLETED 2021-02-10T21:41:09 2021-02-10T21:42:05 
+1991446      SJ_2Proce+  jie.yang     bdwall         36  COMPLETED 2021-02-10T21:52:34 2021-02-10T21:53:28 
+1991446.bat+      batch                              36  COMPLETED 2021-02-10T21:52:34 2021-02-10T21:53:28 
+1991446.0    hydra_pmi+                               1  COMPLETED 2021-02-10T21:52:36 2021-02-10T21:53:28 
+1992472      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T16:45:45 2021-02-11T16:45:49 
+1992472.bat+      batch                              36  COMPLETED 2021-02-11T16:45:45 2021-02-11T16:45:49 
+1992472.0    hydra_pmi+                               1  COMPLETED 2021-02-11T16:45:47 2021-02-11T16:45:49 
+1992474      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T16:46:34 2021-02-11T16:46:38 
+1992474.bat+      batch                              36  COMPLETED 2021-02-11T16:46:34 2021-02-11T16:46:38 
+1992474.0    hydra_pmi+                               1  COMPLETED 2021-02-11T16:46:34 2021-02-11T16:46:38 
+1992476      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T16:47:11 2021-02-11T16:47:19 
+1992476.bat+      batch                              36  COMPLETED 2021-02-11T16:47:11 2021-02-11T16:47:19 
+1992476.0    hydra_pmi+                               1  COMPLETED 2021-02-11T16:47:12 2021-02-11T16:47:19 
+1992478      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T16:47:37 2021-02-11T16:47:55 
+1992478.bat+      batch                              36  COMPLETED 2021-02-11T16:47:37 2021-02-11T16:47:55 
+1992478.0    hydra_pmi+                               1  COMPLETED 2021-02-11T16:47:37 2021-02-11T16:47:55 
+1992480      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T16:47:52 2021-02-11T16:48:31 
+1992480.bat+      batch                              36  COMPLETED 2021-02-11T16:47:52 2021-02-11T16:48:31 
+1992480.0    hydra_pmi+                               1  COMPLETED 2021-02-11T16:47:54 2021-02-11T16:48:31 
+1992481      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-11T16:48:04 2021-02-11T16:49:11 
+1992481.bat+      batch                              36  COMPLETED 2021-02-11T16:48:04 2021-02-11T16:49:11 
+1992481.0    hydra_pmi+                               2  COMPLETED 2021-02-11T16:48:06 2021-02-11T16:49:11 
+1992483      Warmup_4N+  jie.yang     bdwall        144  COMPLETED 2021-02-11T16:49:27 2021-02-11T16:51:35 
+1992483.bat+      batch                              36  COMPLETED 2021-02-11T16:49:27 2021-02-11T16:51:35 
+1992483.0    hydra_pmi+                               4  COMPLETED 2021-02-11T16:49:28 2021-02-11T16:51:35 
+1992490      Warmup_4N+  jie.yang     bdwall        144  COMPLETED 2021-02-11T17:08:28 2021-02-11T17:10:28 
+1992490.bat+      batch                              36  COMPLETED 2021-02-11T17:08:28 2021-02-11T17:10:28 
+1992490.0    hydra_pmi+                               4  COMPLETED 2021-02-11T17:08:30 2021-02-11T17:10:28 
+1992491      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-11T17:04:30 2021-02-11T17:05:42 
+1992491.bat+      batch                              36  COMPLETED 2021-02-11T17:04:30 2021-02-11T17:05:42 
+1992491.0    hydra_pmi+                               2  COMPLETED 2021-02-11T17:04:32 2021-02-11T17:05:42 
+1992492      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T17:05:00 2021-02-11T17:05:39 
+1992492.bat+      batch                              36  COMPLETED 2021-02-11T17:05:00 2021-02-11T17:05:39 
+1992492.0    hydra_pmi+                               1  COMPLETED 2021-02-11T17:05:02 2021-02-11T17:05:39 
+1992493      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T17:06:01 2021-02-11T17:06:19 
+1992493.bat+      batch                              36  COMPLETED 2021-02-11T17:06:01 2021-02-11T17:06:19 
+1992493.0    hydra_pmi+                               1  COMPLETED 2021-02-11T17:06:02 2021-02-11T17:06:19 
+1992494      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T17:06:01 2021-02-11T17:06:10 
+1992494.bat+      batch                              36  COMPLETED 2021-02-11T17:06:01 2021-02-11T17:06:10 
+1992494.0    hydra_pmi+                               1  COMPLETED 2021-02-11T17:06:02 2021-02-11T17:06:09 
+1992496      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T17:06:01 2021-02-11T17:06:06 
+1992496.bat+      batch                              36  COMPLETED 2021-02-11T17:06:01 2021-02-11T17:06:06 
+1992496.0    hydra_pmi+                               1  COMPLETED 2021-02-11T17:06:02 2021-02-11T17:06:06 
+1992497      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T17:07:01 2021-02-11T17:07:04 
+1992497.bat+      batch                              36  COMPLETED 2021-02-11T17:07:01 2021-02-11T17:07:04 
+1992497.0    hydra_pmi+                               1  COMPLETED 2021-02-11T17:07:02 2021-02-11T17:07:04 
+1992502      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T17:43:08 2021-02-11T17:43:12 
+1992502.bat+      batch                              36  COMPLETED 2021-02-11T17:43:08 2021-02-11T17:43:12 
+1992502.0    hydra_pmi+                               1  COMPLETED 2021-02-11T17:43:10 2021-02-11T17:43:12 
+1992503      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T17:43:53 2021-02-11T17:43:55 
+1992503.bat+      batch                              36  COMPLETED 2021-02-11T17:43:53 2021-02-11T17:43:55 
+1992503.0    hydra_pmi+                               1  COMPLETED 2021-02-11T17:43:53 2021-02-11T17:43:55 
+1992504      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T17:44:04 2021-02-11T17:44:07 
+1992504.bat+      batch                              36  COMPLETED 2021-02-11T17:44:04 2021-02-11T17:44:07 
+1992504.0    hydra_pmi+                               1  COMPLETED 2021-02-11T17:44:05 2021-02-11T17:44:07 
+1992505      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T17:44:17 2021-02-11T17:44:21 
+1992505.bat+      batch                              36  COMPLETED 2021-02-11T17:44:17 2021-02-11T17:44:21 
+1992505.0    hydra_pmi+                               1  COMPLETED 2021-02-11T17:44:18 2021-02-11T17:44:21 
+1992506      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T17:44:26 2021-02-11T17:44:32 
+1992506.bat+      batch                              36  COMPLETED 2021-02-11T17:44:26 2021-02-11T17:44:32 
+1992506.0    hydra_pmi+                               1  COMPLETED 2021-02-11T17:44:26 2021-02-11T17:44:32 
+1992508      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T17:44:36 2021-02-11T17:44:46 
+1992508.bat+      batch                              36  COMPLETED 2021-02-11T17:44:36 2021-02-11T17:44:46 
+1992508.0    hydra_pmi+                               1  COMPLETED 2021-02-11T17:44:36 2021-02-11T17:44:46 
+1992509      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-11T17:45:01 2021-02-11T17:45:13 
+1992509.bat+      batch                              36  COMPLETED 2021-02-11T17:45:01 2021-02-11T17:45:13 
+1992509.0    hydra_pmi+                               2  COMPLETED 2021-02-11T17:45:02 2021-02-11T17:45:13 
+1992510      Warmup_4N+  jie.yang     bdwall        144  COMPLETED 2021-02-11T17:49:23 2021-02-11T17:49:36 
+1992510.bat+      batch                              36  COMPLETED 2021-02-11T17:49:23 2021-02-11T17:49:36 
+1992510.0    hydra_pmi+                               4  COMPLETED 2021-02-11T17:49:24 2021-02-11T17:49:36 
+1992605      Warmup_4N+  jie.yang     bdwall        144  COMPLETED 2021-02-11T20:52:24 2021-02-11T20:52:36 
+1992605.bat+      batch                              36  COMPLETED 2021-02-11T20:52:24 2021-02-11T20:52:36 
+1992605.0    hydra_pmi+                               4  COMPLETED 2021-02-11T20:52:26 2021-02-11T20:52:36 
+1992606      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-11T20:54:34 2021-02-11T20:54:46 
+1992606.bat+      batch                              36  COMPLETED 2021-02-11T20:54:34 2021-02-11T20:54:46 
+1992606.0    hydra_pmi+                               2  COMPLETED 2021-02-11T20:54:35 2021-02-11T20:54:46 
+1992607      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T20:54:48 2021-02-11T20:54:58 
+1992607.bat+      batch                              36  COMPLETED 2021-02-11T20:54:48 2021-02-11T20:54:58 
+1992607.0    hydra_pmi+                               1  COMPLETED 2021-02-11T20:54:50 2021-02-11T20:54:58 
+1992608      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T20:54:59 2021-02-11T20:55:06 
+1992608.bat+      batch                              36  COMPLETED 2021-02-11T20:54:59 2021-02-11T20:55:06 
+1992608.0    hydra_pmi+                               1  COMPLETED 2021-02-11T20:55:00 2021-02-11T20:55:06 
+1992609      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T20:55:18 2021-02-11T20:55:22 
+1992609.bat+      batch                              36  COMPLETED 2021-02-11T20:55:18 2021-02-11T20:55:22 
+1992609.0    hydra_pmi+                               1  COMPLETED 2021-02-11T20:55:19 2021-02-11T20:55:22 
+1992610      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T20:55:29 2021-02-11T20:55:32 
+1992610.bat+      batch                              36  COMPLETED 2021-02-11T20:55:29 2021-02-11T20:55:32 
+1992610.0    hydra_pmi+                               1  COMPLETED 2021-02-11T20:55:30 2021-02-11T20:55:32 
+1992611      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T20:55:36 2021-02-11T20:55:39 
+1992611.bat+      batch                              36  COMPLETED 2021-02-11T20:55:36 2021-02-11T20:55:39 
+1992611.0    hydra_pmi+                               1  COMPLETED 2021-02-11T20:55:38 2021-02-11T20:55:39 
+1992617      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T21:09:58 2021-02-11T21:10:01 
+1992617.bat+      batch                              36  COMPLETED 2021-02-11T21:09:58 2021-02-11T21:10:01 
+1992617.0    hydra_pmi+                               1  COMPLETED 2021-02-11T21:10:00 2021-02-11T21:10:01 
+1992619      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T21:12:23 2021-02-11T21:12:25 
+1992619.bat+      batch                              36  COMPLETED 2021-02-11T21:12:23 2021-02-11T21:12:25 
+1992619.0    hydra_pmi+                               1  COMPLETED 2021-02-11T21:12:24 2021-02-11T21:12:25 
+1992620      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T21:12:39 2021-02-11T21:12:44 
+1992620.bat+      batch                              36  COMPLETED 2021-02-11T21:12:39 2021-02-11T21:12:44 
+1992620.0    hydra_pmi+                               1  COMPLETED 2021-02-11T21:12:41 2021-02-11T21:12:44 
+1992621      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T21:12:51 2021-02-11T21:12:56 
+1992621.bat+      batch                              36  COMPLETED 2021-02-11T21:12:51 2021-02-11T21:12:56 
+1992621.0    hydra_pmi+                               1  COMPLETED 2021-02-11T21:12:51 2021-02-11T21:12:56 
+1992622      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T21:13:04 2021-02-11T21:13:12 
+1992622.bat+      batch                              36  COMPLETED 2021-02-11T21:13:04 2021-02-11T21:13:12 
+1992622.0    hydra_pmi+                               1  COMPLETED 2021-02-11T21:13:04 2021-02-11T21:13:12 
+1992624      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-11T21:13:19 2021-02-11T21:13:29 
+1992624.bat+      batch                              36  COMPLETED 2021-02-11T21:13:19 2021-02-11T21:13:29 
+1992624.0    hydra_pmi+                               2  COMPLETED 2021-02-11T21:13:19 2021-02-11T21:13:29 
+1992625      Warmup_4N+  jie.yang     bdwall        144  COMPLETED 2021-02-11T21:26:02 2021-02-11T21:26:12 
+1992625.bat+      batch                              36  COMPLETED 2021-02-11T21:26:02 2021-02-11T21:26:12 
+1992625.0    hydra_pmi+                               4  COMPLETED 2021-02-11T21:26:03 2021-02-11T21:26:12 
+1992627      Warmup_4N+  jie.yang     bdwall        144  COMPLETED 2021-02-11T21:32:37 2021-02-11T21:32:49 
+1992627.bat+      batch                              36  COMPLETED 2021-02-11T21:32:37 2021-02-11T21:32:49 
+1992627.0    hydra_pmi+                               4  COMPLETED 2021-02-11T21:32:38 2021-02-11T21:32:49 
+1992628      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-11T21:33:04 2021-02-11T21:33:14 
+1992628.bat+      batch                              36  COMPLETED 2021-02-11T21:33:04 2021-02-11T21:33:14 
+1992628.0    hydra_pmi+                               2  COMPLETED 2021-02-11T21:33:05 2021-02-11T21:33:14 
+1992629      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-11T21:36:44 2021-02-11T21:36:54 
+1992629.bat+      batch                              36  COMPLETED 2021-02-11T21:36:44 2021-02-11T21:36:54 
+1992629.0    hydra_pmi+                               2  COMPLETED 2021-02-11T21:36:45 2021-02-11T21:36:54 
+1992630      Warmup_4N+  jie.yang     bdwall        144  COMPLETED 2021-02-11T21:38:46 2021-02-11T21:38:57 
+1992630.bat+      batch                              36  COMPLETED 2021-02-11T21:38:46 2021-02-11T21:38:57 
+1992630.0    hydra_pmi+                               4  COMPLETED 2021-02-11T21:38:47 2021-02-11T21:38:57 
+1992631      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T21:39:12 2021-02-11T21:39:21 
+1992631.bat+      batch                              36  COMPLETED 2021-02-11T21:39:12 2021-02-11T21:39:21 
+1992631.0    hydra_pmi+                               1  COMPLETED 2021-02-11T21:39:13 2021-02-11T21:39:21 
+1992632      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T21:39:12 2021-02-11T21:39:19 
+1992632.bat+      batch                              36  COMPLETED 2021-02-11T21:39:12 2021-02-11T21:39:19 
+1992632.0    hydra_pmi+                               1  COMPLETED 2021-02-11T21:39:13 2021-02-11T21:39:19 
+1992633      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T21:39:21 2021-02-11T21:39:25 
+1992633.bat+      batch                              36  COMPLETED 2021-02-11T21:39:21 2021-02-11T21:39:25 
+1992633.0    hydra_pmi+                               1  COMPLETED 2021-02-11T21:39:22 2021-02-11T21:39:25 
+1992634      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T21:39:32 2021-02-11T21:39:34 
+1992634.bat+      batch                              36  COMPLETED 2021-02-11T21:39:32 2021-02-11T21:39:34 
+1992634.0    hydra_pmi+                               1  COMPLETED 2021-02-11T21:39:33 2021-02-11T21:39:34 
+1992635      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T21:39:40 2021-02-11T21:39:42 
+1992635.bat+      batch                              36  COMPLETED 2021-02-11T21:39:40 2021-02-11T21:39:42 
+1992635.0    hydra_pmi+                               1  COMPLETED 2021-02-11T21:39:40 2021-02-11T21:39:42 
+1992649      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T22:54:05 2021-02-11T22:54:08 
+1992649.bat+      batch                              36  COMPLETED 2021-02-11T22:54:05 2021-02-11T22:54:08 
+1992649.0    hydra_pmi+                               1  COMPLETED 2021-02-11T22:54:07 2021-02-11T22:54:08 
+1992650      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T22:56:15 2021-02-11T22:56:17 
+1992650.bat+      batch                              36  COMPLETED 2021-02-11T22:56:15 2021-02-11T22:56:17 
+1992650.0    hydra_pmi+                               1  COMPLETED 2021-02-11T22:56:16 2021-02-11T22:56:17 
+1992651      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T22:56:27 2021-02-11T22:56:31 
+1992651.bat+      batch                              36  COMPLETED 2021-02-11T22:56:27 2021-02-11T22:56:31 
+1992651.0    hydra_pmi+                               1  COMPLETED 2021-02-11T22:56:28 2021-02-11T22:56:31 
+1992652      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T22:56:48 2021-02-11T22:56:53 
+1992652.bat+      batch                              36  COMPLETED 2021-02-11T22:56:48 2021-02-11T22:56:53 
+1992652.0    hydra_pmi+                               1  COMPLETED 2021-02-11T22:56:48 2021-02-11T22:56:53 
+1992653      Warmup_1N+  jie.yang     bdwall         36  COMPLETED 2021-02-11T22:56:59 2021-02-11T22:57:07 
+1992653.bat+      batch                              36  COMPLETED 2021-02-11T22:56:59 2021-02-11T22:57:07 
+1992653.0    hydra_pmi+                               1  COMPLETED 2021-02-11T22:56:59 2021-02-11T22:57:07 
+1992654      Warmup_2N+  jie.yang     bdwall         72  COMPLETED 2021-02-11T22:57:14 2021-02-11T22:57:25 
+1992654.bat+      batch                              36  COMPLETED 2021-02-11T22:57:14 2021-02-11T22:57:25 
+1992654.0    hydra_pmi+                               2  COMPLETED 2021-02-11T22:57:15 2021-02-11T22:57:25 
+1992655      Warmup_4N+  jie.yang     bdwall        144  COMPLETED 2021-02-11T23:12:30 2021-02-11T23:12:42 
+1992655.bat+      batch                              36  COMPLETED 2021-02-11T23:12:30 2021-02-11T23:12:42 
+1992655.0    hydra_pmi+                               4  COMPLETED 2021-02-11T23:12:31 2021-02-11T23:12:42 
+1997395      Gather_Bc+  jie.yang     bdwall         36  COMPLETED 2021-02-15T20:57:20 2021-02-15T20:57:23 
+1997395.bat+      batch                              36  COMPLETED 2021-02-15T20:57:20 2021-02-15T20:57:23 
+1997395.0    hydra_pmi+                               1  COMPLETED 2021-02-15T20:57:21 2021-02-15T20:57:23 
+1997428      Gather_Bc+  jie.yang     bdwall        144  COMPLETED 2021-02-15T22:32:05 2021-02-15T22:34:06 
+1997428.bat+      batch                              36  COMPLETED 2021-02-15T22:32:05 2021-02-15T22:34:06 
+1997428.0    hydra_pmi+                               4  COMPLETED 2021-02-15T22:32:06 2021-02-15T22:34:06 
+1997570      Gather_Bc+  jie.yang     bdwall         72  COMPLETED 2021-02-16T09:24:06 2021-02-16T09:25:08 
+1997570.bat+      batch                              36  COMPLETED 2021-02-16T09:24:06 2021-02-16T09:25:08 
+1997570.0    hydra_pmi+                               2  COMPLETED 2021-02-16T09:24:08 2021-02-16T09:25:08 
+1997571      Gather_Bc+  jie.yang     bdwall         36  COMPLETED 2021-02-16T09:24:38 2021-02-16T09:25:19 
+1997571.bat+      batch                              36  COMPLETED 2021-02-16T09:24:38 2021-02-16T09:25:19 
+1997571.0    hydra_pmi+                               1  COMPLETED 2021-02-16T09:24:41 2021-02-16T09:25:19 
+1997572      Gather_Bc+  jie.yang     bdwall         36  COMPLETED 2021-02-16T09:25:02 2021-02-16T09:25:22 
+1997572.bat+      batch                              36  COMPLETED 2021-02-16T09:25:02 2021-02-16T09:25:22 
+1997572.0    hydra_pmi+                               1  COMPLETED 2021-02-16T09:25:05 2021-02-16T09:25:22 
+1997573      Gather_Bc+  jie.yang     bdwall         36  COMPLETED 2021-02-16T09:25:23 2021-02-16T09:25:32 
+1997573.bat+      batch                              36  COMPLETED 2021-02-16T09:25:23 2021-02-16T09:25:32 
+1997573.0    hydra_pmi+                               1  COMPLETED 2021-02-16T09:25:25 2021-02-16T09:25:32 
+1997574      Gather_Bc+  jie.yang     bdwall         36  COMPLETED 2021-02-16T09:25:50 2021-02-16T09:25:55 
+1997574.bat+      batch                              36  COMPLETED 2021-02-16T09:25:50 2021-02-16T09:25:55 
+1997574.0    hydra_pmi+                               1  COMPLETED 2021-02-16T09:25:51 2021-02-16T09:25:55 
+1998079      GatherBca+  jie.yang     bdwall        144  COMPLETED 2021-02-16T16:23:30 2021-02-16T16:23:42 
+1998079.bat+      batch                              36  COMPLETED 2021-02-16T16:23:30 2021-02-16T16:23:42 
+1998079.0    hydra_pmi+                               4  COMPLETED 2021-02-16T16:23:32 2021-02-16T16:23:42 
+1998097      GatherBca+  jie.yang     bdwall         72  COMPLETED 2021-02-16T16:36:11 2021-02-16T16:36:22 
+1998097.bat+      batch                              36  COMPLETED 2021-02-16T16:36:11 2021-02-16T16:36:22 
+1998097.0    hydra_pmi+                               2  COMPLETED 2021-02-16T16:36:12 2021-02-16T16:36:22 
+1998099      GatherBca+  jie.yang     bdwall         36  COMPLETED 2021-02-16T16:36:37 2021-02-16T16:36:46 
+1998099.bat+      batch                              36  COMPLETED 2021-02-16T16:36:37 2021-02-16T16:36:46 
+1998099.0    hydra_pmi+                               1  COMPLETED 2021-02-16T16:36:38 2021-02-16T16:36:46 
+1998100      GatherBca+  jie.yang     bdwall         36  COMPLETED 2021-02-16T16:36:37 2021-02-16T16:36:43 
+1998100.bat+      batch                              36  COMPLETED 2021-02-16T16:36:37 2021-02-16T16:36:43 
+1998100.0    hydra_pmi+                               1  COMPLETED 2021-02-16T16:36:38 2021-02-16T16:36:43 
+1998101      GatherBca+  jie.yang     bdwall         36  COMPLETED 2021-02-16T16:36:58 2021-02-16T16:37:01 
+1998101.bat+      batch                              36  COMPLETED 2021-02-16T16:36:58 2021-02-16T16:37:01 
+1998101.0    hydra_pmi+                               1  COMPLETED 2021-02-16T16:36:58 2021-02-16T16:37:01 
+1998102      GatherBca+  jie.yang     bdwall         36  COMPLETED 2021-02-16T16:37:01 2021-02-16T16:37:03 
+1998102.bat+      batch                              36  COMPLETED 2021-02-16T16:37:01 2021-02-16T16:37:03 
+1998102.0    hydra_pmi+                               1  COMPLETED 2021-02-16T16:37:02 2021-02-16T16:37:03 
+1998104      GatherBca+  jie.yang     bdwall         36  COMPLETED 2021-02-16T16:37:16 2021-02-16T16:37:19 
+1998104.bat+      batch                              36  COMPLETED 2021-02-16T16:37:16 2021-02-16T16:37:19 
+1998104.0    hydra_pmi+                               1  COMPLETED 2021-02-16T16:37:17 2021-02-16T16:37:19 
