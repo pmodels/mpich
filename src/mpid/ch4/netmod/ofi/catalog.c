@@ -41,6 +41,7 @@ static void MPIDI_OFI_unused_gen_catalog()
     MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofid_poll", "**ofid_poll %s %d %s %s", a, b, a, a);
     MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofid_peek", "**ofid_peek %s %d %s %s", a, b, a, a);
     MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofid_send", "**ofid_send %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofid_sendv", "**ofid_sendv %s %d %s %s", a, b, a, a);
     MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofid_inject", "**ofid_inject %s %d %s %s", a, b, a, a);
     MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofid_rdma_write", "**ofid_rdma_write %s %d %s %s", a, b, a,
                   a);

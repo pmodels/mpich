@@ -59,8 +59,8 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
             MPIR_ERR_##CHKANDJUMP4(_ret != -FI_EAGAIN,                  \
                                    mpi_errno,                           \
                                    MPI_ERR_OTHER,                       \
-                                   "**ofi_"#STR,                        \
-                                   "**ofi_"#STR" %s %d %s %s",          \
+                                   "**ofid_"#STR,                        \
+                                   "**ofid_"#STR" %s %d %s %s",          \
                                    __SHORT_FILE__,                      \
                                    __LINE__,                            \
                                    __func__,                              \
@@ -128,7 +128,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * r
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_global.ctx[0].rx,
                                        &MPIDI_OFI_global.am_msg[am->index],
-                                       FI_MULTI_RECV | FI_COMPLETION), repost);
+                                       FI_MULTI_RECV | FI_COMPLETION), prepost);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     return mpi_errno;
