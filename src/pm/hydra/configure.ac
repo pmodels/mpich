@@ -407,7 +407,10 @@ for hydra_topolib in ${hydra_topolibs}; do
                 fi
 		if test "$with_hwloc" = "embedded" ; then
                     hydra_use_embedded_hwloc=yes
+                    PAC_PUSH_FLAG([CFLAGS])
+                    CFLAGS=""
                     PAC_CONFIG_SUBDIR_ARGS([tools/topo/hwloc/hwloc], [--enable-embedded-mode --disable-visibility],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
+                    PAC_POP_FLAG([CFLAGS])
                     dnl Note that single quote is intentional to pass the variable as is
                     hwloc_srcdir="tools/topo/hwloc/hwloc"
                     hwloc_includedir='-I${srcdir}/${hwloc_srcdir}/include -I${builddir}/${hwloc_srcdir}/include'
