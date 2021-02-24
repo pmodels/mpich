@@ -39,7 +39,7 @@ static type_hash mpi_type_hashs[] = {
 
 
 //Get the initial hash value for a MPI_Datatype
-MPI_Datatype MPIR_Datatype_Hash_builtin_search_by_datatype(MPI_Datatype datatype)
+unsigned int MPIR_Datatype_Hash_builtin_search_by_datatype(MPI_Datatype datatype)
 {
     int i;
     unsigned int  hash_value_to_return= MPI_DATATYPE_HASH_UNDEFINED;
