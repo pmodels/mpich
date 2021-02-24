@@ -79,6 +79,27 @@ int test_recv_init(int src_rank, const char *test_name)
     return errs;
 }
 
+void test_proc_null()
+{
+    MPI_Request r;
+    MPI_Status s;
+    int errs = 0;
+    int flag;
+    int buf[10];
+    int tag = 27;
+
+    MPI_Recv_init(buf, 10, MPI_INT, MPI_PROC_NULL, tag, MPI_COMM_WORLD, &r);
+    MPI_Start(&r);
+    MPI_Wait(&r, &s);
+    MPI_Request_free(&r);
+
+    MPI_Send_init(buf, 10, MPI_INT, MPI_PROC_NULL, tag, MPI_COMM_WORLD, &r);
+    MPI_Start(&r);
+    MPI_Wait(&r, &s);
+
+    MPI_Request_free(&r);
+}
+
 int main(int argc, char *argv[])
 {
     MPI_Request r;
@@ -165,8 +186,6 @@ int main(int argc, char *argv[])
         printf("Status not empty after MPI_Wait (send)\n");
     }
 
-
-
     MPI_Request_free(&r);
 
     if (rank == 0)
@@ -181,6 +200,7 @@ int main(int argc, char *argv[])
         MTestPrintfMsg(1, "Create a persistent receive (ANY_SOURCE) request\n");
 
     errs += test_recv_init(MPI_ANY_SOURCE, "recv-anysource");
+    test_proc_null();
 
   fn_exit:
     MTest_Finalize(errs);
