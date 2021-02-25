@@ -17,6 +17,7 @@ typedef struct Type_Sig {
 unsigned long MPIR_Circular_Left_Shift(unsigned long val, unsigned long nums_left_shift)
 {
     unsigned long return_val;
+    nums_left_shift = nums_left_shift % (sizeof(val)*CHAR_BIT);
 
     return_val = (val << nums_left_shift) | 
     		(val >> (sizeof(val)*CHAR_BIT - nums_left_shift));
