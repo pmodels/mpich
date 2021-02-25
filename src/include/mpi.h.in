@@ -900,9 +900,9 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_T_ERR_INVALID_NAME      73  /* Name doesn't match */
 #define MPI_T_ERR_INVALID           74  /* Generic error code for MPI_T added in MPI-3.1 */
 
-#define MPI_ERR_SESSION             75  /* Invalid session handle */
+#define MPIX_ERR_SESSION            75  /* Invalid session handle */
 
-#define MPI_T_ERR_NOT_SUPPORTED     76  /* Requested functionality not supported */
+#define MPIX_T_ERR_NOT_SUPPORTED    76  /* Requested functionality not supported */
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
