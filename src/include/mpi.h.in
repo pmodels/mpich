@@ -884,8 +884,7 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
                                            be initialized */
 #define MPI_T_ERR_INVALID_INDEX     62  /* The index is invalid or
                                            has been deleted  */
-#define MPI_T_ERR_INVALID_ITEM      MPI_T_ERR_INVALID_INDEX
-                                        /* Deprecated.  If a queried item index is out of range,
+#define MPI_T_ERR_INVALID_ITEM      63  /* Deprecated.  If a queried item index is out of range,
                                          * MPI-4 will return MPI_T_ERR_INVALID_INDEX instead. */
 #define MPI_T_ERR_INVALID_HANDLE    64  /* The handle is invalid */
 #define MPI_T_ERR_OUT_OF_HANDLES    65  /* No more handles available */
