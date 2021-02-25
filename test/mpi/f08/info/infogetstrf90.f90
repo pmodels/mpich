@@ -39,7 +39,7 @@
 ! Case 1: invalid key
       bufl = 10
       val = canary
-      call mpi_info_get_string( inf, "invkey", bufl, val, f, ierr )
+      call mpix_info_get_string( inf, "invkey", bufl, val, f, ierr )
       if ( f ) then
          errs = errs + 1
          print *, ' get_string succeeded for invalid key'
@@ -53,7 +53,7 @@
       do i = 1, nkeys
          bufl = 0
          val = canary
-         call mpi_info_get_string( inf, keys(i), bufl, val, f, ierr )
+         call mpix_info_get_string( inf, keys(i), bufl, val, f, ierr )
          if ( .not. f ) then
             errs = errs + 1
             print *, ' get_string failed for valid key ', keys(i)
@@ -73,7 +73,7 @@
       do i = 1, nkeys
          bufl = 2
          val = canary
-         call mpi_info_get_string( inf, keys(i), bufl, val, f, ierr )
+         call mpix_info_get_string( inf, keys(i), bufl, val, f, ierr )
          if ( .not. f ) then
             errs = errs + 1
             print *, ' get_string failed for valid key ', keys(i)
@@ -98,7 +98,7 @@
 ! Case 4: bufl = MPI_MAX_INFO_VAL (very large number)
       do i = 1, nkeys
          bufl = MPI_MAX_INFO_VAL
-         call mpi_info_get_string( inf, keys(i), bufl, val, f, ierr )
+         call mpix_info_get_string( inf, keys(i), bufl, val, f, ierr )
          if ( .not. f ) then
             errs = errs + 1
             print *, ' get_string failed for valid key ', keys(i)

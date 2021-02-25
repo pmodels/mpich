@@ -26,15 +26,15 @@ MPI_Add_error_string:
     with this routine.
 */
 
-MPIX_Delete_error_class:
+MPI_Delete_error_class:
     errorclass: ERROR_CLASS, [value of the error class to be remoed]
     .desc: Delete an MPI error class from the known classes
 
-MPIX_Delete_error_code:
+MPI_Delete_error_code:
     errorcode: ERROR_CODE, [value of the error code to be remoed]
     .desc: Delete an MPI error code
 
-MPIX_Delete_error_string:
+MPI_Delete_error_string:
     errorcode: ERROR_CODE, [value of the error code whose string is to be remoed]
     .desc: Delete the error string associated with an MPI error code or class
 /*

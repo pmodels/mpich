@@ -9,6 +9,7 @@ from local_python import MPI_API_Global as G
 import sys
 import re
 import copy
+import os
 
 def load_mpi_json(api_json):
     import json
@@ -47,6 +48,20 @@ def load_mpi_mapping(api_mapping_txt):
                 if RE.match(r'\s*(\w+):\s*(.*)', line):
                     key, val = RE.m.group(1, 2)
                     G.default_descriptions[key] = val
+
+def load_mpix_txt():
+    G.mpix_symbols = {}
+    stage = "functions"
+    if os.path.exists("src/binding/mpix.txt"):
+        with open("src/binding/mpix.txt") as In:
+            for line in In:
+                if RE.match(r'#\s*mpi.h\s+symbols', line):
+                    stage = "symbols"
+                if RE.match(r'(MPI_\w+)', line):
+                    name = RE.m.group(1)
+                    G.mpix_symbols[name] = stage
+                    if stage == "functions":
+                        G.FUNCS[name.lower()]['mpix'] = 1
 
 # If gen_in_dir is given, all functions loaded in api_txt are candidates 
 # for binding generation. This allows fine-grain binding control.

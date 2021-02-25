@@ -134,12 +134,20 @@ def dump_Makefile_mk(f):
                 print("    %s" % f, file=Out)
 
 def dump_mpir_impl_h(f):
+    def dump_mpix_symbols():
+        # define MPI symbols from future API to MPIX
+        print("", file=Out)
+        for a, t in G.mpix_symbols.items():
+            if t == "symbols":
+                print("#define %s %s" % (a, re.sub(r'^MPI_', 'MPIX_', a)), file=Out)
+
     print("  --> [%s]" %f)
     with open(f, "w") as Out:
         for l in G.copyright_c:
             print(l, file=Out)
         print("#ifndef MPIR_IMPL_H_INCLUDED", file=Out)
         print("#define MPIR_IMPL_H_INCLUDED", file=Out)
+        dump_mpix_symbols()
         print("", file=Out)
         for l in G.impl_declares:
             print(l, file=Out)
@@ -159,9 +167,9 @@ def dump_mpi_proto_h(f):
     list_b = []  # tool prototypes
     list_c = []  # large prototypes
     for l in G.mpi_declares:
-        if re.match(r'int (MPI_T_|MPIX_Grequest_)', l):
+        if re.match(r'int (MPIX?_T_|MPIX_Grequest_)', l):
             list_b.append(l)
-        elif re.match(r'int MPI_\w+_c\(', l):
+        elif re.match(r'int MPIX?_\w+_c\(', l):
             list_c.append(l)
         else:
             list_a.append(l)
@@ -209,6 +217,17 @@ def dump_errnames_txt(f):
         for l in G.mpi_errnames:
             print(l, file=Out)
         
+def dump_mtest_mpix_h(f):
+    print("  --> [%s]" % f)
+    with open(f, "w") as Out:
+        print("#ifndef MTEST_MPIX_H_INCLUDED", file=Out)
+        print("#define MTEST_MPIX_H_INCLUDED", file=Out)
+        print("", file=Out)
+        for a in G.mpix_symbols:
+            print("#define %s %s" % (a, re.sub(r'MPI_', 'MPIX_', a)), file=Out)
+        print("", file=Out)
+        print("#endif /* MTEST_MPIX_H_INCLUDED */", file=Out)
+
 # ---- pre-processing  ----
 
 def check_func_directives(func):
@@ -2064,10 +2083,19 @@ def get_mapping(map_type):
         return G.MAPS['BIG_C_KIND_MAP']
 
 def get_function_name(func, map_type="SMALL"):
+    big_use_mpix = True 
     if map_type == "BIG":
-        return func['name'] + "_c"
+        name = func['name'] + "_c"
+        if big_use_mpix:
+            G.mpix_symbols[name] = "functions"
+            name = re.sub(r'MPI_', 'MPIX_', name)
+        return name
     else:
-        return func['name']
+        name = func['name']
+        if 'mpix' in func:
+            G.mpix_symbols[name] = "functions"
+            name = re.sub(r'MPI_', 'MPIX_', name)
+        return name
 
 def get_function_args(func):
     arg_list = []
@@ -2112,6 +2140,9 @@ def get_C_param(param, mapping):
 
     want_star, want_bracket = '', ''
     param_type = mapping[kind]
+
+    if param_type in G.mpix_symbols:
+        param_type = re.sub(r'MPI_', 'MPIX_', param_type)
 
     if param['func_type']:
         param_type = param['func_type']
