@@ -26,9 +26,9 @@
 !
        do i = 1, 9
           vl = MPI_MAX_INFO_KEY
-          call mpi_info_get_string( i1, keys(i), vl, value1, f1, ierr )
+          call mpix_info_get_string( i1, keys(i), vl, value1, f1, ierr )
           vl = MPI_MAX_INFO_KEY
-          call mpi_info_get_string( i2, keys(i), vl, value2, f2, ierr )
+          call mpix_info_get_string( i2, keys(i), vl, value2, f2, ierr )
 !
 !         if ( f1 ) then
 !            print *, "keys: ", trim(keys(i)), "value1: ", trim(value1)
