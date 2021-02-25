@@ -1630,7 +1630,7 @@ function MPIR_Info_create_c(info) &
 end function MPIR_Info_create_c
 
 function MPIR_Info_create_env_c(info) &
-    bind(C, name="PMPI_Info_create_env") result(ierror)
+    bind(C, name="PMPIX_Info_create_env") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Info
     implicit none
