@@ -67,7 +67,7 @@
 **mpi_t_category_get_categories: MPI_T_category_get_categories failed
 **mpi_t_category_get_categories %d %d %p: MPI_T_category_get_categories(cat_index=%d, len=%d, indices=%p)
 **mpi_t_category_changed: MPI_T_category_changed failed
-**mpi_t_category_changed %p: MPI_T_category_changed(stamp=%p)
+**mpi_t_category_changed %p: MPI_T_category_changed(update_number=%p)
 **mpi_t_cvar_get_index: mpi_t_cvar_get_index failed
 **mpi_t_cvar_get_index %p %p: mpi_t_cvar_get_index(name=%p, cvar_index=%p)
 **mpi_t_pvar_get_index: mpi_t_pvar_get_index failed
