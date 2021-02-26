@@ -93,11 +93,15 @@ MPI_Delete_error_class
 MPI_Delete_error_code
 MPI_Delete_error_string
 MPI_Info_get_string
+MPI_Info_create_env
 
 # mpi.h symbols
 
 MPI_Session
 MPI_SESSION_NULL
+MPI_ERR_SESSION
+
+MPI_T_ERR_NOT_SUPPORTED
 
 MPI_COMM_TYPE_HW_GUIDED
 MPI_COMM_TYPE_HW_UNGUIDED

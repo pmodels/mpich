@@ -884,8 +884,7 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
                                            be initialized */
 #define MPI_T_ERR_INVALID_INDEX     62  /* The index is invalid or
                                            has been deleted  */
-#define MPI_T_ERR_INVALID_ITEM      MPI_T_ERR_INVALID_INDEX
-                                        /* Deprecated.  If a queried item index is out of range,
+#define MPI_T_ERR_INVALID_ITEM      63  /* Deprecated.  If a queried item index is out of range,
                                          * MPI-4 will return MPI_T_ERR_INVALID_INDEX instead. */
 #define MPI_T_ERR_INVALID_HANDLE    64  /* The handle is invalid */
 #define MPI_T_ERR_OUT_OF_HANDLES    65  /* No more handles available */
@@ -900,9 +899,9 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_T_ERR_INVALID_NAME      73  /* Name doesn't match */
 #define MPI_T_ERR_INVALID           74  /* Generic error code for MPI_T added in MPI-3.1 */
 
-#define MPI_ERR_SESSION             75  /* Invalid session handle */
+#define MPIX_ERR_SESSION            75  /* Invalid session handle */
 
-#define MPI_T_ERR_NOT_SUPPORTED     76  /* Requested functionality not supported */
+#define MPIX_T_ERR_NOT_SUPPORTED    76  /* Requested functionality not supported */
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
