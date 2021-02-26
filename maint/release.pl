@@ -14,6 +14,7 @@ use File::Temp qw( tempdir );
 my $arg = 0;
 my $branch = "";
 my $version = "";
+my $so_version = "";
 my $append_commit_id;
 my $root = cwd();
 my $with_autoconf = "";
@@ -122,6 +123,7 @@ sub run_cmd
 GetOptions(
     "branch=s" => \$branch,
     "version=s" => \$version,
+    "so-version=s" => \$so_version,
     "append-commit-id!" => \$append_commit_id,
     "with-autoconf" => \$with_autoconf,
     "with-automake" => \$with_automake,
@@ -208,6 +210,10 @@ chdir($expdir);
 my $date = `date`;
 chomp $date;
 system(qq(perl -p -i -e 's/\\[MPICH_RELEASE_DATE_m4\\],\\[unreleased development copy\\]/[MPICH_RELEASE_DATE_m4],[$date]/g' ./maint/version.m4));
+
+if ($so_version) {
+    system(qq(perl -p -i -e 's/\\[libmpi_so_version_m4\\],\\[0:0:0\\]/[libmpi_so_version_m4],[$so_version]/g' ./maint/version.m4));
+}
 # the main version.m4 file will be copied to hydra's version.m4, including the
 # above modifications
 print("done\n");
