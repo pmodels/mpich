@@ -176,6 +176,7 @@ LIS_KIND_MAP:
     TYPECLASS: integer
     TYPECLASS_SIZE: integer
     UPDATE_MODE: state
+    UPDATE_NUMBER: integer
     VARARGS: \\ldots
     VARIABLE_SCOPE: integer
     VERSION: integer
@@ -364,6 +365,7 @@ BASE_C_KIND_MAP:
     TYPECLASS: int
     TYPECLASS_SIZE: int
     UPDATE_MODE: int
+    UPDATE_NUMBER: int
     VARARGS: \\ldots
     VARIABLE_SCOPE: int
     VERSION: int
@@ -592,6 +594,7 @@ BASE_F90_KIND_MAP:
     TYPECLASS: INTEGER
     TYPECLASS_SIZE: INTEGER
     UPDATE_MODE: INTEGER
+    UPDATE_NUMBER: None
     VARARGS: None
     VARIABLE_SCOPE: None
     VERSION: INTEGER
