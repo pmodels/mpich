@@ -18,7 +18,7 @@ src/binding/c/errnames.txt, and src/include/mpir_impl.h.
 The master config file -- maint/mpi_standards_api.txt is a direct
 transcription from mpi-standard repository. It contains entries as following:
 
----- quote ----
+```
 MPI_Send:
     buf: BUFFER, constant=True, [initial address of send buffer]
     count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
@@ -26,7 +26,7 @@ MPI_Send:
     dest: RANK, [rank of destination]
     tag: TAG, [message tag]
     comm: COMMUNICATOR
----- end quote ----
+```
 
 Essentially for each function followed with a list a parameters. Each parameter
 starts with the variable name, followed by a "kind", then a set of optional 
@@ -37,7 +37,7 @@ attributes, finally a description inside the square brackets.
 The mapping from parameter "kind" to language specific type is listed in
 maint/api_mapping.txt with a simple format as:
 
----- quote ----
+```
 LIS_KIND_MAP:
     ACCESS_MODE: integer
     ...
@@ -52,7 +52,7 @@ BIG_C_KIND_MAP:
     .base: BASE_C_KIND_MAP
     POLYDISPLACEMENT: MPI_Aint
 ...
----- end quote ----
+```
 
 I.e. a map type heading followed with a set of kind: type listings. `BASE_C_KIND_MAP`
 is only used to avoid duplication between SMALL and BIG versions.
@@ -73,7 +73,7 @@ src/binding/c/pt2pt_api.txt will get generated in src/binding/c/pt2pt/ folder.
 The custom config file follows the same format as master config files plust a few
 additions. General format as following:
 
----- example ----
+```
 MPI_Example:
     .desc: a short description
 /*
@@ -112,7 +112,7 @@ MPI_Example:
         goto fn_fail;
     }
 }
----- end of example ----
+```
 
 The above example customizes the function, MPI_Example, with a short description,
 extra man page notes, custom error checking code, early_return code, and custom
@@ -123,10 +123,10 @@ complex code that it is too complex to deal with within the python script.
 However, for most functions, most of the custom parts can be omitted. For example,
 the following:
 
----- quote ----
+```
 MPI_Sendrecv:
     .desc: Sends and receives a message
----- end quote ----
+```
 
 is sufficient to generate src/binding/c/pt2pt/sendrecv.c with default man page,
 default validations, and default body of routines, which simply calls
@@ -136,22 +136,26 @@ customizations when necessary.
 For MPIX function, we'll need supply our own parameter information since they
 will be missing from the standard master config file. Simply list the parameters
 in the custom files. The parameters all start with 
+```
     param_name: ...
+```
 while the directives all start with a '.', as
+```
     .desc: ...
+```
 
 Supported directives include:
-    .desc -- short description
-    .skip -- a list of items that should skip auto generations, such as
+*   .desc -- short description
+*   .skip -- a list of items that should skip auto generations, such as
              ThreadSafe, Fortran: these are standard notes
              validate-INDEX: the INDEX kind should be skipped
              validate-ANY: skip all validations
              initcheck: the function should skip MPIR_ERRTEST_INITIALIZED_ORDIE
              global_cs: the function should skip MPID_THREAD_CS_ENTER/EXIT
 
-    .extra -- a list extra items that should be generated, such as
+*   .extra -- a list extra items that should be generated, such as
               SignalSafe, NotThreadSafe, collops: extra notes 
-    .error -- a list extra error code that should listed in the document.
+*   .error -- a list extra error code that should listed in the document.
               The error codes associated with generated validation code are
               always documented automatically.
 
