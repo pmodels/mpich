@@ -1,43 +1,17 @@
-\documentclass[11pt]{article}
-\usepackage{times} % Necessary because Acrobat can't handle fonts properly
-\let\file=\texttt
-\let\code=\texttt
-\let\program=\code
-\usepackage{epsf}
-\setlength\textwidth{6.5in}
-\setlength\oddsidemargin{0in}
-\setlength\evensidemargin{0in}
-\setlength\marginparwidth{0.7in}
-\def\bw{\texttt{\char`\\}}
+# Process Management in MPICH
+author: The MPICH Team
 
-% Add a discussion macro for parts of the paper that need discussion
-\newenvironment{discussion}{\begin{quotation}\centerline{\textbf{Discussion}}}{\ifvmode\else\par\fi\centerline{\textbf{End
-      of Discussion}}\end{quotation}}
+In this note we describe a process management interface that can be
+used by MPI implementations and other parallel processing libraries
+yet be independent of both.  We define the specific interface we are
+developing, called PMI (Process Manager Interface) in the context of
+MPICH.  We describe the interface itself and a number of
+implementations.  We show how an MPI implementation built on MPICH
+can use PMI to make itself independent of the environment in which it
+executes, and how a process management environment can support MPI
+implementations based on MPICH.
 
-
-\newcommand\onehalf{\ifmmode {\scriptstyle {\scriptstyle 1\over
-  \scriptstyle 2}} \else $\onehalf$ \fi}
-\renewcommand{\floatpagefraction}{0.9}
-
-\begin{document}
-\title{{\bf Process Management in MPICH}\\[.2in] DRAFT 2.1}
-\author{The MPICH Team\\Argonne National Laboratory}
-\maketitle
-
-\begin{abstract}
-  In this note we describe a process management interface that can be
-  used by MPI implementations and other parallel processing libraries
-  yet be independent of both.  We define the specific interface we are
-  developing, called PMI (Process Manager Interface) in the context of
-  MPICH.  We describe the interface itself and a number of
-  implementations.  We show how an MPI implementation built on MPICH
-  can use PMI to make itself independent of the environment in which it
-  executes, and how a process management environment can support MPI
-  implementations based on MPICH.
-\end{abstract}
-
-\section{Introduction}
-\label{sec:introduction}
+## Introduction
 
 This informal paper is intended to be useful for those using MPICH as the
 basis of their own MPI implementations, or providing a process
@@ -59,15 +33,15 @@ to support an MPI implementation that does not include dynamic process
 management.
 
 We describe the problem we are trying to solve in
-Section~\ref{sec:problem}, the approach we have taken so far in MPICH
-in Section~\ref{sec:approach}, the PMI interface itself in
-Section~\ref{sec:interface} as it has been defined so far, and
-implementations in Section~\ref{sec:implementing}.  In
-Section~\ref{sec:implications} we outline the implications for those who
+Section [problem](#problem), the approach we have taken so far in MPICH
+in Section [approach](#approach), the PMI interface itself in
+Section [interface](#interface) as it has been defined so far, and
+implementations in Section [implementing](#implementing).  In
+Section [implications](#implications) we outline the implications for those who
 are collaborating with us in various ways related to the MPICH project. 
 
-\section{The Problem}
-\label{sec:problem}
+## The Problem
+<a id="problem"></a>
 
 The problem this paper addresses is how to provide the processes of a
 parallel job with the information they need in order to interact with
@@ -84,9 +58,9 @@ the port.
 
 Traditionally, parallel programming libraries, such as MPI
 implementations, have been integrated with process management mechanisms
-(LAM, MPICH1 with ch\_p4 device, POE) in order to solve this problem.
+(LAM, MPICH1 with ch_p4 device, POE) in order to solve this problem.
 After a preliminary exploration of separating the library from the
-process manager in MPICH-1 with the {\tt ch\_p4mpd} device we have decided to
+process manager in MPICH-1 with the `ch_p4mpd` device we have decided to
 update the interface and then commit to this approach in MPICH.  We are
 motivated by the challenges of implementing MPI-2 in a
 system-independent way, but many of the ideas here might prove useful in
@@ -95,26 +69,26 @@ as Global Arrays, GP-SHMEM, or GASNet) or language-based systems (such
 as UPC, Co-Array Fortran, or Titanium).
 
 The problem to be addressed has several components:
-\begin{itemize}
-\item Conveying to processes in a parallel job the information they need
+
+* Conveying to processes in a parallel job the information they need
   to establish communication with one another.  To focus the discussion,
   we assume that such communication is needed for implementing MPI.
   Thus this information could include hosts, ports, interfaces,
   shared-memory keys, and other information.
-\item MPI-2 dynamic process management functions require extra support
-  for implementing {\tt MPI\_Comm\_Spawn}, {\tt MPI\_Comm\_\{Connect/Accept\}},
-  {\tt MPI\_\{Publish/Lookup\}\_name}, etc.
-\item The interface should be simple and straightforward, particularly
+* MPI-2 dynamic process management functions require extra support
+  for implementing `MPI_Comm_Spawn`, `MPI_Comm_{Connect/Accept}`,
+  `MPI_{Publish/Lookup}_name`, etc.
+* The interface should be simple and straightforward, particularly
   in the absence of dynamic process management.  MPICH will implement
   dynamic process management, but some other MPI implementations may
   not.
-\item The interface must allow a scalable implementation for
+* The interface must allow a scalable implementation for
   performance-critical operations.  In environments with even only hundreds
   of processes, serial algorithms will be inappropriate.
-\end{itemize}
+
 An earlier, similar version of this approach was described
 in~\cite{butler-lusk-gropp:mpd-parcomp}, where the interface is called
-BNR, incorporated in the {\tt ch\_p4mpd} device in the original MPICH.  PMI
+BNR, incorporated in the `ch_p4mpd` device in the original MPICH.  PMI
 represents an evolution of that interface and its implementation in MPICH.
 
 Note that existing process managers often do a scalable job of starting
@@ -125,10 +99,10 @@ is to combine the process startup and information exchange functionality
 in a single interface, a different implementation could separate these,
 using an existing process-startup mechanism and adding a new component
 to implement the other parts of the interface.  One approach along these
-lines is outlined in Section~\ref{sec:adding}.
+lines is outlined in Section [adding](#adding).
 
-\section{Our Approach}
-\label{sec:approach}
+## Our Approach
+<a id="approach"></a>
 
 The approach we have taken to the problem is to define a Process
 Management Interface (PMI).  The MPICH implementation of MPI will be
@@ -138,11 +112,11 @@ then be possible, independently of the MPICH implementation of MPI.
 The key to a good design for PMI is to specify it in a way that allows for
 scalable implementation without dictating any details of the
 implementations.  This has worked out well so far, and in
-Section~\ref{sec:implementing} we describe a number of quite different
-implementations of the interfaces described in Section~\ref{sec:interface}.
+Section [implementing](#implementing) we describe a number of quite different
+implementations of the interfaces described in Section [interface](#interface).
 
-\section{The PMI Interface}
-\label{sec:interface}
+## The PMI Interface
+<a id="interface"></a>
 
 We present the interface in two parts.  The first part is sufficient for
 the implementation of MPI-1 and many parts of MPI-2.  The second part is
@@ -152,30 +126,29 @@ so we consider it relatively final at this point.  Since we have not yet
 implemented the dynamic process management functions in MPICH, some
 evolution of Part 2 of PMI may take place as we do so.
 
-The fundamental idea of Part 1 is the {\em key-value space}, or KVS,
+The fundamental idea of Part 1 is the *key-value space*, or KVS,
 containing a set of (key, value) pairs of strings.  Processes acquire 
-access to one or more KVS's through PMI and can perform {\tt put/get}
+access to one or more KVS's through PMI and can perform `put/get`
 operations on them.  Synchronization is defined in a scalable way via
 the barrier operation, so that processes can be assure that the necessary
 puts have been done before attempting the corresponding gets.
 
-Thus the PMI interface (Part 1) consists of {\tt put/get/barrier} operations
+Thus the PMI interface (Part 1) consists of `put/get/barrier` operations
 together with housekeeping operations for managing the KVS's.  For
 implementation of MPI-1, a single KVS, the default KVS for processes
 started at the same time, is sufficient, but multiple KVS's will be
 useful when we consider Part 2 and dynamic process management.
 
 
-\subsection{Part 1:  Basic PMI Routines}
-\label{sec:part1}
+### Part 1:  Basic PMI Routines
 
 Part 1 of the interface is invoked in performance-critical parts of the
 MPI implementation, both during initialization and connection setup.
 Thus it is critical that this part of the interface allow scalable
-implementation.  We accomplish this through the semantics of the {\tt
-  put/get/barrier}, since the only synchronizing operation is the
-collective {\tt barrier}, which is can have a scalable implementation.
-The {\tt commit} operation allowsl batching of {\tt put} operations for
+implementation.  We accomplish this through the semantics of the 
+`put/get/barrier`, since the only synchronizing operation is the
+collective `barrier`, which is can have a scalable implementation.
+The `commit` operation allowsl batching of `put` operations for
 improved performance.
 
 Part 1 has two subparts:  firstly, the functions associated with the process group
@@ -183,8 +156,7 @@ being started, and thus already implemented in some way in any MPI
 implementation, and secondly, the functions associated with managing the
 keyval spaces, used for communicating setup information. 
 
-\begin{small}
-\begin{verbatim}
+```
 /* PMI Group functions */
 int PMI_Init( int *spawned );  /* initialize PMI for this process group
                                   The value of spawned indicates whether
@@ -216,73 +188,68 @@ int PMI_KVS_iter_first(const char *kvsname, char *key, char *val);
 int PMI_KVS_iter_next(const char *kvsname, char *key, char *val);
                                 /* loop through the pairs in the kvs */
                              
-\end{verbatim}
-\end{small}
+```
 
 A scalable implementation of Part 1 of PMI could probably use existing software
 for the group functions, and add some new functionality to support the
 KVS-related functions.  One possible implementation is suggested below
-in Section~\ref{sec:adding}.
+in Section [adding](#adding).
 
-\paragraph{Notes}
-\begin{itemize}
-\item The above routines (Part 1) are all that is needed for an
+#### Notes
+* The above routines (Part 1) are all that is needed for an
   implementation of MPI-1 and most of MPI-2.  Part 2 is only needed to
   support the MPI functions defined in the Dynamic Process Management
   section of the MPI Standard.
-\item Similarly, multiple KVS's are only really needed in the dynamic
-  process management case.  An initial implementation could omit {\tt
-    PMI\_KVS\_Create} and {\tt PMI\_KVS\_Destroy}.  The iterators {\tt
-    int PMI\_KVS\_iter\_first} and {\tt int PMI\_KVS\_iter\_next} are used to
+* Similarly, multiple KVS's are only really needed in the dynamic
+  process management case.  An initial implementation could omit
+  `PMI_KVS_Create` and `PMI_KVS_Destroy`.  The iterators
+  `int PMI_KVS_iter_first` and `int PMI_KVS_iter_next` are used to
   transfer KVS's in grid environments, and could also be omitted from
   some implementations.
-\item The {\tt spawned} argument to {\tt PMI\_Init} is necessary to
-  implement MPI-2 functionality, in particular {\tt MPI\_Get\_parent}.
+* The `spawned` argument to `PMI_Init` is necessary to
+  implement MPI-2 functionality, in particular `MPI_Get_parent`.
   In a PMI implementation that does not support dynamic process
   management, it can always just return a pointer to 0.
-\item The {\tt PMI\_Commit} exists so that in case {\tt PMI\_Put} is an
+* The `PMI_Commit` exists so that in case `PMI_Put` is an
   expensive operation, involving communication with an external process,
-  several {\tt PMI\_Put}s can be batched locally and only sent off when
-  the {\tt PMI\_Commit} is done.
-\item The notion of KVS is reminiscent of Linda, in which processes
-  execute {\tt read} and {\tt write} operations on a shared ``tuple
+  several `PMI_Put`s can be batched locally and only sent off when
+  the `PMI_Commit` is done.
+* The notion of KVS is reminiscent of Linda, in which processes
+  execute `read` and `write` operations on a shared ``tuple
   space''.  Why not use the Linda interface?  The reason is scalability.
-  Linda implements a blocking {\tt read}, in which the calling process blocks
+  Linda implements a blocking `read`, in which the calling process blocks
   until data with the requested key is put into the tuple space by
   another process.  While this is a convenient synchronizing operation,
   and could in theory be used here, it would not be scalable.  Note that
   in PMI, there is no point-to-point communication.  The only
-  synchronization operation is the {\tt PMI\_Barrier}, which can have a
+  synchronization operation is the `PMI_Barrier`, which can have a
   variety of scalable implementations, depending on the environment.
-\end{itemize}
 
-\textbf{To Do}: Provide minimum sizes for the various strings.  Here
+**To Do**: Provide minimum sizes for the various strings.  Here
 is a proposal.
 
 The minimum sizes of the names and values stored will depend on the
 MPI implementation.  The following limits will work with most
 implementations:
-\begin{description}
-\item[kvsname]16
-\item[key]32
-\item[value]64
-\item[Number of keys]Number of processes in an MPI program (size of
-  \texttt{MPI\_COMM\_WORLD} in an MPI-1 program)
-\item[Number of groups]Number of separate \texttt{MPI\_COMM\_WORLD}s
-  managed by the process manager.  For an single MPI-1 code, this is one.
-\end{description}
 
-\subsection{Part 2:  Advanced PMI Routines}
-\label{sec:part2}
+* [kvsname]16
+* [key]32
+* [value]64
+* [Number of keys]Number of processes in an MPI program (size of
+  `MPI_COMM_WORLD` in an MPI-1 program)
+* [Number of groups]Number of separate `MPI_COMM_WORLD`s
+  managed by the process manager.  For an single MPI-1 code, this is one.
+
+
+### Part 2:  Advanced PMI Routines
 
 This part of PMI is still under development.  If one assumes that the
 dynamic process management functions in MPI-2 are not performance
 critical, then the requirements for efficiency and scalability of these
-operations are less crucial, although we expect MPI\_Comm\_Spawn to be
-scalably implemented, at least to compete with an original {\tt mpiexec}.
+operations are less crucial, although we expect MPI_Comm_Spawn to be
+scalably implemented, at least to compete with an original `mpiexec`.
 
-\begin{small}
-\begin{verbatim}
+```
 /* PMI Process Creation functions */
 
 int PMI_Spawn_multiple(int count, const char *cmds[], const char **argvs[], 
@@ -302,65 +269,62 @@ int PMI_Args_to_info(int *argcp, char ***argvp, void *infop);
 /* Other PMI functions to be defined as necessary for other parts of
    dynamic process management */
 
-\end{verbatim}
-\end{small}
+```
 
-
-\section{Typical Usage}
-\label{sec:usage}
+## Typical Usage
 
 In this section we give an example of typical usage of the PMI interface
-in MPICH.  In the {\tt CH3\_TCP} device used on Linux clusters, TCP is
+in MPICH.  In the `CH3_TCP` device used on Linux clusters, TCP is
 used to support MPI communication.  Connections between processes are
-established by the normal socket {\tt connect}/{\tt accept} mechanism.
-For this to work, before the first {\tt MPI\_SEND} from one process to
+established by the normal socket `connect`/`accept` mechanism.
+For this to work, before the first `MPI_SEND` from one process to
 another, one process must have acquired a port from the operating system
-and be listening on it with the normal {\tt socket}/{\tt bind}/{\tt listen}
+and be listening on it with the normal `socket`/`bind`/`listen`
 sequence.  The other process, typically on a separate host, will execute
-the corresponding {\tt socket}/{\tt connect} sequence, at which time the
-first process will issue an {\tt accept}, establishing the TCP
+the corresponding `socket`/`connect` sequence, at which time the
+first process will issue an `accept`, establishing the TCP
 connection.  Since we don't use reserved ports, the first process must
 advertise in some way the port it is listening on.  Since for the sake
 of scalability and rapid startup we don't establish these connections
-until they are needed, the {\tt connect} operation is not executed until
-the socket is needed, typically the first time a process issues an {\tt
-  MPI\_SEND}.  At this point the MPICH implementation must determine from the
+until they are needed, the `connect` operation is not executed until
+the socket is needed, typically the first time a process issues an
+`MPI_SEND`.  At this point the MPICH implementation must determine from the
 MPI rank of the destination process which host, and which port on that
 host, to connect to in order to establish the connection.
 
 PMI is the mechanism by which the first process advertises its host and
 listening port, keyed by rank, and the the second process finds out this
-information.  Thus the sequence of events during {\tt MPI\_Init} goes
+information.  Thus the sequence of events during `MPI_Init` goes
 like this:
-\begin{enumerate}
-\item During {\tt MPI\_Init}, each process calls {\tt PMI\_Init}, in
+
+* During `MPI_Init`, each process calls `PMI_Init`, in
   order to perform whatever initialization is needed by the PMI
   implementation.
-\item Still in {\tt MPI\_Init}, each process calls {\tt PMI\_Get\_rank}
+* Still in `MPI_Init`, each process calls `PMI_Get_rank`
   to find out its rank in the MPI job.
-\item Each process executes {\tt gethostname} to find out its host and
-  {\tt socket}/{\tt bind} to obtain a port.
-\item Each process creates a key from its rank and a value for that key
-  from its host and port.  We actually use two pairs, using keys {\tt
-    P<rank>-hostname} and {\tt P<rank>-port}.
-\item Each process does a {\tt PMI\_KVS\_Put} to put its (key, value)
+* Each process executes `gethostname` to find out its host and
+  `socket`/`bind` to obtain a port.
+* Each process creates a key from its rank and a value for that key
+  from its host and port.  We actually use two pairs, using keys
+  `P<rank>-hostname` and `P<rank>-port`.
+* Each process does a `PMI_KVS_Put` to put its (key, value)
   pairs into the default KVS.  It may deposit other information with
-  other calls to {\tt PMI\_KVS\_Put}.  It does a {\tt PMI\_Commit} to
+  other calls to `PMI_KVS_Put`.  It does a `PMI_Commit` to
   flush all of the (key, value) pairs to the KVS.
-\item All processes execute {\tt PMI\_Barrier} to synchronize.  It is
+* All processes execute `PMI_Barrier` to synchronize.  It is
   assumed that this operation is implemented in a scalable way.  Note
-  that MPI communication is not available yet, so this is not an {\tt
-    MPI\_Barrier}.  We are still inside {\tt MPI\_Init}.
-\end{enumerate}
+  that MPI communication is not available yet, so this is not an
+  `MPI_Barrier`.  We are still inside `MPI_Init`.
+
 At this point the only non-local communication that has taken place is
-the barrier.  Now, each process can exit from {\tt MPI\_INIT}, having
+the barrier.  Now, each process can exit from `MPI_INIT`, having
 made available the information that only it knows (the listening port).
 
-When a process executes any form of {\tt MPI\_SEND}, the
+When a process executes any form of `MPI_SEND`, the
 implementation can check to see if a connection to the destination
 process already exists, and if not, use the rank to create the
-appropriate key and do {\tt PMI\_KVS\_Get} to find the host and port of the
-destination process and do the {\tt connect}.  We currently keep these
+appropriate key and do `PMI_KVS_Get` to find the host and port of the
+destination process and do the `connect`.  We currently keep these
 sockets open for the rest of the job, but there is nothing to preclude
 closing and reopening them as needed.
 
@@ -370,8 +334,8 @@ even if more information is conveyed in this way, the actual size of the
 KVS is not anticipated to be large.  Room for a few (key, value) pairs
 for each process is all that is necessary.
 
-\section{Implementing PMI}
-\label{sec:implementing}
+## Implementing PMI
+<a id="implementing"></a>
 
 In this section we describe some implementations of PMI that we are
 using, together with a design for one we are not.  Although this note is
@@ -380,10 +344,10 @@ be useful to understand the alternatives that we have explored and are
 in current use.  Also, the very existence of multiple implementations
 demonstrates that PMI is a real interface with a purpose, not just a
 design for part of MPICH.  All implementations are distributed with
-MPICH, as described at the end of Section~\ref{sec:implications}.
+MPICH, as described at the end of Section [implications](#implications).
 
 It is useful to think of a PMI implementation as having two parts: a 
-{\em client\/} side and a {\em server\/} side.  The client side is the
+*client* side and a *server* side.  The client side is the
 direct implementation of the PMI functions defined above, linked together
 with the MPI library in the application's executable.  In some cases this
 part of the implementation communicates with other processes not part of
@@ -393,55 +357,48 @@ or be part of the client side; multiple architectures for PMI
 implementations already exist.  In the following subsection we describe some
 existing client-side PMI implementations.  In the next section we
 describe some server-side implementations.  Currently most of these are
-part of the MPICH distribution~\cite{mpich-web-page}.
+part of the [MPICH distribution](https://www.mpich.org/).
 
 
-\subsection{Client Side}
-\label{sec:client-side}
+### Client Side
 
 We currently are using three separate implementations of the client side of PMI.
-\begin{description}
-%% \item[uni] is a stub used for debugging.  It assumes that there is only one
-%%   process and so needs to provide no services.
-\item[simple] is our primary implementation for Unix systems.  It
+
+* [uni] is a stub used for debugging.  It assumes that there is only one
+  process and so needs to provide no services.
+* [simple] is our primary implementation for Unix systems.  It
   assumes that a socket (the PMI socket) has been created that can be
   used to exchange commands with the server side of the implementation.
   It is used by multiple server implementations, as described below.
-\end{description}
 
-
-\subsection{Server Side}
-\label{sec:server-side}
+### Server Side
 
 One can think of the server side of a PMI implementation as that part of
 a process management system that supports the client.  Currently several
 are in use or under development.
 
-\begin{description}
-\item[forker] implements the server side of the ``simple'' client side
+* [forker] implements the server side of the ``simple'' client side
   described above.  It is used primarily for debugging, although it can
-  also be used in production on SMP's.  It consists of an {\tt mpiexec}
+  also be used in production on SMP's.  It consists of an `mpiexec`
   script that simply forks the parallel processes after setting up the
   PMI socket.  Thus all processes must be on the same machine.
-\item[Remshell] uses {\tt rsh} or {\tt ssh} to start the processes from
-  the {\tt mpiexec} process, then they connect back to exchange the
-  keyval information.  This illustrates the combination of an old ({\tt
-    rsh}) process startup mechanism with a new data-exchange mechanism.
-\end{description}
+* [Remshell] uses `rsh` or `ssh` to start the processes from
+  the `mpiexec` process, then they connect back to exchange the
+  keyval information.  This illustrates the combination of an old (
+  `rsh`) process startup mechanism with a new data-exchange mechanism.
 
-\subsection{Combined Client and Server}
-\label{sec:combined}
+### Combined Client and Server
 
 The MPICH-G2~\cite{karonis02:mpich-g2} implementation of MPI illustrates
 yet another approach.  MPICH-G2 is built on MPICH1 and thus uses the BNR
 interface, but the underlying principles are the same.  In MPICH-G2, the
-{\tt put} operations are local, and the {\tt barrier} operation is a
+`put` operations are local, and the `barrier` operation is a
 global all-to-all-exchange, implemented in a scalable way.  Then the
-{\tt get}s can be done without further communication. 
+`get`s can be done without further communication. 
 
 
-\subsection{Adding a PMI Module to an Existing Process Starter}
-\label{sec:adding}
+### Adding a PMI Module to an Existing Process Starter
+<a id="adding"></a>
 
 In the implementations listed above, we have combined the PMI
 implementation, particularly the server side, with a process startup
@@ -451,32 +408,31 @@ and might be looking for the simplest way to add PMI capabilities.
 Although the best approach is likely to be to incorporate PMI
 server-side capabilities into the process starter, it may be that the
 following approach, though less scalable, might be serviceable:
-\begin{enumerate}
-\item At the time each process of the MPI job is started, it is passed
+
+* At the time each process of the MPI job is started, it is passed
   its rank and the size of the job in an environment variable, since
   these are things the process manager knows.  This could be used to
-  implement {\tt PMI\_Get\_rank} and {\tt PMI\_Get\_size}.  (Actually
-  these values would probably be read from the environment during {\tt
-    PMI\_Init} and cached.)
-\item At the time the job is started, a separate ``KVS server'' process
+  implement `PMI_Get_rank` and `PMI_Get_size`.  (Actually
+  these values would probably be read from the environment during
+  `PMI_Init` and cached.)
+* At the time the job is started, a separate ``KVS server'' process
   would be forked to hold all KVS data.
-\item All processes would send their {\tt PMI\_KVS\_Put} data to this
+* All processes would send their `PMI_KVS_Put` data to this
   server.  Use of UDP rather than TCP would probably help with the
   obvious scalability problem that this server would receive data from
   each process in the job at approximately the same time.
-\item The {\tt PMI\_Barrier} would be implemented in the server with a
+* The `PMI_Barrier` would be implemented in the server with a
   simple counter.
-\item Data requested by {\tt PMI\_KVS\_Get} would come from the server.
-\item A variation would be to have all the data broadcast at the time of
+* Data requested by `PMI_KVS_Get` would come from the server.
+* A variation would be to have all the data broadcast at the time of
   the barrier, so that subsequent gets would be local.
-\end{enumerate}
+
 This mechanism is not intrinsically scalable to thousands of nodes,
 which is why we are not using it.  However, it might scale farther than
 a few hundred nodes, and be a rather straightforward addition to an
 existing process startup mechanism.
 
-\section{Resource Registration}
-\label{sec:register}
+## Resource Registration
 There are some resources that a program may need to allocate that the
 program cannot guarantee will be released when the program exits,
 particularly if the program exits as the result of an error or an
@@ -488,23 +444,23 @@ manager to free them when the program exits.
 
 If the process manager does not provide these functions, then there
 are several options:
-\begin{enumerate}
-\item The calls can be ignored.  The program will do its best to free
+
+* The calls can be ignored.  The program will do its best to free
   these resources when it exits.  This may include setting a cleanup
   handler on the catchable signals that normally cause an abort.
   Note that in this case the registration routine must retrun an error
   so that the application knows that it must handle this itself.
-\item The calls can be directed to an alternate process, called a
+* The calls can be directed to an alternate process, called a
   ``watchdog'', that will free the resources if the watched process
   terminates abnormally.
-\end{enumerate}
+
 
 Note that this interface provides a way for process managers to permit
 a process to create new processes, since the processes will be
 registered with the process manager.
 
 The following is still in rough draft form
-\begin{verbatim}
+```
 int PMI_Resource_register( const char *name, (void *()(void*))at_exit, 
                            void *at_exit_extra_data,
                           (void *()(void *))at_abort, 
@@ -512,9 +468,9 @@ int PMI_Resource_register( const char *name, (void *()(void*))at_exit,
 
 int PMI_Resource_release_begin( const char *name, int timeout );
 int PMI_Resource_release_end( const char *name );
-\end{verbatim}
+```
 
-The functions in \texttt{PMI\_Resource\_register} may need to be
+The functions in `PMI_Resource_register` may need to be
 command names or an enumerated list of known resources.  
 
 The release functions are split to allow the process to indicate that
@@ -522,11 +478,11 @@ it is about to release a resource and a timeout at which time the
 watchdog may consider the process to have failed.  For example, when
 removing a SYSV shared memory segment, the following code would be used:
 
-\begin{verbatim}
+```
    PMI_Resource_release_begin( "myipc", 10 );
    shmctl( memid, IPC_RMID, NULL );
    PMI_Resource_release_end( "myipc" );
-\end{verbatim}
+```
 
 This interface still contains a small race condition: the time between
 when the resource is created and when it is registered.  This is a
@@ -537,34 +493,32 @@ would register the intent to create a resource.  In the case of
 failure to complete the second part of the two-phase registration, the
 watchdog could try to hunt down the newly allocated resource.  
 
-\section{Topology Information}
-\label{sec:topology}
+## Topology Information
 The process manager often has some information about the process
 topology.  For example, it is likely to know about multiprocessor
 nodes and may know about parallel machine layout.  The routines in
 this section provide a way for the process manager to communicate that
 information to the program.  As with the other PMI services, if the
 process manager cannot provide this service, several alternatives
-exist, including returning an \texttt{PMI\_ERR\_UNSUPPORTED} and using
+exist, including returning an `PMI_ERR_UNSUPPORTED` and using
 a separate service to provide this information.
 
-\begin{verbatim}
+```
 int PMI_Topo_type( PMI_Group group, int *kind );
 int PMI_Topo_cluster_info( PMI_Group group, 
                             int *levels, int my_cluster[], 
                             int my_rank[] );
 int PMI_Topo_mesh_info( PMI_Group group, int ndims, int dims[] );
-\end{verbatim}
+```
 These routines provide information on the specified PMI group.
-\texttt{PMI\_Topo\_type} gets the type of topology.  The current
-choices are \texttt{PMI\_TOPO\_CLUSTER}, \texttt{PMI\_TOPO\_MESH}, and
-\texttt{PMI\_TOPO\_NONE}.
+`PMI_Topo_type` gets the type of topology.  The current
+choices are `PMI_TOPO_CLUSTER`, `PMI_TOPO_MESH`, and
+`PMI_TOPO_NONE`.
 The other routines provide information about the cluster and mesh
 topology.  Other topologies can be added as necessary; these cover
 most current systems.
 
-\section{Resource Allocation on Behalf of Parallel Jobs}
-\label{sec:request}
+## Resource Allocation on Behalf of Parallel Jobs
 (I'm not sure that this section goes here)
 
 In some cases, resources must be allocated before a process is
@@ -573,15 +527,15 @@ to share an anonymous mmap (for shared memory), this memory must be
 allocated before the processes are created (strictly, before all but
 the first process is created, if the first process creates the
 others).  The purpose of the routines in this section is to allow a
-startup program, such as \texttt{mpiexec}, to describe these
+startup program, such as `mpiexec`, to describe these
 requirements to the process manager before  any processes are started.
 Question: it may be that the only routine here is used to answer the
 question ``did you give me the resource''?  This leaves unanswered the
 question of ``how does a device let an mpiexec know that it needs a
 particular resource''?
 
-\section{Implications for Collaborators}
-\label{sec:implications}
+## Implications for Collaborators
+<a id="implications"></a>
 
 We hope that this brief discussion has made it easier to understand what
 options and opportunities exist for implementors of parallel programming
@@ -605,24 +559,16 @@ themselves, meaning that one would link one's application with a PBS- or
 SLURM- or Myricom-specific object file implementing the client side.
 
 The PMI-related code described here is available in the current MPICH
-distribution~\cite{mpich-web-page}, in the {\tt
-  src/pmi/\{simple,uni\}} (client side) and {\tt
-  src/pm/forker} (server side) subdirectories.
+distribution, in the `src/pmi/{simple,uni}`
+(client side) and `src/pm/forker` (server side) subdirectories.
 Different process managers (the server side) and different PMI
 implementations can be chosen when MPICH is configured.  The default is
 as if one had specified
-\begin{verbatim}
+```
      configure --with-pmi=simple
-\end{verbatim}
+```
 Please send questions and comments to mpich-discuss@mcs.anl.gov.
 
-%\appendix
-%\section{Wire Protocol for the Simple PMI Implementation}
-%\texttt{PMI\_PORT} environment variable
-%\section{Man Pages for PMI Routines}
-% Use the man page generator and include the relevant files here
-
-\bibliography{/home/MPI/allbib,paper}
-\bibliographystyle{plain}
-
-\end{document}
+# appendix
+## Wire Protocol for the Simple PMI Implementation
+* PMI_PORT - environment variable
