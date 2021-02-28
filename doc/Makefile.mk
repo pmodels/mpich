@@ -4,8 +4,7 @@
 ##
 
 DEVELOPER_SUBDIRS = doc/pmi doc/namepub
-DOC_SUBDIRS += doc/mansrc doc/userguide doc/installguide \
-	       doc/design
+DOC_SUBDIRS += doc/mansrc doc/userguide doc/installguide
 doc3_src_txt += doc/mansrc/mpiconsts.txt
 
 userdocs:
