@@ -17,8 +17,8 @@ Non Native API:
       NM : vci
      SHM : vci
   progress : int
-      NM : vci, blocking
-     SHM : vci, blocking
+      NM*: vci, blocking
+     SHM*: vci, blocking
   mpi_comm_connect : int
       NM : port_name, info, root, timeout, comm, newcomm_ptr
      SHM : port_name, info, root, timeout, comm, newcomm_ptr
