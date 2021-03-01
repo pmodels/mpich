@@ -507,11 +507,12 @@ def dump_f08_wrappers_f(func):
         return (arg, arg)
 
     # ----
+    func_name = get_function_name(func)
     if (need_cdesc(func)):
-        f08ts_name = func['name'] + "_f08ts"
+        f08ts_name = func_name + "_f08ts"
         c_func_name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_cdesc')
     else:
-        f08ts_name = func['name'] + "_f08"
+        f08ts_name = func_name + "_f08"
         c_func_name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_c')
     uses[c_func_name] = 1
 
@@ -773,12 +774,13 @@ def dump_mpi_f08(func):
         decl_list.append("%s :: res" % f08_mapping[func['return']])
 
     # ----
+    func_name = get_function_name(func)
     if need_cdesc(func):
-        name = func['name'] + '_f08ts'
+        name = func_name + '_f08ts'
     else:
-        name = func['name'] + '_f08'
+        name = func_name + '_f08'
     G.out.append("")
-    G.out.append("INTERFACE %s" % func['name'])
+    G.out.append("INTERFACE %s" % func_name)
     G.out.append("INDENT")
     if 'return' not in func:
         dump_fortran_line("SUBROUTINE %s(%s)" % (name, ', '.join(f_param_list)))
@@ -790,11 +792,11 @@ def dump_mpi_f08(func):
     G.out.extend(decl_list)
     G.out.append("DEDENT")
     if 'return' not in func:
-        G.out.append("END SUBROUTINE %s" %name)
+        G.out.append("END SUBROUTINE %s" % name)
     else:
-        G.out.append("END FUNCTION %s" %name)
+        G.out.append("END FUNCTION %s" % name)
     G.out.append("DEDENT")
-    G.out.append("END INTERFACE %s" % func['name'])
+    G.out.append("END INTERFACE %s" % func_name)
 
 # -------------------------------
 def f08_param_need_skip(p, mapping):
@@ -1475,3 +1477,9 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
     else:
         print("get_F_c_decl: unhandled type %s: %s - %s" % (p['name'], t_f, t_c))
         return None
+
+def get_function_name(func):
+    name = func['name']
+    if 'mpix' in func:
+        name = re.sub(r'MPI_', 'MPIX_', name)
+    return name
