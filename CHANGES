@@ -1,5 +1,5 @@
 ===============================================================================
-                               Changes in 4.0a1
+                               Changes in 4.0
 ===============================================================================
 
 # Implemented basic MPI-4 session API using MPIX interface.
@@ -21,6 +21,11 @@
 # Implemented MPIX_Info_get_string.
 
 # MPI_Info objects can be accessed before MPI_Init{_thread}.
+
+# Generate C API interface functions inlcuding man page notes and error
+  checking using Python scripts.
+
+# Generate Fortran mpi_f08 binding using Python scripts.
 
 # Support explict --without-cuda configure option.
 
