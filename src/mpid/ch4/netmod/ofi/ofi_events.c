@@ -19,6 +19,7 @@ static int inject_emu_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 static int accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
+static int am_isend_rdma_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
 static int am_isend_pipeline_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
 static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
@@ -526,20 +527,34 @@ static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_AM_ISEND_EVENT);
 
     msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
-    MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
+    MPID_Request_complete(sreq);
 
-    /* continue origin side completion if not RDMA_READ. REMA_READ will perform
-     * origin side completion when ACK arrives */
-    if (msg_hdr->am_type != MPIDI_AMTYPE_RDMA_READ) {
-        MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool,
-                                          MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
-        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
-        mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool,
+                                      MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
+    MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+    mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_AM_ISEND_EVENT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int am_isend_rdma_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_AM_ISEND_RDMA_EVENT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_AM_ISEND_RDMA_EVENT);
+
+    MPID_Request_complete(sreq);
+
+    /* RDMA_READ will perform origin side completion when ACK arrives */
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_AM_ISEND_RDMA_EVENT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -775,6 +790,9 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND)) {
         mpi_errno = am_isend_event(wc, req);
+        goto fn_exit;
+    } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND_RDMA)) {
+        mpi_errno = am_isend_rdma_event(wc, req);
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND_PIPELINE)) {
         mpi_errno = am_isend_pipeline_event(wc, req);
