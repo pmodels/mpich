@@ -558,7 +558,7 @@ AC_ARG_ENABLE(weak-symbols,
 AC_ARG_ENABLE(qmpi,
 	AC_HELP_STRING([--enable-qmpi],
 			[Enable QMPI support (default)]),,
-		enable_qmpi=yes)
+		enable_qmpi=no)
 
 if test "$enable_qmpi" = "yes" ; then
     AC_DEFINE(ENABLE_QMPI,1,[Define if QMPI enabled])
