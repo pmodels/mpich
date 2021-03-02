@@ -10,6 +10,40 @@ import sys
 import re
 import copy
 import os
+import glob
+
+def load_C_func_list(binding_dir="src/binding", silent=False):
+    # -- Loading Standard APIs --
+    if os.path.exists("%s/apis.json" % binding_dir):
+        if not silent: print("Loading %s/apis.json ..." % binding_dir)
+        load_mpi_json("%s/apis.json" % binding_dir)
+    else:
+        if not silent: print("Loading %s/mpi_standard_api.txt ..." % binding_dir)
+        load_mpi_api("%s/mpi_standard_api.txt" % binding_dir)
+
+    if not silent: print("Loading %s/apis_mapping.txt ..." % binding_dir)
+    load_mpi_mapping("%s/apis_mapping.txt" % binding_dir)
+    if not silent: print("Loading %s/custom_mapping.txt ..." % binding_dir)
+    load_mpi_mapping("%s/custom_mapping.txt" % binding_dir)
+
+    # -- Loading MPICH APIs --
+
+    api_files = glob.glob("%s/c/*_api.txt" % binding_dir)
+    for f in api_files:
+        if RE.match(r'.*\/(\w+)_api.txt', f):
+            # The name in eg pt2pt_api.txt indicates the output folder.
+            # Only the api functions with output folder will get generated.
+            # This allows simple control of what functions to generate.
+            if not silent: print("Loading %s ..." % f)
+            load_mpi_api(f, RE.m.group(1))
+
+    # -- filter and sort func_list --
+    func_list = [f for f in G.FUNCS.values() if 'dir' in f and 'not_implemented' not in f]
+    func_list.sort(key = lambda f: f['dir'])
+
+    load_mpix_txt()
+
+    return func_list
 
 def load_mpi_json(api_json):
     import json
@@ -196,8 +230,86 @@ def parse_param_attributes(p):
     else:
         p['constant'] = False
 
+    if RE.search(r'asynchronous\s*=\s*True', p['t']):
+        p['asynchronous'] = True
+    else:
+        p['asynchronous'] = False
+
 def function_has_POLY_parameters(func):
     for p in func['parameters']:
         if p['kind'].startswith('POLY'):
             return True
     return False
+
+# FIXME: until ROMIO interface are generated
+def get_mpiio_func_list():
+    io_func_name_list = [
+        "MPI_File_c2f",
+        "MPI_File_close",
+        "MPI_File_delete",
+        "MPI_File_errhandler_function",
+        "MPI_File_f2c",
+        "MPI_File_get_amode",
+        "MPI_File_get_atomicity",
+        "MPI_File_get_byte_offset",
+        "MPI_File_get_group",
+        "MPI_File_get_info",
+        "MPI_File_get_position",
+        "MPI_File_get_position_shared",
+        "MPI_File_get_size",
+        "MPI_File_get_type_extent",
+        "MPI_File_get_view",
+        "MPI_File_iread",
+        "MPI_File_iread_all",
+        "MPI_File_iread_at",
+        "MPI_File_iread_at_all",
+        "MPI_File_iread_shared",
+        "MPI_File_iwrite",
+        "MPI_File_iwrite_all",
+        "MPI_File_iwrite_at",
+        "MPI_File_iwrite_at_all",
+        "MPI_File_iwrite_shared",
+        "MPI_File_open",
+        "MPI_File_preallocate",
+        "MPI_File_read",
+        "MPI_File_read_all",
+        "MPI_File_read_all_begin",
+        "MPI_File_read_all_end",
+        "MPI_File_read_at",
+        "MPI_File_read_at_all",
+        "MPI_File_read_at_all_begin",
+        "MPI_File_read_at_all_end",
+        "MPI_File_read_ordered",
+        "MPI_File_read_ordered_begin",
+        "MPI_File_read_ordered_end",
+        "MPI_File_read_shared",
+        "MPI_File_seek",
+        "MPI_File_seek_shared",
+        "MPI_File_set_atomicity",
+        "MPI_File_set_info",
+        "MPI_File_set_size",
+        "MPI_File_set_view",
+        "MPI_File_sync",
+        "MPI_File_write",
+        "MPI_File_write_all",
+        "MPI_File_write_all_begin",
+        "MPI_File_write_all_end",
+        "MPI_File_write_at",
+        "MPI_File_write_at_all",
+        "MPI_File_write_at_all_begin",
+        "MPI_File_write_at_all_end",
+        "MPI_File_write_ordered",
+        "MPI_File_write_ordered_begin",
+        "MPI_File_write_ordered_end",
+        "MPI_File_write_shared",
+        "MPI_Register_datarep"
+    ]
+    return [G.FUNCS[a.lower()] for a in io_func_name_list]
+
+def get_type_create_f90_func_list():
+    type_func_name_list = [
+        "MPI_Type_create_f90_integer",
+        "MPI_Type_create_f90_real",
+        "MPI_Type_create_f90_complex",
+    ]
+    return [G.FUNCS[a.lower()] for a in type_func_name_list]

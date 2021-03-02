@@ -4,6 +4,7 @@
 ##
 
 from local_python import MPI_API_Global as G
+from local_python.binding_common import *
 from local_python import RE
 
 import sys
@@ -323,48 +324,6 @@ def check_params_with_large_only(func):
         else:
             func['c_parameters'] = func['params_large']
 
-def get_userbuffer_group(func, i):
-    """internal function used by process_func_parameters"""
-    p = func['c_parameters'][i]
-    p2 = func['c_parameters'][i + 1]
-    p3 = func['c_parameters'][i + 2]
-    func_name = func['name']
-    if RE.match(r'mpi_i?(alltoall|allgather|gather|scatter)', func_name, re.IGNORECASE):
-        type = "inplace"
-        if RE.search(r'send', p['name'], re.IGNORECASE) and RE.search(r'scatter', func_name, re.IGNORECASE):
-            type = "noinplace"
-        elif RE.search(r'recv', p['name'], re.IGNORECASE) and not RE.search(r'scatter', func_name, re.IGNORECASE):
-            type = "noinplace"
-
-        if RE.search(r'alltoallw', func_name, re.IGNORECASE):
-            group_kind = "USERBUFFER-%s-w" % (type)
-            group_count = 4
-        elif p3['kind'] == "DATATYPE":
-            group_kind = "USERBUFFER-%s" % (type)
-            group_count = 3
-        else:
-            group_kind = "USERBUFFER-%s-v" % (type)
-            group_count = 4
-    elif RE.match(r'mpi_i?neighbor', func_name, re.IGNORECASE):
-        if RE.search(r'alltoallw', func_name, re.IGNORECASE):
-            group_kind = "USERBUFFER-neighbor-w"
-            group_count = 4
-        elif p3['kind'] == "DATATYPE":
-            group_kind = "USERBUFFER-neighbor"
-            group_count = 3
-        else:
-            group_kind = "USERBUFFER-neighbor-v"
-            group_count = 4
-    elif RE.match(r'mpi_i?(allreduce|reduce|scan|exscan)', func_name, re.IGNORECASE):
-        group_kind = "USERBUFFER-reduce"
-        group_count = 5
-    elif RE.search(r'XFER_NUM_ELEM', p2['kind']) and RE.search(r'DATATYPE', p3['kind']):
-        group_kind = "USERBUFFER-simple"
-        group_count = 3
-    else:
-        group_kind, group_count = None, 0
-    return (group_kind, group_count)
-
 def process_func_parameters(func):
     """ Scan parameters and populate a few lists to facilitate generation."""
     # Note: we'll attach the lists to func at the end
@@ -381,7 +340,7 @@ def process_func_parameters(func):
         p = func['c_parameters'][i]
         (group_kind, group_count) = ("", 0)
         if i + 3 <= n and RE.search(r'BUFFER', p['kind']):
-            group_kind, group_count = get_userbuffer_group(func, i)
+            group_kind, group_count = get_userbuffer_group(func_name, func['c_parameters'], i)
         if group_count > 0:
             t = ''
             for j in range(group_count):
@@ -2133,59 +2092,6 @@ def get_C_params(func, mapping):
     else:
         return param_list
 
-def get_C_param(param, mapping):
-    kind = param['kind']
-    if kind == "VARARGS":
-        return "..."
-
-    want_star, want_bracket = '', ''
-    param_type = mapping[kind]
-
-    if param_type in G.mpix_symbols:
-        param_type = re.sub(r'MPI_', 'MPIX_', param_type)
-
-    if param['func_type']:
-        param_type = param['func_type']
-        if mapping['_name'].startswith("BIG_"):
-            param_type += "_c"
-
-    if not param_type:
-        raise Exception("Type mapping [%s] %s not found!" % (mapping, kind))
-    if not want_star:
-        if is_pointer_type(param):
-            if kind == "STRING_ARRAY":
-                want_star = 1
-                want_bracket = 1
-            elif kind == "STRING_2DARRAY":
-                want_star = 2
-                want_bracket = 1
-            elif kind == "ARGUMENT_LIST":
-                want_star = 3
-            elif param['pointer'] is not None and not param['pointer']:
-                want_bracket = 1
-            elif param['length'] is not None and kind != "STRING":
-                want_bracket = 1
-            else:
-                want_star = 1
-
-    s = ''
-    if param['constant']:
-        s += "const "
-    s += param_type
-
-    if want_star:
-        s += " " + "*" * want_star
-    else:
-        s += " "
-    s += param['name']
-
-    if want_bracket:
-        s += "[]"
-    if isinstance(param['length'], list):
-        s += "[%s]" % param['length'][-1]
-
-    return s
-
 def get_impl_param(func, param):
     mapping = get_mapping(func['_map_type'])
 
@@ -2206,20 +2112,6 @@ def get_polymorph_param_and_arg(s):
     extra_param = RE.m.group(1) + ' ' + RE.m.group(2)
     extra_arg = RE.m.group(3)
     return (extra_param, extra_arg)
-
-def is_pointer_type(param):
-    if RE.match(r'(STRING\w*)$', param['kind']):
-        return 1
-    elif RE.match(r'(ATTRIBUTE_VAL\w*|(C_)?BUFFER\d?|STATUS|EXTRA_STATE\d*|TOOL_MPI_OBJ|(POLY)?FUNCTION\w*)$', param['kind']):
-        return 1
-    elif param['param_direction'] != 'in':
-        return 1
-    elif param['length']:
-        return 1
-    elif param['pointer']:
-        return 1
-    else:
-        return 0
 
 def dump_error_check(sp):
     G.out.append("%sif (mpi_errno) {" % sp)
@@ -2253,63 +2145,6 @@ def dump_error(errname, errfmt, errargs):
     G.out.append("                                 \"**%s\"," % errname)
     G.out.append("                                 \"**%s %s\", %s);" % (errname, errfmt, errargs))
     G.out.append("goto fn_fail;")
-
-def split_line_with_break(s, tail, N=100):
-    """Breaks a long line with proper indentations.
-    This simplistic routine splits on ", ", thus only works with function declarations
-    and simple function calls such as those generated by this script. """
-    out_list = []
-
-    tlist = []
-    n = 0
-
-    # by default, segments indent by additional 4 spaces
-    if RE.match(r'(\s*)', s):
-        n_lead = len(RE.m.group(1)) + 4
-
-    if len(s) < N:
-        tlist.append(s)
-        n = len(s)
-    elif RE.match(r'(.*?\()(.*)', s):
-        # line with function pattern, match indent at openning parenthesis
-        s_lead, s_next = RE.m.group(1,2)
-        n_lead = len(s_lead)
-
-        for a in s_next.split(', '):
-            if n == 0:
-                # first line
-                tlist = [s_lead, a]
-                n = n_lead + len(a)
-            elif n + 2 + len(a) < N:
-                # just append to tlist
-                tlist.append(', ')
-                tlist.append(a)
-                n += 2 + len(a)
-            else:
-                # break the line
-                tlist.append(',')
-                out_list.append(''.join(tlist))
-                # start new line with leading spaces
-                tlist = [' ' * n_lead, a]
-                n = n_lead + len(a)
-        # leave last segment with tail
-    else:
-        # only break long function declaration or call for now
-        tlist.append(s)
-        n = len(s)
-
-    # tail is mostly for "__attribute__ ((weak, alias(...))));",
-    # which contains , that we do not desire to break
-    if tail:
-        if n + 1 + len(tail) < 100:
-            out_list.append(''.join(tlist) + ' ' + tail)
-        else:
-            out_list.append(''.join(tlist))
-            out_list.append(' ' * n_lead + tail)
-    else:
-        out_list.append(''.join(tlist))
-
-    return out_list
 
 def dump_line_with_break(s, tail=''):
     tlist = split_line_with_break(s, tail, 100)

@@ -1045,6 +1045,7 @@ endif MAINTAINER_MODE
 if BUILD_F77_BINDING
 EOT
     &print_line(  MAKEFD, "mpi_f77_sources += ", 80, "\\\n\t", 8 );
+    &print_line(  MAKEFD, "src/binding/fortran/mpif_h/attr_proxy.c ", 80, "\\\n\t", 8 );
     for ($i=0; $i<=$#files; $i++) {
         $name = $files[$i];
         &print_line( MAKEFD, "src/binding/fortran/mpif_h/$name ", 80, "\\\n\t", 8 );
@@ -3630,7 +3631,7 @@ sub setF90Type_keyval {
     if ($within_fint) { $argname = "l$argnum"; }
     print $FD "\
     if (*ierr == MPI_SUCCESS) {
-         MPII_Keyval_set_proxy( (int)$argname, MPIR_Type_copy_attr_f90_proxy, MPIR_Type_delete_attr_f90_proxy );
+         MPII_Keyval_set_f90_proxy( (int)$argname );
     }\n";
 }
 sub setF90Comm_keyval {
@@ -3641,7 +3642,7 @@ sub setF90Comm_keyval {
     if ($within_fint) { $argname = "l$argnum"; }
     print $FD "\
     if (*ierr == MPI_SUCCESS) {
-         MPII_Keyval_set_proxy( (int)$argname, MPII_Comm_copy_attr_f90_proxy, MPIR_Comm_delete_attr_f90_proxy );
+         MPII_Keyval_set_f90_proxy( (int)$argname );
     }\n";
 }
 sub setF90Win_keyval {
@@ -3652,7 +3653,7 @@ sub setF90Win_keyval {
     if ($within_fint) { $argname = "l$argnum"; }
     print $FD "\
     if (*ierr == MPI_SUCCESS) {
-         MPII_Keyval_set_proxy( (int)$argname, MPIR_Win_copy_attr_f90_proxy, MPIR_Win_delete_attr_f90_proxy );
+         MPII_Keyval_set_f90_proxy( (int)$argname );
     }\n";
 }
 sub setF77greq {
@@ -4395,67 +4396,6 @@ sub build_specials {
 #endif
 ";
 
-    print $OUTFD "
-/* The F77 attr copy function prototype and calling convention */
-typedef void (FORT_CALL F77_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *, MPI_Aint *, MPI_Fint *, MPI_Fint *);
-
-/* Helper proxy function to thunk the attr copy function call into F77 calling convention */
-static
-int
-MPII_Comm_copy_attr_f77_proxy(
-    MPI_Comm_copy_attr_function* user_function,
-    MPI_Comm comm,
-    int keyval,
-    void* extra_state,
-    MPIR_Attr_type value_type,
-    void* value,
-    void** new_value,
-    int* flag
-    )
-{
-    MPI_Fint ierr = 0;
-    MPI_Fint fhandle = (MPI_Fint)comm;
-    MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = (MPI_Aint)value;
-    MPI_Aint *fextra = (MPI_Aint *)extra_state;
-    MPI_Aint fnew = 0;
-    MPI_Fint fflag = 0;
-
-    ((F77_CopyFunction*)(void*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
-
-    *flag = MPII_FROM_FLOG(fflag);
-    *new_value = (void *)fnew;
-    return (int)ierr;
-}
-
-
-/* The F77 attr delete function prototype and calling convention */
-typedef void (FORT_CALL F77_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *, MPI_Fint *);
-
-/* Helper proxy function to thunk the attr delete function call into F77 calling convention */
-static
-int
-MPIR_Comm_delete_attr_f77_proxy(
-    MPI_Comm_delete_attr_function* user_function,
-    MPI_Comm comm,
-    int keyval,
-    MPIR_Attr_type value_type,
-    void* value,
-    void* extra_state
-    )
-{
-    MPI_Fint ierr = 0;
-    MPI_Fint fhandle = (MPI_Fint)comm;
-    MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = (MPI_Aint)value;
-    MPI_Aint *fextra = (MPI_Aint *)extra_state;
-
-    ((F77_DeleteFunction*)(void*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
-    return (int)ierr;
-}
-
-
-";
     &print_routine_type_decl( $OUTFD, $out_prefix, "keyval_create" );
     &print_args( $OUTFD, $args, 0, "keyval_create" );
     #&print_attr;
@@ -4464,7 +4404,7 @@ MPIR_Comm_delete_attr_f77_proxy(
         *ierr = MPI_Comm_create_keyval( v1, v2, &l3, v4 );
         if (!*ierr) {
             *v3 = l3;
-            MPII_Keyval_set_proxy((int)*v3, MPII_Comm_copy_attr_f77_proxy, MPIR_Comm_delete_attr_f77_proxy);
+            MPII_Keyval_set_f90_proxy((int)*v3);
         }
 }\n";
     close ($OUTFD);
@@ -5423,198 +5363,6 @@ FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( $proto_params ) {
 
 ";
 
-}
-
-sub HelperForType_create_keyval {
-    my $OUTFD = $_[0];
-
-    print $OUTFD "\
-
-/* The F90 attr copy function prototype and calling convention */
-typedef void (FORT_CALL F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,MPI_Aint *, MPI_Fint *, MPI_Fint *);
-
-/* Helper proxy function to thunk the attr copy function call into F90 calling convention */
-static
-int
-MPIR_Type_copy_attr_f90_proxy(
-    MPI_Type_copy_attr_function* user_function,
-    MPI_Datatype datatype,
-    int keyval,
-    void* extra_state,
-    MPIR_Attr_type value_type,
-    void* value,
-    void** new_value,
-    int* flag
-    )
-{
-    MPI_Fint ierr = 0;
-    MPI_Fint fhandle = (MPI_Fint)datatype;
-    MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = (MPI_Aint)value;
-    MPI_Aint* fextra  = (MPI_Aint*)extra_state;
-    MPI_Aint fnew = 0;
-    MPI_Fint fflag = 0;
-
-    ((F90_CopyFunction*)(void*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
-
-    *flag = MPII_FROM_FLOG(fflag);
-    *new_value = (void *)fnew;
-    return (int)ierr;
-}
-
-
-/* The F90 attr delete function prototype and calling convention */
-typedef void (FORT_CALL F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *, MPI_Fint *);
-
-/* Helper proxy function to thunk the attr delete function call into F77 calling convention */
-static
-int
-MPIR_Type_delete_attr_f90_proxy(
-    MPI_Type_delete_attr_function* user_function,
-    MPI_Datatype datatype,
-    int keyval,
-    MPIR_Attr_type value_type,
-    void* value,
-    void* extra_state
-    )
-{
-    MPI_Fint ierr = 0;
-    MPI_Fint fhandle = (MPI_Fint)datatype;
-    MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = (MPI_Aint)value;
-    MPI_Aint* fextra  = (MPI_Aint*)extra_state;
-
-    ((F90_DeleteFunction*)(void*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
-    return (int)ierr;
-}\n";
-}
-
-sub HelperForComm_create_keyval {
-    my $OUTFD = $_[0];
-
-    print $OUTFD "\
-
-/* The F90 attr copy function prototype and calling convention */
-typedef void (FORT_CALL F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,MPI_Aint *, MPI_Fint *, MPI_Fint *);
-
-/* Helper proxy function to thunk the attr copy function call into F90 calling convention */
-static
-int
-MPII_Comm_copy_attr_f90_proxy(
-    MPI_Comm_copy_attr_function* user_function,
-    MPI_Comm comm,
-    int keyval,
-    void* extra_state,
-    MPIR_Attr_type value_type,
-    void* value,
-    void** new_value,
-    int* flag
-    )
-{
-    MPI_Fint ierr = 0;
-    MPI_Fint fhandle = (MPI_Fint)comm;
-    MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = (MPI_Aint)value;
-    MPI_Aint* fextra  = (MPI_Aint*)extra_state;
-    MPI_Aint fnew = 0;
-    MPI_Fint fflag = 0;
-
-    ((F90_CopyFunction*)(void*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
-
-    *flag = MPII_FROM_FLOG(fflag);
-    *new_value = (void *)fnew;
-    return (int)ierr;
-}
-
-
-/* The F90 attr delete function prototype and calling convention */
-typedef void (FORT_CALL F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *, MPI_Fint *);
-
-/* Helper proxy function to thunk the attr delete function call into F77 calling convention */
-static
-int
-MPIR_Comm_delete_attr_f90_proxy(
-    MPI_Comm_delete_attr_function* user_function,
-    MPI_Comm comm,
-    int keyval,
-    MPIR_Attr_type value_type,
-    void* value,
-    void* extra_state
-    )
-{
-    MPI_Fint ierr = 0;
-    MPI_Fint fhandle = (MPI_Fint)comm;
-    MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = (MPI_Aint)value;
-    MPI_Aint* fextra  = (MPI_Aint*)extra_state;
-
-    ((F90_DeleteFunction*)(void*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
-    return (int)ierr;
-}\n";
-}
-
-sub HelperForWin_create_keyval {
-    my $OUTFD = $_[0];
-
-    print $OUTFD "\
-
-/* The F90 attr copy function prototype and calling convention */
-typedef void (FORT_CALL F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,MPI_Aint *, MPI_Fint *, MPI_Fint *);
-
-/* Helper proxy function to thunk the attr copy function call into F90 calling convention */
-static
-int
-MPIR_Win_copy_attr_f90_proxy(
-    MPI_Win_copy_attr_function* user_function,
-    MPI_Win win,
-    int keyval,
-    void* extra_state,
-    MPIR_Attr_type value_type,
-    void* value,
-    void** new_value,
-    int* flag
-    )
-{
-    MPI_Fint ierr = 0;
-    MPI_Fint fhandle = (MPI_Fint)win;
-    MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = (MPI_Aint)value;
-    MPI_Aint* fextra  = (MPI_Aint*)extra_state;
-    MPI_Aint fnew = 0;
-    MPI_Fint fflag = 0;
-
-    ((F90_CopyFunction*)(void*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
-
-    *flag = MPII_FROM_FLOG(fflag);
-    *new_value = (void *)fnew;
-    return (int)ierr;
-}
-
-
-/* The F90 attr delete function prototype and calling convention */
-typedef void (FORT_CALL F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *, MPI_Fint *);
-
-/* Helper proxy function to thunk the attr delete function call into F77 calling convention */
-static
-int
-MPIR_Win_delete_attr_f90_proxy(
-    MPI_Win_delete_attr_function* user_function,
-    MPI_Win win,
-    int keyval,
-    MPIR_Attr_type value_type,
-    void* value,
-    void* extra_state
-    )
-{
-    MPI_Fint ierr = 0;
-    MPI_Fint fhandle = (MPI_Fint)win;
-    MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = (MPI_Aint)value;
-    MPI_Aint* fextra  = (MPI_Aint*)extra_state;
-
-    ((F90_DeleteFunction*)(void*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
-    return (int)ierr;
-}\n";
 }
 
 # Allow multiple underscore versions of names
