@@ -39,10 +39,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
 
         ucxdir="modules/ucx"
         ucxlib="modules/ucx/src/ucp/libucp.la"
-
-        # embedded ucx is 1.4 or higher version, thus always set as defined.
-        have_ucp_put_nb=yes
-        have_ucp_get_nb=yes
     else
         dnl PAC_PROBE_HEADER_LIB must've been successful
         AC_MSG_NOTICE([CH4 UCX Netmod:  Using an external ucx])
@@ -60,16 +56,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
             AC_MSG_ERROR([UCX installation does not meet minimum version requirement (v1.7.0). Please upgrade your installation, or use --with-ucx=embedded.])
         fi
         PAC_LIBS_ADD([-lucp -lucs])
-        # ucp_put_nb and ucp_get_nb are added only from ucx 1.4.
-        PAC_CHECK_HEADER_LIB([ucp/api/ucp.h],[ucp],[ucp_put_nb], [have_ucp_put_nb=yes], [have_ucp_put_nb=no])
-        PAC_CHECK_HEADER_LIB([ucp/api/ucp.h],[ucp],[ucp_get_nb], [have_ucp_get_nb=yes], [have_ucp_get_nb=no])
-    fi
-
-    if test "${have_ucp_put_nb}" = "yes" ; then
-        AC_DEFINE(HAVE_UCP_PUT_NB,1,[Define if ucp_put_nb is defined in ucx])
-    fi
-    if test "${have_ucp_get_nb}" = "yes" ; then
-        AC_DEFINE(HAVE_UCP_GET_NB,1,[Define if ucp_get_nb is defined in ucx])
     fi
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_UCX,...)
 ])dnl end _BODY
