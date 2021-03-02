@@ -225,6 +225,12 @@ typedef struct {
     struct fid_av *av;
     struct fid_ep *ep;
     struct fid_cntr *rma_cmpl_cntr;
+    uint64_t rma_issued_cntr;
+    /* rma using shared TX context */
+    struct fid_stx *rma_stx_ctx;
+    /* rma using dedicated scalable EP */
+    struct fid_ep *rma_sep;
+    UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
 
     struct fid_ep *tx;
     struct fid_ep *rx;
@@ -300,9 +306,6 @@ typedef struct {
     struct fi_info *prov_use;
     struct fid_fabric *fabric;
 
-    struct fid_stx *rma_stx_ctx;        /* shared TX context for RMA */
-    struct fid_ep *rma_sep;     /* dedicated scalable EP for RMA */
-
     int got_named_av;
 
     /* Queryable limits */
@@ -330,11 +333,9 @@ typedef struct {
 
     /* Window/RMA Globals */
     void *win_map;
-    uint64_t rma_issued_cntr;
     /* OFI atomics limitation of each pair of <dtype, op> returned by the
      * OFI provider at MPI initialization.*/
     MPIDI_OFI_atomic_valid_t win_op_table[MPIR_DATATYPE_N_PREDEFINED][MPIDIG_ACCU_NUM_OP];
-    UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
 
     /* Active Message Globals */
     struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
