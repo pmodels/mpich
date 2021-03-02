@@ -25,7 +25,7 @@
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
-int MPIDI_OFI_progress(int vci, int blocking);
+int MPIDI_OFI_progress_uninlined(int vni);
 
 /* vni mapping */
 /* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
@@ -33,7 +33,11 @@ int MPIDI_OFI_progress(int vci, int blocking);
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
                                                int src_rank, int dst_rank, int tag)
 {
+#if MPIDI_CH4_MAX_VCIS == 1
+    return 0;
+#else
     return MPIDI_get_vci(flag, comm_ptr, src_rank, dst_rank, tag) % MPIDI_OFI_global.num_vnis;
+#endif
 }
 
 /*
@@ -41,7 +45,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
  */
 #define MPIDI_OFI_PROGRESS(vni)                                   \
     do {                                                          \
-        mpi_errno = MPIDI_OFI_progress(vni, 0);                   \
+        mpi_errno = MPIDI_NM_progress(vni, 0);                   \
         MPIR_ERR_CHECK(mpi_errno);                                \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
@@ -101,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
 #define MPIDI_OFI_VCI_PROGRESS(vci_)                                    \
     do {                                                                \
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                \
-        mpi_errno = MPIDI_OFI_progress(vci_, 0);                        \
+        mpi_errno = MPIDI_NM_progress(vci_, 0);                        \
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);                 \
         MPIR_ERR_CHECK(mpi_errno);                                      \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
@@ -111,7 +115,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
     do {                                                                    \
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                    \
         while (cond) {                                                      \
-            mpi_errno = MPIDI_OFI_progress(vci_, 0);                        \
+            mpi_errno = MPIDI_NM_progress(vci_, 0);                        \
             if (mpi_errno) {                                                \
                 MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);             \
                 MPIR_ERR_POP(mpi_errno);                                    \
