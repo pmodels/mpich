@@ -11,8 +11,6 @@
 #include "mpidu_shm.h"
 #include "ch4r_proc.h"
 
-int MPIDI_Progress_test(int flags);
-int MPIDI_progress_test_vci(int vci);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
@@ -446,6 +444,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank,
  * NOTE: when used in a loop, we insert a yield of global lock to prevent
  * blocking other progress (under global granularity).
  */
+
+/* declare to avoid header order dance */
+MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci);
 
 #define MPIDIU_PROGRESS_WHILE(cond, vci)         \
     while (cond) {                          \

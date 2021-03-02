@@ -23,7 +23,7 @@
 #endif
 
 #include "shm_am.h"
-#include "shm_init.h"
+#include "shm_progress.h"
 #include "shm_misc.h"
 #include "shm_types.h"
 #include "shm_control.h"
