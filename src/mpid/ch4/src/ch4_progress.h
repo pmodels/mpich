@@ -152,29 +152,36 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state, in
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_progress_state_init(MPID_Progress_state * state, int wait)
+/* Init with all VCIs. Performance critical path should always pass in explicit
+ * state, thus avoid poking all progresses */
+MPL_STATIC_INLINE_PREFIX void MPIDI_progress_state_init(MPID_Progress_state * state)
 {
     state->flag = MPIDI_PROGRESS_ALL;
     state->progress_made = 0;
-    if (wait) {
-        /* only wait functions need check progress_counts */
-        for (int i = 0; i < MPIDI_global.n_vcis; i++) {
-            state->progress_counts[i] = MPIDI_global.progress_counts[i];
-        }
-    }
-
     /* global progress by default */
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
         state->vci[i] = i;
     }
     state->vci_count = MPIDI_global.n_vcis;
+}
 
+/* only wait functions need check progress_counts */
+MPL_STATIC_INLINE_PREFIX void MPIDI_progress_state_init_count(MPID_Progress_state * state)
+{
+    /* Note: ugly code to avoid warning -Wmaybe-uninitialized */
+#if MPIDI_CH4_MAX_VCIS == 1
+    state->progress_counts[0] = MPIDI_global.progress_counts[0];
+#else
+    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        state->progress_counts[i] = MPIDI_global.progress_counts[i];
+    }
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 {
     MPID_Progress_state state;
-    MPIDI_progress_state_init(&state, 0);
+    MPIDI_progress_state_init(&state);
     state.flag = flags;
     return MPIDI_progress_test(&state, 0);
 }
@@ -210,7 +217,9 @@ MPL_STATIC_INLINE_PREFIX void MPID_Progress_start(MPID_Progress_state * state)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START);
 
-    MPIDI_progress_state_init(state, 1);
+    MPIDI_progress_state_init(state);
+    /* need set count to check for progress_made */
+    MPIDI_progress_state_init_count(state);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_START);
     return;
@@ -230,7 +239,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(MPID_Progress_state * state)
     if (state == NULL) {
         MPID_Progress_state progress_state;
 
-        MPIDI_progress_state_init(&progress_state, 0);
+        MPIDI_progress_state_init(&progress_state);
         return MPIDI_progress_test(&progress_state, 0);
     } else {
         return MPIDI_progress_test(state, 0);
