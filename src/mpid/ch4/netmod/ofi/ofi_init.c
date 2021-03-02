@@ -927,10 +927,8 @@ static int create_vni_domain(struct fid_domain **p_domain, struct fid_av **p_av,
 static int create_cq(struct fid_domain *domain, struct fid_cq **p_cq);
 static int create_sep_tx(struct fid_ep *ep, int idx, struct fid_ep **p_tx,
                          struct fid_cq *cq, struct fid_cntr *cntr);
-static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx,
-                         struct fid_cq *cq, struct fid_cntr *cntr);
+static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx, struct fid_cq *cq);
 static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av);
-static int create_rma_stx_ctx(struct fid_domain *domain, struct fid_stx **p_rma_stx_ctx);
 
 static int create_vni_context(int vni)
 {
@@ -978,7 +976,7 @@ static int create_vni_context(int vni)
 
         mpi_errno = create_sep_tx(ep, 0, &tx, cq, rma_cmpl_cntr);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = create_sep_rx(ep, 0, &rx, cq, rma_cmpl_cntr);
+        mpi_errno = create_sep_rx(ep, 0, &rx, cq);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         MPIDI_OFI_CALL(fi_endpoint(domain, prov_use, &ep, NULL), ep);
@@ -992,6 +990,7 @@ static int create_vni_context(int vni)
     MPIDI_OFI_global.ctx[vni].domain = domain;
     MPIDI_OFI_global.ctx[vni].av = av;
     MPIDI_OFI_global.ctx[vni].rma_cmpl_cntr = rma_cmpl_cntr;
+    MPIDI_OFI_global.ctx[vni].rma_issued_cntr = 0;
     MPIDI_OFI_global.ctx[vni].ep = ep;
     MPIDI_OFI_global.ctx[vni].cq = cq;
     MPIDI_OFI_global.ctx[vni].tx = tx;
@@ -1029,7 +1028,7 @@ static int create_vni_context(int vni)
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         mpi_errno = create_sep_tx(ep, vni, &tx, cq, rma_cmpl_cntr);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = create_sep_rx(ep, vni, &rx, cq, rma_cmpl_cntr);
+        mpi_errno = create_sep_rx(ep, vni, &rx, cq);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         tx = ep;
@@ -1041,19 +1040,15 @@ static int create_vni_context(int vni)
         MPIDI_OFI_global.ctx[0].av = av;
         MPIDI_OFI_global.ctx[0].rma_cmpl_cntr = rma_cmpl_cntr;
         MPIDI_OFI_global.ctx[0].ep = ep;
+    } else {
+        /* non-zero vni share most fields with vni 0, copy them
+         * so we don't have to switch during runtime */
+        MPIDI_OFI_global.ctx[vni] = MPIDI_OFI_global.ctx[0];
     }
     MPIDI_OFI_global.ctx[vni].cq = cq;
     MPIDI_OFI_global.ctx[vni].tx = tx;
     MPIDI_OFI_global.ctx[vni].rx = rx;
 #endif
-
-    /* ------------------------------------------------------------------------ */
-    /* Construct:  Shared TX Context for RMA                                    */
-    /* ------------------------------------------------------------------------ */
-    if (vni == 0) {
-        mpi_errno = create_rma_stx_ctx(domain, &MPIDI_OFI_global.rma_stx_ctx);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CREATE_VNI_CONTEXT);
@@ -1122,19 +1117,18 @@ static int destroy_vni_context(int vni)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[vni].domain->fid), domainclose);
     }
 #endif
-    if (vni == 0) {
-        /* Close RMA scalable EP. */
-        if (MPIDI_OFI_global.rma_sep) {
-            /* All transmit contexts on RMA must be closed. */
-            MPIR_Assert(utarray_len(MPIDI_OFI_global.rma_sep_idx_array) ==
-                        MPIDI_OFI_global.max_rma_sep_tx_cnt);
-            utarray_free(MPIDI_OFI_global.rma_sep_idx_array);
-            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_sep->fid), epclose);
-        }
+    /* Close RMA scalable EP. */
+    if (MPIDI_OFI_global.ctx[vni].rma_sep) {
+        /* All transmit contexts on RMA must be closed. */
+        MPIR_Assert(utarray_len(MPIDI_OFI_global.ctx[vni].rma_sep_idx_array) ==
+                    MPIDI_OFI_global.max_rma_sep_tx_cnt);
+        utarray_free(MPIDI_OFI_global.ctx[vni].rma_sep_idx_array);
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[vni].rma_sep->fid), epclose);
+    }
 
-        if (MPIDI_OFI_global.rma_stx_ctx != NULL) {
-            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_stx_ctx->fid), stx_ctx_close);
-        }
+    /* Close RMA shared context */
+    if (MPIDI_OFI_global.ctx[vni].rma_stx_ctx != NULL) {
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[vni].rma_stx_ctx->fid), stx_ctx_close);
     }
 
   fn_exit:
@@ -1244,8 +1238,7 @@ static int create_sep_tx(struct fid_ep *ep, int idx, struct fid_ep **p_tx,
     goto fn_exit;
 }
 
-static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx,
-                         struct fid_cq *cq, struct fid_cntr *cntr)
+static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx, struct fid_cq *cq)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1314,34 +1307,6 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av)
         return 0;
     }
 #endif
-}
-
-static int create_rma_stx_ctx(struct fid_domain *domain, struct fid_stx **p_rma_stx_ctx)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS) {
-        int ret;
-        struct fi_tx_attr tx_attr;
-        memset(&tx_attr, 0, sizeof(tx_attr));
-        /* A shared transmit context’s attributes must be a union of all associated
-         * endpoints' transmit capabilities. */
-        tx_attr.caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
-        tx_attr.msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
-        tx_attr.op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
-        MPIDI_OFI_CALL_RETURN(fi_stx_context(domain, &tx_attr, p_rma_stx_ctx, NULL), ret);
-        if (ret < 0) {
-            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        "Failed to create shared TX context for RMA, "
-                        "falling back to global EP/counter scheme");
-            *p_rma_stx_ctx = NULL;
-        }
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int open_fabric(void)
