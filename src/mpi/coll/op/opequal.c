@@ -99,25 +99,35 @@ typedef struct MPIR_longdoubleint_eqltype {
 void MPIR_EQUAL_user_defined_datatype_compare(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
 	int mpi_errno = MPI_SUCCESS;
-	int i, j, size, len = *Len; 
-	int data_len = 0, type_len = 0, struct_len = 0, max_type_size = 0;
+	int i, j, size, len = *Len, is_equal; 
+	int data_len = 0, type_len = 0;
 	int num_ints, num_adds, num_types, combiner, *ints;
-	void *invec_pos, *inoutvec_pos;
-    MPI_Aint *adds = NULL;
-    MPI_Datatype *types;
+	void *invec_i_pos, *invec_i_bool_pos, *inoutvec_i_pos, *inoutvec_i_bool_pos;
+	MPI_Aint *adds = NULL;
+	MPI_Aint lb, extent;
+	MPI_Datatype *types;
 
 	 /* decode */
     mpi_errno = MPI_Type_get_envelope(*type, &num_ints, &num_adds, &num_types, &combiner);
 
-    if(num_types < 3 || (combiner != MPI_COMBINER_STRUCT && combiner != MPI_COMBINER_VECTOR)) /*At least 2 elements is required, data, result*/
+    if(num_types < 3 || combiner != MPI_COMBINER_STRUCT) /*At least 2 elements is required, data, result*/
 	{
 		MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_EQUAL");
 		return;
 	}
 
 	ints = (int *)malloc(num_ints * sizeof(*ints));
-    if (num_adds)
+
+    if (num_adds || (num_ints != num_adds+1))/*ints[0] is the length*/
+    {
         adds = (MPI_Aint *)malloc(num_adds * sizeof(*adds));
+    }
+    else /*adds is required to avoid impacts of struct alignment*/
+    {
+    	MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_EQUAL");
+		return;
+    }
+
     types = (MPI_Datatype *)malloc(num_types * sizeof(*types));
 
     mpi_errno = MPI_Type_get_contents(*type, num_ints, num_adds, num_types, ints, adds, types);
@@ -128,53 +138,33 @@ void MPIR_EQUAL_user_defined_datatype_compare(void *invec, void *inoutvec, int *
 		return;
 	}
 
-    for(i = 0; i < num_types; ++i)
+    MPI_Type_get_extent(*type, &lb, &extent);
+    type_len = extent - lb;
+
+    for (i = 0; i < len; ++i)    	
     {
-    	MPI_Type_size(types[i], &size); 
-    	type_len += size;
-    	max_type_size = size > max_type_size ? size : max_type_size;
-
-    }
-
-    struct_len = type_len;
-
-    if(combiner == MPI_COMBINER_STRUCT)
-    	C_STRUCT_PADDING(struct_len, max_type_size);
-
-    for (i = 0; i < len; ++i)
-    {
-    	invec_pos = invec + i*struct_len;
-    	inoutvec_pos = inoutvec + i*struct_len;
-    	if(max_type_size == sizeof(int)){
-    		if(*(int*)(invec_pos + struct_len - sizeof(int)) == 0 ||
-	    		*(int*)(inoutvec_pos + struct_len - sizeof(int)) == 0)
-	    	{
-	    		*(int*)(inoutvec_pos + struct_len - sizeof(int)) = 0;
-	    	}
-	    	else if(memcmp(invec_pos, inoutvec_pos, struct_len - sizeof(int)))
-	    	{
-	    		*(int*)(inoutvec_pos + struct_len - sizeof(int)) = 0;
-	    	}
-	    	else
-	    	{
-	    		*(int*)(inoutvec_pos + struct_len - sizeof(int)) = 1;
-	    	}
+    	invec_i_pos = invec + i*type_len;
+    	invec_i_bool_pos = invec_i_pos + adds[num_adds-1];
+    	inoutvec_i_pos = inoutvec + i*type_len;
+    	inoutvec_i_bool_pos = inoutvec_i_pos + adds[num_adds-1];
+    	if((*(int*)invec_i_bool_pos == 0) ||
+    		(*(int*)inoutvec_i_bool_pos == 0))
+    	{
+    		*(int*)inoutvec_i_bool_pos  = 0;
     	}
     	else
-    	{
-    		if(*(int*)(invec_pos + type_len - sizeof(int)) == 0 ||
-	    		*(int*)(inoutvec_pos + type_len - sizeof(int)) == 0)
-	    	{
-	    		*(int*)(inoutvec_pos + type_len - sizeof(int)) = 0;
-	    	}
-	    	else if(memcmp(invec_pos, inoutvec_pos, type_len - sizeof(int)))
-	    	{
-	    		*(int*)(inoutvec_pos + type_len - sizeof(int)) = 0;
-	    	}
-	    	else
-	    	{
-	    		*(int*)(inoutvec_pos + type_len - sizeof(int)) = 1;
-	    	}
+    	{/*compare the content of the struct*/
+    		is_equal = 1;
+    		for(j = 0; j < num_adds-1; ++j)
+    		{
+    			MPI_Type_size(types[j], &size); 
+    			data_len = ints[j + 1] * size;
+
+    			if(memcmp(invec_i_pos+adds[j], inoutvec_i_pos+adds[j], data_len))
+    				is_equal = 0;
+    		}
+
+    		*(int*)inoutvec_i_bool_pos  = is_equal;
     	}
     }
 }
