@@ -589,6 +589,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
             /* Force packing of GPU buffer in host memory */
             need_packing = true;
         }
+        offset = 0;
     } else {
         /* we are issuing deferred op. If the offset == 0, this is the first segment and we need to
          * send am_hdr */
@@ -618,7 +619,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
                 goto fn_exit;
             }
         }
-        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, (issue_deferred ? offset : 0), send_buf,
+        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, offset, send_buf,
                                       send_size, &packed_size);
         MPIR_ERR_CHECK(mpi_errno);
         send_size = packed_size;
@@ -629,7 +630,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
         send_req->pack_buffer = send_buf;
     } else {
         MPIDI_Datatype_check_lb(datatype, dt_true_lb);
-        send_buf = (char *) buf + dt_true_lb + (issue_deferred ? offset : 0);
+        send_buf = (char *) buf + dt_true_lb + offset;
         MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_hdr_buf_pool, (void **) &send_req);
         MPIR_Assert(send_req);
         send_req->sreq = sreq;
