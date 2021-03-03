@@ -264,7 +264,7 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
     localCountInfo.isEqual = 1;
 
     mpi_errno = MPIR_Allreduce_impl(&localCountInfo, &globalCountInfo, 1, MPI_2INT,
-                        MPI_EQUAL, comm_ptr, errflag);
+                        MPIX_EQUAL, comm_ptr, errflag);
 
 /*
     int min_count, max_count, test_count, comm_size;

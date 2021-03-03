@@ -41,13 +41,10 @@ typedef struct MPIR_longdoubleint_eqltype {
 
 #define MPIR_EQUAL_FLOAT_PRECISION 1e-6
 
-#define C_STRUCT_PADDING(_size, _pad) (_size = (_size%_pad) ? (_size - _size%_pad + _pad) : _size)
-
 #define MPIR_EQUAL_FLOAT_COMPARE(_aValue, _bValue)              \
     (((_aValue <= _bValue + MPIR_EQUAL_FLOAT_PRECISION)         \
     && (_aValue >= _bValue - MPIR_EQUAL_FLOAT_PRECISION))?      \
     1:0)
-
 
 /* If a child found unequal, its parent sticks to unequal. */
 /* Values of isEqual: 1 equal 0 not equal, init using any value other than 0.*/
@@ -108,65 +105,65 @@ void MPIR_EQUAL_user_defined_datatype_compare(void *invec, void *inoutvec, int *
 	MPI_Datatype *types;
 
 	 /* decode */
-    mpi_errno = MPI_Type_get_envelope(*type, &num_ints, &num_adds, &num_types, &combiner);
+	MPIR_Type_get_envelope(*type, &num_ints, &num_adds, &num_types, &combiner);
 
-    if(num_types < 3 || combiner != MPI_COMBINER_STRUCT) /*At least 2 elements is required, data, result*/
+	if(num_types < 3 || combiner != MPI_COMBINER_STRUCT) /*At least 2 elements is required, data, result*/
 	{
-		MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_EQUAL");
+		MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPIX_EQUAL");
 		return;
 	}
 
 	ints = (int *)malloc(num_ints * sizeof(*ints));
 
-    if (num_adds || (num_ints != num_adds+1))/*ints[0] is the length*/
-    {
-        adds = (MPI_Aint *)malloc(num_adds * sizeof(*adds));
-    }
-    else /*adds is required to avoid impacts of struct alignment*/
-    {
-    	MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_EQUAL");
-		return;
-    }
-
-    types = (MPI_Datatype *)malloc(num_types * sizeof(*types));
-
-    mpi_errno = MPI_Type_get_contents(*type, num_ints, num_adds, num_types, ints, adds, types);
-
-    if(types[num_types-1] != MPI_INT) /*The last element has to be int*/
+	if (num_adds || (num_ints != num_adds+1))/*ints[0] is the length*/
 	{
-		MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_EQUAL");
+	    adds = (MPI_Aint *)malloc(num_adds * sizeof(*adds));
+	}
+	else /*adds is required to avoid impacts of struct alignment*/
+	{
+		MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPIX_EQUAL");
 		return;
 	}
 
-    MPI_Type_get_extent(*type, &lb, &extent);
-    type_len = extent - lb;
+	types = (MPI_Datatype *)malloc(num_types * sizeof(*types));
 
-    for (i = 0; i < len; ++i)    	
-    {
-    	invec_i_pos = invec + i*type_len;
-    	invec_i_bool_pos = invec_i_pos + adds[num_adds-1];
-    	inoutvec_i_pos = inoutvec + i*type_len;
-    	inoutvec_i_bool_pos = inoutvec_i_pos + adds[num_adds-1];
-    	if((*(int*)invec_i_bool_pos == 0) ||
-    		(*(int*)inoutvec_i_bool_pos == 0))
-    	{
-    		*(int*)inoutvec_i_bool_pos  = 0;
-    	}
-    	else
-    	{/*compare the content of the struct*/
-    		is_equal = 1;
-    		for(j = 0; j < num_adds-1; ++j)
-    		{
-    			MPI_Type_size(types[j], &size); 
-    			data_len = ints[j + 1] * size;
+	mpi_errno = MPIR_Type_get_contents(*type, num_ints, num_adds, num_types, ints, adds, types);
 
-    			if(memcmp(invec_i_pos+adds[j], inoutvec_i_pos+adds[j], data_len))
-    				is_equal = 0;
-    		}
+	if(types[num_types-1] != MPI_INT) /*The last element has to be int*/
+	{
+		MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPIX_EQUAL");
+		return;
+	}
 
-    		*(int*)inoutvec_i_bool_pos  = is_equal;
-    	}
-    }
+	MPIR_Type_get_extent_impl(*type, &lb, &extent);
+	type_len = extent - lb;
+
+	for (i = 0; i < len; ++i)    	
+	{
+		invec_i_pos = invec + i*type_len;
+		invec_i_bool_pos = invec_i_pos + adds[num_adds-1];
+		inoutvec_i_pos = inoutvec + i*type_len;
+		inoutvec_i_bool_pos = inoutvec_i_pos + adds[num_adds-1];
+		if((*(int*)invec_i_bool_pos == 0) ||
+			(*(int*)inoutvec_i_bool_pos == 0))
+		{
+			*(int*)inoutvec_i_bool_pos  = 0;
+		}
+		else
+		{/*compare the content of the struct*/
+			is_equal = 1;
+			for(j = 0; j < num_adds-1; ++j)
+			{
+				MPI_Type_size(types[j], &size); 
+				data_len = ints[j + 1] * size;
+
+				if(memcmp(invec_i_pos+adds[j], inoutvec_i_pos+adds[j], data_len))
+					is_equal = 0;
+			}
+
+			*(int*)inoutvec_i_bool_pos  = is_equal;
+		}
+	}
 }
 
 void MPIR_EQUAL(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
@@ -201,10 +198,6 @@ void MPIR_EQUAL(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 #ifndef HAVE_NO_FORTRAN_MPI_TYPES_IN_C
         case MPI_2INTEGER:
             MPIR_EQUAL_F_CASE(MPI_Fint);
-        case MPI_2REAL:
-            MPIR_EQUAL_F_CASE(MPIR_FC_REAL_CTYPE);
-        case MPI_2DOUBLE_PRECISION:
-            MPIR_EQUAL_F_CASE(MPIR_FC_DOUBLE_CTYPE);
 #endif
 #endif
         default:
@@ -218,7 +211,7 @@ void MPIR_EQUAL(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 
 int MPIR_EQUAL_check_dtype(MPI_Datatype type)
 {
-	//To support user defined datatypes, no type check now.
+	//To support user defined datatypes, no actual type check now.
     int mpi_errno = MPI_SUCCESS;
 
     switch (type) {
@@ -235,8 +228,6 @@ int MPIR_EQUAL_check_dtype(MPI_Datatype type)
 #ifdef HAVE_FORTRAN_BINDING
 #ifndef HAVE_NO_FORTRAN_MPI_TYPES_IN_C
         case MPI_2INTEGER:
-        case MPI_2REAL:
-        case MPI_2DOUBLE_PRECISION:
 #endif
 #endif
             break;
