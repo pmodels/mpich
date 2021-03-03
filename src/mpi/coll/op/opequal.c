@@ -41,7 +41,7 @@ typedef struct MPIR_longdoubleint_eqltype {
 
 #define MPIR_EQUAL_FLOAT_PRECISION 1e-6
 
-#define C_STRUCT_PADDING(_size) (_size = (_size%8) ? (_size - _size%8 + 8) : _size)
+#define C_STRUCT_PADDING(_size, _pad) (_size = (_size%_pad) ? (_size - _size%_pad + _pad) : _size)
 
 #define MPIR_EQUAL_FLOAT_COMPARE(_aValue, _bValue)              \
     (((_aValue <= _bValue + MPIR_EQUAL_FLOAT_PRECISION)         \
@@ -100,9 +100,9 @@ void MPIR_EQUAL_user_defined_datatype_compare(void *invec, void *inoutvec, int *
 {
 	int mpi_errno = MPI_SUCCESS;
 	int i, j, size, len = *Len; 
-	int data_len = 0;
-	int type_len = 0, struct_len = 0;
+	int data_len = 0, type_len = 0, struct_len = 0, max_type_size = 0;
 	int num_ints, num_adds, num_types, combiner, *ints;
+	void *invec_pos, *inoutvec_pos;
     MPI_Aint *adds = NULL;
     MPI_Datatype *types;
 
@@ -132,29 +132,49 @@ void MPIR_EQUAL_user_defined_datatype_compare(void *invec, void *inoutvec, int *
     {
     	MPI_Type_size(types[i], &size); 
     	type_len += size;
+    	max_type_size = size > max_type_size ? size : max_type_size;
 
     }
 
     struct_len = type_len;
 
     if(combiner == MPI_COMBINER_STRUCT)
-    	C_STRUCT_PADDING(struct_len);
+    	C_STRUCT_PADDING(struct_len, max_type_size);
 
     for (i = 0; i < len; ++i)
     {
-    	if(*(int*)(invec + i*struct_len + type_len - sizeof(int)) == 0 ||
-    		*(int*)(inoutvec + i*struct_len + type_len - sizeof(int)) == 0)
-    	{
-    		*(int*)(inoutvec + i*struct_len + type_len - sizeof(int)) = 0;
-    	}
-    	else if(memcmp(invec + i*struct_len, 
-    			inoutvec + i*struct_len, type_len - sizeof(int)))
-    	{
-    		*(int*)(inoutvec + i*struct_len + type_len - sizeof(int)) = 0;
+    	invec_pos = invec + i*struct_len;
+    	inoutvec_pos = inoutvec + i*struct_len;
+    	if(max_type_size == sizeof(int)){
+    		if(*(int*)(invec_pos + struct_len - sizeof(int)) == 0 ||
+	    		*(int*)(inoutvec_pos + struct_len - sizeof(int)) == 0)
+	    	{
+	    		*(int*)(inoutvec_pos + struct_len - sizeof(int)) = 0;
+	    	}
+	    	else if(memcmp(invec_pos, inoutvec_pos, struct_len - sizeof(int)))
+	    	{
+	    		*(int*)(inoutvec_pos + struct_len - sizeof(int)) = 0;
+	    	}
+	    	else
+	    	{
+	    		*(int*)(inoutvec_pos + struct_len - sizeof(int)) = 1;
+	    	}
     	}
     	else
     	{
-    		*(int*)(inoutvec + i*struct_len + type_len - sizeof(int)) = 1;
+    		if(*(int*)(invec_pos + type_len - sizeof(int)) == 0 ||
+	    		*(int*)(inoutvec_pos + type_len - sizeof(int)) == 0)
+	    	{
+	    		*(int*)(inoutvec_pos + type_len - sizeof(int)) = 0;
+	    	}
+	    	else if(memcmp(invec_pos, inoutvec_pos, type_len - sizeof(int)))
+	    	{
+	    		*(int*)(inoutvec_pos + type_len - sizeof(int)) = 0;
+	    	}
+	    	else
+	    	{
+	    		*(int*)(inoutvec_pos + type_len - sizeof(int)) = 1;
+	    	}
     	}
     }
 }
