@@ -19,9 +19,17 @@ static int count_num_bind_entries(const char *str)
 {
     const char *s = str;
     int num_bind_entries = 0;
+    const char *s_x = NULL;
     while (true) {
         if (!*s || *s == ',') {
-            num_bind_entries++;
+            if (s_x) {
+                num_bind_entries += atoi(s_x + 1);
+                s_x = NULL;
+            } else {
+                num_bind_entries++;
+            }
+        } else if (*s == 'x') {
+            s_x = s;
         }
         /* next char */
         if (!*s) {
@@ -95,10 +103,22 @@ static HYD_status handle_user_binding(const char *binding)
     const char *s = binding;
     for (int i = 0; i < num_bind_entries; i++) {
         HYDT_topo_hwloc_info.bitmap[i] = parse_bindset_str(s);
-        while (*s && *s != ',') {
+        while (*s && *s != ',' && *s != 'x') {
             s++;
         }
-        /* skip ',' */
+        /* multiplier */
+        if (*s == 'x') {
+            int n = atoi(s + 1);
+            for (int j = 1; j < n; j++) {
+                HYDT_topo_hwloc_info.bitmap[i + j] =
+                    hwloc_bitmap_dup(HYDT_topo_hwloc_info.bitmap[i]);
+            }
+            i += n - 1;
+            while (*s && *s != ',') {
+                s++;
+            }
+        }
+        /* skip comma */
         s++;
     }
 
