@@ -48,11 +48,28 @@ static hwloc_bitmap_t parse_bindset_str(const char *str)
 
         /* number */
         int num = 0;
+        int num2 = 0;
         while (*s && isdigit(*s)) {
             num = num * 10 + (*s) - '0';
             s++;
         }
-        hwloc_bitmap_set(bindset, num);
+        /* potentially second number */
+        if (*s && *s == '-') {
+            s++;
+            while (*s && isdigit(*s)) {
+                num2 = num2 * 10 + (*s) - '0';
+                s++;
+            }
+            if (num > num2) {
+                num2 = num;
+            }
+        } else {
+            num2 = num;
+        }
+        /* set the bindset */
+        for (int j = num; j <= num2; j++) {
+            hwloc_bitmap_set(bindset, j);
+        }
 
         /* expect '+' or break */
         if (*s == '+') {
