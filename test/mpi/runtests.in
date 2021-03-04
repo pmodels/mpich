@@ -198,6 +198,9 @@ if (defined($ENV{'MPITEST_PPNMAX'})) {
 if (defined($ENV{'MPITEST_TIMELIMITARG'})) {
     $timelimitArg = $ENV{'MPITEST_TIMELIMITARG'};
 }
+if (defined($ENV{'MPITEST_MPIEXECARG'})) {
+    $g_opt->{mpiexecargs} = $ENV{'MPITEST_MPIEXECARG'};
+}
 
 #---------------------------------------------------------------------------
 # Process arguments and override any defaults
@@ -702,6 +705,9 @@ sub RunMPIProgram {
     my $progArgs = join(' ', @{$test_opt->{args}});
     my $progEnv = join(' ', @{$test_opt->{envs}});
     my $mpiexecArgs = join(' ', @{$test_opt->{mpiexecargs}});
+    if (!$mpiexecArgs and $g_opt->{mpiexecargs}) {
+        $mpiexecArgs = $g_opt->{mpiexecargs};
+    }
 
     my $found_error   = 0;
     my $found_noerror = 0;
