@@ -9,33 +9,33 @@
 /* For reusing code, using int type instead of bool*/
 typedef struct MPIR_2int_eqltype {
     int value;
-    int isEqual;
+    int is_equal;
 } MPIR_2int_eqltype;
 
 typedef struct MPIR_floatint_eqltype {
     float value;
-    int isEqual;
+    int is_equal;
 } MPIR_floatint_eqltype;
 
 typedef struct MPIR_longint_eqltype {
     long value;
-    int isEqual;
+    int is_equal;
 } MPIR_longint_eqltype;
 
 typedef struct MPIR_shortint_eqltype {
     short value;
-    int isEqual;
+    int is_equal;
 } MPIR_shortint_eqltype;
 
 typedef struct MPIR_doubleint_eqltype {
     double value;
-    int isEqual;
+    int is_equal;
 } MPIR_doubleint_eqltype;
 
 #if defined(HAVE_LONG_DOUBLE)
 typedef struct MPIR_longdoubleint_eqltype {
     long double value;
-    int isEqual;
+    int is_equal;
 } MPIR_longdoubleint_eqltype;
 #endif
 
@@ -47,17 +47,17 @@ typedef struct MPIR_longdoubleint_eqltype {
     1:0)
 
 /* If a child found unequal, its parent sticks to unequal. */
-/* Values of isEqual: 1 equal 0 not equal, init using any value other than 0.*/
+/* Values of is_equal: 1 equal 0 not equal, init using any value other than 0.*/
 #define MPIR_EQUAL_C_CASE_INT(c_type_) {                \
         c_type_ *a = (c_type_ *)inoutvec;               \
         c_type_ *b = (c_type_ *)invec;                  \
         for (i = 0; i < len; ++i) {                         \
-            if (0 == b[i].isEqual || 0 == a[i].isEqual){    \
-                a[i].isEqual = 0;            			\
+            if (0 == b[i].is_equal || 0 == a[i].is_equal){    \
+                a[i].is_equal = 0;            			\
             }else if (a[i].value != b[i].value){        \
-                a[i].isEqual = 0;                       \
+                a[i].is_equal = 0;                       \
             }else{                                      \
-                a[i].isEqual = 1;                       \
+                a[i].is_equal = 1;                       \
             }                                           \
         }                                               \
     }                                                   \
@@ -67,12 +67,12 @@ typedef struct MPIR_longdoubleint_eqltype {
         c_type_ *a = (c_type_ *)inoutvec;               \
         c_type_ *b = (c_type_ *)invec;                  \
         for (i = 0; i < len; ++i) {                         \
-            if (0 == b[i].isEqual || 0 == a[i].isEqual){    \
-                a[i].isEqual = 0;            			\
+            if (0 == b[i].is_equal || 0 == a[i].is_equal){    \
+                a[i].is_equal = 0;            			\
             }else if (!MPIR_EQUAL_FLOAT_COMPARE(a[i].value, b[i].value)){        \
-                a[i].isEqual = 0;                       \
+                a[i].is_equal = 0;                       \
             }else{                                      \
-                a[i].isEqual = 1;                       \
+                a[i].is_equal = 1;                       \
             }                                           \
         }                                               \
     }                                                   \
@@ -107,7 +107,7 @@ void MPIR_EQUAL_user_defined_datatype_compare(void *invec, void *inoutvec, int *
 	 /* decode */
 	MPIR_Type_get_envelope(*type, &num_ints, &num_adds, &num_types, &combiner);
 
-	if(num_types < 3 || combiner != MPI_COMBINER_STRUCT) /*At least 2 elements is required, data, result*/
+	if(num_types < 2 || combiner != MPI_COMBINER_STRUCT) /*At least 2 elements is required, data, result*/
 	{
 		MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPIX_EQUAL");
 		return;
