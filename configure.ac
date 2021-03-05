@@ -643,10 +643,6 @@ if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
 fi
 PAC_POP_FLAG([CFLAGS])
 
-# also needed by hwloc in embedded mode, must also come early for expansion
-# ordering reasons
-AC_USE_SYSTEM_EXTENSIONS
-
 dnl now that autoconf and core compilers are setup, init automake and libtool
 dnl
 dnl We would like to pass -Werror, but we are cheating in the "examples/"
