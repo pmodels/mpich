@@ -227,7 +227,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(int vni)
 {
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
     MPIDI_OFI_global.ctx[vni].rma_issued_cntr++;
+#else
+    /* NOTE: shared with ctx[0] */
+    MPIDI_OFI_global.ctx[0].rma_issued_cntr++;
+#endif
 }
 
 /* Externs:  see util.c for definition */
