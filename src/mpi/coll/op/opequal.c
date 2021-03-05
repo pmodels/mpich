@@ -95,41 +95,41 @@ typedef struct MPIR_longdoubleint_eqltype {
 
 void MPIR_EQUAL_user_defined_datatype_compare(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
-	int mpi_errno = MPI_SUCCESS;
-	int i, j, size, len = *Len, is_equal; 
-	int data_len = 0, type_len = 0;
-	int num_ints, num_adds, num_types, combiner, *ints;
+	int mpi_errno = MPI_SUCCESS, len = *Len, data_len = 0, type_len = 0;
+	int i, j, size, is_equal, combiner, *ints;
 	void *invec_i_pos, *invec_i_bool_pos, *inoutvec_i_pos, *inoutvec_i_bool_pos;
-	MPI_Aint *adds = NULL;
-	MPI_Aint lb, extent;
+	MPI_Aint *aints, *counts, lb, extent;
 	MPI_Datatype *types;
+	MPIR_Datatype *typeptr;
+	MPIR_Datatype_contents *cp;
 
-	 /* decode */
-	MPIR_Type_get_envelope(*type, &num_ints, &num_adds, &num_types, &combiner);
+	/* decode */
+	MPIR_Datatype_get_ptr(*type, typeptr);
 
-	if(num_types < 2 || combiner != MPI_COMBINER_STRUCT) /*At least 2 elements is required, data, result*/
+	cp = typeptr->contents;
+
+	combiner = MPIR_Type_get_combiner(*type);
+	if(combiner != MPI_COMBINER_STRUCT) /*Type checking: only accept derived struct type*/
 	{
 		MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPIX_EQUAL");
 		return;
 	}
 
-	ints = (int *)malloc(num_ints * sizeof(*ints));
+	MPIR_Datatype_access_contents(cp, &ints, &aints, &counts, &types);
 
-	if (num_adds || (num_ints != num_adds+1))/*ints[0] is the length*/
-	{
-	    adds = (MPI_Aint *)malloc(num_adds * sizeof(*adds));
-	}
-	else /*adds is required to avoid impacts of struct alignment*/
+	if(ints == NULL || ints[0] < 2) /*At least 2 elements is required, data, result*/
 	{
 		MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPIX_EQUAL");
 		return;
 	}
 
-	types = (MPI_Datatype *)malloc(num_types * sizeof(*types));
+	if(aints == NULL || cp->nr_aints < 2) /*addrs is required to avoid impacts of struct alignment*/
+	{
+		MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPIX_EQUAL");
+		return;
+	}
 
-	mpi_errno = MPIR_Type_get_contents(*type, num_ints, num_adds, num_types, ints, adds, types);
-
-	if(types[num_types-1] != MPI_INT) /*The last element has to be int*/
+	if(types[cp->nr_types-1] != MPI_INT) /*The last element has to be int*/
 	{
 		MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPIX_EQUAL");
 		return;
@@ -138,26 +138,29 @@ void MPIR_EQUAL_user_defined_datatype_compare(void *invec, void *inoutvec, int *
 	MPIR_Type_get_extent_impl(*type, &lb, &extent);
 	type_len = extent - lb;
 
+	/*Compare structs*/
 	for (i = 0; i < len; ++i)    	
 	{
 		invec_i_pos = invec + i*type_len;
-		invec_i_bool_pos = invec_i_pos + adds[num_adds-1];
+		invec_i_bool_pos = invec_i_pos + aints[cp->nr_aints-1];
 		inoutvec_i_pos = inoutvec + i*type_len;
-		inoutvec_i_bool_pos = inoutvec_i_pos + adds[num_adds-1];
+		inoutvec_i_bool_pos = inoutvec_i_pos + aints[cp->nr_aints-1];
+
 		if((*(int*)invec_i_bool_pos == 0) ||
 			(*(int*)inoutvec_i_bool_pos == 0))
-		{
+		{/*compare values of is_equal*/
 			*(int*)inoutvec_i_bool_pos  = 0;
 		}
 		else
 		{/*compare the content of the struct*/
 			is_equal = 1;
-			for(j = 0; j < num_adds-1; ++j)
+
+			for(j = 0; j < cp->nr_types-1; ++j)
 			{
 				MPI_Type_size(types[j], &size); 
 				data_len = ints[j + 1] * size;
 
-				if(memcmp(invec_i_pos+adds[j], inoutvec_i_pos+adds[j], data_len))
+				if(memcmp(invec_i_pos+aints[j], inoutvec_i_pos+aints[j], data_len))
 					is_equal = 0;
 			}
 
