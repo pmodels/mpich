@@ -86,7 +86,8 @@ MPI_User_function *MPIR_Op_table[] = {
     MPIR_BAND, MPIR_LOR, MPIR_BOR,
     MPIR_LXOR, MPIR_BXOR,
     MPIR_MINLOC, MPIR_MAXLOC,
-    MPIR_REPLACE, MPIR_NO_OP
+    MPIR_REPLACE, MPIR_NO_OP,
+    MPIR_EQUAL
 };
 
 MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
@@ -96,7 +97,8 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
     MPIR_BAND_check_dtype, MPIR_LOR_check_dtype, MPIR_BOR_check_dtype,
     MPIR_LXOR_check_dtype, MPIR_BXOR_check_dtype,
     MPIR_MINLOC_check_dtype, MPIR_MAXLOC_check_dtype,
-    MPIR_REPLACE_check_dtype, MPIR_NO_OP_check_dtype
+    MPIR_REPLACE_check_dtype, MPIR_NO_OP_check_dtype,
+    MPIR_EQUAL_check_dtype
 };
 
 

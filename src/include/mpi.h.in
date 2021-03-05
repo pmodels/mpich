@@ -312,6 +312,7 @@ typedef int MPI_Op;
 #define MPI_MAXLOC  (MPI_Op)(0x5800000c)
 #define MPI_REPLACE (MPI_Op)(0x5800000d)
 #define MPI_NO_OP   (MPI_Op)(0x5800000e)
+#define MPIX_EQUAL  (MPI_Op)(0x5800000f)
 
 /* Permanent key values */
 /* C Versions (return pointer to value),

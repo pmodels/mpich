@@ -19,4 +19,5 @@ mpi_core_sources += \
     src/mpi/coll/op/opminloc.c       \
     src/mpi/coll/op/opmaxloc.c       \
     src/mpi/coll/op/opno_op.c        \
-    src/mpi/coll/op/opreplace.c
+    src/mpi/coll/op/opreplace.c      \
+    src/mpi/coll/op/opequal.c
