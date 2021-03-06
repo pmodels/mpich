@@ -14,74 +14,116 @@ struct HYDT_topo_hwloc_info HYDT_topo_hwloc_info = { 0 };
 static hwloc_topology_t topology;
 static int hwloc_initialized = 0;
 
+/* ---- handle_user_binding routines ---- */
+static int count_num_bind_entries(const char *str)
+{
+    const char *s = str;
+    int num_bind_entries = 0;
+    const char *s_x = NULL;
+    while (true) {
+        if (!*s || *s == ',') {
+            if (s_x) {
+                num_bind_entries += atoi(s_x + 1);
+                s_x = NULL;
+            } else {
+                num_bind_entries++;
+            }
+        } else if (*s == 'x') {
+            s_x = s;
+        }
+        /* next char */
+        if (!*s) {
+            break;
+        } else {
+            s++;
+        }
+    }
+    return num_bind_entries;
+}
+
+static hwloc_bitmap_t parse_bindset_str(const char *str)
+{
+    hwloc_bitmap_t bindset;
+    bindset = hwloc_bitmap_alloc();
+    hwloc_bitmap_zero(bindset);
+
+    const char *s = str;
+    while (true) {
+        /* expect digit */
+        if (!isdigit(*s)) {
+            break;
+        }
+
+        /* number */
+        int num = 0;
+        int num2 = 0;
+        while (*s && isdigit(*s)) {
+            num = num * 10 + (*s) - '0';
+            s++;
+        }
+        /* potentially second number */
+        if (*s && *s == '-') {
+            s++;
+            while (*s && isdigit(*s)) {
+                num2 = num2 * 10 + (*s) - '0';
+                s++;
+            }
+            if (num > num2) {
+                num2 = num;
+            }
+        } else {
+            num2 = num;
+        }
+        /* set the bindset */
+        for (int j = num; j <= num2; j++) {
+            hwloc_bitmap_set(bindset, j);
+        }
+
+        /* expect '+' or break */
+        if (*s == '+') {
+            s++;
+        }
+    }
+    return bindset;
+}
+
 static HYD_status handle_user_binding(const char *binding)
 {
-    int i, j, k, num_bind_entries, *bind_entry_lengths;
-    char *bindstr, **bind_entries;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYDU_ASSERT(hwloc_initialized, status);
 
-    num_bind_entries = 1;
-    for (i = 0; binding[i]; i++)
-        if (binding[i] == ',')
-            num_bind_entries++;
-    HYDU_MALLOC_OR_JUMP(bind_entries, char **, num_bind_entries * sizeof(char *), status);
-    HYDU_MALLOC_OR_JUMP(bind_entry_lengths, int *, num_bind_entries * sizeof(int), status);
+    int num_bind_entries = count_num_bind_entries(binding);
 
-    for (i = 0; i < num_bind_entries; i++)
-        bind_entry_lengths[i] = 0;
-
-    j = 0;
-    for (i = 0; binding[i]; i++) {
-        if (binding[i] != ',')
-            bind_entry_lengths[j]++;
-        else
-            j++;
-    }
-
-    for (i = 0; i < num_bind_entries; i++) {
-        HYDU_MALLOC_OR_JUMP(bind_entries[i], char *, bind_entry_lengths[i] * sizeof(char), status);
-    }
-
-    j = 0;
-    k = 0;
-    for (i = 0; binding[i]; i++) {
-        if (binding[i] != ',')
-            bind_entries[j][k++] = binding[i];
-        else {
-            bind_entries[j][k] = 0;
-            j++;
-            k = 0;
-        }
-    }
-    bind_entries[j][k++] = 0;
-
-    /* initialize bitmaps */
     HYDU_MALLOC_OR_JUMP(HYDT_topo_hwloc_info.bitmap, hwloc_bitmap_t *,
                         num_bind_entries * sizeof(hwloc_bitmap_t), status);
 
-    for (i = 0; i < num_bind_entries; i++) {
-        HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_alloc();
-        hwloc_bitmap_zero(HYDT_topo_hwloc_info.bitmap[i]);
-        bindstr = strtok(bind_entries[i], "+");
-        while (bindstr) {
-            hwloc_bitmap_set(HYDT_topo_hwloc_info.bitmap[i], atoi(bindstr));
-            bindstr = strtok(NULL, "+");
+    const char *s = binding;
+    for (int i = 0; i < num_bind_entries; i++) {
+        HYDT_topo_hwloc_info.bitmap[i] = parse_bindset_str(s);
+        while (*s && *s != ',' && *s != 'x') {
+            s++;
         }
+        /* multiplier */
+        if (*s == 'x') {
+            int n = atoi(s + 1);
+            for (int j = 1; j < n; j++) {
+                HYDT_topo_hwloc_info.bitmap[i + j] =
+                    hwloc_bitmap_dup(HYDT_topo_hwloc_info.bitmap[i]);
+            }
+            i += n - 1;
+            while (*s && *s != ',') {
+                s++;
+            }
+        }
+        /* skip comma */
+        s++;
     }
 
     HYDT_topo_hwloc_info.num_bitmaps = num_bind_entries;
     HYDT_topo_hwloc_info.user_binding = 1;
-
-    /* free temporary memory */
-    for (i = 0; i < num_bind_entries; i++) {
-        MPL_free(bind_entries[i]);
-    }
-    MPL_free(bind_entries);
-    MPL_free(bind_entry_lengths);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -90,6 +132,8 @@ static HYD_status handle_user_binding(const char *binding)
   fn_fail:
     goto fn_exit;
 }
+
+/* ---- end handle_user_binding routines ---- */
 
 static HYD_status handle_rr_binding(void)
 {
