@@ -7,7 +7,11 @@ use strict;
 
 our $debug = 0;
 our $dir = "binding_reference";
+our $dummy = "./dummy";
 
+if (!-x $dummy) {
+    $dummy = "true";
+}
 
 my $test_list = load_tests("$dir/proc_binding.txt");
 
@@ -30,7 +34,7 @@ sub load_tests {
         if (/TOPO:\s*(\S+\.xml)/i) {
             $topo_file = $1;
         }
-        elsif (/^mpiexec\s+(.*) -n (\d+) \.\/dummy/) {
+        elsif (/^mpiexec\s+(.*) -n (\d+)/) {
             $test = {option=>$1, np=>$2, output=>[], topo=>$topo_file};
             push @tests, $test;
         }
@@ -45,7 +49,7 @@ sub load_tests {
 sub run_bind_test {
     my ($test) = @_;
     my $np = $test->{np};
-    my $cmd = "mpiexec $test->{option} -n $np ./dummy";
+    my $cmd = "mpiexec $test->{option} -n $np $dummy";
     $ENV{HYDRA_TOPO_DEBUG} = 1;
     $ENV{HWLOC_XMLFILE} = "$dir/$test->{topo}";
 
