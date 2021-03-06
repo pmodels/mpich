@@ -519,8 +519,14 @@ static int win_init_global(MPIR_Win * win)
 
     int vni = MPIDI_OFI_WIN(win).vni;
     MPIDI_OFI_WIN(win).ep = MPIDI_OFI_global.ctx[vni].tx;
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
     MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_OFI_global.ctx[vni].rma_cmpl_cntr;
     MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_global.ctx[vni].rma_issued_cntr;
+#else
+    /* NOTE: shared with ctx[0] */
+    MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_OFI_global.ctx[0].rma_cmpl_cntr;
+    MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_global.ctx[0].rma_issued_cntr;
+#endif
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_INIT_GLOBAL);
 
@@ -1023,6 +1029,7 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
         }
         if (MPIDI_OFI_WIN(win).ep != MPIDI_OFI_global.ctx[vni].tx)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
+        /* FIXME: comparing pointer is fragile, ctx[vni].rma_cmpl_cntr may be a dummy */
         if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_OFI_global.ctx[vni].rma_cmpl_cntr)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);
         if (MPIDI_OFI_WIN(win).mr)
