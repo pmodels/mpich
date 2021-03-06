@@ -166,6 +166,11 @@ int main(int argc, char **argv)
         }
     }
 
+    if (HYD_server_info.debug_nodelist) {
+        HYDU_debug_node_list(HYD_server_info.node_list);
+        HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "%s", "");
+    }
+
     if (HYD_server_info.user_global.skip_launch_node) {
         struct HYD_node *newlist = NULL, *tail = NULL;
         struct HYD_node *next;

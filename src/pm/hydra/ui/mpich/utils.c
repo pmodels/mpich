@@ -605,6 +605,25 @@ static HYD_status config_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void debug_nodelist_help_fn(void)
+{
+    printf("\n");
+    printf("-debug-nodelist: Print nodelist and exit\n");
+}
+
+static HYD_status debug_nodelist_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_server_info.debug_nodelist = 1;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static void env_help_fn(void)
 {
     printf("\n");
@@ -1788,6 +1807,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"errfile", errfile_pattern_fn, errfile_pattern_help_fn},
     {"wdir", wdir_fn, wdir_help_fn},
     {"configfile", config_fn, config_help_fn},
+    {"debug-nodelist", debug_nodelist_fn, debug_nodelist_help_fn},
 
     /* Local environment options */
     {"env", env_fn, env_help_fn},

@@ -30,6 +30,7 @@ void HYD_uiu_init_params(void)
     HYD_server_info.stderr_cb = NULL;
 
     HYD_server_info.node_list = NULL;
+    HYD_server_info.debug_nodelist = 0;
 
     HYDU_init_pg(&HYD_server_info.pg_list, 0);
 

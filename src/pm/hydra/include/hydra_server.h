@@ -32,6 +32,7 @@ struct HYD_server_info_s {
 
     /* All of the available nodes */
     struct HYD_node *node_list;
+    int debug_nodelist;
 
     /* Process groups */
     struct HYD_pg pg_list;

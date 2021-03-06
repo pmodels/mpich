@@ -56,6 +56,15 @@ HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD
     goto fn_exit;
 }
 
+void HYDU_debug_node_list(struct HYD_node *node_list)
+{
+    struct HYD_node *node = node_list;
+    while (node) {
+        printf("  %s:%d\n", node->hostname, node->core_count);
+        node = node->next;
+    }
+}
+
 void HYDU_delay(unsigned long delay)
 {
     struct timeval start, end;
