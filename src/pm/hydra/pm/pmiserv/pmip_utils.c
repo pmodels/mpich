@@ -562,8 +562,9 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
 
     for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
 
+    errno = 0;
     count = strtol(**argv, NULL, 10);
-    if (errno == ERANGE || errno == EINVAL)
+    if (errno != 0)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Exec arg not convertible to integer\n");
     for (i = 0; i < count; i++) {
         (*argv)++;
