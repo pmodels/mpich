@@ -1825,7 +1825,6 @@ AC_OUTPUT(maint/testmerge \
           f08/rma/testlist \
           impls/Makefile \
           impls/hydra/Makefile \
-          impls/hydra/proc_binding.sh \
           impls/mpich/Makefile \
           impls/mpich/testlist \
           impls/mpich/mpi_t/Makefile \
