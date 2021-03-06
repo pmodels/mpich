@@ -29,6 +29,7 @@ foreach my $a (@ARGV) {
 }
 
 push @test_configs, "$dir/proc_binding.txt";
+push @test_configs, "$dir/slurm_nodelist.txt";
 
 foreach my $config_txt (@test_configs) {
     my $tests = load_tests($config_txt);
@@ -93,6 +94,26 @@ sub run_binding_test {
     close In;
 
     return check_output($cmd, \@output, $test->{output});
+}
+
+sub run_slurm_test {
+    my ($test) = @_;
+    my $nnodes = $test->{nnodes};
+    $ENV{SLURM_NNODES} = $nnodes;
+    $ENV{SLURM_TASKS_PER_NODE} = "1(x$nnodes)";
+    $ENV{SLURM_NODELIST} = $test->{nodelist};
+    my $cmd = "mpiexec -rmk slurm -debug-nodelist true";
+    my @output;
+    open In, "$cmd |" or die "Can't open $cmd |: $!\n";
+    while(<In>){
+        if (/(\S.*)/) {
+            push @output, $1;
+        }
+    }
+    close In;
+
+    my $testname = "nodelist: $test->{nodelist}";
+    return check_output($testname, \@output, $test->{output});
 }
 
 sub check_output {

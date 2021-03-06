@@ -1,0 +1,43 @@
+slurm: 1 host
+    host:1
+
+slurm: 4 host-[00-03]
+    host-00:1
+    host-01:1
+    host-02:1
+    host-03:1
+
+slurm: 4 host-[8-11]
+    host-8:1
+    host-9:1
+    host-10:1
+    host-11:1
+
+slurm: 5 host[8-11,101]
+    host8:1
+    host9:1
+    host10:1
+    host11:1
+    host101:1
+
+slurm: 5 192.168.0.[100-104]
+    192.168.0.100:1
+    192.168.0.101:1
+    192.168.0.102:1
+    192.168.0.103:1
+    192.168.0.104:1
+
+slurm: 3 h0-h2
+    h0:1
+    h1:1
+    h2:1
+
+slurm: 3 [h0-h2]
+    h0:1
+    h1:1
+    h2:1
+
+slurm: 3 a1h[0-2]
+    a1h0:1
+    a1h1:1
+    a1h2:1
