@@ -238,6 +238,8 @@ typedef struct {
 
 #define MAX_CH4_MUTEXES 8
 
+extern MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[REQUEST_POOL_MAX];
+
 /* per-VCI structure -- using union to force minimum size */
 typedef union MPIDI_vci {
     struct {
