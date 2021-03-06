@@ -4,7 +4,7 @@
 ##
 
 testing: dummy
-	$(builddir)/proc_binding.sh
+	perl $(builddir)/proc_binding.pl
 
 noinst_PROGRAMS = dummy
 
