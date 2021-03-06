@@ -1,5 +1,5 @@
 TOPO: topo1.xml
-mpiexec -bind-to rr -n 8
+binding: -bind-to rr -n 8
     10000000
     01000000
     00100000
@@ -9,19 +9,19 @@ mpiexec -bind-to rr -n 8
     00000010
     00000001
 
-mpiexec -bind-to user:1,0,4,7 -n 4
+binding: -bind-to user:1,0,4,7 -n 4
     01000000
     10000000
     00001000
     00000001
 
-mpiexec -bind-to user:1,0+2,4,5+6+7 -n 4
+binding: -bind-to user:1,0+2,4,5+6+7 -n 4
     01000000
     10100000
     00001000
     00000111
 
-mpiexec -bind-to user:1x1,0+2,4+5x3,7x3 -n 8
+binding: -bind-to user:1x1,0+2,4+5x3,7x3 -n 8
     01000000
     10100000
     00001100
@@ -31,7 +31,7 @@ mpiexec -bind-to user:1x1,0+2,4+5x3,7x3 -n 8
     00000001
     00000001
 
-mpiexec -bind-to user:0,1-7x7 -n 8
+binding: -bind-to user:0,1-7x7 -n 8
     10000000
     01111111
     01111111
@@ -42,7 +42,7 @@ mpiexec -bind-to user:0,1-7x7 -n 8
     01111111
 
 TOPO: topo1.xml
-mpiexec -bind-to hwthread -map-by hwthread -n 16
+binding: -bind-to hwthread -map-by hwthread -n 16
     10000000
     01000000
     00100000
@@ -60,7 +60,7 @@ mpiexec -bind-to hwthread -map-by hwthread -n 16
     00000010
     00000001
 TOPO: topo1.xml
-mpiexec -bind-to hwthread -map-by hwthread:2 -n 16
+binding: -bind-to hwthread -map-by hwthread:2 -n 16
     10000000
     00100000
     00001000
@@ -78,7 +78,7 @@ mpiexec -bind-to hwthread -map-by hwthread:2 -n 16
     00000100
     00000001
 TOPO: topo1.xml
-mpiexec -bind-to hwthread -map-by hwthread:4 -n 16
+binding: -bind-to hwthread -map-by hwthread:4 -n 16
     10000000
     00001000
     01000000
@@ -96,7 +96,7 @@ mpiexec -bind-to hwthread -map-by hwthread:4 -n 16
     00010000
     00000001
 TOPO: topo1.xml
-mpiexec -bind-to hwthread -map-by hwthread:8 -n 16
+binding: -bind-to hwthread -map-by hwthread:8 -n 16
     10000000
     01000000
     00100000
@@ -114,7 +114,7 @@ mpiexec -bind-to hwthread -map-by hwthread:8 -n 16
     00000010
     00000001
 TOPO: topo1.xml
-mpiexec -bind-to hwthread -map-by core -n 16
+binding: -bind-to hwthread -map-by core -n 16
     10000000
     00100000
     00001000
@@ -132,7 +132,7 @@ mpiexec -bind-to hwthread -map-by core -n 16
     00000100
     00000001
 TOPO: topo1.xml
-mpiexec -bind-to hwthread -map-by core:2 -n 16
+binding: -bind-to hwthread -map-by core:2 -n 16
     10000000
     00001000
     01000000
@@ -150,7 +150,7 @@ mpiexec -bind-to hwthread -map-by core:2 -n 16
     00010000
     00000001
 TOPO: topo1.xml
-mpiexec -bind-to hwthread -map-by core:4 -n 16
+binding: -bind-to hwthread -map-by core:4 -n 16
     10000000
     01000000
     00100000
@@ -168,7 +168,7 @@ mpiexec -bind-to hwthread -map-by core:4 -n 16
     00000010
     00000001
 TOPO: topo1.xml
-mpiexec -bind-to hwthread -map-by numa -n 16
+binding: -bind-to hwthread -map-by numa -n 16
     10000000
     01000000
     00100000
@@ -186,7 +186,7 @@ mpiexec -bind-to hwthread -map-by numa -n 16
     00000010
     00000001
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread -n 16
+binding: -bind-to hwthread:2 -map-by hwthread -n 16
     11000000
     01100000
     00110000
@@ -204,7 +204,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread -n 16
     00000011
     10000001
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:2 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:2 -n 16
     11000000
     00110000
     00001100
@@ -222,7 +222,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:2 -n 16
     00001100
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:4 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:4 -n 16
     11000000
     00001100
     00110000
@@ -240,7 +240,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:4 -n 16
     00110000
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:8 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:8 -n 16
     11000000
     00110000
     00001100
@@ -258,7 +258,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:8 -n 16
     00001100
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:2 -map-by core -n 16
+binding: -bind-to hwthread:2 -map-by core -n 16
     11000000
     00110000
     00001100
@@ -276,7 +276,7 @@ mpiexec -bind-to hwthread:2 -map-by core -n 16
     00001100
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:2 -map-by core:2 -n 16
+binding: -bind-to hwthread:2 -map-by core:2 -n 16
     11000000
     00001100
     00110000
@@ -294,7 +294,7 @@ mpiexec -bind-to hwthread:2 -map-by core:2 -n 16
     00110000
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:2 -map-by core:4 -n 16
+binding: -bind-to hwthread:2 -map-by core:4 -n 16
     11000000
     00110000
     00001100
@@ -312,7 +312,7 @@ mpiexec -bind-to hwthread:2 -map-by core:4 -n 16
     00001100
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:2 -map-by numa -n 16
+binding: -bind-to hwthread:2 -map-by numa -n 16
     11000000
     00110000
     00001100
@@ -330,7 +330,7 @@ mpiexec -bind-to hwthread:2 -map-by numa -n 16
     00001100
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread -n 16
+binding: -bind-to hwthread:4 -map-by hwthread -n 16
     11110000
     01111000
     00111100
@@ -348,7 +348,7 @@ mpiexec -bind-to hwthread:4 -map-by hwthread -n 16
     11000011
     11100001
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:2 -n 16
+binding: -bind-to hwthread:4 -map-by hwthread:2 -n 16
     11110000
     00111100
     00001111
@@ -366,7 +366,7 @@ mpiexec -bind-to hwthread:4 -map-by hwthread:2 -n 16
     00001111
     11000011
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:4 -n 16
+binding: -bind-to hwthread:4 -map-by hwthread:4 -n 16
     11110000
     00001111
     11110000
@@ -384,7 +384,7 @@ mpiexec -bind-to hwthread:4 -map-by hwthread:4 -n 16
     11110000
     00001111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:8 -n 16
+binding: -bind-to hwthread:4 -map-by hwthread:8 -n 16
     11110000
     00001111
     11110000
@@ -402,7 +402,7 @@ mpiexec -bind-to hwthread:4 -map-by hwthread:8 -n 16
     11110000
     00001111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:4 -map-by core -n 16
+binding: -bind-to hwthread:4 -map-by core -n 16
     11110000
     00111100
     00001111
@@ -420,7 +420,7 @@ mpiexec -bind-to hwthread:4 -map-by core -n 16
     00001111
     11000011
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:4 -map-by core:2 -n 16
+binding: -bind-to hwthread:4 -map-by core:2 -n 16
     11110000
     00001111
     11110000
@@ -438,7 +438,7 @@ mpiexec -bind-to hwthread:4 -map-by core:2 -n 16
     11110000
     00001111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:4 -map-by core:4 -n 16
+binding: -bind-to hwthread:4 -map-by core:4 -n 16
     11110000
     00001111
     11110000
@@ -456,7 +456,7 @@ mpiexec -bind-to hwthread:4 -map-by core:4 -n 16
     11110000
     00001111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:4 -map-by numa -n 16
+binding: -bind-to hwthread:4 -map-by numa -n 16
     11110000
     00001111
     11110000
@@ -474,7 +474,7 @@ mpiexec -bind-to hwthread:4 -map-by numa -n 16
     11110000
     00001111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread -n 16
+binding: -bind-to hwthread:8 -map-by hwthread -n 16
     11111111
     11111111
     11111111
@@ -492,7 +492,7 @@ mpiexec -bind-to hwthread:8 -map-by hwthread -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:2 -n 16
+binding: -bind-to hwthread:8 -map-by hwthread:2 -n 16
     11111111
     11111111
     11111111
@@ -510,7 +510,7 @@ mpiexec -bind-to hwthread:8 -map-by hwthread:2 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:4 -n 16
+binding: -bind-to hwthread:8 -map-by hwthread:4 -n 16
     11111111
     11111111
     11111111
@@ -528,7 +528,7 @@ mpiexec -bind-to hwthread:8 -map-by hwthread:4 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:8 -n 16
+binding: -bind-to hwthread:8 -map-by hwthread:8 -n 16
     11111111
     11111111
     11111111
@@ -546,7 +546,7 @@ mpiexec -bind-to hwthread:8 -map-by hwthread:8 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:8 -map-by core -n 16
+binding: -bind-to hwthread:8 -map-by core -n 16
     11111111
     11111111
     11111111
@@ -564,7 +564,7 @@ mpiexec -bind-to hwthread:8 -map-by core -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:8 -map-by core:2 -n 16
+binding: -bind-to hwthread:8 -map-by core:2 -n 16
     11111111
     11111111
     11111111
@@ -582,7 +582,7 @@ mpiexec -bind-to hwthread:8 -map-by core:2 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:8 -map-by core:4 -n 16
+binding: -bind-to hwthread:8 -map-by core:4 -n 16
     11111111
     11111111
     11111111
@@ -600,7 +600,7 @@ mpiexec -bind-to hwthread:8 -map-by core:4 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to hwthread:8 -map-by numa -n 16
+binding: -bind-to hwthread:8 -map-by numa -n 16
     11111111
     11111111
     11111111
@@ -618,7 +618,7 @@ mpiexec -bind-to hwthread:8 -map-by numa -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to core -map-by hwthread -n 16
+binding: -bind-to core -map-by hwthread -n 16
     11000000
     11000000
     00110000
@@ -636,7 +636,7 @@ mpiexec -bind-to core -map-by hwthread -n 16
     00000011
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to core -map-by hwthread:2 -n 16
+binding: -bind-to core -map-by hwthread:2 -n 16
     11000000
     00110000
     00001100
@@ -654,7 +654,7 @@ mpiexec -bind-to core -map-by hwthread:2 -n 16
     00001100
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to core -map-by hwthread:4 -n 16
+binding: -bind-to core -map-by hwthread:4 -n 16
     11000000
     00001100
     00110000
@@ -672,7 +672,7 @@ mpiexec -bind-to core -map-by hwthread:4 -n 16
     00110000
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to core -map-by hwthread:8 -n 16
+binding: -bind-to core -map-by hwthread:8 -n 16
     11000000
     00110000
     00001100
@@ -690,7 +690,7 @@ mpiexec -bind-to core -map-by hwthread:8 -n 16
     00001100
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to core -map-by core -n 16
+binding: -bind-to core -map-by core -n 16
     11000000
     00110000
     00001100
@@ -708,7 +708,7 @@ mpiexec -bind-to core -map-by core -n 16
     00001100
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to core -map-by core:2 -n 16
+binding: -bind-to core -map-by core:2 -n 16
     11000000
     00001100
     00110000
@@ -726,7 +726,7 @@ mpiexec -bind-to core -map-by core:2 -n 16
     00110000
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to core -map-by core:4 -n 16
+binding: -bind-to core -map-by core:4 -n 16
     11000000
     00110000
     00001100
@@ -744,7 +744,7 @@ mpiexec -bind-to core -map-by core:4 -n 16
     00001100
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to core -map-by numa -n 16
+binding: -bind-to core -map-by numa -n 16
     11000000
     00110000
     00001100
@@ -762,7 +762,7 @@ mpiexec -bind-to core -map-by numa -n 16
     00001100
     00000011
 TOPO: topo1.xml
-mpiexec -bind-to core:2 -map-by hwthread -n 16
+binding: -bind-to core:2 -map-by hwthread -n 16
     11110000
     11110000
     00111100
@@ -780,7 +780,7 @@ mpiexec -bind-to core:2 -map-by hwthread -n 16
     11000011
     11000011
 TOPO: topo1.xml
-mpiexec -bind-to core:2 -map-by hwthread:2 -n 16
+binding: -bind-to core:2 -map-by hwthread:2 -n 16
     11110000
     00111100
     00001111
@@ -798,7 +798,7 @@ mpiexec -bind-to core:2 -map-by hwthread:2 -n 16
     00001111
     11000011
 TOPO: topo1.xml
-mpiexec -bind-to core:2 -map-by hwthread:4 -n 16
+binding: -bind-to core:2 -map-by hwthread:4 -n 16
     11110000
     00001111
     11110000
@@ -816,7 +816,7 @@ mpiexec -bind-to core:2 -map-by hwthread:4 -n 16
     11110000
     00001111
 TOPO: topo1.xml
-mpiexec -bind-to core:2 -map-by hwthread:8 -n 16
+binding: -bind-to core:2 -map-by hwthread:8 -n 16
     11110000
     00001111
     11110000
@@ -834,7 +834,7 @@ mpiexec -bind-to core:2 -map-by hwthread:8 -n 16
     11110000
     00001111
 TOPO: topo1.xml
-mpiexec -bind-to core:2 -map-by core -n 16
+binding: -bind-to core:2 -map-by core -n 16
     11110000
     00111100
     00001111
@@ -852,7 +852,7 @@ mpiexec -bind-to core:2 -map-by core -n 16
     00001111
     11000011
 TOPO: topo1.xml
-mpiexec -bind-to core:2 -map-by core:2 -n 16
+binding: -bind-to core:2 -map-by core:2 -n 16
     11110000
     00001111
     11110000
@@ -870,7 +870,7 @@ mpiexec -bind-to core:2 -map-by core:2 -n 16
     11110000
     00001111
 TOPO: topo1.xml
-mpiexec -bind-to core:2 -map-by core:4 -n 16
+binding: -bind-to core:2 -map-by core:4 -n 16
     11110000
     00001111
     11110000
@@ -888,7 +888,7 @@ mpiexec -bind-to core:2 -map-by core:4 -n 16
     11110000
     00001111
 TOPO: topo1.xml
-mpiexec -bind-to core:2 -map-by numa -n 16
+binding: -bind-to core:2 -map-by numa -n 16
     11110000
     00001111
     11110000
@@ -906,7 +906,7 @@ mpiexec -bind-to core:2 -map-by numa -n 16
     11110000
     00001111
 TOPO: topo1.xml
-mpiexec -bind-to core:4 -map-by hwthread -n 16
+binding: -bind-to core:4 -map-by hwthread -n 16
     11111111
     11111111
     11111111
@@ -924,7 +924,7 @@ mpiexec -bind-to core:4 -map-by hwthread -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to core:4 -map-by hwthread:2 -n 16
+binding: -bind-to core:4 -map-by hwthread:2 -n 16
     11111111
     11111111
     11111111
@@ -942,7 +942,7 @@ mpiexec -bind-to core:4 -map-by hwthread:2 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to core:4 -map-by hwthread:4 -n 16
+binding: -bind-to core:4 -map-by hwthread:4 -n 16
     11111111
     11111111
     11111111
@@ -960,7 +960,7 @@ mpiexec -bind-to core:4 -map-by hwthread:4 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to core:4 -map-by hwthread:8 -n 16
+binding: -bind-to core:4 -map-by hwthread:8 -n 16
     11111111
     11111111
     11111111
@@ -978,7 +978,7 @@ mpiexec -bind-to core:4 -map-by hwthread:8 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to core:4 -map-by core -n 16
+binding: -bind-to core:4 -map-by core -n 16
     11111111
     11111111
     11111111
@@ -996,7 +996,7 @@ mpiexec -bind-to core:4 -map-by core -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to core:4 -map-by core:2 -n 16
+binding: -bind-to core:4 -map-by core:2 -n 16
     11111111
     11111111
     11111111
@@ -1014,7 +1014,7 @@ mpiexec -bind-to core:4 -map-by core:2 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to core:4 -map-by core:4 -n 16
+binding: -bind-to core:4 -map-by core:4 -n 16
     11111111
     11111111
     11111111
@@ -1032,7 +1032,7 @@ mpiexec -bind-to core:4 -map-by core:4 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to core:4 -map-by numa -n 16
+binding: -bind-to core:4 -map-by numa -n 16
     11111111
     11111111
     11111111
@@ -1050,7 +1050,7 @@ mpiexec -bind-to core:4 -map-by numa -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to numa -map-by hwthread -n 16
+binding: -bind-to numa -map-by hwthread -n 16
     11111111
     11111111
     11111111
@@ -1068,7 +1068,7 @@ mpiexec -bind-to numa -map-by hwthread -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to numa -map-by hwthread:2 -n 16
+binding: -bind-to numa -map-by hwthread:2 -n 16
     11111111
     11111111
     11111111
@@ -1086,7 +1086,7 @@ mpiexec -bind-to numa -map-by hwthread:2 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to numa -map-by hwthread:4 -n 16
+binding: -bind-to numa -map-by hwthread:4 -n 16
     11111111
     11111111
     11111111
@@ -1104,7 +1104,7 @@ mpiexec -bind-to numa -map-by hwthread:4 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to numa -map-by hwthread:8 -n 16
+binding: -bind-to numa -map-by hwthread:8 -n 16
     11111111
     11111111
     11111111
@@ -1122,7 +1122,7 @@ mpiexec -bind-to numa -map-by hwthread:8 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to numa -map-by core -n 16
+binding: -bind-to numa -map-by core -n 16
     11111111
     11111111
     11111111
@@ -1140,7 +1140,7 @@ mpiexec -bind-to numa -map-by core -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to numa -map-by core:2 -n 16
+binding: -bind-to numa -map-by core:2 -n 16
     11111111
     11111111
     11111111
@@ -1158,7 +1158,7 @@ mpiexec -bind-to numa -map-by core:2 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to numa -map-by core:4 -n 16
+binding: -bind-to numa -map-by core:4 -n 16
     11111111
     11111111
     11111111
@@ -1176,7 +1176,7 @@ mpiexec -bind-to numa -map-by core:4 -n 16
     11111111
     11111111
 TOPO: topo1.xml
-mpiexec -bind-to numa -map-by numa -n 16
+binding: -bind-to numa -map-by numa -n 16
     11111111
     11111111
     11111111
@@ -1195,7 +1195,7 @@ mpiexec -bind-to numa -map-by numa -n 16
     11111111
 TOPO: topo2.xml
 TOPO: topo2.xml
-mpiexec -bind-to hwthread -map-by hwthread -n 16
+binding: -bind-to hwthread -map-by hwthread -n 16
     1000000000000000
     0000000010000000
     0100000000000000
@@ -1213,7 +1213,7 @@ mpiexec -bind-to hwthread -map-by hwthread -n 16
     0000000100000000
     0000000000000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread -map-by hwthread:2 -n 16
+binding: -bind-to hwthread -map-by hwthread:2 -n 16
     1000000000000000
     0100000000000000
     0010000000000000
@@ -1231,7 +1231,7 @@ mpiexec -bind-to hwthread -map-by hwthread:2 -n 16
     0000000000000010
     0000000000000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread -map-by hwthread:4 -n 16
+binding: -bind-to hwthread -map-by hwthread:4 -n 16
     1000000000000000
     0010000000000000
     0000100000000000
@@ -1249,7 +1249,7 @@ mpiexec -bind-to hwthread -map-by hwthread:4 -n 16
     0000000000000100
     0000000000000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread -map-by hwthread:8 -n 16
+binding: -bind-to hwthread -map-by hwthread:8 -n 16
     1000000000000000
     0000100000000000
     0000000010000000
@@ -1267,7 +1267,7 @@ mpiexec -bind-to hwthread -map-by hwthread:8 -n 16
     0000000000010000
     0000000000000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread -map-by core -n 16
+binding: -bind-to hwthread -map-by core -n 16
     1000000000000000
     0100000000000000
     0010000000000000
@@ -1285,7 +1285,7 @@ mpiexec -bind-to hwthread -map-by core -n 16
     0000000000000010
     0000000000000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread -map-by core:2 -n 16
+binding: -bind-to hwthread -map-by core:2 -n 16
     1000000000000000
     0010000000000000
     0000100000000000
@@ -1303,7 +1303,7 @@ mpiexec -bind-to hwthread -map-by core:2 -n 16
     0000000000000100
     0000000000000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread -map-by core:4 -n 16
+binding: -bind-to hwthread -map-by core:4 -n 16
     1000000000000000
     0000100000000000
     0000000010000000
@@ -1321,7 +1321,7 @@ mpiexec -bind-to hwthread -map-by core:4 -n 16
     0000000000010000
     0000000000000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread -map-by socket -n 16
+binding: -bind-to hwthread -map-by socket -n 16
     1000000000000000
     0000100000000000
     0000000010000000
@@ -1339,7 +1339,7 @@ mpiexec -bind-to hwthread -map-by socket -n 16
     0000000000010000
     0000000000000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread -map-by numa -n 16
+binding: -bind-to hwthread -map-by numa -n 16
     1000000000000000
     0000100000000000
     0000000010000000
@@ -1357,7 +1357,7 @@ mpiexec -bind-to hwthread -map-by numa -n 16
     0000000000010000
     0000000000000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread -n 16
+binding: -bind-to hwthread:2 -map-by hwthread -n 16
     1000000010000000
     0100000010000000
     0100000001000000
@@ -1375,7 +1375,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread -n 16
     0000000100000001
     1000000000000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:2 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:2 -n 16
     1000000010000000
     0100000001000000
     0010000000100000
@@ -1393,7 +1393,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:2 -n 16
     0000001000000010
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:4 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:4 -n 16
     1000000010000000
     0010000000100000
     0000100000001000
@@ -1411,7 +1411,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:4 -n 16
     0000010000000100
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:8 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:8 -n 16
     1000000010000000
     0000100000001000
     0100000001000000
@@ -1429,7 +1429,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:8 -n 16
     0001000000010000
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:2 -map-by core -n 16
+binding: -bind-to hwthread:2 -map-by core -n 16
     1000000010000000
     0100000001000000
     0010000000100000
@@ -1447,7 +1447,7 @@ mpiexec -bind-to hwthread:2 -map-by core -n 16
     0000001000000010
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:2 -map-by core:2 -n 16
+binding: -bind-to hwthread:2 -map-by core:2 -n 16
     1000000010000000
     0010000000100000
     0000100000001000
@@ -1465,7 +1465,7 @@ mpiexec -bind-to hwthread:2 -map-by core:2 -n 16
     0000010000000100
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:2 -map-by core:4 -n 16
+binding: -bind-to hwthread:2 -map-by core:4 -n 16
     1000000010000000
     0000100000001000
     0100000001000000
@@ -1483,7 +1483,7 @@ mpiexec -bind-to hwthread:2 -map-by core:4 -n 16
     0001000000010000
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:2 -map-by socket -n 16
+binding: -bind-to hwthread:2 -map-by socket -n 16
     1000000010000000
     0000100000001000
     0100000001000000
@@ -1501,7 +1501,7 @@ mpiexec -bind-to hwthread:2 -map-by socket -n 16
     0001000000010000
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:2 -map-by numa -n 16
+binding: -bind-to hwthread:2 -map-by numa -n 16
     1000000010000000
     0000100000001000
     0100000001000000
@@ -1519,7 +1519,7 @@ mpiexec -bind-to hwthread:2 -map-by numa -n 16
     0001000000010000
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread -n 16
+binding: -bind-to hwthread:4 -map-by hwthread -n 16
     1100000011000000
     0110000011000000
     0110000001100000
@@ -1537,7 +1537,7 @@ mpiexec -bind-to hwthread:4 -map-by hwthread -n 16
     1000000110000001
     1100000010000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:2 -n 16
+binding: -bind-to hwthread:4 -map-by hwthread:2 -n 16
     1100000011000000
     0110000001100000
     0011000000110000
@@ -1555,7 +1555,7 @@ mpiexec -bind-to hwthread:4 -map-by hwthread:2 -n 16
     0000001100000011
     1000000110000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:4 -n 16
+binding: -bind-to hwthread:4 -map-by hwthread:4 -n 16
     1100000011000000
     0011000000110000
     0000110000001100
@@ -1573,7 +1573,7 @@ mpiexec -bind-to hwthread:4 -map-by hwthread:4 -n 16
     0000110000001100
     0000001100000011
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:8 -n 16
+binding: -bind-to hwthread:4 -map-by hwthread:8 -n 16
     1100000011000000
     0000110000001100
     0011000000110000
@@ -1591,7 +1591,7 @@ mpiexec -bind-to hwthread:4 -map-by hwthread:8 -n 16
     0011000000110000
     0000001100000011
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:4 -map-by core -n 16
+binding: -bind-to hwthread:4 -map-by core -n 16
     1100000011000000
     0110000001100000
     0011000000110000
@@ -1609,7 +1609,7 @@ mpiexec -bind-to hwthread:4 -map-by core -n 16
     0000001100000011
     1000000110000001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:4 -map-by core:2 -n 16
+binding: -bind-to hwthread:4 -map-by core:2 -n 16
     1100000011000000
     0011000000110000
     0000110000001100
@@ -1627,7 +1627,7 @@ mpiexec -bind-to hwthread:4 -map-by core:2 -n 16
     0000110000001100
     0000001100000011
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:4 -map-by core:4 -n 16
+binding: -bind-to hwthread:4 -map-by core:4 -n 16
     1100000011000000
     0000110000001100
     0011000000110000
@@ -1645,7 +1645,7 @@ mpiexec -bind-to hwthread:4 -map-by core:4 -n 16
     0011000000110000
     0000001100000011
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:4 -map-by socket -n 16
+binding: -bind-to hwthread:4 -map-by socket -n 16
     1100000011000000
     0000110000001100
     0011000000110000
@@ -1663,7 +1663,7 @@ mpiexec -bind-to hwthread:4 -map-by socket -n 16
     0011000000110000
     0000001100000011
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:4 -map-by numa -n 16
+binding: -bind-to hwthread:4 -map-by numa -n 16
     1100000011000000
     0000110000001100
     0011000000110000
@@ -1681,7 +1681,7 @@ mpiexec -bind-to hwthread:4 -map-by numa -n 16
     0011000000110000
     0000001100000011
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread -n 16
+binding: -bind-to hwthread:8 -map-by hwthread -n 16
     1111000011110000
     0111100011110000
     0111100001111000
@@ -1699,7 +1699,7 @@ mpiexec -bind-to hwthread:8 -map-by hwthread -n 16
     1110000111100001
     1111000011100001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:2 -n 16
+binding: -bind-to hwthread:8 -map-by hwthread:2 -n 16
     1111000011110000
     0111100001111000
     0011110000111100
@@ -1717,7 +1717,7 @@ mpiexec -bind-to hwthread:8 -map-by hwthread:2 -n 16
     1100001111000011
     1110000111100001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:4 -n 16
+binding: -bind-to hwthread:8 -map-by hwthread:4 -n 16
     1111000011110000
     0011110000111100
     0000111100001111
@@ -1735,7 +1735,7 @@ mpiexec -bind-to hwthread:8 -map-by hwthread:4 -n 16
     0000111100001111
     1100001111000011
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:8 -n 16
+binding: -bind-to hwthread:8 -map-by hwthread:8 -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -1753,7 +1753,7 @@ mpiexec -bind-to hwthread:8 -map-by hwthread:8 -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:8 -map-by core -n 16
+binding: -bind-to hwthread:8 -map-by core -n 16
     1111000011110000
     0111100001111000
     0011110000111100
@@ -1771,7 +1771,7 @@ mpiexec -bind-to hwthread:8 -map-by core -n 16
     1100001111000011
     1110000111100001
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:8 -map-by core:2 -n 16
+binding: -bind-to hwthread:8 -map-by core:2 -n 16
     1111000011110000
     0011110000111100
     0000111100001111
@@ -1789,7 +1789,7 @@ mpiexec -bind-to hwthread:8 -map-by core:2 -n 16
     0000111100001111
     1100001111000011
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:8 -map-by core:4 -n 16
+binding: -bind-to hwthread:8 -map-by core:4 -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -1807,7 +1807,7 @@ mpiexec -bind-to hwthread:8 -map-by core:4 -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:8 -map-by socket -n 16
+binding: -bind-to hwthread:8 -map-by socket -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -1825,7 +1825,7 @@ mpiexec -bind-to hwthread:8 -map-by socket -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to hwthread:8 -map-by numa -n 16
+binding: -bind-to hwthread:8 -map-by numa -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -1843,7 +1843,7 @@ mpiexec -bind-to hwthread:8 -map-by numa -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to core -map-by hwthread -n 16
+binding: -bind-to core -map-by hwthread -n 16
     1000000010000000
     1000000010000000
     0100000001000000
@@ -1861,7 +1861,7 @@ mpiexec -bind-to core -map-by hwthread -n 16
     0000000100000001
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to core -map-by hwthread:2 -n 16
+binding: -bind-to core -map-by hwthread:2 -n 16
     1000000010000000
     0100000001000000
     0010000000100000
@@ -1879,7 +1879,7 @@ mpiexec -bind-to core -map-by hwthread:2 -n 16
     0000001000000010
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to core -map-by hwthread:4 -n 16
+binding: -bind-to core -map-by hwthread:4 -n 16
     1000000010000000
     0010000000100000
     0000100000001000
@@ -1897,7 +1897,7 @@ mpiexec -bind-to core -map-by hwthread:4 -n 16
     0000010000000100
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to core -map-by hwthread:8 -n 16
+binding: -bind-to core -map-by hwthread:8 -n 16
     1000000010000000
     0000100000001000
     0100000001000000
@@ -1915,7 +1915,7 @@ mpiexec -bind-to core -map-by hwthread:8 -n 16
     0001000000010000
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to core -map-by core -n 16
+binding: -bind-to core -map-by core -n 16
     1000000010000000
     0100000001000000
     0010000000100000
@@ -1933,7 +1933,7 @@ mpiexec -bind-to core -map-by core -n 16
     0000001000000010
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to core -map-by core:2 -n 16
+binding: -bind-to core -map-by core:2 -n 16
     1000000010000000
     0010000000100000
     0000100000001000
@@ -1951,7 +1951,7 @@ mpiexec -bind-to core -map-by core:2 -n 16
     0000010000000100
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to core -map-by core:4 -n 16
+binding: -bind-to core -map-by core:4 -n 16
     1000000010000000
     0000100000001000
     0100000001000000
@@ -1969,7 +1969,7 @@ mpiexec -bind-to core -map-by core:4 -n 16
     0001000000010000
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to core -map-by socket -n 16
+binding: -bind-to core -map-by socket -n 16
     1000000010000000
     0000100000001000
     0100000001000000
@@ -1987,7 +1987,7 @@ mpiexec -bind-to core -map-by socket -n 16
     0001000000010000
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to core -map-by numa -n 16
+binding: -bind-to core -map-by numa -n 16
     1000000010000000
     0000100000001000
     0100000001000000
@@ -2005,7 +2005,7 @@ mpiexec -bind-to core -map-by numa -n 16
     0001000000010000
     0000000100000001
 TOPO: topo2.xml
-mpiexec -bind-to core:2 -map-by hwthread -n 16
+binding: -bind-to core:2 -map-by hwthread -n 16
     1100000011000000
     1100000011000000
     0110000001100000
@@ -2023,7 +2023,7 @@ mpiexec -bind-to core:2 -map-by hwthread -n 16
     1000000110000001
     1000000110000001
 TOPO: topo2.xml
-mpiexec -bind-to core:2 -map-by hwthread:2 -n 16
+binding: -bind-to core:2 -map-by hwthread:2 -n 16
     1100000011000000
     0110000001100000
     0011000000110000
@@ -2041,7 +2041,7 @@ mpiexec -bind-to core:2 -map-by hwthread:2 -n 16
     0000001100000011
     1000000110000001
 TOPO: topo2.xml
-mpiexec -bind-to core:2 -map-by hwthread:4 -n 16
+binding: -bind-to core:2 -map-by hwthread:4 -n 16
     1100000011000000
     0011000000110000
     0000110000001100
@@ -2059,7 +2059,7 @@ mpiexec -bind-to core:2 -map-by hwthread:4 -n 16
     0000110000001100
     0000001100000011
 TOPO: topo2.xml
-mpiexec -bind-to core:2 -map-by hwthread:8 -n 16
+binding: -bind-to core:2 -map-by hwthread:8 -n 16
     1100000011000000
     0000110000001100
     0011000000110000
@@ -2077,15 +2077,7 @@ mpiexec -bind-to core:2 -map-by hwthread:8 -n 16
     0011000000110000
     0000001100000011
 TOPO: topo2.xml
-mpiexec -bind-to core:2 -map-by core -n 16
-    1100000011000000
-    0110000001100000
-    0011000000110000
-    0001100000011000
-    0000110000001100
-    0000011000000110
-    0000001100000011
-    1000000110000001
+binding: -bind-to core:2 -map-by core -n 16
     1100000011000000
     0110000001100000
     0011000000110000
@@ -2094,8 +2086,16 @@ mpiexec -bind-to core:2 -map-by core -n 16
     0000011000000110
     0000001100000011
     1000000110000001
+    1100000011000000
+    0110000001100000
+    0011000000110000
+    0001100000011000
+    0000110000001100
+    0000011000000110
+    0000001100000011
+    1000000110000001
 TOPO: topo2.xml
-mpiexec -bind-to core:2 -map-by core:2 -n 16
+binding: -bind-to core:2 -map-by core:2 -n 16
     1100000011000000
     0011000000110000
     0000110000001100
@@ -2111,27 +2111,9 @@ mpiexec -bind-to core:2 -map-by core:2 -n 16
     1100000011000000
     0011000000110000
     0000110000001100
-    0000001100000011
-TOPO: topo2.xml
-mpiexec -bind-to core:2 -map-by core:4 -n 16
-    1100000011000000
-    0000110000001100
-    0011000000110000
-    0000001100000011
-    1100000011000000
-    0000110000001100
-    0011000000110000
-    0000001100000011
-    1100000011000000
-    0000110000001100
-    0011000000110000
-    0000001100000011
-    1100000011000000
-    0000110000001100
-    0011000000110000
     0000001100000011
 TOPO: topo2.xml
-mpiexec -bind-to core:2 -map-by socket -n 16
+binding: -bind-to core:2 -map-by core:4 -n 16
     1100000011000000
     0000110000001100
     0011000000110000
@@ -2149,7 +2131,7 @@ mpiexec -bind-to core:2 -map-by socket -n 16
     0011000000110000
     0000001100000011
 TOPO: topo2.xml
-mpiexec -bind-to core:2 -map-by numa -n 16
+binding: -bind-to core:2 -map-by socket -n 16
     1100000011000000
     0000110000001100
     0011000000110000
@@ -2167,7 +2149,25 @@ mpiexec -bind-to core:2 -map-by numa -n 16
     0011000000110000
     0000001100000011
 TOPO: topo2.xml
-mpiexec -bind-to core:4 -map-by hwthread -n 16
+binding: -bind-to core:2 -map-by numa -n 16
+    1100000011000000
+    0000110000001100
+    0011000000110000
+    0000001100000011
+    1100000011000000
+    0000110000001100
+    0011000000110000
+    0000001100000011
+    1100000011000000
+    0000110000001100
+    0011000000110000
+    0000001100000011
+    1100000011000000
+    0000110000001100
+    0011000000110000
+    0000001100000011
+TOPO: topo2.xml
+binding: -bind-to core:4 -map-by hwthread -n 16
     1111000011110000
     1111000011110000
     0111100001111000
@@ -2185,7 +2185,7 @@ mpiexec -bind-to core:4 -map-by hwthread -n 16
     1110000111100001
     1110000111100001
 TOPO: topo2.xml
-mpiexec -bind-to core:4 -map-by hwthread:2 -n 16
+binding: -bind-to core:4 -map-by hwthread:2 -n 16
     1111000011110000
     0111100001111000
     0011110000111100
@@ -2203,7 +2203,7 @@ mpiexec -bind-to core:4 -map-by hwthread:2 -n 16
     1100001111000011
     1110000111100001
 TOPO: topo2.xml
-mpiexec -bind-to core:4 -map-by hwthread:4 -n 16
+binding: -bind-to core:4 -map-by hwthread:4 -n 16
     1111000011110000
     0011110000111100
     0000111100001111
@@ -2221,7 +2221,7 @@ mpiexec -bind-to core:4 -map-by hwthread:4 -n 16
     0000111100001111
     1100001111000011
 TOPO: topo2.xml
-mpiexec -bind-to core:4 -map-by hwthread:8 -n 16
+binding: -bind-to core:4 -map-by hwthread:8 -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2239,7 +2239,7 @@ mpiexec -bind-to core:4 -map-by hwthread:8 -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to core:4 -map-by core -n 16
+binding: -bind-to core:4 -map-by core -n 16
     1111000011110000
     0111100001111000
     0011110000111100
@@ -2257,7 +2257,7 @@ mpiexec -bind-to core:4 -map-by core -n 16
     1100001111000011
     1110000111100001
 TOPO: topo2.xml
-mpiexec -bind-to core:4 -map-by core:2 -n 16
+binding: -bind-to core:4 -map-by core:2 -n 16
     1111000011110000
     0011110000111100
     0000111100001111
@@ -2275,7 +2275,7 @@ mpiexec -bind-to core:4 -map-by core:2 -n 16
     0000111100001111
     1100001111000011
 TOPO: topo2.xml
-mpiexec -bind-to core:4 -map-by core:4 -n 16
+binding: -bind-to core:4 -map-by core:4 -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2293,7 +2293,7 @@ mpiexec -bind-to core:4 -map-by core:4 -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to core:4 -map-by socket -n 16
+binding: -bind-to core:4 -map-by socket -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2311,7 +2311,7 @@ mpiexec -bind-to core:4 -map-by socket -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to core:4 -map-by numa -n 16
+binding: -bind-to core:4 -map-by numa -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2329,7 +2329,7 @@ mpiexec -bind-to core:4 -map-by numa -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to socket -map-by hwthread -n 16
+binding: -bind-to socket -map-by hwthread -n 16
     1111000011110000
     1111000011110000
     1111000011110000
@@ -2347,7 +2347,7 @@ mpiexec -bind-to socket -map-by hwthread -n 16
     0000111100001111
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to socket -map-by hwthread:2 -n 16
+binding: -bind-to socket -map-by hwthread:2 -n 16
     1111000011110000
     1111000011110000
     1111000011110000
@@ -2365,7 +2365,7 @@ mpiexec -bind-to socket -map-by hwthread:2 -n 16
     0000111100001111
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to socket -map-by hwthread:4 -n 16
+binding: -bind-to socket -map-by hwthread:4 -n 16
     1111000011110000
     1111000011110000
     0000111100001111
@@ -2383,7 +2383,7 @@ mpiexec -bind-to socket -map-by hwthread:4 -n 16
     0000111100001111
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to socket -map-by hwthread:8 -n 16
+binding: -bind-to socket -map-by hwthread:8 -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2401,7 +2401,7 @@ mpiexec -bind-to socket -map-by hwthread:8 -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to socket -map-by core -n 16
+binding: -bind-to socket -map-by core -n 16
     1111000011110000
     1111000011110000
     1111000011110000
@@ -2419,7 +2419,7 @@ mpiexec -bind-to socket -map-by core -n 16
     0000111100001111
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to socket -map-by core:2 -n 16
+binding: -bind-to socket -map-by core:2 -n 16
     1111000011110000
     1111000011110000
     0000111100001111
@@ -2437,7 +2437,7 @@ mpiexec -bind-to socket -map-by core:2 -n 16
     0000111100001111
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to socket -map-by core:4 -n 16
+binding: -bind-to socket -map-by core:4 -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2455,7 +2455,7 @@ mpiexec -bind-to socket -map-by core:4 -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to socket -map-by socket -n 16
+binding: -bind-to socket -map-by socket -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2473,7 +2473,7 @@ mpiexec -bind-to socket -map-by socket -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to socket -map-by numa -n 16
+binding: -bind-to socket -map-by numa -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2491,7 +2491,7 @@ mpiexec -bind-to socket -map-by numa -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to numa -map-by hwthread -n 16
+binding: -bind-to numa -map-by hwthread -n 16
     1111000011110000
     1111000011110000
     1111000011110000
@@ -2509,7 +2509,7 @@ mpiexec -bind-to numa -map-by hwthread -n 16
     0000111100001111
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to numa -map-by hwthread:2 -n 16
+binding: -bind-to numa -map-by hwthread:2 -n 16
     1111000011110000
     1111000011110000
     1111000011110000
@@ -2527,7 +2527,7 @@ mpiexec -bind-to numa -map-by hwthread:2 -n 16
     0000111100001111
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to numa -map-by hwthread:4 -n 16
+binding: -bind-to numa -map-by hwthread:4 -n 16
     1111000011110000
     1111000011110000
     0000111100001111
@@ -2545,7 +2545,7 @@ mpiexec -bind-to numa -map-by hwthread:4 -n 16
     0000111100001111
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to numa -map-by hwthread:8 -n 16
+binding: -bind-to numa -map-by hwthread:8 -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2563,7 +2563,7 @@ mpiexec -bind-to numa -map-by hwthread:8 -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to numa -map-by core -n 16
+binding: -bind-to numa -map-by core -n 16
     1111000011110000
     1111000011110000
     1111000011110000
@@ -2581,7 +2581,7 @@ mpiexec -bind-to numa -map-by core -n 16
     0000111100001111
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to numa -map-by core:2 -n 16
+binding: -bind-to numa -map-by core:2 -n 16
     1111000011110000
     1111000011110000
     0000111100001111
@@ -2599,7 +2599,7 @@ mpiexec -bind-to numa -map-by core:2 -n 16
     0000111100001111
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to numa -map-by core:4 -n 16
+binding: -bind-to numa -map-by core:4 -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2617,7 +2617,7 @@ mpiexec -bind-to numa -map-by core:4 -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to numa -map-by socket -n 16
+binding: -bind-to numa -map-by socket -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2635,7 +2635,7 @@ mpiexec -bind-to numa -map-by socket -n 16
     1111000011110000
     0000111100001111
 TOPO: topo2.xml
-mpiexec -bind-to numa -map-by numa -n 16
+binding: -bind-to numa -map-by numa -n 16
     1111000011110000
     0000111100001111
     1111000011110000
@@ -2654,7 +2654,7 @@ mpiexec -bind-to numa -map-by numa -n 16
     0000111100001111
 TOPO: topo3.xml
 TOPO: topo3.xml
-mpiexec -bind-to hwthread -map-by hwthread -n 16
+binding: -bind-to hwthread -map-by hwthread -n 16
     10000000
     01000000
     00100000
@@ -2672,7 +2672,7 @@ mpiexec -bind-to hwthread -map-by hwthread -n 16
     00000010
     00000001
 TOPO: topo3.xml
-mpiexec -bind-to hwthread -map-by hwthread:2 -n 16
+binding: -bind-to hwthread -map-by hwthread:2 -n 16
     10000000
     00100000
     00001000
@@ -2690,7 +2690,7 @@ mpiexec -bind-to hwthread -map-by hwthread:2 -n 16
     00000100
     00000001
 TOPO: topo3.xml
-mpiexec -bind-to hwthread -map-by hwthread:4 -n 16
+binding: -bind-to hwthread -map-by hwthread:4 -n 16
     10000000
     00001000
     01000000
@@ -2708,7 +2708,7 @@ mpiexec -bind-to hwthread -map-by hwthread:4 -n 16
     00010000
     00000001
 TOPO: topo3.xml
-mpiexec -bind-to hwthread -map-by hwthread:8 -n 16
+binding: -bind-to hwthread -map-by hwthread:8 -n 16
     10000000
     01000000
     00100000
@@ -2726,7 +2726,7 @@ mpiexec -bind-to hwthread -map-by hwthread:8 -n 16
     00000010
     00000001
 TOPO: topo3.xml
-mpiexec -bind-to hwthread -map-by core -n 16
+binding: -bind-to hwthread -map-by core -n 16
     10000000
     01000000
     00100000
@@ -2744,7 +2744,7 @@ mpiexec -bind-to hwthread -map-by core -n 16
     00000010
     00000001
 TOPO: topo3.xml
-mpiexec -bind-to hwthread -map-by core:2 -n 16
+binding: -bind-to hwthread -map-by core:2 -n 16
     10000000
     00100000
     00001000
@@ -2762,7 +2762,7 @@ mpiexec -bind-to hwthread -map-by core:2 -n 16
     00000100
     00000001
 TOPO: topo3.xml
-mpiexec -bind-to hwthread -map-by core:4 -n 16
+binding: -bind-to hwthread -map-by core:4 -n 16
     10000000
     00001000
     01000000
@@ -2780,7 +2780,7 @@ mpiexec -bind-to hwthread -map-by core:4 -n 16
     00010000
     00000001
 TOPO: topo3.xml
-mpiexec -bind-to hwthread -map-by socket -n 16
+binding: -bind-to hwthread -map-by socket -n 16
     10000000
     00100000
     00001000
@@ -2798,7 +2798,7 @@ mpiexec -bind-to hwthread -map-by socket -n 16
     00000100
     00000001
 TOPO: topo3.xml
-mpiexec -bind-to hwthread -map-by numa -n 16
+binding: -bind-to hwthread -map-by numa -n 16
     10000000
     01000000
     00100000
@@ -2816,7 +2816,7 @@ mpiexec -bind-to hwthread -map-by numa -n 16
     00000010
     00000001
 TOPO: topo3.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread -n 16
+binding: -bind-to hwthread:2 -map-by hwthread -n 16
     11000000
     01100000
     00110000
@@ -2834,7 +2834,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread -n 16
     00000011
     10000001
 TOPO: topo3.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:2 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:2 -n 16
     11000000
     00110000
     00001100
@@ -2852,7 +2852,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:2 -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:4 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:4 -n 16
     11000000
     00001100
     00110000
@@ -2870,7 +2870,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:4 -n 16
     00110000
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:8 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:8 -n 16
     11000000
     00110000
     00001100
@@ -2888,583 +2888,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:8 -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to hwthread:2 -map-by core -n 16
-    11000000
-    01100000
-    00110000
-    00011000
-    00001100
-    00000110
-    00000011
-    10000001
-    11000000
-    01100000
-    00110000
-    00011000
-    00001100
-    00000110
-    00000011
-    10000001
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:2 -map-by core:2 -n 16
-    11000000
-    00110000
-    00001100
-    00000011
-    11000000
-    00110000
-    00001100
-    00000011
-    11000000
-    00110000
-    00001100
-    00000011
-    11000000
-    00110000
-    00001100
-    00000011
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:2 -map-by core:4 -n 16
-    11000000
-    00001100
-    00110000
-    00000011
-    11000000
-    00001100
-    00110000
-    00000011
-    11000000
-    00001100
-    00110000
-    00000011
-    11000000
-    00001100
-    00110000
-    00000011
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:2 -map-by socket -n 16
-    11000000
-    00110000
-    00001100
-    00000011
-    11000000
-    00110000
-    00001100
-    00000011
-    11000000
-    00110000
-    00001100
-    00000011
-    11000000
-    00110000
-    00001100
-    00000011
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:2 -map-by numa -n 16
-    11000000
-    00110000
-    00001100
-    00000011
-    11000000
-    00110000
-    00001100
-    00000011
-    11000000
-    00110000
-    00001100
-    00000011
-    11000000
-    00110000
-    00001100
-    00000011
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread -n 16
-    11110000
-    01111000
-    00111100
-    00011110
-    00001111
-    10000111
-    11000011
-    11100001
-    11110000
-    01111000
-    00111100
-    00011110
-    00001111
-    10000111
-    11000011
-    11100001
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:2 -n 16
-    11110000
-    00111100
-    00001111
-    11000011
-    11110000
-    00111100
-    00001111
-    11000011
-    11110000
-    00111100
-    00001111
-    11000011
-    11110000
-    00111100
-    00001111
-    11000011
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:4 -n 16
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:8 -n 16
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:4 -map-by core -n 16
-    11110000
-    01111000
-    00111100
-    00011110
-    00001111
-    10000111
-    11000011
-    11100001
-    11110000
-    01111000
-    00111100
-    00011110
-    00001111
-    10000111
-    11000011
-    11100001
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:4 -map-by core:2 -n 16
-    11110000
-    00111100
-    00001111
-    11000011
-    11110000
-    00111100
-    00001111
-    11000011
-    11110000
-    00111100
-    00001111
-    11000011
-    11110000
-    00111100
-    00001111
-    11000011
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:4 -map-by core:4 -n 16
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:4 -map-by socket -n 16
-    11110000
-    00111100
-    00001111
-    11000011
-    11110000
-    00111100
-    00001111
-    11000011
-    11110000
-    00111100
-    00001111
-    11000011
-    11110000
-    00111100
-    00001111
-    11000011
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:4 -map-by numa -n 16
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-    11110000
-    00001111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:2 -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:4 -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:8 -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:8 -map-by core -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:8 -map-by core:2 -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:8 -map-by core:4 -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:8 -map-by socket -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo3.xml
-mpiexec -bind-to hwthread:8 -map-by numa -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo3.xml
-mpiexec -bind-to core -map-by hwthread -n 16
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-TOPO: topo3.xml
-mpiexec -bind-to core -map-by hwthread:2 -n 16
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-TOPO: topo3.xml
-mpiexec -bind-to core -map-by hwthread:4 -n 16
-    10000000
-    00001000
-    01000000
-    00000100
-    00100000
-    00000010
-    00010000
-    00000001
-    10000000
-    00001000
-    01000000
-    00000100
-    00100000
-    00000010
-    00010000
-    00000001
-TOPO: topo3.xml
-mpiexec -bind-to core -map-by hwthread:8 -n 16
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-TOPO: topo3.xml
-mpiexec -bind-to core -map-by core -n 16
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-TOPO: topo3.xml
-mpiexec -bind-to core -map-by core:2 -n 16
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-TOPO: topo3.xml
-mpiexec -bind-to core -map-by core:4 -n 16
-    10000000
-    00001000
-    01000000
-    00000100
-    00100000
-    00000010
-    00010000
-    00000001
-    10000000
-    00001000
-    01000000
-    00000100
-    00100000
-    00000010
-    00010000
-    00000001
-TOPO: topo3.xml
-mpiexec -bind-to core -map-by socket -n 16
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-TOPO: topo3.xml
-mpiexec -bind-to core -map-by numa -n 16
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-TOPO: topo3.xml
-mpiexec -bind-to core:2 -map-by hwthread -n 16
+binding: -bind-to hwthread:2 -map-by core -n 16
     11000000
     01100000
     00110000
@@ -3482,7 +2906,7 @@ mpiexec -bind-to core:2 -map-by hwthread -n 16
     00000011
     10000001
 TOPO: topo3.xml
-mpiexec -bind-to core:2 -map-by hwthread:2 -n 16
+binding: -bind-to hwthread:2 -map-by core:2 -n 16
     11000000
     00110000
     00001100
@@ -3500,7 +2924,7 @@ mpiexec -bind-to core:2 -map-by hwthread:2 -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to core:2 -map-by hwthread:4 -n 16
+binding: -bind-to hwthread:2 -map-by core:4 -n 16
     11000000
     00001100
     00110000
@@ -3518,7 +2942,7 @@ mpiexec -bind-to core:2 -map-by hwthread:4 -n 16
     00110000
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to core:2 -map-by hwthread:8 -n 16
+binding: -bind-to hwthread:2 -map-by socket -n 16
     11000000
     00110000
     00001100
@@ -3536,7 +2960,511 @@ mpiexec -bind-to core:2 -map-by hwthread:8 -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to core:2 -map-by core -n 16
+binding: -bind-to hwthread:2 -map-by numa -n 16
+    11000000
+    00110000
+    00001100
+    00000011
+    11000000
+    00110000
+    00001100
+    00000011
+    11000000
+    00110000
+    00001100
+    00000011
+    11000000
+    00110000
+    00001100
+    00000011
+TOPO: topo3.xml
+binding: -bind-to hwthread:4 -map-by hwthread -n 16
+    11110000
+    01111000
+    00111100
+    00011110
+    00001111
+    10000111
+    11000011
+    11100001
+    11110000
+    01111000
+    00111100
+    00011110
+    00001111
+    10000111
+    11000011
+    11100001
+TOPO: topo3.xml
+binding: -bind-to hwthread:4 -map-by hwthread:2 -n 16
+    11110000
+    00111100
+    00001111
+    11000011
+    11110000
+    00111100
+    00001111
+    11000011
+    11110000
+    00111100
+    00001111
+    11000011
+    11110000
+    00111100
+    00001111
+    11000011
+TOPO: topo3.xml
+binding: -bind-to hwthread:4 -map-by hwthread:4 -n 16
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+TOPO: topo3.xml
+binding: -bind-to hwthread:4 -map-by hwthread:8 -n 16
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+TOPO: topo3.xml
+binding: -bind-to hwthread:4 -map-by core -n 16
+    11110000
+    01111000
+    00111100
+    00011110
+    00001111
+    10000111
+    11000011
+    11100001
+    11110000
+    01111000
+    00111100
+    00011110
+    00001111
+    10000111
+    11000011
+    11100001
+TOPO: topo3.xml
+binding: -bind-to hwthread:4 -map-by core:2 -n 16
+    11110000
+    00111100
+    00001111
+    11000011
+    11110000
+    00111100
+    00001111
+    11000011
+    11110000
+    00111100
+    00001111
+    11000011
+    11110000
+    00111100
+    00001111
+    11000011
+TOPO: topo3.xml
+binding: -bind-to hwthread:4 -map-by core:4 -n 16
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+TOPO: topo3.xml
+binding: -bind-to hwthread:4 -map-by socket -n 16
+    11110000
+    00111100
+    00001111
+    11000011
+    11110000
+    00111100
+    00001111
+    11000011
+    11110000
+    00111100
+    00001111
+    11000011
+    11110000
+    00111100
+    00001111
+    11000011
+TOPO: topo3.xml
+binding: -bind-to hwthread:4 -map-by numa -n 16
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+    11110000
+    00001111
+TOPO: topo3.xml
+binding: -bind-to hwthread:8 -map-by hwthread -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo3.xml
+binding: -bind-to hwthread:8 -map-by hwthread:2 -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo3.xml
+binding: -bind-to hwthread:8 -map-by hwthread:4 -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo3.xml
+binding: -bind-to hwthread:8 -map-by hwthread:8 -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo3.xml
+binding: -bind-to hwthread:8 -map-by core -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo3.xml
+binding: -bind-to hwthread:8 -map-by core:2 -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo3.xml
+binding: -bind-to hwthread:8 -map-by core:4 -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo3.xml
+binding: -bind-to hwthread:8 -map-by socket -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo3.xml
+binding: -bind-to hwthread:8 -map-by numa -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo3.xml
+binding: -bind-to core -map-by hwthread -n 16
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+TOPO: topo3.xml
+binding: -bind-to core -map-by hwthread:2 -n 16
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+TOPO: topo3.xml
+binding: -bind-to core -map-by hwthread:4 -n 16
+    10000000
+    00001000
+    01000000
+    00000100
+    00100000
+    00000010
+    00010000
+    00000001
+    10000000
+    00001000
+    01000000
+    00000100
+    00100000
+    00000010
+    00010000
+    00000001
+TOPO: topo3.xml
+binding: -bind-to core -map-by hwthread:8 -n 16
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+TOPO: topo3.xml
+binding: -bind-to core -map-by core -n 16
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+TOPO: topo3.xml
+binding: -bind-to core -map-by core:2 -n 16
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+TOPO: topo3.xml
+binding: -bind-to core -map-by core:4 -n 16
+    10000000
+    00001000
+    01000000
+    00000100
+    00100000
+    00000010
+    00010000
+    00000001
+    10000000
+    00001000
+    01000000
+    00000100
+    00100000
+    00000010
+    00010000
+    00000001
+TOPO: topo3.xml
+binding: -bind-to core -map-by socket -n 16
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+TOPO: topo3.xml
+binding: -bind-to core -map-by numa -n 16
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+TOPO: topo3.xml
+binding: -bind-to core:2 -map-by hwthread -n 16
     11000000
     01100000
     00110000
@@ -3554,7 +3482,7 @@ mpiexec -bind-to core:2 -map-by core -n 16
     00000011
     10000001
 TOPO: topo3.xml
-mpiexec -bind-to core:2 -map-by core:2 -n 16
+binding: -bind-to core:2 -map-by hwthread:2 -n 16
     11000000
     00110000
     00001100
@@ -3572,7 +3500,7 @@ mpiexec -bind-to core:2 -map-by core:2 -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to core:2 -map-by core:4 -n 16
+binding: -bind-to core:2 -map-by hwthread:4 -n 16
     11000000
     00001100
     00110000
@@ -3590,7 +3518,7 @@ mpiexec -bind-to core:2 -map-by core:4 -n 16
     00110000
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to core:2 -map-by socket -n 16
+binding: -bind-to core:2 -map-by hwthread:8 -n 16
     11000000
     00110000
     00001100
@@ -3608,7 +3536,25 @@ mpiexec -bind-to core:2 -map-by socket -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to core:2 -map-by numa -n 16
+binding: -bind-to core:2 -map-by core -n 16
+    11000000
+    01100000
+    00110000
+    00011000
+    00001100
+    00000110
+    00000011
+    10000001
+    11000000
+    01100000
+    00110000
+    00011000
+    00001100
+    00000110
+    00000011
+    10000001
+TOPO: topo3.xml
+binding: -bind-to core:2 -map-by core:2 -n 16
     11000000
     00110000
     00001100
@@ -3626,7 +3572,61 @@ mpiexec -bind-to core:2 -map-by numa -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to core:4 -map-by hwthread -n 16
+binding: -bind-to core:2 -map-by core:4 -n 16
+    11000000
+    00001100
+    00110000
+    00000011
+    11000000
+    00001100
+    00110000
+    00000011
+    11000000
+    00001100
+    00110000
+    00000011
+    11000000
+    00001100
+    00110000
+    00000011
+TOPO: topo3.xml
+binding: -bind-to core:2 -map-by socket -n 16
+    11000000
+    00110000
+    00001100
+    00000011
+    11000000
+    00110000
+    00001100
+    00000011
+    11000000
+    00110000
+    00001100
+    00000011
+    11000000
+    00110000
+    00001100
+    00000011
+TOPO: topo3.xml
+binding: -bind-to core:2 -map-by numa -n 16
+    11000000
+    00110000
+    00001100
+    00000011
+    11000000
+    00110000
+    00001100
+    00000011
+    11000000
+    00110000
+    00001100
+    00000011
+    11000000
+    00110000
+    00001100
+    00000011
+TOPO: topo3.xml
+binding: -bind-to core:4 -map-by hwthread -n 16
     11110000
     01111000
     00111100
@@ -3644,7 +3644,7 @@ mpiexec -bind-to core:4 -map-by hwthread -n 16
     11000011
     11100001
 TOPO: topo3.xml
-mpiexec -bind-to core:4 -map-by hwthread:2 -n 16
+binding: -bind-to core:4 -map-by hwthread:2 -n 16
     11110000
     00111100
     00001111
@@ -3662,7 +3662,7 @@ mpiexec -bind-to core:4 -map-by hwthread:2 -n 16
     00001111
     11000011
 TOPO: topo3.xml
-mpiexec -bind-to core:4 -map-by hwthread:4 -n 16
+binding: -bind-to core:4 -map-by hwthread:4 -n 16
     11110000
     00001111
     11110000
@@ -3680,7 +3680,7 @@ mpiexec -bind-to core:4 -map-by hwthread:4 -n 16
     11110000
     00001111
 TOPO: topo3.xml
-mpiexec -bind-to core:4 -map-by hwthread:8 -n 16
+binding: -bind-to core:4 -map-by hwthread:8 -n 16
     11110000
     00001111
     11110000
@@ -3698,7 +3698,7 @@ mpiexec -bind-to core:4 -map-by hwthread:8 -n 16
     11110000
     00001111
 TOPO: topo3.xml
-mpiexec -bind-to core:4 -map-by core -n 16
+binding: -bind-to core:4 -map-by core -n 16
     11110000
     01111000
     00111100
@@ -3716,7 +3716,7 @@ mpiexec -bind-to core:4 -map-by core -n 16
     11000011
     11100001
 TOPO: topo3.xml
-mpiexec -bind-to core:4 -map-by core:2 -n 16
+binding: -bind-to core:4 -map-by core:2 -n 16
     11110000
     00111100
     00001111
@@ -3734,7 +3734,7 @@ mpiexec -bind-to core:4 -map-by core:2 -n 16
     00001111
     11000011
 TOPO: topo3.xml
-mpiexec -bind-to core:4 -map-by core:4 -n 16
+binding: -bind-to core:4 -map-by core:4 -n 16
     11110000
     00001111
     11110000
@@ -3752,11 +3752,7 @@ mpiexec -bind-to core:4 -map-by core:4 -n 16
     11110000
     00001111
 TOPO: topo3.xml
-mpiexec -bind-to core:4 -map-by socket -n 16
-    11110000
-    00111100
-    00001111
-    11000011
+binding: -bind-to core:4 -map-by socket -n 16
     11110000
     00111100
     00001111
@@ -3769,8 +3765,12 @@ mpiexec -bind-to core:4 -map-by socket -n 16
     00111100
     00001111
     11000011
+    11110000
+    00111100
+    00001111
+    11000011
 TOPO: topo3.xml
-mpiexec -bind-to core:4 -map-by numa -n 16
+binding: -bind-to core:4 -map-by numa -n 16
     11110000
     00001111
     11110000
@@ -3788,7 +3788,7 @@ mpiexec -bind-to core:4 -map-by numa -n 16
     11110000
     00001111
 TOPO: topo3.xml
-mpiexec -bind-to socket -map-by hwthread -n 16
+binding: -bind-to socket -map-by hwthread -n 16
     11000000
     11000000
     00110000
@@ -3806,7 +3806,7 @@ mpiexec -bind-to socket -map-by hwthread -n 16
     00000011
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to socket -map-by hwthread:2 -n 16
+binding: -bind-to socket -map-by hwthread:2 -n 16
     11000000
     00110000
     00001100
@@ -3824,7 +3824,7 @@ mpiexec -bind-to socket -map-by hwthread:2 -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to socket -map-by hwthread:4 -n 16
+binding: -bind-to socket -map-by hwthread:4 -n 16
     11000000
     00001100
     00110000
@@ -3842,7 +3842,7 @@ mpiexec -bind-to socket -map-by hwthread:4 -n 16
     00110000
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to socket -map-by hwthread:8 -n 16
+binding: -bind-to socket -map-by hwthread:8 -n 16
     11000000
     00110000
     00001100
@@ -3860,7 +3860,7 @@ mpiexec -bind-to socket -map-by hwthread:8 -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to socket -map-by core -n 16
+binding: -bind-to socket -map-by core -n 16
     11000000
     11000000
     00110000
@@ -3878,7 +3878,7 @@ mpiexec -bind-to socket -map-by core -n 16
     00000011
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to socket -map-by core:2 -n 16
+binding: -bind-to socket -map-by core:2 -n 16
     11000000
     00110000
     00001100
@@ -3896,7 +3896,7 @@ mpiexec -bind-to socket -map-by core:2 -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to socket -map-by core:4 -n 16
+binding: -bind-to socket -map-by core:4 -n 16
     11000000
     00001100
     00110000
@@ -3914,7 +3914,7 @@ mpiexec -bind-to socket -map-by core:4 -n 16
     00110000
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to socket -map-by socket -n 16
+binding: -bind-to socket -map-by socket -n 16
     11000000
     00110000
     00001100
@@ -3932,7 +3932,7 @@ mpiexec -bind-to socket -map-by socket -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to socket -map-by numa -n 16
+binding: -bind-to socket -map-by numa -n 16
     11000000
     00110000
     00001100
@@ -3950,7 +3950,7 @@ mpiexec -bind-to socket -map-by numa -n 16
     00001100
     00000011
 TOPO: topo3.xml
-mpiexec -bind-to numa -map-by hwthread -n 16
+binding: -bind-to numa -map-by hwthread -n 16
     11111111
     11111111
     11111111
@@ -3968,7 +3968,7 @@ mpiexec -bind-to numa -map-by hwthread -n 16
     11111111
     11111111
 TOPO: topo3.xml
-mpiexec -bind-to numa -map-by hwthread:2 -n 16
+binding: -bind-to numa -map-by hwthread:2 -n 16
     11111111
     11111111
     11111111
@@ -3986,7 +3986,7 @@ mpiexec -bind-to numa -map-by hwthread:2 -n 16
     11111111
     11111111
 TOPO: topo3.xml
-mpiexec -bind-to numa -map-by hwthread:4 -n 16
+binding: -bind-to numa -map-by hwthread:4 -n 16
     11111111
     11111111
     11111111
@@ -4004,7 +4004,7 @@ mpiexec -bind-to numa -map-by hwthread:4 -n 16
     11111111
     11111111
 TOPO: topo3.xml
-mpiexec -bind-to numa -map-by hwthread:8 -n 16
+binding: -bind-to numa -map-by hwthread:8 -n 16
     11111111
     11111111
     11111111
@@ -4022,7 +4022,7 @@ mpiexec -bind-to numa -map-by hwthread:8 -n 16
     11111111
     11111111
 TOPO: topo3.xml
-mpiexec -bind-to numa -map-by core -n 16
+binding: -bind-to numa -map-by core -n 16
     11111111
     11111111
     11111111
@@ -4040,7 +4040,7 @@ mpiexec -bind-to numa -map-by core -n 16
     11111111
     11111111
 TOPO: topo3.xml
-mpiexec -bind-to numa -map-by core:2 -n 16
+binding: -bind-to numa -map-by core:2 -n 16
     11111111
     11111111
     11111111
@@ -4058,7 +4058,7 @@ mpiexec -bind-to numa -map-by core:2 -n 16
     11111111
     11111111
 TOPO: topo3.xml
-mpiexec -bind-to numa -map-by core:4 -n 16
+binding: -bind-to numa -map-by core:4 -n 16
     11111111
     11111111
     11111111
@@ -4076,7 +4076,7 @@ mpiexec -bind-to numa -map-by core:4 -n 16
     11111111
     11111111
 TOPO: topo3.xml
-mpiexec -bind-to numa -map-by socket -n 16
+binding: -bind-to numa -map-by socket -n 16
     11111111
     11111111
     11111111
@@ -4094,7 +4094,7 @@ mpiexec -bind-to numa -map-by socket -n 16
     11111111
     11111111
 TOPO: topo3.xml
-mpiexec -bind-to numa -map-by numa -n 16
+binding: -bind-to numa -map-by numa -n 16
     11111111
     11111111
     11111111
@@ -4113,7 +4113,7 @@ mpiexec -bind-to numa -map-by numa -n 16
     11111111
 TOPO: topo4.xml
 TOPO: topo4.xml
-mpiexec -bind-to hwthread -map-by hwthread -n 16
+binding: -bind-to hwthread -map-by hwthread -n 16
     10000000
     00100000
     00001000
@@ -4131,7 +4131,7 @@ mpiexec -bind-to hwthread -map-by hwthread -n 16
     00000100
     00000001
 TOPO: topo4.xml
-mpiexec -bind-to hwthread -map-by hwthread:2 -n 16
+binding: -bind-to hwthread -map-by hwthread:2 -n 16
     10000000
     00001000
     01000000
@@ -4149,7 +4149,7 @@ mpiexec -bind-to hwthread -map-by hwthread:2 -n 16
     00010000
     00000001
 TOPO: topo4.xml
-mpiexec -bind-to hwthread -map-by hwthread:4 -n 16
+binding: -bind-to hwthread -map-by hwthread:4 -n 16
     10000000
     01000000
     00100000
@@ -4167,7 +4167,7 @@ mpiexec -bind-to hwthread -map-by hwthread:4 -n 16
     00000010
     00000001
 TOPO: topo4.xml
-mpiexec -bind-to hwthread -map-by hwthread:8 -n 16
+binding: -bind-to hwthread -map-by hwthread:8 -n 16
     10000000
     00100000
     00001000
@@ -4185,7 +4185,7 @@ mpiexec -bind-to hwthread -map-by hwthread:8 -n 16
     00000100
     00000001
 TOPO: topo4.xml
-mpiexec -bind-to hwthread -map-by core -n 16
+binding: -bind-to hwthread -map-by core -n 16
     10000000
     00100000
     00001000
@@ -4203,7 +4203,7 @@ mpiexec -bind-to hwthread -map-by core -n 16
     00000100
     00000001
 TOPO: topo4.xml
-mpiexec -bind-to hwthread -map-by core:2 -n 16
+binding: -bind-to hwthread -map-by core:2 -n 16
     10000000
     00001000
     01000000
@@ -4221,7 +4221,7 @@ mpiexec -bind-to hwthread -map-by core:2 -n 16
     00010000
     00000001
 TOPO: topo4.xml
-mpiexec -bind-to hwthread -map-by core:4 -n 16
+binding: -bind-to hwthread -map-by core:4 -n 16
     10000000
     01000000
     00100000
@@ -4239,7 +4239,7 @@ mpiexec -bind-to hwthread -map-by core:4 -n 16
     00000010
     00000001
 TOPO: topo4.xml
-mpiexec -bind-to hwthread -map-by socket -n 16
+binding: -bind-to hwthread -map-by socket -n 16
     10000000
     01000000
     00100000
@@ -4257,7 +4257,7 @@ mpiexec -bind-to hwthread -map-by socket -n 16
     00000010
     00000001
 TOPO: topo4.xml
-mpiexec -bind-to hwthread -map-by numa -n 16
+binding: -bind-to hwthread -map-by numa -n 16
     10000000
     00100000
     00001000
@@ -4275,7 +4275,7 @@ mpiexec -bind-to hwthread -map-by numa -n 16
     00000100
     00000001
 TOPO: topo4.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread -n 16
+binding: -bind-to hwthread:2 -map-by hwthread -n 16
     10100000
     00101000
     00001010
@@ -4293,7 +4293,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread -n 16
     00000101
     10000001
 TOPO: topo4.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:2 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:2 -n 16
     10100000
     00001010
     01010000
@@ -4311,7 +4311,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:2 -n 16
     01010000
     00000101
 TOPO: topo4.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:4 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:4 -n 16
     10100000
     01010000
     00001010
@@ -4329,7 +4329,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:4 -n 16
     00001010
     00000101
 TOPO: topo4.xml
-mpiexec -bind-to hwthread:2 -map-by hwthread:8 -n 16
+binding: -bind-to hwthread:2 -map-by hwthread:8 -n 16
     10100000
     00001010
     01010000
@@ -4347,583 +4347,7 @@ mpiexec -bind-to hwthread:2 -map-by hwthread:8 -n 16
     01010000
     00000101
 TOPO: topo4.xml
-mpiexec -bind-to hwthread:2 -map-by core -n 16
-    10100000
-    00101000
-    00001010
-    01000010
-    01010000
-    00010100
-    00000101
-    10000001
-    10100000
-    00101000
-    00001010
-    01000010
-    01010000
-    00010100
-    00000101
-    10000001
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:2 -map-by core:2 -n 16
-    10100000
-    00001010
-    01010000
-    00000101
-    10100000
-    00001010
-    01010000
-    00000101
-    10100000
-    00001010
-    01010000
-    00000101
-    10100000
-    00001010
-    01010000
-    00000101
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:2 -map-by core:4 -n 16
-    10100000
-    01010000
-    00001010
-    00000101
-    10100000
-    01010000
-    00001010
-    00000101
-    10100000
-    01010000
-    00001010
-    00000101
-    10100000
-    01010000
-    00001010
-    00000101
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:2 -map-by socket -n 16
-    10100000
-    01010000
-    00001010
-    00000101
-    10100000
-    01010000
-    00001010
-    00000101
-    10100000
-    01010000
-    00001010
-    00000101
-    10100000
-    01010000
-    00001010
-    00000101
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:2 -map-by numa -n 16
-    10100000
-    00001010
-    01010000
-    00000101
-    10100000
-    00001010
-    01010000
-    00000101
-    10100000
-    00001010
-    01010000
-    00000101
-    10100000
-    00001010
-    01010000
-    00000101
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread -n 16
-    10101010
-    01101010
-    01011010
-    01010110
-    01010101
-    10010101
-    10100101
-    10101001
-    10101010
-    01101010
-    01011010
-    01010110
-    01010101
-    10010101
-    10100101
-    10101001
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:2 -n 16
-    10101010
-    01011010
-    01010101
-    10100101
-    10101010
-    01011010
-    01010101
-    10100101
-    10101010
-    01011010
-    01010101
-    10100101
-    10101010
-    01011010
-    01010101
-    10100101
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:4 -n 16
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:4 -map-by hwthread:8 -n 16
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:4 -map-by core -n 16
-    10101010
-    01101010
-    01011010
-    01010110
-    01010101
-    10010101
-    10100101
-    10101001
-    10101010
-    01101010
-    01011010
-    01010110
-    01010101
-    10010101
-    10100101
-    10101001
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:4 -map-by core:2 -n 16
-    10101010
-    01011010
-    01010101
-    10100101
-    10101010
-    01011010
-    01010101
-    10100101
-    10101010
-    01011010
-    01010101
-    10100101
-    10101010
-    01011010
-    01010101
-    10100101
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:4 -map-by core:4 -n 16
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:4 -map-by socket -n 16
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:4 -map-by numa -n 16
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-    10101010
-    01010101
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:2 -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:4 -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:8 -map-by hwthread:8 -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:8 -map-by core -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:8 -map-by core:2 -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:8 -map-by core:4 -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:8 -map-by socket -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo4.xml
-mpiexec -bind-to hwthread:8 -map-by numa -n 16
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-    11111111
-TOPO: topo4.xml
-mpiexec -bind-to core -map-by hwthread -n 16
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-TOPO: topo4.xml
-mpiexec -bind-to core -map-by hwthread:2 -n 16
-    10000000
-    00001000
-    01000000
-    00000100
-    00100000
-    00000010
-    00010000
-    00000001
-    10000000
-    00001000
-    01000000
-    00000100
-    00100000
-    00000010
-    00010000
-    00000001
-TOPO: topo4.xml
-mpiexec -bind-to core -map-by hwthread:4 -n 16
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-TOPO: topo4.xml
-mpiexec -bind-to core -map-by hwthread:8 -n 16
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-TOPO: topo4.xml
-mpiexec -bind-to core -map-by core -n 16
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-TOPO: topo4.xml
-mpiexec -bind-to core -map-by core:2 -n 16
-    10000000
-    00001000
-    01000000
-    00000100
-    00100000
-    00000010
-    00010000
-    00000001
-    10000000
-    00001000
-    01000000
-    00000100
-    00100000
-    00000010
-    00010000
-    00000001
-TOPO: topo4.xml
-mpiexec -bind-to core -map-by core:4 -n 16
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-TOPO: topo4.xml
-mpiexec -bind-to core -map-by socket -n 16
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-    10000000
-    01000000
-    00100000
-    00010000
-    00001000
-    00000100
-    00000010
-    00000001
-TOPO: topo4.xml
-mpiexec -bind-to core -map-by numa -n 16
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-    10000000
-    00100000
-    00001000
-    00000010
-    01000000
-    00010000
-    00000100
-    00000001
-TOPO: topo4.xml
-mpiexec -bind-to core:2 -map-by hwthread -n 16
+binding: -bind-to hwthread:2 -map-by core -n 16
     10100000
     00101000
     00001010
@@ -4941,7 +4365,7 @@ mpiexec -bind-to core:2 -map-by hwthread -n 16
     00000101
     10000001
 TOPO: topo4.xml
-mpiexec -bind-to core:2 -map-by hwthread:2 -n 16
+binding: -bind-to hwthread:2 -map-by core:2 -n 16
     10100000
     00001010
     01010000
@@ -4959,7 +4383,7 @@ mpiexec -bind-to core:2 -map-by hwthread:2 -n 16
     01010000
     00000101
 TOPO: topo4.xml
-mpiexec -bind-to core:2 -map-by hwthread:4 -n 16
+binding: -bind-to hwthread:2 -map-by core:4 -n 16
     10100000
     01010000
     00001010
@@ -4977,7 +4401,25 @@ mpiexec -bind-to core:2 -map-by hwthread:4 -n 16
     00001010
     00000101
 TOPO: topo4.xml
-mpiexec -bind-to core:2 -map-by hwthread:8 -n 16
+binding: -bind-to hwthread:2 -map-by socket -n 16
+    10100000
+    01010000
+    00001010
+    00000101
+    10100000
+    01010000
+    00001010
+    00000101
+    10100000
+    01010000
+    00001010
+    00000101
+    10100000
+    01010000
+    00001010
+    00000101
+TOPO: topo4.xml
+binding: -bind-to hwthread:2 -map-by numa -n 16
     10100000
     00001010
     01010000
@@ -4995,7 +4437,493 @@ mpiexec -bind-to core:2 -map-by hwthread:8 -n 16
     01010000
     00000101
 TOPO: topo4.xml
-mpiexec -bind-to core:2 -map-by core -n 16
+binding: -bind-to hwthread:4 -map-by hwthread -n 16
+    10101010
+    01101010
+    01011010
+    01010110
+    01010101
+    10010101
+    10100101
+    10101001
+    10101010
+    01101010
+    01011010
+    01010110
+    01010101
+    10010101
+    10100101
+    10101001
+TOPO: topo4.xml
+binding: -bind-to hwthread:4 -map-by hwthread:2 -n 16
+    10101010
+    01011010
+    01010101
+    10100101
+    10101010
+    01011010
+    01010101
+    10100101
+    10101010
+    01011010
+    01010101
+    10100101
+    10101010
+    01011010
+    01010101
+    10100101
+TOPO: topo4.xml
+binding: -bind-to hwthread:4 -map-by hwthread:4 -n 16
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+TOPO: topo4.xml
+binding: -bind-to hwthread:4 -map-by hwthread:8 -n 16
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+TOPO: topo4.xml
+binding: -bind-to hwthread:4 -map-by core -n 16
+    10101010
+    01101010
+    01011010
+    01010110
+    01010101
+    10010101
+    10100101
+    10101001
+    10101010
+    01101010
+    01011010
+    01010110
+    01010101
+    10010101
+    10100101
+    10101001
+TOPO: topo4.xml
+binding: -bind-to hwthread:4 -map-by core:2 -n 16
+    10101010
+    01011010
+    01010101
+    10100101
+    10101010
+    01011010
+    01010101
+    10100101
+    10101010
+    01011010
+    01010101
+    10100101
+    10101010
+    01011010
+    01010101
+    10100101
+TOPO: topo4.xml
+binding: -bind-to hwthread:4 -map-by core:4 -n 16
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+TOPO: topo4.xml
+binding: -bind-to hwthread:4 -map-by socket -n 16
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+TOPO: topo4.xml
+binding: -bind-to hwthread:4 -map-by numa -n 16
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+    10101010
+    01010101
+TOPO: topo4.xml
+binding: -bind-to hwthread:8 -map-by hwthread -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo4.xml
+binding: -bind-to hwthread:8 -map-by hwthread:2 -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo4.xml
+binding: -bind-to hwthread:8 -map-by hwthread:4 -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo4.xml
+binding: -bind-to hwthread:8 -map-by hwthread:8 -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo4.xml
+binding: -bind-to hwthread:8 -map-by core -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo4.xml
+binding: -bind-to hwthread:8 -map-by core:2 -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo4.xml
+binding: -bind-to hwthread:8 -map-by core:4 -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo4.xml
+binding: -bind-to hwthread:8 -map-by socket -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo4.xml
+binding: -bind-to hwthread:8 -map-by numa -n 16
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+    11111111
+TOPO: topo4.xml
+binding: -bind-to core -map-by hwthread -n 16
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+TOPO: topo4.xml
+binding: -bind-to core -map-by hwthread:2 -n 16
+    10000000
+    00001000
+    01000000
+    00000100
+    00100000
+    00000010
+    00010000
+    00000001
+    10000000
+    00001000
+    01000000
+    00000100
+    00100000
+    00000010
+    00010000
+    00000001
+TOPO: topo4.xml
+binding: -bind-to core -map-by hwthread:4 -n 16
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+TOPO: topo4.xml
+binding: -bind-to core -map-by hwthread:8 -n 16
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+TOPO: topo4.xml
+binding: -bind-to core -map-by core -n 16
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+TOPO: topo4.xml
+binding: -bind-to core -map-by core:2 -n 16
+    10000000
+    00001000
+    01000000
+    00000100
+    00100000
+    00000010
+    00010000
+    00000001
+    10000000
+    00001000
+    01000000
+    00000100
+    00100000
+    00000010
+    00010000
+    00000001
+TOPO: topo4.xml
+binding: -bind-to core -map-by core:4 -n 16
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+TOPO: topo4.xml
+binding: -bind-to core -map-by socket -n 16
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+    10000000
+    01000000
+    00100000
+    00010000
+    00001000
+    00000100
+    00000010
+    00000001
+TOPO: topo4.xml
+binding: -bind-to core -map-by numa -n 16
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+    10000000
+    00100000
+    00001000
+    00000010
+    01000000
+    00010000
+    00000100
+    00000001
+TOPO: topo4.xml
+binding: -bind-to core:2 -map-by hwthread -n 16
     10100000
     00101000
     00001010
@@ -5013,7 +4941,7 @@ mpiexec -bind-to core:2 -map-by core -n 16
     00000101
     10000001
 TOPO: topo4.xml
-mpiexec -bind-to core:2 -map-by core:2 -n 16
+binding: -bind-to core:2 -map-by hwthread:2 -n 16
     10100000
     00001010
     01010000
@@ -5031,7 +4959,7 @@ mpiexec -bind-to core:2 -map-by core:2 -n 16
     01010000
     00000101
 TOPO: topo4.xml
-mpiexec -bind-to core:2 -map-by core:4 -n 16
+binding: -bind-to core:2 -map-by hwthread:4 -n 16
     10100000
     01010000
     00001010
@@ -5049,25 +4977,7 @@ mpiexec -bind-to core:2 -map-by core:4 -n 16
     00001010
     00000101
 TOPO: topo4.xml
-mpiexec -bind-to core:2 -map-by socket -n 16
-    10100000
-    01010000
-    00001010
-    00000101
-    10100000
-    01010000
-    00001010
-    00000101
-    10100000
-    01010000
-    00001010
-    00000101
-    10100000
-    01010000
-    00001010
-    00000101
-TOPO: topo4.xml
-mpiexec -bind-to core:2 -map-by numa -n 16
+binding: -bind-to core:2 -map-by hwthread:8 -n 16
     10100000
     00001010
     01010000
@@ -5085,7 +4995,97 @@ mpiexec -bind-to core:2 -map-by numa -n 16
     01010000
     00000101
 TOPO: topo4.xml
-mpiexec -bind-to core:4 -map-by hwthread -n 16
+binding: -bind-to core:2 -map-by core -n 16
+    10100000
+    00101000
+    00001010
+    01000010
+    01010000
+    00010100
+    00000101
+    10000001
+    10100000
+    00101000
+    00001010
+    01000010
+    01010000
+    00010100
+    00000101
+    10000001
+TOPO: topo4.xml
+binding: -bind-to core:2 -map-by core:2 -n 16
+    10100000
+    00001010
+    01010000
+    00000101
+    10100000
+    00001010
+    01010000
+    00000101
+    10100000
+    00001010
+    01010000
+    00000101
+    10100000
+    00001010
+    01010000
+    00000101
+TOPO: topo4.xml
+binding: -bind-to core:2 -map-by core:4 -n 16
+    10100000
+    01010000
+    00001010
+    00000101
+    10100000
+    01010000
+    00001010
+    00000101
+    10100000
+    01010000
+    00001010
+    00000101
+    10100000
+    01010000
+    00001010
+    00000101
+TOPO: topo4.xml
+binding: -bind-to core:2 -map-by socket -n 16
+    10100000
+    01010000
+    00001010
+    00000101
+    10100000
+    01010000
+    00001010
+    00000101
+    10100000
+    01010000
+    00001010
+    00000101
+    10100000
+    01010000
+    00001010
+    00000101
+TOPO: topo4.xml
+binding: -bind-to core:2 -map-by numa -n 16
+    10100000
+    00001010
+    01010000
+    00000101
+    10100000
+    00001010
+    01010000
+    00000101
+    10100000
+    00001010
+    01010000
+    00000101
+    10100000
+    00001010
+    01010000
+    00000101
+TOPO: topo4.xml
+binding: -bind-to core:4 -map-by hwthread -n 16
     10101010
     01101010
     01011010
@@ -5103,7 +5103,7 @@ mpiexec -bind-to core:4 -map-by hwthread -n 16
     10100101
     10101001
 TOPO: topo4.xml
-mpiexec -bind-to core:4 -map-by hwthread:2 -n 16
+binding: -bind-to core:4 -map-by hwthread:2 -n 16
     10101010
     01011010
     01010101
@@ -5121,7 +5121,7 @@ mpiexec -bind-to core:4 -map-by hwthread:2 -n 16
     01010101
     10100101
 TOPO: topo4.xml
-mpiexec -bind-to core:4 -map-by hwthread:4 -n 16
+binding: -bind-to core:4 -map-by hwthread:4 -n 16
     10101010
     01010101
     10101010
@@ -5139,7 +5139,7 @@ mpiexec -bind-to core:4 -map-by hwthread:4 -n 16
     10101010
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to core:4 -map-by hwthread:8 -n 16
+binding: -bind-to core:4 -map-by hwthread:8 -n 16
     10101010
     01010101
     10101010
@@ -5157,7 +5157,7 @@ mpiexec -bind-to core:4 -map-by hwthread:8 -n 16
     10101010
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to core:4 -map-by core -n 16
+binding: -bind-to core:4 -map-by core -n 16
     10101010
     01101010
     01011010
@@ -5175,7 +5175,7 @@ mpiexec -bind-to core:4 -map-by core -n 16
     10100101
     10101001
 TOPO: topo4.xml
-mpiexec -bind-to core:4 -map-by core:2 -n 16
+binding: -bind-to core:4 -map-by core:2 -n 16
     10101010
     01011010
     01010101
@@ -5193,7 +5193,7 @@ mpiexec -bind-to core:4 -map-by core:2 -n 16
     01010101
     10100101
 TOPO: topo4.xml
-mpiexec -bind-to core:4 -map-by core:4 -n 16
+binding: -bind-to core:4 -map-by core:4 -n 16
     10101010
     01010101
     10101010
@@ -5211,7 +5211,7 @@ mpiexec -bind-to core:4 -map-by core:4 -n 16
     10101010
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to core:4 -map-by socket -n 16
+binding: -bind-to core:4 -map-by socket -n 16
     10101010
     01010101
     10101010
@@ -5229,7 +5229,7 @@ mpiexec -bind-to core:4 -map-by socket -n 16
     10101010
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to core:4 -map-by numa -n 16
+binding: -bind-to core:4 -map-by numa -n 16
     10101010
     01010101
     10101010
@@ -5247,7 +5247,7 @@ mpiexec -bind-to core:4 -map-by numa -n 16
     10101010
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to socket -map-by hwthread -n 16
+binding: -bind-to socket -map-by hwthread -n 16
     10101010
     10101010
     10101010
@@ -5265,7 +5265,7 @@ mpiexec -bind-to socket -map-by hwthread -n 16
     01010101
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to socket -map-by hwthread:2 -n 16
+binding: -bind-to socket -map-by hwthread:2 -n 16
     10101010
     10101010
     01010101
@@ -5283,7 +5283,7 @@ mpiexec -bind-to socket -map-by hwthread:2 -n 16
     01010101
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to socket -map-by hwthread:4 -n 16
+binding: -bind-to socket -map-by hwthread:4 -n 16
     10101010
     01010101
     10101010
@@ -5301,7 +5301,7 @@ mpiexec -bind-to socket -map-by hwthread:4 -n 16
     10101010
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to socket -map-by hwthread:8 -n 16
+binding: -bind-to socket -map-by hwthread:8 -n 16
     10101010
     01010101
     10101010
@@ -5319,7 +5319,7 @@ mpiexec -bind-to socket -map-by hwthread:8 -n 16
     10101010
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to socket -map-by core -n 16
+binding: -bind-to socket -map-by core -n 16
     10101010
     10101010
     10101010
@@ -5337,7 +5337,7 @@ mpiexec -bind-to socket -map-by core -n 16
     01010101
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to socket -map-by core:2 -n 16
+binding: -bind-to socket -map-by core:2 -n 16
     10101010
     10101010
     01010101
@@ -5355,7 +5355,7 @@ mpiexec -bind-to socket -map-by core:2 -n 16
     01010101
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to socket -map-by core:4 -n 16
+binding: -bind-to socket -map-by core:4 -n 16
     10101010
     01010101
     10101010
@@ -5373,7 +5373,7 @@ mpiexec -bind-to socket -map-by core:4 -n 16
     10101010
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to socket -map-by socket -n 16
+binding: -bind-to socket -map-by socket -n 16
     10101010
     01010101
     10101010
@@ -5391,7 +5391,7 @@ mpiexec -bind-to socket -map-by socket -n 16
     10101010
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to socket -map-by numa -n 16
+binding: -bind-to socket -map-by numa -n 16
     10101010
     01010101
     10101010
@@ -5409,7 +5409,7 @@ mpiexec -bind-to socket -map-by numa -n 16
     10101010
     01010101
 TOPO: topo4.xml
-mpiexec -bind-to numa -map-by hwthread -n 16
+binding: -bind-to numa -map-by hwthread -n 16
     11111111
     11111111
     11111111
@@ -5427,7 +5427,7 @@ mpiexec -bind-to numa -map-by hwthread -n 16
     11111111
     11111111
 TOPO: topo4.xml
-mpiexec -bind-to numa -map-by hwthread:2 -n 16
+binding: -bind-to numa -map-by hwthread:2 -n 16
     11111111
     11111111
     11111111
@@ -5445,7 +5445,7 @@ mpiexec -bind-to numa -map-by hwthread:2 -n 16
     11111111
     11111111
 TOPO: topo4.xml
-mpiexec -bind-to numa -map-by hwthread:4 -n 16
+binding: -bind-to numa -map-by hwthread:4 -n 16
     11111111
     11111111
     11111111
@@ -5463,7 +5463,7 @@ mpiexec -bind-to numa -map-by hwthread:4 -n 16
     11111111
     11111111
 TOPO: topo4.xml
-mpiexec -bind-to numa -map-by hwthread:8 -n 16
+binding: -bind-to numa -map-by hwthread:8 -n 16
     11111111
     11111111
     11111111
@@ -5481,7 +5481,7 @@ mpiexec -bind-to numa -map-by hwthread:8 -n 16
     11111111
     11111111
 TOPO: topo4.xml
-mpiexec -bind-to numa -map-by core -n 16
+binding: -bind-to numa -map-by core -n 16
     11111111
     11111111
     11111111
@@ -5499,7 +5499,7 @@ mpiexec -bind-to numa -map-by core -n 16
     11111111
     11111111
 TOPO: topo4.xml
-mpiexec -bind-to numa -map-by core:2 -n 16
+binding: -bind-to numa -map-by core:2 -n 16
     11111111
     11111111
     11111111
@@ -5517,7 +5517,7 @@ mpiexec -bind-to numa -map-by core:2 -n 16
     11111111
     11111111
 TOPO: topo4.xml
-mpiexec -bind-to numa -map-by core:4 -n 16
+binding: -bind-to numa -map-by core:4 -n 16
     11111111
     11111111
     11111111
@@ -5535,7 +5535,7 @@ mpiexec -bind-to numa -map-by core:4 -n 16
     11111111
     11111111
 TOPO: topo4.xml
-mpiexec -bind-to numa -map-by socket -n 16
+binding: -bind-to numa -map-by socket -n 16
     11111111
     11111111
     11111111
@@ -5553,7 +5553,7 @@ mpiexec -bind-to numa -map-by socket -n 16
     11111111
     11111111
 TOPO: topo4.xml
-mpiexec -bind-to numa -map-by numa -n 16
+binding: -bind-to numa -map-by numa -n 16
     11111111
     11111111
     11111111
