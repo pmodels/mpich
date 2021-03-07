@@ -569,10 +569,6 @@ Makefile.am-stamp
 /src/pm/util/test/argstest
 /src/pm/util/test/forktest
 
-# /src/util/logging/common/
-/src/util/logging/common/describe_states.c
-/src/util/logging/common/state_names.h
-
 # /src/util/logging/rlog/
 /src/util/logging/rlog/rlogconf.*
 /src/util/logging/rlog/printrlog
