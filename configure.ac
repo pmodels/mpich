@@ -507,10 +507,6 @@ AC_ARG_WITH(pm,
                  only the mpiexec from hydra is installed into the bin
                  directory.]),,with_pm=default)
 
-AC_ARG_WITH(logging,
-	AC_HELP_STRING([--with-logging=name], [Specify the logging library for MPICH]),
-	[if test -z "$withval" ; then with_logging=rlog ; fi],with_logging=none)
-
 AC_ARG_ENABLE(threads,
 [  --enable-threads=level - Control the level of thread support in the
                            MPICH implementation.  The following levels
@@ -5392,7 +5388,6 @@ AC_OUTPUT(Makefile \
           src/include/mpi.h \
           doc/design/Makefile \
           doc/installguide/Makefile \
-          doc/logging/Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
           test/commands/cmdtests)
