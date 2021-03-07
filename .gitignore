@@ -569,14 +569,6 @@ Makefile.am-stamp
 /src/pm/util/test/argstest
 /src/pm/util/test/forktest
 
-# /src/util/logging/rlog/
-/src/util/logging/rlog/rlogconf.*
-/src/util/logging/rlog/printrlog
-/src/util/logging/rlog/printirlog
-/src/util/logging/rlog/pprintirlog
-/src/util/logging/rlog/irlog2rlog
-/src/util/logging/rlog/trace_impl.h
-
 # /test/
 /test/runtests
 

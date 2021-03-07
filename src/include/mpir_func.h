@@ -67,9 +67,6 @@
 #define MPIR_FUNC_VERBOSE_RMA_ENTER(a)       MPIR_FUNC_ENTER(a)
 #define MPIR_FUNC_VERBOSE_RMA_EXIT(a)        MPIR_FUNC_EXIT(a)
 
-#define MPII_Timer_init(rank, size)
-#define MPII_Timer_finalize()
-
 #else /* ! defined(MPL_USE_DBG_LOGGING) && ! defined(MPICH_DEBUG_MEMARENA) */
 
 /* Routine tracing (see --enable-timing for control of this) */
@@ -80,18 +77,13 @@
 
 #include "mpiallstates.h"
 
-#if (USE_LOGGING == MPICH_LOGGING__RLOG)
-#include "rlog_macros.h"
-#elif (USE_LOGGING == MPICH_LOGGING__EXTERNAL)
+#if (USE_LOGGING == MPICH_LOGGING__EXTERNAL)
 #include "mpilogging.h"
 #else
 #error You must select a logging library if timing is enabled
 #endif
 
 #else /* HAVE_TIMING and doing logging */
-
-#define MPII_Timer_init(rank, size)
-#define MPII_Timer_finalize()
 
 #define MPIR_FUNC_TERSE_STATE_DECL(a)
 #define MPIR_FUNC_TERSE_INIT_STATE_DECL(a)

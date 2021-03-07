@@ -114,7 +114,6 @@ MAKE=${MAKE-make}
 
 # amdirs are the directories that make use of autoreconf
 amdirs=". src/mpl"
-# amdirs="$amdirs src/util/logging/rlog"
 
 autoreconf_args="-if"
 export autoreconf_args
