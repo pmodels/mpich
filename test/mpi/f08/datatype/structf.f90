@@ -61,7 +61,7 @@
           call mpi_type_free(newtype,ierr)
 !         write(*,*) "Sent ",name(1:5),x
       else
-!         Everyone calls barrier incase size > 2
+!         Everyone calls barrier in case size > 2
           call mpi_barrier( MPI_COMM_WORLD, ierr )
           if (me.eq.dest) then
              position=0

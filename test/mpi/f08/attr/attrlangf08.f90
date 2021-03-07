@@ -74,7 +74,7 @@
 !
 ! For X->Y tests:
 !    Using X, store into key created in all three.
-!    Using Y, retrive all attributes.  See above for handling of
+!    Using Y, retrieve all attributes.  See above for handling of
 !     truncated or sign-extended
 !
 ! Use Fortran to drive tests (Fortran main program).  Call C for
