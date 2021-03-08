@@ -295,7 +295,8 @@ int MPIR_T_event_handle_free_impl(MPI_T_event_registration event_registration, v
 {
     LL_DELETE(event_registration->event->reg_list_head, event_registration->event->reg_list_tail,
               event_registration);
-    (free_cb_function) (event_registration, MPI_T_CB_REQUIRE_NONE, user_data);
+    if (free_cb_function != NULL)
+        (free_cb_function) (event_registration, MPI_T_CB_REQUIRE_NONE, user_data);
     MPL_free(event_registration);
 
     return MPI_SUCCESS;
