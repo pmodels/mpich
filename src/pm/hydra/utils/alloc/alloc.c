@@ -426,7 +426,7 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
     }
 
     /* find dummy proxies and remove them */
-    while (pg->proxy_list->exec_list == NULL) {
+    while (pg->proxy_list && pg->proxy_list->exec_list == NULL) {
         tmp = pg->proxy_list->next;
         pg->proxy_list->next = NULL;
         HYDU_free_proxy_list(pg->proxy_list);
@@ -436,6 +436,12 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
             HYDU_ERR_POP(status, "Missing executable.\n");
         }
     }
+
+    if (!pg->proxy_list) {
+        status = HYD_FAILURE;
+        HYDU_ERR_POP(status, "Missing executables\n");
+    }
+
     for (proxy = pg->proxy_list; proxy->next;) {
         if (proxy->next->exec_list == NULL) {
             tmp = proxy->next;
