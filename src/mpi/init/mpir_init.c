@@ -63,6 +63,18 @@ static MPL_initlock_t init_lock = MPL_INITLOCK_INITIALIZER;
 /* Note: we are not using atomic variable since it is always accessed under init_lock */
 static int init_counter;
 
+/*
+ * atexit function to check for proper finalize
+ * FIXME: warning text needs update for Sessions
+ */
+static void finalize_check(void)
+{
+    if (init_counter > 0) {
+        fprintf(stderr, "WARNING: MPI_FINALIZE not called!\n");
+        MPIR_pmi_finalize();    /* let the process manager know we are exiting */
+    }
+}
+
 /* TODO: currently the world model is not distinguished with session model, neither between
  * sessions, in that there is no session pointer attached to communicators, datatypes, etc.
  * To properly reflect the session semantics, we may need to always assoicate a session
@@ -249,6 +261,10 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
 
     if (provided)
         *provided = MPIR_ThreadInfo.thread_provided;
+
+#ifdef HAVE_ERROR_CHECKING
+    atexit(&finalize_check);
+#endif
 
   fn_exit:
     if (is_world_model) {
