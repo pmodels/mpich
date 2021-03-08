@@ -43,6 +43,7 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_halving(const void *sendbuf
     }
 
     if (total_count == 0) {
+        MPIR_SCHED_CHKPMEM_REAP(s);
         goto fn_exit;
     }
 
