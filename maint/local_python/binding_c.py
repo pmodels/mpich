@@ -416,12 +416,14 @@ def process_func_parameters(func):
                 else:
                     validation_list.append({'kind': "datatype_and_ptr", 'name': name})
         elif kind == "OPERATION":
-            if RE.match(r'mpi_op_(free|commutative)', func_name, re.IGNORECASE):
+            if RE.match(r'mpi_op_(free)', func_name, re.IGNORECASE):
                 do_handle_ptr = 1
             elif RE.match(r'mpi_r?accumulate', func_name, re.IGNORECASE):
                 validation_list.append({'kind': "OP_ACC", 'name': name})
             elif RE.match(r'mpi_(r?get_accumulate|fetch_and_op)', func_name, re.IGNORECASE):
                 validation_list.append({'kind': "OP_GACC", 'name': name})
+            elif RE.match(r'mpi_op_(commutative)', func_name, re.IGNORECASE):
+                validation_list.append({'kind': "op_ptr", 'name': name})
             else:
                 validation_list.append({'kind': "op_and_ptr", 'name': name})
         elif kind == "MESSAGE" and p['param_direction'] == 'inout':
@@ -1708,9 +1710,12 @@ def dump_validation(func, t):
     elif kind == "datatype_and_ptr":
         G.err_codes['MPI_ERR_TYPE'] = 1
         dump_validate_datatype(func, name)
+    elif kind == "op_ptr":
+        G.err_codes['MPI_ERR_OP'] = 1
+        dump_validate_op(name, "", False)
     elif kind == "op_and_ptr":
         G.err_codes['MPI_ERR_OP'] = 1
-        dump_validate_op(name, "")
+        dump_validate_op(name, "", True)
     elif kind == 'KEYVAL':
         if RE.match('MPI_Comm_', func_name):
             G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_COMM, \"%s\", mpi_errno);" % (name, name))
@@ -1823,7 +1828,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
     cond_intra = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM"
     cond_inter = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM"
     if RE.match(r'mpi_reduce_local$', func['name'], re.IGNORECASE):
-        dump_validate_op(op, dt)
+        dump_validate_op(op, dt, True)
         dump_validate_datatype(func, dt)
         G.out.append("if (%s > 0) {" % ct)
         G.out.append("    MPIR_ERRTEST_ALIAS_COLL(%s, %s, mpi_errno);" % (sbuf, rbuf))
@@ -1840,7 +1845,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         # exclude intercomm MPI_PROC_NULL
         G.out.append("if (" + cond_intra + " || root != MPI_PROC_NULL) {")
         G.out.append("INDENT")
-        dump_validate_op(op, dt)
+        dump_validate_op(op, dt, True)
         dump_validate_datatype(func, dt)
 
         cond_a = cond_intra + " && comm_ptr->rank == root"
@@ -1864,7 +1869,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         G.out.append("DEDENT")
         G.out.append("}")
     else:
-        dump_validate_op(op, dt)
+        dump_validate_op(op, dt, True)
         dump_validate_datatype(func, dt)
         (sct, rct) = (ct, ct)
         if RE.search(r'reduce_scatter$', func['name'], re.IGNORECASE):
@@ -2002,8 +2007,9 @@ def dump_validate_datatype(func, dt):
         dump_error_check("    ")
     G.out.append("}")
 
-def dump_validate_op(op, dt):
-    G.out.append("MPIR_ERRTEST_OP(%s, mpi_errno);" % op)
+def dump_validate_op(op, dt, is_coll):
+    if is_coll:
+        G.out.append("MPIR_ERRTEST_OP(%s, mpi_errno);" % op)
     G.out.append("if (!HANDLE_IS_BUILTIN(%s)) {" % op)
     G.out.append("    MPIR_Op *op_ptr = NULL;")
     G.out.append("    MPIR_Op_get_ptr(%s, op_ptr);" % op)
