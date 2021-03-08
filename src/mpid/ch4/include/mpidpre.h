@@ -298,7 +298,7 @@ typedef enum {
     MPIDIG_ACCU_SAME_OP_NO_OP
 } MPIDIG_win_info_accumulate_ops;
 
-#define MPIDIG_ACCU_NUM_OP (MPIR_OP_N_BUILTIN + 1)      /* builtin reduce op + cswap */
+#define MPIDIG_ACCU_NUM_OP (MPIR_OP_N_BUILTIN)  /* builtin reduce op + cswap */
 
 typedef struct MPIDIG_win_info_args_t {
     int no_locks;

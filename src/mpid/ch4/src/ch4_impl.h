@@ -1175,7 +1175,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_win_acc_op_get_index(MPI_Op op)
     if (op == MPI_OP_NULL) {
         /* Builtin index is from 0 to MPIR_OP_N_BUILTIN-1.
          * Thus use MPIR_OP_N_BUILTIN as index for special OP_NULL as RMA cswap */
-        return MPIR_OP_N_BUILTIN;
+        return MPIR_OP_N_BUILTIN - 1;
     } else {
         return MPIR_Op_builtin_get_index(op);
     }
@@ -1183,7 +1183,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_win_acc_op_get_index(MPI_Op op)
 
 MPL_STATIC_INLINE_PREFIX MPI_Op MPIDIU_win_acc_get_op(int index)
 {
-    if (index == MPIR_OP_N_BUILTIN) {
+    if (index == MPIR_OP_N_BUILTIN - 1) {
         /* Builtin index is from 0 to MPIR_OP_N_BUILTIN-1.
          * Thus use MPIR_OP_N_BUILTIN as index for special OP_NULL as RMA cswap */
         return MPI_OP_NULL;
