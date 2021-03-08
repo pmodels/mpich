@@ -44,7 +44,7 @@ AC_SUBST([yaksalib])
 
 AM_COND_IF([BUILD_YAKSA_ENGINE], [
 m4_define([yaksa_embedded_dir],[modules/yaksa])
-PAC_CHECK_HEADER_LIB_EXPLICIT([yaksa],[yaksa_config.h],[$YAKSALIBNAME],[yaksa_init])
+PAC_CHECK_HEADER_LIB_EXPLICIT([yaksa],[yaksa.h],[$YAKSALIBNAME],[yaksa_init])
 if test "$with_yaksa" = "embedded" ; then
     PAC_PUSH_ALL_FLAGS()
     PAC_RESET_ALL_FLAGS()
