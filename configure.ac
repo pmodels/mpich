@@ -1110,6 +1110,22 @@ m4_define([hwloc_embedded_dir],[modules/hwloc])
 dnl minor difference from e.g. mpl and zm -- we'll prioritize system hwloc by default
 PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
 PAC_CHECK_HEADER_LIB_OPTIONAL([netloc],[netloc.h],[netloc],[netloc_get_all_host_nodes])
+
+if test "$pac_have_hwloc" = "yes" ; then
+    AC_MSG_CHECKING([if hwloc meets minimum version requirement])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <hwloc.h>], [
+                       #if HWLOC_API_VERSION < 0x00020000
+                       #error
+                       #endif
+                       return 0;])],[],[pac_have_hwloc=no])
+    AC_MSG_RESULT([$pac_have_hwloc])
+
+    # if an old hwloc was specified by the user, throw an error
+    if test "$pac_have_hwloc" = "no" -a -n "$with_hwloc" -a "$with_hwloc" != "yes" ; then
+        AC_MSG_ERROR([hwloc installation does not meet minimum version requirement])
+    fi
+fi
+
 if test "$pac_have_hwloc" = "no" ; then
     with_hwloc=embedded
     pac_have_hwloc=yes
