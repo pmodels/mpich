@@ -57,7 +57,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_enqueue_unexp(MPIR_Request * req, MPIDIG_rr
     MPIDIG_REQUEST(req, req->rreq.request) = req;
     DL_APPEND(*list, &req->dev.ch4.am.req->rreq);
     MPIR_T_DO_EVENT(unexp_message_indices[0], MPI_T_CB_REQUIRE_MPI_RESTRICTED,
-                    &MPIDIG_REQUEST(req, tag));
+                    &MPIDIG_REQUEST(req, rank));
     MPIR_T_PVAR_LEVEL_INC(RECVQ, unexpected_recvq_length, 1);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
 }
@@ -86,7 +86,8 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_unexp(int rank, int tag,
         req = curr->request;
         if (MPIDIG_match_unexp(rank, tag, context_id, req)) {
             DL_DELETE(*list, curr);
-            MPIR_T_DO_EVENT(unexp_message_indices[1], MPI_T_CB_REQUIRE_MPI_RESTRICTED, &tag);
+            MPIR_T_DO_EVENT(unexp_message_indices[1], MPI_T_CB_REQUIRE_MPI_RESTRICTED,
+                            &MPIDIG_REQUEST(req, rank));
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
             break;
         }
