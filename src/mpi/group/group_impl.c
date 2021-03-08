@@ -64,6 +64,7 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 {
     int mpi_errno = MPI_SUCCESS;
     int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
+    int *flags = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
@@ -73,7 +74,7 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     /* Insure that the lpid lists are setup */
     MPIR_Group_setup_lpid_pairs(group_ptr1, group_ptr2);
 
-    int *flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
+    flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
 
     g1_idx = group_ptr1->idx_of_first_lpid;
     g2_idx = group_ptr2->idx_of_first_lpid;
@@ -121,9 +122,8 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
         /* TODO calculate is_local_dense_monotonic */
     }
 
-    MPL_free(flags);
-
   fn_exit:
+    MPL_free(flags);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
     return mpi_errno;
   fn_fail:
@@ -135,6 +135,7 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 {
     int mpi_errno = MPI_SUCCESS;
     int size, i, newi;
+    int *flags = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
@@ -148,7 +149,7 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
     (*new_group_ptr)->rank = MPI_UNDEFINED;
     /* Use flag fields to mark the members to *exclude* . */
 
-    int *flags = MPL_calloc(size, sizeof(int), MPL_MEM_OTHER);
+    flags = MPL_calloc(size, sizeof(int), MPL_MEM_OTHER);
 
     for (i = 0; i < n; i++) {
         flags[ranks[i]] = 1;
@@ -164,13 +165,12 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
         }
     }
 
-    MPL_free(flags);
-
     (*new_group_ptr)->size = size - n;
     (*new_group_ptr)->idx_of_first_lpid = -1;
     /* TODO calculate is_local_dense_monotonic */
 
   fn_exit:
+    MPL_free(flags);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
     return mpi_errno;
   fn_fail:
@@ -235,6 +235,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
 {
     int mpi_errno = MPI_SUCCESS;
     int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
+    int *flags = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_INTERSECTION_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_INTERSECTION_IMPL);
@@ -244,7 +245,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
     /* Insure that the lpid lists are setup */
     MPIR_Group_setup_lpid_pairs(group_ptr1, group_ptr2);
 
-    int *flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
+    flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
 
     g1_idx = group_ptr1->idx_of_first_lpid;
     g2_idx = group_ptr2->idx_of_first_lpid;
@@ -292,9 +293,8 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
         }
     }
 
-    MPL_free(flags);
-
   fn_exit:
+    MPL_free(flags);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_INTERSECTION_IMPL);
     return mpi_errno;
   fn_fail:
@@ -306,6 +306,7 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
 {
     int mpi_errno = MPI_SUCCESS;
     int size, i, j, k, nnew, first, last, stride;
+    int *flags = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
@@ -343,7 +344,7 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
      * was enabled *and* we are not MPI_THREAD_MULTIPLE, but since this
      * is a low-usage routine, we haven't taken that optimization.  */
 
-    int *flags = MPL_calloc(size, sizeof(int), MPL_MEM_OTHER);
+    flags = MPL_calloc(size, sizeof(int), MPL_MEM_OTHER);
 
     for (i = 0; i < n; i++) {
         first = ranges[i][0];
@@ -372,12 +373,10 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
         }
     }
 
-    MPL_free(flags);
-
     /* TODO calculate is_local_dense_monotonic */
 
-
   fn_exit:
+    MPL_free(flags);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
     return mpi_errno;
   fn_fail:
@@ -526,6 +525,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 {
     int mpi_errno = MPI_SUCCESS;
     int g1_idx, g2_idx, nnew, i, k, size1, size2, mylpid;
+    int *flags = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_UNION_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_UNION_IMPL);
@@ -550,7 +550,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     /* Clear the flag bits on the second group.  The flag is set if
      * a member of the second group belongs to the union */
     size2 = group_ptr2->size;
-    int *flags = MPL_calloc(size2, sizeof(int), MPL_MEM_OTHER);
+    flags = MPL_calloc(size2, sizeof(int), MPL_MEM_OTHER);
 
     /* Loop through the lists that are ordered by lpid (local process
      * id) to detect which processes in group 2 are not in group 1
@@ -616,11 +616,10 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
         }
     }
 
-    MPL_free(flags);
-
     /* TODO calculate is_local_dense_monotonic */
 
   fn_exit:
+    MPL_free(flags);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_UNION_IMPL);
     return mpi_errno;
   fn_fail:
