@@ -41,14 +41,14 @@ int MPIDIG_recvq_init(void)
     MPIR_T_register_source("RECVQ", "active message receive queue", MPI_T_SOURCE_ORDERED, NULL, -1,
                            -1, &source_index);
 
-    MPI_Datatype array_of_datatypes[2] = { MPI_INT, MPI_INT };
-    MPI_Aint array_of_displacements[2] = { 0, 4 };
+    MPI_Datatype array_of_datatypes[1] = { MPI_INT };
+    MPI_Aint array_of_displacements[1] = { 0 };
     MPIR_T_register_event(source_index, "unexp_message_enqueued", MPI_T_VERBOSITY_USER_BASIC,
-                          array_of_datatypes, array_of_displacements, 2,
+                          array_of_datatypes, array_of_displacements, 1,
                           "message added to unexpected queue", MPI_T_BIND_NO_OBJECT, "CH4",
                           &unexp_message_indices[0]);
     MPIR_T_register_event(source_index, "unexp_message_dequeued", MPI_T_VERBOSITY_USER_BASIC,
-                          array_of_datatypes, array_of_displacements, 2,
+                          array_of_datatypes, array_of_displacements, 1,
                           "message removed from unexpected queue", MPI_T_BIND_NO_OBJECT, "CH4",
                           &unexp_message_indices[1]);
 
