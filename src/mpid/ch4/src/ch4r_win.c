@@ -70,13 +70,11 @@ static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen)
     int c = 0, op_index;
     for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
         if (val & (1 << op_index)) {
-            MPI_Op op = MPIDIU_win_acc_get_op(op_index);
-
             MPIR_Assert(c < maxlen);
-            /* use OP_NULL as special cswap */
-            if (op == MPI_OP_NULL) {
+            if (op_index == 0) {
                 c += snprintf(buf + c, maxlen - c, "%scswap", (c > 0) ? "," : "");
             } else {
+                MPI_Op op = MPIDIU_win_acc_get_op(op_index);
                 const char *short_name = MPIR_Op_builtin_get_shortname(op);
                 c += snprintf(buf + c, maxlen - c, "%s%s", (c > 0) ? "," : "", short_name);
             }
