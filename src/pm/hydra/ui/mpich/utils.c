@@ -449,6 +449,13 @@ static void prepend_rank_help_fn(void)
 static HYD_status prepend_rank_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
+    int val;
+
+    if (MPL_env2int("MPIEXEC_PREFIX_DEFAULT", &val)) {
+        if (val >= 1) {
+            goto fn_exit;
+        }
+    }
 
     if (reading_config_file && HYD_ui_info.prepend_pattern) {
         /* global variable already set; ignore */
@@ -1635,6 +1642,24 @@ static HYD_status parse_args(char **t_argv)
     goto fn_exit;
 }
 
+static HYD_status check_envs(void)
+{
+    HYD_status status = HYD_SUCCESS;
+    int val;
+
+    if (MPL_env2int("MPIEXEC_PREFIX_DEFAULT", &val)) {
+        if (val > 0) {
+            status = HYDU_set_str("MPIEXEC_PREFIX_DEFAULT", &HYD_ui_info.prepend_pattern, "[%r] ");
+            HYDU_ERR_POP(status, "error setting prepend_pattern\n");
+        }
+    }
+
+  fn_exit:
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 {
     int ret;
@@ -1649,6 +1674,9 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 
     HYD_uiu_init_params();
     init_ui_mpich_info();
+
+    status = check_envs();
+    HYDU_ERR_POP(status, "error setting environment variable\n");
 
     argv++;
     status = parse_args(argv);
