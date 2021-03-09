@@ -52,9 +52,8 @@ static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr)
         } else {
             /* search other reduce op by short name */
             MPI_Op op = MPIR_Op_builtin_search_by_shortname(token);
-            if (op != MPI_OP_NULL) {
-                ops |= (1 << MPIDIU_win_acc_op_get_index(op));
-            }
+            MPIR_Assert(op != MPI_OP_NULL);
+            ops |= (1 << MPIDIU_win_acc_op_get_index(op));
         }
 
         token = (char *) strtok_r(NULL, ",", &savePtr);
