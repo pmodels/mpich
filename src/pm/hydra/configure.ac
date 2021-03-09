@@ -455,10 +455,9 @@ AC_MSG_RESULT([$available_topolibs])
 #########################################################################
 # Slurm hostlist parsing
 #########################################################################
-AC_CHECK_HEADERS(slurm/slurm.h)
-PAC_CHECK_HEADER_LIB_OPTIONAL([libslurm],[slurm/slurm.h],[slurm],[slurm_hostlist_create])
-if test "$pac_have_libslurm" = "yes" ; then
-    AC_DEFINE(HAVE_LIBSLURM,1,[Define if libslurm is available])
+PAC_CHECK_HEADER_LIB_OPTIONAL([slurm],[slurm/slurm.h],[slurm],[slurm_hostlist_create])
+if test "$pac_have_slurm" = "yes" ; then
+    AC_DEFINE(HAVE_SLURM,1,[Define if slurm is available])
 fi
 
 #########################################################################
