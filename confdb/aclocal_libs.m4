@@ -83,9 +83,12 @@ dnl prepend the library to WRAPPER_LIBS instead.
 AC_DEFUN([PAC_CHECK_HEADER_LIB],[
     failure=no
     AC_CHECK_HEADER([$1],,failure=yes)
-    PAC_PUSH_FLAG(LIBS)
-    AC_CHECK_LIB($2,$3,,failure=yes)
-    PAC_POP_FLAG(LIBS)
+    dnl Skip lib check if cannot find header
+    if test "$failure" = "no" ; then
+        PAC_PUSH_FLAG(LIBS)
+        AC_CHECK_LIB($2,$3,,failure=yes)
+        PAC_POP_FLAG(LIBS)
+    fi
     if test "$failure" = "no" ; then
        $4
     else
