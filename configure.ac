@@ -1214,7 +1214,7 @@ m4_define([hwloc_embedded_dir],[modules/hwloc])
 PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
 PAC_CHECK_HEADER_LIB_OPTIONAL([netloc],[netloc.h],[netloc],[netloc_get_all_host_nodes])
 
-if test "$pac_have_hwloc" = "yes" ; then
+if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
     AC_MSG_CHECKING([if hwloc meets minimum version requirement])
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <hwloc.h>], [
                        #if HWLOC_API_VERSION < 0x00020000
