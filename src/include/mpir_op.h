@@ -40,6 +40,8 @@ typedef enum MPIR_Op_kind {
     MPIR_OP_KIND__USER = 33
 } MPIR_Op_kind;
 
+#define MPIR_OP_N_BUILTIN 15
+
 /*S
   MPIR_User_function - Definition of a user function for MPI_Op types.
 
@@ -106,7 +108,6 @@ typedef struct MPIR_Op {
      MPID_DEV_OP_DECL
 #endif
 } MPIR_Op;
-#define MPIR_OP_N_BUILTIN 14
 extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
 extern MPIR_Op MPIR_Op_direct[];
 extern MPIR_Object_alloc_t MPIR_Op_mem;
@@ -130,15 +131,24 @@ extern MPIR_Object_alloc_t MPIR_Op_mem;
 /* Query index of builtin op */
 MPL_STATIC_INLINE_PREFIX int MPIR_Op_builtin_get_index(MPI_Op op)
 {
-    MPIR_Assert(HANDLE_IS_BUILTIN(op));
-    return (0x000000ff & op) - 1;       /* index 1 to 14 in handle. */
+    if (op == MPI_OP_NULL) {
+        return 0;
+    } else {
+        MPIR_Assert(HANDLE_IS_BUILTIN(op));
+        return (0x000000ff & op);
+    }
 }
 
-/* Query builtin op by using index (from 0 to MPIR_OP_N_BUILTIN-1) */
+/* Query builtin op by using index (from 1 to MPIR_OP_N_BUILTIN-1)
+ * Note: index 0 refers to MPI_OP_NULL (0x18000000) */
 MPL_STATIC_INLINE_PREFIX MPI_Op MPIR_Op_builtin_get_op(int index)
 {
-    MPIR_Assert(index >= 0 && index < MPIR_OP_N_BUILTIN);
-    return (MPI_Op) (0x58000000 | (index + 1)); /* index 1 to 14 in handle */
+    if (index == 0) {
+        return MPI_OP_NULL;
+    } else {
+        MPIR_Assert(index > 0 && index < MPIR_OP_N_BUILTIN);
+        return (MPI_Op) (0x58000000 | index);
+    }
 }
 
 MPI_Datatype MPIR_Op_builtin_search_by_shortname(const char *short_name);
