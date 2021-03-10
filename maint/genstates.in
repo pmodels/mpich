@@ -234,7 +234,7 @@ close HFILE;
 # FIXME: This is RLOG specific and should be placed in the appropriate 
 # RLOG directory, not common.  
 # FIXME: It would also make more sense for the RLOG_Describe_state routine
-# to perform the random color assignement when provided with an empty
+# to perform the random color assignment when provided with an empty
 # or null color string, rather than including all of this code in what is
 # otherwise an RLOG-specific file.
 

@@ -24,7 +24,7 @@ def split_line_with_break(s, tail, N=100):
         tlist.append(s)
         n = len(s)
     elif RE.match(r'(.*?\()(.*)', s):
-        # line with function pattern, match indent at openning parenthesis
+        # line with function pattern, match indent at opening parenthesis
         s_lead, s_next = RE.m.group(1,2)
         n_lead = len(s_lead)
 

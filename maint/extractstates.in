@@ -425,7 +425,7 @@ sub CheckAllInfo {
 		# There are two possibilities: 
 		# One of the values is cached and the other is an exception
 		# value, in which case we reject the cached value
-		# The other possiblity is a conflict, which we report.
+		# The other possibility is a conflict, which we report.
 		
 		print STDERR "\nInconsistent value for state of $key:\n";
 		print STDERR "Old : $stateNames{$key} in $stateLoc{$key}\n";

@@ -76,7 +76,7 @@ MPID_Win_fence
   Q: Should we perform a barrier here?  If we eliminate the barrier,
   then all processes still waiting for operations to complete will
   have to enqueue incoming requests from the next epoch until the
-  operations from the currrent epoch are complete.  Not performing the
+  operations from the current epoch are complete.  Not performing the
   barrier complicates the RMA operations, but the performance benefit
   may be significant for some cases.  (What are they?  How common are
   they?)

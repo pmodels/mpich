@@ -318,7 +318,7 @@ separated  by commas), with their current values, to the processes being run by
 \item[\texttt{-genv <name> <value>}]The \item{-genv} options have the same
 meaning as their corresponding \texttt{-env} version, except they apply to all
 executables, not just the current executable (in the case that the colon
-syntax is used to specify multiple execuables).
+syntax is used to specify multiple executables).
 \item[\texttt{-genvnone}]Like \texttt{-envnone}, but for all executables
 \item[\texttt{-genvlist <list>}]Like \texttt{-envlist}, but for all executables
 \item[\texttt{-usize <n>}]Specify the value returned for the value of the
@@ -330,7 +330,7 @@ attribute \texttt{MPI\_UNIVERSE\_SIZE}.
 exited if there is an abnormal exit
 \end{description}
 
-In addition to the commandline argments, the \texttt{gforker} \texttt{mpiexec}
+In addition to the commandline arguments, the \texttt{gforker} \texttt{mpiexec}
 provides a number of environment variables that can be used to control the
 behavior of \texttt{mpiexec}:
 

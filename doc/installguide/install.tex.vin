@@ -338,7 +338,7 @@ for details. A typical example is:
 to ensure that the process with rank 0 runs on your workstation.
 
 The arguments between `:'s in this syntax are called ``argument sets,''
-since they apply to a set of processes.  More argments are described in
+since they apply to a set of processes.  More arguments are described in
 the \textit{User's Guide}.
 
 \end{enumerate}

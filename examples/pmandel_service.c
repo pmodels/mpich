@@ -113,7 +113,7 @@ const char *default_filename = "pmandel.pgm";
                              abs(z=z^2+c) > diverge_value
    -julia        Plot a Julia set instead of a Mandelbrot set
    -jx # -jy #   The Julia point that defines the set
-   -alternate #    Plot an alternate Mandelbrot equation (varient 1 or 2 so far)
+   -alternate #    Plot an alternate Mandelbrot equation (variant 1 or 2 so far)
 */
 
 int myid;
@@ -846,7 +846,7 @@ void check_mand_params(int *m_max_iterations,
 #if PROMPT
     if (*m_pixels_across == NOVALUE || *m_pixels_down == NOVALUE) {
         /* grab unspecified limits */
-        printf("Enter pixel size (horizonal by vertical, i.e. 256 256): ");
+        printf("Enter pixel size (horizontal by vertical, i.e. 256 256): ");
         scanf(" %d %d", &*m_pixels_across, &*m_pixels_down);
     }
 #endif

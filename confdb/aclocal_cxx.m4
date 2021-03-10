@@ -1,5 +1,5 @@
 dnl This is from crypt.to/autoconf-archive, slightly modified.
-dnl It defines bool as int if it is not availalbe
+dnl It defines bool as int if it is not available
 dnl
 AC_DEFUN([AX_CXX_BOOL],
 [AC_CACHE_CHECK(whether the compiler recognizes bool as a built-in type,

@@ -63,7 +63,7 @@ Turning off Fortran (-nof77 being assumed)])
         WDEF="-D$FORTRANNAMES"
     fi
     # Delete confftest files with any extension.  This catches the case
-    # where auxillary files, such as coverage files, are removed.
+    # where auxiliary files, such as coverage files, are removed.
     rm -f confftest.*
     ])dnl
 dnl
@@ -804,7 +804,7 @@ EOF
   $CC $USER_CFLAGS -I$MPI_INCLUDE_DIR -o conftest$EXEEXT mpitest.c $MPI_LIB > /dev/null 2>&1
   if test -x conftest$EXEEXT ; then
      AC_MSG_RESULT(yes)
-     AC_DEFINE(HAVE_MPI_GREQUEST,1,[Define if generalized requests avaliable])
+     AC_DEFINE(HAVE_MPI_GREQUEST,1,[Define if generalized requests available])
      DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST 1"
   else
      AC_MSG_RESULT(no)
@@ -827,7 +827,7 @@ EOF
   $CC $USER_CFLAGS -I$MPI_INCLUDE_DIR -o conftest$EXEEXT mpitest.c $MPI_LIB > /dev/null 2>&1
   if test -x conftest$EXEEXT ; then
      AC_MSG_RESULT(yes)
-     AC_DEFINE(HAVE_MPI_GREQUEST_EXTENTIONS,1,[Define if non-standard generalized requests extensions avaliable])
+     AC_DEFINE(HAVE_MPI_GREQUEST_EXTENTIONS,1,[Define if non-standard generalized requests extensions available])
      DEFINE_HAVE_MPI_GREQUEST_EXTENSIONS="#define HAVE_MPI_GREQUEST_EXTENSIONS 1"
   else
      AC_MSG_RESULT(no)

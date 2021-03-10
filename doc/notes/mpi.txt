@@ -136,7 +136,7 @@ Concepts
 
   - virtual connection structures
 
-  - low-level connnection management (sockets, etc.) should be handled
+  - low-level connection management (sockets, etc.) should be handled
     entirely by the device and probably driven by a state machine
 
 
@@ -304,7 +304,7 @@ Structures that cross layers
   layers, but not vice versa.  To increase cache locality and reduce memory
   allocation, the device (and methods) report the amount of space they need in
   these structures so that the highest layer can allocate sufficient space.
-  pointer arithmatic, etc.
+  pointer arithmetic, etc.
 
 Virtual connection
 
