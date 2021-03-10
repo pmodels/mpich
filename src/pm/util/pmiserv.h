@@ -32,7 +32,7 @@ typedef struct PMIProcess {
                                                  * data */
     struct ProcessWorld *spawnWorld;    /* In progress spawn multiple
                                          * new world */
-    struct PMIKVSpace *spawnKVS;        /* In progres KV space for new world */
+    struct PMIKVSpace *spawnKVS;        /* In progress KV space for new world */
 } PMIProcess;
 
 typedef struct PMIGroup {

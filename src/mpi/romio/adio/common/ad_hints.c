@@ -251,7 +251,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                                          &(fd->hints->striping_unit), myname, error_code);
     }
 
-    /* Begin hint post-processig: some hints take precidence over or conflict
+    /* Begin hint post-processig: some hints take precedence over or conflict
      * with others, or aren't supported by some file systems */
 
     /* handle cb_config_list default value here; avoids an extra

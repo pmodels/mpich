@@ -53,7 +53,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
     {
 	iov_n += iovcnt;  /* add count of hdr iovs */
 	
-	/* Note this routine is invoked withing a CH3 critical section */
+	/* Note this routine is invoked within a CH3 critical section */
 	/* MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex); */
 	mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, iov_n);
 	/* MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex); */

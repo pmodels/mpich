@@ -66,9 +66,9 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     pow_k_phase = MPL_ipow(k, phase);
     /* first offset where the phase'th bit has value digitval */
     offset = pow_k_phase * digitval;
-    /* number of consecutive occurences of digitval */
+    /* number of consecutive occurrences of digitval */
     nconsecutive_occurrences = pow_k_phase;
-    /* distance between non-consecutive occurences of digitval */
+    /* distance between non-consecutive occurrences of digitval */
     delta = (k - 1) * pow_k_phase;
 
     dtcopy_id = MPL_malloc(sizeof(int) * comm_size, MPL_MEM_COLL);      /* NOTE: We do not need this much large array - make it more accurate */
@@ -173,7 +173,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     /* calculate largest power of k that is smaller than 'size'.
      * This is used for allocating temporary space for sending
-     * and receving data. */
+     * and receiving data. */
     p_of_k = 1;
     for (i = 0; i < nphases - 1; i++) {
         p_of_k *= k;
@@ -229,7 +229,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     MPIR_TSP_sched_fence(sched);
 
-    /* Step 2: Allocate buffer space for packing/receving data for every phase */
+    /* Step 2: Allocate buffer space for packing/receiving data for every phase */
     delta = 1;
     MPIR_CHKLMEM_MALLOC(tmp_sbuf, void ***, sizeof(void **) * nphases, mpi_errno, "tmp_sbuf",
                         MPL_MEM_COLL);

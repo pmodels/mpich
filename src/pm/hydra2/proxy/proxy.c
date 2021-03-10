@@ -417,7 +417,7 @@ static HYD_status launch_processes(void)
 #define MAPPING_PARSE_ERROR() abort()
 /* advance _c until we find a non whitespace character */
 #define MAPPING_SKIP_SPACE(_c) while (isspace(*(_c))) ++(_c)
-/* return true iff _c points to a character valid as an indentifier, i.e., [-_a-zA-Z0-9] */
+/* return true iff _c points to a character valid as an identifier, i.e., [-_a-zA-Z0-9] */
 #define MAPPING_ISIDENT(_c) (isalnum(_c) || (_c) == '-' || (_c) == '_')
 
 /* give an error iff *_c != _e */

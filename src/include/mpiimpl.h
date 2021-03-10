@@ -73,13 +73,13 @@ int usleep(useconds_t usec);
 #define PMPI_LOCAL
 #endif
 
-/* Fix for universal endianess added in autoconf 2.62 */
+/* Fix for universal endianness added in autoconf 2.62 */
 #ifdef WORDS_UNIVERSAL_ENDIAN
 #if defined(__BIG_ENDIAN__)
 #elif defined(__LITTLE_ENDIAN__)
 #define WORDS_LITTLEENDIAN
 #else
-#error 'Universal endianess defined without __BIG_ENDIAN__ or __LITTLE_ENDIAN__'
+#error 'Universal endianness defined without __BIG_ENDIAN__ or __LITTLE_ENDIAN__'
 #endif
 #endif
 

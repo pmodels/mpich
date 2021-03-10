@@ -28,7 +28,7 @@ static void load_acc_hint(MPIR_Win * win)
 
     /* TODO: we assume all pes pass the same hint. Allreduce is needed to check
      * the maximal value or the spec must define it as same value on all pes.
-     * Now we assume the spec requries same value on all pes. */
+     * Now we assume the spec requires same value on all pes. */
 
     /* We translate the atomic op hints to max count allowed for all possible atomics with each
      * datatype. We do not need more specific info (e.g., <datatype, op>, because any process may use
@@ -316,7 +316,7 @@ static int win_init_sep(MPIR_Win * win)
             goto fn_fail;
         }
 
-        /* Allocate and initilize tx index array. */
+        /* Allocate and initialize tx index array. */
         utarray_new(MPIDI_OFI_global.ctx[vni].rma_sep_idx_array, &ut_int_icd, MPL_MEM_RMA);
         for (i = 0; i < MPIDI_OFI_global.max_rma_sep_tx_cnt; i++) {
             utarray_push_back(MPIDI_OFI_global.ctx[vni].rma_sep_idx_array, &i, MPL_MEM_RMA);

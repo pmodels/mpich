@@ -114,7 +114,7 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr,
     }
 
     /* This process is responsible for all processes that have bits
-     * set from the LSB upto (but not including) mask.  Because of the
+     * set from the LSB up to (but not including) mask.  Because of the
      * "not including", we start by shifting mask back down one. */
 
     mask >>= 1;

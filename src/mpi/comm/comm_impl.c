@@ -351,7 +351,7 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
      * so it must be created before we decide if this process is a
      * member of the group */
     /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
-     * calling routine already holds the single criticial section */
+     * calling routine already holds the single critical section */
     mpi_errno = MPIR_Get_contextid_sparse(comm_ptr, &new_context_id,
                                           group_ptr->rank == MPI_UNDEFINED);
     MPIR_ERR_CHECK(mpi_errno);
@@ -441,7 +441,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
      * so it must be created before we decide if this process is a
      * member of the group */
     /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
-     * calling routine already holds the single criticial section */
+     * calling routine already holds the single critical section */
     if (!comm_ptr->local_comm) {
         MPII_Setup_intercomm_localcomm(comm_ptr);
     }
@@ -1065,7 +1065,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
                     (MPL_DBG_FDEST, "About to get contextid (local_size=%d) on rank %d",
                      local_comm_ptr->local_size, local_comm_ptr->rank));
     /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
-     * calling routine already holds the single criticial section */
+     * calling routine already holds the single critical section */
     /* TODO: Make sure this is tag-safe */
     mpi_errno = MPIR_Get_contextid_sparse(local_comm_ptr, &recvcontext_id, FALSE);
     MPIR_ERR_CHECK(mpi_errno);
@@ -1274,7 +1274,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
 
     /* printf("About to get context id \n"); fflush(stdout); */
     /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
-     * calling routine already holds the single criticial section */
+     * calling routine already holds the single critical section */
     new_context_id = 0;
     mpi_errno = MPIR_Get_contextid_sparse((*new_intracomm_ptr), &new_context_id, FALSE);
     MPIR_ERR_CHECK(mpi_errno);

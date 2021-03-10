@@ -189,7 +189,7 @@ if test "$ac_cv_func_select" != yes ; then
     AC_MSG_ERROR([select is required for the process manager utilities])
 else
     # Check that FD_ZERO works.  Under the Darwin xlc (version 6) compiler,
-    # FD_ZERO gets turned into a referece to __builtin_bzero, which is not
+    # FD_ZERO gets turned into a reference to __builtin_bzero, which is not
     # in the xlc libraries.  This is apparently due to xlc pretending that it
     # is GCC within the system header files (the same test that must 
     # succeed within the system header files to cause the declaration to

@@ -27,7 +27,7 @@ void ADIOI_PVFS2_Flush(ADIO_File fd, int *error_code)
 
 
     /* unlike ADIOI_PVFS2_Resize, MPI_File_sync() does not perform any
-     * syncronization */
+     * synchronization */
     MPI_Reduce(&dummy_in, &dummy, 1, MPI_INT, MPI_SUM, fd->hints->ranklist[0], fd->comm);
 
     /* io_worker computed in ADIO_Open */

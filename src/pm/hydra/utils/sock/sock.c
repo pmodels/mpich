@@ -18,7 +18,7 @@ struct fwd_hash {
     struct fwd_hash *next;
 };
 
-/* FIXME: redudant code with PMIServGetPort. Can we call PMIServGetPort here? */
+/* FIXME: redundant code with PMIServGetPort. Can we call PMIServGetPort here? */
 HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 {
     int ret;

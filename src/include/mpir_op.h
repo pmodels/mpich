@@ -55,7 +55,7 @@ typedef enum MPIR_Op_kind {
   We need to include a Fortran version, since those arguments will
   have type 'MPI_Fint *' instead.  We also need to add a test to the
   test suite for this case; in fact, we need tests for each of the handle
-  types to ensure that the transfered handle works correctly.
+  types to ensure that the transferred handle works correctly.
 
   This is part of the collective module because user-defined operations
   are valid only for the collective computation routines and not for

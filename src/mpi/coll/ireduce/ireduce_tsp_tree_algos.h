@@ -97,7 +97,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 
-    /* identify my locaion in the tree */
+    /* identify my location in the tree */
     is_tree_root = (rank == tree_root) ? 1 : 0;
     is_tree_leaf = (num_children == 0) ? 1 : 0;
     is_tree_intermediate = (!is_tree_leaf && !is_tree_root);
@@ -206,7 +206,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                                                            datatype, op, sched, nvtcs, vtcs);
             } else {    /* wait for the previous reduce to complete */
 
-                /* NOTE: Make sure that knomial tree is being constructed differently for reduce for optimal performace.
+                /* NOTE: Make sure that knomial tree is being constructed differently for reduce for optimal performance.
                  * In bcast, leftmost subtree is the largest while it should be the opposite in case of reduce */
 
                 if (i > 0) {

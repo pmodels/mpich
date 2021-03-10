@@ -349,7 +349,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         mpi_errno = MPIDI_OFI_send_lightweight(send_buf, data_sz, cq_data, dst_rank, tag, comm,
                                                context_offset, addr, vni_src, vni_dst);
         if (actual_pack_bytes > 0) {
-            /* Free stage host buf (asigned to send_buf already) after
+            /* Free stage host buf (assigned to send_buf already) after
              * lightweight_send. */
             MPL_gpu_free_host(send_buf);
         }

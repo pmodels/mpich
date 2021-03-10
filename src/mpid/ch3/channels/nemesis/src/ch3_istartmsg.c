@@ -16,7 +16,7 @@
  * the entire message is successfully sent, then NULL is returned.
  * Otherwise a request is allocated, the header is copied into the
  * request, and a pointer to the request is returned.  An error
- * condition also results in a request be allocated and the errror
+ * condition also results in a request be allocated and the error
  * being returned in the status field of the request.
  */
 int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Request **sreq_ptr)

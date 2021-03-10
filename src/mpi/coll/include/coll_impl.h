@@ -43,7 +43,7 @@ extern MPIR_Tree_type_t MPIR_Ibcast_tree_type;
 extern void *MPIR_Csel_root;
 extern char MPII_coll_generic_json[];
 
-/* Function to initialze communicators for collectives */
+/* Function to initialize communicators for collectives */
 int MPIR_Coll_comm_init(MPIR_Comm * comm);
 
 /* Function to cleanup any communicators for collectives */

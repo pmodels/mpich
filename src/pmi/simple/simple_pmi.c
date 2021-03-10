@@ -69,7 +69,7 @@ static int PMI_rank = 0;
 /* Set PMI_initialized to 1 for singleton init but no process manager
    to help.  Initialized to 2 for normal initialization.  Initialized
    to values higher than 2 when singleton_init by a process manager.
-   All values higher than 1 invlove a PM in some way.
+   All values higher than 1 involve a PM in some way.
 */
 typedef enum { PMI_UNINITIALIZED = 0,
     SINGLETON_INIT_BUT_NO_PM = 1,
@@ -1090,7 +1090,7 @@ static int PMII_Set_from_port(int fd, int id)
    mpiexec, and PMI_Init returned as if there was only one process.
 
    Note that PMI routines should not call PMII_singinit; they should
-   call PMIi_InitIfSingleton(), which both connects to the process mangager
+   call PMIi_InitIfSingleton(), which both connects to the process manager
    and sets up the initial KVS connection entry.
 */
 
@@ -1332,7 +1332,7 @@ static int getPMIFD(int *notset)
         if (p) {
             id = atoi(p);
             /* PMII_Set_from_port sets up the values that are delivered
-             * by enviroment variables when a separate port is not used */
+             * by environment variables when a separate port is not used */
             PMII_Set_from_port(PMI_fd, id);
             *notset = 0;
         }

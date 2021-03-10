@@ -169,7 +169,7 @@ int llapi_ladvise_lock(ADIO_File fd, unsigned long long flags, int num_advise,
     }
 
 
-    /* Simply save the new start/end extents, forget what we aleady had locked
+    /* Simply save the new start/end extents, forget what we already had locked
      * since lustre may reclaim it at any time. */
     fd->hints->fs_hints.lustre.lock_ahead_start_extent = ladvise_hdr->lah_advise[0].lla_start;
     fd->hints->fs_hints.lustre.lock_ahead_end_extent =

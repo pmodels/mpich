@@ -171,7 +171,7 @@ Major Changes Version 1.0.2:
   directly between the user's buffer and the storage devices, bypassing 
   the file-system cache. This can improve performance significantly on 
   systems with high disk bandwidth. Without high disk bandwidth,
-  regular I/O (that uses the file-system cache) perfoms better.
+  regular I/O (that uses the file-system cache) performs better.
   ROMIO, therefore, does not use direct I/O by default. The user can
   turn on direct I/O (separately for reading and writing) either by
   using environment variables or by using MPI's hints mechanism (info). 

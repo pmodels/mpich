@@ -232,7 +232,7 @@ AC_ARG_WITH(mpi-impl,[
 --with-mpi-impl=name - Specify MPI implementation to build ROMIO for],,)
 dnl
 AC_ARG_WITH(mpi, [
---with-mpi=path   - Path to instalation of MPI (headers, libs, etc)],,)
+--with-mpi=path   - Path to installation of MPI (headers, libs, etc)],,)
 dnl
 if test "$enable_f77" != "yes" ; then
    NOF77=1
@@ -708,7 +708,7 @@ if test "x$HAVE_WEAK_SYMBOLS" = "x0" ; then
 fi
 
 
-# weird: we have conflated "buid ROMIO's versions of the fortran bindings" and
+# weird: we have conflated "build ROMIO's versions of the fortran bindings" and
 # "build ROMIO"s fortran I/O tests". Of course the common situaiton is that we
 # are building as part of MPICH, which builds its own fortran bindings, but we
 # still want tests built

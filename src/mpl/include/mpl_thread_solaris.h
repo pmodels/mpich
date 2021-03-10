@@ -182,7 +182,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         /*                                                              \
          * FIXME: Solaris threads does not have a key destroy.  We      \
          * need to create equivalent functionality to prevent a         \
-         * callback from occuring when a thread exits after the TLS is  \
+         * callback from occurring when a thread exits after the TLS is  \
          * destroyed.  This is the only way to prevent subsystems that  \
          * have shutdown from continuing to receive callbacks.          \
          */                                                             \

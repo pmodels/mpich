@@ -169,7 +169,7 @@ static int free_avtid(int avtid)
      * If the allowed number of process groups are very large
      * We need to return unsed pages back to OS.
      * madvise(addr, len, MADV_DONTNEED);
-     * We need tracking wich page can be returned
+     * We need tracking which page can be returned
      */
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_FREE_AVTID);
     return 0;

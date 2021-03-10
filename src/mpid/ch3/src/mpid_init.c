@@ -397,7 +397,7 @@ static int init_pg(int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
        return errors if the routines are in fact used */
     if (usePMI) {
 	/*
-	 * Initialize the process manangement interface (PMI), 
+	 * Initialize the process management interface (PMI), 
 	 * and get rank and size information about our process group
 	 */
 
@@ -409,7 +409,7 @@ static int init_pg(int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
         pg_size = MPIR_Process.size;
         appnum = MPIR_Process.appnum;
 
-	/* Note that if pmi is not availble, the value of MPI_APPNUM is 
+	/* Note that if pmi is not available, the value of MPI_APPNUM is 
 	   not set */
 	if (appnum != -1) {
 	    MPIR_Process.attrs.appnum = appnum;
@@ -489,7 +489,7 @@ int MPIDI_CH3I_BCInit( char **bc_val_p, int *val_max_sz_p )
                              "**pmi_kvs_get_value_length_max %d", pmi_errno);
     }
 #endif
-    /* This memroy is returned by this routine */
+    /* This memory is returned by this routine */
     *bc_val_p = MPL_malloc(*val_max_sz_p, MPL_MEM_ADDRESS);
     if (*bc_val_p == NULL) {
 	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**nomem","**nomem %d",

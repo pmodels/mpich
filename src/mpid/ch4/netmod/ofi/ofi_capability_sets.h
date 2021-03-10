@@ -105,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
  * MPIDI_OFI_SYNC_SEND                 The bit to indicate a sync send
  * MPIDI_OFI_SYNC_SEND_ACK             The bit to indicate a sync send ack
  * MPIDI_OFI_DYNPROC_SEND              The bit to indicate a dynamic process send
- * MPIDI_OFI_HUGE_SEND                 The bit to indicate a huge messge
+ * MPIDI_OFI_HUGE_SEND                 The bit to indicate a huge message
  * MPIDI_OFI_CONTEXT_STRUCTS           The number of fi_context structs needed for the provider
  */
 

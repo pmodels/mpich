@@ -937,7 +937,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
      * scan result. for example, to node 3, it will have reduce result
      * of rank 1,2,3,4,5,6 in tempbuf.
      * then we should broadcast this result in the local node, and
-     * reduce it with recvbuf to get final result if nessesary. */
+     * reduce it with recvbuf to get final result if necessary. */
 
     if (comm_ptr->node_comm != NULL) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD

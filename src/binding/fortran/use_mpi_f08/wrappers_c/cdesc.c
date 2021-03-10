@@ -32,7 +32,7 @@ int cdesc_create_datatype(CFI_cdesc_t * cdesc, int oldcount, MPI_Datatype oldtyp
         MPIR_Assert(cdesc->rank <= MAX_RANK);
         PMPI_Type_size(oldtype, &size);
         /* When cdesc->elem_len != size, things suddenly become complicated. Generally, it is hard to create
-         * a composite datatype based on two datatypes. Currently we don't support it and doubt it is usefull.
+         * a composite datatype based on two datatypes. Currently we don't support it and doubt it is useful.
          */
         MPIR_Assert(cdesc->elem_len == size);
     }
@@ -55,7 +55,7 @@ int cdesc_create_datatype(CFI_cdesc_t * cdesc, int oldcount, MPI_Datatype oldtyp
         if (extent > cdesc->dim[i].extent) {
             extent = cdesc->dim[i].extent;
         } else {
-            /* Up to now, we have accumlated enough elements */
+            /* Up to now, we have accumulated enough elements */
             done = 1;
         }
 

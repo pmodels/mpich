@@ -18,7 +18,7 @@
  * The last set, are wrapper routines to support types created on top of other types,
  * e.g. large count datatypes
  *
- * The functions within each set follows the same ordering, i.e. contigous,
+ * The functions within each set follows the same ordering, i.e. contiguous,
  * vector, indexed_block, indexed, struct, dup, resized.
  */
 
@@ -305,7 +305,7 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         mpi_errno = MPIR_Typerep_create_dup(oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
 
-        /* if old_dtp is commited, user will not call `MPI_Type_commit` on the new type,
+        /* if old_dtp is committed, user will not call `MPI_Type_commit` on the new type,
          * but the device still need be notified (e.g. ucx need register the type) */
         if (old_dtp->is_committed) {
             MPID_Type_commit_hook(new_dtp);
@@ -528,7 +528,7 @@ int MPIR_Type_create_indexed_block_impl(int count,
         p_disp = (MPI_Aint *) array_of_displacements;
     } else {
         MPIR_CHKLMEM_MALLOC_ORJUMP(p_disp, MPI_Aint *, count * sizeof(MPI_Aint), mpi_errno,
-                                   "aint displacment array", MPL_MEM_BUFFER);
+                                   "aint displacement array", MPL_MEM_BUFFER);
         for (int i = 0; i < count; i++) {
             p_disp[i] = array_of_displacements[i];
         }
@@ -680,7 +680,7 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
         MPIR_CHKLMEM_MALLOC_ORJUMP(p_blkl, MPI_Aint *, count * sizeof(MPI_Aint), mpi_errno,
                                    "aint blocklengths array", MPL_MEM_BUFFER);
         MPIR_CHKLMEM_MALLOC_ORJUMP(p_disp, MPI_Aint *, count * sizeof(MPI_Aint), mpi_errno,
-                                   "aint displacments array", MPL_MEM_BUFFER);
+                                   "aint displacements array", MPL_MEM_BUFFER);
         for (int i = 0; i < count; i++) {
             p_blkl[i] = array_of_blocklengths[i];
             p_disp[i] = array_of_displacements[i];

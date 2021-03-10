@@ -6,7 +6,7 @@ MPI_Comm_compare:
     .extra: ignore_revoked_comm
 /*
     .N ThreadSafe
-    (To perform the communicator comparisions, this routine may need to
+    (To perform the communicator comparisons, this routine may need to
     allocate some memory.  Memory allocation is not interrupt-safe, and hence
     this routine is only thread-safe.)
 */
@@ -43,7 +43,7 @@ MPI_Comm_dup:
       particularly useful for (a) attributes that describe some property
       of the group associated with the communicator, such as its
       interconnection topology and (b) communicators that are given back
-      to the user; the attibutes in this case can track subsequent
+      to the user; the attributes in this case can track subsequent
       'MPI_Comm_dup' operations on this communicator.
 */
 
@@ -211,7 +211,7 @@ MPI_Intercomm_create:
        'local_leader' in the 'local_comm'.
 
       The MPI 1.1 Standard contains two mutually exclusive comments on the
-      input intercommunicators.  One says that their repective groups must be
+      input intercommunicators.  One says that their respective groups must be
       disjoint; the other that the leaders can be the same process.  After
       some discussion by the MPI Forum, it has been decided that the groups must
       be disjoint.  Note that the `reason` given for this in the standard is

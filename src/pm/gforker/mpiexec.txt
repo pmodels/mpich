@@ -58,7 +58,7 @@
    processes created by 'mpiexec'.  
 
    Notes:
-   A few additional enviroment variables are defined for the use of
+   A few additional environment variables are defined for the use of
    developers and in debugging.  These are
 
 .  MPIEXEC_DEBUG - If set, 'mpiexec' will write additional information

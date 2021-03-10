@@ -154,7 +154,7 @@ int MPIR_Coll_safe_to_block(void)
     return MPII_Gentran_scheds_are_pending() == false;
 }
 
-/* Function to initialze communicators for collectives */
+/* Function to initialize communicators for collectives */
 int MPIR_Coll_comm_init(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -63,7 +63,7 @@ typedef struct MPIR_Datatype_contents {
   Most were not chosen because any benefit in performance or memory
   efficiency was outweighed by the added complexity of the implementation.
 
-  A number of fields contain only boolean inforation ('is_contig',
+  A number of fields contain only boolean information ('is_contig',
   'is_committed').  These
   could be combined and stored in a single bit vector.
 

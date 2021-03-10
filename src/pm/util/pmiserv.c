@@ -114,7 +114,7 @@ static PMICmdMap pmiCommands[] = {
     {"spawn", fPMI_Handle_spawn},
     {"get_universe_size", fPMI_Handle_get_universe_size},
     {"get_appnum", fPMI_Handle_get_appnum},
-    {"\0", 0},  /* Sentinal for end of list */
+    {"\0", 0},  /* Sentinel for end of list */
 };
 
 /* ------------------------------------------------------------------------- */
@@ -873,7 +873,7 @@ static int fPMI_Handle_getbyidx(PMIProcess * pentry)
  * set up)
  * After the fork, the child will call
  *      PMISetupInClient(1, &pmiinfo)
- * This adds the PMI_PORT and PMI_ID values to the enviroment
+ * This adds the PMI_PORT and PMI_ID values to the environment
  * The parent also calls
  *      PMISetupFinishInServer(1, &pmiinfo, pState)
  * ? What should this do, since there is no connection yet?

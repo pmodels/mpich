@@ -15,7 +15,7 @@
  *   setting error code that relying on MPI error utility functions are also
  *   inapproprate, therefore, we have separate error macros for MPI tool interfaces.
  *
- *   On the other hand, due to the contraints, the error handling in tool
+ *   On the other hand, due to the constraints, the error handling in tool
  *   interface are rather simplified. Since it cannot fail, the failing diagnosis
  *   message is not going to be used, and the application developers are supposed
  *   to check return values and handle errors according to their application logic.

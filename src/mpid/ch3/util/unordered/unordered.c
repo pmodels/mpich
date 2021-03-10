@@ -105,7 +105,7 @@ int MPIDI_CH3U_Handle_unordered_recv_pkt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t * pkt,
 		while (pc_cur != NULL)
 		{
 		    /* the current recv seqnum is subtracted from both the 
-		       seqnums prior to comparision so as to remove any wrap
+		       seqnums prior to comparison so as to remove any wrap
 		       around effects. */
 		    if (pc_new->pkt.seqnum - vc->seqnum_recv < 
 			pc_cur->pkt.seqnum - vc->seqnum_recv)

@@ -12,7 +12,7 @@
 
 /* Rationale:
  *   push allocated pointers onto a stack
- *   free them on failiure or
+ *   free them on failure or
  *   commit (dismiss) the stack on success.
  */
 

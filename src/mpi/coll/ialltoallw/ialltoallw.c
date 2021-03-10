@@ -22,8 +22,8 @@ cvars:
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_blocked           - Force blocked algorithm
         sched_inplace           - Force inplace algorithm
-        gentran_blocked   - Force genereic transport based blocked algorithm
-        gentran_inplace   - Force genereic transport based inplace algorithm
+        gentran_blocked   - Force generic transport based blocked algorithm
+        gentran_inplace   - Force generic transport based inplace algorithm
 
     - name        : MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE

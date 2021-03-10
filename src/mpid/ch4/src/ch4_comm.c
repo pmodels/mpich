@@ -478,7 +478,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
 #endif /* HAVE_ERROR_CHECKING */
 
         /*
-         * Make an arbitrary decision about which group of processs is
+         * Make an arbitrary decision about which group of process is
          * the low group.  The LEADERS do this by comparing the
          * local process ids of the 0th member of the two groups
          * LUPID itself is not enough for determine is_low_group because both

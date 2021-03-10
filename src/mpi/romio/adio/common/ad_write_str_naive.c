@@ -110,7 +110,7 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
         /* First we're going to calculate a set of values for use in all
          * the noncontiguous in file cases:
          * start_off - starting byte position of data in file
-         * end_offset - last byte offset to be acessed in the file
+         * end_offset - last byte offset to be accessed in the file
          * st_n_filetypes - how far into the file we start in terms of
          *                  whole filetypes
          * st_index - index of block in first filetype that we will be

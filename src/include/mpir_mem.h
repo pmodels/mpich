@@ -50,7 +50,7 @@ extern "C" {
 
   Rules for memory management:
 
-  MPICH explicity prohibits the appearence of 'malloc', 'free',
+  MPICH explicitly prohibits the appearance of 'malloc', 'free',
   'calloc', 'realloc', or 'strdup' in any code implementing a device or
   MPI call (of course, users may use any of these calls in their code).
   Instead, you must use 'MPL_malloc' etc.; if these are defined

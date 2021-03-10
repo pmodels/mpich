@@ -16,7 +16,7 @@ typedef struct MPL_atomic_int64_t MPL_atomic_int64_t;
 typedef struct MPL_atomic_uint64_t MPL_atomic_uint64_t;
 typedef struct MPL_atomic_ptr_t MPL_atomic_ptr_t;
 
-/* By default, we use stronger atomic sematics for load and store. However,
+/* By default, we use stronger atomic semantics for load and store. However,
  * the relaxed semantics still can be used where it deemed approprate.
  */
 #define MPL_atomic_load_int MPL_atomic_acquire_load_int

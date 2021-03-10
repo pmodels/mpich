@@ -233,7 +233,7 @@ int MPIR_Attr_delete_list(int handle, MPIR_Attribute ** attr)
          * storage */
         new_p = p->next;
 
-        /* Check the sentinals first */
+        /* Check the sentinels first */
         /* --BEGIN ERROR HANDLING-- */
         if (p->pre_sentinal != 0 || p->post_sentinal != 0) {
             MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**attrsentinal");

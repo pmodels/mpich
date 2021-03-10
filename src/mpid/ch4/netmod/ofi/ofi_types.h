@@ -398,7 +398,7 @@ typedef struct MPIDI_OFI_win_acc_hint {
     uint64_t dtypes_max_count[MPIR_DATATYPE_N_PREDEFINED];      /* translate CH4 which_accumulate_ops hints to
                                                                  * atomicity support of all OFI datatypes. A datatype
                                                                  * is supported only when all enabled ops are valid atomic
-                                                                 * provided by the OFI provider (recored in MPIDI_OFI_global.win_op_table).
+                                                                 * provided by the OFI provider (recorded in MPIDI_OFI_global.win_op_table).
                                                                  * Invalid <dtype, op> defined in MPI standard are excluded.
                                                                  * This structure is prepared at window creation time. */
 } MPIDI_OFI_win_acc_hint_t;
@@ -500,7 +500,7 @@ typedef struct MPIDI_OFI_huge_recv {
 } MPIDI_OFI_huge_recv_t;
 
 /* The list of posted huge receives that haven't been matched yet. These need
- * to get matched up when handling the control message that starts transfering
+ * to get matched up when handling the control message that starts transferring
  * data from the remote memory region and we need a way of matching up the
  * control messages with the "real" requests. */
 typedef struct MPIDI_OFI_huge_recv_list {

@@ -47,7 +47,7 @@ void MPIR_T_enum_create(const char *enum_name, MPI_T_enum * handle)
     (*handle) = e;
 }
 
-/* Add an item to an exisiting enum.
+/* Add an item to an existing enum.
  * IN: handle, handle to the enum
  * IN: item_name, name of the item
  * IN: item_value, value associated with item_name
@@ -68,7 +68,7 @@ void MPIR_T_enum_add_item(MPI_T_enum handle, const char *item_name, int item_val
 
 /* Create a new category with name <cat_name>.
  * The new category is pushed at the back of cat_table.
- * Aslo, a new hash entry is added for the category in cat_hash.
+ * Also, a new hash entry is added for the category in cat_hash.
  * Return the newly created category.
  */
 static cat_table_entry_t *MPIR_T_cat_create(const char *cat_name)
@@ -103,7 +103,7 @@ static cat_table_entry_t *MPIR_T_cat_create(const char *cat_name)
 /* Add a pvar to an existing or new category
  * IN: cat_name, name of the category
  * IN: pvar_index, index of the pvar as defined by MPI_T_pvar_handle_alloc()
- * If cat_name is NULL or a empty string, nothing happpens.
+ * If cat_name is NULL or a empty string, nothing happens.
  */
 int MPIR_T_cat_add_pvar(const char *cat_name, int pvar_index)
 {
@@ -137,7 +137,7 @@ int MPIR_T_cat_add_pvar(const char *cat_name, int pvar_index)
 /* Add a cvar to an existing or new category
  * IN: cat_name, name of the category
  * IN: cvar_index, index of the cvar as defined by MPI_T_cvar_handle_alloc()
- * If cat_name is NULL or a empty string, nothing happpens.
+ * If cat_name is NULL or a empty string, nothing happens.
  */
 int MPIR_T_cat_add_cvar(const char *cat_name, int cvar_index)
 {
@@ -257,7 +257,7 @@ int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc)
 /* Add an event to an existing or new category
  * IN: cat_name, name of the category
  * IN: event_index, index of the event
- * If cat_name is NULL or a empty string, nothing happpens.
+ * If cat_name is NULL or a empty string, nothing happens.
  */
 int MPIR_T_cat_add_event(const char *cat_name, int event_index)
 {
@@ -291,8 +291,8 @@ int MPIR_T_cat_add_event(const char *cat_name, int event_index)
  *
  * IN: dtype, MPI datatype for this cvar
  * IN: name, Name of the cvar
- * IN: addr, Pointer to the cvar if known at registeration, otherwise NULL.
- * IN: count, # of elements of this cvar if known at registeration, otherwise 0.
+ * IN: addr, Pointer to the cvar if known at registration, otherwise NULL.
+ * IN: count, # of elements of this cvar if known at registration, otherwise 0.
  * IN: etype, MPI_T_enum or MPI_T_ENUM_NULL
  * IN: verb, MPI_T_PVAR_VERBOSITY_*
  * IN: binding, MPI_T_BIND_*
@@ -376,8 +376,8 @@ void MPIR_T_CVAR_REGISTER_impl(MPI_Datatype dtype, const char *name, const void 
  * IN: varclass, MPI_T_PVAR_CLASS_*
  * IN: dtype, MPI datatype for this pvar
  * IN: name, Name of the pvar
- * IN: addr, Pointer to the pvar if known at registeration, otherwise NULL.
- * IN: count, # of elements of this pvar if known at registeration, otherwise 0.
+ * IN: addr, Pointer to the pvar if known at registration, otherwise NULL.
+ * IN: count, # of elements of this pvar if known at registration, otherwise 0.
  * IN: etype, MPI_T_enum or MPI_T_ENUM_NULL
  * IN: verb, MPI_T_PVAR_VERBOSITY_*
  * IN: binding, MPI_T_BIND_*

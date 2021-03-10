@@ -306,7 +306,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
     goto fn_exit;
 }
 
-/* Common internal rountine for send_init family */
+/* Common internal routine for send_init family */
 MPL_STATIC_INLINE_PREFIX int MPIDI_psend_init(MPIDI_ptype ptype,
                                               const void *buf,
                                               MPI_Aint count,

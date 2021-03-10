@@ -138,7 +138,7 @@ typedef void *MPII_Attr_val_t;
   Notes:
   Attributes don''t have 'ref_count's because they don''t have reference
   count semantics.  That is, there are no shallow copies or duplicates
-  of an attibute.  An attribute is copied when the communicator that
+  of an attribute.  An attribute is copied when the communicator that
   it is attached to is duplicated.  Subsequent operations, such as
   'MPI_Comm_attr_free', can change the attribute list for one of the
   communicators but not the other, making it impractical to keep the
