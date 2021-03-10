@@ -83,7 +83,7 @@ MPI_Example:
 */
 /*
     Multiple such "comment" blocks are allowed. The first block adds notes to the
-    top fo the man page (after the generated parameter info). The rest of the blocks
+    top of the man page (after the generated parameter info). The rest of the blocks
     are concatenated a follows the generated notes.
 
     Typical functions will all include .ThreadSafe and .Fortran notes, unless

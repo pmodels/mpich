@@ -402,7 +402,7 @@ format).
 For more details of \texttt{--enable-fast}, see the output of
 \texttt{configure --help}. 
 Any other complicated optimization flags for MPICH libraries have
-to be set throught \texttt{MPICHLIB\_xFLAGS}.  \texttt{CFLAGS} and friends
+to be set through \texttt{MPICHLIB\_xFLAGS}.  \texttt{CFLAGS} and friends
 are empty by default.
 
 For example, to build a production MPICH environment with \texttt{-O3} for all
@@ -631,7 +631,7 @@ different mechanisms by which your processes are started.  An interface
 (called PMI) isolates the MPICH library code from the process manager.
 Currently three process managers are distributed with MPICH
 \begin{description}
-\item[hydra] This is the default process manager tha natively uses the
+\item[hydra] This is the default process manager that natively uses the
 existing daemons on the system such as ssh, slurm, pbs.
 \item[gforker] This is a simple process manager that creates all
   processes on a single machine.  It is useful both for debugging and

@@ -1485,7 +1485,7 @@ sub print_args {
             # (even if an array, because at the Fortran level, it
             # is still a pointer to a character variable; the length
             # of each entry in the array is the "d" value).
-            # FORT_END_LEN and FORT_MIXED_LEN contain the necessary comman
+            # FORT_END_LEN and FORT_MIXED_LEN contain the necessary command
             # if they are prsent at all.
             print "    parm is a character string\n" if $debug;
             if ($prototype_only) {

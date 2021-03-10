@@ -990,7 +990,7 @@ void check_mand_params(int *m_max_iterations,
 
     if (*m_max_iterations == NOVALUE) {
         /* grab unspecified limit */
-        printf("Enter max interations to do: ");
+        printf("Enter max iterations to do: ");
         scanf("%d", &*m_max_iterations);
     }
 #endif

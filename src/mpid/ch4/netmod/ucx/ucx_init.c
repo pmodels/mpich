@@ -313,7 +313,7 @@ int MPIDI_UCX_mpi_finalize_hook(void)
         }
     }
 
-    /* now complete the outstaning requests! Important: call progress inbetween, otherwise we
+    /* now complete the outstaning requests! Important: call progress in between, otherwise we
      * deadlock! */
     int completed = p;
     while (completed != 0) {

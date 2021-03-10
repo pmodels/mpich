@@ -495,7 +495,7 @@ static void gavl_tree_remove_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr, 
         gavl_tree_remove_node_internal(tree_ptr, dnode);
 
         /* we perform rebalance after every internal deletion in order to ensure
-         * lightweight rebalance that rotates left and right childs with at most
+         * lightweight rebalance that rotates left and right children with at most
          * 2 height difference. */
         gavl_tree_rebalance(tree_ptr);
     };

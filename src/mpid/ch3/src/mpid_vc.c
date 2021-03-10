@@ -583,7 +583,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
-        /* Extract the context and group sign informatin */
+        /* Extract the context and group sign information */
         *is_low_group     = comm_info[1];
     }
 

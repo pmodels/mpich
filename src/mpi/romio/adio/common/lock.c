@@ -96,7 +96,7 @@ int ADIOI_GEN_SetLock(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int w
      * ADIO_Offsets.  */
 /* FIXME: This is a temporary hack until we use flock64 where
    available. It also doesn't fix the broken Solaris header sys/types.h
-   header file, which declars off_t as a UNION ! Configure tests to
+   header file, which declares off_t as a UNION ! Configure tests to
    see if the off64_t is a union if large file support is requested;
    if so, it does not select large file support.
 */

@@ -1837,7 +1837,7 @@ sub clean_args {
 
 # Print out the constants.
 # PrintConstants( FD, giveValue )
-# if GiveValue is true, defint the value, otherwise, make it external
+# if GiveValue is true, define the value, otherwise, make it external
 sub PrintConstants {    
     my ($OUTFD, $giveValue) = @_;
     my $extern = "extern ";

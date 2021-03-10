@@ -167,7 +167,7 @@ static int free_avtid(int avtid)
     /*
      * TODO:
      * If the allowed number of process groups are very large
-     * We need to return unsed pages back to OS.
+     * We need to return unused pages back to OS.
      * madvise(addr, len, MADV_DONTNEED);
      * We need tracking which page can be returned
      */

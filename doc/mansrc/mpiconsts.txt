@@ -321,7 +321,7 @@ Window flavors:
 
 Window Memory Model:
 +I MPI_WIN_SEPARATE - Separate public and private copies of window memory
-- MPI_WIN_UNIFIED - The publich and private copies are identical (by which
+- MPI_WIN_UNIFIED - The public and private copies are identical (by which
  we mean that updates are eventually observed without additional RMA operations)
 
 Window Lock Types:

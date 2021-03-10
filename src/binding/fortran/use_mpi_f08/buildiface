@@ -33,7 +33,7 @@ my $pmpi_dir = "wrappers_f/profiling";
 
 # Some of the following variables and subroutines are adapted from F77
 # buildiface. They are used to parse files like mpi.h.in and mpio.h.in,
-# store MPI definitions and print them in Fortran soure code.
+# store MPI definitions and print them in Fortran source code.
 # The main driver part follows the subroutines.
 
 my %mpidef; # Map MPI constant names to values

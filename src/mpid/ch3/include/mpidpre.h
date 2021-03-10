@@ -181,8 +181,8 @@ typedef struct MPIDI_CH3I_comm
                              * disconnected as a part of
                              * MPI_COMM_DISCONNECT; FALSE otherwise. */
 
-    struct MPIDI_VCRT *vcrt;          /* virtual connecton reference table */
-    struct MPIDI_VCRT *local_vcrt;    /* local virtual connecton reference table */
+    struct MPIDI_VCRT *vcrt;          /* virtual connection reference table */
+    struct MPIDI_VCRT *local_vcrt;    /* local virtual connection reference table */
 
     struct MPIR_Comm *next; /* next pointer for list of communicators */
     struct MPIR_Comm *prev; /* prev pointer for list of communicators */
