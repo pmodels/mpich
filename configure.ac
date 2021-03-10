@@ -2825,7 +2825,7 @@ AC_CHECK_ALIGNOF(int16_t)
 AC_CHECK_ALIGNOF(int32_t)
 AC_CHECK_ALIGNOF(int64_t)
 AC_CHECK_ALIGNOF(bool)
-AC_CHECK_ALIGNOF(wchar_t, 0, [#include <stddef.h>])
+AC_CHECK_ALIGNOF(wchar_t)
 
 # sys/bitypes.h defines the int16_t etc. on some systems (e.g., OSF1).
 # Include it when testing for these types
