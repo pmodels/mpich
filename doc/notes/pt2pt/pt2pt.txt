@@ -58,7 +58,7 @@ MPI_Start(request, error)
   the right thing (tm).
 
 - we chose not to convert handles to structure pointers since the handles may
-  cointain quick access to common information avoiding pointer dereferences.
+  contain quick access to common information avoiding pointer dereferences.
   in some cases, an associated structure may not even exist.
 
   the implication here is that many of the non-persistent MPI_Xsend routines
@@ -85,7 +85,7 @@ MPI_Ssend(buf, count, datatype, dest, tag, comm, error)
      as much data as possible.  If the entire message could not be sent
      "immediately" then queue the request for later processing. (We need a
      progress engine to ensure that later happens.  */
-  /* Build up a segement unless the datatype is "trivial" */
+  /* Build up a segment unless the datatype is "trivial" */
 
 
   /* Wait until entire message is sent */
@@ -174,7 +174,7 @@ MPI_Ssend(buf, count, datatype, dest, tag, comm, error)
 reminder: envelope = (context (communicator), source_rank, tag)
 
 QUESTION: what exactly are the semantics of a block?  Sends to the same
-destination are definitely ordered.  Sends to different desinations could
+destination are definitely ordered.  Sends to different destinations could
 proceed in parallel.  Should they?
 
 example:

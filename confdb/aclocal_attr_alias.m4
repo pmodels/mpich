@@ -113,12 +113,12 @@ mpif_cmblk_t MPIFCMB;
    define aliased symbols if they are in the same file.
 */
 /*
-    We can't do the following comparision in one test:
+    We can't do the following comparison in one test:
 
-    ilogical = (( &mpifcmb == ptr && &MPIFCMB == ptr ) ? TRUE : FALSE) ;
+    illogical = (( &mpifcmb == ptr && &MPIFCMB == ptr ) ? TRUE : FALSE) ;
 
     because some compiler, like gcc 4.4.2's -O* optimizes the code
-    such that the ilogical expression is FALSE. The likely reason is that
+    such that the illogical expression is FALSE. The likely reason is that
     mpifcmb and MPIFCMB are defined in the same scope in which C optimizer
     may have treated them as different objects (with different addresses),
     &mpifcmb != &MPIFCMB, before actually running the test and hence the
@@ -304,7 +304,7 @@ AC_LANG_POP(C)
 dnl
 dnl PAC_F2C_ATTR_ALIGNED_SIZE(ARRAY_SIZE, [OUTPUT_VAR], [MIN_ALIGNMENT])
 dnl
-dnl ARRAY_SIZE    : Size of the integer array within the fortran commmon block.
+dnl ARRAY_SIZE    : Size of the integer array within the fortran common block.
 dnl OUTPUT_VAR    : Optional variable to be set.
 dnl                 if test succeeds, set OUTPUT_VAR=$pac_f2c_attr_aligned_str.
 dnl                 if test fails, set OUTPUT_VAR="unknown".
@@ -337,7 +337,7 @@ dnl i.e. ac_fc_werror_flag=yes, because compiler like pgf77 at version 10.x)
 dnl has non-zero stderr output if a fortran program is used in the linking.
 dnl The stderr contains the name of fortran program even if the linking is
 dnl successful.  We could avoid the non-zero stderr output in pgf77 by
-dnl compiling everthing into object files and linking all the object files
+dnl compiling everything into object files and linking all the object files
 dnl with pgf77.  Doing that would need us to use AC_TRY_EVAL instead of
 dnl AC_LINK_IFELSE, so "diff" approach is used instead.
 #

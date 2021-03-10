@@ -695,7 +695,7 @@ AC_LANG_POP([Fortran 77])
 dnl PAC_PROG_F77_IN_C_LIBS
 dnl
 dnl Find the essential libraries that are needed to use the C linker to 
-dnl create a program that includes a trival Fortran code.  
+dnl create a program that includes a trivial Fortran code.  
 dnl
 dnl For example, all pgf90 compiled objects include a reference to the
 dnl symbol pgf90_compiled, found in libpgf90 .

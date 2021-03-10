@@ -192,7 +192,7 @@ case "$enable_sharedlibs" in
 	# our base approach.  Disabling for now
 	dnl LT_PREREQ([2.2.6])
         dnl LT_INIT([disable-shared])
-	AC_MSG_ERROR([To use this test verison, edit aclocal_shl.m4])
+	AC_MSG_ERROR([To use this test version, edit aclocal_shl.m4])
         # Likely to be
         # either CC or CC_SHL is libtool $cc
         CC_SHL='${LIBTOOL} --mode=compile ${CC}'

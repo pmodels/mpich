@@ -725,7 +725,7 @@ If the C compiler that is used to build MPICH libraries supports both
 multiple weak symbols and multiple aliases of common symbols, the
 Fortran binding can support multiple Fortran compilers. The
 multiple weak symbols support allow MPICH to provide different name
-mangling scheme (of subroutine names) required by differen Fortran
+mangling scheme (of subroutine names) required by different Fortran
 compilers. The multiple aliases of common symbols support enables
 MPICH to equal different common block symbols of the MPI Fortran
 constant, e.g. MPI_IN_PLACE, MPI_STATUS_IGNORE. So they are understood

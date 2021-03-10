@@ -50,7 +50,7 @@ MPI_Win_create
   (MPIR_Win).
 
   * Create a copy of the communcator provided by the user so the
-    window has its own communcation context.
+    window has its own communication context.
   
   Q: Which layer (MPI/ADI3) should manage (be responsible for
   creating, destroying, etc.) the MPIR_Win object?

@@ -57,7 +57,7 @@ Supported options:
     --help              - this output (optional)
     --debug             - enable some debugging output (optional)
     --namespace=STR     - use STR as variable/type prefix in generated code (optional, default=$ns)
-    --alt-namespace=STR - use STR as alternaive variable/type prefix in generated code (optional, default=$alt_ns)
+    --alt-namespace=STR - use STR as alternative variable/type prefix in generated code (optional, default=$alt_ns)
     --header=STR        - specify the header file name (optional, default=$header_file)
     --c-file=STR        - specify the C file name (optional, default=$c_file)
     --readme-file=STR   - specify the readme file name (optional, default=$readme_file)

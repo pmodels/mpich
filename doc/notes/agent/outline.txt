@@ -87,11 +87,11 @@
     Theoretically, a MPI communicator could be tagged to allow
     unrealiable delivery, QoS, etc.  We haven't thought much what
     impact this has on our design, but we probably don't want to
-    prevent these capabilites.
+    prevent these capabilities.
 
 * Communication subsystem components
 
-  - virtual connnections
+  - virtual connections
 
     allows late binding to a communication device (method)
 
@@ -148,7 +148,7 @@
 
   - reliability
 
-    Under a default environemnt, MPI messages are inherently reliable
+    Under a default environment, MPI messages are inherently reliable
     which means that some methods may need concern themselves with
     acknowledgments and retransmission if the underlying network does
     not guarantee reliability.

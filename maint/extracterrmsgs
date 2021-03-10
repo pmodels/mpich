@@ -94,7 +94,7 @@ else {
 }
 # Setup before processing the files
 if ($build_test_pgm && -d "test/mpi/errhan") {
-    # Get current directory incase we need it for the error message
+    # Get current directory in case we need it for the error message
     my $curdir = `pwd`;
     open( TESTFD, ">test/mpi/errhan/errcode.c" ) or die "Cannot create test program errcode.c in $curdir/test/mpi/errhan\n";
     print TESTFD "/*\
@@ -180,7 +180,7 @@ typedef struct msgpair {
 }
 #
 # We also need a way to create the records
-# We then hash these on the first occurance (or precompute the hashes?)
+# We then hash these on the first occurrence (or precompute the hashes?)
 #
 # The error messages are output in the following form:
 # typedef struct {const char short[], const long[]} namemap;
@@ -206,7 +206,7 @@ sub CreateErrMsgMapping {
 	s/#.*$//;
 	my ($mpiname,$num,$shortmsg) = split(/\s\s*/);
 	if (!defined($shortmsg)) {
-	    # Incase there is no short message entry (!)
+	    # In case there is no short message entry (!)
 	    $shortmsg = "";
 	}
 	if ($shortmsg ne "")
@@ -255,7 +255,7 @@ sub CreateErrMsgMapping {
 	    $seenfile = $generic_loc{$key};
 	    if ($key =~ /^\*\*/) {
 		# If the message begins with text, assume that it is a 
-		# litteral message
+		# literal message
 		print STDERR "Shortname $key for generic messages has no expansion (first seen in file $seenfile)\n";
 		print STDERR "(Add expansion to $sourcefile)\n";
 	    }
@@ -281,8 +281,8 @@ sub CreateErrMsgMapping {
     # Generate the mapping of short to long names
     print $OUTFD "\nstatic const int generic_msgs_len = $num;\n";
 
-    # The sentinals should be hardcoded into the source file that
-    # uses this file to ensure that the sentinal tests are ok.
+    # The sentinels should be hardcoded into the source file that
+    # uses this file to ensure that the sentinel tests are ok.
     my $sentinal1 = "0xacebad03";
     my $sentinal2 = "0xcb0bfa11";
     print $OUTFD "static const msgpair generic_err_msgs[] = {\n";
@@ -541,7 +541,7 @@ sub AddTestCall {
 # Read an errnames file.  This allows us to distribute the errnames.txt
 # files in the relevant modules, rather than making them part of one
 # single main file.
-# This updates the global hashs longnames and longnamesDefined
+# This updates the global hashes longnames and longnamesDefined
 #  ReadErrnamesFile( filename )
 # ==========================================================================
 sub ReadErrnamesFile {

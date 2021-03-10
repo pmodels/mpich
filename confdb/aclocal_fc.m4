@@ -123,7 +123,7 @@ fi # is not cross compiling
 dnl
 dnl ------------------------------------------------------------------------
 dnl Special characteristics that have no autoconf counterpart but that
-dnl we need as part of the Fortran 90 support.  To distinquish these, they
+dnl we need as part of the Fortran 90 support.  To distinguish these, they
 dnl have a [PAC] prefix.
 dnl 
 dnl At least one version of the Cray compiler needs the option -em to
@@ -274,7 +274,7 @@ AC_COMPILE_IFELSE([],[
 rm -rf conftest.dSYM
 rm -f conftest.$ac_ext
 
-dnl Create the conftest here so the test isn't created everytime inside loop.
+dnl Create the conftest here so the test isn't created every time inside loop.
 AC_LANG_CONFTEST([AC_LANG_PROGRAM([],[use conf])])
 
 # Save the original FCFLAGS
@@ -312,7 +312,7 @@ if test "X$pac_cv_fc_module_incflag" = "X" ; then
         #     fullpathname.pc
         # The "fullpathname.pc" is generated, I believe, when a module is 
         # compiled.  
-        # Intel compilers use a wierd system: -cl,filename.pcl .  If no file is
+        # Intel compilers use a weird system: -cl,filename.pcl .  If no file is
         # specified, work.pcl and work.pc are created.  However, if you specify
         # a file, it must contain the name of a file ending in .pc .  Ugh!
         pac_cv_fc_module_incflag="unknown"
@@ -1143,7 +1143,7 @@ END INTERFACE TEST_ASSUMED_RANK_ASYNC
 
 CONTAINS
 
-! Test TS 29113 asychronous attribute and optional
+! Test TS 29113 asynchronous attribute and optional
 SUBROUTINE test1(buf, count, ierr)
     INTEGER, ASYNCHRONOUS :: buf(*)
     INTEGER               :: count
