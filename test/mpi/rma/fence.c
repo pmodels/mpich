@@ -10,12 +10,14 @@
 #include <limits.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include "mtest_dtp.h"
 #include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Get with Fence";
 */
 
+int world_rank, world_size;
 MTEST_DTP_DECLARE(orig);
 MTEST_DTP_DECLARE(target);
 
@@ -35,9 +37,6 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
     char *orig_desc, *target_desc;
     DTP_obj_get_description(orig_obj, &orig_desc);
     DTP_obj_get_description(target_obj, &target_desc);
-    MTestPrintfMsg(1,
-                   "Getting count = %ld of origtype %s - count = %ld target type %s\n",
-                   origcount, orig_desc, targetcount, target_desc);
 
     if (rank == target) {
 #if defined(USE_GET)
@@ -127,40 +126,38 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
     return errs;
 }
 
-
-int main(int argc, char *argv[])
+static int fence_test(int seed, int testsize, int count, const char *basic_type)
 {
     int err, errs = 0;
     int rank, size, orig, target;
     int minsize = 2;
     int i;
-    int seed, testsize;
-    MPI_Aint count, maxbufsize;
+    MPI_Aint maxbufsize;
     MPI_Comm comm;
     DTP_pool_s dtp;
-    char *basic_type;
     MPI_Aint extent, lb;
     MPI_Win win;
 
-    MTest_Init(&argc, &argv);
-
-    MTestArgList *head = MTestArgListCreate(argc, argv);
-    seed = MTestArgListGetInt(head, "seed");
-    testsize = MTestArgListGetInt(head, "testsize");
-    count = MTestArgListGetLong(head, "count");
-    basic_type = MTestArgListGetString(head, "type");
-    origmem = MTestArgListGetMemType(head, "origmem");
-    targetmem = MTestArgListGetMemType(head, "targetmem");
+    static char test_desc[200];
+    snprintf(test_desc, 200,
+#if defined(USE_GET)
+             "./getfence -seed=%d -testsize=%d -type=%s -count=%d -origmem=%s -targetmem=%s",
+#elif defined(USE_PUT)
+             "./putfence -seed=%d -testsize=%d -type=%s -count=%d -origmem=%s -targetmem=%s",
+#endif
+             seed, testsize, basic_type, count, MTest_memtype_name(origmem),
+             MTest_memtype_name(targetmem));
+    if (world_rank == 0) {
+        MTestPrintfMsg(1, " %s\n", test_desc);
+    }
 
     maxbufsize = MTestDefaultMaxBufferSize();
 
     err = DTP_pool_create(basic_type, count, seed, &dtp);
     if (err != DTP_SUCCESS) {
-        fprintf(stderr, "Error while creating orig pool (%s,%ld)\n", basic_type, count);
+        fprintf(stderr, "Error while creating orig pool (%s,%d)\n", basic_type, count);
         fflush(stderr);
     }
-
-    MTestArgListDestroy(head);
 
     if (MTestIsBasicDtype(dtp.DTP_base_type)) {
         MPI_Type_get_extent(dtp.DTP_base_type, &lb, &extent);
@@ -229,6 +226,26 @@ int main(int argc, char *argv[])
 
   fn_exit:
     DTP_pool_free(dtp);
+    return errs;
+}
+
+int main(int argc, char *argv[])
+{
+    int errs = 0;
+
+    MTest_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+    struct dtp_args dtp_args;
+    dtp_args_init(&dtp_args, MTEST_DTP_RMA, argc, argv);
+    while (dtp_args_get_next(&dtp_args)) {
+        origmem = dtp_args.u.rma.origmem;
+        targetmem = dtp_args.u.rma.targetmem;
+        errs += fence_test(dtp_args.seed, dtp_args.testsize, dtp_args.count, dtp_args.basic_type);
+
+    }
+    dtp_args_finalize(&dtp_args);
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);

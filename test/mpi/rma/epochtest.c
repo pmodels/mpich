@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include "mtest_dtp.h"
 #include <assert.h>
 
 /*
@@ -32,46 +33,46 @@ static char MTEST_Descrip[] = "Put with Fences used to separate epochs";
 
 #define MAX_PERR 10
 
+int world_rank, world_size;
 
 int PrintRecvedError(const char *, const char *, const char *);
 
-int main(int argc, char **argv)
+static int epoch_test(int seed, int testsize, int count, const char *basic_type,
+                      mtest_mem_type_e t_origmem, mtest_mem_type_e t_targetmem)
 {
     int errs = 0, err;
     int rank, size, orig, target;
     int minsize = 2;
     int i;
-    int seed, testsize;
     int onlyInt = 0;
     MPI_Aint origcount, targetcount;
     MPI_Comm comm;
     MPI_Win win;
-    MPI_Aint extent, lb, count, maxbufsize;
+    MPI_Aint extent, lb, maxbufsize;
     MPI_Datatype origtype, targettype;
     DTP_pool_s dtp;
     MTEST_DTP_DECLARE(orig);
     MTEST_DTP_DECLARE(target);
-    char *basic_type;
 
-    MTest_Init(&argc, &argv);
+    origmem = t_origmem;
+    targetmem = t_targetmem;
 
-    MTestArgList *head = MTestArgListCreate(argc, argv);
-    seed = MTestArgListGetInt(head, "seed");
-    testsize = MTestArgListGetInt(head, "testsize");
-    count = MTestArgListGetLong(head, "count");
-    basic_type = MTestArgListGetString(head, "type");
-    origmem = MTestArgListGetMemType(head, "origmem");
-    targetmem = MTestArgListGetMemType(head, "targetmem");
+    static char test_desc[200];
+    snprintf(test_desc, 200,
+             "./epoch_test -seed=%d -testsize=%d -type=%s -count=%d -origmem=%s -targetmem=%s",
+             seed, testsize, basic_type, count, MTest_memtype_name(origmem),
+             MTest_memtype_name(targetmem));
+    if (world_rank == 0) {
+        MTestPrintfMsg(1, " %s\n", test_desc);
+    }
 
     maxbufsize = MTestDefaultMaxBufferSize();
 
     err = DTP_pool_create(basic_type, count, seed, &dtp);
     if (err != DTP_SUCCESS) {
-        fprintf(stderr, "Error while creating orig pool (%s,%ld)\n", basic_type, count);
+        fprintf(stderr, "Error while creating orig pool (%s,%d)\n", basic_type, count);
         fflush(stderr);
     }
-
-    MTestArgListDestroy(head);
 
     /* Check for a simple choice of communicator and datatypes */
     if (getenv("MTEST_SIMPLE"))
@@ -250,8 +251,7 @@ int main(int argc, char **argv)
     MTest_dtp_free(target);
     DTP_pool_free(dtp);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 int PrintRecvedError(const char *msg, const char *orig_name, const char *target_name)
@@ -260,4 +260,26 @@ int PrintRecvedError(const char *msg, const char *orig_name, const char *target_
         ("At step %s, Data in target buffer did not match for destination datatype %s (put with orig datatype %s)\n",
          msg, orig_name, target_name);
     return 0;
+}
+
+int main(int argc, char *argv[])
+{
+    int errs = 0;
+
+    MTest_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+    struct dtp_args dtp_args;
+    dtp_args_init(&dtp_args, MTEST_DTP_RMA, argc, argv);
+    while (dtp_args_get_next(&dtp_args)) {
+        errs += epoch_test(dtp_args.seed, dtp_args.testsize,
+                           dtp_args.count, dtp_args.basic_type,
+                           dtp_args.u.rma.origmem, dtp_args.u.rma.targetmem);
+
+    }
+    dtp_args_finalize(&dtp_args);
+
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }
