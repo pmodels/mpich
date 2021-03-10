@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
                 recvtype = recv_obj.DTP_datatype;
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
-                    err = DTP_obj_buf_init(recv_obj, recvbuf_h, -1, -1, count[0]);
+                    err = DTP_obj_buf_init(recv_obj, recvbuf_h, -1, -1, count[1]);
                     if (err != DTP_SUCCESS) {
                         errs++;
                         break;
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
                     }
 
                     MTestCopyContent(recvbuf, recvbuf_h, recv_obj.DTP_bufsize, recvmem);
-                    err = DTP_obj_buf_check(recv_obj, recvbuf_h, 0, 1, count[0]);
+                    err = DTP_obj_buf_check(recv_obj, recvbuf_h, 0, 1, count[1]);
                     if (err != DTP_SUCCESS) {
                         if (errs < 10) {
                             char *recv_desc, *send_desc;
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
                             DTP_obj_get_description(send_obj, &send_desc);
                             fprintf(stderr,
                                     "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld, message iteration %d of %d\n",
-                                    recv_desc, send_desc, count[0], nmsg, maxmsg);
+                                    recv_desc, send_desc, count[1], nmsg, maxmsg);
                             fflush(stderr);
                             free(recv_desc);
                             free(send_desc);
