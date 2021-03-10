@@ -70,7 +70,7 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    /* Setup bufer for bsend */
+    /* Setup buffer for bsend */
 #if defined(BSEND) || defined(IBSEND)
     {
         int n_experiment_grps = 3;

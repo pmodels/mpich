@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
             } else if (rank == target) {
                 MPI_Win_fence(0, win);
                 /* This should have the same effect, in terms of
-                 * transfering data, as a send/recv pair */
+                 * transferring data, as a send/recv pair */
                 MTestCopyContent(targetbuf, targetbuf_h, target_obj.DTP_bufsize, targetmem);
                 err = DTP_obj_buf_check(target_obj, targetbuf_h, 0, 1, count);
                 if (err != DTP_SUCCESS) {

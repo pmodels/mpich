@@ -12,18 +12,18 @@
 #define ITERS 10
 
 /* This test uses several scenarios to overlap iallreduce and comm_idup
- * 1.)  Use comm_idup  dublicate the COMM_WORLD and do iallreduce
+ * 1.)  Use comm_idup  duplicate the COMM_WORLD and do iallreduce
  *      on the COMM_WORLD
  * 2.)  Do the above test in a loop
- * 3.)  Dublicate  COMM_WORLD, overalp iallreduce on one
+ * 3.)  Duplicate  COMM_WORLD, overalp iallreduce on one
  *      communicator with comm_idup on the nother communicator
  * 4.)  Split MPI_COMM_WORLD, communicate on the split communicator
         while dublicating COMM_WORLD
  *  5.) Duplicate the split communicators with comm_idup
  *      while communicating  onCOMM_WORLD
- *  6.) Ceate an inter-communicator and duplicate it with comm_idup while
+ *  6.) Create an inter-communicator and duplicate it with comm_idup while
  *      communicating on the inter-communicator
- *  7.) Dublicate the inter-communicator whil communicate on COMM_WORLD
+ *  7.) Duplicate the inter-communicator whil communicate on COMM_WORLD
  *  8.) Merge the inter-communicator to an intra-communicator and idup it,
  *      overlapping with communication on MPI_COMM_WORLD
  *  9.) Communicate on the merge communicator, while duplicating COMM_WORLD

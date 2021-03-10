@@ -16,7 +16,7 @@ int assoc(int *, int *, int *, MPI_Datatype *);
     (see 4.9.4).  The order is important.
 
     Note that the computation is in process rank (in the communicator)
-    order, independant of the root.
+    order, independent of the root.
  */
 int assoc(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
 {

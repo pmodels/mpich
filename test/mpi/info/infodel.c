@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     MTest_Init(&argc, &argv);
 
     MPI_Info_create(&info);
-    /* Use only named keys incase the info implementation only supports
+    /* Use only named keys in case the info implementation only supports
      * the predefined keys (e.g., IBM) */
     for (i = 0; i < NKEYS; i++) {
         MPI_Info_set(info, keys[i], values[i]);

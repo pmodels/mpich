@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 
     /* We should not get here, because the default error handler
      * is ERRORS_ARE_FATAL.  This makes sure that the correct error
-     * handler is called and that no failure occured (such as
+     * handler is called and that no failure occurred (such as
      * a SEGV) in Comm_call_errhandler on the default
      * error handler. */
     printf("After the Error Handler Has Been Called\n");

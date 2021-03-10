@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     MPI_Comm comm, dupcomm, dupcomm2;
     MPI_Request rreq[2];
     int count;
-    int indicies[2];
+    int indices[2];
     int r1buf, r2buf, s1buf, s2buf;
     int rank, isLeft;
 
@@ -39,12 +39,12 @@ int main(int argc, char *argv[])
             MPI_Irecv(&r1buf, 1, MPI_INT, 0, 0, dupcomm, &rreq[0]);
             MPI_Irecv(&r2buf, 1, MPI_INT, 0, 0, comm, &rreq[1]);
             MPI_Send(&s2buf, 1, MPI_INT, 0, 0, comm);
-            MPI_Waitsome(2, rreq, &count, indicies, MPI_STATUSES_IGNORE);
-            if (count != 1 || indicies[0] != 1) {
+            MPI_Waitsome(2, rreq, &count, indices, MPI_STATUSES_IGNORE);
+            if (count != 1 || indices[0] != 1) {
                 /* The only valid return is that exactly one message
                  * has been received */
                 errs++;
-                if (count == 1 && indicies[0] != 1) {
+                if (count == 1 && indices[0] != 1) {
                     printf("Error in context values for intercomm\n");
                 } else if (count == 2) {
                     printf("Error: two messages received!\n");
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
                     int i;
                     printf("Error: count = %d", count);
                     for (i = 0; i < count; i++) {
-                        printf(" indicies[%d] = %d", i, indicies[i]);
+                        printf(" indices[%d] = %d", i, indices[i]);
                     }
                     printf("\n");
                 }

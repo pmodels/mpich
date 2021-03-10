@@ -134,7 +134,7 @@ foreach my $key (keys(%EnvSeen)) {
     delete $copyEnv{$key};
 }
 foreach my $key (keys(%copyEnv)) {
-    print "Enviroment variable $key not delivered to target program\n";
+    print "Environment variable $key not delivered to target program\n";
     $errors ++;
 }
 

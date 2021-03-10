@@ -136,7 +136,7 @@ static int basic_only = 0;
   free(myname); \
   counts[cnt]  = 1;  bytesize[cnt] = sizeof(_ctype) * (_count); cnt++; }
 
-/* This defines a structure of two basic members; by chosing things like
+/* This defines a structure of two basic members; by choosing things like
    (char, double), various packing and alignment tests can be made */
 #define SETUPSTRUCT2TYPE(_mpitype1,_ctype1,_mpitype2,_ctype2,_count,_tname) { \
   int i; char *myname;						\
