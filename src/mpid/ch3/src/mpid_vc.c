@@ -36,7 +36,7 @@ cvars:
 
 /* What is the arrangement of VCRT and VCR and VC? 
    
-   Each VC (the virtual connection itself) is refered to by a reference 
+   Each VC (the virtual connection itself) is referred to by a reference 
    (pointer) or VCR.  
    Each communicator has a VCRT, which is nothing more than a 
    structure containing a count (size) and an array of pointers to 
@@ -87,7 +87,7 @@ int MPIDI_VCRT_Create(int size, struct MPIDI_VCRT **vcrt_ptr)
   This is called when a communicator duplicates its group of processes.
   It is used in 'commutil.c' and in routines to create communicators from
   dynamic process operations.  It does not change the state of any of the
-  virtural connections (VCs).
+  virtual connections (VCs).
   @*/
 int MPIDI_VCRT_Add_ref(struct MPIDI_VCRT *vcrt)
 {
@@ -212,7 +212,7 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
   Notes:
   If the VC is being used for the first time in a VC reference
   table, the reference count is set to two, not one, in order to
-  distinquish between freeing a communicator with 'MPI_Comm_free' and
+  distinguish between freeing a communicator with 'MPI_Comm_free' and
   'MPI_Comm_disconnect', and the reference count on the process group
   is incremented (to indicate that the process group is in use).
   While this has no effect on the process group of 'MPI_COMM_WORLD',
@@ -541,7 +541,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         }
 #       endif /* HAVE_ERROR_CHECKING */
 
-        /* Make an arbitrary decision about which group of processs is
+        /* Make an arbitrary decision about which group of process is
            the low group.  The LEADERS do this by comparing the
            local process ids of the 0th member of the two groups */
         (*is_low_group) = local_lpids[0] < (*remote_lpids)[0];

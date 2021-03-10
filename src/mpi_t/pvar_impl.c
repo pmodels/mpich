@@ -277,7 +277,7 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
         MPIR_Memcpy(buf, handle->accum, handle->bytes * handle->count);
     } else if (MPIR_T_pvar_is_watermark(handle)) {
         /* Callback and array are not allowed for watermarks, since they
-         * can not gurantee correct semantics of watermarks.
+         * can not guarantee correct semantics of watermarks.
          */
         MPIR_Assert(handle->get_value == NULL && handle->count == 1);
 
@@ -497,7 +497,7 @@ int MPIR_T_pvar_stop_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
             handle->get_value(handle->addr, handle->obj_handle, handle->count, handle->current);
         }
 
-        /* Substract offset from current, and accumulate the result to accum */
+        /* Subtract offset from current, and accumulate the result to accum */
         switch (handle->datatype) {
             case MPI_UNSIGNED_LONG_LONG:
                 for (i = 0; i < handle->count; i++) {

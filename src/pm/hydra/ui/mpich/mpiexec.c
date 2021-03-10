@@ -242,7 +242,7 @@ int main(int argc, char **argv)
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
     /* NOTE:
-     *   user may accidently give on command line -np 0, or even -np -1,
+     *   user may accidentally give on command line -np 0, or even -np -1,
      *   these cases will all be treated as if it is being ignored.
      */
     HYD_server_info.pg_list.pg_process_count = 0;

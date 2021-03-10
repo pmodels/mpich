@@ -1093,7 +1093,7 @@ int PMI2_Nameserv_unpublish(const char service_name[], const PMI2U_Info * info_p
 /* ------------------------------------------------------------------------- */
 
 
-/* frees all of the keyvals pointed to by a keyvalpair* array and the array iteself*/
+/* frees all of the keyvals pointed to by a keyvalpair* array and the array itself*/
 static void freepairs(PMI2_Keyvalpair ** pairs, int npairs)
 {
     int i;
@@ -1832,7 +1832,7 @@ static int PMII_Connect_to_pm(char *hostname, int portnum)
    mpiexec, and PMI2_Init returned as if there was only one process.
 
    Note that PMI routines should not call PMII_singinit; they should
-   call PMIi_InitIfSingleton(), which both connects to the process mangager
+   call PMIi_InitIfSingleton(), which both connects to the process manager
    and sets up the initial KVS connection entry.
 */
 

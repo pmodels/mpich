@@ -76,7 +76,7 @@ our $prototype_file_a = "../../../include/mpi.h.in";
 our $prototype_file_b = "../../../include/mpi_proto.h";
 
 # Global hashes used for definitions and to record the locations of the
-# defintions.
+# definitions.
 %mpidef = ();
 %mpidefFile = ();
 %mpiRoutinesFile = ();
@@ -86,7 +86,7 @@ our $prototype_file_b = "../../../include/mpi_proto.h";
 # Notes on this string.  Some symbols need to be initialized at runtime.
 # These are typically the addresses of the "special" Fortran symbols,
 # such as MPIR_F_MPI_BOTTOM.  Because MPI-2 requires that MPI_Init and
-# MPI_Init_thread, called in *any* language, initalize MPI for *all*
+# MPI_Init_thread, called in *any* language, initialize MPI for *all*
 # languages, we can't depend on having the Fortran versions of MPI_Init or
 # MPI_Init_thread called before these values might be used in a Fortran
 # wrapper function.
@@ -360,7 +360,7 @@ foreach $_ (@ARGV) {
 );
 
 #
-# Special routines have very different calling seqences in C and Fortran
+# Special routines have very different calling sequences in C and Fortran
 # or different behavior.
 # Init and Init thread have different arg lists (no argc, argv)
 # Pcontrol has no varargs
@@ -3161,7 +3161,7 @@ sub blankpad_ctof {
     my $outvar  = $_[1];
 
     # find the null character.  Replace with blanks from there to the
-    # end of the string.  The declared lenght is given by a variable
+    # end of the string.  The declared length is given by a variable
     # whose name is derived from outvar
     $strlen = $outvar;
     $strlen =~ s/^v/d/;
@@ -3203,7 +3203,7 @@ sub blankpadonflag_ctof {
     my $outvar  = $_[1];
 
     # find the null character.  Replace with blanks from there to the
-    # end of the string.  The declared lenght is given by a variable
+    # end of the string.  The declared length is given by a variable
     # whose name is derived from outvar
     $strlen = $outvar;
     $strlen =~ s/^v/d/;
@@ -3478,7 +3478,7 @@ sub chararray2_ftoc {
         pdata = (char *)$malloc( arglen, MPL_MEM_OTHER );
         p$count\[k\] = pargs;
         pargs\[argcnt\] = 0;  /* Null terminate end */
-        /* Copy each argument to consequtive locations in pdata,
+        /* Copy each argument to consecutive locations in pdata,
            and set the corresponding pointer entry */
         p = v$count + k * d$count;
         for (i=0; i<argcnt; i++) {
@@ -5252,7 +5252,7 @@ sub ReplaceIfDifferent {
 # We wish to have the option of adding a special init call for some
 # variables.  This lets us ensure that MPI routines that need special
 # symbols (such as MPI_BOTTOM or MPI_IN_PLACE) can initialize them without
-# requiring any Fortran routines be called from the C verison of MPI_Init
+# requiring any Fortran routines be called from the C version of MPI_Init
 # (this can cause problems if the Fortran object file includes references
 # to compiler-specific symbols, making it difficult and inconvenient at
 # best to link C programs)

@@ -20,7 +20,7 @@
 #define MPIDIG_PART_REQ_CTS 2   /* Indicating receiver is ready to receive data
                                  * (requests matched and start called) */
 
-/* Status to inactivate at request completion */
+/* Status to deactivate at request completion */
 #define MPIDIG_PART_SREQ_INACTIVE 0     /* Sender need 2 increments to be CTS: start and remote start */
 #define MPIDIG_PART_RREQ_INACTIVE 1     /* Receiver need 1 increments to be CTS: start */
 

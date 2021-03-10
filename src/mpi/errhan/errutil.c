@@ -80,7 +80,7 @@ cvars:
  *
  * MPICH_ERROR_MSG__NONE - No text messages at all
  * MPICH_ERROR_MSG__CLASS - Only messages for the MPI error classes
- * MPICH_ERROR_MSG__GENERIC - Only predefiend messages for the MPI error codes
+ * MPICH_ERROR_MSG__GENERIC - Only predefined messages for the MPI error codes
  * MPICH_ERROR_MSG__ALL - Instance specific error messages (and error message
  *                       stack)
  *
@@ -483,7 +483,7 @@ static int checkValidErrcode(int error_class, const char fcname[], int *errcode_
 }
 
 /* Append an error code, error2, to the end of a list of messages in the error
-   ring whose head endcoded in error1_code.  An error code pointing at the
+   ring whose head encoded in error1_code.  An error code pointing at the
    combination is returned.  If the list of messages does not terminate cleanly
    (i.e. ring wrap has occurred), then the append is not performed. and error1
    is returned (although it may include the class of error2 if the class of
@@ -1255,7 +1255,7 @@ static int FindSpecificMsgIndex(const char msg[])
 {
     int i, c;
     for (i = 0; i < specific_msgs_len; i++) {
-        /* Check the sentinals to insure that the values are ok first */
+        /* Check the sentinels to insure that the values are ok first */
         if (specific_err_msgs[i].sentinal1 != 0xacebad03 ||
             specific_err_msgs[i].sentinal2 != 0xcb0bfa11) {
             /* Something bad has happened! Don't risk trying the
@@ -1999,7 +1999,7 @@ static int FindGenericMsgIndex(const char msg[])
 {
     int i, c;
     for (i = 0; i < generic_msgs_len; i++) {
-        /* Check the sentinals to insure that the values are ok first */
+        /* Check the sentinels to insure that the values are ok first */
         if (generic_err_msgs[i].sentinal1 != 0xacebad03 ||
             generic_err_msgs[i].sentinal2 != 0xcb0bfa11) {
             /* Something bad has happened! Don't risk trying the

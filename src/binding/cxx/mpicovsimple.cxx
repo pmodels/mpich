@@ -146,7 +146,7 @@ int MPIX_Coverage::FileMerge( const char filename[] )
 	// If this becomes a problem, we can merge the two
 	// into a single output
 	while (infile) {
-	    fp.count = -1;  // Set a sentinal on eof in infile
+	    fp.count = -1;  // Set a sentinel on eof in infile
 	    infile >> fp.name >> fp.argcount >> fp.count >> fp.sourceFile >>
 		fp.firstLine >> fp.lastLine;
 	    if (fp.count == -1) break;

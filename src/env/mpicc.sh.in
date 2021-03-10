@@ -35,7 +35,7 @@ libdir=__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__
 
 # Default settings for compiler, flags, and libraries.
 # Determined by a combination of environment variables and tests within
-# configure (e.g., determining whehter -lsocket is needee)
+# configure (e.g., determining whether -lsocket is needee)
 CC="@CC@"
 MPICH_VERSION="@MPICH_VERSION@"
 
@@ -87,7 +87,7 @@ fi
 # Argument processing.
 # This is somewhat awkward because of the handling of arguments within
 # the shell.  We want to handle arguments that include spaces without 
-# loosing the spacing (an alternative would be to use a more powerful
+# losing the spacing (an alternative would be to use a more powerful
 # scripting language that would allow us to retain the array of values, 
 # which the basic (rather than enhanced) Bourne shell does not.  
 #
@@ -246,7 +246,7 @@ fi
 # -----------------------------------------------------------------------
 #
 # A temporary statement to invoke the compiler
-# Place the -L before any args incase there are any mpi libraries in there.
+# Place the -L before any args in case there are any mpi libraries in there.
 # Eventually, we'll want to move this after any non-MPI implementation 
 # libraries.
 # We use a single invocation of the compiler.  This will be adequate until

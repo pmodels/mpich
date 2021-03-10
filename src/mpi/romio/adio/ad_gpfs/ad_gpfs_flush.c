@@ -25,7 +25,7 @@ void ADIOI_GPFS_Flush(ADIO_File fd, int *error_code)
      * to flush, we can consult the 'fd->hints->ranklist[]' array.  For now, a
      * flush from one process should suffice */
 
-    /* ensure all other proceses are done writing. On many platforms MPI_Reduce
+    /* ensure all other processes are done writing. On many platforms MPI_Reduce
      * is fastest because it has the lightest constraints. On Blue Gene, BARRIER
      * is optimized  */
     MPI_Barrier(fd->comm);

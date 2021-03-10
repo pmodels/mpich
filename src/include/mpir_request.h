@@ -13,7 +13,7 @@
 
 categories :
     - name : REQUEST
-      description : A category for requests mangement variables
+      description : A category for requests management variables
 
 cvars:
     - name        : MPIR_CVAR_REQUEST_POLL_FREQ
@@ -651,7 +651,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_poll(MPIR_Request * request_ptr, MPI_
     return mpi_errno;
 }
 
-/* local reuqest array size in MPI_Start_all and MPI_{Test,Wait}{all,any,some} */
+/* local request array size in MPI_Start_all and MPI_{Test,Wait}{all,any,some} */
 #define MPIR_REQUEST_PTR_ARRAY_SIZE 64
 
 int MPIR_Test_state(MPIR_Request * request, int *flag, MPI_Status * status,

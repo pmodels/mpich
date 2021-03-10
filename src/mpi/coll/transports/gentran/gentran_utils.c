@@ -140,7 +140,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
                                      "  --> GENTRAN transport (selective sink) performed"));
-                    /* Nothin to do, just record completion */
+                    /* Nothing to do, just record completion */
                     vtx_record_completion(vtxp, sched);
                 }
                 break;
@@ -148,7 +148,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                     vtx_record_issue(vtxp, sched);
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST, "  --> GENTRAN transport (sink) performed"));
-                    /* Nothin to do, just record completion */
+                    /* Nothing to do, just record completion */
                     vtx_record_completion(vtxp, sched);
                 }
                 break;
@@ -156,7 +156,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                     vtx_record_issue(vtxp, sched);
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST, "  --> GENTRAN transport (fence) performed"));
-                    /* Nothin to do, just record completion */
+                    /* Nothing to do, just record completion */
                     vtx_record_completion(vtxp, sched);
                 }
                 break;
@@ -353,7 +353,7 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
     }
 
     /* check if there was any fence operation and add appropriate dependencies.
-     * The application will never explicity specify a dependency on it,
+     * The application will never explicitly specify a dependency on it,
      * the transport has to make sure that the dependency on the fence operation is met */
     if (sched->last_fence != -1 && sched->last_fence != vtx_id) {
         /* add the last fence vertex as an incoming vertex to vtx */

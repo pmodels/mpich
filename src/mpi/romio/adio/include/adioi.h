@@ -362,7 +362,7 @@ void ADIOI_SetFunctions(ADIO_File fd);
 ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype type);
 void ADIOI_Flatten(MPI_Datatype type, ADIOI_Flatlist_node * flat,
                    ADIO_Offset st_offset, MPI_Count * curr_index);
-/* callbakcs for attribute-style flattened tracking */
+/* callbacks for attribute-style flattened tracking */
 int ADIOI_Flattened_type_copy(MPI_Datatype oldtype,
                               int type_keyval, void *extra_state, void *attribute_val_in,
                               void *attribute_val_out, int *flag);
@@ -701,7 +701,7 @@ typedef struct ADIOI_OneSidedStripeParms {
     /* onesided algorithm.                                          */
     int lastStripedWriteCall;   /* whether this is the last call in the last segment of the  */
     /* onesided algorithm.                                        */
-    int iWasUsedStripingAgg;    /* whether this rank was ever a used agg for this striping segement */
+    int iWasUsedStripingAgg;    /* whether this rank was ever a used agg for this striping segment */
     int numStripesUsed;         /* the number of stripes packed into an aggregator */
     /* These 2 elements are the offset and lengths in the file corresponding to the actual stripes */
     ADIO_Offset *stripeWriteOffsets;

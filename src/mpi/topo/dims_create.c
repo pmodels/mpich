@@ -113,7 +113,7 @@ static int MPIR_Dims_create_init(void)
    store all of the factors for a large number (grows *faster* than n
    factorial). */
 #define MAX_FACTORS 10
-/* 2^20 is a millon */
+/* 2^20 is a million */
 #define MAX_DIMS    20
 
 typedef struct Factors {
@@ -334,7 +334,7 @@ static int factor_to_divisors(int nf, Factors * factors, int ndiv, int divs[])
  *
  * First, distribute factors to dims[0..nd-1].  The purpose is to get the
  * initial factors set and to ensure that the smallest dimension is > 1.
- * Second, distibute the remaining factors, starting with the largest, to
+ * Second, distribute the remaining factors, starting with the largest, to
  * the elements of dims with the smallest index i such that
  *   dims[i-1] > dims[i]*val
  * or to dims[0] if no i satisfies.

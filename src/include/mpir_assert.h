@@ -25,7 +25,7 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  *
  * Similar to assert() except that it performs an MPID_Abort() when the
  * assertion fails.  Also, for Windows, it doesn't popup a
- * mesage box on a remote machine.
+ * message box on a remote machine.
  */
 #if (defined(__COVERITY__) || defined(__KLOCWORK__))
 #include <assert.h>

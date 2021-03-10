@@ -77,7 +77,7 @@ libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources
 ## MPICH, these are the objects that need to go into libmpi, while the foo.o
 ## objects should go into libpmpi.  Furthermore, the -D option for ROMIO's
 ## source files is different and inverted (in the boolean sense) compared with
-## MPICH's defintion.  And ROMIO was dumping all of the symbols into the main
+## MPICH's definition.  And ROMIO was dumping all of the symbols into the main
 ## libmpi library, regardless of the separate profiling library's existence.
 ##
 ## Annoying, right?

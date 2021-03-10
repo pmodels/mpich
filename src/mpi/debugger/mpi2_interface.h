@@ -41,7 +41,7 @@ typedef unsigned char MPI2DD_BYTE_T;
 #define MPI2DD_MPIFLAG_PARTIAL_ATTACH_OK 0x40
 
 /* These structures are defined so that the debugger can find items
-   easily, even in the absense of detailed symbol table information,
+   easily, even in the absence of detailed symbol table information,
    since the layout is fixed. */
 
 typedef struct MPI2DD_PROCDESC {

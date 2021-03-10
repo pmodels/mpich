@@ -93,7 +93,7 @@ cvars:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, enable virtual addressing for OFI memory regions. This variable is only meaningful
-        for OFI versions 1.5+. It is equivelent to using FI_MR_BASIC in versions of
+        for OFI versions 1.5+. It is equivalent to using FI_MR_BASIC in versions of
         OFI older than 1.5.
 
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_MR_ALLOCATED
@@ -106,7 +106,7 @@ cvars:
       description : >-
         If true, require all OFI memory regions must be backed by physical memory pages
         at the time the registration call is made. This variable is only meaningful
-        for OFI versions 1.5+. It is equivelent to using FI_MR_BASIC in versions of
+        for OFI versions 1.5+. It is equivalent to using FI_MR_BASIC in versions of
         OFI older than 1.5.
 
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_MR_PROV_KEY
@@ -118,7 +118,7 @@ cvars:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, enable provider supplied key for OFI memory regions. This variable is only
-        meaningful for OFI versions 1.5+. It is equivelent to using FI_MR_BASIC in versions of OFI
+        meaningful for OFI versions 1.5+. It is equivalent to using FI_MR_BASIC in versions of OFI
         older than 1.5.
 
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_TAGGED
@@ -650,7 +650,7 @@ int MPIDI_OFI_init_local(int *tag_bits)
         num_vnis = MPIDI_OFI_MAX_VNIS;
     }
     /* for best performance, we ensure 1-to-1 vci/vni mapping. ref: MPIDI_OFI_vci_to_vni */
-    /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. overide MPIDI_global.n_vcis */
+    /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. override MPIDI_global.n_vcis */
     MPIR_Assert(num_vnis == MPIDI_global.n_vcis);
 
     /* Multiple vni without using domain require MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS */
@@ -692,7 +692,7 @@ int MPIDI_OFI_init_local(int *tag_bits)
                                               &MPIDI_OFI_global.pack_buf_pool);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Initalize RMA keys allocator */
+    /* Initialize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
 
     /* ------------------------------------------------- */
@@ -949,7 +949,7 @@ static int create_vni_context(int vni)
      * the same domain and av, and use a single scalable endpoint. Separate VNI
      * context will have its separate cq and separate tx and rx with the SEP.
      *
-     * To accomodate both configurations, each context structure will have all fields
+     * To accommodate both configurations, each context structure will have all fields
      * including domain, av, cq, ... For "VNI_USE_DOMAIN", they are not shared.
      * When not "VNI_USE_DOMAIN" or "VNI_USE_SEPCTX", domain, av, and ep are shared
      * with the root (or 0th) VNI context.
@@ -1176,7 +1176,7 @@ static int create_vni_domain(struct fid_domain **p_domain, struct fid_av **p_av,
         MPIDI_OFI_CALL(fi_av_open(domain, &av_attr, p_av, NULL), avopen);
     }
 
-    /* ---- other sharable objects ---- */
+    /* ---- other shareable objects ---- */
     struct fi_cntr_attr cntr_attr;
     memset(&cntr_attr, 0, sizeof(cntr_attr));
     cntr_attr.events = FI_CNTR_EVENTS_COMP;

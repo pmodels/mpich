@@ -393,7 +393,7 @@ typedef MPL_atomic_int_t Handle_ref_count;
  * cases.
  *
  * All *active* (in use) objects have the handle as the first value; objects
- * with referene counts have the reference count as the second value.  See
+ * with reference counts have the reference count as the second value.  See
  * MPIR_Object_add_ref and MPIR_Object_release_ref.
  *
  * NOTE: This macro *must* be invoked as the very first element of the structure! */

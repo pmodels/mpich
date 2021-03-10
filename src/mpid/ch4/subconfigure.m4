@@ -412,7 +412,7 @@ esac
 
 #
 # Dependency checks for CH4 MT modes
-# Currently, "handoff" and "runtime" require the followings:
+# Currently, "handoff" and "runtime" require the following:
 # - izem linked in (--with-zm-prefix)
 # - enable-thread-cs=per-vci
 #

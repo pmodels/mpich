@@ -232,7 +232,7 @@ int mqs_setup_image(mqs_image * image, const mqs_image_callbacks * icb)
 
 /*
  * Setup information needed to access the queues.  If successful, return
- * mqs_ok.  If not, return an erro rcode.  Also set the message pointer
+ * mqs_ok.  If not, return an error rcode.  Also set the message pointer
  * with an explanatory message if there is a problem; otherwise, set it
  * to NULL.
  *

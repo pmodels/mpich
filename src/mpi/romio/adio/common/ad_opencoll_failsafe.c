@@ -25,7 +25,7 @@ void ADIOI_FAILSAFE_OpenColl(ADIO_File fd, int rank, int access_mode, int *error
             fd->access_mode = access_mode;
 
             /* if the lower-level file system tries to communicate, COMM_SELF
-             * will ensure it doesn't get stuck waiting for non-existant
+             * will ensure it doesn't get stuck waiting for non-existent
              * participants */
             tmp_comm = fd->comm;
             fd->comm = MPI_COMM_SELF;

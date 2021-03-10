@@ -654,10 +654,10 @@ typedef struct MPIDI_CH3_Pkt_get {
 typedef struct MPIDI_CH3_Pkt_get_resp {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Request request_handle;
-    /* followings are used to decrement ack_counter at origin */
+    /* following are used to decrement ack_counter at origin */
     int target_rank;
     int pkt_flags;
-    /* Followings are to piggyback IMMED data */
+    /* Following are to piggyback IMMED data */
     struct {
         /* note that we use struct here in order
          * to consistently access data
@@ -699,10 +699,10 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
 typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Request request_handle;
-    /* followings are used to decrement ack_counter at origin */
+    /* following are used to decrement ack_counter at origin */
     int target_rank;
     int pkt_flags;
-    /* Followings are to piggyback IMMED data */
+    /* Following are to piggyback IMMED data */
     struct {
         /* note that we use struct here in order
          * to consistently access data
@@ -731,7 +731,7 @@ typedef struct MPIDI_CH3_Pkt_cas_resp {
          * by "pkt->info.data". */
         MPIDI_CH3_CAS_Immed_u data;
     } info;
-    /* followings are used to decrement ack_counter at orign */
+    /* following are used to decrement ack_counter at origin */
     int target_rank;
     int pkt_flags;
 } MPIDI_CH3_Pkt_cas_resp_t;
@@ -761,7 +761,7 @@ typedef struct MPIDI_CH3_Pkt_fop_resp {
          * by "pkt->info.data". */
         MPIDI_CH3_RMA_Immed_u data;
     } info;
-    /* followings are used to decrement ack_counter at orign */
+    /* following are used to decrement ack_counter at origin */
     int target_rank;
     int pkt_flags;
 } MPIDI_CH3_Pkt_fop_resp_t;

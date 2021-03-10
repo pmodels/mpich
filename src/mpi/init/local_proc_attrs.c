@@ -43,7 +43,7 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
 
 #ifdef HAVE_ERROR_CHECKING
     /* Because the PARAM system has not been initialized, temporarily
-     * uncondtionally enable error checks.  Once the PARAM system is
+     * unconditionally enable error checks.  Once the PARAM system is
      * initialized, this may be reset */
     MPIR_Process.do_error_checks = 1;
 #if (HAVE_ERROR_CHECKING == MPID_ERROR_LEVEL_RUNTIME)
@@ -73,7 +73,7 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
 
     /* "Allocate" from the reserved space for builtin communicators and
      * (partially) initialize predefined communicators.  comm_parent is
-     * intially NULL and will be allocated by the device if the process group
+     * initially NULL and will be allocated by the device if the process group
      * was started using one of the MPI_Comm_spawn functions. */
     MPIR_Process.comm_world = MPIR_Comm_builtin + 0;
     MPII_Comm_init(MPIR_Process.comm_world);

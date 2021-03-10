@@ -17,7 +17,7 @@ static int is_initialized = 0;
  * longlong_t as a structure in some circumstances, making arithmetic
  * with hrtime_t invalid.  FIXME.
  * To fix this, we'll need to test hrtime_t arithmetic in the configure
- * program, and if it fails, check for the Solaris defintions (
+ * program, and if it fails, check for the Solaris definitions (
  * union { double _d; int32_t _l[2]; }.  Alternately, we may decide that
  * if hrtime_t is not supported, then neither is gethrtime.
  *

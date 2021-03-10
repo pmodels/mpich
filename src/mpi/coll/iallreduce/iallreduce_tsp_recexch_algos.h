@@ -119,7 +119,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
             qsort(step2_nbrs[phase], k - 1, sizeof(int), MPII_Algo_compare_int);
         }
         /* copy the data to a temporary buffer so that sends ands recvs
-         * can be posted simultaneosly */
+         * can be posted simultaneously */
         if (count != 0) {
             if (phase == 0) {   /* wait for Step 1 to complete */
                 nvtcs = 1;
@@ -241,7 +241,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                 }
                 MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                 (MPL_DBG_FDEST,
-                                 "reducing data with count %d dependent %d nvtcs coutner %d right neighbor",
+                                 "reducing data with count %d dependent %d nvtcs counter %d right neighbor",
                                  count, nvtcs, counter));
                 if (is_commutative) {
                     reduce_id[counter] =

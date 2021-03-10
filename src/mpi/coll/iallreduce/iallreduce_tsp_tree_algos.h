@@ -158,7 +158,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
                                                            datatype, op, sched, nvtcs, vtcs);
             } else {    /* wait for the previous allreduce to complete */
 
-                /* NOTE: Make sure that knomial tree is being constructed differently for allreduce for optimal performace.
+                /* NOTE: Make sure that knomial tree is being constructed differently for allreduce for optimal performance.
                  * In bcast, leftmost subtree is the largest while it should be the opposite in case of allreduce */
 
                 if (i > 0) {

@@ -157,7 +157,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         ADIO_Offset my_count_size = 0;
         /* One-sided aggregation needs the amount of data per rank as well
          * because the difference in starting and ending offsets for 1 byte is
-         * 0 the same as 0 bytes so it cannot be distiguished.
+         * 0 the same as 0 bytes so it cannot be distinguished.
          */
         if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
             count_sizes = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
@@ -1053,7 +1053,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
      * processes are operating on noncontigous data.  But holes can also show
      * up at the beginning or end of the file domain (see John Bent ROMIO REQ
      * #835). Missing these holes would result in us writing more data than
-     * recieved by everyone else. */
+     * received by everyone else. */
     *hole = 0;
     if (off != srt_off[0])      /* hole at the front */
         *hole = 1;

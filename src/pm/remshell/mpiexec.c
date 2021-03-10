@@ -268,7 +268,7 @@ int mypostfork(void *predata, void *data, ProcessState * pState)
         /* Insert into app->args */
         newargs = (const char **) MPL_malloc((app->nArgs + 14 + 1) * sizeof(char *), MPL_MEM_PM);
         if (!pState->hostname) {
-            MPL_error_printf("No hostname avaliable for %s\n", app->exename);
+            MPL_error_printf("No hostname available for %s\n", app->exename);
             exit(1);
         }
 
@@ -378,7 +378,7 @@ int myspawn(ProcessWorld * pWorld, void *data)
  * to the postfork routine; this is called after the fork but before the
  * exec, and it can change the command line by making a copy of the app
  * structure, changing the command line, and setting the pState structure
- * to point to this new app (after the fork, these changes are visable only
+ * to point to this new app (after the fork, these changes are visible only
  * to the forked process).
  *
  * Enhancements:

@@ -25,7 +25,7 @@ Input Parameters:
 . dtcopy_id - id of previous data copy from scheduler (integer)
 . recv_id - array to store ids of the receives from the scheduler (integer array)
 . reduce_id - array to store ids of the reduces from the scheduler (integer array)
-. vtcs - array to specify depencies of a call to the scheduler (integer array)
+. vtcs - array to specify dependencies of a call to the scheduler (integer array)
 . step1_sendto - partner to send my data in step1 (integer)
 . in_step2 - variable to check if I participate in step2 or not (bool)
 . step1_nrecvs - number of partners to receive data from in step1 (integer)

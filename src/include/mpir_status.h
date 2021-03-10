@@ -11,7 +11,7 @@
  * "count_hi_and_cancelled" field represents the 'cancelled' object.
  * The 'count' object is split between the "count_lo" and
  * "count_hi_and_cancelled" fields, with the lower order bits going
- * into the "count_lo" field, and the higher order bits goin into the
+ * into the "count_lo" field, and the higher order bits going into the
  * "count_hi_and_cancelled" field.  This gives us 2N-1 bits for the
  * 'count' object, where N is the size of int.  However, the value
  * returned to the user is bounded by the definition on MPI_Count. */

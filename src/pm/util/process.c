@@ -377,7 +377,7 @@ ProcessState *MPIE_FindProcessByPid(pid_t pid)
             pState = app->pState;
             np -= app->nProcess;
             if (np < 0) {
-                /* This is a panic exit, used becaue we may call this
+                /* This is a panic exit, used because we may call this
                  * from within the signal handler */
                 return 0;
             }
@@ -457,7 +457,7 @@ static volatile int skipHandler = 0;
    exit before we've recorded their pids.  This is unlikely, but may
    happen if a process fails to exec (e.g., the fork succeeds but the
    exec immediately fails).  This ensures that we can handle SIGCHLD
-   events without loosing information about the child processes */
+   events without losing information about the child processes */
 #define MAXUNEXPECTEDPIDS 1024
 static struct {
     pid_t pid;
@@ -492,7 +492,7 @@ static void handle_sigchild(int sig)
     DBG_PRINTF(("Entering sigchild handler\n"));
     DBG_EPRINTF((stderr, "Waiting for any child on signal\n"));
 
-    /* Since signals may be coallesced, we process all children that
+    /* Since signals may be coalesced, we process all children that
      * have exited */
     while (1) {
         /* Find out about any children that have exited.  Note that
@@ -574,7 +574,7 @@ void MPIE_ProcessInit(void)
 }
 
 /*
- * Wait upto timeout seconds for all processes to exit.
+ * Wait up to timeout seconds for all processes to exit.
  * Because we are using a SIGCHLD handler to get the exit reason and
  * status from exiting children, this routine waits for those
  * signal handlers to return.  (POSIX requires a SIGCHLD handler, and leaving
@@ -627,7 +627,7 @@ int MPIE_WaitForProcesses(ProcessUniverse * mypUniv, int timeout)
  *
  *
  * Updates the ProcessTable with the new processes, and updates the
- * number of processes.  All processses are added to the end of the
+ * number of processes.  All processes are added to the end of the
  * current array.  Only the "spec" part of the state element is initialized
  *
  * Return value is the number of processes added, or a negative value
@@ -935,7 +935,7 @@ static void MPIE_InstallSigHandler(int sig, void (*handler) (int))
     oldact.sa_handler = (void (*)(int)) handler;
 #ifdef SA_RESETHAND
     /* Note that if this feature is not supported, there is a race
-     * condition in the handling of signals, and the OS is fundementally
+     * condition in the handling of signals, and the OS is fundamentally
      * flawed */
     oldact.sa_flags = oldact.sa_flags & ~(SA_RESETHAND);
 #endif

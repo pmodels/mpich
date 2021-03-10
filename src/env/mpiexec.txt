@@ -65,7 +65,7 @@ The MPI standard specifies the following arguments and their meanings\:
 . \-genv <name> <value> - The '\-genv' options have the same meaning as their
  corresponding '\-env' version, except they apply to all executables, not just
  the current executable (in the case that the colon syntax is used to specify
- multiple execuables).
+ multiple executables).
 .  \-genvnone - Like '\-envnone', but for all executables
 .  \-genvlist <list> - Like '\-envlist', but for all executables
 .  \-usize <n> - Specify the value returned for the value of the attribute

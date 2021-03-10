@@ -197,7 +197,7 @@ sub print_param {
         $value =~ s/\(MPI_[A-Za-z0-9]*\s*\)//;
         print "cast removal: $value\n" if $debug;
     }
-    # Remove any surrounding () around nubmers or placeholders like @MPI_COMPLEX@
+    # Remove any surrounding () around numbers or placeholders like @MPI_COMPLEX@
     if ($value =~ /\(\s*[-a-fx0-9\w@]*\)/) {
         $value =~ s/\(\s*([-a-fx0-9\w@]*)\s*\)/$1/;
         print "paren removal: $value\n" if $debug;

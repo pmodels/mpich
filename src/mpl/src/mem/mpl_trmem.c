@@ -605,11 +605,11 @@ Input Parameters:
 $   Block [id=%d(%d)] at address %lx is corrupted (probably write past end)
 $   Block allocated in <filename>[<linenumber>]
 
-   if the sentinal at the end of the block has been corrupted, and
+   if the sentinel at the end of the block has been corrupted, and
 
 $   Block at address %lx is corrupted
 
-   if the sentinal at the begining of the block has been corrupted.
+   if the sentinel at the beginning of the block has been corrupted.
 
    The address is the actual address of the block.  The id is the
    value of TRID.

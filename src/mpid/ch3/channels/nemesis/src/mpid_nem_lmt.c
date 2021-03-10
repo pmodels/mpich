@@ -508,7 +508,7 @@ static int do_cts(MPIDI_VC_t *vc, MPIR_Request *rreq, int *complete)
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"posted request found");
 
-    /* determine amount of data to be transfered and check for truncation */
+    /* determine amount of data to be transferred and check for truncation */
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     if (rreq->ch.lmt_data_sz > data_sz)
     {

@@ -11,7 +11,7 @@
 CC = $(TEST_CC)
 F77 = $(TEST_F77)
 
-# because := is not universally avalible, we have to play games to use the
+# because := is not universally available, we have to play games to use the
 # user-specified LDFLAGS and OUR_LIBS env. variables (if set)
 OUR_LIBS = $(TEST_LIBNAME) $(MPI_LIB)
 

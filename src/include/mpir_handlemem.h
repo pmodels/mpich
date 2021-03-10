@@ -263,7 +263,7 @@ static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t * objmem)
 }
 
 /* Beyond direct objects (a single static block), indirect objects are allocated by blocks,
- * each block initialized with an array of objects upto max_indices. `max_blocks` depends
+ * each block initialized with an array of objects up to max_indices. `max_blocks` depends
  * on the bit size in the object handle. Request objects need extra bits to support multiple
  * request pools, so it will have lower `max_blocks` than default (HANDLE_NUM_BLOCKS).
  * While `max_indices` is also limited by handle bits, we also need balance the runtime cost.

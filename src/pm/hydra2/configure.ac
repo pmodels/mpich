@@ -341,7 +341,7 @@ else
 fi
 
 # FIXME: Disable hwloc on Cygwin for now. The hwloc package,
-# atleast as of 1.0.2, does not install correctly on Cygwin
+# at least as of 1.0.2, does not install correctly on Cygwin
 AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
 
 if test "$have_hwloc" = "yes" ; then

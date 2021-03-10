@@ -40,7 +40,7 @@
   that must be handled.  In particular, multiple threads are allowed to
   update the same info value.  Thus, all of the update routines must be thread
   safe; the simple implementation used in the MPICH implementation uses locks.
-  Note that the 'MPI_Info_delete' call does not need a lock; the defintion of
+  Note that the 'MPI_Info_delete' call does not need a lock; the definition of
   thread-safety means that any order of the calls functions correctly; since
   it invalid either to delete the same 'MPI_Info' twice or to modify an
   'MPI_Info' that has been deleted, only one thread at a time can call

@@ -20,7 +20,7 @@ static int MPIR_Topology_delete_fn(MPI_Comm, int, void *, void *);
 static int MPIR_Topology_finalize(void *);
 
 /*
-  Return a poiner to the topology structure on a communicator.
+  Return a pointer to the topology structure on a communicator.
   Returns null if no topology structure is defined
 */
 MPIR_Topology *MPIR_Topology_get(MPIR_Comm * comm_ptr)
