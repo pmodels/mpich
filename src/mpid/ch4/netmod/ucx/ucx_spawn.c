@@ -9,6 +9,7 @@
 int MPIDI_UCX_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
+    port_name[0] = '\0';
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -47,7 +48,8 @@ int MPIDI_UCX_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_COMM_DISCONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_COMM_DISCONNECT);
 
-
+    mpi_errno = MPIR_Comm_free_impl(comm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_COMM_DISCONNECT);
