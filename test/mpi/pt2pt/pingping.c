@@ -8,50 +8,53 @@
 #include <stdlib.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include "mtest_dtp.h"
 #include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Send flood test";
 */
 
+int world_rank, world_size;
+
 #define MAX_TOTAL_MSG_SIZE (32 * 1024 * 1024)
 #define MAXMSG (4096)
 
-int main(int argc, char *argv[])
+static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
+                    const char *basic_type, mtest_mem_type_e t_sendmem, mtest_mem_type_e t_recvmem)
 {
-    int errs = 0, err;
+    int errs = 0;
+    int err;
     int rank, size, source, dest;
     int minsize = 2, nmsg, maxmsg;
-    int i, j, len, seed, testsize;
-    MPI_Aint sendcount, recvcount, count[2];
+    int i, j, len;
+    MPI_Aint sendcount, recvcount;
     MPI_Aint maxbufsize;
     MPI_Comm comm;
     MPI_Datatype sendtype, recvtype;
     DTP_pool_s dtp;
     MTEST_DTP_DECLARE(send);
     MTEST_DTP_DECLARE(recv);
-    char *basic_type;
 
-    MTest_Init(&argc, &argv);
+    sendmem = t_sendmem;
+    recvmem = t_recvmem;
 
-    MTestArgList *head = MTestArgListCreate(argc, argv);
-    seed = MTestArgListGetInt(head, "seed");
-    testsize = MTestArgListGetInt(head, "testsize");
-    count[0] = MTestArgListGetLong(head, "sendcnt");
-    count[1] = MTestArgListGetLong(head, "recvcnt");
-    basic_type = MTestArgListGetString(head, "type");
-    sendmem = MTestArgListGetMemType(head, "sendmem");
-    recvmem = MTestArgListGetMemType(head, "recvmem");
+    static char test_desc[200];
+    snprintf(test_desc, 200,
+             "./pingping -seed=%d -testsize=%d -type=%s -sendcnt=%d -recvcnt=%d -sendmem=%s -recvmem=%s",
+             seed, testsize, basic_type, sendcnt, recvcnt, MTest_memtype_name(sendmem),
+             MTest_memtype_name(recvmem));
+    if (world_rank == 0) {
+        MTestPrintfMsg(1, " %s\n", test_desc);
+    }
 
     maxbufsize = MTestDefaultMaxBufferSize();
 
-    err = DTP_pool_create(basic_type, count[0], seed, &dtp);
+    err = DTP_pool_create(basic_type, sendcnt, seed, &dtp);
     if (err != DTP_SUCCESS) {
-        fprintf(stderr, "Error while creating send pool (%s,%ld)\n", basic_type, count[0]);
+        fprintf(stderr, "Error while creating send pool (%s,%d)\n", basic_type, sendcnt);
         fflush(stderr);
     }
-
-    MTestArgListDestroy(head);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -100,7 +103,7 @@ int main(int argc, char *argv[])
 
             if (rank == source) {
                 MTest_dtp_malloc_obj(send, rank);
-                MTest_dtp_init(send, 0, 1, count[0]);
+                MTest_dtp_init(send, 0, 1, sendcnt);
 
                 sendcount = send_obj.DTP_type_count;
                 sendtype = send_obj.DTP_datatype;
@@ -108,7 +111,7 @@ int main(int argc, char *argv[])
                 char *desc;
                 DTP_obj_get_description(send_obj, &desc);
                 MTestPrintfMsg(1, "Sending count = %d of sendtype %s of total size %d bytes\n",
-                               count[0], desc, nbytes * count[0]);
+                               sendcnt, desc, nbytes * sendcnt);
                 free(desc);
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
@@ -131,7 +134,7 @@ int main(int argc, char *argv[])
                 recvtype = recv_obj.DTP_datatype;
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
-                    MTest_dtp_init(recv, -1, -1, count[1]);
+                    MTest_dtp_init(recv, -1, -1, recvcnt);
 
                     err =
                         MPI_Recv(recvbuf + recv_obj.DTP_buf_offset, recvcount, recvtype, source, 0,
@@ -143,14 +146,14 @@ int main(int argc, char *argv[])
                         }
                     }
 
-                    MTest_dtp_check(recv, 0, 1, count[1]);
+                    MTest_dtp_check(recv, 0, 1, recvcnt);
                     if (err != DTP_SUCCESS && errs < 10) {
                         char *recv_desc, *send_desc;
                         DTP_obj_get_description(recv_obj, &recv_desc);
                         DTP_obj_get_description(send_obj, &send_desc);
                         fprintf(stderr,
-                                "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld, message iteration %d of %d\n",
-                                recv_desc, send_desc, count[1], nmsg, maxmsg);
+                                "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %d, message iteration %d of %d\n",
+                                recv_desc, send_desc, recvcnt, nmsg, maxmsg);
                         fflush(stderr);
                         free(recv_desc);
                         free(send_desc);
@@ -175,7 +178,25 @@ int main(int argc, char *argv[])
     }
 
     DTP_pool_free(dtp);
+    return errs;
+}
 
+int main(int argc, char *argv[])
+{
+    int errs = 0;
+
+    MTest_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+    struct dtp_args dtp_args;
+    dtp_args_init(&dtp_args, MTEST_DTP_PT2PT, argc, argv);
+    while (dtp_args_get_next(&dtp_args)) {
+        errs += pingping(dtp_args.seed, dtp_args.testsize,
+                         dtp_args.count, dtp_args.u.pt2pt.recvcnt,
+                         dtp_args.basic_type, dtp_args.u.pt2pt.sendmem, dtp_args.u.pt2pt.recvmem);
+    }
+    dtp_args_finalize(&dtp_args);
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
 }

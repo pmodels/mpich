@@ -8,21 +8,20 @@
 #include <stdlib.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include "mtest_dtp.h"
 #include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Test of broadcast with various roots and datatypes";
 */
 
-
-
-int main(int argc, char *argv[])
+static int bcast_dtp(int seed, int testsize, int count, const char *basic_type,
+                     mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
 {
     int errs = 0, err;
     int rank, size, root;
     int minsize = 2;
-    int i, j, seed, testsize;
-    MPI_Aint count;
+    int i, j;
     MPI_Aint maxbufsize;
     MPI_Comm comm;
     MPI_Datatype type;
@@ -30,33 +29,31 @@ int main(int argc, char *argv[])
     DTP_obj_s obj;
     void *buf;
     void *buf_h;
-    char *basic_type;
     mtest_mem_type_e memtype;
-
-    MTest_Init(&argc, &argv);
-
-    MTestArgList *head = MTestArgListCreate(argc, argv);
-    seed = MTestArgListGetInt(head, "seed");
-    testsize = MTestArgListGetInt(head, "testsize");
-    count = MTestArgListGetLong(head, "count");
-    basic_type = MTestArgListGetString(head, "type");
-
-    maxbufsize = MTestDefaultMaxBufferSize();
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    static char test_desc[200];
+    snprintf(test_desc, 200,
+             "./bcast -seed=%d -testsize=%d -type=%s -count=%d -evenmemtype=%s -oddmemtype=%s",
+             seed, testsize, basic_type, count, MTest_memtype_name(evenmem),
+             MTest_memtype_name(oddmem));
+    if (rank == 0) {
+        MTestPrintfMsg(1, " %s\n", test_desc);
+    }
+
+    maxbufsize = MTestDefaultMaxBufferSize();
+
     if (rank % 2 == 0)
-        memtype = MTestArgListGetMemType(head, "evenmemtype");
+        memtype = evenmem;
     else
-        memtype = MTestArgListGetMemType(head, "oddmemtype");
+        memtype = oddmem;
 
     err = DTP_pool_create(basic_type, count, seed + rank, &dtp);
     if (err != DTP_SUCCESS) {
-        fprintf(stderr, "Error while creating send pool (%s,%ld)\n", basic_type, count);
+        fprintf(stderr, "Error while creating send pool (%s,%d)\n", basic_type, count);
         fflush(stderr);
     }
-
-    MTestArgListDestroy(head);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -137,7 +134,25 @@ int main(int argc, char *argv[])
     }
 
     DTP_pool_free(dtp);
+    return errs;
+}
 
+
+int main(int argc, char *argv[])
+{
+    int errs = 0;
+
+    MTest_Init(&argc, &argv);
+
+    struct dtp_args dtp_args;
+    dtp_args_init(&dtp_args, MTEST_DTP_COLL, argc, argv);
+    while (dtp_args_get_next(&dtp_args)) {
+        errs += bcast_dtp(dtp_args.seed, dtp_args.testsize,
+                          dtp_args.count, dtp_args.basic_type,
+                          dtp_args.u.coll.oddmem, dtp_args.u.coll.evenmem);
+    }
+    dtp_args_finalize(&dtp_args);
     MTest_Finalize(errs);
+
     return MTestReturnValue(errs);
 }
