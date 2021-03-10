@@ -20,8 +20,6 @@ mpi_core_sources +=   \
 noinst_HEADERS +=   \
     src/util/mpir_nodemap.h
 
-# include $(top_srcdir)/src/util/logging/Makefile.mk
-
 if MAINTAINER_MODE
 # normally built by autogen.sh, but this rebuild rule is here
 $(top_srcdir)/src/util/cvar/mpir_cvars.c: $(top_srcdir)/maint/extractcvars

@@ -214,9 +214,6 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     mpi_errno = MPIR_Datatype_commit_pairtypes();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* FIXME: this is for rlog, and should be removed when we delete rlog */
-    MPII_Timer_init(MPIR_Process.comm_world->rank, MPIR_Process.comm_world->local_size);
-
     MPII_post_init_memory_tracing();
     MPII_init_dbg_logging();
     MPII_Wait_for_debugger();
@@ -298,8 +295,6 @@ int MPII_Finalize(MPIR_Session * session_ptr)
 
     mpi_errno = MPII_finalize_local_proc_attrs();
     MPIR_ERR_CHECK(mpi_errno);
-
-    MPII_Timer_finalize();
 
     /* Call the high-priority callbacks */
     MPII_Call_finalize_callbacks(MPIR_FINALIZE_CALLBACK_PRIO + 1, MPIR_FINALIZE_CALLBACK_MAX_PRIO);
