@@ -1595,7 +1595,7 @@ www.mcs.anl.gov/mpi/mpich2/mpich2_1_0_6changes.htm.
 - The CH3 interface and device now provide a mechanism for using RDMA (remote
   direct memory access) to transfer data between processes.
 
-- Logging capabilities for MPI and internal routines have been readded.  See
+- Logging capabilities for MPI and internal routines have been re-added.  See
   the documentation in doc/logging for details.
 
 - A "meminit" option was added to --enable-g to force all bytes associated with
