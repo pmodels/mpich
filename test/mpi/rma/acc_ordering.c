@@ -111,7 +111,7 @@ int main(int argc, char **argv)
         data[0].val = 0;
     }
     MPI_Win_fence(0, win);
-    /* 1.b. Large arrary test */
+    /* 1.b. Large array test */
     if (me == nproc - 1) {
         MPI_Accumulate(mine, ARRAY_LEN, MPI_2INT, 0, 0, ARRAY_LEN, MPI_2INT, MPI_REPLACE, win);
         MPI_Accumulate(mine_plus, ARRAY_LEN, MPI_2INT, 0, 0, ARRAY_LEN, MPI_2INT, MPI_REPLACE, win);

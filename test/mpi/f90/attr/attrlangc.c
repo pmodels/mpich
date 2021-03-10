@@ -166,7 +166,7 @@ static int TYPE_DELETE_FN(MPI_Datatype dtype, int keyval, void *outval, void *ex
 {
     if (verbose)
         printf(" In C MPI type delete function, extra = %p\n", extra);
-    /* We reverse the incrment used in copy (checked after free of the type) */
+    /* We reverse the increment used in copy (checked after free of the type) */
     *(int *) outval = *(int *) outval - 1;
     return MPI_SUCCESS;
 }

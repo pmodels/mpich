@@ -560,7 +560,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == size / 2) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -589,7 +589,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == 1) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -619,7 +619,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == 2) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -649,7 +649,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == size / 2) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -689,7 +689,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == size / 2) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -740,7 +740,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == (size / 2)) {
                         rleader = 1;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }
@@ -781,7 +781,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
                     } else if (rank == (size / 2)) {
                         rleader = 0;
                     } else {
-                        /* Remote leader is signficant only for the processes
+                        /* Remote leader is significant only for the processes
                          * designated local leaders */
                         rleader = -1;
                     }

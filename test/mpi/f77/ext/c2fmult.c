@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
         printf("Unable to cancel MPI_Irecv request\n");
     }
     /* Using MPI_Request_free should be ok, but some MPI implementations
-     * object to it imediately after the cancel and that isn't essential to
+     * object to it immediately after the cancel and that isn't essential to
      * this test */
 
     MTest_Finalize(errs);

@@ -40,7 +40,7 @@ items listed here that are already sufficiently tested.
 		unsigned short, char, unsigned char, float, double,
 		long double, complex (f77), double complex (f77)
 
-	red_scat: differnt alg lengths
+	red_scat: different alg lengths
 
 	reduce: run with non powers of two, both odd and even values
 		run with root in various places, particularly with non

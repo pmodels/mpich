@@ -8,10 +8,10 @@
 /* ------------------------------------------------------------------------ */
 /* Utilities related to test environment */
 
-/* Some tests would like to test with large buffer, but an arbitary size may fail
+/* Some tests would like to test with large buffer, but an arbitrary size may fail
    on machines that does not have sufficient memory or the OS may not support it.
    This routine provides a portable interface to get that max size.
-   It is taking the simpliest solution here: default to 2GB, unless user set via
+   It is taking the simplest solution here: default to 2GB, unless user set via
    environment variable -- MPITEST_MAXBUFFER
 */
 MPI_Aint MTestDefaultMaxBufferSize()
@@ -236,7 +236,7 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
 
 #ifdef HAVE_ZE
     if (device_id == -1) {
-        /* Initilize ZE driver and device only at first call. */
+        /* Initialize ZE driver and device only at first call. */
         device_id = 0;
         zerr = zeInit(0);
         assert(zerr == ZE_RESULT_SUCCESS);
