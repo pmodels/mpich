@@ -23,7 +23,7 @@ open (I2, "<$f2" ) || die "Cannot open $f2";
 while (!eof(I1) && !eof(I2)) {
     $s1 = <I1>;
     $s2 = <I2>;
-    # The following apply to the preceeding line, and in the case of
+    # The following apply to the preceding line, and in the case of
     # a macro, there may be multiple lines.  In the merge case, 
     # we don't have a good way to interpret these, so we skip them
     # ^\s*branch\s+\d+\s+never executed

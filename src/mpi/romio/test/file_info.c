@@ -56,7 +56,7 @@ hint_defaults BLUEGENE_DEFAULTS = {
 
 /* Test will print out information about unexpected hint keys or values that
  * differ from the default.  Since this is often interesting but rarely an
- * error, default will be to increment error cound for true error conditions
+ * error, default will be to increment error count for true error conditions
  * but not print out these "interesting" non-error cases. */
 
 static int verbose = 0;

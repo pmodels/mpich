@@ -119,7 +119,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     orig_fp = fd->fp_ind;
 
-    /* IO patten identification if cb_write isn't disabled */
+    /* IO pattern identification if cb_write isn't disabled */
     if (fd->hints->cb_write != ADIOI_HINT_DISABLE) {
         /* For this process's request, calculate the list of offsets and
          * lengths in the file and determine the start and end offsets.

@@ -487,7 +487,7 @@ static void create_dt_map()
     dtsize[FI_LONG_DOUBLE_COMPLEX] = sizeof(long double complex);
 
     /* when atomics are disabled and atomics capability are not
-     * enabled call fo fi_atomic*** may crash */
+     * enabled call of fi_atomic*** may crash */
     MPIR_Assert(MPIDI_OFI_ENABLE_ATOMICS);
 
     memset(MPIDI_OFI_global.win_op_table, 0, sizeof(MPIDI_OFI_global.win_op_table));

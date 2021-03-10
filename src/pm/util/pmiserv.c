@@ -1129,7 +1129,7 @@ static int fPMI_Handle_spawn(PMIProcess * pentry)
          * separate routine (not yet implemented).
          * simple_pmi.c sends (key,value), so we can keep just the
          * last key and pass the key/value to the registered info
-         * handler, along with tha app structure.  Alternately,
+         * handler, along with the app structure.  Alternately,
          * we could save all info items and let the user's
          * spawner handle it */
         else if (strcmp("info_num", cmdPtr) == 0) {
@@ -1211,7 +1211,7 @@ static int fPMI_Handle_spawn(PMIProcess * pentry)
  *     mpiexec, but possibly a separate pmiserver process)
  * 5. return kvsname; return code
  *    How do we handle soft (no specific return size required).
- *    Also, is part fo the group associated with these processes or
+ *    Also, is part of the group associated with these processes or
  *    another group (the spawner?) of processes?
  *
  * This should be called after receiving the cmd=initack from the client.

@@ -382,7 +382,7 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         host_desc.pNext = NULL;
         host_desc.flags = 0;
 
-        /* Currently ZE ignores this augument and uses an internal alignment
+        /* Currently ZE ignores this argument and uses an internal alignment
          * value. However, this behavior can change in the future. */
         mem_alignment = 1;
         zerr = zeMemAllocHost(context, &host_desc, size, mem_alignment, devicebuf);
@@ -399,7 +399,7 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         device_desc.pNext = NULL;
         device_desc.flags = 0;
         device_desc.ordinal = 0;        /* We currently support a single memory type */
-        /* Currently ZE ignores this augument and uses an internal alignment
+        /* Currently ZE ignores this argument and uses an internal alignment
          * value. However, this behavior can change in the future. */
         mem_alignment = 1;
         zerr =
@@ -430,7 +430,7 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         host_desc.stype = ZE_STRUCTURE_TYPE_HOST_MEM_ALLOC_DESC;
         host_desc.pNext = NULL;
         host_desc.flags = 0;
-        /* Currently ZE ignores this augument and uses an internal alignment
+        /* Currently ZE ignores this argument and uses an internal alignment
          * value. However, this behavior can change in the future. */
         mem_alignment = 1;
         zerr =

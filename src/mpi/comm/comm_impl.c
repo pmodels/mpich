@@ -1101,7 +1101,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
-        /* Extract the context and group sign informatin */
+        /* Extract the context and group sign information */
         final_context_id = comm_info[0];
     }
 

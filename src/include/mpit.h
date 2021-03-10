@@ -127,7 +127,7 @@ static inline cvar_table_entry_t *LOOKUP_CVAR_BY_NAME(const char *cvar_name)
 #define MPIR_T_PVAR_STMT(MODULE, stmt_) \
     PVAR_GATED_ACTION(MODULE, stmt_)
 
-/* The following are interfaces for each pvar classe,
+/* The following are interfaces for each pvar class,
  * basically including delcaration, access and registration.
  */
 

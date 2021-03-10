@@ -759,7 +759,7 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
             /* Neither freed nor updated. This connection is the looser of
                a head-to-head connection. The VC is still in use, but by
                another sochekt connection. The refcount is not incremented
-               By chaning the associated connection. */
+               By changing the associated connection. */
 	    /* MPIR_Assert( conn->vc->ch.conn != conn ); */
 	    /* Set the candidate vc for this connection to NULL (we
 	       are discarding this connection because (I think) we

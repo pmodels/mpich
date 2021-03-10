@@ -3241,7 +3241,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
                                  pollfds_active_elems, millisecond_timeout);
                     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POLL);
 
-                    /* Reaquire the lock before processing any of the
+                    /* Reacquire the lock before processing any of the
                      * information returned from poll */
                     MPL_DBG_MSG(MPIR_DBG_OTHER, TYPICAL,
                                 "Enter global critical section (sock_wait)");

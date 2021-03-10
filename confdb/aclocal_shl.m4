@@ -367,7 +367,7 @@ dnl This macro ensures that all of the necessary substitutions are
 dnl made by any subdirectory configure (which may simply SUBST the
 dnl necessary values rather than trying to determine them from scratch)
 dnl This is a more robust (and, in the case of libtool, only 
-dnl managable) method.
+dnl manageable) method.
 AC_DEFUN([PAC_CC_SUBDIR_SHLIBS],[
 	AC_SUBST(CC_SHL)
         AC_SUBST(C_LINK_SHL)

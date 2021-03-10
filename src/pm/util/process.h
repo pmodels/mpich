@@ -95,7 +95,7 @@ typedef struct ProcessApp {
     const char *arch;           /* Architecture type */
     const char *path;           /* Search path for executables */
     const char *wdir;           /* Working directory */
-    const char *hostname;       /* Default host (can be overridded
+    const char *hostname;       /* Default host (can be overridden
                                  * by each process in an App) */
     const char **args;          /* Pointer into the array of args */
     int nArgs;                  /* Number of args (list is *not* null
