@@ -8,7 +8,7 @@
 #include "bscu.h"
 #include "slurm.h"
 
-#if defined(HAVE_SLURM_SLURM_H)
+#if defined(HAVE_SLURM)
 #include <slurm/slurm.h>        /* for slurm_hostlist_create */
 #elif defined(HAVE_POSIX_REGCOMP)
 #include <regex.h>      /* for POSIX regular expressions */
@@ -22,7 +22,7 @@
 static int *tasks_per_node = NULL;
 static struct HYD_node *global_node_list = NULL;
 
-#if defined(HAVE_LIBSLURM)
+#if defined(HAVE_SLURM)
 static HYD_status list_to_nodes(char *str)
 {
     hostlist_t hostlist;
