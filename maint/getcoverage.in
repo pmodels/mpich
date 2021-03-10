@@ -979,7 +979,7 @@ sub skipBlock {
 	    /^$lineLeader4\/\*\s+--END $blockName--\s+\*\//) {
 	    last; 
 	}
-	# If we match the following but not the preceeding, there are extra 
+	# If we match the following but not the preceding, there are extra 
 	# spaces in the comment
 	if (/^\s*\/\*\s*--\s*END\s+$blockName\s*--\s*\*\/\s*/ ||
 	    /^\s*-:\s*\d+:\s*\/\*\s*--\s*END\s+$blockName\s*--\s*\*\/\s*/) {

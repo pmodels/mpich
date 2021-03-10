@@ -10,7 +10,7 @@
    It starts a single receiver thread that expects
    NUMSENDS from NUMTHREADS sender threads, that
    use [i]bsend/[i]send to send a message of size MSGSIZE
-   to its right neigbour or rank 0 if (my_rank==comm_size-1), i.e.
+   to its right neighbor or rank 0 if (my_rank==comm_size-1), i.e.
    target_rank = (my_rank+1)%size .
 
    After all messages have been received, the

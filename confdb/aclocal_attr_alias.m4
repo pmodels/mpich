@@ -344,7 +344,7 @@ dnl AC_LINK_IFELSE, so "diff" approach is used instead.
 dnl Using diff of compiler(linker) output requires a reference output file
 dnl as the base of diff.  The process of creating this reference output file
 dnl has to be exactly the same as the testing process, because pgf77 has
-dnl the following weird behavour
+dnl the following weird behavior
 dnl pgf77 -o ftest ftest.f         => when $?=0 with zero stderr output
 dnl pgf77 -o ftest ftest.f dummy.o => when $?=0 with non-zero stderr output.
 dnl                                   stderr has "ftest.f:".

@@ -323,7 +323,7 @@ be in the range 0 to %d
 **intern %s:Internal MPI error!  %s
 **internrc:Internal MPI error!  Unexpected return code from internal function.
 **instatus:See the MPI_ERROR field in MPI_Status for the error code
-**inpending:Pending request (no error)
+**pending:Pending request (no error)
 **unknowngpid:Internal MPI error: Unknown gpid
 **unknowngpid %d %d:Internal MPI error: Unknown gpid (%d)%d
 **request:Invalid MPI_Request

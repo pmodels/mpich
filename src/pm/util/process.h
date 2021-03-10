@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 /*
-Data structures and routines for managing processs
+Data structures and routines for managing processes
 
 The data structures for managing processes following the hierarchy implied
 by MPI-2 design, particularly the ":" syntax of mpiexec and the

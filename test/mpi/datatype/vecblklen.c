@@ -14,7 +14,7 @@
 */
 int main(int argc, char *argv[])
 {
-    MPI_Datatype ot, ot2, newtype;
+    MPI_Datatype dt, dt2, newtype;
     int position, psize, insize, outsize;
     signed char *inbuf = 0, *outbuf = 0, *pbuf = 0, *p;
     int i, j, k;
@@ -25,14 +25,14 @@ int main(int argc, char *argv[])
     /*
      * Create a type with some padding
      */
-    MPI_Type_contiguous(59, MPI_CHAR, &ot);
-    MPI_Type_create_resized(ot, 0, 64, &ot2);
+    MPI_Type_contiguous(59, MPI_CHAR, &dt);
+    MPI_Type_create_resized(dt, 0, 64, &dt2);
     /*
      * Use a vector type with a block size equal to the stride - thus
      * tiling the target memory with copies of old type.  This is not
      * a contiguous copy since oldtype has a gap at the end.
      */
-    MPI_Type_vector(veccount, stride, stride, ot2, &newtype);
+    MPI_Type_vector(veccount, stride, stride, dt2, &newtype);
     MPI_Type_commit(&newtype);
 
     insize = veccount * stride * 64;
@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
     free(inbuf);
     free(outbuf);
 
-    MPI_Type_free(&ot);
-    MPI_Type_free(&ot2);
+    MPI_Type_free(&dt);
+    MPI_Type_free(&dt2);
     MPI_Type_free(&newtype);
     MTest_Finalize(errs);
 
