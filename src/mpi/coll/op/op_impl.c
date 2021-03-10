@@ -103,7 +103,11 @@ int MPIR_Op_is_commutative(MPI_Op op)
     MPIR_Op *op_ptr;
 
     if (HANDLE_IS_BUILTIN(op)) {
-        return TRUE;
+        if (op == MPI_NO_OP || op == MPI_REPLACE) {
+            return FALSE;
+        } else {
+            return TRUE;
+        }
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
         MPIR_Assert(op_ptr != NULL);
@@ -114,19 +118,11 @@ int MPIR_Op_is_commutative(MPI_Op op)
     }
 }
 
-int MPIR_Op_commutative_impl(MPIR_Op * op_ptr, int *commute)
+int MPIR_Op_commutative_impl(MPI_Op op, int *commute)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* Built-in op */
-    if (MPIR_OP_KIND__USER_NONCOMMUTE > op_ptr->kind) {
-        *commute = 1;
-    } else {
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
-            *commute = 0;
-        else
-            *commute = 1;
-    }
+    *commute = MPIR_Op_is_commutative(op);
 
     return mpi_errno;
 }
