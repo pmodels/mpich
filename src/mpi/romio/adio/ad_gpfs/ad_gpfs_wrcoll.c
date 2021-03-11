@@ -360,7 +360,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
             ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count, buf,
                                            datatype, error_code, firstFileOffset, lastFileOffset,
                                            currentValidDataIndex, fd_start, fd_end, &holeFound,
-                                           noStripeParms);
+                                           &noStripeParms);
             romio_onesided_no_rmw = prev_romio_onesided_no_rmw;
             GPFSMPIO_T_CIO_REPORT(1, fd, myrank, nprocs);
             ADIOI_Free(offset_list);
@@ -447,8 +447,12 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     GPFSMPIO_T_CIO_REPORT(1, fd, myrank, nprocs);
 
     /* free all memory allocated for collective I/O */
-    ADIOI_Free(others_req[0].offsets);
-    ADIOI_Free(others_req[0].mem_ptrs);
+    if (others_req[0].offsets) {
+        ADIOI_Free(others_req[0].offsets);
+    }
+    if (others_req[0].mem_ptrs) {
+        ADIOI_Free(others_req[0].mem_ptrs);
+    }
     ADIOI_Free(others_req);
 
     ADIOI_Free(buf_idx);
