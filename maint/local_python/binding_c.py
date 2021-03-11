@@ -377,7 +377,10 @@ def process_func_parameters(func):
             pass
         elif p['param_direction'] == 'out':
             # -- output parameter --
-            validation_list.append({'kind': "ARGNULL", 'name': name})
+            if p['length']:
+                validation_list.append({'kind': "ARGNULL-length", 'name': name, 'length': p['length']})
+            else:
+                validation_list.append({'kind': "ARGNULL", 'name': name})
             if RE.search(r'get_errhandler$', func_name):
                 # we may get the built-in handler, which doesn't have pointer
                 pass
@@ -1696,6 +1699,11 @@ def dump_validation(func, t):
         else:
             G.err_codes['MPI_ERR_ARG'] = 1
             G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
+    elif RE.match(r'(ARGNULL-length)$', kind):
+        G.err_codes['MPI_ERR_ARG'] = 1
+        dump_if_open("%s > 0" % t['length'])
+        G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
+        dump_if_close()
     elif RE.match(r'(ARGNEG)$', kind):
         if func['dir'] == 'mpit':
             G.err_codes['MPI_T_ERR_INVALID'] = 1

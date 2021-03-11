@@ -244,16 +244,7 @@ MPI_Type_ub:
 MPI_Type_get_contents:
     .desc: get type contents
     .skip: ThreadSafe
-{ -- error_check -- array_of_integers, array_of_addresses, array_of_datatypes
-    if (max_integers > 0) {
-        MPIR_ERRTEST_ARGNULL(array_of_integers, "array_of_integers", mpi_errno);
-    }
-    if (max_addresses > 0) {
-        MPIR_ERRTEST_ARGNULL(array_of_addresses, "array_of_addresses", mpi_errno);
-    }
-    if (max_datatypes > 0) {
-        MPIR_ERRTEST_ARGNULL(array_of_datatypes, "array_of_datatypes", mpi_errno);
-    }
+{ -- error_check --
     if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE, "**contentspredef", 0);
         goto fn_fail;
