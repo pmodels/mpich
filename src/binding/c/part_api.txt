@@ -51,7 +51,7 @@ MPI_Pready:
 MPI_Pready_range:
     .desc: Indicates that a given range of the send buffer in a partitioned
            communication call is ready to be transferred
-{ -- error_check -- partition
+{ -- error_check -- partition_low, partition_high
     MPIR_ERRTEST_PARTITION(partition_low, request_ptr, mpi_errno);
     MPIR_ERRTEST_PARTITION(partition_high, request_ptr, mpi_errno);
     if (partition_low > partition_high) {
