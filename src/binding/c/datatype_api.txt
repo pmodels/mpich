@@ -410,6 +410,7 @@ MPI_Type_hvector:
     newtype: DATATYPE, direction=out, [new datatype]
     .desc: type_hvector
     .replace: removed with MPI_Type_create_hvector
+    .skip: validate-DTYPE_STRIDE_BYTES_SMALL
 
 MPI_Type_indexed:
     .desc: Creates an indexed datatype
