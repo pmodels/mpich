@@ -29,6 +29,7 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
 {
     int mpi_errno = MPI_SUCCESS;
     int size, i, j, k, nnew, first, last, stride;
+    int *flags = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
@@ -66,7 +67,7 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
      * was enabled *and* we are not MPI_THREAD_MULTIPLE, but since this
      * is a low-usage routine, we haven't taken that optimization.  */
 
-    int *flags = MPL_calloc(size, sizeof(int), MPL_MEM_OTHER);
+    flags = MPL_calloc(size, sizeof(int), MPL_MEM_OTHER);
 
     for (i = 0; i < n; i++) {
         first = ranges[i][0];
@@ -95,12 +96,11 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
         }
     }
 
-    MPL_free(flags);
-
     /* TODO calculate is_local_dense_monotonic */
 
 
   fn_exit:
+    MPL_free(flags);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
     return mpi_errno;
   fn_fail:
