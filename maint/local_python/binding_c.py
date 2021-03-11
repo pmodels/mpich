@@ -1246,7 +1246,9 @@ def dump_body_impl(func, prefix='mpir'):
     elif RE.match(r'mpi_type_', func['name'], re.IGNORECASE):
         p = func['c_parameters'][-1]
         if p['kind'] == "DATATYPE" and p['param_direction'] == 'out':
-            G.out.append("*%s = MPI_DATATYPE_NULL;" % p['name'])
+            # check it is not a datatype array (MPI_Type_get_contents)
+            if not p['length']:
+                G.out.append("*%s = MPI_DATATYPE_NULL;" % p['name'])
 
     impl = func['name']
     if func['_map_type'] == "BIG" and func['_poly_impl'] == "separate":
