@@ -455,7 +455,7 @@ def process_func_parameters(func):
                 validation_list.append({'kind': "COUNT", 'name': name})
         elif RE.match(r'WINDOW_SIZE|WIN_ATTACH_SIZE', kind):
             validation_list.append({'kind': "WIN_SIZE", 'name': name})
-        elif RE.match(r'ALLOC_MEM_NUM_BYTES', kind):
+        elif RE.match(r'(ALLOC_MEM_NUM_BYTES|(POLY)?NUM_PARAM_VALUES)', kind):
             validation_list.append({'kind': "ARGNEG", 'name': name})
         elif RE.match(r'(C_)?BUFFER', kind) and RE.match(r'MPI_Win_(allocate|create|attach)', func_name):
             validation_list.append({'kind': "WINBUFFER", 'name': name})

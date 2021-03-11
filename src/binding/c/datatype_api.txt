@@ -243,7 +243,7 @@ MPI_Type_ub:
 
 MPI_Type_get_contents:
     .desc: get type contents
-    .skip: ThreadSafe, validate-POLYNUM_PARAM_VALUES
+    .skip: ThreadSafe
 { -- error_check -- array_of_integers, array_of_addresses, array_of_datatypes
     if (max_integers > 0) {
         MPIR_ERRTEST_ARGNULL(array_of_integers, "array_of_integers", mpi_errno);
