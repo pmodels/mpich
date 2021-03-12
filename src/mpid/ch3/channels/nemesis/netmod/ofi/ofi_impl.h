@@ -29,13 +29,13 @@
  * <tag> has the following format:
  * tag<delim>tag_value<separ>\0
  * where "tag" is constant string (3 chars),
- * <delim>  and <separ> are one-char delimeters (2 chars),
+ * <delim>  and <separ> are one-char delimiters (2 chars),
  * tag_value is integer value (12 chars are enough for max value).
  *
  * <business card> has the following format:
  * OFI<delim>address<separ>
  * where "OFI" is constant string (3 chars),
- * <delim>  and <separ> are one-char delimeters (2 chars).
+ * <delim>  and <separ> are one-char delimiters (2 chars).
  * address is variable string.
  *
  * Address is provider specific and have encoded form

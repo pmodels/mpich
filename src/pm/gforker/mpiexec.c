@@ -103,7 +103,7 @@ int myspawn(ProcessWorld *, void *);
 /* Set printFailure to 1 to get an explanation of the failure reason
    for each process when a process fails */
 static int printFailure = 0;
-/* Set usePort to 1 if a host:port should be used insted of inheriting
+/* Set usePort to 1 if a host:port should be used instead of inheriting
    an FD to a socketpair.  Meaningful only if code is compilete with
    -DMPIEXEC_ALLOW_PORT */
 static int usePort = 0;

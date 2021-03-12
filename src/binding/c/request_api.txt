@@ -37,7 +37,7 @@ MPIX_Grequest_start:
     query_fn: FUNCTION_SMALL, func_type=MPI_Grequest_query_function, [callback function invoked when request status is queried]
     free_fn: FUNCTION_SMALL, func_type=MPI_Grequest_free_function, [callback function invoked when request is freed]
     cancel_fn: FUNCTION_SMALL, func_type=MPI_Grequest_cancel_function, [callback function invoked when request is cancelled]
-    poll_fn: FUNCTION_SMALL, func_type=MPIX_Grequest_poll_function, [callback function invoked when request completeion is tested]
+    poll_fn: FUNCTION_SMALL, func_type=MPIX_Grequest_poll_function, [callback function invoked when request completion is tested]
     wait_fn: FUNCTION_SMALL, func_type=MPIX_Grequest_wait_function, [callback function invoked when request is waited on]
     extra_state: EXTRA_STATE, [extra state]
     request: REQUEST, direction=out, [generalized request]
@@ -58,7 +58,7 @@ MPIX_Grequest_class_create:
     query_fn: FUNCTION_SMALL, func_type=MPI_Grequest_query_function, [callback function invoked when request status is queried]
     free_fn: FUNCTION_SMALL, func_type=MPI_Grequest_free_function, [callback function invoked when request is freed]
     cancel_fn: FUNCTION_SMALL, func_type=MPI_Grequest_cancel_function, [callback function invoked when request is cancelled]
-    poll_fn: FUNCTION_SMALL, func_type=MPIX_Grequest_poll_function, [callback function invoked when request completeion is tested]
+    poll_fn: FUNCTION_SMALL, func_type=MPIX_Grequest_poll_function, [callback function invoked when request completion is tested]
     wait_fn: FUNCTION_SMALL, func_type=MPIX_Grequest_wait_function, [callback function invoked when request is waited on]
     greq_class: GREQUEST_CLASS, direction=out, [generalized request class]
 
@@ -282,7 +282,7 @@ MPI_Waitsome:
     .desc: Waits for some given MPI Requests to complete
 /*
     Notes:
-    The array of indicies are in the range '0' to 'incount - 1' for C and
+    The array of indices are in the range '0' to 'incount - 1' for C and
     in the range '1' to 'incount' for Fortran.
 
     Null requests are ignored; if all requests are null, then the routine

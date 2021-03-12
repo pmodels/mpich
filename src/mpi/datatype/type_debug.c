@@ -18,7 +18,7 @@
  *
  */
 
-static void contents_printf(MPI_Datatype type, int depth, int acount);
+static void contents_printf(MPI_Datatype type, int depth, int array_ct);
 static char *depth_spacing(int depth) ATTRIBUTE((unused));
 
 #define NR_TYPE_CUTOFF 6        /* Number of types to display before truncating
@@ -360,7 +360,7 @@ static char *depth_spacing(int depth)
     }
 }
 
-static void contents_printf(MPI_Datatype type, int depth, int acount)
+static void contents_printf(MPI_Datatype type, int depth, int array_ct)
 {
     int i;
     MPIR_Datatype *dtp;
@@ -411,14 +411,14 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
             MPIR_Assert((ints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %scontig ct = %d\n",
                                                 depth_spacing(depth), *ints));
-            contents_printf(*types, depth + 1, acount);
+            contents_printf(*types, depth + 1, array_ct);
             return;
         case MPI_COMBINER_VECTOR:
             MPIR_Assert((ints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                 "# %svector ct = %d, blk = %d, str = %d\n",
                                                 depth_spacing(depth), ints[0], ints[1], ints[2]));
-            contents_printf(*types, depth + 1, acount);
+            contents_printf(*types, depth + 1, array_ct);
             return;
         case MPI_COMBINER_HVECTOR:
             MPIR_Assert((ints != NULL) && (aints != NULL) && (types != NULL));
@@ -427,52 +427,52 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
                                                 MPI_AINT_FMT_DEC_SPEC "\n",
                                                 depth_spacing(depth), ints[0],
                                                 ints[1], (MPI_Aint) aints[0]));
-            contents_printf(*types, depth + 1, acount);
+            contents_printf(*types, depth + 1, array_ct);
             return;
         case MPI_COMBINER_INDEXED:
             MPIR_Assert((ints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %sindexed ct = %d:",
                                                 depth_spacing(depth), ints[0]));
-            for (i = 0; i < acount && i < ints[0]; i++) {
+            for (i = 0; i < array_ct && i < ints[0]; i++) {
                 MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                     "# %s  indexed [%d]: blk = %d, disp = %d\n",
                                                     depth_spacing(depth),
                                                     i,
                                                     ints[i + 1], ints[i + (cp->nr_ints / 2) + 1]));
-                contents_printf(*types, depth + 1, acount);
+                contents_printf(*types, depth + 1, array_ct);
             }
             return;
         case MPI_COMBINER_HINDEXED:
             MPIR_Assert((ints != NULL) && (aints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %shindexed ct = %d:",
                                                 depth_spacing(depth), ints[0]));
-            for (i = 0; i < acount && i < ints[0]; i++) {
+            for (i = 0; i < array_ct && i < ints[0]; i++) {
                 MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                     "# %s  hindexed [%d]: blk = %d, disp = "
                                                     MPI_AINT_FMT_DEC_SPEC "\n",
                                                     depth_spacing(depth), i,
                                                     (int) ints[i + 1], (MPI_Aint) aints[i]));
-                contents_printf(*types, depth + 1, acount);
+                contents_printf(*types, depth + 1, array_ct);
             }
             return;
         case MPI_COMBINER_STRUCT:
             MPIR_Assert((ints != NULL) && (aints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %sstruct ct = %d:",
                                                 depth_spacing(depth), (int) ints[0]));
-            for (i = 0; i < acount && i < ints[0]; i++) {
+            for (i = 0; i < array_ct && i < ints[0]; i++) {
                 MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                     "# %s  struct[%d]: blk = %d, disp = "
                                                     MPI_AINT_FMT_DEC_SPEC "\n",
                                                     depth_spacing(depth), i,
                                                     (int) ints[i + 1], (MPI_Aint) aints[i]));
-                contents_printf(types[i], depth + 1, acount);
+                contents_printf(types[i], depth + 1, array_ct);
             }
             return;
         case MPI_COMBINER_SUBARRAY:
             MPIR_Assert((ints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %ssubarray ct = %d:",
                                                 depth_spacing(depth), (int) ints[0]));
-            for (i = 0; i < acount && i < ints[0]; i++) {
+            for (i = 0; i < array_ct && i < ints[0]; i++) {
                 MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                     "# %s  sizes[%d] = %d subsizes[%d] = %d starts[%d] = %d\n",
                                                     depth_spacing(depth),
@@ -480,7 +480,7 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
                                                     i, (int) ints[i + ints[0] + 1],
                                                     i, (int) ints[2 * ints[0] + 1]));
             }
-            contents_printf(*types, depth + 1, acount);
+            contents_printf(*types, depth + 1, array_ct);
             return;
 
         case MPI_COMBINER_RESIZED:
@@ -489,7 +489,7 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
                             (MPL_DBG_FDEST,
                              "# %sresized lb = " MPI_AINT_FMT_DEC_SPEC " extent = "
                              MPI_AINT_FMT_DEC_SPEC "\n", depth_spacing(depth), aints[0], aints[1]));
-            contents_printf(*types, depth + 1, acount);
+            contents_printf(*types, depth + 1, array_ct);
             return;
         default:
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %sunhandled combiner",

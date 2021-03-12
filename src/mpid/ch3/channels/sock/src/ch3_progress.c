@@ -373,7 +373,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
                 MPIDI_CH3I_Connection_t *conn = (MPIDI_CH3I_Connection_t *) event->user_ptr;
                 /* If we have a READ event on a discarded connection, we probably have
                  * an error on this connection, if the remote side is closed due to
-                 * MPI_Finalize. Since the connection is discareded (and therefore not needed)
+                 * MPI_Finalize. Since the connection is discarded (and therefore not needed)
                  * it can be closed and the error can be ignored */
                 if (conn->state == CONN_STATE_DISCARD) {
                     MPIDI_CH3_Sockconn_handle_close_event(conn);

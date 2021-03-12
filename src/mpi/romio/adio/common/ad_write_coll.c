@@ -607,7 +607,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
      * processes are operating on noncontigous data.  But holes can also show
      * up at the beginning or end of the file domain (see John Bent ROMIO REQ
      * #835). Missing these holes would result in us writing more data than
-     * recieved by everyone else. */
+     * received by everyone else. */
 
     *hole = 0;
     if (sum) {

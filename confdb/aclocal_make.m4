@@ -3,7 +3,7 @@ dnl We need routines to check that make works.  Possible problems with
 dnl make include
 dnl
 dnl It is really gnumake, and contrary to the documentation on gnumake,
-dnl it insists on screaming everytime a directory is changed.  The fix
+dnl it insists on screaming every time a directory is changed.  The fix
 dnl is to add the argument --no-print-directory to the make
 dnl
 dnl It is really BSD 4.4 make, and can't handle 'include'.  For some

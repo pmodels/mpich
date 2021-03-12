@@ -110,7 +110,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
                conflict with release of the RTS request if the CTS is received
 	       (see handling of a rendezvous CTS packet in
                MPIDI_CH3U_Handle_recv_pkt()).  
-	       MPID_Request_fetch_and_clear_rts_sreq() is used to gurantee 
+	       MPID_Request_fetch_and_clear_rts_sreq() is used to guarantee 
 	       that atomicity. */
 	    MPIDI_Request_fetch_and_clear_rts_sreq(sreq, &rts_sreq);
 	    if (rts_sreq != NULL) 

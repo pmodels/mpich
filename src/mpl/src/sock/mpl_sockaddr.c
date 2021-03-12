@@ -11,7 +11,7 @@
  */
 
 /** Design considerations:
- *    Either IPv4 or IPv6, globally set as defalt or with command line option, to
+ *    Either IPv4 or IPv6, globally set as default or with command line option, to
  *    simplify logic.
  *    TCP only, no UDP or unix domain sockets.
  *

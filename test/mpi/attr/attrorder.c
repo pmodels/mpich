@@ -92,7 +92,7 @@ int checkAttrs(MPI_Comm comm, int n, int key[], int attrval[])
             fprintf(stderr, "Attribute for key %d not set\n", i);
         } else if (val_p != &attrval[i]) {
             errs++;
-            fprintf(stderr, "Atribute value for key %d not correct\n", i);
+            fprintf(stderr, "Attribute value for key %d not correct\n", i);
         }
     }
 

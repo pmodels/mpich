@@ -114,7 +114,7 @@ static PMICmdMap pmiCommands[] = {
     {"spawn", fPMI_Handle_spawn},
     {"get_universe_size", fPMI_Handle_get_universe_size},
     {"get_appnum", fPMI_Handle_get_appnum},
-    {"\0", 0},  /* Sentinal for end of list */
+    {"\0", 0},  /* Sentinel for end of list */
 };
 
 /* ------------------------------------------------------------------------- */
@@ -873,7 +873,7 @@ static int fPMI_Handle_getbyidx(PMIProcess * pentry)
  * set up)
  * After the fork, the child will call
  *      PMISetupInClient(1, &pmiinfo)
- * This adds the PMI_PORT and PMI_ID values to the enviroment
+ * This adds the PMI_PORT and PMI_ID values to the environment
  * The parent also calls
  *      PMISetupFinishInServer(1, &pmiinfo, pState)
  * ? What should this do, since there is no connection yet?
@@ -1129,7 +1129,7 @@ static int fPMI_Handle_spawn(PMIProcess * pentry)
          * separate routine (not yet implemented).
          * simple_pmi.c sends (key,value), so we can keep just the
          * last key and pass the key/value to the registered info
-         * handler, along with tha app structure.  Alternately,
+         * handler, along with the app structure.  Alternately,
          * we could save all info items and let the user's
          * spawner handle it */
         else if (strcmp("info_num", cmdPtr) == 0) {
@@ -1211,7 +1211,7 @@ static int fPMI_Handle_spawn(PMIProcess * pentry)
  *     mpiexec, but possibly a separate pmiserver process)
  * 5. return kvsname; return code
  *    How do we handle soft (no specific return size required).
- *    Also, is part fo the group associated with these processes or
+ *    Also, is part of the group associated with these processes or
  *    another group (the spawner?) of processes?
  *
  * This should be called after receiving the cmd=initack from the client.

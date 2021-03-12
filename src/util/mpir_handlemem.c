@@ -42,7 +42,7 @@ cvars:
 
    MPIR_Add_finalize(MPIR_check_handles_on_finalize, objmem, 1);
 
-   as part of the object intialization.
+   as part of the object initialization.
 
    The algorithm follows the following approach:
 

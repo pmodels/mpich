@@ -12,7 +12,7 @@ from local_python import RE
 def main():
     binding_dir = "src/binding"
     f08_dir = "src/binding/fortran/use_mpi_f08"
-    func_list = load_C_func_list(binding_dir, True) # supress noise
+    func_list = load_C_func_list(binding_dir, True) # suppress noise
     # FIXME: until romio interface is generated
     func_list.extend(get_mpiio_func_list())
     func_list.extend(get_type_create_f90_func_list())

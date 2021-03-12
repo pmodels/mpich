@@ -12,7 +12,7 @@
  * This test attempts MPI_Recv with the source being a dead process. It should fail
  * and return an error. If we are testing sufficiently new MPICH, we look for the
  * MPIX_ERR_PROC_FAILED error code. These should be converted to look for the
- * standarized error code once it is finalized.
+ * standardized error code once it is finalized.
  */
 int main(int argc, char **argv)
 {

@@ -16,7 +16,7 @@ src/binding/c/errnames.txt, and src/include/mpir_impl.h.
 ## Master API config file
 
 The master config file -- maint/mpi_standards_api.txt is a direct
-transcription from mpi-standard repository. It contains entries as follwing:
+transcription from mpi-standard repository. It contains entries as following:
 
 ---- quote ----
 MPI_Send:
@@ -83,7 +83,7 @@ MPI_Example:
 */
 /*
     Multiple such "comment" blocks are allowed. The first block adds notes to the
-    top fo the man page (after the generated parameter info). The rest of the blocks
+    top of the man page (after the generated parameter info). The rest of the blocks
     are concatenated a follows the generated notes.
 
     Typical functions will all include .ThreadSafe and .Fortran notes, unless
@@ -118,7 +118,7 @@ The above example customizes the function, MPI_Example, with a short description
 extra man page notes, custom error checking code, early_return code, and custom
 body of routine.
 
-The customizations are place holders to allow flexibility dealing with arbitary
+The customizations are place holders to allow flexibility dealing with arbitrary
 complex code that it is too complex to deal with within the python script.
 However, for most functions, most of the custom parts can be omitted. For example,
 the following:

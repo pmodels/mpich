@@ -71,7 +71,7 @@ static int find_file(void)
 }
 
 /* parse the file-of-hints.  Format is zero or more lines of "<key> <value>\n".
- * A # in collumn zero is a comment and the line will be ignored.  Do our best
+ * A # in column zero is a comment and the line will be ignored.  Do our best
  * to ignore badly formed lines too.
  *
  * The caller provides an 'info' object.  Each key-value pair found by the

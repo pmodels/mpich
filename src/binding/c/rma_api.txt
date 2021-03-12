@@ -562,7 +562,7 @@ MPI_Win_start:
     The 'assert' argument is used to indicate special conditions for the
     fence that an implementation may use to optimize the 'MPI_Win_start'
     operation.  The value zero is always correct.  Other assertion values
-    may be or''ed together.  Assertions tha are valid for 'MPI_Win_start' are\:
+    may be or''ed together.  Assertions that are valid for 'MPI_Win_start' are\:
 
     . MPI_MODE_NOCHECK - the matching calls to 'MPI_WIN_POST' have already
       completed on all target processes when the call to 'MPI_WIN_START' is made.

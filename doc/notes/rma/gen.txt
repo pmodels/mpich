@@ -46,7 +46,7 @@
   Q: How do the three synchronization mechanisms play together?  What
   is required in order to switch from one mechanism to another?  The
   standard talks about this briefly, but I am still somewhat confused
-  about what happens when a transistions occurs from active (fence)
+  about what happens when a transitions occurs from active (fence)
   synchronization to scalable or passive synchronization.  It seems as
   though active synchronization always has open access and exposure
   epochs unless the assertion MPI_MODE_NOSUCCEED is specified.

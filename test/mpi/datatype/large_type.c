@@ -16,7 +16,7 @@ static MPI_Datatype make_largexfer_type_struct(MPI_Offset nbytes)
     int remainder = 0;
     MPI_Datatype memtype, chunktype;
 
-    /* need to cook up a new datatype to accomodate large datatypes */
+    /* need to cook up a new datatype to accommodate large datatypes */
     /* first pass: chunks of 1 MiB plus an additional remainder.  Does require
      * 8 byte MPI_Aint, which should have been checked for earlier */
 
@@ -54,7 +54,7 @@ static MPI_Datatype make_largexfer_type_hindexed(MPI_Offset nbytes)
     MPI_Aint *disp;
     MPI_Datatype memtype;
 
-    /* need to cook up a new datatype to accomodate large datatypes */
+    /* need to cook up a new datatype to accommodate large datatypes */
     /* Does require 8 byte MPI_Aint, which should have been checked for earlier
      */
 

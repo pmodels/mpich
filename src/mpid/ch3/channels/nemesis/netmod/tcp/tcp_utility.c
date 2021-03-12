@@ -110,7 +110,7 @@ there is an error in the socket or whether the peer has closed it (i.e we have r
 EOF and hence recv returns 0). Either way, we deccide the socket fd is not usable any
 more. So, same return code is used.
 A design decision is not to write also, if the peer has closed the socket. Please note that
-write will still be succesful, even if the peer has sent us FIN. Only the subsequent
+write will still be successful, even if the peer has sent us FIN. Only the subsequent
 write will fail. So, this function is made tight enough and this should be called
 before doing any read/write at least in the connection establishment state machine code.
 

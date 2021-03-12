@@ -36,7 +36,7 @@ cvars:
       description : >-
         Size of the Global RMA operations pool (in number of
         operations) that stores information about RMA operations that
-        could not be issued immediatly.  Requires a positive value.
+        could not be issued immediately.  Requires a positive value.
 
     - name        : MPIR_CVAR_CH3_RMA_TARGET_WIN_POOL_SIZE
       category    : CH3
@@ -60,7 +60,7 @@ cvars:
       description : >-
         Size of the Global RMA targets pool (in number of
         targets) that stores information about RMA targets that
-        could not be issued immediatly.  Requires a positive value.
+        could not be issued immediately.  Requires a positive value.
 
     - name        : MPIR_CVAR_CH3_RMA_TARGET_LOCK_ENTRY_WIN_POOL_SIZE
       category    : CH3
@@ -72,7 +72,7 @@ cvars:
       description : >-
         Size of the window-private RMA lock entries pool (in number of
         lock entries) that stores information about RMA lock requests that
-        could not be satisfied immediatly.  Requires a positive value.
+        could not be satisfied immediately.  Requires a positive value.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -150,7 +150,7 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
      * because for some UNLOCK messages, we do not send ACK back to origin,
      * we must wait until lock is released so that we can free window.
      * 2. We also need to wait until AT completion counter being zero, because
-     * this counter is increment everytime we meet a GET-like operation, it is
+     * this counter is increment every time we meet a GET-like operation, it is
      * possible that when target entering Win_free, passive epoch is not finished
      * yet and there are still GETs doing on this target.
      * 3. We also need to wait until lock queue becomes empty. It is possible

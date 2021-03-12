@@ -440,7 +440,7 @@ static int send_id_info(const sockconn_t * const sc)
 
 /*     store ending NULL also */
 /*     FIXME better keep pg_id_len itself as part of MPIDI_Process.my_pg structure to */
-/*     avoid computing the length of string everytime this function is called. */
+/*     avoid computing the length of string every time this function is called. */
 
     MPL_VG_MEM_INIT(&hdr, sizeof(hdr));
 
@@ -502,7 +502,7 @@ static int send_tmpvc_info(const sockconn_t * const sc)
 
 /*     store ending NULL also */
 /*     FIXME better keep pg_id_len itself as part of MPIDI_Process.my_pg structure to */
-/*     avoid computing the length of string everytime this function is called. */
+/*     avoid computing the length of string every time this function is called. */
 
     MPL_VG_MEM_INIT(&hdr, sizeof(hdr));
 
@@ -1735,7 +1735,7 @@ int MPID_nem_tcp_sm_finalize(void)
 }
 
 /*
- N1: create a new listener fd?? While doing so, if we bind it to the same port used befor,
+ N1: create a new listener fd?? While doing so, if we bind it to the same port used before,
 then it is ok. Else,the new port number(and thus the business card) has to be communicated
 to the other processes (in same and different pg's), which is not quite simple to do.
 Evaluate the need for it by testing and then do it, if needed.
@@ -1844,7 +1844,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
 
   N3:  find_free_entry is called within the while loop. It may cause the table to expand. So,
   the arguments passed for this callback function may get invalidated. So, it is imperative
-  that we obtain sc pointer and plfd pointer everytime within the while loop.
+  that we obtain sc pointer and plfd pointer every time within the while loop.
   Accordingly, the parameters are named unused1 and unused2 for clarity.
 */
 int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn_t * const unused_2)

@@ -309,9 +309,9 @@ struct gcn_state {
 struct gcn_state *next_gcn = NULL;
 
 /* All pending context_id allocations are added to a list. The context_id allocations are ordered
- * according to the context_id of of parrent communicator and the tag, wherby blocking context_id
+ * according to the context_id of of parent communicator and the tag, wherby blocking context_id
  * allocations  can have the same tag, while nonblocking operations cannot. In the non-blocking
- * case, the user is reponsible for the right tags if "comm_create_group" is used */
+ * case, the user is responsible for the right tags if "comm_create_group" is used */
 static void add_gcn_to_list(struct gcn_state *new_state)
 {
     struct gcn_state *tmp = NULL;
@@ -426,7 +426,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /*If we are here, at least one element must be in the list, at least myself */
 
             /* only the first element in the list can own the mask. However, maybe the mask is used
-             * by another thread, which added another allcoation to the list bevore. So we have to check,
+             * by another thread, which added another allcoation to the list before. So we have to check,
              * if the mask is used and mark, if we own it */
             if (mask_in_use || &st != next_gcn) {
                 memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
@@ -597,7 +597,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
         }
         if (st.first_iter == 1) {
             st.first_iter = 0;
-            /* to avoid deadlocks, the element is not added to the list bevore the first iteration */
+            /* to avoid deadlocks, the element is not added to the list before the first iteration */
             if (!ignore_id && *context_id == 0) {
                 MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
                 MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);

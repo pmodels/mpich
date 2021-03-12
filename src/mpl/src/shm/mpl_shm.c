@@ -43,7 +43,7 @@ int MPL_shm_hnd_deserialize(MPL_shm_hnd_t hnd, const char *str_hnd, size_t str_h
 
 /* Get a serialized handle by reference.
  * Rationale: The user might only want to read the serialized view
- * of the handle & hence not want to allocate a buffer for the ser view
+ * of the handle & hence not want to allocate a buffer for the serialized view
  * of the handle.
  * str_ptr  : Pointer to a string of chars to hold the serialized handle
  *           If the function succeeds, the pointer points to a

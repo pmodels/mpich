@@ -15,7 +15,7 @@
  *
  * . generalized file writing/reading to handle arbitrary number of processors
  * . provides the "cb_config_list" hint with several permutations of the
- *   avaliable processors.
+ *   available processors.
  *   [ makes use of code copied from ROMIO's ADIO code to collect the names of
  *   the processors ]
  */

@@ -1042,7 +1042,7 @@ dnl EOF
 dnl             # FIXME.  Check for BASECC
 dnl             # Note: This assumes that CC has been set to the C compiler for
 dnl             # MPI Programs, and that either any necessary include paths are 
-dnl             # already set or they are in CPPFLAGS (prefered) or CFLAGS.
+dnl             # already set or they are in CPPFLAGS (preferred) or CFLAGS.
 dnl             if AC_TRY_EVAL(ac_link) && test -s conftest$ac_exeext ; then
 dnl                 if ./conftest$ac_exeext ; then
 dnl                     #success
@@ -1573,7 +1573,7 @@ AC_MSG_RESULT($POINTERINT)
 AC_DEFINE_UNQUOTED(POINTERINT_t,$POINTERINT,[POINTERINT_t is a pointer-sized integer])
 
 # Find perl; used to create some of the tests from template and 
-# defintion files
+# definition files
 AC_PATH_PROG(PERL,perl)
 AC_SUBST(PERL)
 AC_SUBST(otherlangs)

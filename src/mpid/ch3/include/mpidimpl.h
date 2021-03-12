@@ -92,8 +92,8 @@ typedef struct MPIDI_PG
        find a particular process group. */
     void * id;
 
-    /* Flag to mark a procress group which is finalizing. This means thay
-       the VCs for this process group are closing, (normally becuase
+    /* Flag to mark a procress group which is finalizing. This means they
+       the VCs for this process group are closing, (normally because
        MPI_Finalize was called). This is required to avoid a reconnection
        of the VCs when the PG is closed due to unused elements in the event
        queue  */
@@ -391,7 +391,7 @@ extern MPIDI_Process_t MPIDI_Process;
 /* Note: In the current implementation, the mpid_xsend.c routines that
    make use of MPIDI_VC_FAI_send_seqnum are all protected by the 
    SINGLE_CS_ENTER/EXIT macros, so all uses of this macro are 
-   alreay within a critical section when needed.  If/when we move to
+   already within a critical section when needed.  If/when we move to
    a finer-grain model, we'll need to examine whether this requires
    a separate lock. */
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
@@ -679,7 +679,7 @@ typedef struct MPIDI_VC
     MPIDI_CH3_Pkt_send_container_t * msg_reorder_queue;
 #endif
 
-    /* rendezvous function pointers.  Called to send a rendevous
+    /* rendezvous function pointers.  Called to send a rendezvous
        message or when one is matched */
     int (* rndvSend_fn)( struct MPIR_Request **sreq_p, const void * buf, MPI_Aint count,
                          MPI_Datatype datatype, int dt_contig, intptr_t data_sz,
@@ -1186,7 +1186,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
     void MPIDI_CH3I_Progress_wakeup(void);
     /* MT TODO profiling is needed here.  We currently protect the completion
      * counter with the COMPLETION critical section, which could be a source of
-     * contention.  It should be possible to peform these updates atomically via
+     * contention.  It should be possible to perform these updates atomically via
      * OPA instead, but the additional complexity should be justified by
      * profiling evidence.  [goodell@ 2010-06-29] */
 #   define MPIDI_CH3_Progress_signal_completion()			\
@@ -1238,7 +1238,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root );
 + vc - virtual connection to send the message over
 . pkt - pointer to a MPIDI_CH3_Pkt_t structure containing the substructure to 
   be sent
-- pkt_sz - size of the packet substucture
+- pkt_sz - size of the packet substructure
 
   Output Parameters:
 . sreq_ptr - send request or NULL if the send completed immediately
@@ -1305,7 +1305,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, struct iovec * iov, int iov_n,
 . sreq - pointer to the send request object
 . pkt - pointer to a MPIDI_CH3_Pkt_t structure containing the substructure to 
   be sent
-- pkt_sz - size of the packet substucture
+- pkt_sz - size of the packet substructure
 
   Return value:
   An mpi error code.
@@ -1452,7 +1452,7 @@ int MPIDI_CH3_GetParentPort(char ** parent_port_name);
 
 /*@
    MPIDI_CH3_FreeParentPort - This routine frees the storage associated with
-   a parent port (allocted with MPIDH_CH3_GetParentPort).
+   a parent port (allocated with MPIDH_CH3_GetParentPort).
 
   @*/
 void MPIDI_CH3_FreeParentPort( void );

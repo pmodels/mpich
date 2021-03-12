@@ -148,7 +148,7 @@ EOF
     esac
 done
 
-# Move everthing into a device-specific directory
+# Move everything into a device-specific directory
 webloc="$weblocbase/$device"
 if [ "$update_web" = yes ] ; then
     if [ ! -d $webloc ] ; then mkdir -p $webloc ; fi

@@ -203,7 +203,7 @@ Output Parameters:
 /* In a strict ANSI environment, S_ISLNK may not be defined.  Fix that
    here.  We assume that S_ISLNK is *always* defined as a macro.  If
    that is not universally true, then add a test to the romio
-   configure that trys to link a program that references S_ISLNK */
+   configure that tries to link a program that references S_ISLNK */
 #if !defined(S_ISLNK)
 #if defined(S_IFLNK)
      /* Check for the link bit */
@@ -306,7 +306,7 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 #endif
     static char myname[] = "ADIO_RESOLVEFILETYPE_FNCALL";
 
-/* NFS can get stuck and end up returing ESTALE "forever" */
+/* NFS can get stuck and end up returning ESTALE "forever" */
 #define MAX_ESTALE_RETRY 10000
     int retry_cnt;
 

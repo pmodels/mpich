@@ -192,7 +192,7 @@ case "$enable_sharedlibs" in
 	# our base approach.  Disabling for now
 	dnl LT_PREREQ([2.2.6])
         dnl LT_INIT([disable-shared])
-	AC_MSG_ERROR([To use this test verison, edit aclocal_shl.m4])
+	AC_MSG_ERROR([To use this test version, edit aclocal_shl.m4])
         # Likely to be
         # either CC or CC_SHL is libtool $cc
         CC_SHL='${LIBTOOL} --mode=compile ${CC}'
@@ -367,7 +367,7 @@ dnl This macro ensures that all of the necessary substitutions are
 dnl made by any subdirectory configure (which may simply SUBST the
 dnl necessary values rather than trying to determine them from scratch)
 dnl This is a more robust (and, in the case of libtool, only 
-dnl managable) method.
+dnl manageable) method.
 AC_DEFUN([PAC_CC_SUBDIR_SHLIBS],[
 	AC_SUBST(CC_SHL)
         AC_SUBST(C_LINK_SHL)

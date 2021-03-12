@@ -234,7 +234,7 @@ int MPIE_Args(int argc, char *argv[], ProcessUniverse * mypUniv,
             MPL_snprintf(envstring, sizeof(envstring), "MPICH_CH3CHANNEL=%s", channame);
             MPIE_Putenv(mypUniv->worlds, envstring);
         }
-/* End of the MPICH mpiexec common extentions */
+/* End of the MPICH mpiexec common extensions */
 
         else if (argv[i][0] != '-') {
             exename = argv[i];
@@ -243,7 +243,7 @@ int MPIE_Args(int argc, char *argv[], ProcessUniverse * mypUniv,
              * directory, convert it to an absolute name.
              * FIXME: Make this optional (MPIEXEC_EXEPATH_ABSOLUTE?) */
             /* We may not want to do this, if the idea is that that
-             * executable should be found in the PATH at the destionation */
+             * executable should be found in the PATH at the destination */
             /* wd = getwd(curdir) */
 
             /* Skip arguments until we hit either the end of the args
@@ -508,7 +508,7 @@ static int getInt(int argnum, int argc, char *argv[])
 
 /* FIXME: Move this routine else where; perhaps a pmutil.c? */
 /*
- * Try to get an integer value from the enviroment.  Return the default
+ * Try to get an integer value from the environment.  Return the default
  * if the value is not available or invalid
  */
 static int GetIntValue(const char name[], int default_val)

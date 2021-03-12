@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     else
         maxsize = size;
 
-    /* General forumula: If we multiple the values from 1 to n, the
+    /* General formula: If we multiple the values from 1 to n, the
      * product is n!.  This grows very fast, so we'll only use the first
      * five (1! = 1, 2! = 2, 3! = 6, 4! = 24, 5! = 120), with n!
      * stored in the array result[n] */

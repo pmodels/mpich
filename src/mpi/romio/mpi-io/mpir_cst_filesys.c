@@ -123,7 +123,7 @@ static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
      *
      * note that this scheme works really well for traditional linux clusters:
      * think nodes with a local scratch drive.  this scheme works less well for
-     * a deeper heirarchy.  what if the directory in question was hosted by an
+     * a deeper hierarchy.  what if the directory in question was hosted by an
      * i/o forwarding agent?
      */
 
@@ -153,7 +153,7 @@ static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
      * which group can see what files */
 
     /* here come a bunch of assumptions:
-     * - file system layouts are homogenous: if one system has /scratch,
+     * - file system layouts are homogeneous: if one system has /scratch,
      *   all have /scratch
      * - a globally visible parallel file system will have the same name
      *   everywhere: e.g /gpfs/users/something
@@ -215,12 +215,12 @@ static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
     }
     MPI_Bcast(&globally_visible, 1, MPI_INT, challenge_rank, comm);
 
-    /*   with the above assumptions, we have two cases for a flie
+    /*   with the above assumptions, we have two cases for a file
      *   created on one process:
      *   -- either a process not in the group can access it (node-local
      *      storage of some sort)
      *   -- or a process not in the group cannot access it (globally
-     *      accessable parallel file system) */
+     *      accessible parallel file system) */
 
     if (globally_visible) {
         MPI_Comm_dup(comm, newcomm);

@@ -984,7 +984,7 @@ EOT
 print MAKEFD <<EOT;
 # FIXME: We may want to edit the mpif.h to convert Fortran77-specific
 # items (such as an integer*8 used for file offsets) into the
-# corresponding Fortran 90 KIND type, to accomodate compilers that
+# corresponding Fortran 90 KIND type, to accommodate compilers that
 # reject non-standard features such as integer*8 (such as the Intel
 # Fortran compiler with -std95).
 # We need the MPI constants in a separate module for some of the
@@ -1244,7 +1244,7 @@ EOT
 # Print arguments in a pair of braces and end with a new line.
 # $fd : File handle to print to.
 # $curlen : Length of the current line.
-# $indent : Indention length of the following lines when they exist.
+# $indent : Indentation length of the following lines when they exist.
 # $line_length : Maximal length of a line.
 # @argnames : argument names to print out.
 sub PrintArgBrace {

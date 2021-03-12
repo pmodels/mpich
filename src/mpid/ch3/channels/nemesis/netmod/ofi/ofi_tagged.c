@@ -27,7 +27,7 @@ MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)), MPIR_Requ
 #include "ofi_tagged_template.c"
 
 /* ------------------------------------------------------------------------ */
-/* Receive callback called after sending a syncronous send acknowledgement. */
+/* Receive callback called after sending a synchronous send acknowledgement. */
 /* ------------------------------------------------------------------------ */
 static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
                                                   MPIR_Request * rreq)
@@ -115,7 +115,7 @@ int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
     /* ----------------------------------------------------- */
     ret = fi_cancel((fid_t) gl_data.endpoint, &(REQ_OFI(rreq)->ofi_context));
     if (ret == 0) {
-        /* Cancel succeded. This means that the actual message has been
+        /* Cancel succeeded. This means that the actual message has been
          *  received via nemesis shared memory. We need to return
          *  matched=False. The request will be completed at the nemesis level.
          *

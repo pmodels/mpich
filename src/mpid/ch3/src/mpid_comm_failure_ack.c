@@ -51,7 +51,7 @@ int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
 
     MPIR_Comm_group_impl(comm_ptr, &comm_group);
 
-    /* Get the intersection of all falied processes in this communicator */
+    /* Get the intersection of all failed processes in this communicator */
     MPIR_Group_intersection_impl(failed_group, comm_group, group_ptr);
 
     MPIR_Group_release(comm_group);

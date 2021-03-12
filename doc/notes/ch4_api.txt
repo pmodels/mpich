@@ -32,7 +32,7 @@ PARAM:
     ...
 ---- end of ch4_api.txt
 
-Section headings, i.e. "Non Native API", "Native API", and "PARAM", need start at the begining of the line immediately followed by ':'. All other specifications require to be start with some spaces.
+Section headings, i.e. "Non Native API", "Native API", and "PARAM", need start at the beginning of the line immediately followed by ':'. All other specifications require to be start with some spaces.
 
 The api is specified with "name", followed by ':', followed by "return type". Flexible spaces are allowed.
 

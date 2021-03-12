@@ -184,7 +184,7 @@ static MPLI_gavl_tree_node_s *gavl_tree_search_internal(MPLI_gavl_tree_s * tree_
 
 /* if avl tree is possibly unbalanced, gavl_tree_rebalance should be called to rebalance
  * it. In unbalanced avl tree, the height difference between left and right child is at
- * most 2; gavl_tree_rebalance takes it as a premise in order to rebalance tree correcly */
+ * most 2; gavl_tree_rebalance takes it as a premise in order to rebalance tree correctly */
 static void gavl_tree_rebalance(MPLI_gavl_tree_s * tree_ptr)
 {
     MPLI_gavl_tree_node_s *cur_node = tree_ptr->cur_node;
@@ -495,7 +495,7 @@ static void gavl_tree_remove_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr, 
         gavl_tree_remove_node_internal(tree_ptr, dnode);
 
         /* we perform rebalance after every internal deletion in order to ensure
-         * lightweight rebalance that rotates left and right childs with at most
+         * lightweight rebalance that rotates left and right children with at most
          * 2 height difference. */
         gavl_tree_rebalance(tree_ptr);
     };

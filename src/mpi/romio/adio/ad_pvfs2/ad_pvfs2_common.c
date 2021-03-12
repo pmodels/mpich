@@ -57,7 +57,7 @@ void ADIOI_PVFS2_Init(int *error_code)
     }
 
     /* for consistency, we should disable the pvfs2 ncache.  If the
-     * environtment variable is already set, assume a  user knows it
+     * environment variable is already set, assume a  user knows it
      * won't be a problem */
     ncache_timeout = getenv("PVFS2_NCACHE_TIMEOUT");
     if (ncache_timeout == NULL)

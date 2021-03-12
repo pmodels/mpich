@@ -44,7 +44,7 @@ int MPID_Get_processor_name(char * name, int namelen, int * resultlen)
 /* Here we define an internal routine to get the processor name, based on 
    which system or facilities are available to us */
 
-/* Additional and alternative implmentations of these routines may be
+/* Additional and alternative implementations of these routines may be
    found in mpich/mpid/ch2/chnodename.c */
 
 /* If we are using sysinfo, we need to make sure that both the 

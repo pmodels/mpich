@@ -85,7 +85,7 @@ void *MPIR_Breakpoint(void);
 
 /*
  * In addition to the discussion in the paper "A Standard Interface for Debugger
- * Access to Message Queue Inforation in MPI" and the more recent paper "An
+ * Access to Message Queue Information in MPI" and the more recent paper "An
  * Interface to Support the Identification of Dynamic {MPI} 2 Processes for
  * Scalable Parallel Debugging", there are a few features that have become
  * defacto standard.  These include the "proctable" (a relic of the way

@@ -58,14 +58,14 @@ MPL_atomic_int_t MPIR_world_model_state = MPL_ATOMIC_INT_T_INITIALIZER(0);
 /* Use init_lock to protect concurrent init/finalize (include session init/finalize) */
 static MPL_initlock_t init_lock = MPL_INITLOCK_INITIALIZER;
 
-/* Use init_counter to track when we are initilizing for the first time or
+/* Use init_counter to track when we are initializing for the first time or
  * when we are finalize for the last time and need cleanup states */
 /* Note: we are not using atomic variable since it is always accessed under init_lock */
 static int init_counter;
 
 /* TODO: currently the world model is not distinguished with session model, neither between
  * sessions, in that there is no session pointer attached to communicators, datatypes, etc.
- * To properly reflect the session semantics, we may need to always assoicate a session
+ * To properly reflect the session semantics, we may need to always associate a session
  * pointer to all MPI objects (other than info) and add runtime validation checks everywhere.
  */
 
@@ -120,7 +120,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     }
     /**********************************************************************/
     /* Section 1: base components that other components rely on.
-     * These need to be intialized first.  They have strong
+     * These need to be initialized first.  They have strong
      * dependencies between each other, which makes it a pain to
      * maintain them.  Hopefully, the number of such components is
      * small. */

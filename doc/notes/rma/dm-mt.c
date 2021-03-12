@@ -76,7 +76,7 @@ MPID_Win_fence(assert, win)
 	 * operation should block, but it needs to guarantee that forward
 	 * progress is being made on both the incoming RHCs and locally posted
 	 * operations.  Whatever the correct interface is, we either need to
-	 * pass in dwin or declare/cast the counters unsed the above while
+	 * pass in dwin or declare/cast the counters used in the above while
 	 * statement as volatile.
 	 */
 	MPID_Win_wait(dwin);

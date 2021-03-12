@@ -167,7 +167,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
                                      (char *) recvbuf + copy_dst * recvcount * recvtype_extent,
                                      recvcount, recvtype, sched, 1, &recv_id[i % 3]);
 
-        /* swap sbuf and rbuf - using data_buf as intermeidate buffer */
+        /* swap sbuf and rbuf - using data_buf as intermediate buffer */
         data_buf = sbuf;
         sbuf = rbuf;
         rbuf = data_buf;

@@ -109,7 +109,7 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
         }
 
         /* This should have the same effect, in terms of
-         * transfering data, as a send/recv pair */
+         * transferring data, as a send/recv pair */
 #if defined(USE_GET)
         err =
             MPI_Get(origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,

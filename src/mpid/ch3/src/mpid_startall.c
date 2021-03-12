@@ -264,7 +264,7 @@ int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 }
 
 /* 
- * FIXME: The ch3 implmentation of the persistent routines should
+ * FIXME: The ch3 implementation of the persistent routines should
  * be very simple and use common code as much as possible.  All
  * persistent routine should be in the same file, along with 
  * startall.  Consider using function pointers to specify the 

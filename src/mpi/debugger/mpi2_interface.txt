@@ -81,7 +81,7 @@ MPI2DD_BYTE_T debug_state
 
 MPI2DD_UINT32_T debugger_flags
 
-     The bits in this field are initalized by the MPI implementation
+     The bits in this field are initialized by the MPI implementation
      and may be modified by the debugger.
 
      #define MPI2DD_FLAG_GATE    0x01

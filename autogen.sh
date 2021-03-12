@@ -873,7 +873,7 @@ if [ $do_geterrmsgs = "yes" ] ; then
             fi
             rm -f .err .err2
         else
-            # Incase it exists but has zero size
+            # In case it exists but has zero size
             rm -f .err
         fi
 	if [ -s unusederr.txt ] ; then

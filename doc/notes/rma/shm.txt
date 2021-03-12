@@ -89,9 +89,9 @@ MPID_shm_Win_fence
 
   * set (or clear) preceding put flag based on the assertions
 
-    NOTE: To reduce unncessary cache and write buffer flushes, the
+    NOTE: To reduce unnecessary cache and write buffer flushes, the
     barrier (above) could be replaced with an alltoall gather of the
-    operation occuring between node pairs.  Using this information, we
+    operation occurring between node pairs.  Using this information, we
     could eliminate flushes except when an operation actually affected
     the local window.
 

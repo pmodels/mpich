@@ -80,7 +80,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
      *
      * Do subdivision.  There are two phases:
      * 1. Wait for arrival of data.  Because of the power of two nature
-     * of the subtree roots, the source of this message is alwyas the
+     * of the subtree roots, the source of this message is always the
      * process whose relative rank has the least significant 1 bit CLEARED.
      * That is, process 4 (100) receives from process 0, process 7 (111)
      * from process 6 (110), etc.
@@ -127,7 +127,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     }
 
     /* This process is responsible for all processes that have bits
-     * set from the LSB upto (but not including) mask.  Because of
+     * set from the LSB up to (but not including) mask.  Because of
      * the "not including", we start by shifting mask back down one.
      *
      * We can easily change to a different algorithm at any power of two

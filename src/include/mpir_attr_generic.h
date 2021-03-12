@@ -133,7 +133,7 @@ extern "C" {
   Language bindings for MPI
 
   A few operations in MPI need to know how to marshal the callback into the calling
-  lanuage calling convention. The marshaling code is provided by a thunk layer which
+  language calling convention. The marshaling code is provided by a thunk layer which
   implements the correct behavior.  Examples of these callback functions are the
   keyval attribute copy and delete functions.
 

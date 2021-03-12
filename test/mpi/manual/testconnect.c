@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 
     MPI_Init(0, 0);
 
-    /* the existance of the file is used to decide which processes
+    /* the existence of the file is used to decide which processes
      * first do a connect to the root process.  */
     fh = fopen(fname, "rt");
     if (fh == NULL) {

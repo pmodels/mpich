@@ -1046,7 +1046,7 @@ int MPIDI_PG_Dup_vcr( MPIDI_PG_t *pg, int rank, MPIDI_VC_t **vc_p )
     /* Increase the reference count of the vc.  If the reference count 
        increases from 0 to 1, increase the reference count of the 
        process group *and* the reference count of the vc (this
-       allows us to distinquish between Comm_free and Comm_disconnect) */
+       allows us to distinguish between Comm_free and Comm_disconnect) */
     /* FIXME-MT: This should be a fetch and increment for thread-safety */
     if (MPIR_Object_get_ref(vc) == 0) {
 	MPIDI_PG_add_ref(pg);

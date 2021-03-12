@@ -436,7 +436,7 @@ int MPIR_File_call_cxx_errhandler(MPI_File * fh, int *errorcode,
                                   void (*c_errhandler) (MPI_File *, int *, ...))
 {
     /* ROMIO will contain a reference to this routine, so if there is
-     * no C++ support, it will never be called but it must be availavle. */
+     * no C++ support, it will never be called but it must be available. */
 #ifdef HAVE_CXX_BINDING
     void *fh1 = (void *) fh;
     (*MPIR_Process.cxx_call_errfn) (1, fh1, errorcode, (void (*)(void)) c_errhandler);

@@ -323,7 +323,7 @@ be in the range 0 to %d
 **intern %s:Internal MPI error!  %s
 **internrc:Internal MPI error!  Unexpected return code from internal function.
 **instatus:See the MPI_ERROR field in MPI_Status for the error code
-**inpending:Pending request (no error)
+**pending:Pending request (no error)
 **unknowngpid:Internal MPI error: Unknown gpid
 **unknowngpid %d %d:Internal MPI error: Unknown gpid (%d)%d
 **request:Invalid MPI_Request
@@ -904,7 +904,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpir_wingetattr %W %d %p %p:MPII_Win_get_attr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
 
 
-# Datarep conversion function not supported by ROMIO (Temproary until implemented)
+# Datarep conversion function not supported by ROMIO (Temporary until implemented)
 **drconvnotsupported:Read and Write datarep conversions are currently not supported by MPI-IO
 
 # Argobots related error messages

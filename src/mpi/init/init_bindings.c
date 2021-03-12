@@ -31,7 +31,7 @@ MPI_F08_status MPIR_F08_MPI_STATUSES_IGNORE_OBJ[1];
 int MPIR_F08_MPI_IN_PLACE;
 int MPIR_F08_MPI_BOTTOM;
 
-/* Althought the two STATUS pointers are required but the MPI3.0,  they are not used in MPICH F08 binding */
+/* Although the two STATUS pointers are required but the MPI3.0,  they are not used in MPICH F08 binding */
 MPI_F08_status *MPI_F08_STATUS_IGNORE = &MPIR_F08_MPI_STATUS_IGNORE_OBJ;
 MPI_F08_status *MPI_F08_STATUSES_IGNORE = &MPIR_F08_MPI_STATUSES_IGNORE_OBJ[0];
 

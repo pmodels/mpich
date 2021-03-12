@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
                 MPI_Group_free(&neighbors);
                 MPI_Win_wait(win);
                 /* This should have the same effect, in terms of
-                 * transfering data, as a send/recv pair */
+                 * transferring data, as a send/recv pair */
                 MTestCopyContent(targetbuf, targetbuf_h, maxbufsize, targetmem);
                 err = DTP_obj_buf_check(target_obj, targetbuf_h, 0, 1, count);
                 if (err != DTP_SUCCESS) {

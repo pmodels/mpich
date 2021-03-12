@@ -845,7 +845,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
          * operation are completed when counter reaches zero. */
         win_ptr->at_completion_counter++;
 
-        /* Calculate the length of reponse data, ensure that it fits into immed packet. */
+        /* Calculate the length of response data, ensure that it fits into immed packet. */
         MPIR_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
         MPIR_Assign_trunc(len, get_accum_pkt->count * type_size, size_t);
 
@@ -1566,7 +1566,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
         MPIR_Datatype_get_size_macro(basic_type, basic_type_size);
 
         /* Note: here we get the stream_offset from the extended packet header
-         * in the response request, which is set in issue_get_acc_op() funcion.
+         * in the response request, which is set in issue_get_acc_op() function.
          * Note that this extended packet header only contains stream_offset and
          * does not contain datatype info, so here we pass 0 to is_derived_dt
          * flag. */

@@ -772,7 +772,7 @@ sub RunMPIProgram {
     # acquire lock if requested
     my ($lockfile, $got_lock);
     if ($test_opt->{lock}) {
-        # explict lock by setting "lock=[shared|name]" on testline directly
+        # explicit lock by setting "lock=[shared|name]" on testline directly
         my $name = $test_opt->{lock};
         $lockfile = "/tmp/runtests-$name.lock";
         if ($name eq "shared") {
@@ -913,7 +913,7 @@ sub AddMPIProgram {
 
     if ($test_opt->{resultTest}) {
         # This test really needs to be run manually, with this test
-        # Eventually, we can update this to include handleing in checktests.
+        # Eventually, we can update this to include handling in checktests.
         print STDERR "Run $curdir/$programname with $np processes and use $test_opt->{resultTest} to check the results\n";
         return;
     }

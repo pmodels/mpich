@@ -39,7 +39,7 @@
 #       COVERAGE_EXIT(Name,argcount); }
 # The COVERAGE_ENTER and EXIT can be used as macros to invoke code to keep
 # track of each entry and exit.  The argcount is the number of parameters,
-# and can be used to distinquish between routines with the same name but
+# and can be used to distinguish between routines with the same name but
 # different number of arguments.
 #
 # (const applies only if the function does not modify its object (e.g., 
@@ -55,7 +55,7 @@
 #   Pass by reference to process routine
 # 
 # Notes:
-#   "NULL" isn't the rigth way to specify a NULL pointer in C++; use "0" (this 
+#   "NULL" isn't the right way to specify a NULL pointer in C++; use "0" (this 
 #   will have the correct type and some C++ compilers don't recognize NULL
 #   unless you include header files that needed it and are otherwise unneeded
 #   by the C++ interface)
@@ -1077,7 +1077,7 @@ if ($do_DistGraphComm) {
 	'Dist_graph_neighbors_count';
 }
 
-# These routines must be defered because their implementations need 
+# These routines must be deferred because their implementations need 
 # definitions of classes that must be made later than the class that they
 # are in.  In particular, these need both datatypes and communicators.
 %defer_definition = ( 'Pack' => Datatype, 
@@ -1101,7 +1101,7 @@ if ($do_DistGraphComm) {
     $class_has_no_compare{'Distgraphcomm'} = 1;
 }
 
-# These classes do not have a default intialization
+# These classes do not have a default initialization
 # These use the Full class name
 %class_has_no_default = ( 'Status' => 1 );
 
@@ -1110,7 +1110,7 @@ if ($do_DistGraphComm) {
 # derived from the ReadInterface
 if ($doFuncspec) {
     &ReadFuncSpec( "cxxdecl3.dat" );
-    # Use the MPI C++ binding names for the defered definitions
+    # Use the MPI C++ binding names for the deferred definitions
     $defer_definition{"Create_cart"}  = "Comm";
     $defer_definition{"Create_graph"} = "Comm";
     $defer_definition{"Get_parent"}   = "Comm";
@@ -1531,7 +1531,7 @@ EOT
 sub print_args { 
     my $OUTFD = $_[0];
     my @parms = split(/\s*,\s*/, $_[1] );  # the original parameter list
-    my $class_type = $_[2];                # Is this a Comm, Info, or othe 
+    my $class_type = $_[2];                # Is this a Comm, Info, or other 
                                            # class?  Use to find the position
                                            # of the "this" entry in the C 
                                            # version of the routine.
@@ -1725,7 +1725,7 @@ sub print_call_args {
 	}
 	elsif ($count == $return_parm_pos) {
 	    # We may need to pass the address of a temporary object
-	    # We'll unilateraly assume this for now
+	    # We'll unilaterally assume this for now
 	    # This must be first, so that it has a priority over the
 	    # class pos location.
 	    if ($parm =~ /MPI_/ && !($parm =~ /MPI_Offset/) &&
@@ -1837,7 +1837,7 @@ sub clean_args {
 
 # Print out the constants.
 # PrintConstants( FD, giveValue )
-# if GiveValue is true, defint the value, otherwise, make it external
+# if GiveValue is true, define the value, otherwise, make it external
 sub PrintConstants {    
     my ($OUTFD, $giveValue) = @_;
     my $extern = "extern ";
@@ -3866,7 +3866,7 @@ sub EndClass {
 #   f) return result value, if any
 #   
 # The handling of the temporary variables is done by calling a named routine
-# for each parameter that identifies itself as requring special processing
+# for each parameter that identifies itself as requiring special processing
 # ----------------------------------------------------------------------------
 #
 # PrintRoutineDef( outfd, class, routine, arginfo, defonly )
@@ -4453,7 +4453,7 @@ sub bool_out_ctocxx {
     
     print $OUTFD "$indent    $cxxoutvar = $cinvar ? true : false;\n";
 }
-# conver to C int
+# convert to C int
 sub bool_in_cxxtoc {
 #    my $cxxinvar = $_[0];
 #    my $coutvar  = $_[1];
@@ -5146,7 +5146,7 @@ sub ReadFuncSpec {
 }
 # ----------------------------------------------------------------------------
 # Special debugging:
-# Somethimes it is valuable to debug just a single routine.  This interface
+# Sometimes it is valuable to debug just a single routine.  This interface
 # makes that relatively easy
 sub debugPrint {
     my ($routine, $str) = @_;

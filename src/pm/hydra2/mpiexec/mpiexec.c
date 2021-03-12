@@ -864,7 +864,7 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    HYD_ERR_POP(status, "error setting up the boostrap proxies\n");
+    HYD_ERR_POP(status, "error setting up the bootstrap proxies\n");
 
     HYD_str_free_list(args);
 

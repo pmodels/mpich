@@ -22,12 +22,12 @@
 
 # MPI_Info objects can be accessed before MPI_Init{_thread}.
 
-# Generate C API interface functions inlcuding man page notes and error
+# Generate C API interface functions including man page notes and error
   checking using Python scripts.
 
 # Generate Fortran mpi_f08 binding using Python scripts.
 
-# Support explict --without-cuda configure option.
+# Support explicit --without-cuda configure option.
 
 ===============================================================================
                                Changes in 3.4
@@ -36,7 +36,7 @@
 # ch4 replaces ch3 as the default device configuration. If no network
   module is specified at configuration-time, MPICH will search the
   user environment in order to select one to build. The user will be
-  prompted to choose if no preferred network library is dectected.
+  prompted to choose if no preferred network library is detected.
 
 # Add support for Yaksa datatype engine (default in ch4).
 
@@ -211,7 +211,7 @@
  # Added experimental support for Open Fabrics Interfaces (OFI) version 1.0.0.
    https://github.com/ofiwg/libfabric (thanks to Intel for code contribution)
 
- # The Myrinet MX network module, which had a life cyle from 1.1 till
+ # The Myrinet MX network module, which had a life cycle from 1.1 till
    3.1.2, has now been deleted.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
@@ -1227,7 +1227,7 @@ www.mcs.anl.gov/mpi/mpich2/mpich2_1_0_6changes.htm.
 
 - Many enhancements to MPE
 
-- Enhanced support for features and idiosyncracies of Fortran 77 and 
+- Enhanced support for features and idiosyncrasies of Fortran 77 and 
   Fortran 90 compilers, including gfortran, g95, and xlf
 
 - Enhanced support for C++ compilers that do not fully support abstract
@@ -1241,13 +1241,13 @@ www.mcs.anl.gov/mpi/mpich2/mpich2_1_0_6changes.htm.
 - Man pages for mpiexec and mpif90
 
 - Enhancements for developers, including a more flexible and general 
-  mechanism for inserting logging and information messages, controlable
+  mechanism for inserting logging and information messages, controllable
   with --mpich-dbg-xxx command line arguments or MPICH_DBG_XXX environment
   variables.
 
 - Note to developers: 
   This release contains many changes to the structure of the CH3
-  device implementation (in src/mpid/ch3), including signficant
+  device implementation (in src/mpid/ch3), including significant
   reworking of the files (many files have been combined into fewer files
   representing logical grouping of functions).  The next release of 
   MPICH2 will contain even more significant changes to the device 
@@ -1278,7 +1278,7 @@ www.mcs.anl.gov/mpi/mpich2/mpich2_1_0_6changes.htm.
     and provides count of real drawables in preview drawables.
 
   - new slog2 tools, slog2filter and slog2updater, which both are logfile
-    format convertors.  slog2filter removes undesirable categories of
+    format converters.  slog2filter removes undesirable categories of
     drawables as well as alters the slog2 file structure.  slog2updater
     is a slog2filter that reads in older logfile format, 2.0.5, and 
     writes out the latest format 2.0.6.
@@ -1595,7 +1595,7 @@ www.mcs.anl.gov/mpi/mpich2/mpich2_1_0_6changes.htm.
 - The CH3 interface and device now provide a mechanism for using RDMA (remote
   direct memory access) to transfer data between processes.
 
-- Logging capabilities for MPI and internal routines have been readded.  See
+- Logging capabilities for MPI and internal routines have been re-added.  See
   the documentation in doc/logging for details.
 
 - A "meminit" option was added to --enable-g to force all bytes associated with

@@ -205,7 +205,7 @@ int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device)
         .flags = 0,
         .ordinal = 0,   /* We currently support a single memory type */
     };
-    /* Currently ZE ignores this augument and uses an internal alignment
+    /* Currently ZE ignores this argument and uses an internal alignment
      * value. However, this behavior can change in the future. */
     mem_alignment = 1;
     ret = zeMemAllocDevice(global_ze_context, &device_desc, size, mem_alignment, h_device, ptr);
@@ -227,7 +227,7 @@ int MPL_gpu_malloc_host(void **ptr, size_t size)
         .flags = 0,
     };
 
-    /* Currently ZE ignores this augument and uses an internal alignment
+    /* Currently ZE ignores this argument and uses an internal alignment
      * value. However, this behavior can change in the future. */
     mem_alignment = 1;
     ret = zeMemAllocHost(global_ze_context, &host_desc, size, mem_alignment, ptr);

@@ -119,7 +119,7 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 
     /* Pascal Deveze reports that, even though we pass a
      * "GETSTRIPE" (read) flag to the ioctl, if some of the values of this
-     * struct are uninitialzed, the call can give an error.  zero it out in case
+     * struct are uninitialized, the call can give an error.  zero it out in case
      * there are other members that must be initialized and in case
      * lov_user_md struct changes in future */
     memset(lum, 0, lumlen);

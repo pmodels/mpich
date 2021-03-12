@@ -109,7 +109,7 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
     }
 
     /* This process is responsible for all processes that have bits
-     * set from the LSB upto (but not including) mask.  Because of
+     * set from the LSB up to (but not including) mask.  Because of
      * the "not including", we start by shifting mask back down one.
      *
      * We can easily change to a different algorithm at any power of two

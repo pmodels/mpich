@@ -243,7 +243,7 @@ Notes:
 This function only closes the first open socket of a sock_set and returns the
 user pointer of the sock-info structure. To close all sockets, the function must
 be called repeatedly, untiluser_ptr == NULL. The reason for this is
-that the overlying protocoll may need the user_ptr for further cleanup.
+that the overlying protocol may need the user_ptr for further cleanup.
 
 @*/
 int MPIDI_CH3I_Sock_close_open_sockets(struct MPIDI_CH3I_Sock_set *sock_set, void **user_ptr);
@@ -510,7 +510,7 @@ If any other operations are posted on the specified sock, they will be terminate
 terminated operation.  All such events will be delivered by MPIDI_CH3I_Sock_wait() prior to the delivery of the MPIDI_CH3I_SOCK_OP_CLOSE
 event.
 
-The sock object is destroyed just prior to the MPIDI_CH3I_SOCK_OP_CLOSE event being returned by MPIDI_CH3I_Sock_wait().  Any oustanding
+The sock object is destroyed just prior to the MPIDI_CH3I_SOCK_OP_CLOSE event being returned by MPIDI_CH3I_Sock_wait().  Any outstanding
 references to the sock object held by the application should be considered invalid and not used again.
 
 Thread safety:
@@ -841,7 +841,7 @@ MPIDI_CH3I_Sock_wakeup() may not be called from within a progress update functio
 progress update function.
 
 The implementation should strive to only wakeup a MPIDI_CH3I_Sock_wait() that is already blocking; however, it is acceptable (although
-undesireable) for it wakeup a MPIDI_CH3I_Sock_wait() that is called in the future.
+undesirable) for it wakeup a MPIDI_CH3I_Sock_wait() that is called in the future.
 
 Module:
 Utility-Sock

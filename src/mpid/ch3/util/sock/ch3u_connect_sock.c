@@ -233,7 +233,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
     mpi_errno = MPIDI_CH3I_Connection_alloc(&conn);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* conn->pg_id is not used for this conection */
+    /* conn->pg_id is not used for this connection */
 
     /* FIXME: To avoid this global (MPIDI_CH3I_sock_set) which is 
        used only in ch3_progress.c and ch3_progress_connect.c in the channels,
@@ -415,7 +415,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
 
-    /* Look up the interface address cooresponding to this host description */
+    /* Look up the interface address corresponding to this host description */
     /* FIXME: We should start switching to getaddrinfo instead of 
        gethostbyname */
     /* FIXME: We don't make use of the ifname in Windows in order to 
@@ -631,7 +631,7 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
             conn->vc = NULL;
 	}
         else if(conn->state == CONN_STATE_DISCARD) {
-        /* post close, so the socket is closed and memmory leaks are avoided */
+        /* post close, so the socket is closed and memory leaks are avoided */
             MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"CLosing sock (Post_close)");
             conn->state = CONN_STATE_CLOSING;
             mpi_errno = MPIDI_CH3I_Sock_post_close(conn->sock);
@@ -759,7 +759,7 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
             /* Neither freed nor updated. This connection is the looser of
                a head-to-head connection. The VC is still in use, but by
                another sochekt connection. The refcount is not incremented
-               By chaning the assosiated connection. */
+               By changing the associated connection. */
 	    /* MPIR_Assert( conn->vc->ch.conn != conn ); */
 	    /* Set the candidate vc for this connection to NULL (we
 	       are discarding this connection because (I think) we

@@ -119,7 +119,7 @@ static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
 #define MPIR_NODEMAP_PARSE_ERROR() MPIR_ERR_INTERNALANDJUMP(mpi_errno, "parse error")
 /* advance _c until we find a non whitespace character */
 #define MPIR_NODEMAP_SKIP_SPACE(_c) while (isspace(*(_c))) ++(_c)
-/* return true iff _c points to a character valid as an indentifier, i.e., [-_a-zA-Z0-9] */
+/* return true iff _c points to a character valid as an identifier, i.e., [-_a-zA-Z0-9] */
 #define MPIR_NODEMAP_ISIDENT(_c) (isalnum(_c) || (_c) == '-' || (_c) == '_')
 
 /* give an error iff *_c != _e */
@@ -325,7 +325,7 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
    processes (g_num_global).  Each process determines maximum node id
    and assigns a node id to each process (g_node_ids[]):
 
-     For each hostname the process seaches the list of unique nodes
+     For each hostname the process searches the list of unique nodes
      names (node_names[]) for a match.  If a match is found, the node id
      is recorded for that matching process.  Otherwise, the hostname is
      added to the list of node names.

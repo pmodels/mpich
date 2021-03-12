@@ -37,7 +37,7 @@ Input Parameters:
 . is_out_vtcs - variable to denote if there is going to be an outgoing vertices
                 in the scheduler from this function (integer)
 . reduce_id - array with ids of reduces from the scheduler (integer array)
-. vtcs - array to specify depencies of a call to the scheduler (integer array)
+. vtcs - array to specify dependencies of a call to the scheduler (integer array)
 - sched - scheduler (handle)
 
 */

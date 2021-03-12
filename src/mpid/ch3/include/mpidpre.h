@@ -181,8 +181,8 @@ typedef struct MPIDI_CH3I_comm
                              * disconnected as a part of
                              * MPI_COMM_DISCONNECT; FALSE otherwise. */
 
-    struct MPIDI_VCRT *vcrt;          /* virtual connecton reference table */
-    struct MPIDI_VCRT *local_vcrt;    /* local virtual connecton reference table */
+    struct MPIDI_VCRT *vcrt;          /* virtual connection reference table */
+    struct MPIDI_VCRT *local_vcrt;    /* local virtual connection reference table */
 
     struct MPIR_Comm *next; /* next pointer for list of communicators */
     struct MPIR_Comm *prev; /* prev pointer for list of communicators */
@@ -219,7 +219,7 @@ MPIDI_CH3I_comm_t;
  * the last op piggybacked with a FLUSH flag to
  * detect remote completion;
  * (4) UNLOCK means origin issues all pending operations
- * incuding the last op piggybacked with an UNLOCK
+ * including the last op piggybacked with an UNLOCK
  * flag to release the lock on target and detect remote
  * completion.
  * Note that FLUSH_LOCAL is a superset of NONE, FLUSH
@@ -727,7 +727,7 @@ int MPID_Win_sync(MPIR_Win *win);
 
 void MPID_Progress_start(MPID_Progress_state * state);
 int MPID_Progress_wait(MPID_Progress_state * state);
-void MPID_Progress_end(MPID_Progress_state * stae);
+void MPID_Progress_end(MPID_Progress_state * state);
 int MPID_Progress_poke(void);
 
 int MPID_Get_processor_name( char *name, int namelen, int *resultlen);

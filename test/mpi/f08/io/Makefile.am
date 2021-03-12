@@ -66,7 +66,7 @@ c2f2ciof90_SOURCES = c2f2ciof90.f90 c2f902cio.c
 # ensure that dependent tests will be rebuilt when headers are updated
 
 
-# these files are genereated using testmerge (see below)
+# these files are generated using testmerge (see below)
 generated_io_sources = \
     iwriteatf90.f90        \
     iwriteatallf90.f90     \
