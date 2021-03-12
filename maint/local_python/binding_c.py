@@ -377,7 +377,10 @@ def process_func_parameters(func):
             pass
         elif p['param_direction'] == 'out':
             # -- output parameter --
-            validation_list.append({'kind': "ARGNULL", 'name': name})
+            if p['length']:
+                validation_list.append({'kind': "ARGNULL-length", 'name': name, 'length': p['length']})
+            else:
+                validation_list.append({'kind': "ARGNULL", 'name': name})
             if RE.search(r'get_errhandler$', func_name):
                 # we may get the built-in handler, which doesn't have pointer
                 pass
@@ -455,7 +458,7 @@ def process_func_parameters(func):
                 validation_list.append({'kind': "COUNT", 'name': name})
         elif RE.match(r'WINDOW_SIZE|WIN_ATTACH_SIZE', kind):
             validation_list.append({'kind': "WIN_SIZE", 'name': name})
-        elif RE.match(r'ALLOC_MEM_NUM_BYTES', kind):
+        elif RE.match(r'(ALLOC_MEM_NUM_BYTES|(POLY)?NUM_PARAM_VALUES)', kind):
             validation_list.append({'kind': "ARGNEG", 'name': name})
         elif RE.match(r'(C_)?BUFFER', kind) and RE.match(r'MPI_Win_(allocate|create|attach)', func_name):
             validation_list.append({'kind': "WINBUFFER", 'name': name})
@@ -1246,7 +1249,9 @@ def dump_body_impl(func, prefix='mpir'):
     elif RE.match(r'mpi_type_', func['name'], re.IGNORECASE):
         p = func['c_parameters'][-1]
         if p['kind'] == "DATATYPE" and p['param_direction'] == 'out':
-            G.out.append("*%s = MPI_DATATYPE_NULL;" % p['name'])
+            # check it is not a datatype array (MPI_Type_get_contents)
+            if not p['length']:
+                G.out.append("*%s = MPI_DATATYPE_NULL;" % p['name'])
 
     impl = func['name']
     if func['_map_type'] == "BIG" and func['_poly_impl'] == "separate":
@@ -1694,6 +1699,11 @@ def dump_validation(func, t):
         else:
             G.err_codes['MPI_ERR_ARG'] = 1
             G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
+    elif RE.match(r'(ARGNULL-length)$', kind):
+        G.err_codes['MPI_ERR_ARG'] = 1
+        dump_if_open("%s > 0" % t['length'])
+        G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
+        dump_if_close()
     elif RE.match(r'(ARGNEG)$', kind):
         if func['dir'] == 'mpit':
             G.err_codes['MPI_T_ERR_INVALID'] = 1

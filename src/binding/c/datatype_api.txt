@@ -243,17 +243,8 @@ MPI_Type_ub:
 
 MPI_Type_get_contents:
     .desc: get type contents
-    .skip: ThreadSafe, validate-POLYNUM_PARAM_VALUES
-{ -- error_check -- array_of_integers, array_of_addresses, array_of_datatypes
-    if (max_integers > 0) {
-        MPIR_ERRTEST_ARGNULL(array_of_integers, "array_of_integers", mpi_errno);
-    }
-    if (max_addresses > 0) {
-        MPIR_ERRTEST_ARGNULL(array_of_addresses, "array_of_addresses", mpi_errno);
-    }
-    if (max_datatypes > 0) {
-        MPIR_ERRTEST_ARGNULL(array_of_datatypes, "array_of_datatypes", mpi_errno);
-    }
+    .skip: ThreadSafe
+{ -- error_check --
     if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE, "**contentspredef", 0);
         goto fn_fail;
@@ -419,6 +410,7 @@ MPI_Type_hvector:
     newtype: DATATYPE, direction=out, [new datatype]
     .desc: type_hvector
     .replace: removed with MPI_Type_create_hvector
+    .skip: validate-DTYPE_STRIDE_BYTES_SMALL
 
 MPI_Type_indexed:
     .desc: Creates an indexed datatype
