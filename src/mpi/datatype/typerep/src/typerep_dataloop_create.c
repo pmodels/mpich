@@ -28,7 +28,7 @@ static void update_type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint st
 
         newtype->size = count * blocklength * el_sz;
 
-        newtype->alignsize = el_sz;     /* ??? */
+        newtype->alignsize = MPIR_Datatype_builtintype_alignment(oldtype);
         newtype->n_builtin_elements = count * blocklength;
         newtype->builtin_element_size = el_sz;
         newtype->basic_type = oldtype;
@@ -213,7 +213,7 @@ static void update_type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
 
         newtype->size = count * blocklength * el_sz;
 
-        newtype->alignsize = el_sz;     /* ??? */
+        newtype->alignsize = MPIR_Datatype_builtintype_alignment(oldtype);
         newtype->n_builtin_elements = count * blocklength;
         newtype->builtin_element_size = el_sz;
         newtype->basic_type = oldtype;
@@ -369,7 +369,7 @@ int MPIR_Typerep_create_contig(MPI_Aint count, MPI_Datatype oldtype, MPIR_Dataty
         newtype->ub = newtype->true_ub;
         newtype->extent = newtype->ub - newtype->lb;
 
-        newtype->alignsize = el_sz;
+        newtype->alignsize = MPIR_Datatype_builtintype_alignment(oldtype);
         newtype->n_builtin_elements = count;
         newtype->builtin_element_size = el_sz;
         newtype->basic_type = oldtype;
@@ -586,7 +586,7 @@ int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint exte
         newtype->true_ub = oldsize;
         newtype->ub = lb + extent;
         newtype->extent = extent;
-        newtype->alignsize = oldsize;   /* FIXME ??? */
+        newtype->alignsize = MPIR_Datatype_builtintype_alignment(oldtype);
         newtype->n_builtin_elements = 1;
         newtype->builtin_element_size = oldsize;
         newtype->is_contig = (extent == oldsize) ? 1 : 0;
