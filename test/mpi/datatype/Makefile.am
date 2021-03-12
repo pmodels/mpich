@@ -19,6 +19,7 @@ noinst_PROGRAMS =             \
     contigstruct              \
     cxx_types                 \
     dataalign                 \
+    dataalign2                \
     darray_pack               \
     darray_cyclic             \
     gaddress                  \
