@@ -7,7 +7,7 @@
 #define MPIR_TOPO_H_INCLUDED
 
 /*
- * The following struture allows the device detailed control over the
+ * The following structure allows the device detailed control over the
  * functions that are used to implement the topology routines.  If either
  * the pointer to this structure is null or any individual entry is null,
  * the default function is used (this follows exactly the same rules as the

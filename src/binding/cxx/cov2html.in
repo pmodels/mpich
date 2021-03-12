@@ -67,7 +67,7 @@ sub DebugWriteCovData {
 # Read a source file and annotate it based on the information in the
 # srchash
 #
-# There are three states for the annoted file:
+# There are three states for the annotated file:
 #   nocode  - not within a coverage block
 #   incov   - within AND covered
 #   uncov   - within and NOT covered

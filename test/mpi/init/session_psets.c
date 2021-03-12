@@ -11,7 +11,7 @@
 /* This is adapted example 10.9 from MPI Standard 4.0
  * This example illustrates the use of Process Set query functions to select a
  * Process Set to use for MPI Group creation. First, the default error handler
- * can be specified when instatiating a Session instance. Second, thre must be
+ * can be specified when instatiating a Session instance. Second, there must be
  * at least two process sets associated with a Session. Third, the example
  * illustrates use of session info object and the one required key: "mpi_size".
  */

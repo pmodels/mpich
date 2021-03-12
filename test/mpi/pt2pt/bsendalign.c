@@ -7,7 +7,7 @@
 #include "mpi.h"
 #include "mpitest.h"
 
-/* Test bsend with a buffer with arbitray alignment */
+/* Test bsend with a buffer with arbitrary alignment */
 #define BUFSIZE 2000*4
 int main(int argc, char *argv[])
 {
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
         if (bptr != buf + align) {
             errs++;
             printf
-                ("Did not recieve the same buffer on detach that was provided on init (%p vs %p)\n",
+                ("Did not receive the same buffer on detach that was provided on init (%p vs %p)\n",
                  bptr, buf);
         }
     }

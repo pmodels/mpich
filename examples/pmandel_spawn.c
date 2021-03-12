@@ -127,7 +127,7 @@ const char *default_filename = "pmandel.pgm";
                              abs(z=z^2+c) > diverge_value
    -julia        Plot a Julia set instead of a Mandelbrot set
    -jx # -jy #   The Julia point that defines the set
-   -alternate #    Plot an alternate Mandelbrot equation (varient 1 or 2 so far)
+   -alternate #    Plot an alternate Mandelbrot equation (variant 1 or 2 so far)
 */
 
 int myid;
@@ -491,7 +491,7 @@ int main(int argc, char *argv[])
         }
     } else {
         for (;;) {
-            /*printf("child[%d] receiveing bounds.\n", pid);fflush(stdout); */
+            /*printf("child[%d] receiving bounds.\n", pid);fflush(stdout); */
             MPI_Recv(&x_min, 1, MPI_DOUBLE, 0, 0, parent, MPI_STATUS_IGNORE);
             MPI_Recv(&x_max, 1, MPI_DOUBLE, 0, 0, parent, MPI_STATUS_IGNORE);
             MPI_Recv(&y_min, 1, MPI_DOUBLE, 0, 0, parent, MPI_STATUS_IGNORE);
@@ -943,7 +943,7 @@ void check_mand_params(int *m_max_iterations,
 
     if (*m_max_iterations == NOVALUE) {
         /* grab unspecified limit */
-        printf("Enter max interations to do: ");
+        printf("Enter max iterations to do: ");
         scanf("%d", &*m_max_iterations);
     }
 #endif
@@ -959,7 +959,7 @@ void check_mand_params(int *m_max_iterations,
 #if PROMPT
     if (*m_pixels_across == NOVALUE || *m_pixels_down == NOVALUE) {
         /* grab unspecified limits */
-        printf("Enter pixel size (horizonal by vertical, i.e. 256 256): ");
+        printf("Enter pixel size (horizontal by vertical, i.e. 256 256): ");
         scanf(" %d %d", &*m_pixels_across, &*m_pixels_down);
     }
 #endif
@@ -1429,7 +1429,7 @@ file's magic number is the two characters "P2".
 - Width * height gray values, each in ASCII decimal, between
 0  and  the  specified  maximum  value,  separated by whi-
 tespace, starting at the top-left corner of  the  graymap,
-proceding  in  normal English reading order.  A value of 0
+proceeding  in  normal English reading order.  A value of 0
 means black, and the maximum value means white.
 
 - Characters from a "#" to the next end-of-line are  ignored

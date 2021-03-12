@@ -112,7 +112,7 @@ EOF
     if test "$NOG2C" != "1" ; then
         trial_LIBS="$trial_LIBS -lg2c"
     fi
-    # Discard libs that are not availble:
+    # Discard libs that are not available:
     save_IFS="$IFS"
     # Make sure that IFS includes a space, or the tests that run programs
     # may fail

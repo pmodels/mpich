@@ -364,7 +364,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
 
 /* ------------------------------------------------------------------------ */
 /* MPID_nem_ofi_cm_finalize                                                 */
-/* Clean up and cancle the requests initiated by the cm_init routine        */
+/* Clean up and cancel the requests initiated by the cm_init routine        */
 /* ------------------------------------------------------------------------ */
 int MPID_nem_ofi_cm_finalize()
 {

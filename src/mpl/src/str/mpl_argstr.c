@@ -463,7 +463,7 @@ Output Parameters:
     Notes:
     This routine adds a string to a string in such a way that
     MPL_str_get_string can
-    retreive the same string back.  It takes into account spaces and quote
+    retrieve the same string back.  It takes into account spaces and quote
     characters.
     The string pointer is updated to the start of the next string in the
     string and maxlen is updated accordingly.

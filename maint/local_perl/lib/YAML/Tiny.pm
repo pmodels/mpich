@@ -700,13 +700,13 @@ I said B<human-readable> and not B<geek-readable>. The sort of files that
 your average manager or secretary should be able to look at and make
 sense of.
 
-L<YAML::Tiny> does not generate comments, it won't necesarily preserve the
+L<YAML::Tiny> does not generate comments, it won't necessarily preserve the
 order of your hashes, and it will normalise if reading in and writing out
 again.
 
 It only supports a very basic subset of the full YAML specification.
 
-Usage is targetted at files like Perl's META.yml, for which a small and
+Usage is targeted at files like Perl's META.yml, for which a small and
 easily-embeddable module is extremely attractive.
 
 Features will only be added if they are human readable, and can be written
@@ -746,7 +746,7 @@ JSON, with the additional limitation that only simple keys are supported.
 
 As a result, all possible YAML Tiny documents should be able to be
 transformed into an equivalent JSON document, although the reverse is
-not necesarily true (but will be true in simple cases).
+not necessarily true (but will be true in simple cases).
 
 As a result of these simplifications the YAML Tiny specification should
 be implementable in a relatively small amount of code in any language
@@ -804,7 +804,7 @@ B<Loading Failure Points>
 
 YAML Tiny parsers and emitters are not expected to recover from adapt to
 errors. The specific error modality of any implementation is not dictated
-(return codes, exceptions, etc) but is expected to be consistant.
+(return codes, exceptions, etc) but is expected to be consistent.
 
 =head2 4. Syntax
 
@@ -905,7 +905,7 @@ Indentation spaces work as per the YAML specification in all cases.
 Comments work as per the YAML specification in all simple cases.
 Support for indented multi-line comments is B<not> required.
 
-Seperation spaces work as per the YAML specification in all cases.
+Separation spaces work as per the YAML specification in all cases.
 
 B<YAML Tiny Character Stream>
 
@@ -938,7 +938,7 @@ Support for the document boundary marker "---" is required.
 
 Support for the document boundary market "..." is B<not> required.
 
-If necesary, a document boundary should simply by indicated with a
+If necessary, a document boundary should simply by indicated with a
 "---" marker, with not preceding "..." marker.
 
 Support for empty streams (containing no documents) is required.
@@ -961,7 +961,7 @@ Support for nodes optional anchor and tag properties are B<not> required.
 
 Support for node anchors is B<not> required.
 
-Supprot for node tags is B<not> required.
+Support for node tags is B<not> required.
 
 Support for alias nodes is B<not> required.
 

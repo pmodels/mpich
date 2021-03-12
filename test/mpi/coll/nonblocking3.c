@@ -122,7 +122,7 @@ static void cleanup_laundry(struct laundry *l)
 }
 
 /* Starts a "random" operation on "comm" corresponding to "rndnum" and returns
- * in (*req) a request handle corresonding to that operation.  This call should
+ * in (*req) a request handle corresponding to that operation.  This call should
  * be considered collective over comm (with a consistent value for "rndnum"),
  * even though the operation may only be a point-to-point request. */
 static void start_random_nonblocking(MPI_Comm comm, unsigned int rndnum, MPI_Request * req,

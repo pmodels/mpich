@@ -16,7 +16,7 @@ MPIR_Copy_data(src_addr, src_count, src_datatype,
 	 * this is a safe operation.
 	 *
 	 * NOTE: This code assumes that the (dest_count, dest_datatype)
-	 * represents enough space to accomodate (src_count, src_datatype) and
+	 * represents enough space to accommodate (src_count, src_datatype) and
 	 * that enough space exists in the dest buffer to cover (dest_count,
 	 * dest_datatype).  This implies that truncation and buffer overruns
 	 * errors must be caught before this routine is called.
@@ -40,7 +40,7 @@ MPIR_Copy_data(src_addr, src_count, src_datatype,
     else if (MPIR_Datatype_iscontig(src_count, src_datatype))
     {
         /*
-	 * The data arrangment at the src buffer is contiguous, but not at the
+	 * The data arrangement at the src buffer is contiguous, but not at the
 	 * dest.  We should be able to "unpack" the data directly into the dest
 	 * buffer.
 	 */
@@ -48,7 +48,7 @@ MPIR_Copy_data(src_addr, src_count, src_datatype,
     else if (MPIR_Datatype_iscontig(dest_count, dest_datatype))
     {
         /*
-	 * The data arrangment at the dest buffer is contiguous, but not at the
+	 * The data arrangement at the dest buffer is contiguous, but not at the
 	 * src.  We should be able to "pack" the data directly into the dest
 	 * buffer.
 	 */
@@ -139,7 +139,7 @@ MPIR_Win_verify_dt_op_compat(src_count, src_datatype,
     {
 	/* 
 	 * NOTE: The standard does not define what the application should
-	 * expect when truncation occurs.  We could peform the operation on as
+	 * expect when truncation occurs.  We could perform the operation on as
 	 * much data as possible before rc =ing an error, but that would only
 	 * delay reporting the error to the application.  Besides, a portable
 	 * application cannot rely on any of the operations being completed, so

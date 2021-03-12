@@ -96,7 +96,7 @@ while (<FD>) {
     my $procfile = "/proc/$pid/cmdline";
     print "Looking for $procfile\n" if $debug;
     # We *CANNOT USE* -s with a file in /proc because -s filename returns
-    # false alwyas ! (BUG BUG BUG).  Instead, we try to open and read from it
+    # false always ! (BUG BUG BUG).  Instead, we try to open and read from it
     $rc = open PFD, "<$procfile";
     if ($rc) {
 	my $cmdline = <PFD>;

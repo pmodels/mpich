@@ -75,7 +75,7 @@ double gpfsmpio_prof_cr[GPFSMPIO_CIO_LAST + 1];
  *   - any integer
  *   - Default is 8
  *
- * - GPFSMPIO_PTHREADIO - Enables a very simple form of asyncronous io where a
+ * - GPFSMPIO_PTHREADIO - Enables a very simple form of asynchronous io where a
  *   pthread is spawned to do the posix writes while the main thread does the
  *   data aggregation - useful for large files where multiple rounds are
  *   required (more that the cb_buffer_size of data per aggregator).   User
@@ -111,7 +111,7 @@ double gpfsmpio_prof_cr[GPFSMPIO_CIO_LAST + 1];
  *   - Default is 0
  *
  * - GPFSMPIO_BRIDGERINGAGG - Relevant only to BGQ.  Aggregator placement
- *   optimization whch forms a 5-d ring around the bridge node starting at
+ *   optimization which forms a 5-d ring around the bridge node starting at
  *   GPFSMPIO_BRIDGERINGAGG hops away.  Experimental performance results
  *   suggest best value is 1 and only in conjunction with GPFSMPIO_P2PCONTIG
  *   and GPFSMPIO_BALANCECONTIG.  The number of aggregators selected is still

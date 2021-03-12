@@ -19,7 +19,7 @@
         errs = 0
         call mtest_init( ierr )
 
-! integers with upto 9 are 4 bytes integers; r of 4 are 2 byte,
+! integers with up to 9 are 4 bytes integers; r of 4 are 2 byte,
 ! and r of 2 is 1 byte
         call mpi_type_create_f90_integer( 9, ntype1, ierr )
 !

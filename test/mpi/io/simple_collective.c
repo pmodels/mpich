@@ -5,7 +5,7 @@
 
 
 /* this deceptively simple test uncovered a bug in the way certain file systems
- * dealt with tuning parmeters.  See
+ * dealt with tuning parameters.  See
  * https://github.com/open-mpi/ompi/issues/158 and
  * http://trac.mpich.org/projects/mpich/ticket/2261
  *
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     sprintf(file, "%s", opt_file);
     MPI_Info_create(&info);
     nr_errors += test_write(file, nprocs, rank, info);
-    /* acutal value does not matter.  test only writes a small amount of data */
+    /* actual value does not matter.  test only writes a small amount of data */
     MPI_Info_set(info, "striping_factor", "50");
     nr_errors += test_write(file, nprocs, rank, info);
     MPI_Info_free(&info);

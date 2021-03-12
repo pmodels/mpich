@@ -32,7 +32,7 @@ cvars:
       description : >-
         Size (in bytes) of available lock data this window can provided. If
         current buffered lock data is more than this value, the process will
-        drop the upcoming operation data. Requires a positive calue.
+        drop the upcoming operation data. Requires a positive value.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */

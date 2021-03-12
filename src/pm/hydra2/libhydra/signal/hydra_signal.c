@@ -23,7 +23,7 @@ HYD_status HYD_signal_set(int signum, void (*handler) (int))
 #if defined SA_RESETHAND
     /* Note that if this feature is not supported, there is a race
      * condition in the handling of signals, and the OS is
-     * fundementally flawed */
+     * fundamentally flawed */
     act.sa_flags = act.sa_flags & ~(SA_RESETHAND);
 #endif
     sigaction(signum, &act, (struct sigaction *) NULL);

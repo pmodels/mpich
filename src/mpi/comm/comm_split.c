@@ -41,7 +41,7 @@ static int sorttype_compare(const void *v1, const void *v2)
 #endif
 
 /* Sort the entries in keytable into increasing order by key.  A stable
-   sort should be used incase the key values are not unique. */
+   sort should be used in case the key values are not unique. */
 static void MPIU_Sort_inttable(sorttype * keytable, int size)
 {
     sorttype tmp;
@@ -198,7 +198,7 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
      * processes whose color is MPI_UNDEFINED will not influence the
      * resulting context id (by passing ignore_id==TRUE). */
     /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
-     * calling routine already holds the single criticial section */
+     * calling routine already holds the single critical section */
     mpi_errno = MPIR_Get_contextid_sparse(local_comm_ptr, &new_context_id, !in_newcomm);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(new_context_id != 0);

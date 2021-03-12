@@ -65,7 +65,7 @@ int main(int argc, char **argv)
          * wait their turn by checking for the correct file to show up */
         actualFname = writePortToFile(portName, "%s.%d", fname, rankToAccept++);
 
-        /* The wrapper script I'm using checks for the existance of "fname", so
+        /* The wrapper script I'm using checks for the existence of "fname", so
          * create that - even though it isn't used  */
         globalFname = writePortToFile(portName, fname);
         installExitHandler(globalFname);

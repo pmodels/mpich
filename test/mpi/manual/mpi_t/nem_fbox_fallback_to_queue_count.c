@@ -33,7 +33,7 @@ int err, rank;
 MPI_T_pvar_session session;
 MPI_T_pvar_handle fbox_handle;
 
-/* Check that we can successfuly write to the variable.
+/* Check that we can successfully write to the variable.
  * Question: Do we really want to write pvars other than reset?
  */
 void blank_test()

@@ -656,7 +656,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         preput_val = val;
 
         status = HYD_pmcd_pmi_add_kvs(preput_key, preput_val, pg_scratch->kvs, &ret);
-        HYDU_ERR_POP(status, "unable to add keypair to kvs\n");
+        HYDU_ERR_POP(status, "unable to add key pair to kvs\n");
     }
 
     /* Create the proxy list */

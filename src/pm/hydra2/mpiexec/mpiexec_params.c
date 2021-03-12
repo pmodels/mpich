@@ -102,7 +102,7 @@ static void help_help_fn(void)
     printf("    -usize                           universe size (SYSTEM, INFINITE, <value>)\n");
 
     printf("\n");
-    printf("Please see the intructions provided at\n");
+    printf("Please see the instructions provided at\n");
     printf("http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager\n");
     printf("for further details\n\n");
 }

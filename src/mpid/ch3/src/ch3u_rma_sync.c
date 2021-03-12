@@ -103,7 +103,7 @@
        following SHM operations will happen after PROC_SYNC and will see the
        latest data on target processes.
 
-       In WIN_COMPLETE, the MEM_SYNC before PROC_SYNC essentailly exposes previous
+       In WIN_COMPLETE, the MEM_SYNC before PROC_SYNC essentially exposes previous
        SHM operations to group of target processes; after PROC_SYNC, target
        processes knows all origin process already exposed their SHM operations;
        in WIN_WAIT/TEST, the MEM_SYNC after PROC_SYNC ensures that following local
@@ -249,7 +249,7 @@ cvars:
         case, the origin process still tries to piggyback LOCK message
         with the first operation; for UNLOCK/FLUSH message, the origin
         process no longer keeps the current last operation but only
-        piggyback UNLOCK/FLUSH if there is an operation avaliable in
+        piggyback UNLOCK/FLUSH if there is an operation available in
         the ending synchronization call.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===

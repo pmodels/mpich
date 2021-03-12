@@ -87,7 +87,7 @@ int ADIOI_Calc_aggregator(ADIO_File fd,
         /* wkliao: implementation for file domain alignment
          * fd_start[] and fd_end[] have been aligned with file lock
          * boundaries when returned from ADIOI_Calc_file_domains() so cannot
-         * just use simple arithmatic as above */
+         * just use simple arithmetic as above */
         rank_index = 0;
         while (off > fd_end[rank_index])
             rank_index++;
@@ -164,7 +164,7 @@ void ADIOI_Calc_file_domains(ADIO_Offset * st_offsets, ADIO_Offset
     /* ceiling division as in HPF block distribution */
 
     /* Tweak the file domains so that no fd is smaller than a threshold.  We
-     * have to strike a balance between efficency and parallelism: somewhere
+     * have to strike a balance between efficiency and parallelism: somewhere
      * between 10k processes sending 32-byte requests and one process sending a
      * 320k request is a (system-dependent) sweet spot */
 

@@ -37,7 +37,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Threshold at which the RMA implementation attempts to complete requests
-        while completing RMA operations and while using the lazy synchonization
+        while completing RMA operations and while using the lazy synchronization
         approach.  Change this value if programs fail because they run out of
         requests or other internal resources
 

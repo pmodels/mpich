@@ -58,7 +58,7 @@ void MPII_init_windows(void)
     _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, assert_hook);
 #ifdef _WIN64
     {
-        /* FIXME: (Windows) This severly degrades performance but fixes alignment
+        /* FIXME: (Windows) This severely degrades performance but fixes alignment
          * issues with the datatype code. */
         /* Prevent misaligned faults on Win64 machines */
         UINT mode, old_mode;

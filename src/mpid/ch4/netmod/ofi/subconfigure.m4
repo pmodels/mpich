@@ -45,7 +45,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     elif test "x$netmod_args" = "x" || test "$netmod_args" = "runtime"; then
         runtime_capabilities="yes"
         no_providers="yes"
-        AC_MSG_NOTICE([Using runtime capability set due to no selected provider or explicity runtime selection])
+        AC_MSG_NOTICE([Using runtime capability set due to no selected provider or explicitly runtime selection])
     fi
 
     if test "$no_providers" = "no" ; then

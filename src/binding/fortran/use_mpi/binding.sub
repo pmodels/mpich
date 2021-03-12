@@ -72,7 +72,7 @@ sub ReadInterface {
                 print STDERR "Duplicate prototypes for $routine_name\n";
                 next;
             }
-            # Seperate argument types and names
+            # Separate argument types and names
             my ($argtypes, $argnames) = &separate_args_and_append_ierror($args);
             # # Handle special cases
             # my $testname = $routine_name . "_args";

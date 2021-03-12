@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     valdup = new char[MPI::MAX_INFO_VAL];
 
     info1 = MPI::Info::Create();
-    /* Use only named keys incase the info implementation only supports
+    /* Use only named keys in case the info implementation only supports
      * the predefined keys (e.g., IBM) */
     info1.Set("host", "myhost.myorg.org");
     info1.Set("file", "runfile.txt");

@@ -38,7 +38,7 @@ int MPIR_Type_is_rma_atomic(MPI_Datatype type)
 }
 
 
-/* Returns true if (a == b) when interepreted using the given datatype.
+/* Returns true if (a == b) when interpreted using the given datatype.
  * Currently, this is only defined for RMA atomic types.
  */
 int MPIR_Compare_equal(const void *a, const void *b, MPI_Datatype type)

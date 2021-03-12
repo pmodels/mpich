@@ -85,8 +85,8 @@ static int MPIDI_CH3I_Port_connreq_free(MPIDI_CH3I_Port_connreq_t * connreq);
 /*
  * Structure of this file and the connect/accept algorithm:
  *
- * Here are the steps involved in implementating MPI_Comm_connect and
- * MPI_Comm_accept.  These same steps are used withing MPI_Comm_spawn
+ * Here are the steps involved in implementing MPI_Comm_connect and
+ * MPI_Comm_accept.  These same steps are used within MPI_Comm_spawn
  * and MPI_Comm_spawn_multiple.
  *
  * First, the connecting process establishes a connection (not a virtual
@@ -512,7 +512,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
     tmp_comm->recvcontext_id = tmp_comm->context_id;
 
     /* sanity: the INVALID context ID value could potentially conflict with the
-     * dynamic proccess space */
+     * dynamic process space */
     MPIR_Assert(tmp_comm->context_id     != MPIR_INVALID_CONTEXT_ID);
     MPIR_Assert(tmp_comm->recvcontext_id != MPIR_INVALID_CONTEXT_ID);
 

@@ -212,7 +212,7 @@ MPI_Accumulate(origin_addr, origin_count, origin_datatype,
     {
 	target_offset = win.displ * target_disp;
 	target_addr = win.base + target_offset;
-	/* peform requested operation */
+	/* perform requested operation */
     }
     else if (origin_byte_count < EAGER_MAX)
     {

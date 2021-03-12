@@ -18,7 +18,7 @@ int MPIR_Ext_dbg_romio_terse_enabled = 0;
 int MPIR_Ext_dbg_romio_typical_enabled = 0;
 int MPIR_Ext_dbg_romio_verbose_enabled = 0;
 
-/* NOTE: we'll lazily initilize this mutex */
+/* NOTE: we'll lazily initialize this mutex */
 static MPL_thread_mutex_t romio_mutex;
 static MPL_atomic_int_t romio_mutex_initialized = MPL_ATOMIC_INT_T_INITIALIZER(0);
 

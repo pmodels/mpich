@@ -27,7 +27,7 @@ int ADIOI_PVFS2_StridedDtypeIO(ADIO_File fd, void *buf, int count,
     PVFS_size pvfs_disp = -1;
     ADIOI_Flatlist_node *flat_file_p;
 
-    /* Use for offseting the PVFS2 filetype */
+    /* Use for offsetting the PVFS2 filetype */
     int pvfs_blk = 1;
     ADIOI_PVFS2_fs *pvfs_fs;
     static char myname[] = "ADIOI_PVFS2_STRIDED_DTYPE";
@@ -167,7 +167,7 @@ int ADIOI_PVFS2_StridedDtypeIO(ADIO_File fd, void *buf, int count,
 #ifdef HAVE_STATUS_SET_BYTES
     MPIR_Status_set_bytes(status, datatype, resp_io.total_completed);
     /* This is a temporary way of filling in status. The right way is to
-     * keep track of how much data was actually acccessed by
+     * keep track of how much data was actually accessed by
      * ADIOI_BUFFERED operations */
 #endif
     return ret;
@@ -352,7 +352,7 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype * mpi_dtype, PVFS_Request * pvfs_dtype)
         int has_lb_ub = 0;
 
         /* When converting into a PVFS_Request_struct, we no longer
-         * can use MPI_LB and MPI_UB.  Therfore, we have to do the
+         * can use MPI_LB and MPI_UB.  Therefore, we have to do the
          * following.
          * We simply ignore all the MPI_LB and MPI_UB types and
          * get the lb and extent and pass it on through a

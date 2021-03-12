@@ -157,7 +157,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
      * send_count_arr */
 
     if (memtype_is_contig) {
-        /* if memory is contigous, we now replace memtype_sz and
+        /* if memory is contiguous, we now replace memtype_sz and
          * memtype_extent with the full access size */
         memtype_sz *= count;
         memtype_extent = memtype_sz;

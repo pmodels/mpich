@@ -13,7 +13,7 @@
 /*                    auxiliary functions                      */
 /* =========================================================== */
 
-/* immed_copy() copys data from origin buffer to
+/* immed_copy() copies data from origin buffer to
    IMMED packet header. */
 static inline int immed_copy(void *src, void *dest, size_t len)
 {

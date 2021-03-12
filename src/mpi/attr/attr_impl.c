@@ -86,7 +86,7 @@ int MPIR_Type_create_keyval_impl(MPI_Type_copy_attr_function * type_copy_attr_fn
     keyval_ptr->delfn.user_function = type_delete_attr_fn;
     keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
 
-    /* Tell finalize to check for attributes on permenant types */
+    /* Tell finalize to check for attributes on permanent types */
     MPII_Datatype_attr_finalize();
 
     MPIR_OBJ_PUBLISH_HANDLE(*type_keyval, keyval_ptr->handle);
@@ -164,7 +164,7 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
          * integer because, even for the Fortran keyvals, the C interface is
          * used which stores the result in a pointer (hence we need a
          * pointer-sized int).  Thus we use intptr_t instead of MPI_Fint.
-         * On some 64-bit plaforms, such as Solaris-SPARC, using an MPI_Fint
+         * On some 64-bit platforms, such as Solaris-SPARC, using an MPI_Fint
          * will cause the value to placed into the high, rather than low,
          * end of the output value. */
 #endif
@@ -268,7 +268,7 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
                 *(intptr_t *) attr_val_p = *(int *) *(void **) attr_val_p;
             else if (outAttrType == MPIR_ATTR_INT) {
                 /* *(int*)attr_val_p = *(int *)*(void **)attr_val_p; */
-                /* This is correct, because the cooresponding code
+                /* This is correct, because the corresponding code
                  * in the Fortran interface expects to find a pointer-length
                  * integer value.  Thus, this works for both big and little
                  * endian systems. Any changes made here must have

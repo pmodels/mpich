@@ -553,7 +553,7 @@ static int blkidx_m2m(MPI_Aint * blocks_p,
         cbufp = (char *) paramp->userbuf + rel_off + offsetarray[curblock];
 
         /* there was some casting going on here at one time but now all types
-         * are promoted ot big values */
+         * are promoted to big values */
         if (blocklen > blocks_left)
             blocklen = blocks_left;
 

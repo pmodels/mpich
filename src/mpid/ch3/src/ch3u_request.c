@@ -286,7 +286,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	/* --BEGIN ERROR HANDLING-- */
 	if (rreq->dev.iov_count == 0)
 	{
-	    /* If the data can't be unpacked, the we have a mis-match between
+	    /* If the data can't be unpacked, the we have a mismatch between
 	       the datatype and the amount of data received.  Adjust
 	       the segment info so that the remaining data is received and 
 	       thrown away. */

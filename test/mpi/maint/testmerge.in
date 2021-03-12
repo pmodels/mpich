@@ -132,7 +132,7 @@ sub MergeTemplate {
 	    if (defined($Definitions{$name})) {
 		my $defn = $Definitions{$name};
 		my $newdefn = "";
-		# Add indentation to definition; substitute any defintions
+		# Add indentation to definition; substitute any definitions
 		foreach my $line (split(/\n/,$defn)) {
 		    print "Looking at |$line|\n" if $debug;
 		    $newdefn .= $indent . $line . "\n";

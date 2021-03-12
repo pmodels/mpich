@@ -77,7 +77,7 @@ def dump_f08_wrappers_c(func):
                 p5 = func['parameters'][i + 4]
                 dump_buf(p['name'], True)
                 dump_buf(p2['name'], False)
-                # arbitary: only recvbuf may be sub-array
+                # arbitrary: only recvbuf may be sub-array
                 if RE.match(r'mpi_i?reduce_scatter', func['name'], re.IGNORECASE):
                     dump_p(p3)
                     dump_p(p4)
@@ -420,7 +420,7 @@ def dump_f08_wrappers_f(func):
                 need_check_int_kind = True
                 if not has_comm_size:
                     if RE.search(r'alltoallw', func['name'], re.IGNORECASE):
-                        # always need the lenght for types array
+                        # always need the length for types array
                         use_list = convert_list_pre
                     else:
                         use_list = convert_list_1

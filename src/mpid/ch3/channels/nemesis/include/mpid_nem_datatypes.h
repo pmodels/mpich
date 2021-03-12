@@ -34,7 +34,7 @@
    not really a fair comparison for studying the impact of atomic instructions.
    [goodell@ 2009-01-16] */
 
-#define MPID_NEM_OFFSETOF(struc, field) ((int)(&((struc *)0)->field))
+#define MPID_NEM_OFFSETOF(struct, field) ((int)(&((struct *)0)->field))
 #define MPID_NEM_CACHE_LINE_LEN MPL_CACHELINE_SIZE
 #define MPID_NEM_NUM_CELLS      64
 #define MPID_NEM_CELL_LEN       (64*1024)

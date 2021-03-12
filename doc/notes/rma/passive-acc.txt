@@ -23,7 +23,7 @@ Important issues with passive target accumulate
 
     Unless multiple threads (and processors) are present on the target
     system to process accumulation operations, serialization is
-    eminent, and the best optmization is to not have a ton of
+    eminent, and the best optimization is to not have a ton of
     multi-threading optimizations in the way slowing things down.  This
     suggests that two implementations may be necessary: one using
     threads and one that doesn't.

@@ -50,7 +50,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
    properly.
 
    The CH4I_request functions are even more bare bones.
-   They create request objects that are not useable by the
+   They create request objects that are not usable by the
    lower layers until further initialization takes place.
 
    CH4R_request_xxx functions can be used to create and destroy

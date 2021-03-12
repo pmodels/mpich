@@ -687,7 +687,7 @@ dnl lead to weird AM_CONDITIONAL errors and potentially other problems.
 # support for this language. This should save a bit of configure time and also
 # prevent user complaints like ticket #1570.
 #
-# NOTE: we are skipping overiding CXX as some modules (e.g. ucx) may depend on CXX
+# NOTE: we are skipping overriding CXX as some modules (e.g. ucx) may depend on CXX
 #
 AS_IF([test "x$enable_f77" = "xno"],[F77=no])
 AS_IF([test "x$enable_fc"  = "xno"],[FC=no])
@@ -1153,7 +1153,7 @@ fi
 # * MPID_MAX_THREAD_LEVEL, set in one of the device subconfigure.m4,
 #    determines the maximum thread level, typically MPI_THREAD_MULTIPLE.
 #    If missing, equivallent to single.
-# * --enable-threads, explict user config option, raise error if beyond
+# * --enable-threads, explicit user config option, raise error if beyond
 #    MPID_MAX_THREAD_LEVEL.
 #    It default to MPID_MAX_THREAD_LEVEL.
 # * MPICH_THREAD_LEVEL is set by enable_threads
@@ -1461,7 +1461,7 @@ if test "$enable_romio" = "yes" ; then
        # make it possible to "#include" mpio.h at build time
        #
        # This ought to be sufficient, but there is also a symlink setup in
-       # src/include to accomodate current mpicc limitations.  See
+       # src/include to accommodate current mpicc limitations.  See
        # src/mpi/Makefile.mk for more info.
        PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
 
@@ -1601,7 +1601,7 @@ AC_SUBST(pm_name)
 
 # Step 2:
 # Once we've selected the process manager (or managers), we can
-# check that we have a compatible PMI implemenatation.
+# check that we have a compatible PMI implementation.
 # with-pmi
 if test "$with_pmi" != "no" ; then
     if test "$with_pmi" = "default" -o "$with_pmi" = "yes" ; then
@@ -2675,11 +2675,11 @@ PAC_C_GNU_ATTRIBUTE
 PAC_C_BUILTIN_EXPECT
 PAC_C_STATIC_ASSERT
 
-# We need to check for the endianess in order to implement the
+# We need to check for the endianness in order to implement the
 # "external32" representations.  This defines "WORDS_BIGENDIAN when
 # the system is bigendian.
 # As of autoconf 2.62, this macro takes an additional argument for systems
-# that can produce object files for either endianess.
+# that can produce object files for either endianness.
 # With the as-always-incompatible-with-every-version autoconf, the
 # arguments for this macro *changed* in 2.62 to
 # (if-bigendian,if-littleendian,unknown,universal)
@@ -2702,7 +2702,7 @@ case $byteOrdering in
     AC_DEFINE(WORDS_UNIVERSAL_ENDIAN,1,[Define if configure will not tell us, for universal binaries])
     ;;
     unknown)
-    AC_MSG_ERROR([Unable to determine endianess])
+    AC_MSG_ERROR([Unable to determine endianness])
     ;;
 esac
 
@@ -3143,7 +3143,7 @@ fi
 if test -n "$MPIR_REAL16_CTYPE" ; then
     AC_DEFINE_UNQUOTED(MPIR_REAL16_CTYPE,$MPIR_REAL16_CTYPE,[C type to use for MPI_REAL16])
 fi
-# For complex 8/16/32, we assume that these are 2 consequetive real4/8/16
+# For complex 8/16/32, we assume that these are 2 consecutive real4/8/16
 #
 # Search for the integer types
 for type in char short int long long_long ; do
@@ -4675,7 +4675,7 @@ AC_ARG_ENABLE(checkpointing,
 )
 
 # Update the cache first with the results of the previous configure steps
-# We don't use the subdir cache because ensuring that the cache is consistant
+# We don't use the subdir cache because ensuring that the cache is consistent
 # with the way in which configure wishes to use it is very difficult and
 # too prone to error.
 dnl PAC_SUBDIR_CACHE(always)
@@ -5219,7 +5219,7 @@ if test "X$enable_shared" = "Xyes" ; then
 fi
 
 # Set F08 versions of datatypes, which have type MPI_Datatype and are not integers anymore.
-# If the correspoinding F77 datatypes exist, i.e., not MPI_DATATYPE_NULL, we simply use their
+# If the corresponding F77 datatypes exist, i.e., not MPI_DATATYPE_NULL, we simply use their
 # integer value (already converted into decimal) in F08 counterparts. Otherwise, we use
 # MPI_VAL value of F08 MPI_DATATYPE_NULL.
 # We put the code at the end to ensure all F77 datatypes have been set.

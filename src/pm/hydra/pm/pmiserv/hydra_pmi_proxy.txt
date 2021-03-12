@@ -1,4 +1,4 @@
-/*D hydra_pmi_proxy - Internal exectuable used by Hydra
+/*D hydra_pmi_proxy - Internal executable used by Hydra
 
    Description:
     This executable is designed to not be run directly by users, but to

@@ -40,7 +40,7 @@ int MPIR_Delete_error_code_impl(int code);
    is-fatal?: the error is fatal and should not be returned to the user
 
    Note that error codes must also be positive integers, so we lose one
-   bit (if they aren't positive, the comparisons agains MPI_ERR_LASTCODE
+   bit (if they aren't positive, the comparisons against MPI_ERR_LASTCODE
    and the value of the attribute MPI_LASTUSEDCODE will fail).
  */
 

@@ -82,7 +82,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
          */
         if (nbytes > 0) {
             char *addr = (char *) buf + dt_true_lb;
-            assert(addr);       /* to supress gcc-8 warning: -Wnonnull */
+            assert(addr);       /* to suppress gcc-8 warning: -Wnonnull */
             MPIR_Typerep_copy(addr, MPIDIG_REQUEST(rreq, buffer), nbytes);
         }
     }
@@ -101,7 +101,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* Decrement the refrence counter for the request object (for the reference held by the sending
+    /* Decrement the reference counter for the request object (for the reference held by the sending
      * process). */
     MPID_Request_complete(rreq);
   fn_exit:

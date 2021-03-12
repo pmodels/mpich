@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
     /* 1,2,3 */
     MPI_Info_create(&info);
-    /* Use only named keys incase the info implementation only supports
+    /* Use only named keys in case the info implementation only supports
      * the predefined keys (e.g., IBM) */
     for (i = 0; i < NKEYS; i++) {
         MPI_Info_set(info, keys1[i], values1[i]);
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 
     /* 3,2,1 */
     MPI_Info_create(&info);
-    /* Use only named keys incase the info implementation only supports
+    /* Use only named keys in case the info implementation only supports
      * the predefined keys (e.g., IBM) */
     for (i = NKEYS - 1; i >= 0; i--) {
         MPI_Info_set(info, keys1[i], values1[i]);
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
     /* 1,3,2 */
     MPI_Info_create(&info);
-    /* Use only named keys incase the info implementation only supports
+    /* Use only named keys in case the info implementation only supports
      * the predefined keys (e.g., IBM) */
     MPI_Info_set(info, keys1[0], values1[0]);
     MPI_Info_set(info, keys1[2], values1[2]);
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 
     /* 2,1,3 */
     MPI_Info_create(&info);
-    /* Use only named keys incase the info implementation only supports
+    /* Use only named keys in case the info implementation only supports
      * the predefined keys (e.g., IBM) */
     MPI_Info_set(info, keys1[1], values1[1]);
     MPI_Info_set(info, keys1[0], values1[0]);
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 
     /* 2,3,1 */
     MPI_Info_create(&info);
-    /* Use only named keys incase the info implementation only supports
+    /* Use only named keys in case the info implementation only supports
      * the predefined keys (e.g., IBM) */
     MPI_Info_set(info, keys1[1], values1[1]);
     MPI_Info_set(info, keys1[2], values1[2]);
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 
     /* 3,1,2 */
     MPI_Info_create(&info);
-    /* Use only named keys incase the info implementation only supports
+    /* Use only named keys in case the info implementation only supports
      * the predefined keys (e.g., IBM) */
     MPI_Info_set(info, keys1[2], values1[2]);
     MPI_Info_set(info, keys1[0], values1[0]);

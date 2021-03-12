@@ -52,7 +52,7 @@ static void MPIR_Bsend_dump(void);
  * taking advantage of the "alignpad"), but this would require more changes.
  */
 static struct BsendBuffer {
-    void *buffer;               /* Pointer to the begining of the user-
+    void *buffer;               /* Pointer to the beginning of the user-
                                  * provided buffer */
     MPI_Aint buffer_size;       /* Size of the user-provided buffer */
     void *origbuffer;           /* Pointer to the buffer provided by
@@ -251,7 +251,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
 
             /* Pack the data into the buffer */
             /* We may want to optimize for the special case of
-             * either primative or contiguous types, and just
+             * either primitive or contiguous types, and just
              * use MPIR_Memcpy and the provided datatype */
             msg->count = 0;
             if (dtype != MPI_PACKED) {
@@ -290,7 +290,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
             }
             break;
         }
-        /* If we found a buffer or we're in the seccond pass, then break.
+        /* If we found a buffer or we're in the second pass, then break.
          * Note that the test on phere is redundant, as the code breaks
          * out of the loop in the test above if a block p is found. */
         if (p || pass == 1)
@@ -368,7 +368,7 @@ static void MPIR_Bsend_free_segment(MPII_Bsend_data_t * p)
                                               ((char *) p) + p->total_size));
 
     MPL_DBG_MSG_D(MPIR_DBG_BSEND, TYPICAL,
-                  "At the begining of free_segment with size %llu:",
+                  "At the beginning of free_segment with size %llu:",
                   (unsigned long long) p->total_size);
     MPL_DBG_STMT(MPIR_DBG_BSEND, TYPICAL, MPIR_Bsend_dump());
 

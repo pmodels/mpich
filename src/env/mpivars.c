@@ -337,7 +337,7 @@ const char *mpit_scopeToStr(int scope)
             p = "SCOPE_ALL_EQ";
             break;
         default:
-            p = "Unrecoginized scope";
+            p = "Unrecognized scope";
             break;
     }
     return p;

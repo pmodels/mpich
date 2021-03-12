@@ -207,7 +207,7 @@ sub StripComments {
 	    $comment_line = $1;
 	    $curline =~ s/\/\*.*?\*\///s;
 	    print "Removed comment, now is $curline\n" if $debug;
-	    # Keep looking for comments incase the line has multiple 
+	    # Keep looking for comments in case the line has multiple 
 	    # comments
 	}
 	else {

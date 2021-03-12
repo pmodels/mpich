@@ -32,7 +32,7 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
     MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
 #undef MPIR_OP_TYPE_MACRO
 #endif
-/* op_macro_ is a 2-arg macro or function that preforms the reduction
+/* op_macro_ is a 2-arg macro or function that performs the reduction
    operation on a single element */
 /* FIXME: This code may penalize the performance on many platforms as
    a work-around for a compiler bug in some versions of xlc.  It

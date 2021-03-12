@@ -297,7 +297,7 @@ typedef struct MPIR_T_pvar_handle_s {
     /* Bytes of an element of datatype */
     int bytes;
 
-    /* Basic flags copied from pvar info + auxilary flags in pvar handle */
+    /* Basic flags copied from pvar info + auxiliary flags in pvar handle */
     int flags;
 
     /* Store info here in case we need other fields */
@@ -313,7 +313,7 @@ typedef struct MPIR_T_pvar_handle_s {
      *
      * For pvars of counter, timer or aggregate type, we cache their value at
      * the last start time in offset, their current value in current, and
-     * their accumlated value in accum. Generally, when such a pvar is running,
+     * their accumulated value in accum. Generally, when such a pvar is running,
      * reading the pvar should return
      *      accum[i] + current[i] - offset[i], 0 <= i < count - 1.
      * When the pvar is stopped, reading just returns accum.

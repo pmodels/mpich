@@ -756,7 +756,7 @@ def check_large_parameters(func):
 
     # Set func['_poly_impl']
     if 'poly_impl' in func:
-        # always prefer explict .poly_impl directive
+        # always prefer explicit .poly_impl directive
         func['_poly_impl'] = func['poly_impl']
     elif 'code-large_count' in func:
         # { -- large_count } code block exist
@@ -2113,7 +2113,7 @@ def get_impl_param(func, param):
 
 def get_polymorph_param_and_arg(s):
     # s is a polymorph spec, e.g. "MPIR_Attr_type attr_type=MPIR_ATTR_PTR"
-    # Note: we assum limit of single extra param for now (which is sufficient)
+    # Note: we assume limit of single extra param for now (which is sufficient)
     RE.match(r'^\s*(.+?)\s*(\w+)\s*=\s*(.+)', s)
     extra_param = RE.m.group(1) + ' ' + RE.m.group(2)
     extra_arg = RE.m.group(3)

@@ -96,7 +96,7 @@ int MPL_wtime_init(void)
         goto fn_exit;
 
     /* set a closer time_epoch so MPL_wtime_todouble retain ns resolution */
-    /* time across process are still relavant within 1 hour */
+    /* time across process are still relevant within 1 hour */
     MPL_time_t t;
     MPL_wtime(&t);
     time_epoch = t.tv_sec - t.tv_sec % (3600);

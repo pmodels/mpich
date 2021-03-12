@@ -775,7 +775,7 @@ static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set *sock_set,
 
     /*
      * No free elements were found.  Larger pollfd and pollinfo arrays need to
-     * be allocated and the existing data transfered over.
+     * be allocated and the existing data transferred over.
      */
     if (avail_elem == sock_set->poll_array_sz) {
         int elem;
@@ -3179,7 +3179,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
              *
              * FIXME: If the attempt to set the socket back to blocking fails,
              * we presently ignore it.  Should we return an
-             * error?  We need to define acceptible data loss at close time.
+             * error?  We need to define acceptable data loss at close time.
              * MS Windows has worse problems with this, so it
              * may not be possible to make any guarantees.
              */
@@ -3241,7 +3241,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
                                  pollfds_active_elems, millisecond_timeout);
                     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POLL);
 
-                    /* Reaquire the lock before processing any of the
+                    /* Reacquire the lock before processing any of the
                      * information returned from poll */
                     MPL_DBG_MSG(MPIR_DBG_OTHER, TYPICAL,
                                 "Enter global critical section (sock_wait)");
