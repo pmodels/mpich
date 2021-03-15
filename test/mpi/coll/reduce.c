@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mtest_dtp.h"
 
 /*
 static char MTEST_Descrip[] = "A simple test of Reduce with all choices of root process";
@@ -42,7 +43,7 @@ void check_buf(int rank, int size, int count, int *errs, int *buf)
     }
 }
 
-int main(int argc, char *argv[])
+static int test_reduce(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
 {
     int errs = 0;
     int rank, size, root, i;
@@ -51,14 +52,16 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     mtest_mem_type_e memtype;
 
-    MTest_Init(&argc, &argv);
-    MTestArgList *head = MTestArgListCreate(argc, argv);
-
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     if (rank % 2 == 0)
-        memtype = MTestArgListGetMemType(head, "evenmemtype");
+        memtype = evenmem;
     else
-        memtype = MTestArgListGetMemType(head, "oddmemtype");
+        memtype = oddmem;
+
+    if (rank == 0) {
+        MTestPrintfMsg(1, "./reduce -evenmemtype=%s -oddmemtype=%s\n",
+                       MTest_memtype_name(evenmem), MTest_memtype_name(oddmem));
+    }
 
     while (MTestGetIntracommGeneral(&comm, minsize, 1)) {
         if (comm == MPI_COMM_NULL)
@@ -89,6 +92,21 @@ int main(int argc, char *argv[])
         }
         MTestFreeComm(&comm);
     }
+    return errs;
+}
+
+int main(int argc, char *argv[])
+{
+    int errs = 0;
+    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+
+    struct dtp_args dtp_args;
+    dtp_args_init(&dtp_args, MTEST_COLL_NOCOUNT, argc, argv);
+    while (dtp_args_get_next(&dtp_args)) {
+        errs += test_reduce(dtp_args.u.coll.evenmem, dtp_args.u.coll.oddmem);
+    }
+    dtp_args_finalize(&dtp_args);
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
