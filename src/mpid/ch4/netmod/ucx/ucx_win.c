@@ -47,10 +47,16 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     if (*base_ptr == NULL)
         mem_map_params.flags |= UCP_MEM_MAP_ALLOCATE;
 
+    MPIDI_UCX_WIN(win).mem_mapped = false;
+
     status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params, &mem_h);
     /* some memory types cannot be mapped, skip rkey packing */
     if (status != UCS_ERR_UNSUPPORTED) {
         MPIDI_UCX_CHK_STATUS(status);
+
+        /* checked at win_free to unmap mem_h */
+        MPIDI_UCX_WIN(win).mem_mapped = true;
+        MPIDI_UCX_WIN(win).mem_h = mem_h;
 
         /* query allocated address. */
         mem_attr.field_mask = UCP_MEM_ATTR_FIELD_ADDRESS | UCP_MEM_ATTR_FIELD_LENGTH;
@@ -59,8 +65,6 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
 
         *base_ptr = mem_attr.address;
         MPIR_Assert(mem_attr.length >= length);
-
-        MPIDI_UCX_WIN(win).mem_h = mem_h;
 
         /* pack the key */
         status = ucp_rkey_pack(ucp_context, mem_h, (void **) &rkey_buffer, &rkey_size);
@@ -283,19 +287,18 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
 
-    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_NM_REACHABLE) {
-        int i;
-        for (i = 0; i < win->comm_ptr->local_size; i++) {
-            if (MPIDI_UCX_WIN_INFO(win, i).rkey) {
-                ucp_rkey_destroy(MPIDI_UCX_WIN_INFO(win, i).rkey);
-            }
+    int i;
+    for (i = 0; i < win->comm_ptr->local_size; i++) {
+        if (MPIDI_UCX_WIN_INFO(win, i).rkey) {
+            ucp_rkey_destroy(MPIDI_UCX_WIN_INFO(win, i).rkey);
         }
-
-        if (win->size > 0)
-            ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
-        MPL_free(MPIDI_UCX_WIN(win).info_table);
-        MPL_free(MPIDI_UCX_WIN(win).target_sync);
     }
+
+    /* Skip unmap for unsupported mem type */
+    if (MPIDI_UCX_WIN(win).mem_mapped)
+        ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
+    MPL_free(MPIDI_UCX_WIN(win).info_table);
+    MPL_free(MPIDI_UCX_WIN(win).target_sync);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
     return mpi_errno;

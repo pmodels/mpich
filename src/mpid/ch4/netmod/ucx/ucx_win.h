@@ -154,7 +154,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_RMA_WIN_CMPL_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_WIN_CMPL_HOOK);
 
-    if ((MPIDI_WIN(win, winattr) & MPIDI_WINATTR_NM_REACHABLE) && MPIDI_UCX_win_need_flush(win)) {
+    if (MPIDI_UCX_win_need_flush(win)) {
         ucs_status_t ucp_status;
         /* maybe we just flush all eps here? More efficient for smaller communicators... */
         ucp_status = MPIDI_UCX_flush(0);
@@ -175,8 +175,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_RMA_WIN_LOCAL_CMPL_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_WIN_LOCAL_CMPL_HOOK);
 
-    if ((MPIDI_WIN(win, winattr) & MPIDI_WINATTR_NM_REACHABLE) &&
-        MPIDI_UCX_win_need_flush_local(win)) {
+    if (MPIDI_UCX_win_need_flush_local(win)) {
         ucs_status_t ucp_status;
 
         /* currently, UCP does not support local flush, so we have to call
