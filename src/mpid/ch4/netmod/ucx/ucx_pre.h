@@ -60,6 +60,9 @@ typedef struct MPIDI_UCX_win_target_sync {
 typedef struct {
     MPIDI_UCX_win_info_t *info_table;
     ucp_mem_h mem_h;
+    bool mem_mapped;            /* Indicate whether mem_h has been mapped (e.g., supported mem type).
+                                 * Set at win init and checked at win free for mem_unmap */
+
     MPIDI_UCX_win_target_sync_t *target_sync;
 } MPIDI_UCX_win_t;
 
