@@ -4,7 +4,6 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-testlist_gpu=coll/testlist.gpu
 testlist_cvar=coll/testlist.cvar
 #start an empty testlist
 echo "" > ${testlist_cvar}
@@ -86,13 +85,7 @@ for algo_name in ${algo_names}; do
                 env="${env} env=MPIR_CVAR_IREDUCE_TREE_KVAL=${kval} env=MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096"
 
                 echo "reduce 5 ${env}" >> ${testlist_cvar}
-                echo "reduce 5 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                echo "reduce 5 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                echo "reduce 5 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
                 echo "reduce 10 ${env}" >> ${testlist_cvar}
-                echo "reduce 10 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                echo "reduce 10 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                echo "reduce 10 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
                 echo "red3 10 ${env}" >> ${testlist_cvar}
                 echo "red4 10 ${env}" >> ${testlist_cvar}
                 env=""
@@ -104,13 +97,7 @@ for algo_name in ${algo_names}; do
         env="${env} env=MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE=4096"
 
         echo "reduce 5 ${env}" >> ${testlist_cvar}
-        echo "reduce 5 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-        echo "reduce 5 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-        echo "reduce 5 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
         echo "reduce 10 ${env}" >> ${testlist_cvar}
-        echo "reduce 10 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-        echo "reduce 10 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-        echo "reduce 10 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
         echo "red3 10 ${env}" >> ${testlist_cvar}
         echo "red4 10 ${env}" >> ${testlist_cvar}
         env=""
@@ -143,18 +130,9 @@ for algo_name in ${algo_names}; do
                     env="${env} env=MPIR_CVAR_IALLREDUCE_TREE_KVAL=${kval}"
 
                     echo "allred 4 arg=-count=100 ${env}" >> ${testlist_cvar}
-                    echo "allred 4 arg=-count=100 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                    echo "allred 4 arg=-count=100 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                    echo "allred 4 arg=-count=100 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
                     echo "allred 7 arg=-count=10 ${env}" >> ${testlist_cvar}
-                    echo "allred 7 arg=-count=10 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                    echo "allred 7 arg=-count=10 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                    echo "allred 7 arg=-count=10 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
                     echo "allredmany 4 ${env}" >> ${testlist_cvar}
                     echo "allred2 4 ${env}" >> ${testlist_cvar}
-                    echo "allred2 4 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                    echo "allred2 4 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                    echo "allred2 4 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
                     echo "allred3 10 ${env}" >> ${testlist_cvar}
                     echo "allred4 4 ${env}" >> ${testlist_cvar}
                     echo "allred5 5 ${env}" >> ${testlist_cvar}
@@ -168,18 +146,9 @@ for algo_name in ${algo_names}; do
                 env="${env} env=MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=${kval}"
 
                 echo "allred 4 arg=-count=100 ${env}" >> ${testlist_cvar}
-                echo "allred 4 arg=-count=100 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                echo "allred 4 arg=-count=100 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                echo "allred 4 arg=-count=100 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
                 echo "allred 7 arg=-count=10 ${env}" >> ${testlist_cvar}
-                echo "allred 7 arg=-count=10 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                echo "allred 7 arg=-count=10 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                echo "allred 7 arg=-count=10 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
                 echo "allredmany 4 ${env}" >> ${testlist_cvar}
                 echo "allred2 4 ${env}" >> ${testlist_cvar}
-                echo "allred2 4 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                echo "allred2 4 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-                echo "allred2 4 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
                 echo "allred3 10 ${env}" >> ${testlist_cvar}
                 echo "allred4 4 ${env}" >> ${testlist_cvar}
                 echo "allred5 5 ${env}" >> ${testlist_cvar}
@@ -193,18 +162,9 @@ for algo_name in ${algo_names}; do
         env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name}"
 
         echo "allred 4 arg=-count=100 ${env}" >> ${testlist_cvar}
-        echo "allred 4 arg=-count=100 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-        echo "allred 4 arg=-count=100 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-        echo "allred 4 arg=-count=100 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
         echo "allred 7 arg=-count=10 ${env}" >> ${testlist_cvar}
-        echo "allred 7 arg=-count=10 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-        echo "allred 7 arg=-count=10 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-        echo "allred 7 arg=-count=10 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
         echo "allredmany 4 ${env}" >> ${testlist_cvar}
         echo "allred2 4 ${env}" >> ${testlist_cvar}
-        echo "allred2 4 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-        echo "allred2 4 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-        echo "allred2 4 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
         echo "allred3 10 ${env}" >> ${testlist_cvar}
         echo "allred4 4 ${env}" >> ${testlist_cvar}
         echo "allred5 5 ${env}" >> ${testlist_cvar}
@@ -463,9 +423,6 @@ for algo_name in ${algo_names}; do
 
     echo "scantst 4 ${env}" >> ${testlist_cvar}
     echo "op_coll 4 ${env}" >> ${testlist_cvar}
-    echo "op_coll 4 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-    echo "op_coll 4 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-    echo "op_coll 4 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
     env=""
 done
 
