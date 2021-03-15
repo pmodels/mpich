@@ -101,7 +101,7 @@ static void update_type_indexed(MPI_Aint count, const MPI_Aint * blocklength_arr
         old_extent = el_sz;
         old_is_contig = 1;
 
-        MPIR_Assign_trunc(newtype->alignsize, el_sz, MPI_Aint);
+        newtype->alignsize = MPIR_Datatype_builtintype_alignment(oldtype);
         newtype->builtin_element_size = el_sz;
         newtype->basic_type = oldtype;
     } else {
