@@ -70,6 +70,141 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 }
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__IMPLICIT
+MPL_STATIC_INLINE_PREFIX int MPIDI_int_to_vci(int i)
+{
+    /* Remove the sign bit if present and bound the value within n_vcis */
+    return ((i) & ~(1 << (sizeof(int) * 8 - 1))) % MPIDI_global.n_vcis;
+}
+
+/* Map comm to vci_idx */
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_to_vci(MPIR_Context_id_t context_id)
+{
+    return MPIDI_int_to_vci(MPIR_CONTEXT_READ_FIELD(PREFIX, context_id));
+}
+
+/* Map comm and rank to vci_idx */
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_rank_to_vci(MPIR_Context_id_t context_id, int rank)
+{
+    return MPIDI_int_to_vci(MPIR_CONTEXT_READ_FIELD(PREFIX, context_id) + rank);
+}
+
+/* Map comm and tag to vci_idx */
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_tag_to_vci(MPIR_Context_id_t context_id, int tag)
+{
+    return MPIDI_int_to_vci(MPIR_CONTEXT_READ_FIELD(PREFIX, context_id) + tag);
+}
+
+/* Map comm, rank, and tag to vci_idx */
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_rank_tag_to_vci(MPIR_Context_id_t context_id,
+                                                                 int rank, int tag)
+{
+    return MPIDI_int_to_vci(MPIR_CONTEXT_READ_FIELD(PREFIX, context_id) + rank + tag);
+}
+
+/* Return VCI index of a send transmit context.
+ * Used for two purposes:
+ *   1. For the sender side to determine which VCI index of a transmit context
+ *      to send a message from
+ *   2. For the receiver side to determine which VCI of the remote peer to address
+ *      to when sending ack for sync sends
+ * Note: the unused parameters can be used in future
+ *
+ * ctxid_in_effect: communicator's context ID used to calculate the VCI index.
+ *   For an intercommunicator, the right one may be either comm->context_id
+ *   or comm->recvcontext_id, depending on situation.
+ *   This parameter allows caller to explicitly specify context ID.
+ *
+ * When this function is called from the sender side, ctxid_in_effect should be comm->context_id.
+ * Otherwise (receiver side), it should be comm->recvcontext_id.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_get_sender_vci(MPIR_Comm * comm,
+                                                  MPIR_Context_id_t ctxid_in_effect,
+                                                  int sender_rank, int receiver_rank, int tag)
+{
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    MPIR_Assert(comm);
+    int vci_idx = MPIDI_VCI_INVALID;
+    bool use_user_defined_vci = (comm->hints[MPIR_COMM_HINT_VCI_IDX_SENDER] != MPIDI_VCI_INVALID);
+    bool use_tag = comm->hints[MPIR_COMM_HINT_NO_ANY_TAG];
+
+    /* Compute vci_idx if user did not provide it */
+    if (!use_user_defined_vci) {
+        if (use_tag) {
+            vci_idx = MPIDI_map_contextid_rank_tag_to_vci(ctxid_in_effect, receiver_rank, tag);
+        } else {
+            /* General unoptimized case */
+            vci_idx = MPIDI_map_contextid_rank_to_vci(ctxid_in_effect, receiver_rank);
+        }
+    } else {
+        /* Read user provided value */
+        vci_idx = comm->hints[MPIR_COMM_HINT_VCI_IDX_SENDER];
+    }
+    MPIR_Assert(vci_idx >= 0 && vci_idx < MPIDI_global.n_vcis);
+    return vci_idx;
+#else
+    return 0;
+#endif
+}
+
+/* Return VCI index of a receive transmit context.
+ * Used for two purposes:
+ *   1. For the receive side to determine where to post a receive call
+ *   2. For the sender side to determine which VCI in the remote peer to address to
+ * Note: the unused parameters can be used in future
+ *
+ * ctxid_in_effect: communicator's context ID used to calculate the VCI index.
+ *   For an intercommunicator, the right one may be either comm->context_id
+ *   or comm->recvcontext_id, depending on situation.
+ *   This parameter allows caller to explicitly specify context ID.
+ *
+ * When this function is called from the sender side, ctxid_in_effect should be comm->context_id.
+ * Otherwise (receiver side), it should be comm->recvcontext_id.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_get_receiver_vci(MPIR_Comm * comm,
+                                                    MPIR_Context_id_t ctxid_in_effect,
+                                                    int sender_rank, int receiver_rank, int tag)
+{
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    MPIR_Assert(comm);
+    int vci_idx = MPIDI_VCI_INVALID;
+    bool use_user_defined_vci = (comm->hints[MPIR_COMM_HINT_VCI_IDX_RECEIVER] != MPIDI_VCI_INVALID);
+    bool use_tag = comm->hints[MPIR_COMM_HINT_NO_ANY_TAG];
+    bool use_source = comm->hints[MPIR_COMM_HINT_NO_ANY_SOURCE];
+
+    /* Compute vci_idx if user did not provide it */
+    if (!use_user_defined_vci) {
+        /* If mpi_any_tag and mpi_any_source can be used for recv, all messages
+         * should be received on a single vci. Otherwise, messages sent from a
+         * rank can concurrently match at different vcis. This can allow a
+         * mesasge to be received in different order than it was sent. We
+         * should avoid this.
+         * However, if we know mpi_any_source and MPI_any_tag are absent, we
+         * don't have this risk and hence we can utilize multiple vcis on the
+         * receive side.
+         */
+        if (use_tag && use_source) {
+            vci_idx = MPIDI_map_contextid_rank_tag_to_vci(ctxid_in_effect, sender_rank, tag);
+        } else if (use_source) {
+            vci_idx = MPIDI_map_contextid_rank_to_vci(ctxid_in_effect, sender_rank);
+        } else if (use_tag) {
+            vci_idx = MPIDI_map_contextid_tag_to_vci(ctxid_in_effect, tag);
+        } else {
+            /* General unoptimized case */
+            vci_idx = MPIDI_map_contextid_to_vci(ctxid_in_effect);
+        }
+    } else {
+        /* Read user provided value */
+        vci_idx = comm->hints[MPIR_COMM_HINT_VCI_IDX_RECEIVER];
+    }
+
+    MPIR_Assert(vci_idx >= 0 && vci_idx < MPIDI_global.n_vcis);
+    return vci_idx;
+#else
+    return 0;
+#endif
+}
+
+
 /* Figure out vci based on (comm, rank, tag) plus hints
  * This is essentially an "auto" method, we use "implicit" as a contrast * to "explicit", which could be available with, e.g. MPI endpoints.
  */
