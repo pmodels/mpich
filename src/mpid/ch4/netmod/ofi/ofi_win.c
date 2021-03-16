@@ -144,13 +144,20 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     int rc = 0, allrc = 0;
     MPIDI_OFI_WIN(win).mr = NULL;
     if (base || (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC && !MPIDI_OFI_ENABLE_MR_ALLOCATED)) {
+        size_t len;
+        if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+            len = UINTPTR_MAX - (uintptr_t) base;
+        } else {
+            len = (size_t) win->size;
+        }
+
         /* device buffers are not currently supported */
         if (MPIR_GPU_query_pointer_is_dev(base))
             rc = -1;
         else
             MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,     /* In:  Domain Object */
                                             base,       /* In:  Lower memory address */
-                                            win->size,  /* In:  Length              */
+                                            len,        /* In:  Length              */
                                             FI_REMOTE_READ | FI_REMOTE_WRITE,   /* In:  Expose MR for read  */
                                             0ULL,       /* In:  offset(not used)    */
                                             MPIDI_OFI_WIN(win).mr_key,  /* In:  requested key       */
@@ -776,11 +783,6 @@ int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
-        /* FIXME: should the OFI specific size be stored inside OFI rather
-         * than overwriting CH4 info ? Now we simply followed original
-         * create_dynamic routine.*/
-        win->size = (uintptr_t) UINTPTR_MAX - (uintptr_t) MPI_BOTTOM;
-
         mpi_errno = win_init(win);
         MPIR_ERR_CHECK(mpi_errno);
 
