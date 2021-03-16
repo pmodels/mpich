@@ -19,7 +19,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j, t;
-    int num_chunks, chunk_size_floor, chunk_size_ceil;
+    MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
     size_t extent, type_size;
     MPI_Aint type_lb, true_extent;

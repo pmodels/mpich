@@ -58,7 +58,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr);
  * shm bcast buffer before notifying the children. Children copy the data out of shm buffer when
  * notified by the parent */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_buf,
-                                                                    const int count,
+                                                                    MPI_Aint count,
                                                                     MPI_Datatype datatype,
                                                                     const int root,
                                                                     MPIR_Comm * comm_ptr,
@@ -266,7 +266,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
  * Children notify the parent when it arrives. In case of Reduce, each rank places its data in shm
  * reduce buffer. A parent reduces all its children data with its own before notifying its parent. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *inbuf, void *outbuf,
-                                                                   const int count,
+                                                                   MPI_Aint count,
                                                                    MPI_Datatype datatype, MPI_Op op,
                                                                    const int root,
                                                                    MPIR_Comm * comm_ptr,

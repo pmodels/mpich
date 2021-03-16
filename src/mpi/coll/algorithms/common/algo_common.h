@@ -16,13 +16,15 @@ static int MPII_Algo_compare_int(const void *a, const void *b)
 }
 
 /* Avoid unused function warning in certain configurations */
-static inline int MPIR_Algo_calculate_pipeline_chunk_info(int chunk_size, int type_size, int count,
-                                                          int *num_segments, int *segsize_floor,
-                                                          int *segsize_ceil) ATTRIBUTE((unused));
-static inline int MPIR_Algo_calculate_pipeline_chunk_info(int chunk_size,
-                                                          int type_size, int count,
-                                                          int *num_segments,
-                                                          int *segsize_floor, int *segsize_ceil)
+static inline int MPIR_Algo_calculate_pipeline_chunk_info(MPI_Aint chunk_size, MPI_Aint type_size,
+                                                          MPI_Aint count, MPI_Aint * num_segments,
+                                                          MPI_Aint * segsize_floor,
+                                                          MPI_Aint *
+                                                          segsize_ceil) ATTRIBUTE((unused));
+static inline int MPIR_Algo_calculate_pipeline_chunk_info(MPI_Aint chunk_size, MPI_Aint type_size,
+                                                          MPI_Aint count, MPI_Aint * num_segments,
+                                                          MPI_Aint * segsize_floor,
+                                                          MPI_Aint * segsize_ceil)
 {
     int maxelems;
     int mpi_errno = MPI_SUCCESS;
