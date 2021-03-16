@@ -208,11 +208,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_receiver_vci(MPIR_Comm * comm,
 /* Figure out vci based on (comm, rank, tag) plus hints
  * This is essentially an "auto" method, we use "implicit" as a contrast * to "explicit", which could be available with, e.g. MPI endpoints.
  */
-#error "MPICH_VCI__IMPLICIT not implemented."
 MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
                                            int src_rank, int dst_rank, int tag)
 {
-    return 0;
+    int ctxid_in_effect;
+    if (!(flag & 0x2)) {
+        /* called from sender */
+        ctxid_in_effect = comm_ptr->context_id;
+    } else {
+        /* called from receiver */
+        ctxid_in_effect = comm_ptr->recvcontext_id;
+    }
+
+    if (!(flag & 0x1)) {
+        /* src */
+        return MPIDI_get_sender_vci(comm_ptr, ctxid_in_effect, src_rank, dst_rank, tag);
+    } else {
+        /* dst */
+        return MPIDI_get_receiver_vci(comm_ptr, ctxid_in_effect, src_rank, dst_rank, tag);
+    }
 }
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__EXPLICIT
