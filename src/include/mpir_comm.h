@@ -88,6 +88,8 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
      * Potentially, we can use macros and configure to hide them */
     MPIR_COMM_HINT_EAGER_THRESH,        /* ch3 */
     MPIR_COMM_HINT_EAGAIN,      /* ch4:ofi */
+    MPIR_COMM_HINT_VCI_IDX_SENDER,      /* ch4 */
+    MPIR_COMM_HINT_VCI_IDX_RECEIVER,    /* ch4 */
     /* dynamic hints starts here */
     MPIR_COMM_HINT_PREDEFINED_COUNT
 };

@@ -11,6 +11,7 @@
 /* vci is embedded in the request's pool index */
 
 #define MPIDI_Request_get_vci(req) MPIR_REQUEST_POOL(req)
+#define MPIDI_VCI_INVALID (-1)
 
 /* VCI hashing function (fast path)
  * NOTE: The returned vci should always MOD NUMVCIS, where NUMVCIS is

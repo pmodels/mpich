@@ -1208,4 +1208,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_rma_set_am_flag(void)
     MPL_atomic_store_int(&MPIDIG_global.rma_am_flag, 1);
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_sender_vci(MPIR_Comm * comm, int type, int value)
+{
+    comm->hints[MPIR_COMM_HINT_VCI_IDX_SENDER] = value % MPIDI_global.n_vcis;
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_receiver_vci(MPIR_Comm * comm, int type, int value)
+{
+    comm->hints[MPIR_COMM_HINT_VCI_IDX_RECEIVER] = value % MPIDI_global.n_vcis;
+    return MPI_SUCCESS;
+}
+
 #endif /* CH4_IMPL_H_INCLUDED */

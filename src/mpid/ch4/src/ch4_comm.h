@@ -11,6 +11,10 @@
 int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
                           MPIR_Comm ** newcomm_ptr);
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_sender_vci(MPIR_Comm * comm, int type, int value);
+MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_receiver_vci(MPIR_Comm * comm, int type,
+                                                              int value);
+
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_AS_ENABLED);
