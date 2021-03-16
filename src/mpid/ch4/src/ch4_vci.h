@@ -69,14 +69,86 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 }
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__IMPLICIT
+
+/* Return VCI index of a send transmit context.
+ * Used for two purposes:
+ *   1. For the sender side to determine which VCI index of a transmit context
+ *      to send a message from
+ *   2. For the receiver side to determine which VCI of the remote peer to address
+ *      to when sending ack for sync sends
+ * Note: the unused parameters can be used in future
+ *
+ * ctxid_in_effect: communicator's context ID used to calculate the VCI index.
+ *   For an intercommunicator, the right one may be either comm->context_id
+ *   or comm->recvcontext_id, depending on situation.
+ *   This parameter allows caller to explicitly specify context ID.
+ *
+ * When this function is called from the sender side, ctxid_in_effect should be comm->context_id.
+ * Otherwise (receiver side), it should be comm->recvcontext_id.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_get_sender_vci(MPIR_Comm * comm,
+                                                  MPIR_Context_id_t ctxid_in_effect,
+                                                  int sender_rank, int receiver_rank, int tag)
+{
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    MPIR_Assert(comm);
+    /* TODO: implement implicit hashing using other parameters */
+    return comm->seq;
+#else
+    return 0;
+#endif
+}
+
+/* Return VCI index of a receive transmit context.
+ * Used for two purposes:
+ *   1. For the receive side to determine where to post a receive call
+ *   2. For the sender side to determine which VCI in the remote peer to address to
+ * Note: the unused parameters can be used in future
+ *
+ * ctxid_in_effect: communicator's context ID used to calculate the VCI index.
+ *   For an intercommunicator, the right one may be either comm->context_id
+ *   or comm->recvcontext_id, depending on situation.
+ *   This parameter allows caller to explicitly specify context ID.
+ *
+ * When this function is called from the sender side, ctxid_in_effect should be comm->context_id.
+ * Otherwise (receiver side), it should be comm->recvcontext_id.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_get_receiver_vci(MPIR_Comm * comm,
+                                                    MPIR_Context_id_t ctxid_in_effect,
+                                                    int sender_rank, int receiver_rank, int tag)
+{
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    MPIR_Assert(comm);
+    /* TODO: implement implicit hashing using other parameters */
+    return comm->seq;
+#else
+    return 0;
+#endif
+}
+
+
 /* Figure out vci based on (comm, rank, tag) plus hints
  * This is essentially an "auto" method, we use "implicit" as a contrast * to "explicit", which could be available with, e.g. MPI endpoints.
  */
-#error "MPICH_VCI__IMPLICIT not implemented."
 MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
                                            int src_rank, int dst_rank, int tag)
 {
-    return 0;
+    int ctxid_in_effect;
+    if (!(flag & 0x2)) {
+        /* called from sender */
+        ctxid_in_effect = comm_ptr->context_id;
+    } else {
+        /* called from receiver */
+        ctxid_in_effect = comm_ptr->recvcontext_id;
+    }
+
+    if (!(flag & 0x1)) {
+        /* src */
+        return MPIDI_get_sender_vci(comm_ptr, ctxid_in_effect, src_rank, dst_rank, tag);
+    } else {
+        /* dst */
+        return MPIDI_get_receiver_vci(comm_ptr, ctxid_in_effect, src_rank, dst_rank, tag);
+    }
 }
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__EXPLICIT
