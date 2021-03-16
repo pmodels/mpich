@@ -58,7 +58,7 @@ typedef struct MPIDI_UCX_win_target_sync {
 } MPIDI_UCX_win_target_sync_t;
 
 typedef struct {
-    MPIDI_UCX_win_info_t *info_table;
+    MPIDI_UCX_win_info_t *info_table;   /* NULL indicates AM fallback for entire win */
     ucp_mem_h mem_h;
     bool mem_mapped;            /* Indicate whether mem_h has been mapped (e.g., supported mem type).
                                  * Set at win init and checked at win free for mem_unmap */

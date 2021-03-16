@@ -106,7 +106,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
      * then we need our fallback-solution */
 
     int vni = MPIDI_UCX_get_win_vni(win);
-    bool all_reachable = true;
+    bool all_reachable = true, none_reachable = true;
     for (i = 0; i < comm_ptr->local_size; i++) {
         /* Skip unmapped remote region. */
         if (rkey_sizes[i] == 0) {
@@ -121,9 +121,15 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
         if (status == UCS_ERR_UNREACHABLE) {
             all_reachable = false;
             MPIDI_UCX_WIN_INFO(win, i).rkey = NULL;
-        } else
+        } else {
             MPIDI_UCX_CHK_STATUS(status);
+            none_reachable = false;
+        }
     }
+
+    if (none_reachable)
+        goto am_fallback;
+
     share_data = MPL_malloc(comm_ptr->local_size * sizeof(struct ucx_share), MPL_MEM_OTHER);
 
     share_data[comm_ptr->rank].disp = disp_unit;
@@ -158,6 +164,9 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     MPL_free(recv_disps);
     MPL_free(rkey_recv_buff);
     return mpi_errno;
+  am_fallback:
+    MPL_free(MPIDI_UCX_WIN(win).info_table);
+    MPIDI_UCX_WIN(win).info_table = NULL;
   fn_fail:
     goto fn_exit;
 }
@@ -295,10 +304,12 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
 
-    int i;
-    for (i = 0; i < win->comm_ptr->local_size; i++) {
-        if (MPIDI_UCX_WIN_INFO(win, i).rkey) {
-            ucp_rkey_destroy(MPIDI_UCX_WIN_INFO(win, i).rkey);
+    if (MPIDI_UCX_WIN(win).info_table) {
+        int i;
+        for (i = 0; i < win->comm_ptr->local_size; i++) {
+            if (MPIDI_UCX_WIN_INFO(win, i).rkey) {
+                ucp_rkey_destroy(MPIDI_UCX_WIN_INFO(win, i).rkey);
+            }
         }
     }
 
