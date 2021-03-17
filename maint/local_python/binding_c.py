@@ -45,23 +45,30 @@ def dump_mpi_c(func, map_type="SMALL"):
                 G.out.append("#include \"%s\"" % a)
 
     G.out.append("")
+
     dump_profiling(func)
 
     if 'polymorph' in func:
         # MPII_ function to support C/Fortran Polymorphism, eg MPI_Comm_get_attr
-        # It needs go inside "#ifndef MPICH_MPI_FROM_PMPI"
-        G.out.pop() # #endif from dump_profiling()
-        dump_function(func, kind="polymorph")
+        G.out.append("#ifndef MPICH_MPI_FROM_PMPI")
+        dump_function_internal(func, kind="polymorph")
         G.out.append("#endif /* MPICH_MPI_FROM_PMPI */")
+        G.out.append("")
 
-    G.out.append("")
-    dump_manpage(func)
     if 'polymorph' in func:
-        dump_function(func, kind="call-polymorph")
+        dump_function_internal(func, kind="call-polymorph")
     elif 'replace' in func and 'body' not in func:
-        dump_function(func, kind="call-replace")
+        dump_function_internal(func, kind="call-replace")
     else:
-        dump_function(func, kind="normal")
+        dump_function_internal(func, kind="normal")
+    G.out.append("")
+
+    dump_manpage(func)
+    G.out.append("")
+
+    # Create the MPI and QMPI wrapper functions that will call the above, "real" version of the
+    # funcion in the MPII prefix
+    dump_qmpi_wrappers(func, func['_map_type'])
 
 def get_func_file_path(func, root_dir):
     file_path = None
@@ -155,13 +162,36 @@ def dump_mpir_impl_h(f):
         print("", file=Out)
         print("#endif /* MPIR_IMPL_H_INCLUDED */", file=Out)
 
+def get_qmpi_decl_from_func_decl(func_decl):
+    func_decl = re.sub('\(void\)', '()', func_decl, 1)
+    func_decl = re.sub(' MPI', ' QMPI', func_decl, 1)
+    func_decl = re.sub('\(', '(QMPI_Context context, int tool_id, ', func_decl, 1)
+    func_decl = re.sub(', \)', ')', func_decl, 1) # Remove the extra comma from the previous
+                                                  # line (if there is one)
+    return func_decl
+
+def get_qmpi_typedef_from_func_decl(func_decl):
+    func_decl = re.sub('\(void\)', '()', func_decl, 1)
+    func_decl = re.sub(" MPI", " QMPI", func_decl, 1)
+    func_decl = re.sub("\(", "_t) (QMPI_Context context, int tool_id, ", func_decl, 1)
+    func_decl = re.sub(', \)', ')', func_decl, 1) # Remove the extra comma from the previous
+                                                  # line (if there is one)
+    func_decl = re.sub("QMPI", "(QMPI", func_decl, 1)
+    func_decl = re.sub("^", "typedef ", func_decl, 1)
+    func_decl = re.sub("\s*$", ";", func_decl, 1)
+    func_decl = re.sub(" MPICH_API_PUBLIC", "", func_decl, 1)
+    func_decl = re.sub(" MPICH_ATTR_POINTER_WITH_TYPE_TAG\(.*,.*\)", "", func_decl, 1)
+    return func_decl
+
 def dump_mpi_proto_h(f):
+    def dump_line(s, tail, Out):
+        tlist = split_line_with_break(s, tail, 100)
+        for l in tlist:
+            print(l, file=Out)
     def dump_proto_line(l, Out):
         if RE.match(r'(.*?\))\s+(MPICH.*)', l):
             s, tail = RE.m.group(1,2)
-            tlist = split_line_with_break(s, tail + ';', 100)
-            for l in tlist:
-                print(l, file=Out)
+            dump_line(s, tail + ';', Out)
 
     # -- sort the prototypes into groups --
     list_a = []  # prototypes the fortran needs
@@ -208,6 +238,52 @@ def dump_mpi_proto_h(f):
             dump_proto_line(re.sub(' MPI', ' PMPI', l, 1), Out)
         print("", file=Out)
 
+        # -- QMPI function enum --
+        # We need this all the time to avoid unknown types
+        print("enum QMPI_Functions_enum {", file=Out)
+        for l in G.mpi_declares:
+            m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', l);
+            func_name = m.group(1);
+            if func_name.lower() in G.FUNCS:
+                func = G.FUNCS[func_name.lower()];
+                if 'dir' not in func or 'not_implemented' in func:
+                    continue
+                if re.match(r'MPI_DUP_FN', func['name']):
+                    continue
+            print("    " + func_name.upper() + "_T,", file=Out)
+        print("    MPI_LAST_FUNC_T", file=Out)
+        print("};", file=Out)
+        print("", file=Out)
+
+        # -- QMPI prototypes --
+        for func_decl in G.mpi_declares:
+            m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
+            func_name = m.group(1);
+            if func_name.lower() in G.FUNCS:
+                func = G.FUNCS[func_name.lower()];
+                if 'dir' not in func or 'not_implemented' in func:
+                    continue
+                if re.match(r'MPI_DUP_FN', func['name']):
+                    continue
+            func_decl = get_qmpi_decl_from_func_decl(func_decl)
+            dump_proto_line(func_decl, Out)
+
+        print("", file=Out)
+
+        # -- QMPI function typedefs --
+        for func_decl in G.mpi_declares:
+            m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
+            func_name = m.group(1);
+            if func_name.lower() in G.FUNCS:
+                func = G.FUNCS[func_name.lower()];
+                if 'dir' not in func or 'not_implemented' in func:
+                    continue
+                if re.match(r'MPI_DUP_FN', func['name']):
+                    continue
+            func_decl = get_qmpi_typedef_from_func_decl(func_decl)
+            dump_line(func_decl, '', Out)
+        print("", file=Out)
+
         print("#endif /* MPI_PROTO_H_INCLUDED */", file=Out)
 
 def dump_errnames_txt(f):
@@ -217,7 +293,7 @@ def dump_errnames_txt(f):
             print(l, file=Out)
         for l in G.mpi_errnames:
             print(l, file=Out)
-        
+
 def dump_mtest_mpix_h(f):
     print("  --> [%s]" % f)
     with open(f, "w") as Out:
@@ -228,6 +304,37 @@ def dump_mtest_mpix_h(f):
             print("#define %s %s" % (a, re.sub(r'MPI_', 'MPIX_', a)), file=Out)
         print("", file=Out)
         print("#endif /* MTEST_MPIX_H_INCLUDED */", file=Out)
+
+def dump_qmpi_register_h(f):
+    print("  --> [%s]" %f)
+    with open(f, "w") as Out:
+        for l in G.copyright_c:
+            print(l, file=Out)
+        print("#ifndef QMPI_REGISTER_H_INCLUDED", file=Out)
+        print("#define QMPI_REGISTER_H_INCLUDED", file=Out)
+        print("", file=Out)
+        print("#ifdef ENABLE_QMPI", file=Out)
+        print("", file=Out)
+        print("static inline int MPII_qmpi_register_internal_functions(void)", file=Out)
+        print("{", file=Out)
+        for l in G.mpi_declares:
+            m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', l);
+            func_name = m.group(1);
+            if func_name.lower() in G.FUNCS:
+                func = G.FUNCS[func_name.lower()];
+                if 'dir' not in func or 'not_implemented' in func:
+                    continue
+                if re.match(r'MPI_DUP_FN', func['name']):
+                    continue
+            print("    MPIR_QMPI_pointers[%s_T] = (void (*)(void)) &Q%s;" % (func_name.upper(),
+                func_name), file=Out)
+        print("", file=Out)
+        print("    return MPI_SUCCESS;", file=Out)
+        print("}", file=Out)
+        print("", file=Out)
+        print("#endif /* ENABLE_QMPI */", file=Out)
+        print("", file=Out)
+        print("#endif /* QMPI_REGISTER_H_INCLUDED */", file=Out)
 
 # ---- pre-processing  ----
 
@@ -587,6 +694,66 @@ def dump_copy_right():
     G.out.append(" */")
     G.out.append("")
 
+def dump_qmpi_wrappers(func, mapping):
+    parameters = ""
+    for p in func['c_parameters']:
+        parameters = parameters + ", " + p['name']
+
+    func_name = get_function_name(func, mapping)
+    func_decl = get_declare_function(func, mapping)
+    qmpi_decl = get_qmpi_decl_from_func_decl(func_decl)
+
+    static_call = re.sub(r'MPI(X?)_', r'internal\1_', func_name, 1)
+    static_call = static_call + "(" + get_function_args(func) + ")"
+
+    G.out.append("#ifdef ENABLE_QMPI")
+    G.out.append("#ifndef MPICH_MPI_FROM_PMPI")
+    dump_line_with_break(qmpi_decl)
+    G.out.append("{")
+    if func_name == "MPI_Pcontrol":
+        G.out.append("    va_list varargs;")
+        G.out.append("    va_start(varargs, level);")
+        G.out.append("")
+    G.out.append("    return " + static_call + ";")
+    G.out.append("}")
+    G.out.append("#endif /* MPICH_MPI_FROM_PMPI */")
+
+    dump_line_with_break(func_decl)
+    G.out.append("{")
+    G.out.append("    QMPI_Context context;")
+    G.out.append("    Q%s_t *fn_ptr;" % (func_name))
+    G.out.append("")
+    G.out.append("    context.storage_stack = NULL;")
+    G.out.append("")
+    if func_name == "MPI_Pcontrol":
+        G.out.append("    va_list varargs;")
+        G.out.append("    va_start(varargs, level);")
+        G.out.append("")
+    if "initcheck" in func['skip']:
+        G.out.append("    int mpi_errno = MPI_SUCCESS;")
+        G.out.append("    mpi_errno = MPII_qmpi_init();")
+        G.out.append("    if (mpi_errno != MPI_SUCCESS) {")
+        G.out.append("        return mpi_errno;")
+        G.out.append("    }")
+        G.out.append("")
+    G.out.append("    if (MPIR_QMPI_num_tools == 0)")
+    dump_line_with_break("        return Q%s(context, 0%s);" % (func_name, parameters))
+    G.out.append("")
+    dump_line_with_break("    fn_ptr = (Q%s_t *) MPIR_QMPI_first_fn_ptrs[%s_T];" % (func_name, func_name.upper()))
+    G.out.append("")
+    dump_line_with_break("    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[%s_T]%s);" % (func_name.upper(), parameters));
+    G.out.append("}")
+    G.out.append("#else /* ENABLE_QMPI */")
+    dump_line_with_break(func_decl)
+    G.out.append("{")
+    if func_name == "MPI_Pcontrol":
+        G.out.append("    va_list varargs;")
+        G.out.append("    va_start(varargs, level);")
+        G.out.append("")
+    G.out.append("    return " + static_call + ";")
+    G.out.append("}")
+    G.out.append("#endif /* ENABLE_QMPI */")
+
 def dump_profiling(func):
     func_name = get_function_name(func, func['_map_type'])
     G.out.append("/* -- Begin Profiling Symbol Block for routine %s */" % func_name)
@@ -608,8 +775,8 @@ def dump_profiling(func):
     G.out.append("#ifndef MPICH_MPI_FROM_PMPI")
     G.out.append("#undef %s" % func_name)
     G.out.append("#define %s P%s" % (func_name, func_name))
+    G.out.append("#endif /* MPICH_MPI_FROM_PMPI */")
     G.out.append("")
-    G.out.append("#endif")
 
 def dump_manpage(func):
     G.out.append("/*@")
@@ -698,8 +865,13 @@ def dump_manpage_list(list, header):
             G.out.append("%s %s - %s" % (lead, p['name'], p['desc']))
     G.out.append("")
 
+def get_function_internal_prototype(func_decl):
+    func_decl = re.sub(r'MPI(X?)_([a-zA-Z0-9_]*\()', r'internal\1_\2', func_decl, 1)
+    func_decl = "static " + func_decl
+    return func_decl
+
 # ---- the function part ----
-def dump_function(func, kind):
+def dump_function_internal(func, kind):
     """Appends to G.out array the MPI function implementation."""
     func_name = get_function_name(func, func['_map_type']);
     state_name = "MPID_STATE_" + func_name.upper()
@@ -707,12 +879,15 @@ def dump_function(func, kind):
     s = get_declare_function(func, func['_map_type'])
     if kind == "polymorph":
         (extra_param, extra_arg) = get_polymorph_param_and_arg(func['polymorph'])
-        s = re.sub(r'MPIX?_', 'MPII_', s, 1)
+        s = re.sub(r'MPI(X?)_([a-zA-Z0-9_]*\()', r'MPI\1I_\2', s, 1)
         s = re.sub(r'\)$', ', '+extra_param+')', s)
         # prepare for the latter body of routines calling MPIR impl
         RE.search(r'(\w+)$', extra_param)
         func['_impl_arg_list'].append(RE.m.group(1))
         func['_impl_param_list'].append(extra_param)
+    else:
+        G.out.append("")
+        s = get_function_internal_prototype(s)
 
     dump_line_with_break(s)
     G.out.append("{")
@@ -723,7 +898,7 @@ def dump_function(func, kind):
         dump_function_direct(func, state_name)
     elif kind == 'call-polymorph':
         (extra_param, extra_arg) = get_polymorph_param_and_arg(func['polymorph'])
-        repl_name = re.sub(r'MPIX?_', 'MPII_', func_name, 1)
+        repl_name = re.sub(r'MPI(X?)_', r'MPI\1I_', func_name, 1)
         repl_args = get_function_args(func) + ', ' + extra_arg
         repl_call = "mpi_errno = %s(%s);" % (repl_name, repl_args)
         dump_function_replace(func, state_name, repl_call)

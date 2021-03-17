@@ -1112,6 +1112,7 @@
 /mpi_t/getindex
 /mpi_t/mpi_t_str
 /mpi_t/mpit_vars
+/mpi_t/qmpi_test
 /perf/allredtrace
 /perf/commcreatep
 /perf/dtpack

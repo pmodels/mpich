@@ -51,6 +51,7 @@ def main():
     dump_Makefile_mk("%s/Makefile.mk" % c_dir)
     dump_mpir_impl_h("src/include/mpir_impl.h")
     dump_errnames_txt("%s/errnames.txt" % c_dir)
+    dump_qmpi_register_h("src/mpi_t/qmpi_register.h")
     dump_mpi_proto_h("src/include/mpi_proto.h")
     dump_mtest_mpix_h("test/mpi/include/mtest_mpix.h")
 
