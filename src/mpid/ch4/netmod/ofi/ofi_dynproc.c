@@ -22,6 +22,8 @@ int MPIDI_OFI_dynproc_init(void)
     MPIDI_OFI_global.conn_mgr.n_conn = 0;
     MPIDI_OFI_global.conn_mgr.max_n_conn = 0;
     MPIDI_OFI_global.conn_mgr.conn_table = NULL;
+    MPIDI_OFI_global.conn_mgr.n_free = 0;
+    MPIDI_OFI_global.conn_mgr.free_stack = NULL;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_INIT);
@@ -98,6 +100,7 @@ int MPIDI_OFI_dynproc_finalize(void)
     }
 
     MPL_free(MPIDI_OFI_global.conn_mgr.conn_table);
+    MPL_free(MPIDI_OFI_global.conn_mgr.free_stack);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_DESTROY);
     return mpi_errno;
@@ -216,6 +219,10 @@ static int dynproc_grow_conn_table(int new_max)
                                                        MPL_MEM_OTHER);
     MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.conn_table == NULL, mpi_errno, MPI_ERR_NO_MEM,
                         goto fn_fail, "**nomem");
+    MPIDI_OFI_global.conn_mgr.free_stack = MPL_realloc(MPIDI_OFI_global.conn_mgr.free_stack,
+                                                       new_max * sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.free_stack == NULL, mpi_errno, MPI_ERR_NO_MEM,
+                        goto fn_fail, "**nomem");
 
     MPIDI_OFI_global.conn_mgr.max_n_conn = new_max;
     for (int i = old_max; i < new_max; i++) {
@@ -233,20 +240,24 @@ static int dynproc_get_next_conn_id(int *conn_id_out)
     int mpi_errno = MPI_SUCCESS;
     int conn_id;
 
-    conn_id = MPIDI_OFI_global.conn_mgr.n_conn;
-    MPIDI_OFI_global.conn_mgr.n_conn++;
-    /* TODO: add a free list */
-    if (MPIDI_OFI_global.conn_mgr.n_conn <= MPIDI_OFI_global.conn_mgr.max_n_conn) {
-        int new_max;
-        if (new_max == 0) {
-            new_max = INITIAL_NUM_CONN;
-        } else {
-            new_max = MPIDI_OFI_global.conn_mgr.max_n_conn * 2;
-        }
-        mpi_errno = dynproc_grow_conn_table(new_max);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+    if (MPIDI_OFI_global.conn_mgr.n_free > 0) {
+        MPIDI_OFI_global.conn_mgr.n_free--;
+        conn_id = MPIDI_OFI_global.conn_mgr.free_stack[MPIDI_OFI_global.conn_mgr.n_free];
+    } else {
+        conn_id = MPIDI_OFI_global.conn_mgr.n_conn;
+        MPIDI_OFI_global.conn_mgr.n_conn++;
 
+        if (MPIDI_OFI_global.conn_mgr.n_conn > MPIDI_OFI_global.conn_mgr.max_n_conn) {
+            int new_max;
+            if (MPIDI_OFI_global.conn_mgr.max_n_conn == 0) {
+                new_max = INITIAL_NUM_CONN;
+            } else {
+                new_max = MPIDI_OFI_global.conn_mgr.max_n_conn * 2;
+            }
+            mpi_errno = dynproc_grow_conn_table(new_max);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
     *conn_id_out = conn_id;
 
   fn_exit:

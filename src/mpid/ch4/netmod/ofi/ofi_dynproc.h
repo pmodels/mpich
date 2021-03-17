@@ -25,6 +25,12 @@ typedef struct MPIDI_OFI_conn_manager_t {
     int n_conn;                 /* Current number of open connections */
     int max_n_conn;             /* size of connection table */
     MPIDI_OFI_conn_t *conn_table;       /* connection table */
+    /* maintain free conn_id in a stack, n_free is the stack pointer.
+     * free_stack has the same size as max_n_conn since ever connection may
+     * disconnect and pushed to the free_stack.
+     */
+    int n_free;
+    int *free_stack;
 } MPIDI_OFI_conn_manager_t;
 
 int MPIDI_OFI_dynproc_init(void);
