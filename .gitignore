@@ -539,6 +539,9 @@ Makefile.am-stamp
 
 # /src/mpi/spawn/
 
+# /src/mpi_t/
+/src/mpi_t/qmpi_register.h
+
 # /src/mpid/ch3/channels/nemesis/nemesis/src/
 /src/mpid/ch3/channels/nemesis/src/mpid_nem_net_array.c
 

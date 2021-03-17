@@ -555,6 +555,19 @@ AC_ARG_ENABLE(weak-symbols,
 			[Use weak symbols to implement PMPI routines (default)]),,
 		enable_weak_symbols=yes)
 
+AC_ARG_ENABLE(qmpi,
+	AC_HELP_STRING([--enable-qmpi],
+			[Enable QMPI support (default)]),,
+		enable_qmpi=no)
+
+if test "$enable_qmpi" = "yes" ; then
+    AC_DEFINE(ENABLE_QMPI,1,[Define if QMPI enabled])
+    ENABLE_QMPI=1
+else
+    ENABLE_QMPI=0
+fi
+AC_SUBST(ENABLE_QMPI)
+
 AC_ARG_ENABLE([two-level-namespace],
               [AS_HELP_STRING([--enable-two-level-namespace],
                               [(Darwin only) Build shared libraries and programs
