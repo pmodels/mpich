@@ -6,9 +6,10 @@
 #include "mpidimpl.h"
 #include "ofi_impl.h"
 
-#define MAX_NUM_CONN 1024       /* TODO: make it unlimited */
+#define INITIAL_NUM_CONN 10
 
 static int dynproc_send_disconnect(int conn_id);
+static int dynproc_grow_conn_table(int new_max);
 static int dynproc_get_next_conn_id(int *conn_id_out);
 
 int MPIDI_OFI_dynproc_init(void)
@@ -19,15 +20,8 @@ int MPIDI_OFI_dynproc_init(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_INIT);
 
     MPIDI_OFI_global.conn_mgr.n_conn = 0;
-    MPIDI_OFI_global.conn_mgr.max_n_conn = MAX_NUM_CONN;
-    MPIDI_OFI_global.conn_mgr.conn_table = MPL_malloc(MAX_NUM_CONN * sizeof(MPIDI_OFI_conn_t),
-                                                      MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.conn_table == NULL, mpi_errno, MPI_ERR_NO_MEM,
-                        goto fn_fail, "**nomem");
-
-    for (int i = 0; i < MPIDI_OFI_global.conn_mgr.max_n_conn; i++) {
-        MPIDI_OFI_global.conn_mgr.conn_table[i].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
-    }
+    MPIDI_OFI_global.conn_mgr.max_n_conn = 0;
+    MPIDI_OFI_global.conn_mgr.conn_table = NULL;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_INIT);
@@ -208,6 +202,32 @@ static int dynproc_send_disconnect(int conn_id)
     goto fn_exit;
 }
 
+static int dynproc_grow_conn_table(int new_max)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIDI_OFI_global.conn_mgr.max_n_conn >= new_max) {
+        goto fn_exit;
+    }
+
+    int old_max = MPIDI_OFI_global.conn_mgr.max_n_conn;
+    MPIDI_OFI_global.conn_mgr.conn_table = MPL_realloc(MPIDI_OFI_global.conn_mgr.conn_table,
+                                                       new_max * sizeof(MPIDI_OFI_conn_t),
+                                                       MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.conn_table == NULL, mpi_errno, MPI_ERR_NO_MEM,
+                        goto fn_fail, "**nomem");
+
+    MPIDI_OFI_global.conn_mgr.max_n_conn = new_max;
+    for (int i = old_max; i < new_max; i++) {
+        MPIDI_OFI_global.conn_mgr.conn_table[i].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static int dynproc_get_next_conn_id(int *conn_id_out)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -216,11 +236,15 @@ static int dynproc_get_next_conn_id(int *conn_id_out)
     conn_id = MPIDI_OFI_global.conn_mgr.n_conn;
     MPIDI_OFI_global.conn_mgr.n_conn++;
     /* TODO: add a free list */
-    /* TODO: grow the table to allow unlimited connection */
     if (MPIDI_OFI_global.conn_mgr.n_conn <= MPIDI_OFI_global.conn_mgr.max_n_conn) {
-        MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**ofi_max_conn", "**ofi_max_conn %d",
-                      MPIDI_OFI_global.conn_mgr.max_n_conn);
-        goto fn_fail;
+        int new_max;
+        if (new_max == 0) {
+            new_max = INITIAL_NUM_CONN;
+        } else {
+            new_max = MPIDI_OFI_global.conn_mgr.max_n_conn * 2;
+        }
+        mpi_errno = dynproc_grow_conn_table(new_max);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *conn_id_out = conn_id;
