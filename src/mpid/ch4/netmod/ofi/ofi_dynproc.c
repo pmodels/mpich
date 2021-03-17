@@ -6,6 +6,8 @@
 #include "mpidimpl.h"
 #include "ofi_impl.h"
 
+#define MAX_NUM_CONN 1024       /* TODO: make it unlimited */
+
 static int dynproc_send_disconnect(int conn_id);
 
 int MPIDI_OFI_dynproc_init(void)
@@ -19,9 +21,8 @@ int MPIDI_OFI_dynproc_init(void)
     MPIDI_OFI_global.conn_mgr.next_conn_id = 0;
     MPIDI_OFI_global.conn_mgr.n_conn = 0;
 
-    MPIDI_OFI_global.conn_mgr.conn_list =
-        (MPIDI_OFI_conn_t *) MPL_malloc(8 * 4 * 1024 /* FIXME: what is this size? */ ,
-                                        MPL_MEM_ADDRESS);
+    MPIDI_OFI_global.conn_mgr.conn_list = MPL_malloc(MAX_NUM_CONN * sizeof(MPIDI_OFI_conn_t),
+                                                     MPL_MEM_ADDRESS);
     MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.conn_list == NULL, mpi_errno, MPI_ERR_NO_MEM,
                         goto fn_fail, "**nomem");
 
@@ -129,6 +130,7 @@ int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state)
     if (MPIDI_OFI_global.conn_mgr.next_conn_id == -1) {
         int old_max, new_max, i;
         old_max = MPIDI_OFI_global.conn_mgr.max_n_conn;
+        MPIR_Assert(old_max < MAX_NUM_CONN);    /* TODO: proper error return */
         new_max = old_max + 1;
         MPIDI_OFI_global.conn_mgr.free_conn_id =
             (int *) MPL_realloc(MPIDI_OFI_global.conn_mgr.free_conn_id, new_max * sizeof(int),
