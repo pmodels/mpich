@@ -24,9 +24,6 @@ typedef struct {
 typedef struct MPIDI_OFI_conn_manager_t {
     int max_n_conn;             /* Maximum number of connections up to this point */
     int n_conn;                 /* Current number of open connections */
-    int next_conn_id;           /* The next connection id to be used. */
-    int *free_conn_id;          /* The list of the next connection id to be used so we
-                                 * can garbage collect as we go. */
     MPIDI_OFI_conn_t *conn_list;        /* The list of connection structs to track the
                                          * outstanding dynamic process connections. */
 } MPIDI_OFI_conn_manager_t;
