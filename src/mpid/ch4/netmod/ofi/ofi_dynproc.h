@@ -29,6 +29,6 @@ typedef struct MPIDI_OFI_conn_manager_t {
 
 int MPIDI_OFI_dynproc_init(void);
 int MPIDI_OFI_dynproc_finalize(void);
-int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state);
+int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state, int *conn_id_out);
 
 #endif /* OFI_DYNPROC_H_INCLUDED */

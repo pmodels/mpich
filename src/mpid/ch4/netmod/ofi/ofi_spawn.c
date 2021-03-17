@@ -511,7 +511,6 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     int parent_root = -1;
     int rank = comm_ptr->rank;
     int port_id;
-    int conn_id;
     int get_tag = 1;
     fi_addr_t conn;
 
@@ -593,9 +592,11 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
                                  is_low_group, get_tag, (char *) "Connect");
     MPIR_ERR_CHECK(mpi_errno);
     if (rank == root) {
-        conn_id = MPIDI_OFI_dynproc_insert_conn(conn, (*newcomm)->rank,
-                                                MPIDI_OFI_DYNPROC_CONNECTED_CHILD);
-        MPIDI_OFI_COMM(*newcomm).conn_id = conn_id;
+        mpi_errno = MPIDI_OFI_dynproc_insert_conn(conn, (*newcomm)->rank,
+                                                  MPIDI_OFI_DYNPROC_CONNECTED_CHILD,
+                                                  &MPIDI_OFI_COMM(*newcomm).conn_id);
+        MPIR_ERR_CHECK(mpi_errno);
+
     }
     mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
@@ -689,7 +690,6 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     int *remote_node_ids = NULL;
     int child_root = -1;
     int is_low_group = -1;
-    int conn_id;
     fi_addr_t conn = 0;
     int rank = comm_ptr->rank;
     int get_tag = -1;
@@ -756,9 +756,10 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
                                  is_low_group, get_tag, (char *) "Connect");
     MPIR_ERR_CHECK(mpi_errno);
     if (rank == root) {
-        conn_id = MPIDI_OFI_dynproc_insert_conn(conn, (*newcomm)->rank,
-                                                MPIDI_OFI_DYNPROC_CONNECTED_PARENT);
-        MPIDI_OFI_COMM(*newcomm).conn_id = conn_id;
+        mpi_errno = MPIDI_OFI_dynproc_insert_conn(conn, (*newcomm)->rank,
+                                                  MPIDI_OFI_DYNPROC_CONNECTED_PARENT,
+                                                  &MPIDI_OFI_COMM(*newcomm).conn_id);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);

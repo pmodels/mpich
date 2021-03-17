@@ -110,9 +110,11 @@ int MPIDI_OFI_dynproc_finalize(void)
     goto fn_exit;
 }
 
-int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state)
+int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state, int *conn_id_out)
 {
-    int conn_id = -1;
+    int mpi_errno = MPI_SUCCESS;
+
+    int conn_id;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONN_MANAGER_INSERT_CONN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_INSERT_CONN);
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
@@ -121,8 +123,11 @@ int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state)
     MPIDI_OFI_global.conn_mgr.n_conn++;
     /* TODO: add a free list */
     /* TODO: grow the table to allow unlimited connection */
-    /* TODO: proper error return */
-    MPIR_Assert(MPIDI_OFI_global.conn_mgr.n_conn <= MPIDI_OFI_global.conn_mgr.max_n_conn);
+    if (MPIDI_OFI_global.conn_mgr.n_conn <= MPIDI_OFI_global.conn_mgr.max_n_conn) {
+        MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**ofi_max_conn", "**ofi_max_conn %d",
+                      MPIDI_OFI_global.conn_mgr.max_n_conn);
+        goto fn_fail;
+    }
 
     MPIDI_OFI_global.conn_mgr.conn_table[conn_id].dest = conn;
     MPIDI_OFI_global.conn_mgr.conn_table[conn_id].rank = rank;
@@ -132,9 +137,15 @@ int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state)
                     (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
                      conn_id, conn, rank, MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state));
 
+    *conn_id_out = conn_id;
+
+  fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_INSERT_CONN);
-    return conn_id;
+
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* static routines */
