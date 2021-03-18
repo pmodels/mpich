@@ -101,6 +101,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_rank_tag_to_vci(MPIR_Context_id
     return MPIDI_int_to_vci(MPIR_CONTEXT_READ_FIELD(PREFIX, context_id) + rank + tag);
 }
 
+/* Use round robin algorithm to assign vci_idx for transmit context */
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_comm_to_vci_round_robin(MPIR_Comm * comm)
+{
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_COMM_MUTEX(comm));
+    /* NOTE: Currently the round robin is done in the scope of a single communicator.
+     * Alternatively, this can be done at a global scope, across all the communicators.
+     */
+    if (unlikely(MPIDIG_COMM(comm, vci_idx_last_assigned) == MPIDI_VCI_INVALID)) {
+        MPIDIG_COMM(comm, vci_idx_last_assigned) = 0;   /* Assuming 1st idx is 0 */
+    } else {
+        int vci_idx_new = (MPIDIG_COMM(comm, vci_idx_last_assigned) + 1)
+            % MPIDI_global.n_vcis;
+        MPIDIG_COMM(comm, vci_idx_last_assigned) = vci_idx_new;
+    }
+
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_COMM_MUTEX(comm));
+    return MPIDIG_COMM(comm, vci_idx_last_assigned);
+}
+
 /* Return VCI index of a send transmit context.
  * Used for two purposes:
  *   1. For the sender side to determine which VCI index of a transmit context

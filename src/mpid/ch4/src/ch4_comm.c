@@ -195,6 +195,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    MPIDIG_COMM(comm, vci_idx_last_assigned) = MPIDI_VCI_INVALID;
+
 #ifdef HAVE_DEBUGGER_SUPPORT
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDIG_COMM(comm, posted_head_ptr) = &(MPIDI_global.posted_list);

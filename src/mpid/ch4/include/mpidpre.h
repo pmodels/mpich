@@ -511,6 +511,7 @@ typedef struct MPIDIG_comm_t {
     MPIDIG_rreq_t *posted_list;
     MPIDIG_rreq_t *unexp_list;
     uint32_t window_instance;
+    int vci_idx_last_assigned;  /* Supports Round Robin vci assignment algorithm */
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIDIG_rreq_t **posted_head_ptr;
     MPIDIG_rreq_t **unexp_head_ptr;
