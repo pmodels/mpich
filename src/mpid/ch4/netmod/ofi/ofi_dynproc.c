@@ -19,13 +19,13 @@ int MPIDI_OFI_dynproc_init(void)
 
     MPIDI_OFI_global.conn_mgr.n_conn = 0;
     MPIDI_OFI_global.conn_mgr.max_n_conn = MAX_NUM_CONN;
-    MPIDI_OFI_global.conn_mgr.conn_list = MPL_malloc(MAX_NUM_CONN * sizeof(MPIDI_OFI_conn_t),
-                                                     MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.conn_list == NULL, mpi_errno, MPI_ERR_NO_MEM,
+    MPIDI_OFI_global.conn_mgr.conn_table = MPL_malloc(MAX_NUM_CONN * sizeof(MPIDI_OFI_conn_t),
+                                                      MPL_MEM_ADDRESS);
+    MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.conn_table == NULL, mpi_errno, MPI_ERR_NO_MEM,
                         goto fn_fail, "**nomem");
 
     for (int i = 0; i < MPIDI_OFI_global.conn_mgr.max_n_conn; i++) {
-        MPIDI_OFI_global.conn_mgr.conn_list[i].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
+        MPIDI_OFI_global.conn_mgr.conn_table[i].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
     }
 
   fn_exit:
@@ -66,7 +66,7 @@ int MPIDI_OFI_dynproc_finalize(void)
 
         j = 0;
         for (i = 0; i < max_n_conn; ++i) {
-            switch (MPIDI_OFI_global.conn_mgr.conn_list[i].state) {
+            switch (MPIDI_OFI_global.conn_mgr.conn_table[i].state) {
                 case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
                     mpi_errno = dynproc_send_disconnect(i);
                     MPIR_ERR_CHECK(mpi_errno);
@@ -75,7 +75,7 @@ int MPIDI_OFI_dynproc_finalize(void)
                 case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
                     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                     (MPL_DBG_FDEST, "Wait for close of conn_id=%d", i));
-                    conn[j] = MPIDI_OFI_global.conn_mgr.conn_list[i].dest;
+                    conn[j] = MPIDI_OFI_global.conn_mgr.conn_table[i].dest;
                     req[j].done = 0;
                     req[j].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
                     MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx,
@@ -94,7 +94,7 @@ int MPIDI_OFI_dynproc_finalize(void)
 
         for (i = 0; i < j; ++i) {
             MPIDI_OFI_PROGRESS_WHILE(!req[i].done, 0);
-            MPIDI_OFI_global.conn_mgr.conn_list[i].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
+            MPIDI_OFI_global.conn_mgr.conn_table[i].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "conn_id=%d closed", i));
         }
@@ -102,7 +102,7 @@ int MPIDI_OFI_dynproc_finalize(void)
         MPIR_CHKLMEM_FREEALL();
     }
 
-    MPL_free(MPIDI_OFI_global.conn_mgr.conn_list);
+    MPL_free(MPIDI_OFI_global.conn_mgr.conn_table);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_DESTROY);
     return mpi_errno;
@@ -124,13 +124,13 @@ int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state)
     /* TODO: proper error return */
     MPIR_Assert(MPIDI_OFI_global.conn_mgr.n_conn <= MPIDI_OFI_global.conn_mgr.max_n_conn);
 
-    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].dest = conn;
-    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].rank = rank;
-    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state = state;
+    MPIDI_OFI_global.conn_mgr.conn_table[conn_id].dest = conn;
+    MPIDI_OFI_global.conn_mgr.conn_table[conn_id].rank = rank;
+    MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state = state;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
-                     conn_id, conn, rank, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
+                     conn_id, conn, rank, MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state));
 
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_INSERT_CONN);
@@ -153,7 +153,7 @@ static int dynproc_send_disconnect(int conn_id)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DYNPROC_SEND_DISCONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DYNPROC_SEND_DISCONNECT);
 
-    if (MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
+    if (MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, " send disconnect msg conn_id=%d from child side",
                          conn_id));
@@ -168,7 +168,7 @@ static int dynproc_send_disconnect(int conn_id)
         msg.msg_iov = &msg_iov;
         msg.desc = NULL;
         msg.iov_count = 0;
-        msg.addr = MPIDI_OFI_global.conn_mgr.conn_list[conn_id].dest;
+        msg.addr = MPIDI_OFI_global.conn_mgr.conn_table[conn_id].dest;
         msg.tag = match_bits;
         msg.ignore = context_id;
         msg.context = (void *) &req.context;
@@ -179,13 +179,13 @@ static int dynproc_send_disconnect(int conn_id)
         MPIDI_OFI_PROGRESS_WHILE(!req.done, 0);
     }
 
-    switch (MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state) {
+    switch (MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state) {
         case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
-            MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state =
+            MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state =
                 MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_CHILD;
             break;
         case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
-            MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state =
+            MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state =
                 MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT;
             break;
         default:
@@ -194,7 +194,7 @@ static int dynproc_send_disconnect(int conn_id)
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, " local_disconnected conn_id=%d state=%d",
-                     conn_id, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
+                     conn_id, MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DYNPROC_SEND_DISCONNECT);

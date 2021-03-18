@@ -22,10 +22,9 @@ typedef struct {
 
 /* allocated in MPIDI_OFI_global_t */
 typedef struct MPIDI_OFI_conn_manager_t {
-    int max_n_conn;             /* Maximum number of connections up to this point */
     int n_conn;                 /* Current number of open connections */
-    MPIDI_OFI_conn_t *conn_list;        /* The list of connection structs to track the
-                                         * outstanding dynamic process connections. */
+    int max_n_conn;             /* size of connection table */
+    MPIDI_OFI_conn_t *conn_table;       /* connection table */
 } MPIDI_OFI_conn_manager_t;
 
 int MPIDI_OFI_dynproc_init(void);
