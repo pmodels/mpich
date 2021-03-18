@@ -9,6 +9,7 @@
 #define MAX_NUM_CONN 1024       /* TODO: make it unlimited */
 
 static int dynproc_send_disconnect(int conn_id);
+static int dynproc_get_next_conn_id(int *conn_id_out);
 
 int MPIDI_OFI_dynproc_init(void)
 {
@@ -114,20 +115,13 @@ int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state, int *conn
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int conn_id;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONN_MANAGER_INSERT_CONN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_INSERT_CONN);
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
 
-    conn_id = MPIDI_OFI_global.conn_mgr.n_conn;
-    MPIDI_OFI_global.conn_mgr.n_conn++;
-    /* TODO: add a free list */
-    /* TODO: grow the table to allow unlimited connection */
-    if (MPIDI_OFI_global.conn_mgr.n_conn <= MPIDI_OFI_global.conn_mgr.max_n_conn) {
-        MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**ofi_max_conn", "**ofi_max_conn %d",
-                      MPIDI_OFI_global.conn_mgr.max_n_conn);
-        goto fn_fail;
-    }
+    int conn_id;
+    mpi_errno = dynproc_get_next_conn_id(&conn_id);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIDI_OFI_global.conn_mgr.conn_table[conn_id].dest = conn;
     MPIDI_OFI_global.conn_mgr.conn_table[conn_id].rank = rank;
@@ -209,6 +203,29 @@ static int dynproc_send_disconnect(int conn_id)
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DYNPROC_SEND_DISCONNECT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int dynproc_get_next_conn_id(int *conn_id_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int conn_id;
+
+    conn_id = MPIDI_OFI_global.conn_mgr.n_conn;
+    MPIDI_OFI_global.conn_mgr.n_conn++;
+    /* TODO: add a free list */
+    /* TODO: grow the table to allow unlimited connection */
+    if (MPIDI_OFI_global.conn_mgr.n_conn <= MPIDI_OFI_global.conn_mgr.max_n_conn) {
+        MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**ofi_max_conn", "**ofi_max_conn %d",
+                      MPIDI_OFI_global.conn_mgr.max_n_conn);
+        goto fn_fail;
+    }
+
+    *conn_id_out = conn_id;
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
