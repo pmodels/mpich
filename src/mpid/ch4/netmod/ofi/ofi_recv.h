@@ -77,8 +77,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
     msg.data = 0;
     msg.addr =
-        (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr, vni_local,
-                                                                         vni_remote);
+        (MPI_ANY_SOURCE == rank || comm->hints[MPIR_COMM_HINT_ALLOW_OVERTAKING]) ?
+        FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote);
 
     MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[vni_dst].rx, &msg, flags), vni_local,
                          trecv, FALSE);
@@ -115,9 +115,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Datatype *dt_ptr;
     struct fi_msg_tagged msg;
     char *recv_buf;
+    fi_addr_t remote_addr;
     MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
     bool force_gpu_pack = false;
-    int vni_remote = vni_src;
+    int vni_remote = (comm->hints[MPIR_COMM_HINT_ALLOW_OVERTAKING]) ? MPIDI_VCI_INVALID : vni_src;
     int vni_local = vni_dst;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
@@ -211,13 +212,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
+    if (MPI_ANY_SOURCE == rank || comm->hints[MPIR_COMM_HINT_ALLOW_OVERTAKING])
+        remote_addr = FI_ADDR_UNSPEC;
+    else
+        remote_addr = MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote);
+
     if (!flags) /* Branch should compile out */
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[vni_dst].rx,
                                       recv_buf,
                                       data_sz,
                                       NULL,
-                                      (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC :
-                                      MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),
+                                      remote_addr,
                                       match_bits, mask_bits,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), vni_local,
                              trecv, FALSE);

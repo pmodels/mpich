@@ -148,7 +148,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_sender_vci(MPIR_Comm * comm,
 
     /* Compute vci_idx if user did not provide it */
     if (!use_user_defined_vci) {
-        if (use_tag) {
+        if (comm->hints[MPIR_COMM_HINT_ALLOW_OVERTAKING]) {
+            vci_idx = MPIDI_map_comm_to_vci_round_robin(comm);
+        } else if (use_tag) {
             vci_idx = MPIDI_map_contextid_rank_tag_to_vci(ctxid_in_effect, receiver_rank, tag);
         } else {
             /* General unoptimized case */
