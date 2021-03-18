@@ -211,6 +211,7 @@ int MPIR_Comm_split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * 
         "cpu",
         "core",
         "hwthread",
+        "bindset",
     };
 
     for (int i = 0; i < sizeof(topolist) / sizeof(topolist[0]); i++) {
