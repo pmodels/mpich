@@ -71,6 +71,7 @@ cvars:
         Specifies the CH4 multi-threading model. Possible values are:
         direct (default)
         handoff
+        lockless
 
     - name        : MPIR_CVAR_CH4_NUM_VCIS
       category    : CH4
@@ -240,6 +241,7 @@ static int set_runtime_configurations(void);
 static const char *mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
     "direct",
     "handoff",
+    "lockless",
 };
 
 static const char *get_mt_model_name(int mt)
