@@ -462,6 +462,24 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_name(const char *name)
             hwtopo_class_e class = get_type_class(non_io_ancestor->type);
             gid = HWTOPO_GET_GID(class, non_io_ancestor->depth, non_io_ancestor->logical_index);
         }
+    } else if (!strcmp(name, "bindset")) {
+        char buf[100];          /* covers up to 800 PUs */
+        memset(buf, 0, 100);
+        int num_pus = hwloc_get_nbobjs_by_type(hwloc_topology, HWLOC_OBJ_PU);
+        int n = MPL_MIN(8 * 100, num_pus);
+        int j = 0;
+        int k = 0;
+        for (int i = 0; i < n; i++) {
+            if (hwloc_bitmap_isset(bindset, i)) {
+                buf[j] |= (1 << k);
+            }
+            k++;
+            if (k >= 8) {
+                j++;
+                k = 0;
+            }
+        }
+        HASH_VALUE(buf, j, gid);
     } else
 #endif
     {
