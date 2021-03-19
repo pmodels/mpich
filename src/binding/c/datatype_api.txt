@@ -32,6 +32,9 @@ MPI_Get_address:
      in C).  In this case, it is recommended that you use C to manipulate
      addresses.
 */
+{ -- error_check -- location
+    /* location can be NULL (MPI_BOTTOM) */
+}
 {
     /* SX_4 needs to set CHAR_PTR_IS_ADDRESS
      * The reason is that it computes the different in two pointers in
