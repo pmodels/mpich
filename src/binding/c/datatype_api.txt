@@ -119,6 +119,11 @@ MPI_Pack:
     the communicator that will be subsequently used for sending the packed
     message.
 */
+{ -- error_check -- inbuf, outbuf
+    if (incount > 0) {
+        MPIR_ERRTEST_ARGNULL(inbuf, "inbuf", mpi_errno);
+    }
+}
 
 MPI_Pack_external:
     .desc: Packs a datatype into contiguous memory, using the external32 format
@@ -147,6 +152,11 @@ MPI_Unpack:
     .desc: Unpack a buffer according to a datatype into contiguous memory
     .seealso: MPI_Pack, MPI_Pack_size
     .poly_impl: use_aint
+{ -- error_check -- inbuf, outbuf
+    if (outcount > 0) {
+        MPIR_ERRTEST_ARGNULL(outbuf, "outbuf", mpi_errno);
+    }
+}
 
 MPI_Unpack_external:
     .desc: Unpack a buffer (packed with MPI_Pack_external) according to a datatype into contiguous memory
