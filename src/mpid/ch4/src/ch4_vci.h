@@ -59,7 +59,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
                                            int src_rank, int dst_rank, int tag)
 {
-    if (flag & 0x1) {
+    if (!(flag & 0x1)) {
         /* src */
         return (tag == MPI_ANY_TAG) ? 0 : ((tag >> 10) & 0x1f);
     } else {
