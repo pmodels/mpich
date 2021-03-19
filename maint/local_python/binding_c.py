@@ -1801,6 +1801,8 @@ def dump_validation(func, t):
         if RE.match(r'mpi_(i?m?probe|i?recv|recv_init)$', func_name, re.IGNORECASE) or name == "recvtag":
             # allow MPI_ANY_SOURCE, MPI_PROC_NULL
             G.out.append("MPIR_ERRTEST_RECV_RANK(%s, %s, mpi_errno);" % (comm_ptr, name))
+        elif RE.match(r'mpi_(i?sendrecv)', func_name, re.IGNORECASE) and name == "source":
+            G.out.append("MPIR_ERRTEST_RECV_RANK(%s, %s, mpi_errno);" % (comm_ptr, name))
         elif RE.match(r'(dest|target_rank)$', name) or RE.match(r'mpi_win_', func_name, re.IGNORECASE):
             # allow MPI_PROC_NULL
             G.out.append("MPIR_ERRTEST_SEND_RANK(%s, %s, mpi_errno);" % (comm_ptr, name))
