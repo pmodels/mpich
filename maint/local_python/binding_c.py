@@ -541,6 +541,8 @@ def process_func_parameters(func):
         elif kind == "KEYVAL":
             if RE.search(r'_(set_attr|delete_attr|free_keyval)$', func_name):
                 do_handle_ptr = 1
+            if is_pointer_type(p):
+                validation_list.append({'kind': "KEYVAL", 'name': '*' + name})
             else:
                 validation_list.append({'kind': "KEYVAL", 'name': name})
         elif kind == "GREQUEST_CLASS":
@@ -1671,17 +1673,6 @@ def dump_validate_handle(func, p):
             G.out.append("MPIR_ERRTEST_INFO_OR_NULL(%s, mpi_errno);" % name)
         else:
             G.out.append("MPIR_ERRTEST_INFO(%s, mpi_errno);" % name)
-    elif kind == "KEYVAL":
-        G.err_codes['MPI_ERR_KEYVAL'] = 1
-        if RE.match(r'mpi_comm_', func_name, re.IGNORECASE):
-            G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_COMM, \"communicator\", mpi_errno);" % name)
-        elif RE.match(r'mpi_type_', func_name, re.IGNORECASE):
-            G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_DATATYPE, \"datatype\", mpi_errno);" % name)
-        elif RE.match(r'mpi_win_', func_name, re.IGNORECASE):
-            G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_WIN, \"window\", mpi_errno);" % name)
-
-        if not RE.match(r'\w+_(get_attr)', func_name, re.IGNORECASE):
-            G.out.append("MPIR_ERRTEST_KEYVAL_PERM(%s, mpi_errno);" % name)
 
 def dump_convert_handle(func, p):
     (kind, name) = (p['kind'], p['name'])
@@ -1902,8 +1893,15 @@ def dump_validation(func, t):
         G.err_codes['MPI_ERR_OP'] = 1
         dump_validate_op(name, "", True)
     elif kind == 'KEYVAL':
-        if RE.match('MPI_Comm_', func_name):
+        G.err_codes['MPI_ERR_KEYVAL'] = 1
+        if RE.match(r'mpi_comm_', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_COMM, \"%s\", mpi_errno);" % (name, name))
+        elif RE.match(r'mpi_type_', func_name, re.IGNORECASE):
+            G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_DATATYPE, \"%s\", mpi_errno);" % (name, name))
+        elif RE.match(r'mpi_win_', func_name, re.IGNORECASE):
+            G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_WIN, \"%s\", mpi_errno);" % (name, name))
+        if not RE.match(r'\w+_(get_attr)', func_name, re.IGNORECASE):
+            G.out.append("MPIR_ERRTEST_KEYVAL_PERM(%s, mpi_errno);" % name)
     elif kind == "group_check_valid_ranks":
         G.out.append("if (group_ptr) {")
         G.out.append("    mpi_errno = MPIR_Group_check_valid_ranks(group_ptr, ranks, n);")
