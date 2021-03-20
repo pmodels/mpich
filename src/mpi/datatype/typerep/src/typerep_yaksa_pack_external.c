@@ -369,7 +369,8 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
                                            typerep_float256_t);
             } else {
                 /* unsupported, including MPI_INTEGER16 */
-                assert(0);
+                MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**packextunsupport");
+                goto fn_fail;
             }
     }
 
@@ -547,7 +548,8 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
                                              typerep_float256_t);
             } else {
                 /* unsupported, including MPI_INTEGER16 */
-                assert(0);
+                MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**packextunsupport");
+                goto fn_fail;
             }
     }
 
