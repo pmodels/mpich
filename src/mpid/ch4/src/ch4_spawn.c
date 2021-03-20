@@ -30,7 +30,6 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
                              MPIR_Comm ** intercomm, int errcodes[])
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
@@ -39,15 +38,17 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
     memset(port_name, 0, sizeof(port_name));
 
     int total_num_processes = 0;
-    for (i = 0; i < count; i++)
-        total_num_processes += maxprocs[i];
-
-    int *pmi_errcodes;
-    pmi_errcodes = (int *) MPL_calloc(total_num_processes, sizeof(int), MPL_MEM_OTHER);
-    MPIR_Assert(pmi_errcodes);
-
     int spawn_error = 0;
+    int *pmi_errcodes = NULL;
+
     if (comm_ptr->rank == root) {
+        for (int i = 0; i < count; i++) {
+            total_num_processes += maxprocs[i];
+        }
+
+        pmi_errcodes = (int *) MPL_calloc(total_num_processes, sizeof(int), MPL_MEM_OTHER);
+        MPIR_Assert(pmi_errcodes);
+
         /* NOTE: we can't do ERR JUMP here, or the later BCAST won't work */
 
         mpi_errno = MPID_Open_port(NULL, port_name);
@@ -68,10 +69,21 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
         }
     }
 
+    int bcast_ints[2];
+    if (comm_ptr->rank == root) {
+        bcast_ints[0] = total_num_processes;
+        bcast_ints[1] = spawn_error;
+    }
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-
-    mpi_errno = MPIR_Bcast(&spawn_error, 1, MPI_INT, root, comm_ptr, &errflag);
+    mpi_errno = MPIR_Bcast(bcast_ints, 2, MPI_INT, root, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
+    if (comm_ptr->rank != root) {
+        total_num_processes = bcast_ints[0];
+        spawn_error = bcast_ints[1];
+        pmi_errcodes = (int *) MPL_calloc(total_num_processes, sizeof(int), MPL_MEM_OTHER);
+        MPIR_Assert(pmi_errcodes);
+    }
+
     MPIR_ERR_CHKANDJUMP(spawn_error, mpi_errno, MPI_ERR_OTHER, "**spawn");
 
     int should_accept = 1;
@@ -81,7 +93,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
         MPIR_ERR_CHECK(mpi_errno);
 
         /* FIXME: Are we only checking pmi_errcodes[0] and ignoring the rest? */
-        for (i = 0; i < total_num_processes; i++) {
+        for (int i = 0; i < total_num_processes; i++) {
             errcodes[i] = pmi_errcodes[0];
             should_accept = should_accept && errcodes[i];
         }
