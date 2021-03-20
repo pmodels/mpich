@@ -31,6 +31,8 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                 size_t ** remote_upid_size, char **remote_upids,
                                 int **remote_node_ids);
 
+/* NOTE: port_name_tag, context_id_offset, and port_id all refer to the same context_id used during
+ * establishing dynamic connections */
 static void free_port_name_tag(int tag)
 {
     int idx, rem_tag;
@@ -120,9 +122,9 @@ static int get_conn_name_from_port(const char *port_name, char *connname)
 
 static int dynproc_create_intercomm(const char *port_name, int remote_size, int *remote_lupids,
                                     MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm, int is_low_group,
-                                    int get_tag, char *api)
+                                    int context_id_offset, char *api)
 {
-    int context_id_offset, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *tmp_comm_ptr = NULL;
     int i = 0;
     MPIDI_rank_map_mlut_t *mlut = NULL;
@@ -130,10 +132,6 @@ static int dynproc_create_intercomm(const char *port_name, int remote_size, int 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DYNPROC_CREATE_INTERCOMM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DYNPROC_CREATE_INTERCOMM);
 
-    if (get_tag) {
-        mpi_errno = get_tag_from_port(port_name, &context_id_offset);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
     mpi_errno = MPIR_Comm_create(&tmp_comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -500,7 +498,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
 int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                                MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
 {
-    int mpi_errno = MPI_SUCCESS, root_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int remote_size = 0;
     size_t *remote_upid_size = NULL;
@@ -510,8 +508,6 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     int is_low_group = -1;
     int parent_root = -1;
     int rank = comm_ptr->rank;
-    int port_id;
-    int get_tag = 1;
     fi_addr_t conn;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_CONNECT);
@@ -524,10 +520,12 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
         goto fn_exit;
     }
 
-    mpi_errno = get_tag_from_port(port_name, &port_id);
-    MPIR_ERR_CHECK(mpi_errno);
-
+    int port_id;
+    int bcast_ints[2];          /* used to bcast port_id and errno */
     if (rank == root) {
+        mpi_errno = get_tag_from_port(port_name, &port_id);
+        MPIR_ERR_CHECK(mpi_errno);
+
         char conname[FI_NAME_MAX];
         mpi_errno = get_conn_name_from_port(port_name, conname);
         MPIR_ERR_CHECK(mpi_errno);
@@ -540,17 +538,14 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
                                  &remote_node_ids);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = dynproc_handshake(root, DYNPROC_RECEIVER, timeout, port_id, &conn, comm_ptr);
-        if (mpi_errno == MPI_ERR_PORT || mpi_errno == MPI_SUCCESS) {
-            root_errno = mpi_errno;
-            mpi_errno = MPIR_Bcast_allcomm_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
-            MPIR_ERR_CHECK(mpi_errno);
-            if (root_errno != MPI_SUCCESS) {
-                mpi_errno = root_errno;
-                MPIR_ERR_POP(mpi_errno);
-            }
-        } else {
-            MPIR_ERR_POP(mpi_errno);
-        }
+
+        bcast_ints[0] = port_id;
+        bcast_ints[1] = mpi_errno;
+        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, &errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = bcast_ints[1];
+        MPIR_ERR_CHECK(mpi_errno);
+
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_RECEIVER, port_id, &conn, conname, comm_ptr,
                                  &parent_root, &remote_size, &remote_upid_size, &remote_upids,
@@ -563,15 +558,12 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
                                remote_node_ids);
         /* the child comm group is alawys the low group */
         is_low_group = 0;
-    }
-
-    if (rank != root) {
-        mpi_errno = MPIR_Bcast_allcomm_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
+    } else {
+        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, &errflag);
         MPIR_ERR_CHECK(mpi_errno);
-        if (root_errno != MPI_SUCCESS) {
-            mpi_errno = root_errno;
-            MPIR_ERR_POP(mpi_errno);
-        }
+        port_id = bcast_ints[0];
+        mpi_errno = bcast_ints[1];
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* broadcast the upids to local groups */
@@ -589,7 +581,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     /* Now Create the New Intercomm */
     mpi_errno =
         dynproc_create_intercomm(port_name, remote_size, remote_lupids, comm_ptr, newcomm,
-                                 is_low_group, get_tag, (char *) "Connect");
+                                 is_low_group, port_id, (char *) "Connect");
     MPIR_ERR_CHECK(mpi_errno);
     if (rank == root) {
         mpi_errno = MPIDI_OFI_dynproc_insert_conn(conn, (*newcomm)->rank,
@@ -692,7 +684,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     int is_low_group = -1;
     fi_addr_t conn = 0;
     int rank = comm_ptr->rank;
-    int get_tag = -1;
+    int port_id;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
@@ -706,7 +698,6 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
 
     if (rank == root) {
         char conname[FI_NAME_MAX];
-        int port_id;
 
         mpi_errno = get_tag_from_port(port_name, &port_id);
         MPIR_ERR_CHECK(mpi_errno);
@@ -744,16 +735,15 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
         MPL_free(remote_upid_size);
         MPL_free(remote_upids);
         MPL_free(remote_node_ids);
-
-        get_tag = 1;
-    } else {
-        get_tag = 0;
     }
+
+    mpi_errno = MPIR_Bcast_impl(&port_id, 1, MPI_INT, root, comm_ptr, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Now Create the New Intercomm */
     mpi_errno =
         dynproc_create_intercomm(port_name, remote_size, remote_lupids, comm_ptr, newcomm,
-                                 is_low_group, get_tag, (char *) "Connect");
+                                 is_low_group, port_id, (char *) "Connect");
     MPIR_ERR_CHECK(mpi_errno);
     if (rank == root) {
         mpi_errno = MPIDI_OFI_dynproc_insert_conn(conn, (*newcomm)->rank,
