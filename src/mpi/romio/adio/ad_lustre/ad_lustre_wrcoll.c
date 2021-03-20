@@ -287,7 +287,6 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                               my_req, nprocs, myrank, &count_others_req_procs, &others_req);
 */
         ADIOI_TAM_Calc_others_req(fd, count_my_req_procs, count_my_req_per_proc,
-
                               my_req, nprocs, myrank, &count_others_req_procs, &others_req);
         ADIOI_Free(count_my_req_per_proc);
 
@@ -315,7 +314,9 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         ADIOI_Free(buf_idx);
         ADIOI_Free(my_req);
     }
-    ADIOI_Free(offset_list);
+    if (fd->hints->cb_write != ADIOI_HINT_DISABLE) {
+        ADIOI_Free(offset_list);
+    }
 
     /* If this collective write is followed by an independent write, it's
      * possible to have those subsequent writes on other processes race ahead
