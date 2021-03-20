@@ -107,9 +107,19 @@ MPI_Close_port:
 
 MPI_Comm_accept:
     .desc: Accept a request to form a new intercommunicator
+{ -- error_check -- port_name
+    if (comm_ptr->rank == root) {
+        MPIR_ERRTEST_ARGNULL(port_name, "port_name", mpi_errno);
+    }
+}
 
 MPI_Comm_connect:
     .desc: Make a request to form a new intercommunicator
+{ -- error_check -- port_name
+    if (comm_ptr->rank == root) {
+        MPIR_ERRTEST_ARGNULL(port_name, "port_name", mpi_errno);
+    }
+}
 
 MPI_Comm_disconnect:
     .desc: Disconnect from a communicator
