@@ -97,18 +97,19 @@ int testtype(MPI_Datatype type, MPI_Offset expected)
     }
 
     if (size != expected) {
-        printf("reported type size %lld does not match expected %lld\n", size, expected);
+        printf("reported type size %lld does not match expected %lld\n", (long long) size,
+               (long long) expected);
         errs++;
     }
 
     MPI_Type_get_true_extent_x(type, &lb, &extent);
     if (lb != 0) {
-        printf("ERROR: type should have lb of 0, reported %lld\n", lb);
+        printf("ERROR: type should have lb of 0, reported %lld\n", (long long) lb);
         errs++;
     }
 
     if (extent != size) {
-        printf("ERROR: extent should match size, not %lld\n", extent);
+        printf("ERROR: extent should match size, not %lld\n", (long long) extent);
         errs++;
     }
     return errs;
