@@ -3,6 +3,7 @@ gaddress 1
 lbub 1
 lbub_oldapi 1 strict=FALSE
 localpack 1
+pack_external 1
 simple_pack 1
 simple_pack_external 1
 simple_pack_external2 1
