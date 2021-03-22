@@ -172,7 +172,6 @@ static inline void BASIC_convert128(const char *src, char *dest)
 {
     uint64_t tmp_src[2];
     uint64_t tmp_dest[2];
-    char *ptr = dest;
 
     tmp_src[0] = *((uint64_t *) src);
     tmp_src[1] = *((uint64_t *) ((char *) src + sizeof(uint64_t)));

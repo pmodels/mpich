@@ -147,13 +147,39 @@ static int external32_basic_convert(char *dest_buf,
             }
         }
     } else {
-        /* TODO */
-        MPL_error_printf
-            ("Conversion of types whose size is not the same as the size in external32 is not supported\n");
-        MPID_Abort(0, MPI_SUCCESS, 1, "Aborting with internal error");
-        /* There is no way to return an error code, so an abort is the
-         * only choice (the return value of this routine is not
-         * an error code) */
+        if (src_el_size == 4) {
+            while (src_ptr != src_end) {
+                int32_t tmp;
+                BASIC_convert32((*(const int32_t *) src_ptr), (*(int32_t *) dest_ptr));
+                if (dest_el_size == 8) {
+                    /* NOTE: it's wrong if it is unsigned and highest bit is 1, but
+                     * at least only happens when number is in the higher half of the
+                     * range. It won't work if value overflow anyway. */
+                    *(int64_t *) dest_ptr = tmp;
+                } else {
+                    MPIR_Assert(0 && "Unhandled conversion of unequal size");
+                }
+
+                src_ptr += src_el_size;
+                dest_ptr += dest_el_size;
+            }
+        } else if (src_el_size == 8) {
+            while (src_ptr != src_end) {
+                int32_t tmp;
+                if (dest_el_size == 4) {
+                    /* NOTE: obviously won't work if overflow, but it is user's responsibility */
+                    tmp = *(const int64_t *) src_ptr;
+                    BASIC_convert32(tmp, *(int32_t *) dest_ptr);
+                } else {
+                    MPIR_Assert(0 && "Unhandled conversion of unequal size");
+                }
+
+                src_ptr += src_el_size;
+                dest_ptr += dest_el_size;
+            }
+        } else {
+            MPIR_Assert(0 && "Unhandled conversion of unequal size");
+        }
     }
     return 0;
 }
