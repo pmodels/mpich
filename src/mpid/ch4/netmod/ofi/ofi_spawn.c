@@ -30,7 +30,6 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                 MPIR_Comm * comm_ptr, int *out_root, int *remote_size,
                                 size_t ** remote_upid_size, char **remote_upids,
                                 int **remote_node_ids);
-static int conn_manager_insert_conn(fi_addr_t conn, int rank, int state);
 
 static void free_port_name_tag(int tag)
 {
@@ -498,49 +497,6 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
     goto fn_exit;
 }
 
-static int conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
-{
-    int conn_id = -1;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONN_MANAGER_INSERT_CONN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_INSERT_CONN);
-    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
-
-    /* We've run out of space in the connection table. Allocate more. */
-    if (MPIDI_OFI_global.conn_mgr.next_conn_id == -1) {
-        int old_max, new_max, i;
-        old_max = MPIDI_OFI_global.conn_mgr.max_n_conn;
-        new_max = old_max + 1;
-        MPIDI_OFI_global.conn_mgr.free_conn_id =
-            (int *) MPL_realloc(MPIDI_OFI_global.conn_mgr.free_conn_id, new_max * sizeof(int),
-                                MPL_MEM_ADDRESS);
-        for (i = old_max; i < new_max - 1; ++i) {
-            MPIDI_OFI_global.conn_mgr.free_conn_id[i] = i + 1;
-        }
-        MPIDI_OFI_global.conn_mgr.free_conn_id[new_max - 1] = -1;
-        MPIDI_OFI_global.conn_mgr.max_n_conn = new_max;
-        MPIDI_OFI_global.conn_mgr.next_conn_id = old_max;
-    }
-
-    conn_id = MPIDI_OFI_global.conn_mgr.next_conn_id;
-    MPIDI_OFI_global.conn_mgr.next_conn_id = MPIDI_OFI_global.conn_mgr.free_conn_id[conn_id];
-    MPIDI_OFI_global.conn_mgr.free_conn_id[conn_id] = -1;
-    MPIDI_OFI_global.conn_mgr.n_conn++;
-
-    MPIR_Assert(MPIDI_OFI_global.conn_mgr.n_conn <= MPIDI_OFI_global.conn_mgr.max_n_conn);
-
-    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].dest = conn;
-    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].rank = rank;
-    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state = state;
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
-                     conn_id, conn, rank, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
-
-    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_INSERT_CONN);
-    return conn_id;
-}
-
 int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                                MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
 {
@@ -555,7 +511,6 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     int parent_root = -1;
     int rank = comm_ptr->rank;
     int port_id;
-    int conn_id;
     int get_tag = 1;
     fi_addr_t conn;
 
@@ -637,9 +592,11 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
                                  is_low_group, get_tag, (char *) "Connect");
     MPIR_ERR_CHECK(mpi_errno);
     if (rank == root) {
-        conn_id = conn_manager_insert_conn(conn, (*newcomm)->rank,
-                                           MPIDI_OFI_DYNPROC_CONNECTED_CHILD);
-        MPIDI_OFI_COMM(*newcomm).conn_id = conn_id;
+        mpi_errno = MPIDI_OFI_dynproc_insert_conn(conn, (*newcomm)->rank,
+                                                  MPIDI_OFI_DYNPROC_CONNECTED_CHILD,
+                                                  &MPIDI_OFI_COMM(*newcomm).conn_id);
+        MPIR_ERR_CHECK(mpi_errno);
+
     }
     mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
@@ -733,7 +690,6 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     int *remote_node_ids = NULL;
     int child_root = -1;
     int is_low_group = -1;
-    int conn_id;
     fi_addr_t conn = 0;
     int rank = comm_ptr->rank;
     int get_tag = -1;
@@ -800,9 +756,10 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
                                  is_low_group, get_tag, (char *) "Connect");
     MPIR_ERR_CHECK(mpi_errno);
     if (rank == root) {
-        conn_id = conn_manager_insert_conn(conn, (*newcomm)->rank,
-                                           MPIDI_OFI_DYNPROC_CONNECTED_PARENT);
-        MPIDI_OFI_COMM(*newcomm).conn_id = conn_id;
+        mpi_errno = MPIDI_OFI_dynproc_insert_conn(conn, (*newcomm)->rank,
+                                                  MPIDI_OFI_DYNPROC_CONNECTED_PARENT,
+                                                  &MPIDI_OFI_COMM(*newcomm).conn_id);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
