@@ -579,6 +579,14 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         comm->node_comm->local_size = num_local;
         comm->node_comm->remote_size = num_local;
 
+        /* Copy relevant hints to node_comm */
+        comm->node_comm->hints[MPIR_COMM_HINT_VCI_IDX_SENDER] =
+            comm->hints[MPIR_COMM_HINT_VCI_IDX_SENDER];
+        comm->node_comm->hints[MPIR_COMM_HINT_VCI_IDX_RECEIVER] =
+            comm->hints[MPIR_COMM_HINT_VCI_IDX_RECEIVER];
+        comm->node_comm->hints[MPIR_COMM_HINT_THREAD_ID] = comm->hints[MPIR_COMM_HINT_THREAD_ID];
+
+
         MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs, num_local,
                                 MPIR_COMM_MAP_DIR__L2L, NULL);
         mpi_errno = MPIR_Comm_commit_internal(comm->node_comm);
@@ -600,6 +608,14 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 
         comm->node_roots_comm->local_size = num_external;
         comm->node_roots_comm->remote_size = num_external;
+
+        /* Copy relevant hints to node_roots_comm */
+        comm->node_roots_comm->hints[MPIR_COMM_HINT_VCI_IDX_SENDER] =
+            comm->hints[MPIR_COMM_HINT_VCI_IDX_SENDER];
+        comm->node_roots_comm->hints[MPIR_COMM_HINT_VCI_IDX_RECEIVER] =
+            comm->hints[MPIR_COMM_HINT_VCI_IDX_RECEIVER];
+        comm->node_roots_comm->hints[MPIR_COMM_HINT_THREAD_ID] =
+            comm->hints[MPIR_COMM_HINT_THREAD_ID];
 
         MPIR_Comm_map_irregular(comm->node_roots_comm, comm, external_procs, num_external,
                                 MPIR_COMM_MAP_DIR__L2L, NULL);
