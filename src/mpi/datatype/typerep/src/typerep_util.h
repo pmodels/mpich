@@ -59,8 +59,8 @@
   FLOAT_convert(src, dest) -- converts floating point src into
   external32 floating point format and stores the result in dest.
 
-  BASIC_convert(src, dest) -- converts integral type src into
-  external32 integral type and stores the result in dest.
+  BASIC_convert(const void *src, void *dest, int size) -- converts integral
+  type src into external32 integral type and stores the result in dest.
 
   These two macros compile to assignments on big-endian architectures.
 */
@@ -126,29 +126,50 @@ static inline void BASIC_convert128(const char *src, char *dest)
 }
 
 #if (BLENDIAN == 1)
-#define BASIC_convert(src, dest)               \
-{                                           \
-    register int type_byte_size = sizeof(src); \
-    switch(type_byte_size)                     \
-    {                                          \
-        case 1:                                \
-            dest = src;                        \
-            break;                             \
-        case 2:                                \
-            BASIC_convert16(src, dest);        \
-            break;                             \
-        case 4:                                \
-            BASIC_convert32(src, dest);        \
-            break;                             \
-        case 8:                                \
-            BASIC_convert64(src, dest);        \
-            break;                             \
-    }                                          \
+/* Note: use `uint` to suppress warnings on left-shift */
+static inline void BASIC_convert(const void *src, void *dest, int size)
+{
+    switch (size) {
+        case 1:
+            *(uint8_t *) dest = *(uint8_t *) src;
+            break;
+        case 2:
+            BASIC_convert16(*(uint16_t *) src, *(uint16_t *) dest);
+            break;
+        case 4:
+            BASIC_convert32(*(uint32_t *) src, *(uint32_t *) dest);
+            break;
+        case 8:
+            BASIC_convert64(*(uint64_t *) src, *(uint64_t *) dest);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
 }
 
 #else
-#define BASIC_convert(src, dest)               \
-        { dest = src; }
+
+/* FIXME: we may need use memcpy to allow no-alignment */
+static inline void BASIC_convert(const void *src, void *dest, int size)
+{
+    switch (size) {
+        case 1:
+            *(int8_t *) dest = *(int8_t *) src;
+            break;
+        case 2:
+            *(int16_t *) dest = *(int16_t *) src;
+            break;
+        case 4:
+            *(int32_t *) dest = *(int32_t *) src;
+            break;
+        case 8:
+            *(int64_t *) dest = *(int64_t *) src;
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+}
+
 #endif
 
 /*
