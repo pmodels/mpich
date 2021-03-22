@@ -103,3 +103,5 @@
 **ofi_provider_mismatch %s %d %s %s:OFI Provider name does not match configure-time provider name (%s:%d:%s:%s)
 **ofid_cancel:OFI cancel failed
 **ofid_cancel %s %d %s %s:OFI cancel failed (%s:%d:%s:%s)
+**ofi_max_conn:OFI dynamic process reaches maximum connection
+**ofi_max_conn %d:OFI dynamic process reaches maximum connection (%d)
