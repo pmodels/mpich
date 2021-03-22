@@ -13,17 +13,6 @@
 
 #include "mpichconf.h"
 
-/* FIXME!!!  TODO!!!  FOO!!!  DO THIS!!!  DETECT ME!!!
- *
- * Consider using MPIU_INT64_T etc. types instead of the
- * EIGHT_BYTE_BASIC_TYPE stuff, or put #defines at the top of this file
- * assigning them in a simple manner.
- *
- * Doing that might require that we create MPIU_UINT64_T types (etc),
- * because it looks like we really want to have unsigned types for the
- * various convert functions below.
- */
-
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
@@ -34,19 +23,7 @@
 #include <endian.h>
 #endif
 
-#ifdef HAVE_INT64
-#define uint64_t __int64
-#define uint32_t __int32
-#elif defined(MPIU_INT64_T)
-/* FIXME: This is necessary with some compilers or compiler settings */
-#define uint64_t unsigned MPIU_INT64_T
-#endif
-
-/* FIXME: Who defines __BYTE_ORDER or __BIG_ENDIAN?  They aren't part of C */
-/* FIXME: The else test assumes that the byte order is little endian, whereas
-   it may simply have been undetermined.  This should instead use either
-   a configure-time test (for which there are macros) or a runtime test
-   and not use this non-portable check */
+/* Relying on the common predefined macros */
 
 /* Some platforms, like AIX, use BYTE_ORDER instead of __BYTE_ORDER */
 #if defined(BYTE_ORDER) && !defined(__BYTE_ORDER)
@@ -55,28 +32,24 @@
 
 #if defined(WORDS_BIGENDIAN)
 #define BLENDIAN 0
+
 #elif defined(WORDS_LITTLEENDIAN)
 #define BLENDIAN 1
+
 #else
+
 #if !defined(__BYTE_ORDER) || !defined(__BIG_ENDIAN)
 #error This code assumes that __BYTE_ORDER and __BIG_ENDIAN are defined
 #endif
-/* FIXME: "BLENDIAN" is a non-conforming name - it could conflict with some
-   other definition in a non-mpich header file */
+/* FIXME: I don't understand this. Whether ntohl being a macro or defined seems have
+ * nothing to do with the logic. */
 #if ((defined(_BIG_ENDIAN) && !defined(ntohl)) || (__BYTE_ORDER == __BIG_ENDIAN))
 #define BLENDIAN 0      /* detected host arch byte order is big endian */
 #else
 #define BLENDIAN 1      /* detected host arch byte order is little endian */
 #endif
-#endif
 
-/*
-  set to 1: uses manual swapping routines
-            for 16/32 bit data types
-  set to 0: uses system provided swapping routines
-            for 16/32 bit data types
-*/
-#define MANUAL_BYTESWAPS 1
+#endif
 
 /*
   NOTE:
@@ -92,50 +65,30 @@
   These two macros compile to assignments on big-endian architectures.
 */
 
-#if (MANUAL_BYTESWAPS == 0)
-#include <netinet/in.h>
-#endif
-
-#define BITSIZE_OF(type)    (sizeof(type) * CHAR_BIT)
-
-#if (MANUAL_BYTESWAPS == 1)
-#define BASIC_convert32(src, dest)      \
-{                                    \
-    dest = (((src >> 24) & 0x000000FF) |\
-            ((src >>  8) & 0x0000FF00) |\
-            ((src <<  8) & 0x00FF0000) |\
-            ((src << 24) & 0xFF000000));\
-}
-#else
-#define BASIC_convert32(src, dest)      \
-{                                    \
-    dest = htonl((uint32_t)src);        \
-}
-#endif
-
-#if (MANUAL_BYTESWAPS == 1)
 #define BASIC_convert16(src, dest)  \
 {                                \
-    dest = (((src >> 8) & 0x00FF) | \
-            ((src << 8) & 0xFF00)); \
+    dest = ((((src) >> 8) & 0x00FF) | \
+            (((src) << 8) & 0xFF00)); \
 }
-#else
-#define BASIC_convert16(src, dest)  \
-{                                \
-    dest = htons((uint16_t)src);    \
+
+#define BASIC_convert32(src, dest)      \
+{                                    \
+    dest = ((((src) >> 24) & 0x000000FF) |\
+            (((src) >>  8) & 0x0000FF00) |\
+            (((src) <<  8) & 0x00FF0000) |\
+            (((src) << 24) & 0xFF000000));\
 }
-#endif
 
 #define BASIC_convert64(src, dest)   \
 {                                    \
-    dest = (((src >> 56) & 0x00000000000000FFLL) |\
-            ((src >> 40) & 0x000000000000FF00LL) |\
-            ((src >> 24) & 0x0000000000FF0000LL) |\
-            ((src >>  8) & 0x00000000FF000000LL) |\
-            ((src <<  8) & 0x000000FF00000000LL) |\
-            ((src << 24) & 0x0000FF0000000000LL) |\
-            ((src << 40) & 0x00FF000000000000LL) |\
-            ((src << 56) & 0xFF00000000000000LL));\
+    dest = ((((src) >> 56) & 0x00000000000000FFLL) |\
+            (((src) >> 40) & 0x000000000000FF00LL) |\
+            (((src) >> 24) & 0x0000000000FF0000LL) |\
+            (((src) >>  8) & 0x00000000FF000000LL) |\
+            (((src) <<  8) & 0x000000FF00000000LL) |\
+            (((src) << 24) & 0x0000FF0000000000LL) |\
+            (((src) << 40) & 0x00FF000000000000LL) |\
+            (((src) << 56) & 0xFF00000000000000LL));\
 }
 
 static inline void BASIC_convert96(const char *src, char *dest)
@@ -193,20 +146,8 @@ static inline void BASIC_convert128(const char *src, char *dest)
     }                                          \
 }
 
-/*
-  http://www.mpi-forum.org/docs/mpi-20-html/node200.htm
-
-  When converting a larger size integer to a smaller size integer,
-  only the less significant bytes are moved. Care must be taken to
-  preserve the sign bit value. This allows no conversion errors if the
-  data range is within the range of the smaller size integer. (End of
-  advice to implementors.)
-*/
-#define BASIC_mixed_convert(src, dest)
 #else
 #define BASIC_convert(src, dest)               \
-        { dest = src; }
-#define BASIC_mixed_convert(src, dest)         \
         { dest = src; }
 #endif
 
@@ -249,16 +190,6 @@ static inline void BASIC_convert128(const char *src, char *dest)
   };
 
   * little endian byte order
-  * big endian float word order
-  struct le_ieee754_double_precision
-  {
-  unsigned int mantissa0:20;
-  unsigned int exponent:11;
-  unsigned int sign_neg:1;
-  unsigned int mantissa1:32;
-  };
-
-  * little endian byte order
   * little endian float word order
   struct le_ieee754_double_precision
   {
@@ -266,56 +197,16 @@ static inline void BASIC_convert128(const char *src, char *dest)
   unsigned int mantissa0:20;
   unsigned int exponent:11;
   unsigned int sign_neg:1;
-  };
-  ---------------------
-
-  ---------------------
-  96 bit floating point
-  ---------------------
-  * big endian byte order
-  struct be_ieee854_double_extended
-  {
-  unsigned int negative:1;
-  unsigned int exponent:15;
-  unsigned int empty:16;
-  unsigned int mantissa0:32;
-  unsigned int mantissa1:32;
-  };
-
-  * little endian byte order
-  * big endian float word order
-  struct le_ieee854_double_extended
-  {
-  unsigned int exponent:15;
-  unsigned int negative:1;
-  unsigned int empty:16;
-  unsigned int mantissa0:32;
-  unsigned int mantissa1:32;
-  };
-
-  * little endian byte order
-  * little endian float word order
-  struct le_ieee854_double_extended
-  {
-  unsigned int mantissa1:32;
-  unsigned int mantissa0:32;
-  unsigned int exponent:15;
-  unsigned int negative:1;
-  unsigned int empty:16;
   };
   ---------------------
 
   128 bit floating point implementation notes
   ===========================================
 
-  "A 128-bit long double number consists of an ordered pair of
-  64-bit double-precision numbers. The first member of the
-  ordered pair contains the high-order part of the number, and
-  the second member contains the low-order part. The value of the
-  long double quantity is the sum of the two 64-bit numbers."
+  For the IEEE ``Double Extended'' formats, MPI specifies a Format
+  Width of 16 bytes, with 15 exponent bits, bias = +16383,
+  112 fraction bits, and an encoding analogous to the ``Double'' format.
 
-  From http://nscp.upenn.edu/aix4.3html/aixprggd/genprogc/128bit_long_double_floating-point_datatype.htm
-  [ as of 09/04/2003 ]
 */
 
 #if (BLENDIAN == 1)
@@ -356,40 +247,6 @@ static inline void BASIC_convert128(const char *src, char *dest)
 #define FLOAT_convert(src, dest)              \
         { dest = src; }
 #endif
-
-#ifdef HAVE_INT16_T
-#define TWO_BYTE_BASIC_TYPE uint16_t
-#else
-#if (SIZEOF_SHORT == 2)
-#define TWO_BYTE_BASIC_TYPE unsigned short
-#else
-#error "Cannot detect a basic type that is 2 bytes long"
-#endif
-#endif /* HAVE_INT16_T */
-
-#ifdef HAVE_INT32_T
-#define FOUR_BYTE_BASIC_TYPE uint32_t
-#else
-#if (SIZEOF_INT == 4)
-#define FOUR_BYTE_BASIC_TYPE unsigned int
-#elif (SIZEOF_LONG == 4)
-#define FOUR_BYTE_BASIC_TYPE unsigned long
-#else
-#error "Cannot detect a basic type that is 4 bytes long"
-#endif
-#endif /* HAVE_INT32_T */
-
-#ifdef HAVE_INT64_T
-#define EIGHT_BYTE_BASIC_TYPE uint64_t
-#else
-#ifdef HAVE_INT64
-#define EIGHT_BYTE_BASIC_TYPE unsigned __int64
-#elif (SIZEOF_LONG_LONG == 8)
-#define EIGHT_BYTE_BASIC_TYPE unsigned long long
-#else
-#error "Cannot detect a basic type that is 8 bytes long"
-#endif
-#endif /* HAVE_INT64_T */
 
 #if (SIZEOF_FLOAT == 4)
 #define FOUR_BYTE_FLOAT_TYPE float

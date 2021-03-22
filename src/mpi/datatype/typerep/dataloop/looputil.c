@@ -124,16 +124,14 @@ static int external32_basic_convert(char *dest_buf,
     if (src_el_size == dest_el_size) {
         if (src_el_size == 2) {
             while (src_ptr != src_end) {
-                BASIC_convert16((*(const TWO_BYTE_BASIC_TYPE *) src_ptr),
-                                (*(TWO_BYTE_BASIC_TYPE *) dest_ptr));
+                BASIC_convert16(*(const int16_t *) src_ptr, *(int16_t *) dest_ptr);
 
                 src_ptr += src_el_size;
                 dest_ptr += dest_el_size;
             }
         } else if (src_el_size == 4) {
             while (src_ptr != src_end) {
-                BASIC_convert32((*(const FOUR_BYTE_BASIC_TYPE *) src_ptr),
-                                (*(FOUR_BYTE_BASIC_TYPE *) dest_ptr));
+                BASIC_convert32(*(const int32_t *) src_ptr, *(int32_t *) dest_ptr);
 
                 src_ptr += src_el_size;
                 dest_ptr += dest_el_size;
