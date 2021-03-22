@@ -747,11 +747,11 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
     } else if (is_float_type(el_type)) {
         external32_float_convert(((char *) bufp) + rel_off,
                                  paramp->u.unpack.unpack_buffer,
-                                 dest_el_size, src_el_size, *blocks_p);
+                                 src_el_size, dest_el_size, *blocks_p);
     } else {
         external32_basic_convert(((char *) bufp) + rel_off,
                                  paramp->u.unpack.unpack_buffer,
-                                 dest_el_size, src_el_size, *blocks_p);
+                                 src_el_size, dest_el_size, *blocks_p);
     }
     paramp->u.unpack.unpack_buffer += (dest_el_size * (*blocks_p));
 
