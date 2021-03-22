@@ -417,5 +417,7 @@ static inline void BASIC_convert128(const char *src, char *dest)
 #endif
 
 MPI_Aint MPII_Typerep_get_basic_size_external32(MPI_Datatype el_type);
+bool MPII_Typerep_basic_type_is_complex(MPI_Datatype el_type);
+bool MPII_Typerep_basic_type_is_unsigned(MPI_Datatype el_type);
 
 #endif /* TYPEREP_UTIL_H_INCLUDED */
