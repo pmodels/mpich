@@ -4,6 +4,7 @@
  */
 
 #include "mpiimpl.h"
+#include <strings.h>    /* for strcasecmp */
 
 #ifdef HAVE_HWLOC
 #include "hwloc.h"
