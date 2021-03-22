@@ -126,31 +126,22 @@
 }
 #endif
 
-
-/* changed the argument types to be char* instead of uint64_t* because the Sun compiler
-   prints out warnings that the function expects unsigned long long, but is being passed
-   signed long long in mpid_ext32_segment.c. */
-static inline void BASIC_convert64(const char *src, char *dest)
-{
-    uint32_t tmp_src[2];
-    uint32_t tmp_dest[2];
-
-    tmp_src[0] = (uint32_t) (*((uint64_t *) src) >> 32);
-    tmp_src[1] = (uint32_t) ((*((uint64_t *) src) << 32) >> 32);
-
-    BASIC_convert32(tmp_src[0], tmp_dest[0]);
-    BASIC_convert32(tmp_src[1], tmp_dest[1]);
-
-    *((uint64_t *) dest) = (uint64_t) tmp_dest[0];
-    *((uint64_t *) dest) <<= 32;
-    *((uint64_t *) dest) |= (uint64_t) tmp_dest[1];
+#define BASIC_convert64(src, dest)   \
+{                                    \
+    dest = (((src >> 56) & 0x00000000000000FFLL) |\
+            ((src >> 40) & 0x000000000000FF00LL) |\
+            ((src >> 24) & 0x0000000000FF0000LL) |\
+            ((src >>  8) & 0x00000000FF000000LL) |\
+            ((src <<  8) & 0x000000FF00000000LL) |\
+            ((src << 24) & 0x0000FF0000000000LL) |\
+            ((src << 40) & 0x00FF000000000000LL) |\
+            ((src << 56) & 0xFF00000000000000LL));\
 }
 
 static inline void BASIC_convert96(const char *src, char *dest)
 {
     uint32_t tmp_src[3];
     uint32_t tmp_dest[3];
-    char *ptr = dest;
 
     tmp_src[0] = (uint32_t) (*((uint64_t *) src) >> 32);
     tmp_src[1] = (uint32_t) ((*((uint64_t *) src) << 32) >> 32);
@@ -161,11 +152,9 @@ static inline void BASIC_convert96(const char *src, char *dest)
     BASIC_convert32(tmp_src[1], tmp_dest[1]);
     BASIC_convert32(tmp_src[2], tmp_dest[2]);
 
-    *((uint32_t *) ptr) = tmp_dest[0];
-    ptr += sizeof(uint32_t);
-    *((uint32_t *) ptr) = tmp_dest[1];
-    ptr += sizeof(uint32_t);
-    *((uint32_t *) ptr) = tmp_dest[2];
+    ((uint32_t *) dest)[2] = tmp_dest[0];
+    ((uint32_t *) dest)[1] = tmp_dest[1];
+    ((uint32_t *) dest)[0] = tmp_dest[2];
 }
 
 static inline void BASIC_convert128(const char *src, char *dest)
@@ -176,12 +165,11 @@ static inline void BASIC_convert128(const char *src, char *dest)
     tmp_src[0] = *((uint64_t *) src);
     tmp_src[1] = *((uint64_t *) ((char *) src + sizeof(uint64_t)));
 
-    BASIC_convert64((char *) &tmp_src[0], (char *) &tmp_dest[0]);
-    BASIC_convert64((char *) &tmp_src[1], (char *) &tmp_dest[1]);
+    BASIC_convert64(tmp_src[0], tmp_dest[0]);
+    BASIC_convert64(tmp_src[1], tmp_dest[1]);
 
-    *((uint64_t *) ptr) = tmp_dest[0];
-    ptr += sizeof(uint64_t);
-    *((uint64_t *) ptr) = tmp_dest[1];
+    ((uint64_t *) dest)[1] = tmp_dest[0];
+    ((uint64_t *) dest)[0] = tmp_dest[1];
 }
 
 #if (BLENDIAN == 1)
@@ -200,8 +188,7 @@ static inline void BASIC_convert128(const char *src, char *dest)
             BASIC_convert32(src, dest);        \
             break;                             \
         case 8:                                \
-            BASIC_convert64((char *)&src,  \
-                            (char *)&dest);\
+            BASIC_convert64(src, dest);        \
             break;                             \
     }                                          \
 }
@@ -339,15 +326,16 @@ static inline void BASIC_convert128(const char *src, char *dest)
     {                                         \
         case 4:                               \
         {                                     \
-           long d;                            \
-           BASIC_convert32((long)src, d);     \
+           uint32_t d;                        \
+           BASIC_convert32((uint32_t) src, d); \
            dest = (float)d;                   \
         }                                     \
         break;                                \
         case 8:                               \
         {                                     \
-           BASIC_convert64((const char *)&src,\
-                           (char *)&dest);\
+           uint64_t d;                        \
+           BASIC_convert64((uint64_t) src, d); \
+           dest = (double) d;                 \
         }                                     \
         break;                                \
         case 12:                              \

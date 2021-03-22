@@ -140,7 +140,7 @@ static int external32_basic_convert(char *dest_buf,
             }
         } else if (src_el_size == 8) {
             while (src_ptr != src_end) {
-                BASIC_convert64(src_ptr, dest_ptr);
+                BASIC_convert64(*(const int64_t *) src_ptr, *(int64_t *) dest_ptr);
 
                 src_ptr += src_el_size;
                 dest_ptr += dest_el_size;
@@ -150,7 +150,7 @@ static int external32_basic_convert(char *dest_buf,
         if (src_el_size == 4) {
             while (src_ptr != src_end) {
                 int32_t tmp;
-                BASIC_convert32((*(const int32_t *) src_ptr), (*(int32_t *) dest_ptr));
+                BASIC_convert32((*(const int32_t *) src_ptr), tmp);
                 if (dest_el_size == 8) {
                     /* NOTE: it's wrong if it is unsigned and highest bit is 1, but
                      * at least only happens when number is in the higher half of the
