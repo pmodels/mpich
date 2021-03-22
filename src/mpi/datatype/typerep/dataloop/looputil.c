@@ -7,7 +7,7 @@
 #include "dataloop_internal.h"
 #include "datatype.h"
 #include "mpir_typerep.h"
-#include "looputil.h"
+#include "typerep_util.h"
 #include "veccpy.h"
 
 #define M2M_TO_USERBUF   0
@@ -651,7 +651,7 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONTIG_PACK_EXTERNAL32_TO_BUF);
 
     src_el_size = MPIR_Datatype_get_basic_size(el_type);
-    dest_el_size = MPII_Dataloop_get_basic_size_external32(el_type);
+    dest_el_size = MPII_Typerep_get_basic_size_external32(el_type);
     MPIR_Assert(dest_el_size);
 
     /*
@@ -697,7 +697,7 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
 
     src_el_size = MPIR_Datatype_get_basic_size(el_type);
-    dest_el_size = MPII_Dataloop_get_basic_size_external32(el_type);
+    dest_el_size = MPII_Typerep_get_basic_size_external32(el_type);
     MPIR_Assert(dest_el_size);
 
     /*
@@ -747,7 +747,7 @@ void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
     MPII_Segment_manipulate(segp, first, lastp, contig_pack_external32_to_buf, NULL,    /* MPIR_Segment_vector_pack_external32_to_buf, */
                             NULL,       /* blkidx */
                             NULL,       /* MPIR_Segment_index_pack_external32_to_buf, */
-                            MPII_Dataloop_get_basic_size_external32, &pack_params);
+                            MPII_Typerep_get_basic_size_external32, &pack_params);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_PACK_EXTERNAL32);
     return;
@@ -765,7 +765,7 @@ void MPIR_Segment_unpack_external32(struct MPIR_Segment *segp,
     MPII_Segment_manipulate(segp, first, lastp, contig_unpack_external32_to_buf, NULL,  /* MPIR_Segment_vector_unpack_external32_to_buf, */
                             NULL,       /* blkidx */
                             NULL,       /* MPIR_Segment_index_unpack_external32_to_buf, */
-                            MPII_Dataloop_get_basic_size_external32, &pack_params);
+                            MPII_Typerep_get_basic_size_external32, &pack_params);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_UNPACK_EXTERNAL32);
     return;

@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 #include "dataloop_internal.h"
+#include "typerep_util.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -522,14 +523,14 @@ void MPIR_Dataloop_create_resized(MPI_Datatype oldtype, MPI_Aint extent, void **
 MPI_Aint MPIR_Dataloop_size_external32(MPI_Datatype type)
 {
     if (HANDLE_IS_BUILTIN(type)) {
-        return MPII_Dataloop_get_basic_size_external32(type);
+        return MPII_Typerep_get_basic_size_external32(type);
     } else {
         MPII_Dataloop *dlp = NULL;
 
         MPIR_DATALOOP_GET_LOOPPTR(type, dlp);
         MPIR_Assert(dlp != NULL);
 
-        return MPII_Dataloop_stream_size(dlp, MPII_Dataloop_get_basic_size_external32);
+        return MPII_Dataloop_stream_size(dlp, MPII_Typerep_get_basic_size_external32);
     }
 }
 

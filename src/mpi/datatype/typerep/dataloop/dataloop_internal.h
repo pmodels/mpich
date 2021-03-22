@@ -199,8 +199,6 @@ void MPII_Dataloop_alloc_and_copy(int kind,
                                   MPI_Aint count,
                                   MPII_Dataloop * old_loop, MPII_Dataloop ** new_loop_p);
 
-MPI_Aint MPII_Dataloop_get_basic_size_external32(MPI_Datatype el_type);
-
 void MPII_Dataloop_segment_flatten(MPIR_Segment * segp,
                                    MPI_Aint first,
                                    MPI_Aint * lastp,

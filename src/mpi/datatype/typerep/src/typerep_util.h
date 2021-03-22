@@ -3,8 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef LOOPUTIL_H_INCLUDED
-#define LOOPUTIL_H_INCLUDED
+#ifndef TYPEREP_UTIL_H_INCLUDED
+#define TYPEREP_UTIL_H_INCLUDED
+
+/* This header contains macros and routines to facilitate basic datatype conversions,
+ * e.g. convert integers and real numbers with different sizes and endians. It is mainly
+ * used to support packing and unpacking "external32" datarep.
+ */
 
 #include "mpichconf.h"
 
@@ -411,4 +416,6 @@ static inline void BASIC_convert128(const char *src, char *dest)
 #error "Cannot detect a float type that is 8 bytes long"
 #endif
 
-#endif /* LOOPUTIL_H_INCLUDED */
+MPI_Aint MPII_Typerep_get_basic_size_external32(MPI_Datatype el_type);
+
+#endif /* TYPEREP_UTIL_H_INCLUDED */

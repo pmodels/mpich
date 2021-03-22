@@ -4,6 +4,7 @@
 ##
 
 mpi_core_sources += \
+   src/mpi/datatype/typerep/src/typerep_ext32.c \
    src/mpi/datatype/typerep/src/typerep_flatten.c
 
 if BUILD_YAKSA_ENGINE
