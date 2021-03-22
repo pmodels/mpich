@@ -16,7 +16,7 @@
         for (uintptr_t i = 0; i < max_iov_len; i++) {                   \
             c_type *sbuf = (c_type *) iov[i].iov_base;                  \
             for (size_t j = 0; j < iov[i].iov_len / sizeof(c_type); j++) { \
-                BASIC_convert(sbuf[j], dbuf[idx]);                      \
+                BASIC_convert(&sbuf[j], &dbuf[idx], sizeof(c_type));    \
                 idx++;                                                  \
             }                                                           \
         }                                                               \
@@ -29,7 +29,7 @@
         for (uintptr_t i = 0; i < max_iov_len; i++) {                   \
             c_type *dbuf = (c_type *) iov[i].iov_base;                  \
             for (size_t j = 0; j < iov[i].iov_len / sizeof(c_type); j++) { \
-                BASIC_convert(sbuf[idx], dbuf[j]);                      \
+                BASIC_convert(&sbuf[idx], &dbuf[j], sizeof(c_type));    \
                 idx++;                                                  \
             }                                                           \
         }                                                               \
@@ -44,7 +44,7 @@
             c_type *sbuf = (c_type *) iov[i].iov_base;                  \
             for (size_t j = 0; j < iov[i].iov_len / sizeof(c_type); j++) { \
                 tmp = sbuf[j];                                          \
-                BASIC_convert(tmp, dbuf[idx]);                          \
+                BASIC_convert(&tmp, &dbuf[idx], sizeof(pack_c_type));        \
                 idx++;                                                  \
             }                                                           \
         }                                                               \
@@ -58,7 +58,7 @@
         for (uintptr_t i = 0; i < max_iov_len; i++) {                   \
             c_type *dbuf = (c_type *) iov[i].iov_base;                  \
             for (size_t j = 0; j < iov[i].iov_len / sizeof(c_type); j++) { \
-                BASIC_convert(sbuf[idx], tmp);                          \
+                BASIC_convert(&sbuf[idx], &tmp, sizeof(pack_c_type));        \
                 dbuf[j] = tmp;                                          \
                 idx++;                                                  \
             }                                                           \
