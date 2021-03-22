@@ -46,6 +46,9 @@ int main(int argc, char *argv[])
         if (binding != MPI_T_BIND_NO_OBJECT)
             continue;
 
+        if (scope == MPI_T_SCOPE_READONLY || scope == MPI_T_SCOPE_CONSTANT)
+            continue;
+
         MPI_T_cvar_handle_alloc(i, NULL, &chandle, &count);
         if (count == 1 || (datatype == MPI_CHAR && count < sizeof(cin))) {
             if (MPI_INT == datatype) {
