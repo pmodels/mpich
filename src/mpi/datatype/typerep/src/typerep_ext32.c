@@ -4,7 +4,7 @@
  */
 
 #include <mpiimpl.h>
-#include <mpir_typerep.h>
+#include "typerep_util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -94,4 +94,47 @@ MPI_Aint MPII_Typerep_get_basic_size_external32(MPI_Datatype el_type)
         }
     }
     return 0;
+}
+
+bool MPII_Typerep_basic_type_is_complex(MPI_Datatype el_type)
+{
+    switch (el_type) {
+        case MPI_C_COMPLEX:
+        case MPI_C_DOUBLE_COMPLEX:
+        case MPI_C_LONG_DOUBLE_COMPLEX:
+#ifdef HAVE_FORTRAN_BINDING
+        case MPI_COMPLEX8:
+        case MPI_COMPLEX16:
+        case MPI_COMPLEX32:
+#endif
+#ifdef HAVE_CXX_BINDING
+        case MPI_CXX_FLOAT_COMPLEX:
+        case MPI_CXX_DOUBLE_COMPLEX:
+        case MPI_CXX_LONG_DOUBLE_COMPLEX:
+#endif
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool MPII_Typerep_basic_type_is_unsigned(MPI_Datatype el_type)
+{
+    switch (el_type) {
+        case MPI_PACKED:
+        case MPI_BYTE:
+        case MPI_WCHAR:
+        case MPI_UNSIGNED_CHAR:
+        case MPI_UNSIGNED_SHORT:
+        case MPI_UNSIGNED:
+        case MPI_UNSIGNED_LONG:
+        case MPI_UNSIGNED_LONG_LONG:
+        case MPI_UINT8_T:
+        case MPI_UINT16_T:
+        case MPI_UINT32_T:
+        case MPI_UINT64_T:
+            return true;
+        default:
+            return false;
+    }
 }
