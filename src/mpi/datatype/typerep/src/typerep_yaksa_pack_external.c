@@ -143,29 +143,29 @@
         uintptr_t idx = 0;                                              \
         for (uintptr_t i = 0; i < max_iov_len; i++) {                   \
             dest_c_type *dbuf = (dest_c_type *) iov[i].iov_base;        \
-            for (size_t j = 0; j < iov[i].iov_len / sizeof(src_c_type); j++) { \
+            for (size_t j = 0; j < iov[i].iov_len / sizeof(dest_c_type); j++) { \
                 dbuf[j] = (dest_c_type) sbuf[idx++];                    \
             }                                                           \
         }                                                               \
     } while (0)
 
-#define UNPACK_EXTERNAL_INT_MAPPED(inbuf, outbuf, max_iov_len, basic_type_size, dest_c_type) \
+#define UNPACK_EXTERNAL_INT_MAPPED(inbuf, outbuf, max_iov_len, basic_type_size, src_c_type) \
     do {                                                                \
         switch (basic_type_size) {                                      \
         case 1:                                                         \
-            UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, int8_t, dest_c_type); \
+            UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, src_c_type, int8_t); \
             break;                                                      \
                                                                         \
         case 2:                                                         \
-            UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, int16_t, dest_c_type); \
+            UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, src_c_type, int16_t); \
             break;                                                      \
                                                                         \
         case 4:                                                         \
-            UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, int32_t, dest_c_type); \
+            UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, src_c_type, int32_t); \
             break;                                                      \
                                                                         \
         case 8:                                                         \
-            UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, int64_t, dest_c_type); \
+            UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, src_c_type, int64_t); \
             break;                                                      \
                                                                         \
         default:                                                        \
@@ -173,31 +173,31 @@
         }                                                               \
     } while (0)
 
-#define UNPACK_EXTERNAL_FLOAT_MAPPED(inbuf, outbuf, max_iov_len, basic_type_size, dest_c_type) \
+#define UNPACK_EXTERNAL_FLOAT_MAPPED(inbuf, outbuf, max_iov_len, basic_type_size, src_c_type) \
         do {                                                            \
             switch (basic_type_size) {                                  \
             case 1:                                                     \
-                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, typerep_float8_t, dest_c_type); \
+                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, src_c_type, typerep_float8_t); \
                 break;                                                  \
                                                                         \
             case 2:                                                     \
-                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, typerep_float16_t, dest_c_type); \
+                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, src_c_type, typerep_float16_t); \
                 break;                                                  \
                                                                         \
             case 4:                                                     \
-                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, typerep_float32_t, dest_c_type); \
+                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, src_c_type, typerep_float32_t); \
                 break;                                                  \
                                                                         \
             case 8:                                                     \
-                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, typerep_float64_t, dest_c_type); \
+                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, src_c_type, typerep_float64_t); \
                 break;                                                  \
                                                                         \
             case 16:                                                    \
-                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, typerep_float128_t, dest_c_type); \
+                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, src_c_type, typerep_float128_t); \
                 break;                                                  \
                                                                         \
             case 32:                                                    \
-                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, typerep_float256_t, dest_c_type); \
+                UNPACK_EXTERNAL(inbuf, outbuf, max_iov_len, src_c_type, typerep_float256_t); \
                 break;                                                  \
                                                                         \
             default:                                                    \
@@ -222,7 +222,8 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(datatype);
 
-    *actual_pack_bytes = typeptr->size * incount;
+    MPI_Aint pack_size = MPIR_Typerep_size_external32(datatype);
+    *actual_pack_bytes = pack_size * incount;
 
     /* convert type to IOV */
     uintptr_t max_iov_len;
@@ -238,6 +239,7 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
     assert(typeptr->basic_type != MPI_DATATYPE_NULL);
 
     MPI_Datatype basic_type;
+    /* FIXME: assumes a single basic_type, won't work with struct */
     if (HANDLE_IS_BUILTIN(datatype)) {
         basic_type = datatype;
     } else {
@@ -398,7 +400,8 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
     MPIR_Datatype *typeptr;
     MPIR_Datatype_get_ptr(datatype, typeptr);
 
-    *actual_unpack_bytes = typeptr->size * outcount;
+    MPI_Aint pack_size = MPIR_Typerep_size_external32(datatype);
+    *actual_unpack_bytes = pack_size * outcount;
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(datatype);
 
@@ -416,6 +419,7 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
     assert(typeptr->basic_type != MPI_DATATYPE_NULL);
 
     MPI_Aint basic_type;
+    /* FIXME: assumes a single basic_type, won't work with struct */
     if (HANDLE_IS_BUILTIN(datatype)) {
         basic_type = datatype;
     } else {
@@ -575,6 +579,7 @@ int MPIR_Typerep_size_external32(MPI_Datatype type)
     MPIR_Datatype_get_ptr(type, typeptr);
 
     MPI_Aint basic_type;
+    /* FIXME: assumes a single basic_type, won't work with struct */
     if (HANDLE_IS_BUILTIN(type)) {
         basic_type = type;
     } else {
