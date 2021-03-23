@@ -768,12 +768,17 @@ int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
     MPIR_Request *req;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(vni_idx, nic);
+    ssize_t ret_cqerr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR);
 
     switch (ret) {
         case -FI_EAVAIL:
-            fi_cq_readerr(MPIDI_OFI_global.ctx[ctx_idx].cq, &e, 0);
+            ret_cqerr = fi_cq_readerr(MPIDI_OFI_global.ctx[ctx_idx].cq, &e, 0);
+            /* The error was already consumed, most likely by another thread,
+             *  possible in case of lockless MT model */
+            if (ret_cqerr == -FI_EAGAIN)
+                break;
 
             switch (e.err) {
                 case FI_ETRUNC:
