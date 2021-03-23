@@ -310,14 +310,14 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
             PACK_EXTERNAL_INT_MAPPED(iov, outbuf, max_iov_len, basic_type_size, int64_t);
             break;
 
-#ifdef HAVE_FORTRAN_BINDING
         case MPI_FLOAT:
+#ifdef HAVE_FORTRAN_BINDING
         case MPI_REAL:
         case MPI_REAL4:
+#endif /* HAVE_FORTRAN_BINDING */
             PACK_EXTERNAL_FLOAT_MAPPED(iov, outbuf, max_iov_len, basic_type_size,
                                        typerep_float32_t);
             break;
-#endif /* HAVE_FORTRAN_BINDING */
 
         case MPI_DOUBLE:
         case MPI_C_COMPLEX:
@@ -369,7 +369,8 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
                                            typerep_float256_t);
             } else {
                 /* unsupported, including MPI_INTEGER16 */
-                assert(0);
+                MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**packextunsupport");
+                goto fn_fail;
             }
     }
 
@@ -487,14 +488,14 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
             UNPACK_EXTERNAL_INT_MAPPED(inbuf, iov, max_iov_len, basic_type_size, int64_t);
             break;
 
-#ifdef HAVE_FORTRAN_BINDING
         case MPI_FLOAT:
+#ifdef HAVE_FORTRAN_BINDING
         case MPI_REAL:
         case MPI_REAL4:
+#endif /* HAVE_FORTRAN_BINDING */
             UNPACK_EXTERNAL_FLOAT_MAPPED(inbuf, iov, max_iov_len, basic_type_size,
                                          typerep_float32_t);
             break;
-#endif /* HAVE_FORTRAN_BINDING */
 
         case MPI_DOUBLE:
         case MPI_C_COMPLEX:
@@ -547,7 +548,8 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
                                              typerep_float256_t);
             } else {
                 /* unsupported, including MPI_INTEGER16 */
-                assert(0);
+                MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**packextunsupport");
+                goto fn_fail;
             }
     }
 
