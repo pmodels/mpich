@@ -510,10 +510,10 @@ const char *mpit_errclasscheck(int err)
     const char *p = 0;
     switch (err) {
         case MPI_T_ERR_CVAR_SET_NOT_NOW:
-            p = "MPI_T cvar not set";
+            p = "MPI_T cvar cannot be set at this moment";
             break;
         case MPI_T_ERR_CVAR_SET_NEVER:
-            p = "MPI_T cvar was never set";
+            p = "MPI_T cvar cannot be set until end of execution";
             break;
         case MPI_T_ERR_PVAR_NO_STARTSTOP:
             p = "MPI_T pvar does not support start and stop";
