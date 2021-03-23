@@ -9,6 +9,7 @@
 #include "typerep_util.h"
 #include <assert.h>
 
+/* convert equal sizes */
 #define PACK_EXTERNAL_equal_size(iov, outbuf, max_iov_len, c_type) \
     do {                                                                \
         c_type *dbuf = (c_type *) outbuf;                               \
@@ -35,6 +36,7 @@
         }                                                               \
     } while (0)
 
+/* convert unequal sizes */
 #define PACK_EXTERNAL_unequal_size(iov, outbuf, max_iov_len, c_type, pack_c_type) \
     do {                                                                \
         pack_c_type tmp;                                                \
@@ -59,6 +61,42 @@
             c_type *dbuf = (c_type *) iov[i].iov_base;                  \
             for (size_t j = 0; j < iov[i].iov_len / sizeof(c_type); j++) { \
                 BASIC_convert(&sbuf[idx], &tmp, sizeof(pack_c_type));        \
+                dbuf[j] = tmp;                                          \
+                idx++;                                                  \
+            }                                                           \
+        }                                                               \
+    } while (0)
+
+/* long double */
+#ifdef HAVE_FLOAT128
+#define EXTERNAL_LONG_DOUBLE_TYPE __float128
+#else
+#define EXTERNAL_LONG_DOUBLE_TYPE long double
+#endif
+
+#define PACK_EXTERNAL_long_double(iov, outbuf, max_iov_len) \
+    do {                                                                \
+        char *dbuf = outbuf;                                            \
+        uintptr_t idx = 0;                                              \
+        for (uintptr_t i = 0; i < max_iov_len; i++) {                   \
+            long double *sbuf = iov[i].iov_base;                        \
+            for (size_t j = 0; j < iov[i].iov_len / sizeof(long double); j++) { \
+                EXTERNAL_LONG_DOUBLE_TYPE tmp = sbuf[j];                \
+                BASIC_copyto(&tmp, dbuf + idx * 16, sizeof(tmp));       \
+                idx++;                                                  \
+            }                                                           \
+        }                                                               \
+    } while (0)
+
+#define UNPACK_EXTERNAL_long_double(inbuf, iov, max_iov_len) \
+    do {                                                                \
+        const char *sbuf = inbuf;                                       \
+        uintptr_t idx = 0;                                              \
+        for (uintptr_t i = 0; i < max_iov_len; i++) {                   \
+            long double *dbuf = iov[i].iov_base;                        \
+            for (size_t j = 0; j < iov[i].iov_len / sizeof(long double); j++) { \
+                EXTERNAL_LONG_DOUBLE_TYPE tmp;                          \
+                BASIC_copyto(sbuf + idx * 16, &tmp, sizeof(tmp));       \
                 dbuf[j] = tmp;                                          \
                 idx++;                                                  \
             }                                                           \
@@ -116,7 +154,10 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
         ext_type_size /= 2;
     }
 
-    if (basic_type_size == ext_type_size) {
+    if (basic_type == MPI_LONG_DOUBLE) {
+        /* most c compiler's long double is different from 128-bit floating point */
+        PACK_EXTERNAL_long_double(iov, outbuf, max_iov_len);
+    } else if (basic_type_size == ext_type_size) {
         if (basic_type_size == 1) {
             PACK_EXTERNAL_equal_size(iov, outbuf, max_iov_len, int8_t);
         } else if (basic_type_size == 2) {
@@ -128,9 +169,6 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
         } else {
             MPIR_Assert(0);
         }
-    } else if (basic_type == MPI_LONG_DOUBLE) {
-        /* FIXME */
-        MPIR_Assert(0);
     } else {
         if (basic_type_size == 1) {
             MPIR_Assert(0);
@@ -213,7 +251,10 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
         ext_type_size /= 2;
     }
 
-    if (basic_type_size == ext_type_size) {
+    if (basic_type == MPI_LONG_DOUBLE) {
+        /* most c compiler's long double is different from 128-bit floating point */
+        UNPACK_EXTERNAL_long_double(inbuf, iov, max_iov_len);
+    } else if (basic_type_size == ext_type_size) {
         if (basic_type_size == 1) {
             UNPACK_EXTERNAL_equal_size(inbuf, iov, max_iov_len, int8_t);
         } else if (basic_type_size == 2) {
@@ -225,9 +266,6 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
         } else {
             MPIR_Assert(0);
         }
-    } else if (basic_type == MPI_LONG_DOUBLE) {
-        /* FIXME */
-        MPIR_Assert(0);
     } else {
         if (basic_type_size == 1) {
             MPIR_Assert(0);
