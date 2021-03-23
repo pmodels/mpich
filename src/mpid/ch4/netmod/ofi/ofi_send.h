@@ -398,11 +398,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     } else {
         int vni_src, vni_dst;
         MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
+        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_src);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, vni_src, vni_dst,
                                    request, 0, 0ULL, MPIR_ERR_NONE);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
+        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_src);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISEND);
@@ -442,11 +442,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
     } else {
         int vni_src, vni_dst;
         MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
+        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_src);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, vni_src, vni_dst, request, 0, 0ULL,
                                    *errflag);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
+        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_src);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_ISEND_COLL);
@@ -468,11 +468,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count
     } else {
         int vni_src, vni_dst;
         MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
+        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_src);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, vni_src, vni_dst, request, 0,
                                    MPIDI_OFI_SYNC_SEND, MPIR_ERR_NONE);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
+        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_src);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISSEND);

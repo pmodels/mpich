@@ -279,13 +279,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     } else {
         rreq = message;
         int vci = MPIDI_Request_get_vci(rreq);
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci);
         av = MPIDIU_comm_rank_to_av(rreq->comm, message->status.MPI_SOURCE);
         /* FIXME: need get vni_src in the request */
         mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, message->status.MPI_SOURCE,
                                        message->status.MPI_TAG, rreq->comm, 0, av, 0, vci,
                                        &rreq, MPIDI_OFI_USE_EXISTING, FI_CLAIM | FI_COMPLETION);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMRECV);
@@ -314,12 +314,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     } else {
         int vni_src, vni_dst;
         MPIDI_OFI_RECV_VNIS(vni_src, vni_dst);
-        MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(vni_dst).lock);
+        MPIDI_OFI_THREAD_CS_ENTER_REC_VCI_OPTIONAL(vni_dst);
         mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
                                        context_offset, addr, vni_src, vni_dst, request,
                                        MPIDI_OFI_ON_HEAP, 0ULL);
         MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_dst).lock);
+        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_dst);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IRECV);

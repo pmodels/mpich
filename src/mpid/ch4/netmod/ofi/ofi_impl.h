@@ -179,6 +179,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_win_vni(MPIR_Win * win)
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
 
+#define MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_)            \
+    do {                                                        \
+        if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {      \
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
+        }                                                       \
+    } while (0)
+
+#define MPIDI_OFI_THREAD_CS_ENTER_REC_VCI_OPTIONAL(vci_)        \
+    do {                                                        \
+        if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {      \
+            MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(vci_).lock);     \
+        }                                                       \
+    } while (0)
+
+#define MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_)         \
+    do {                                                    \
+        if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {  \
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock); \
+        }                                                   \
+    } while (0)
+
 #define MPIDI_OFI_CALL_RETURN(FUNC, _ret)                               \
         do {                                                            \
             (_ret) = FUNC;                                              \

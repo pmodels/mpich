@@ -129,11 +129,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 
     int vni_src, vni_dst;
     MPIDI_OFI_PROBE_VNIS(vni_src, vni_dst);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
+    MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_dst);
     /* Set flags for mprobe peek, when ready */
     mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, vni_src, vni_dst,
                                     flag, status, message, FI_CLAIM | FI_COMPLETION);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_dst).lock);
+    MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_dst);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_exit;
@@ -163,10 +163,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
     } else {
         int vni_src, vni_dst;
         MPIDI_OFI_PROBE_VNIS(vni_src, vni_dst);
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
+        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_dst);
         mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr,
                                         vni_src, vni_dst, flag, status, NULL, 0ULL);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_dst).lock);
+        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_dst);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IPROBE);
