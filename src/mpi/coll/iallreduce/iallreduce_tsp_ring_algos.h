@@ -99,12 +99,6 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
 
         MPIR_TSP_sched_isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
                              datatype, dst, tag, comm, sched, nvtcs, &vtcs);
-
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST,
-                         "displs[recv_rank:%d]:%d, cnts[recv_rank:%d, displs[send_rank:%d]:%d, cnts[send_rank:%d]:%d]:%d ",
-                         recv_rank, displs[recv_rank], recv_rank, cnts[recv_rank], send_rank,
-                         displs[send_rank], send_rank, cnts[send_rank]));
     }
     MPIR_CHKLMEM_MALLOC(reduce_id, int *, 2 * sizeof(int), mpi_errno, "reduce_id", MPL_MEM_COLL);
 

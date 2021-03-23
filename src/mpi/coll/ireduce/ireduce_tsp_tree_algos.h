@@ -45,10 +45,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Scheduling pipelined reduce on %d ranks, root=%d",
-                     MPIR_Comm_size(comm), root));
-
     size = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
     is_root = (rank == root);
@@ -76,11 +72,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     /* calculate chunking information for pipelining */
     MPIR_Algo_calculate_pipeline_chunk_info(chunk_size, type_size, count, &num_chunks,
                                             &chunk_size_floor, &chunk_size_ceil);
-    /* print chunking information */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Reduce pipeline info: chunk_size=%d count=%d num_chunks=%d chunk_size_floor=%d chunk_size_ceil=%d",
-                                             chunk_size, count, num_chunks,
-                                             chunk_size_floor, chunk_size_ceil));
 
     if (!is_commutative) {
         if (k > 1)
@@ -188,11 +179,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                     nvtcs = 1;
                 }
             }
-
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "Schedule receive from child %d", child));
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "Posting receive at address %p", recv_address));
 
             recv_id[i] = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,
                                               sched, nvtcs, vtcs);
