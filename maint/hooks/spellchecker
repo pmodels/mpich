@@ -10,8 +10,8 @@
 # Redirect output to stderr.
 exec 1>&2
 
-MIRROR=/tmp/${USER}/mpich-tmp-mirror
-TMP_FILENAME=/tmp/${USER}/mpich-tmp-file
+MIRROR=/tmp/${USER}/mpich-spellchecker-$$
+TMP_FILENAME=/tmp/${USER}/mpich-tmp-$$
 
 # Checkout a copy of the current index into MIRROR
 git checkout-index --prefix=$MIRROR/ -af
@@ -42,6 +42,8 @@ do
     fi
 done
 
+popd > /dev/null
+
 rm -rf ${MIRROR} ${TMP_FILENAME}
 
 if [ $ret != 0 ] ; then
@@ -50,5 +52,3 @@ if [ $ret != 0 ] ; then
     echo -e "${RED}== SPELLCHECKER SCRIPT FAILED ==${NC}"
     exit $ret
 fi
-
-popd > /dev/null
