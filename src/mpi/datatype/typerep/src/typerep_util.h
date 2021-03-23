@@ -147,6 +147,13 @@ static inline void BASIC_convert(const void *src, void *dest, int size)
     }
 }
 
+static inline void BASIC_copyto(const void *src, void *dest, int size)
+{
+    for (int i = 0; i < size; i++) {
+        ((char *) dest)[i] = ((const char *) src)[size - 1 - i];
+    }
+}
+
 #else
 
 /* FIXME: we may need use memcpy to allow no-alignment */
@@ -168,6 +175,11 @@ static inline void BASIC_convert(const void *src, void *dest, int size)
         default:
             MPIR_Assert(0);
     }
+}
+
+static inline void BASIC_copyto(const void *src, void *dest, int size)
+{
+    memcpy(dest, src, (size_t) size);
 }
 
 #endif
