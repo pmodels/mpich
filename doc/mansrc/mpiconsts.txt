@@ -532,8 +532,8 @@ Error codes for MPI_T:
 . MPI_T_ERR_OUT_OF_HANDLES    - No more handles available
 . MPI_T_ERR_OUT_OF_SESSIONS   - No more sessions available
 . MPI_T_ERR_INVALID_SESSION   - Session argument is not valid
-. MPI_T_ERR_CVAR_SET_NOT_NOW  - Cvar can''t be set at this moment
-. MPI_T_ERR_CVAR_SET_NEVER    - Cvar can''t be set until end of execution
+. MPI_T_ERR_CVAR_SET_NOT_NOW  - Cvar cannot be set at this moment
+. MPI_T_ERR_CVAR_SET_NEVER    - Cvar cannot be set until end of execution
 . MPI_T_ERR_PVAR_NO_STARTSTOP - Pvar can''t be started or stopped
 . MPI_T_ERR_PVAR_NO_WRITE     - Pvar can''t be written or reset
 . MPI_T_ERR_PVAR_NO_ATOMIC    - Pvar can''t be R/W atomically
