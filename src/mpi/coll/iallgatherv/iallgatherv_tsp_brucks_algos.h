@@ -79,8 +79,6 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     rank = MPIR_Comm_rank(comm);
     size = MPIR_Comm_size(comm);
     max = size - 1;
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "allgatherv_brucks: num_ranks: %d, k: %d", size, k));
 
     if (is_inplace) {
         sendcount = recvcounts[rank];
@@ -96,22 +94,10 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_lb, &recvtype_true_extent);
     recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);
 
-#ifdef MPL_USE_DBG_LOGGING
-    MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "send_type_size: %lu, sendtype_extent: %lu, send_count: %d",
-                     sendtype_size, sendtype_extent, sendcount));
-#endif
-
     while (max) {
         nphases++;
         max /= k;
     }
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "comm_size:%d, nphases:%d, recvcounts[rank:%d]:%d", size,
-                     nphases, rank, recvcounts[rank]));
 
     /* Check if size is power of k */
     if (MPL_ipow(k, nphases) == size)
@@ -153,11 +139,6 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     index_sum = recvcounts[rank];       /* because in initially you copy your own data to the top of recv_buf */
     if (nphases > 0)
         recv_index[idx++] = index_sum;
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST,
-                     "addresses of all allocated memory:\n recv_index:%p, recv_id:%p, r_counts:%p, s_counts:%p, tmp_recvbuf:%p",
-                     recv_index, recv_id, r_counts, s_counts, tmp_recvbuf));
 
     delta = 1;
     for (i = 0; i < nphases; i++) {
@@ -211,10 +192,6 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             if (idx < nphases * (k - 1))
                 recv_index[idx++] = index_sum;
 
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST,
-                             "r_counts[%d][%d]=%d, s_counts[%d][%d]=%d", i, j - 1,
-                             r_counts[i][j - 1], i, j - 1, s_counts[i][j - 1]));
         }
         delta *= k;
     }
@@ -240,28 +217,16 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
             dst = (int) (size + (rank - delta * j)) % size;
             src = (int) (rank + delta * j) % size;
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "Phase#%d/%d:j:%d: src:%d, dst:%d",
-                             i, nphases, j, src, dst));
             /* Recv at the exact location */
             recv_id[idx] =
                 MPIR_TSP_sched_irecv((char *) tmp_recvbuf + recv_index[idx] * recvtype_extent,
                                      r_counts[i][j - 1], recvtype, src, tag, comm, sched, 0, NULL);
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST,
-                             "Phase#%d:, k:%d with recv_index[idx:%d]:%d at Recv at:%p from src:%d for recv_count:%d",
-                             i, k, idx, recv_index[idx],
-                             ((char *) tmp_recvbuf + recv_index[idx] * recvtype_extent), src,
-                             r_counts[i][j - 1]));
             idx++;
 
             /* Send from the start of recv till the count amount of data */
             MPIR_TSP_sched_isend(tmp_recvbuf, s_counts[i][j - 1], recvtype, dst, tag, comm, sched,
                                  n_invtcs, recv_id);
 
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                                     "Phase#%d:, k:%d Send from:%p to dst:%d for count:%d",
-                                                     i, k, tmp_recvbuf, dst, s_counts[i][j - 1]));
         }
         n_invtcs += (k - 1);
         delta *= k;
@@ -292,10 +257,6 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                          recvcounts[src], recvtype,
                                          (char *) recvbuf + displs[src] * recvtype_extent,
                                          recvcounts[src], recvtype, sched, 0, NULL);
-                MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                (MPL_DBG_FDEST,
-                                 "Copied rank %d's data for recvcounts:%d from idx:%d at displs:%d",
-                                 src, recvcounts[src], idx, displs[src]));
             }
         }
     }
