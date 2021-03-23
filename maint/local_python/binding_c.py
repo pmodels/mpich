@@ -67,7 +67,7 @@ def dump_mpi_c(func, map_type="SMALL"):
     G.out.append("")
 
     # Create the MPI and QMPI wrapper functions that will call the above, "real" version of the
-    # funcion in the MPII prefix
+    # function in the MPII prefix
     dump_qmpi_wrappers(func, func['_map_type'])
 
 def get_func_file_path(func, root_dir):
