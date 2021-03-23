@@ -2816,6 +2816,9 @@ AC_CHECK_SIZEOF(wchar_t, 0, [
 ])
 
 AC_CHECK_SIZEOF(__float128, 0)
+if test "$ac_cv_sizeof___float128" = "16" ; then
+    AC_DEFINE(HAVE_FLOAT128, 1, [Define if __float128 is supported])
+fi
 
 AC_CHECK_SIZEOF(float_int, 0, [typedef struct { float a; int b; } float_int; ])
 AC_CHECK_SIZEOF(double_int, 0, [typedef struct { double a; int b; } double_int; ])
