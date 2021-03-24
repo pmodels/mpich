@@ -94,6 +94,9 @@ static int gpu_ze_init_driver()
 
         if (NULL != global_ze_driver_handle) {
             break;
+        } else {
+            MPL_free(global_ze_devices_handle);
+            global_ze_devices_handle = NULL;
         }
     }
 
