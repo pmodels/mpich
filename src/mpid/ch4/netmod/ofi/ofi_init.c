@@ -626,12 +626,97 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     goto fn_exit;
 }
 
+/* static functions needed by finalize */
+
+/* NOTE: exactly the same as used in dynproc_send_disconnect (TODO: refactor) */
+#define MPIDI_OFI_FLUSH_CONTEXT_ID 0xF000
+#define MPIDI_OFI_FLUSH_TAG        1
+
+/* send a dummy message to flush the send queue */
+static int flush_send(int dst)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Comm *comm = MPIR_Process.comm_world;
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_comm_rank_to_av(comm, dst), 0, 0);
+    int data = 0;
+    uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
+                                                 MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
+
+    /* Use the same direct send method as used in establishing dynamic processes */
+    MPIDI_OFI_dynamic_process_request_t req;
+    req.done = 0;
+    req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+
+    MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx, &data, 4, NULL, 0,
+                                      addr, match_bits, &req.context), 0, tsenddata, FALSE);
+    MPIDI_OFI_PROGRESS_WHILE(!req.done, 0);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* recv the dummy message the other process sent for the purpose flushing send queue */
+static int flush_recv(int src)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Comm *comm = MPIR_Process.comm_world;
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_comm_rank_to_av(comm, src), 0, 0);
+    int data;
+    uint64_t mask_bits = 0;
+    uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
+                                                 MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
+
+    /* Use the same direct recv method as used in establishing dynamic processes */
+    MPIDI_OFI_dynamic_process_request_t req;
+    req.done = 0;
+    req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+
+    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx, &data, 4, NULL,
+                                  addr, match_bits, mask_bits, &req.context), 0, trecv, FALSE);
+    MPIDI_OFI_PROGRESS_WHILE(!req.done, 0);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int flush_send_queue(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int n = MPIR_Process.size;
+    int i = MPIR_Process.rank;
+    if (n > 1) {
+        int dst = (i + 1) % n;
+        int src = (i - 1 + n) % n;
+        if (i % 2 == 0) {
+            mpi_errno = flush_send(dst);
+            MPIR_ERR_CHECK(mpi_errno);
+            mpi_errno = flush_recv(src);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            mpi_errno = flush_recv(src);
+            MPIR_ERR_CHECK(mpi_errno);
+            mpi_errno = flush_send(dst);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_OFI_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i = 0;
-    int barrier[2] = { 0 };
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
@@ -648,10 +733,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     /* Destroy RMA key allocator */
     MPIDI_OFI_mr_key_allocator_destroy();
 
-    /* Barrier over allreduce, but force non-immediate send */
-    MPIDI_OFI_global.max_buffered_send = 0;
-    mpi_errno = MPIR_Allreduce_allcomm_auto(&barrier[0], &barrier[1], 1, MPI_INT, MPI_SUM,
-                                            MPIR_Process.comm_world, &errflag);
+    /* Flush any last lightweight send */
+    mpi_errno = flush_send_queue();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight injection emulation requests */
