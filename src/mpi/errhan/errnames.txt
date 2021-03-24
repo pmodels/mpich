@@ -846,6 +846,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **vc_in_error_state:Connection is in error state
 **tcp_cleanup_fail:Error while cleaning up failed connection
 **tmpvc_connect_fail:Failure during connection protocol
+**comm_connect_fail:Unable to establish connection to process
+**comm_accept_fail:Unable to establish connection from process
 
 **coll_fail:Failure during collective
 **collalgo:User set collective algorithm is not usable for the provided arguments
