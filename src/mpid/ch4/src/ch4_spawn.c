@@ -92,9 +92,8 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
             MPIR_Bcast(pmi_errcodes, total_num_processes, MPI_INT, root, comm_ptr, &errflag);
         MPIR_ERR_CHECK(mpi_errno);
 
-        /* FIXME: Are we only checking pmi_errcodes[0] and ignoring the rest? */
         for (int i = 0; i < total_num_processes; i++) {
-            errcodes[i] = pmi_errcodes[0];
+            errcodes[i] = pmi_errcodes[i];
             should_accept = should_accept && errcodes[i];
         }
         should_accept = !should_accept;
