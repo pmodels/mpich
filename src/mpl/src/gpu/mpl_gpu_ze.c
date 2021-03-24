@@ -16,7 +16,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 ze_driver_handle_t global_ze_driver_handle;
 ze_device_handle_t *global_ze_devices_handle = NULL;
 ze_context_handle_t global_ze_context;
-int global_ze_device_count = 0;
+int global_ze_device_count;
 static int gpu_ze_init_driver(void);
 
 #define ZE_ERR_CHECK(ret) \
@@ -69,6 +69,7 @@ static int gpu_ze_init_driver()
     int i, d;
     /* Find a driver instance with a GPU device */
     for (i = 0; i < driver_count; ++i) {
+        global_ze_device_count = 0;
         ret = zeDeviceGet(all_drivers[i], &global_ze_device_count, NULL);
         ZE_ERR_CHECK(ret);
         global_ze_devices_handle =
