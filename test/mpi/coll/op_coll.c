@@ -55,8 +55,9 @@ int main(int argc, char **argv)
         memtype = MTestArgListGetMemType(head, "oddmemtype");
     MTestArgListDestroy(head);
 
-    MTestAlloc(COUNT * size * sizeof(int), memtype, (void **) &buf_h, (void **) &buf, 0);
-    MTestAlloc(COUNT * size * sizeof(int), memtype, (void **) &recvbuf_h, (void **) &recvbuf, 0);
+    MTestMalloc(COUNT * size * sizeof(int), memtype, (void **) &buf_h, (void **) &buf, rank);
+    MTestMalloc(COUNT * size * sizeof(int), memtype, (void **) &recvbuf_h, (void **) &recvbuf,
+                rank);
     recvcounts = malloc(size * sizeof(int));
     test_op_coll_with_root(rank, size, 0);
     test_op_coll_with_root(rank, size, size - 1);

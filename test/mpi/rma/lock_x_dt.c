@@ -108,7 +108,7 @@ static int run_test(MPI_Comm comm, MPI_Win win, DTP_obj_s orig_obj, void *origbu
      * second one informs the origin that the target is done
      * checking. */
     if (rank == orig) {
-        MTestAlloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf, 0);
+        MTestMalloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf, 0);
         assert(origbuf && origbuf_h);
 
         err = DTP_obj_buf_init(orig_obj, origbuf_h, 0, 1, count);
@@ -140,7 +140,7 @@ static int run_test(MPI_Comm comm, MPI_Win win, DTP_obj_s orig_obj, void *origbu
                                targettype, MPI_REPLACE, win);
             }
         } else {
-            MTestAlloc(result_obj.DTP_bufsize, resultmem, &resultbuf_h, &resultbuf, 0);
+            MTestMalloc(result_obj.DTP_bufsize, resultmem, &resultbuf_h, &resultbuf, 1);
             assert(resultbuf && resultbuf_h);
 
 #if !defined(MULTI_ORIGIN) && !defined(MULTI_TARGET)
@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
         goto fn_exit;
     }
 
-    MTestAlloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf, 0);
+    MTestMalloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf, 2);
     assert(targetbuf && targetbuf_h);
 
     while (MTestGetIntracommGeneral(&comm, minsize, 1)) {

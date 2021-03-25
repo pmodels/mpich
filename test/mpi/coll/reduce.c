@@ -68,8 +68,8 @@ int main(int argc, char *argv[])
         MPI_Comm_size(comm, &size);
 
         for (count = 1; count < 130000; count = count * 2) {
-            MTestAlloc(count * sizeof(int), memtype, &recvbuf_h, &recvbuf, 0);
-            MTestAlloc(count * sizeof(int), memtype, &sendbuf_h, &sendbuf, 0);
+            MTestMalloc(count * sizeof(int), memtype, &recvbuf_h, &recvbuf, rank);
+            MTestMalloc(count * sizeof(int), memtype, &sendbuf_h, &sendbuf, rank);
 
             for (root = 0; root < size; root++) {
                 set_send_buf(count, sendbuf_h);
