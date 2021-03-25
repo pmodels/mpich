@@ -244,7 +244,13 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_winfo_mr_key(MPIR_Win * w, int rank)
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
 {
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    /* Lockless mode requires to use atomic operation, in order to make
+     * cntrs thread-safe. */
+    MPL_atomic_fetch_add_uint64(MPIDI_OFI_WIN(win).issued_cntr, 1);
+#else
     (*MPIDI_OFI_WIN(win).issued_cntr)++;
+#endif
 }
 
 /* Calculate the OFI context index.
@@ -263,7 +269,21 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(int vni, int nic)
     /* NOTE: shared with ctx[0] */
     int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
 #endif
+
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    MPL_atomic_fetch_add_uint64(&MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr, 1);
+#else
     MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr++;
+#endif
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_set(int ctx_idx, int val)
+{
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    MPL_atomic_store_uint64(&MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr, val);
+#else
+    MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr = val;
+#endif
 }
 
 /* Externs:  see util.c for definition */
