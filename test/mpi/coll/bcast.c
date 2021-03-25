@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
                     break;
                 }
 
-                MTestAlloc(obj.DTP_bufsize, memtype, &buf_h, &buf, 0);
+                MTestMalloc(obj.DTP_bufsize, memtype, &buf_h, &buf, rank);
                 assert(buf);
 
                 if (rank == root) {

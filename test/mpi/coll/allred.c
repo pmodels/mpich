@@ -61,8 +61,8 @@ struct double_test {
 #define DECL_MALLOC_IN_OUT_SOL(type)            \
     type *in, *out, *sol; /*allocated on host*/ \
     void *in_d, *out_d; /*allocated on device*/ \
-    MTestAlloc(count * sizeof(type), memtype, ((void **)&in), &in_d, 1);  \
-    MTestAlloc(count * sizeof(type), memtype, ((void **)&out), &out_d, 1);\
+    MTestCalloc(count * sizeof(type), memtype, ((void **)&in), &in_d, rank);  \
+    MTestCalloc(count * sizeof(type), memtype, ((void **)&out), &out_d, rank);\
     sol = (type *) calloc(count, sizeof(type));
 
 #define SET_INDEX_CONST(arr, val)               \

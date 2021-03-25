@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
         goto fn_exit;
     }
 
-    MTestAlloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf, 0);
+    MTestMalloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf, 0);
     assert(targetbuf && targetbuf_h);
 
     /* The following illustrates the use of the routines to
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
             targettype = target_obj.DTP_datatype;
 
             if (rank == orig) {
-                MTestAlloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf, 0);
+                MTestMalloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf, 1);
                 assert(origbuf && origbuf_h);
 
                 err = DTP_obj_buf_init(orig_obj, origbuf_h, 0, 1, count);

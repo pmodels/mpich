@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
         MPI_Comm_rank(comm, &rank);
 
         for (count = 1; count < 65000; count = count * 2) {
-            MTestAlloc(count * sizeof(int), memtype, &buf_h, &buf, 0);
+            MTestMalloc(count * sizeof(int), memtype, &buf_h, &buf, rank);
 
             set_buf(rank, count, buf_h);
             MTestCopyContent(buf_h, buf, count * sizeof(int), memtype);

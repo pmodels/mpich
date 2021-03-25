@@ -77,7 +77,7 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
         }
 #endif
     } else if (rank == orig) {
-        MTestAlloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf, 0);
+        MTestMalloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf, 0);
         assert(origbuf && origbuf_h);
 
 #if defined(USE_GET)
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
         goto fn_exit;
     }
 
-    MTestAlloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf, 0);
+    MTestMalloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf, 1);
     assert(targetbuf && targetbuf_h);
 
     /* The following illustrates the use of the routines to

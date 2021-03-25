@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
             }
 
             if (rank == source) {
-                MTestAlloc(send_obj.DTP_bufsize, sendmem, &sendbuf_h, &sendbuf, 0);
+                MTestMalloc(send_obj.DTP_bufsize, sendmem, &sendbuf_h, &sendbuf, rank);
                 assert(sendbuf && sendbuf_h);
 
                 err = DTP_obj_buf_init(send_obj, sendbuf_h, 0, 1, count[0]);
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 
                 MTestFree(sendmem, sendbuf_h, sendbuf);
             } else if (rank == dest) {
-                MTestAlloc(recv_obj.DTP_bufsize, recvmem, &recvbuf_h, &recvbuf, 0);
+                MTestMalloc(recv_obj.DTP_bufsize, recvmem, &recvbuf_h, &recvbuf, rank);
                 assert(recvbuf && recvbuf_h);
 
                 err = DTP_obj_buf_init(recv_obj, recvbuf_h, -1, -1, count[0]);
