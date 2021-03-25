@@ -19,12 +19,23 @@
                          rreq->status.MPI_SOURCE, rreq->status.MPI_TAG, \
                          (int) data_sz, (int) in_data_sz)
 
+MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_set_buffer_attr(MPIR_Request * rreq)
+{
+    MPL_pointer_attr_t attr;
+    MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
+
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
+    p->is_device_buffer = (attr.type == MPL_GPU_POINTER_DEV);
+}
+
 /* caching recv buffer information */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Request * rreq)
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     p->recv_type = MPIDIG_RECV_DATATYPE;
     p->in_data_sz = in_data_sz;
+
+    MPIDIG_recv_set_buffer_attr(rreq);
 
     MPI_Aint max_data_size;
     MPIR_Datatype_get_size_macro(MPIDIG_REQUEST(rreq, datatype), max_data_size);
@@ -48,6 +59,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_s
         p->iov_ptr = data;
         p->iov_num = data_sz;
     }
+
+    MPIDIG_recv_set_buffer_attr(rreq);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_finish(MPIR_Request * rreq)
@@ -62,7 +75,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_finish(MPIR_Request * rreq)
  * Providing helper routine keeps the internal of MPIDIG_rreq_async_t here.
  */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq);
-MPL_STATIC_INLINE_PREFIX void MPIDIG_get_recv_data(int *is_contig, void **p_data,
+MPL_STATIC_INLINE_PREFIX void MPIDIG_get_recv_data(int *is_contig, int *is_gpu, void **p_data,
                                                    MPI_Aint * p_data_sz, MPIR_Request * rreq)
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
@@ -80,6 +93,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_get_recv_data(int *is_contig, void **p_data
         *p_data = p->iov_ptr;
         *p_data_sz = p->iov_num;
     }
+    *is_gpu = p->is_device_buffer;
 }
 
 /* Sometime the transport just need info to make algorithm choice */

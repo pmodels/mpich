@@ -167,6 +167,7 @@ typedef enum {
 
 typedef struct MPIDIG_req_async {
     MPIDIG_recv_type recv_type;
+    bool is_device_buffer;
     MPI_Aint in_data_sz;
     MPI_Aint offset;
     struct iovec *iov_ptr;      /* used with MPIDIG_RECV_IOV */
