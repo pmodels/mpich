@@ -17,12 +17,15 @@ typedef enum {
     MTEST_MEM_TYPE__REGISTERED_HOST,
     MTEST_MEM_TYPE__DEVICE,
     MTEST_MEM_TYPE__SHARED,
+    MTEST_MEM_TYPE__RANDOM,
+    MTEST_MEM_TYPE__ALL,
 } mtest_mem_type_e;
 
 MPI_Aint MTestDefaultMaxBufferSize();
 
 typedef void MTestArgList;
 MTestArgList *MTestArgListCreate(int argc, char *argv[]);
+char *MTestArgListSearch(MTestArgList * head, const char *arg);
 char *MTestArgListGetString(MTestArgList * head, const char *arg);
 int MTestArgListGetInt(MTestArgList * head, const char *arg);
 long MTestArgListGetLong(MTestArgList * head, const char *arg);
@@ -32,6 +35,12 @@ int MTestArgListGetInt_with_default(MTestArgList * head, const char *arg, int de
 long MTestArgListGetLong_with_default(MTestArgList * head, const char *arg, long default_val);
 mtest_mem_type_e MTestArgListGetMemType(MTestArgList * head, const char *arg);
 void MTestArgListDestroy(MTestArgList * head);
+
+mtest_mem_type_e MTest_memtype_random(void);
+const char *MTest_memtype_name(mtest_mem_type_e memtype);
+int *MTestParseIntList(const char *str, int *num);
+char **MTestParseStringList(const char *str, int *num);
+void MTestFreeStringList(char **str, int num);
 
 #define MTEST_DTP_DECLARE(name) \
     mtest_mem_type_e name ## mem; \
