@@ -59,8 +59,9 @@ static void MTestArgListInsert(MTestArgListEntry ** head, char *arg, char *val)
     tmp->next->next = NULL;
 }
 
-static char *MTestArgListSearch(MTestArgListEntry * head, const char *arg)
+char *MTestArgListSearch(MTestArgList * dummy_head, const char *arg)
 {
+    MTestArgListEntry *head = dummy_head;
     char *val = NULL;
 
     while (head && strcmp(head->arg, arg))
@@ -172,16 +173,47 @@ long MTestArgListGetLong_with_default(MTestArgList * head, const char *arg, long
 mtest_mem_type_e MTestArgListGetMemType(MTestArgList * head, const char *arg)
 {
     const char *memtype = MTestArgListGetString_with_default(head, arg, NULL);
-    if (!memtype || strcmp(memtype, "host") == 0)
+    if (!memtype || strcmp(memtype, "host") == 0) {
         return MTEST_MEM_TYPE__UNREGISTERED_HOST;
-    else if (strcmp(memtype, "reg_host") == 0)
+    } else if (strcmp(memtype, "reg_host") == 0) {
         return MTEST_MEM_TYPE__REGISTERED_HOST;
-    else if (strcmp(memtype, "device") == 0)
+    } else if (strcmp(memtype, "device") == 0) {
         return MTEST_MEM_TYPE__DEVICE;
-    else if (strcmp(memtype, "shared") == 0) {
+    } else if (strcmp(memtype, "shared") == 0) {
         return MTEST_MEM_TYPE__SHARED;
-    } else
+    } else if (strcmp(memtype, "random") == 0) {
+        return MTEST_MEM_TYPE__RANDOM;
+    } else if (strcmp(memtype, "all") == 0) {
+        return MTEST_MEM_TYPE__ALL;
+    } else {
         return MTEST_MEM_TYPE__UNSET;
+    }
+}
+
+mtest_mem_type_e MTest_memtype_random(void)
+{
+    /* roll our own rand() since we need prevent interfering with dtpools random pool.
+     * Using the code from libc man page */
+    static unsigned long number = 1;
+    number = number * 1103515245 + 12345;
+    return number / 65536 % 4 + MTEST_MEM_TYPE__UNREGISTERED_HOST;
+}
+
+const char *MTest_memtype_name(mtest_mem_type_e memtype)
+{
+    if (memtype == MTEST_MEM_TYPE__UNREGISTERED_HOST) {
+        return "host";
+    } else if (memtype == MTEST_MEM_TYPE__REGISTERED_HOST) {
+        return "reg_host";
+    } else if (memtype == MTEST_MEM_TYPE__DEVICE) {
+        return "device";
+    } else if (memtype == MTEST_MEM_TYPE__SHARED) {
+        return "shared";
+    } else if (memtype == MTEST_MEM_TYPE__RANDOM) {
+        return "random";
+    } else {
+        return "INVALID";
+    }
 }
 
 int MTestIsBasicDtype(MPI_Datatype type)
@@ -192,6 +224,83 @@ int MTestIsBasicDtype(MPI_Datatype type)
     int is_basic = (combiner == MPI_COMBINER_NAMED);
 
     return is_basic;
+}
+
+/* parse comma-separated integer string, return the integer array and
+ * set num in output. User is responsible freeing the memory.
+ */
+int *MTestParseIntList(const char *str, int *num)
+{
+    int i = 0;
+    for (const char *s = str; *s; s++) {
+        if (*s == ',') {
+            i++;
+        }
+    }
+    *num = i + 1;
+
+    int *ints = malloc((*num) * sizeof(int));
+
+    i = 0;
+    ints[i] = atoi(str);
+    for (const char *s = str; *s; s++) {
+        if (*s == ',') {
+            i++;
+            ints[i] = atoi(s + 1);
+        }
+    }
+    return ints;
+}
+
+/* parse comma-separated string list, return the string array and
+ * set num in output. Call MTestFreeStringList to free the returned
+ * string list.
+ */
+char **MTestParseStringList(const char *str, int *num)
+{
+    int i, j;
+
+    i = 0;
+    for (const char *s = str; *s; s++) {
+        if (*s == ',') {
+            i++;
+        }
+    }
+    *num = i + 1;
+
+    char **strlist = malloc((*num) * sizeof(char *));
+
+    i = 0;      /* index to strlist */
+    j = 0;      /* index within the str */
+    const char *s = str;
+    while (true) {
+        if (*s == '\0' || *s == ',') {
+            /* previous str has j chars */
+            strlist[i] = malloc(j + 1);
+            strncpy(strlist[i], s - j, j);
+            strlist[i][j] = '\0';
+            i++;
+            j = 0;
+        } else {
+            j++;
+        }
+
+        if (!*s) {
+            break;
+        } else {
+            s++;
+        }
+    }
+
+    return strlist;
+}
+
+void MTestFreeStringList(char **strlist, int num)
+{
+    for (int i = 0; i < num; i++) {
+        free(strlist[i]);
+    }
+    free(strlist);
 }
 
 /* ------------------------------------------------------------------------ */
