@@ -209,45 +209,25 @@ int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+/* For reduction-type collective, this routine swaps the (potential) device buffers
+ * with allocated host-buffer */
 void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_Aint count,
                                  MPI_Datatype datatype, void **host_sendbuf, void **host_recvbuf)
 {
-    MPL_pointer_attr_t attr;
-    *host_sendbuf = NULL;
-    *host_recvbuf = NULL;
-    MPI_Aint extent = 0;
-
+    void *tmp;
     if (sendbuf != MPI_IN_PLACE) {
-        MPIR_GPU_query_pointer_attr(sendbuf, &attr);
-        if (attr.type == MPL_GPU_POINTER_DEV) {
-            MPI_Aint true_extent;
-            MPI_Aint true_lb;
-
-            MPIR_Datatype_get_extent_macro(datatype, extent);
-            MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-            extent = MPL_MAX(extent, true_extent);
-
-            *host_sendbuf = MPL_malloc(extent * count, MPL_MEM_COLL);
-            MPIR_Assert(*host_sendbuf);
-            MPIR_Localcopy(sendbuf, count, datatype, *host_sendbuf, count, datatype);
-        }
+        tmp = MPIR_gpu_host_swap(sendbuf, count, datatype);
+        *host_sendbuf = tmp;
+    } else {
+        *host_sendbuf = NULL;
     }
 
-    MPIR_GPU_query_pointer_attr(recvbuf, &attr);
-    if (attr.type == MPL_GPU_POINTER_DEV) {
-        if (!extent) {
-            MPI_Aint true_extent;
-            MPI_Aint true_lb;
-
-            MPIR_Datatype_get_extent_macro(datatype, extent);
-            MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-            extent = MPL_MAX(extent, true_extent);
-        }
-
-        *host_recvbuf = MPL_malloc(extent * count, MPL_MEM_COLL);
-        MPIR_Assert(*host_recvbuf);
-        if (sendbuf == MPI_IN_PLACE)
-            MPIR_Localcopy(recvbuf, count, datatype, *host_recvbuf, count, datatype);
+    if (sendbuf == MPI_IN_PLACE) {
+        tmp = MPIR_gpu_host_swap(recvbuf, count, datatype);
+        *host_recvbuf = tmp;
+    } else {
+        tmp = MPIR_gpu_host_alloc(recvbuf, count, datatype);
+        *host_recvbuf = tmp;
     }
 }
 
@@ -260,23 +240,29 @@ void MPIR_Coll_host_buffer_free(void *host_sendbuf, void *host_recvbuf)
 void MPIR_Coll_host_buffer_swap_back(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
                                      MPI_Aint count, MPI_Datatype datatype, MPIR_Request * request)
 {
-    if (host_recvbuf == NULL) {
-        /* no copy at completion necessary, just return */
+    if (!host_sendbuf && !host_recvbuf) {
+        /* no copy (or free) at completion necessary, just return */
         return;
     }
 
     if (request == NULL || MPIR_Request_is_complete(request)) {
         /* operation is complete, copy the data and return */
-        MPIR_Localcopy(host_recvbuf, count, datatype, in_recvbuf, count, datatype);
-        MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);
+        if (host_sendbuf) {
+            MPIR_gpu_host_free(host_sendbuf, count, datatype);
+        }
+        if (host_recvbuf) {
+            MPIR_gpu_swap_back(host_recvbuf, in_recvbuf, count, datatype);
+        }
         return;
     }
 
     /* data will be copied later during request completion */
     request->u.nbc.coll.host_sendbuf = host_sendbuf;
     request->u.nbc.coll.host_recvbuf = host_recvbuf;
-    request->u.nbc.coll.user_recvbuf = in_recvbuf;
-    request->u.nbc.coll.count = count;
-    request->u.nbc.coll.datatype = datatype;
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    if (host_recvbuf) {
+        request->u.nbc.coll.user_recvbuf = in_recvbuf;
+        request->u.nbc.coll.count = count;
+        request->u.nbc.coll.datatype = datatype;
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    }
 }
