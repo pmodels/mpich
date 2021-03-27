@@ -33,6 +33,49 @@ long MTestArgListGetLong_with_default(MTestArgList * head, const char *arg, long
 mtest_mem_type_e MTestArgListGetMemType(MTestArgList * head, const char *arg);
 void MTestArgListDestroy(MTestArgList * head);
 
+#define MTEST_DTP_DECLARE(name) \
+    mtest_mem_type_e name ## mem; \
+    void *name ## buf; \
+    void *name ## buf_h; \
+    DTP_obj_s name ## _obj
+
+#define MTest_dtp_malloc_max(name, device_id) \
+    do { \
+        MTestMalloc(maxbufsize, name ## mem, &name ## buf_h, &name ## buf, device_id); \
+        assert(name ## buf && name ## buf_h); \
+    } while (0)
+
+#define MTest_dtp_malloc_obj(name, device_id) \
+    do { \
+        MTestMalloc(name ## _obj.DTP_bufsize, name ## mem, &name ## buf_h, &name ## buf, device_id); \
+        assert(name ## buf && name ## buf_h); \
+    } while (0)
+
+#define MTest_dtp_free(name) \
+    do { \
+        MTestFree(name ## mem, name ## buf_h, name ## buf); \
+    } while (0)
+
+#define MTest_dtp_init(name, start, stride, count) \
+    do { \
+        err = DTP_obj_buf_init(name ## _obj, name ## buf_h, start, stride, count); \
+        if (err != DTP_SUCCESS) { \
+            printf("DTP_obj_buf_init " #name " failed.\n"); \
+            errs++; \
+        } \
+        MTestCopyContent(name ## buf_h, name ## buf, name ## _obj.DTP_bufsize, name ## mem); \
+    } while (0)
+
+#define MTest_dtp_check(name, start, stride, count) \
+    do { \
+        MTestCopyContent(name ## buf, name ## buf_h, name ## _obj.DTP_bufsize, name ## mem); \
+        err = DTP_obj_buf_check(name ## _obj, name ## buf_h, start, stride, count); \
+        if (err != DTP_SUCCESS) { \
+            printf("DTP_obj_buf_check " #name " failed.\n"); \
+            errs++; \
+        } \
+    } while (0)
+
 #define MTestMalloc(size, type, hostbuf, devicebuf, device) MTestAlloc(size, type, hostbuf, devicebuf, 0, device)
 #define MTestCalloc(size, type, hostbuf, devicebuf, device) MTestAlloc(size, type, hostbuf, devicebuf, 1, device)
 void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devicebuf,
