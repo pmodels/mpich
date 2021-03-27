@@ -27,11 +27,9 @@ int main(int argc, char *argv[])
     MPI_Datatype sendtype, recvtype;
     MPI_Request req;
     DTP_pool_s dtp;
-    DTP_obj_s send_obj, recv_obj;
-    void *sendbuf, *recvbuf;
-    void *sendbuf_h, *recvbuf_h;
+    MTEST_DTP_DECLARE(send);
+    MTEST_DTP_DECLARE(recv);
     char *basic_type;
-    mtest_mem_type_e sendmem, recvmem;
 
     MTest_Init(&argc, &argv);
 
@@ -73,25 +71,11 @@ int main(int argc, char *argv[])
             errs++;
         }
 
-        MTestMalloc(send_obj.DTP_bufsize, sendmem, &sendbuf_h, &sendbuf, 0);
-        assert(sendbuf && sendbuf_h);
+        MTest_dtp_malloc_obj(send, 0);
+        MTest_dtp_malloc_obj(recv, 1);
 
-        MTestMalloc(recv_obj.DTP_bufsize, recvmem, &recvbuf_h, &recvbuf, 1);
-        assert(recvbuf && recvbuf_h);
-
-        err = DTP_obj_buf_init(send_obj, sendbuf_h, 0, 1, count[0]);
-        if (err != DTP_SUCCESS) {
-            errs++;
-            break;
-        }
-        MTestCopyContent(sendbuf_h, sendbuf, send_obj.DTP_bufsize, sendmem);
-
-        err = DTP_obj_buf_init(recv_obj, recvbuf_h, -1, -1, count[0]);
-        if (err != DTP_SUCCESS) {
-            errs++;
-            break;
-        }
-        MTestCopyContent(recvbuf_h, recvbuf, recv_obj.DTP_bufsize, sendmem);
+        MTest_dtp_init(send, 0, 1, count[0]);
+        MTest_dtp_init(recv, -1, -1, count[0]);
 
         sendcount = send_obj.DTP_type_count;
         sendtype = send_obj.DTP_datatype;
@@ -117,29 +101,21 @@ int main(int argc, char *argv[])
         }
 
         err = MPI_Wait(&req, MPI_STATUS_IGNORE);
-        MTestCopyContent(recvbuf, recvbuf_h, recv_obj.DTP_bufsize, recvmem);
-        err = DTP_obj_buf_check(recv_obj, recvbuf_h, 0, 1, count[0]);
-        if (err != DTP_SUCCESS) {
-            if (errs < 10) {
-                char *recv_desc, *send_desc;
-                DTP_obj_get_description(recv_obj, &recv_desc);
-                DTP_obj_get_description(send_obj, &send_desc);
-                fprintf(stderr,
-                        "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld\n",
-                        recv_desc, send_desc, count[0]);
-                fflush(stderr);
-                free(recv_desc);
-                free(send_desc);
-            }
-            errs++;
+
+        MTest_dtp_check(recv, 0, 1, count[0]);
+        if (err != DTP_SUCCESS && errs <= 10) {
+            char *recv_desc, *send_desc;
+            DTP_obj_get_description(recv_obj, &recv_desc);
+            DTP_obj_get_description(send_obj, &send_desc);
+            fprintf(stderr,
+                    "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld\n",
+                    recv_desc, send_desc, count[0]);
+            fflush(stderr);
+            free(recv_desc);
+            free(send_desc);
         }
 
-        err = DTP_obj_buf_init(recv_obj, recvbuf_h, -1, -1, count[0]);
-        if (err != DTP_SUCCESS) {
-            errs++;
-            break;
-        }
-        MTestCopyContent(recvbuf_h, recvbuf, recv_obj.DTP_bufsize, sendmem);
+        MTest_dtp_init(recv, -1, -1, count[0]);
 
         err =
             MPI_Irecv(recvbuf + recv_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm, &req);
@@ -159,29 +135,21 @@ int main(int argc, char *argv[])
         }
 
         err = MPI_Wait(&req, MPI_STATUS_IGNORE);
-        MTestCopyContent(recvbuf, recvbuf_h, recv_obj.DTP_bufsize, sendmem);
-        err = DTP_obj_buf_check(recv_obj, recvbuf_h, 0, 1, count[0]);
-        if (err != DTP_SUCCESS) {
-            if (errs < 10) {
-                char *recv_desc, *send_desc;
-                DTP_obj_get_description(recv_obj, &recv_desc);
-                DTP_obj_get_description(send_obj, &send_desc);
-                fprintf(stderr,
-                        "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld\n",
-                        recv_desc, send_desc, count[0]);
-                fflush(stderr);
-                free(recv_desc);
-                free(send_desc);
-            }
-            errs++;
+
+        MTest_dtp_check(recv, 0, 1, count[0]);
+        if (err != DTP_SUCCESS && errs <= 10) {
+            char *recv_desc, *send_desc;
+            DTP_obj_get_description(recv_obj, &recv_desc);
+            DTP_obj_get_description(send_obj, &send_desc);
+            fprintf(stderr,
+                    "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld\n",
+                    recv_desc, send_desc, count[0]);
+            fflush(stderr);
+            free(recv_desc);
+            free(send_desc);
         }
 
-        err = DTP_obj_buf_init(recv_obj, recvbuf_h, -1, -1, count[0]);
-        if (err != DTP_SUCCESS) {
-            errs++;
-            break;
-        }
-        MTestCopyContent(recvbuf_h, recvbuf, recv_obj.DTP_bufsize, sendmem);
+        MTest_dtp_init(recv, -1, -1, count[0]);
 
         err =
             MPI_Irecv(recvbuf + recv_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm, &req);
@@ -201,25 +169,22 @@ int main(int argc, char *argv[])
         }
 
         err = MPI_Wait(&req, MPI_STATUS_IGNORE);
-        MTestCopyContent(recvbuf, recvbuf_h, recv_obj.DTP_bufsize, sendmem);
-        err = DTP_obj_buf_check(recv_obj, recvbuf_h, 0, 1, count[0]);
-        if (err != DTP_SUCCESS) {
-            if (errs < 10) {
-                char *recv_desc, *send_desc;
-                DTP_obj_get_description(recv_obj, &recv_desc);
-                DTP_obj_get_description(send_obj, &send_desc);
-                fprintf(stderr,
-                        "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld\n",
-                        recv_desc, send_desc, count[0]);
-                fflush(stderr);
-                free(recv_desc);
-                free(send_desc);
-            }
-            errs++;
+
+        MTest_dtp_check(recv, 0, 1, count[0]);
+        if (err != DTP_SUCCESS && errs <= 10) {
+            char *recv_desc, *send_desc;
+            DTP_obj_get_description(recv_obj, &recv_desc);
+            DTP_obj_get_description(send_obj, &send_desc);
+            fprintf(stderr,
+                    "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld\n",
+                    recv_desc, send_desc, count[0]);
+            fflush(stderr);
+            free(recv_desc);
+            free(send_desc);
         }
 
-        MTestFree(sendmem, sendbuf_h, sendbuf);
-        MTestFree(recvmem, recvbuf_h, recvbuf);
+        MTest_dtp_free(send);
+        MTest_dtp_free(recv);
         DTP_obj_free(send_obj);
         DTP_obj_free(recv_obj);
     }
