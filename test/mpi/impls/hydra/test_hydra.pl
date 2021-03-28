@@ -8,13 +8,14 @@ use strict;
 
 our $debug = 0;
 our $dir = "config";
-our @test_configs;
 our @test_list;
-
 
 foreach my $a (@ARGV) {
     if ($a eq "-v") {
         $debug = 1;
+    } elsif ($a =~ /^-slurm=(.*)/) {
+        quick_test_slurm($1);
+        exit(0);
     } elsif ($a eq "-h" or $a=~/--?help/) {
         print "Usage: $0 [-v] [-h]\n";
         print "\n";
@@ -23,17 +24,22 @@ foreach my $a (@ARGV) {
         print "\nOptions:\n";
         print "  -v: turn on verbose mode.\n";
         print "  -h: print this message.\n";
+        print "  -slurm=\"np host_pattern\"\n";
+        print "      run quick test on slurm host pattern\n";
         print "\n";
         exit(0);
     }
 }
 
-push @test_configs, "$dir/proc_binding.txt";
-push @test_configs, "$dir/slurm_nodelist.txt";
+if (!@test_list) {
+    my @test_configs;
+    push @test_configs, "$dir/proc_binding.txt";
+    push @test_configs, "$dir/slurm_nodelist.txt";
 
-foreach my $config_txt (@test_configs) {
-    my $tests = load_tests($config_txt);
-    push @test_list, @$tests;
+    foreach my $config_txt (@test_configs) {
+        my $tests = load_tests($config_txt);
+        push @test_list, @$tests;
+    }
 }
 
 my $num_errors = 0;
@@ -68,8 +74,10 @@ sub load_tests {
             $test = {type=>"slurm", nnodes=>$1, nodelist=>$2, output=>[]};
             push @tests, $test;
         }
-        elsif (/^\s+(\S.+)/) {
+        elsif ($test and /^\s+(\S.+)/) {
             push @{$test->{output}}, $1;
+        } else {
+            undef $test;
         }
     }
     close In;
@@ -79,7 +87,12 @@ sub load_tests {
 sub run_binding_test {
     my ($test) = @_;
     my $np = $test->{np};
-    my $cmd = "mpiexec $test->{option} -n $np ./dummy";
+    my $cmd = "mpiexec $test->{option} -n $np";
+    if (-x "dummy") {
+        $cmd .= " ./dummy";
+    } else {
+        $cmd .= " true";
+    }
     $ENV{HYDRA_TOPO_DEBUG} = 1;
     $ENV{HWLOC_XMLFILE} = "$dir/$test->{topo}";
 
@@ -114,6 +127,20 @@ sub run_slurm_test {
 
     my $testname = "nodelist: $test->{nodelist}";
     return check_output($testname, \@output, $test->{output});
+}
+
+sub quick_test_slurm {
+    my ($t) = @_;
+    if ($t=~/(\d+)\s+(.+)/) {
+        $ENV{SLURM_NNODES} = $1;
+        $ENV{SLURM_TASKS_PER_NODE} = "1(x$1)";
+        $ENV{SLURM_NODELIST} = $2;
+        my $cmd = "mpiexec -rmk slurm -debug-nodelist true";
+        print "Pattern: $2\n";
+        system $cmd;
+    } else {
+        die "Usage: $0 -slurm=\"np hostlist_pattern\"\n";
+    }
 }
 
 sub check_output {
