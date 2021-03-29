@@ -74,4 +74,40 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_dev(const void *ptr)
     return false;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIR_gpu_register_host(const void *ptr, size_t size)
+{
+    if (ENABLE_GPU) {
+        return MPL_gpu_register_host(ptr, size);
+    }
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_gpu_unregister_host(const void *ptr)
+{
+    if (ENABLE_GPU) {
+        return MPL_gpu_unregister_host(ptr);
+    }
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_gpu_malloc_host(void **ptr, size_t size)
+{
+    if (ENABLE_GPU) {
+        return MPL_gpu_malloc_host(ptr, size);
+    } else {
+        *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
+        return MPI_SUCCESS;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_gpu_free_host(void *ptr)
+{
+    if (ENABLE_GPU) {
+        return MPL_gpu_free_host(ptr);
+    } else {
+        MPL_free(ptr);
+        return MPI_SUCCESS;
+    }
+}
+
 #endif /* MPIR_GPU_H_INCLUDED */

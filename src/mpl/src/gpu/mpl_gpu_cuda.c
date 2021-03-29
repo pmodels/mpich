@@ -25,25 +25,24 @@ static int gpu_mem_hook_init();
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
     cudaError_t ret;
-    struct cudaPointerAttributes ptr_attr;
-    ret = cudaPointerGetAttributes(&ptr_attr, ptr);
+    ret = cudaPointerGetAttributes(&attr->device_attr, ptr);
     if (ret == cudaSuccess) {
-        switch (ptr_attr.type) {
+        switch (attr->device_attr.type) {
             case cudaMemoryTypeUnregistered:
                 attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
-                attr->device = ptr_attr.device;
+                attr->device = attr->device_attr.device;
                 break;
             case cudaMemoryTypeHost:
                 attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
-                attr->device = ptr_attr.device;
+                attr->device = attr->device_attr.device;
                 break;
             case cudaMemoryTypeDevice:
                 attr->type = MPL_GPU_POINTER_DEV;
-                attr->device = ptr_attr.device;
+                attr->device = attr->device_attr.device;
                 break;
             case cudaMemoryTypeManaged:
                 attr->type = MPL_GPU_POINTER_MANAGED;
-                attr->device = ptr_attr.device;
+                attr->device = attr->device_attr.device;
                 break;
         }
     } else if (ret == cudaErrorInvalidValue) {
