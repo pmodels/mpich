@@ -78,12 +78,16 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
         case MPIR_REQUEST_KIND__COLL:
             {
                 MPII_Coll_req_t *coll = &request_ptr->u.nbc.coll;
-                if (coll->host_recvbuf) {
-                    MPIR_Localcopy(coll->host_recvbuf, coll->count, coll->datatype,
-                                   coll->user_recvbuf, coll->count, coll->datatype);
+
+                if (coll->host_sendbuf) {
+                    MPIR_gpu_host_free(coll->host_sendbuf, coll->count, coll->datatype);
                 }
-                MPIR_Coll_host_buffer_free(coll->host_sendbuf, coll->host_recvbuf);
-                MPIR_Datatype_release_if_not_builtin(coll->datatype);
+
+                if (coll->host_recvbuf) {
+                    MPIR_gpu_swap_back(coll->host_recvbuf, coll->user_recvbuf,
+                                       coll->count, coll->datatype);
+                    MPIR_Datatype_release_if_not_builtin(coll->datatype);
+                }
 
                 MPIR_Request_extract_status(request_ptr, status);
                 mpi_errno = request_ptr->status.MPI_ERROR;

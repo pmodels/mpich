@@ -238,6 +238,8 @@ typedef struct MPIR_Session MPIR_Session;
 #include "mpir_nettopo.h"
 #include "mpir_impl.h"
 
+#include "mpir_gpu_util.h"
+
 /*****************************************************************************/
 /******************** PART 6: DEVICE "POST" FUNCTIONALITY ********************/
 /*****************************************************************************/

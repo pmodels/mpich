@@ -431,11 +431,15 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request *
         /* noncontig data with mostly tiny segments */
         mpi_errno = do_long_am_recv_unpack(in_data_sz, rreq, lmt_msg);
     } else {
-        int is_contig;
+        int is_contig, is_gpu;
         void *p_data;
         MPI_Aint data_sz;
-        MPIDIG_get_recv_data(&is_contig, &p_data, &data_sz, rreq);
-        if (is_contig) {
+        MPIDIG_get_recv_data(&is_contig, &is_gpu, &p_data, &data_sz, rreq);
+
+        if (is_gpu) {
+            /* Use unpack for GPU buffer */
+            mpi_errno = do_long_am_recv_unpack(in_data_sz, rreq, lmt_msg);
+        } else if (is_contig) {
             mpi_errno = do_long_am_recv_contig(p_data, data_sz, in_data_sz, rreq, lmt_msg);
         } else {
             mpi_errno = do_long_am_recv_iov(p_data, data_sz, in_data_sz, rreq, lmt_msg);
