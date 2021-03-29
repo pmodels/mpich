@@ -1,0 +1,18 @@
+--- libtool.m4.org	2021-03-03 16:21:54.800529915 +0900
++++ libtool.m4	2021-03-03 16:29:34.959297925 +0900
+@@ -6291,6 +6291,7 @@
+ ## the running order or otherwise move them around unless you know exactly
+ ## what you are doing...
+ if test -n "$compiler"; then
++  _LT_SYS_HIDDEN_LIBDEPS($1)
+   _LT_COMPILER_NO_RTTI($1)
+   _LT_COMPILER_PIC($1)
+   _LT_COMPILER_C_O($1)
+@@ -7829,6 +7830,7 @@
+     ## There is no encapsulation within the following macros, do not change
+     ## the running order or otherwise move them around unless you know exactly
+     ## what you are doing...
++    _LT_SYS_HIDDEN_LIBDEPS($1)
+     _LT_COMPILER_PIC($1)
+     _LT_COMPILER_C_O($1)
+     _LT_COMPILER_FILE_LOCKS($1)

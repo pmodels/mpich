@@ -1021,6 +1021,8 @@ if [ "$do_build_configure" = "yes" ] ; then
                 flang_patch_requires_rebuild=no
                 arm_patch_requires_rebuild=no
                 ibm_patch_requires_rebuild=no
+		f77_patch_requires_rebuild=no
+		fujitsu_patch_requires_rebuild=no
                 sys_lib_dlsearch_path_patch_requires_rebuild=no
                 macos_patch_requires_rebuild=no
                 echo_n "Patching libtool.m4 for system dynamic library search path..."
@@ -1094,11 +1096,32 @@ if [ "$do_build_configure" = "yes" ] ; then
                     else
                         echo "failed"
                     fi
+            echo_n "Patching libtool.m4 for Fortran 77 compilers..."
+            patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/f77.patch
+            if [ $? -eq 0 ] ; then
+                f77_patch_requires_rebuild=yes
+            # Remove possible leftovers, which don't imply a failure
+            rm -f $amdir/confdb/libtool.m4.orig
+            echo "done"
+            else
+                echo "failed"
+            fi
+            echo_n "Patching libtool.m4 for Fujitsu Fortran compilers..."
+            patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/fujitsu.patch
+            if [ $? -eq 0 ] ; then
+            fujitsu_patch_requires_rebuild=yes
+                # Remove possible leftovers, which don't imply a failure
+            rm -f $amdir/confdb/libtool.m4.orig
+            echo "done"
+            else
+                echo "failed"
+            fi
                 fi
 
                 if [ $ifort_patch_requires_rebuild = "yes" ] || [ $oracle_patch_requires_rebuild = "yes" ] \
                     || [ $arm_patch_requires_rebuild = "yes" ] || [ $ibm_patch_requires_rebuild = "yes" ] \
                     || [ $sys_lib_dlsearch_path_patch_requires_rebuild = "yes" ] || [ $flang_patch_requires_rebuild = "yes" ] \
+                    || [ $f77_patch_requires_rebuild = "yes" ] || [ $fujitsum_patch_requires_rebuild = "yes" ] \
                     || [ $macos_patch_requires_rebuild = "yes" ]; then
                     # Rebuild configure
                     (cd $amdir && $autoconf -f) || exit 1

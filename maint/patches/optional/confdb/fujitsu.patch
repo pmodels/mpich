@@ -1,0 +1,42 @@
+--- libtool.m4.org	2021-03-03 16:21:54.800529915 +0900
++++ libtool.m4	2021-03-03 16:34:02.020877909 +0900
+@@ -4789,6 +4789,11 @@
+         # ARM LLVM C/C++/Fortran
+         _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
+         ;;
++      fcc* | FCC* | frt*)
++        # Fujitsu C/C++/Fortran
++        _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
++       _LT_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
++        ;;
+       *)
+ 	case `$CC -V 2>&1 | sed 5q` in
+ 	*Sun\ Ceres\ Fortran* | *Sun*Fortran*\ [[1-7]].* | *Sun*Fortran*\ 8.[[0-3]]*)
+@@ -7814,6 +7819,13 @@
+ 	  esac
+ 	fi
+         ;;
++      linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
++        case $cc_basename in
++          fcc* | FCC* | frt*)
++            output_verbose_link_cmd='$CC $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "\-L"'
++          ;;
++        esac
++        ;;
+     esac
+     AC_MSG_RESULT([$enable_shared])
+ 
+@@ -7952,6 +7964,13 @@
+ 	  esac
+ 	fi
+         ;;
++      linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
++        case $cc_basename in
++          fcc* | FCC* | frt*)
++            output_verbose_link_cmd='$CC $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "\-L"'
++          ;;
++        esac
++        ;;
+     esac
+     AC_MSG_RESULT([$enable_shared])
+ 
