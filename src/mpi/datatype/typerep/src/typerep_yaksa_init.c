@@ -11,6 +11,8 @@ static yaksa_type_t TYPEREP_YAKSA_TYPE__REAL16;
 static yaksa_type_t TYPEREP_YAKSA_TYPE__COMPLEX32;
 static yaksa_type_t TYPEREP_YAKSA_TYPE__INTEGER16;
 
+yaksa_info_t MPII_yaksa_info_nogpu;
+
 yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_TYPEREP_GET_YAKSA_TYPE);
@@ -367,7 +369,15 @@ void MPIR_Typerep_init(void)
      */
     MPIR_Assert(sizeof(MPI_Aint) == sizeof(intptr_t));
 
-    yaksa_init(NULL);
+    yaksa_info_create(&MPII_yaksa_info_nogpu);
+    yaksa_info_keyval_append(MPII_yaksa_info_nogpu, "yaksa_gpu_driver", "nogpu", 6);
+
+    if (MPIR_CVAR_ENABLE_GPU) {
+        yaksa_init(NULL);
+    } else {
+        /* prevent yaksa to query gpu devices, which can be very expensive */
+        yaksa_init(MPII_yaksa_info_nogpu);
+    }
 
     MPIR_Datatype_get_size_macro(MPI_REAL16, size);
     yaksa_type_create_contig(size, YAKSA_TYPE__BYTE, NULL, &TYPEREP_YAKSA_TYPE__REAL16);
@@ -389,6 +399,8 @@ void MPIR_Typerep_finalize(void)
     yaksa_type_free(TYPEREP_YAKSA_TYPE__REAL16);
     yaksa_type_free(TYPEREP_YAKSA_TYPE__COMPLEX32);
     yaksa_type_free(TYPEREP_YAKSA_TYPE__INTEGER16);
+
+    yaksa_info_free(MPII_yaksa_info_nogpu);
 
     yaksa_finalize();
 

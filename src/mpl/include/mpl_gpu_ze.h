@@ -10,6 +10,7 @@
 
 typedef ze_ipc_mem_handle_t MPL_gpu_ipc_mem_handle_t;
 typedef ze_device_handle_t MPL_gpu_device_handle_t;
+typedef ze_memory_allocation_properties_t MPL_gpu_device_attr;
 #define MPL_GPU_DEVICE_INVALID NULL
 
 #endif /* ifndef MPL_GPU_ZE_H_INCLUDED */

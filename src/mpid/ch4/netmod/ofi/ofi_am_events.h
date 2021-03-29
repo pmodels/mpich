@@ -381,7 +381,7 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv_unpack(MPI_Aint in_data_sz, MPIR_Re
     p->context_id = lmt_msg->context_id;
     p->src_offset = lmt_msg->src_offset;
 
-    mpi_errno = MPL_gpu_malloc_host(&p->unpack_buffer, pack_size);
+    mpi_errno = MPIR_gpu_malloc_host(&p->unpack_buffer, pack_size);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPI_Aint remain = MPIDIG_REQUEST(rreq, req->recv_async).in_data_sz;
@@ -417,7 +417,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq)
         return FALSE;
     } else {
         /* all done. */
-        MPL_gpu_free_host(p->unpack_buffer);
+        MPIR_gpu_free_host(p->unpack_buffer);
         return TRUE;
     }
 }

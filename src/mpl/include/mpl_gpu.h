@@ -29,6 +29,7 @@ typedef enum {
 typedef struct {
     MPL_pointer_type_t type;
     MPL_gpu_device_handle_t device;
+    MPL_gpu_device_attr device_attr;
 } MPL_pointer_attr_t;
 
 typedef enum {

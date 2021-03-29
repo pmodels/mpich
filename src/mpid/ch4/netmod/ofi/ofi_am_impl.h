@@ -736,7 +736,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
         /* FIXME: currently always allocate pack buffer for any size. This should be removed in next
          * step when we work on ZCOPY protocol support. Basically, if the src buf and datatype needs
          * packing, we should not be doing RDMA read. */
-        MPL_gpu_malloc_host((void **) &send_buf, data_sz);
+        MPIR_gpu_malloc_host((void **) &send_buf, data_sz);
         mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(data_sz == last);
