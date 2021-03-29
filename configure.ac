@@ -3256,7 +3256,7 @@ fi
 if test ${len_long_double__Complex} != 0 ; then
     MPI_C_LONG_DOUBLE_COMPLEX=0x4c00${len_long_double__Complex}42
 fi
-if test ${len__Float16} != 0 ; then
+if test ${len__Float16} != 0 -a "$MPID_NO_FLOAT16" != "yes"; then
     MPIX_C_FLOAT16=0x4c000246
 fi
 
