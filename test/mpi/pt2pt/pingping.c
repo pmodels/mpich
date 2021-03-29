@@ -108,12 +108,6 @@ static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
                 sendcount = send_obj.DTP_type_count;
                 sendtype = send_obj.DTP_datatype;
 
-                char *desc;
-                DTP_obj_get_description(send_obj, &desc);
-                MTestPrintfMsg(1, "Sending count = %d of sendtype %s of total size %d bytes\n",
-                               sendcnt, desc, nbytes * sendcnt);
-                free(desc);
-
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
                     err =
                         MPI_Send(sendbuf + send_obj.DTP_buf_offset, sendcount, sendtype, dest, 0,
