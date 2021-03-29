@@ -1021,8 +1021,8 @@ if [ "$do_build_configure" = "yes" ] ; then
                 flang_patch_requires_rebuild=no
                 arm_patch_requires_rebuild=no
                 ibm_patch_requires_rebuild=no
-		f77_patch_requires_rebuild=no
-		fujitsu_patch_requires_rebuild=no
+                f77_patch_requires_rebuild=no
+                fujitsu_patch_requires_rebuild=no
                 sys_lib_dlsearch_path_patch_requires_rebuild=no
                 macos_patch_requires_rebuild=no
                 echo_n "Patching libtool.m4 for system dynamic library search path..."
