@@ -58,6 +58,7 @@ AH_TOP([/*
  */
 #ifndef ROMIOCONF_H_INCLUDED
 #define ROMIOCONF_H_INCLUDED
+#include <mplconfig.h>
 ])
 AH_BOTTOM([
 /* quash PACKAGE and PACKAGE_* vars, see MPICH top-level configure.ac for
