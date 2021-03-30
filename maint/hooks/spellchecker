@@ -33,7 +33,7 @@ ret=0
 for file in $filestring
 do
     if [[ !($file == *.tex) ]] ; then
-        cp ${file} ${TMP_FILENAME}
+        cp -p ${file} ${TMP_FILENAME}
         bash maint/spellcheck.sh ${file}
         git --no-pager diff ${file} ${TMP_FILENAME}
         if [ $? != 0 ] ; then
