@@ -17,6 +17,12 @@
 MPI_Aint MTestDefaultMaxBufferSize()
 {
     MPI_Aint max_size = 1073741824;
+    if (sizeof(void *) == 4) {
+        /* 32-bit is very easy to overflow, which may still result in a
+         * seemingly valid size. Use a smaller maximum to reduce the chance
+         * -- an overflow integer is likely to be negative or very large. */
+        max_size = 268435456;
+    }
     char *envval = NULL;
     envval = getenv("MPITEST_MAXBUFFER");
     if (envval) {
