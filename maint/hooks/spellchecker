@@ -29,6 +29,16 @@ pushd $MIRROR > /dev/null
 
 ret=0
 
+# check commit message
+git log --format=%B -n 1 HEAD > commit-message
+cp commit-message ${TMP_FILENAME}
+bash maint/spellcheck.sh commit-message
+diff commit-message ${TMP_FILENAME}
+if [ $? != 0 ] ; then
+    ret=1
+fi
+rm -f commit-message
+
 # This won't work if we ever have a file with a space in the name
 for file in $filestring
 do
