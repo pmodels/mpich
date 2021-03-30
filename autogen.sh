@@ -352,6 +352,7 @@ fi
 ########################################################################
 ## Check if autoreconf can be patched to work
 ## when autotools are not in the same location.
+## We use -B (prepend include path) insted of -I (append install path)
 ## This test needs to be done before individual tests of autotools
 ########################################################################
 
@@ -361,7 +362,7 @@ if [ "$same_atdir" != "yes" ] ; then
         ProgHomeDir $libtoolize libtooldir
     fi
     libtoolm4dir="$libtooldir/share/aclocal"
-    echo_n "Checking if $autoreconf accepts -I $libtoolm4dir... "
+    echo_n "Checking if $autoreconf accepts -B $libtoolm4dir... "
     new_autoreconf_works=no
     if [ -d "$libtoolm4dir" -a -f "$libtoolm4dir/libtool.m4" ] ; then
         recreate_tmp
