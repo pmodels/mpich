@@ -22,11 +22,12 @@ enum acc_type {
 MTEST_DTP_DECLARE(orig);
 MTEST_DTP_DECLARE(target);
 MTEST_DTP_DECLARE(result);
+static MPI_Aint base_type_size;
 static MPI_Aint maxbufsize;
 
 int world_rank, world_size;
 
-static int run_test(MPI_Comm comm, MPI_Win win, DTP_pool_s dtp, int count, enum acc_type acc)
+static int run_test(MPI_Comm comm, MPI_Win win, int count, enum acc_type acc)
 {
     int rank, size, orig, target;
     int target_start_idx, target_end_idx;
@@ -114,9 +115,6 @@ static int run_test(MPI_Comm comm, MPI_Win win, DTP_pool_s dtp, int count, enum 
             MPI_Win_lock_all(0, win);
         }
 
-        MPI_Aint lb, extent;
-        MPI_Type_get_extent(dtp.DTP_base_type, &lb, &extent);
-
         origcount = orig_obj.DTP_type_count;
         origtype = orig_obj.DTP_datatype;
         targetcount = target_obj.DTP_type_count;
@@ -128,7 +126,7 @@ static int run_test(MPI_Comm comm, MPI_Win win, DTP_pool_s dtp, int count, enum 
         if (acc == ACC_TYPE__ACC) {
             for (t = target_start_idx; t <= target_end_idx; t++) {
                 MPI_Accumulate(origbuf + orig_obj.DTP_buf_offset, origcount,
-                               origtype, t, target_obj.DTP_buf_offset / extent, targetcount,
+                               origtype, t, target_obj.DTP_buf_offset / base_type_size, targetcount,
                                targettype, MPI_REPLACE, win);
             }
         } else {
@@ -141,8 +139,8 @@ static int run_test(MPI_Comm comm, MPI_Win win, DTP_pool_s dtp, int count, enum 
             for (t = target_start_idx; t <= target_end_idx; t++) {
                 MPI_Get_accumulate(origbuf + orig_obj.DTP_buf_offset, origcount,
                                    origtype, resultbuf + result_obj.DTP_buf_offset, resultcount,
-                                   resulttype, t, target_obj.DTP_buf_offset / extent, targetcount,
-                                   targettype, MPI_REPLACE, win);
+                                   resulttype, t, target_obj.DTP_buf_offset / base_type_size,
+                                   targetcount, targettype, MPI_REPLACE, win);
             }
         }
 
@@ -217,7 +215,8 @@ int main(int argc, char *argv[])
     int i, seed, testsize;
     MPI_Comm comm;
     MPI_Win win;
-    MPI_Aint lb, extent, count;
+    MPI_Aint lb;
+    MPI_Aint count;
     DTP_pool_s dtp;
     char *basic_type;
 
@@ -243,7 +242,7 @@ int main(int argc, char *argv[])
     MTestArgListDestroy(head);
 
     if (MTestIsBasicDtype(dtp.DTP_base_type)) {
-        MPI_Type_get_extent(dtp.DTP_base_type, &lb, &extent);
+        MPI_Type_get_extent(dtp.DTP_base_type, &lb, &base_type_size);
     } else {
         /* accumulate tests cannot use struct types */
         goto fn_exit;
@@ -265,7 +264,7 @@ int main(int argc, char *argv[])
         MPI_Comm_rank(comm, &rank);
         MPI_Comm_size(comm, &size);
 
-        MPI_Win_create(targetbuf, maxbufsize, extent, MPI_INFO_NULL, comm, &win);
+        MPI_Win_create(targetbuf, maxbufsize, base_type_size, MPI_INFO_NULL, comm, &win);
 
         for (i = 0; i < testsize; i++) {
             err = DTP_obj_create(dtp, &orig_obj, maxbufsize);
@@ -292,8 +291,8 @@ int main(int argc, char *argv[])
              * initialized before we start writing data to it */
             MPI_Barrier(comm);
 
-            errs += run_test(comm, win, dtp, count, ACC_TYPE__ACC);
-            errs += run_test(comm, win, dtp, count, ACC_TYPE__GACC);
+            errs += run_test(comm, win, count, ACC_TYPE__ACC);
+            errs += run_test(comm, win, count, ACC_TYPE__GACC);
 
             DTP_obj_free(orig_obj);
             DTP_obj_free(target_obj);
