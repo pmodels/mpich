@@ -352,7 +352,7 @@ fi
 ########################################################################
 ## Check if autoreconf can be patched to work
 ## when autotools are not in the same location.
-## We use -B (prepend include path) insted of -I (append install path)
+## We use -B (prepend include path) instead of -I (append install path)
 ## This test needs to be done before individual tests of autotools
 ########################################################################
 
