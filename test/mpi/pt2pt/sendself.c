@@ -16,7 +16,7 @@ static char MTEST_Descrip[] = "Test of sending to self (with a preposted receive
 */
 
 static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
-                    const char *basic_type, mtest_mem_type_e t_sendmem, mtest_mem_type_e t_recvmem)
+                    const char *basic_type, mtest_mem_type_e sendmem, mtest_mem_type_e recvmem)
 {
     int errs = 0, err;
     int rank, size;
@@ -27,11 +27,7 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
     MPI_Datatype sendtype, recvtype;
     MPI_Request req;
     DTP_pool_s dtp;
-    MTEST_DTP_DECLARE(send);
-    MTEST_DTP_DECLARE(recv);
-
-    sendmem = t_sendmem;
-    recvmem = t_recvmem;
+    struct mtest_obj send, recv;
 
     comm = MPI_COMM_WORLD;
     MPI_Comm_rank(comm, &rank);
@@ -46,43 +42,35 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
         MTestPrintfMsg(1, " %s\n", test_desc);
     }
 
-    maxbufsize = MTestDefaultMaxBufferSize();
-
     err = DTP_pool_create(basic_type, sendcnt, seed, &dtp);
     if (err != DTP_SUCCESS) {
         fprintf(stderr, "Error while creating send pool (%s,%d)\n", basic_type, sendcnt);
         fflush(stderr);
     }
 
+    MTest_dtp_obj_start(&send, "send", dtp, sendmem, 0, false);
+    MTest_dtp_obj_start(&recv, "recv", dtp, recvmem, 0, false);
+
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
     MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
     for (i = 0; i < testsize; i++) {
-        err = DTP_obj_create(dtp, &send_obj, maxbufsize);
-        if (err != DTP_SUCCESS) {
-            errs++;
-        }
+        errs += MTest_dtp_create(&send, true);
+        errs += MTest_dtp_create(&recv, true);
 
-        err = DTP_obj_create(dtp, &recv_obj, maxbufsize);
-        if (err != DTP_SUCCESS) {
-            errs++;
-        }
+        MTest_dtp_init(&send, 0, 1, sendcnt);
+        MTest_dtp_init(&recv, -1, -1, recvcnt);
 
-        MTest_dtp_malloc_obj(send, 0);
-        MTest_dtp_malloc_obj(recv, 1);
+        sendcount = send.dtp_obj.DTP_type_count;
+        sendtype = send.dtp_obj.DTP_datatype;
 
-        MTest_dtp_init(send, 0, 1, sendcnt);
-        MTest_dtp_init(recv, -1, -1, recvcnt);
-
-        sendcount = send_obj.DTP_type_count;
-        sendtype = send_obj.DTP_datatype;
-
-        recvcount = recv_obj.DTP_type_count;
-        recvtype = recv_obj.DTP_datatype;
+        recvcount = recv.dtp_obj.DTP_type_count;
+        recvtype = recv.dtp_obj.DTP_datatype;
 
         err =
-            MPI_Irecv(recvbuf + recv_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm, &req);
+            MPI_Irecv(recv.buf + recv.dtp_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm,
+                      &req);
         if (err) {
             errs++;
             if (errs < 10) {
@@ -90,7 +78,7 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
             }
         }
 
-        err = MPI_Send(sendbuf + send_obj.DTP_buf_offset, sendcount, sendtype, rank, 0, comm);
+        err = MPI_Send(send.buf + send.dtp_obj.DTP_buf_offset, sendcount, sendtype, rank, 0, comm);
         if (err) {
             errs++;
             if (errs < 10) {
@@ -100,23 +88,13 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
 
         err = MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-        MTest_dtp_check(recv, 0, 1, sendcnt);
-        if (err != DTP_SUCCESS && errs <= 10) {
-            char *recv_desc, *send_desc;
-            DTP_obj_get_description(recv_obj, &recv_desc);
-            DTP_obj_get_description(send_obj, &send_desc);
-            fprintf(stderr,
-                    "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %d\n",
-                    recv_desc, send_desc, sendcnt);
-            fflush(stderr);
-            free(recv_desc);
-            free(send_desc);
-        }
+        errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
 
-        MTest_dtp_init(recv, -1, -1, sendcnt);
+        MTest_dtp_init(&recv, -1, -1, sendcnt);
 
         err =
-            MPI_Irecv(recvbuf + recv_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm, &req);
+            MPI_Irecv(recv.buf + recv.dtp_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm,
+                      &req);
         if (err) {
             errs++;
             if (errs < 10) {
@@ -124,7 +102,7 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
             }
         }
 
-        err = MPI_Ssend(sendbuf + send_obj.DTP_buf_offset, sendcount, sendtype, rank, 0, comm);
+        err = MPI_Ssend(send.buf + send.dtp_obj.DTP_buf_offset, sendcount, sendtype, rank, 0, comm);
         if (err) {
             errs++;
             if (errs < 10) {
@@ -134,23 +112,13 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
 
         err = MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-        MTest_dtp_check(recv, 0, 1, sendcnt);
-        if (err != DTP_SUCCESS && errs <= 10) {
-            char *recv_desc, *send_desc;
-            DTP_obj_get_description(recv_obj, &recv_desc);
-            DTP_obj_get_description(send_obj, &send_desc);
-            fprintf(stderr,
-                    "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %d\n",
-                    recv_desc, send_desc, sendcnt);
-            fflush(stderr);
-            free(recv_desc);
-            free(send_desc);
-        }
+        errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
 
-        MTest_dtp_init(recv, -1, -1, sendcnt);
+        MTest_dtp_init(&recv, -1, -1, sendcnt);
 
         err =
-            MPI_Irecv(recvbuf + recv_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm, &req);
+            MPI_Irecv(recv.buf + recv.dtp_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm,
+                      &req);
         if (err) {
             errs++;
             if (errs < 10) {
@@ -158,7 +126,7 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
             }
         }
 
-        err = MPI_Rsend(sendbuf + send_obj.DTP_buf_offset, sendcount, sendtype, rank, 0, comm);
+        err = MPI_Rsend(send.buf + send.dtp_obj.DTP_buf_offset, sendcount, sendtype, rank, 0, comm);
         if (err) {
             errs++;
             if (errs < 10) {
@@ -168,25 +136,14 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
 
         err = MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-        MTest_dtp_check(recv, 0, 1, sendcnt);
-        if (err != DTP_SUCCESS && errs <= 10) {
-            char *recv_desc, *send_desc;
-            DTP_obj_get_description(recv_obj, &recv_desc);
-            DTP_obj_get_description(send_obj, &send_desc);
-            fprintf(stderr,
-                    "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %d\n",
-                    recv_desc, send_desc, sendcnt);
-            fflush(stderr);
-            free(recv_desc);
-            free(send_desc);
-        }
+        errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
 
-        MTest_dtp_free(send);
-        MTest_dtp_free(recv);
-        DTP_obj_free(send_obj);
-        DTP_obj_free(recv_obj);
+        MTest_dtp_destroy(&send);
+        MTest_dtp_destroy(&recv);
     }
 
+    MTest_dtp_obj_finish(&send);
+    MTest_dtp_obj_finish(&recv);
     DTP_pool_free(dtp);
     return errs;
 }

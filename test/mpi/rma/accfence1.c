@@ -25,23 +25,19 @@ static char MTEST_Descrip[] = "Accumulate/Replace with Fence";
 int world_rank, world_size;
 
 static int accfence_test(int seed, int testsize, int count, const char *basic_type,
-                         mtest_mem_type_e t_origmem, mtest_mem_type_e t_targetmem)
+                         mtest_mem_type_e origmem, mtest_mem_type_e targetmem)
 {
     int errs = 0, err;
-    int rank, size, orig, target;
+    int rank, size, orig_rank, target_rank;
     int minsize = 2;
     int i;
     MPI_Aint origcount, targetcount;
     MPI_Comm comm;
     MPI_Win win;
-    MPI_Aint extent, lb, maxbufsize;
+    MPI_Aint extent, lb;
     MPI_Datatype origtype, targettype;
     DTP_pool_s dtp;
-    MTEST_DTP_DECLARE(orig);
-    MTEST_DTP_DECLARE(target);
-
-    origmem = t_origmem;
-    targetmem = t_targetmem;
+    struct mtest_obj orig, target;
 
     static char test_desc[200];
     snprintf(test_desc, 200,
@@ -51,8 +47,6 @@ static int accfence_test(int seed, int testsize, int count, const char *basic_ty
     if (world_rank == 0) {
         MTestPrintfMsg(1, " %s\n", test_desc);
     }
-
-    maxbufsize = MTestDefaultMaxBufferSize();
 
     err = DTP_pool_create(basic_type, count, seed, &dtp);
     if (err != DTP_SUCCESS) {
@@ -66,7 +60,8 @@ static int accfence_test(int seed, int testsize, int count, const char *basic_ty
         goto fn_exit;
     }
 
-    MTest_dtp_malloc_max(target, 0);
+    MTest_dtp_obj_start(&orig, "origin", dtp, origmem, 0, false);
+    MTest_dtp_obj_start(&target, "target", dtp, targetmem, 1, true);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -77,67 +72,51 @@ static int accfence_test(int seed, int testsize, int count, const char *basic_ty
             /* for NULL comms, make sure these processes create the
              * same number of objects, so the target knows what
              * datatype layout to check for */
-            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, maxbufsize, testsize);
-            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, maxbufsize, testsize);
+            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, testsize);
+            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, testsize);
             continue;
         }
 
         /* Determine the sender and receiver */
         MPI_Comm_rank(comm, &rank);
         MPI_Comm_size(comm, &size);
-        orig = 0;
-        target = size - 1;
+        orig_rank = 0;
+        target_rank = size - 1;
 
-        MPI_Win_create(targetbuf, maxbufsize, extent, MPI_INFO_NULL, comm, &win);
+        MPI_Win_create(target.buf, target.maxbufsize, extent, MPI_INFO_NULL, comm, &win);
 
         /* To improve reporting of problems about operations, we
          * change the error handler to errors return */
         MPI_Win_set_errhandler(win, MPI_ERRORS_RETURN);
 
         for (i = 0; i < testsize; i++) {
-            err = DTP_obj_create(dtp, &orig_obj, maxbufsize);
-            if (err != DTP_SUCCESS) {
-                errs++;
-                break;
-            }
+            errs += MTest_dtp_create(&orig, rank == orig_rank);
+            errs += MTest_dtp_create(&target, false);
 
-            err = DTP_obj_create(dtp, &target_obj, maxbufsize);
-            if (err != DTP_SUCCESS) {
-                errs++;
-                break;
-            }
+            MTest_dtp_init(&target, -1, -1, count);
 
-            MTest_dtp_init(target, -1, -1, count);
-
-            targetcount = target_obj.DTP_type_count;
-            targettype = target_obj.DTP_datatype;
+            targetcount = target.dtp_obj.DTP_type_count;
+            targettype = target.dtp_obj.DTP_datatype;
 
             MPI_Win_fence(0, win);
 
-            if (rank == orig) {
-                MTest_dtp_malloc_obj(orig, 1);
-                MTest_dtp_init(orig, 0, 1, count);
+            if (rank == orig_rank) {
+                MTest_dtp_init(&orig, 0, 1, count);
 
-                origcount = orig_obj.DTP_type_count;
-                origtype = orig_obj.DTP_datatype;
+                origcount = orig.dtp_obj.DTP_type_count;
+                origtype = orig.dtp_obj.DTP_datatype;
 
                 /* MPI_REPLACE on accumulate is almost the same
                  * as MPI_Put; the only difference is in the
                  * handling of overlapping accumulate operations,
                  * which are not tested here */
-                err = MPI_Accumulate(origbuf + orig_obj.DTP_buf_offset, origcount,
-                                     origtype, target, target_obj.DTP_buf_offset / extent,
+                err = MPI_Accumulate(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount,
+                                     origtype, target_rank, target.dtp_obj.DTP_buf_offset / extent,
                                      targetcount, targettype, MPI_REPLACE, win);
                 if (err) {
                     errs++;
                     if (errs < 10) {
-                        char *orig_desc, *target_desc;
-                        DTP_obj_get_description(orig_obj, &orig_desc);
-                        DTP_obj_get_description(target_obj, &target_desc);
-                        error("Accumulate types: send %s, recv %s\n", orig_desc, target_desc);
                         MTestPrintError(err);
-                        free(orig_desc);
-                        free(target_desc);
                     }
                 }
                 err = MPI_Win_fence(0, win);
@@ -147,33 +126,23 @@ static int accfence_test(int seed, int testsize, int count, const char *basic_ty
                         MTestPrintError(err);
                     }
                 }
-
-                MTest_dtp_free(orig);
-            } else if (rank == target) {
+            } else if (rank == target_rank) {
                 MPI_Win_fence(0, win);
                 /* This should have the same effect, in terms of
                  * transferring data, as a send/recv pair */
-                MTest_dtp_check(target, 0, 1, count);
-                if (err != DTP_SUCCESS && errs < 10) {
-                    char *orig_desc, *target_desc;
-                    DTP_obj_get_description(orig_obj, &orig_desc);
-                    DTP_obj_get_description(target_obj, &target_desc);
-                    error("Data received with type %s does not match data sent with type %s\n",
-                          target_desc, orig_desc);
-                    free(orig_desc);
-                    free(target_desc);
-                }
+                errs += MTest_dtp_check(&target, 0, 1, count, errs < 10);
             } else {
                 MPI_Win_fence(0, win);
             }
-            DTP_obj_free(orig_obj);
-            DTP_obj_free(target_obj);
+            MTest_dtp_destroy(&orig);
+            MTest_dtp_destroy(&target);
         }
         MPI_Win_free(&win);
         MTestFreeComm(&comm);
     }
 
-    MTest_dtp_free(target);
+    MTest_dtp_obj_finish(&orig);
+    MTest_dtp_obj_finish(&target);
 
   fn_exit:
     DTP_pool_free(dtp);

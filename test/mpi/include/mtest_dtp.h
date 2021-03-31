@@ -6,7 +6,9 @@
 #ifndef MTEST_DTP_H_INCLUDED
 #define MTEST_DTP_H_INCLUDED
 
+#include "dtpools.h"
 #include "mtest_common.h"
+#include <assert.h>
 
 typedef enum {
     MTEST_DTP_ONCE,
@@ -314,6 +316,115 @@ static bool dtp_args_get_next(struct dtp_args *dtp_args)
         dtp_args->idx++;
     }
     return true;
+}
+
+/* Wrap dtp object functions for isolating memtype support */
+
+typedef enum {
+    MTEST_DTP_BUF_UNALLOCATED,
+    MTEST_DTP_BUF_MAX,          /* buffer need be separately allocated and freed */
+    MTEST_DTP_BUF_OBJ,          /* buffer and dtp_obj created and destroyed together */
+} mtest_dtp_buf_mode_e;
+
+struct mtest_obj {
+    mtest_mem_type_e memtype;
+    void *buf;
+    void *buf_h;
+    DTP_obj_s dtp_obj;
+    const char *name;
+    DTP_pool_s dtp;
+    MPI_Aint maxbufsize;
+    mtest_dtp_buf_mode_e buf_mode;
+    int device_id;
+};
+
+/* MTest_dtp_obj_start/finish once for each mtest_obj */
+static inline void MTest_dtp_obj_start(struct mtest_obj *obj, const char *name,
+                                       DTP_pool_s dtp, mtest_mem_type_e memtype,
+                                       int device_id, bool use_max_buffer)
+{
+    obj->name = name;
+    obj->dtp = dtp;
+    obj->memtype = memtype;
+    obj->device_id = device_id;
+    obj->maxbufsize = MTestDefaultMaxBufferSize();
+    obj->buf = NULL;
+    if (use_max_buffer) {
+        MTestMalloc(obj->maxbufsize, obj->memtype, &obj->buf_h, &obj->buf, device_id);
+        assert(obj->buf && obj->buf_h);
+        obj->buf_mode = MTEST_DTP_BUF_MAX;
+    } else {
+        obj->buf_mode = MTEST_DTP_BUF_UNALLOCATED;
+    }
+}
+
+static inline void MTest_dtp_obj_finish(struct mtest_obj *obj)
+{
+    if (obj->buf_mode == MTEST_DTP_BUF_MAX) {
+        MTestFree(obj->memtype, obj->buf_h, obj->buf);
+        obj->buf_mode = MTEST_DTP_BUF_UNALLOCATED;
+    }
+}
+
+/* MTest_dtp_create/destroy for each instance of dtp type */
+static inline int MTest_dtp_create(struct mtest_obj *obj, bool alloc)
+{
+    int err = DTP_obj_create(obj->dtp, &obj->dtp_obj, obj->maxbufsize);
+    if (alloc && obj->buf_mode != MTEST_DTP_BUF_MAX) {
+        MTestMalloc(obj->dtp_obj.DTP_bufsize, obj->memtype, &obj->buf_h, &obj->buf, obj->device_id);
+        assert(obj->buf && obj->buf_h);
+        obj->buf_mode = MTEST_DTP_BUF_OBJ;
+    }
+    return err;
+}
+
+static inline int MTest_dtp_destroy(struct mtest_obj *obj)
+{
+    int err = DTP_obj_free(obj->dtp_obj);
+    if (obj->buf_mode == MTEST_DTP_BUF_OBJ) {
+        MTestFree(obj->memtype, obj->buf_h, obj->buf);
+        obj->buf = NULL;
+        obj->buf_mode = MTEST_DTP_BUF_UNALLOCATED;
+    }
+    return err;
+}
+
+/* utilitis for each instance of dtp obj */
+static inline void MTest_dtp_print_desc(struct mtest_obj *obj)
+{
+    char *desc;
+    DTP_obj_get_description(obj->dtp_obj, &desc);
+    printf("%s [%s]\n", obj->name, desc);
+    free(desc);
+}
+
+static inline int MTest_dtp_init(struct mtest_obj *obj, int start, int stride, int count)
+{
+    int err;
+    err = DTP_obj_buf_init(obj->dtp_obj, obj->buf_h, start, stride, count);
+    if (err != DTP_SUCCESS) {
+        printf("DTP_obj_buf_init failed.\n");
+        MTest_dtp_print_desc(obj);
+        return 1;
+    }
+    MTestCopyContent(obj->buf_h, obj->buf, obj->dtp_obj.DTP_bufsize, obj->memtype);
+    return 0;
+}
+
+static inline int MTest_dtp_check(struct mtest_obj *obj, int start, int stride, int count,
+                                  int verbose)
+{
+    int err;
+    MTestCopyContent(obj->buf, obj->buf_h, obj->dtp_obj.DTP_bufsize, obj->memtype);
+    err = DTP_obj_buf_check(obj->dtp_obj, obj->buf_h, start, stride, count);
+    if (err != DTP_SUCCESS) {
+        if (verbose) {
+            printf("DTP_obj_buf_check failed.\n");
+            MTest_dtp_print_desc(obj);
+        }
+        return 1;
+    }
+    return 0;
 }
 
 #endif /* MTEST_DTP_H_INCLUDED */
