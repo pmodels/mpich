@@ -40,6 +40,8 @@ dnl    MPID_NO_LONG_LONG     - if yes, the device does not support the
 dnl                            long long integer type
 dnl    MPID_NO_LONG_DOUBLE   - if yes, the device does not support the
 dnl                            long double type
+dnl    MPID_NO_FLOAT16       - if yes, the device does not support the
+dnl                            _Float16 type
 dnl    MPID_PM_NAMESERVER    - if set, provides the name of the nameserver
 dnl                            that the process manager supports.
 dnl                            This name server will be used if the
