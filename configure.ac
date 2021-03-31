@@ -2777,6 +2777,7 @@ if test "$MPID_NO_FLOAT16" != "yes" ; then
     pac_cv_have_float16=yes,pac_cv_have_float16=no)])
     if test "$pac_cv_have_float16" = "yes" ; then
         AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
+        AC_CHECK_SIZEOF([_Float16])
     fi
 fi
 
@@ -2920,7 +2921,6 @@ AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
 #endif
   ])
 ])
-AC_CHECK_SIZEOF([_Float16])
 
 # we need really could just use the result of AC_CHECK_SIZEOF, but having a
 # HAVE_typename macro is useful for consistency
@@ -2948,6 +2948,7 @@ for type in short int long long_long float double long_double wchar_t \
                    $type != long_double -a \
                    $type != long_double_int -a \
                    $type != _Bool -a \
+                   $type != _Float16 -a \
                    $type != float__Complex -a \
                    $type != double__Complex -a \
                    $type != long_double__Complex ; then
