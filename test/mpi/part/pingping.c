@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mtest_dtp.h"
 #include "dtpools.h"
 #include <assert.h>
 
@@ -74,8 +75,8 @@ int main(int argc, char *argv[])
     MPI_Aint maxbufsize;
     MPI_Comm comm;
     DTP_pool_s dtp;
-    MTEST_DTP_DECLARE(send);
-    MTEST_DTP_DECLARE(recv);
+    struct mtest_obj send, recv;
+    mtest_mem_type_e sendmem, recvmem;
     char *basic_type;
 
     MTest_Init(&argc, &argv);
@@ -99,6 +100,9 @@ int main(int argc, char *argv[])
 
     MTestArgListDestroy(head);
 
+    MTest_dtp_obj_start(&send, "send", dtp, sendmem, 0, false);
+    MTest_dtp_obj_start(&recv, "recv", dtp, recvmem, 0, false);
+
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
      * Use subsets of these for tests that do not involve combinations
@@ -108,8 +112,8 @@ int main(int argc, char *argv[])
             /* for NULL comms, make sure these processes create the
              * same number of objects, so the target knows what
              * datatype layout to check for */
-            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, maxbufsize, testsize);
-            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, maxbufsize, testsize);
+            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, testsize);
+            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, testsize);
             continue;
         }
 
@@ -124,21 +128,12 @@ int main(int argc, char *argv[])
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
         for (int i = 0; i < testsize; i++) {
-            err = DTP_obj_create(dtp, &send_obj, maxbufsize);
-            if (err != DTP_SUCCESS) {
-                errs++;
-                break;
-            }
-
-            err += DTP_obj_create(dtp, &recv_obj, maxbufsize);
-            if (err != DTP_SUCCESS) {
-                errs++;
-                break;
-            }
+            errs += MTest_dtp_create(&send, rank == source);
+            errs += MTest_dtp_create(&recv, rank == dest);
 
             int nbytes;
-            MPI_Type_size(send_obj.DTP_datatype, &nbytes);
-            nbytes *= send_obj.DTP_type_count;
+            MPI_Type_size(send.dtp_obj.DTP_datatype, &nbytes);
+            nbytes *= send.dtp_obj.DTP_type_count;
 
             maxmsg = MAX_TOTAL_MSG_SIZE / nbytes;
             if (maxmsg > MAXMSG)
@@ -149,62 +144,42 @@ int main(int argc, char *argv[])
             MPI_Datatype dtype = MPI_DATATYPE_NULL;
 
             if (rank == source) {
-                MTest_dtp_malloc_obj(send, rank);
-                MTest_dtp_init(send, 0, 1, count[0]);
+                MTest_dtp_init(&send, 0, 1, count[0]);
 
-                dtype = send_obj.DTP_datatype;
-                set_partitions_count(send_obj.DTP_type_count, &partitions, &partition_count);
+                dtype = send.dtp_obj.DTP_datatype;
+                set_partitions_count(send.dtp_obj.DTP_type_count, &partitions, &partition_count);
 
                 char *desc;
-                DTP_obj_get_description(send_obj, &desc);
+                DTP_obj_get_description(send.dtp_obj, &desc);
                 MTestPrintfMsg(1,
                                "Sending partitions = %d, count = %ld (total size %d bytes) of datatype %s",
                                partitions, partition_count, nbytes * count[0], desc);
                 free(desc);
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++)
-                    send_test((char *) sendbuf + send_obj.DTP_buf_offset, partitions,
+                    send_test((char *) send.buf + send.dtp_obj.DTP_buf_offset, partitions,
                               partition_count, dtype, dest, comm);
-
-                MTest_dtp_free(send);
             } else if (rank == dest) {
-                MTest_dtp_malloc_obj(recv, rank);
-
-                dtype = recv_obj.DTP_datatype;
-                set_partitions_count(recv_obj.DTP_type_count, &partitions, &partition_count);
+                dtype = recv.dtp_obj.DTP_datatype;
+                set_partitions_count(recv.dtp_obj.DTP_type_count, &partitions, &partition_count);
 
                 char *desc;
-                DTP_obj_get_description(recv_obj, &desc);
+                DTP_obj_get_description(recv.dtp_obj, &desc);
                 MTestPrintfMsg(1, "Receiving partitions = %d, count = %d of datatype %s\n",
                                partitions, partition_count, desc);
                 free(desc);
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
-                    MTest_dtp_init(recv, -1, -1, count[0]);
+                    MTest_dtp_init(&recv, -1, -1, count[0]);
 
-                    recv_test((char *) recvbuf + recv_obj.DTP_buf_offset, partitions,
+                    recv_test((char *) recv.buf + recv.dtp_obj.DTP_buf_offset, partitions,
                               partition_count, dtype, source, comm);
 
-                    MTest_dtp_check(recv, 0, 1, count[0]);
-                    if (err != DTP_SUCCESS && errs <= 10) {
-                        char *recv_desc, *send_desc;
-                        DTP_obj_get_description(recv_obj, &recv_desc);
-                        DTP_obj_get_description(send_obj, &send_desc);
-                        fprintf(stderr,
-                                "Data in receive buffer did not match for destination datatype %s and source datatype %s,"
-                                "partitions = %d, count = %ld, total count = %ld, message iteration %d of %d\n",
-                                recv_desc, send_desc, partitions, partition_count, count[0],
-                                nmsg, maxmsg);
-                        fflush(stderr);
-                        free(recv_desc);
-                        free(send_desc);
-                    }
+                    errs += MTest_dtp_check(&recv, 0, 1, count[0], errs < 10);
                 }
-
-                MTest_dtp_free(recv);
             }
-            DTP_obj_free(recv_obj);
-            DTP_obj_free(send_obj);
+            MTest_dtp_destroy(&send);
+            MTest_dtp_destroy(&recv);
 #ifdef USE_BARRIER
             /* NOTE: Without MPI_Barrier, recv side can easily accumulate large unexpected queue
              * across multiple batches, especially in an async test. Currently, both libfabric and ucx
@@ -218,6 +193,8 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
+    MTest_dtp_obj_finish(&send);
+    MTest_dtp_obj_finish(&recv);
     DTP_pool_free(dtp);
 
     MTest_Finalize(errs);

@@ -18,10 +18,9 @@ static char MTEST_Descrip[] = "Get with Fence";
 */
 
 int world_rank, world_size;
-MTEST_DTP_DECLARE(orig);
-MTEST_DTP_DECLARE(target);
+struct mtest_obj orig, target;
 
-static inline int test(MPI_Comm comm, int rank, int orig, int target,
+static inline int test(MPI_Comm comm, int rank, int orig_rank, int target_rank,
                        MPI_Aint count, DTP_pool_s dtp, MPI_Win win)
 {
     int errs = 0, err;
@@ -29,20 +28,20 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
     MPI_Aint extent, lb;
     MPI_Datatype origtype, targettype;
 
-    origtype = orig_obj.DTP_datatype;
-    origcount = orig_obj.DTP_type_count;
-    targettype = target_obj.DTP_datatype;
-    targetcount = target_obj.DTP_type_count;
+    origtype = orig.dtp_obj.DTP_datatype;
+    origcount = orig.dtp_obj.DTP_type_count;
+    targettype = target.dtp_obj.DTP_datatype;
+    targetcount = target.dtp_obj.DTP_type_count;
 
     char *orig_desc, *target_desc;
-    DTP_obj_get_description(orig_obj, &orig_desc);
-    DTP_obj_get_description(target_obj, &target_desc);
+    DTP_obj_get_description(orig.dtp_obj, &orig_desc);
+    DTP_obj_get_description(target.dtp_obj, &target_desc);
 
-    if (rank == target) {
+    if (rank == target_rank) {
 #if defined(USE_GET)
-        MTest_dtp_init(target, 0, 1, count);
+        MTest_dtp_init(&target, 0, 1, count);
 #elif defined(USE_PUT)
-        MTest_dtp_init(target, -1, -1, count);
+        MTest_dtp_init(&target, -1, -1, count);
 #endif
 
         /* The target does not need to do anything besides the
@@ -51,20 +50,13 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
         MPI_Win_fence(0, win);
 
 #if defined(USE_PUT)
-        MTest_dtp_check(target, 0, 1, count);
-        if (err != DTP_SUCCESS && errs < 10) {
-            printf
-                ("Data in target buffer did not match for target datatype %s (get with orig datatype %s)\n",
-                 target_desc, orig_desc);
-        }
+        errs += MTest_dtp_check(&target, 0, 1, count, errs < 10);
 #endif
-    } else if (rank == orig) {
-        MTest_dtp_malloc_obj(orig, 0);
-
+    } else if (rank == orig_rank) {
 #if defined(USE_GET)
-        MTest_dtp_init(orig, -1, -1, count);
+        MTest_dtp_init(&orig, -1, -1, count);
 #elif defined(USE_PUT)
-        MTest_dtp_init(orig, 0, 1, count);
+        MTest_dtp_init(&orig, 0, 1, count);
 #endif
 
         /* To improve reporting of problems about operations, we
@@ -85,12 +77,12 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
          * transferring data, as a send/recv pair */
 #if defined(USE_GET)
         err =
-            MPI_Get(origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
-                    target_obj.DTP_buf_offset / extent, targetcount, targettype, win);
+            MPI_Get(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype, target_rank,
+                    target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
 #elif defined(USE_PUT)
         err =
-            MPI_Put(origbuf + orig_obj.DTP_buf_offset, origcount, origtype, target,
-                    target_obj.DTP_buf_offset / extent, targetcount, targettype, win);
+            MPI_Put(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype, target_rank,
+                    target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
 #endif
         if (err) {
             errs++;
@@ -106,15 +98,8 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
             }
         }
 #if defined(USE_GET)
-        MTest_dtp_check(orig, 0, 1, count);
-        if (err != DTP_SUCCESS && errs < 10) {
-            printf
-                ("Data in origin buffer did not match for origin datatype %s (get with target datatype %s)\n",
-                 orig_desc, target_desc);
-        }
+        errs += MTest_dtp_check(&orig, 0, 1, count, errs < 10);
 #endif
-
-        MTest_dtp_free(orig);
     } else {
         MPI_Win_fence(0, win);
         MPI_Win_fence(0, win);
@@ -126,10 +111,11 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
     return errs;
 }
 
-static int fence_test(int seed, int testsize, int count, const char *basic_type)
+static int fence_test(int seed, int testsize, int count, const char *basic_type,
+                      mtest_mem_type_e origmem, mtest_mem_type_e targetmem)
 {
     int err, errs = 0;
-    int rank, size, orig, target;
+    int rank, size, orig_rank, target_rank;
     int minsize = 2;
     int i;
     MPI_Aint maxbufsize;
@@ -145,8 +131,8 @@ static int fence_test(int seed, int testsize, int count, const char *basic_type)
 #elif defined(USE_PUT)
              "./putfence -seed=%d -testsize=%d -type=%s -count=%d -origmem=%s -targetmem=%s",
 #endif
-             seed, testsize, basic_type, count, MTest_memtype_name(origmem),
-             MTest_memtype_name(targetmem));
+             seed, testsize, basic_type, count, MTest_memtype_name(orig.memtype),
+             MTest_memtype_name(target.memtype));
     if (world_rank == 0) {
         MTestPrintfMsg(1, " %s\n", test_desc);
     }
@@ -176,7 +162,8 @@ static int fence_test(int seed, int testsize, int count, const char *basic_type)
         goto fn_exit;
     }
 
-    MTest_dtp_malloc_max(target, 1);
+    MTest_dtp_obj_start(&orig, "origin", dtp, origmem, 0, false);
+    MTest_dtp_obj_start(&target, "target", dtp, targetmem, 1, true);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -187,42 +174,34 @@ static int fence_test(int seed, int testsize, int count, const char *basic_type)
             /* for NULL comms, make sure these processes create the
              * same number of objects, so the target knows what
              * datatype layout to check for */
-            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, maxbufsize, testsize);
-            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, maxbufsize, testsize);
+            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, testsize);
+            errs += MTEST_CREATE_AND_FREE_DTP_OBJS(dtp, testsize);
             continue;
         }
 
         /* Determine the sender and receiver */
         MPI_Comm_rank(comm, &rank);
         MPI_Comm_size(comm, &size);
-        orig = 0;
-        target = size - 1;
+        orig_rank = 0;
+        target_rank = size - 1;
 
-        MPI_Win_create(targetbuf, maxbufsize, extent, MPI_INFO_NULL, comm, &win);
+        MPI_Win_create(target.buf, target.maxbufsize, extent, MPI_INFO_NULL, comm, &win);
 
         for (i = 0; i < testsize; i++) {
-            err = DTP_obj_create(dtp, &orig_obj, maxbufsize);
-            if (err != DTP_SUCCESS) {
-                errs++;
-                break;
-            }
+            errs += MTest_dtp_create(&orig, true);
+            errs += MTest_dtp_create(&target, false);
 
-            err = DTP_obj_create(dtp, &target_obj, maxbufsize);
-            if (err != DTP_SUCCESS) {
-                errs++;
-                break;
-            }
+            errs += test(comm, rank, orig_rank, target_rank, count, dtp, win);
 
-            errs += test(comm, rank, orig, target, count, dtp, win);
-
-            DTP_obj_free(target_obj);
-            DTP_obj_free(orig_obj);
+            MTest_dtp_destroy(&orig);
+            MTest_dtp_destroy(&target);
         }
         MPI_Win_free(&win);
         MTestFreeComm(&comm);
     }
 
-    MTest_dtp_free(target);
+    MTest_dtp_obj_finish(&orig);
+    MTest_dtp_obj_finish(&target);
 
   fn_exit:
     DTP_pool_free(dtp);
@@ -240,9 +219,9 @@ int main(int argc, char *argv[])
     struct dtp_args dtp_args;
     dtp_args_init(&dtp_args, MTEST_DTP_RMA, argc, argv);
     while (dtp_args_get_next(&dtp_args)) {
-        origmem = dtp_args.u.rma.origmem;
-        targetmem = dtp_args.u.rma.targetmem;
-        errs += fence_test(dtp_args.seed, dtp_args.testsize, dtp_args.count, dtp_args.basic_type);
+        errs +=
+            fence_test(dtp_args.seed, dtp_args.testsize, dtp_args.count, dtp_args.basic_type,
+                       dtp_args.u.rma.origmem, dtp_args.u.rma.targetmem);
 
     }
     dtp_args_finalize(&dtp_args);
