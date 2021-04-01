@@ -8,7 +8,7 @@
 
 /* dynamic process messages are send with MPIDI_OFI_DYNPROC_SEND bit masked, so it
  * does not collide with normal messages with a regular communicator. The following
- * DISCONNECT_CONTEXT_ID is arbitary chosen so the diconect messages won't collide
+ * DISCONNECT_CONTEXT_ID is arbitrary chosen so the disconnect messages won't collide
  * with other dynamic process messages (just the initial handshake messages).
  */
 #define DISCONNECT_CONTEXT_ID 0xF000
