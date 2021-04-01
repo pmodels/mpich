@@ -138,7 +138,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int blocking)
 
     }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PROGRESS_SEND);
     return mpi_errno;
 }
