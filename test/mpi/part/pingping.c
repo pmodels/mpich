@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     int rank, size, source, dest;
     int minsize = 2, nmsg, maxmsg;
     int seed, testsize;
-    MPI_Aint count[2];
+    MPI_Aint sendcnt, recvcnt;
     MPI_Aint maxbufsize;
     MPI_Comm comm;
     DTP_pool_s dtp;
@@ -84,17 +84,17 @@ int main(int argc, char *argv[])
     MTestArgList *head = MTestArgListCreate(argc, argv);
     seed = MTestArgListGetInt(head, "seed");
     testsize = MTestArgListGetInt(head, "testsize");
-    count[0] = MTestArgListGetLong(head, "sendcnt");
-    count[1] = MTestArgListGetLong(head, "recvcnt");
+    sendcnt = MTestArgListGetLong(head, "sendcnt");
+    recvcnt = MTestArgListGetLong(head, "recvcnt");
     basic_type = MTestArgListGetString(head, "type");
     sendmem = MTestArgListGetMemType(head, "sendmem");
     recvmem = MTestArgListGetMemType(head, "recvmem");
 
     maxbufsize = MTestDefaultMaxBufferSize();
 
-    err = DTP_pool_create(basic_type, count[0], seed, &dtp);
+    err = DTP_pool_create(basic_type, sendcnt, seed, &dtp);
     if (err != DTP_SUCCESS) {
-        fprintf(stderr, "Error while creating send pool (%s,%ld)\n", basic_type, count[0]);
+        fprintf(stderr, "Error while creating send pool (%s,%ld)\n", basic_type, sendcnt);
         fflush(stderr);
     }
 
@@ -102,6 +102,13 @@ int main(int argc, char *argv[])
 
     MTest_dtp_obj_start(&send, "send", dtp, sendmem, 0, false);
     MTest_dtp_obj_start(&recv, "recv", dtp, recvmem, 0, false);
+
+    int nbytes;
+    MPI_Type_size(dtp.DTP_base_type, &nbytes);
+    nbytes *= sendcnt;
+    maxmsg = MAX_TOTAL_MSG_SIZE / nbytes;
+    if (maxmsg > MAXMSG)
+        maxmsg = MAXMSG;
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -123,6 +130,8 @@ int main(int argc, char *argv[])
         source = 0;
         dest = size - 1;
 
+        DTP_pool_update_count(dtp, rank == source ? sendcnt : recvcnt);
+
         /* To improve reporting of problems about operations, we
          * change the error handler to errors return */
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
@@ -131,20 +140,12 @@ int main(int argc, char *argv[])
             errs += MTest_dtp_create(&send, rank == source);
             errs += MTest_dtp_create(&recv, rank == dest);
 
-            int nbytes;
-            MPI_Type_size(send.dtp_obj.DTP_datatype, &nbytes);
-            nbytes *= send.dtp_obj.DTP_type_count;
-
-            maxmsg = MAX_TOTAL_MSG_SIZE / nbytes;
-            if (maxmsg > MAXMSG)
-                maxmsg = MAXMSG;
-
             int partitions = 0;
             MPI_Count partition_count = 0;
             MPI_Datatype dtype = MPI_DATATYPE_NULL;
 
             if (rank == source) {
-                MTest_dtp_init(&send, 0, 1, count[0]);
+                MTest_dtp_init(&send, 0, 1, sendcnt);
 
                 dtype = send.dtp_obj.DTP_datatype;
                 set_partitions_count(send.dtp_obj.DTP_type_count, &partitions, &partition_count);
@@ -153,7 +154,7 @@ int main(int argc, char *argv[])
                 DTP_obj_get_description(send.dtp_obj, &desc);
                 MTestPrintfMsg(1,
                                "Sending partitions = %d, count = %ld (total size %d bytes) of datatype %s",
-                               partitions, partition_count, nbytes * count[0], desc);
+                               partitions, partition_count, nbytes * sendcnt, desc);
                 free(desc);
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++)
@@ -170,12 +171,12 @@ int main(int argc, char *argv[])
                 free(desc);
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
-                    MTest_dtp_init(&recv, -1, -1, count[0]);
+                    MTest_dtp_init(&recv, -1, -1, recvcnt);
 
                     recv_test((char *) recv.buf + recv.dtp_obj.DTP_buf_offset, partitions,
                               partition_count, dtype, source, comm);
 
-                    errs += MTest_dtp_check(&recv, 0, 1, count[0], errs < 10);
+                    errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
                 }
             }
             MTest_dtp_destroy(&send);

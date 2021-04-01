@@ -43,7 +43,7 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
 
     err = DTP_pool_create(basic_type, sendcnt, seed, &dtp);
     if (err != DTP_SUCCESS) {
-        fprintf(stderr, "Error while creating send pool (%s,%d)\n", basic_type, sendcnt);
+        fprintf(stderr, "Error while creating dtp pool (%s,%d)\n", basic_type, sendcnt);
         fflush(stderr);
     }
 
@@ -75,6 +75,7 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
         for (i = 0; i < testsize; i++) {
+            DTP_pool_update_count(dtp, (rank == source) ? sendcnt : recvcnt);
             errs += MTest_dtp_create(&send, rank == source);
             errs += MTest_dtp_create(&recv, rank == dest);
 
@@ -94,7 +95,7 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
                     }
                 }
             } else if (rank == dest) {
-                MTest_dtp_init(&recv, -1, -1, sendcnt);
+                MTest_dtp_init(&recv, -1, -1, recvcnt);
 
                 recvcount = recv.dtp_obj.DTP_type_count;
                 recvtype = recv.dtp_obj.DTP_datatype;
@@ -109,6 +110,7 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
                     }
                 }
 
+                /* only up to sendcnt should be updated */
                 errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
             }
             MTest_dtp_destroy(&send);
