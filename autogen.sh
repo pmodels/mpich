@@ -234,6 +234,10 @@ for arg in "$@" ; do
         do_json=no
         ;;
 
+    -without-yaksa|--without-yaksa)
+        do_yaksa=no
+        ;;
+
 	-help|--help|-usage|--usage)
 	    cat <<EOF
    ./autogen.sh [ --with-autotools=dir ] \\
