@@ -603,7 +603,7 @@ echo
 check_submodule_presence modules/hwloc
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/pm/hydra2 src/mpi/romio modules/hwloc test/mpi modules/json-c modules/yaksa"
+externals="src/pm/hydra src/pm/hydra2 src/mpi/romio modules/hwloc test/mpi"
 
 if [ "yes" = "$do_izem" ] ; then
     check_submodule_presence modules/izem
@@ -622,10 +622,12 @@ fi
 
 if [ "yes" = "$do_json" ] ; then
     check_submodule_presence "modules/json-c"
+    externals="${externals} modules/json-c"
 fi
 
 if [ "yes" = "$do_yaksa" ] ; then
     check_submodule_presence "modules/yaksa"
+    externals="${externals} modules/yaksa"
 fi
 
 ########################################################################
