@@ -289,8 +289,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_send_hdr(int grank,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_AM_SEND_HDR);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
   fn_deferred:
     mpi_errno = MPIDI_POSIX_am_enqueue_req_hdr(am_hdr, msg_hdr->am_hdr_sz, grank, msg_hdr);
     goto fn_exit;
