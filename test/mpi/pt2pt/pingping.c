@@ -53,6 +53,13 @@ static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
     MTest_dtp_obj_start(&send, "send", dtp, sendmem, 0, false);
     MTest_dtp_obj_start(&recv, "recv", dtp, recvmem, 0, false);
 
+    int nbytes;
+    MPI_Type_size(dtp.DTP_base_type, &nbytes);
+    nbytes *= sendcnt;
+    maxmsg = MAX_TOTAL_MSG_SIZE / nbytes;
+    if (maxmsg > MAXMSG)
+        maxmsg = MAXMSG;
+
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
      * Use subsets of these for tests that do not involve combinations
@@ -73,6 +80,8 @@ static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
         source = 0;
         dest = size - 1;
 
+        DTP_pool_update_count(dtp, rank == source ? sendcnt : recvcnt);
+
         /* To improve reporting of problems about operations, we
          * change the error handler to errors return */
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
@@ -80,14 +89,6 @@ static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
         for (i = 0; i < testsize; i++) {
             errs += MTest_dtp_create(&send, rank == source);
             errs += MTest_dtp_create(&recv, rank == dest);
-
-            int nbytes;
-            MPI_Type_size(send.dtp_obj.DTP_datatype, &nbytes);
-            nbytes *= send.dtp_obj.DTP_type_count;
-
-            maxmsg = MAX_TOTAL_MSG_SIZE / nbytes;
-            if (maxmsg > MAXMSG)
-                maxmsg = MAXMSG;
 
             if (rank == source) {
                 MTest_dtp_init(&send, 0, 1, sendcnt);
@@ -123,7 +124,8 @@ static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
                         }
                     }
 
-                    errs += MTest_dtp_check(&recv, 0, 1, recvcnt, errs < 10);
+                    /* only up to sendcnt should be updated */
+                    errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
                 }
             }
             MTest_dtp_destroy(&send);

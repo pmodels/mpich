@@ -56,7 +56,9 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
     MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
     for (i = 0; i < testsize; i++) {
+        DTP_pool_update_count(dtp, sendcnt);
         errs += MTest_dtp_create(&send, true);
+        DTP_pool_update_count(dtp, recvcnt);
         errs += MTest_dtp_create(&recv, true);
 
         MTest_dtp_init(&send, 0, 1, sendcnt);
