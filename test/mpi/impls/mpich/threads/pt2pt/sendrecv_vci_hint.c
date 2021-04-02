@@ -69,8 +69,8 @@ MTEST_THREAD_RETURN_TYPE run_send_recv_test(void *arg)
 }
 
 /* Launch multiple threads, apply provided comm hints, run send/recv */
-int comm_hint_test(const char **comm_hints, const char **comm_hints_vals, int n_hints,
-                   bool test_set_value, bool maintain_msg_order)
+static int comm_hint_test(const char **comm_hints, const char **comm_hints_vals, int n_hints,
+                          bool test_set_value, bool maintain_msg_order)
 {
     int i, j, errs = 0, nprocs, rank, flag;
     struct thread_param params[NTHREADS];
@@ -142,7 +142,7 @@ int comm_hint_test(const char **comm_hints, const char **comm_hints_vals, int n_
 
 int main(int argc, char **argv)
 {
-    int i, pmode, nprocs, errs = 0, err, count = 0, iter = 0;
+    int pmode, nprocs, errs = 0, err;
     const char *hints_1[2];
     const char *hints_1_vals[2];
 
