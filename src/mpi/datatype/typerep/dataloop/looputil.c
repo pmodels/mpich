@@ -193,22 +193,10 @@ static int external32_float_convert(char *dest_buf,
     MPIR_Assert(dest_buf && src_buf);
 
     if (src_el_size == dest_el_size) {
-        if (src_el_size == 4) {
-            while (src_ptr != src_end) {
-                FLOAT_convert((*(const FOUR_BYTE_FLOAT_TYPE *) src_ptr),
-                              (*(FOUR_BYTE_FLOAT_TYPE *) dest_ptr));
-
-                src_ptr += src_el_size;
-                dest_ptr += dest_el_size;
-            }
-        } else if (src_el_size == 8) {
-            while (src_ptr != src_end) {
-                FLOAT_convert((*(const EIGHT_BYTE_FLOAT_TYPE *) src_ptr),
-                              (*(EIGHT_BYTE_FLOAT_TYPE *) dest_ptr));
-
-                src_ptr += src_el_size;
-                dest_ptr += dest_el_size;
-            }
+        while (src_ptr != src_end) {
+            BASIC_convert(src_ptr, dest_ptr, src_el_size);
+            src_ptr += src_el_size;
+            dest_ptr += dest_el_size;
         }
     } else {
         /* TODO */
