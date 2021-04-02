@@ -242,57 +242,6 @@ static inline void BASIC_copyto(const void *src, void *dest, int size)
 
 */
 
-#if (BLENDIAN == 1)
-#define FLOAT_convert(src, dest)              \
-{                                          \
-    register int type_byte_size = sizeof(src);\
-    switch(type_byte_size)                    \
-    {                                         \
-        case 4:                               \
-        {                                     \
-           uint32_t d;                        \
-           BASIC_convert32((uint32_t) src, d); \
-           dest = (float)d;                   \
-        }                                     \
-        break;                                \
-        case 8:                               \
-        {                                     \
-           uint64_t d;                        \
-           BASIC_convert64((uint64_t) src, d); \
-           dest = (double) d;                 \
-        }                                     \
-        break;                                \
-        case 12:                              \
-        {                                     \
-           BASIC_convert96((const char *)&src,\
-                           (char *)&dest);    \
-        }                                     \
-        break;                                \
-        case 16:                              \
-        {                                     \
-           BASIC_convert128((const char *)&src,\
-                            (char *)&dest);   \
-        }                                     \
-        break;                                \
-    }                                         \
-}
-#else
-#define FLOAT_convert(src, dest)              \
-        { dest = src; }
-#endif
-
-#if (SIZEOF_FLOAT == 4)
-#define FOUR_BYTE_FLOAT_TYPE float
-#else
-#error "Cannot detect a float type that is 4 bytes long"
-#endif
-
-#if (SIZEOF_DOUBLE == 8)
-#define EIGHT_BYTE_FLOAT_TYPE double
-#else
-#error "Cannot detect a float type that is 8 bytes long"
-#endif
-
 MPI_Aint MPII_Typerep_get_basic_size_external32(MPI_Datatype el_type);
 bool MPII_Typerep_basic_type_is_complex(MPI_Datatype el_type);
 bool MPII_Typerep_basic_type_is_unsigned(MPI_Datatype el_type);
