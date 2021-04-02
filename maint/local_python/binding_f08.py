@@ -141,6 +141,16 @@ def dump_f08_wrappers_f(func):
     has_comm_size = False  # arrays of length = comm_size
     status_var = ""
     status_count = ""
+    is_alltoallw = False
+
+    func_name = get_function_name(func)
+    if (need_cdesc(func)):
+        f08ts_name = func_name + "_f08ts"
+        c_func_name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_cdesc')
+    else:
+        f08ts_name = func_name + "_f08"
+        c_func_name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_c')
+    uses[c_func_name] = 1
 
     if RE.match(r'MPI_(Init|Init_thread)$', func['name'], re.IGNORECASE):
         arg_list_1.append("c_null_ptr")
@@ -148,6 +158,28 @@ def dump_f08_wrappers_f(func):
         arg_list_2.append("c_null_ptr")
         arg_list_2.append("c_null_ptr")
         uses['c_null_ptr'] = 1
+    elif RE.match(r'mpi_i?alltoallw', func['name'], re.IGNORECASE):
+        # Need check MPI_IN_PLACE in order to skip sendtypes array
+        is_alltoallw = True
+        uses['c_loc'] = 1
+        uses['c_associated'] = 1
+        uses['MPI_IN_PLACE'] = 1
+
+    # alltoallw inplace hack (since it is a corner case)
+    def dump_alltoallw_inplace(arg_list_1, arg_list_2, convert_list_2):
+        # cannot use like sendcounts(1:length)
+        send_args = "sendbuf, sendcounts, sdispls, sendtypes(1:1)%MPI_VAL"
+        args1 = send_args + ", " + ', '.join(arg_list_1[4:])
+        args2 = send_args + ", " + ', '.join(arg_list_2[4:])
+        dump_F_if_open("c_int == kind(0)")
+        dump_fortran_line("ierror_c = %s(%s)" % (c_func_name, args1))
+        dump_F_else()
+        G.out.append("recvcounts_c = recvcounts(1:length)")
+        G.out.append("rdispls_c = rdispls_c(1:length)")
+        G.out.append("recvtypes_c = recvtypes(1:length)%MPI_VAL")
+        dump_fortran_line("ierror_c = %s(%s)" % (c_func_name, args2))
+        G.out.extend(convert_list_2)
+        dump_F_if_close()
 
     # ----
     def process_integer(p):
@@ -507,15 +539,6 @@ def dump_f08_wrappers_f(func):
         return (arg, arg)
 
     # ----
-    func_name = get_function_name(func)
-    if (need_cdesc(func)):
-        f08ts_name = func_name + "_f08ts"
-        c_func_name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_cdesc')
-    else:
-        f08ts_name = func_name + "_f08"
-        c_func_name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_c')
-    uses[c_func_name] = 1
-
     has_attribute_val = False
     for p in func['parameters']:
         if f08_param_need_skip(p, f08_mapping):
@@ -524,6 +547,8 @@ def dump_f08_wrappers_f(func):
             has_attribute_val = True
         f_param_list.append(p['name'])
         f_decl = get_F_decl(p, f08_mapping)
+        if is_alltoallw and p['name'] == 'sendbuf':
+            f_decl = re.sub(r' ::', ', TARGET ::', f_decl)
         f_decl_list.append(f_decl)
         check_decl_uses(f_decl, uses)
 
@@ -638,6 +663,10 @@ def dump_f08_wrappers_f(func):
     else:
         ret = 'res'
 
+    if is_alltoallw:
+        dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
+        dump_alltoallw_inplace(arg_list_1, arg_list_2, convert_list_2)
+        dump_F_else()
     if need_check_int_kind:
         dump_F_if_open("c_int == kind(0)")
         dump_call("%s = %s(%s)" % (ret, c_func_name, ', '.join(arg_list_1)), False)
@@ -647,6 +676,8 @@ def dump_f08_wrappers_f(func):
     G.out.extend(convert_list_2)
 
     if need_check_int_kind:
+        dump_F_if_close()
+    if is_alltoallw:
         dump_F_if_close()
     G.out.append("")
 
