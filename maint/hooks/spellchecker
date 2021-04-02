@@ -42,11 +42,12 @@ rm -f commit-message
 # This won't work if we ever have a file with a space in the name
 for file in $filestring
 do
-    if [[ !($file == *.tex) ]] ; then
+    if [[ -f $file && $file != *.tex ]]; then
         cp -p ${file} ${TMP_FILENAME}
-        bash maint/spellcheck.sh ${file}
+        output=$(bash maint/spellcheck.sh ${file})
         git --no-pager diff ${file} ${TMP_FILENAME}
-        if [ $? != 0 ] ; then
+        if [ -n "$output" ] ; then
+            echo $output
             ret=1
         fi
     fi
