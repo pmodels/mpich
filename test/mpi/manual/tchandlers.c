@@ -78,7 +78,7 @@ void startWatchdog(int seconds)
     pthread_create(&theThread, NULL, threadLooper, NULL);
 }
 
-void strokeWatchdog()
+void strokeWatchdog(void)
 {
     sWatchdogStrokeCount++;
 }

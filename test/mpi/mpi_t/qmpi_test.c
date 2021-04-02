@@ -40,7 +40,7 @@ QMPI_Finalize_t *next_finalize_fn[2];
 int next_finalize_id[2];
 
 __attribute__ ((constructor))
-void static_register_my_tool()
+void static_register_my_tool(void)
 {
     if (MPI_SUCCESS == QMPI_Register_tool_name("test_tool", &test_init_function_pointer)) {
         qmpi_on = 1;

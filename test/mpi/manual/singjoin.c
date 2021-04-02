@@ -60,7 +60,8 @@ int opt_port = 0;
 SOCKET_FD_TYPE server_routine(int portnum)
 {
     SOCKET_FD_TYPE listenfd, peer_fd;
-    int ret, peer_addr_size;
+    int ret;
+    socklen_t peer_addr_size;
     struct sockaddr_in server_addr, peer_addr;
 
     listenfd = socket(AF_INET, SOCK_STREAM, 0);

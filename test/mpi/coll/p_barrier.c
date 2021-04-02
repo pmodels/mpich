@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 {
     MPI_Request req;
     MPI_Info info;
-    int rank, i, done;
+    int rank, i;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
