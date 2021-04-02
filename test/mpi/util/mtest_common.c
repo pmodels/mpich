@@ -4,6 +4,7 @@
  */
 
 #include "mpitest.h"
+#include <assert.h>
 
 /* ------------------------------------------------------------------------ */
 /* Utilities related to test environment */
@@ -113,10 +114,12 @@ MTestArgList *MTestArgListCreate(int argc, char *argv[])
 
     for (i = 1; i < argc; i++) {
         /* extract arg and val */
+        assert(argv[i][0] == '-' && argv[i][1] != '-');
         string = strdup(argv[i]);
         tmp = strtok(string, "=");
         arg = strdup(tmp + 1);  /* skip prepending '-' */
         tmp = strtok(NULL, "=");
+        assert(tmp != NULL);
         val = strdup(tmp);
 
         MTestArgListInsert(&head, arg, val);
