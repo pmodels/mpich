@@ -423,6 +423,8 @@ AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
+AC_USE_SYSTEM_EXTENSIONS
+
 # Ensure that we can compile an MPI program before we go any further
 # We don't use a cached value here because this is a sanity check
 AC_MSG_CHECKING([whether we can compile and link MPI programs in C])
