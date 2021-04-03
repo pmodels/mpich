@@ -13,6 +13,21 @@
 #include "mpithreadtest.h"
 #include "mtest_common.h"
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#if defined NEEDS_STRDUP_DECL && !defined strdup
+extern char *strdup(const char *);
+#endif
+
+#if defined NEEDS_USLEEP_DECL && !defined usleep
+extern int usleep(useconds_t);
+#endif
+
 /*
  * Init and finalize test
  */
