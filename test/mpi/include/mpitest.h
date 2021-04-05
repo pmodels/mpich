@@ -85,4 +85,37 @@ do {                                    \
     memset(addr_, 0, size_);            \
 } while (0)
 
+/* convenient error checking routines */
+
+static inline int MTestCheckStatus(MPI_Status * p_status, MPI_Datatype el_type,
+                                   int exp_count, int exp_source, int exp_tag, bool verbose)
+{
+    int errs = 0;
+
+    if (MTestIsBasicDtype(el_type)) {
+        int count;
+        MPI_Get_count(p_status, el_type, &count);
+        if (count != exp_count) {
+            errs++;
+            if (verbose) {
+                printf("Status expect count %d, got %d\n", exp_count, count);
+            }
+        }
+    }
+
+    if (exp_source != MPI_ANY_SOURCE && p_status->MPI_SOURCE != exp_source) {
+        errs++;
+        if (verbose) {
+            printf("Status expect source %d, got %d\n", exp_source, p_status->MPI_SOURCE);
+        }
+    }
+
+    if (exp_tag != MPI_ANY_TAG && p_status->MPI_TAG != exp_tag) {
+        errs++;
+        if (verbose) {
+            printf("Status expect tag %d, got %d\n", exp_tag, p_status->MPI_TAG);
+        }
+    }
+}
+
 #endif /* MPITEST_H_INCLUDED */

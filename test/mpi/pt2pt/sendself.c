@@ -56,6 +56,8 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
     MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
     for (i = 0; i < testsize; i++) {
+        MPI_Status status;
+
         DTP_pool_update_count(dtp, sendcnt);
         errs += MTest_dtp_create(&send, true);
         DTP_pool_update_count(dtp, recvcnt);
@@ -88,8 +90,9 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
             }
         }
 
-        err = MPI_Wait(&req, MPI_STATUS_IGNORE);
+        err = MPI_Wait(&req, &status);
 
+        errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, rank, 0, errs < 10);
         errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
 
         MTest_dtp_init(&recv, -1, -1, sendcnt);
@@ -112,8 +115,9 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
             }
         }
 
-        err = MPI_Wait(&req, MPI_STATUS_IGNORE);
+        err = MPI_Wait(&req, &status);
 
+        errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, rank, 0, errs < 10);
         errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
 
         MTest_dtp_init(&recv, -1, -1, sendcnt);
@@ -136,8 +140,9 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
             }
         }
 
-        err = MPI_Wait(&req, MPI_STATUS_IGNORE);
+        err = MPI_Wait(&req, &status);
 
+        errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, rank, 0, errs < 10);
         errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
 
         MTest_dtp_destroy(&send);

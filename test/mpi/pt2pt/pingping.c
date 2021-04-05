@@ -114,9 +114,9 @@ static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
                     MTest_dtp_init(&recv, -1, -1, recvcnt);
 
-                    err =
-                        MPI_Recv(recv.buf + recv.dtp_obj.DTP_buf_offset, recvcount, recvtype,
-                                 source, 0, comm, MPI_STATUS_IGNORE);
+                    MPI_Status status;
+                    err = MPI_Recv(recv.buf + recv.dtp_obj.DTP_buf_offset,
+                                   recvcount, recvtype, source, 0, comm, &status);
                     if (err) {
                         errs++;
                         if (errs < 10) {
@@ -125,6 +125,8 @@ static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
                     }
 
                     /* only up to sendcnt should be updated */
+                    errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, source, 0,
+                                             errs < 10);
                     errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
                 }
             }
