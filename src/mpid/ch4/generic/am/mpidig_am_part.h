@@ -45,12 +45,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request, int is_lo
                                           request, is_local);
     }
 
-  fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_START);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* Checks whether all partitions are ready.
@@ -98,11 +95,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int partition_low, int part
 
     mpi_errno = MPIDIG_post_pready(part_sreq, is_local);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PREADY_RANGE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, int array_of_partitions[],
@@ -120,11 +114,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, int array_of_par
 
     mpi_errno = MPIDIG_post_pready(part_sreq, is_local);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PREADY_LIST);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int partition, int *flag)
