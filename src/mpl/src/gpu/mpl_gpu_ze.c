@@ -170,12 +170,12 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
     ze_result_t ret;
-    ze_device_handle_t device;
-    memset(&attr->device_attr, 0, sizeof(ze_memory_allocation_properties_t));
-    ret = zeMemGetAllocProperties(global_ze_context, ptr, &attr->device_attr, &device);
+    memset(&attr->device_attr.prop, 0, sizeof(ze_memory_allocation_properties_t));
+    ret = zeMemGetAllocProperties(global_ze_context, ptr,
+                                  &attr->device_attr.prop, &attr->device_attr.device);
     ZE_ERR_CHECK(ret);
-    attr->device = device;
-    switch (attr->device_attr.type) {
+    attr->device = attr->device_attr.device;
+    switch (attr->device_attr.prop.type) {
         case ZE_MEMORY_TYPE_UNKNOWN:
             attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
             break;
