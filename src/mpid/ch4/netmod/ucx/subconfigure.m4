@@ -46,6 +46,19 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
     else
         dnl PAC_PROBE_HEADER_LIB must've been successful
         AC_MSG_NOTICE([CH4 UCX Netmod:  Using an external ucx])
+
+        AC_MSG_CHECKING([if UCX meets minimum version requirement])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <ucp/api/ucp.h>], [
+                           #if UCP_VERSION(UCP_API_MAJOR, UCP_API_MINOR) < UCP_VERSION(1, 7)
+                           #error
+                           #endif
+                           return 0;])],[ucx_happy=yes],[ucx_happy=no])
+        AC_MSG_RESULT([$ucx_happy])
+
+        # if a too old UCX was found, throw an error
+        if test "$ucx_happy" = "no" ; then
+            AC_MSG_ERROR([UCX installation does not meet minimum version requirement (v1.7.0). Please upgrade your installation, or use --with-ucx=embedded.])
+        fi
         PAC_LIBS_ADD([-lucp -lucs])
         # ucp_put_nb and ucp_get_nb are added only from ucx 1.4.
         PAC_CHECK_HEADER_LIB([ucp/api/ucp.h],[ucp],[ucp_put_nb], [have_ucp_put_nb=yes], [have_ucp_put_nb=no])
