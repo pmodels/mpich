@@ -54,14 +54,14 @@ static void send_test(void *sbuf, int partitions, MPI_Count count, MPI_Datatype 
 }
 
 static void recv_test(void *rbuf, int partitions, MPI_Count count, MPI_Datatype rtype,
-                      int source, MPI_Comm comm)
+                      int source, MPI_Comm comm, MPI_Status * p_status)
 {
     MPI_Request req = MPI_REQUEST_NULL;
 
     MPI_Precv_init(rbuf, partitions, count, rtype, source, 0, comm, MPI_INFO_NULL, &req);
     MPI_Start(&req);
 
-    MPI_Wait(&req, MPI_STATUS_IGNORE);
+    MPI_Wait(&req, p_status);
     MPI_Request_free(&req);
 }
 
@@ -173,9 +173,12 @@ int main(int argc, char *argv[])
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
                     MTest_dtp_init(&recv, -1, -1, recvcnt);
 
+                    MPI_Status status;
                     recv_test((char *) recv.buf + recv.dtp_obj.DTP_buf_offset, partitions,
-                              partition_count, dtype, source, comm);
+                              partition_count, dtype, source, comm, &status);
 
+                    errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, source, 0,
+                                             errs < 10);
                     errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
                 }
             }
