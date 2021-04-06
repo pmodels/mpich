@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     int periods[1] = { 0 };
     int sendbuf[1];
     int recvbuf[2] = { 0xdeadbeef, 0xdeadbeef };
-    MPI_Comm cart, dgraph, graph;
+    MPI_Comm cart;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);

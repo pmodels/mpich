@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     MPI_File fh;
     MPI_Request request;
     MPI_Status status;
-    char *filename;
+    char *filename = NULL;
     MPI_Datatype typevec, typevec2, newtype;
 
     MTest_Init(&argc, &argv);

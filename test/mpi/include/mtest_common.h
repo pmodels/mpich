@@ -21,7 +21,7 @@ typedef enum {
     MTEST_MEM_TYPE__ALL,
 } mtest_mem_type_e;
 
-MPI_Aint MTestDefaultMaxBufferSize();
+MPI_Aint MTestDefaultMaxBufferSize(void);
 
 typedef void MTestArgList;
 MTestArgList *MTestArgListCreate(int argc, char *argv[]);
@@ -65,5 +65,5 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
                 bool is_calloc, int device);
 void MTestFree(mtest_mem_type_e type, void *hostbuf, void *devicebuf);
 void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_e type);
-void MTest_finalize_gpu();
+void MTest_finalize_gpu(void);
 #endif

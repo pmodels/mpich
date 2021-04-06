@@ -21,8 +21,8 @@ int main(int argc, char **argv)
     void **inbufs, **outbufs;
     int *counts, *bytesize, ntype;
     MPI_Comm comm;
-    int ncomm = 20, rank, np, partner, tag, count;
-    int j, k, err, toterr, world_rank, errloc;
+    int rank, np, partner, tag, count;
+    int j, k, err, world_rank, errloc;
     MPI_Status status;
     char *obuf;
     MPI_Datatype offsettype;

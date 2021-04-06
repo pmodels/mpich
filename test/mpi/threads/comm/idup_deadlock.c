@@ -21,14 +21,13 @@
 
 MPI_Comm comms[NUM_THREADS];
 MTEST_THREAD_LOCK_TYPE comm_lock;
-int rank, size;
+int size;
 int verbose = 0;
 volatile int start_idup[NUM_THREADS];
 
 static MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
 {
     int rank;
-    int i, j;
     int wait;
     int tid = *(int *) arg;
     MPI_Comm_rank(comms[*(int *) arg], &rank);
@@ -38,7 +37,7 @@ static MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
     if (tid % 2 == 0 && rank % 2 == 0) {
         do {
             wait = 0;
-            for (i = 0; i < NUM_THREADS; i++)
+            for (int i = 0; i < NUM_THREADS; i++)
                 wait += start_idup[i];
             MTest_thread_yield();
         } while (wait > NUM_THREADS / 2);
@@ -61,7 +60,6 @@ int main(int argc, char **argv)
 
     check(provided == MPI_THREAD_MULTIPLE);
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     for (i = 0; i < NUM_THREADS; i++) {

@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 {
     int i, k;
     int errors = 0;
-    int my_buf_num;
+    int my_buf_num = 0;         /* to suppress warning */
     MPI_Datatype origin_dtp, target_dtp;
 
     MTest_Init(&argc, &argv);

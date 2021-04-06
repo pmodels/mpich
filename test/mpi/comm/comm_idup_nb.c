@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     int i, isleft;
     MPI_Comm test_comm, new_comm[ITERS];
     int in[ITERS], out[ITERS], sol;
-    int rank, size, rsize, rrank;
+    int rank, size, rsize;
     MPI_Request sreq[ITERS * 2];
     int root;
 

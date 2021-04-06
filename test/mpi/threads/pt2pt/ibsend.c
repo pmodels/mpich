@@ -97,11 +97,10 @@ static MTEST_THREAD_RETURN_TYPE sender_send(void *ptr)
 int main(int argc, char *argv[])
 {
 
-    int provided, i[2], k;
+    int provided, k;
     char *buffer, *ptr_dt;
     buffer = (char *) malloc(BUFSIZE * sizeof(char));
     MTEST_VG_MEM_INIT(buffer, BUFSIZE * sizeof(char));
-    MPI_Status status;
     MPI_Comm communicator;
     int bs;
 

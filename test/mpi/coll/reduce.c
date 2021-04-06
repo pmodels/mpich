@@ -46,7 +46,7 @@ static void check_buf(int rank, int size, int count, int *errs, int *buf)
 static int test_reduce(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
 {
     int errs = 0;
-    int rank, size, root, i;
+    int rank, size, root;
     void *sendbuf, *recvbuf, *sendbuf_h, *recvbuf_h;
     int minsize = 2, count;
     MPI_Comm comm;
@@ -99,7 +99,6 @@ int main(int argc, char *argv[])
 {
     int errs = 0;
     MTest_Init(&argc, &argv);
-    MTestArgList *head = MTestArgListCreate(argc, argv);
 
     struct dtp_args dtp_args;
     dtp_args_init(&dtp_args, MTEST_COLL_NOCOUNT, argc, argv);

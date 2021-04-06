@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     int errs = 0;
     int wrank, wsize;
     int periods[1] = { 0 };
-    MPI_Comm cart, dgraph, graph;
+    MPI_Comm cart;
     int sendbuf[1];
     int recvbuf[2] = { 0xdeadbeef, 0xdeadbeef };
     int recvcounts[2] = { 1, 1 };
