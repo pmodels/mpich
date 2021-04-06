@@ -16,7 +16,7 @@
 
 int main(int argc, char *argv[])
 {
-    char *args[] = { "a", "b", "c", (char *) 0 };
+    char *args[] = { (char *) "a", (char *) "b", (char *) "c", (char *) 0 };
     int rank;
     MPI_Comm parent, child;
 
