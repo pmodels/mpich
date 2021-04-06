@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
             MPI_Get_elements(&status, (type_), &elements);        \
             MPI_Get_elements_x(&status, (type_), &elements_x);    \
             MPI_Get_count(&status, (type_), &count);              \
-            check(elements == (elts_));                           \
+            check(elements == (int) (elts_));                     \
             check(elements_x == (elts_));                         \
             check(count == 1);                                    \
         }                                                         \
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
             check(elements == MPI_UNDEFINED);                     \
         }                                                         \
         else {                                                    \
-            check(elements == (elts_));                           \
+            check(elements == (int) (elts_));                           \
         }                                                         \
         check(elements_x == (elts_));                             \
         check(count == 1);                                        \
