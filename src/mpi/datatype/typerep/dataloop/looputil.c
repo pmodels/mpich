@@ -708,9 +708,9 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
 
-    src_el_size = MPIR_Datatype_get_basic_size(el_type);
-    dest_el_size = MPII_Typerep_get_basic_size_external32(el_type);
-    MPIR_Assert(dest_el_size);
+    dest_el_size = MPIR_Datatype_get_basic_size(el_type);
+    src_el_size = MPII_Typerep_get_basic_size_external32(el_type);
+    MPIR_Assert(src_el_size);
 
     /*
      * h  = handle value
@@ -735,13 +735,13 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
     } else if (is_float_type(el_type)) {
         external32_float_convert(((char *) bufp) + rel_off,
                                  paramp->u.unpack.unpack_buffer,
-                                 src_el_size, dest_el_size, *blocks_p);
+                                 dest_el_size, src_el_size, *blocks_p);
     } else {
         external32_basic_convert(((char *) bufp) + rel_off,
                                  paramp->u.unpack.unpack_buffer,
-                                 src_el_size, dest_el_size, *blocks_p);
+                                 dest_el_size, src_el_size, *blocks_p);
     }
-    paramp->u.unpack.unpack_buffer += (dest_el_size * (*blocks_p));
+    paramp->u.unpack.unpack_buffer += (src_el_size * (*blocks_p));
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
     return 0;
