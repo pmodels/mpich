@@ -48,6 +48,7 @@ noinst_PROGRAMS =             \
     sendrecvt4                \
     simple_commit             \
     simple_pack               \
+    pack_external             \
     simple_pack_external      \
     simple_pack_external2     \
     simple_resized            \
