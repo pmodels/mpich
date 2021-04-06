@@ -20,9 +20,7 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
 {
     int errs = 0, err;
     int rank, size;
-    int i, j, len;
     MPI_Aint sendcount, recvcount;
-    MPI_Aint maxbufsize;
     MPI_Comm comm;
     MPI_Datatype sendtype, recvtype;
     MPI_Request req;
@@ -55,7 +53,7 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
      * change the error handler to errors return */
     MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
-    for (i = 0; i < testsize; i++) {
+    for (int i = 0; i < testsize; i++) {
         MPI_Status status;
 
         DTP_pool_update_count(dtp, sendcnt);
@@ -72,9 +70,8 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
         recvcount = recv.dtp_obj.DTP_type_count;
         recvtype = recv.dtp_obj.DTP_datatype;
 
-        err =
-            MPI_Irecv(recv.buf + recv.dtp_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm,
-                      &req);
+        err = MPI_Irecv((char *) recv.buf + recv.dtp_obj.DTP_buf_offset,
+                        recvcount, recvtype, rank, 0, comm, &req);
         if (err) {
             errs++;
             if (errs < 10) {
@@ -82,32 +79,8 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
             }
         }
 
-        err = MPI_Send(send.buf + send.dtp_obj.DTP_buf_offset, sendcount, sendtype, rank, 0, comm);
-        if (err) {
-            errs++;
-            if (errs < 10) {
-                MTestPrintError(err);
-            }
-        }
-
-        err = MPI_Wait(&req, &status);
-
-        errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, rank, 0, errs < 10);
-        errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
-
-        MTest_dtp_init(&recv, -1, -1, sendcnt);
-
-        err =
-            MPI_Irecv(recv.buf + recv.dtp_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm,
-                      &req);
-        if (err) {
-            errs++;
-            if (errs < 10) {
-                MTestPrintError(err);
-            }
-        }
-
-        err = MPI_Ssend(send.buf + send.dtp_obj.DTP_buf_offset, sendcount, sendtype, rank, 0, comm);
+        err = MPI_Send((const char *) send.buf + send.dtp_obj.DTP_buf_offset,
+                       sendcount, sendtype, rank, 0, comm);
         if (err) {
             errs++;
             if (errs < 10) {
@@ -122,9 +95,8 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
 
         MTest_dtp_init(&recv, -1, -1, sendcnt);
 
-        err =
-            MPI_Irecv(recv.buf + recv.dtp_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm,
-                      &req);
+        err = MPI_Irecv((char *) recv.buf + recv.dtp_obj.DTP_buf_offset,
+                        recvcount, recvtype, rank, 0, comm, &req);
         if (err) {
             errs++;
             if (errs < 10) {
@@ -132,7 +104,33 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
             }
         }
 
-        err = MPI_Rsend(send.buf + send.dtp_obj.DTP_buf_offset, sendcount, sendtype, rank, 0, comm);
+        err = MPI_Ssend((char *) send.buf + send.dtp_obj.DTP_buf_offset,
+                        sendcount, sendtype, rank, 0, comm);
+        if (err) {
+            errs++;
+            if (errs < 10) {
+                MTestPrintError(err);
+            }
+        }
+
+        err = MPI_Wait(&req, &status);
+
+        errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, rank, 0, errs < 10);
+        errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
+
+        MTest_dtp_init(&recv, -1, -1, sendcnt);
+
+        err = MPI_Irecv((char *) recv.buf + recv.dtp_obj.DTP_buf_offset,
+                        recvcount, recvtype, rank, 0, comm, &req);
+        if (err) {
+            errs++;
+            if (errs < 10) {
+                MTestPrintError(err);
+            }
+        }
+
+        err = MPI_Rsend((const char *) send.buf + send.dtp_obj.DTP_buf_offset,
+                        sendcount, sendtype, rank, 0, comm);
         if (err) {
             errs++;
             if (errs < 10) {

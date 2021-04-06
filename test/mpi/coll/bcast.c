@@ -21,9 +21,7 @@ static int bcast_dtp(int seed, int testsize, int count, const char *basic_type,
     int errs = 0, err;
     int rank, size, root;
     int minsize = 2;
-    int i, j;
     MPI_Comm comm;
-    MPI_Datatype type;
     DTP_pool_s dtp;
     struct mtest_obj coll;
     mtest_mem_type_e memtype;
@@ -76,7 +74,7 @@ static int bcast_dtp(int seed, int testsize, int count, const char *basic_type,
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
         for (root = 0; root < size; root++) {
-            for (i = 0; i < testsize; i++) {
+            for (int i = 0; i < testsize; i++) {
                 errs += MTest_dtp_create(&coll, true);
 
                 if (rank == root) {
@@ -85,9 +83,8 @@ static int bcast_dtp(int seed, int testsize, int count, const char *basic_type,
                     errs += MTest_dtp_init(&coll, -1, -1, count);
                 }
 
-                err =
-                    MPI_Bcast(coll.buf + coll.dtp_obj.DTP_buf_offset, coll.dtp_obj.DTP_type_count,
-                              coll.dtp_obj.DTP_datatype, root, comm);
+                err = MPI_Bcast((char *) coll.buf + coll.dtp_obj.DTP_buf_offset,
+                                coll.dtp_obj.DTP_type_count, coll.dtp_obj.DTP_datatype, root, comm);
                 if (err) {
                     errs++;
                     MTestPrintError(err);

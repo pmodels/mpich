@@ -76,13 +76,13 @@ static inline int test(MPI_Comm comm, int rank, int orig_rank, int target_rank,
         /* This should have the same effect, in terms of
          * transferring data, as a send/recv pair */
 #if defined(USE_GET)
-        err =
-            MPI_Get(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype, target_rank,
-                    target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
+        err = MPI_Get((char *) orig.buf + orig.dtp_obj.DTP_buf_offset,
+                      origcount, origtype, target_rank,
+                      target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
 #elif defined(USE_PUT)
-        err =
-            MPI_Put(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype, target_rank,
-                    target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
+        err = MPI_Put((char *) orig.buf + orig.dtp_obj.DTP_buf_offset,
+                      origcount, origtype, target_rank,
+                      target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
 #endif
         if (err) {
             errs++;
@@ -118,7 +118,6 @@ static int fence_test(int seed, int testsize, int count, const char *basic_type,
     int rank, size, orig_rank, target_rank;
     int minsize = 2;
     int i;
-    MPI_Aint maxbufsize;
     MPI_Comm comm;
     DTP_pool_s dtp;
     MPI_Aint extent, lb;
@@ -137,8 +136,6 @@ static int fence_test(int seed, int testsize, int count, const char *basic_type,
         MTestPrintfMsg(1, " %s\n", test_desc);
     }
 
-    maxbufsize = MTestDefaultMaxBufferSize();
-
     err = DTP_pool_create(basic_type, count, seed, &dtp);
     if (err != DTP_SUCCESS) {
         fprintf(stderr, "Error while creating orig pool (%s,%d)\n", basic_type, count);
@@ -155,7 +152,7 @@ static int fence_test(int seed, int testsize, int count, const char *basic_type,
 
     int type_size;
     MPI_Type_size(dtp.DTP_base_type, &type_size);
-    if (type_size * count > maxbufsize) {
+    if (type_size * count > MTestDefaultMaxBufferSize()) {
         /* if the type size or count are too large, we do not have too
          * many objects in the pool that we can search for.  in such
          * cases, simply return. */
