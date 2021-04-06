@@ -18,6 +18,7 @@
  * I am surprised src/mpi/romio/test/create_excl.c did not uncover the bug
  */
 
+#include "mpitest.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,7 +31,6 @@
 #include <mpi.h>
 #include <errno.h>
 #include <getopt.h>
-#include "mpitest.h"
 
 static char *opt_file = NULL;
 static int rank = -1;

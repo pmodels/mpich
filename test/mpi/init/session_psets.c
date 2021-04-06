@@ -3,10 +3,10 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <stdio.h>
 #include <assert.h>
-#include "mpitest.h"
 
 /* This is adapted example 10.9 from MPI Standard 4.0
  * This example illustrates the use of Process Set query functions to select a
