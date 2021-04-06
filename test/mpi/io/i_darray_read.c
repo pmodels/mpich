@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     double *ldata, *pdata;
 
     int tsize, nelem;
-    char *filename;
+    const char *filename;
 
     MPI_File dfile;
 
