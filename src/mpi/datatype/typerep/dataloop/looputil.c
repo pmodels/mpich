@@ -685,6 +685,11 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
     /* TODO: DEAL WITH CASE WHERE ALL DATA DOESN'T FIT! */
     if ((src_el_size == dest_el_size) && (src_el_size == 1)) {
         MPIR_Memcpy(paramp->u.pack.pack_buffer, ((char *) bufp) + rel_off, *blocks_p);
+    } else if (MPII_Typerep_basic_type_is_complex(el_type)) {
+        /* treat as 2x floating point */
+        external32_float_convert(paramp->u.pack.pack_buffer,
+                                 ((char *) bufp) + rel_off,
+                                 dest_el_size / 2, src_el_size / 2, (*blocks_p) * 2);
     } else if (is_float_type(el_type)) {
         external32_float_convert(paramp->u.pack.pack_buffer,
                                  ((char *) bufp) + rel_off, dest_el_size, src_el_size, *blocks_p);
@@ -732,6 +737,11 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
     /* TODO: DEAL WITH CASE WHERE ALL DATA DOESN'T FIT! */
     if ((src_el_size == dest_el_size) && (src_el_size == 1)) {
         MPIR_Memcpy(((char *) bufp) + rel_off, paramp->u.unpack.unpack_buffer, *blocks_p);
+    } else if (MPII_Typerep_basic_type_is_complex(el_type)) {
+        /* treat as 2x floating point */
+        external32_float_convert(((char *) bufp) + rel_off,
+                                 paramp->u.unpack.unpack_buffer,
+                                 dest_el_size / 2, src_el_size / 2, (*blocks_p) * 2);
     } else if (is_float_type(el_type)) {
         external32_float_convert(((char *) bufp) + rel_off,
                                  paramp->u.unpack.unpack_buffer,
