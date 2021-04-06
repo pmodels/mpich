@@ -17,6 +17,7 @@
 /* Needed for getcwd */
 #include <unistd.h>
 #endif
+#include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "A simple test of Comm_spawn with info";
@@ -32,7 +33,6 @@ int main(int argc, char *argv[])
     MPI_Status status;
     MPI_Info spawninfo;
     char curdir[1024], wd[1024], childwd[1024];
-    char *cerr;
     int can_spawn;
 
     MTest_Init(&argc, &argv);
@@ -40,7 +40,8 @@ int main(int argc, char *argv[])
     errs += MTestSpawnPossible(&can_spawn);
 
     if (can_spawn) {
-        cerr = getcwd(curdir, sizeof(curdir));
+        char *s = getcwd(curdir, sizeof(curdir));
+        assert(s != NULL);
 
         MPI_Comm_get_parent(&parentcomm);
 
