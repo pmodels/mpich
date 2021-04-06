@@ -165,7 +165,6 @@ int parse_args(int argc, char **argv)
 {
 #ifndef HAVE_WINDOWS_H
     int c;
-    extern char *optarg;
     while ((c = getopt(argc, argv, "csp:")) != -1) {
         switch (c) {
             case 's':
