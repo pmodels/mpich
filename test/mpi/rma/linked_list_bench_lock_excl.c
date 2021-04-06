@@ -156,7 +156,7 @@ int main(int argc, char **argv)
                 llist_ptr_t next_tail_ptr;
 
                 MPI_Win_lock(MPI_LOCK_EXCLUSIVE, tail_ptr.rank, 0, llist_win);
-#if USE_ACC
+#ifdef USE_ACC
                 MPI_Get_accumulate(NULL, 0, MPI_DATATYPE_NULL, &next_tail_ptr,
                                    sizeof(llist_ptr_t), MPI_BYTE, tail_ptr.rank,
                                    (MPI_Aint) & (((llist_elem_t *) tail_ptr.disp)->next),
