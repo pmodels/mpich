@@ -23,7 +23,8 @@
 /* we are going to muck with this later to make it evenly divisible by however many compute nodes we have */
 #define STARTING_SIZE 5000
 
-int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg, int verbose);
+int test_file(const char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg,
+              int verbose);
 
 #define ADIOI_Free free
 #define ADIOI_Malloc malloc
@@ -331,7 +332,8 @@ int main(int argc, char **argv)
 
 #define SEEDER(x,y,z) ((x)*1000000 + (y) + (x)*(z))
 
-int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg, int verbose)
+int test_file(const char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg,
+              int verbose)
 {
     MPI_Datatype typevec, typevec2, newtype;
     int *buf, i, blocklength, errcode, errors = 0;

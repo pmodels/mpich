@@ -141,7 +141,7 @@ static int test_indexed_with_zeros(const char *filename, int testcase)
 int main(int argc, char **argv)
 {
     int errs, rank, np;
-    char *filename;
+    const char *filename = NULL;
 
     filename = (argc > 1) ? argv[1] : "testfile";
 
