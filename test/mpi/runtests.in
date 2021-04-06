@@ -54,6 +54,8 @@ our $g_opt = {};   # global options. TODO: migrate global option vars into the h
 $g_opt->{memory_total} = 20;      # Total memory in GB
 $g_opt->{memory_multiplier} = 1;  # No of simutaneous jobs
 $g_opt->{cleanup} = 1;            # Whether to remove the compiled programs
+$g_opt->{start_time} = time();    # So we can track accumulative test duration
+$g_opt->{has_gpu_test} = 0;       # will set MPIR_CVAR_ENABLE_GPU for optimizations
 
 # Total number of tests checked and run
 our $g_total_run = 0;
@@ -307,6 +309,11 @@ else {
 
 #
 # Process any files
+
+if ($listfiles =~ /testlist\.gpu/) {
+    $g_opt->{has_gpu_test} = 1;
+}
+
 if ($listfiles eq "") {
     if ($batchRun) {
         print STDERR "An implicit list of tests is not permitted in batch mode. See README for more details\n";
@@ -425,15 +432,6 @@ sub ProcessDir {
 sub RunList { 
     my $LIST = "LIST$depth"; $depth++;
     my $listfile = $_[0];
-    my @TYPES = "";
-    my $DTP_SWITCH = "@DTP_SWITCH@";
-
-    if (! defined $ENV{"DTP_RUNTIME_TYPES"}) {
-        @TYPES = split ' ', "MPI_INT MPI_DOUBLE";
-    }
-    else {
-        @TYPES = split ' ', $ENV{"DTP_RUNTIME_TYPES"};
-    }
 
     # eg: runtests -tests='testlist,testlist.dtp'
     my @all_listfiles = split /,\s*/, $listfile;
@@ -446,7 +444,10 @@ sub RunList {
             # just skip, do not complain missing unless it is "testlist"
             next;
         }
-        print "Looking in $curdir/$_f\n" if $debug;
+        # add a timestamp to have a quick idea of how long the tests ran
+        my @tm_list = gmtime(time() - $g_opt->{start_time});
+        my $timestamp = sprintf("%02d:%02d:%02d", $tm_list[2], $tm_list[1], $tm_list[0]);
+        print "Looking in $curdir/$_f \t[$timestamp]\n" if $debug;
         open( $LIST, "<$listfileSource" ) || die "Could not open $listfileSource\n";
         while (<$LIST>) {
             # Check for stop file
@@ -480,20 +481,19 @@ sub RunList {
             # for examples of using the key=value form
             my @args = split(/\s+/,$_);
             my $test_opt = {args=>[], envs=>[], mpiexecargs=>[]};
+            if ($g_opt->{has_gpu_test}) {
+                if ($_f ne "testlist.gpu") {
+                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=0";
+                } else {
+                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
+                }
+            }
 
             my $programname = $args[0];
             my $np = "";
             my $requiresStrict = "";
             my $requiresMPIX   = "";
 
-            my $dtp_match_type = 0;
-            my $dtp_test_type = "";    # this test type
-            # get the type of this test
-            if ($programname =~ /BASIC/) {
-                $dtp_test_type = "BASIC";
-            } elsif ($programname =~ /STRUCT/) {
-                $dtp_test_type = "STRUCT";
-            }
             if ($#args >= 1) { $np = $args[1]; }
             # Process the key=value arguments
             for (my $i=2; $i <= $#args; $i++) {
@@ -504,14 +504,6 @@ sub RunList {
                         $test_opt->{$key} = $value;
                     }
                     elsif ($key eq "arg") {
-                        # match allowed datatypes here
-                        for my $j (@TYPES) {
-                            if ($value eq "-type=$j") {
-                                $dtp_match_type=1;
-                                break;
-                            }
-                        }
-
                         push @{$test_opt->{args}}, $value;
                     }
                     elsif ($key eq "mpiexecarg") {
@@ -534,18 +526,6 @@ sub RunList {
 
             if (defined $test_opt->{xfail} and !$test_opt->{xfail}) {
                 print STDERR "\"xfail=\" requires an argument\n";
-            }
-
-            if ($DTP_SWITCH eq "ON") {
-                # if dtpools tests are ON only run matching types for basic tests
-                if ($dtp_test_type eq "BASIC" && $dtp_match_type == 0) {
-                    $programname = "";
-                }
-            } else {
-                # if dtpools tests are OFF only disable dtpools tests, run the rest
-                if ($dtp_test_type eq "BASIC" || $dtp_test_type eq "STRUCT") {
-                    $programname = "";
-                }
             }
 
             # skip empty lines

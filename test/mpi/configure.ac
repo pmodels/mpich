@@ -267,7 +267,6 @@ AC_ARG_WITH(dtpools-datatypes,
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
 
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
-AC_CONFIG_COMMANDS([gputests],[$srcdir/maint/generate_gpu_tests.sh])
 #Test collectives algorithms with CVARs
 AC_CONFIG_COMMANDS([collcvartests],[$srcdir/maint/test_coll_algos.sh])
 
@@ -744,8 +743,8 @@ if test "X${pac_have_cuda}" = "Xyes" ; then
         else
             cuda_LDFLAGS="-L${with_cuda}/lib"
         fi
-        cuda_LIBS="-lcudart"
     fi
+    cuda_LIBS="-lcudart"
 fi
 AM_CONDITIONAL([HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
 AC_SUBST([cuda_CPPFLAGS])
@@ -768,8 +767,8 @@ if test "$have_gpu" = "no" ; then
             else
                 ze_LDFLAGS="-L${with_ze}/lib"
             fi
-            ze_LIBS="-lze_loader"
         fi
+        ze_LIBS="-lze_loader"
     fi
     AC_SUBST([ze_CPPFLAGS])
     AC_SUBST([ze_LDFLAGS])
