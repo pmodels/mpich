@@ -19,8 +19,8 @@
 
 static int errs = 0;
 
-void uenq_cb_fn(MPI_T_event_instance event_instance, MPI_T_event_registration er,
-                MPI_T_cb_safety cb_safety, void *user_data)
+static void uenq_cb_fn(MPI_T_event_instance event_instance, MPI_T_event_registration er,
+                       MPI_T_cb_safety cb_safety, void *user_data)
 {
     int rank;
     int tag;
@@ -30,8 +30,8 @@ void uenq_cb_fn(MPI_T_event_instance event_instance, MPI_T_event_registration er
         errs = 1;
 }
 
-void udeq_cb_fn(MPI_T_event_instance event_instance, MPI_T_event_registration er,
-                MPI_T_cb_safety cb_safety, void *user_data)
+static void udeq_cb_fn(MPI_T_event_instance event_instance, MPI_T_event_registration er,
+                       MPI_T_cb_safety cb_safety, void *user_data)
 {
     int rank;
     int tag;
@@ -41,8 +41,8 @@ void udeq_cb_fn(MPI_T_event_instance event_instance, MPI_T_event_registration er
         errs = 1;
 }
 
-void recvq_free_cb(MPI_T_event_registration event_registration, MPI_T_cb_safety cb_safety,
-                   void *user_data)
+static void recvq_free_cb(MPI_T_event_registration event_registration, MPI_T_cb_safety cb_safety,
+                          void *user_data)
 {
     return;
 }
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     MPI_Aint *at;
     int num_elements;
     int bind;
-    int provided, maxnamelen, maxdesclen, maxne;
+    int provided, maxnamelen, maxdesclen, maxne = 0;
     MPI_T_enum enumtype;
     MPI_Info info;
     int uenq_idx = -1, udeq_idx = -1;
