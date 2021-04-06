@@ -34,7 +34,6 @@ void weh(MPI_Win * win, int *err, ...)
 
 int main(int argc, char *argv[])
 {
-    int err;
     int buf[2];
     MPI_Win win;
     MPI_Comm comm;
@@ -58,7 +57,7 @@ int main(int argc, char *argv[])
     MPI_Win_set_errhandler(win, newerr);
 
     expected_err_class = MPI_ERR_RANK;
-    err = MPI_Put(buf, 1, MPI_INT, -5, 0, 1, MPI_INT, win);
+    MPI_Put(buf, 1, MPI_INT, -5, 0, 1, MPI_INT, win);
     if (calls != 1) {
         errs++;
         printf("newerr not called\n");
