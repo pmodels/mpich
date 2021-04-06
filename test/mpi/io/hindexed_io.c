@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     int data_size = DATA_SIZE;
     int i, j, k, errs = 0;
     MPI_Aint disp[BLK_COUNT];
-    char *filename = "unnamed.dat";
+    const char *filename = "unnamed.dat";
 
     MTest_Init(&argc, &argv);
     disp[0] = (MPI_Aint) (PAD);

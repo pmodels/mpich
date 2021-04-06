@@ -56,7 +56,7 @@ static int test_info(MPI_Info info1, MPI_Info info2)
 {
     int i, nerrs = 0;
     char value1[MPI_MAX_INFO_VAL], value2[MPI_MAX_INFO_VAL];
-    char *keys[] = { "command", "argv", "maxprocs", "soft", "host", "arch", "wdir", "file",
+    const char *keys[] = { "command", "argv", "maxprocs", "soft", "host", "arch", "wdir", "file",
         "thread_level"
     };
     for (i = 0; i < (int) (sizeof(keys) / sizeof(keys[0])); i++) {

@@ -35,8 +35,7 @@ int main(int argc, char **argv)
     int data_size = DATA_SIZE;
     int i, j, k, errs = 0;
     MPI_Aint disp[BLK_COUNT];
-    int block_lens[BLK_COUNT];
-    char *filename = "unnamed.dat";
+    const char *filename = "unnamed.dat";
     MPI_Status status;
     MPI_Request request;
 
@@ -44,10 +43,6 @@ int main(int argc, char **argv)
     disp[0] = (MPI_Aint) (PAD);
     disp[1] = (MPI_Aint) (data_size * 1 + PAD);
     disp[2] = (MPI_Aint) (data_size * 2 + PAD);
-
-    block_lens[0] = data_size;
-    block_lens[1] = data_size;
-    block_lens[2] = data_size;
 
     data = malloc(data_size);
     verify = malloc(data_size * BLK_COUNT + HEADER + PAD);

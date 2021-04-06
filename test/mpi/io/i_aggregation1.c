@@ -137,7 +137,7 @@ static void write_file(const char *target, int rank, MPI_Info * info)
     free(request);
 }
 
-static void read_file(char *target, int rank, MPI_Info * info, int *corrupt_blocks)
+static void read_file(const char *target, int rank, MPI_Info * info, int *corrupt_blocks)
 {
     MPI_File rfh;
     MPI_Offset *offset;
@@ -236,7 +236,7 @@ set_hints(MPI_Info *info, char *hints) {
 int main(int argc, char *argv[])
 {
     int nproc = 1, rank = 0;
-    char *target = NULL;
+    const char *target = NULL;
     int c;
     MPI_Info info;
     int mpi_ret;

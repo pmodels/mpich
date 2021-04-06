@@ -24,9 +24,9 @@ int main(int argc, char *argv[])
     char emsg[MPI_MAX_ERROR_STRING];
     int emsglen, err, ec, errs = 0;
     int amode, rank;
-    char *name = 0;
+    const char *name = 0;
     MPI_Status st;
-    int outbuf[BUFLEN], inbuf[BUFLEN];
+    char outbuf[BUFLEN], inbuf[BUFLEN];
 
     MTest_Init(&argc, &argv);
 
