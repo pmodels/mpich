@@ -9,6 +9,13 @@
 #include "typerep_util.h"
 #include <assert.h>
 
+/* The 16-byte c type is needed to use following macros */
+
+typedef struct {
+    int64_t a;
+    int64_t b;
+} SIXTEEN_BYTE_TYPE;
+
 /* convert equal sizes */
 #define PACK_EXTERNAL_equal_size(iov, outbuf, max_iov_len, c_type) \
     do {                                                                \
@@ -154,7 +161,7 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
         ext_type_size /= 2;
     }
 
-    if (basic_type == MPI_LONG_DOUBLE) {
+    if (basic_type == MPI_LONG_DOUBLE || basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
         /* most c compiler's long double is different from 128-bit floating point */
         PACK_EXTERNAL_long_double(iov, outbuf, max_iov_len);
     } else if (basic_type_size == ext_type_size) {
@@ -166,6 +173,8 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
             PACK_EXTERNAL_equal_size(iov, outbuf, max_iov_len, int32_t);
         } else if (basic_type_size == 8) {
             PACK_EXTERNAL_equal_size(iov, outbuf, max_iov_len, int64_t);
+        } else if (basic_type_size == 16) {
+            PACK_EXTERNAL_equal_size(iov, outbuf, max_iov_len, SIXTEEN_BYTE_TYPE);
         } else {
             MPIR_Assert(0);
         }
@@ -233,7 +242,7 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
     assert(max_iov_len == actual_iov_len);
     assert(typeptr->basic_type != MPI_DATATYPE_NULL);
 
-    MPI_Aint basic_type;
+    MPI_Datatype basic_type;
     /* FIXME: assumes a single basic_type, won't work with struct */
     if (HANDLE_IS_BUILTIN(datatype)) {
         basic_type = datatype;
@@ -251,7 +260,7 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
         ext_type_size /= 2;
     }
 
-    if (basic_type == MPI_LONG_DOUBLE) {
+    if (basic_type == MPI_LONG_DOUBLE || basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
         /* most c compiler's long double is different from 128-bit floating point */
         UNPACK_EXTERNAL_long_double(inbuf, iov, max_iov_len);
     } else if (basic_type_size == ext_type_size) {
@@ -263,6 +272,8 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
             UNPACK_EXTERNAL_equal_size(inbuf, iov, max_iov_len, int32_t);
         } else if (basic_type_size == 8) {
             UNPACK_EXTERNAL_equal_size(inbuf, iov, max_iov_len, int64_t);
+        } else if (basic_type_size == 16) {
+            UNPACK_EXTERNAL_equal_size(inbuf, iov, max_iov_len, SIXTEEN_BYTE_TYPE);
         } else {
             MPIR_Assert(0);
         }
@@ -309,7 +320,7 @@ int MPIR_Typerep_size_external32(MPI_Datatype type)
     MPIR_Datatype *typeptr;
     MPIR_Datatype_get_ptr(type, typeptr);
 
-    MPI_Aint basic_type;
+    MPI_Datatype basic_type;
     /* FIXME: assumes a single basic_type, won't work with struct */
     if (HANDLE_IS_BUILTIN(type)) {
         basic_type = type;

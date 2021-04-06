@@ -126,6 +126,13 @@ static inline void BASIC_convert128(const char *src, char *dest)
 }
 
 #if (BLENDIAN == 1)
+static inline void BASIC_copyto(const void *src, void *dest, int size)
+{
+    for (int i = 0; i < size; i++) {
+        ((char *) dest)[i] = ((const char *) src)[size - 1 - i];
+    }
+}
+
 /* Note: use `uint` to suppress warnings on left-shift */
 static inline void BASIC_convert(const void *src, void *dest, int size)
 {
@@ -143,18 +150,15 @@ static inline void BASIC_convert(const void *src, void *dest, int size)
             BASIC_convert64(*(uint64_t *) src, *(uint64_t *) dest);
             break;
         default:
-            MPIR_Assert(0);
-    }
-}
-
-static inline void BASIC_copyto(const void *src, void *dest, int size)
-{
-    for (int i = 0; i < size; i++) {
-        ((char *) dest)[i] = ((const char *) src)[size - 1 - i];
+            BASIC_copyto(src, dest, size);
     }
 }
 
 #else
+static inline void BASIC_copyto(const void *src, void *dest, int size)
+{
+    memcpy(dest, src, (size_t) size);
+}
 
 /* FIXME: we may need use memcpy to allow no-alignment */
 static inline void BASIC_convert(const void *src, void *dest, int size)
@@ -173,13 +177,8 @@ static inline void BASIC_convert(const void *src, void *dest, int size)
             *(int64_t *) dest = *(int64_t *) src;
             break;
         default:
-            MPIR_Assert(0);
+            BASIC_copyto(src, dest, size);
     }
-}
-
-static inline void BASIC_copyto(const void *src, void *dest, int size)
-{
-    memcpy(dest, src, (size_t) size);
 }
 
 #endif
