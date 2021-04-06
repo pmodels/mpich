@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     char *actualFname = NULL;
     char *globalFname = NULL;
     int totalSize, expectedRank, size, cachedRank;
-    char portName[MPI_MAX_PORT_NAME];
+    char portName[MPI_MAX_PORT_NAME + 1];
     int rankToAccept = 1;
 
     /* Debug - print out where we picked up the MPICH build from */
