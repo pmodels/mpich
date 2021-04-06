@@ -13,7 +13,7 @@
 static char MTEST_Descrip[] = "A simple test of Reduce with all choices of root process";
 */
 
-void set_send_buf(int count, int *buf)
+static void set_send_buf(int count, int *buf)
 {
     int i;
     for (i = 0; i < count; i++) {
@@ -21,7 +21,7 @@ void set_send_buf(int count, int *buf)
     }
 }
 
-void set_recv_buf(int count, int *buf)
+static void set_recv_buf(int count, int *buf)
 {
     int i;
     for (i = 0; i < count; i++) {
@@ -29,7 +29,7 @@ void set_recv_buf(int count, int *buf)
     }
 }
 
-void check_buf(int rank, int size, int count, int *errs, int *buf)
+static void check_buf(int rank, int size, int count, int *errs, int *buf)
 {
     int i;
     for (i = 0; i < count; i++) {

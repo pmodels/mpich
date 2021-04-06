@@ -15,7 +15,7 @@ MPI_Win win[NUM_THREADS];
 int *win_mem[NUM_THREADS];
 int rank, nprocs;
 int thread_errs[NUM_THREADS];
-MTEST_THREAD_RETURN_TYPE run_test(void *arg)
+static MTEST_THREAD_RETURN_TYPE run_test(void *arg)
 {
     int i;
     int *local_b;

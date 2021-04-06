@@ -83,7 +83,7 @@ static MPI_Offset get_offset(int rank, int num_objs, int obj_size, int which_obj
     return offset;
 }
 
-static void write_file(char *target, int rank, MPI_Info * info)
+static void write_file(const char *target, int rank, MPI_Info * info)
 {
     MPI_File wfh;
     MPI_Request *request;

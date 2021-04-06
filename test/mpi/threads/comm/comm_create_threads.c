@@ -22,7 +22,7 @@
 MPI_Comm comms[NUM_THREADS];
 int rank, size;
 
-MTEST_THREAD_RETURN_TYPE test_comm_create(void *arg)
+static MTEST_THREAD_RETURN_TYPE test_comm_create(void *arg)
 {
     int i;
 

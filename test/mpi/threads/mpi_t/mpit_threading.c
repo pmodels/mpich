@@ -39,7 +39,7 @@ int PrintControlVars(FILE * fp, int myThreadId);
 int PrintPerfVars(FILE * fp, int myThreadId);
 int PrintCategories(FILE * fp, int myThreadId);
 
-MTEST_THREAD_RETURN_TYPE RunTest(void *p)
+static MTEST_THREAD_RETURN_TYPE RunTest(void *p)
 {
     int myThreadId = (int) (long) p;
 

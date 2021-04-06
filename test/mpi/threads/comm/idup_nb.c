@@ -42,7 +42,7 @@ int verbose = 0;
    is overlapped with other non-blocking operations on the same communicator or
    on a different communicator.
 */
-MTEST_THREAD_RETURN_TYPE test_intracomm(void *arg)
+static MTEST_THREAD_RETURN_TYPE test_intracomm(void *arg)
 {
     int i, j;
     int root, bcastbuf;
@@ -123,7 +123,7 @@ MTEST_THREAD_RETURN_TYPE test_intracomm(void *arg)
    is overlapped with other non-blocking operations on the same communicator or
    on a different communicator.
 */
-MTEST_THREAD_RETURN_TYPE test_intercomm(void *arg)
+static MTEST_THREAD_RETURN_TYPE test_intercomm(void *arg)
 {
     int rank, rsize, root;
     int i, j;

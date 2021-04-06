@@ -15,7 +15,7 @@
 
 MPI_Win win;
 
-MTEST_THREAD_RETURN_TYPE run_test(void *arg)
+static MTEST_THREAD_RETURN_TYPE run_test(void *arg)
 {
     int i;
     double *local_b;

@@ -40,7 +40,7 @@
 
 #define CMP(x, y) ((x - ((TYPE_C) (y))) > 1.0e-9)
 
-void reset_vars(TYPE_C * val_ptr, TYPE_C * res_ptr, MPI_Win win)
+static void reset_vars(TYPE_C * val_ptr, TYPE_C * res_ptr, MPI_Win win)
 {
     int i, rank, nproc;
 

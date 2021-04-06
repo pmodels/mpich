@@ -67,7 +67,7 @@ static MPI_Datatype make_large_hindexed(MPI_Count nbytes)
 }
 
 
-int testtype(MPI_Datatype type, MPI_Count expected)
+static int testtype(MPI_Datatype type, MPI_Count expected)
 {
     MPI_Count size, lb, extent;
     int errs = 0;

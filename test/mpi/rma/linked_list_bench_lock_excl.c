@@ -53,7 +53,7 @@ static int my_elems_size = 0;
 static int my_elems_count = 0;
 
 /* Allocate a new shared linked list element */
-MPI_Aint alloc_elem(int value, MPI_Win win)
+static MPI_Aint alloc_elem(int value, MPI_Win win)
 {
     MPI_Aint disp;
     llist_elem_t *elem_ptr;
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
                            (void *) tail_ptr.disp);
 
                 MPI_Win_lock(MPI_LOCK_EXCLUSIVE, tail_ptr.rank, 0, llist_win);
-#if USE_ACC
+#ifdef USE_ACC
                 MPI_Accumulate(&new_elem_ptr, sizeof(llist_ptr_t), MPI_BYTE, tail_ptr.rank,
                                (MPI_Aint) & (((llist_elem_t *) tail_ptr.disp)->next),
                                sizeof(llist_ptr_t), MPI_BYTE, MPI_REPLACE, llist_win);

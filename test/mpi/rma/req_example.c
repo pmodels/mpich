@@ -25,7 +25,7 @@
  * function. */
 double junk = 0.0;
 
-void compute(int step, double *data)
+static void compute(int step, double *data)
 {
     int i;
 

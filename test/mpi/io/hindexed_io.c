@@ -15,7 +15,7 @@
 #define HEADER 144
 #define BLK_COUNT 3
 
-static void handle_error(int errcode, char *str)
+static void handle_error(int errcode, const char *str)
 {
     char msg[MPI_MAX_ERROR_STRING];
     int resultlen;

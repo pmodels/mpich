@@ -25,7 +25,7 @@ int rank, size;
 int verbose = 0;
 volatile int start_idup[NUM_THREADS];
 
-MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
+static MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
 {
     int rank;
     int i, j;
