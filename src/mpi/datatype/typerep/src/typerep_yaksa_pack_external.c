@@ -242,7 +242,7 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
     assert(max_iov_len == actual_iov_len);
     assert(typeptr->basic_type != MPI_DATATYPE_NULL);
 
-    MPI_Aint basic_type;
+    MPI_Datatype basic_type;
     /* FIXME: assumes a single basic_type, won't work with struct */
     if (HANDLE_IS_BUILTIN(datatype)) {
         basic_type = datatype;
@@ -320,7 +320,7 @@ int MPIR_Typerep_size_external32(MPI_Datatype type)
     MPIR_Datatype *typeptr;
     MPIR_Datatype_get_ptr(type, typeptr);
 
-    MPI_Aint basic_type;
+    MPI_Datatype basic_type;
     /* FIXME: assumes a single basic_type, won't work with struct */
     if (HANDLE_IS_BUILTIN(type)) {
         basic_type = type;
