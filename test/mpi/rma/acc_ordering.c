@@ -58,7 +58,10 @@ static void verify_nondeterministic_result(twoint_t * data,
 int main(int argc, char **argv)
 {
     int me, nproc, i;
-    twoint_t *data, *mine, *mine_plus, *expected;
+    twoint_t *data;
+    twoint_t *mine = NULL;
+    twoint_t *mine_plus = NULL;
+    twoint_t *expected = NULL;
     MPI_Win win;
     MPI_Info info_in;
 

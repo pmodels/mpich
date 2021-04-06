@@ -249,8 +249,8 @@ void simple_shuffle_str(int mynod, int len, ADIO_cb_name_array array, char *dest
 
 int main(int argc, char **argv)
 {
-    int i, mynod, nprocs, len, errs = 0, sum_errs = 0, verbose = 0;
-    char *filename;
+    int i, mynod, nprocs, len, errs = 0, verbose = 0;
+    char *filename = NULL;
     char *cb_config_string;
     int cb_config_len;
     ADIO_cb_name_array array;

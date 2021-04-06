@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
         char c;
     } s[10], s1[10];
     int j;
-    int errs = 0, toterrs;
+    int errs = 0;
     int rank, size, tsize;
     MPI_Aint text, tmp_lb;
     int blens[2];

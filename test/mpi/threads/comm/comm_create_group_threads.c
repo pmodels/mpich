@@ -75,7 +75,7 @@ static MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
 int main(int argc, char **argv)
 {
     int thread_args[NUM_THREADS];
-    int i, err, provided;
+    int i, provided;
 
     MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 

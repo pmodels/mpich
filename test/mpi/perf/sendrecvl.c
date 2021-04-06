@@ -88,8 +88,6 @@ int main(int argc, char *argv[])
         if (wrank == 0) {
             t1 = t1 / reps;
             if (t1 > 0) {
-                double rate;
-                rate = (len / t1) / 1.e6;
                 t1 = t1 * 1.e6;
                 if (verbose)
                     printf("%d\t%g\t%g\n", len, t1, len / t1);
@@ -133,8 +131,6 @@ int main(int argc, char *argv[])
         if (wrank == 0) {
             t1 = t1 / reps;
             if (t1 > 0) {
-                double rate;
-                rate = (len / t1) / 1.e6;
                 t1 = t1 * 1.e6;
                 if (verbose)
                     printf("%d\t%g\t%g\n", len, t1, len / t1);
@@ -183,8 +179,6 @@ int main(int argc, char *argv[])
         if (wrank == 0) {
             t1 = t1 / reps;
             if (t1 > 0) {
-                double rate;
-                rate = (len / t1) / 1.e6;
                 t1 = t1 * 1.e6;
                 if (verbose)
                     printf("%d\t%g\t%g\n", len, t1, len / t1);

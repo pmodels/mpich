@@ -14,12 +14,8 @@ int main(int argc, char *argv[])
 {
     MPI_Comm intercomm;
     int remote_rank, rank, size, errs = 0;
-    volatile int trigger;
 
     MTest_Init(&argc, &argv);
-
-    trigger = 1;
-/*    while (trigger) ; */
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if (size < 2) {

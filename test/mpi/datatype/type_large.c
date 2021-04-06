@@ -101,7 +101,7 @@ static int testtype(MPI_Datatype type, MPI_Count expected)
 int main(int argc, char **argv)
 {
 
-    int errs = 0, i;
+    int errs = 0;
     int rank, size;
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     types[1] = make_large_indexed_block(expected_sizes[1]);
     types[2] = make_large_hindexed(expected_sizes[2]);
 
-    for (i = 0; i < NR_TYPES; i++) {
+    for (int i = 0; i < NR_TYPES; i++) {
         if (types[i] != MPI_DATATYPE_NULL) {
             errs += testtype(types[i], expected_sizes[i]);
             MPI_Type_free(&(types[i]));

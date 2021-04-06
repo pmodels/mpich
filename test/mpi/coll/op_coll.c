@@ -21,16 +21,6 @@
         }                                                                 \
     } while (0)
 
-static void sum_fn(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype)
-{
-    int i;
-    int *in = invec;
-    int *inout = inoutvec;
-    for (i = 0; i < *len; ++i) {
-        inout[i] = in[i] + inout[i];
-    }
-}
-
 int *buf;
 int *buf_h;
 int *recvbuf;

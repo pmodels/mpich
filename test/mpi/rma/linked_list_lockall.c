@@ -123,7 +123,7 @@ int main(int argc, char **argv)
             success = (next_tail_ptr.rank == nil.rank);
 
             if (success) {
-                int i, flag;
+                int flag;
 
                 MPI_Accumulate(&new_elem_ptr.disp, 1, MPI_AINT, tail_ptr.rank,
                                (MPI_Aint) & (((llist_elem_t *) tail_ptr.disp)->next.disp), 1,
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
 
                 /* For implementations that use pt-to-pt messaging, force progress for other threads'
                  * RMA operations. */
-                for (i = 0; i < NPROBE; i++)
+                for (int j = 0; j < NPROBE; j++)
                     MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag,
                                MPI_STATUS_IGNORE);
 

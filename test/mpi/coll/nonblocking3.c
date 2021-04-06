@@ -414,12 +414,6 @@ static void check_after_completion(struct laundry *l)
     MPI_Comm comm = l->comm;
     int *buf = l->buf;
     int *recvbuf = l->recvbuf;
-    int *sendcounts = l->sendcounts;
-    int *recvcounts = l->recvcounts;
-    int *sdispls = l->sdispls;
-    int *rdispls = l->rdispls;
-    int *sendtypes = l->sendtypes;
-    int *recvtypes = l->recvtypes;
     char *buf_alias = (char *) buf;
 
     MPI_Comm_rank(comm, &rank);

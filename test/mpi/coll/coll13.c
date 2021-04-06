@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     int i;
     int *sb;
     int *rb;
-    int status, gstatus;
+    int status;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

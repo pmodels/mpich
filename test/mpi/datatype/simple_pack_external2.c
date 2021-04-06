@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-char *datarep = "external32";
+const char *datarep = "external32";
 
 #define UINT_COUNT (2)
 #define DBLE_COUNT (24)

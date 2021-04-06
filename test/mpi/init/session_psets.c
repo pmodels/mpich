@@ -19,7 +19,7 @@
 int main(int argc, char *argv[])
 {
     int errs = 0;
-    int n_psets, psetlen, rc, ret;
+    int n_psets, psetlen, rc;
     int valuelen;
     int flag = 0;
     char *info_val = NULL;

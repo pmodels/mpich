@@ -5,9 +5,16 @@
 
 #include "mt_pt2pt_common.h"
 
+int test_sendrecv(int id, int iter, int *buff, MPI_Comm comm, int tag, int verify);
+int test_sendrecv_huge(int id, int iter, int count, int *buff, MPI_Comm comm, int tag, int verify);
+int test_isendirecv(int id, int iter, int *buff, MPI_Comm comm, int tag, int verify);
+int test_isendirecv_huge(int id, int iter, int count, int *buff, MPI_Comm comm, int tag,
+                         int verify);
+MTEST_THREAD_RETURN_TYPE run_test(void *arg);
+
 int test_sendrecv(int id, int iter, int *buff, MPI_Comm comm, int tag, int verify)
 {
-    int errs = 0, err, i, rank;
+    int errs = 0, i, rank;
     MPI_Datatype type = MPI_INT;
 
     MPI_Comm_rank(comm, &rank);
@@ -43,7 +50,7 @@ int test_sendrecv(int id, int iter, int *buff, MPI_Comm comm, int tag, int verif
 
 int test_sendrecv_huge(int id, int iter, int count, int *buff, MPI_Comm comm, int tag, int verify)
 {
-    int errs = 0, err, i, rank;
+    int errs = 0, i, rank;
     MPI_Datatype type = MPI_INT;
 
     MPI_Comm_rank(comm, &rank);
@@ -83,8 +90,8 @@ int test_sendrecv_huge(int id, int iter, int count, int *buff, MPI_Comm comm, in
 
 int test_isendirecv(int id, int iter, int *buff, MPI_Comm comm, int tag, int verify)
 {
-    int errs = 0, err, i, rank;
-    MPI_Request *reqs = alloca(sizeof(MPI_Request) * iter);
+    int errs = 0, i, rank;
+    MPI_Request *reqs = malloc(sizeof(MPI_Request) * iter);
     MPI_Datatype type = MPI_INT;
 
     MPI_Comm_rank(comm, &rank);
@@ -122,12 +129,13 @@ int test_isendirecv(int id, int iter, int *buff, MPI_Comm comm, int tag, int ver
     }
 
   fn_exit:
+    free(reqs);
     return errs;
 }
 
 int test_isendirecv_huge(int id, int iter, int count, int *buff, MPI_Comm comm, int tag, int verify)
 {
-    int errs = 0, err, i, j, rank;
+    int errs = 0, i, j, rank;
     MPI_Request req;
     MPI_Datatype type = MPI_INT;
 
