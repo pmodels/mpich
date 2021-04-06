@@ -8,7 +8,7 @@
 
 #include "ucx_impl.h"
 
-void *MPIDI_UCX_am_buf;
+extern void *MPIDI_UCX_am_buf;
 void MPIDI_UCX_am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t * info);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
