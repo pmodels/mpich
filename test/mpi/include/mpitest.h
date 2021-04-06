@@ -116,6 +116,8 @@ static inline int MTestCheckStatus(MPI_Status * p_status, MPI_Datatype el_type,
             printf("Status expect tag %d, got %d\n", exp_tag, p_status->MPI_TAG);
         }
     }
+
+    return errs;
 }
 
 #endif /* MPITEST_H_INCLUDED */
