@@ -25,7 +25,7 @@ typedef struct {
 
 static int errs = 0;
 
-void verify_result(twoint_t * data, int len, twoint_t expected, const char *test_name)
+static void verify_result(twoint_t * data, int len, twoint_t expected, const char *test_name)
 {
     int i;
     for (i = 0; i < len; i++) {
@@ -39,8 +39,8 @@ void verify_result(twoint_t * data, int len, twoint_t expected, const char *test
 
 /* Check non-deterministic result of none ordering.
  * Expected result has two possibilities. */
-void verify_nondeterministic_result(twoint_t * data,
-                                    int len, twoint_t * expected, const char *test_name)
+static void verify_nondeterministic_result(twoint_t * data,
+                                           int len, twoint_t * expected, const char *test_name)
 {
     int i;
     for (i = 0; i < len; i++) {

@@ -38,7 +38,7 @@ static int rank = -1;
 static int parse_args(int argc, char **argv);
 static void usage(const char *prog);
 
-int test_write(char *file, int nprocs, int rank, MPI_Info info)
+static int test_write(char *file, int nprocs, int rank, MPI_Info info)
 {
     double stime, etime, wtime, w_elapsed, w_slowest, elapsed, slowest;
     MPI_File fh;

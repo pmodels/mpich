@@ -16,7 +16,7 @@
 MPI_Win win;
 int errs = 0, dummy;
 
-MTEST_THREAD_RETURN_TYPE run_test(void *arg)
+static MTEST_THREAD_RETURN_TYPE run_test(void *arg)
 {
     int i;
 

@@ -13,7 +13,7 @@
 static char MTEST_Descrip[] = "Test MPI_Allreduce with MPI_IN_PLACE";
 */
 
-void set_buf(int rank, int count, int *buf)
+static void set_buf(int rank, int count, int *buf)
 {
     int i;
     for (i = 0; i < count; i++) {
@@ -22,7 +22,7 @@ void set_buf(int rank, int count, int *buf)
     }
 }
 
-void check_buf(int size, int count, int *errs, int *buf)
+static void check_buf(int size, int count, int *errs, int *buf)
 {
     int i;
     for (i = 0; i < count; i++) {

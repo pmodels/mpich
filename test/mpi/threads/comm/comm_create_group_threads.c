@@ -24,7 +24,7 @@ MTEST_THREAD_LOCK_TYPE comm_lock;
 int rank, size;
 int verbose = 0;
 
-MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
+static MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
 {
     int i;
 

@@ -50,7 +50,7 @@ MTEST_THREAD_RETURN_TYPE run_test(void *arg)
 }
 
 /* Launch multiple threads */
-int cancel_recv_test(int iter)
+static int cancel_recv_test(int iter)
 {
     int i, j, errs = 0;
     struct thread_param params[NTHREADS];
