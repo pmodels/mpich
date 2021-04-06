@@ -4,12 +4,14 @@
  */
 
 #include <mpiimpl.h>
-#include <mpir_typerep.h>
-#include "dataloop_internal.h"
+#include "typerep_util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
+/* "external32" format defined by MPI specification.
+ * The type is defined to be platform-independent and data is packed in big-endian order.
+ */
 
 typedef struct external32_basic_size {
     MPI_Datatype el_type;
@@ -81,15 +83,58 @@ static external32_basic_size_t external32_basic_size_array[] = {
     {MPI_CXX_LONG_DOUBLE_COMPLEX, 2 * 16}
 };
 
-MPI_Aint MPII_Dataloop_get_basic_size_external32(MPI_Datatype el_type)
+#define COUNT_OF(array) \
+    (sizeof(array) / sizeof(array[0]))
+
+MPI_Aint MPII_Typerep_get_basic_size_external32(MPI_Datatype el_type)
 {
-    MPI_Aint ret = (MPI_Aint) 0;
-    unsigned int i = 0;
-    for (i = 0; i < (sizeof(external32_basic_size_array) / sizeof(external32_basic_size_t)); i++) {
+    for (int i = 0; i < COUNT_OF(external32_basic_size_array); i++) {
         if (external32_basic_size_array[i].el_type == el_type) {
-            ret = external32_basic_size_array[i].el_size;
-            break;
+            return external32_basic_size_array[i].el_size;
         }
     }
-    return ret;
+    return 0;
+}
+
+bool MPII_Typerep_basic_type_is_complex(MPI_Datatype el_type)
+{
+    switch (el_type) {
+        case MPI_C_COMPLEX:
+        case MPI_C_DOUBLE_COMPLEX:
+        case MPI_C_LONG_DOUBLE_COMPLEX:
+#ifdef HAVE_FORTRAN_BINDING
+        case MPI_COMPLEX8:
+        case MPI_COMPLEX16:
+        case MPI_COMPLEX32:
+#endif
+#ifdef HAVE_CXX_BINDING
+        case MPI_CXX_FLOAT_COMPLEX:
+        case MPI_CXX_DOUBLE_COMPLEX:
+        case MPI_CXX_LONG_DOUBLE_COMPLEX:
+#endif
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool MPII_Typerep_basic_type_is_unsigned(MPI_Datatype el_type)
+{
+    switch (el_type) {
+        case MPI_PACKED:
+        case MPI_BYTE:
+        case MPI_WCHAR:
+        case MPI_UNSIGNED_CHAR:
+        case MPI_UNSIGNED_SHORT:
+        case MPI_UNSIGNED:
+        case MPI_UNSIGNED_LONG:
+        case MPI_UNSIGNED_LONG_LONG:
+        case MPI_UINT8_T:
+        case MPI_UINT16_T:
+        case MPI_UINT32_T:
+        case MPI_UINT64_T:
+            return true;
+        default:
+            return false;
+    }
 }
