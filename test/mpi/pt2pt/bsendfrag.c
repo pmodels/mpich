@@ -21,11 +21,11 @@ different messages are received in different orders";
  */
 
 #define MSG_SIZE 17000
+int b1[MSG_SIZE], b2[MSG_SIZE], b3[MSG_SIZE], b4[MSG_SIZE];
 
 int main(int argc, char *argv[])
 {
     int errs = 0;
-    int b1[MSG_SIZE], b2[MSG_SIZE], b3[MSG_SIZE], b4[MSG_SIZE];
     int src, dest, size, rank, i;
     MPI_Comm comm;
     MPI_Status status;
