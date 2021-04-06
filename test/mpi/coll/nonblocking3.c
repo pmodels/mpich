@@ -12,12 +12,12 @@
  * - post operations on multiple comms from multiple threads
  */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include "mpitest.h"
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

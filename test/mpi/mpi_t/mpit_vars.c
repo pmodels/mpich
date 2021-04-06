@@ -9,12 +9,12 @@
    2021-02-17: added sources and events
  */
 
+#include "mpitest.h"
 #include <stdio.h>
 #include <strings.h>
 #include <string.h>     /* For strncpy */
 #include <stdlib.h>
 #include "mpi.h"
-#include "mpitest.h"
 
 char *mpit_scopeToStr(int scope);
 char *mpit_bindingToStr(int binding);

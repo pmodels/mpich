@@ -3,11 +3,11 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "mpitest.h"
 
 /* A 32^3 array. For other array sizes, change array_of_gsizes below. */
 

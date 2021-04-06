@@ -3,11 +3,11 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "mpitest.h"
 
 /* tests noncontiguous reads/writes using nonblocking collective I/O */
 

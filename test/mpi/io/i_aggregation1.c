@@ -9,12 +9,12 @@
 
 /* Uses nonblocking collective I/O.*/
 
+#include "mpitest.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <mpi.h>
 #include <stdio.h>
 #include <string.h>
-#include "mpitest.h"
 
 #define NUM_OBJS 4
 #define OBJ_SIZE 1048576
