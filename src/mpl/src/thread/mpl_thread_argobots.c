@@ -21,7 +21,7 @@ static void thread_start(void *arg)
     MPL_thread_func_t func = info->func;
     void *data = info->data;
 
-    free(arg);
+    MPL_free(arg);
 
     func(data);
 }
