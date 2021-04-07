@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     MPI_Datatype row, xpose;
     MPI_Aint sizeofint;
 
-    int err, errs = 0;
+    int errs = 0;
     int bufsize, position = 0;
     void *buffer;
 
@@ -61,11 +61,11 @@ int main(int argc, char *argv[])
      * change the error handler to errors return */
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
-    err = MPI_Pack(a, 1, xpose, buffer, bufsize, &position, MPI_COMM_WORLD);
+    MPI_Pack(a, 1, xpose, buffer, bufsize, &position, MPI_COMM_WORLD);
 
     /* Unpack the buffer into b. */
     position = 0;
-    err = MPI_Unpack(buffer, bufsize, &position, b, 100 * 100, MPI_INT, MPI_COMM_WORLD);
+    MPI_Unpack(buffer, bufsize, &position, b, 100 * 100, MPI_INT, MPI_COMM_WORLD);
 
     for (i = 0; i < 100; i++) {
         for (j = 0; j < 100; j++) {

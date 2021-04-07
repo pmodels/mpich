@@ -127,7 +127,6 @@ int main(int argc, char **argv)
     for (ntry = 0; ntry < 5; ntry++) {
         const double *ppe = (const double *) inbuf;
         const int *id = (const int *) index_displacement;
-        int k, j;
         t0 = MPI_Wtime();
         position = 0;
         for (i = 0; i < icount; i++) {

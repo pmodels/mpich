@@ -6,12 +6,26 @@
 #ifndef MPITEST_H_INCLUDED
 #define MPITEST_H_INCLUDED
 
-#include <string.h>
+#include "mpitestconf.h"
 #include <mpi.h>
 #include "mtest_mpix.h"
-#include "mpitestconf.h"
 #include "mpithreadtest.h"
 #include "mtest_common.h"
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#if defined NEEDS_STRDUP_DECL && !defined strdup
+extern char *strdup(const char *);
+#endif
+
+#if defined NEEDS_USLEEP_DECL && !defined usleep
+extern int usleep(useconds_t);
+#endif
 
 /*
  * Init and finalize test
@@ -116,6 +130,8 @@ static inline int MTestCheckStatus(MPI_Status * p_status, MPI_Datatype el_type,
             printf("Status expect tag %d, got %d\n", exp_tag, p_status->MPI_TAG);
         }
     }
+
+    return errs;
 }
 
 #endif /* MPITEST_H_INCLUDED */

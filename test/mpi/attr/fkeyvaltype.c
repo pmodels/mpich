@@ -45,11 +45,10 @@ int main(int argc, char *argv[])
 {
     int err, errs = 0;
     int attrval;
-    int i, j, key[32], keyval, saveKeyval;
+    int i, key[32], keyval, saveKeyval;
     int seed, testsize;
     int obj_idx;
     MPI_Aint count, maxbufsize;
-    int tnlen;
     MPI_Datatype type, duptype;
     DTP_pool_s dtp;
     DTP_obj_s obj;

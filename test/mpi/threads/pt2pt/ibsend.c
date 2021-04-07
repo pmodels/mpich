@@ -33,7 +33,7 @@
 
 int rank, size;
 
-MTEST_THREAD_RETURN_TYPE receiver(void *ptr)
+static MTEST_THREAD_RETURN_TYPE receiver(void *ptr)
 {
     int k;
     char buf[MSGSIZE];
@@ -46,7 +46,7 @@ MTEST_THREAD_RETURN_TYPE receiver(void *ptr)
 }
 
 
-MTEST_THREAD_RETURN_TYPE sender_bsend(void *ptr)
+static MTEST_THREAD_RETURN_TYPE sender_bsend(void *ptr)
 {
     char buffer[MSGSIZE];
     int i;
@@ -57,7 +57,7 @@ MTEST_THREAD_RETURN_TYPE sender_bsend(void *ptr)
     return NULL;
 }
 
-MTEST_THREAD_RETURN_TYPE sender_ibsend(void *ptr)
+static MTEST_THREAD_RETURN_TYPE sender_ibsend(void *ptr)
 {
     char buffer[MSGSIZE];
     int i;
@@ -70,7 +70,7 @@ MTEST_THREAD_RETURN_TYPE sender_ibsend(void *ptr)
     return NULL;
 }
 
-MTEST_THREAD_RETURN_TYPE sender_isend(void *ptr)
+static MTEST_THREAD_RETURN_TYPE sender_isend(void *ptr)
 {
     char buffer[MSGSIZE];
     int i;
@@ -83,7 +83,7 @@ MTEST_THREAD_RETURN_TYPE sender_isend(void *ptr)
     return NULL;
 }
 
-MTEST_THREAD_RETURN_TYPE sender_send(void *ptr)
+static MTEST_THREAD_RETURN_TYPE sender_send(void *ptr)
 {
     char buffer[MSGSIZE];
     int i;
@@ -97,11 +97,10 @@ MTEST_THREAD_RETURN_TYPE sender_send(void *ptr)
 int main(int argc, char *argv[])
 {
 
-    int provided, i[2], k;
+    int provided, k;
     char *buffer, *ptr_dt;
     buffer = (char *) malloc(BUFSIZE * sizeof(char));
     MTEST_VG_MEM_INIT(buffer, BUFSIZE * sizeof(char));
-    MPI_Status status;
     MPI_Comm communicator;
     int bs;
 

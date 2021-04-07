@@ -15,14 +15,13 @@
 
 int main(int argc, char **argv)
 {
-    int i, j, rank;
+    int rank;
     MPI_Info info_in, info_out;
-    int errors = 0, errs = 0;
+    int errs = 0;
     MPI_Comm comm;
     char query_key[MPI_MAX_INFO_KEY];
     char val[MPI_MAX_INFO_VAL];
     char new_key[MPI_MAX_INFO_KEY];
-    short hint_mutable;         /* a hint is mutable or immutable based on an MPI implementation */
     MPI_Comm comm_dup2;
     MPI_Comm comm_dup3;
     MPI_Comm comm_dup4;

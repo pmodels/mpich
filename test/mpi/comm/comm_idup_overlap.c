@@ -9,8 +9,7 @@
 
 int main(int argc, char **argv)
 {
-    int i, rank, size, color;
-    MPI_Group group;
+    int i, rank, size;
     MPI_Comm primary[2], secondary[2], tmp;
     MPI_Request req[2];
 

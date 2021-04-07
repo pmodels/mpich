@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     int rank = 0, nprocs = 0;
     int i = 0, x = 0, dst = 0, src = 0, tag = 0;
     MPI_Status stat;
-#if TEST_NB
+#ifdef TEST_NB
     MPI_Request req;
 #endif
     int sbuf[BUFSIZE], rbuf[BUFSIZE];
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     for (x = 0; x < ITER; x++) {
         tag = x;
         if (rank == dst) {
-#if TEST_NB
+#ifdef TEST_NB
             MPI_Irecv(rbuf, sizeof(int) * BUFSIZE, MPI_CHAR, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD,
                       &req);
             MPI_Wait(&req, &stat);

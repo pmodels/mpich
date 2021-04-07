@@ -36,12 +36,28 @@ enum probe_routines { Probe, Iprobe, Mprobe, Improbe };
 #define PROBE_ERROR_DUMMY MPI_ERR_DIMS  /* Dummy values used for the tests */
 #define RECV_ERROR_DUMMY MPI_ERR_TOPOLOGY
 
+int probetest_check_valid_data(const MPI_Message * message, MPI_Status * status, int sender_rank,
+                               int tag);
+int probetest_invoke_send(int *buff, int data_count, MPI_Datatype type, int recv_rank,
+                          MPI_Comm comm, int tag, MPI_Request * request);
+int probetest_invoke_probe(int sender_rank, int tag, MPI_Comm comm, int *recv_count,
+                           MPI_Datatype type, MPI_Message * message, MPI_Status * status);
+int probetest_check_probe_result(int id, int *buff, int send_count, int recv_count,
+                                 MPI_Message * message, MPI_Status * status, int sender_rank,
+                                 int tag);
+int probetest_invoke_recv(int *buff, int recv_count, MPI_Datatype type, int sender_rank, int tag,
+                          MPI_Comm comm, MPI_Message * message, MPI_Status * status);
+int probetest_probe_n_recv(int id, int send_count, MPI_Datatype type, int sender_rank,
+                           int *buff, MPI_Comm comm, int tag);
+int test_probe_normal(int id, int iter, int count, int *buff, MPI_Comm comm, int tag, int verify);
+int test_probe_huge(int id, int iter, int count, int *buff, MPI_Comm comm, int tag, int verify);
+int test_probe_nullproc(int id, int iter, int count, int *buff, MPI_Comm comm, int tag, int verify);
+MTEST_THREAD_RETURN_TYPE run_test(void *arg);
 
 int probetest_check_valid_data(const MPI_Message * message, MPI_Status * status, int sender_rank,
                                int tag)
 {
     int errs = 0;
-    int j;
 
     /* check message matching */
     if (PROBE_ROUTINE == Mprobe || PROBE_ROUTINE == Improbe) {
@@ -111,7 +127,6 @@ int probetest_check_probe_result(int id, int *buff, int send_count, int recv_cou
                                  int tag)
 {
     int errs = 0;
-    int j;
 
     if (sender_rank == MPI_PROC_NULL) {
         RECORD_ERROR(recv_count != 0);  /* expect count 0 for NULL_PROC */
@@ -174,7 +189,7 @@ int probetest_probe_n_recv(int id, int send_count, MPI_Datatype type, int sender
 
 int test_probe_normal(int id, int iter, int count, int *buff, MPI_Comm comm, int tag, int verify)
 {
-    int errs = 0, err, i, j, rank;
+    int errs = 0, i, rank;
     MPI_Datatype type = MPI_INT;
 
     MPI_Comm_rank(comm, &rank);
@@ -183,19 +198,18 @@ int test_probe_normal(int id, int iter, int count, int *buff, MPI_Comm comm, int
     MTest_thread_barrier(NTHREADS);
 
     if (rank == 0) {    /* sender */
-        int err;
-        MPI_Request *requests = alloca(sizeof(MPI_Request) * iter);
+        MPI_Request *requests = malloc(sizeof(MPI_Request) * iter);
         for (i = 0; i < iter; i++) {
             buff[i] = SETVAL(i, id);
             errs = probetest_invoke_send(&buff[i], 1, type, 1, comm, tag, &requests[i]);
         }
         if (SEND_TYPE == TYPE_ASYNC)
             MPI_Waitall(iter, requests, MPI_STATUSES_IGNORE);
+        free(requests);
     } else {    /* receiver */
         /* Run tests multiple times */
         for (i = 0; i < iter; i++) {
             /* Use sender rank 0 and buffer buff[i] */
-            int last = i == iter - 1;
             buff[i] = -1;
             errs += probetest_probe_n_recv(id, 1, type, 0 /* sender */ , &buff[i], comm, tag);
             if (verify && buff[i] != SETVAL(i, id)) {
@@ -216,7 +230,7 @@ int test_probe_normal(int id, int iter, int count, int *buff, MPI_Comm comm, int
 
 int test_probe_huge(int id, int iter, int count, int *buff, MPI_Comm comm, int tag, int verify)
 {
-    int errs = 0, err, i, j, rank;
+    int errs = 0, rank;
     MPI_Datatype type = MPI_INT;
 
     MPI_Comm_rank(comm, &rank);
@@ -226,9 +240,9 @@ int test_probe_huge(int id, int iter, int count, int *buff, MPI_Comm comm, int t
 
     if (rank == 0) {    /* sender */
         MPI_Request request;
-        for (i = 0; i < count; i++)
+        for (int i = 0; i < count; i++)
             buff[i] = SETVAL(i, id);
-        for (i = 0; i < iter; i++) {
+        for (int i = 0; i < iter; i++) {
             errs = probetest_invoke_send(buff, count, type, 1, comm, tag, &request);
             /* complete a request before starting another since buff is common across them */
             if (SEND_TYPE == TYPE_ASYNC)
@@ -236,14 +250,13 @@ int test_probe_huge(int id, int iter, int count, int *buff, MPI_Comm comm, int t
         }
     } else {    /* receiver */
         /* Run tests multiple times */
-        for (i = 0; i < iter; i++) {
-            int j;
-            for (j = 0; j < count; j++)
+        for (int i = 0; i < iter; i++) {
+            for (int j = 0; j < count; j++)
                 buff[j] = -1;
             errs += probetest_probe_n_recv(id, count, type, 0 /* sender_rank */ , buff, comm,
                                            tag);
             if (verify) {
-                for (j = 0; j < count; j++) {
+                for (int j = 0; j < count; j++) {
                     if (buff[j] != SETVAL(j, id)) {
                         errs++;
                         if (errs <= DATA_WARN_THRESHOLD)
@@ -262,7 +275,7 @@ int test_probe_huge(int id, int iter, int count, int *buff, MPI_Comm comm, int t
 
 int test_probe_nullproc(int id, int iter, int count, int *buff, MPI_Comm comm, int tag, int verify)
 {
-    int errs = 0, err, i, rank;
+    int errs = 0, i, rank;
     MPI_Datatype type = MPI_INT;
 
     MPI_Comm_rank(comm, &rank);

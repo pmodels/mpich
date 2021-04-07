@@ -127,10 +127,9 @@ static int epoch_test(int seed, int testsize, int count, const char *basic_type,
             }
 
             if (rank == orig_rank) {
-                err =
-                    MPI_Put(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype,
-                            target_rank, target.dtp_obj.DTP_buf_offset / extent, targetcount,
-                            targettype, win);
+                err = MPI_Put((char *) orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype,
+                              target_rank, target.dtp_obj.DTP_buf_offset / extent, targetcount,
+                              targettype, win);
                 if (err) {
                     if (errs++ < MAX_PERR)
                         MTestPrintError(err);
@@ -147,9 +146,9 @@ static int epoch_test(int seed, int testsize, int count, const char *basic_type,
             if (rank == target_rank) {
                 errs += MTest_dtp_check(&target, 0, 1, count, errs < MAX_PERR);
 
-                err =
-                    MPI_Put(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype, orig_rank,
-                            target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
+                err = MPI_Put((char *) orig.buf + orig.dtp_obj.DTP_buf_offset,
+                              origcount, origtype, orig_rank,
+                              target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
                 if (err) {
                     if (errs++ < MAX_PERR)
                         MTestPrintError(err);
@@ -166,19 +165,18 @@ static int epoch_test(int seed, int testsize, int count, const char *basic_type,
             if (rank == orig_rank) {
                 errs += MTest_dtp_check(&target, 0, 1, count, errs < MAX_PERR);
 
-                err =
-                    MPI_Put(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype,
-                            target_rank, target.dtp_obj.DTP_buf_offset / extent, targetcount,
-                            targettype, win);
+                err = MPI_Put((char *) orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype,
+                              target_rank, target.dtp_obj.DTP_buf_offset / extent, targetcount,
+                              targettype, win);
                 if (err) {
                     if (errs++ < MAX_PERR)
                         MTestPrintError(err);
                 }
             }
             if (rank == target_rank) {
-                err =
-                    MPI_Put(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype, orig_rank,
-                            target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
+                err = MPI_Put((char *) orig.buf + orig.dtp_obj.DTP_buf_offset,
+                              origcount, origtype, orig_rank,
+                              target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
                 if (err) {
                     if (errs++ < MAX_PERR)
                         MTestPrintError(err);

@@ -16,6 +16,9 @@
 static int test_val = 0;
 static int qmpi_on = 0;
 
+__attribute__ ((constructor))
+void static_register_my_tool(void);
+
 void test_init_function_pointer(int tool_id);
 int Test_Init_Thread(QMPI_Context context, int tool_id, int *argc, char ***argv, int required,
                      int *provided);

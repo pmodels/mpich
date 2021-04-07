@@ -110,10 +110,9 @@ static int putpscw_test(int seed, int testsize, int count, const char *basic_typ
                     }
                 }
                 MPI_Group_free(&neighbors);
-                err =
-                    MPI_Put(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype,
-                            target_rank, target.dtp_obj.DTP_buf_offset / extent, targetcount,
-                            targettype, win);
+                err = MPI_Put((char *) orig.buf + orig.dtp_obj.DTP_buf_offset,
+                              origcount, origtype, target_rank,
+                              target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
                 if (err) {
                     errs++;
                     MTestPrintError(err);

@@ -9,18 +9,19 @@
    2021-02-17: added sources and events
  */
 
+#include "mpitest.h"
 #include <stdio.h>
 #include <strings.h>
 #include <string.h>     /* For strncpy */
 #include <stdlib.h>
 #include "mpi.h"
-#include "mpitest.h"
 
-char *mpit_scopeToStr(int scope);
-char *mpit_bindingToStr(int binding);
-char *mpit_validDtypeStr(MPI_Datatype datatype);
-char *mpit_varclassToStr(int varClass);
-char *mpit_verbosityToStr(int verbosity);
+const char *mpit_scopeToStr(int scope);
+const char *mpit_bindingToStr(int binding);
+const char *mpit_validDtypeStr(MPI_Datatype datatype);
+const char *mpit_varclassToStr(int varClass);
+const char *mpit_verbosityToStr(int verbosity);
+const char *mpit_errclassToStr(int err);
 int perfvarReadInt(int pvarIndex, int isContinuous, int *found);
 unsigned int perfvarReadUint(int pvarIndex, int isContinuous, int *found);
 double perfvarReadDouble(int pvarIndex, int isContinuous, int *found);
@@ -334,9 +335,9 @@ int PrintCategories(FILE * fp)
 
 /* --- Support routines --- */
 
-char *mpit_validDtypeStr(MPI_Datatype datatype)
+const char *mpit_validDtypeStr(MPI_Datatype datatype)
 {
-    char *p = 0;
+    const char *p = 0;
     if (datatype == MPI_INT)
         p = "MPI_INT";
     else if (datatype == MPI_UNSIGNED)
@@ -373,9 +374,9 @@ char *mpit_validDtypeStr(MPI_Datatype datatype)
     return p;
 }
 
-char *mpit_scopeToStr(int scope)
+const char *mpit_scopeToStr(int scope)
 {
-    char *p = 0;
+    const char *p = 0;
     switch (scope) {
         case MPI_T_SCOPE_CONSTANT:
             p = "SCOPE_CONSTANT";
@@ -405,9 +406,9 @@ char *mpit_scopeToStr(int scope)
     return p;
 }
 
-char *mpit_bindingToStr(int binding)
+const char *mpit_bindingToStr(int binding)
 {
-    char *p;
+    const char *p;
     switch (binding) {
         case MPI_T_BIND_NO_OBJECT:
             p = "NO_OBJECT";
@@ -448,9 +449,9 @@ char *mpit_bindingToStr(int binding)
     return p;
 }
 
-char *mpit_varclassToStr(int varClass)
+const char *mpit_varclassToStr(int varClass)
 {
-    char *p = 0;
+    const char *p = 0;
     switch (varClass) {
         case MPI_T_PVAR_CLASS_STATE:
             p = "CLASS_STATE";
@@ -489,9 +490,9 @@ char *mpit_varclassToStr(int varClass)
     return p;
 }
 
-char *mpit_verbosityToStr(int verbosity)
+const char *mpit_verbosityToStr(int verbosity)
 {
-    char *p = 0;
+    const char *p = 0;
     switch (verbosity) {
         case MPI_T_VERBOSITY_USER_BASIC:
             p = "VERBOSITY_USER_BASIC";
@@ -527,9 +528,9 @@ char *mpit_verbosityToStr(int verbosity)
     return p;
 }
 
-char *mpit_errclassToStr(int err)
+const char *mpit_errclassToStr(int err)
 {
-    char *p = 0;
+    const char *p = 0;
     switch (err) {
         case MPI_T_ERR_MEMORY:
             p = "ERR_MEMORY";

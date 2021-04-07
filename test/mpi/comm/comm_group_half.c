@@ -10,7 +10,7 @@
 
 int main(int argc, char **argv)
 {
-    int rank, size, i;
+    int rank, size;
     MPI_Group full_group, half_group;
     int range[1][3];
     MPI_Comm comm;

@@ -14,7 +14,7 @@
  */
 int main(int argc, char **argv)
 {
-    int rank, err;
+    int rank, err = 0;
     char buf[10];
 
     MPI_Init(&argc, &argv);

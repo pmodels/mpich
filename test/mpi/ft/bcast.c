@@ -15,7 +15,7 @@
  */
 int main(int argc, char **argv)
 {
-    int rank, size, rc, errclass, toterrs, errs = 0;
+    int rank, size, rc, errclass, errs = 0;
     int deadprocs[] = { 1 };
     char buf[100000];
     MPI_Group world, newgroup;

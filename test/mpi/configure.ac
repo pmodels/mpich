@@ -700,6 +700,8 @@ AC_PROG_RANLIB
 AM_PROG_AR
 
 # Check for --enable-strict
+# NOTE: do this before checking any AC_CHECK_HEADERS, because strict may
+# turn on extension macros
 PAC_ARG_STRICT
 
 # General headers
@@ -707,6 +709,17 @@ AC_HEADER_STDC
 dnl AC_CHECK_HEADERS(stdarg.h unistd.h string.h stdlib.h memory.h stdint.h)
 dnl unistd.h string.h stdlib.h memory.h stdint.h are checked by AC_PROG_CC.
 AC_CHECK_HEADERS(stdarg.h sys/time.h sys/resource.h)
+
+# check if we need declarations
+AC_CHECK_FUNCS(strdup)
+if test "$ac_cv_func_strdup" = "yes" ; then
+   PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
+fi
+
+AC_CHECK_FUNCS(usleep)
+if test "$ac_cv_func_usleep" = "yes" ; then
+   PAC_FUNC_NEEDS_DECL([#include <unistd.h>],usleep)
+fi
 
 # Check for fixed width types
 AC_TYPE_INT8_T

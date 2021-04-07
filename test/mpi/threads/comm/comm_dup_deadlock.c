@@ -21,10 +21,9 @@
 
 MPI_Comm comms[NUM_THREADS];
 MTEST_THREAD_LOCK_TYPE comm_lock;
-int rank, size;
 int verbose = 0;
 
-MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
+static MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
 {
     int rank;
     int i;
@@ -70,9 +69,6 @@ int main(int argc, char **argv)
     MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     check(provided == MPI_THREAD_MULTIPLE);
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     MTest_thread_lock_create(&comm_lock);
 

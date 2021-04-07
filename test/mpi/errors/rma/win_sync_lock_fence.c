@@ -11,13 +11,12 @@
 
 int main(int argc, char *argv[])
 {
-    int rank, nproc;
+    int nproc;
     int errors = 0, errs = 0;
     int buf = 0, my_buf;
     MPI_Win win;
 
     MTest_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
     MPI_Win_create(&buf, sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);

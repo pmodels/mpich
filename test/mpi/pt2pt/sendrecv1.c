@@ -24,9 +24,7 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
     int err;
     int rank, size, source, dest;
     int minsize = 2;
-    int i, j, len;
     MPI_Aint sendcount, recvcount;
-    MPI_Aint maxbufsize;
     MPI_Comm comm;
     MPI_Datatype sendtype, recvtype;
     DTP_pool_s dtp;
@@ -74,7 +72,7 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
          * change the error handler to errors return */
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
-        for (i = 0; i < testsize; i++) {
+        for (int i = 0; i < testsize; i++) {
             DTP_pool_update_count(dtp, (rank == source) ? sendcnt : recvcnt);
             errs += MTest_dtp_create(&send, rank == source);
             errs += MTest_dtp_create(&recv, rank == dest);
@@ -85,9 +83,8 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
                 sendcount = send.dtp_obj.DTP_type_count;
                 sendtype = send.dtp_obj.DTP_datatype;
 
-                err =
-                    MPI_Send(send.buf + send.dtp_obj.DTP_buf_offset, sendcount, sendtype, dest, 0,
-                             comm);
+                err = MPI_Send((const char *) send.buf + send.dtp_obj.DTP_buf_offset,
+                               sendcount, sendtype, dest, 0, comm);
                 if (err) {
                     errs++;
                     if (errs < 10) {
@@ -101,7 +98,7 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
                 recvtype = recv.dtp_obj.DTP_datatype;
 
                 MPI_Status status;
-                err = MPI_Recv(recv.buf + recv.dtp_obj.DTP_buf_offset,
+                err = MPI_Recv((char *) recv.buf + recv.dtp_obj.DTP_buf_offset,
                                recvcount, recvtype, source, 0, comm, &status);
                 if (err) {
                     errs++;

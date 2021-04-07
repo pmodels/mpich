@@ -15,7 +15,8 @@
 
 /* Read given info hint key value from the given info object,
  * while expecting the hint value=val */
-int ReadCommInfo(MPI_Info info, const char *key, const char *val, char *buf, const char *test_name)
+static int ReadCommInfo(MPI_Info info, const char *key, const char *val, char *buf,
+                        const char *test_name)
 {
     int flag;
     int errors = 0;
@@ -36,20 +37,20 @@ int ReadCommInfo(MPI_Info info, const char *key, const char *val, char *buf, con
 
 int main(int argc, char **argv)
 {
-    int i, j, rank;
+    int i, rank;
     int errors = 0, errs = 0;
     char query_key[MPI_MAX_INFO_KEY];
     char buf[MPI_MAX_INFO_VAL];
     char val[MPI_MAX_INFO_VAL];
     MPI_Comm comm_dup1;
-    MPI_Comm comm_dup2;
+    /* comm_dup2 not used */
     MPI_Comm comm_dup3;
     MPI_Comm comm_dup4;
     MPI_Comm comm_split5;
     MPI_Info info_in1;
     MPI_Info info_in4;
     MPI_Info info_out1;
-    MPI_Info info_out2;
+    /* info_out2 not used */
     MPI_Info info_out3;
     MPI_Info info_out4;
     MPI_Info info_out5;

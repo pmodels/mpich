@@ -25,9 +25,9 @@ MTEST_THREAD_RETURN_TYPE run_test(void *arg)
     /* Rank 0 posts MPI_Irecv to receive from rank 1, but cancels them */
     if (rank == 0) {
         int i, flag;
-        int buffer[p->iter];
-        MPI_Request request[p->iter];
-        MPI_Status status[p->iter];
+        int *buffer = malloc(p->iter * sizeof(int));
+        MPI_Request *request = malloc(p->iter * sizeof(MPI_Request));
+        MPI_Status *status = malloc(p->iter * sizeof(MPI_Status));
 
         /* Post irecv requests */
         for (i = 0; i < p->iter; i++)
@@ -44,15 +44,18 @@ MTEST_THREAD_RETURN_TYPE run_test(void *arg)
             if (!flag)
                 p->result++;
         }
+        free(buffer);
+        free(request);
+        free(status);
     }
 
     return (MTEST_THREAD_RETURN_TYPE) NULL;
 }
 
 /* Launch multiple threads */
-int cancel_recv_test(int iter)
+static int cancel_recv_test(int iter)
 {
-    int i, j, errs = 0;
+    int i, errs = 0;
     struct thread_param params[NTHREADS];
     MPI_Comm dup_worlds[NTHREADS];
 
@@ -79,7 +82,7 @@ int cancel_recv_test(int iter)
 
 int main(int argc, char **argv)
 {
-    int i, pmode, nprocs, rank, errs = 0, err;
+    int pmode, nprocs, errs = 0, err;
 
     MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
     if (pmode != MPI_THREAD_MULTIPLE) {

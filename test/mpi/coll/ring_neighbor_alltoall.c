@@ -12,9 +12,6 @@
 
 int main(int argc, char *argv[])
 {
-    int right, left;
-    int sum, i;
-
     MTest_Init(&argc, &argv);
 
     int size;

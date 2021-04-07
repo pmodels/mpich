@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int test_count(MPI_Count count)
+static int test_count(MPI_Count count)
 {
     MPI_Status stat;
     int cancelled, cancelled2;

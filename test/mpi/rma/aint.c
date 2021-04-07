@@ -19,9 +19,9 @@ int main(int argc, char **argv)
     int errs = 0;
     int array[1024];
     int val = 0;
-    int target_rank;
+    int target_rank = 0;        /* suppress warnings */
     MPI_Aint bases[2];
-    MPI_Aint disp, offset;
+    MPI_Aint disp, offset = 0;  /* suppress warnings */
     MPI_Win win;
 
     MTest_Init(&argc, &argv);
