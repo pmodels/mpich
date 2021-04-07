@@ -265,6 +265,10 @@ typedef int Handle_ref_count;
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, (objptr_)->ref_count, "incr"); \
         HANDLE_CHECK_REFCOUNT(objptr_,(objptr_)->ref_count,"incr");     \
     } while (0)
+#define MPIR_Object_add_ref_always_unsafe(objptr_)                      \
+    do {                                                                \
+        MPIR_Object_add_ref_always(objptr_);                            \
+    } while (0)
 #define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
     do {                                                                \
         *(inuse_ptr) = --((objptr_)->ref_count);                        \
@@ -303,6 +307,11 @@ typedef MPL_atomic_int_t Handle_ref_count;
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_ref_, "incr");          \
         HANDLE_CHECK_REFCOUNT(objptr_,new_ref_,"incr");                 \
     } while (0)
+#define MPIR_Object_add_ref_always_unsafe(objptr_)                      \
+    do {                                                                \
+        /* This is for debugging, so using fetch_add is okay. */        \
+        MPIR_Object_add_ref_always(objptr_);                            \
+    } while (0)
 #define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
     do {                                                                \
         int new_ref_ = MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1; \
@@ -315,6 +324,11 @@ typedef MPL_atomic_int_t Handle_ref_count;
 #define MPIR_Object_add_ref_always(objptr_)     \
     do {                                        \
         MPL_atomic_fetch_add_int(&((objptr_)->ref_count), 1);  \
+    } while (0)
+#define MPIR_Object_add_ref_always_unsafe(objptr_)                      \
+    do {                                                                \
+        MPL_atomic_relaxed_store_int(&((objptr_)->ref_count),           \
+            MPL_atomic_relaxed_load_int(&((objptr_)->ref_count)) + 1);  \
     } while (0)
 #define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
     do {                                                                \
@@ -356,6 +370,19 @@ typedef MPL_atomic_int_t Handle_ref_count;
                                                      MPIR_Object_get_ref(objptr_))) \
                 }                                                       \
     } while (0)
+#define MPIR_Object_add_ref_unsafe(objptr_)                                       \
+    do {                                                                          \
+        int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle);                    \
+        if (unlikely(handle_kind_ != HANDLE_KIND_BUILTIN)) {                      \
+            MPIR_Object_add_ref_always_unsafe((objptr_));                         \
+        } else {                                                                  \
+            MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPL_DBG_FDEST,               \
+                "skipping add_ref_unsafe on %p (0x%08x kind=%s) refcount=%d",     \
+                (objptr_), (objptr_)->handle,                                     \
+                MPIR_Handle_get_kind_str(HANDLE_GET_MPI_KIND((objptr_)->handle)), \
+                MPIR_Object_get_ref(objptr_)))                                    \
+        }                                                                         \
+    } while (0)
 #define MPIR_Object_release_ref(objptr_,inuse_ptr_)                     \
     do {                                                                \
         int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle);          \
@@ -378,6 +405,8 @@ typedef MPL_atomic_int_t Handle_ref_count;
 /* the base case, where we just always manipulate the reference counts */
 #define MPIR_Object_add_ref(objptr_)            \
     MPIR_Object_add_ref_always((objptr_))
+#define MPIR_Object_add_ref_unsafe(objptr_) \
+    MPIR_Object_add_ref_always_unsafe((objptr_))
 #define MPIR_Object_release_ref(objptr_,inuse_ptr_)             \
     MPIR_Object_release_ref_always((objptr_),(inuse_ptr_))
 
