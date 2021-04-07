@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     int rank, size, i, j, k;
     int errors = 0;
     int origin_shm, origin_am, dest;
-    int my_buf_size;
+    int my_buf_size = 0;        /* to avoid warnings */
     int *orig_buf = NULL, *result_buf = NULL, *target_buf = NULL, *check_buf = NULL;
     MPI_Win win;
     MPI_Status status;

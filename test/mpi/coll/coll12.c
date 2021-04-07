@@ -18,7 +18,7 @@ int main(int argc, char **argv)
         int b;
     } in[TABLE_SIZE], out[TABLE_SIZE];
     int i;
-    int errors = 0, toterrors;
+    int errors = 0;
 
     /* Initialize the environment and some variables */
     MTest_Init(&argc, &argv);

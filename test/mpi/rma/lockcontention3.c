@@ -308,24 +308,22 @@ int RMACheck(int i, int *buf, MPI_Aint bufsize)
             break;
         case 3:        /* Datatype single put (strided put) */
         case 6:        /* a few small puts (like strided put, but 1 word at a time) */
-            /* FIXME: The conditional and increment are reversed below.  This looks
-             * like a bug, and currently prevents the following test from running. */
-            for (j = 0; j++; j < veccount) {
-                if (buf[j * stride] != PUT_VAL + j) {
+            for (j = 0; j < veccount; j++) {
+                int pos = j * stride + OFFSET_1;
+                if (buf[pos] != PUT_VAL + j) {
                     errs++;
-                    printf("case %d: value is %d should be %d\n", i, buf[j * stride], PUT_VAL + j);
+                    printf("case %d: buf[%d] is %d should be %d\n", i, pos, buf[pos], PUT_VAL + j);
                 }
             }
             break;
         case 4:        /* Datatype single accumulate (strided acc) */
         case 7:        /* a few small accumulates (like strided acc, but 1 word at a time) */
-            /* FIXME: The conditional and increment are reversed below.  This looks
-             * like a bug, and currently prevents the following test from running. */
-            for (j = 0; j++; j < veccount) {
-                if (buf[j * stride] != ACC_VAL + j + OFFSET_2 + j * stride) {
+            for (j = 0; j < veccount; j++) {
+                int pos = j * stride + OFFSET_2;
+                if (buf[pos] != ACC_VAL + j + OFFSET_2 + j * stride) {
                     errs++;
-                    printf("case %d: value is %d should be %d\n", i,
-                           buf[j * stride], ACC_VAL + j + OFFSET_2 + j * stride);
+                    printf("case %d: buf[%d] is %d should be %d\n", i, pos, buf[pos],
+                           ACC_VAL + j + OFFSET_2 + j * stride);
                 }
             }
             break;

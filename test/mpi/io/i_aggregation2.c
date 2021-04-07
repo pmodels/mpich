@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     int errcode;
     int i, rank, errs = 0, buffer[BUFSIZE], buf2[BUFSIZE];
     MPI_Request request;
-    char *filename = NULL;
+    const char *filename = NULL;
 
     filename = (argc > 1) ? argv[1] : "testfile";
 

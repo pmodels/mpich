@@ -9,7 +9,7 @@
 
 int main(int argc, char *argv[])
 {
-    int rank, size;
+    int rank;
     int errclass, errs = 0, mpi_errno;
 
     MTest_Init(&argc, &argv);

@@ -10,7 +10,7 @@
 int main(int argc, char **argv)
 {
     int errs = 0;
-    MPI_Comm dup, dup2;
+    MPI_Comm dup;
     MPI_Info info_in, info_out;
     int flag;
     char val[MPI_MAX_INFO_VAL] = { 0 };
@@ -33,6 +33,7 @@ int main(int argc, char **argv)
     MPI_Info_free(&info_out);
 
 #if MPI_VERSION >= 4
+    MPI_Comm dup2;
     MPI_Comm_dup(dup, &dup2);
     MPI_Comm_get_info(dup, &info_out);
     MPI_Info_get(info_out, "mpi_assert_no_any_tag", MPI_MAX_INFO_VAL, val, &flag);

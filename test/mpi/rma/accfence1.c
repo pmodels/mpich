@@ -110,7 +110,7 @@ static int accfence_test(int seed, int testsize, int count, const char *basic_ty
                  * as MPI_Put; the only difference is in the
                  * handling of overlapping accumulate operations,
                  * which are not tested here */
-                err = MPI_Accumulate(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount,
+                err = MPI_Accumulate((char *) orig.buf + orig.dtp_obj.DTP_buf_offset, origcount,
                                      origtype, target_rank, target.dtp_obj.DTP_buf_offset / extent,
                                      targetcount, targettype, MPI_REPLACE, win);
                 if (err) {

@@ -13,7 +13,7 @@
 
 MPI_Comm comm_all;
 
-void error_handler(MPI_Comm * communicator, int *error_code, ...)
+static void error_handler(MPI_Comm * communicator, int *error_code, ...)
 {
     MPI_Comm *new_comm = malloc(sizeof(MPI_Comm));
 

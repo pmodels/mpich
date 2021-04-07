@@ -15,7 +15,7 @@
  */
 int main(int argc, char **argv)
 {
-    int rank, size, err;
+    int rank, size, err = 0;
     char buf[10];
     MPI_Request request;
 

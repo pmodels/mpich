@@ -30,6 +30,7 @@
 #error 'Unrecognized Fortran name mapping'
 #endif
 
+void c_routine_(MPI_Fint * ftype, int *errs);
 void c_routine_(MPI_Fint * ftype, int *errs)
 {
     int count = 5;

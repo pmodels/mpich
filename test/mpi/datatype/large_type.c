@@ -85,7 +85,7 @@ static MPI_Datatype make_largexfer_type_hindexed(MPI_Offset nbytes)
 }
 
 
-int testtype(MPI_Datatype type, MPI_Offset expected)
+static int testtype(MPI_Datatype type, MPI_Offset expected)
 {
     MPI_Count size, lb, extent;
     int errs = 0;

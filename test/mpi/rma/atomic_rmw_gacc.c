@@ -31,7 +31,7 @@ int dest, origin_shm, origin_am;
 int *orig_buf = NULL, *result_buf = NULL, *target_buf = NULL, *check_buf = NULL;
 MPI_Win win;
 
-void checkResults(int loop_k, int *errors)
+static void checkResults(int loop_k, int *errors)
 {
     int i, j, m;
     MPI_Status status;
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 {
     int i, k;
     int errors = 0;
-    int my_buf_num;
+    int my_buf_num = 0;         /* to suppress warning */
     MPI_Datatype origin_dtp, target_dtp;
 
     MTest_Init(&argc, &argv);

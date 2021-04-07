@@ -254,9 +254,8 @@ int main(int argc, char *argv[])
         MPI_Info_set(info, "network_topo", split_topo_network[i]);
         MPI_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_NEIGHBORHOOD, 0, info, &comm);
         if (comm != MPI_COMM_NULL) {
-            int newsize, world_size;
+            int newsize;
             MPI_Comm_size(comm, &newsize);
-            MPI_Comm_size(MPI_COMM_WORLD, &world_size);
             if (newsize > world_size) {
                 printf("MPIX_COMM_TYPE_NEIGHBORHOOD (network_topo): impossible\n");
                 errs++;

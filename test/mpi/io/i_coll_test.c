@@ -3,11 +3,11 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "mpitest.h"
 
 /* A 32^3 array. For other array sizes, change array_of_gsizes below. */
 
@@ -36,8 +36,8 @@ int main(int argc, char **argv)
     int array_of_dargs[3], array_of_psizes[3];
     int *readbuf, *writebuf, mynod, *tmpbuf, array_size;
     MPI_Count bufcount;
-    char *filename;
-    int errs = 0, toterrs;
+    char *filename = NULL;
+    int errs = 0;
     MPI_File fh;
     MPI_Status status;
     MPI_Request request;
@@ -113,7 +113,8 @@ int main(int argc, char **argv)
     /* end of initialization */
 
     /* write the array to the file */
-    errcode = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
+    errcode = MPI_File_open(MPI_COMM_WORLD, (const char *) filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
     if (errcode != MPI_SUCCESS)
         handle_error(errcode, "MPI_File_open");
 

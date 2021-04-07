@@ -85,7 +85,6 @@ int test_mismatched_accept(MPI_Comm intra_comm, int gid)
     int mpi_errno = MPI_SUCCESS;
     int errs = 0;
     int intra_rank, intra_nproc;
-    int server_rank = 0, local_server_rank = 0;
 
     MTEST_VG_MEM_INIT(port, MPI_MAX_PORT_NAME * sizeof(char));
 
@@ -143,13 +142,12 @@ int test_mismatched_accept(MPI_Comm intra_comm, int gid)
 
 int test_no_accept(MPI_Comm intra_comm, int gid)
 {
-    char port[MPI_MAX_PORT_NAME], timeout = 0;
+    char port[MPI_MAX_PORT_NAME];
     MPI_Info info = MPI_INFO_NULL;
     MPI_Comm comm = MPI_COMM_NULL;
     int mpi_errno = MPI_SUCCESS;
     int errs = 0;
     int intra_rank, intra_nproc;
-    int server_rank = 0, local_server_rank = 0;
 
     MTEST_VG_MEM_INIT(port, MPI_MAX_PORT_NAME * sizeof(char));
 
@@ -194,8 +192,7 @@ int test_no_accept(MPI_Comm intra_comm, int gid)
 int main(int argc, char *argv[])
 {
     MPI_Comm intra_comm = MPI_COMM_NULL;
-    int sub_rank, sub_nproc;
-    int errs = 0, allerrs = 0;
+    int errs = 0;
 
     if (getenv("MPITEST_VERBOSE")) {
         verbose = 1;

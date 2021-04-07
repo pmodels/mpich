@@ -13,7 +13,7 @@
 static char MTEST_Descrip[] = "A simple test of Reduce with all choices of root process";
 */
 
-void set_send_buf(int count, int *buf)
+static void set_send_buf(int count, int *buf)
 {
     int i;
     for (i = 0; i < count; i++) {
@@ -21,7 +21,7 @@ void set_send_buf(int count, int *buf)
     }
 }
 
-void set_recv_buf(int count, int *buf)
+static void set_recv_buf(int count, int *buf)
 {
     int i;
     for (i = 0; i < count; i++) {
@@ -29,7 +29,7 @@ void set_recv_buf(int count, int *buf)
     }
 }
 
-void check_buf(int rank, int size, int count, int *errs, int *buf)
+static void check_buf(int rank, int size, int count, int *errs, int *buf)
 {
     int i;
     for (i = 0; i < count; i++) {
@@ -46,7 +46,7 @@ void check_buf(int rank, int size, int count, int *errs, int *buf)
 static int test_reduce(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
 {
     int errs = 0;
-    int rank, size, root, i;
+    int rank, size, root;
     void *sendbuf, *recvbuf, *sendbuf_h, *recvbuf_h;
     int minsize = 2, count;
     MPI_Comm comm;
@@ -99,7 +99,6 @@ int main(int argc, char *argv[])
 {
     int errs = 0;
     MTest_Init(&argc, &argv);
-    MTestArgList *head = MTestArgListCreate(argc, argv);
 
     struct dtp_args dtp_args;
     dtp_args_init(&dtp_args, MTEST_COLL_NOCOUNT, argc, argv);

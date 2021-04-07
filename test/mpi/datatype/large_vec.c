@@ -13,7 +13,7 @@
 
 int main(int argc, char *argv[])
 {
-    int ierr, i, size, rank;
+    int i, size, rank;
     int elems = 270000000;
     MPI_Status status;
     MPI_Datatype dtype;
@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
         return MTestReturnValue(errs);
     }
 
-    ierr = MPI_Comm_size(MPI_COMM_WORLD, &size);
-    ierr = MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     if (size != 3) {
         fprintf(stderr, "[%d] usage: mpiexec -n 3 %s\n", rank, argv[0]);
         MPI_Abort(MPI_COMM_WORLD, 1);
@@ -51,14 +51,14 @@ int main(int argc, char *argv[])
         for (i = 0; i < elems; i++)
             cols[i] = i;
         /* printf("[%d] sending...\n",rank); */
-        ierr = MPI_Send(cols, 1, dtype, 1, 0, MPI_COMM_WORLD);
-        ierr = MPI_Send(cols, 1, dtype, 2, 0, MPI_COMM_WORLD);
+        MPI_Send(cols, 1, dtype, 1, 0, MPI_COMM_WORLD);
+        MPI_Send(cols, 1, dtype, 2, 0, MPI_COMM_WORLD);
     } else {
         /* printf("[%d] receiving...\n",rank); */
         for (i = 0; i < elems; i++)
             cols[i] = -1;
-        ierr = MPI_Recv(cols, 1, dtype, 0, 0, MPI_COMM_WORLD, &status);
-        /* ierr = MPI_Get_count(&status,MPI_LONG_LONG_INT,&cnt);
+        MPI_Recv(cols, 1, dtype, 0, 0, MPI_COMM_WORLD, &status);
+        /* MPI_Get_count(&status,MPI_LONG_LONG_INT,&cnt);
          * Get_count still fails because count is not 64 bit */
         for (i = 0; i < elems; i++) {
             if (i % 2)

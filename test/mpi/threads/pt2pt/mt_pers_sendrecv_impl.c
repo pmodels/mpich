@@ -11,9 +11,14 @@
 #define SENDINIT JOIN(SEND_FUN, _init)
 
 int pers_sendrecv_kernel(int id, int rank, int count, int *buff, MPI_Comm comm, int tag,
+                         MPI_Request * r, MPI_Status * s, int verify);
+int test_pers_sendrecv(int id, int iter, int count, int *buff, MPI_Comm comm, int tag, int verify);
+MTEST_THREAD_RETURN_TYPE run_test(void *arg);
+
+int pers_sendrecv_kernel(int id, int rank, int count, int *buff, MPI_Comm comm, int tag,
                          MPI_Request * r, MPI_Status * s, int verify)
 {
-    int errs = 0, err, i;
+    int errs = 0, i;
 
     if (rank == 0) {
         for (i = 0; i < count; i++)
@@ -40,7 +45,7 @@ int pers_sendrecv_kernel(int id, int rank, int count, int *buff, MPI_Comm comm, 
 
 int test_pers_sendrecv(int id, int iter, int count, int *buff, MPI_Comm comm, int tag, int verify)
 {
-    int errs = 0, err, i, rank;
+    int errs = 0, i, rank;
     MPI_Datatype type = MPI_INT;
     MPI_Comm_rank(comm, &rank);
 

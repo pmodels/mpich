@@ -12,11 +12,12 @@
 #define WIN_SIZE (PUT_SIZE+GET_SIZE)
 #define LOOP 100
 
+int win_buf[WIN_SIZE], orig_get_buf[GET_SIZE], orig_put_buf[PUT_SIZE];
+
 int main(int argc, char **argv)
 {
     MPI_Win win;
     int i, k, rank, nproc;
-    int win_buf[WIN_SIZE], orig_get_buf[GET_SIZE], orig_put_buf[PUT_SIZE];
     int orig_rank = 0, dest_rank = 1;
     int errs = 0;
     MPI_Group comm_group, orig_group, dest_group;

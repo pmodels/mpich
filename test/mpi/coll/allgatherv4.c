@@ -27,9 +27,6 @@ char *sbuf, *rbuf;
 int *recvcounts, *displs;
 int errs = 0;
 
-/* #define dprintf printf */
-#define dprintf(...)
-
 typedef enum {
     REGULAR,
     BCAST,
@@ -81,24 +78,24 @@ int main(int argc, char **argv)
     }
 
     if (!comm_rank) {
-        dprintf("Message Range: (%d, %d); System size: %d\n", START_BUF, LARGE_BUF, comm_size);
-        fflush(stdout);
+        MTestPrintfMsg(1, "Message Range: (%d, %d); System size: %d\n", START_BUF, LARGE_BUF,
+                       comm_size);
     }
 
 
     /* COMM_WORLD tests */
     if (!comm_rank) {
-        dprintf("\n\n==========================================================\n");
-        dprintf("                         MPI_COMM_WORLD\n");
-        dprintf("==========================================================\n");
+        MTestPrintfMsg(1, "\n\n==========================================================\n");
+        MTestPrintfMsg(1, "                         MPI_COMM_WORLD\n");
+        MTestPrintfMsg(1, "==========================================================\n");
     }
     comm_tests(MPI_COMM_WORLD);
 
     /* non-COMM_WORLD tests */
     if (!comm_rank) {
-        dprintf("\n\n==========================================================\n");
-        dprintf("                         non-COMM_WORLD\n");
-        dprintf("==========================================================\n");
+        MTestPrintfMsg(1, "\n\n==========================================================\n");
+        MTestPrintfMsg(1, "                         non-COMM_WORLD\n");
+        MTestPrintfMsg(1, "==========================================================\n");
     }
     MPI_Comm_split(MPI_COMM_WORLD, (comm_rank == comm_size - 1) ? 0 : 1, 0, &comm);
     if (comm_rank < comm_size - 1)
@@ -107,9 +104,9 @@ int main(int argc, char **argv)
 
     /* Randomized communicator tests */
     if (!comm_rank) {
-        dprintf("\n\n==========================================================\n");
-        dprintf("                         Randomized Communicator\n");
-        dprintf("==========================================================\n");
+        MTestPrintfMsg(1, "\n\n==========================================================\n");
+        MTestPrintfMsg(1, "                         Randomized Communicator\n");
+        MTestPrintfMsg(1, "==========================================================\n");
     }
     MPI_Comm_split(MPI_COMM_WORLD, 0, rand(), &comm);
     comm_tests(comm);
@@ -137,44 +134,37 @@ void comm_tests(MPI_Comm comm)
 
     for (msg_size = START_BUF; msg_size <= LARGE_BUF; msg_size *= 2) {
         if (!comm_rank) {
-            dprintf("\n====> MSG_SIZE: %d\n", (int) msg_size);
-            fflush(stdout);
+            MTestPrintfMsg(1, "\n====> MSG_SIZE: %d\n", (int) msg_size);
         }
 
         rtime = run_test(msg_size, comm, REGULAR, &max_time);
         if (!comm_rank) {
-            dprintf("REGULAR:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
-            fflush(stdout);
+            MTestPrintfMsg(1, "REGULAR:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
         }
 
         rtime = run_test(msg_size, comm, BCAST, &max_time);
         if (!comm_rank) {
-            dprintf("BCAST:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
-            fflush(stdout);
+            MTestPrintfMsg(1, "BCAST:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
         }
 
         rtime = run_test(msg_size, comm, SPIKE, &max_time);
         if (!comm_rank) {
-            dprintf("SPIKE:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
-            fflush(stdout);
+            MTestPrintfMsg(1, "SPIKE:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
         }
 
         rtime = run_test(msg_size, comm, HALF_FULL, &max_time);
         if (!comm_rank) {
-            dprintf("HALF_FULL:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
-            fflush(stdout);
+            MTestPrintfMsg(1, "HALF_FULL:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
         }
 
         rtime = run_test(msg_size, comm, LINEAR_DECREASE, &max_time);
         if (!comm_rank) {
-            dprintf("LINEAR_DECREASE:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
-            fflush(stdout);
+            MTestPrintfMsg(1, "LINEAR_DECREASE:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
         }
 
         rtime = run_test(msg_size, comm, BELL_CURVE, &max_time);
         if (!comm_rank) {
-            dprintf("BELL_CURVE:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
-            fflush(stdout);
+            MTestPrintfMsg(1, "BELL_CURVE:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
         }
     }
 }

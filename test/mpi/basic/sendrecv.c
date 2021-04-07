@@ -11,11 +11,12 @@
 #define LARGE_SIZE  100*1024
 #define RNDV_SIZE   256*1024
 
+char big_buffer[RNDV_SIZE] = "big garbage";
+
 int main(int argc, char *argv[])
 {
     int size, rank;
     char buffer[100] = "garbage";
-    char big_buffer[RNDV_SIZE] = "big garbage";
     MPI_Status status;
     int tag = 1;
     int reps = 1;

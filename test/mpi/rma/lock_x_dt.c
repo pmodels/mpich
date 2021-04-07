@@ -45,8 +45,7 @@ static int run_test(MPI_Comm comm, MPI_Win win, int count, enum acc_type acc)
         FLUSH_LOCAL_TYPE__FLUSH_LOCAL,
         FLUSH_LOCAL_TYPE__FLUSH_LOCAL_ALL,
     } flush_local_type;
-    int err, errs = 0;
-
+    int errs = 0;
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
@@ -122,7 +121,7 @@ static int run_test(MPI_Comm comm, MPI_Win win, int count, enum acc_type acc)
         int t;
         if (acc == ACC_TYPE__ACC) {
             for (t = target_start_idx; t <= target_end_idx; t++) {
-                MPI_Accumulate(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount,
+                MPI_Accumulate((char *) orig.buf + orig.dtp_obj.DTP_buf_offset, origcount,
                                origtype, t, target.dtp_obj.DTP_buf_offset / base_type_size,
                                targetcount, targettype, MPI_REPLACE, win);
             }
@@ -132,11 +131,11 @@ static int run_test(MPI_Comm comm, MPI_Win win, int count, enum acc_type acc)
 #endif
 
             for (t = target_start_idx; t <= target_end_idx; t++) {
-                MPI_Get_accumulate(orig.buf + orig.dtp_obj.DTP_buf_offset, origcount,
-                                   origtype, result.buf + result.dtp_obj.DTP_buf_offset,
+                MPI_Get_accumulate((char *) orig.buf + orig.dtp_obj.DTP_buf_offset, origcount,
+                                   origtype, (char *) result.buf + result.dtp_obj.DTP_buf_offset,
                                    resultcount, resulttype, t,
-                                   target.dtp_obj.DTP_buf_offset / base_type_size,
-                                   targetcount, targettype, MPI_REPLACE, win);
+                                   target.dtp_obj.DTP_buf_offset / base_type_size, targetcount,
+                                   targettype, MPI_REPLACE, win);
             }
         }
 
