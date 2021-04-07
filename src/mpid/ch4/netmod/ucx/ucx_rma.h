@@ -75,7 +75,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
         MPIR_Request *req = NULL;
         req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
         MPIR_ERR_CHKANDSTMT(req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Request_add_ref(req);
+        MPIR_Request_add_ref_unsafe(req);
         ucp_request->req = req;
         *reqptr = req;
 
@@ -170,7 +170,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
         MPIR_Request *req = NULL;
         req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
         MPIR_ERR_CHKANDSTMT(req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Request_add_ref(req);
+        MPIR_Request_add_ref_unsafe(req);
         ucp_request->req = req;
         *reqptr = req;
 

@@ -25,14 +25,9 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t
     /* as long as ref_count is a constant, any compiler should be able
      * to unroll the below loop.  when threading is not enabled, the
      * compiler should be able to combine the below individual
-     * increments to a single increment of "ref_count - 1".
-     *
-     * FIXME: when threading is enabled, the ref_count increase is an
-     * atomic operation, so it might be more inefficient.  we should
-     * use a new API to increase the ref_count value instead of the
-     * for loop. */
+     * increments to a single increment of "ref_count - 1". */
     for (i = 0; i < ref_count - 1; i++)
-        MPIR_Request_add_ref(req);
+        MPIR_Request_add_ref_unsafe(req);
 
     MPIDI_NM_am_request_init(req);
 #ifndef MPIDI_CH4_DIRECT_NETMOD

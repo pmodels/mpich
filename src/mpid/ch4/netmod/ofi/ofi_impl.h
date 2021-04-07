@@ -203,7 +203,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_win_vni(MPIR_Win * win)
     do {                                                      \
         (req) = MPIR_Request_create_from_pool(kind, vni);  \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
-        MPIR_Request_add_ref((req));                                \
+        MPIR_Request_add_ref_unsafe((req));                         \
     } while (0)
 
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
