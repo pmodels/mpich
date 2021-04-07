@@ -29,6 +29,8 @@ MPIR_Object_alloc_t MPIDI_workq_elemt_mem = {
 
 #ifdef MPL_TLS
 MPL_TLS int global_vci_poll_count = 0;
+#elif defined(MPL_COMPILER_TLS)
+MPL_COMPILER_TLS int global_vci_poll_count;
 #else
 /* We just need ensure global progress happen, so some race condition or even corruption
  * can be tolerated.  */
