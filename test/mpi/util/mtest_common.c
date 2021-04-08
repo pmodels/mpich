@@ -333,7 +333,7 @@ ze_event_pool_handle_t *event_pools = NULL;
 
 /* allocates memory of specified type */
 void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devicebuf,
-                bool is_calloc, int device)
+                bool is_calloc, int device_id)
 {
 #ifdef HAVE_CUDA
     if (ndevices == -1) {
@@ -463,7 +463,7 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         if (hostbuf)
             *hostbuf = *devicebuf;
     } else if (type == MTEST_MEM_TYPE__DEVICE) {
-        cudaSetDevice(device % ndevices);
+        cudaSetDevice(device_id % ndevices);
         cudaMalloc(devicebuf, size);
         if (hostbuf) {
             cudaMallocHost(hostbuf, size);
@@ -471,7 +471,7 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
                 memset(*hostbuf, 0, size);
         }
     } else if (type == MTEST_MEM_TYPE__SHARED) {
-        cudaSetDevice(device % ndevices);
+        cudaSetDevice(device_id % ndevices);
         cudaMallocManaged(devicebuf, size, cudaMemAttachGlobal);
         if (hostbuf)
             *hostbuf = *devicebuf;
@@ -505,9 +505,8 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         /* Currently ZE ignores this argument and uses an internal alignment
          * value. However, this behavior can change in the future. */
         mem_alignment = 1;
-        zerr =
-            zeMemAllocDevice(context, &device_desc, size, mem_alignment, device[device % ndevices],
-                             devicebuf);
+        zerr = zeMemAllocDevice(context, &device_desc, size, mem_alignment,
+                                device[device_id % ndevices], devicebuf);
         assert(zerr == ZE_RESULT_SUCCESS);
 
         if (hostbuf) {
@@ -536,7 +535,7 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         mem_alignment = 1;
         zerr =
             zeMemAllocShared(context, &device_desc, &host_desc, size, mem_alignment,
-                             device[device % ndevices], devicebuf);
+                             device[device_id % ndevices], devicebuf);
         assert(zerr == ZE_RESULT_SUCCESS);
         if (hostbuf)
             *hostbuf = *devicebuf;
