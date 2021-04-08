@@ -1955,6 +1955,8 @@ static int addr_exchange_all_vnis(void)
             }
         }
     }
+    MPL_free(all_names);
+    MPL_free(mapped_table);
 #endif
   fn_exit:
     return mpi_errno;
