@@ -633,24 +633,22 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 #define MPIDI_OFI_FLUSH_TAG        1
 
 /* send a dummy message to flush the send queue */
-static int flush_send(int dst)
+static int flush_send(int dst, int vni, MPIDI_OFI_dynamic_process_request_t * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_Comm *comm = MPIR_Process.comm_world;
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_comm_rank_to_av(comm, dst), 0, 0);
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_comm_rank_to_av(comm, dst), vni, vni);
     int data = 0;
     uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
                                                  MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
 
     /* Use the same direct send method as used in establishing dynamic processes */
-    MPIDI_OFI_dynamic_process_request_t req;
-    req.done = 0;
-    req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+    req->done = 0;
+    req->event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
-    MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx, &data, 4, NULL, 0,
-                                      addr, match_bits, &req.context), 0, tsenddata, FALSE);
-    MPIDI_OFI_PROGRESS_WHILE(!req.done, 0);
+    MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[vni].tx, &data, 4, NULL, 0,
+                                      addr, match_bits, &req->context), vni, tsenddata, FALSE);
 
   fn_exit:
     return mpi_errno;
@@ -659,25 +657,23 @@ static int flush_send(int dst)
 }
 
 /* recv the dummy message the other process sent for the purpose flushing send queue */
-static int flush_recv(int src)
+static int flush_recv(int src, int vni, MPIDI_OFI_dynamic_process_request_t * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_Comm *comm = MPIR_Process.comm_world;
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_comm_rank_to_av(comm, src), 0, 0);
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_comm_rank_to_av(comm, src), vni, vni);
     int data;
     uint64_t mask_bits = 0;
     uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
                                                  MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
 
     /* Use the same direct recv method as used in establishing dynamic processes */
-    MPIDI_OFI_dynamic_process_request_t req;
-    req.done = 0;
-    req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+    req->done = 0;
+    req->event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
-    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx, &data, 4, NULL,
-                                  addr, match_bits, mask_bits, &req.context), 0, trecv, FALSE);
-    MPIDI_OFI_PROGRESS_WHILE(!req.done, 0);
+    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[vni].rx, &data, 4, NULL,
+                                  addr, match_bits, mask_bits, &req->context), vni, trecv, FALSE);
 
   fn_exit:
     return mpi_errno;
@@ -685,26 +681,42 @@ static int flush_recv(int src)
     goto fn_exit;
 }
 
-static int flush_send_queue(void)
+static int flush_send_queue()
 {
     int mpi_errno = MPI_SUCCESS;
 
     int n = MPIR_Process.size;
-    int i = MPIR_Process.rank;
     if (n > 1) {
-        int dst = (i + 1) % n;
-        int src = (i - 1 + n) % n;
-        if (i % 2 == 0) {
-            mpi_errno = flush_send(dst);
+        MPIDI_OFI_dynamic_process_request_t *reqs;
+        int num_reqs = MPIDI_OFI_global.num_vnis * 2;
+        reqs = MPL_malloc(sizeof(MPIDI_OFI_dynamic_process_request_t) * num_reqs, MPL_MEM_OTHER);
+
+        int rank = MPIR_Process.rank;
+        int dst = (rank + 1) % n;
+        int src = (rank - 1 + n) % n;
+
+        for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+            mpi_errno = flush_send(dst, vni, &reqs[vni * 2]);
             MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno = flush_recv(src);
-            MPIR_ERR_CHECK(mpi_errno);
-        } else {
-            mpi_errno = flush_recv(src);
-            MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno = flush_send(dst);
+            mpi_errno = flush_recv(src, vni, &reqs[vni * 2 + 1]);
             MPIR_ERR_CHECK(mpi_errno);
         }
+
+        bool all_done = false;
+        while (!all_done) {
+            for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+                mpi_errno = MPIDI_NM_progress(vni, 0);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+            all_done = true;
+            for (int i = 0; i < num_reqs; i++) {
+                if (!reqs[i].done) {
+                    all_done = false;
+                    break;
+                }
+            }
+        }
+        MPL_free(reqs);
     }
 
   fn_exit:
