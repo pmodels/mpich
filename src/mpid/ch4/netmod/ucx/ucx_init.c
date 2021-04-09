@@ -410,6 +410,10 @@ int MPIDI_UCX_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    if (MPIDI_UCX_global.num_vnis == 1) {
+        goto fn_exit;
+    }
+
     for (int i = 1; i < MPIDI_UCX_global.num_vnis; i++) {
         mpi_errno = init_worker(i);
         MPIR_ERR_CHECK(mpi_errno);
