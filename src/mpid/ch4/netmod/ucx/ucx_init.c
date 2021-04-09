@@ -214,7 +214,7 @@ int MPIDI_UCX_init_local(int *tag_bits)
     init_num_vnis();
 
     /* unable to support extended context id in current match bit configuration */
-    MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_TAG_BITS);
+    MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_ID_BITS);
 
     ucx_status = ucp_config_read(NULL, NULL, &config);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -240,7 +240,11 @@ int MPIDI_UCX_init_local(int *tag_bits)
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
 
-    *tag_bits = MPIR_TAG_BITS_DEFAULT;
+    if (MPIDI_UCX_TAG_BITS > MPIR_TAG_BITS_DEFAULT) {
+        *tag_bits = MPIR_TAG_BITS_DEFAULT;
+    } else {
+        *tag_bits = MPIDI_UCX_TAG_BITS;
+    }
 
   fn_exit:
     return mpi_errno;
