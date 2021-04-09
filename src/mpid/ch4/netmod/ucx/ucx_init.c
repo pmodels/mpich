@@ -16,6 +16,16 @@ categories :
       description : A category for CH4 UCX netmod variables
 
 cvars:
+    - name        : MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG
+      category    : CH4_UCX
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Prints out the ucx netmod capability.
+
     - name        : MPIR_CVAR_CH4_UCX_MAX_VNIS
       category    : CH4_UCX
       type        : int
@@ -244,6 +254,15 @@ int MPIDI_UCX_init_local(int *tag_bits)
         *tag_bits = MPIR_TAG_BITS_DEFAULT;
     } else {
         *tag_bits = MPIDI_UCX_TAG_BITS;
+    }
+
+    if (MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG && MPIR_Process.rank == 0) {
+        printf("==== UCX netmod Capability ====\n");
+        printf("MPIDI_UCX_CONTEXT_ID_BITS: %d\n", MPIDI_UCX_CONTEXT_ID_BITS);
+        printf("MPIDI_UCX_RANK_BITS: %d\n", MPIDI_UCX_RANK_BITS);
+        printf("num_vnis: %d\n", MPIDI_UCX_global.num_vnis);
+        printf("tag_bits: %d\n", *tag_bits);
+        printf("===============================\n");
     }
 
   fn_exit:
