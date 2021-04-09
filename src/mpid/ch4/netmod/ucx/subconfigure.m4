@@ -21,6 +21,15 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
     AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch4:ucx])
 
+    AC_ARG_WITH([ch4-ucx-rankbits],
+                AS_HELP_STRING([--with-ch4-ucx-rankbits=<N>],[Number of bits allocated to the rank field]),
+                [ rankbits=$withval ],
+                [ rankbits=16 ])
+    if test "$rankbits" -lt "16" -a "$rankbits" -gt "32" ; then
+        AC_MSG_ERROR(ch4-ucx-rankbits must be between 16 and 32-bit)
+    fi
+    AC_DEFINE_UNQUOTED(CH4_UCX_RANKBITS,$rankbits,[Define the number of rank bits used in UCX])
+
     ucxdir=""
     AC_SUBST([ucxdir])
     ucxlib=""
