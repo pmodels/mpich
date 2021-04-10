@@ -125,11 +125,11 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 #ifdef FLATTEN_DEBUG
         {
             int i;
-            for (i = 0; i < flat->count; i++)
+            for (i = 0; i < flat->count; i++) {
                 DBG_FPRINTF(stderr,
                             "ADIOI_Flatten_datatype:: i %#X, blocklens %#llX, indices %#llX\n", i,
-                            flat->blocklens[i], flat->indices[i]
-);
+                            flat->blocklens[i], flat->indices[i]);
+            }
         }
 #endif
     }
