@@ -824,7 +824,6 @@ if [ $do_bindings = "yes" ] ; then
 	# Top-level files
 	( cd src/binding/fortran/use_mpi_f08 && chmod a+x ./buildiface && ./buildiface )
         # generate src/binding/fortran/use_mpi_f08/wrappers_c/...
-        $PYTHON maint/gen_binding_f08.py
 	echo "done"
     fi
 
