@@ -1194,7 +1194,8 @@ def dump_mpi_f08_types():
     G.out.append("")
     G.out.append("private :: c_int, c_Count, c_Status")
     dump_handle_types()
-    dump_file_interface()
+    if "no-mpiio" not in G.opts:
+        dump_file_interface()
     dump_status_type()
     dump_status_interface()
     dump_handle_interface()

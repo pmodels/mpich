@@ -5380,6 +5380,9 @@ if test "$f08_works" = "yes" ; then
     if test "$pac_fc_has_real128" = "no" ; then
         cmd="$cmd -no-real128"
     fi
+    if test "$enable_romio" = "no" ; then
+        cmd="$cmd -no-mpiio"
+    fi
     AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd"])
 fi
 
