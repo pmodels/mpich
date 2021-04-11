@@ -10,6 +10,9 @@ from local_python.binding_f08 import *
 from local_python import RE
 
 def main():
+    # currently support -no-real128, -no-mpiio
+    G.parse_cmdline()
+
     binding_dir = "src/binding"
     f08_dir = "src/binding/fortran/use_mpi_f08"
     func_list = load_C_func_list(binding_dir, True) # suppress noise
