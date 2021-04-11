@@ -720,23 +720,23 @@ AM_CONDITIONAL([BUILD_F77_TESTS],[test "x$NOF77" != "x1"])
 #
 # Check whether the MPI Offset type is compatible with struct flock
 AC_MSG_CHECKING([whether struct flock compatible with MPI_Offset])
-AC_TRY_COMPILE([#include <fcntl.h>],
-[struct flock l;
- $MPI_OFFSET_TYPE a=1;
- l.l_start = a;
- l.l_len   = a;
-],pac_cv_struct_flock_and_mpi_offset=yes,pac_cv_struct_flock_and_mpi_offset=no)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <fcntl.h>]],[[
+    struct flock l;
+    $MPI_OFFSET_TYPE a=1;
+    l.l_start = a;
+    l.l_len   = a;
+    ]])],pac_cv_struct_flock_and_mpi_offset=yes,pac_cv_struct_flock_and_mpi_offset=no)
 AC_MSG_RESULT($pac_cv_struct_flock_and_mpi_offset)
 # FIXME: We should look for struct flock64 and the F_SETLK64/F_GETLK64
 # ADIOI_GEN_SetLock. could use these instead.
 if test "$pac_cv_struct_flock_and_mpi_offset" = no ; then
     AC_MSG_CHECKING([whether struct flock compatible with int])
-    AC_TRY_COMPILE([#include <fcntl.h>],
-[struct flock l;
- int a=1;
- l.l_start = a;
- l.l_len   = a;
-],pac_cv_struct_flock_and_int=yes,pac_cv_struct_flock_and_int=no)
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <fcntl.h>]],[[
+        struct flock l;
+        int a=1;
+        l.l_start = a;
+        l.l_len   = a;
+        ]])],pac_cv_struct_flock_and_int=yes,pac_cv_struct_flock_and_int=no)
     AC_MSG_RESULT($pac_cv_struct_flock_and_int)
     if test "$pac_cv_struct_flock_and_int" = yes ; then
         AC_DEFINE(NEEDS_INT_CAST_WITH_FLOCK,1,[Define if l_start and l_len data should be cast as int])
@@ -943,32 +943,30 @@ AM_CONDITIONAL([LUSTRE_LOCKAHEAD],[test "$lustre_lockahead" = "yes"])
 if test -n "$file_system_xfs"; then
     AC_DEFINE(ROMIO_XFS,1,[Define for ROMIO with XFS])
     # Check for memalign value
-    AC_CACHE_CHECK([for memory alignment needed for direct I/O],
-    pac_cv_memalignval,
-    [
-    rm -f confmemalignval
-    rm -f /tmp/romio_tmp.bin
-    AC_TRY_RUN([
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-int main(int argc, char **argv) {
-	struct dioattr st;
-	int fd = open("/tmp/romio_tmp.bin", O_RDWR | O_CREAT, 0644);
-	FILE *f=fopen("confmemalignval","w");
-	if (fd == -1) exit(1);
-	if (!f) exit(1);
-	fcntl(fd, F_DIOINFO, &st);
-	fprintf( f, "%u\n", st.d_mem);
-	exit(0);
-	}
-	],
-	pac_cv_memalignval=`cat confmemalignval`,
-	pac_cv_memalignval="unknown",pac_cv_memalignval="unknown"
-    )
-    rm -f confmemalignval
-    rm -f /tmp/romio_tmp.bin
+    AC_CACHE_CHECK([for memory alignment needed for direct I/O], pac_cv_memalignval,[
+        rm -f confmemalignval
+        rm -f /tmp/romio_tmp.bin
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+            #include <stdio.h>
+            #include <unistd.h>
+            #include <fcntl.h>
+            #include <stdio.h>
+            int main(int argc, char **argv) {
+                struct dioattr st;
+                int fd = open("/tmp/romio_tmp.bin", O_RDWR | O_CREAT, 0644);
+                FILE *f=fopen("confmemalignval","w");
+                if (fd == -1) exit(1);
+                if (!f) exit(1);
+                fcntl(fd, F_DIOINFO, &st);
+                fprintf( f, "%u\n", st.d_mem);
+                exit(0);
+            }
+            ]])],
+            pac_cv_memalignval=`cat confmemalignval`,
+            pac_cv_memalignval="unknown",pac_cv_memalignval="unknown"
+        )
+        rm -f confmemalignval
+        rm -f /tmp/romio_tmp.bin
     ])
     if test -n "$pac_cv_memalignval" -a "$pac_cv_memalignval" != 0 -a \
 	"$pac_cv_memalignval" != "unknown" ; then
@@ -1072,24 +1070,24 @@ if test "$ac_cv_header_aio_h" = "yes" -o "$ac_cv_header_sys_aio_h" = "yes" -o "x
     # actually use the aio_write interface).  Note that this will
     # fail for some pre-POSIX implementations of the aio interface
     # (an old IBM interface needs an fd argument as well)
-    AC_TRY_RUN([
-#include <sys/types.h>
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#ifdef HAVE_AIO_H
-#include <aio.h>
-#endif
-#ifdef HAVE_SYS_AIO_H
-#include <sys/aio.h>
-#endif
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+        #include <sys/types.h>
+        #ifdef HAVE_SIGNAL_H
+        #include <signal.h>
+        #endif
+        #ifdef HAVE_AIO_H
+        #include <aio.h>
+        #endif
+        #ifdef HAVE_SYS_AIO_H
+        #include <sys/aio.h>
+        #endif
 	int main(int argc, char **argv)
 	{
             struct aiocb *aiocbp;
 	    if (argc > 10) aio_write(aiocbp);
 	    return 0;
 	}
-	],
+	]])],
 	aio_runs=yes
 	AC_MSG_RESULT(yes),
 	aio_runs=no
@@ -1112,17 +1110,17 @@ if test "$ac_cv_header_aio_h" = "yes" -o "$ac_cv_header_sys_aio_h" = "yes" -o "x
     # aio_read correctly
 
     AC_MSG_CHECKING([for obsolete two-argument aio_write])
-    AC_TRY_RUN([
-#include <sys/types.h>
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#ifdef HAVE_AIO_H
-#include <aio.h>
-#endif
-#ifdef HAVE_SYS_AIO_H
-#include <sys/aio.h>
-#endif
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+        #include <sys/types.h>
+        #ifdef HAVE_SIGNAL_H
+        #include <signal.h>
+        #endif
+        #ifdef HAVE_AIO_H
+        #include <aio.h>
+        #endif
+        #ifdef HAVE_SYS_AIO_H
+        #include <sys/aio.h>
+        #endif
 	int main(int argc, char **argv)
 	{
 		int fd;
@@ -1130,7 +1128,7 @@ if test "$ac_cv_header_aio_h" = "yes" -o "$ac_cv_header_sys_aio_h" = "yes" -o "x
 		if (argc > 10) aio_write(fd, aiocbp);
 		return 0;
 	}
-	],
+	]])],
 	aio_two_arg_write=yes
 	AC_MSG_RESULT(yes),
 	aio_two_arg_write=no
@@ -1145,24 +1143,24 @@ if test "$ac_cv_header_aio_h" = "yes" -o "$ac_cv_header_sys_aio_h" = "yes" -o "x
     fi
 
     AC_MSG_CHECKING([for obsolete two-argument aio_suspend])
-    AC_TRY_RUN([
-#include <sys/types.h>
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#ifdef HAVE_AIO_H
-#include <aio.h>
-#endif
-#ifdef HAVE_SYS_AIO_H
-#include <sys/aio.h>
-#endif
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+        #include <sys/types.h>
+        #ifdef HAVE_SIGNAL_H
+        #include <signal.h>
+        #endif
+        #ifdef HAVE_AIO_H
+        #include <aio.h>
+        #endif
+        #ifdef HAVE_SYS_AIO_H
+        #include <sys/aio.h>
+        #endif
 	int main(int argc, char **argv)
 	{
 		struct aiocb *aiocbp;
 		if (argc > 10) aio_suspend(1, &aiocbp);
 		return 0;
 	}
-	],
+	]])],
 	aio_two_arg_suspend=yes
 	AC_MSG_RESULT(yes),
 	aio_two_arg_suspend=no
@@ -1226,22 +1224,22 @@ AS_CASE([$host_os],
 AC_CHECK_HEADERS(sys/vfs.h sys/param.h sys/mount.h sys/statvfs.h)
 AC_CHECK_FUNCS([statfs])
 AC_MSG_CHECKING([whether struct statfs properly defined])
-AC_TRY_COMPILE([
-#ifdef HAVE_SYS_VFS_H
-#include <sys/vfs.h>
-#endif
-#ifdef HAVE_SYS_STATVFS_H
-#include <sys/statvfs.h>
-#endif
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
-#ifdef HAVE_SYS_MOUNT_H
-#include <sys/mount.h>
-#endif
-    ],[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #ifdef HAVE_SYS_VFS_H
+    #include <sys/vfs.h>
+    #endif
+    #ifdef HAVE_SYS_STATVFS_H
+    #include <sys/statvfs.h>
+    #endif
+    #ifdef HAVE_SYS_PARAM_H
+    #include <sys/param.h>
+    #endif
+    #ifdef HAVE_SYS_MOUNT_H
+    #include <sys/mount.h>
+    #endif
+    ]],[[
     struct statfs f;
-    ],
+    ]])],
     pac_cv_have_statfs=yes,pac_cv_have_statfs=no
 )
 AC_MSG_RESULT($pac_cv_have_statfs)
@@ -1253,27 +1251,27 @@ if test "$pac_cv_have_statfs" = yes ; then
     AC_DEFINE(HAVE_STRUCT_STATFS,1,[Define if struct statfs can be compiled])
 fi
 AC_MSG_CHECKING([for f_type member of statfs structure])
-AC_TRY_COMPILE([
-#ifdef HAVE_SYS_VFS_H
-#include <sys/vfs.h>
-#endif
-#ifdef HAVE_SYS_STATVFS_H
-#include <sys/statvfs.h>
-#endif
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
-#ifdef HAVE_SYS_MOUNT_H
-#include <sys/mount.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-    ],[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #ifdef HAVE_SYS_VFS_H
+    #include <sys/vfs.h>
+    #endif
+    #ifdef HAVE_SYS_STATVFS_H
+    #include <sys/statvfs.h>
+    #endif
+    #ifdef HAVE_SYS_PARAM_H
+    #include <sys/param.h>
+    #endif
+    #ifdef HAVE_SYS_MOUNT_H
+    #include <sys/mount.h>
+    #endif
+    #ifdef HAVE_STRING_H
+    #include <string.h>
+    #endif
+    ]],[[
     struct statfs f;
     memset(&f, 0, sizeof(f));
     f.f_type = 0;
-    ],
+    ]])],
     pac_cv_have_statfs_f_type=yes,
     pac_cv_have_statfs_f_type=no
 )
@@ -1284,27 +1282,27 @@ fi
 
 
 AC_MSG_CHECKING([for f_fstypename member of statfs structure])
-AC_TRY_COMPILE([
-#ifdef HAVE_SYS_VFS_H
-#include <sys/vfs.h>
-#endif
-#ifdef HAVE_SYS_STATVFS_H
-#include <sys/statvfs.h>
-#endif
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
-#ifdef HAVE_SYS_MOUNT_H
-#include <sys/mount.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-    ],[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #ifdef HAVE_SYS_VFS_H
+    #include <sys/vfs.h>
+    #endif
+    #ifdef HAVE_SYS_STATVFS_H
+    #include <sys/statvfs.h>
+    #endif
+    #ifdef HAVE_SYS_PARAM_H
+    #include <sys/param.h>
+    #endif
+    #ifdef HAVE_SYS_MOUNT_H
+    #include <sys/mount.h>
+    #endif
+    #ifdef HAVE_STRING_H
+    #include <string.h>
+    #endif
+    ]],[[
     struct statfs f;
     memset(&f, 0, sizeof(f));
     strncmp("nfs", f.f_fstypename, 3);
-    ],
+    ]])],
     pac_cv_have_statfs_f_fstypename=yes,
     pac_cv_have_statfs_f_fstypename=no
 )
@@ -1320,21 +1318,20 @@ AC_CHECK_HEADERS(sys/stat.h sys/types.h unistd.h)
 AC_CHECK_FUNCS(stat,
     AC_DEFINE(HAVE_STAT, 1, Define if stat function is present)
     AC_MSG_CHECKING([for st_fstype member of stat structure])
-    AC_TRY_COMPILE([
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-	],[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #ifdef HAVE_SYS_TYPES_H
+        #include <sys/types.h>
+        #endif
+        #ifdef HAVE_SYS_STAT_H
+        #include <sys/stat.h>
+        #endif
+        #ifdef HAVE_UNISTD_H
+        #include <unistd.h>
+        #endif
+	]],[[
 	struct stat s;
-
 	s.st_fstype = NULL;
-	],
+	]])],
 	AC_MSG_RESULT(yes)
 	AC_DEFINE(ROMIO_HAVE_STRUCT_STAT_WITH_ST_FSTYPE, 1, Define if struct stat has a st_fstype member),
 	AC_MSG_RESULT(no)
@@ -1348,21 +1345,20 @@ AC_CHECK_HEADERS(sys/types.h sys/statvfs.h sys/vfs.h)
 AC_CHECK_FUNCS(statvfs,
     AC_DEFINE(HAVE_STATVFS, 1, Define if statvfs function is present)
     AC_MSG_CHECKING([for f_basetype member of statvfs structure])
-    AC_TRY_COMPILE([
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_SYS_VFS_H
-#include <sys/vfs.h>
-#endif
-#ifdef HAVE_SYS_STATVFS_H
-#include <sys/statvfs.h>
-#endif
-	], [[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #ifdef HAVE_SYS_TYPES_H
+        #include <sys/types.h>
+        #endif
+        #ifdef HAVE_SYS_VFS_H
+        #include <sys/vfs.h>
+        #endif
+        #ifdef HAVE_SYS_STATVFS_H
+        #include <sys/statvfs.h>
+        #endif
+	]], [[
 	struct statvfs foo;
-
 	foo.f_basetype[0] = 'a';
-	]],
+	]])],
 	AC_MSG_RESULT(yes)
 	AC_DEFINE(ROMIO_HAVE_STRUCT_STATVFS_WITH_F_BASETYPE, 1, defined if struct statvfs has a f_basetype member),
 	AC_MSG_RESULT(no)
