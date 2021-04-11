@@ -1661,10 +1661,12 @@ AM_CONDITIONAL([HAS_F90], [test $f90dir = f90])
 AM_CONDITIONAL([HAS_F08], [test $f08dir = f08])
 AM_CONDITIONAL([HAS_CXX], [test $cxxdir = cxx])
 
-AC_OUTPUT_COMMANDS([chmod a+x maint/testmerge])
-AC_OUTPUT_COMMANDS([chmod a+x runtests checktests])
-AC_OUTPUT_COMMANDS([chmod a+x manual/manyconnect])
-AC_OUTPUT_COMMANDS([chmod a+x impls/hydra/proc_binding.sh])
+AC_CONFIG_COMMANDS([chmod],[
+    chmod a+x maint/testmerge
+    chmod a+x runtests checktests
+    chmod a+x manual/manyconnect
+    chmod a+x impls/hydra/proc_binding.sh
+])
 dnl Note that this format for AC_OUTPUT can cause problems for autoconf
 dnl run under cygwin
 AC_OUTPUT(maint/testmerge \
