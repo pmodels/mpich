@@ -5052,37 +5052,6 @@ sub ReadInterfaceForDefinitions {
     close (MPIFD);
 }
 
-# ----------------------------------------------------------------------------
-# Check for a working autoconf
-#
-# Try the following first
-# in a new directory, create configure.ac containing:
-# AC_INIT(configure.ac)
-# AC_LANG_FORTRAN77
-# AC_TRY_COMPILE(,[integer a],a=1,a=0)
-# Then run autoconf
-# Then grep endEOF configure.  If found (status 0), then autoconf is
-# broken.
-#
-# CheckAutoconf - returns 0 if autoconf works, 1 if broken.
-sub CheckAutoconf {
-    if (! -d "tmp") {
-        mkdir "tmp", 0777 || die "Cannot create temporary directory\n";
-    }
-    open (ACFD, ">tmp/configure.ac" ) || die "Cannot create test configure.ac\n";
-    print ACFD "AC_INIT(configure.ac)\nAC_LANG_FORTRAN77\n";
-    print ACFD "AC_TRY_COMPILE(,[integer a],a=1,a=0)\n";
-    close ACFD;
-
-    chdir 'tmp';
-    $rc = system "autoconf >/dev/null 2>&1 ";
-    $rc = system "grep endEOF configure >/dev/null 2>&1";
-    $rc = !$rc;
-    chdir "..";
-
-    system "rm -rf tmp";
-    return $rc;
-}
 #
 # ISSUES NOT YET HANDLED
 # ----------------------------------------------------------------------------
