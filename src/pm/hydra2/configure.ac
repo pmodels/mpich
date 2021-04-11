@@ -207,26 +207,30 @@ if test "$ac_cv_func_putenv" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
 fi
 
-AC_TRY_LINK([
-	#include <stdio.h>
-	#include <sys/types.h>
-	#include <ifaddrs.h>
-	],
-	[return getifaddrs(NULL);],
-	[AC_DEFINE([HAVE_GETIFADDRS],1,[Define to '1' if getifaddrs is present and usable])])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    #include <stdio.h>
+    #include <sys/types.h>
+    #include <ifaddrs.h>
+    ]],[[
+    return getifaddrs(NULL);
+    ]])],[
+    AC_DEFINE([HAVE_GETIFADDRS],1,[Define to '1' if getifaddrs is present and usable])
+])
 
 # Check what we need to do about the environ extern
-AC_CACHE_CHECK([for environ in unistd.h],pac_cv_environ_in_unistd,
-	[AC_TRY_COMPILE([#include <unistd.h>],[char **x = environ;],
-	pac_cv_environ_in_unistd=yes,pac_cv_environ_in_unistd=no)])
+AC_CACHE_CHECK([for environ in unistd.h],pac_cv_environ_in_unistd, [
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],[[char **x = environ;]])],
+	pac_cv_environ_in_unistd=yes,pac_cv_environ_in_unistd=no)
+])
 if test "$pac_cv_environ_in_unistd" = "yes" ; then
     # We have environ defined in unistd.h; we are done
     AC_DEFINE(HAVE_EXTERN_ENVIRON,1,[Define if environ extern is available])
 else
     # See if we can declare it
-    AC_CACHE_CHECK([for manually declared extern environ], pac_cv_manual_extern_environ,
-	[AC_TRY_LINK([#include <unistd.h>],[extern char ** environ; char **x = environ;],
-	pac_cv_manual_extern_environ=yes,pac_cv_manual_extern_environ=no)])
+    AC_CACHE_CHECK([for manually declared extern environ], pac_cv_manual_extern_environ, [
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],[[extern char ** environ; char **x = environ;]])],
+            pac_cv_manual_extern_environ=yes,pac_cv_manual_extern_environ=no)
+    ])
     if test "$pac_cv_manual_extern_environ" = "yes" ; then
         # We can manually declare the extern
         AC_DEFINE(MANUAL_EXTERN_ENVIRON,1,[Define if environ decl needed])
@@ -460,21 +464,29 @@ sigaction_ok=no
 if test "$ac_cv_func_sigaction" = "yes" ; then
     # Make sure that the fields that we need in sigaction are defined
     AC_CACHE_CHECK([for struct sigaction and sa_handler],
-    pac_cv_struct_sigaction_with_sa_handler,[
-    AC_TRY_COMPILE([#include <signal.h>],[
-struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
-act.sa_handler = SIG_IGN;],
-    pac_cv_struct_sigaction_with_sa_handler=yes,
-    pac_cv_struct_sigaction_with_sa_handler=no)])
+                    pac_cv_struct_sigaction_with_sa_handler,[
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <signal.h>
+            ]],[[
+            struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+            act.sa_handler = SIG_IGN;
+            ]])],
+            pac_cv_struct_sigaction_with_sa_handler=yes,
+            pac_cv_struct_sigaction_with_sa_handler=no)
+    ])
     if test "$pac_cv_struct_sigaction_with_sa_handler" = "no" ; then
         AC_CACHE_CHECK([for struct sigaction and sa_handler with _POSIX_SOURCE],
-	pac_cv_struct_sigaction_with_sa_handler_needs_posix,[
-        AC_TRY_COMPILE([#define _POSIX_SOURCE
-#include <signal.h>],[
-struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
-act.sa_handler = SIG_IGN;],
-	pac_cv_struct_sigaction_with_sa_handler_needs_posix=yes,
-	pac_cv_struct_sigaction_with_sa_handler_needs_posix=no)])
+                        pac_cv_struct_sigaction_with_sa_handler_needs_posix,[
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+                #define _POSIX_SOURCE
+                #include <signal.h>
+                ]],[[
+                struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+                act.sa_handler = SIG_IGN;
+                ]])],
+                pac_cv_struct_sigaction_with_sa_handler_needs_posix=yes,
+                pac_cv_struct_sigaction_with_sa_handler_needs_posix=no)
+        ])
         if test "$pac_cv_struct_sigaction_with_sa_handler_needs_posix" = "yes" ; then
             sigaction_ok=yes
 	fi

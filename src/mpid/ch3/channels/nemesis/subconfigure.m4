@@ -44,11 +44,12 @@ AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis])
 ##fi
 
 dnl AC_CHECK_HEADER(net/if.h) fails on Solaris; extra header files needed
-AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <net/if.h>
-],,lac_cv_header_net_if_h=yes,lac_cv_header_net_if_h=no)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <sys/types.h>
+    #include <sys/socket.h>
+    #include <net/if.h>
+    ]],[])],
+    lac_cv_header_net_if_h=yes,lac_cv_header_net_if_h=no)
 
 echo "checking for net/if.h... $lac_cv_header_net_if_h"
 
@@ -77,12 +78,15 @@ AC_CHECK_HEADERS([ \
 # other headers.  2.57 changes the syntax (!) of check_headers to allow 
 # additional headers.
 AC_CACHE_CHECK([for netinet/in.h],ac_cv_header_netinet_in_h,[
-AC_TRY_COMPILE([#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#include <netinet/in.h>],[int a=0;],
-    ac_cv_header_netinet_in_h=yes,
-    ac_cv_header_netinet_in_h=no)])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #ifdef HAVE_SYS_TYPES_H
+        #include <sys/types.h>
+        #endif
+        #include <netinet/in.h>
+        ]],[[int a=0;]])],
+        ac_cv_header_netinet_in_h=yes,
+        ac_cv_header_netinet_in_h=no)
+])
 if test "$ac_cv_header_netinet_in_h" = yes ; then
     AC_DEFINE(HAVE_NETINET_IN_H,1,[Define if netinet/in.h exists])
 fi
@@ -194,27 +198,30 @@ AC_DEFINE(USE_FASTBOX,1,[Define to use the fastboxes in Nemesis code])
 
 # We may need this only for tcp and related netmodules
 # Check for h_addr or h_addr_list
-AC_CACHE_CHECK([whether struct hostent contains h_addr_list],
-pac_cv_have_haddr_list,[
-AC_TRY_COMPILE([
-#include <netdb.h>],[struct hostent hp;hp.h_addr_list[0]=0;],
-pac_cv_have_haddr_list=yes,pac_cv_have_haddr_list=no)])
+AC_CACHE_CHECK([whether struct hostent contains h_addr_list], pac_cv_have_haddr_list,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <netdb.h>
+        ]],[[
+        struct hostent hp;hp.h_addr_list[0]=0;
+        ]])], pac_cv_have_haddr_list=yes,pac_cv_have_haddr_list=no)
+])
 if test "$pac_cv_have_haddr_list" = "yes" ; then
     AC_DEFINE(HAVE_H_ADDR_LIST,1,[Define if struct hostent contains h_addr_list])
 fi
 
 # If we need the socket code, see if we can use struct ifconf
 # sys/socket.h is needed on Solaris
-AC_CACHE_CHECK([whether we can use struct ifconf],
-pac_cv_have_struct_ifconf,[
-AC_TRY_COMPILE([
-#include <sys/types.h>
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#include <net/if.h>
-],[struct ifconf conftest; int s; s = sizeof(conftest);],
-pac_cv_have_struct_ifconf=yes,pac_cv_have_struct_ifconf=no)])
+AC_CACHE_CHECK([whether we can use struct ifconf], pac_cv_have_struct_ifconf,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <sys/types.h>
+        #ifdef HAVE_SYS_SOCKET_H
+        #include <sys/socket.h>
+        #endif
+        #include <net/if.h>
+        ]],[[
+        struct ifconf conftest; int s; s = sizeof(conftest);
+        ]])], pac_cv_have_struct_ifconf=yes,pac_cv_have_struct_ifconf=no)
+])
 
 # Intentionally not testing whether _SVID_SOURCE or _POSIX_C_SOURCE affects
 # ifconf availability.  Making those sort of modifications at this stage
@@ -225,16 +232,17 @@ if test "$pac_cv_have_struct_ifconf" = "yes" ; then
     AC_DEFINE(HAVE_STRUCT_IFCONF,1,[Define if struct ifconf can be used])
 fi
 
-AC_CACHE_CHECK([whether we can use struct ifreq],
-pac_cv_have_struct_ifreq,[
-AC_TRY_COMPILE([
-#include <sys/types.h>
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#include <net/if.h>
-],[struct ifreq conftest; int s; s = sizeof(conftest);],
-pac_cv_have_struct_ifreq=yes,pac_cv_have_struct_ifreq=no)])
+AC_CACHE_CHECK([whether we can use struct ifreq], pac_cv_have_struct_ifreq,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <sys/types.h>
+        #ifdef HAVE_SYS_SOCKET_H
+        #include <sys/socket.h>
+        #endif
+        #include <net/if.h>
+        ]],[[
+        struct ifreq conftest; int s; s = sizeof(conftest);
+        ]])], pac_cv_have_struct_ifreq=yes,pac_cv_have_struct_ifreq=no)
+])
 
 if test "$pac_cv_have_struct_ifreq" = "yes" ; then
     AC_DEFINE(HAVE_STRUCT_IFREQ,1,[Define if struct ifreq can be used])
