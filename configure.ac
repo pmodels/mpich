@@ -5375,7 +5375,12 @@ export pkgconfigdir
 
 if test "$f08_works" = "yes" ; then
     PAC_CHECK_PYTHON
-    AC_CONFIG_COMMANDS([gen_binding_f08], [$PYTHON maint/gen_binding_f08.py], [PYTHON=$PYTHON])
+    PAC_FC_CHECK_REAL128
+    cmd="$PYTHON maint/gen_binding_f08.py"
+    if test "$pac_fc_has_real128" = "no" ; then
+        cmd="$cmd -no-real128"
+    fi
+    AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd"])
 fi
 
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
