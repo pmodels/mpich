@@ -5373,6 +5373,11 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
+if test "$f08_works" = "yes" ; then
+    PAC_CHECK_PYTHON
+    AC_CONFIG_COMMANDS([gen_binding_f08], [$PYTHON maint/gen_binding_f08.py], [PYTHON=$PYTHON])
+fi
+
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
 dnl directory
 AC_OUTPUT(Makefile \
