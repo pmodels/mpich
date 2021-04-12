@@ -21,12 +21,15 @@ typedef struct Finalize_func_t {
 /* When full debugging is enabled, each MPI handle type has a finalize handler
    installed to detect unfreed handles.  */
 #define MAX_FINALIZE_FUNC 64
+static MPL_initlock_t fstack_lock = MPL_INITLOCK_INITIALIZER;
 static Finalize_func_t fstack[MAX_FINALIZE_FUNC];
 static int fstack_sp = 0;
 static int fstack_max_priority = 0;
 
 void MPIR_Add_finalize(int (*f) (void *), void *extra_data, int priority)
 {
+    /* MPIR_Add_finalize may be called both inside and outside init */
+    MPL_initlock_lock(&fstack_lock);
     /* --BEGIN ERROR HANDLING-- */
     if (fstack_sp >= MAX_FINALIZE_FUNC) {
         /* This is a little tricky.  We may want to check the state of
@@ -46,6 +49,7 @@ void MPIR_Add_finalize(int (*f) (void *), void *extra_data, int priority)
 
     if (priority > fstack_max_priority)
         fstack_max_priority = priority;
+    MPL_initlock_unlock(&fstack_lock);
 }
 
 /* Invoke the registered callbacks */
