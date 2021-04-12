@@ -29,25 +29,26 @@ static inline yaksa_info_t MPII_yaksa_get_info(MPL_pointer_attr_t * inattr,
     yaksa_info_t info;
     yaksa_info_create(&info);
 #ifdef MPL_HAVE_GPU
-#if MPL_HAVE_GPU == MPL_GPU_TYPE_CUDA
+    /* Note: MPL_GPU_TYPE_CUDA/ZE are enums, can't be used in #if-expression. Use a branch
+     * in stead. The branch should be optimized away. */
     int rc;
-    yaksa_info_keyval_append(info, "yaksa_gpu_driver", "cuda", 5);
-    rc = yaksa_info_keyval_append(info, "yaksa_cuda_inbuf_ptr_attr", &inattr->device_attr,
-                                  sizeof(MPL_gpu_device_attr));
-    MPIR_Assert(rc == 0);
-    rc = yaksa_info_keyval_append(info, "yaksa_cuda_outbuf_ptr_attr", &outattr->device_attr,
-                                  sizeof(MPL_gpu_device_attr));
-    MPIR_Assert(rc == 0);
-#elif MPL_HAVE_GPU == MPL_GPU_TYPE_ZE
-    int rc;
-    yaksa_info_keyval_append(info, "yaksa_gpu_driver", "ze", 3);
-    rc = yaksa_info_keyval_append(info, "yaksa_ze_inbuf_ptr_attr", &inattr->device_attr,
-                                  sizeof(MPL_gpu_device_attr));
-    MPIR_Assert(rc == 0);
-    rc = yaksa_info_keyval_append(info, "yaksa_ze_outbuf_ptr_attr", &outattr->device_attr,
-                                  sizeof(MPL_gpu_device_attr));
-    MPIR_Assert(rc == 0);
-#endif
+    if (MPL_HAVE_GPU == MPL_GPU_TYPE_CUDA) {
+        yaksa_info_keyval_append(info, "yaksa_gpu_driver", "cuda", 5);
+        rc = yaksa_info_keyval_append(info, "yaksa_cuda_inbuf_ptr_attr", &inattr->device_attr,
+                                      sizeof(MPL_gpu_device_attr));
+        MPIR_Assert(rc == 0);
+        rc = yaksa_info_keyval_append(info, "yaksa_cuda_outbuf_ptr_attr", &outattr->device_attr,
+                                      sizeof(MPL_gpu_device_attr));
+        MPIR_Assert(rc == 0);
+    } else if (MPL_HAVE_GPU == MPL_GPU_TYPE_ZE) {
+        yaksa_info_keyval_append(info, "yaksa_gpu_driver", "ze", 3);
+        rc = yaksa_info_keyval_append(info, "yaksa_ze_inbuf_ptr_attr", &inattr->device_attr,
+                                      sizeof(MPL_gpu_device_attr));
+        MPIR_Assert(rc == 0);
+        rc = yaksa_info_keyval_append(info, "yaksa_ze_outbuf_ptr_attr", &outattr->device_attr,
+                                      sizeof(MPL_gpu_device_attr));
+        MPIR_Assert(rc == 0);
+    }
 #endif
     return info;
 }
