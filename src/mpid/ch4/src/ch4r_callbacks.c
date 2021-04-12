@@ -304,6 +304,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
     MPIR_Comm *root_comm;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
     void *pack_buf = NULL;
+    bool do_cts = false;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
@@ -436,7 +437,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
             MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
             MPIDIG_recv_type_init(hdr->data_sz, rreq);
-            MPIDIG_do_cts(rreq);
+            do_cts = true;
         } else {
             MPIDIG_REQUEST(rreq, req->seq_no) =
                 MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
@@ -468,6 +469,10 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             MPIDIG_recv_copy(data, rreq);
             MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
         }
+    }
+
+    if (do_cts) {
+        MPIDIG_do_cts(rreq);
     }
 
   fn_exit:
