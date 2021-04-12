@@ -331,15 +331,27 @@ if test "$enable_ch4r_per_comm_msg_queue" = "yes" ; then
         [Define if CH4U will use per-communicator message queues])
 fi
 
+dnl Note: the maximum of 64 is due to the fact that we use 6 bits in the
+dnl request handle to encode pool index
 AC_ARG_WITH(ch4-max-vcis,
     [--with-ch4-max-vcis=<N>
-       Select max number of VCIs to configure (default is 1; minimum is 1)],
-    [], [with_ch4_max_vcis=1 ])
-if test $with_ch4_max_vcis -le 0 ; then
-   AC_MSG_ERROR(Number of VCIs must be greater than 0)
+       Select max number of VCIs to configure (default is 1; minimum is 1; maximum is 64)],
+    [], [with_ch4_max_vcis=default])
+
+if test "$with_ch4_max_vcis" = "default" ; then
+    if test $thread_granularity = MPICH_THREAD_GRANULARITY__VCI ; then
+        with_ch4_max_vcis=64
+    else
+        with_ch4_max_vcis=1
+    fi
+else
+    if test $thread_granularity != MPICH_THREAD_GRANULARITY__VCI ; then
+        AC_MSG_ERROR(Option --with-ch4-max-vcis requires --enable-thread-cs=per-vci)
+    fi
 fi
-if test $with_ch4_max_vcis -gt 1 -a $thread_granularity != MPICH_THREAD_GRANULARITY__VCI ; then
-    AC_MSG_ERROR(CH4_MAX_VCIS greater than 1 requires --enable-thread-cs=per-vci)
+
+if test $with_ch4_max_vcis -lt 1 -o $with_ch4_max_vcis -gt 64; then
+   AC_MSG_ERROR(Number of VCIs must be between 1 and 64)
 fi
 AC_DEFINE_UNQUOTED([MPIDI_CH4_MAX_VCIS], [$with_ch4_max_vcis], [Number of VCIs configured in CH4])
 

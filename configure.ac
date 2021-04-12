@@ -526,8 +526,8 @@ AC_ARG_ENABLE(thread-cs,
 			[Choose the method used for critical sections
                          and other atomic updates when multiple
                          threads are present.  Values may be default, global,
-                         per-object, per-vci, lock-free. By default, CH3 uses global,
-                         while CH4 uses per-vci.]),,enable_thread_cs=default)
+                         per-object, per-vci, lock-free. Default is global.
+                        ]),,enable_thread_cs=default)
 
 AC_ARG_ENABLE(refcount,
 	AC_HELP_STRING([--enable-refcount=type],
