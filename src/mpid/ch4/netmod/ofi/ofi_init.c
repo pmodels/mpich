@@ -639,7 +639,7 @@ static int flush_send(int dst, int vni, MPIDI_OFI_dynamic_process_request_t * re
 
     MPIR_Comm *comm = MPIR_Process.comm_world;
     fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_comm_rank_to_av(comm, dst), vni, vni);
-    int data = 0;
+    static int data = 0;
     uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
                                                  MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
 
@@ -663,7 +663,6 @@ static int flush_recv(int src, int vni, MPIDI_OFI_dynamic_process_request_t * re
 
     MPIR_Comm *comm = MPIR_Process.comm_world;
     fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_comm_rank_to_av(comm, src), vni, vni);
-    int data;
     uint64_t mask_bits = 0;
     uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
                                                  MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
@@ -672,7 +671,9 @@ static int flush_recv(int src, int vni, MPIDI_OFI_dynamic_process_request_t * re
     req->done = 0;
     req->event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
-    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[vni].rx, &data, 4, NULL,
+    /* we don't care the data and the tag field is not used */
+    void *recvbuf = &(req->tag);
+    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[vni].rx, recvbuf, 4, NULL,
                                   addr, match_bits, mask_bits, &req->context), vni, trecv, FALSE);
 
   fn_exit:
