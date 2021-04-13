@@ -327,13 +327,15 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
         int vni_dst = recv_elem->remote_info.vni_dst;
         int vni_local = vni_dst;
         int vni_remote = vni_src;
+        int nic = 0;
+        int ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, nic);
 
-        MPIDI_OFI_cntr_incr(vni_local);
-        MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[vni_local].tx,        /* endpoint     */
+        MPIDI_OFI_cntr_incr(vni_local, nic);
+        MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx,  /* endpoint     */
                                      (void *) ((uintptr_t) recv_elem->wc.buf + recv_elem->cur_offset),  /* local buffer */
                                      bytesToGet,        /* bytes        */
                                      NULL,      /* descriptor   */
-                                     MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank, vni_local, vni_remote),    /* Destination  */
+                                     MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank, nic, vni_local, vni_remote),       /* Destination  */
                                      recv_rbase(recv_elem) + recv_elem->cur_offset,     /* remote maddr */
                                      remote_key,        /* Key          */
                                      (void *) &recv_elem->context), vni_local, rdma_readfrom,   /* Context */
@@ -767,12 +769,14 @@ int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
     int mpi_errno = MPI_SUCCESS;
     struct fi_cq_err_entry e;
     MPIR_Request *req;
+    int nic = 0;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_idx, nic);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR);
 
     switch (ret) {
         case -FI_EAVAIL:
-            fi_cq_readerr(MPIDI_OFI_global.ctx[vni_idx].cq, &e, 0);
+            fi_cq_readerr(MPIDI_OFI_global.ctx[ctx_idx].cq, &e, 0);
 
             switch (e.err) {
                 case FI_ETRUNC:

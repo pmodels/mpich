@@ -555,3 +555,62 @@ uint64_t MPIR_hwtopo_get_node_mem(void)
 
     return size;
 }
+
+#ifdef HAVE_HWLOC
+static hwloc_obj_t get_first_non_io_obj_by_pci(int domain, int bus, int dev, int func)
+{
+    hwloc_obj_t io_device = hwloc_get_pcidev_by_busid(hwloc_topology, domain, bus, dev, func);
+    MPIR_Assert(io_device);
+    hwloc_obj_t first_non_io = hwloc_get_non_io_ancestor_obj(hwloc_topology, io_device);
+    MPIR_Assert(first_non_io);
+    return first_non_io;
+}
+
+/* Determine if PCI device is "close" to this process by checking if this process's affinity is
+ * included in PCI device's affinity or if PCI device's affinity is included in this process's
+ * affinity */
+static bool pci_device_is_close(hwloc_obj_t device)
+{
+    return (hwloc_bitmap_isincluded(bindset, device->cpuset) ||
+            hwloc_bitmap_isincluded(device->cpuset, bindset));
+}
+#endif
+
+bool MPIR_hwtopo_is_dev_close_by_name(const char *name)
+{
+    bool is_close = false;
+    if (!bindset_is_valid)
+        return is_close;
+#ifdef HAVE_HWLOC
+    MPIR_hwtopo_gid_t gid = MPIR_hwtopo_get_obj_by_name(name);
+    int hwloc_obj_index = HWTOPO_GET_INDEX(gid);
+    int hwloc_obj_depth = HWTOPO_GET_DEPTH(gid);
+    is_close = pci_device_is_close(hwloc_get_obj_by_depth(hwloc_topology, hwloc_obj_depth,
+                                                          hwloc_obj_index));
+#endif
+    return is_close;
+}
+
+bool MPIR_hwtopo_is_dev_close_by_pci(int domain, int bus, int dev, int func)
+{
+    bool is_close = false;
+    if (!bindset_is_valid)
+        return is_close;
+#ifdef HAVE_HWLOC
+    is_close = pci_device_is_close(get_first_non_io_obj_by_pci(domain, bus, dev, func));
+#endif
+    return is_close;
+}
+
+MPIR_hwtopo_gid_t MPIR_hwtopo_get_dev_parent_by_pci(int domain, int bus, int dev, int func)
+{
+    MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_ROOT;
+    if (!bindset_is_valid)
+        return gid;
+#ifdef HAVE_HWLOC
+    hwloc_obj_t first_non_io = get_first_non_io_obj_by_pci(domain, bus, dev, func);
+    hwtopo_class_e class = get_type_class(first_non_io->type);
+    gid = HWTOPO_GET_GID(class, first_non_io->depth, first_non_io->logical_index);
+#endif
+    return gid;
+}

@@ -112,10 +112,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
         int vni_dst = MPIDI_OFI_get_vni(DST_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
         int vni_local = vni_dst;
         int vni_remote = vni_src;
-        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[vni_local].tx, NULL /* buf */ ,
+        int nic = 0;
+        int ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, nic);
+        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL /* buf */ ,
                                             0 /* len */ ,
                                             MPIR_Comm_rank(c),
-                                            MPIDI_OFI_comm_to_phys(c, r, vni_local, vni_remote),
+                                            MPIDI_OFI_comm_to_phys(c, r, nic, vni_local,
+                                                                   vni_remote),
                                             ss_bits), vni_local, tinjectdata, FALSE /* eagain */);
     }
 
