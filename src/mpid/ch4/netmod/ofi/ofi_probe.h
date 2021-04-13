@@ -25,6 +25,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     int ofi_err;
     int vni_local = vni_dst;
     int vni_remote = vni_src;
+    int nic = 0;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IPROBE);
@@ -32,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     if (unlikely(MPI_ANY_SOURCE == source))
         remote_proc = FI_ADDR_UNSPEC;
     else
-        remote_proc = MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote);
+        remote_proc = MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote);
 
     if (message) {
         rreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, vni_dst);
@@ -55,7 +57,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
     msg.data = 0;
 
-    MPIDI_OFI_CALL_RETURN(fi_trecvmsg(MPIDI_OFI_global.ctx[vni_dst].rx, &msg,
+    MPIDI_OFI_CALL_RETURN(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg,
                                       peek_flags | FI_PEEK | FI_COMPLETION | FI_REMOTE_CQ_DATA),
                           ofi_err);
     if (ofi_err == -FI_ENOMSG) {

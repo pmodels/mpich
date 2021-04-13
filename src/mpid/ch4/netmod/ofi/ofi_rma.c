@@ -129,8 +129,9 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
         msg_len = MPL_MIN(origin_iov[origin_cur].iov_len, target_iov[target_cur].iov_len);
 
         int vni = MPIDI_OFI_WIN(win).vni;
+        int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(addr, vni, vni);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vni, vni);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -224,8 +225,9 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         MPIR_ERR_CHKANDSTMT(chunk == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
         int vni = MPIDI_OFI_WIN(win).vni;
+        int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, vni, vni);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, nic, vni, vni);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -308,8 +310,9 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         MPIR_ERR_CHKANDSTMT(chunk == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
         int vni = MPIDI_OFI_WIN(win).vni;
+        int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, vni, vni);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, nic, vni, vni);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
