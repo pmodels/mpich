@@ -19,6 +19,15 @@
 
 #ifdef MPL_TLS
 extern MPL_TLS int global_vci_poll_count;
+#elif defined(MPL_COMPILER_TLS)
+/*
+ * If MPL_COMPILER_TLS is defined, use MPL_COMPILER_TLS.  This is the case of Argobots, for example.
+ * Argobots does not have MPL_TLS since MPL_COMPILER_TLS (__thread) is not Argobots ULT local.
+ * MPL_COMPILER_TLS is executions-stream-local storage from the Argobots viewpoint, but this works
+ * well for this progress counter since this global_vci_poll_count is "thread-local" just to avoid
+ * any conflict among parallel execution entities (i.e., POSIX threads).
+ */
+extern MPL_COMPILER_TLS int global_vci_poll_count;
 #else
 extern int global_vci_poll_count;
 #endif
