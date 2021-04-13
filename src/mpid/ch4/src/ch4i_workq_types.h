@@ -17,12 +17,16 @@ enum {
     MPIDI_CH4_NUM_MT_MODELS,
 };
 
-/* For now any thread safety model that is not "direct" requires
- * work queues. These queues might be used for different reasons,
- * thus a new macro to capture that. */
-#if !defined(MPIDI_CH4_USE_MT_DIRECT)
+/* Some thread safety models, e.g. handoff, requires work queues.
+ * These queues might be used for different reasons thus a new macro
+ * to capture that. Handoff can be selected under runtime selection
+ * mode as well. */
+#if 0   /* FIXME: work queues are disabled at present */
+#if defined(MPIDI_CH4_USE_MT_HANDOFF) || defined(MPIDI_CH4_USE_MT_RUNTIME)
 #define MPIDI_CH4_USE_WORK_QUEUES
 #endif
+#endif
+
 
 /* Define the work queue implementation type */
 #if defined(ENABLE_IZEM_QUEUE)
