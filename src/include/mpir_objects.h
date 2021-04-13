@@ -303,12 +303,25 @@ typedef MPL_atomic_int_t Handle_ref_count;
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_ref_, "incr");          \
         HANDLE_CHECK_REFCOUNT(objptr_,new_ref_,"incr");                 \
     } while (0)
-#define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
-    do {                                                                \
-        int new_ref_ = MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1; \
-        *(inuse_ptr) = new_ref_;                                        \
-        HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_ref_, "decr");          \
-        HANDLE_CHECK_REFCOUNT(objptr_,new_ref_,"decr");                 \
+#define MPIR_Object_release_ref_always(objptr_,inuse_ptr)                      \
+    do {                                                                       \
+        /* If it is 1, we will just free it without a heavy atomic operation.  \
+         * Note that any concurrent add_ref() to a handle whose count is 1 is  \
+         * illegal and we do not consider.                                     \
+         *                                                                     \
+         * The similar optimization caused an error and was reverted.          \
+         * (See a5686ec3c42f0357119cab7f21df46389c7acec8)                      \
+         * The following uses acquire_load() instead of OPA_load_int(). */     \
+        if (MPL_atomic_acquire_load_int(&((objptr_)->ref_count)) == 1) {       \
+            MPL_atomic_relaxed_store_int(&((objptr_)->ref_count), 0);          \
+            *(inuse_ptr) = 0;                                                  \
+        } else {                                                               \
+            int new_ref_ =                                                     \
+                MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1;      \
+            *(inuse_ptr) = new_ref_;                                           \
+        }                                                                      \
+        HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_ref_, "decr");                 \
+        HANDLE_CHECK_REFCOUNT(objptr_,new_ref_,"decr");                        \
     } while (0)
 #else /* MPICH_DEBUG_HANDLES */
 /* MPICH_THREAD_REFCOUNT == MPICH_REFCOUNT__LOCKFREE && !MPICH_DEBUG_HANDLES */
@@ -316,10 +329,17 @@ typedef MPL_atomic_int_t Handle_ref_count;
     do {                                        \
         MPL_atomic_fetch_add_int(&((objptr_)->ref_count), 1);  \
     } while (0)
-#define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
-    do {                                                                \
-        int new_ref_ = MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1; \
-        *(inuse_ptr) = new_ref_;                                        \
+#define MPIR_Object_release_ref_always(objptr_,inuse_ptr)                   \
+    do {                                                                    \
+        /* If it is 1, we will free it without a heavy atomic operation. */ \
+        if (MPL_atomic_acquire_load_int(&((objptr_)->ref_count)) == 1) {    \
+            MPL_atomic_relaxed_store_int(&((objptr_)->ref_count), 0);       \
+            *(inuse_ptr) = 0;                                               \
+        } else {                                                            \
+            int new_ref_ =                                                  \
+                MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1;   \
+            *(inuse_ptr) = new_ref_;                                        \
+        }                                                                   \
     } while (0)
 #endif /* MPICH_DEBUG_HANDLES */
 #else
