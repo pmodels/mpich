@@ -756,9 +756,9 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
         MPL_initlock_lock(&lock);
         if (!MPIR_Process.comm_world->local_group) {
             mpi_errno = comm_create_local_group(MPIR_Process.comm_world);
-            MPIR_ERR_CHECK(mpi_errno);
         }
         MPL_initlock_unlock(&lock);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
     } else if (group_ptr->pset_name && strcmp(group_ptr->pset_name, "mpi://WORLD") == 0) {
         /* TODO: once we init process is split into local init and world init, we need call
