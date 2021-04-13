@@ -52,7 +52,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
-    uint64_t ucx_tag;
     char *send_buf;
     size_t data_sz;
     MPIDI_UCX_am_header_t ucx_hdr;
@@ -63,7 +62,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     MPIDI_Datatype_check_size(datatype, count, data_sz);
 
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
-    ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
@@ -80,10 +78,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(actual_pack_bytes == data_sz);
 
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
-                                                              data_sz + am_hdr_sz + sizeof(ucx_hdr),
-                                                              ucp_dt_make_contig(1), ucx_tag,
-                                                              &MPIDI_UCX_am_isend_callback);
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID, send_buf,
+                                                             data_sz + am_hdr_sz + sizeof(ucx_hdr),
+                                                             ucp_dt_make_contig(1),
+                                                             &MPIDI_UCX_am_isend_callback, 0);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     /* send is done. free all resources and complete the request */
@@ -120,7 +118,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     size_t am_hdr_sz = 0, i;
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
-    uint64_t ucx_tag;
     char *send_buf;
     size_t data_sz;
     MPIDI_UCX_am_header_t ucx_hdr;
@@ -130,7 +127,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISENDV);
 
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
-    ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     MPIDI_Datatype_check_size(datatype, count, data_sz);
     for (i = 0; i < iov_len; i++) {
@@ -155,10 +151,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(actual_pack_bytes == data_sz);
 
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
-                                                              data_sz + am_hdr_sz + sizeof(ucx_hdr),
-                                                              ucp_dt_make_contig(1), ucx_tag,
-                                                              &MPIDI_UCX_am_isend_callback);
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID, send_buf,
+                                                             data_sz + am_hdr_sz + sizeof(ucx_hdr),
+                                                             ucp_dt_make_contig(1),
+                                                             &MPIDI_UCX_am_isend_callback, 0);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     /* send is done. free all resources and complete the request */
@@ -196,7 +192,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
     ucp_datatype_t dt;
-    uint64_t ucx_tag;
     char *send_buf;
     void *send_buf_p;
     size_t data_sz;
@@ -213,7 +208,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
 
     use_comm = MPIDIG_context_id_to_comm(context_id);
     ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank, 0, 0);
-    ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
@@ -268,9 +262,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
         total_sz = data_sz + am_hdr_sz + sizeof(ucx_hdr);
     }
     ucp_request =
-        (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep,
-                                                    send_buf_p, total_sz, dt, ucx_tag,
-                                                    &MPIDI_UCX_am_isend_callback);
+        (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID,
+                                                   send_buf_p, total_sz, dt,
+                                                   &MPIDI_UCX_am_isend_callback, 0);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     /* send is done. free all resources and complete the request */
@@ -316,7 +310,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
-    uint64_t ucx_tag;
     char *send_buf;
     MPIDI_UCX_am_header_t ucx_hdr;
 
@@ -324,7 +317,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_SEND_HDR);
 
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
-    ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
@@ -335,10 +327,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
     MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
 
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
-                                                              am_hdr_sz + sizeof(ucx_hdr),
-                                                              ucp_dt_make_contig(1), ucx_tag,
-                                                              &MPIDI_UCX_am_send_callback);
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID, send_buf,
+                                                             am_hdr_sz + sizeof(ucx_hdr),
+                                                             ucp_dt_make_contig(1),
+                                                             &MPIDI_UCX_am_send_callback, 0);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request == NULL) {
@@ -363,7 +355,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
-    uint64_t ucx_tag;
     char *send_buf;
     MPIDI_UCX_am_header_t ucx_hdr;
     MPIR_Comm *use_comm;
@@ -373,7 +364,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
 
     use_comm = MPIDIG_context_id_to_comm(context_id);
     ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank, 0, 0);
-    ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
@@ -383,10 +373,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     send_buf = MPL_malloc(am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
     MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
     MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
-                                                              am_hdr_sz + sizeof(ucx_hdr),
-                                                              ucp_dt_make_contig(1), ucx_tag,
-                                                              &MPIDI_UCX_am_send_callback);
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID, send_buf,
+                                                             am_hdr_sz + sizeof(ucx_hdr),
+                                                             ucp_dt_make_contig(1),
+                                                             &MPIDI_UCX_am_send_callback, 0);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request == NULL) {
