@@ -11,8 +11,6 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
 {
     int mpi_errno = MPI_SUCCESS;
-    ucp_tag_recv_info_t info;
-    MPIDI_UCX_ucp_request_t *ucp_request;
 
     int vni = MPIDI_UCX_vci_to_vni(vci);
     if (vni < 0) {
