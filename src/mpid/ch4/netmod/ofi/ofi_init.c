@@ -541,15 +541,10 @@ int MPIDI_OFI_init_local(int *tag_bits)
 
     MPIDI_OFI_global.num_vnis = num_vnis;
 
-    /* Creating the vni contexts.
+    /* Creating the context for vni 0 and nic 0.
      * This code maybe moved to a later stage */
-    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
-        for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-            mpi_errno = create_vni_context(vni, nic);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-    }
-
+    mpi_errno = create_vni_context(0, 0);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
@@ -851,9 +846,21 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 int MPIDI_OFI_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+        for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
+            /* vni 0 nic 0 already created */
+            if (vni > 0 || nic > 0) {
+                mpi_errno = create_vni_context(vni, nic);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+        }
+    }
+
     if (MPIDI_OFI_global.num_vnis > 1) {
         mpi_errno = addr_exchange_all_vnis();
     }
+  fn_fail:
     return mpi_errno;
 }
 
