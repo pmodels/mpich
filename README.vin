@@ -834,6 +834,37 @@ environment variables README.envvar.
 13. Threads
 ===========
 
+The supported thread level are configured by option:
+
+    --enable-threads={single,funneled,serialized,multiple}
+
+The default depends on the configured device. With ch4, "multiple" is the
+default. Set thread level to "single" provides best performance when application
+does not use multiple threads. Use "multiple" to allow application to access
+MPI from multiple threads concurrently.
+
+With "multiple" thread level, there are a few choices for the internal critical
+section models. This is controlled by configure option:
+
+    --enable-thread-cs={global,per-vci}
+
+Current default is to use "global" cs. Applications that do heavy concurrent
+MPI communications may experience slow down due to this global cs. The
+"per-vci" cs internally will use multiple VCI (virtual communication
+interface) critical sections, thus can provide much better performance. To
+achieve the best performance, applications should try to expose as much
+parallel information to MPI as possible. For example, if each threads use
+separate communicators, MPICH may be able to assign separate VCI for each
+thread, thus achieving the maximum performance.
+
+The multiple VCI support may increase the resource allocation and overheads
+during initialization. By default, only a single vci is used. Set
+
+    MPIR_CVAR_CH4_NUM_VCIS=<N>
+
+to enable multiple vcis at runtime. For best performance, match number of VCIs
+to the number threads application is using.
+
 MPICH supports multiple threading packages.  The default is posix
 threads (pthreads), but solaris threads, windows threads and argobots
 are also supported.
