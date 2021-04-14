@@ -1956,7 +1956,7 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
     int num_nics = MPIDI_OFI_global.num_nics;
-    size_t addrnamelen = MPIDI_OFI_global.addrnamelen = FI_NAME_MAX;
+    size_t addrnamelen = FI_NAME_MAX;
     MPIR_CHKLMEM_DECL(1);
 
     /* No pre-published address table, need do address exchange. */
@@ -2075,8 +2075,9 @@ static int addr_exchange_all_vnis(void)
     int num_vnis = MPIDI_OFI_global.num_vnis;
     int num_nics = MPIDI_OFI_global.num_nics;
 
-    /* Use the maximum name length to simplify the address exchange with multiple NICs */
-    int my_len = num_vnis * num_nics * FI_NAME_MAX;
+    /* libfabric uses uniform name_len within a single provider */
+    int name_len = MPIDI_OFI_global.addrnamelen;
+    int my_len = num_vnis * num_nics * name_len;
     char *all_names = MPL_malloc(size * my_len, MPL_MEM_ADDRESS);
     MPIR_Assert(all_names);
     char *my_names = all_names + rank * my_len;
@@ -2084,11 +2085,12 @@ static int addr_exchange_all_vnis(void)
     /* put in my addrnames */
     for (int nic = 0; nic < num_nics; nic++) {
         for (int vni = 0; vni < num_vnis; vni++) {
-            size_t actual_name_len = FI_NAME_MAX;
-            char *vni_addrname = my_names + (vni * num_nics * FI_NAME_MAX) + (nic * FI_NAME_MAX);
+            size_t actual_name_len = name_len;
+            char *vni_addrname = my_names + (vni * num_nics + nic) * name_len;
             int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
             MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[ctx_idx].ep, vni_addrname,
                                       &actual_name_len), getname);
+            MPIR_Assert(actual_name_len == name_len);
         }
     }
     /* Allgather */
