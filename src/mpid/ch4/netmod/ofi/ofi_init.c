@@ -391,6 +391,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+static void dump_dynamic_settings(void);
 static int get_ofi_version(void);
 static int open_fabric(void);
 static int create_vni_context(int vni, int nic);
@@ -646,6 +647,9 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
     MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
 
+    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+        dump_dynamic_settings();
+    }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
     return mpi_errno;
@@ -1915,8 +1919,6 @@ static void dump_global_settings(void)
 #ifdef MPIDI_OFI_VNI_USE_SEPCTX
     fprintf(stdout, "MPIDI_OFI_VNI_USE_SEPCTX: %d\n", 1);
 #endif
-    fprintf(stdout, "======================================\n");
-
     /* Discover the maximum number of ranks. If the source shift is not
      * defined, there are 32 bits in use due to the uint32_t used in
      * ofi_send.h */
@@ -1937,6 +1939,13 @@ static void dump_global_settings(void)
     fprintf(stdout, "rx_iov_limit: %lu\n", MPIDI_OFI_global.rx_iov_limit);
     fprintf(stdout, "rma_iov_limit: %lu\n", MPIDI_OFI_global.rma_iov_limit);
     fprintf(stdout, "max_mr_key_size: %lu\n", MPIDI_OFI_global.max_mr_key_size);
+}
+
+static void dump_dynamic_settings(void)
+{
+    fprintf(stdout, "==== OFI dyanamic settings ====\n");
+    fprintf(stdout, "num_vnis: %d\n", MPIDI_OFI_global.num_vnis);
+    fprintf(stdout, "num_nics: %d\n", MPIDI_OFI_global.num_nics);
     fprintf(stdout, "======================================\n");
 }
 
