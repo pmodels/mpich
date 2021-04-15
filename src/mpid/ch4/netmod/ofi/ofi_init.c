@@ -391,6 +391,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+static void dump_dynamic_settings(void);
 static int get_ofi_version(void);
 static int open_fabric(void);
 static int create_vni_context(int vni, int nic);
@@ -540,15 +541,10 @@ int MPIDI_OFI_init_local(int *tag_bits)
 
     MPIDI_OFI_global.num_vnis = num_vnis;
 
-    /* Creating the vni contexts.
+    /* Creating the context for vni 0 and nic 0.
      * This code maybe moved to a later stage */
-    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
-        for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-            mpi_errno = create_vni_context(vni, nic);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-    }
-
+    mpi_errno = create_vni_context(0, 0);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
@@ -646,6 +642,9 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
     MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
 
+    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+        dump_dynamic_settings();
+    }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
     return mpi_errno;
@@ -847,9 +846,21 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 int MPIDI_OFI_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+        for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
+            /* vni 0 nic 0 already created */
+            if (vni > 0 || nic > 0) {
+                mpi_errno = create_vni_context(vni, nic);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+        }
+    }
+
     if (MPIDI_OFI_global.num_vnis > 1) {
         mpi_errno = addr_exchange_all_vnis();
     }
+  fn_fail:
     return mpi_errno;
 }
 
@@ -1915,8 +1926,6 @@ static void dump_global_settings(void)
 #ifdef MPIDI_OFI_VNI_USE_SEPCTX
     fprintf(stdout, "MPIDI_OFI_VNI_USE_SEPCTX: %d\n", 1);
 #endif
-    fprintf(stdout, "======================================\n");
-
     /* Discover the maximum number of ranks. If the source shift is not
      * defined, there are 32 bits in use due to the uint32_t used in
      * ofi_send.h */
@@ -1937,6 +1946,13 @@ static void dump_global_settings(void)
     fprintf(stdout, "rx_iov_limit: %lu\n", MPIDI_OFI_global.rx_iov_limit);
     fprintf(stdout, "rma_iov_limit: %lu\n", MPIDI_OFI_global.rma_iov_limit);
     fprintf(stdout, "max_mr_key_size: %lu\n", MPIDI_OFI_global.max_mr_key_size);
+}
+
+static void dump_dynamic_settings(void)
+{
+    fprintf(stdout, "==== OFI dyanamic settings ====\n");
+    fprintf(stdout, "num_vnis: %d\n", MPIDI_OFI_global.num_vnis);
+    fprintf(stdout, "num_nics: %d\n", MPIDI_OFI_global.num_nics);
     fprintf(stdout, "======================================\n");
 }
 
@@ -1946,42 +1962,24 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
     int mpi_errno = MPI_SUCCESS;
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
-    int num_nics = MPIDI_OFI_global.num_nics;
-    size_t addrnamelen = MPIDI_OFI_global.addrnamelen = FI_NAME_MAX;
-    MPIR_CHKLMEM_DECL(1);
 
     /* No pre-published address table, need do address exchange. */
-    /* First, each process get its own name (for each nic that it will use) */
-    for (int nic = 0; nic < num_nics; nic++) {
-        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(0, nic)].ep,
-                                  MPIDI_OFI_global.addrname[nic], &addrnamelen), getname);
-        if (nic == 0) {
-            MPIDI_OFI_global.addrnamelen = addrnamelen;
-        } else {
-            MPIR_Assert(MPIDI_OFI_global.addrnamelen == addrnamelen);
-        }
-    }
+    /* First, each get its own name */
+    MPIDI_OFI_global.addrnamelen = FI_NAME_MAX;
+    MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, MPIDI_OFI_global.addrname,
+                              &MPIDI_OFI_global.addrnamelen), getname);
+    MPIR_Assert(MPIDI_OFI_global.addrnamelen <= FI_NAME_MAX);
 
     /* Second, exchange names using PMI */
     /* If MPIR_CVAR_CH4_ROOTS_ONLY_PMI is true, we only collect a table of node-roots.
      * Otherwise, we collect a table of everyone. */
     void *table = NULL;
-    int ret_bc_len = 0;
-
-    /* Convert the 2D array to an array of pointers so the memory addresses don't get calculated
-     * incorrectly. */
-    void *addrnames;
-    MPIR_CHKLMEM_MALLOC(addrnames, void *, addrnamelen * num_nics, mpi_errno, "addrnames",
-                        MPL_MEM_ADDRESS);
-    for (int nic = 0; nic < num_nics; nic++) {
-        memcpy(((char *) addrnames) + (addrnamelen * nic), MPIDI_OFI_global.addrname[nic],
-               addrnamelen);
-    }
-
-    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0], addrnames,
-                                      addrnamelen * num_nics, TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI,
-                                      &table, &ret_bc_len);
+    int ret_bc_len;
+    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
+                                      &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
+                                      TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &ret_bc_len);
     MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(ret_bc_len = MPIDI_OFI_global.addrnamelen);
 
     /* Third, each fi_av_insert those addresses */
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
@@ -1992,65 +1990,47 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
 
         /* First, insert address of node-roots, init_comm become useful */
         fi_addr_t *mapped_table;
-        mapped_table = (fi_addr_t *) MPL_malloc(num_nodes * num_nics * sizeof(fi_addr_t),
-                                                MPL_MEM_ADDRESS);
-        for (int i = 0; i < num_nics; i++) {
-            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(0, i)].av,
-                                        table, num_nodes * num_nics, mapped_table, 0ULL, NULL),
-                           avmap);
-        }
+        mapped_table = (fi_addr_t *) MPL_malloc(num_nodes * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
+        MPIDI_OFI_CALL(fi_av_insert
+                       (MPIDI_OFI_global.ctx[0].av, table, num_nodes, mapped_table, 0ULL, NULL),
+                       avmap);
 
         for (int i = 0; i < num_nodes; i++) {
-            for (int j = 0; j < num_nics; j++) {
-                fi_addr_t table_entry = mapped_table[(i * num_nics) + j];
-                MPIR_Assert(table_entry != FI_ADDR_NOTAVAIL);
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[j][0][0] = table_entry;
-            }
+            MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0][0] = mapped_table[i];
         }
         MPL_free(mapped_table);
         /* Then, allgather all address names using init_comm */
-        MPIDU_bc_allgather(init_comm, addrnames, addrnamelen, TRUE, &table, &rank_map,
-                           &recv_bc_len);
+        MPIDU_bc_allgather(init_comm, MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
+                           TRUE, &table, &rank_map, &recv_bc_len);
 
         /* Insert the rest of the addresses */
         for (int i = 0; i < MPIR_Process.size; i++) {
-            for (int nic = 0; nic < num_nics; nic++) {
-                if (rank_map[i] >= 0) {
-                    fi_addr_t addr;
-                    char *addrname = (char *) table + (recv_bc_len * rank_map[i] * nic) +
-                        (nic * rank_map[i]);
-                    MPIDI_OFI_CALL(fi_av_insert
-                                   (MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(0, nic)].av,
-                                    addrname, 1, &addr, 0ULL, NULL), avmap);
-                    MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest[nic][0][0] = addr;
-                }
+            if (rank_map[i] >= 0) {
+                fi_addr_t addr;
+                char *addrname = (char *) table + recv_bc_len * rank_map[i];
+                MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av,
+                                            addrname, 1, &addr, 0ULL, NULL), avmap);
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest[0][0][0] = addr;
             }
         }
         MPIDU_bc_table_destroy();
     } else {
         /* not "ROOTS_ONLY", we already have everyone's address name, insert all of them */
         fi_addr_t *mapped_table;
-        mapped_table = (fi_addr_t *) MPL_malloc(size * num_nics * sizeof(fi_addr_t),
-                                                MPL_MEM_ADDRESS);
-        for (int nic = 0; nic < num_nics; nic++) {
-            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(0, nic)].av,
-                                        table, size * num_nics, mapped_table, 0ULL, NULL), avmap);
-        }
+        mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
+        MPIDI_OFI_CALL(fi_av_insert
+                       (MPIDI_OFI_global.ctx[0].av, table, size, mapped_table, 0ULL, NULL), avmap);
 
         for (int i = 0; i < size; i++) {
-            for (int nic = 0; nic < num_nics; nic++) {
-                MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[nic][0][0] =
-                    mapped_table[(i * num_nics) + nic];
-            }
+            MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0][0] = mapped_table[i];
         }
         MPL_free(mapped_table);
         MPIDU_bc_table_destroy();
     }
 
   fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -2066,8 +2046,9 @@ static int addr_exchange_all_vnis(void)
     int num_vnis = MPIDI_OFI_global.num_vnis;
     int num_nics = MPIDI_OFI_global.num_nics;
 
-    /* Use the maximum name length to simplify the address exchange with multiple NICs */
-    int my_len = num_vnis * num_nics * FI_NAME_MAX;
+    /* libfabric uses uniform name_len within a single provider */
+    int name_len = MPIDI_OFI_global.addrnamelen;
+    int my_len = num_vnis * num_nics * name_len;
     char *all_names = MPL_malloc(size * my_len, MPL_MEM_ADDRESS);
     MPIR_Assert(all_names);
     char *my_names = all_names + rank * my_len;
@@ -2075,11 +2056,12 @@ static int addr_exchange_all_vnis(void)
     /* put in my addrnames */
     for (int nic = 0; nic < num_nics; nic++) {
         for (int vni = 0; vni < num_vnis; vni++) {
-            size_t actual_name_len = FI_NAME_MAX;
-            char *vni_addrname = my_names + (vni * num_nics * FI_NAME_MAX) + (nic * FI_NAME_MAX);
+            size_t actual_name_len = name_len;
+            char *vni_addrname = my_names + (vni * num_nics + nic) * name_len;
             int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
             MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[ctx_idx].ep, vni_addrname,
                                       &actual_name_len), getname);
+            MPIR_Assert(actual_name_len == name_len);
         }
     }
     /* Allgather */
