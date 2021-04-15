@@ -305,6 +305,7 @@ typedef MPL_atomic_int_t Handle_ref_count;
     } while (0)
 #define MPIR_Object_release_ref_always(objptr_,inuse_ptr)                      \
     do {                                                                       \
+        int new_ref_;                                                          \
         /* If it is 1, we will just free it without a heavy atomic operation.  \
          * Note that any concurrent add_ref() to a handle whose count is 1 is  \
          * illegal and we do not consider.                                     \
@@ -314,9 +315,10 @@ typedef MPL_atomic_int_t Handle_ref_count;
          * The following uses acquire_load() instead of OPA_load_int(). */     \
         if (MPL_atomic_acquire_load_int(&((objptr_)->ref_count)) == 1) {       \
             MPL_atomic_relaxed_store_int(&((objptr_)->ref_count), 0);          \
+            new_ref_ = 0;                                                      \
             *(inuse_ptr) = 0;                                                  \
         } else {                                                               \
-            int new_ref_ =                                                     \
+            new_ref_ =                                                         \
                 MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1;      \
             *(inuse_ptr) = new_ref_;                                           \
         }                                                                      \
