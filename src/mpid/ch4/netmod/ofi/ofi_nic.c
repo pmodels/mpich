@@ -98,7 +98,6 @@ int MPIDI_OFI_setup_multi_nic(void)
     MPIR_hwtopo_gid_t parents[MPIDI_OFI_MAX_NICS];
     int num_parents = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_hwtopo_gid_t *close_nic_parents = NULL;
     int local_rank = MPIR_Process.local_rank;
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
 
@@ -186,8 +185,6 @@ int MPIDI_OFI_setup_multi_nic(void)
     }
 
   fn_exit:
-    if (close_nic_parents)
-        MPIDU_Init_shm_free(close_nic_parents);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
