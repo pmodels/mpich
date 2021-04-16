@@ -184,8 +184,5 @@ int MPIDI_OFI_setup_multi_nic(void)
         MPIDI_OFI_global.prov_use[i] = nics[i].nic;
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
