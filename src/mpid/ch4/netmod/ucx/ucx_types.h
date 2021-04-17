@@ -18,7 +18,7 @@
 #define UCP_PEER_NAME_MAX         HOST_NAME_MAX
 
 /* Active Message Stuff */
-#define MPIDI_UCX_MAX_AM_EAGER_SZ      (16*1024)
+#define MPIDI_UCX_DEFAULT_SHORT_SEND_SIZE      (16*1024)
 
 /*
  *  UCX level am handler IDs are for differentiating AM message transferred in different modes:
