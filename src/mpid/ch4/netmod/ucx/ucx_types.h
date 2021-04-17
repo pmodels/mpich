@@ -19,7 +19,17 @@
 
 /* Active Message Stuff */
 #define MPIDI_UCX_MAX_AM_EAGER_SZ      (16*1024)
-#define MPIDI_UCX_AM_HANDLER_ID        (0)
+
+/*
+ *  UCX level am handler IDs are for differentiating AM message transferred in different modes:
+ *  1. Bulk mode. Send data in one tag send regardless message size.
+ *  2. Short mode. Send data in one tag send if message (with headers) is smaller than a predefined
+ *  threshold.
+ *  3. Pipeline mode. Send data in multiple tag sends.
+ */
+enum MPIDI_UCX_am_handler_ids {
+    MPIDI_UCX_AM_HANDLER_ID__BULK = 0
+};
 
 typedef struct {
     ucp_worker_h worker;

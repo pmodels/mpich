@@ -6,8 +6,8 @@
 #include "mpidimpl.h"
 #include "ucx_impl.h"
 
-ucs_status_t MPIDI_UCX_am_handler(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
-                                  unsigned flags)
+ucs_status_t MPIDI_UCX_am_handler_bulk(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
+                                       unsigned flags)
 {
     void *tmp, *p_data;
     size_t data_sz;

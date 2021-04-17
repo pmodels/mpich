@@ -290,8 +290,8 @@ int MPIDI_UCX_init_world(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     ucs_status_t ucx_status =
-        ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID,
-                                  &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
+        ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID__BULK,
+                                  &MPIDI_UCX_am_handler_bulk, NULL, UCP_AM_FLAG_WHOLE_MSG);
     MPIDI_UCX_CHK_STATUS(ucx_status);
 
     mpi_errno = initial_address_exchange();

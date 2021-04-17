@@ -139,6 +139,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_win_vni(MPIR_Win * win)
 
 #define MPIDI_UCX_WIN_AV_TO_EP(av, vni) MPIDI_UCX_AV((av)).dest[vni][vni]
 
-ucs_status_t MPIDI_UCX_am_handler(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
-                                  unsigned flags);
+ucs_status_t MPIDI_UCX_am_handler_bulk(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
+                                       unsigned flags);
 #endif /* UCX_IMPL_H_INCLUDED */

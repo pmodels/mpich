@@ -78,9 +78,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(actual_pack_bytes == data_sz);
 
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID, send_buf,
-                                                             data_sz + am_hdr_sz + sizeof(ucx_hdr),
-                                                             ucp_dt_make_contig(1),
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID__BULK,
+                                                             send_buf, data_sz + am_hdr_sz +
+                                                             sizeof(ucx_hdr), ucp_dt_make_contig(1),
                                                              &MPIDI_UCX_am_isend_callback, 0);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
@@ -151,9 +151,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(actual_pack_bytes == data_sz);
 
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID, send_buf,
-                                                             data_sz + am_hdr_sz + sizeof(ucx_hdr),
-                                                             ucp_dt_make_contig(1),
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID__BULK,
+                                                             send_buf, data_sz + am_hdr_sz +
+                                                             sizeof(ucx_hdr), ucp_dt_make_contig(1),
                                                              &MPIDI_UCX_am_isend_callback, 0);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
@@ -260,9 +260,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Comm * comm,
         total_sz = data_sz + am_hdr_sz + sizeof(ucx_hdr);
     }
     ucp_request =
-        (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID,
-                                                   send_buf_p, total_sz, dt,
-                                                   &MPIDI_UCX_am_isend_callback, 0);
+        (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID__BULK, send_buf_p,
+                                                   total_sz, dt, &MPIDI_UCX_am_isend_callback, 0);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     /* send is done. free all resources and complete the request */
@@ -325,8 +324,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
     MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
 
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID, send_buf,
-                                                             am_hdr_sz + sizeof(ucx_hdr),
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID__BULK,
+                                                             send_buf, am_hdr_sz + sizeof(ucx_hdr),
                                                              ucp_dt_make_contig(1),
                                                              &MPIDI_UCX_am_send_callback, 0);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
@@ -369,8 +368,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Comm * comm,
     send_buf = MPL_malloc(am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
     MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
     MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID, send_buf,
-                                                             am_hdr_sz + sizeof(ucx_hdr),
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID__BULK,
+                                                             send_buf, am_hdr_sz + sizeof(ucx_hdr),
                                                              ucp_dt_make_contig(1),
                                                              &MPIDI_UCX_am_send_callback, 0);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
