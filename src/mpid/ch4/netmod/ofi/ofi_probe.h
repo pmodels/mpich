@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
         remote_proc = MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote);
 
     if (message) {
-        rreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, vni_dst);
+        rreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, vni_dst, 1);
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
         rreq = &r;
