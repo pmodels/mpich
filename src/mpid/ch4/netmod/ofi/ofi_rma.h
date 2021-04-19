@@ -969,10 +969,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
-        *sigreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
+        *sigreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0, 2);
         MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
-        MPIR_Request_add_ref(*sigreq);
         MPIDIU_request_complete(*sigreq);
     }
     goto fn_exit;
