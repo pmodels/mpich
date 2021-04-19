@@ -379,10 +379,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
                                    winattr);
     if (mpi_errno == MPI_SUCCESS) {
         /* create a completed request for user. */
-        sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
+        sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0, 2);
         MPIR_Assert(sreq);
 
-        MPIR_Request_add_ref(sreq);
         MPID_Request_complete(sreq);
         *request = sreq;
     }
@@ -495,11 +494,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
 
     /* create a completed request for user. */
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
+    sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0, 2);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_Assert(sreq);
 
-    MPIR_Request_add_ref(sreq);
     MPID_Request_complete(sreq);
     *request = sreq;
 
@@ -548,11 +546,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
 
     /* create a completed request for user. */
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
+    sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0, 2);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_Assert(sreq);
 
-    MPIR_Request_add_ref(sreq);
     MPID_Request_complete(sreq);
     *request = sreq;
 
@@ -670,10 +667,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
                                    winattr);
     if (mpi_errno == MPI_SUCCESS) {
         /* create a completed request for user. */
-        sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
+        sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0, 2);
         MPIR_Assert(sreq);
 
-        MPIR_Request_add_ref(sreq);
         MPID_Request_complete(sreq);
         *request = sreq;
     }

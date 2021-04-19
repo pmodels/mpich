@@ -20,7 +20,7 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     /* Set refcnt=1 for user-defined partitioned pattern; decrease at request_free. */
-    req = MPIR_Request_create_from_pool(kind, 0);
+    req = MPIR_Request_create_from_pool(kind, 0, 1);
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIR_Comm_add_ref(comm);
