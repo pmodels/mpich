@@ -28,9 +28,9 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REQUEST_FREE_HOOK);
 
     int vci = MPIDI_Request_get_vci(req);
-    /* Increment MPIDI_global.progress_counts[vci]. */
-    int count = MPL_atomic_relaxed_load_int(&MPIDI_global.progress_counts[vci]);
-    MPL_atomic_relaxed_store_int(&MPIDI_global.progress_counts[vci], count + 1);
+    /* Increment MPIDI_global.vci[vci].vci.progress_count. */
+    int count = MPL_atomic_relaxed_load_int(&MPIDI_VCI(vci).progress_count);
+    MPL_atomic_relaxed_store_int(&MPIDI_VCI(vci).progress_count, count + 1);
 
     /* This is tricky. I think the only solution is to expose partner
      * to the upper layer */

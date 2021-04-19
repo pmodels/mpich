@@ -453,6 +453,9 @@ typedef struct MPIR_Object_alloc_t {
                                  * pointer is ignored. Ref. mpir_request.h.
                                  * NOTE: it is `void *` because mutex type not defined yet.
                                  */
+    /* The following padding is to avoid cache line sharing with other MPIR_Object_alloc_t.  This
+     * padding is particularly important for an array of per-vci MPI_Request pools. */
+    char pad[MPL_CACHELINE_SIZE];
 } MPIR_Object_alloc_t;
 static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t *);
 void *MPIR_Info_handle_obj_alloc(MPIR_Object_alloc_t *);
