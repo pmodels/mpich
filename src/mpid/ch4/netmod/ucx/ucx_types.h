@@ -25,6 +25,7 @@ typedef struct {
     ucp_worker_h worker;
     ucp_address_t *if_address;
     size_t addrname_len;
+    char pad[MPL_CACHELINE_SIZE];
 } MPIDI_UCX_context_t;
 
 typedef struct {
