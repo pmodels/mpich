@@ -357,8 +357,10 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
 
 /* NOTE: Pool-specific request creation is unsafe unless under global thread granularity.
  */
-static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t kind, int pool)
+static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t kind, int pool,
+                                                          int ref_count)
 {
+    MPIR_Assert(ref_count >= 1);
     MPIR_Request *req;
 
 #ifdef MPICH_DEBUG_MUTEX
@@ -390,7 +392,7 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
          * inheritance).  For example, do we really* want to set the
          * kind to UNDEFINED? And should the RMA values be set only
          * for RMA requests? */
-        MPIR_Object_set_ref(req, 1);
+        MPIR_Object_set_ref(req, ref_count);
         req->kind = kind;
         MPIR_cc_set(&req->cc, 1);
         req->cc_ptr = &req->cc;
@@ -431,7 +433,7 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
     MPIR_Request *req;
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[0].lock));
-    req = MPIR_Request_create_from_pool(kind, 0);
+    req = MPIR_Request_create_from_pool(kind, 0, 1);
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[0].lock));
     return req;

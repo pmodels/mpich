@@ -33,9 +33,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 
     if (message_h) {
         *flag = 1;
-        req = (MPIR_Request *) MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, vni_dst);
+        req = (MPIR_Request *) MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, vni_dst, 2);
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).message_handler = message_h;
 
         if (status != MPI_STATUS_IGNORE) {

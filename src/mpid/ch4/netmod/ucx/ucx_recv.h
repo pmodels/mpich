@@ -141,7 +141,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
 
     if (ucp_request->req) {
         if (req == NULL) {
-            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst);
+            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst, 1);
             memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
             MPIR_cc_set(&req->cc, 0);
             MPL_free(ucp_request->req);
@@ -153,10 +153,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
     } else {
-        if (req == NULL)
-            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst);
-        MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Request_add_ref(req);
+        if (req == NULL) {
+            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst, 2);
+            MPIR_ERR_CHKANDSTMT(req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        } else {
+            MPIR_Request_add_ref(req);
+        }
         MPIDI_UCX_REQ(req).ucp_request = ucp_request;
         ucp_request->req = req;
     }
