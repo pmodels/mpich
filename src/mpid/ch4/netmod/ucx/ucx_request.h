@@ -10,13 +10,12 @@
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
 {
-    req->dev.ch4.am.netmod_am.ucx.pack_buffer = NULL;
+    MPIDI_UCX_AMREQUEST(req, pack_buffer) = NULL;
+    MPIDI_UCX_AMREQUEST(req, am_type_choice) = MPIDI_UCX_AMTYPE_NONE;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)
 {
-    MPIR_gpu_free_host((req)->dev.ch4.am.netmod_am.ucx.pack_buffer);
-    /* MPIR_Request_free(req); */
 }
 
 #endif /* UCX_REQUEST_H_INCLUDED */

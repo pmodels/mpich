@@ -11,6 +11,12 @@
 #define MPIDI_UCX_KVSAPPSTRLEN 4096
 #define MPIDI_UCX_MAX_AM_HDR_SIZE 256
 
+enum {
+    MPIDI_UCX_AMTYPE_NONE = 0,
+    MPIDI_UCX_AMTYPE_SHORT,
+    MPIDI_UCX_AMTYPE_BULK
+};
+
 typedef struct {
     int dummy;
 } MPIDI_UCX_Global_t;
@@ -64,6 +70,8 @@ typedef struct {
     int handler_id;
     char *pack_buffer;
     bool is_gpu_pack_buffer;
+    int am_type_choice;
+    MPI_Aint data_sz;
     ucp_dt_iov_t iov[2];
 
     MPIDI_UCX_deferred_am_isend_req_t *deferred_req;
