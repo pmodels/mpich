@@ -45,7 +45,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
 /* inside per-vci progress */
 MPL_STATIC_INLINE_PREFIX void MPIDI_check_progress_made_idx(MPID_Progress_state * state, int idx)
 {
-    int cur_count = MPL_atomic_relaxed_load_int(&MPIDI_global.progress_counts[state->vci[idx]]);
+    int cur_count = MPL_atomic_relaxed_load_int(&MPIDI_VCI(state->vci[idx]).progress_count);
     if (state->progress_counts[idx] != cur_count) {
         state->progress_counts[idx] = cur_count;
         state->progress_made = 1;
@@ -57,8 +57,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_check_progress_made_vci(MPID_Progress_state 
 {
     for (int i = 0; i < state->vci_count; i++) {
         if (vci == state->vci[i]) {
-            int cur_count;
-            cur_count = MPL_atomic_relaxed_load_int(&MPIDI_global.progress_counts[state->vci[i]]);
+            int cur_count = MPL_atomic_relaxed_load_int(&MPIDI_VCI(state->vci[i]).progress_count);
             if (state->progress_counts[i] != cur_count) {
                 state->progress_counts[i] = cur_count;
                 state->progress_made = 1;
@@ -182,10 +181,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_progress_state_init_count(MPID_Progress_stat
 {
     /* Note: ugly code to avoid warning -Wmaybe-uninitialized */
 #if MPIDI_CH4_MAX_VCIS == 1
-    state->progress_counts[0] = MPL_atomic_relaxed_load_int(&MPIDI_global.progress_counts[0]);
+    state->progress_counts[0] = MPL_atomic_relaxed_load_int(&MPIDI_VCI(0).progress_count);
 #else
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
-        state->progress_counts[i] = MPL_atomic_relaxed_load_int(&MPIDI_global.progress_counts[i]);
+        state->progress_counts[i] = MPL_atomic_relaxed_load_int(&MPIDI_VCI(i).progress_count);
     }
 #endif
 }
