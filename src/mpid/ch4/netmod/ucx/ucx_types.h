@@ -32,7 +32,8 @@
  */
 enum MPIDI_UCX_am_handler_ids {
     MPIDI_UCX_AM_HANDLER_ID__BULK = 0,
-    MPIDI_UCX_AM_HANDLER_ID__SHORT
+    MPIDI_UCX_AM_HANDLER_ID__SHORT,
+    MPIDI_UCX_AM_HANDLER_ID__PIPELINE
 };
 
 typedef struct {
@@ -49,6 +50,7 @@ typedef struct {
     MPIDU_genq_private_pool_t am_hdr_buf_pool;
     MPIDU_genq_private_pool_t pack_buf_pool;
     MPIDI_UCX_deferred_am_isend_req_t *deferred_am_isend_q;
+    void *req_map;
 } MPIDI_UCX_global_t;
 
 #define MPIDI_UCX_AV(av)     ((av)->netmod.ucx)

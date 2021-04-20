@@ -14,6 +14,7 @@
 enum {
     MPIDI_UCX_AMTYPE_NONE = 0,
     MPIDI_UCX_AMTYPE_SHORT,
+    MPIDI_UCX_AMTYPE_PIPELINE,
     MPIDI_UCX_AMTYPE_BULK
 };
 
@@ -37,7 +38,8 @@ typedef union {
 } MPIDI_UCX_request_t;
 
 typedef struct MPIDI_UCX_am_header_t {
-    uint64_t handler_id;
+    uint32_t handler_id;
+    uint32_t src_grank;
     uint64_t data_sz;
     uint64_t payload[];
 } MPIDI_UCX_am_header_t;
@@ -72,7 +74,8 @@ typedef struct {
     bool is_gpu_pack_buffer;
     int am_type_choice;
     MPI_Aint data_sz;
-    ucp_dt_iov_t iov[2];
+    ucp_dt_iov_t iov[3];
+    MPIR_Request *sreq;
 
     MPIDI_UCX_deferred_am_isend_req_t *deferred_req;
 } MPIDI_UCX_am_request_t;

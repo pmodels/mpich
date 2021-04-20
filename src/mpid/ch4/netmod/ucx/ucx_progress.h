@@ -25,6 +25,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_handle_deferred_ops(void)
                                                         dreq->count, dreq->datatype, dreq->sreq,
                                                         true);
                 break;
+            case MPIDI_UCX_AM_HANDLER_ID__PIPELINE:
+                mpi_errno = MPIDI_UCX_do_am_isend_pipeline(dreq->rank, dreq->comm, dreq->handler_id,
+                                                           dreq->am_hdr, dreq->am_hdr_sz, dreq->buf,
+                                                           dreq->count, dreq->datatype, dreq->sreq,
+                                                           true);
+                break;
             default:
                 MPIR_Assert(0);
         }

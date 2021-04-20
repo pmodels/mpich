@@ -355,6 +355,7 @@ int MPIDI_UCX_init_world(void)
                                               host_free_registered,
                                               &MPIDI_UCX_global.pack_buf_pool);
     MPIDI_UCX_global.deferred_am_isend_q = NULL;
+    MPIDIU_map_create(&MPIDI_UCX_global.req_map, MPL_MEM_OTHER);
 
     ucs_status_t ucx_status;
     ucx_status =
@@ -364,6 +365,10 @@ int MPIDI_UCX_init_world(void)
     ucx_status =
         ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID__SHORT,
                                   &MPIDI_UCX_am_handler_short, NULL, UCP_AM_FLAG_WHOLE_MSG);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
+    ucx_status =
+        ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID__PIPELINE,
+                                  &MPIDI_UCX_am_handler_pipeline, NULL, UCP_AM_FLAG_WHOLE_MSG);
     MPIDI_UCX_CHK_STATUS(ucx_status);
 
     mpi_errno = initial_address_exchange();
@@ -481,6 +486,7 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
     MPIDU_genq_private_pool_destroy_unsafe(MPIDI_UCX_global.am_hdr_buf_pool);
     MPIDU_genq_private_pool_destroy_unsafe(MPIDI_UCX_global.pack_buf_pool);
+    MPIDIU_map_destroy(MPIDI_UCX_global.req_map);
 
     mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);

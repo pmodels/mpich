@@ -189,7 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Comm * comm,
 
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_NM_am_hdr_max_sz(void)
 {
-    return (MPIDI_UCX_DEFAULT_SHORT_SEND_SIZE - sizeof(MPIDI_UCX_am_header_t));
+    return MPIDI_UCX_MAX_AM_HDR_SIZE;
 }
 
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_NM_am_eager_limit(void)
