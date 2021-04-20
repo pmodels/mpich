@@ -67,7 +67,7 @@ static void ipc_handle_free_hook(void *dptr)
 int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
 {
     int mpl_err, mpi_errno = MPI_SUCCESS;
-    int device_count = -1;
+    int device_count;
     int my_max_dev_id, node_max_dev_id = -1;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GPU_MPI_INIT_HOOK);
@@ -75,10 +75,9 @@ int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
     MPIR_CHKPMEM_DECL(1);
 
     MPIDI_GPUI_global.initialized = 0;
-    mpl_err = MPL_gpu_init(&device_count, &my_max_dev_id);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
-
-    if (device_count == -1)
+    mpl_err = MPL_gpu_get_dev_count(&device_count, &my_max_dev_id);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_get_dev_count");
+    if (device_count < 0)
         goto fn_exit;
 
     int *global_ids = MPL_malloc(sizeof(int) * device_count, MPL_MEM_OTHER);
@@ -233,7 +232,7 @@ int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
 
 int MPIDI_GPU_mpi_finalize_hook(void)
 {
-    int mpl_err, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_GPUI_dev_id_t *current, *tmp;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GPU_MPI_FINALIZE_HOOK);
@@ -287,9 +286,6 @@ int MPIDI_GPU_mpi_finalize_hook(void)
         }
     }
     MPL_free(MPIDI_GPUI_global.ipc_handle_track_trees);
-
-    mpl_err = MPL_gpu_finalize();
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_finalize");
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_MPI_FINALIZE_HOOK);
