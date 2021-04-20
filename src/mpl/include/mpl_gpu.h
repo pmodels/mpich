@@ -43,7 +43,7 @@ typedef enum {
 static inline int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
     attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
-    attr->device = -1;
+    attr->device = MPL_GPU_DEVICE_INVALID;
 
     return MPL_SUCCESS;
 }

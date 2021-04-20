@@ -195,6 +195,7 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     switch (attr->device_attr.prop.type) {
         case ZE_MEMORY_TYPE_UNKNOWN:
             attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
+            attr->device = MPL_GPU_DEVICE_INVALID;
             break;
         case ZE_MEMORY_TYPE_HOST:
             attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
