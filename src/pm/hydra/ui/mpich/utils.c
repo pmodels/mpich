@@ -472,6 +472,7 @@ static void pattern_info(void)
     printf("       %%g: Process group ID\n");
     printf("       %%p: Proxy ID\n");
     printf("       %%h: Hostname\n");
+    printf("       %%t: Timestamp in seconds\n");
 }
 
 static void prepend_pattern_help_fn(void)

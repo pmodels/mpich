@@ -25,6 +25,7 @@ void HYD_uiu_init_params(void)
 
     HYD_server_info.nameserver = NULL;
     HYD_server_info.localhost = NULL;
+    HYD_server_info.time_start = time(NULL);
 
     HYD_server_info.stdout_cb = NULL;
     HYD_server_info.stderr_cb = NULL;
@@ -191,6 +192,10 @@ static HYD_status resolve_pattern_string(const char *pattern, char **str, int pg
                     break;
                 case 'p':
                     MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", proxy_id);
+                    break;
+                case 't':
+                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d",
+                                 (int) (time(NULL) - HYD_server_info.time_start));
                     break;
                 case 'h':
                     for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
