@@ -192,6 +192,13 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPIR_ThreadInfo.isThreaded = 0;
 #endif
 
+    /* Initialize gpu in mpl in order to support shm gpu module initialization
+     * inside MPID_Init */
+    if (MPIR_CVAR_ENABLE_GPU) {
+        int mpl_errno = MPL_gpu_init();
+        MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
+    }
+
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -329,6 +336,11 @@ int MPII_Finalize(MPIR_Session * session_ptr)
      * was more careful about file updates, though the lack of OS support
      * for atomic file updates makes this harder. */
     MPII_final_coverage_delay(rank);
+
+    if (MPIR_CVAR_ENABLE_GPU) {
+        int mpl_errno = MPL_gpu_finalize();
+        MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_finalize");
+    }
 
     /* All memory should be freed at this point */
     MPII_finalize_memory_tracing();

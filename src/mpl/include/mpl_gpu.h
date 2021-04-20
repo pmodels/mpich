@@ -66,7 +66,7 @@ int MPL_gpu_unregister_host(const void *ptr);
 int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device);
 int MPL_gpu_free(void *ptr);
 
-int MPL_gpu_init(int *device_count, int *max_dev_id_ptr);
+int MPL_gpu_init(void);
 int MPL_gpu_finalize(void);
 
 int MPL_gpu_get_dev_id(MPL_gpu_device_handle_t dev_handle, int *dev_id);
@@ -75,5 +75,6 @@ int MPL_gpu_get_global_dev_ids(int *global_ids, int count);
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len);
 
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr));
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id);
 
 #endif /* ifndef MPL_GPU_H_INCLUDED */

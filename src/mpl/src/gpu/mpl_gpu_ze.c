@@ -10,6 +10,10 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef MPL_HAVE_ZE
 
+static int gpu_initialized = 0;
+static int device_count;
+static int max_dev_id;
+
 /* Level-zero API v1.0:
  * http://spec.oneapi.com/level-zero/latest/index.html
  */
@@ -25,14 +29,27 @@ static int gpu_ze_init_driver(void);
             goto fn_fail; \
     } while (0)
 
-int MPL_gpu_init(int *device_count_ptr, int *max_dev_id_ptr)
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
+{
+    int ret = MPL_SUCCESS;
+    if (!gpu_initialized) {
+        ret = MPL_gpu_init();
+    }
+
+    *dev_cnt = device_count;
+    *dev_id = max_dev_id;
+    return ret;
+}
+
+int MPL_gpu_init()
 {
     int ret_error;
     ret_error = gpu_ze_init_driver();
     if (ret_error != MPL_SUCCESS)
         goto fn_fail;
 
-    *max_dev_id_ptr = *device_count_ptr = global_ze_device_count;
+    max_dev_id = device_count = global_ze_device_count;
+    gpu_initialized = 1;
 
   fn_exit:
     return MPL_SUCCESS;
