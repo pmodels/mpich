@@ -136,20 +136,25 @@ static int construct_resized(DTP_pool_s dtp, int attr_tree_depth, DTPI_Attr_s * 
         attr->u.resized.lb = lb;
         attr->u.resized.extent = extent;
 
+        int64_t lb_tmp = lb;
         int lb_attr = DTPI_rand(dtpi) % DTPI_ATTR_RESIZED_LB__LAST;
         if (lb_attr == DTPI_ATTR_RESIZED_LB__PACKED) {
-            attr->u.resized.lb = true_lb;
+            lb_tmp = true_lb;
         } else if (lb_attr == DTPI_ATTR_RESIZED_LB__LOW) {
-            attr->u.resized.lb = lb - 2 * extent;
+            lb_tmp -= (int64_t) 2 *extent;
         } else if (lb_attr == DTPI_ATTR_RESIZED_LB__VERY_LOW) {
-            attr->u.resized.lb = lb - 10 * extent;
+            lb_tmp -= (int64_t) 10 *extent;
         } else if (lb_attr == DTPI_ATTR_RESIZED_LB__HIGH) {
-            attr->u.resized.lb = lb + 2 * extent;
+            lb_tmp += (int64_t) 2 *extent;
         } else if (lb_attr == DTPI_ATTR_RESIZED_LB__VERY_HIGH) {
-            attr->u.resized.lb = lb + 10 * extent;
+            lb_tmp += (int64_t) 10 *extent;
         } else {
             DTPI_ERR_ASSERT(0, rc);
         }
+
+        if (!VALUE_FITS_IN_AINT(lb_tmp))
+            continue;
+        attr->u.resized.lb = lb_tmp;
 
         int extent_attr = DTPI_rand(dtpi) % DTPI_ATTR_RESIZED_EXTENT__LAST;
         if (extent_attr == DTPI_ATTR_RESIZED_EXTENT__PACKED) {
@@ -606,7 +611,7 @@ static int construct_blkhindx(DTP_pool_s dtp, int attr_tree_depth, DTPI_Attr_s *
         if (displs_attr == DTPI_ATTR_BLKHINDX_DISPLS__SMALL) {
             for (int i = 0; i < attr->u.blkhindx.numblks; i++) {
                 attr->u.blkhindx.array_of_displs[i] = (MPI_Aint) total_displ;
-                total_displ += (attr->u.blkhindx.blklen + 1) * attr->child_type_extent;
+                total_displ += (uint64_t) (attr->u.blkhindx.blklen + 1) * attr->child_type_extent;
                 if (!VALUE_FITS_IN_AINT(total_displ))
                     goto retry;
             }
@@ -949,14 +954,16 @@ static int construct_hindexed(DTP_pool_s dtp, int attr_tree_depth, DTPI_Attr_s *
         if (displs_attr == DTPI_ATTR_HINDEXED_DISPLS__SMALL) {
             for (int i = 0; i < attr->u.hindexed.numblks; i++) {
                 attr->u.hindexed.array_of_displs[i] = (MPI_Aint) total_displ;
-                total_displ += attr->child_type_extent * (attr->u.hindexed.array_of_blklens[i] + 1);
+                total_displ +=
+                    (uint64_t) attr->child_type_extent * (attr->u.hindexed.array_of_blklens[i] + 1);
                 if (!VALUE_FITS_IN_AINT(total_displ))
                     goto retry;
             }
         } else if (displs_attr == DTPI_ATTR_HINDEXED_DISPLS__LARGE) {
             for (int i = 0; i < attr->u.hindexed.numblks; i++) {
                 attr->u.hindexed.array_of_displs[i] = (MPI_Aint) total_displ;
-                total_displ += attr->child_type_extent * (attr->u.hindexed.array_of_blklens[i] * 4);
+                total_displ +=
+                    (uint64_t) attr->child_type_extent * (attr->u.hindexed.array_of_blklens[i] * 4);
                 if (!VALUE_FITS_IN_AINT(total_displ))
                     goto retry;
             }

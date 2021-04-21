@@ -152,7 +152,7 @@ int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize)
         rc = MPI_Type_get_extent(obj->DTP_datatype, &lb, &extent);
         DTPI_ERR_CHK_MPI_RC(rc);
 
-        obj->DTP_bufsize = (extent * obj->DTP_type_count) + true_extent - extent;
+        obj->DTP_bufsize = (extent * obj->DTP_type_count) + (true_extent - extent);
 
         /* if the true_lb occurs after the actual buffer start, make
          * sure we allocate some additional bytes to accommodate for
