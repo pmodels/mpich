@@ -117,7 +117,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Datatype *dt_ptr;
     struct fi_msg_tagged msg;
     char *recv_buf;
-    MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
     bool force_gpu_pack = false;
     int vni_remote = vni_src;
     int vni_local = vni_dst;
@@ -157,6 +156,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     recv_buf = (char *) buf + dt_true_lb;
+    MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(recv_buf, &attr);
     if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
         if (!MPIDI_OFI_ENABLE_HMEM) {

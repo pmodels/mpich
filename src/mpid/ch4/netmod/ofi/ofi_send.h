@@ -134,7 +134,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     int mpi_errno = MPI_SUCCESS;
     char *send_buf;
     uint64_t match_bits;
-    MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
     bool force_gpu_pack = false;
     int vni_local = vni_src;
     int vni_remote = vni_dst;
@@ -183,6 +182,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     send_buf = (char *) buf + dt_true_lb;
+    MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(send_buf, &attr);
     if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
         if (!MPIDI_OFI_ENABLE_HMEM) {
@@ -336,9 +336,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send))) {
-        MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
         MPI_Aint actual_pack_bytes = 0;
         void *send_buf = (char *) buf + dt_true_lb;
+        MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(send_buf, &attr);
         if (attr.type == MPL_GPU_POINTER_DEV) {
             if (!MPIDI_OFI_ENABLE_HMEM) {
