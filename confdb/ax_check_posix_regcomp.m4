@@ -27,18 +27,18 @@ AU_ALIAS([AG_CHECK_POSIX_REGCOMP], [AX_CHECK_POSIX_REGCOMP])
 AC_DEFUN([AX_CHECK_POSIX_REGCOMP],[
     AC_MSG_CHECKING([whether POSIX compliant regcomp()/regexec()])
     AC_CACHE_VAL([ax_cv_posix_regcomp],[
-    AC_TRY_RUN([
-#include <sys/types.h>
-#include <regex.h>
-int main() {
-    int flags = REG_EXTENDED|REG_ICASE|REG_NEWLINE;
-    regex_t  re;
-    if (regcomp( &re, "^.*$", flags  ) != 0)
-        return 1;
-    return regcomp( &re, "yes.*|no.*", flags  );
-}],
-    [ax_cv_posix_regcomp=yes],[ax_cv_posix_regcomp=no],[ax_cv_posix_regcomp=no]
-    ) # end of TRY_RUN]) # end of CACHE_VAL
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+            #include <sys/types.h>
+            #include <regex.h>
+            int main() {
+                int flags = REG_EXTENDED|REG_ICASE|REG_NEWLINE;
+                regex_t  re;
+                if (regcomp( &re, "^.*$", flags  ) != 0)
+                    return 1;
+                return regcomp( &re, "yes.*|no.*", flags  );
+            }
+            ]])], [ax_cv_posix_regcomp=yes],[ax_cv_posix_regcomp=no],[ax_cv_posix_regcomp=no])
+    ])
 
     AC_MSG_RESULT([$ax_cv_posix_regcomp])
     if test "$ax_cv_posix_regcomp" = "yes"; then

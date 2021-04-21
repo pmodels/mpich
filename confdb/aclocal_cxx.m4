@@ -6,12 +6,12 @@ AC_DEFUN([AX_CXX_BOOL],
 ac_cv_cxx_bool,
 [AC_LANG_SAVE
  AC_LANG_CPLUSPLUS
- AC_TRY_COMPILE([
-int f(int  x){return 1;}
-int f(char x){return 1;}
-int f(bool x){return 1;}
-],[bool b = true; return f(b);],
- ac_cv_cxx_bool=yes, ac_cv_cxx_bool=no)
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    int f(int  x){return 1;}
+    int f(char x){return 1;}
+    int f(bool x){return 1;}
+    ]],[[bool b = true; return f(b);]])],
+    ac_cv_cxx_bool=yes, ac_cv_cxx_bool=no)
  AC_LANG_RESTORE
 ])
 if test "$ac_cv_cxx_bool" != yes; then
@@ -26,8 +26,8 @@ AC_DEFUN([AX_CXX_EXCEPTIONS],
 ac_cv_cxx_exceptions,
 [AC_LANG_SAVE
  AC_LANG_CPLUSPLUS
- AC_TRY_COMPILE(,[try { throw  1; } catch (int i) { return i; }],
- ac_cv_cxx_exceptions=yes, ac_cv_cxx_exceptions=no)
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[[try { throw  1; } catch (int i) { return i; }]])],
+    ac_cv_cxx_exceptions=yes, ac_cv_cxx_exceptions=no)
  AC_LANG_RESTORE
 ])
 if test "$ac_cv_cxx_exceptions" = yes; then
@@ -42,9 +42,12 @@ AC_DEFUN([AX_CXX_NAMESPACES],
 ac_cv_cxx_namespaces,
 [AC_LANG_SAVE
  AC_LANG_CPLUSPLUS
- AC_TRY_COMPILE([namespace Outer { namespace Inner { int i = 0; }}],
-                [using namespace Outer::Inner; return i;],
- ac_cv_cxx_namespaces=yes, ac_cv_cxx_namespaces=no)
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    namespace Outer { namespace Inner { int i = 0; }}
+    ]],[[
+    using namespace Outer::Inner; return i;
+    ]])],
+    ac_cv_cxx_namespaces=yes, ac_cv_cxx_namespaces=no)
  AC_LANG_RESTORE
 ])
 if test "$ac_cv_cxx_namespaces" = yes; then
@@ -62,11 +65,13 @@ ac_cv_cxx_namespace_std,
 if test "$ac_cv_cxx_namespaces" = yes ; then 
    AC_LANG_SAVE
    AC_LANG_CPLUSPLUS
-   AC_TRY_COMPILE([
-#include <iostream>
-using namespace std;],
-                [cout << "message\n";],
- ac_cv_cxx_namespace_std=yes, ac_cv_cxx_namespace_std=no)
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <iostream>
+        using namespace std;
+        ]],[[
+        cout << "message\n";
+        ]])],
+        ac_cv_cxx_namespace_std=yes, ac_cv_cxx_namespace_std=no)
    AC_LANG_RESTORE
 fi
 ])

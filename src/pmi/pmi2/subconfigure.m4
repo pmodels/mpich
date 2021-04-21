@@ -60,24 +60,25 @@ fi
 
 # Check for socklen_t .  If undefined, define it as int
 # (note the conditional inclusion of sys/socket.h)
-AC_CACHE_CHECK([whether socklen_t is defined (in sys/socket.h if present)],
-pac_cv_have_socklen_t,[
-AC_TRY_COMPILE([
-#include <sys/types.h>
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-]
-typedef struct { double a; int b; } socklen_t;,[socklen_t a;a.a=1.0;],pac_cv_have_socklen_t=no,pac_cv_have_socklen_t=yes)])
+AC_CACHE_CHECK([whether socklen_t is defined (in sys/socket.h if present)], pac_cv_have_socklen_t,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <sys/types.h>
+        #ifdef HAVE_SYS_SOCKET_H
+        #include <sys/socket.h>
+        #endif
+        typedef struct { double a; int b; } socklen_t;
+        ]],[[
+        socklen_t a;a.a=1.0;
+        ]])],pac_cv_have_socklen_t=no,pac_cv_have_socklen_t=yes)
+])
 if test "$pac_cv_have_socklen_t" = no ; then
     AC_DEFINE(socklen_t,int,[Define if socklen_t is not defined])
 fi
 # Check for h_addr or h_addr_list
-AC_CACHE_CHECK([whether struct hostent contains h_addr_list],
-pac_cv_have_haddr_list,[
-AC_TRY_COMPILE([
-#include <netdb.h>],[struct hostent hp;hp.h_addr_list[0]=0;],
-pac_cv_have_haddr_list=yes,pac_cv_have_haddr_list=no)])
+AC_CACHE_CHECK([whether struct hostent contains h_addr_list], pac_cv_have_haddr_list,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],[[struct hostent hp;hp.h_addr_list[0]=0;]])],
+        pac_cv_have_haddr_list=yes,pac_cv_have_haddr_list=no)
+])
 if test "$pac_cv_have_haddr_list" = "yes" ; then
     AC_DEFINE(HAVE_H_ADDR_LIST,1,[Define if struct hostent contains h_addr_list])
 fi
