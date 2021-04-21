@@ -2301,14 +2301,15 @@ if test "$enable_cxx" = "yes" ; then
     AC_CACHE_CHECK([whether the C++ compiler $CXX can build an executable],
     pac_cv_cxx_builds_exe,[
  AC_LANG_PUSH([C++])
- AC_TRY_LINK([
-class mytest {
-  int a;
-public:
-  mytest(void) : a(1) {}
-  ~mytest(void) {}
-};],[mytest a;],
- pac_cv_cxx_builds_exe=yes, pac_cv_cxx_builds_exe=no)
+ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    class mytest {
+        int a;
+      public:
+        mytest(void) : a(1) {}
+        ~mytest(void) {}
+    };
+    ]],[[mytest a;]])],
+    pac_cv_cxx_builds_exe=yes, pac_cv_cxx_builds_exe=no)
  AC_LANG_POP([C++])
 ])
     if test "$pac_cv_cxx_builds_exe" != yes ; then
@@ -2318,7 +2319,8 @@ public:
     # The Intel icpc 10.x compiler fails with <string> if gcc 4.2 is installed.
     AC_CACHE_CHECK([whether C++ compiler works with string],pac_cv_cxx_compiles_string,[
     AC_LANG_PUSH([C++])
-    AC_TRY_COMPILE([#include <string>],[return 0;],pac_cv_cxx_compiles_string=yes,pac_cv_cxx_compiles_string=no)
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <string>]],[[return 0;]])],
+        pac_cv_cxx_compiles_string=yes,pac_cv_cxx_compiles_string=no)
     AC_LANG_POP([C++])
 ])
     if test "$pac_cv_cxx_compiles_string" != yes ; then
@@ -2339,15 +2341,13 @@ public:
     fi
     # iostream and math are needed for examples/cxx/cxxpi.cxx
     AC_CACHE_CHECK([whether <iostream> available],pac_cv_cxx_has_iostream,[
-    AC_TRY_COMPILE([
-#include <iostream>
-],[using namespace std;],pac_cv_cxx_has_iostream=yes,pac_cv_cxx_has_iostream=no)])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <iostream>]],[[using namespace std;]])],
+        pac_cv_cxx_has_iostream=yes,pac_cv_cxx_has_iostream=no)])
     AX_CXX_NAMESPACE_STD
 
     AC_CACHE_CHECK([whether <math> available],pac_cv_cxx_has_math,[
-    AC_TRY_COMPILE([
-#include <math>
-],[using namespace std;],pac_cv_cxx_has_math=yes,pac_cv_cxx_has_math=no)])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <math>]],[[using namespace std;]])],
+        pac_cv_cxx_has_math=yes,pac_cv_cxx_has_math=no)])
 
     # GNU changed the calling conventions between minor releases (!!!)
     # This is too hard to detect, but we should be able to detect
@@ -2372,20 +2372,21 @@ public:
        "$GNUCXX_VERSION" = 0 -a "$GNUCXX_MINORVERSION" = 0 ; then
          ac_vals=""
 	 AC_MSG_CHECKING([for GNU g++ version])
-         AC_TRY_RUN([#include <stdio.h>
-int main() {
-    int v = -1, m = -1;
-    FILE *fp = fopen("conftest.out","w");
-#ifdef __GNUC_MINOR__
-    m = __GNUC_MINOR__;
-#endif
-#ifdef __GNUC__
-    v = __GNUC__;
-#endif
-    fprintf( fp, "v=%d, m=%d\n", v, m );
-    fclose( fp );
-    return 0;
-}],ac_vals=`cat conftest.out`)
+         AC_RUN_IFELSE([AC_LANG_SOURCE([[
+            #include <stdio.h>
+            int main() {
+                int v = -1, m = -1;
+                FILE *fp = fopen("conftest.out","w");
+            #ifdef __GNUC_MINOR__
+                m = __GNUC_MINOR__;
+            #endif
+            #ifdef __GNUC__
+                v = __GNUC__;
+            #endif
+                fprintf( fp, "v=%d, m=%d\n", v, m );
+                fclose( fp );
+                return 0;
+            }]])],ac_vals=`cat conftest.out`)
          if test -n "$ac_vals" ; then
              v=`echo "$ac_vals" | sed -e 's/v=\(.*\),.*/\1/'`
              m=`echo "$ac_vals" | sed -e 's/.*m=\(.*\)/\1/'`
@@ -2729,15 +2730,15 @@ You may need to specify an additional argument to your C compiler to
 force it to allow unaligned accesses.)])
 fi
 # Check for __func__ (defined in C99) or __FUNCTION__ (defined in older GCC)
-AC_CACHE_CHECK([whether $CC supports __func__],pac_cv_cc_has___func__,
-[AC_TRY_COMPILE([],
- [const char *cp = __func__; ],pac_cv_cc_has___func__=yes,
-pac_cv_cc_has___func__=no)])
+AC_CACHE_CHECK([whether $CC supports __func__],pac_cv_cc_has___func__, [
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[[const char *cp = __func__;]])],
+        pac_cv_cc_has___func__=yes, pac_cv_cc_has___func__=no)
+])
 if test "$pac_cv_cc_has___func__" != "yes" ; then
-    AC_CACHE_CHECK([whether $CC supports __FUNCTION__],pac_cv_cc_has___FUNCTION__,
-[AC_TRY_COMPILE([],
- [const char *cp = __FUNCTION__;],pac_cv_cc_has___FUNCTION__=yes,
-pac_cv_cc_has___FUNCTION__=no)])
+    AC_CACHE_CHECK([whether $CC supports __FUNCTION__],pac_cv_cc_has___FUNCTION__,[
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[[const char *cp = __FUNCTION__;]])],
+            pac_cv_cc_has___FUNCTION__=yes, pac_cv_cc_has___FUNCTION__=no)
+    ])
 fi
 
 # ----------------------------------------------------------------------------
@@ -2749,8 +2750,8 @@ fi
 if test "$MPID_NO_LONG_DOUBLE" != "yes" && test "X$enable_long_double" != "Xno" ; then
     AC_CACHE_CHECK([whether long double is supported],
     pac_cv_have_long_double,[
-    AC_TRY_COMPILE(,[long double a;],
-    pac_cv_have_long_double=yes,pac_cv_have_long_double=no)])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[[long double a;]])],
+        pac_cv_have_long_double=yes,pac_cv_have_long_double=no)])
     if test "$pac_cv_have_long_double" = "yes" ; then
         AC_DEFINE(HAVE_LONG_DOUBLE,1,[Define if long double is supported])
     fi
@@ -2758,8 +2759,8 @@ fi
 if test "$MPID_NO_LONG_LONG" != "yes" ; then
     AC_CACHE_CHECK([whether long long is supported],
     pac_cv_have_long_long,[
-    AC_TRY_COMPILE(,[long long a;],
-    pac_cv_have_long_long=yes,pac_cv_have_long_long=no)])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[[long long a;]])],
+        pac_cv_have_long_long=yes,pac_cv_have_long_long=no)])
     if test "$pac_cv_have_long_long" = "yes" ; then
         AC_DEFINE(HAVE_LONG_LONG_INT,1,[Define if long long is supported])
     fi
@@ -4274,13 +4275,15 @@ AC_SUBST([MPI_F77_CXX_LONG_DOUBLE_COMPLEX])
 # therefore, they must be also be activated/deavtivated there
 PAC_PUSH_FLAG([CFLAGS])
 PAC_C_CHECK_COMPILER_OPTION([-Werror],[CFLAGS="$CFLAGS -Werror"])
-AC_TRY_COMPILE([
-typedef int TEST_Datatype;
-#define TEST_INT ((TEST_Datatype)0x44)
-static const TEST_Datatype test_int  __attribute__((type_tag_for_datatype(TEST,int)))  = TEST_INT;
-void test(const void* buffer, TEST_Datatype datatype)__attribute__((pointer_with_type_tag(TEST,1,2)));],[
-const int buf[10];
-test(buf, TEST_INT);],ac_attr_support=yes, ac_attr_support=no)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    typedef int TEST_Datatype;
+    #define TEST_INT ((TEST_Datatype)0x44)
+    static const TEST_Datatype test_int  __attribute__((type_tag_for_datatype(TEST,int)))  = TEST_INT;
+    void test(const void* buffer, TEST_Datatype datatype)__attribute__((pointer_with_type_tag(TEST,1,2)));
+    ]],[[
+    const int buf[10];
+    test(buf, TEST_INT);
+    ]])],ac_attr_support=yes, ac_attr_support=no)
 if test "$ac_attr_support" = yes
 then
     DISABLE_TAG_SUPPORT="#undef NO_TAGS_WITH_MODIFIERS"
@@ -4308,29 +4311,29 @@ if test "$ac_cv_c_int64_t" != "no" -o -n "$INT64_T" ; then
     fi
     # We use the type that we're going use for int64.
     AC_CACHE_CHECK([for alignment restrictions on $INT64_T],pac_cv_int64_t_alignment,[
-    AC_TRY_RUN([
-#include <sys/types.h>
-#include <stdlib.h>
-int main(int argc, char **argv )
-{
-    $INT64_T *p1, v;
-    char    *buf_p = (char *)malloc( 64 ), *bp;
-    bp = buf_p;
-    /* Make bp aligned on 4, not 8 bytes */
-    if (!( (long)bp & 0x7 ) ) bp += 4;
-    p1 = ($INT64_T *)bp;
-    v = -1;
-    *p1 = v;
-    if (!( (long)bp & 0x3 ) ) bp += 2;
-    p1 = ($INT64_T *)bp;
-    *p1 = 1;
-    if (!( (long)bp & 0x1 ) ) bp += 1;
-    p1 = ($INT64_T *)bp;
-    *p1 = 1;
-    return 0;
-}
-],pac_cv_int64_t_alignment=no,pac_cv_int64_t_alignment=yes,pac_cv_int64_t_alignment=$default_int64_t_alignment)
-])
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+            #include <sys/types.h>
+            #include <stdlib.h>
+            int main(int argc, char **argv )
+            {
+                $INT64_T *p1, v;
+                char    *buf_p = (char *)malloc( 64 ), *bp;
+                bp = buf_p;
+                /* Make bp aligned on 4, not 8 bytes */
+                if (!( (long)bp & 0x7 ) ) bp += 4;
+                p1 = ($INT64_T *)bp;
+                v = -1;
+                *p1 = v;
+                if (!( (long)bp & 0x3 ) ) bp += 2;
+                p1 = ($INT64_T *)bp;
+                *p1 = 1;
+                if (!( (long)bp & 0x1 ) ) bp += 1;
+                p1 = ($INT64_T *)bp;
+                *p1 = 1;
+                return 0;
+            }
+        ]])],pac_cv_int64_t_alignment=no,pac_cv_int64_t_alignment=yes,pac_cv_int64_t_alignment=$default_int64_t_alignment)
+    ])
     if test "$pac_cv_int64_t_alignment" = "no" ; then
          AC_DEFINE(HAVE_ANY_INT64_T_ALIGNMENT,1,[Define if int64_t works with any alignment])
     fi
@@ -4347,29 +4350,29 @@ if test "$ac_cv_int32_t" != "no" ; then
     fi
 
     AC_CACHE_CHECK([for alignment restrictions on int32_t],pac_cv_int32_t_alignment,[
-    AC_TRY_RUN([
-#include <sys/types.h>
-#include <stdlib.h>
-int main(int argc, char **argv )
-{
-    $INT32_T *p1, v;
-    char    *buf_p = (char *)malloc( 64 ), *bp;
-    bp = buf_p;
-    /* Make bp aligned on 4, not 8 bytes */
-    if (!( (long)bp & 0x7 ) ) bp += 4;
-    p1 = ($INT32_T *)bp;
-    v = -1;
-    *p1 = v;
-    if (!( (long)bp & 0x3 ) ) bp += 2;
-    p1 = ($INT32_T *)bp;
-    *p1 = 1;
-    if (!( (long)bp & 0x1 ) ) bp += 1;
-    p1 = ($INT32_T *)bp;
-    *p1 = 1;
-    return 0;
-}
-],pac_cv_int32_t_alignment=no,pac_cv_int32_t_alignment=yes,pac_cv_int32_t_alignment=$default_int32_t_alignment)
-])
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+            #include <sys/types.h>
+            #include <stdlib.h>
+            int main(int argc, char **argv )
+            {
+                $INT32_T *p1, v;
+                char    *buf_p = (char *)malloc( 64 ), *bp;
+                bp = buf_p;
+                /* Make bp aligned on 4, not 8 bytes */
+                if (!( (long)bp & 0x7 ) ) bp += 4;
+                p1 = ($INT32_T *)bp;
+                v = -1;
+                *p1 = v;
+                if (!( (long)bp & 0x3 ) ) bp += 2;
+                p1 = ($INT32_T *)bp;
+                *p1 = 1;
+                if (!( (long)bp & 0x1 ) ) bp += 1;
+                p1 = ($INT32_T *)bp;
+                *p1 = 1;
+                return 0;
+            }
+        ]])],pac_cv_int32_t_alignment=no,pac_cv_int32_t_alignment=yes,pac_cv_int32_t_alignment=$default_int32_t_alignment)
+    ])
     if test "$pac_cv_int32_t_alignment" = "no" ; then
          AC_DEFINE(HAVE_ANY_INT32_T_ALIGNMENT,1,[Define if int32_t works with any alignment])
     fi
@@ -4389,10 +4392,13 @@ AC_HEADER_STDC
 # stddef.h is sometimes needed for types like wchar_t
 AC_CHECK_HEADERS(stdlib.h stdarg.h sys/types.h string.h inttypes.h limits.h stddef.h errno.h sys/socket.h sys/time.h unistd.h endian.h assert.h sys/param.h)
 AC_CACHE_CHECK([for sys/uio.h],ac_cv_header_sys_uio_h,[
-AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <sys/uio.h>
-],[int a;],ac_cv_header_sys_uio_h=yes,ac_cv_header_sys_uio_h=no)])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <sys/types.h>
+        #include <sys/uio.h>
+        ]],[[
+        int a;
+        ]])],ac_cv_header_sys_uio_h=yes,ac_cv_header_sys_uio_h=no)
+])
 if test "$ac_cv_header_sys_uio_h" = yes ; then
     AC_DEFINE(HAVE_SYS_UIO_H,1,[Define if you have the <sys/uio.h> header file.])
 fi
@@ -4433,31 +4439,33 @@ AC_CHECK_FUNCS([qsort])
 # debugging routine.  We may want to withdraw this (saving the
 # test in confdb/aclocal_cc.m4).
 AC_CACHE_CHECK([for va_copy],pac_cv_func_va_copy,[
-AC_TRY_LINK([
-#include <stdarg.h>
-void foo1( char *fmt, ... ) {
-    va_list ap, list;
-    va_start(ap,fmt);
-    va_copy(list,ap);
-    va_end(list);
-    va_end(ap);
-}
-],[foo1("a test %d", 3);],pac_cv_func_va_copy=yes,pac_cv_func_va_copy=no)])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+        #include <stdarg.h>
+        void foo1( char *fmt, ... ) {
+            va_list ap, list;
+            va_start(ap,fmt);
+            va_copy(list,ap);
+            va_end(list);
+            va_end(ap);
+        }
+        ]],[[foo1("a test %d", 3);]])],pac_cv_func_va_copy=yes,pac_cv_func_va_copy=no)
+])
 
 if test "$pac_cv_func_va_copy" = "yes" ; then
     AC_DEFINE(HAVE_VA_COPY,1,[Define if we have va_copy])
 else
     AC_CACHE_CHECK([for __va_copy],pac_cv_func___va_copy,[
-    AC_TRY_LINK([
-#include <stdarg.h>
-void foo1( char *fmt, ... ) {
-    va_list ap, list;
-    va_start(ap,fmt);
-    __va_copy(list,ap);
-    va_end(list);
-    va_end(ap);
-}
-],[foo1("a test %d", 3);],pac_cv_func___va_copy=yes,pac_cv_func___va_copy=no)])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+            #include <stdarg.h>
+            void foo1( char *fmt, ... ) {
+                va_list ap, list;
+                va_start(ap,fmt);
+                __va_copy(list,ap);
+                va_end(list);
+                va_end(ap);
+            }
+            ]],[[foo1("a test %d", 3);]])],pac_cv_func___va_copy=yes,pac_cv_func___va_copy=no)
+    ])
     if test "$pac_cv_func___va_copy" = "yes" ; then
         AC_DEFINE(HAVE___VA_COPY,1,[Define if we have __va_copy])
     fi
@@ -4646,16 +4654,15 @@ AC_CHECK_FUNCS(sched_setaffinity sched_getaffinity bindprocessor thread_policy_s
 if test "$ac_cv_func_sched_setaffinity" = "yes" ; then
     # Test for the cpu process set type
     AC_CACHE_CHECK([whether cpu_set_t available],pac_cv_have_cpu_set_t,[
-    AC_TRY_COMPILE( [
-#include <sched.h>],[ cpu_set_t t; ],pac_cv_have_cpu_set_t=yes,pac_cv_have_cpu_set_t=no)])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sched.h>]],[[cpu_set_t t;]])],
+        pac_cv_have_cpu_set_t=yes,pac_cv_have_cpu_set_t=no)])
     if test "$pac_cv_have_cpu_set_t" = yes ; then
         AC_DEFINE(HAVE_CPU_SET_T,1,[Define if cpu_set_t is defined in sched.h])
 
 	AC_CACHE_CHECK([whether the CPU_SET and CPU_ZERO macros are defined],
 	pac_cv_cpu_set_defined,[
-        AC_TRY_LINK( [
-#include <sched.h>],[ cpu_set_t t; CPU_ZERO(&t); CPU_SET(1,&t); ],
-        pac_cv_cpu_set_defined=yes,pac_cv_cpu_set_defined=no)])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sched.h>]],[[cpu_set_t t; CPU_ZERO(&t); CPU_SET(1,&t);]])],
+            pac_cv_cpu_set_defined=yes,pac_cv_cpu_set_defined=no)])
 	if test "$pac_cv_cpu_set_defined" = "yes" ; then
 	    AC_DEFINE(HAVE_CPU_SET_MACROS,1,[Define if CPU_SET and CPU_ZERO defined])
         fi
@@ -4664,13 +4671,16 @@ if test "$ac_cv_func_sched_setaffinity" = "yes" ; then
     fi
 fi
 if test "$ac_cv_func_thread_policy_set" = yes ; then
-    AC_CACHE_CHECK([whether thread affinity macros defined],
-    pac_cv_have_thread_affinity_policy,[
-    AC_TRY_COMPILE([#include <mach/thread_policy.h>],[
-#if !defined(THREAD_AFFINITY_POLICY) || !defined(THREAD_AFFINITY_TAG_NULL)
-    :'thread macros not defined
-],pac_cv_have_thread_affinity_policy=yes,
-  pac_cv_have_thread_affinity_policy=no)])
+    AC_CACHE_CHECK([whether thread affinity macros defined], pac_cv_have_thread_affinity_policy,[
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <mach/thread_policy.h>
+            ]],[[
+            #if !defined(THREAD_AFFINITY_POLICY) || !defined(THREAD_AFFINITY_TAG_NULL)
+                :'thread macros not defined
+            ]])],
+            pac_cv_have_thread_affinity_policy=yes,
+            pac_cv_have_thread_affinity_policy=no)
+    ])
     if test "$pac_cv_have_thread_affinity_policy" = yes ; then
         AC_DEFINE(HAVE_OSX_THREAD_AFFINITY,1,[Define is the OSX thread affinity policy macros defined])
     fi

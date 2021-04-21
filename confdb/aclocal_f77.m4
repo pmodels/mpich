@@ -387,7 +387,7 @@ dnl Check whether '!' may be used to begin comments in Fortran.
 dnl
 dnl This macro requires a version of autoconf `after` 2.13; the 'acgeneral.m4'
 dnl file contains an error in the handling of Fortran programs in 
-dnl 'AC_TRY_COMPILE' (fixed in our local version).
+dnl 'AC_COMPILE_IFELSE' (fixed in our local version).
 dnl
 dnl D*/
 AC_DEFUN([PAC_PROG_F77_EXCLAIM_COMMENTS],[

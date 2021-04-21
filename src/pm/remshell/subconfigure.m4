@@ -75,17 +75,23 @@ AC_CHECK_FUNCS([sigaction signal sigset])
 sigaction_ok=no
 if test "$ac_cv_func_sigaction" = "yes" ; then
     AC_CACHE_CHECK([for struct sigaction],pac_cv_struct_sigaction,[
-    AC_TRY_COMPILE([#include <signal.h>],[
-struct sigaction act; sigaddset( &act.sa_mask, SIGINT );],
-    pac_cv_struct_sigaction="yes",pac_cv_struct_sigaction="no")])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <signal.h>
+            ]],[[
+            struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+            ]])], pac_cv_struct_sigaction="yes",pac_cv_struct_sigaction="no")
+    ])
     if test "$pac_cv_struct_sigaction" = "no" ; then
-        AC_CACHE_CHECK([for struct sigaction with _POSIX_SOURCE],
-	pac_cv_struct_sigaction_needs_posix,[
-        AC_TRY_COMPILE([#define _POSIX_SOURCE
-#include <signal.h>],[
-struct sigaction act; sigaddset( &act.sa_mask, SIGINT );],
-       pac_cv_struct_sigaction_needs_posix="yes",
-       pac_cv_struct_sigaction_needs_posix="no")])
+        AC_CACHE_CHECK([for struct sigaction with _POSIX_SOURCE], pac_cv_struct_sigaction_needs_posix,[
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+                #define _POSIX_SOURCE
+                #include <signal.h>
+                ]],[[
+                struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+                ]])],
+                pac_cv_struct_sigaction_needs_posix="yes",
+                pac_cv_struct_sigaction_needs_posix="no")
+        ])
         if test "$pac_cv_struct_sigaction_needs_posix" = "yes" ; then
             sigaction_ok=yes
 	fi
@@ -117,12 +123,14 @@ AC_CHECK_FUNCS([ptrace])
 # It isn't enough to find ptrace.  We also need the ptrace 
 # parameters, which some systems, such as IRIX, do not define.
 if test "$ac_cv_func_ptrace" = yes ; then
-    AC_CACHE_CHECK([for ptrace named parameters],
-[pac_cv_has_ptrace_parms],[
-    AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <sys/ptrace.h>],[int i = PTRACE_CONT;],[pac_cv_has_ptrace_parms=yes],
-[pac_cv_has_ptrace_parms=no])])
+    AC_CACHE_CHECK([for ptrace named parameters], [pac_cv_has_ptrace_parms],[
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <sys/types.h>
+            #include <sys/ptrace.h>
+            ]],[[
+            int i = PTRACE_CONT;
+            ]])],[pac_cv_has_ptrace_parms=yes], [pac_cv_has_ptrace_parms=no])
+    ])
     if test "$pac_cv_has_ptrace_parms" = "yes" ; then
         AC_DEFINE([HAVE_PTRACE_CONT],[],[Define if ptrace parameters available])
     fi
