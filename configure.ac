@@ -4427,45 +4427,6 @@ fi
 # qsort will be used in MPI_Comm_split, if available
 AC_CHECK_FUNCS([qsort])
 
-# if we are using stdarg, we may need va_copy .  Test to see if we have it
-# Since it may be a built-in instead of a function, we must try to
-# compile and link a program that uses it.
-# va_copy is currently used only in src/util/dbg_printf.c, in an obsolete
-# debugging routine.  We may want to withdraw this (saving the
-# test in confdb/aclocal_cc.m4).
-AC_CACHE_CHECK([for va_copy],pac_cv_func_va_copy,[
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-        #include <stdarg.h>
-        void foo1( char *fmt, ... ) {
-            va_list ap, list;
-            va_start(ap,fmt);
-            va_copy(list,ap);
-            va_end(list);
-            va_end(ap);
-        }
-        ]],[[foo1("a test %d", 3);]])],pac_cv_func_va_copy=yes,pac_cv_func_va_copy=no)
-])
-
-if test "$pac_cv_func_va_copy" = "yes" ; then
-    AC_DEFINE(HAVE_VA_COPY,1,[Define if we have va_copy])
-else
-    AC_CACHE_CHECK([for __va_copy],pac_cv_func___va_copy,[
-        AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-            #include <stdarg.h>
-            void foo1( char *fmt, ... ) {
-                va_list ap, list;
-                va_start(ap,fmt);
-                __va_copy(list,ap);
-                va_end(list);
-                va_end(ap);
-            }
-            ]],[[foo1("a test %d", 3);]])],pac_cv_func___va_copy=yes,pac_cv_func___va_copy=no)
-    ])
-    if test "$pac_cv_func___va_copy" = "yes" ; then
-        AC_DEFINE(HAVE___VA_COPY,1,[Define if we have __va_copy])
-    fi
-fi
-
 PAC_C_MACRO_VA_ARGS
 
 # Check for alloca function.  May set HAVE_ALLOCA_H and HAVE_ALLOCA
