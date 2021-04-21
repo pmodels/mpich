@@ -69,7 +69,7 @@ int MPIR_Pack_external_impl(const char datarep[],
   fn_exit:
     return mpi_errno;
   fn_fail:
-    goto fn_fail;
+    goto fn_exit;
 }
 
 int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
@@ -86,7 +86,7 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
   fn_exit:
     return mpi_errno;
   fn_fail:
-    goto fn_fail;
+    goto fn_exit;
 }
 
 int MPIR_Unpack_external_impl(const char datarep[],
@@ -103,7 +103,7 @@ int MPIR_Unpack_external_impl(const char datarep[],
   fn_exit:
     return mpi_errno;
   fn_fail:
-    goto fn_fail;
+    goto fn_exit;
 }
 
 void MPIR_Pack_size(MPI_Aint incount, MPI_Datatype datatype, MPI_Aint * size)
