@@ -65,13 +65,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                 mpi_errno = MPIDI_UCX_do_am_isend_short(rank, comm, handler_id, am_hdr, am_hdr_sz,
                                                         data, count, datatype, sreq, false);
             } else {
-                mpi_errno = MPIDI_UCX_do_am_isend_bulk(rank, comm, handler_id, am_hdr, am_hdr_sz,
-                                                       data, count, datatype, sreq);
+                mpi_errno = MPIDI_UCX_do_am_isend_pipeline(rank, comm, handler_id, am_hdr,
+                                                           am_hdr_sz, data, count, datatype, sreq,
+                                                           false);
             }
             break;
         case MPIDI_UCX_AMTYPE_SHORT:
             mpi_errno = MPIDI_UCX_do_am_isend_short(rank, comm, handler_id, am_hdr, am_hdr_sz, data,
                                                     count, datatype, sreq, false);
+            /* cleanup preselected amtype to avoid problem with reused request */
+            MPIDI_UCX_AMREQUEST(sreq, am_type_choice) = MPIDI_UCX_AMTYPE_NONE;
+            break;
+        case MPIDI_UCX_AMTYPE_PIPELINE:
+            mpi_errno = MPIDI_UCX_do_am_isend_pipeline(rank, comm, handler_id, am_hdr, am_hdr_sz,
+                                                       data, count, datatype, sreq, false);
             /* cleanup preselected amtype to avoid problem with reused request */
             MPIDI_UCX_AMREQUEST(sreq, am_type_choice) = MPIDI_UCX_AMTYPE_NONE;
             break;
@@ -301,7 +308,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Ai
         MPIDI_UCX_AMREQUEST(sreq, am_type_choice) = MPIDI_UCX_AMTYPE_SHORT;
         return true;
     } else {
-        MPIDI_UCX_AMREQUEST(sreq, am_type_choice) = MPIDI_UCX_AMTYPE_BULK;
+        MPIDI_UCX_AMREQUEST(sreq, am_type_choice) = MPIDI_UCX_AMTYPE_PIPELINE;
         return false;
     }
 }
