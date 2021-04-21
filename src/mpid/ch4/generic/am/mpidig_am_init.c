@@ -49,6 +49,8 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+MPIDIG_global_t MPIDIG_global;
+
 static int dynamic_am_handler_id = MPIDIG_HANDLER_STATIC_MAX;
 
 static void *host_alloc(uintptr_t size);
