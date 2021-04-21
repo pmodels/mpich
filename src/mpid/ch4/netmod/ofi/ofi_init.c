@@ -1974,12 +1974,10 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
     /* If MPIR_CVAR_CH4_ROOTS_ONLY_PMI is true, we only collect a table of node-roots.
      * Otherwise, we collect a table of everyone. */
     void *table = NULL;
-    int ret_bc_len;
     mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
                                       &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
-                                      TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &ret_bc_len);
+                                      TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Assert(ret_bc_len = MPIDI_OFI_global.addrnamelen);
 
     /* Third, each fi_av_insert those addresses */
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {

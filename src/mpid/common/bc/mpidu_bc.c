@@ -141,6 +141,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (!same_len) {
         /* if business cards can be different length, use the max value length */
         recv_bc_len = MPID_MAX_BC_SIZE;
+        /* Note: ret_bc_len is only touched if !same_len */
         *ret_bc_len = recv_bc_len;
     }
 
