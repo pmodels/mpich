@@ -172,7 +172,7 @@ struct mpif_cmblk7_t_ {
 };
 typedef struct mpif_cmblk7_t_ mpif_cmblk7_t;
 /* *INDENT-OFF* */
-mpif_cmblk7_t mpifcmb7r @CMB_1INT_ALIGNMENT@ = {{{0}}};
+mpif_cmblk7_t mpifcmb7r @CMB_1INT_ALIGNMENT@ = {{{0}},{0}};
 /* *INDENT-ON* */
 extern mpif_cmblk7_t _CMPIFCMB7 __attribute__ ((alias("mpifcmb7r")));
 extern mpif_cmblk7_t MPIFCMB7 __attribute__ ((alias("mpifcmb7r")));
@@ -187,7 +187,7 @@ struct mpif_cmblk8_t_ {
 };
 typedef struct mpif_cmblk8_t_ mpif_cmblk8_t;
 /* *INDENT-OFF* */
-mpif_cmblk8_t mpifcmb8r @CMB_1INT_ALIGNMENT@ = {{0}};
+mpif_cmblk8_t mpifcmb8r @CMB_1INT_ALIGNMENT@ = {{0},{0}};
 /* *INDENT-ON* */
 extern mpif_cmblk8_t _CMPIFCMB8 __attribute__ ((alias("mpifcmb8r")));
 extern mpif_cmblk8_t MPIFCMB8 __attribute__ ((alias("mpifcmb8r")));
