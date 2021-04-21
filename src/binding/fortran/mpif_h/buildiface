@@ -1067,7 +1067,7 @@ AM_CPPFLAGS += -I\${main_top_srcdir}/src/binding/fortran/mpif_h
 noinst_HEADERS += src/binding/fortran/mpif_h/fproto.h src/binding/fortran/mpif_h/mpi_fortimpl.h
 
 # config.status copies src/binding/fortran/mpif_h/mpif.h to src/include (see the relevant
-# AC_OUTPUT_COMMANDS in configure.ac), so we need to delete it at distclean time
+# AC_CONFIG_COMMANDS in configure.ac), so we need to delete it at distclean time
 # too.  More work is needed in this Makefile.mk to keep src/include/mpif.h up to
 # date w.r.t. the src/binding/fortran/mpif_h version.
 DISTCLEANFILES += src/binding/fortran/mpif_h/mpif.h src/include/mpif.h

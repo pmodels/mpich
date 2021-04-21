@@ -1195,3 +1195,21 @@ fi
 rm -f conftest1.$OBJEXT F08TS_MODULE.* f08ts_module.*
 AC_MSG_RESULT([$f08_works])
 ])
+
+dnl
+dnl PAC_FC_CHECK_REAL128 check whether real128 is supported (for use_mpi_f08)
+dnl set pac_fc_has_real128 to yes if it's supported, otherwise, no.
+dnl
+AC_DEFUN([PAC_FC_CHECK_REAL128],[
+    AC_LANG_PUSH(Fortran)
+    AC_MSG_CHECKING([for Fortran 90 real128])
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+        program main
+            use iso_fortran_env
+            real(real128) x
+            x = 1.0
+        end
+    ])],[pac_fc_has_real128=yes],[pac_fc_has_real128=no])
+    AC_MSG_RESULT([$pac_fc_has_real128])
+    AC_LANG_POP(Fortran)
+])

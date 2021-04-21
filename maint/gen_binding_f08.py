@@ -10,11 +10,18 @@ from local_python.binding_f08 import *
 from local_python import RE
 
 def main():
+    # currently support -no-real128, -no-mpiio
+    G.parse_cmdline()
+
     binding_dir = "src/binding"
     f08_dir = "src/binding/fortran/use_mpi_f08"
     func_list = load_C_func_list(binding_dir, True) # suppress noise
-    # FIXME: until romio interface is generated
-    func_list.extend(get_mpiio_func_list())
+    if "no-mpiio" in G.opts:
+        # a few MPI_File_xxx functions are already in (MPI_File_xxx_errhandler)
+        func_list = [f for f in func_list if not f['name'].startswith('MPI_File_')]
+    else:
+        # FIXME: until romio interface is generated
+        func_list.extend(get_mpiio_func_list())
     func_list.extend(get_type_create_f90_func_list())
 
     # f08_cdesc.c

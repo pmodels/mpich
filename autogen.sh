@@ -824,7 +824,6 @@ if [ $do_bindings = "yes" ] ; then
 	# Top-level files
 	( cd src/binding/fortran/use_mpi_f08 && chmod a+x ./buildiface && ./buildiface )
         # generate src/binding/fortran/use_mpi_f08/wrappers_c/...
-        $PYTHON maint/gen_binding_f08.py
 	echo "done"
     fi
 
@@ -1033,7 +1032,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                 else
                     echo "failed"
                 fi
-                echo_n "Patching libtool.m4 for compatibility macOS Big Sur..."
+                echo_n "Patching libtool.m4 for compatibility macOS BigSur..."
                 patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/big-sur.patch
                 if [ $? -eq 0 ] ; then
                     macos_patch_requires_rebuild=yes
