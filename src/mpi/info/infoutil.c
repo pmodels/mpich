@@ -20,7 +20,7 @@ MPIR_Info MPIR_Info_direct[MPIR_INFO_PREALLOC];
 MPIR_Object_alloc_t MPIR_Info_mem = { 0, 0, 0, 0, 0, 0, MPIR_INFO,
     sizeof(MPIR_Info), MPIR_Info_direct,
     MPIR_INFO_PREALLOC,
-    NULL
+    NULL, {0}
 };
 
 /* Free an info structure.  In the multithreaded case, this routine

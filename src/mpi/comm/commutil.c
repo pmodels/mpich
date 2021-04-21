@@ -32,7 +32,7 @@ MPIR_Object_alloc_t MPIR_Comm_mem = {
     sizeof(MPIR_Comm),
     MPIR_Comm_direct,
     MPID_COMM_PREALLOC,
-    NULL
+    NULL, {0}
 };
 
 /* Communicator creation functions */
