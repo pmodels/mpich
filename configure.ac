@@ -2070,7 +2070,7 @@ fi
 dnl By modifying mpif.h to use ! for comments, it can work with many f90
 dnl compilers without creating a separate version.
 dnl Note that this is run AFTER the AC_OUTPUT actions
-AC_OUTPUT_COMMANDS([if test "$enable_f77" = yes ; then
+AC_CONFIG_COMMANDS([src/include/mpif.h],[if test "$enable_f77" = yes ; then
 if test "$has_exclaim" = "yes" ; then
     sed -e 's/^C/\!/g' src/binding/fortran/mpif_h/mpif.h > src/include/mpif.h
 	cp src/include/mpif.h src/binding/fortran/mpif_h/mpif.h
@@ -5080,7 +5080,7 @@ dnl from the file.
 dnl
 dnl Run a setup command for any external modules (normally, this is empty)
 dnl Pass a subset of the environment to the invoked process.
-AC_OUTPUT_COMMANDS([
+AC_CONFIG_COMMANDS([external_setups],[
 for prog in $EXTERNAL_SETUPS - ; do
     if test "$prog" != "-" ; then
       dir=`dirname $prog`
@@ -5120,10 +5120,12 @@ dnl
 dnl If we rerun configure, place a file in the lib directory with the
 dnl date.  We can use this to avoid rebuilding the library when
 dnl a build aborts due to an error (this is intended to help developers)
-AC_OUTPUT_COMMANDS([if [ ! -d lib ] ; then mkdir lib ; fi
-date > lib/newconfig])
+AC_CONFIG_COMMANDS([lib/newconfig],[
+    mkdir -p lib
+    date > lib/newconfig
+])
 
-AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
+AC_CONFIG_COMMANDS([chmod],[chmod a+x test/commands/cmdtests])
 
 
 AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h file has been included])
@@ -5370,6 +5372,19 @@ if test -z "$pkgconfigdir" ; then
 fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
+
+if test "$f08_works" = "yes" ; then
+    PAC_CHECK_PYTHON
+    PAC_FC_CHECK_REAL128
+    cmd="$PYTHON maint/gen_binding_f08.py"
+    if test "$pac_fc_has_real128" = "no" ; then
+        cmd="$cmd -no-real128"
+    fi
+    if test "$enable_romio" = "no" ; then
+        cmd="$cmd -no-mpiio"
+    fi
+    AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd"])
+fi
 
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
 dnl directory

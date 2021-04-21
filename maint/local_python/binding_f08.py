@@ -1145,6 +1145,10 @@ def dump_mpi_f08_types():
         G.out.append("DEDENT")
         G.out.append("END INTERFACE")
 
+    def filter_f08_sizeof_list():
+        if "no-real128" in G.opts:
+            G.f08_sizeof_list = [a for a in G.f08_sizeof_list if not a.endswith("128")]
+
     def dump_sizeof_interface():
         G.out.append("")
         G.out.append("INTERFACE MPI_Sizeof")
@@ -1180,6 +1184,9 @@ def dump_mpi_f08_types():
             G.out.append("END SUBROUTINE")
 
     # ----
+    # optionally filter real128
+    filter_f08_sizeof_list()
+
     dump_F_module_open("mpi_f08_types")
     G.out.append("USE, intrinsic :: iso_c_binding, ONLY: c_int")
     G.out.append("USE :: mpi_c_interface_types, ONLY: c_Count, c_Status")
@@ -1187,7 +1194,8 @@ def dump_mpi_f08_types():
     G.out.append("")
     G.out.append("private :: c_int, c_Count, c_Status")
     dump_handle_types()
-    dump_file_interface()
+    if "no-mpiio" not in G.opts:
+        dump_file_interface()
     dump_status_type()
     dump_status_interface()
     dump_handle_interface()

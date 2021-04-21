@@ -4,6 +4,7 @@
 ##
 
 import re
+import sys
 
 # RE class allows convenience of using regex capture in a condition
 class RE:
@@ -17,10 +18,16 @@ class RE:
 
 # Global data used across modules
 class MPI_API_Global:
+    # command line options and arguments
+    opts = {}
+    args = []
+    # output
     out = []
+    # api
     FUNCS = {}
     MAPS = {}
     default_descriptions = {}
+    # misc globals used during code genration
     err_codes = {}
     mpi_sources = []
     mpi_declares = []
@@ -116,3 +123,12 @@ class MPI_API_Global:
         "! -- THIS FILE IS AUTO-GENERATED -- ",
         ""
     ]
+
+    def parse_cmdline():
+        for a in sys.argv[1:]:
+            if RE.match(r'--?(\w+)=(.*)', a):
+                MPI_API_Global.opts[RE.m.group(1)] = RE.m.group(2)
+            elif RE.match(r'--?(\w.+)', a):
+                MPI_API_Global.opts[RE.m.group(1)] = 1
+            else:
+                MPI_API_Global.args.append(a)
