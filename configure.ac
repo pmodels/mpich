@@ -1664,11 +1664,6 @@ done
 # Check for whether the compiler defines a symbol that contains the
 # function name. The MPICH code uses this for debugging purposes.
 
-# NOTE: C99, C11 defines __func__. If not supported, it will only
-# break debugging, not the main code.
-
-PAC_CC_FUNCTION_NAME_SYMBOL
-
 # Check if $MPI_DEFAULT_COPTS is valid with $CC
 if test -n "$MPI_DEFAULT_COPTS" ; then
     if test "$enable_check_compiler_flags" = "yes" ; then
