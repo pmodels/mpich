@@ -74,7 +74,6 @@ AC_PROG_INSTALL
 PAC_ARG_CACHING
 PAC_C_MACRO_VA_ARGS
 PAC_C_GNU_ATTRIBUTE
-PAC_CC_FUNCTION_NAME_SYMBOL
 
 # Build information
 # these values come from the m4_include above
