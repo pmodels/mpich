@@ -855,7 +855,7 @@ int MPIDI_OFI_post_init(void)
         }
     }
 
-    if (MPIDI_OFI_global.num_vnis > 1) {
+    if (MPIDI_OFI_global.num_vnis > 1 || MPIDI_OFI_global.num_nics > 1) {
         mpi_errno = addr_exchange_all_vnis();
     }
   fn_fail:
@@ -1513,7 +1513,7 @@ static int addr_exchange_all_vnis(void)
             for (int r = 0; r < size; r++) {
                 MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
                 for (int vni_remote = 0; vni_remote < num_vnis; vni_remote++) {
-                    if (vni_local == 0 && vni_remote == 0) {
+                    if (vni_local == 0 && vni_remote == 0 && nic == 0) {
                         /* don't overwrite existing addr, or bad things will happen */
                         continue;
                     }
