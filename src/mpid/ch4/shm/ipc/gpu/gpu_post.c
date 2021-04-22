@@ -265,7 +265,7 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle,
         MPL_gpu_device_handle_t map_dev_handle;
         bool insert_successful = false;
         MPL_gpu_get_dev_handle(map_dev_id, &map_dev_handle);
-        mpl_err = MPL_gpu_ipc_handle_map(handle.ipc_handle, map_dev_handle, &pbase);
+        mpl_err = MPL_gpu_ipc_handle_map(handle.ipc_handle, handle.len, map_dev_handle, &pbase);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_map");
 
