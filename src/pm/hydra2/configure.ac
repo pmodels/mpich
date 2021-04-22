@@ -84,7 +84,6 @@ LT_INIT
 AC_PROG_MKDIR_P
 AC_PROG_INSTALL
 PAC_ARG_CACHING
-PAC_CC_FUNCTION_NAME_SYMBOL
 
 # Build information
 # these values come from the m4_include above
