@@ -87,11 +87,6 @@ int usleep(useconds_t usec);
 int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
 
-/* Just in case __func__ is not supported won't break code */
-#ifndef HAVE__FUNC__
-#define __func__ "__func__"
-#endif
-
 /* pmix.h contains inline functions that calls malloc, calloc, and free,
    and it will break with MPL's memory tracing when enabled.
    Make sure it is included *before* mpl.h.
