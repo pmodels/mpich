@@ -40,6 +40,15 @@ static inline yaksa_info_t MPII_yaksa_get_info(MPL_pointer_attr_t * inattr,
         rc = yaksa_info_keyval_append(info, "yaksa_cuda_outbuf_ptr_attr", &outattr->device_attr,
                                       sizeof(MPL_gpu_device_attr));
         MPIR_Assert(rc == 0);
+
+        if (inattr->is_ipc) {
+            rc = yaksa_info_keyval_append(info, "yaksa_cuda_inbuf_ptr_is_ipc", NULL, 0);
+            MPIR_Assert(rc == 0);
+        }
+        if (outattr->is_ipc) {
+            rc = yaksa_info_keyval_append(info, "yaksa_cuda_outbuf_ptr_is_ipc", NULL, 0);
+            MPIR_Assert(rc == 0);
+        }
     } else if (MPL_HAVE_GPU == MPL_GPU_TYPE_ZE) {
         yaksa_info_keyval_append(info, "yaksa_gpu_driver", "ze", 3);
         rc = yaksa_info_keyval_append(info, "yaksa_ze_inbuf_ptr_attr", &inattr->device_attr,
