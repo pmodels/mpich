@@ -187,6 +187,7 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
     ze_result_t ret;
+    attr->is_ipc = flase;
     memset(&attr->device_attr.prop, 0, sizeof(ze_memory_allocation_properties_t));
     ret = zeMemGetAllocProperties(global_ze_context, ptr,
                                   &attr->device_attr.prop, &attr->device_attr.device);

@@ -28,6 +28,7 @@ typedef enum {
 
 typedef struct {
     MPL_pointer_type_t type;
+    bool is_ipc;
     MPL_gpu_device_handle_t device;
     MPL_gpu_device_attr device_attr;
 } MPL_pointer_attr_t;
@@ -44,6 +45,7 @@ static inline int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t
 {
     attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
     attr->device = MPL_GPU_DEVICE_INVALID;
+    attr->is_ipc = false;
 
     return MPL_SUCCESS;
 }
