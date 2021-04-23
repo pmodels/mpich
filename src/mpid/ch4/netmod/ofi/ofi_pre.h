@@ -170,7 +170,7 @@ typedef struct {
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    int util_id;
+    MPL_atomic_int_t util_id;
     MPI_Datatype datatype;
     union {
         struct {

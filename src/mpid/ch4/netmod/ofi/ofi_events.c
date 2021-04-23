@@ -94,7 +94,7 @@ static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     /* util_id should be the last thing to change in rreq. Reason is
      * we use util_id to indicate peek_event has completed and all the
      * relevant values have been copied to rreq. */
-    MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_FOUND;
+    MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_FOUND);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PEEK_EVENT);
     return mpi_errno;
@@ -110,8 +110,12 @@ static int peek_empty_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 
     switch (MPIDI_OFI_REQUEST(rreq, event_id)) {
         case MPIDI_OFI_EVENT_PEEK:
-            MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_NOT_FOUND;
             rreq->status.MPI_ERROR = MPI_SUCCESS;
+            /* util_id should be the last thing to change in rreq. Reason is
+             * we use util_id to indicate peek_event has completed and all the
+             * relevant values have been copied to rreq. */
+            MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)),
+                                         MPIDI_OFI_PEEK_NOT_FOUND);
             break;
 
         case MPIDI_OFI_EVENT_ACCEPT_PROBE:

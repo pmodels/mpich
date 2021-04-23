@@ -46,7 +46,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, comm->recvcontext_id + context_offset, tag);
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_PEEK;
-    MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_START;
+    MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_START);
 
     msg.msg_iov = NULL;
     msg.desc = NULL;
@@ -68,9 +68,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     }
 
     MPIDI_OFI_CALL(ofi_err, trecvmsg);
-    MPIDI_OFI_PROGRESS_WHILE(MPIDI_OFI_REQUEST(rreq, util_id) == MPIDI_OFI_PEEK_START, vni_dst);
+    MPIDI_OFI_PROGRESS_WHILE(MPL_atomic_acquire_load_int(&(MPIDI_OFI_REQUEST(rreq, util_id))) ==
+                             MPIDI_OFI_PEEK_START, vni_dst);
 
-    switch (MPIDI_OFI_REQUEST(rreq, util_id)) {
+    /* Ordering constraint for util_id is unnecessary after the thread unblocks */
+    switch (MPL_atomic_relaxed_load_int(&(MPIDI_OFI_REQUEST(rreq, util_id)))) {
         case MPIDI_OFI_PEEK_NOT_FOUND:
             *flag = 0;
 
