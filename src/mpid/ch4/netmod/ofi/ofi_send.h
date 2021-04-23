@@ -288,7 +288,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
          * MPIDI_OFI_global.max_msg_size */
         sreq->comm = comm;
         MPIR_Comm_add_ref(comm);
-        MPIDI_OFI_REQUEST(sreq, util_id) = dst_rank;
+        /* Store ordering unnecessary for dst_rank, so use relaxed store */
+        MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(sreq, util_id), dst_rank);
         match_bits |= MPIDI_OFI_HUGE_SEND;      /* Add the bit for a huge message */
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           send_buf, MPIDI_OFI_global.max_msg_size, NULL /* desc */ ,
