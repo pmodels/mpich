@@ -11,9 +11,6 @@
 #include "posix_eager.h"
 #include "mpidu_genq.h"
 
-#define MPIDI_POSIX_RESIZE_TO_MAX_ALIGN(x) \
-    ((((x) / MAX_ALIGNMENT) + !!((x) % MAX_ALIGNMENT)) * MAX_ALIGNMENT)
-
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_POSIX_am_eager_limit(void)
 {
     return MPIDI_POSIX_eager_payload_limit() - MAX_ALIGNMENT;
