@@ -9,7 +9,7 @@ MPI_T_category_changed:
     from the second call is higher, then some categories have been added or expanded.
 */
 {
-    *stamp = cat_stamp;
+    *update_number = cat_stamp;
 }
 
 MPI_T_category_get_categories:

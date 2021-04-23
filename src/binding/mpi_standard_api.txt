@@ -2049,7 +2049,7 @@ MPI_TYPE_NULL_DELETE_FN:
     extra_state: EXTRA_STATE
     ierror: ERROR_CODE_SHOW_INTENT, direction=out, suppress=c_parameter
 MPI_T_category_changed:
-    stamp: TIMESTAMP, direction=out, [a virtual time stamp to indicate the last change to the categories]
+    update_number: UPDATE_NUMBER, direction=out, [update number]
 MPI_T_category_get_categories:
     cat_index: CAT_INDEX, [index of the category to be queried, in the range $0$ and $num_cat-1$]
     len: ARRAY_LENGTH, [the length of the indices array]
