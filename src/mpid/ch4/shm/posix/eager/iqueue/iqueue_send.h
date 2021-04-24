@@ -80,7 +80,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
      * tail. */
     cell->payload_size = 0;
     if (am_hdr) {
-        MPI_Aint resized_am_hdr_sz = MPIDI_POSIX_RESIZE_TO_MAX_ALIGN(am_hdr_sz);
+        MPI_Aint resized_am_hdr_sz = MPL_ROUND_UP_ALIGN(am_hdr_sz, MAX_ALIGNMENT);
         cell->am_header = *msg_hdr;
         cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_HDR;
         /* send am_hdr if this is the first segment */
