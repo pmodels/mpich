@@ -7,6 +7,7 @@
 #define MPIR_TYPEREP_H_INCLUDED
 
 #include <mpi.h>
+#include "typerep_pre.h"
 
 void MPIR_Typerep_init(void);
 void MPIR_Typerep_finalize(void);
