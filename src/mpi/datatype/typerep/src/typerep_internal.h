@@ -7,9 +7,7 @@
 #define TYPEREP_INTERNAL_H_INCLUDED
 
 #include "mpiimpl.h"
-
-#define MPICH_DATATYPE_ENGINE_YAKSA    (1)
-#define MPICH_DATATYPE_ENGINE_DATALOOP (2)
+#include "typerep_pre.h"
 
 #if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
 
