@@ -52,11 +52,6 @@ int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes)
     goto fn_exit;
 }
 
-typedef enum {
-    MEMCPY_DIR__PACK,
-    MEMCPY_DIR__UNPACK,
-} memcpy_dir_e;
-
 int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
                       MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
                       MPI_Aint * actual_pack_bytes)
