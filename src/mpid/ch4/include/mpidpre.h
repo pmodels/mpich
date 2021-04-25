@@ -349,6 +349,11 @@ typedef enum {
 
 #define MPIDIG_ACCU_NUM_OP (MPIR_OP_N_BUILTIN)  /* builtin reduce op + cswap */
 
+typedef enum {
+    MPIDIG_RMA_LAT_PREFERRED = 0,
+    MPIDIG_RMA_MR_PREFERRED,
+} MPIDIG_win_info_perf_preference;
+
 typedef struct MPIDIG_win_info_args_t {
     int no_locks;
     int same_size;
@@ -367,6 +372,9 @@ typedef struct MPIDIG_win_info_args_t {
                                          * TODO: can be set to win_size.*/
     bool disable_shm_accumulate;        /* false by default. */
     bool coll_attach;           /* false by default. Valid only for dynamic window */
+    int perf_preference;        /* Arbitrary combination of MPIDIG_win_info_perf_preference.
+                                 * By default MPICH/CH4 tends to optimize for low latency.
+                                 * MPICH may ignore invalid combination. */
 
     /* alloc_shm: MPICH specific hint (same in CH3).
      * If true, MPICH will try to use shared memory routines for the window.
@@ -483,6 +491,7 @@ typedef enum {
                                          * its internal optimization. */
     MPIDI_WINATTR_NM_DYNAMIC_MR = 32,   /* whether the memory region is registered dynamically. Valid only for
                                          * dynamic window. Set by netmod. */
+    MPIDI_WINATTR_MR_PREFERRED = 64,    /* message rate preferred flag. Default 0, set by user hint. */
     MPIDI_WINATTR_LAST_BIT
 } MPIDI_winattr_bit_t;
 

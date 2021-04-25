@@ -84,6 +84,45 @@ static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen)
         strncpy(buf, "none", maxlen);
 }
 
+static void parse_info_perf_preference_str(const char *str, int *preference_ptr)
+{
+    int preference = 0;
+    char *value, *token, *savePtr = NULL;
+
+    value = (char *) str;
+    /* str can never be NULL. */
+    MPIR_Assert(value);
+
+    token = (char *) strtok_r(value, ",", &savePtr);
+    while (token != NULL) {
+        if (!strncmp(token, "lat", strlen("lat"))) {
+            preference |= (1 << MPIDIG_RMA_LAT_PREFERRED);
+        } else if (!strncmp(token, "mr", strlen("mr"))) {
+            preference |= (1 << MPIDIG_RMA_MR_PREFERRED);
+        }
+
+        token = (char *) strtok_r(NULL, ",", &savePtr);
+    }
+
+    /* update info only when any valid value is set */
+    if (preference)
+        *preference_ptr = preference;
+}
+
+static void get_info_perf_preference_str(int val, char *buf, size_t maxlen)
+{
+    int c = 0;
+
+    if (val & (1 << MPIDIG_RMA_LAT_PREFERRED)) {
+        MPIR_Assert(c < maxlen);
+        c += snprintf(buf + c, maxlen - c, "%slat", (c > 0) ? "," : "");
+    }
+    if (val & (1 << MPIDIG_RMA_MR_PREFERRED)) {
+        MPIR_Assert(c < maxlen);
+        c += snprintf(buf + c, maxlen - c, "%smr", (c > 0) ? "," : "");
+    }
+}
+
 static void update_winattr_after_set_info(MPIR_Win * win)
 {
     if (MPIDIG_WIN(win, info_args).disable_shm_accumulate)
@@ -95,6 +134,11 @@ static void update_winattr_after_set_info(MPIR_Win * win)
         MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_SAME_OP_NO_OP;
     else
         MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_ACCU_SAME_OP_NO_OP);
+
+    if (MPIDIG_WIN(win, info_args).perf_preference & (1 << MPIDIG_RMA_MR_PREFERRED))
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_MR_PREFERRED;
+    else
+        MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_MR_PREFERRED);
 }
 
 static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
@@ -206,6 +250,9 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
                 MPIDIG_WIN(win, info_args).coll_attach = true;
             else
                 MPIDIG_WIN(win, info_args).coll_attach = false;
+        } else if (is_init && !strcmp(curr_ptr->key, "perf_preference")) {
+            parse_info_perf_preference_str(curr_ptr->value,
+                                           &MPIDIG_WIN(win, info_args).perf_preference);
         }
       next:
         curr_ptr = curr_ptr->next;
@@ -753,6 +800,14 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "coll_attach", "false");
     MPIR_ERR_CHECK(mpi_errno);
+
+    {   /* Keep buf as a local variable for perf_preference key. */
+        char buf[128];
+        get_info_perf_preference_str(MPIDIG_WIN(win, info_args).perf_preference, &buf[0],
+                                     sizeof(buf));
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "perf_preference", buf);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_GET_INFO);
