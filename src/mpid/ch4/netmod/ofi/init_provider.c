@@ -157,6 +157,39 @@ static int find_provider(struct fi_info **prov_out)
 
 /* internal routines */
 
+static const char *get_prov_addr(struct fi_info *prov)
+{
+    static char addr_str[1024];
+    char addr_buf[500];
+    switch (prov->addr_format) {
+        case FI_SOCKADDR_IN:
+            sprintf(addr_str, "FI_SOCKADDR_IN [%zd] %s", prov->src_addrlen,
+                    inet_ntoa(((struct sockaddr_in *) prov->src_addr)->sin_addr));
+            break;
+        case FI_SOCKADDR_IN6:
+            sprintf(addr_str, "FI_SOCKADDR_IN6 [%zd] %s", prov->src_addrlen,
+                    inet_ntop(AF_INET6, &((struct sockaddr_in6 *) prov->src_addr)->sin6_addr,
+                              addr_buf, 500));
+            break;
+        case FI_SOCKADDR_IB:
+            sprintf(addr_str, "FI_SOCKADDR_IB [%zd]", prov->src_addrlen);
+            break;
+        case FI_ADDR_PSMX:
+            sprintf(addr_str, "FI_ADDR_PSMX [%zd]", prov->src_addrlen);
+            break;
+        case FI_ADDR_GNI:
+            sprintf(addr_str, "FI_ADDR_GNI [%zd]", prov->src_addrlen);
+            break;
+        case FI_ADDR_STR:
+            snprintf(addr_str, 1024, "FI_ADDR_STR [%zd] - %s", prov->src_addrlen,
+                     (char *) prov->src_addr);
+            break;
+        default:
+            sprintf(addr_str, "FI_FORMAT_UNSPEC [%zd]", prov->src_addrlen);
+    }
+    return addr_str;
+}
+
 static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *list)
 {
     bool provname_is_set = (provname &&
@@ -182,7 +215,8 @@ static struct fi_info *pick_provider_from_list(const char *provname, struct fi_i
             best_prov = prov;
         }
         if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
-            printf("provider: %s, score = %d\n", prov->fabric_attr->prov_name, score);
+            printf("provider: %s, score = %d, %s\n", prov->fabric_attr->prov_name, score,
+                   get_prov_addr(prov));
         }
     }
 
