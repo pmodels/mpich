@@ -125,11 +125,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(int source, MPIR_Comm * comm,
     am_hdr.rreq_ptr = rreq_ptr;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (is_local)
-        mpi_errno = MPIDI_SHM_am_send_hdr(source, comm, MPIDIG_PART_CTS, &am_hdr, sizeof(am_hdr));
+        mpi_errno =
+            MPIDI_SHM_am_send_hdr_reply(comm->context_id, source, MPIDIG_PART_CTS, &am_hdr,
+                                        sizeof(am_hdr));
     else
 #endif
     {
-        mpi_errno = MPIDI_NM_am_send_hdr(source, comm, MPIDIG_PART_CTS, &am_hdr, sizeof(am_hdr));
+        mpi_errno =
+            MPIDI_NM_am_send_hdr_reply(comm->context_id, source, MPIDIG_PART_CTS, &am_hdr,
+                                       sizeof(am_hdr));
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_ISSUE_CTS);
