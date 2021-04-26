@@ -112,27 +112,28 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_part_match_rreq(MPIR_Request * part_req)
 }
 
 /* Receiver issues a CTS to sender once reach MPIDIG_PART_REQ_CTS */
-MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(int source, MPIR_Comm * comm,
-                                                   MPIR_Request * sreq_ptr,
-                                                   MPIR_Request * rreq_ptr, int is_local)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PART_ISSUE_CTS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PART_ISSUE_CTS);
 
     MPIDIG_part_cts_msg_t am_hdr;
-    am_hdr.sreq_ptr = sreq_ptr;
+    am_hdr.sreq_ptr = MPIDIG_PART_REQUEST(rreq_ptr, peer_req_ptr);
     am_hdr.rreq_ptr = rreq_ptr;
+
+    int source = MPIDI_PART_REQUEST(rreq_ptr, rank);
+    MPIR_Context_id_t context_id = MPIDI_PART_REQUEST(rreq_ptr, context_id);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (is_local)
+    if (MPIDI_REQUEST(rreq_ptr, is_local))
         mpi_errno =
-            MPIDI_SHM_am_send_hdr_reply(comm->context_id, source, MPIDIG_PART_CTS, &am_hdr,
+            MPIDI_SHM_am_send_hdr_reply(context_id, source, MPIDIG_PART_CTS, &am_hdr,
                                         sizeof(am_hdr));
     else
 #endif
     {
         mpi_errno =
-            MPIDI_NM_am_send_hdr_reply(comm->context_id, source, MPIDIG_PART_CTS, &am_hdr,
+            MPIDI_NM_am_send_hdr_reply(context_id, source, MPIDIG_PART_CTS, &am_hdr,
                                        sizeof(am_hdr));
     }
 

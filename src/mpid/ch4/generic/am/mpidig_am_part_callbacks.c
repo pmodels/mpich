@@ -81,8 +81,7 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
 
         /* If rreq matches and local start has been called, notify sender CTS */
         if (MPIDIG_PART_REQ_INC_FETCH_STATUS(posted_req) == MPIDIG_PART_REQ_CTS) {
-            mpi_errno = MPIDIG_part_issue_cts(msg_hdr->src_rank, posted_req->comm,
-                                              msg_hdr->sreq_ptr, posted_req, is_local);
+            mpi_errno = MPIDIG_part_issue_cts(posted_req);
         }
     } else {
         MPIR_Request *unexp_req = NULL;
