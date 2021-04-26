@@ -31,7 +31,6 @@
 /* Initializes hint structure based MPIDI_OFI_global.settings (or config macros) */
 void MPIDI_OFI_init_hints(struct fi_info *hints)
 {
-    int ofi_version = MPIDI_OFI_get_ofi_version();
     MPIR_Assert(hints != NULL);
 
     /* ------------------------------------------------------------------------ */
@@ -63,7 +62,7 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
     /* ------------------------------------------------------------------------ */
     hints->mode = FI_CONTEXT | FI_ASYNC_IOV | FI_RX_CQ_DATA;    /* We can handle contexts  */
 
-    if (ofi_version >= FI_VERSION(1, 5)) {
+    if (fi_version() >= FI_VERSION(1, 5)) {
 #ifdef FI_CONTEXT2
         hints->mode |= FI_CONTEXT2;
 #endif
@@ -122,7 +121,7 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
     hints->domain_attr->resource_mgmt = FI_RM_ENABLED;
     hints->domain_attr->av_type = MPIDI_OFI_ENABLE_AV_TABLE ? FI_AV_TABLE : FI_AV_MAP;
 
-    if (ofi_version >= FI_VERSION(1, 5)) {
+    if (fi_version() >= FI_VERSION(1, 5)) {
         hints->domain_attr->mr_mode = 0;
 #ifdef FI_RESTRICTED_COMP
         hints->domain_attr->mode = FI_RESTRICTED_COMP;
