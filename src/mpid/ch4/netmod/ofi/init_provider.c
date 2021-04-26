@@ -63,22 +63,33 @@ int MPIDI_OFI_find_provider(struct fi_info **prov_out)
     goto fn_exit;
 }
 
+static int MPIDI_OFI_get_required_version(void)
+{
+    if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
+        return FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
+    else
+        return fi_version();
+}
+
 /* find best matching provider */
 static int find_provider(struct fi_info **prov_out)
 {
     int mpi_errno = MPI_SUCCESS;
+    int ret;                    /* return from fi_getinfo() */
 
     const char *provname = MPIR_CVAR_OFI_USE_PROVIDER;
-    int ofi_version = MPIDI_OFI_get_ofi_version();
-
-    int ret;                    /* return from fi_getinfo() */
+    int required_version = MPIDI_OFI_get_required_version();
+    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+        printf("Required minimum FI_VERSION: %x, current version: %x\n", required_version,
+               fi_version());
+    }
 
     struct fi_info *hints = fi_allocinfo();
     MPIR_Assert(hints != NULL);
 
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         /* NOTE: prov_list should not be freed until we initialize multi-nic */
-        MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, NULL, &prov_list), getinfo);
+        MPIDI_OFI_CALL(fi_getinfo(required_version, NULL, NULL, 0ULL, NULL, &prov_list), getinfo);
 
         /* Pick a best matching provider and use it to refine hints */
         struct fi_info *prov;
@@ -107,11 +118,11 @@ static int find_provider(struct fi_info **prov_out)
         struct fi_info *old_prov_list = prov_list;
 
         /* First try with the initial (optimal) hints */
-        ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov_list);
+        ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
         if (ret || prov_list == NULL) {
             /* relax msg_order */
             hints->tx_attr->msg_order = prov->tx_attr->msg_order;
-            ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov_list);
+            ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
         }
         if (ret || prov_list == NULL) {
             if (prov->domain_attr->mr_mode & FI_MR_BASIC) {
@@ -119,7 +130,7 @@ static int find_provider(struct fi_info **prov_out)
             } else if (prov->domain_attr->mr_mode & FI_MR_SCALABLE) {
                 hints->domain_attr->mr_mode = FI_MR_SCALABLE;
             }
-            ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov_list);
+            ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
         }
         /* free the old one, the new one will be freed in MPIDI_OFI_find_provider_cleanup */
         fi_freeinfo(old_prov_list);
@@ -133,7 +144,7 @@ static int find_provider(struct fi_info **prov_out)
         MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = provname ? MPL_strdup(provname) : NULL;
 
-        ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov_list);
+        ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
         MPIR_ERR_CHKANDJUMP(prov_list == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
 
         int set_number = MPIDI_OFI_get_set_number(prov_list->fabric_attr->prov_name);
