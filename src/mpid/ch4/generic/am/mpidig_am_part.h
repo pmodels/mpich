@@ -40,9 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request, int is_lo
      * because it is erroneous to free an active partitioned req if it is not complete.*/
 
     if (request->kind == MPIR_REQUEST_KIND__PART_RECV && status == MPIDIG_PART_REQ_CTS) {
-        mpi_errno = MPIDIG_part_issue_cts(MPIDI_PART_REQUEST(request, rank),
-                                          request->comm, MPIDIG_PART_REQUEST(request, peer_req_ptr),
-                                          request, is_local);
+        mpi_errno = MPIDIG_part_issue_cts(request);
     }
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
