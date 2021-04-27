@@ -170,7 +170,11 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
                                             &MPIDI_OFI_WIN(win).mr,     /* Out: memregion object    */
                                             NULL), rc); /* In:  context             */
     } else if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+        /* We may still do native atomics with collective attach, let's load acc_hint */
+        load_acc_hint(win);
         goto fn_exit;
+    } else {
+        /* FIXME: what's in the branch? If it can't happen, add an assertion here */
     }
 
     /* Check if any process fails to register. If so, release local MR and force AM path. */
