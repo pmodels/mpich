@@ -159,7 +159,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
 
     /* send is done. free all resources and complete the request */
     if (ucp_request == NULL) {
-        MPL_gpu_free_host(send_buf);
+        MPIR_gpu_free_host(send_buf);
         MPIDIG_global.origin_cbs[handler_id] (sreq);
         goto fn_exit;
     }
@@ -223,7 +223,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     ucx_hdr.data_sz = data_sz;
 
     if (dt_contig) {
-        send_buf = MPL_malloc(sizeof(ucx_hdr) + am_hdr_sz, MPL_MEM_BUFFER);
+        MPIR_gpu_malloc_host((void **) &send_buf, sizeof(ucx_hdr) + am_hdr_sz);
         MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
         MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
 
