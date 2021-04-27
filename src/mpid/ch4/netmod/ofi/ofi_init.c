@@ -394,6 +394,17 @@ cvars:
       description : >-
         Striping will happen for message sizes beyond this threshold.
 
+    - name        : MPIR_CVAR_OFI_USE_MIN_NICS
+      category    : DEVELOPER
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true and all nodes do not have the same number of NICs, MPICH will fall back
+        to using the fewest number of NICs instead of returning an error.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -864,6 +875,41 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 int MPIDI_OFI_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
+    int num_nics = MPIDI_OFI_global.num_nics;
+    int tmp_num_vnis = MPIDI_OFI_global.num_vnis;
+    int tmp_num_nics = MPIDI_OFI_global.num_nics;
+
+    /* Set the number of NICs and VNIs to 1 temporarily to avoid problems during the collective */
+    MPIDI_OFI_global.num_vnis = MPIDI_OFI_global.num_nics = 1;
+
+    /* Confirm that all processes have the same number of NICs */
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPI_INT,
+                                            MPI_MIN, MPIR_Process.comm_world, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_OFI_global.num_vnis = tmp_num_vnis;
+    MPIDI_OFI_global.num_nics = tmp_num_nics;
+
+    /* If the user did not ask to fallback to fewer NICs, throw an error if someone is missing a
+     * NIC. */
+    if (tmp_num_nics != num_nics) {
+        if (MPIR_CVAR_OFI_USE_MIN_NICS) {
+            MPIDI_OFI_global.num_nics = num_nics;
+
+            /* If we fall down to 1 nic, turn off multi-nic optimizations. */
+            if (num_nics == 1) {
+                MPIDI_OFI_COMM(MPIR_Process.comm_world).enable_striping = 0;
+            }
+        } else {
+            MPIR_ERR_CHKANDJUMP(num_nics != MPIDI_OFI_global.num_nics, mpi_errno, MPI_ERR_OTHER,
+                                "**ofi_num_nics");
+        }
+    }
+
+    /* FIXME: It would also be helpful to check that all of the NICs can communicate so we can fall
+     * back to other options if that is not the case (e.g., verbs are often configured with a
+     * different subnet for each "set" of nics). It's unknown how to write a good check for that. */
 
     for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
         for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
