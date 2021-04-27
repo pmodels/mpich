@@ -40,9 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request, int is_lo
      * because it is erroneous to free an active partitioned req if it is not complete.*/
 
     if (request->kind == MPIR_REQUEST_KIND__PART_RECV && status == MPIDIG_PART_REQ_CTS) {
-        mpi_errno = MPIDIG_part_issue_cts(MPIDI_PART_REQUEST(request, rank),
-                                          request->comm, MPIDIG_PART_REQUEST(request, peer_req_ptr),
-                                          request, is_local);
+        mpi_errno = MPIDIG_part_issue_cts(request);
     }
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
@@ -50,9 +48,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request, int is_lo
     return mpi_errno;
 }
 
-/* Checks whether all partitions are ready.
- * If so, blocking waits until reached MPIDIG_PART_REQ_CTS and then issues data.
- * No-op if some partitions are not ready. */
+/* Checks whether all partitions are ready and MPIDIG_PART_REQ_CTS has been received,
+ * If so, then issues data. Otherwise a no-op.
+ */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq, int is_local)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -63,12 +61,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq, int is
 
     /* Send data when all partitions are ready */
     if (MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) ==
-        part_sreq->u.part.partitions) {
-
-        /* Wait until CTS */
-        MPIDIU_PROGRESS_WHILE(MPL_atomic_load_int(&MPIDIG_PART_REQUEST(part_sreq, status))
-                              != MPIDIG_PART_REQ_CTS, 0);
-
+        part_sreq->u.part.partitions &&
+        MPL_atomic_load_int(&MPIDIG_PART_REQUEST(part_sreq, status)) == MPIDIG_PART_REQ_CTS) {
         mpi_errno = MPIDIG_part_issue_data(part_sreq, is_local);
     }
 

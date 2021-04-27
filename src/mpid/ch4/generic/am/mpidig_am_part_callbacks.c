@@ -81,8 +81,7 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
 
         /* If rreq matches and local start has been called, notify sender CTS */
         if (MPIDIG_PART_REQ_INC_FETCH_STATUS(posted_req) == MPIDIG_PART_REQ_CTS) {
-            mpi_errno = MPIDIG_part_issue_cts(msg_hdr->src_rank, posted_req->comm,
-                                              msg_hdr->sreq_ptr, posted_req, is_local);
+            mpi_errno = MPIDIG_part_issue_cts(posted_req);
         }
     } else {
         MPIR_Request *unexp_req = NULL;
@@ -111,7 +110,9 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
 }
 
 /* Callback used on sender, triggered when received CTS from receiver.
- * It stores rreq pointer and updates local status */
+ * It stores rreq pointer, updates local status, and optionally initiates
+ * data transfer if all partitions have been marked as ready.
+ */
 int MPIDIG_part_cts_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                   MPI_Aint in_data_sz, int is_local, int is_async,
                                   MPIR_Request ** req)
@@ -126,6 +127,7 @@ int MPIDIG_part_cts_target_msg_cb(int handler_id, void *am_hdr, void *data,
 
     MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr) = msg_hdr->rreq_ptr;
     MPIDIG_PART_REQ_INC_FETCH_STATUS(part_sreq);
+    mpi_errno = MPIDIG_post_pready(part_sreq, is_local);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_CTS_TARGET_MSG_CB);
     return mpi_errno;
