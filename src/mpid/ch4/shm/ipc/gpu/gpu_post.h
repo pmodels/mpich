@@ -26,6 +26,8 @@ cvars:
 
 #include "gpu_pre.h"
 
+int MPIDI_GPU_get_ipc_type(MPIDI_IPCI_type_t * ipc_type);
+int MPIDI_GPU_get_ipc_threshold(size_t * threshold);
 int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
                            MPIDI_IPCI_ipc_attr_t * ipc_attr);
 int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype);

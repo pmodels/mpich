@@ -38,6 +38,44 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_type(MPIDI_IPCI_type_t * ipc_type)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+    *ipc_type = MPIDI_IPCI_TYPE__XPMEM;
+#else
+    *ipc_type = MPIDI_IPCI_TYPE__NONE;
+#endif
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_threshold(size_t * threshold)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+    *threshold = MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD;
+#else
+    *threshold = MPIR_AINT_MAX;
+#endif
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *vaddr, uintptr_t data_sz,
                                                       MPIDI_IPCI_ipc_attr_t * ipc_attr)
 {

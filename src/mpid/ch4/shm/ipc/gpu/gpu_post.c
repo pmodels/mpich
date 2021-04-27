@@ -123,6 +123,45 @@ int MPIDI_GPU_ipc_handle_cache_insert(int rank, MPIR_Comm * comm, MPIDI_GPU_ipc_
     return mpi_errno;
 }
 
+int MPIDI_GPU_get_ipc_type(MPIDI_IPCI_type_t * ipc_type)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    *ipc_type = MPIDI_IPCI_TYPE__GPU;
+#else
+    *ipc_type = MPIDI_IPCI_TYPE__NONE;
+#endif
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
+int MPIDI_GPU_get_ipc_threshold(size_t * threshold)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    *threshold = MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD;
+#else
+    *threshold = MPIR_AINT_MAX;
+#endif
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
                            MPIDI_IPCI_ipc_attr_t * ipc_attr)
 {
