@@ -223,7 +223,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
     int Foo(int a) { return a; }
 ]],[[
     return PFoo(1);
-]])],,has_pragma_weak=yes)
+]])],has_pragma_weak=yes)
 #
 # Some systems (Linux ia64 and ecc, for example), support weak symbols
 # only within a single object file!  This tests that case.
