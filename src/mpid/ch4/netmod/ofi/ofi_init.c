@@ -492,9 +492,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
 
     MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGAIN, "eagain", NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
 
-    /* index datatypes for RMA atomics */
-    MPIDI_OFI_index_datatypes();
-
     MPIDI_OFI_global.deferred_am_isend_q = NULL;
 
     /* -------------------------------- */
@@ -545,6 +542,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
      * This code maybe moved to a later stage */
     mpi_errno = create_vni_context(0, 0);
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* index datatypes for RMA atomics. NOTE: we only can query atomics after ep is created */
+    MPIDI_OFI_index_datatypes();
 
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
