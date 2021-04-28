@@ -772,9 +772,16 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     /* Destroy RMA key allocator */
     MPIDI_OFI_mr_key_allocator_destroy();
 
-    /* Flush any last lightweight send */
-    mpi_errno = flush_send_queue();
-    MPIR_ERR_CHECK(mpi_errno);
+    if (strcmp("sockets", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
+        /* sockets provider need flush any last lightweight send */
+        mpi_errno = flush_send_queue();
+        MPIR_ERR_CHECK(mpi_errno);
+    } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
+        /* verbs;ofi_rxm provider need barrier to prevent message loss */
+        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+        mpi_errno = MPIR_Barrier_allcomm_auto(MPIR_Process.comm_world, &errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     /* Progress until we drain all inflight injection emulation requests */
     /* NOTE: am currently only use vni 0. Need update once that changes */
