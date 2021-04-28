@@ -427,6 +427,18 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
     return req;
 }
 
+/* Useful for lockless MT model */
+static inline MPIR_Request *MPIR_Request_create_from_pool_safe(MPIR_Request_kind_t kind, int pool,
+                                                               int ref_count)
+{
+    MPIR_Request *req;
+
+    MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+    req = MPIR_Request_create_from_pool(kind, pool, ref_count);
+    MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+    return req;
+}
+
 /* NOTE: safe under per-vci, per-obj, or global thread granularity */
 static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
