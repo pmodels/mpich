@@ -24,14 +24,18 @@ def main():
         func_list.extend(get_mpiio_func_list())
     func_list.extend(get_type_create_f90_func_list())
 
-    # f08_cdesc.c
-    G.out = []
-    G.decls = []
+    # preprocess
     for func in func_list:
         check_func_directives(func)
         if '_skip_fortran' in func:
             continue
         process_func_parameters(func)
+    func_list = [f for f in func_list if '_skip_fortran' not in f]
+
+    # f08_cdesc.c
+    G.out = []
+    G.decls = []
+    for func in func_list:
         if need_cdesc(func):
             G.out.append("")
             dump_f08_wrappers_c(func)
@@ -43,8 +47,6 @@ def main():
     # f08ts.f90
     G.out = []
     for func in func_list:
-        if '_skip_fortran' in func:
-            continue
         dump_f08_wrappers_f(func)
     f = "%s/wrappers_f/f08ts.f90" % f08_dir
     dump_f90_file(f, G.out)
@@ -62,8 +64,6 @@ def main():
     G.out = []
     dump_interface_module_open("mpi_c_interface_cdesc")
     for func in func_list:
-        if '_skip_fortran' in func:
-            continue
         if need_cdesc(func):
             dump_mpi_c_interface_cdesc(func)
     f_sync_reg = {'name':"MPI_F_sync_reg", 'parameters':[{'name':"buf", 'kind':"BUFFER", 't':'', 'large_only':None, 'param_direction':"in"}]}
@@ -75,8 +75,6 @@ def main():
     G.out = []
     dump_interface_module_open("mpi_c_interface_nobuf")
     for func in func_list:
-        if '_skip_fortran' in func:
-            continue
         if not need_cdesc(func):
             dump_mpi_c_interface_nobuf(func)
     dump_interface_module_close("mpi_c_interface_nobuf")
@@ -95,8 +93,6 @@ def main():
     G.out.append("")
     G.out.append("IMPLICIT NONE")
     for func in func_list:
-        if '_skip_fortran' in func:
-            continue
         dump_mpi_f08(func)
     G.out.append("")
     dump_F_module_close("mpi_f08")
