@@ -22,7 +22,7 @@ extern char **MPIR_C_MPI_ARGV_NULL;
 extern char ***MPIR_C_MPI_ARGVS_NULL;
 extern int *MPIR_C_MPI_ERRCODES_IGNORE;
 
-extern int cdesc_create_datatype(CFI_cdesc_t * cdesc, int oldcount, MPI_Datatype oldtype,
+extern int cdesc_create_datatype(CFI_cdesc_t * cdesc, MPI_Aint oldcount, MPI_Datatype oldtype,
                                  MPI_Datatype * newtype);
 extern int MPIR_Fortran_array_of_string_f2c(const char *strs_f, char ***strs_c, int str_len,
                                             int know_size, int size);
