@@ -64,12 +64,12 @@ int MPL_gpu_free(void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_init()
+int MPL_gpu_init(void)
 {
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_finalize()
+int MPL_gpu_finalize(void)
 {
     return MPL_SUCCESS;
 }

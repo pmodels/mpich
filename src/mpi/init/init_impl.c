@@ -44,7 +44,7 @@ MPIR_Session MPIR_Session_direct[MPIR_SESSION_PREALLOC];
 MPIR_Object_alloc_t MPIR_Session_mem = { 0, 0, 0, 0, 0, 0,
     MPIR_SESSION, sizeof(MPIR_Session),
     MPIR_Session_direct, MPIR_SESSION_PREALLOC,
-    NULL
+    NULL, {0}
 };
 
 /* Psets */

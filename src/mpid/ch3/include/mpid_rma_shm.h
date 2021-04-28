@@ -586,16 +586,8 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
         shm_locked = 0;
     }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3I_SHM_CAS_OP);
     return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    if (shm_locked) {
-        MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-    }
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 
@@ -648,13 +640,6 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3I_SHM_FOP_OP);
     return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    if (shm_locked) {
-        MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-    }
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 

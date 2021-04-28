@@ -13,11 +13,8 @@ int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes)
 
     MPIR_Memcpy(outbuf, inbuf, num_bytes);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_COPY);
     return MPI_SUCCESS;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,

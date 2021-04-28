@@ -85,7 +85,7 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     goto fn_exit;
 }
 
-int MPIDI_POSIX_iqueue_finalize()
+int MPIDI_POSIX_iqueue_finalize(void)
 {
     MPIDI_POSIX_eager_iqueue_transport_t *transport;
     int mpi_errno;
@@ -98,9 +98,6 @@ int MPIDI_POSIX_iqueue_finalize()
     mpi_errno = MPIDU_Init_shm_free(transport->terminals);
     mpi_errno = MPIDU_genq_shmem_pool_destroy_unsafe(transport->cell_pool);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_IQUEUE_FINALIZE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }

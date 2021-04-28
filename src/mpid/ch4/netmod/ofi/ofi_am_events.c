@@ -41,5 +41,5 @@ int MPIDI_OFI_am_rdma_read_ack_handler(int handler_id, void *am_hdr, void *data,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_RDMA_READ_ACK_HANDLER);
     return mpi_errno;
   fn_fail:
-    goto fn_fail;
+    goto fn_exit;
 }

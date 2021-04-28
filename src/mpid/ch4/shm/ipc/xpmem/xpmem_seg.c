@@ -113,9 +113,6 @@ void MPIDI_XPMEM_seg_free(void *seg)
     xpmem_detach((void *) seg_ptr->att_vaddr);
     MPL_free(seg);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_FREE_SEG);
     return;
-  fn_fail:
-    goto fn_exit;
 }

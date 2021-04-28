@@ -793,14 +793,8 @@ int MPID_Put(const void *origin_addr, int origin_count, MPI_Datatype
                                target_rank, target_disp, target_count, target_datatype,
                                win_ptr, NULL);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPID_PUT);
     return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 int MPID_Get(void *origin_addr, int origin_count, MPI_Datatype
@@ -816,14 +810,8 @@ int MPID_Get(void *origin_addr, int origin_count, MPI_Datatype
                                target_rank, target_disp, target_count, target_datatype,
                                win_ptr, NULL);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPID_GET);
     return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 int MPID_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
@@ -839,14 +827,8 @@ int MPID_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                                       target_rank, target_disp, target_count, target_datatype,
                                       op, win_ptr, NULL);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPID_ACCUMULATE);
     return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 int MPID_Get_accumulate(const void *origin_addr, int origin_count,
@@ -865,14 +847,8 @@ int MPID_Get_accumulate(const void *origin_addr, int origin_count,
                                           target_rank, target_disp, target_count,
                                           target_datatype, op, win_ptr, NULL);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPID_GET_ACCUMULATE);
     return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 

@@ -26,11 +26,8 @@ int MPID_Comm_failure_ack(MPIR_Comm *comm_ptr)
     /* Mark the communicator as any source active */
     comm_ptr->dev.anysource_enabled = 1;
 
-fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_FAILURE_ACK);
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
@@ -57,9 +54,7 @@ int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
     MPIR_Group_release(comm_group);
     MPIR_Group_release(failed_group);
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_FAILURE_GET_ACKED);
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }

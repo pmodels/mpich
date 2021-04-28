@@ -50,11 +50,8 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             break;
     }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_COMMIT);
     return;
-  fn_fail:
-    goto fn_exit;
 }
 
 void MPIR_Typerep_free(MPIR_Datatype * typeptr)

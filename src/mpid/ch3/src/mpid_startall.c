@@ -323,6 +323,7 @@ int MPID_Bcast_init( void *buffer, MPI_Aint count, MPI_Datatype datatype, int ro
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST_INIT);
 
     mpi_errno = MPIR_Bcast_init_impl(buffer, count, datatype, root, comm_ptr, info_ptr, request);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIDI_Request_set_type(*request, MPIDI_REQUEST_TYPE_PERSISTENT_COLL);
 
   fn_exit:

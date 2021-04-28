@@ -774,12 +774,8 @@ static int start_req_complete(MPIR_Request * req)
             MPIDI_CH3I_Win_set_active(win_ptr);
     }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_START_REQ_COMPLETE);
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
@@ -1134,7 +1130,6 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPIR_Win * win_ptr)
         }
     }
 
-  finish_lock:
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
         MPL_atomic_read_write_barrier();
@@ -1200,7 +1195,6 @@ int MPID_Win_unlock(int dest, MPIR_Win * win_ptr)
         }
     } while (!remote_completed);
 
-  finish_unlock:
     if (win_ptr->comm_ptr->rank == dest) {
         /* In some cases (e.g. target is myself),
          * this function call does not go through the progress engine.

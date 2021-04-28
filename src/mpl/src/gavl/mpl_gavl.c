@@ -444,10 +444,7 @@ int MPL_gavl_tree_delete_range(MPL_gavl_tree_t gavl_tree, const void *addr, uint
     /* free nodes and buffer objects from remove list */
     gavl_tree_delete_removed_nodes(tree_ptr, (uintptr_t) addr, len, MPLI_GAVL_INTERSECTION_SEARCH);
 
-  fn_exit:
     return mpl_err;
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -469,10 +466,7 @@ int MPL_gavl_tree_delete_start_addr(MPL_gavl_tree_t gavl_tree, const void *addr)
     /* free nodes and buffer objects from remove list */
     gavl_tree_delete_removed_nodes(tree_ptr, (uintptr_t) addr, 0, MPLI_GAVL_START_ADDR_SEARCH);
 
-  fn_exit:
     return mpl_err;
-  fn_fail:
-    goto fn_exit;
 }
 
 static void gavl_tree_remove_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len,

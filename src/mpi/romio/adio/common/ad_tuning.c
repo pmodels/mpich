@@ -76,7 +76,7 @@ int romio_tunegather;
  *
  */
 
-void ad_get_env_vars()
+void ad_get_env_vars(void)
 {
     char *x;
 
