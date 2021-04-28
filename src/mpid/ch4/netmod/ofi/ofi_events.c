@@ -443,11 +443,8 @@ static int am_isend_rdma_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sre
 
     /* RDMA_READ will perform origin side completion when ACK arrives */
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_AM_ISEND_RDMA_EVENT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int am_isend_pipeline_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me)
@@ -497,7 +494,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     void *orig_buf = wc->buf;   /* needed in case we will copy the header for alignment fix */
     am_hdr = (MPIDI_OFI_am_header_t *) wc->buf;
 
-#if NEEDS_STRICT_ALIGNMENT
+#ifdef NEEDS_STRICT_ALIGNMENT
     /* FI_MULTI_RECV may pack the message at lesser alignment, copy the header
      * when that's the case */
 #define MAX_HDR_SIZE 256        /* need accommodate MPIDI_AMTYPE_RDMA_READ */

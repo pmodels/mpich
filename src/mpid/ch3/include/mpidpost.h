@@ -157,6 +157,11 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPIR_Comm * comm_ptr,
 #define MPIDI_CH3U_Request_increment_cc(req_, was_incomplete_)   \
     MPIR_cc_incr((req_)->cc_ptr, was_incomplete_)
 
+/* versions that do not require return */
+#define MPIDI_CH3U_Request_dec_cc(req_)   \
+    MPIR_cc_dec((req_)->cc_ptr)
+#define MPIDI_CH3U_Request_inc_cc(req_)   \
+    MPIR_cc_inc((req_)->cc_ptr)
 /*
  * Device level request management macros
  */

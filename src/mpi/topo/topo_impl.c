@@ -20,10 +20,7 @@ int MPIR_Cart_coords_impl(MPIR_Comm * comm_ptr, int rank, int maxdims, int coord
         rank = rank % nnodes;
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
@@ -173,10 +170,7 @@ int MPIR_Cart_get_impl(MPIR_Comm * comm_ptr, int maxdims, int dims[], int period
     for (i = 0; i < n; i++)
         *coords++ = *vals++;
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Cart_map_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],

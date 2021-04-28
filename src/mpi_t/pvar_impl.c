@@ -7,16 +7,24 @@
 #include "utlist.h"
 
 /* Define storage for the ALL_HANDLES constant */
-MPIR_T_pvar_handle_t MPIR_T_pvar_all_handles_obj = {
-#ifdef HAVE_ERROR_CHECKING
-    MPIR_T_PVAR_HANDLE, /* pvar handle tag for error checking */
-#endif
-    0
-};
+MPIR_T_pvar_handle_t MPIR_T_pvar_all_handles_obj = { 0 };
 
 MPIR_T_pvar_handle_t *const MPI_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_handles_obj;
 
-/* any non-MPI functions go here, especially non-static ones */
+void MPIR_T_pvar_env_init(void)
+{
+    int i;
+    static const UT_icd pvar_table_entry_icd = { sizeof(pvar_table_entry_t), NULL, NULL, NULL };
+
+    utarray_new(pvar_table, &pvar_table_entry_icd, MPL_MEM_MPIT);
+    for (i = 0; i < MPIR_T_PVAR_CLASS_NUMBER; i++) {
+        pvar_hashs[i] = NULL;
+    }
+
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_T_pvar_all_handles_obj.kind = MPIR_T_PVAR_HANDLE;
+#endif
+}
 
 int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
                                   void *obj_handle, MPI_T_pvar_handle * handle, int *count)

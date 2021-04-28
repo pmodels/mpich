@@ -64,6 +64,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq, int is
         part_sreq->u.part.partitions &&
         MPL_atomic_load_int(&MPIDIG_PART_REQUEST(part_sreq, status)) == MPIDIG_PART_REQ_CTS) {
         mpi_errno = MPIDIG_part_issue_data(part_sreq, is_local);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

@@ -152,6 +152,7 @@ int MPIR_Allreduce_allcomm_auto(const void *sendbuf, void *recvbuf, MPI_Aint cou
         default:
             MPIR_Assert(0);
     }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

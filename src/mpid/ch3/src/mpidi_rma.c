@@ -113,7 +113,7 @@ int MPIDI_RMA_init(void)
 
   fn_fail:
     MPIR_CHKPMEM_REAP();
-    goto fn_fail;
+    goto fn_exit;
 }
 
 

@@ -30,17 +30,6 @@ static inline int MPIR_T_cvar_env_init(void)
     return MPIR_T_cvar_init();
 }
 
-static inline void MPIR_T_pvar_env_init(void)
-{
-    int i;
-    static const UT_icd pvar_table_entry_icd = { sizeof(pvar_table_entry_t), NULL, NULL, NULL };
-
-    utarray_new(pvar_table, &pvar_table_entry_icd, MPL_MEM_MPIT);
-    for (i = 0; i < MPIR_T_PVAR_CLASS_NUMBER; i++) {
-        pvar_hashs[i] = NULL;
-    }
-}
-
 int MPIR_T_env_init(void)
 {
     int mpi_errno = MPI_SUCCESS;

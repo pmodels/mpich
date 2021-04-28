@@ -33,11 +33,8 @@ static int part_send_data_target_cmpl_cb(MPIR_Request * rreq)
     /* Reset part_rreq status to inactive */
     MPL_atomic_store_int(&MPIDIG_PART_REQUEST(part_rreq, status), MPIDIG_PART_RREQ_INACTIVE);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PUT_DT_TARGET_CMPL_CB);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* Callback used on sender, triggered when the data transfer AM completes.

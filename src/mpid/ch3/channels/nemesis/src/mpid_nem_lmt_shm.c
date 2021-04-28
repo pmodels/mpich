@@ -395,8 +395,6 @@ static int get_next_req(MPIDI_VC_t *vc)
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_GET_NEXT_REQ);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 /* The message is copied in a pipelined fashion.  There are NUM_BUFS
@@ -800,11 +798,8 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
         MPL_free(we);
     }
 
- fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_SHM_VC_TERMINATED);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 

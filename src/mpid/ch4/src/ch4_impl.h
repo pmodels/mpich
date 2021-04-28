@@ -666,8 +666,6 @@ MPL_STATIC_INLINE_PREFIX uintptr_t MPIDIG_win_base_at_target(const MPIR_Win * wi
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
                                                         MPIR_cc_t ** local_cmpl_cnts_ptr)
 {
-    int c = 0;
-
     /* Increase per-window counters for fence, and per-target counters for
      * all other synchronization. */
     switch (MPIDIG_WIN(win, sync).access_epoch_type) {
@@ -680,15 +678,15 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_cmpl_cnts_incr(MPIR_Win * win, int targ
             {
                 MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_get(win, target_rank);
 
-                MPIR_cc_incr(&target_ptr->local_cmpl_cnts, &c);
-                MPIR_cc_incr(&target_ptr->remote_cmpl_cnts, &c);
+                MPIR_cc_inc(&target_ptr->local_cmpl_cnts);
+                MPIR_cc_inc(&target_ptr->remote_cmpl_cnts);
 
                 *local_cmpl_cnts_ptr = &target_ptr->local_cmpl_cnts;
                 break;
             }
         default:
-            MPIR_cc_incr(&MPIDIG_WIN(win, local_cmpl_cnts), &c);
-            MPIR_cc_incr(&MPIDIG_WIN(win, remote_cmpl_cnts), &c);
+            MPIR_cc_inc(&MPIDIG_WIN(win, local_cmpl_cnts));
+            MPIR_cc_inc(&MPIDIG_WIN(win, remote_cmpl_cnts));
 
             *local_cmpl_cnts_ptr = &MPIDIG_WIN(win, local_cmpl_cnts);
             break;
@@ -698,18 +696,17 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_cmpl_cnts_incr(MPIR_Win * win, int targ
 /* Increase counter for active message acc ops. */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win, int target_rank)
 {
-    int c = 0;
     switch (MPIDIG_WIN(win, sync).access_epoch_type) {
         case MPIDIG_EPOTYPE_LOCK:
         case MPIDIG_EPOTYPE_LOCK_ALL:
         case MPIDIG_EPOTYPE_START:
             {
                 MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_get(win, target_rank);
-                MPIR_cc_incr(&target_ptr->remote_acc_cmpl_cnts, &c);
+                MPIR_cc_inc(&target_ptr->remote_acc_cmpl_cnts);
                 break;
             }
         default:
-            MPIR_cc_incr(&MPIDIG_WIN(win, remote_acc_cmpl_cnts), &c);
+            MPIR_cc_inc(&MPIDIG_WIN(win, remote_acc_cmpl_cnts));
             break;
     }
 }
@@ -717,7 +714,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win
 /* Decrease counter for active message acc ops. */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
 {
-    int c = 0;
     switch (MPIDIG_WIN(win, sync).access_epoch_type) {
         case MPIDIG_EPOTYPE_LOCK:
         case MPIDIG_EPOTYPE_LOCK_ALL:
@@ -725,11 +721,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win
             {
                 MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, target_rank);
                 MPIR_Assert(target_ptr);
-                MPIR_cc_decr(&target_ptr->remote_acc_cmpl_cnts, &c);
+                MPIR_cc_dec(&target_ptr->remote_acc_cmpl_cnts);
                 break;
             }
         default:
-            MPIR_cc_decr(&MPIDIG_WIN(win, remote_acc_cmpl_cnts), &c);
+            MPIR_cc_dec(&MPIDIG_WIN(win, remote_acc_cmpl_cnts));
             break;
     }
 
@@ -737,8 +733,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
 {
-    int c = 0;
-
     /* Decrease per-window counter for fence, and per-target counters for
      * all other synchronization. */
     switch (MPIDIG_WIN(win, sync).access_epoch_type) {
@@ -748,11 +742,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_cmpl_cnt_decr(MPIR_Win * win, in
             {
                 MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, target_rank);
                 MPIR_Assert(target_ptr);
-                MPIR_cc_decr(&target_ptr->remote_cmpl_cnts, &c);
+                MPIR_cc_dec(&target_ptr->remote_cmpl_cnts);
                 break;
             }
         default:
-            MPIR_cc_decr(&MPIDIG_WIN(win, remote_cmpl_cnts), &c);
+            MPIR_cc_dec(&MPIDIG_WIN(win, remote_cmpl_cnts));
             break;
     }
 }

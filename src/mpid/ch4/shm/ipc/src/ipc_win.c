@@ -217,6 +217,4 @@ int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MPI_WIN_FREE_HOOK);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }

@@ -56,11 +56,14 @@ static int nm_finalize(void)
 MPID_nem_netmod_funcs_t MPIDI_nem_none_funcs = {
     nm_init,
     nm_finalize,
+#ifdef ENABLE_CHECKPOINTING
+    NULL, NULL, NULL,       /* ckpt routines */
+#endif
     nm_poll,
     nm_get_business_card,
     nm_connect_to_root,
     nm_vc_init,
     nm_vc_destroy,
     nm_vc_terminate,
-    NULL        /* anysource iprobe */
+    NULL, NULL, NULL        /* anysource iprobe etc. */
 };

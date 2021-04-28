@@ -151,10 +151,7 @@ int MPIR_Comm_spawn_multiple_impl(int count, char *array_of_commands[], char **a
                                          array_of_maxprocs,
                                          array_of_info_ptrs, root,
                                          comm_ptr, p_intercomm_ptr, array_of_errcodes);
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name)

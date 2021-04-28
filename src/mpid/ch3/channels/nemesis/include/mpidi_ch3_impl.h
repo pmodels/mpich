@@ -90,15 +90,13 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win **win_ptr);
 #define MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr)                                              \
     do {                                                                                \
         int pt_err = pthread_mutex_lock((win_ptr)->shm_mutex);                          \
-        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_lock",        \
-                             "**pthread_lock %s", strerror(pt_err));                    \
+        MPIR_Assert(pt_err == 0); \
     } while (0)
 
 #define MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr)                                            \
     do {                                                                                \
         int pt_err = pthread_mutex_unlock((win_ptr)->shm_mutex);                        \
-        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_unlock",      \
-                             "**pthread_unlock %s", strerror(pt_err));                  \
+        MPIR_Assert(pt_err == 0); \
     } while (0)
 
 #define MPIDI_CH3I_SHM_MUTEX_INIT(win_ptr)                                              \

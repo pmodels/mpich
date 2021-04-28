@@ -25,11 +25,8 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
         comm->hints[MPIR_COMM_HINT_EAGAIN] = FALSE;
     }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_PRE_HOOK);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
@@ -39,11 +36,8 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)

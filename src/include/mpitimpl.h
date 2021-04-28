@@ -1241,6 +1241,8 @@ extern MPID_Thread_mutex_t mpi_t_mutex;
 #endif
 
 /* Init and finalize routines */
+
+extern void MPIR_T_pvar_env_init(void);
 extern int MPIR_T_env_init(void);
 extern void MPIR_T_env_finalize(void);
 extern void MPIR_T_events_finalize(void);

@@ -287,9 +287,6 @@ int MPIDI_GPU_mpi_finalize_hook(void)
     }
     MPL_free(MPIDI_GPUI_global.ipc_handle_track_trees);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_MPI_FINALIZE_HOOK);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }

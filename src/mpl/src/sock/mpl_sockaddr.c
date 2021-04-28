@@ -140,6 +140,7 @@ int MPL_get_sockaddr_direct(int type, MPL_sockaddr_t * p_addr)
         return 0;
     } else {
         assert(0);
+        return -1;
     }
 }
 
@@ -182,7 +183,7 @@ int MPL_get_sockaddr_iface(const char *s_iface, MPL_sockaddr_t * p_addr)
     }
 }
 
-int MPL_socket()
+int MPL_socket(void)
 {
     return socket(af_type, SOCK_STREAM, IPPROTO_TCP);
 }
