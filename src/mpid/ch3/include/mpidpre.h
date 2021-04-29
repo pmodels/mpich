@@ -447,7 +447,7 @@ typedef struct MPIDI_Request {
     void *ext_hdr_ptr; /* Pointer to extended packet header.
                         * It is allocated in RMA issuing/pkt_handler functions,
                         * and freed when release request. */
-    intptr_t ext_hdr_sz;
+    MPI_Aint ext_hdr_sz;
 
     struct MPIDI_RMA_Target *rma_target_ptr;
 
