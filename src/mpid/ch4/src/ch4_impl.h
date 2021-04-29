@@ -14,6 +14,23 @@
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
+/* Request creation with locking for LOCKLESS MT model */
+#define MPIDI_CH4_REQUEST_CREATE(req, kind, pool, ref_count)            \
+    do {                                                                \
+        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS)                \
+            (req) = MPIR_Request_create_from_pool_safe(kind, pool, ref_count); \
+        else                                                            \
+            (req) = MPIR_Request_create_from_pool(kind, pool, ref_count); \
+    } while (0)
+
+#define MPIDI_CH4_REQUEST_FREE(req)                                \
+    do {                                                           \
+        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS)           \
+            MPIR_Request_free_safe(req);                           \
+        else                                                       \
+            MPIR_Request_free_unsafe(req);                         \
+    } while (0)
+
 /* Static inlines */
 
 /* Reconstruct context offset associated with a persistent request.
