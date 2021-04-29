@@ -264,7 +264,7 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
         MPIR_Request_add_ref(sigreq);
         MPID_Request_complete(sigreq);
         /* Free the unexpected request on behalf of the user */
-        MPIR_Request_free_unsafe(rreq);
+        MPIDI_CH4_REQUEST_FREE(rreq);
     }
     MPID_Request_complete(rreq);
   fn_exit:
@@ -397,7 +397,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
                 MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
                 MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
                                                   MPIDIG_REQUEST(rreq, buffer));
-                MPIR_Request_free_unsafe(rreq);
+                MPIDI_CH4_REQUEST_FREE(rreq);
                 MPID_Request_complete(rreq);
                 rreq = NULL;
                 root_comm = root_comm_again;

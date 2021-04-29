@@ -20,7 +20,7 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     /* Set refcnt=1 for user-defined partitioned pattern; decrease at request_free. */
-    req = MPIR_Request_create_from_pool(kind, 0, 1);
+    MPIDI_CH4_REQUEST_CREATE(req, kind, 0, 1);
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIR_Comm_add_ref(comm);
@@ -116,6 +116,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PRECV_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_PRECV_INIT);
 
+
     /* Create and initialize device-layer partitioned request */
     mpi_errno = part_req_create(buf, partitions, count, datatype, source, tag, comm,
                                 MPIR_REQUEST_KIND__PART_RECV, request);
@@ -132,7 +133,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
         MPIDIG_PART_REQUEST(*request, u.recv).sdata_size =
             MPIDIG_PART_REQUEST(unexp_req, u.recv).sdata_size;
         MPIDIG_PART_REQUEST(*request, peer_req_ptr) = MPIDIG_PART_REQUEST(unexp_req, peer_req_ptr);
-        MPIR_Request_free_unsafe(unexp_req);
+        MPIDI_CH4_REQUEST_FREE(unexp_req);
 
         MPIDIG_part_match_rreq(*request);
         MPIDIG_PART_REQ_INC_FETCH_STATUS(*request);

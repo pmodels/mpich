@@ -44,7 +44,7 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
             }
             /* nm_rreq will be freed here. User-layer will have a completed (cancelled)
              * request with correct status. */
-            MPIR_Request_free_unsafe(nm_rreq);
+            MPIDI_CH4_REQUEST_FREE(nm_rreq);
             goto fn_exit;
         }
     }
@@ -73,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
             /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
             mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq);
             MPIR_ERR_CHECK(mpi_errno);
-            MPIR_Request_free_unsafe(partner_rreq);
+            MPIDI_CH4_REQUEST_FREE(partner_rreq);
         }
         mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
     } else {
@@ -234,7 +234,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV_INIT);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    rreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__PREQUEST_RECV, 0, 1);
+    MPIDI_CH4_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__PREQUEST_RECV, 0, 1);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 

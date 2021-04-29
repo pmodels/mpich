@@ -260,7 +260,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         }
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
-        MPIR_Request_free_unsafe(sreq);
+        MPIDI_CH4_REQUEST_FREE(sreq);
     }
     /* c != 0, ssend */
   fn_exit:
@@ -369,7 +369,7 @@ static int chunk_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
     MPIR_cc_decr(creq->parent->cc_ptr, &c);
 
     if (c == 0)
-        MPIR_Request_free_unsafe(creq->parent);
+        MPIDI_CH4_REQUEST_FREE(creq->parent);
 
     MPL_free(creq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CHUNK_DONE_EVENT);
@@ -386,7 +386,7 @@ static int inject_emu_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 
     if (!incomplete) {
         MPL_free(MPIDI_OFI_REQUEST(req, util.inject_buf));
-        MPIR_Request_free_unsafe(req);
+        MPIDI_CH4_REQUEST_FREE(req);
         MPL_atomic_fetch_sub_int(&MPIDI_OFI_global.am_inflight_inject_emus, 1);
     }
 

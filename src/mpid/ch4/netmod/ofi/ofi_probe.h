@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
         remote_proc = MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote);
 
     if (message) {
-        rreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, vni_dst, 1);
+        MPIDI_CH4_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__MPROBE, vni_dst, 1);
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
         rreq = &r;
@@ -63,7 +63,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     if (ofi_err == -FI_ENOMSG) {
         *flag = 0;
         if (message)
-            MPIR_Request_free_unsafe(rreq);
+            MPIDI_CH4_REQUEST_FREE(rreq);
         goto fn_exit;
     }
 
@@ -77,7 +77,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
             *flag = 0;
 
             if (message)
-                MPIR_Request_free_unsafe(rreq);
+                MPIDI_CH4_REQUEST_FREE(rreq);
 
             goto fn_exit;
             break;

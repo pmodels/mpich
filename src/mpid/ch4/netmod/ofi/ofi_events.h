@@ -42,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc 
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
-        MPIR_Request_free_unsafe(sreq);
+        MPIDI_CH4_REQUEST_FREE(sreq);
     }
     /* c != 0, ssend */
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_EVENT);
