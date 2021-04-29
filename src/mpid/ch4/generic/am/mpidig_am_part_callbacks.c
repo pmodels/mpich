@@ -84,7 +84,7 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
         MPIR_Request *unexp_req = NULL;
 
         /* Create temporary unexpected request, freed when matched with a precv_init. */
-        unexp_req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__PART_RECV, 0, 1);
+        MPIDI_CH4_REQUEST_CREATE(unexp_req, MPIR_REQUEST_KIND__PART_RECV, 0, 1);
         MPIR_ERR_CHKANDSTMT(unexp_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
 

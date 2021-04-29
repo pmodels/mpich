@@ -97,7 +97,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
             MPIDI_SHM_am_request_finalize(req);
 #endif
         }
-        MPIR_Request_free_unsafe(req);
+        MPIDI_CH4_REQUEST_FREE(req);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REQUEST_COMPLETE);
