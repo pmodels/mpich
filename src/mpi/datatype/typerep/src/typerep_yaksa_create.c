@@ -35,11 +35,12 @@ static int update_yaksa_type(MPIR_Datatype * newtype, MPI_Datatype oldtype, MPI_
 
     rc = yaksa_type_get_size(dt, (uintptr_t *) & newtype->size);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
-    rc = yaksa_type_get_extent(dt, &newtype->lb, &newtype->extent);
+    rc = yaksa_type_get_extent(dt, (intptr_t *) & newtype->lb, (intptr_t *) & newtype->extent);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
     newtype->ub = newtype->lb + newtype->extent;
     MPI_Aint true_extent;
-    rc = yaksa_type_get_true_extent(dt, &newtype->true_lb, &true_extent);
+    rc = yaksa_type_get_true_extent(dt, (intptr_t *) & newtype->true_lb,
+                                    (intptr_t *) & true_extent);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
     newtype->true_ub = newtype->true_lb + true_extent;
