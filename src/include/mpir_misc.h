@@ -56,8 +56,13 @@ extern const char MPII_Version_F77[] MPICH_API_PUBLIC;
 extern const char MPII_Version_FC[] MPICH_API_PUBLIC;
 extern const char MPII_Version_custom[] MPICH_API_PUBLIC;
 
+#include "typerep_pre.h"        /* needed for MPIR_Typerep_req */
+
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
+int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                    MPIR_Typerep_req * typereq_req);
 
 /*@ MPIR_Add_finalize - Add a routine to be called when MPI_Finalize is invoked
 
