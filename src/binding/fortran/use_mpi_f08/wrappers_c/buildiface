@@ -312,9 +312,11 @@ char **MPIR_C_MPI_ARGV_NULL = MPI_ARGV_NULL;
 char ***MPIR_C_MPI_ARGVS_NULL = MPI_ARGVS_NULL;
 int *MPIR_C_MPI_ERRCODES_IGNORE = MPI_ERRCODES_IGNORE;
 
+/* Fortran 2008 specifies a maximum rank of 15 */
+#define MAX_RANK  (15)
+
 int cdesc_create_datatype(CFI_cdesc_t *cdesc, int oldcount, MPI_Datatype oldtype, MPI_Datatype *newtype)
 {
-    const int MAX_RANK = 15; /* Fortran 2008 specifies a maximum rank of 15 */
     MPI_Datatype types[MAX_RANK + 1]; /* Use a fixed size array to avoid malloc. + 1 for oldtype */
     int mpi_errno = MPI_SUCCESS;
     int accum_elems = 1;

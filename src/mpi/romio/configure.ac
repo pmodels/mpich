@@ -58,6 +58,7 @@ AH_TOP([/*
  */
 #ifndef ROMIOCONF_H_INCLUDED
 #define ROMIOCONF_H_INCLUDED
+#include <mplconfig.h>
 ])
 AH_BOTTOM([
 /* quash PACKAGE and PACKAGE_* vars, see MPICH top-level configure.ac for
@@ -780,18 +781,6 @@ if test -n "$FILE_SYSTEM" ; then
    done
 fi
 
-AC_ARG_WITH([cart],
-    [AS_HELP_STRING([--with-cart],
-            [Build DAOS ROMIO driver[default=no]])],,
-    [with_cart=no])
-
-AS_IF([test "x$with_cart" != xno], [
-    CART="yes"
-    PAC_SET_HEADER_LIB_PATH(cart)
-    AC_CHECK_HEADERS(gurt/hash.h,, [unset CART])
-    AC_CHECK_LIB([gurt], [d_hash_table_create],, [unset CART])
-])
-
 AC_ARG_WITH([daos],
     [AS_HELP_STRING([--with-daos],
 	    [Build DAOS ROMIO driver[default=no]])],,
@@ -801,20 +790,19 @@ AS_IF([test "x$with_daos" != xno], [
     DAOS="yes"
     PAC_SET_HEADER_LIB_PATH(daos)
     AC_CHECK_HEADERS(daos_types.h,, [unset DAOS])
+    AC_CHECK_HEADERS(gurt/hash.h,, [unset DAOS])
+    AC_CHECK_LIB([gurt], [d_hash_table_create],, [unset DAOS])
     AC_CHECK_LIB([uuid], [uuid_generate],, [unset DAOS])
-    AC_CHECK_LIB([daos_common], [daos_sgl_init],, [unset DAOS])
     AC_CHECK_LIB([daos], [daos_init],, [unset DAOS])
     AC_CHECK_LIB([dfs], [dfs_mount],, [unset DAOS])
     AC_CHECK_LIB([duns], [duns_resolve_path],, [unset DAOS])
 ])
 
-AS_IF([test "x$CART" != xyes], [unset DAOS])
-
 if test -n "$file_system_daos" ; then
     if test "x$DAOS" == xyes ; then
 	AC_DEFINE(ROMIO_DAOS,1,[Define for ROMIO with DAOS])
     else
-	AC_MSG_ERROR([DAOS support requested but not found (--with-daos, --with-cart)])
+	AC_MSG_ERROR([DAOS support requested but not found (--with-daos)])
     fi
 fi
 

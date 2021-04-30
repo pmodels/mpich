@@ -30,6 +30,7 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 {
     int mpi_errno = MPI_SUCCESS;
     int size, i, newi;
+    int *flags = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
@@ -43,7 +44,7 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
     (*new_group_ptr)->rank = MPI_UNDEFINED;
     /* Use flag fields to mark the members to *exclude* . */
 
-    int *flags = MPL_calloc(size, sizeof(int), MPL_MEM_OTHER);
+    flags = MPL_calloc(size, sizeof(int), MPL_MEM_OTHER);
 
     for (i = 0; i < n; i++) {
         flags[ranks[i]] = 1;
@@ -59,13 +60,12 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
         }
     }
 
-    MPL_free(flags);
-
     (*new_group_ptr)->size = size - n;
     (*new_group_ptr)->idx_of_first_lpid = -1;
     /* TODO calculate is_local_dense_monotonic */
 
   fn_exit:
+    MPL_free(flags);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
     return mpi_errno;
   fn_fail:

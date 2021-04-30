@@ -30,6 +30,7 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 {
     int mpi_errno = MPI_SUCCESS;
     int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
+    int *flags = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
@@ -39,7 +40,7 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     /* Insure that the lpid lists are setup */
     MPIR_Group_setup_lpid_pairs(group_ptr1, group_ptr2);
 
-    int *flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
+    flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
 
     g1_idx = group_ptr1->idx_of_first_lpid;
     g2_idx = group_ptr2->idx_of_first_lpid;
@@ -87,9 +88,8 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
         /* TODO calculate is_local_dense_monotonic */
     }
 
-    MPL_free(flags);
-
   fn_exit:
+    MPL_free(flags);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
     return mpi_errno;
   fn_fail:

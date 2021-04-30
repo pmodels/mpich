@@ -47,10 +47,23 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     if (*base_ptr == NULL)
         mem_map_params.flags |= UCP_MEM_MAP_ALLOCATE;
 
-    status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params, &mem_h);
+    MPIDI_UCX_WIN(win).mem_mapped = false;
+
+    /* As of ucx-1.10, mapping with a CUDA device buffer may be successful but
+     * later RMA segfaults inside UCX. Thus, MPICH manually disables native RMA for device win buffer for now.*/
+    if (MPIR_GPU_query_pointer_is_dev(*base_ptr)) {
+        status = UCS_ERR_UNSUPPORTED;
+    } else {
+        status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params, &mem_h);
+    }
+
     /* some memory types cannot be mapped, skip rkey packing */
     if (status != UCS_ERR_UNSUPPORTED) {
         MPIDI_UCX_CHK_STATUS(status);
+
+        /* checked at win_free to unmap mem_h */
+        MPIDI_UCX_WIN(win).mem_mapped = true;
+        MPIDI_UCX_WIN(win).mem_h = mem_h;
 
         /* query allocated address. */
         mem_attr.field_mask = UCP_MEM_ATTR_FIELD_ADDRESS | UCP_MEM_ATTR_FIELD_LENGTH;
@@ -59,8 +72,6 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
 
         *base_ptr = mem_attr.address;
         MPIR_Assert(mem_attr.length >= length);
-
-        MPIDI_UCX_WIN(win).mem_h = mem_h;
 
         /* pack the key */
         status = ucp_rkey_pack(ucp_context, mem_h, (void **) &rkey_buffer, &rkey_size);
@@ -94,7 +105,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
      * and remote windows (at least now). If win_create is used, the key cannot be unpackt -
      * then we need our fallback-solution */
 
-    bool all_reachable = true;
+    bool all_reachable = true, none_reachable = true;
     for (i = 0; i < comm_ptr->local_size; i++) {
         /* Skip unmapped remote region. */
         if (rkey_sizes[i] == 0) {
@@ -109,9 +120,15 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
         if (status == UCS_ERR_UNREACHABLE) {
             all_reachable = false;
             MPIDI_UCX_WIN_INFO(win, i).rkey = NULL;
-        } else
+        } else {
             MPIDI_UCX_CHK_STATUS(status);
+            none_reachable = false;
+        }
     }
+
+    if (none_reachable)
+        goto am_fallback;
+
     share_data = MPL_malloc(comm_ptr->local_size * sizeof(struct ucx_share), MPL_MEM_OTHER);
 
     share_data[comm_ptr->rank].disp = disp_unit;
@@ -146,6 +163,9 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     MPL_free(recv_disps);
     MPL_free(rkey_recv_buff);
     return mpi_errno;
+  am_fallback:
+    MPL_free(MPIDI_UCX_WIN(win).info_table);
+    MPIDI_UCX_WIN(win).info_table = NULL;
   fn_fail:
     goto fn_exit;
 }
@@ -283,19 +303,20 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
 
-    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_NM_REACHABLE) {
+    if (MPIDI_UCX_WIN(win).info_table) {
         int i;
         for (i = 0; i < win->comm_ptr->local_size; i++) {
             if (MPIDI_UCX_WIN_INFO(win, i).rkey) {
                 ucp_rkey_destroy(MPIDI_UCX_WIN_INFO(win, i).rkey);
             }
         }
-
-        if (win->size > 0)
-            ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
-        MPL_free(MPIDI_UCX_WIN(win).info_table);
-        MPL_free(MPIDI_UCX_WIN(win).target_sync);
     }
+
+    /* Skip unmap for unsupported mem type */
+    if (MPIDI_UCX_WIN(win).mem_mapped)
+        ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
+    MPL_free(MPIDI_UCX_WIN(win).info_table);
+    MPL_free(MPIDI_UCX_WIN(win).target_sync);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
     return mpi_errno;

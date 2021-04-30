@@ -40,6 +40,8 @@ typedef enum MPIR_Op_kind {
     MPIR_OP_KIND__USER = 33
 } MPIR_Op_kind;
 
+#define MPIR_OP_N_BUILTIN 15
+
 /*S
   MPIR_User_function - Definition of a user function for MPI_Op types.
 
@@ -106,7 +108,6 @@ typedef struct MPIR_Op {
      MPID_DEV_OP_DECL
 #endif
 } MPIR_Op;
-#define MPIR_OP_N_BUILTIN 14
 extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
 extern MPIR_Op MPIR_Op_direct[];
 extern MPIR_Object_alloc_t MPIR_Op_mem;
@@ -203,7 +204,7 @@ extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 #define MPIR_OP_HDL_TO_FN(op) MPIR_Op_table[((op)&0xf)]
 #define MPIR_OP_HDL_TO_DTYPE_FN(op) MPIR_Op_check_dtype_table[((op)&0xf)]
 
-int MPIR_Op_commutative(MPIR_Op * op_ptr, int *commute);
+int MPIR_Op_commutative(MPI_Op op, int *commute);
 
 int MPIR_Op_is_commutative(MPI_Op);
 

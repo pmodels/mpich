@@ -3,8 +3,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include <dlfcn.h>
 #include "mpl.h"
+#include <dlfcn.h>
 #include <assert.h>
 
 #define CUDA_ERR_CHECK(ret) if (unlikely((ret) != cudaSuccess)) goto fn_fail
@@ -15,12 +15,28 @@ typedef struct gpu_free_hook {
     struct gpu_free_hook *next;
 } gpu_free_hook_s;
 
+static int gpu_initialized = 0;
+static int device_count = -1;
+static int max_dev_id = -1;
+
 static gpu_free_hook_s *free_hook_chain = NULL;
 
 static CUresult CUDAAPI(*sys_cuMemFree) (CUdeviceptr dptr);
 static cudaError_t CUDARTAPI(*sys_cudaFree) (void *dptr);
 
 static int gpu_mem_hook_init();
+
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
+{
+    int ret = MPL_SUCCESS;
+    if (!gpu_initialized) {
+        ret = MPL_gpu_init();
+    }
+
+    *dev_cnt = device_count;
+    *dev_id = max_dev_id;
+    return ret;
+}
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
@@ -180,10 +196,9 @@ int MPL_gpu_free(void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_init(int *device_count, int *max_dev_id_ptr)
+int MPL_gpu_init()
 {
-    int count, max_dev_id = -1;
-    cudaError_t ret = cudaGetDeviceCount(&count);
+    cudaError_t ret = cudaGetDeviceCount(&device_count);
     CUDA_ERR_CHECK(ret);
 
     char *visible_devices = getenv("CUDA_VISIBLE_DEVICES");
@@ -192,7 +207,7 @@ int MPL_gpu_init(int *device_count, int *max_dev_id_ptr)
         char *devices = MPL_malloc(len + 1, MPL_MEM_OTHER);
         char *free_ptr = devices;
         memcpy(devices, visible_devices, len + 1);
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < device_count; i++) {
             int global_dev_id;
             char *tmp = strtok(devices, ",");
             assert(tmp);
@@ -203,13 +218,16 @@ int MPL_gpu_init(int *device_count, int *max_dev_id_ptr)
         }
         MPL_free(free_ptr);
     } else {
-        max_dev_id = count - 1;
+        max_dev_id = device_count - 1;
     }
 
-    *max_dev_id_ptr = max_dev_id;
-    *device_count = count;
-
+    /* gpu shm module would cache gpu handle to accelerate intra-node
+     * communication; we must register hooks for memory-related functions
+     * in cuda, such as cudaFree and cuMemFree, to track user behaviors on
+     * the memory buffer and invalidate cached handle/buffer respectively
+     * for result correctness. */
     gpu_mem_hook_init();
+    gpu_initialized = 1;
 
   fn_exit:
     return MPL_SUCCESS;

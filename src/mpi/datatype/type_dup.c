@@ -73,12 +73,14 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         new_dtp->typerep.handle = NULL;
         *newtype = new_dtp->handle;
 
+        mpi_errno = MPIR_Typerep_create_dup(oldtype, new_dtp);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* if old_dtp is commited, user will not call `MPI_Type_commit` on the new type,
+         * but the device still need be notified (e.g. ucx need register the type) */
         if (old_dtp->is_committed) {
             MPID_Type_commit_hook(new_dtp);
         }
-
-        mpi_errno = MPIR_Typerep_create_dup(oldtype, new_dtp);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, VERBOSE, "dup type %x created.", *newtype);

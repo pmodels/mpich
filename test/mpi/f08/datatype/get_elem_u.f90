@@ -21,7 +21,7 @@ PROGRAM get_elem_u
   INTEGER(kind=MPI_ADDRESS_KIND) :: disp(nb)=(/0,8/)
 
   INTEGER, PARAMETER :: amax=200
-  INTEGER :: extent
+  INTEGER(kind=MPI_ADDRESS_KIND) :: lb, extent
   TYPE(MPI_DATATYPE) type1, type2
   REAL    :: a(amax)
 
@@ -36,11 +36,11 @@ PROGRAM get_elem_u
 
   CALL MPI_Type_create_struct(nb, blklen, disp, types, type1, ierr)
   CALL MPI_Type_commit(type1, ierr)
-  CALL MPI_Type_extent(type1, extent, ierr)
+  CALL MPI_Type_get_extent(type1, lb, extent, ierr)
 
   CALL MPI_Type_contiguous(4, Type1, Type2, ierr)
   CALL MPI_Type_commit(Type2, ierr)
-  CALL MPI_Type_extent(Type2, extent, ierr)
+  CALL MPI_Type_get_extent(Type2, lb, extent, ierr)
 
   DO k=1,17
 

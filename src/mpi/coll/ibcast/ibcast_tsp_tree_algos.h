@@ -18,7 +18,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    int num_chunks, chunk_size_floor, chunk_size_ceil;
+    MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
     size_t extent, type_size;
     MPI_Aint lb, true_extent;

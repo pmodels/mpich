@@ -30,6 +30,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 {
     int mpi_errno = MPI_SUCCESS;
     int g1_idx, g2_idx, nnew, i, k, size1, size2, mylpid;
+    int *flags = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_UNION_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_UNION_IMPL);
@@ -54,7 +55,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     /* Clear the flag bits on the second group.  The flag is set if
      * a member of the second group belongs to the union */
     size2 = group_ptr2->size;
-    int *flags = MPL_calloc(size2, sizeof(int), MPL_MEM_OTHER);
+    flags = MPL_calloc(size2, sizeof(int), MPL_MEM_OTHER);
 
     /* Loop through the lists that are ordered by lpid (local process
      * id) to detect which processes in group 2 are not in group 1
@@ -120,11 +121,10 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
         }
     }
 
-    MPL_free(flags);
-
     /* TODO calculate is_local_dense_monotonic */
 
   fn_exit:
+    MPL_free(flags);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_UNION_IMPL);
     return mpi_errno;
   fn_fail:

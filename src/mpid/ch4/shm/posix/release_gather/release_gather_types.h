@@ -26,7 +26,10 @@ typedef struct MPIDI_POSIX_release_gather_comm_t {
     int num_collective_calls;
 
     MPIR_Treealgo_tree_t bcast_tree, reduce_tree;
-    int flags_shm_size;
+    /* shm mem allocated to this comm */
+    uint64_t flags_shm_size;
+    uint64_t bcast_shm_size;
+    uint64_t reduce_shm_size;
     uint64_t gather_state, release_state;
 
     void *flags_addr, *bcast_buf_addr, *reduce_buf_addr;

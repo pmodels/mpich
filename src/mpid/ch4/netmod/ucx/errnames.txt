@@ -8,3 +8,4 @@
 **ucx_nm_rq_error %s %d %s %s: returned failed request in UCX netmod(%s %d %s %s)
 **ucx_nm_other:Other UCX error
 **ucx_nm_other %s %d %s %s: Other UCX error (%s %d %s %s)
+**ucx_nm_notsupported:The function is currently not supported with ucx netmod

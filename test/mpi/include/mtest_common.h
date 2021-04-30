@@ -16,6 +16,7 @@ typedef enum {
     MTEST_MEM_TYPE__UNREGISTERED_HOST,
     MTEST_MEM_TYPE__REGISTERED_HOST,
     MTEST_MEM_TYPE__DEVICE,
+    MTEST_MEM_TYPE__SHARED,
 } mtest_mem_type_e;
 
 MPI_Aint MTestDefaultMaxBufferSize();

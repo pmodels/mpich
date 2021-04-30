@@ -298,7 +298,7 @@ typedef enum {
     MPIDIG_ACCU_SAME_OP_NO_OP
 } MPIDIG_win_info_accumulate_ops;
 
-#define MPIDIG_ACCU_NUM_OP (MPIR_OP_N_BUILTIN + 1)      /* builtin reduce op + cswap */
+#define MPIDIG_ACCU_NUM_OP (MPIR_OP_N_BUILTIN)  /* builtin reduce op + cswap */
 
 typedef struct MPIDIG_win_info_args_t {
     int no_locks;
@@ -430,8 +430,8 @@ typedef enum {
     MPIDI_WINATTR_ACCU_NO_SHM = 4,      /* shortcut of disable_shm_accumulate in MPIDIG_win_info_args_t. */
     MPIDI_WINATTR_ACCU_SAME_OP_NO_OP = 8,
     MPIDI_WINATTR_NM_REACHABLE = 16,    /* whether a netmod may reach the window. Set by netmod at win init.
-                                         * It only indicates whether the win type is supported. Per-target check
-                                         * may be required separately. */
+                                         * Each netmod decides the definition of "reachable" at win_init based on
+                                         * its internal optimization. */
     MPIDI_WINATTR_NM_DYNAMIC_MR = 32,   /* whether the memory region is registered dynamically. Valid only for
                                          * dynamic window. Set by netmod. */
     MPIDI_WINATTR_LAST_BIT

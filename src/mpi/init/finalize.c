@@ -169,6 +169,11 @@ int MPI_Finalize(void)
      * for atomic file updates makes this harder. */
     MPII_final_coverage_delay(rank);
 
+    if (MPIR_CVAR_ENABLE_GPU) {
+        int mpl_errno = MPL_gpu_finalize();
+        MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_finalize");
+    }
+
     /* All memory should be freed at this point */
     MPII_finalize_memory_tracing();
 

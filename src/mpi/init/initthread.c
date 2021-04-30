@@ -146,6 +146,13 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     MPIR_ThreadInfo.isThreaded = 0;
 #endif
 
+    /* Initialize gpu in mpl in order to support shm gpu module initialization
+     * inside MPID_Init */
+    if (MPIR_CVAR_ENABLE_GPU) {
+        int mpl_errno = MPL_gpu_init();
+        MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
+    }
+
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
@@ -159,6 +166,10 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
      * that *REALLY* cannot be done before device initialization
      * should come here. */
     /**********************************************************************/
+
+    /* MPIR_Process.attr.tag_ub depends on tag_bits set by the device */
+    mpi_errno = MPII_init_tag_ub();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* pairtypes might need device hooks to be activated so the device
      * can keep track of their creation.  that's why we need to do
