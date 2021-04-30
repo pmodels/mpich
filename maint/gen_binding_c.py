@@ -17,12 +17,19 @@ def main():
 
     # -- Loading extra api prototypes (needed until other `buildiface` scripts are updated)
     G.mpi_declares = []
-    proto_extra_h = "%s/mpi_proto_extra.h" % c_dir
-    if os.path.exists(proto_extra_h):
-        with open(proto_extra_h) as In:
-            for line in In:
-                if RE.match(r'(int MPIX?_.*MPICH_API_PUBLIC)', line):
-                    G.mpi_declares.append(RE.m.group(1))
+
+    # -- functions that are not generated yet
+    extras = []
+    extras.append("MPI_DUP_FN")
+    for a in ['c2f', 'f2c', 'f082c', 'c2f08', 'f082f', 'f2f08']:
+        extras.append("MPI_Status_%s" % a)
+    for a in ['integer', 'real', 'complex']:
+        extras.append("MPI_Type_create_f90_%s" % a)
+    # now generate the prototypes
+    for a in extras:
+        func = G.FUNCS[a.lower()]
+        mapping = G.MAPS['SMALL_C_KIND_MAP']
+        G.mpi_declares.append(get_declare_function(func, mapping, "proto"))
 
     # -- Generating code --
     for func in func_list:
