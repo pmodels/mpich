@@ -156,6 +156,12 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
             hints->domain_attr->mr_mode = FI_MR_SCALABLE;
         }
     }
+    /* FI_MR_SCALABLE is implied by lack of mr_mode bits in >= v1.5.
+     * But at least sockets provider still need FI_MR_SCALABLE to be set
+     * or it will return FI_MR_BASIC. */
+    if (hints->domain_attr->mr_mode == 0) {
+        hints->domain_attr->mr_mode = FI_MR_SCALABLE;
+    }
     hints->tx_attr->op_flags = FI_COMPLETION;
     hints->tx_attr->msg_order = FI_ORDER_SAS;
     /* direct RMA operations supported only with delivery complete mode,
