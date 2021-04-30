@@ -1084,8 +1084,6 @@ CFLAGS=""
 AX_GCC_VAR_ATTRIBUTE(aligned)
 AX_GCC_VAR_ATTRIBUTE(used)
 
-dnl Check for fallthrough attribute
-AX_GCC_FUNC_ATTRIBUTE(fallthrough)
 PAC_POP_ALL_FLAGS
 
 dnl Final output

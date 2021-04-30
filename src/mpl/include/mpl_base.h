@@ -50,12 +50,6 @@
 #define MPL_STATIC_INLINE_SUFFIX
 #endif
 
-#ifdef MPL_HAVE_FUNC_ATTRIBUTE_FALLTHROUGH
-#define MPL_FALLTHROUGH __attribute__((fallthrough))
-#else
-#define MPL_FALLTHROUGH
-#endif
-
 #ifdef MPL_HAVE_VAR_ATTRIBUTE_ALIGNED
 #define MPL_ATTR_ALIGNED(x) __attribute__((aligned(x)))
 #else
