@@ -710,41 +710,36 @@ static int flush_send_queue(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int n = MPIR_Process.size;
-    if (n > 1) {
-        MPIDI_OFI_dynamic_process_request_t *reqs;
-        /* TODO - Iterate over each NIC in addition to each VNI when multi-NIC within the same
-         * process is implemented. */
-        int num_reqs = MPIDI_OFI_global.num_vnis * 2;
-        reqs = MPL_malloc(sizeof(MPIDI_OFI_dynamic_process_request_t) * num_reqs, MPL_MEM_OTHER);
+    MPIDI_OFI_dynamic_process_request_t *reqs;
+    /* TODO - Iterate over each NIC in addition to each VNI when multi-NIC within the same
+     * process is implemented. */
+    int num_reqs = MPIDI_OFI_global.num_vnis * 2;
+    reqs = MPL_malloc(sizeof(MPIDI_OFI_dynamic_process_request_t) * num_reqs, MPL_MEM_OTHER);
 
-        int rank = MPIR_Process.rank;
-        int dst = (rank + 1) % n;
-        int src = (rank - 1 + n) % n;
-
-        for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
-            mpi_errno = flush_send(dst, 0, vni, &reqs[vni * 2]);
-            MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno = flush_recv(src, 0, vni, &reqs[vni * 2 + 1]);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-
-        bool all_done = false;
-        while (!all_done) {
-            for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
-                mpi_errno = MPIDI_NM_progress(vni, 0);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-            all_done = true;
-            for (int i = 0; i < num_reqs; i++) {
-                if (!reqs[i].done) {
-                    all_done = false;
-                    break;
-                }
-            }
-        }
-        MPL_free(reqs);
+    /* Apparently by sending self messages can flush the send queue */
+    int rank = MPIR_Process.rank;
+    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+        mpi_errno = flush_send(rank, 0, vni, &reqs[vni * 2]);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = flush_recv(rank, 0, vni, &reqs[vni * 2 + 1]);
+        MPIR_ERR_CHECK(mpi_errno);
     }
+
+    bool all_done = false;
+    while (!all_done) {
+        for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+            mpi_errno = MPIDI_NM_progress(vni, 0);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        all_done = true;
+        for (int i = 0; i < num_reqs; i++) {
+            if (!reqs[i].done) {
+                all_done = false;
+                break;
+            }
+        }
+    }
+    MPL_free(reqs);
 
   fn_exit:
     return mpi_errno;
