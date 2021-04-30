@@ -16,6 +16,16 @@ categories :
       description : A category for CH4 UCX netmod variables
 
 cvars:
+    - name        : MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG
+      category    : CH4_UCX
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Prints out the ucx netmod capability.
+
     - name        : MPIR_CVAR_CH4_UCX_MAX_VNIS
       category    : CH4_UCX
       type        : int
@@ -214,7 +224,7 @@ int MPIDI_UCX_init_local(int *tag_bits)
     init_num_vnis();
 
     /* unable to support extended context id in current match bit configuration */
-    MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_TAG_BITS);
+    MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_ID_BITS);
 
     ucx_status = ucp_config_read(NULL, NULL, &config);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -240,7 +250,20 @@ int MPIDI_UCX_init_local(int *tag_bits)
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
 
-    *tag_bits = MPIR_TAG_BITS_DEFAULT;
+    if (MPIDI_UCX_TAG_BITS > MPIR_TAG_BITS_DEFAULT) {
+        *tag_bits = MPIR_TAG_BITS_DEFAULT;
+    } else {
+        *tag_bits = MPIDI_UCX_TAG_BITS;
+    }
+
+    if (MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG && MPIR_Process.rank == 0) {
+        printf("==== UCX netmod Capability ====\n");
+        printf("MPIDI_UCX_CONTEXT_ID_BITS: %d\n", MPIDI_UCX_CONTEXT_ID_BITS);
+        printf("MPIDI_UCX_RANK_BITS: %d\n", MPIDI_UCX_RANK_BITS);
+        printf("num_vnis: %d\n", MPIDI_UCX_global.num_vnis);
+        printf("tag_bits: %d\n", *tag_bits);
+        printf("===============================\n");
+    }
 
   fn_exit:
     return mpi_errno;
@@ -386,6 +409,10 @@ static void flush_all(void)
 int MPIDI_UCX_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    if (MPIDI_UCX_global.num_vnis == 1) {
+        goto fn_exit;
+    }
 
     for (int i = 1; i < MPIDI_UCX_global.num_vnis; i++) {
         mpi_errno = init_worker(i);
