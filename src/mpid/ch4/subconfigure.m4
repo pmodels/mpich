@@ -311,14 +311,6 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH4],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR CH4 DEVICE])
 
-AC_ARG_WITH(ch4-rank-bits, [--with-ch4-rank-bits=16/32     Number of bits allocated to the rank field (16 or 32)],
-			   [ rankbits=$withval ],
-			   [ rankbits=32 ])
-if test "$rankbits" != "16" -a "$rankbits" != "32" ; then
-   AC_MSG_ERROR(Only 16 or 32-bit ranks are supported)
-fi
-AC_DEFINE_UNQUOTED(CH4_RANK_BITS,$rankbits,[Define the number of CH4_RANK_BITS])
-
 AC_ARG_ENABLE(ch4r-per-comm-msg-queue,
     [--enable-ch4r-per-comm-msg-queue=option
        Enable use of per-communicator message queues for posted recvs/unexpected messages
