@@ -777,6 +777,12 @@ typedef struct {
     MPI_Fint MPI_ERROR;
 } MPI_F08_status;
 
+/* MPI 4 added following constants to allow access F90 STATUS as an array of MPI_Fint */
+#define MPI_F_STATUS_SIZE 5
+#define MPI_F_SOURCE 2
+#define MPI_F_TAG 3
+#define MPI_F_ERROR 4
+
 extern MPI_F08_status MPIR_F08_MPI_STATUS_IGNORE_OBJ MPICH_API_PUBLIC;
 extern MPI_F08_status MPIR_F08_MPI_STATUSES_IGNORE_OBJ[1] MPICH_API_PUBLIC;
 extern int MPIR_F08_MPI_IN_PLACE MPICH_API_PUBLIC;

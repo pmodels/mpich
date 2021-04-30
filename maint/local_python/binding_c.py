@@ -405,13 +405,14 @@ def check_func_directives(func):
     func.pop('_got_topo_size', None)
 
 def filter_c_parameters(func):
-    c_params = []
-    for p in func['parameters']:
-        if RE.search(r'c_parameter', p['suppress']):
-            pass
-        else:
-            c_params.append(p)
-    func['c_parameters'] = c_params
+    if "c_parameters" not in func:
+        c_params = []
+        for p in func['parameters']:
+            if RE.search(r'c_parameter', p['suppress']):
+                pass
+            else:
+                c_params.append(p)
+        func['c_parameters'] = c_params
 
 def check_params_with_large_only(func):
     if '_has_large_only' not in func:
@@ -2254,6 +2255,9 @@ def get_function_args(func):
     return ', '.join(arg_list)
 
 def get_declare_function(func, map_type="SMALL", kind=""):
+    filter_c_parameters(func)
+    check_params_with_large_only(func)
+
     name = get_function_name(func, map_type)
     mapping = get_mapping(map_type)
 

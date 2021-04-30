@@ -24,27 +24,27 @@ use warnings;
 
 # Allow this program to be invoked from a different directory
 $mydir = ".";
-if ( ! -s "binding.sub" ) {
+if (!-s "binding.sub") {
     $mydir = $0;
     $mydir =~ s/\/buildiface//;
 }
 
 require "$mydir/binding.sub";
 
-$arg_string = join( ' ', @ARGV );
+$arg_string = join(' ', @ARGV);
 $gDebug = 0;
 
-$prototype_file = "../../../include/mpi_proto.h";
-$is_MPI = 1;
-$buildMPIX = 0;
-$routine_prefix = "MPI_";
+$prototype_file  = "../../../include/mpi_proto.h";
+$is_MPI          = 1;
+$buildMPIX       = 0;
+$routine_prefix  = "MPI_";
 $routine_pattern = "[A-Z][a-z0-9_]*";
-$out_prefix="MPI_";
-$outfile_prefix = "mpi";
-%CtoFName = ();
-%mpi_routines = ();
-%NeedConstants = ();   # constants needed for declaration, hashed by routine
-my $line_limit = 80; # Max line length
+$out_prefix      = "MPI_";
+$outfile_prefix  = "mpi";
+%CtoFName        = ();
+%mpi_routines    = ();
+%NeedConstants = ();    # constants needed for declaration, hashed by routine
+my $line_limit = 80;    # Max line length
 
 #
 # ToDo: Fortran 90 allows some additional checks not possible in Fortran 77.
@@ -65,207 +65,225 @@ my $line_limit = 80; # Max line length
 #  INTERFACE %nl%SUBROUTINE %name%(<args>)%nl%<type decls>%nl%END SUBROUTINE%nl%END INTERFACE
 # where %nl% is newline/indent.
 #
-%argtypec2f = ( 'int' => 'INTEGER',
-         'int[]' => 'INTEGER %name%(*)',
-         'int[][3]' => 'INTEGER %name%(3,*)',
-         'int*' => 'INTEGER',      # assume output scalar (see array
-                                   # replacement below)
-         'bool' => 'LOGICAL',
-         'bool[]' => 'LOGICAL %name%(*)',
-         'MPI_Handler_function*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
-         'MPI_Win_errhandler_function*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
-         'MPI_Comm_errhandler_function*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
-         'MPI_File_errhandler_function*' => 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
-         # These other functions have <choice> (really void*) arguments
-         # and so an interface spec is very hard to do in Fortran 90.
-         'MPI_Comm_copy_attr_function*' => 'EXTERNAL',
-         'MPI_Comm_delete_attr_function*' => 'EXTERNAL',
-         'MPI_Type_copy_attr_function*' => 'EXTERNAL',
-         'MPI_Type_delete_attr_function*' => 'EXTERNAL',
-         'MPI_Win_copy_attr_function*' => 'EXTERNAL',
-         'MPI_Win_delete_attr_function*' => 'EXTERNAL',
-         'MPI_Copy_function*' => 'EXTERNAL',
-         'MPI_Delete_function*' => 'EXTERNAL',
-         'MPI_User_function*' => 'EXTERNAL',
-         'MPI_Grequest_query_function*' => 'EXTERNAL',
-         'MPI_Grequest_free_function*' => 'EXTERNAL',
-         'MPI_Grequest_cancel_function*' => 'EXTERNAL',
-         'MPI_Datarep_conversion_function*' => 'EXTERNAL',
-         'MPI_Datarep_extent_function*' => 'EXTERNAL',
-         'MPI_Request' => 'INTEGER',
-         'MPI_Request*' => 'INTEGER',
-         'MPI_Request[]' => 'INTEGER %name%(*)',
-         'MPIO_Request' => 'INTEGER',
-         'MPIO_Request*' => 'INTEGER',
-         'MPI_Datatype' => 'INTEGER',
-         'MPI_Datatype*' => 'INTEGER',
-         'MPI_Datatype[]' => 'INTEGER %name%(*)',
-         'MPI_Comm' => 'INTEGER',
-         'MPI_Comm*' => 'INTEGER', # Never an array of comm
-         'MPI_Group' => 'INTEGER',
-         'MPI_Group*' => 'INTEGER', # Never an array of groups
-         'MPI_Errhandler' => 'INTEGER',
-         'MPI_Errhandler*' => 'INTEGER', # Never an array of errhandlers
-         'MPI_Op' => 'INTEGER',
-         'MPI_Op*' => 'INTEGER', # Never an array of ops
-         'MPI_Message' => 'INTEGER',
-         'MPI_Message*' => 'INTEGER', # Never an array of messages
-         'MPI_Session' => 'INTEGER',
-         'MPI_Session*' => 'INTEGER', # Never an array of sessions
-         'MPI_Status*' => 'INTEGER %name%(MPI_STATUS_SIZE)',
-         'MPI_Status[]' => 'INTEGER %name%(MPI_STATUS_SIZE,*)',
-         'MPI_Aint' => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
-         'MPI_Aint*' => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
-         'MPI_Aint[]' => 'INTEGER(KIND=MPI_ADDRESS_KIND) %name%(*)',
-         'MPI_Count' => 'INTEGER(KIND=MPI_COUNT_KIND)',
-         'MPI_Count*' => 'INTEGER(KIND=MPI_COUNT_KIND)',
-         'MPI_Offset' => 'INTEGER(KIND=MPI_OFFSET_KIND)',
-         'MPI_Offset*' => 'INTEGER(KIND=MPI_OFFSET_KIND)',
-         'MPI_Info' => 'INTEGER',
-         'MPI_Info*' => 'INTEGER', # Never an array of info
-         'MPI_Info[]' => 'INTEGER %name%(*)',
-         'char*' => 'CHARACTER (LEN=*)',
-         'char[]' => 'CHARACTER (LEN=*)',
-         'char*[]' => 'CHARACTER (LEN=*) %name%(*)',
-         'char**[]' => 'CHARACTER (LEN=*) %name%(count,*)',  #special case
-                # from Comm_Spawn_multiple
-         'MPI_Win' => 'INTEGER',
-         'MPI_Win*' => 'INTEGER', # Never an array of win
-         'MPI_File' => 'INTEGER',
-         'MPI_File*' => 'INTEGER', # Never an array of files
-         'MPI_Message' => 'INTEGER',
-         'MPI_Message*' => 'INTEGER', # Never an array of messages
-         );
+%argtypec2f = (
+    'int'      => 'INTEGER',
+    'int[]'    => 'INTEGER %name%(*)',
+    'int[][3]' => 'INTEGER %name%(3,*)',
+    'int*'     => 'INTEGER',               # assume output scalar (see array
+                                           # replacement below)
+    'bool'     => 'LOGICAL',
+    'bool[]'   => 'LOGICAL %name%(*)',
+    'MPI_Handler_function*' =>
+'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+    'MPI_Win_errhandler_function*' =>
+'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+    'MPI_Comm_errhandler_function*' =>
+'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+    'MPI_File_errhandler_function*' =>
+'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+
+    # These other functions have <choice> (really void*) arguments
+    # and so an interface spec is very hard to do in Fortran 90.
+    'MPI_Comm_copy_attr_function*'     => 'EXTERNAL',
+    'MPI_Comm_delete_attr_function*'   => 'EXTERNAL',
+    'MPI_Type_copy_attr_function*'     => 'EXTERNAL',
+    'MPI_Type_delete_attr_function*'   => 'EXTERNAL',
+    'MPI_Win_copy_attr_function*'      => 'EXTERNAL',
+    'MPI_Win_delete_attr_function*'    => 'EXTERNAL',
+    'MPI_Copy_function*'               => 'EXTERNAL',
+    'MPI_Delete_function*'             => 'EXTERNAL',
+    'MPI_User_function*'               => 'EXTERNAL',
+    'MPI_Grequest_query_function*'     => 'EXTERNAL',
+    'MPI_Grequest_free_function*'      => 'EXTERNAL',
+    'MPI_Grequest_cancel_function*'    => 'EXTERNAL',
+    'MPI_Datarep_conversion_function*' => 'EXTERNAL',
+    'MPI_Datarep_extent_function*'     => 'EXTERNAL',
+    'MPI_Request'                      => 'INTEGER',
+    'MPI_Request*'                     => 'INTEGER',
+    'MPI_Request[]'                    => 'INTEGER %name%(*)',
+    'MPIO_Request'                     => 'INTEGER',
+    'MPIO_Request*'                    => 'INTEGER',
+    'MPI_Datatype'                     => 'INTEGER',
+    'MPI_Datatype*'                    => 'INTEGER',
+    'MPI_Datatype[]'                   => 'INTEGER %name%(*)',
+    'MPI_Comm'                         => 'INTEGER',
+    'MPI_Comm*'       => 'INTEGER',    # Never an array of comm
+    'MPI_Group'       => 'INTEGER',
+    'MPI_Group*'      => 'INTEGER',    # Never an array of groups
+    'MPI_Errhandler'  => 'INTEGER',
+    'MPI_Errhandler*' => 'INTEGER',    # Never an array of errhandlers
+    'MPI_Op'          => 'INTEGER',
+    'MPI_Op*'         => 'INTEGER',    # Never an array of ops
+    'MPI_Message'     => 'INTEGER',
+    'MPI_Message*'    => 'INTEGER',    # Never an array of messages
+    'MPI_Session'     => 'INTEGER',
+    'MPI_Session*'    => 'INTEGER',    # Never an array of sessions
+    'MPI_Status*'     => 'INTEGER %name%(MPI_STATUS_SIZE)',
+    'MPI_Status[]'    => 'INTEGER %name%(MPI_STATUS_SIZE,*)',
+    'MPI_F08_status*' => 'TYPE(MPI_Status)',
+    'MPI_Fint*'       => 'INTEGER %name%(MPI_STATUS_SIZE)',
+    'MPI_Aint'        => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
+    'MPI_Aint*'       => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
+    'MPI_Aint[]'      => 'INTEGER(KIND=MPI_ADDRESS_KIND) %name%(*)',
+    'MPI_Count'       => 'INTEGER(KIND=MPI_COUNT_KIND)',
+    'MPI_Count*'      => 'INTEGER(KIND=MPI_COUNT_KIND)',
+    'MPI_Offset'      => 'INTEGER(KIND=MPI_OFFSET_KIND)',
+    'MPI_Offset*'     => 'INTEGER(KIND=MPI_OFFSET_KIND)',
+    'MPI_Info'        => 'INTEGER',
+    'MPI_Info*'  => 'INTEGER',                       # Never an array of info
+    'MPI_Info[]' => 'INTEGER %name%(*)',
+    'char*'      => 'CHARACTER (LEN=*)',
+    'char[]'     => 'CHARACTER (LEN=*)',
+    'char*[]'    => 'CHARACTER (LEN=*) %name%(*)',
+    'char**[]' => 'CHARACTER (LEN=*) %name%(count,*)',    #special case
+         # from Comm_Spawn_multiple
+    'MPI_Win'      => 'INTEGER',
+    'MPI_Win*'     => 'INTEGER',    # Never an array of win
+    'MPI_File'     => 'INTEGER',
+    'MPI_File*'    => 'INTEGER',    # Never an array of files
+    'MPI_Message'  => 'INTEGER',
+    'MPI_Message*' => 'INTEGER',    # Never an array of messages
+);
 
 # special_args provides for handling of arguments that require special
 # features.  The keys are of the form 'Routine-count', with count the
 # position of the argument, starting from one.
-%special_args = ( 'Testany-2' => 'MPI_Request[]',
-          'Testany-4' => 'bool',
-          'Startall-2' => 'MPI_Request[]',
-          'Testall-2' => 'MPI_Request[]',
-          'Testall-3' => 'bool',
-          'Testall-4' => 'MPI_Status[]',
-          'Testsome-2' => 'MPI_Request[]',
-          'Testsome-4' => 'int[]',
-          'Testsome-5' => 'MPI_Status[]',
-          'Test-2' => 'bool',
-          'Test_cancelled-2' => 'bool',
-          'Type_hindexed-2' => 'int[]',
-          'Type_hindexed-3' => 'int[]',
-          'Type_indexed-2' => 'int[]',
-          'Type_indexed-3' => 'int[]',
-          'Type_hvector-3' => 'int',
-          'Type_struct-2' => 'int[]',
-          'Type_struct-3' => 'int[]',
-          'Type_struct-4' => 'MPI_Datatype[]',
-          'Type_extent-2' => 'int',
-          'Type_lb-2' => 'int',
-          'Type_ub-2' => 'int',
-          'Waitall-2' => 'MPI_Request[]',
-          'Waitall-3' => 'MPI_Status[]',
-          'Waitany-2' => 'MPI_Request[]',
-          'Waitsome-2' => 'MPI_Request[]',
-          'Waitsome-4' => 'int[]',
-          'Waitsome-5' => 'MPI_Status[]',
-          'Group_excl-3' => 'int[]',
-          'Group_incl-3' => 'int[]',
-          'Group_translate_ranks-3' => 'int[]',
-          'Group_translate_ranks-5' => 'int[]',
-          'Cart_coords-4' => 'int[]',
-          'Cart_create-3' => 'int[]',
-          'Cart_create-4' => 'bool[]',
-          'Cart_get-3' => 'int[]',
-          'Cart_get-5' => 'int[]',
-          'Cart_get-4' => 'bool[]',
-          'Cart_map-3' => 'int[]',
-          'Cart_map-4' => 'bool[]',
-          'Cart_rank-2' => 'int[]',
-          'Cart_sub-2' => 'bool[]',
-          'Dims_create-3' => 'int[]',
-          'Graph_create-3' => 'int[]',
-          'Graph_create-4' => 'int[]',
-          'Graph_create-5' => 'bool',
-          'Graph_get-4' => 'int[]',
-          'Graph_get-5' => 'int[]',
-          'Graph_map-3' => 'int[]',
-          'Graph_map-4' => 'int[]',
-          'Graph_neighbors-4' => 'int[]',
-          'Dist_graph_create-8' => 'bool',
-          'Dist_graph_create_adjacent-9' => 'bool',
-          'Dist_graph_neighbors_count-4' => 'bool',
-          'Allgatherv-5' => 'int[]',
-          'Allgatherv-6' => 'int[]',
-          'Alltoallv-2' => 'int[]',
-          'Alltoallv-3' => 'int[]',
-          'Alltoallv-6' => 'int[]',
-          'Alltoallv-7' => 'int[]',
-          'Alltoallw-2' => 'int[]',
-          'Alltoallw-3' => 'int[]',
-          'Alltoallw-6' => 'int[]',
-          'Alltoallw-7' => 'int[]',
-          'Gatherv-5' => 'int[]',
-          'Gatherv-6' => 'int[]',
-          'Iallgatherv-5' => 'int[]',
-          'Iallgatherv-6' => 'int[]',
-          'Ialltoallv-2' => 'int[]',
-          'Ialltoallv-3' => 'int[]',
-          'Ialltoallv-6' => 'int[]',
-          'Ialltoallv-7' => 'int[]',
-          'Ialltoallw-2' => 'int[]',
-          'Ialltoallw-3' => 'int[]',
-          'Ialltoallw-6' => 'int[]',
-          'Ialltoallw-7' => 'int[]',
-          'Igatherv-5' => 'int[]',
-          'Igatherv-6' => 'int[]',
-          'Ireduce_scatter-3' => 'int[]',
-          'Iscatterv-2' => 'int[]',
-          'Iscatterv-3' => 'int[]',
-          'Reduce_scatter-3' => 'int[]',
-          'Scatterv-2' => 'int[]',
-          'Scatterv-3' => 'int[]',
-          'Iprobe-4' => 'bool',
-          'Improbe-4' => 'bool',
-          'Op_create-2' => 'bool',
-          'Attr_get-4' => 'bool',
-          'Comm_get_attr-4' => 'bool',
-          'Type_get_attr-4' => 'bool',
-          'Win_get_attr-4' => 'bool',
-          'Comm_test_inter-2' => 'bool',
-          'Intercomm_merge-2' => 'bool',
-          'Cart_create-5' => 'bool',
-          'Initialized-1' => 'bool',
-          'Finalized-1' => 'bool',
-          'Group_range_excl-3' => 'int[][3]',
-          'Group_range_incl-3' => 'int[][3]',
-          'Info_get_valuelen-4' => 'bool',
-          'Is_thread_main-1' => 'bool',
-          'Type_create_subarray-2' => 'int[]',
-          'Type_create_subarray-3' => 'int[]',
-          'Type_create_subarray-4' => 'int[]',
-          'Request_get_status-2' => 'bool',
-          'Status_set_cancelled-2' => 'bool',
-          'Info_get-5' => 'bool',
-          'Info_get_string-5' => 'bool',
-          'Type_create_indexed_block-3' => 'int[]',
-          'Type_create_darray-4' => 'int[]',
-          'Type_create_darray-5' => 'int[]',
-          'Type_create_darray-6' => 'int[]',
-          'Type_create_darray-7' => 'int[]',
-          'Type_create_struct-2' => 'int[]',
-          'Type_create_struct-3' => 'MPI_Aint[]',
-          'Win_test-2' => 'bool',
-          'Type_create_hindexed-2' => 'int[]',
-          'Type_create_hindexed-3' => 'MPI_Aint[]',
-          'Op_commutative-2' => 'bool',
-          'File_set_atomicity-2' => 'bool',
-          'File_get_atomicity-2' => 'bool',
-        );
+%special_args = (
+    'Testany-2'                    => 'MPI_Request[]',
+    'Testany-4'                    => 'bool',
+    'Startall-2'                   => 'MPI_Request[]',
+    'Testall-2'                    => 'MPI_Request[]',
+    'Testall-3'                    => 'bool',
+    'Testall-4'                    => 'MPI_Status[]',
+    'Testsome-2'                   => 'MPI_Request[]',
+    'Testsome-4'                   => 'int[]',
+    'Testsome-5'                   => 'MPI_Status[]',
+    'Test-2'                       => 'bool',
+    'Test_cancelled-2'             => 'bool',
+    'Type_hindexed-2'              => 'int[]',
+    'Type_hindexed-3'              => 'int[]',
+    'Type_indexed-2'               => 'int[]',
+    'Type_indexed-3'               => 'int[]',
+    'Type_hvector-3'               => 'int',
+    'Type_struct-2'                => 'int[]',
+    'Type_struct-3'                => 'int[]',
+    'Type_struct-4'                => 'MPI_Datatype[]',
+    'Type_extent-2'                => 'int',
+    'Type_lb-2'                    => 'int',
+    'Type_ub-2'                    => 'int',
+    'Waitall-2'                    => 'MPI_Request[]',
+    'Waitall-3'                    => 'MPI_Status[]',
+    'Waitany-2'                    => 'MPI_Request[]',
+    'Waitsome-2'                   => 'MPI_Request[]',
+    'Waitsome-4'                   => 'int[]',
+    'Waitsome-5'                   => 'MPI_Status[]',
+    'Group_excl-3'                 => 'int[]',
+    'Group_incl-3'                 => 'int[]',
+    'Group_translate_ranks-3'      => 'int[]',
+    'Group_translate_ranks-5'      => 'int[]',
+    'Cart_coords-4'                => 'int[]',
+    'Cart_create-3'                => 'int[]',
+    'Cart_create-4'                => 'bool[]',
+    'Cart_get-3'                   => 'int[]',
+    'Cart_get-5'                   => 'int[]',
+    'Cart_get-4'                   => 'bool[]',
+    'Cart_map-3'                   => 'int[]',
+    'Cart_map-4'                   => 'bool[]',
+    'Cart_rank-2'                  => 'int[]',
+    'Cart_sub-2'                   => 'bool[]',
+    'Dims_create-3'                => 'int[]',
+    'Graph_create-3'               => 'int[]',
+    'Graph_create-4'               => 'int[]',
+    'Graph_create-5'               => 'bool',
+    'Graph_get-4'                  => 'int[]',
+    'Graph_get-5'                  => 'int[]',
+    'Graph_map-3'                  => 'int[]',
+    'Graph_map-4'                  => 'int[]',
+    'Graph_neighbors-4'            => 'int[]',
+    'Dist_graph_create-8'          => 'bool',
+    'Dist_graph_create_adjacent-9' => 'bool',
+    'Dist_graph_neighbors_count-4' => 'bool',
+    'Allgatherv-5'                 => 'int[]',
+    'Allgatherv-6'                 => 'int[]',
+    'Alltoallv-2'                  => 'int[]',
+    'Alltoallv-3'                  => 'int[]',
+    'Alltoallv-6'                  => 'int[]',
+    'Alltoallv-7'                  => 'int[]',
+    'Alltoallw-2'                  => 'int[]',
+    'Alltoallw-3'                  => 'int[]',
+    'Alltoallw-6'                  => 'int[]',
+    'Alltoallw-7'                  => 'int[]',
+    'Gatherv-5'                    => 'int[]',
+    'Gatherv-6'                    => 'int[]',
+    'Iallgatherv-5'                => 'int[]',
+    'Iallgatherv-6'                => 'int[]',
+    'Ialltoallv-2'                 => 'int[]',
+    'Ialltoallv-3'                 => 'int[]',
+    'Ialltoallv-6'                 => 'int[]',
+    'Ialltoallv-7'                 => 'int[]',
+    'Ialltoallw-2'                 => 'int[]',
+    'Ialltoallw-3'                 => 'int[]',
+    'Ialltoallw-6'                 => 'int[]',
+    'Ialltoallw-7'                 => 'int[]',
+    'Igatherv-5'                   => 'int[]',
+    'Igatherv-6'                   => 'int[]',
+    'Ireduce_scatter-3'            => 'int[]',
+    'Iscatterv-2'                  => 'int[]',
+    'Iscatterv-3'                  => 'int[]',
+    'Reduce_scatter-3'             => 'int[]',
+    'Scatterv-2'                   => 'int[]',
+    'Scatterv-3'                   => 'int[]',
+    'Iprobe-4'                     => 'bool',
+    'Improbe-4'                    => 'bool',
+    'Op_create-2'                  => 'bool',
+    'Attr_get-4'                   => 'bool',
+    'Comm_get_attr-4'              => 'bool',
+    'Type_get_attr-4'              => 'bool',
+    'Win_get_attr-4'               => 'bool',
+    'Comm_test_inter-2'            => 'bool',
+    'Intercomm_merge-2'            => 'bool',
+    'Cart_create-5'                => 'bool',
+    'Initialized-1'                => 'bool',
+    'Finalized-1'                  => 'bool',
+    'Group_range_excl-3'           => 'int[][3]',
+    'Group_range_incl-3'           => 'int[][3]',
+    'Info_get_valuelen-4'          => 'bool',
+    'Is_thread_main-1'             => 'bool',
+    'Type_create_subarray-2'       => 'int[]',
+    'Type_create_subarray-3'       => 'int[]',
+    'Type_create_subarray-4'       => 'int[]',
+    'Request_get_status-2'         => 'bool',
+    'Status_set_cancelled-2'       => 'bool',
+    'Info_get-5'                   => 'bool',
+    'Info_get_string-5'            => 'bool',
+    'Type_create_indexed_block-3'  => 'int[]',
+    'Type_create_darray-4'         => 'int[]',
+    'Type_create_darray-5'         => 'int[]',
+    'Type_create_darray-6'         => 'int[]',
+    'Type_create_darray-7'         => 'int[]',
+    'Type_create_struct-2'         => 'int[]',
+    'Type_create_struct-3'         => 'MPI_Aint[]',
+    'Win_test-2'                   => 'bool',
+    'Type_create_hindexed-2'       => 'int[]',
+    'Type_create_hindexed-3'       => 'MPI_Aint[]',
+    'Op_commutative-2'             => 'bool',
+    'File_set_atomicity-2'         => 'bool',
+    'File_get_atomicity-2'         => 'bool',
+);
 
 # Some routines must be skipped (custom code is provided for them)
-%skip_routines = ( 'Init' => 1, 'Init_thread' => 1, 'Status_c2f' => 1,
-           'Status_f2c' => 1, 'Pcontrol' => 1, 'Info_create_env' => 1,
-           );
+%skip_routines = (
+    'Init'            => 1,
+    'Init_thread'     => 1,
+    'Status_c2f'      => 1,
+    'Status_f2c'      => 1,
+    'Status_f2f08'    => 1,
+    'Status_f082f'    => 1,
+    'Status_c2f08'    => 1,
+    'Status_f082c'    => 1,
+    'Pcontrol'        => 1,
+    'Info_create_env' => 1,
+);
 
 # Some routines *may* be skipped if we don't want to handle the possibility
 # of a scalar or vector argument
@@ -273,53 +291,55 @@ my $line_limit = 80; # Max line length
 # For each of these, we need to know which arguments are the "scalar/vector"
 # The value of the hash gives us the answer, indexed from 1
 # (these are not correct yet).
-%scalarVectorRoutines = ( 'Startall' => '2-1', 'Testall' => '2-1:4-1',
-              'Testany' => '2-1',
-              'Testsome' => '2-1:4-1:5-1',
-              'Waitall' => '2-1:3-1', 'Waitany' => '2-1',
-              'Waitsome' => '2-1:4-1:5-1',
-              'Dims_create' => '3-2',
-              'Cart_rank' => '2', 'Cart_coords' => '4-3',
-              'Cart_get' => '3-2:4-2:5-2',
-              'Graph_neighbors' => '4-3',
-              'Cart_sub' => '2',
-              'Cart_map' => '3-2:4-2',
-              'Cart_create' => '3-2:4-2',
-              'Graph_create' => '3:4',
-              'Dist_graph_create' => '6',
-              'Dist_graph_create_adjacent' => '4:7',
-              'Dist_graph_neighbors' => '4:7',
-              'Group_translate_ranks' => '3-2:5-2',
+%scalarVectorRoutines = (
+    'Startall'                   => '2-1',
+    'Testall'                    => '2-1:4-1',
+    'Testany'                    => '2-1',
+    'Testsome'                   => '2-1:4-1:5-1',
+    'Waitall'                    => '2-1:3-1',
+    'Waitany'                    => '2-1',
+    'Waitsome'                   => '2-1:4-1:5-1',
+    'Dims_create'                => '3-2',
+    'Cart_rank'                  => '2',
+    'Cart_coords'                => '4-3',
+    'Cart_get'                   => '3-2:4-2:5-2',
+    'Graph_neighbors'            => '4-3',
+    'Cart_sub'                   => '2',
+    'Cart_map'                   => '3-2:4-2',
+    'Cart_create'                => '3-2:4-2',
+    'Graph_create'               => '3:4',
+    'Dist_graph_create'          => '6',
+    'Dist_graph_create_adjacent' => '4:7',
+    'Dist_graph_neighbors'       => '4:7',
+    'Group_translate_ranks'      => '3-2:5-2',
 
-    );
+);
 
 # And we skip them by default
 $buildScalarVector = 0;
-$build_io = 1;
+$build_io          = 1;
 
 # Process any options
 foreach $_ (@ARGV) {
     if (/--?prototype=(.*)/) {
-    $prototype_file = $1;
-    }
-    elsif (/--?sv/) {
-    # This obscure argument enables the creation of an interface that
-    # includes the routines that can accept a scalar or a vector
-    # (e.g., a single request or an array of requests) on a single
-    # type (e.g., an integer).  By default, we leave these out.
-    $buildScalarVector = 1;
-    }
-    elsif (/deffile=(.*)/) {
-    $definition_file = $1;
-    $is_MPI = 0;
-    }
-    elsif (/--?noio/) {
-    $build_io = 0;
-    }
-    elsif (/--?debug/) { $gDebug = 1; }
-    else {
-    print STDERR "Unrecognized argument $_\n";
-    exit 2;
+        $prototype_file = $1;
+    } elsif (/--?sv/) {
+
+        # This obscure argument enables the creation of an interface that
+        # includes the routines that can accept a scalar or a vector
+        # (e.g., a single request or an array of requests) on a single
+        # type (e.g., an integer).  By default, we leave these out.
+        $buildScalarVector = 1;
+    } elsif (/deffile=(.*)/) {
+        $definition_file = $1;
+        $is_MPI          = 0;
+    } elsif (/--?noio/) {
+        $build_io = 0;
+    } elsif (/--?debug/) {
+        $gDebug = 1;
+    } else {
+        print STDERR "Unrecognized argument $_\n";
+        exit 2;
     }
 }
 
@@ -328,22 +348,25 @@ foreach $_ (@ARGV) {
 if ($definition_file) {
     require $definition_file;
 }
-$ucoutfile_prefix = uc( $outfile_prefix );
+$ucoutfile_prefix = uc($outfile_prefix);
 
 #
 # Read the interface file (e.g., mpi_proto.h) and file in the various
 # data structures (they're in global variables)
-&ReadInterface( $prototype_file, $routine_prefix, $routine_pattern, "mpi_routines" );
-if ( -s "../../mpi/romio/include/mpio.h.in" && $build_io) {
-#    %skipBlocks = ( 'HAVE_MPI_DARRAY_SUBARRAY' => 1,
-#           'HAVE_MPI_INFO' => 1,
-#            'MPICH' => 1 );
-    &ReadInterface( "../../mpi/romio/include/mpio.h.in", $routine_prefix,
-    $routine_pattern, "mpi_routines" );
-#    %skipBlocks = ();
+&ReadInterface($prototype_file, $routine_prefix, $routine_pattern,
+    "mpi_routines");
+if (-s "../../mpi/romio/include/mpio.h.in" && $build_io) {
+
+    #    %skipBlocks = ( 'HAVE_MPI_DARRAY_SUBARRAY' => 1,
+    #           'HAVE_MPI_INFO' => 1,
+    #            'MPICH' => 1 );
+    &ReadInterface("../../mpi/romio/include/mpio.h.in",
+        $routine_prefix, $routine_pattern, "mpi_routines");
+
+    #    %skipBlocks = ();
 }
-if ( $buildMPIX ) {
-    &ReadInterface( $prototype_file, "MPIX_", $routine_pattern, "mpi_routines" );
+if ($buildMPIX) {
+    &ReadInterface($prototype_file, "MPIX_", $routine_pattern, "mpi_routines");
 }
 
 #
@@ -356,7 +379,8 @@ if ( $buildMPIX ) {
 # Generate the module for the routines
 # First pass.  Ignore the issue of choice routines
 # Print header
-open (MPIFD, ">${outfile_prefix}.f90.new" ) || die "Could not open ${outfile_prefix}.f90.new\n";
+open(MPIFD, ">${outfile_prefix}.f90.new")
+  || die "Could not open ${outfile_prefix}.f90.new\n";
 
 # Was
 #       USE MPI_CONSTANTS,                                               &
@@ -371,14 +395,15 @@ print MPIFD "! Copyright (C) by Argonne National Laboratory
        USE ${ucoutfile_prefix}_BASE
        END MODULE $ucoutfile_prefix\n";
 
-close (MPIFD);
-&ReplaceIfDifferent( "${outfile_prefix}.f90", "${outfile_prefix}.f90.new" );
+close(MPIFD);
+&ReplaceIfDifferent("${outfile_prefix}.f90", "${outfile_prefix}.f90.new");
 
 # ----------------------------------------------------------------------------
 # This is the file for the routines that have no "choice" arguments.
 # An example of a choice argument is a "void *buf" input argument to
 # MPI_Send, which allows any buffer address, both numeric and character.
-open ( MPIBASEFD, ">${outfile_prefix}_base.f90.in.new" ) || die "Could not open ${outfile_prefix}_base.f90.in.new\n";
+open(MPIBASEFD, ">${outfile_prefix}_base.f90.in.new")
+  || die "Could not open ${outfile_prefix}_base.f90.in.new\n";
 print MPIBASEFD "! Copyright (C) by Argonne National Laboratory
 !     See COPYRIGHT in top-level directory
        MODULE ${ucoutfile_prefix}_BASE
@@ -387,6 +412,7 @@ print MPIBASEFD "! Copyright (C) by Argonne National Laboratory
        INTERFACE\n";
 
 foreach $routine (keys(%mpi_routines)) {
+
     # Permit each package to define a new name for the Fortran version of the
     # routine
     if (defined($CtoFName{$routine})) {
@@ -397,6 +423,7 @@ foreach $routine (keys(%mpi_routines)) {
     my @argnames = split(/,/, $mpi_routines{$routine}[1]);
 
     print "Trying to bind $routine\n" if $gDebug;
+
     # Check for a routine to skip
     if (defined($skip_routines{$routine})) {
         print "Skipping $routine as required\n" if $gDebug;
@@ -404,6 +431,7 @@ foreach $routine (keys(%mpi_routines)) {
     }
 
     if (defined($scalarVectorRoutines{$routine})) {
+
         # These require special processing in any case
         next;
     }
@@ -422,9 +450,9 @@ foreach $routine (keys(%mpi_routines)) {
     &PrintArgBrace(MPIBASEFD,
         length("      SUBROUTINE $out_prefix$ucname"),
         length("      SUBROUTINE  "),
-        $line_limit,
-        @argnames);
-    &PrintArgDecls( $routine, 0, "" );
+        $line_limit, @argnames
+    );
+    &PrintArgDecls($routine, 0, "");
     print MPIBASEFD "      END SUBROUTINE $out_prefix$ucname\n\n";
 }
 
@@ -575,6 +603,7 @@ if ($is_MPI) {
         END SUBROUTINE MPI_INFO_CREATE_ENV
 ";
 }
+
 # Here's where we need to place the interface definitions for the functions
 # that take vector or scalar arguments (startall, testall/any/some,
 # waitall/any/some, group_translate_ranks, etc.)
@@ -594,21 +623,25 @@ if ($is_MPI) {
 print MPIBASEFD "       END INTERFACE\n";
 
 if ($buildScalarVector) {
+
     # Create the interface modules
     foreach my $routine (keys(%scalarVectorRoutines)) {
-    $ucname = uc($routine);
-    print MPIBASEFD "       INTERFACE ${out_prefix}$ucname\n";
-        print MPIBASEFD "           MODULE PROCEDURE ${out_prefix}${ucname}_S\n";
-        print MPIBASEFD "           MODULE PROCEDURE ${out_prefix}${ucname}_V\n";
-    print MPIBASEFD "       END INTERFACE ! ${out_prefix}$ucname\n\n";
+        $ucname = uc($routine);
+        print MPIBASEFD "       INTERFACE ${out_prefix}$ucname\n";
+        print MPIBASEFD
+          "           MODULE PROCEDURE ${out_prefix}${ucname}_S\n";
+        print MPIBASEFD
+          "           MODULE PROCEDURE ${out_prefix}${ucname}_V\n";
+        print MPIBASEFD "       END INTERFACE ! ${out_prefix}$ucname\n\n";
 
     }
     print MPIBASEFD "\n        CONTAINS\n";
+
     # This is much like the base name (interface) block code
     foreach my $routine (keys(%scalarVectorRoutines)) {
         $ucname = uc($routine);
-        my @argtypes  = split(/,/, $mpi_routines{$routine}[0]);
-        my @argnames  = split(/,/, $mpi_routines{$routine}[1]);
+        my @argtypes = split(/,/, $mpi_routines{$routine}[0]);
+        my @argnames = split(/,/, $mpi_routines{$routine}[1]);
         $svArgs = $scalarVectorRoutines{$routine};
 
         # The scalar version
@@ -616,17 +649,14 @@ if ($buildScalarVector) {
         &PrintArgBrace(MPIBASEFD,
             length("       SUBROUTINE ${out_prefix}${ucname}_S"),
             length("       SUBROUTINE  "),
-            $line_limit,
-            @argnames);
-        &PrintArgDecls( $routine, 1, $svArgs );
+            $line_limit, @argnames
+        );
+        &PrintArgDecls($routine, 1, $svArgs);
 
         print MPIBASEFD "       EXTERNAL ${out_prefix}${ucname}\n";
         print MPIBASEFD "       call ${out_prefix}$ucname";
-        &PrintArgBrace(MPIBASEFD,
-            length("       call ${out_prefix}$ucname"),
-            length("       call  "),
-            $line_limit,
-            @argnames);
+        &PrintArgBrace(MPIBASEFD, length("       call ${out_prefix}$ucname"),
+            length("       call  "), $line_limit, @argnames);
         print MPIBASEFD "       END SUBROUTINE ${out_prefix}${ucname}_S\n\n";
 
         # The vector version
@@ -634,31 +664,31 @@ if ($buildScalarVector) {
         &PrintArgBrace(MPIBASEFD,
             length("       SUBROUTINE ${out_prefix}${ucname}_S"),
             length("       SUBROUTINE  "),
-            $line_limit,
-            @argnames);
-        &PrintArgDecls( $routine, 0, "" );
+            $line_limit, @argnames
+        );
+        &PrintArgDecls($routine, 0, "");
 
         print MPIBASEFD "       EXTERNAL ${out_prefix}${ucname}\n";
         print MPIBASEFD "       call ${out_prefix}$ucname";
-        &PrintArgBrace(MPIBASEFD,
-            length("       call ${out_prefix}$ucname"),
-            length("       call  "),
-            $line_limit,
-            @argnames);
+        &PrintArgBrace(MPIBASEFD, length("       call ${out_prefix}$ucname"),
+            length("       call  "), $line_limit, @argnames);
         print MPIBASEFD "       END SUBROUTINE ${out_prefix}${ucname}_V\n\n";
     }
 }
 
 print MPIBASEFD "       END MODULE ${ucoutfile_prefix}_BASE\n";
 close MPIBASEFD;
-&ReplaceIfDifferent( "${outfile_prefix}_base.f90.in", "${outfile_prefix}_base.f90.in.new" );
+&ReplaceIfDifferent("${outfile_prefix}_base.f90.in",
+    "${outfile_prefix}_base.f90.in.new");
 
-open ( MPIFD, ">${outfile_prefix}_constants.f90.in.new" ) || die "Cannot open ${outfile_prefix}_constants.f90.in.new\n";
+open(MPIFD, ">${outfile_prefix}_constants.f90.in.new")
+  || die "Cannot open ${outfile_prefix}_constants.f90.in.new\n";
 print MPIFD "! Copyright (C) by Argonne National Laboratory
 !     See COPYRIGHT in top-level directory
         MODULE ${ucoutfile_prefix}_CONSTANTS
         IMPLICIT NONE
         INCLUDE 'mpifnoext.h'\n";
+
 # MPI-3 Requires that even the MPI module (not just mpi_f08) include
 # the MPI_Status type, as well as handle types
 # WARNING: INTEGER is incorrect; it should be INTEGER(C_INT) if this
@@ -672,8 +702,9 @@ print MPIFD "! Copyright (C) by Argonne National Laboratory
 # because they don't use C integers, and they are not equivalent to the
 # C types.  Was that intended (even for Status?)
 # Pick one of these two:
-$BINDACCESS="";
-$BINDDEF = "SEQUENCE";
+$BINDACCESS = "";
+$BINDDEF    = "SEQUENCE";
+
 # PUBLIC and PRIVATE were not present in the original F90; at least one
 # compiler, the Absoft Fortran (from 2009) installed at ANL will not
 # accept these qualifiers.  Thus, we make these optional (but disabled
@@ -684,7 +715,7 @@ $BINDDEF = "SEQUENCE";
 #$PRIVATEVAR = ", PRIVATE";
 # Use the following for compilers that do not support pubilc and private
 # qualifiers on declarations in derived types.
-$PUBLICVAR = "";
+$PUBLICVAR  = "";
 $PRIVATEVAR = "";
 #
 #$BINDACCESS = ", BIND(C)";
@@ -704,11 +735,18 @@ print MPIFD <<EOT;
         END TYPE MPI_Status
 EOT
 
-%handles = ( 'comm' => 'Comm', 'datatype' => 'Datatype',
-         'group' => 'Group', 'win' => 'Win',
-         'file' => 'File', 'op' => 'Op', 'errhandler' => 'Errhandler',
-         'request' => 'Request', 'message' => 'Message',
-         'info' => 'Info' );
+%handles = (
+    'comm'       => 'Comm',
+    'datatype'   => 'Datatype',
+    'group'      => 'Group',
+    'win'        => 'Win',
+    'file'       => 'File',
+    'op'         => 'Op',
+    'errhandler' => 'Errhandler',
+    'request'    => 'Request',
+    'message'    => 'Message',
+    'info'       => 'Info'
+);
 
 foreach $handle (keys(%handles)) {
     $mpitype = $handles{$handle};
@@ -760,7 +798,10 @@ foreach $handle (keys(%handles)) {
 
 print MPIFD "        END MODULE ${ucoutfile_prefix}_CONSTANTS\n";
 close MPIFD;
-&ReplaceIfDifferent( "${outfile_prefix}_constants.f90.in", "${outfile_prefix}_constants.f90.in.new" );
+&ReplaceIfDifferent(
+    "${outfile_prefix}_constants.f90.in",
+    "${outfile_prefix}_constants.f90.in.new"
+);
 
 #
 # Generate the choice argument routines
@@ -784,7 +825,8 @@ close MPIFD;
 # For scalar arguments, <dims> should be empty.
 # Finally, the module name needs to be distinct for each choice of
 # <type>, <dims>, <type1>, and <dims1>
-open( MPIFD, ">${outfile_prefix}_t1.f90.new" ) || die "Cannot open ${outfile_prefix}_t1.f90.new\n";
+open(MPIFD, ">${outfile_prefix}_t1.f90.new")
+  || die "Cannot open ${outfile_prefix}_t1.f90.new\n";
 print MPIFD "! Copyright (C) by Argonne National Laboratory
 !     See COPYRIGHT in top-level directory
         MODULE ${ucoutfile_prefix}_t1_s
@@ -803,25 +845,25 @@ foreach $routine (keys(%mpi_choice_routines)) {
 
 # MPI_Sizeof has its own module
 
-    print MPIFD "        CONTAINS\n\n";
+print MPIFD "        CONTAINS\n\n";
 
 # For each choice routine, add the modules
 foreach $routine (keys(%mpi_choice_routines)) {
     $ucname = uc($routine);
-    my @argtypes  = split(/,/, $mpi_routines{$routine}[0]);
-    my @argnames  = split(/,/, $mpi_routines{$routine}[1]);
+    my @argtypes = split(/,/, $mpi_routines{$routine}[0]);
+    my @argnames = split(/,/, $mpi_routines{$routine}[1]);
 
     print MPIFD "      SUBROUTINE ${out_prefix}${ucname}_T";
     &PrintArgBrace(MPIFD,
-         length("      SUBROUTINE ${out_prefix}${ucname}_T"),
-         length("      SUBROUTINE  "),
-         $line_limit,
-         @argnames);
+        length("      SUBROUTINE ${out_prefix}${ucname}_T"),
+        length("      SUBROUTINE  "),
+        $line_limit, @argnames
+    );
 
     if (defined($NeedConstants{$routine})) {
         print MPIFD "      USE ${out_prefix}CONSTANTS,ONLY:";
         $sep = "";
-        foreach $name (split(/\s+/,$NeedConstants{$routine})) {
+        foreach $name (split(/\s+/, $NeedConstants{$routine})) {
             print MPIFD "$sep$name";
             $sep = ", ";
         }
@@ -832,41 +874,44 @@ foreach $routine (keys(%mpi_choice_routines)) {
     # convert %type% to the various types and %dims% to the dimensions,
     # including scalar.
     $nchoice = 0;
-    for ($i=0; $i<=$#argtypes; $i++) {
-        $argtypes[$i] =~ s/^const\s//;  # Remove const if present
+    for ($i = 0 ; $i <= $#argtypes ; $i++) {
+        $argtypes[$i] =~ s/^const\s//;    # Remove const if present
         $argtype = $argtypes[$i];
+
         # Check for special args
-        $loc = $i+1;
+        $loc = $i + 1;
         if (defined($special_args{"$routine-$loc"})) {
             $argtype = $special_args{"$routine-$loc"};
         }
 
         if ($argtype =~ /void/) {
+
             # An alternative to this is to have a separate file for
             # routines with 2 choice arguments
             if ($nchoice == 0) {
                 print MPIFD "        <type> $argnames[$i]<dims>\n";
+            } else {
+                print MPIFD
+                  "        <type$nchoice> $argnames[$i]<dims$nchoice>\n";
             }
-            else {
-                print MPIFD "        <type$nchoice> $argnames[$i]<dims$nchoice>\n";
-            }
-            $nchoice ++;
-        }
-        else {
+            $nchoice++;
+        } else {
+
             # Map the C type to the Fortran type
             $cargtype = $argtype;
             $cargtype =~ s/\s+//g;
             $fargtype = $argtypec2f{$cargtype};
             if ($fargtype eq "") {
-                print STDERR "$routine: No Fortran type for $cargtype ($argtype)\n";
+                print STDERR
+                  "$routine: No Fortran type for $cargtype ($argtype)\n";
             }
             if ($fargtype =~ /%name%/) {
                 $fargtype =~ s/%name%/$argnames[$i]/;
+
                 # In the name case, convert any %nl% to newlines and spaces
                 $fargtype =~ s/%nl%/\n       /g;
                 print MPIFD "        $fargtype\n";
-            }
-            else {
+            } else {
                 print MPIFD "        $fargtype $argnames[$i]\n";
             }
         }
@@ -877,8 +922,8 @@ foreach $routine (keys(%mpi_choice_routines)) {
     &PrintArgBrace(MPIFD,
         length("              CALL ${out_prefix}${ucname}"),
         length("              CALL  "),
-        $line_limit,
-        @argnames);
+        $line_limit, @argnames
+    );
 
     print MPIFD "      END SUBROUTINE ${out_prefix}${ucname}_T\n\n";
 }
@@ -887,32 +932,33 @@ foreach $routine (keys(%mpi_choice_routines)) {
 
 print MPIFD "      END MODULE ${ucoutfile_prefix}_t1_s\n";
 close MPIFD;
-&ReplaceIfDifferent( "${outfile_prefix}_t1.f90", "${outfile_prefix}_t1.f90.new" );
+&ReplaceIfDifferent("${outfile_prefix}_t1.f90", "${outfile_prefix}_t1.f90.new");
 
 # -----------------------------------------------------------------------------
 # This block can be used to create the Makefile
 if ($is_MPI) {
-# create a stamp file for use by Makefile.mk rebuild make logic
-open STAMPFD, '>', 'buildiface-stamp';
-close STAMPFD;
 
-open ( MAKEFD, ">Makefile.mk.new" ) || die "Cannot create Makefile.mk.new";
-print MAKEFD <<EOT;
+    # create a stamp file for use by Makefile.mk rebuild make logic
+    open STAMPFD, '>', 'buildiface-stamp';
+    close STAMPFD;
+
+    open(MAKEFD, ">Makefile.mk.new") || die "Cannot create Makefile.mk.new";
+    print MAKEFD <<EOT;
 ## DO NOT EDIT
 ## This file created by buildiface $arg_string
 
 EOT
 
-# these manual variable assignments would be unnecessary if the rules were
-# rewritten to use the AC_SUBSTed name directly
-print MAKEFD "MOD              = \@FCMODEXT\@\n";
-print MAKEFD "MPIMOD           = \@MPIMODNAME\@\n";
-print MAKEFD "MPICONSTMOD      = \@MPICONSTMODNAME\@\n";
-print MAKEFD "MPISIZEOFMOD     = \@MPISIZEOFMODNAME\@\n";
-print MAKEFD "MPIBASEMOD       = \@MPIBASEMODNAME\@\n";
-print MAKEFD "FC_COMPILE_MODS  = \$(LTFCCOMPILE)\n";
+    # these manual variable assignments would be unnecessary if the rules were
+    # rewritten to use the AC_SUBSTed name directly
+    print MAKEFD "MOD              = \@FCMODEXT\@\n";
+    print MAKEFD "MPIMOD           = \@MPIMODNAME\@\n";
+    print MAKEFD "MPICONSTMOD      = \@MPICONSTMODNAME\@\n";
+    print MAKEFD "MPISIZEOFMOD     = \@MPISIZEOFMODNAME\@\n";
+    print MAKEFD "MPIBASEMOD       = \@MPIBASEMODNAME\@\n";
+    print MAKEFD "FC_COMPILE_MODS  = \$(LTFCCOMPILE)\n";
 
-print MAKEFD <<EOT;
+    print MAKEFD <<EOT;
 
 # ensure that the buildiface script ends up in the release tarball
 EXTRA_DIST += src/binding/fortran/use_mpi/buildiface
@@ -944,7 +990,7 @@ AM_FCFLAGS += \@FCINCFLAG\@src/binding/fortran/use_mpi
 
 EOT
 
-print MAKEFD <<EOT;
+    print MAKEFD <<EOT;
 # C source that implements both the C and the Fortran bindings for the type
 # creation routines.  These go into libmpi.la and will be built a second time
 # for inclusion in libpmpi.la on platforms that do not support weak symbols.
@@ -981,7 +1027,7 @@ mpi_fc_sources += \\
 
 EOT
 
-print MAKEFD <<EOT;
+    print MAKEFD <<EOT;
 # FIXME: We may want to edit the mpif.h to convert Fortran77-specific
 # items (such as an integer*8 used for file offsets) into the
 # corresponding Fortran 90 KIND type, to accommodate compilers that
@@ -997,42 +1043,54 @@ EOT
 #\t\t  src/binding/fortran/use_mpi/\$(MPIBASEMOD).\$(MOD) \$(srcdir)/src/binding/fortran/use_mpi/mpi.f90 src/binding/fortran/use_mpi/mpifnoext.h
 #EOT
 #&createModSteps('mpi.f90', 1);
-createModSteps('src/binding/fortran/use_mpi/$(MPIMOD).$(MOD)',
-               join(' ', ('src/binding/fortran/use_mpi/$(MPICONSTMOD).$(MOD)',
-                          'src/binding/fortran/use_mpi/$(MPISIZEOFMOD).$(MOD)',
-                          'src/binding/fortran/use_mpi/$(MPIBASEMOD).$(MOD)',
-                          '$(srcdir)/src/binding/fortran/use_mpi/mpi.f90',
-                          'src/binding/fortran/use_mpi/mpifnoext.h')
-               ),
-               'mpi.f90',
-               1);
+    createModSteps(
+        'src/binding/fortran/use_mpi/$(MPIMOD).$(MOD)',
+        join(
+            ' ',
+            (
+                'src/binding/fortran/use_mpi/$(MPICONSTMOD).$(MOD)',
+                'src/binding/fortran/use_mpi/$(MPISIZEOFMOD).$(MOD)',
+                'src/binding/fortran/use_mpi/$(MPIBASEMOD).$(MOD)',
+                '$(srcdir)/src/binding/fortran/use_mpi/mpi.f90',
+                'src/binding/fortran/use_mpi/mpifnoext.h'
+            )
+        ),
+        'mpi.f90',
+        1
+    );
 
 #print MAKEFD "src/binding/fortran/use_mpi/\$(MPICONSTMOD).\$(MOD): \$(srcdir)/src/binding/fortran/use_mpi/mpi_constants.f90 src/binding/fortran/use_mpi/mpifnoext.h\n";
 #&createModSteps('mpi_constants.f90', 1);
-createModSteps('src/binding/fortran/use_mpi/$(MPICONSTMOD).$(MOD)',
-               'src/binding/fortran/use_mpi/mpi_constants.f90 src/binding/fortran/use_mpi/mpifnoext.h',
-               'mpi_constants.f90',
-               1);
+    createModSteps(
+        'src/binding/fortran/use_mpi/$(MPICONSTMOD).$(MOD)',
+'src/binding/fortran/use_mpi/mpi_constants.f90 src/binding/fortran/use_mpi/mpifnoext.h',
+        'mpi_constants.f90',
+        1
+    );
 
 #print MAKEFD "src/binding/fortran/use_mpi/\$(MPISIZEOFMOD).\$(MOD): src/binding/fortran/use_mpi/mpi_sizeofs.f90 src/binding/fortran/use_mpi/mpifnoext.h\n";
 #&createModSteps("mpi_sizeofs.f90", 0);
-createModSteps('src/binding/fortran/use_mpi/$(MPISIZEOFMOD).$(MOD)',
-               'src/binding/fortran/use_mpi/mpi_sizeofs.f90 src/binding/fortran/use_mpi/mpifnoext.h',
-               'mpi_sizeofs.f90',
-               0);
+    createModSteps(
+        'src/binding/fortran/use_mpi/$(MPISIZEOFMOD).$(MOD)',
+'src/binding/fortran/use_mpi/mpi_sizeofs.f90 src/binding/fortran/use_mpi/mpifnoext.h',
+        'mpi_sizeofs.f90',
+        0
+    );
 
 #print MAKEFD "src/binding/fortran/use_mpi/\$(MPIBASEMOD).\$(MOD): src/binding/fortran/use_mpi/${outfile_prefix}_base.f90 src/binding/fortran/use_mpi/\$(MPICONSTMOD).\$(MOD)\n";
 #&createModSteps("${outfile_prefix}_base.f90", 0);
-createModSteps('src/binding/fortran/use_mpi/$(MPIBASEMOD).$(MOD)',
-               "src/binding/fortran/use_mpi/${outfile_prefix}_base.f90 src/binding/fortran/use_mpi/\$(MPICONSTMOD).\$(MOD)",
-               "${outfile_prefix}_base.f90",
-               0);
+    createModSteps(
+        'src/binding/fortran/use_mpi/$(MPIBASEMOD).$(MOD)',
+"src/binding/fortran/use_mpi/${outfile_prefix}_base.f90 src/binding/fortran/use_mpi/\$(MPICONSTMOD).\$(MOD)",
+        "${outfile_prefix}_base.f90",
+        0
+    );
 
 ## shouldn't be necessary, now the deps should be right...
 # avoid dependency problems and attain an effect similar to simplemake's "all-preamble"
 #BUILT_SOURCES += \$(mpi_fc_modules)
 
-print MAKEFD <<EOT;
+    print MAKEFD <<EOT;
 
 mpi_fc_modules += \\
     src/binding/fortran/use_mpi/\$(MPIMOD).\$(MOD) \\
@@ -1056,15 +1114,15 @@ CLEANFILES += src/binding/fortran/use_mpi/mpifnoext.h
 
 EOT
 
-print MAKEFD "MAINTAINERCLEANFILES += \$(mpi_sources) fproto.h\n";
-print MAKEFD "CLEANFILES += \$(mpi_fc_modules)\n";
-print MAKEFD "\n";
+    print MAKEFD "MAINTAINERCLEANFILES += \$(mpi_sources) fproto.h\n";
+    print MAKEFD "CLEANFILES += \$(mpi_fc_modules)\n";
+    print MAKEFD "\n";
 
-#print MAKEFD "install_BIN     = mpifort\n";
-#print MAKEFD "install_ETC     = mpifort.conf\n";
+    #print MAKEFD "install_BIN     = mpifort\n";
+    #print MAKEFD "install_ETC     = mpifort.conf\n";
 
     # Add the documentation
-#doc_sources = mpifort.txt manfort.txt
+    #doc_sources = mpifort.txt manfort.txt
     print MAKEFD "# Documentation sources
 # FIXME disabled for now until we sort out how to handle docs correctly in the
 # new build system
@@ -1075,19 +1133,19 @@ print MAKEFD "\n";
 #doc_LATEX_SOURCES = \${doc_sources}
 ";
 
-# ----------------------------------------------------------------------------
-# FIXME: Add the steps to handle the choice arguments.  They should be
-# selected by configure from a list of possible choices, with an
-# enable switch used to bypass the checks.  In addition, we need a way to
-# dynamically create subsets, given a list of routines and types/dimensions
-# to include.  This allows users to build precisely tailored Fortran90 modules.
-# ----------------------------------------------------------------------------
+ # ----------------------------------------------------------------------------
+ # FIXME: Add the steps to handle the choice arguments.  They should be
+ # selected by configure from a list of possible choices, with an
+ # enable switch used to bypass the checks.  In addition, we need a way to
+ # dynamically create subsets, given a list of routines and types/dimensions
+ # to include.  This allows users to build precisely tailored Fortran90 modules.
+ # ----------------------------------------------------------------------------
 
-print MAKEFD "\n";
-print MAKEFD "endif BUILD_FC_BINDING\n";
+    print MAKEFD "\n";
+    print MAKEFD "endif BUILD_FC_BINDING\n";
 
-close( MAKEFD );
-&ReplaceIfDifferent( "Makefile.mk", "Makefile.mk.new" );
+    close(MAKEFD);
+    &ReplaceIfDifferent("Makefile.mk", "Makefile.mk.new");
 }
 
 #
@@ -1102,21 +1160,23 @@ close( MAKEFD );
 # Print line to FD; if line size > count, output continue string and
 # continue.  Use print_endline to finish a line
 sub print_line {
-    my $FD = $_[0];
-    my $line = $_[1];
-    my $count = $_[2];
-    my $continue = $_[3];
+    my $FD           = $_[0];
+    my $line         = $_[1];
+    my $count        = $_[2];
+    my $continue     = $_[3];
     my $continue_len = $_[4];
 
-    $linelen = length( $line );
+    $linelen = length($line);
+
     #print "linelen = $linelen, print_line_len = $print_line_len\n";
     if ($print_line_len + $linelen > $count) {
-    print $FD $continue;
-    $print_line_len = $continue_len;
+        print $FD $continue;
+        $print_line_len = $continue_len;
     }
     print $FD $line;
     $print_line_len += $linelen;
 }
+
 sub print_endline {
     my $FD = $_[0];
     print $FD "\n";
@@ -1146,7 +1206,7 @@ sub createModSteps {
     $noext =~ s/\.f90$//;
 
     # filenames used by the make target
-    my $stamp = "src/binding/fortran/use_mpi/${noext}.\$(MOD)-stamp";
+    my $stamp    = "src/binding/fortran/use_mpi/${noext}.\$(MOD)-stamp";
     my $lockfile = "src/binding/fortran/use_mpi/${noext}-lock";
 
     # This code formerly supported the Intel Fortran Compiler's curious
@@ -1197,8 +1257,7 @@ EOT
 \t       rm -f $srcFileWithExt ; \\
 \t   fi )
 EOT
-    }
-    else {
+    } else {
         print MAKEFD <<EOT;
 \t\@( cd src/binding/fortran/use_mpi && \\
 \t   if [ \"\$(FCEXT)\" != \"f90\" ] ; then \\
@@ -1254,7 +1313,8 @@ sub PrintArgBrace {
     print $fd "(";
     $curlen++;
     foreach my $arg (@argnames) {
-        if ($curlen + length($arg) + 2 > $line_length) { # + 2 for the trailing ',&'
+        if ($curlen + length($arg) + 2 > $line_length)
+        {    # + 2 for the trailing ',&'
             $curlen = $indent;
             print $fd "&\n";
             print $fd " " x $indent;
@@ -1275,54 +1335,58 @@ sub PrintArgBrace {
 
 # Print the declarations for the given routine.
 sub PrintArgDecls {
-    my ($routine,$svflag,$svArgs) = @_;
+    my ($routine, $svflag, $svArgs) = @_;
 
-    my $ucname = uc($routine);
+    my $ucname   = uc($routine);
     my @argtypes = split(/,/, $mpi_routines{$routine}[0]);
     my @argnames = split(/,/, $mpi_routines{$routine}[1]);
 
     print "Printing argument delartion for $ucname\n" if $gDebug;
-    print "argtypes = $mpi_routines{$routine}[0]\n" if $gDebug;
-    print "argnames = $mpi_routines{$routine}[1]\n" if $gDebug;
+    print "argtypes = $mpi_routines{$routine}[0]\n"   if $gDebug;
+    print "argnames = $mpi_routines{$routine}[1]\n"   if $gDebug;
 
     # preload the svargs if requested.  This is used to decide whether
     # an array arg is output as a scalar or a vector
     my %svargs = ();
     if ($svflag) {
-    for my $val (split(/:/,$svArgs)) {
-        my $loc = $val;
-        my $count = "-1";
-        if ($loc =~ /(\d+)-(\d+)/) {
-        $loc   = $1;
-        $count = $2;
+        for my $val (split(/:/, $svArgs)) {
+            my $loc   = $val;
+            my $count = "-1";
+            if ($loc =~ /(\d+)-(\d+)/) {
+                $loc   = $1;
+                $count = $2;
+            }
+            $svargs{$loc} = $count;
         }
-        $svargs{$loc} = $count;
     }
-    }
+
     # Determine if we need any constants (e.g., MPI_STATUS_SIZE,
     # MPI_OFFSET_KIND)
-    my %use_constants = ();
+    my %use_constants   = ();
     my $found_constants = 0;
-    for (my $i=0; $i<=$#argtypes; $i++) {
-    $argtypes[$i] =~ s/^const\s+//;  # Remove const if present
-    my $argtype = $argtypes[$i];
-    # Check for special args
-    $loc = $i+1;
-    if (defined($special_args{"$routine-$loc"})) {
-        $argtype = $special_args{"$routine-$loc"};
-    }
-    # Map the C type to the Fortran type
-    my $cargtype = $argtype;
-    $cargtype =~ s/\s+//g;
-    my $fargtype = $argtypec2f{$cargtype};
-    # Now, does this type contain an MPI constant?
-    if (!defined($fargtype)) {
-        print "$cargtype value has no matching fortran argtype\n";
-    }
-    if ($fargtype =~ /(MPI_[A-Z_]*)/) {
-        $use_constants{$1} = 1;
-        $found_constants = 1;
-    }
+    for (my $i = 0 ; $i <= $#argtypes ; $i++) {
+        $argtypes[$i] =~ s/^const\s+//;    # Remove const if present
+        my $argtype = $argtypes[$i];
+
+        # Check for special args
+        $loc = $i + 1;
+        if (defined($special_args{"$routine-$loc"})) {
+            $argtype = $special_args{"$routine-$loc"};
+        }
+
+        # Map the C type to the Fortran type
+        my $cargtype = $argtype;
+        $cargtype =~ s/\s+//g;
+        my $fargtype = $argtypec2f{$cargtype};
+
+        # Now, does this type contain an MPI constant?
+        if (!defined($fargtype)) {
+            print "$cargtype value has no matching fortran argtype\n";
+        }
+        if ($fargtype =~ /(MPI_[A-Z_]*)/) {
+            $use_constants{$1} = 1;
+            $found_constants = 1;
+        }
     }
     if ($found_constants) {
         print MPIBASEFD "           USE MPI_CONSTANTS,ONLY:";
@@ -1336,13 +1400,15 @@ sub PrintArgDecls {
     }
 
     # Output argument types
-    for (my $i=0; $i<=$#argtypes; $i++) {
+    for (my $i = 0 ; $i <= $#argtypes ; $i++) {
         $argtype = $argtypes[$i];
+
         # Check for special args
-        $loc = $i+1;
+        $loc = $i + 1;
         if (defined($special_args{"$routine-$loc"})) {
             $argtype = $special_args{"$routine-$loc"};
         }
+
         # Map the C type to the Fortran type
         $cargtype = $argtype;
         $cargtype =~ s/\s+//g;
@@ -1350,12 +1416,13 @@ sub PrintArgDecls {
         if ($fargtype eq "") {
             print STDERR "$routine: No Fortran type for $cargtype ($argtype)\n";
         }
+
         # Split out the base type from the name
         if ($fargtype =~ /(\w+.*)\s+(%name\S.*)/) {
             $varType = $1;
-            $varName  = $2;
+            $varName = $2;
             if ($varName =~ /%name%/) {
-            $varName =~ s/%name%/$argnames[$i]/;
+                $varName =~ s/%name%/$argnames[$i]/;
             }
             $varName =~ s/%nl%/\n       /g;
             $varType =~ s/%nl%/\n       /g;
@@ -1363,26 +1430,25 @@ sub PrintArgDecls {
             # Here's where we might change vector to scalar args
             if ($svflag) {
                 if (defined($svargs{$loc})) {
+
                     # The value is the count arg for the array; later, we
                     # can make use of that to improve the definitions
                     if ($varName =~ /,\*/) {
                         $varName =~ s/,\*//;
-                    }
-                    elsif ($varName =~ /\(\*\)/) {
+                    } elsif ($varName =~ /\(\*\)/) {
                         $varName =~ s/\(\*\)//;
-                    }
-                    else {
-                        print STDERR "Failed to make arg $i in $routine a scalar\n";
+                    } else {
+                        print STDERR
+                          "Failed to make arg $i in $routine a scalar\n";
                     }
                 }
             }
-         }
-         else {
+        } else {
             $varType = $fargtype;
             $varName = $argnames[$i];
-         }
+        }
 
-         print MPIBASEFD "           $varType $varName\n";
+        print MPIBASEFD "           $varType $varName\n";
     }
 }
 
@@ -1390,29 +1456,29 @@ sub PrintArgDecls {
 # Replace old file with new file only if new file is different
 # Otherwise, remove new filename
 sub ReplaceIfDifferent {
-    my ($oldfilename,$newfilename) = @_;
+    my ($oldfilename, $newfilename) = @_;
     my $rc = 1;
     if (-s $oldfilename) {
         $rc = system "cmp -s $newfilename $oldfilename";
-        $rc >>= 8;   # Shift right to get exit status
+        $rc >>= 8;    # Shift right to get exit status
     }
     if ($rc != 0) {
-    # The files differ.  Replace the old file
-    # with the new one
-    if (-s $oldfilename) {
-        print STDERR "Replacing $oldfilename\n";
-        # If debugging and there is a difference, show that difference
-        if ($gDebug) { system "diff $newfilename $oldfilename"; }
 
-        unlink $oldfilename;
-    }
-    else {
-        print STDERR "Creating $oldfilename\n";
-    }
-    rename $newfilename, $oldfilename ||
-        die "Could not replace $oldfilename";
-    }
-    else {
+        # The files differ.  Replace the old file
+        # with the new one
+        if (-s $oldfilename) {
+            print STDERR "Replacing $oldfilename\n";
+
+            # If debugging and there is a difference, show that difference
+            if ($gDebug) { system "diff $newfilename $oldfilename"; }
+
+            unlink $oldfilename;
+        } else {
+            print STDERR "Creating $oldfilename\n";
+        }
+        rename $newfilename, $oldfilename
+          || die "Could not replace $oldfilename";
+    } else {
         unlink $newfilename;
     }
 }

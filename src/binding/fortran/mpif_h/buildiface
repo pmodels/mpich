@@ -376,6 +376,10 @@ foreach $_ (@ARGV) {
                       'Address' => 1, 'Get_address' => 1,
                       'Keyval_create' => 1, 'Status_f2c' => 1,
                       'Status_c2f' => 1,
+                      'Status_c2f08' => 1,
+                      'Status_f082c' => 1,
+                      'Status_f2f08' => 1,
+                      'Status_f082f' => 1,
                       'Type_create_f90_integer' => 1,
                       'Type_create_f90_real' => 1,
                       'Type_create_f90_complex' => 1,
@@ -2690,7 +2694,7 @@ sub status_array_ctof {
 "    if ($testFlag$coutvar != MPI_STATUSES_IGNORE) {
         int li;
         for (li=0; li<$ActSize; li++) {
-            MPI_Status_c2f($coutvar+li,$outvar+li*MPIF_STATUS_SIZE);
+            MPI_Status_c2f($coutvar+li,$outvar+li*MPI_F_STATUS_SIZE);
         }
     }\n";
         $clean_up .= "     if ($coutvar != MPI_STATUSES_IGNORE) { $free($coutvar); }\n";
@@ -3785,12 +3789,16 @@ if ($write_mpif) {
     print MPIFFD "$cchar      \n";
     #
     # Status elements
+    my $status_size = $mpidef{MPI_F_STATUS_SIZE};
+    my $idx_source = $mpidef{MPI_F_SOURCE} + 1;
+    my $idx_tag = $mpidef{MPI_F_TAG} + 1;
+    my $idx_error = $mpidef{MPI_F_ERROR} + 1;
     # FIXME: The offsets for the status elements are hardwired.  If they
     # change in mpi.h.in, they need to change here as well.
     print MPIFFD "       INTEGER MPI_SOURCE, MPI_TAG, MPI_ERROR\n";
-    print MPIFFD "       PARAMETER (MPI_SOURCE=3,MPI_TAG=4,MPI_ERROR=5)\n";
+    print MPIFFD "       PARAMETER (MPI_SOURCE=$idx_source,MPI_TAG=$idx_tag,MPI_ERROR=$idx_error)\n";
     print MPIFFD "       INTEGER MPI_STATUS_SIZE\n";
-    print MPIFFD "       PARAMETER (MPI_STATUS_SIZE=\@MPI_STATUS_SIZE\@)\n";
+    print MPIFFD "       PARAMETER (MPI_STATUS_SIZE=$status_size)\n";
     # Temporary until configure handles these.  Define as arrays to keep
     # Fortran compilers from complaining excessively.
     print MPIFFD "       INTEGER MPI_STATUS_IGNORE(MPI_STATUS_SIZE)\n";
