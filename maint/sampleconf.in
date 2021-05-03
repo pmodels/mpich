@@ -7,7 +7,7 @@ dnl The file name here refers to a file in the source being configured
 AC_INIT(pick a local file)
 dnl
 dnl Definitions will be placed in this file rather than in the DEFS variable
-AC_CONFIG_HEADER(pick a headef file name)
+AC_CONFIG_HEADERS([pick a headef file name])
 dnl
 dnl Set the directory that contains support scripts such as install-sh and
 dnl config.guess

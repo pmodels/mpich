@@ -3,11 +3,11 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-AC_PREREQ([2.63])
+AC_PREREQ([2.69])
 AC_INIT([dtpools], [0.0], [discuss@mpich.org])
 AC_CONFIG_SRCDIR([include/dtpools.h])
 
-AC_CONFIG_HEADER(dtpoolsconf.h)
+AC_CONFIG_HEADERS([dtpoolsconf.h])
 AH_TOP([/*
  * Copyright (C) by Argonne National Laboratory
  *     See COPYRIGHT in top-level directory

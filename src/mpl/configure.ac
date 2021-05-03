@@ -3,7 +3,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-AC_PREREQ(2.63)
+AC_PREREQ(2.69)
 
 AC_INIT([MPL], [0.1])
 
@@ -44,7 +44,7 @@ else
    AC_MSG_ERROR([Version information not found. Configuration aborted.])
 fi
 
-AC_CONFIG_HEADER([include/config.h])
+AC_CONFIG_HEADERS([include/config.h])
 AC_CONFIG_COMMANDS([prefix-config],[perl $srcdir/confdb/cmd_prefix_config_h.pl MPL include/config.h include/mplconfig.h])
 
 # Non-verbose make
