@@ -641,7 +641,7 @@ dnl
 dnl D*/
 AC_DEFUN([PAC_ARG_STRICT],[
 AC_ARG_ENABLE(strict,
-	AC_HELP_STRING([--enable-strict], [Turn on strict compilation testing]),,enable_strict=no)
+	AS_HELP_STRING([--enable-strict], [Turn on strict compilation testing]),,enable_strict=no)
 PAC_CC_STRICT($enable_strict)
 CFLAGS="$CFLAGS $pac_cc_strict_flags"
 export CFLAGS

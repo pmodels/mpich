@@ -59,13 +59,13 @@ PAC_C_BUILTIN_EXPECT
 PAC_C_STATIC_ASSERT
 
 AC_ARG_ENABLE(embedded,
-    AC_HELP_STRING([--enable-embedded], [Build MPL in embedded mode (default is no)]),
+    AS_HELP_STRING([--enable-embedded], [Build MPL in embedded mode (default is no)]),
     [embedded=yes],
     [embedded=no])
 AM_CONDITIONAL([MPL_EMBEDDED_MODE],[test "x${embedded}" = "xyes"])
 
 AC_ARG_ENABLE(g,
-    AC_HELP_STRING([--enable-g=option],
+    AS_HELP_STRING([--enable-g=option],
 	[
 		Control the level of debugging support in MPL.
 		"option" is a list of comma separated names.  Default
@@ -943,12 +943,12 @@ fi
 #######################################################################
 
 # mkstemp() is a better replacement for mktemp()
-AC_HAVE_FUNCS(mkstemp)
+AC_CHECK_FUNCS(mkstemp)
 if test "$ac_cv_func_mkstemp" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],mkstemp)
 fi
 # fdopen() converts from an fd to a FILE*
-AC_HAVE_FUNCS(fdopen)
+AC_CHECK_FUNCS(fdopen)
 if test "$ac_cv_func_fdopen" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdio.h>],fdopen)
 fi
@@ -972,7 +972,7 @@ PAC_ARG_SHARED_MEMORY
 
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,
-        [AC_HELP_STRING([--enable-versioning],[Enable library versioning])],,
+        [AS_HELP_STRING([--enable-versioning],[Enable library versioning])],,
         [enable_versioning=yes])
 
 if test "$enable_versioning" = "yes" ; then

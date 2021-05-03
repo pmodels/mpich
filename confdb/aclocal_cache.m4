@@ -175,7 +175,7 @@ dnl set here are redundant; the LOAD_CACHE call relies on the way autoconf
 dnl initially processes ARG_ENABLE commands.
 AC_DEFUN([PAC_ARG_CACHING],[
 AC_ARG_ENABLE(cache,
-	AC_HELP_STRING([--enable-cache], [Turn on configure caching]),,
+	AS_HELP_STRING([--enable-cache], [Turn on configure caching]),,
 	[enable_cache="notgiven"])
 ])
 
@@ -328,7 +328,7 @@ dnl cause problems.
 dnl
 AC_DEFUN([PAC_CREATE_BASE_CACHE],[
 AC_ARG_ENABLE(base-cache,
-	AC_HELP_STRING([--enable-base-cache],
+	AS_HELP_STRING([--enable-base-cache],
 		[Enable the use of a simple cache for the subsidiary
                  configure scripts]),,enable_base_cache=default)
 # The default case is controlled by the environment variable CONF_USE_CACHEFILE

@@ -217,7 +217,7 @@ fi
 # Check what bootstrap server we should use
 #########################################################################
 AC_ARG_WITH(hydra-bss,
-	[AC_HELP_STRING([--with-hydra-bss=name],
+	[AS_HELP_STRING([--with-hydra-bss=name],
 		[Bootstrap Server (user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt,manual,persist)])],
 	[ hydra_bss=$withval ],
 	[ hydra_bss="user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt,manual,persist" ])

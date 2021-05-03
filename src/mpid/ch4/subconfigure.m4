@@ -349,7 +349,7 @@ AC_DEFINE_UNQUOTED([MPIDI_CH4_MAX_VCIS], [$with_ch4_max_vcis], [Number of VCIs c
 
 # Check for enable-ch4-vci-method choice
 AC_ARG_ENABLE(ch4-vci-method,
-	AC_HELP_STRING([--enable-ch4-vci-method=type],
+	AS_HELP_STRING([--enable-ch4-vci-method=type],
 			[Choose the method used for vci selection when enable-thread-cs=per-vci is selected.
                           Values may be default, zero, communicator, tag, implicit, explicit]),,enable_ch4_vci_method=default)
 

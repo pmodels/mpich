@@ -241,7 +241,7 @@ fi
 # Check what RMK we should use
 #########################################################################
 AC_ARG_WITH(hydra-rmk,
-	[AC_HELP_STRING([--with-hydra-rmk=name],
+	[AS_HELP_STRING([--with-hydra-rmk=name],
 		[RMK (slurm,ll,lsf,sge,pbs,cobalt)])],
 	[ hydra_rmk=$withval ],
 	[ hydra_rmk="slurm,ll,lsf,sge,pbs,cobalt" ])
@@ -280,7 +280,7 @@ AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_RMKS,"${hydra_rmk_names_unquoted}",[Definitio
 # Check what bstrap we should use
 #########################################################################
 AC_ARG_WITH(hydra-bstrap,
-	[AC_HELP_STRING([--with-hydra-bstrap=name],
+	[AS_HELP_STRING([--with-hydra-bstrap=name],
 		[Bstrap Server (ssh,rsh,slurm,ll,lsf,sge,pbs)])],
 	[ hydra_bstrap=$withval ],
 	[ hydra_bstrap="ssh,slurm,rsh,ll,sge" ])

@@ -456,7 +456,7 @@ fi
 
 PAC_GET_SPECIAL_SYSTEM_INFO
 
-AC_HAVE_FUNCS(memalign)
+AC_CHECK_FUNCS(memalign)
 
 #
 # Question: Should ROMIO under MPICH ignore the Fortran tests, since
