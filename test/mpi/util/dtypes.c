@@ -7,15 +7,9 @@
 #include "mpitestconf.h"
 #include "mpitest.h"
 #include "dtypes.h"
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
-#if defined(HAVE_STDLIB_H) || defined(STDC_HEADERS)
 #include <stdlib.h>
-#endif
-#if defined(HAVE_STRING_H) || defined(STDC_HEADERS)
 #include <string.h>
-#endif
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #endif

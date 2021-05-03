@@ -705,7 +705,6 @@ AM_PROG_AR
 PAC_ARG_STRICT
 
 # General headers
-AC_HEADER_STDC
 dnl AC_CHECK_HEADERS(stdarg.h unistd.h string.h stdlib.h memory.h stdint.h)
 dnl unistd.h string.h stdlib.h memory.h stdint.h are checked by AC_PROG_CC.
 AC_CHECK_HEADERS(stdarg.h sys/time.h sys/resource.h)
