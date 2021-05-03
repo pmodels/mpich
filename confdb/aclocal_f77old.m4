@@ -77,7 +77,7 @@ $fxx_module
 EOF
     found_answer="no"
     if test -z "$ac_fcompilelink" ; then
-        ac_fcompilelink="${F77-f77} -o conftest $FFLAGS $flags conftest.f $LDFLAGS $LIBS 1>&AC_FD_CC"
+        ac_fcompilelink="${F77-f77} -o conftest $FFLAGS $flags conftest.f $LDFLAGS $LIBS 1>&AS_MESSAGE_LOG_FD"
     fi
     AC_MSG_CHECKING([whether ${F77-f77} $flags $libs works with GETARG and IARGC])
     if AC_TRY_EVAL(ac_fcompilelink) && test -x conftest ; then
@@ -124,7 +124,7 @@ EOF
         program main
         end
 EOF
-    ac_fcompilelink_test='${F77-f77} -o conftest $FFLAGS conftest.f $LDFLAGS $libs $LIBS 1>&AC_FD_CC'
+    ac_fcompilelink_test='${F77-f77} -o conftest $FFLAGS conftest.f $LDFLAGS $libs $LIBS 1>&AS_MESSAGE_LOG_FD'
     for libs in $save_trial_LIBS ; do
 	if test "$libs" = "0" ; then
 	    lib_ok="yes"
@@ -211,7 +211,7 @@ EOF
 	    AC_MSG_CHECKING([whether Fortran 77 routine names are case-insensitive $flagval])
 	    dnl we can use double quotes here because all is already
             dnl evaluated
-            ac_fcompilelink_test="${F77-f77} -o conftest $fflag $FFLAGS conftest.f $LDFLAGS $LIBS 1>&AC_FD_CC"
+            ac_fcompilelink_test="${F77-f77} -o conftest $fflag $FFLAGS conftest.f $LDFLAGS $LIBS 1>&AS_MESSAGE_LOG_FD"
 	    if AC_TRY_EVAL(ac_fcompilelink_test) && test -x conftest ; then
 	        AC_MSG_RESULT(yes)
 	    else
@@ -331,7 +331,7 @@ EOF
                 AC_MSG_CHECKING([whether ${F77-f77} $flags $libs works with $MSG])
 		IFS="$save_IFS"
 		dnl We need this here because we've fiddled with IFS
-	        ac_fcompilelink_test="${F77-f77} -o conftest $FFLAGS $flags conftest.f $LDFLAGS $libs $LIBS 1>&AC_FD_CC"
+	        ac_fcompilelink_test="${F77-f77} -o conftest $FFLAGS $flags conftest.f $LDFLAGS $libs $LIBS 1>&AS_MESSAGE_LOG_FD"
 		found_answer="no"
                 if AC_TRY_EVAL(ac_fcompilelink_test) && test -x conftest ; then
 		    if test "$ac_cv_prog_f77_cross" != "yes" -a \	 
@@ -353,8 +353,8 @@ EOF
 		    break
 	        else
                     AC_MSG_RESULT([no])
-		    echo "configure: failed program was:" >&AC_FD_CC
-                    cat conftest.f >&AC_FD_CC
+		    echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+                    cat conftest.f >&AS_MESSAGE_LOG_FD
 	        fi
             done
         done

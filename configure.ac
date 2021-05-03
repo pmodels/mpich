@@ -2563,7 +2563,7 @@ if test "$enable_debuginfo" = "yes" ; then
    #    +noobjdebug
    # for C, Fortran, and C++.  We don't have a good test for this yet,
    # so we add a warning
-   if test "$ac_cv_prog_gcc" = "yes" ; then
+   if test "$ac_cv_c_compiler_gnu" = "yes" ; then
        AC_MSG_WARN([Some versions of gcc do not include debugging information
 within the executable.  Totalview requires this information to detect
 an MPICH code.  If you have trouble, try linking with the additional

@@ -541,7 +541,7 @@ if test -z "$ac_f90ext" ; then
     fi
     AC_MSG_CHECKING([for extension for Fortran 90 programs])
     ac_f90ext="f90"
-    ac_f90compile='${FC-f90} -c $FCFLAGS conftest.$ac_f90ext 1>&AC_FD_CC'
+    ac_f90compile='${FC-f90} -c $FCFLAGS conftest.$ac_f90ext 1>&AS_MESSAGE_LOG_FD'
     cat > conftest.$ac_f90ext <<EOF
       program conftest
       end
@@ -630,7 +630,7 @@ define(PAC_GET_XFS_MEMALIGN,
 [AC_MSG_CHECKING([for memory alignment needed for direct I/O])
 rm -f memalignval
 rm -f /tmp/romio_tmp.bin
-AC_TEST_PROGRAM([#include <stdio.h>
+AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -643,7 +643,7 @@ main() {
   fcntl(fd, F_DIOINFO, &st);
   fprintf( f, "%u\n", st.d_mem);
   exit(0);
-}],Pac_CV_NAME=`cat memalignval`,Pac_CV_NAME="")
+}]])],[Pac_CV_NAME=`cat memalignval`],[Pac_CV_NAME=""],[])
 rm -f memalignval
 rm -f /tmp/romio_tmp.bin
 if test -n "$Pac_CV_NAME" -a "$Pac_CV_NAME" != 0 ; then
