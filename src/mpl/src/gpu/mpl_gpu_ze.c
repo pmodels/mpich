@@ -311,8 +311,13 @@ int MPL_gpu_get_global_dev_ids(int *global_ids, int count)
 
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
 {
-    /* TODO: need to find oneAPI function to retrieve base addr and buffer len */
+    int ret;
+    ret = zeMemGetAddressRange(global_ze_context, ptr, pbase, len);
+    ZE_ERR_CHECK(ret);
+  fn_exit:
     return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
 }
 
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
