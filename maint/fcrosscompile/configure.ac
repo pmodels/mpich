@@ -6,7 +6,7 @@
 AC_INIT
 
 AC_ARG_WITH(aint-size,
-    AC_HELP_STRING([--with-aint-size],
+    AS_HELP_STRING([--with-aint-size],
                    [Override the size of MPI_AINT (in bytes)]),,
     with_aint_size=0)
 

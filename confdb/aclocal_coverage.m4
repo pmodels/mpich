@@ -18,7 +18,7 @@ AC_ARG_VAR([GCOV],[name/path for the gcov utility])
 AC_CHECK_PROGS([GCOV],[gcov])
 
 AC_ARG_ENABLE([coverage],
-              [AC_HELP_STRING([--enable-coverage],
+              [AS_HELP_STRING([--enable-coverage],
                               [Turn on coverage analysis using gcc and gcov])],
               [],[enable_coverage=no])
 

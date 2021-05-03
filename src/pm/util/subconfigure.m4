@@ -181,7 +181,7 @@ dnl
 # FIXME: need to include the test, at least for any file that
 # might set _POSIX_SOURCE
 # putenv() sets environment variable
-AC_HAVE_FUNCS(putenv)
+AC_CHECK_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
 fi

@@ -177,7 +177,7 @@ MPICH_NUMVERSION=`expr $V1$V2$V3$V4$V5 + 0`
 AC_SUBST(MPICH_NUMVERSION)
 
 AC_ARG_WITH(custom-version-string,
-            AC_HELP_STRING([--with-custom-version-string], [Adds a user-specified value to the output of the mpichversion executable]),,with_custom_version_string="")
+            AS_HELP_STRING([--with-custom-version-string], [Adds a user-specified value to the output of the mpichversion executable]),,with_custom_version_string="")
 MPICH_CUSTOM_STRING=$with_custom_version_string
 AC_SUBST(MPICH_CUSTOM_STRING)
 
@@ -325,7 +325,7 @@ m4_include([subsys_include.m4])
 dnl ----------------------------------------------------------------------------
 dnl setup top-level argument handling
 AC_ARG_ENABLE(echo,
-	AC_HELP_STRING([--enable-echo], [Turn on strong echoing. The default is enable=no.]),
+	AS_HELP_STRING([--enable-echo], [Turn on strong echoing. The default is enable=no.]),
 	set -x)
 
 AC_ARG_ENABLE(error-checking,
@@ -413,7 +413,7 @@ AC_ARG_ENABLE([mpit-events],
 dnl We may want to force MPI_Aint to be the same size as MPI_Offset,
 dnl particularly on 32 bit systems with large (64 bit) file systems.
 AC_ARG_WITH(aint-size,
-	AC_HELP_STRING([--with-aint-size], [Override the size of MPI_AINT (in bytes)]),,
+	AS_HELP_STRING([--with-aint-size], [Override the size of MPI_AINT (in bytes)]),,
 	with_aint_size=0)
 
 AC_ARG_ENABLE(fast,
@@ -431,10 +431,10 @@ AC_ARG_ENABLE(fast,
 ],,enable_fast=O2)
 
 AC_ARG_ENABLE(interlib-deps,
-	[AC_HELP_STRING([--enable-interlib-deps - Enable interlibrary dependencies])],,enable_interlib_deps=yes)
+	[AS_HELP_STRING([--enable-interlib-deps - Enable interlibrary dependencies])],,enable_interlib_deps=yes)
 
 AC_ARG_ENABLE(check-compiler-flags,
-	AC_HELP_STRING([--enable-check-compiler-flags], [enable the checks for all compiler
+	AS_HELP_STRING([--enable-check-compiler-flags], [enable the checks for all compiler
                        options, xxxFLAGS, MPICH_xxxFLAGS. Default is on.]),,
 		       enable_check_compiler_flags=yes)
 
@@ -449,28 +449,28 @@ AC_ARG_ENABLE(fortran,
 ],,[enable_fortran=all])
 
 AC_ARG_ENABLE(f77,
-	AC_HELP_STRING([--enable-f77],
+	AS_HELP_STRING([--enable-f77],
 		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_f77=yes])
 
 AC_ARG_ENABLE(fc,
-	AC_HELP_STRING([--enable-fc],
+	AS_HELP_STRING([--enable-fc],
 		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_fc=yes])
 
 AC_ARG_ENABLE(cxx,
-	AC_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
+	AS_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
 
 AC_ARG_ENABLE(romio,
-	AC_HELP_STRING([--enable-romio], [Enable ROMIO MPI I/O implementation]),,
+	AS_HELP_STRING([--enable-romio], [Enable ROMIO MPI I/O implementation]),,
 	enable_romio=yes)
 
 AC_ARG_ENABLE(debuginfo,
-	AC_HELP_STRING([--enable-debuginfo], [Enable support for debuggers]),,
+	AS_HELP_STRING([--enable-debuginfo], [Enable support for debuggers]),,
 	enable_debuginfo=no)
 
 
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,
-        [AC_HELP_STRING([--enable-versioning],[Enable library versioning])],,
+        [AS_HELP_STRING([--enable-versioning],[Enable library versioning])],,
         [enable_versioning=yes])
 
 if test "$enable_versioning" = "yes" ; then
@@ -489,15 +489,15 @@ dnl load to access the MPICH internal data structures.
 dnl "default" is a special device that allows MPICH to choose one
 dnl based on the environment.
 AC_ARG_WITH(device,
-	AC_HELP_STRING([--with-device=name], [Specify the communication device for MPICH]),,
+	AS_HELP_STRING([--with-device=name], [Specify the communication device for MPICH]),,
 	with_device=ch4)
 
 AC_ARG_WITH(pmi,
-	AC_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
+	AS_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
 	with_pmi=default)
 
 AC_ARG_WITH(pm,
-	AC_HELP_STRING([--with-pm=name],
+	AS_HELP_STRING([--with-pm=name],
 		[Specify the process manager for MPICH.  "no" or "none" are
                  valid values.  Multiple process managers may be specified as
                  long as they all use the same pmi interface by separating them
@@ -522,7 +522,7 @@ AC_ARG_ENABLE(threads,
 ],,enable_threads=default)
 
 AC_ARG_ENABLE(thread-cs,
-	AC_HELP_STRING([--enable-thread-cs=type],
+	AS_HELP_STRING([--enable-thread-cs=type],
 			[Choose the method used for critical sections
                          and other atomic updates when multiple
                          threads are present.  Values may be default, global,
@@ -530,7 +530,7 @@ AC_ARG_ENABLE(thread-cs,
                         ]),,enable_thread_cs=default)
 
 AC_ARG_ENABLE(refcount,
-	AC_HELP_STRING([--enable-refcount=type],
+	AS_HELP_STRING([--enable-refcount=type],
 			[Choose the method for ensuring atomic updates
                          to the reference counts for MPI objects.
                          Values may be lock-free or none.  The
@@ -540,7 +540,7 @@ AC_ARG_ENABLE(refcount,
                          enable_refcount=default)
 
 AC_ARG_ENABLE(mutex-timing,
-	AC_HELP_STRING([--enable-mutex-timing], [calculate the time spent waiting on mutexes]),
+	AS_HELP_STRING([--enable-mutex-timing], [calculate the time spent waiting on mutexes]),
 	AC_DEFINE(MPIU_MUTEX_WAIT_TIME,1,[Define to enable timing mutexes]))
 
 AC_ARG_ENABLE([predefined-refcount],
@@ -551,12 +551,12 @@ AC_ARG_ENABLE([predefined-refcount],
               [enable_predefined_refcount=default])
 
 AC_ARG_ENABLE(weak-symbols,
-	AC_HELP_STRING([--enable-weak-symbols],
+	AS_HELP_STRING([--enable-weak-symbols],
 			[Use weak symbols to implement PMPI routines (default)]),,
 		enable_weak_symbols=yes)
 
 AC_ARG_ENABLE(qmpi,
-	AC_HELP_STRING([--enable-qmpi],
+	AS_HELP_STRING([--enable-qmpi],
 			[Enable QMPI support (default)]),,
 		enable_qmpi=no)
 
@@ -582,12 +582,12 @@ AC_ARG_ENABLE([two-level-namespace],
               [enable_two_level_namespace=no])
 
 AC_ARG_ENABLE(multi-aliases,
-	AC_HELP_STRING([--enable-multi-aliases],
+	AS_HELP_STRING([--enable-multi-aliases],
 		[Multiple aliasing to support multiple fortran compilers (default)]),,
 		enable_multi_aliases=yes)
 
 AC_ARG_WITH([wrapper-dl-type],
-            [AC_HELP_STRING([--enable-wrapper-dl-type],
+            [AS_HELP_STRING([--enable-wrapper-dl-type],
                             [Dynamic loading model for alternate MPI
                              libraries, used when programs are linked
                              by mpicc compiler wrappers.  This only
@@ -602,7 +602,7 @@ AC_ARG_WITH([wrapper-dl-type],
 AC_SUBST([with_wrapper_dl_type])
 
 AC_ARG_ENABLE([long-double],
-              [AC_HELP_STRING([--disable-long-double],
+              [AS_HELP_STRING([--disable-long-double],
                               [Pass --disable-long-double to prevent the MPI
                                library from supporting the C "long double" type,
                                even if the C compiler supports it.  "long
@@ -612,7 +612,7 @@ AC_ARG_ENABLE([long-double],
               [enable_long_double=yes])
 
 AC_ARG_WITH(cross,
-	AC_HELP_STRING([--with-cross=file],
+	AS_HELP_STRING([--with-cross=file],
 		[Specify the values of variables that configure cannot
                  determine in a cross-compilation environment]),,
 		 with_cross=$MPID_DEFAULT_CROSS_FILE)
@@ -628,7 +628,7 @@ AC_ARG_WITH(name-publisher,
     [],
     with_namepublisher=$with_name_publisher,)
 
-AC_ARG_ENABLE(nolocal, AC_HELP_STRING([--enable-nolocal], [enables nolocal mode where shared-memory communication is disabled]),
+AC_ARG_ENABLE(nolocal, AS_HELP_STRING([--enable-nolocal], [enables nolocal mode where shared-memory communication is disabled]),
     AC_DEFINE(ENABLE_NO_LOCAL, 1, [Define to disable shared-memory communication]))
 
 AC_CANONICAL_TARGET
@@ -1904,7 +1904,7 @@ information to configure with the FCFLAGS environment variable.])
    #    gfortran
    # Add others as they become known
    AC_ARG_ENABLE(f77characterlen,
-       AC_HELP_STRING([--enable-f77characterlen],
+       AS_HELP_STRING([--enable-f77characterlen],
            [Select between int and size_t for the length of a Fortran CHARACTER, depending on the F77 compiler.  If --enable-f77characterlen=size_t is given, force the use of size_t.  This is used for passing Fortran CHARACTER data between C and Fortran, and is provided for experts.  Note that the documentation provided by compiler vendors on the calling convention may not be accurate.]),,enable_f77characterlen=no)
 
    # Set the default
@@ -4442,7 +4442,7 @@ PAC_C_MACRO_VA_ARGS
 AC_FUNC_ALLOCA
 # We don't use alloca unless USE_ALLOCA is also set.
 AC_ARG_ENABLE(alloca,
-	AC_HELP_STRING([--enable-alloca],
+	AS_HELP_STRING([--enable-alloca],
 		[Use alloca to allocate temporary memory if available]),,enable_alloca=no)
 if test "$enable_alloca" = yes ; then
     AC_DEFINE(USE_ALLOCA,1,[Define if alloca should be used if available])
@@ -4461,12 +4461,12 @@ fi
 # Look for some non-posix, but commonly provided functions
 # ----------------------------------------------------------------------------
 # mkstemp() is a better replacement for mktemp()
-AC_HAVE_FUNCS(mkstemp)
+AC_CHECK_FUNCS(mkstemp)
 if test "$ac_cv_func_mkstemp" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],mkstemp)
 fi
 # putenv() sets environment variable
-AC_HAVE_FUNCS(putenv)
+AC_CHECK_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
 fi
@@ -4658,7 +4658,7 @@ fi
 
 # Checkpointing
 AC_ARG_ENABLE(checkpointing,
-    [AC_HELP_STRING([--enable-checkpointing], [Enable application checkpointing])],
+    [AS_HELP_STRING([--enable-checkpointing], [Enable application checkpointing])],
     [ if test "$enableval" != "no" ; then
 	PAC_CHECK_HEADER_LIB_FATAL(blcr, libcr.h, cr, cr_init)
         AC_DEFINE(ENABLE_CHECKPOINTING,1,[Application checkpointing enabled])
