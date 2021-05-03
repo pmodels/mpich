@@ -2021,7 +2021,7 @@ if test "$enable_f77" = "yes" ; then
     PAC_COMPILER_SHLIB_FLAGS([F77],[$f77_shlib_conf])
     AC_SUBST_FILE([f77_shlib_conf])
 
-    AC_LANG_FORTRAN77
+    AC_LANG([Fortran 77])
     PAC_PROG_F77_EXCLAIM_COMMENTS(has_exclaim="yes",has_exclaim="no")
     PAC_PROG_F77_HAS_INCDIR(src)
     PAC_PROG_F77_LIBRARY_DIR_FLAG
@@ -2334,7 +2334,7 @@ if test "$enable_cxx" = "yes" ; then
         AC_MSG_WARN([The C++ compiler $CXX cannot compile a program containing the <string> header - this may indicate a problem with the C++ installation.  Consider configuing with --disable-cxx])
     fi
 
-    AC_LANG_CPLUSPLUS
+    AC_LANG([C++])
     AX_CXX_EXCEPTIONS
     AX_CXX_BOOL
     AX_CXX_NAMESPACES
@@ -2456,7 +2456,7 @@ AC_SUBST(bindings)
 # End of the bindings support
 # ----------------------------------------------------------------------------
 
-AC_LANG_C
+AC_LANG([C])
 #
 # ----------------------------------------------------------------------------
 # Done with the basic argument processing and decisions about which
@@ -3331,7 +3331,7 @@ if test "$enable_f77" = yes ; then
     PAC_PROG_F77_CHECK_SIZEOF_EXT(integer,$CROSS_F77_SIZEOF_INTEGER)
     PAC_PROG_F77_CHECK_SIZEOF_EXT(real,$CROSS_F77_SIZEOF_REAL)
     PAC_PROG_F77_CHECK_SIZEOF_EXT(double precision,$CROSS_F77_SIZEOF_DOUBLE_PRECISION)
-    AC_LANG_FORTRAN77
+    AC_LANG([Fortran 77])
     # If we have sizes for real and double, we do not need to call
     # mpir_get_fsize at run time.
     # For the size-defined types (e.g., integer*2), we assume that if the
@@ -3665,7 +3665,7 @@ dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain th
         fi
         eval $fullvar=$value
     done
-    AC_LANG_C
+    AC_LANG([C])
 
     # Now, handle the sized types
     #
@@ -4140,7 +4140,7 @@ dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain th
     AC_SUBST(REQI8)
     #
 
-    AC_LANG_C
+    AC_LANG([C])
 fi
 # ----------------------------------------------------------------------------
 # C++ types
@@ -4158,7 +4158,7 @@ MPI_F77_CXX_FLOAT_COMPLEX=MPI_DATATYPE_NULL
 MPI_F77_CXX_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
 MPI_F77_CXX_LONG_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
 if test "$enable_cxx" = "yes" ; then
-    AC_LANG_CPLUSPLUS
+    AC_LANG([C++])
     AC_CHECK_SIZEOF(bool)
 
     # Find a C type that matches the size of the C++ boolean type
@@ -4251,7 +4251,7 @@ using namespace std;
             esac
         fi
     fi
-    AC_LANG_C
+    AC_LANG([C])
 
     # Make these available to the collective operations and other code
     AC_DEFINE_UNQUOTED(MPIR_CXX_BOOL_VALUE,$MPIR_CXX_BOOL,[Define as the MPI Datatype handle for MPI::BOOL])

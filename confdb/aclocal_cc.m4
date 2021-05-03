@@ -359,7 +359,7 @@ AC_DEFUN([PAC_PROG_CC_WORKS],
 [AC_PROG_CC_WORKS
 AC_MSG_CHECKING([whether the C compiler sets its return status correctly])
 AC_LANG_SAVE
-AC_LANG_C
+AC_LANG([C])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([],[[int a = bzzzt;]])],notbroken=no,notbroken=yes)
 AC_MSG_RESULT($notbroken)
 if test "$notbroken" = "no" ; then
