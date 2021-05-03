@@ -101,10 +101,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_win_vni(MPIR_Win * win)
         /* FIXME: by fixing the recursive locking interface to account
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
-         * operation can be avoided since we are inside a finite loop. */\
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);     \
+         * operation can be avoided since we are inside a finite loop. */ \
+        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_);			  \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
+        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_);			     \
         MPIR_ERR_CHECK(mpi_errno);                               \
         _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \
@@ -179,6 +179,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_win_vni(MPIR_Win * win)
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
 
+#define MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_)            \
+    do {                                                        \
+        if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {      \
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
+        }                                                       \
+    } while (0)
+
+#define MPIDI_OFI_THREAD_CS_ENTER_REC_VCI_OPTIONAL(vci_)        \
+    do {                                                        \
+        if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {      \
+            MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(vci_).lock);     \
+        }                                                       \
+    } while (0)
+
+#define MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_)         \
+    do {                                                    \
+        if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {  \
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock); \
+        }                                                   \
+    } while (0)
+
 #define MPIDI_OFI_CALL_RETURN(FUNC, _ret)                               \
         do {                                                            \
             (_ret) = FUNC;                                              \
@@ -201,7 +222,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_win_vni(MPIR_Win * win)
 
 #define MPIDI_OFI_REQUEST_CREATE(req, kind, vni) \
     do {                                                      \
-        (req) = MPIR_Request_create_from_pool(kind, vni, 2);  \
+        MPIDI_CH4_REQUEST_CREATE(req, kind, vni, 2);                    \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
     } while (0)
 
@@ -223,7 +244,13 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_winfo_mr_key(MPIR_Win * w, int rank)
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
 {
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    /* Lockless mode requires to use atomic operation, in order to make
+     * cntrs thread-safe. */
+    MPL_atomic_fetch_add_uint64(MPIDI_OFI_WIN(win).issued_cntr, 1);
+#else
     (*MPIDI_OFI_WIN(win).issued_cntr)++;
+#endif
 }
 
 /* Calculate the OFI context index.
@@ -242,7 +269,21 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(int vni, int nic)
     /* NOTE: shared with ctx[0] */
     int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
 #endif
+
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    MPL_atomic_fetch_add_uint64(&MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr, 1);
+#else
     MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr++;
+#endif
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_set(int ctx_idx, int val)
+{
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    MPL_atomic_store_uint64(&MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr, val);
+#else
+    MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr = val;
+#endif
 }
 
 /* Externs:  see util.c for definition */

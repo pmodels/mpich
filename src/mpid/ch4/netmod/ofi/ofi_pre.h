@@ -170,7 +170,7 @@ typedef struct {
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    int util_id;
+    MPL_atomic_int_t util_id;
     MPI_Datatype datatype;
     union {
         struct {
@@ -216,9 +216,18 @@ typedef struct {
     int sep_tx_idx;             /* transmit context index for scalable EP,
                                  * -1 means using non scalable EP. */
     int vni;
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    MPL_atomic_uint64_t *issued_cntr;   /* atomic counter in support of lockless and runtime mt models */
+#else
     uint64_t *issued_cntr;
+#endif
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    MPL_atomic_uint64_t issued_cntr_v;  /* atomic counter in support of lockless and runtime mt models */
+#else
     uint64_t issued_cntr_v;     /* main body of an issued counter,
                                  * if we are to use per-window counter */
+#endif
+
     struct fid_cntr *cmpl_cntr;
     uint64_t win_id;
     struct MPIDI_OFI_win_request *syncQ;

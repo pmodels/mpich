@@ -963,7 +963,7 @@ static int create_vni_context(int vni, int nic)
     MPIDI_OFI_global.ctx[ctx_idx].domain = domain;
     MPIDI_OFI_global.ctx[ctx_idx].av = av;
     MPIDI_OFI_global.ctx[ctx_idx].rma_cmpl_cntr = rma_cmpl_cntr;
-    MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr = 0;
+    MPIDI_OFI_cntr_set(ctx_idx, 0);
     MPIDI_OFI_global.ctx[ctx_idx].ep = ep;
     MPIDI_OFI_global.ctx[ctx_idx].cq = cq;
     MPIDI_OFI_global.ctx[ctx_idx].tx = tx;
@@ -1613,6 +1613,10 @@ bool match_global_settings(struct fi_info * prov)
     int MPICH_REQUIRE_RDM = 1;  /* hack to use CHECK_CAP macro */
     CHECK_CAP(MPICH_REQUIRE_RDM, prov->ep_attr->type != FI_EP_RDM);
 
+    int MPICH_REQURE_FI_THREAD_SAFE = 1;        /* hack to use CHECK_CAP macro */
+    CHECK_CAP(MPICH_REQURE_FI_THREAD_SAFE, MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS &&
+              prov->domain_attr->threading != FI_THREAD_SAFE);
+
     return true;
 }
 
@@ -1823,7 +1827,11 @@ static void init_hints(struct fi_info *hints)
     /* FI_EP_RDM:  Reliable datagram                                            */
     /* ------------------------------------------------------------------------ */
     hints->addr_format = FI_FORMAT_UNSPEC;
-    hints->domain_attr->threading = FI_THREAD_DOMAIN;
+    if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {
+        hints->domain_attr->threading = FI_THREAD_DOMAIN;
+    } else {
+        hints->domain_attr->threading = FI_THREAD_SAFE;
+    }
     if (MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS) {
         hints->domain_attr->data_progress = FI_PROGRESS_AUTO;
     } else {

@@ -71,6 +71,7 @@ cvars:
         Specifies the CH4 multi-threading model. Possible values are:
         direct (default)
         handoff
+        lockless
 
     - name        : MPIR_CVAR_CH4_NUM_VCIS
       category    : CH4
@@ -240,6 +241,7 @@ static int set_runtime_configurations(void);
 static const char *mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
     "direct",
     "handoff",
+    "lockless",
 };
 
 static const char *get_mt_model_name(int mt)
@@ -544,6 +546,15 @@ int MPID_Init_local(int requested, int *provided)
         print_runtime_configurations();
 #endif
 
+    /* These mutex are used for the lockless MT model. */
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
+        for (int i = 0; i < MPIR_REQUEST_NUM_POOLS; i++) {
+            int err;
+            MPID_Thread_mutex_create(&(MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[i]), &err);
+            MPIR_Assert(err == 0);
+        }
+    }
+
     init_av_table();
 
     mpi_errno = generic_init();
@@ -566,7 +577,11 @@ int MPID_Init_local(int requested, int *provided)
         MPIR_Assert(err == 0);
 
         /* NOTE: 1-1 vci-pool mapping */
-        MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
+        /* For lockless, use a separate set of mutexes */
+        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS)
+            MPIR_Request_register_pool_lock(i, &MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[i]);
+        else
+            MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
 
         /* TODO: workq */
     }

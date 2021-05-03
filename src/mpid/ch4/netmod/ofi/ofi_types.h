@@ -217,7 +217,11 @@ typedef struct {
     struct fid_av *av;
     struct fid_ep *ep;
     struct fid_cntr *rma_cmpl_cntr;
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    MPL_atomic_uint64_t rma_issued_cntr;        /* atomic version in support of lockless mt model */
+#else
     uint64_t rma_issued_cntr;
+#endif
     /* rma using shared TX context */
     struct fid_stx *rma_stx_ctx;
     /* rma using dedicated scalable EP */

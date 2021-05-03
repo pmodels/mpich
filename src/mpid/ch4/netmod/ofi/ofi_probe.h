@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
         remote_proc = MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote);
 
     if (message) {
-        rreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, vni_dst, 1);
+        MPIDI_CH4_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__MPROBE, vni_dst, 1);
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
         rreq = &r;
@@ -46,7 +46,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, comm->recvcontext_id + context_offset, tag);
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_PEEK;
-    MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_START;
+    MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_START);
 
     msg.msg_iov = NULL;
     msg.desc = NULL;
@@ -63,19 +63,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     if (ofi_err == -FI_ENOMSG) {
         *flag = 0;
         if (message)
-            MPIR_Request_free_unsafe(rreq);
+            MPIDI_CH4_REQUEST_FREE(rreq);
         goto fn_exit;
     }
 
     MPIDI_OFI_CALL(ofi_err, trecvmsg);
-    MPIDI_OFI_PROGRESS_WHILE(MPIDI_OFI_REQUEST(rreq, util_id) == MPIDI_OFI_PEEK_START, vni_dst);
+    MPIDI_OFI_PROGRESS_WHILE(MPL_atomic_acquire_load_int(&(MPIDI_OFI_REQUEST(rreq, util_id))) ==
+                             MPIDI_OFI_PEEK_START, vni_dst);
 
-    switch (MPIDI_OFI_REQUEST(rreq, util_id)) {
+    /* Ordering constraint for util_id is unnecessary after the thread unblocks */
+    switch (MPL_atomic_relaxed_load_int(&(MPIDI_OFI_REQUEST(rreq, util_id)))) {
         case MPIDI_OFI_PEEK_NOT_FOUND:
             *flag = 0;
 
             if (message)
-                MPIR_Request_free_unsafe(rreq);
+                MPIDI_CH4_REQUEST_FREE(rreq);
 
             goto fn_exit;
             break;
@@ -129,11 +131,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 
     int vni_src, vni_dst;
     MPIDI_OFI_PROBE_VNIS(vni_src, vni_dst);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
+    MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_dst);
     /* Set flags for mprobe peek, when ready */
     mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, vni_src, vni_dst,
                                     flag, status, message, FI_CLAIM | FI_COMPLETION);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_dst).lock);
+    MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_dst);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_exit;
@@ -163,10 +165,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
     } else {
         int vni_src, vni_dst;
         MPIDI_OFI_PROBE_VNIS(vni_src, vni_dst);
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
+        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_dst);
         mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr,
                                         vni_src, vni_dst, flag, status, NULL, 0ULL);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_dst).lock);
+        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_dst);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IPROBE);
