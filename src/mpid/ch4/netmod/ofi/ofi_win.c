@@ -964,7 +964,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
             (MPIDI_OFI_target_mr_t *) MPL_malloc(sizeof(MPIDI_OFI_target_mr_t), MPL_MEM_RMA);
         MPIR_Assert(target_mr);
         /* Store addr only for calculating offset when !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS */
-        target_mr->addr = (uint64_t) target_mrs[i].base;
+        target_mr->addr = (uintptr_t) target_mrs[i].base;
         target_mr->mr_key = target_mrs[i].mr_key;
 
         mpl_err = MPL_gavl_tree_insert(MPIDI_OFI_WIN(win).dwin_target_mrs[i],

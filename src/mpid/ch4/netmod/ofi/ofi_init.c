@@ -1947,12 +1947,12 @@ static void dump_global_settings(void)
     fprintf(stdout, "max_buffered_send: %" PRIu64 "\n", MPIDI_OFI_global.max_buffered_write);
     fprintf(stdout, "max_buffered_write: %" PRIu64 "\n", MPIDI_OFI_global.max_buffered_send);
     fprintf(stdout, "max_msg_size: %" PRIu64 "\n", MPIDI_OFI_global.max_msg_size);
-    fprintf(stdout, "max_order_raw: %lu\n", MPIDI_OFI_global.max_order_raw);
-    fprintf(stdout, "max_order_war: %lu\n", MPIDI_OFI_global.max_order_war);
-    fprintf(stdout, "max_order_waw: %lu\n", MPIDI_OFI_global.max_order_waw);
-    fprintf(stdout, "tx_iov_limit: %lu\n", MPIDI_OFI_global.tx_iov_limit);
-    fprintf(stdout, "rx_iov_limit: %lu\n", MPIDI_OFI_global.rx_iov_limit);
-    fprintf(stdout, "rma_iov_limit: %lu\n", MPIDI_OFI_global.rma_iov_limit);
+    fprintf(stdout, "max_order_raw: %zd\n", MPIDI_OFI_global.max_order_raw);
+    fprintf(stdout, "max_order_war: %zd\n", MPIDI_OFI_global.max_order_war);
+    fprintf(stdout, "max_order_waw: %zd\n", MPIDI_OFI_global.max_order_waw);
+    fprintf(stdout, "tx_iov_limit: %zd\n", MPIDI_OFI_global.tx_iov_limit);
+    fprintf(stdout, "rx_iov_limit: %zd\n", MPIDI_OFI_global.rx_iov_limit);
+    fprintf(stdout, "rma_iov_limit: %zd\n", MPIDI_OFI_global.rma_iov_limit);
     fprintf(stdout, "max_mr_key_size: %" PRIu64 "\n", MPIDI_OFI_global.max_mr_key_size);
 }
 

@@ -1075,15 +1075,15 @@ AC_CHECK_FUNCS(inet_ntop getifaddrs)
 
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
-AX_GCC_VAR_ATTRIBUTE(aligned)
-AX_GCC_VAR_ATTRIBUTE(used)
 
-dnl Check for fallthrough attribute
 PAC_PUSH_ALL_FLAGS
 dnl This check requires removing -Wall and -Wextra first or it will fail. Just
 dnl clear them all.
 CFLAGS=""
-AX_GCC_FUNC_ATTRIBUTE(fallthrough)
+
+AX_GCC_VAR_ATTRIBUTE(aligned)
+AX_GCC_VAR_ATTRIBUTE(used)
+
 PAC_POP_ALL_FLAGS
 
 dnl Final output
