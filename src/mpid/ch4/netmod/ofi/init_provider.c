@@ -103,6 +103,7 @@ static int find_provider(struct fi_info **prov_out)
             prov->caps |= FI_DIRECTED_RECV;
         }
 
+        provname = prov->fabric_attr->prov_name;
         /* Initialize MPIDI_OFI_global.settings */
         MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings, provname);
         /* NOTE: we fill the hints with optimal settings. In order to work for providers
@@ -110,7 +111,7 @@ static int find_provider(struct fi_info **prov_out)
          * relax settings. The following code does this for the providers that we have tested.
          */
         MPIDI_OFI_init_hints(hints);
-        hints->fabric_attr->prov_name = MPL_strdup(prov->fabric_attr->prov_name);
+        hints->fabric_attr->prov_name = MPL_strdup(provname);
         hints->caps = prov->caps;
         hints->addr_format = prov->addr_format;
 
