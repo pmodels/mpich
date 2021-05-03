@@ -260,11 +260,9 @@ static int get_pool_cont_uuids(const char *path, struct duns_attr_t *attr)
     if (!bypass_duns) {
         attr->da_no_prefix = true;
         rc = duns_resolve_path(path, attr);
-        if (rc) {
+        if (rc)
             PRINT_MSG(stderr, "duns_resolve_path() failed on path %s (%d)\n", path, rc);
-            return rc;
-        }
-        return 0;
+        return rc;
     }
 
     /* use the env variables to retrieve the pool and container */
@@ -313,7 +311,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     rc = get_pool_cont_uuids(cont->cont_name, &cont->attr);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
-        return;
+        goto err_free;
     }
 
     /** Info object setting should override */
@@ -338,7 +336,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     if (rc) {
         PRINT_MSG(stderr, "Failed to connect to DAOS Pool (%d)\n", rc);
         *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
-        return;
+        goto err_free;
     }
 
     cont->poh = cont->p->open_hdl;
@@ -403,7 +401,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
   err_obj:
     dfs_release(cont->obj);
     if (fd->access_mode & ADIO_CREATE)
-        dfs_remove(cont->dfs, NULL, cont->obj_name, true, NULL);
+        dfs_remove(cont->dfs, NULL, cont->obj_name, false, NULL);
   err_cont:
     adio_daos_coh_release(cont->c);
     cont->c = NULL;
@@ -411,6 +409,10 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     adio_daos_poh_release(cont->p);
     cont->p = NULL;
   err_free:
+    if (cont->attr.da_rel_path) {
+        MPL_direct_free(cont->attr.da_rel_path);
+        cont->attr.da_rel_path = NULL;
+    }
     ADIOI_Free(cont->obj_name);
     ADIOI_Free(cont->cont_name);
     goto out;
@@ -508,6 +510,7 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
     struct adio_daos_hdl *p, *c;
     dfs_t *dfs;
     char *obj_name, *cont_name;
+    dfs_obj_t *parent = NULL;
     struct duns_attr_t attr = { };
     static char myname[] = "ADIOI_DAOS_DELETE";
     int rc;
@@ -525,7 +528,7 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
     rc = get_pool_cont_uuids(cont_name, &attr);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
-        return;
+        goto out_free;
     }
 
     rc = adio_daos_poh_lookup_connect(attr.da_puuid, &p);
@@ -542,30 +545,45 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
     }
 
     if (c->dfs == NULL) {
-        /* Mount a flat namespace on the container */
+        /* Mount DFS namespace on the container */
         rc = dfs_mount(p->open_hdl, c->open_hdl, O_RDWR, &dfs);
         if (rc) {
             PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
             *error_code = ADIOI_DAOS_err(myname, obj_name, __LINE__, rc);
             goto out_cont;
         }
+        /* Track the DFS handle with the container one */
         c->dfs = dfs;
     }
 
-    /* Remove the file from the flat namespace */
-    rc = dfs_remove(c->dfs, NULL, obj_name, true, NULL);
+    /* Lookup the parent directory. this will be NULL in case of root */
+    if (attr.da_rel_path) {
+        rc = dfs_lookup(c->dfs, attr.da_rel_path, O_RDWR, &parent, NULL, NULL);
+        if (rc) {
+            *error_code = ADIOI_DAOS_err(myname, obj_name, __LINE__, rc);
+            goto out_cont;
+        }
+    }
+
+    /* Remove the file */
+    rc = dfs_remove(c->dfs, parent, obj_name, false, NULL);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, obj_name, __LINE__, rc);
-        goto out_cont;
+        goto out_dfs;
     }
 
     *error_code = MPI_SUCCESS;
 
+  out_dfs:
+    if (parent)
+        dfs_release(parent);
   out_cont:
     adio_daos_coh_release(c);
   out_pool:
     adio_daos_poh_release(p);
   out_free:
+    if (attr.da_rel_path)
+        MPL_direct_free(attr.da_rel_path);
     ADIOI_Free(obj_name);
     ADIOI_Free(cont_name);
     return;
