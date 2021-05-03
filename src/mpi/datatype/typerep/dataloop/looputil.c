@@ -124,21 +124,21 @@ static int external32_basic_convert(char *dest_buf,
     if (src_el_size == dest_el_size) {
         if (src_el_size == 2) {
             while (src_ptr != src_end) {
-                BASIC_convert16(*(const int16_t *) src_ptr, *(int16_t *) dest_ptr);
+                BASIC_convert16(*(const uint16_t *) src_ptr, *(uint16_t *) dest_ptr);
 
                 src_ptr += src_el_size;
                 dest_ptr += dest_el_size;
             }
         } else if (src_el_size == 4) {
             while (src_ptr != src_end) {
-                BASIC_convert32(*(const int32_t *) src_ptr, *(int32_t *) dest_ptr);
+                BASIC_convert32(*(const uint32_t *) src_ptr, *(uint32_t *) dest_ptr);
 
                 src_ptr += src_el_size;
                 dest_ptr += dest_el_size;
             }
         } else if (src_el_size == 8) {
             while (src_ptr != src_end) {
-                BASIC_convert64(*(const int64_t *) src_ptr, *(int64_t *) dest_ptr);
+                BASIC_convert64(*(const uint64_t *) src_ptr, *(uint64_t *) dest_ptr);
 
                 src_ptr += src_el_size;
                 dest_ptr += dest_el_size;
@@ -147,13 +147,13 @@ static int external32_basic_convert(char *dest_buf,
     } else {
         if (src_el_size == 4) {
             while (src_ptr != src_end) {
-                int32_t tmp;
-                BASIC_convert32((*(const int32_t *) src_ptr), tmp);
+                uint32_t tmp;
+                BASIC_convert32((*(const uint32_t *) src_ptr), tmp);
                 if (dest_el_size == 8) {
                     /* NOTE: it's wrong if it is unsigned and highest bit is 1, but
                      * at least only happens when number is in the higher half of the
                      * range. It won't work if value overflow anyway. */
-                    *(int64_t *) dest_ptr = tmp;
+                    *(int64_t *) dest_ptr = (int32_t) tmp;
                 } else {
                     MPIR_Assert(0 && "Unhandled conversion of unequal size");
                 }
@@ -163,11 +163,11 @@ static int external32_basic_convert(char *dest_buf,
             }
         } else if (src_el_size == 8) {
             while (src_ptr != src_end) {
-                int32_t tmp;
+                uint32_t tmp;
                 if (dest_el_size == 4) {
                     /* NOTE: obviously won't work if overflow, but it is user's responsibility */
-                    tmp = *(const int64_t *) src_ptr;
-                    BASIC_convert32(tmp, *(int32_t *) dest_ptr);
+                    tmp = (int32_t) (*(const int64_t *) src_ptr);
+                    BASIC_convert32(tmp, *(uint32_t *) dest_ptr);
                 } else {
                     MPIR_Assert(0 && "Unhandled conversion of unequal size");
                 }
