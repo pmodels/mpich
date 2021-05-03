@@ -69,6 +69,7 @@ int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
     int mpl_err, mpi_errno = MPI_SUCCESS;
     int device_count;
     int my_max_dev_id, node_max_dev_id = -1;
+    MPL_gpu_device_handle_t dev_handle;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GPU_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GPU_MPI_INIT_HOOK);
@@ -93,7 +94,8 @@ int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
         MPIDI_GPUI_dev_id_t *id_obj =
             (MPIDI_GPUI_dev_id_t *) MPL_malloc(sizeof(MPIDI_GPUI_dev_id_t), MPL_MEM_OTHER);
         MPIR_Assert(id_obj);
-        id_obj->local_dev_id = i;
+        MPL_gpu_get_dev_handle(i, &dev_handle);
+        MPL_gpu_get_dev_id(dev_handle, &id_obj->local_dev_id);
         id_obj->global_dev_id = global_ids[i];
         HASH_ADD_INT(MPIDI_GPUI_global.local_to_global_map, local_dev_id, id_obj, MPL_MEM_OTHER);
 
