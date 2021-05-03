@@ -227,12 +227,7 @@ static int choose_netmod(void)
     goto fn_exit;
 }
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-/* NOTE: MPIDI_CH4_USE_MT_RUNTIME currently are not supported. The key part is
- * guarded by "#if 0".
- */
-/* TODO: move them to ch4i_workq_init.c. */
-
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
 static const char *get_mt_model_name(int mt);
 static void print_runtime_configurations(void);
 static int parse_mt_model(const char *name);
@@ -273,12 +268,13 @@ static int parse_mt_model(const char *name)
     }
     return -1;
 }
+#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 
 static int set_runtime_configurations(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-#if 0   /* defined(MPIDI_CH4_USE_MT_RUNTIME) */
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
     int mt = parse_mt_model(MPIR_CVAR_CH4_MT_MODEL);
     if (mt < 0)
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
@@ -292,13 +288,11 @@ static int set_runtime_configurations(void)
                "unless --enable-ch4-mt=runtime is given at the configure time.\n");
 #endif /* MPIDI_CH4_USE_MT_RUNTIME */
 
-#if 0   /* defined(MPIDI_CH4_USE_MT_RUNTIME) */
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
   fn_fail:
 #endif
     return mpi_errno;
 }
-
-#endif /* MPIDI_CH4_USE_WORK_QUEUES */
 
 static int create_init_comm(MPIR_Comm ** comm)
 {
@@ -536,15 +530,19 @@ int MPID_Init_local(int requested, int *provided)
         MPIR_Assert(err == 0);
     }
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = set_runtime_configurations();
-    MPIR_ERR_CHECK(mpi_errno);
+    if (mpi_errno != MPI_SUCCESS)
+        return mpi_errno;
 
-    MPIDI_workq_init(&MPIDI_global.workqueue);
-
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
+    int rank = MPIR_Process.rank;
     if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
         print_runtime_configurations();
-#endif
+#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
+
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPIDI_workq_init(&MPIDI_global.workqueue);
+#endif /* #ifdef MPIDI_CH4_USE_WORK_QUEUES */
 
     /* These mutex are used for the lockless MT model. */
     if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {

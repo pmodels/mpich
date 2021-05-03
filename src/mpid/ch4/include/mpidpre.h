@@ -24,11 +24,6 @@
 #include "ch4_csel_container.h"
 #include "ch4i_workq_types.h"
 
-/* Currently, workq is a configure-time only option and guarded by macro
- * MPIDI_CH4_USE_WORK_QUEUES. If we want to enable runtime option, we will
- * need to switch everywhere from "#ifdef MPIDI_CH4_USE_WORK_QUEUES" into
- * runtime "if - else".
- */
 #ifdef MPIDI_CH4_USE_MT_DIRECT
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_DIRECT
 #elif defined MPIDI_CH4_USE_MT_HANDOFF
