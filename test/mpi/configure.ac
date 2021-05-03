@@ -23,7 +23,7 @@ AC_INIT([mpich-testsuite],
         [mpich-testsuite],
         [http://www.mpich.org/])
 
-AC_CONFIG_HEADER(include/mpitestconf.h)
+AC_CONFIG_HEADERS([include/mpitestconf.h])
 AH_TOP([/*
  * Copyright (C) by Argonne National Laboratory
  *     See COPYRIGHT in top-level directory

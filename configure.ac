@@ -3,7 +3,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-AC_PREREQ(2.63)
+AC_PREREQ([2.69])
 
 dnl Process this file with autoconf to produce a configure script.
 dnl
@@ -201,7 +201,7 @@ fi
 echo "Running on system: `uname -a`"
 
 dnl Definitions will be placed in this file rather than in the DEFS variable
-AC_CONFIG_HEADER(src/include/mpichconf.h)
+AC_CONFIG_HEADERS([src/include/mpichconf.h])
 AH_TOP([/*
  * Copyright (C) by Argonne National Laboratory
  *     See COPYRIGHT in top-level directory
@@ -5312,7 +5312,7 @@ fi
 
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
 dnl directory
-AC_OUTPUT(Makefile \
+AC_CONFIG_FILES([Makefile \
           examples/Makefile \
           test/Makefile \
           test/commands/Makefile \
@@ -5345,7 +5345,8 @@ AC_OUTPUT(Makefile \
           doc/installguide/Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
-          test/commands/cmdtests)
+          test/commands/cmdtests])
+AC_OUTPUT
 
 if test ${device_name} = "ch4" ; then
 cat <<EOF

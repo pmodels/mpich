@@ -7,7 +7,7 @@
 # autoconf --localdir=../confdb configure.ac
 # (or wherever the confdb is)
 #
-AC_PREREQ([2.63])
+AC_PREREQ([2.69])
 
 m4_include([version.m4])
 dnl 2nd arg is intentionally underquoted
@@ -51,7 +51,7 @@ if test -n "$CONFIGURE_ARGS" ; then
     AC_MSG_NOTICE([Configuring with args $CONFIGURE_ARGS])
 fi
 
-AC_CONFIG_HEADER(adio/include/romioconf.h)
+AC_CONFIG_HEADERS([adio/include/romioconf.h])
 AH_TOP([/*
  * Copyright (C) by Argonne National Laboratory
  *     See COPYRIGHT in top-level directory

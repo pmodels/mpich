@@ -39,7 +39,7 @@ AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive -Werror foreign 1.12.3 subdir
 
 AM_PROG_AR
 
-AC_CONFIG_HEADER(libhydra/include/hydra_config.h)
+AC_CONFIG_HEADERS([libhydra/include/hydra_config.h])
 
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
