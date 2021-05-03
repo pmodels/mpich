@@ -16,6 +16,7 @@ MPIDI_av_table_t *MPIDI_av_table0;
 MPIDI_NM_funcs_t *MPIDI_NM_func;
 MPIDI_NM_native_funcs_t *MPIDI_NM_native_func;
 
+MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[MPIR_REQUEST_NUM_POOLS];
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
 struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC];
 

@@ -190,7 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
                     MPIR_Request_add_ref(*request);
                     MPID_Request_complete(*request);
                     /* Need to free here because we don't return this to user */
-                    MPIR_Request_free_unsafe(unexp_req);
+                    MPIDI_CH4_REQUEST_FREE(unexp_req);
                 }
             } else {
                 /* if the unexpected recv is not ready, we put user recv buffer info and let

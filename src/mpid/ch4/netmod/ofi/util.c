@@ -202,7 +202,8 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
                  * important information and remove the element from the list. */
                 if (recv_elem->peek) {
                     MPIR_STATUS_SET_COUNT(recv_elem->localreq->status, info->msgsize);
-                    MPIDI_OFI_REQUEST(recv_elem->localreq, util_id) = MPIDI_OFI_PEEK_FOUND;
+                    MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(recv_elem->localreq, util_id)),
+                                                 MPIDI_OFI_PEEK_FOUND);
                     MPIDIU_map_erase(MPIDI_OFI_COMM(recv_elem->comm_ptr).huge_recv_counters,
                                      recv_elem->localreq->handle);
                     MPL_free(recv_elem);

@@ -365,6 +365,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress_unsafe(void)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_workq_elemt_t *workq_elemt = NULL;
 
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS || MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT)
+        goto fn_exit;
+
     MPIDI_workq_dequeue(&MPIDI_global.workqueue, (void **) &workq_elemt);
     while (workq_elemt != NULL) {
         mpi_errno = MPIDI_workq_dispatch(workq_elemt);
@@ -373,8 +376,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress_unsafe(void)
         MPIDI_workq_dequeue(&MPIDI_global.workqueue, (void **) &workq_elemt);
     }
 
-  fn_fail:
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress(void)

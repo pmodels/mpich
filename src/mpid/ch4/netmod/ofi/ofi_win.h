@@ -8,6 +8,18 @@
 
 #include "ofi_impl.h"
 
+/* DBGST: check correctness */
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_win_read_issued_cntr(MPIR_Win * win)
+{
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    /* Lockless mode requires to use atomic operation, in order to make
+     * cntrs thread-safe. */
+    return MPL_atomic_acquire_load_uint64(MPIDI_OFI_WIN(win).issued_cntr);
+#else
+    return *(MPIDI_OFI_WIN(win).issued_cntr);
+#endif
+}
+
 /*
  * Blocking progress function to complete outstanding RMA operations on the input window.
  */
@@ -23,7 +35,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_do_progress(MPIR_Win * win, int vni)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_DO_PROGRESS);
 
     while (1) {
-        tcount = *MPIDI_OFI_WIN(win).issued_cntr;
+        tcount = MPIDI_OFI_win_read_issued_cntr(win);
         donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
 
         MPIR_Assert(donecount <= tcount);
@@ -33,7 +45,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_do_progress(MPIR_Win * win, int vni)
             MPIDI_OFI_PROGRESS(vni);
             /* rma issued_cntr may be updated during MPIDI_OFI_PROGRESS if active messages
              * arrive and trigger RDMA calls, so we need to update it after progress call */
-            tcount = *MPIDI_OFI_WIN(win).issued_cntr;
+            tcount = MPIDI_OFI_win_read_issued_cntr(win);
             donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
             itercount++;
 

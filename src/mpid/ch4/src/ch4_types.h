@@ -37,6 +37,7 @@ enum {
 #define MPIDI_PROGRESS_HOOKS  (1)
 #define MPIDI_PROGRESS_NM     (1<<1)
 #define MPIDI_PROGRESS_SHM    (1<<2)
+#define MPIDI_PROGRESS_NM_LOCKLESS     (1<<3)   /* to support lockless MT model */
 
 #define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
 
@@ -236,6 +237,8 @@ typedef struct {
 #define MPIDIU_THREAD_ALLOC_MEM_MUTEX     MPIDI_global.m[7]
 
 #define MAX_CH4_MUTEXES 8
+
+extern MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[REQUEST_POOL_MAX];
 
 /* per-VCI structure -- using union to force minimum size */
 typedef union MPIDI_vci {
