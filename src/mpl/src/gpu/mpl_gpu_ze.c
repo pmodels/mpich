@@ -292,10 +292,7 @@ int MPL_gpu_unregister_host(const void *ptr)
 
 int MPL_gpu_get_dev_id(MPL_gpu_device_handle_t dev_handle, int *dev_id)
 {
-    ze_device_properties_t devproerty;
-
-    zeDeviceGetProperties(dev_handle, &devproerty);
-    *dev_id = devproerty.deviceId;
+    *dev_id = dev_handle;
     return MPL_SUCCESS;
 }
 
