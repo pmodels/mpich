@@ -532,8 +532,8 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #if defined HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK && HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK
         case MPI_COMBINER_HINDEXED_BLOCK:
             is_hindexed_block = 1;
-            /* fall through */
 #endif
+            /* fall through */
         case MPI_COMBINER_INDEXED_BLOCK:
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_INDEXED_BLOCK\n");
