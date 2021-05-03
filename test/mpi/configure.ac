@@ -1061,14 +1061,14 @@ dnl                     ac_cv_sizeof_MPI_Offset=`cat conftestval`
 dnl                 else
 dnl                     # failure
 dnl                     AC_MSG_WARN([Unable to run the program to determine the size of MPI_Offset])
-dnl                     echo "configure: failed program was:" >&AC_FD_CC
-dnl                     cat conftest.c >&AC_FD_CC
+dnl                     echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+dnl                     cat conftest.c >&AS_MESSAGE_LOG_FD
 dnl                 fi
 dnl             else
 dnl                 # failure
 dnl                 AC_MSG_WARN([Unable to build the program to determine the size of MPI_Offset])
-dnl                 echo "configure: failed program was:" >&AC_FD_CC
-dnl                 cat conftest.c >&AC_FD_CC
+dnl                 echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+dnl                 cat conftest.c >&AS_MESSAGE_LOG_FD
 dnl             fi
 dnl             rm -f conftest*
 dnl         ])
