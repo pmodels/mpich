@@ -153,6 +153,15 @@ static int find_provider(struct fi_info **prov_out)
                             mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
     }
 
+    /* last sanity check */
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
+        MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_SAFE,
+                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+    } else {
+        MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_DOMAIN,
+                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+    }
+
     MPIDI_OFI_set_auto_progress(prov_list);
     *prov_out = prov_list;
 

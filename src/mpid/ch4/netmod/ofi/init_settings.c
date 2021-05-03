@@ -116,7 +116,11 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
     /* FI_EP_RDM:  Reliable datagram                                            */
     /* ------------------------------------------------------------------------ */
     hints->addr_format = FI_FORMAT_UNSPEC;
-    hints->domain_attr->threading = FI_THREAD_DOMAIN;
+    if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {
+        hints->domain_attr->threading = FI_THREAD_DOMAIN;
+    } else {
+        hints->domain_attr->threading = FI_THREAD_SAFE;
+    }
     MPIDI_OFI_set_auto_progress(hints);
     hints->domain_attr->resource_mgmt = FI_RM_ENABLED;
     hints->domain_attr->av_type = MPIDI_OFI_ENABLE_AV_TABLE ? FI_AV_TABLE : FI_AV_MAP;
