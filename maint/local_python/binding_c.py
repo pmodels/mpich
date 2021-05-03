@@ -1078,7 +1078,7 @@ def dump_function_normal(func, state_name):
     # ----
     G.out.append("/* ... body of routine ... */")
 
-    if func['_map_type'] == "BIG":
+    if func['_map_type'] == "BIG" and 'code-large_count' not in func:
         # BIG but internally is using MPI_Aint
         impl_args_save = copy.copy(func['_impl_arg_list'])
 

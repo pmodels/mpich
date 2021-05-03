@@ -359,11 +359,11 @@ void MPII_Dataloop_alloc_and_copy(int kind,
             /* need space for dataloop pointers and extents */
             ptr_sz = count * sizeof(MPII_Dataloop *);
             extent_sz = count * sizeof(MPI_Aint);
-            MPL_FALLTHROUGH;
+            /* fall through */
         case MPII_DATALOOP_KIND_INDEXED:
             /* need space for block sizes */
             blk_sz = count * sizeof(MPI_Aint);
-            MPL_FALLTHROUGH;
+            /* fall through */
         case MPII_DATALOOP_KIND_BLOCKINDEXED:
             /* need space for block offsets */
             off_sz = count * sizeof(MPI_Aint);

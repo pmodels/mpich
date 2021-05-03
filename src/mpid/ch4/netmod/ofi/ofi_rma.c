@@ -123,8 +123,8 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
             MPIDI_OFI_load_iov(origin_addr, origin_count, origin_datatype, origin_len,
                                &origin_iov_offset, origin_iov);
         if (j == target_iov_offset)
-            MPIDI_OFI_load_iov((const void *) target_mr.addr, target_count, target_datatype,
-                               target_len, &target_iov_offset, target_iov);
+            MPIDI_OFI_load_iov((const void *) (uintptr_t) target_mr.addr, target_count,
+                               target_datatype, target_len, &target_iov_offset, target_iov);
 
         msg_len = MPL_MIN(origin_iov[origin_cur].iov_len, target_iov[target_cur].iov_len);
 
@@ -396,7 +396,7 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
     req->noncontig.put.origin.total_bytes = origin_bytes;
 
     /* target */
-    req->noncontig.put.target.base = (void *) target_mr.addr;
+    req->noncontig.put.target.base = (void *) (uintptr_t) target_mr.addr;
     req->noncontig.put.target.count = target_count;
     req->noncontig.put.target.datatype = target_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
@@ -456,7 +456,7 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
     req->noncontig.get.origin.total_bytes = origin_bytes;
 
     /* target */
-    req->noncontig.get.target.base = (void *) target_mr.addr;
+    req->noncontig.get.target.base = (void *) (uintptr_t) target_mr.addr;
     req->noncontig.get.target.count = target_count;
     req->noncontig.get.target.datatype = target_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
