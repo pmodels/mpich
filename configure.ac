@@ -2815,7 +2815,6 @@ AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(long double)
 AC_CHECK_SIZEOF(void *)
 
-AC_HEADER_STDC
 AC_CHECK_HEADERS([stddef.h])
 AC_CHECK_SIZEOF(wchar_t, 0, [
 #ifdef HAVE_STDDEF_H
@@ -4391,8 +4390,6 @@ fi
 PAC_ENABLE_COVERAGE
 
 # -----------------------------------------------------------------------------
-# Look for Standard headers
-AC_HEADER_STDC
 # Check for a specific header
 # Grrr.  OS/X fails the test for sys/uio.h because uio *requires* sys/types.h
 # to compile.  Thus, we'll make that a separate test

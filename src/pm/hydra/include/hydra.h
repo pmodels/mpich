@@ -19,16 +19,12 @@
 extern char *HYD_dbg_prefix;
 
 /* C89 headers can be included without a check */
-#if defined STDC_HEADERS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
 #include <signal.h>
-#else
-#error "STDC_HEADERS are assumed in the Hydra code"
-#endif /* STDC_HEADERS */
 
 #if defined NEEDS_POSIX_FOR_SIGACTION
 #define _POSIX_SOURCE
