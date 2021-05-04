@@ -286,7 +286,8 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
         /* find which side the new node should be inserted */
         if (cmp_ret == MPLI_GAVL_BUFFER_MATCH) {
             /* new node is duplicate, we need to delete new node and exit */
-            tree_ptr->gavl_free_fn((void *) node_ptr->val);
+            if (tree_ptr->gavl_free_fn)
+                tree_ptr->gavl_free_fn((void *) node_ptr->val);
             MPL_free(node_ptr);
             goto fn_exit;
         }
