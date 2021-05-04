@@ -10,7 +10,7 @@ from local_python import RE
 import re
 
 def dump_f08_wrappers_c(func):
-    c_mapping = G.MAPS['SMALL_C_KIND_MAP']
+    c_mapping = get_kind_map('C')
 
     c_param_list = []
     c_arg_list = []
@@ -122,8 +122,8 @@ def dump_f08_wrappers_c(func):
     G.out.append("}")
 
 def dump_f08_wrappers_f(func):
-    c_mapping = G.MAPS['SMALL_C_KIND_MAP']
-    f08_mapping = G.MAPS['SMALL_F08_KIND_MAP']
+    c_mapping = get_kind_map('C', False)
+    f08_mapping = get_kind_map('F08', False)
 
     f_param_list = []
     uses = {}
@@ -723,8 +723,8 @@ def dump_mpi_c_interface_nobuf(func):
     dump_interface_function(func, name, c_name)
 
 def dump_interface_function(func, name, c_name):
-    c_mapping = G.MAPS['SMALL_C_KIND_MAP']
-    f08_mapping = G.MAPS['SMALL_F08_KIND_MAP']
+    c_mapping = get_kind_map('C', False)
+    f08_mapping = get_kind_map('F08', False)
 
     uses = {}
     f_param_list = []
@@ -785,7 +785,7 @@ def dump_interface_function(func, name, c_name):
 
 # dump the interface block in `mpi_f08.f90`
 def dump_mpi_f08(func):
-    f08_mapping = G.MAPS['SMALL_F08_KIND_MAP']
+    f08_mapping = get_kind_map('F08', False)
 
     uses = {}
     f_param_list = []

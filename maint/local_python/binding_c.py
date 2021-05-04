@@ -1510,7 +1510,7 @@ def get_fn_fail_create_code(func):
 
     func_name = get_function_name(func, func['_is_large'])
     err_name = func_name.lower()
-    mapping = get_mapping(func['_is_large'])
+    mapping = get_kind_map('C', func['_is_large'])
 
     (fmts, args, err_fmts) = ([], [], [])
     fmt_codes = {'RANK': "i", 'TAG': "t", 'COMMUNICATOR': "C", 'ASSERT': "A", 'DATATYPE': "D", 'ERRHANDLER': "E", 'FILE': "F", 'GROUP': "G", 'INFO': "I", 'OPERATION': "O", 'REQUEST': "R", 'WINDOW': "W", 'SESSION': "S", 'KEYVAL': "K", "GREQUEST_CLASS": "x"}
@@ -2227,12 +2227,6 @@ def dump_validate_get_topo_size(func):
 
 # ---- supporting routines (reusable) ----
 
-def get_mapping(is_large):
-    if not is_large:
-        return G.MAPS['SMALL_C_KIND_MAP']
-    else:
-        return G.MAPS['BIG_C_KIND_MAP']
-
 def get_function_args(func):
     arg_list = []
     for p in func['c_parameters']:
@@ -2242,7 +2236,7 @@ def get_function_args(func):
 def get_declare_function(func, is_large, kind=""):
     filter_c_parameters(func)
     name = get_function_name(func, is_large)
-    mapping = get_mapping(is_large)
+    mapping = get_kind_map('C', is_large)
 
     ret = "int"
     if 'return' in func:
@@ -2271,7 +2265,7 @@ def get_C_params(func, mapping):
         return param_list
 
 def get_impl_param(func, param):
-    mapping = get_mapping(func['_is_large'])
+    mapping = get_kind_map('C', func['_is_large'])
 
     s = get_C_param(param, mapping)
     if RE.match(r'POLY', param['kind']):
