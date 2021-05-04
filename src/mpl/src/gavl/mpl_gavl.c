@@ -388,12 +388,12 @@ static void gavl_tree_remove_node_internal(MPLI_gavl_tree_s * tree_ptr,
         }
 
         /* remove inorder_node from the tree. */
+        if (inorder_node->u.s.right)
+            inorder_node->u.s.right->u.s.parent = inorder_node->u.s.parent;
         if (inorder_node->u.s.parent != dnode) {
-            if (inorder_node->u.s.right)
-                inorder_node->u.s.right->u.s.parent = inorder_node->u.s.parent;
             inorder_node->u.s.parent->u.s.left = inorder_node->u.s.right;
         } else {
-            dnode->u.s.right = NULL;
+            dnode->u.s.right = inorder_node->u.s.right;
         }
 
         /* exchange inorder_node with dnode and then add dnode into remove_list */
