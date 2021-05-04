@@ -4,7 +4,7 @@
 ##
 
 from local_python import MPI_API_Global as G
-from local_python.binding_c import get_userbuffer_group, get_C_param, split_line_with_break
+from local_python.binding_common import *
 from local_python import RE
 
 import re
