@@ -9,7 +9,31 @@ from local_python import RE
 
 import re
 
-def dump_f08_wrappers_c(func, is_large=False):
+def get_cdesc_name(func, is_large):
+    name = re.sub(r'^MPIX?_', 'MPIR_', func['name'] + "_cdesc")
+    if is_large:
+        name += "_large"
+    return name
+
+def get_f08_c_name(func, is_large):
+    name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_c')
+    if is_large:
+        name += "_large"
+    return name
+
+def get_f08ts_name(func, is_large):
+    name = func['name'] + "_f08ts"
+    if is_large:
+        name += "_large"
+    return name
+
+def get_f08_name(func, is_large):
+    name = func['name'] + "_f08"
+    if is_large:
+        name += "_large"
+    return name
+
+def dump_f08_wrappers_c(func, is_large):
     c_mapping = get_kind_map('C', is_large)
 
     c_param_list = []
@@ -97,9 +121,7 @@ def dump_f08_wrappers_c(func, is_large=False):
             dump_p(p)
             i += 1
 
-    cdesc_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'] + "_cdesc")
-    if is_large:
-        cdesc_name += "_large"
+    cdesc_name = get_cdesc_name(func, is_large)
     s = "int %s(%s)" % (cdesc_name, ', '.join(c_param_list))
     G.decls.append(s)
     tlist = split_line_with_break(s, "", 80)
@@ -126,9 +148,9 @@ def dump_f08_wrappers_c(func, is_large=False):
         G.out.append("#endif")
     G.out.append("}")
 
-def dump_f08_wrappers_f(func):
-    c_mapping = get_kind_map('C', False)
-    f08_mapping = get_kind_map('F08', False)
+def dump_f08_wrappers_f(func, is_large):
+    c_mapping = get_kind_map('C', is_large)
+    f08_mapping = get_kind_map('F08', is_large)
 
     f_param_list = []
     uses = {}
@@ -148,13 +170,12 @@ def dump_f08_wrappers_f(func):
     status_count = ""
     is_alltoallw = False
 
-    func_name = get_function_name(func)
-    if (need_cdesc(func)):
-        f08ts_name = func_name + "_f08ts"
-        c_func_name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_cdesc')
+    if need_cdesc(func):
+        f08ts_name = get_f08ts_name(func, is_large)
+        c_func_name = get_cdesc_name(func, is_large)
     else:
-        f08ts_name = func_name + "_f08"
-        c_func_name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_c')
+        f08ts_name = get_f08_name(func, is_large)
+        c_func_name = get_f08_c_name(func, is_large)
     uses[c_func_name] = 1
 
     if RE.match(r'MPI_(Init|Init_thread)$', func['name'], re.IGNORECASE):
@@ -710,26 +731,28 @@ def dump_interface_module_close(module):
     G.out.append("END INTERFACE")
     G.out.append("END module %s" % module)
 
-def dump_mpi_c_interface_cdesc(func):
-    name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_cdesc')
-    dump_interface_function(func, name, name)
+def dump_mpi_c_interface_cdesc(func, is_large):
+    name = get_cdesc_name(func, is_large)
+    dump_interface_function(func, name, name, is_large)
 
-def dump_mpi_c_interface_nobuf(func):
-    name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_c')
+def dump_mpi_c_interface_nobuf(func, is_large):
+    name = get_f08_c_name(func, is_large)
     if RE.match(r'mpi_(comm|type|win)_(set|get)_attr', func['name'], re.IGNORECASE):
         # use C wrapper functions exposed by C binding
         c_name = re.sub(r'MPIX?_', r'MPII_', func['name'])
+        if is_large:
+            c_name += "_large"
     elif RE.match(r'mpi_comm_spawn(_multiple)?$', func['name'], re.IGNORECASE):
         # use wrapper c functions
         c_name = name
     else:
         # uses PMPI c binding directly
-        c_name = 'P' + get_function_name(func)
-    dump_interface_function(func, name, c_name)
+        c_name = 'P' + get_function_name(func, is_large)
+    dump_interface_function(func, name, c_name, is_large)
 
-def dump_interface_function(func, name, c_name):
-    c_mapping = get_kind_map('C', False)
-    f08_mapping = get_kind_map('F08', False)
+def dump_interface_function(func, name, c_name, is_large):
+    c_mapping = get_kind_map('C', is_large)
+    f08_mapping = get_kind_map('F08', is_large)
 
     uses = {}
     f_param_list = []
@@ -789,8 +812,8 @@ def dump_interface_function(func, name, c_name):
     G.out.append("END FUNCTION %s" % name)
 
 # dump the interface block in `mpi_f08.f90`
-def dump_mpi_f08(func):
-    f08_mapping = get_kind_map('F08', False)
+def dump_mpi_f08(func, is_large):
+    f08_mapping = get_kind_map('F08', is_large)
 
     uses = {}
     f_param_list = []
@@ -810,14 +833,10 @@ def dump_mpi_f08(func):
         decl_list.append("%s :: res" % f08_mapping[func['return']])
 
     # ----
-    func_name = get_function_name(func)
     if need_cdesc(func):
-        name = func_name + '_f08ts'
+        name = get_f08ts_name(func, is_large)
     else:
-        name = func_name + '_f08'
-    G.out.append("")
-    G.out.append("INTERFACE %s" % func_name)
-    G.out.append("INDENT")
+        name = get_f08_name(func, is_large)
     if 'return' not in func:
         dump_fortran_line("SUBROUTINE %s(%s)" % (name, ', '.join(f_param_list)))
     else:
@@ -831,8 +850,6 @@ def dump_mpi_f08(func):
         G.out.append("END SUBROUTINE %s" % name)
     else:
         G.out.append("END FUNCTION %s" % name)
-    G.out.append("DEDENT")
-    G.out.append("END INTERFACE %s" % func_name)
 
 # -------------------------------
 def f08_param_need_skip(p, mapping):
@@ -1521,11 +1538,3 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
     else:
         print("get_F_c_decl: unhandled type %s: %s - %s" % (p['name'], t_f, t_c))
         return None
-
-def get_function_name(func, is_large = False):
-    name = func['name']
-    if 'mpix' in func:
-        name = re.sub(r'MPI_', 'MPIX_', name)
-    if is_large:
-        name += "_c"
-    return name
