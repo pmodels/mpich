@@ -39,6 +39,8 @@ def main():
         if need_cdesc(func):
             G.out.append("")
             dump_f08_wrappers_c(func)
+            G.out.append("")
+            dump_f08_wrappers_c(func, True)
     f = "%s/wrappers_c/f08_cdesc.c" % f08_dir
     dump_cdesc_c(f, G.out)
     f = "%s/wrappers_c/cdesc_proto.h" % f08_dir

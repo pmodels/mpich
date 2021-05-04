@@ -9,8 +9,8 @@ from local_python import RE
 
 import re
 
-def dump_f08_wrappers_c(func):
-    c_mapping = get_kind_map('C')
+def dump_f08_wrappers_c(func, is_large=False):
+    c_mapping = get_kind_map('C', is_large)
 
     c_param_list = []
     c_arg_list = []
@@ -31,9 +31,12 @@ def dump_f08_wrappers_c(func):
         code_list.append("")
 
     def dump_ct_dt(buf, ct, dt):
-        c_param_list.append("int %s" % ct)
+        ct_type = "int"
+        if is_large:
+            ct_type = "MPI_Count"
+        c_param_list.append("%s %s" % (ct_type, ct))
         c_param_list.append("MPI_Datatype %s" % dt)
-        vardecl_list.append("int %s_i = %s;" % (ct, ct))
+        vardecl_list.append("%s %s_i = %s;" % (ct_type, ct, ct))
         vardecl_list.append("MPI_Datatype %s_i = %s;" % (dt, dt))
         c_arg_list.append(ct + "_i")
         c_arg_list.append(dt + "_i")
@@ -95,6 +98,8 @@ def dump_f08_wrappers_c(func):
             i += 1
 
     cdesc_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'] + "_cdesc")
+    if is_large:
+        cdesc_name += "_large"
     s = "int %s(%s)" % (cdesc_name, ', '.join(c_param_list))
     G.decls.append(s)
     tlist = split_line_with_break(s, "", 80)
@@ -111,7 +116,7 @@ def dump_f08_wrappers_c(func):
     G.out.append("")
     for l in code_list:
         G.out.append(l)
-    G.out.append("err = %s(%s);" % (get_function_name(func), ', '.join(c_arg_list)))
+    G.out.append("err = %s(%s);" % (get_function_name(func, is_large), ', '.join(c_arg_list)))
     G.out.append("")
     for l in end_list:
         G.out.append(l)
@@ -1517,8 +1522,10 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
         print("get_F_c_decl: unhandled type %s: %s - %s" % (p['name'], t_f, t_c))
         return None
 
-def get_function_name(func):
+def get_function_name(func, is_large = False):
     name = func['name']
     if 'mpix' in func:
         name = re.sub(r'MPI_', 'MPIX_', name)
+    if is_large:
+        name += "_c"
     return name
