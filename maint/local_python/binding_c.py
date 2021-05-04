@@ -697,13 +697,13 @@ def dump_copy_right():
     G.out.append(" */")
     G.out.append("")
 
-def dump_qmpi_wrappers(func, mapping):
+def dump_qmpi_wrappers(func, map_type):
     parameters = ""
     for p in func['c_parameters']:
         parameters = parameters + ", " + p['name']
 
-    func_name = get_function_name(func, mapping)
-    func_decl = get_declare_function(func, mapping)
+    func_name = get_function_name(func, map_type == "BIG")
+    func_decl = get_declare_function(func, map_type)
     qmpi_decl = get_qmpi_decl_from_func_decl(func_decl)
 
     static_call = re.sub(r'MPI(X?)_', r'internal\1_', func_name, 1)
@@ -758,7 +758,7 @@ def dump_qmpi_wrappers(func, mapping):
     G.out.append("#endif /* ENABLE_QMPI */")
 
 def dump_profiling(func):
-    func_name = get_function_name(func, func['_map_type'])
+    func_name = get_function_name(func, func['_map_type'] == "BIG")
     G.out.append("/* -- Begin Profiling Symbol Block for routine %s */" % func_name)
     G.out.append("#if defined(HAVE_PRAGMA_WEAK)")
     G.out.append("#pragma weak %s = P%s" % (func_name, func_name))
@@ -783,7 +783,7 @@ def dump_profiling(func):
 
 def dump_manpage(func):
     G.out.append("/*@")
-    G.out.append("   %s - %s" % (get_function_name(func, func['_map_type']), func['desc']))
+    G.out.append("   %s - %s" % (get_function_name(func, func['_map_type'] == "BIG"), func['desc']))
     G.out.append("")
     lis_map = G.MAPS['LIS_KIND_MAP']
     for p in func['c_parameters']:
@@ -876,7 +876,7 @@ def get_function_internal_prototype(func_decl):
 # ---- the function part ----
 def dump_function_internal(func, kind):
     """Appends to G.out array the MPI function implementation."""
-    func_name = get_function_name(func, func['_map_type']);
+    func_name = get_function_name(func, func['_map_type'] == "BIG");
     state_name = "MPID_STATE_" + func_name.upper()
 
     s = get_declare_function(func, func['_map_type'])
@@ -1508,7 +1508,7 @@ def dump_mpi_fn_fail(func):
 def get_fn_fail_create_code(func):
     s = "mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,"
 
-    func_name = get_function_name(func, func['_map_type'])
+    func_name = get_function_name(func, func['_map_type'] == "BIG")
     err_name = func_name.lower()
     mapping = get_mapping(func['_map_type'])
 
@@ -2233,21 +2233,6 @@ def get_mapping(map_type):
     else:
         return G.MAPS['BIG_C_KIND_MAP']
 
-def get_function_name(func, map_type="SMALL"):
-    big_use_mpix = True 
-    if map_type == "BIG":
-        name = func['name'] + "_c"
-        if big_use_mpix:
-            G.mpix_symbols[name] = "functions"
-            name = re.sub(r'MPI_', 'MPIX_', name)
-        return name
-    else:
-        name = func['name']
-        if 'mpix' in func:
-            G.mpix_symbols[name] = "functions"
-            name = re.sub(r'MPI_', 'MPIX_', name)
-        return name
-
 def get_function_args(func):
     arg_list = []
     for p in func['c_parameters']:
@@ -2255,10 +2240,7 @@ def get_function_args(func):
     return ', '.join(arg_list)
 
 def get_declare_function(func, map_type="SMALL", kind=""):
-    filter_c_parameters(func)
-    check_params_with_large_only(func)
-
-    name = get_function_name(func, map_type)
+    name = get_function_name(func, map_type == "BIG")
     mapping = get_mapping(map_type)
 
     ret = "int"
