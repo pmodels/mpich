@@ -252,7 +252,6 @@ typedef struct {
     unsigned enable_av_table:1;
     unsigned enable_scalable_endpoints:1;
     unsigned enable_shared_contexts:1;
-    unsigned enable_mr_scalable:1;
     unsigned enable_mr_virt_address:1;
     unsigned enable_mr_allocated:1;
     unsigned enable_mr_prov_key:1;
@@ -264,6 +263,7 @@ typedef struct {
     unsigned enable_hmem:1;
     unsigned enable_data_auto_progress:1;
     unsigned enable_control_auto_progress:1;
+    unsigned require_rdm:1;
 
     int max_endpoints;
     int max_endpoints_bits;

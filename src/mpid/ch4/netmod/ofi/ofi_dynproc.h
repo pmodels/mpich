@@ -12,10 +12,22 @@ enum {
     MPIDI_OFI_DYNPROC_CONNECTED_PARENT
 };
 
+/* This is compatible with MPIDI_OFI_dynamic_process_request_t
+ * when using MPIDI_OFI_EVENT_DYNPROC_DONE
+ */
+typedef struct {
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];
+    int event_id;
+    int done;
+    int data;
+} MPIDI_OFI_dynproc_done_req_t;
+
 typedef struct {
     fi_addr_t dest;
     int rank;
     int state;
+    /* Parent need prepost recv for disconnect message */
+    MPIDI_OFI_dynproc_done_req_t *req;
 } MPIDI_OFI_conn_t;
 
 /* allocated in MPIDI_OFI_global_t */

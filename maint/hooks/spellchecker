@@ -45,9 +45,10 @@ do
     if [[ -f $file && $file != *.tex ]]; then
         cp -p ${file} ${TMP_FILENAME}
         output=$(bash maint/spellcheck.sh ${file})
-        git --no-pager diff ${file} ${TMP_FILENAME}
-        if [ -n "$output" ] ; then
-            echo $output
+        diffs=$(git --no-pager diff ${file} ${TMP_FILENAME})
+        if test -n "$output" -o -n "$diffs" ; then
+            echo "$output"
+            echo "$diffs"
             ret=1
         fi
     fi

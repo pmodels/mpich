@@ -5,7 +5,7 @@
 
 #include "mpidimpl.h"
 #include "ofi_impl.h"
-#include "ofi_nic.h"
+#include "ofi_init.h"
 #include "mpir_hwtopo.h"
 
 /* Return the parent object (typically socket) of the NIC */
@@ -77,10 +77,52 @@ bool MPIDI_OFI_nic_already_used(const struct fi_info * prov, struct fi_info ** o
 }
 
 /* Setup the multi-NIC data structures to use the fi_info structure given in prov */
-void MPIDI_OFI_setup_single_nic(struct fi_info *prov)
+static int setup_single_nic(void);
+static int setup_multi_nic(int nic_count);
+
+int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
 {
-    MPIDI_OFI_global.prov_use[0] = fi_dupinfo(prov);
-    MPIR_Assert(MPIDI_OFI_global.prov_use[0]);
+    int mpi_errno = MPI_SUCCESS;
+    int nic_count = 0;
+
+    if (MPIR_CVAR_CH4_OFI_MAX_NICS == 0 || MPIR_CVAR_CH4_OFI_MAX_NICS <= -2) {
+        /* Invalid values for the CVAR will default to single nic */
+    } else {
+        struct fi_info *prov_iter = prov;
+        /* Count the number of NICs */
+        prov_iter = prov;
+        while (prov_iter && nic_count < MPIDI_OFI_MAX_NICS) {
+            struct fid_nic *nic = prov_iter->nic;
+            if (nic && nic->bus_attr->bus_type == FI_BUS_PCI &&
+                !MPIDI_OFI_nic_already_used(prov_iter, MPIDI_OFI_global.prov_use, nic_count)) {
+                MPIDI_OFI_global.prov_use[nic_count] = fi_dupinfo(prov_iter);
+                MPIR_Assert(MPIDI_OFI_global.prov_use[nic_count]);
+                nic_count++;
+            }
+            prov_iter = prov_iter->next;
+        }
+    }
+    if (nic_count == 0) {
+        /* If no NICs are detected, then force using first
+         * fi_info structure returned by fi_getinfo */
+        MPIDI_OFI_global.prov_use[0] = fi_dupinfo(prov);
+        MPIR_Assert(MPIDI_OFI_global.prov_use[0]);
+        mpi_errno = setup_single_nic();
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno = setup_multi_nic(nic_count);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    MPIR_Assert(MPIDI_OFI_global.num_nics > 0);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int setup_single_nic(void)
+{
     MPIDI_OFI_global.num_nics = 1;
     MPIDI_OFI_global.num_close_nics = 1;
     MPIDI_OFI_global.nic_info[0].nic = MPIDI_OFI_global.prov_use[0];
@@ -89,17 +131,21 @@ void MPIDI_OFI_setup_single_nic(struct fi_info *prov)
     MPIDI_OFI_global.nic_info[0].prefer = 0;
     MPIDI_OFI_global.nic_info[0].count = MPIR_Process.local_size;
     MPIDI_OFI_global.nic_info[0].num_close_ranks = MPIR_Process.local_size;
+
+    return MPI_SUCCESS;
 }
 
 /* TODO: Now that multiple NICs are detected, sort them based on preferred-ness,
  * closeness and count of other processes using the NIC. */
-int MPIDI_OFI_setup_multi_nic(void)
+static int setup_multi_nic(int nic_count)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIR_hwtopo_gid_t parents[MPIDI_OFI_MAX_NICS];
     int num_parents = 0;
-    int mpi_errno = MPI_SUCCESS;
     int local_rank = MPIR_Process.local_rank;
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
+
+    MPIDI_OFI_global.num_nics = nic_count;
 
     /* Initially sort the NICs by name. This way all intranode ranks have a consistent view. */
     qsort(MPIDI_OFI_global.prov_use, MPIDI_OFI_global.num_nics, sizeof(struct fi_info *),

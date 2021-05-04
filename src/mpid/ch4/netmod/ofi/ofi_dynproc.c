@@ -18,7 +18,8 @@
 #define INITIAL_NUM_CONN 10
 
 static int dynproc_send_disconnect(int conn_id);
-static int dynproc_accept_disconnect(int conn_id);
+static int dynproc_post_recv_disconnect(int conn_id);
+static int dynproc_wait_disconnect(int conn_id);
 static int dynproc_grow_conn_table(int new_max);
 static int dynproc_get_next_conn_id(int *conn_id_out);
 
@@ -54,7 +55,7 @@ int MPIDI_OFI_dynproc_finalize(void)
                     MPIR_ERR_CHECK(mpi_errno);
                     break;
                 case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
-                    mpi_errno = dynproc_accept_disconnect(i);
+                    mpi_errno = dynproc_wait_disconnect(i);
                     MPIR_ERR_CHECK(mpi_errno);
                     break;
                 default:
@@ -88,6 +89,11 @@ int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state, int *conn
     MPIDI_OFI_global.conn_mgr.conn_table[conn_id].rank = rank;
     MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state = state;
 
+    if (state == MPIDI_OFI_DYNPROC_CONNECTED_PARENT) {
+        mpi_errno = dynproc_post_recv_disconnect(conn_id);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
                      conn_id, conn, rank, MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state));
@@ -109,7 +115,8 @@ static int dynproc_send_disconnect(int conn_id)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_OFI_dynamic_process_request_t req;
+    MPIDI_OFI_conn_t *p_conn = &MPIDI_OFI_global.conn_mgr.conn_table[conn_id];
+    MPIDI_OFI_dynproc_done_req_t req;
     uint64_t match_bits = 0;
     unsigned int close_msg = 0xcccccccc;
     struct fi_msg_tagged msg;
@@ -127,11 +134,11 @@ static int dynproc_send_disconnect(int conn_id)
     req.done = 0;
     req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
     msg_iov.iov_base = &close_msg;
-    msg_iov.iov_len = sizeof(close_msg);
+    msg_iov.iov_len = sizeof(int);
     msg.msg_iov = &msg_iov;
     msg.desc = NULL;
     msg.iov_count = 0;
-    msg.addr = MPIDI_OFI_global.conn_mgr.conn_table[conn_id].dest;
+    msg.addr = p_conn->dest;
     msg.tag = match_bits;
     msg.ignore = DISCONNECT_CONTEXT_ID;
     msg.context = (void *) &req.context;
@@ -143,7 +150,7 @@ static int dynproc_send_disconnect(int conn_id)
                          0, tsendmsg, FALSE);
     MPIDI_OFI_PROGRESS_WHILE(!req.done, 0);
 
-    MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
+    p_conn->state = MPIDI_OFI_DYNPROC_DISCONNECTED;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, " local_disconnected conn_id=%d state=%d",
@@ -156,30 +163,41 @@ static int dynproc_send_disconnect(int conn_id)
     goto fn_exit;
 }
 
-static int dynproc_accept_disconnect(int conn_id)
+static int dynproc_post_recv_disconnect(int conn_id)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_OFI_dynamic_process_request_t req;
-    fi_addr_t addr = MPIDI_OFI_global.conn_mgr.conn_table[conn_id].dest;
-    int close_msg;
+    MPIDI_OFI_conn_t *p_conn = &MPIDI_OFI_global.conn_mgr.conn_table[conn_id];
+    fi_addr_t addr = p_conn->dest;
 
-    req.done = 0;
-    req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+    p_conn->req = MPL_malloc(sizeof(MPIDI_OFI_dynproc_done_req_t), MPL_MEM_OTHER);
+    p_conn->req->done = 0;
+    p_conn->req->event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
     uint64_t mask_bits = 0;
-    uint64_t match_bits = 0;
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, DISCONNECT_CONTEXT_ID, 1);
-    match_bits |= MPIDI_OFI_DYNPROC_SEND;
+    uint64_t match_bits = MPIDI_OFI_init_sendtag(DISCONNECT_CONTEXT_ID, 1, MPIDI_OFI_DYNPROC_SEND);
 
+    int vni = 0;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
     MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
-                                  &close_msg, sizeof(int),
-                                  NULL, addr, match_bits, mask_bits, &req.context),
-                         0, trecv, FALSE);
-    MPIDI_OFI_PROGRESS_WHILE(!req.done, 0);
-    MPIDI_OFI_global.conn_mgr.conn_table[conn_id].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
+                                  &p_conn->req->data, sizeof(int), NULL,
+                                  addr, match_bits, mask_bits, &p_conn->req->context),
+                         vni, trecv, FALSE);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int dynproc_wait_disconnect(int conn_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_conn_t *p_conn = &MPIDI_OFI_global.conn_mgr.conn_table[conn_id];
+
+    MPIDI_OFI_PROGRESS_WHILE(!p_conn->req->done, 0);
+    p_conn->state = MPIDI_OFI_DYNPROC_DISCONNECTED;
+    MPL_free(p_conn->req);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "conn_id=%d closed", conn_id));
 
   fn_exit:
