@@ -4,6 +4,7 @@
  */
 
 #include "cdesc.h"
+#include <limits.h>
 
 MPI_Status *MPIR_C_MPI_STATUS_IGNORE = MPI_STATUS_IGNORE;
 MPI_Status *MPIR_C_MPI_STATUSES_IGNORE = MPI_STATUSES_IGNORE;
@@ -68,10 +69,10 @@ int cdesc_create_datatype(CFI_cdesc_t * cdesc, MPI_Aint oldcount, MPI_Datatype o
             }
         } else {
             if (cdesc->dim[i].sm == accum_sm) {
-                mpi_errno = PMPI_Type_contiguous_c(extent, types[i], &types[i + 1]);
+                mpi_errno = PMPIX_Type_contiguous_c(extent, types[i], &types[i + 1]);
             } else {
-                mpi_errno = PMPI_Type_create_hvector_c(extent, 1, cdesc->dim[i].sm,
-                                                       types[i], &types[i + 1]);
+                mpi_errno = PMPIX_Type_create_hvector_c(extent, 1, cdesc->dim[i].sm,
+                                                        types[i], &types[i + 1]);
             }
         }
         if (mpi_errno != MPI_SUCCESS) {
