@@ -29,7 +29,7 @@ def main():
     for a in extras:
         func = G.FUNCS[a.lower()]
         mapping = G.MAPS['SMALL_C_KIND_MAP']
-        G.mpi_declares.append(get_declare_function(func, mapping, "proto"))
+        G.mpi_declares.append(get_declare_function(func, False, "proto"))
 
     # -- Generating code --
     for func in func_list:
@@ -44,10 +44,10 @@ def main():
             # Note: set func['_has_poly'] = False to skip embiggenning
             func['_has_poly'] = function_has_POLY_parameters(func)
             if func['_has_poly']:
-                dump_mpi_c(func, "SMALL")
-                dump_mpi_c(func, "BIG")
+                dump_mpi_c(func, False)
+                dump_mpi_c(func, True)
             else:
-                dump_mpi_c(func, "SMALL")
+                dump_mpi_c(func, False)
 
         file_path = get_func_file_path(func, c_dir)
         dump_c_file(file_path, G.out)
