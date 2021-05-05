@@ -29,6 +29,16 @@ subroutine MPI_User_function(invec, inoutvec, len, datatype)
     type(MPI_Datatype) :: datatype
 end subroutine
 
+subroutine MPI_User_function_c(invec, inoutvec, len, datatype)
+    use, intrinsic :: iso_c_binding, only : c_ptr
+    use mpi_f08_types, only : MPI_Datatype
+    use mpi_f08_compile_constants, only : MPI_COUNT_KIND
+    implicit none
+    type(c_ptr), value :: invec, inoutvec
+    integer(kind=MPI_COUNT_KIND) :: len
+    type(MPI_Datatype) :: datatype
+end subroutine
+
 subroutine MPI_Comm_copy_attr_function(oldcomm,comm_keyval,extra_state, &
        attribute_val_in,attribute_val_out,flag,ierror)
     use mpi_f08_types, only : MPI_Comm
@@ -158,6 +168,20 @@ subroutine MPI_Datarep_conversion_function(userbuf, datatype, count, &
     type(c_ptr), value :: userbuf, filebuf
     type(MPI_Datatype) :: datatype
     integer :: count, ierror
+    integer(kind=MPI_OFFSET_KIND) :: position
+    integer(kind=MPI_ADDRESS_KIND) :: extra_state
+end subroutine
+
+subroutine MPI_Datarep_conversion_function_c(userbuf, datatype, count, &
+       filebuf, position, extra_state, ierror)
+    use, intrinsic :: iso_c_binding, only : c_ptr
+    use mpi_f08_types, only : MPI_Datatype
+    use mpi_f08_compile_constants, only : MPI_OFFSET_KIND, MPI_ADDRESS_KIND, MPI_COUNT_KIND
+    implicit none
+    type(c_ptr), value :: userbuf, filebuf
+    type(MPI_Datatype) :: datatype
+    integer :: ierror
+    integer(kind=MPI_COUNT_KIND) :: count
     integer(kind=MPI_OFFSET_KIND) :: position
     integer(kind=MPI_ADDRESS_KIND) :: extra_state
 end subroutine
@@ -299,6 +323,20 @@ subroutine MPI_CONVERSION_FN_NULL(userbuf, datatype, count, &
     type(c_ptr), value :: userbuf, filebuf
     type(MPI_Datatype) :: datatype
     integer :: count, ierror
+    integer(kind=MPI_OFFSET_KIND) :: position
+    integer(kind=MPI_ADDRESS_KIND) :: extra_state
+    ! Do nothing
+end subroutine
+
+subroutine MPI_CONVERSION_FN_NULL_C(userbuf, datatype, count, &
+       filebuf, position, extra_state, ierror)
+    use, intrinsic :: iso_c_binding, only : c_ptr
+    use mpi_f08_types, only : MPI_Datatype
+    use mpi_f08_compile_constants, only : MPI_OFFSET_KIND, MPI_ADDRESS_KIND, MPI_COUNT_KIND
+    implicit none
+    type(c_ptr), value :: userbuf, filebuf
+    type(MPI_Datatype) :: datatype
+    integer(kind=MPI_COUNT_KIND) :: count, ierror
     integer(kind=MPI_OFFSET_KIND) :: position
     integer(kind=MPI_ADDRESS_KIND) :: extra_state
     ! Do nothing
