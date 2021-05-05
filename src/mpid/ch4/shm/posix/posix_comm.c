@@ -68,3 +68,10 @@ int MPIDI_POSIX_mpi_comm_free_hook(MPIR_Comm * comm)
   fn_fail:
     goto fn_exit;
 }
+
+int MPIDI_POSIX_comm_set_hints(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    return mpi_errno;
+}

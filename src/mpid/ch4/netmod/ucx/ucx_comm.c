@@ -47,3 +47,10 @@ int MPIDI_UCX_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_COMM_FREE_HOOK);
     return mpi_errno;
 }
+
+int MPIDI_UCX_comm_set_hints(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    return mpi_errno;
+}

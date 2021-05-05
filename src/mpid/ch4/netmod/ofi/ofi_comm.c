@@ -59,3 +59,10 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
     return mpi_errno;
 }
+
+int MPIDI_OFI_comm_set_hints(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    return mpi_errno;
+}
