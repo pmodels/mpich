@@ -48,6 +48,7 @@ typedef struct {
     /* support for connection */
     int conn_id;
     int enable_striping;        /* Flag to enable striping per communicator. */
+    int enable_hashing;         /* Flag to enable hashing per communicator. */
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_NONE = 0,

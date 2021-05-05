@@ -327,6 +327,7 @@ typedef struct {
     int num_nics;
     int num_close_nics;
     int num_comms_enabled_striping;     /* Number of active communicators with striping enabled */
+    int num_comms_enabled_hashing;      /* Number of active communicators with hashingenabled */
 
     /* Window/RMA Globals */
     void *win_map;
