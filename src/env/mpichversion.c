@@ -3,10 +3,21 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpiimpl.h"
+#include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+extern const char MPII_Version_string[];
+extern const char MPII_Version_date[];
+extern const char MPII_Version_ABI[];
+extern const char MPII_Version_configure[];
+extern const char MPII_Version_device[];
+extern const char MPII_Version_CC[];
+extern const char MPII_Version_CXX[];
+extern const char MPII_Version_F77[];
+extern const char MPII_Version_FC[];
+extern const char MPII_Version_custom[];
 
 /* FIXME: We really should consider internationalizing the output from this
    program */
