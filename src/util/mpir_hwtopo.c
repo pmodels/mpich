@@ -51,49 +51,45 @@ typedef enum {
  * is not directly available outside the topology layer anyway (it has to
  * be queried using get_depth). In this case, when we calculate the depth
  * from the gid we do the opposite operation, restoring the sign. */
-#define HWTOPO_GET_GID(class, depth, idx) ({              \
-    MPIR_Assert(class != HWTOPO_CLASS__INVALID);          \
-    MPIR_hwtopo_gid_t gid_;                               \
-    int depth_ = (class != HWTOPO_CLASS__NORMAL) ?        \
-                 -depth : depth;                          \
-    do {                                                  \
-        MPIR_Assert(depth <= HWTOPO_GID_DEPTH_MAX);       \
-        MPIR_Assert(idx   <= HWTOPO_GID_INDEX_MAX);       \
-        gid_  = (class  << HWTOPO_GID_CLASS_SHIFT);       \
-        gid_ |= (depth_ << HWTOPO_GID_DEPTH_SHIFT);       \
-        gid_ |= (idx    << HWTOPO_GID_INDEX_SHIFT);       \
-    } while (0);                                          \
-    gid_;                                                 \
-})
+static MPIR_hwtopo_gid_t HWTOPO_GET_GID(hwtopo_class_e class, int depth, int idx)
+{
+    MPIR_Assert(class != HWTOPO_CLASS__INVALID);
+    MPIR_hwtopo_gid_t gid;
+    int depth_ = (class != HWTOPO_CLASS__NORMAL) ? -depth : depth;
+    MPIR_Assert(depth <= HWTOPO_GID_DEPTH_MAX);
+    MPIR_Assert(idx <= HWTOPO_GID_INDEX_MAX);
+    gid = (class << HWTOPO_GID_CLASS_SHIFT);
+    gid |= (depth_ << HWTOPO_GID_DEPTH_SHIFT);
+    gid |= (idx << HWTOPO_GID_INDEX_SHIFT);
+    return gid;
+}
 
-#define HWTOPO_GET_CLASS(gid) ({                          \
-    int class_;                                           \
-    do {                                                  \
-        class_ = (gid & HWTOPO_GID_CLASS_MASK);           \
-        class_ = (class_ >> HWTOPO_GID_CLASS_SHIFT);      \
-    } while (0);                                          \
-    class_;                                               \
-})
+static hwtopo_class_e HWTOPO_GET_CLASS(MPIR_hwtopo_gid_t gid)
+{
+    int class;
+    class = (gid & HWTOPO_GID_CLASS_MASK);
+    class = (class >> HWTOPO_GID_CLASS_SHIFT);
+    return (hwtopo_class_e) class;
+}
 
-#define HWTOPO_GET_DEPTH(gid) ({                          \
-    int depth_;                                           \
-    do {                                                  \
-        depth_ = (gid & HWTOPO_GID_DEPTH_MASK);           \
-        depth_ = (depth_ >> HWTOPO_GID_DEPTH_SHIFT);      \
-        if (HWTOPO_GET_CLASS(gid) != HWTOPO_CLASS__NORMAL) \
-            depth_ = -depth_;                             \
-    } while (0);                                          \
-    depth_;                                               \
-})
+static int HWTOPO_GET_DEPTH(MPIR_hwtopo_gid_t gid)
+{
+    int depth;
+    depth = (gid & HWTOPO_GID_DEPTH_MASK);
+    depth = (depth >> HWTOPO_GID_DEPTH_SHIFT);
+    if (HWTOPO_GET_CLASS(gid) != HWTOPO_CLASS__NORMAL) {
+        depth = -depth;
+    }
+    return depth;
+}
 
-#define HWTOPO_GET_INDEX(gid) ({                          \
-    int index_;                                           \
-    do {                                                  \
-        index_ = (gid & HWTOPO_GID_INDEX_MASK);           \
-        index_ = (index_ >> HWTOPO_GID_INDEX_SHIFT);      \
-    } while (0);                                          \
-    index_;                                               \
-})
+static int HWTOPO_GET_INDEX(MPIR_hwtopo_gid_t gid)
+{
+    int idx;
+    idx = (gid & HWTOPO_GID_INDEX_MASK);
+    idx = (idx >> HWTOPO_GID_INDEX_SHIFT);
+    return idx;
+}
 
 #ifdef HAVE_HWLOC
 static hwloc_obj_type_t get_hwloc_obj_type(MPIR_hwtopo_type_e type)
