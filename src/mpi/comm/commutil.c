@@ -107,6 +107,8 @@ static int get_string_value(char *s, int type, int val)
  */
 int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_Info *curr_info;
     LL_FOREACH(info, curr_info) {
         if (curr_info->key == NULL)
@@ -126,8 +128,15 @@ int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
             }
         }
     }
+
+    mpi_errno = MPID_Comm_set_hints(comm_ptr, info);
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* FIXME: run collective to ensure hints consistency */
+  fn_exit:
     return MPI_SUCCESS;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
