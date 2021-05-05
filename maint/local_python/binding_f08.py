@@ -552,15 +552,19 @@ def dump_f08_wrappers_f(func, is_large):
     def process_procedure(p):
         uses['c_funptr'] = 1
         uses['c_funloc'] = 1
-        uses[p['func_type']] = 1
+        FN = get_F_procedure_type(p, is_large)
+        uses[FN] = 1
         convert_list_pre.append("%s_c = c_funloc(%s)" % (p['name'], p['name']))
         if RE.match(r'mpi_register_datarep', func['name'], re.IGNORECASE) and RE.match(r'(read|write)_conversion_fn', p['name']):
-            convert_list_pre.append("IF (c_associated(%s_c, c_funloc(MPI_CONVERSION_FN_NULL))) then" % p['name'])
+            FN_NULL="MPI_CONVERSION_FN_NULL"
+            if is_large:
+                FN_NULL="MPI_CONVERSION_FN_NULL_C"
+            convert_list_pre.append("IF (c_associated(%s_c, c_funloc(%s))) then" % (p['name'], FN_NULL))
             convert_list_pre.append("    %s_c = c_null_funptr" % p['name'])
             convert_list_pre.append("END IF")
             uses['c_associated'] = 1
             uses['c_null_funptr'] = 1
-            uses['MPI_CONVERSION_FN_NULL'] = 1
+            uses[FN_NULL] = 1
         arg = "%s_c" % p['name']
         return (arg, arg)
 
@@ -890,7 +894,7 @@ def dump_F_uses(uses):
             iso_c_binding_list.append(a)
         elif re.match(r'MPIR_ATTR_AINT|MPII_.*_proxy|MPIR.*set_lang|MPIR_.*string_(f2c|c2f)', a):
             mpi_c_list_3.append(a)
-        elif re.match(r'MPI_\w+_(function|FN|FN_NULL)$', a):
+        elif re.match(r'MPI_\w+_(function|FN|FN_NULL)(_c)?$', a, re.IGNORECASE):
             mpi_f08_list_4.append(a)
         elif re.search(r'(STATUS.*IGNORE|ARGV.*NULL|ERRCODES_IGNORE|_UNWEIGHTED|WEIGHTS_EMPTY|MPI_IN_PLACE|MPI_BOTTOM)$', a, re.IGNORECASE):
             mpi_f08_list_3.append(a)
@@ -1319,6 +1323,13 @@ def need_ptr_check(p):
     else:
         return False
 
+def get_F_procedure_type(p, is_large):
+    if re.match(r'MPI_(Datarep_conversion|User)_function', p['func_type']) and is_large:
+        return p['func_type'] + "_c"
+    else:
+        return p['func_type']
+    return s
+
 def get_F_decl(p, mapping):
     if p['kind'] == 'STRING':
         if p['length']:
@@ -1328,7 +1339,7 @@ def get_F_decl(p, mapping):
     elif RE.match(r'STRING_(2D)?ARRAY', p['kind']):
         s = "CHARACTER(len=*)"
     elif RE.match(r'(PROCEDURE)', mapping[p['kind']]):
-        s = "PROCEDURE(%s)" % p['func_type']
+        s = "PROCEDURE(%s)" % get_F_procedure_type(p, re.match(r'BIG', mapping['_name']))
     else:
         s = mapping[p['kind']]
 
