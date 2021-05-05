@@ -128,6 +128,11 @@ def dump_f08_wrappers_c(func, is_large):
     G.out.extend(tlist)
     G.out.append("{")
     if re.match(r'MPI_File_', func['name']):
+        if is_large:
+            # File large functions are not there yet
+            G.out.append("    return MPI_ERR_INTERN;")
+            G.out.append("}")
+            return
         G.out.append("#ifndef MPI_MODE_RDONLY")
         G.out.append("    return MPI_ERR_INTERN;")
         G.out.append("#else")
