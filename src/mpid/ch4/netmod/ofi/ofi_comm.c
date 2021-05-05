@@ -20,6 +20,13 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     /* no connection for non-dynamic or non-root-rank of intercomm */
     MPIDI_OFI_COMM(comm).conn_id = -1;
 
+    /* Use striping if enabled and there are multiple NICs. */
+    if (MPIR_CVAR_CH4_OFI_ENABLE_STRIPING && MPIDI_OFI_global.num_nics > 1) {
+        MPIDI_OFI_COMM(comm).enable_striping = 1;
+    } else {
+        MPIDI_OFI_COMM(comm).enable_striping = 0;
+    }
+
     /* eagain defaults to off */
     if (comm->hints[MPIR_COMM_HINT_EAGAIN] == 0) {
         comm->hints[MPIR_COMM_HINT_EAGAIN] = FALSE;

@@ -47,6 +47,7 @@ typedef struct {
     void *huge_recv_counters;
     /* support for connection */
     int conn_id;
+    int enable_striping;        /* Flag to enable striping per communicator. */
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_NONE = 0,
