@@ -340,6 +340,15 @@ int MPIDI_CH3I_Comm_destroy_hook(MPIR_Comm *comm)
     goto fn_exit;
 }
 
+int MPIDI_CH3I_Comm_set_hints(MPIR_Comm *comm_ptr, MPIR_Info *info_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_SET_HINTS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_COMM_SET_HINTS);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_COMM_SET_HINTS);
+    return mpi_errno;
+}
 
 int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPIR_Comm *, void *), void *param)
 {
