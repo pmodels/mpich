@@ -179,6 +179,8 @@ void MPIR_Comm_hint_init(void)
     /* Used by ch4:ofi, but needs to be initialized early to get the default value. */
     MPIR_Comm_register_hint(MPIR_COMM_HINT_ENABLE_STRIPING, "enable_striping", NULL,
                             MPIR_COMM_HINT_TYPE_BOOL, 0);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING, "enable_multi_nic_hashing",
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
 }
 
 /* FIXME :
