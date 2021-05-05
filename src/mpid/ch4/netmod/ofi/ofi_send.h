@@ -196,8 +196,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     if (!dt_contig && data_sz) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz < MPIDI_OFI_global.max_msg_size &&
-            !force_gpu_pack) {
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && !force_gpu_pack &&
+            ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping) ||
+             (data_sz < MPIDI_OFI_global.stripe_threshold &&
+              MPIDI_OFI_COMM(comm).enable_striping))) {
             mpi_errno = MPIDI_OFI_send_iov(buf, count, data_sz, cq_data, dst_rank, match_bits,
                                            comm, addr, vni_src, vni_dst, sreq, dt_ptr);
             if (mpi_errno == MPI_SUCCESS)       /* Send posted using iov */
@@ -241,7 +243,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                             match_bits), vni_local, tinjectdata,
                              FALSE /* eagain */);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
-    } else if (data_sz < MPIDI_OFI_global.max_msg_size) {
+    } else if ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping)
+               || (data_sz < MPIDI_OFI_global.stripe_threshold &&
+                   MPIDI_OFI_COMM(comm).enable_striping)) {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           send_buf, data_sz, NULL /* desc */ ,
                                           cq_data,
@@ -251,35 +255,47 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                              vni_local, tsenddata, FALSE /* eagain */);
     } else if (unlikely(1)) {
         MPIDI_OFI_send_control_t ctrl;
-        uint64_t rma_key = 0;
-        struct fid_mr *huge_send_mr;
+        int i, num_nics = MPIDI_OFI_global.num_nics;
+        uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
+        struct fid_mr **huge_send_mrs;
+        uint64_t msg_size = MPIDI_OFI_STRIPE_CHUNK_SIZE;
 
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
-        MPIR_cc_inc(sreq->cc_ptr);
 
+        MPIR_cc_inc(sreq->cc_ptr);
+        if (!MPIDI_OFI_COMM(comm).enable_striping) {
+            num_nics = 1;
+            msg_size = MPIDI_OFI_global.max_msg_size;
+        }
+        huge_send_mrs =
+            (struct fid_mr **) MPL_malloc((num_nics * sizeof(struct fid_mr *)), MPL_MEM_BUFFER);
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* Set up a memory region for the lmt data transfer */
-            ctrl.rma_key = MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
-            rma_key = ctrl.rma_key;
+            for (i = 0; i < num_nics; i++) {
+                ctrl.rma_keys[i] =
+                    MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
+                rma_keys[i] = ctrl.rma_keys[i];
+            }
         }
-
-        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[ctx_idx].domain,  /* In:  Domain Object */
-                                 send_buf,      /* In:  Lower memory address */
-                                 data_sz,       /* In:  Length              */
-                                 FI_REMOTE_READ,        /* In:  Expose MR for read  */
-                                 0ULL,  /* In:  offset(not used)    */
-                                 rma_key,       /* In:  requested key       */
-                                 0ULL,  /* In:  flags               */
-                                 &huge_send_mr, /* Out: memregion object    */
-                                 NULL), mr_reg);        /* In:  context             */
-
+        for (i = 0; i < num_nics; i++) {
+            MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vni_local, i)].domain,        /* In:  Domain Object */
+                                     send_buf,  /* In:  Lower memory address */
+                                     data_sz,   /* In:  Length              */
+                                     FI_REMOTE_READ,    /* In:  Expose MR for read  */
+                                     0ULL,      /* In:  offset(not used)    */
+                                     rma_keys[i],       /* In:  requested key       */
+                                     0ULL,      /* In:  flags               */
+                                     &huge_send_mrs[i], /* Out: memregion object    */
+                                     NULL), mr_reg);    /* In:  context             */
+        }
         /* Create map to the memory region */
-        MPIDIU_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, huge_send_mr,
+        MPIDIU_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, huge_send_mrs,
                        MPL_MEM_BUFFER);
-
         if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* MR_BASIC */
-            ctrl.rma_key = fi_mr_key(huge_send_mr);
+            for (i = 0; i < num_nics; i++) {
+                ctrl.rma_keys[i] = fi_mr_key(huge_send_mrs[i]);
+            }
         }
 
         /* Send the maximum amount of data that we can here to get things
@@ -292,7 +308,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(sreq, util_id), dst_rank);
         match_bits |= MPIDI_OFI_HUGE_SEND;      /* Add the bit for a huge message */
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                          send_buf, MPIDI_OFI_global.max_msg_size, NULL /* desc */ ,
+                                          send_buf, msg_size, NULL /* desc */ ,
                                           cq_data,
                                           MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote),
                                           match_bits,

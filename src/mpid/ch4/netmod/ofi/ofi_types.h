@@ -36,6 +36,7 @@
 #define MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
 #define MPIDI_OFI_AM_HDR_POOL_MAX_NUM_CELLS         (257 * 1024)
 #define MPIDI_OFI_NUM_CQ_BUFFERED          (1024)
+#define MPIDI_OFI_STRIPE_CHUNK_SIZE        (2048)       /* First chunk sent through the preferred NIC during striping */
 
 /* The number of bits in the immediate data field allocated to the source rank. */
 #define MPIDI_OFI_IDATA_SRC_BITS (30)
@@ -304,6 +305,7 @@ typedef struct {
     uint64_t max_buffered_send;
     uint64_t max_buffered_write;
     uint64_t max_msg_size;
+    uint64_t stripe_threshold;
     uint64_t max_short_send;
     uint64_t max_mr_key_size;
     uint64_t max_rma_key_bits;
@@ -382,7 +384,7 @@ typedef struct {
     uintptr_t send_buf;
     size_t msgsize;
     int comm_id;
-    uint64_t rma_key;
+    uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
     int tag;
     int vni_src;
     int vni_dst;
@@ -486,6 +488,8 @@ typedef struct MPIDI_OFI_huge_recv {
     bool peek;                  /* Flag to indicate whether this struct has been created to track an uncompleted peek
                                  * operation. */
     size_t cur_offset;
+    size_t stripe_size;
+    int chunks_outstanding;
     MPIR_Comm *comm_ptr;
     MPIR_Request *localreq;
     struct fi_cq_tagged_entry wc;

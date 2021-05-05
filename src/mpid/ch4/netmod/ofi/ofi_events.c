@@ -81,7 +81,11 @@ static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
             recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
             recv_elem->done_fn = MPIDI_OFI_recv_event;
             recv_elem->wc = *wc;
-            recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
+            if (MPIDI_OFI_COMM(comm_ptr).enable_striping) {
+                recv_elem->cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
+            } else {
+                recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
+            }
 
             LL_APPEND(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, huge_list_ptr);
             goto fn_exit;
@@ -143,13 +147,17 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RECV_HUGE_EVENT);
 
     /* Check that the sender didn't underflow the message by sending less than
-     * the huge message threshold. */
-    if (wc->len < MPIDI_OFI_global.max_msg_size) {
+     * the huge message threshold. When striping is enabled underflow occurs if
+     * the sender sends < MPIDI_OFI_STRIPE_CHUNK_SIZE through the huge message protocol
+     * or < MPIDI_OFI_global.stripe_threshold through normal send */
+    if (((wc->len < MPIDI_OFI_STRIPE_CHUNK_SIZE ||
+          (wc->len > MPIDI_OFI_STRIPE_CHUNK_SIZE && wc->len < MPIDI_OFI_global.stripe_threshold)) &&
+         MPIDI_OFI_COMM(rreq->comm).enable_striping) ||
+        (wc->len < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(rreq->comm).enable_striping)) {
         return MPIDI_OFI_recv_event(wc, rreq, MPIDI_OFI_REQUEST(rreq, event_id));
     }
 
     comm_ptr = rreq->comm;
-
     /* Check to see if the tracker is already in the unexpected list.
      * Otherwise, allocate one. */
     {
@@ -224,7 +232,7 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    int c;
+    int c, num_nics;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SEND_HUGE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SEND_HUGE_EVENT);
 
@@ -233,15 +241,15 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
     if (c == 0) {
         MPIR_Comm *comm;
         void *ptr;
-        struct fid_mr *huge_send_mr;
+        struct fid_mr **huge_send_mrs;
 
         comm = sreq->comm;
-
+        num_nics = MPIDI_OFI_COMM(comm).enable_striping ? MPIDI_OFI_global.num_nics : 1;
         /* Look for the memory region using the sreq handle */
         ptr = MPIDIU_map_lookup(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
         MPIR_Assert(ptr != MPIDIU_MAP_NOT_FOUND);
 
-        huge_send_mr = (struct fid_mr *) ptr;
+        huge_send_mrs = (struct fid_mr **) ptr;
 
         /* Send a cleanup message to the receivier and clean up local
          * resources. */
@@ -250,10 +258,16 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 
         /* Clean up the memory region */
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-            uint64_t key = fi_mr_key(huge_send_mr);
-            MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, key);
+            for (int i = 0; i < num_nics; i++) {
+                uint64_t key = fi_mr_key(huge_send_mrs[i]);
+                MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, key);
+            }
         }
-        MPIDI_OFI_CALL(fi_close(&huge_send_mr->fid), mr_unreg);
+
+        for (int i = 0; i < num_nics; i++) {
+            MPIDI_OFI_CALL(fi_close(&huge_send_mrs[i]->fid), mr_unreg);
+        }
+        MPL_free(huge_send_mrs);
 
         if (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer)) {
             MPIR_gpu_free_host(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
@@ -298,21 +312,34 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_huge_recv_t *recv_elem = (MPIDI_OFI_huge_recv_t *) req;
     uint64_t remote_key;
+    size_t bytesLeft, bytesToGet;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_HUGE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_HUGE_EVENT);
 
     if (recv_elem->localreq && recv_elem->cur_offset != 0) {    /* If this is true, then the message has a posted
                                                                  * receive already and we'll be able to find the
                                                                  * struct describing the transfer. */
-        /* Subtract one max_msg_size because we send the first chunk via a regular message instead of the memory region */
-        size_t bytesSent = recv_elem->cur_offset - MPIDI_OFI_global.max_msg_size;
-        size_t bytesLeft =
-            recv_elem->remote_info.msgsize - bytesSent - MPIDI_OFI_global.max_msg_size;
-        size_t bytesToGet =
-            (bytesLeft <=
-             MPIDI_OFI_global.max_msg_size) ? bytesLeft : MPIDI_OFI_global.max_msg_size;
+        if (MPIDI_OFI_COMM(recv_elem->comm_ptr).enable_striping) {
+            /* Subtract one stripe_chunk_size because we send the first chunk via a regular message
+             * instead of the memory region */
+            recv_elem->stripe_size = (recv_elem->remote_info.msgsize - MPIDI_OFI_STRIPE_CHUNK_SIZE)
+                / MPIDI_OFI_global.num_nics;    /* striping */
 
-        if (bytesToGet == 0ULL) {
+            if (recv_elem->stripe_size > MPIDI_OFI_global.max_msg_size) {
+                recv_elem->stripe_size = MPIDI_OFI_global.max_msg_size;
+            }
+            if (recv_elem->chunks_outstanding)
+                recv_elem->chunks_outstanding--;
+            bytesLeft = recv_elem->remote_info.msgsize - recv_elem->cur_offset;
+            bytesToGet = (bytesLeft <= recv_elem->stripe_size) ? bytesLeft : recv_elem->stripe_size;
+        } else {
+            /* Subtract one max_msg_size because we send the first chunk via a regular message
+             * instead of the memory region */
+            bytesLeft = recv_elem->remote_info.msgsize - recv_elem->cur_offset;
+            bytesToGet = (bytesLeft <= MPIDI_OFI_global.max_msg_size) ?
+                bytesLeft : MPIDI_OFI_global.max_msg_size;
+        }
+        if (bytesToGet == 0ULL && recv_elem->chunks_outstanding == 0) {
             MPIDI_OFI_send_control_t ctrl;
             /* recv_elem->localreq may be freed during done_fn.
              * Need to backup the handle here for later use with MPIDIU_map_erase. */
@@ -331,25 +358,49 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
             goto fn_exit;
         }
 
-        remote_key = recv_elem->remote_info.rma_key;
+        int nic = 0;
         int vni_src = recv_elem->remote_info.vni_src;
         int vni_dst = recv_elem->remote_info.vni_dst;
-        int vni_local = vni_dst;
-        int vni_remote = vni_src;
-        int nic = 0;
-        int ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, nic);
+        if (MPIDI_OFI_COMM(recv_elem->comm_ptr).enable_striping) {      /* if striping enabled */
+            MPIDI_OFI_cntr_incr(vni_src, nic);
+            if (recv_elem->cur_offset >= MPIDI_OFI_STRIPE_CHUNK_SIZE && bytesLeft > 0) {
+                for (nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
+                    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, nic);
+                    remote_key = recv_elem->remote_info.rma_keys[nic];
 
-        MPIDI_OFI_cntr_incr(vni_local, nic);
-        MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx,  /* endpoint     */
-                                     (void *) ((uintptr_t) recv_elem->wc.buf + recv_elem->cur_offset),  /* local buffer */
-                                     bytesToGet,        /* bytes        */
-                                     NULL,      /* descriptor   */
-                                     MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank, nic, vni_local, vni_remote),       /* Destination  */
-                                     recv_rbase(recv_elem) + recv_elem->cur_offset,     /* remote maddr */
-                                     remote_key,        /* Key          */
-                                     (void *) &recv_elem->context), vni_local, rdma_readfrom,   /* Context */
-                             FALSE);
-        recv_elem->cur_offset += bytesToGet;
+                    bytesLeft = recv_elem->remote_info.msgsize - recv_elem->cur_offset;
+                    if (bytesLeft <= 0) {
+                        break;
+                    }
+                    bytesToGet =
+                        (bytesLeft <= recv_elem->stripe_size) ? bytesLeft : recv_elem->stripe_size;
+
+                    MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx, (void *) ((uintptr_t) recv_elem->wc.buf + recv_elem->cur_offset),    /* local buffer */
+                                                 bytesToGet,    /* bytes */
+                                                 NULL,  /* descriptor */
+                                                 MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank, nic, vni_dst, vni_src), recv_rbase(recv_elem) + recv_elem->cur_offset, /* remote maddr */
+                                                 remote_key,    /* Key */
+                                                 (void *) &recv_elem->context), nic,    /* Context */
+                                         rdma_readfrom, FALSE);
+                    recv_elem->cur_offset += bytesToGet;
+                    recv_elem->chunks_outstanding++;
+                }
+            }
+        } else {
+            int ctx_idx = MPIDI_OFI_get_ctx_index(vni_src, nic);
+            remote_key = recv_elem->remote_info.rma_keys[nic];
+            MPIDI_OFI_cntr_incr(vni_src, nic);
+            MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx,      /* endpoint     */
+                                         (void *) ((uintptr_t) recv_elem->wc.buf + recv_elem->cur_offset),      /* local buffer */
+                                         bytesToGet,    /* bytes        */
+                                         NULL,  /* descriptor   */
+                                         MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank, nic, vni_src, vni_dst),        /* Destination  */
+                                         recv_rbase(recv_elem) + recv_elem->cur_offset, /* remote maddr */
+                                         remote_key,    /* Key          */
+                                         (void *) &recv_elem->context), vni_src, rdma_readfrom, /* Context */
+                                 FALSE);
+            recv_elem->cur_offset += bytesToGet;
+        }
     }
 
   fn_exit:
