@@ -41,8 +41,6 @@ $routine_pattern = "[A-Z][a-z0-9_]*";
 my @routine_prefixes = qw(MPI_ MPIX_);
 my @out_prefixes = qw(mpi_ mpix_);
 
-$malloc = "MPL_malloc";
-$free   = "MPL_free";
 $header_file = "mpi_fortimpl.h";
 $debug = 0;
 $writeRoutineList = 0;   # Set to 1 to get a list of MPI routines
@@ -1832,11 +1830,11 @@ sub unweighted_in_ftoc {
     }
     else {
         int li;
-        l$count = (int *)$malloc( $Array_size * sizeof(int), MPL_MEM_OTHER );
+        l$count = (int *)malloc($Array_size * sizeof(int));
         for (li=0; li<$Array_size; li++) l$count\[li\] = (int)v$count\[li\];
     }
 EOT
-	$clean_up .= "    if (l$count != MPI_UNWEIGHTED && l$count != MPI_WEIGHTS_EMPTY) {$free(l$count);}\n";
+	$clean_up .= "    if (l$count != MPI_UNWEIGHTED && l$count != MPI_WEIGHTS_EMPTY) {free(l$count);}\n";
     }
     else {
         print $OUTFD "    if      (v$count == MPIR_F_MPI_UNWEIGHTED) v$count = MPI_UNWEIGHTED;\n";
@@ -1855,10 +1853,10 @@ sub unweighted_out_ftoc {
         l$count = MPI_WEIGHTS_EMPTY;
     }
     else {
-        l$count = (int *)$malloc( $Array_size * sizeof(int), MPL_MEM_OTHER );
+        l$count = (int *)malloc($Array_size * sizeof(int));
     }
 EOT
-        $clean_up .= "    if (l$count != MPI_UNWEIGHTED && l$count != MPI_WEIGHTS_EMPTY) {$free(l$count);}\n";
+        $clean_up .= "    if (l$count != MPI_UNWEIGHTED && l$count != MPI_WEIGHTS_EMPTY) {free(l$count);}\n";
     }
 }
 sub unweighted_in_decl {
@@ -1968,7 +1966,7 @@ sub logical_array_in_ftoc {
     }
     print $OUTFD "\
     if ($ActSize) {int li;
-     l$count = (int *)$malloc($ActSize * sizeof(int), MPL_MEM_OTHER);
+     l$count = (int *)malloc($ActSize * sizeof(int));
      for (li=0; li<$ActSize; li++) {
         l$count\[li\] = MPII_FROM_FLOG(v$count\[li\]);
      }
@@ -1981,7 +1979,7 @@ sub logical_array_in_decl {
 	print $OUTFD "    int _ctsize;\n";
     }
     print $OUTFD "    int *l$count=0;\n";
-    $clean_up .= "    $free( l$count );\n";
+    $clean_up .= "    free( l$count );\n";
 }
 sub logical_array_in_arg {
     my $count = $_[0];
@@ -2011,8 +2009,8 @@ sub logical_array_out_ctof {
 sub logical_array_out_decl {
     my $count = $_[0];
     if ($within_fint) {
-	print $OUTFD "    int *l$count = (int *)$malloc($Array_size * sizeof(int), MPL_MEM_OTHER);\n";
-	$clean_up .= "    $free( l$count );\n";
+	print $OUTFD "    int *l$count = (int *)malloc($Array_size * sizeof(int));\n";
+	$clean_up .= "    free( l$count );\n";
     }
     else {
 	; # Nothing required
@@ -2055,7 +2053,7 @@ sub index_array_ftoc {
 sub index_array_out_ftoc {
     my $count = $_[0];
     if ($within_fint) {
-	print $OUTFD "    l$count = (int *)$malloc( $Array_size * sizeof(int), MPL_MEM_OTHER );\n";
+	print $OUTFD "    l$count = (int *)malloc( $Array_size * sizeof(int) );\n";
     }
 }
 sub index_array_ctof {
@@ -2073,7 +2071,7 @@ sub index_array_ctof {
      }
     }
 ";
-	$clean_up .= "    $free( $coutvar );\n";
+	$clean_up .= "    free( $coutvar );\n";
     }
     else {
 	print $OUTFD "\
@@ -2206,13 +2204,13 @@ sub handle_array_in_ftoc {
 	print $OUTFD "\
      /* handle_array_ftoc( $count ); */
     {int li;
-     $cvar = ($nativeType *)$malloc( $asize * sizeof($nativeType), MPL_MEM_OTHER );
+     $cvar = ($nativeType *)malloc($asize * sizeof($nativeType));
      for (li=0; li<$asize; li++) {
         $cvar\[li\] = $convfunc( $fvar\[li\] );
      }
     }
 ";
-	$clean_up .= "    $free( $cvar );\n";
+	$clean_up .= "    free( $cvar );\n";
     }
     else {
     }
@@ -2244,9 +2242,9 @@ sub handle_array_out_ftoc {
 	}
 	print $OUTFD "\
      /* handle_array_ftoc( $count ); */
-     $cvar = ($nativeType *)$malloc( $asize * sizeof($nativeType), MPL_MEM_OTHER );
+     $cvar = ($nativeType *)malloc($asize * sizeof($nativeType));
 ";
-	$clean_up .= "    $free( $cvar );\n";
+	$clean_up .= "    free( $cvar );\n";
     }
     else {
     }
@@ -2590,10 +2588,10 @@ sub errcodesignore_out_ftoc {
 	}
 	print $OUTFD "\
     if ($coutvar != MPI_ERRCODES_IGNORE) {
-         $coutvar = (int *)$malloc( $asize * sizeof(int), MPL_MEM_OTHER );
+         $coutvar = (int *)malloc($asize * sizeof(int));
     }
 ";
-        $clean_up .= "     $free( $coutvar );\n";
+        $clean_up .= "     free( $coutvar );\n";
     }
 }
 
@@ -2613,7 +2611,7 @@ sub errcodesignore_out_ctof {
             $outvar\[li\] = (int)$coutvar\[li\];
         }
     }\n";
-	$clean_up .= "        $free($coutvar);\n";
+	$clean_up .= "        free($coutvar);\n";
     }
 }
 sub errcodesignore_out_decl {
@@ -2656,7 +2654,7 @@ sub status_array_out_ftoc {
 	print $OUTFD "\
     if (l$count != MPI_STATUSES_IGNORE) { 
         int li;
-        l$count = (MPI_Status*)$malloc($Array_size * sizeof(MPI_Status), MPL_MEM_OTHER);
+        l$count = (MPI_Status*)malloc($Array_size * sizeof(MPI_Status));
         for (li=0; li<$Array_size; li++) 
             l$count\[li].MPI_ERROR = ((MPI_Status*)(void*)v$count)[li].MPI_ERROR;
     }\n";
@@ -2683,7 +2681,7 @@ sub status_array_ctof {
             MPI_Status_c2f($coutvar+li,$outvar+li*MPIF_STATUS_SIZE);
         }
     }\n";
-	$clean_up .= "     if ($coutvar != MPI_STATUSES_IGNORE) { $free($coutvar); }\n";
+	$clean_up .= "     if ($coutvar != MPI_STATUSES_IGNORE) { free($coutvar); }\n";
     }
 }
 sub status_array_out_decl {
@@ -2815,13 +2813,13 @@ sub fint2int_array_in_ftoc {
 	}
 	print $OUTFD "\
     if ($extraCondition$asize > 0) {int li;
-     $coutvar = (int *)$malloc( $asize * sizeof(int), MPL_MEM_OTHER );
+     $coutvar = (int *)malloc($asize * sizeof(int));
      for (li=0; li<$asize; li++) {
         $coutvar\[li\] = (int)$outvar\[li\];
      }
     }
 ";
-	$clean_up .= "     $free( $coutvar );\n";
+	$clean_up .= "     free( $coutvar );\n";
     }
 }
 sub fint2int_array_inout_ftoc {
@@ -2850,9 +2848,9 @@ sub fint2int_array_out_ftoc {
 	}
 
 	print $OUTFD "\
-    $coutvar = (int *)$malloc( $asize * sizeof(int), MPL_MEM_OTHER );
+    $coutvar = (int *)malloc( $asize * sizeof(int) );
 ";
-        $clean_up .= "     $free( $coutvar );\n";
+        $clean_up .= "     free( $coutvar );\n";
     }
 }
 
@@ -2993,13 +2991,13 @@ sub fint2intinplace_array_in_ftoc {
 	}
 	print $OUTFD "\
     if ($extraCondition$asize > 0 && v1 != MPI_IN_PLACE) {int li;
-     $coutvar = (int *)$malloc( $asize * sizeof(int), MPL_MEM_OTHER );
+     $coutvar = (int *)malloc($asize * sizeof(int));
      for (li=0; li<$asize; li++) {
         $coutvar\[li\] = (int)$outvar\[li\];
      }
     }
 ";
-	$clean_up .= "     $free( $coutvar );\n";
+	$clean_up .= "     free( $coutvar );\n";
     }
 }
 sub fint2intinplace_array_in_decl {
@@ -3046,13 +3044,13 @@ sub fint2int_rangearray_in_ftoc {
 	}
 	print $OUTFD "\
     if ($extraCondition$asize > 0) {int li;
-     $coutvar = (int *)$malloc( $asize * sizeof(int), MPL_MEM_OTHER );
+     $coutvar = (int *)malloc($asize * sizeof(int));
      for (li=0; li<$asize; li++) {
         $coutvar\[li\] = (int)$outvar\[li\];
      }
     }
 ";
-	$clean_up .= "     $free( $coutvar );\n";
+	$clean_up .= "     free( $coutvar );\n";
     }
 }
 sub fint2int_rangearray_in_decl {
@@ -3144,7 +3142,7 @@ sub blankpad_out_ftoc {
 
     # Allocate space to hold the C version of the output
     $strlen = "d$count";
-    print $OUTFD "    p$count = (char *)$malloc( $strlen + 1, MPL_MEM_OTHER );\n";
+    print $OUTFD "    p$count = (char *)malloc($strlen + 1);\n";
 }
 sub blankpad_ctof {
     my $coutvar = $_[0];
@@ -3164,7 +3162,7 @@ sub blankpad_ctof {
         while ((p-$outvar) < $strlen) { *p++ = ' '; }
     }
 ";
-    $clean_up .= "    $free( $cvar );\n";
+    $clean_up .= "    free( $cvar );\n";
 }
 #
 # Blankpad strings if a flag is true (for info_get, perhaps others?)
@@ -3186,7 +3184,7 @@ sub blankpadonflag_out_ftoc {
 
     # Allocate space to hold the C version of the output
     $strlen = "d$count";
-    print $OUTFD "    p$count = (char *)$malloc( $strlen + 1, MPL_MEM_OTHER );\n";
+    print $OUTFD "    p$count = (char *)malloc($strlen + 1);\n";
 }
 sub blankpadonflag_ctof {
     my $coutvar = $_[0];
@@ -3206,7 +3204,7 @@ sub blankpadonflag_ctof {
         while ((p-$outvar) < $strlen) { *p++ = ' '; }
     }
 ";
-    $clean_up .= "    $free( $cvar );\n";
+    $clean_up .= "    free( $cvar );\n";
 }
 
 # ---------------------------------------------------------------------------
@@ -3234,12 +3232,12 @@ sub addnull_ftoc {
      int  li;
         while (*p == ' ' && p > v$count) p--;
         p++;
-        p$count = (char *)$malloc( p-v$count + 1, MPL_MEM_OTHER );
+        p$count = (char *)malloc(p-v$count + 1);
         for (li=0; li<(p-v$count); li++) { p$count\[li\] = v$count\[li\]; }
         p$count\[li\] = 0; 
     }
 ";
-    $clean_up .= "    $free( p$count );\n";
+    $clean_up .= "    free( p$count );\n";
 }
 # ----------------------------------------------------------------------------
 # Add null to input strings, also trim all LEADING and trailing blanks.
@@ -3270,12 +3268,12 @@ sub addnullandtrim_ftoc {
         while (*p == ' ' && p > v$count) p--;
         p++;
         while (*pin == ' ' && pin < p) pin++;
-        p$count = (char *)$malloc( p-pin + 1, MPL_MEM_OTHER );
+        p$count = (char *)malloc(p-pin + 1);
         for (li=0; li<(p-pin); li++) { p$count\[li\] = pin\[li\]; }
         p$count\[li\] = 0; 
     }
 ";
-    $clean_up .= "    $free( p$count );\n";
+    $clean_up .= "    free( p$count );\n";
 }
 
 # ----------------------------------------------------------------------------
@@ -3325,8 +3323,8 @@ sub chararray_ftoc {
       }\n";
     }
     print $OUTFD "\
-      p$count = (char **)$malloc( asize$count * sizeof(char *), MPL_MEM_OTHER );
-      if (asize$count-1 > 0) ptmp = (char *)$malloc( asize$count * (d$count + 1), MPL_MEM_OTHER );
+      p$count = (char **)malloc( asize$count * sizeof(char *));
+      if (asize$count-1 > 0) ptmp = (char *)malloc(asize$count * (d$count + 1));
       for (i=0; i<asize$count-1; i++) {
           char *p = v$count + i * d$count, *pin, *pdest;
           int j;
@@ -3343,7 +3341,7 @@ sub chararray_ftoc {
     /* Null terminate the array */
     p$count\[asize$count-1\] = 0;
     }\n";
-    $clean_up .= "    if (asize$count-1 > 0) $free( p$count\[0\] );\n    $free( p$count );\n";
+    $clean_up .= "    if (asize$count-1 > 0) free( p$count\[0\] );\n    free( p$count );\n";
 }
 
 # Add null to 2-dimensional arrays of input strings.  Used only 
@@ -3410,7 +3408,7 @@ sub chararray2_ftoc {
       int k;
 
       /* Allocate the array of pointers for the commands */
-      p$count = (char ***)$malloc( $Array_size * sizeof(char **), MPL_MEM_OTHER );
+      p$count = (char ***)malloc($Array_size * sizeof(char **));
 
       for (k=0; k<$Array_size; k++) {
         /* For each command, find the number of command-line arguments.
@@ -3438,8 +3436,8 @@ sub chararray2_ftoc {
 
         /* argcnt is the number of provided arguments.  
            Allocate the necessary elements and copy, null terminating copies */
-        pargs = (char **)$malloc( (argcnt+1)*sizeof(char *), MPL_MEM_OTHER );
-        pdata = (char *)$malloc( arglen, MPL_MEM_OTHER );
+        pargs = (char **)malloc((argcnt+1)*sizeof(char *));
+        pdata = (char *)malloc(arglen);
         p$count\[k\] = pargs;
         pargs\[argcnt\] = 0;  /* Null terminate end */
         /* Copy each argument to consequtive locations in pdata, 
@@ -3466,11 +3464,11 @@ sub chararray2_ftoc {
     $clean_up .= "    if (v$count != (char *)MPI_ARGVS_NULL) { 
         int i; 
         for (i=0; i <$Array_size; i++) {
-            $free( p$count\[i\]\[0\] );  /* Free space allocated to args */
-            $free( p$count\[i\] );       /* Free space allocated to arg array */
+            free( p$count\[i\]\[0\] );  /* Free space allocated to args */
+            free( p$count\[i\] );       /* Free space allocated to arg array */
         }
         /* Free the array of arrays */
-        $free( p$count );
+        free( p$count );
     }\n";
 }
 
@@ -3497,7 +3495,7 @@ sub intToAintArr_ftoc {
     print $OUTFD "
     if ($Array_size > 0) {
         int li;
-        l$count = (MPI_Aint *)$malloc( $Array_size * sizeof(MPI_Aint), MPL_MEM_OTHER );
+        l$count = (MPI_Aint *)malloc( $Array_size * sizeof(MPI_Aint) );
         for (li=0; li<$Array_size; li++) 
             l$count\[li\] = v$count\[li\];
     }
@@ -3516,7 +3514,7 @@ sub intToAintArr_in_ctof {
     my $vname = $_[1];
     print $OUTFD "
 #ifdef HAVE_AINT_LARGER_THAN_FINT
-    $free($lname);
+    free($lname);
 #endif\n";
 }
 # ---------------------------------------------------------------------------
