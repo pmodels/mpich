@@ -32,6 +32,10 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         /* --END ERROR HANDLING-- */
         /* get the function by indexing into the op table */
         uop = MPIR_OP_HDL_TO_FN(op);
+        /* TODO: use MPI_Aint count for built-in op */
+        MPIR_Assert(count <= INT_MAX);
+        int icount = (int) count;
+        (*uop) ((void *) inbuf, inoutbuf, &icount, &datatype);
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
 
@@ -51,31 +55,35 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
 #endif
             }
         }
-    }
 
-    /* actually perform the reduction */
-    /* FIXME: properly support large count reduction */
-    MPIR_Assert(count <= INT_MAX);
-    int icount = (int) count;
+        /* actually perform the reduction */
+        /* FIXME: properly support large count reduction */
+        MPIR_Assert(count <= INT_MAX);
+        int icount = (int) count;
+
+        /* Take off the global locks before calling user functions */
+        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 #ifdef HAVE_CXX_BINDING
-    if (is_cxx_uop) {
-        (*MPIR_Process.cxx_call_op_fn) (inbuf, inoutbuf, icount, datatype, uop);
-    } else
+        if (is_cxx_uop) {
+            (*MPIR_Process.cxx_call_op_fn) (inbuf, inoutbuf, icount, datatype, uop);
+        } else
 #endif
-    {
+        {
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-        if (is_f77_uop) {
-            MPI_Fint lcount = (MPI_Fint) count;
-            MPI_Fint ldtype = (MPI_Fint) datatype;
-            MPII_F77_User_function *uop_f77 = (MPII_F77_User_function *) uop;
+            if (is_f77_uop) {
+                MPI_Fint lcount = (MPI_Fint) count;
+                MPI_Fint ldtype = (MPI_Fint) datatype;
+                MPII_F77_User_function *uop_f77 = (MPII_F77_User_function *) uop;
 
-            (*uop_f77) ((void *) inbuf, inoutbuf, &lcount, &ldtype);
-        } else {
-            (*uop) ((void *) inbuf, inoutbuf, &icount, &datatype);
-        }
+                (*uop_f77) ((void *) inbuf, inoutbuf, &lcount, &ldtype);
+            } else {
+                (*uop) ((void *) inbuf, inoutbuf, &icount, &datatype);
+            }
 #else
-        (*uop) ((void *) inbuf, inoutbuf, &icount, &datatype);
+            (*uop) ((void *) inbuf, inoutbuf, &icount, &datatype);
 #endif
+        }
+        MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
 
   fn_exit:
