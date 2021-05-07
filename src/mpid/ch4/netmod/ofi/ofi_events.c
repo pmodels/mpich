@@ -821,14 +821,12 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
     return mpi_errno;
 }
 
-int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
+int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_cq_err_entry e;
     char err_data[MPIDI_OFI_MAX_ERR_DATA_SIZE];
     MPIR_Request *req;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_idx, nic);
     ssize_t ret_cqerr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR);

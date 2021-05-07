@@ -9,13 +9,13 @@
 
 #define MPIDI_OFI_MR_KEY_PREFIX_SHIFT 63
 
-int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
+int MPIDI_OFI_handle_cq_error_util(int ctx_idx, ssize_t ret)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
 
-    mpi_errno = MPIDI_OFI_handle_cq_error(vni_idx, ret);
+    mpi_errno = MPIDI_OFI_handle_cq_error(ctx_idx, ret);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
     return mpi_errno;
