@@ -13,7 +13,6 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Op *op_ptr;
-    MPI_User_function *uop;
 #ifdef HAVE_CXX_BINDING
     int is_cxx_uop = 0;
 #endif
@@ -25,6 +24,7 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         goto fn_exit;
 
     if (HANDLE_IS_BUILTIN(op)) {
+        MPIR_op_function *uop;
         /* --BEGIN ERROR HANDLING-- */
         mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
         if (mpi_errno != MPI_SUCCESS)
@@ -32,11 +32,9 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         /* --END ERROR HANDLING-- */
         /* get the function by indexing into the op table */
         uop = MPIR_OP_HDL_TO_FN(op);
-        /* TODO: use MPI_Aint count for built-in op */
-        MPIR_Assert(count <= INT_MAX);
-        int icount = (int) count;
-        (*uop) ((void *) inbuf, inoutbuf, &icount, &datatype);
+        (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
     } else {
+        MPI_User_function *uop;
         MPIR_Op_get_ptr(op, op_ptr);
 
 #ifdef HAVE_CXX_BINDING

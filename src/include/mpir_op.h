@@ -154,20 +154,20 @@ MPL_STATIC_INLINE_PREFIX MPI_Op MPIR_Op_builtin_get_op(int index)
 MPI_Datatype MPIR_Op_builtin_search_by_shortname(const char *short_name);
 const char *MPIR_Op_builtin_get_shortname(MPI_Op op);
 
-void MPIR_MAXF(void *, void *, int *, MPI_Datatype *);
-void MPIR_MINF(void *, void *, int *, MPI_Datatype *);
-void MPIR_SUM(void *, void *, int *, MPI_Datatype *);
-void MPIR_PROD(void *, void *, int *, MPI_Datatype *);
-void MPIR_LAND(void *, void *, int *, MPI_Datatype *);
-void MPIR_BAND(void *, void *, int *, MPI_Datatype *);
-void MPIR_LOR(void *, void *, int *, MPI_Datatype *);
-void MPIR_BOR(void *, void *, int *, MPI_Datatype *);
-void MPIR_LXOR(void *, void *, int *, MPI_Datatype *);
-void MPIR_BXOR(void *, void *, int *, MPI_Datatype *);
-void MPIR_MAXLOC(void *, void *, int *, MPI_Datatype *);
-void MPIR_MINLOC(void *, void *, int *, MPI_Datatype *);
-void MPIR_REPLACE(void *, void *, int *, MPI_Datatype *);
-void MPIR_NO_OP(void *, void *, int *, MPI_Datatype *);
+void MPIR_MAXF(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_MINF(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_SUM(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_PROD(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_LAND(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_BAND(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_LOR(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_BOR(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_LXOR(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_BXOR(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_MAXLOC(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_MINLOC(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_REPLACE(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_NO_OP(void *, void *, MPI_Aint *, MPI_Datatype *);
 
 int MPIR_MAXF_check_dtype(MPI_Datatype);
 int MPIR_MINF_check_dtype(MPI_Datatype);
@@ -205,7 +205,9 @@ int MPIR_NO_OP_check_dtype(MPI_Datatype);
         }                                                \
     } while (0)                                          \
 
-extern MPI_User_function *MPIR_Op_table[];
+/* internal op function, uses MPI_Aint for count */
+typedef void (MPIR_op_function) (void *, void *, MPI_Aint *, MPI_Datatype *);
+extern MPIR_op_function *MPIR_Op_table[];
 
 typedef int (MPIR_Op_check_dtype_fn) (MPI_Datatype);
 extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];

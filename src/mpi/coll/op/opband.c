@@ -14,9 +14,9 @@
 #define MPIR_LBAND(a,b) ((a)&(b))
 #endif
 
-void MPIR_BAND(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
+void MPIR_BAND(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 {
-    int i, len = *Len;
+    MPI_Aint i, len = *Len;
 
     switch (*type) {
 #undef MPIR_OP_TYPE_MACRO
