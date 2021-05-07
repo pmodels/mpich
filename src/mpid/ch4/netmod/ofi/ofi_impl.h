@@ -547,4 +547,56 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
     return total_iov;
 }
 
+/* Calculate the index of the NIC used to send a message from sender_rank to receiver_rank
+ *
+ * comm - The communicator used to send the message.
+ * ctxid_in_effect - The context ID that will be used to send the message.
+ *                   On the sender side, this should be comm->context_id.
+ *                   On the receiver side, this should be comm->recvcontext_id.
+ * receiver_rank - The rank of the receiving process.
+ * tag - The tag of the message being sent.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_sender_nic_index(MPIR_Comm * comm,
+                                                              MPIR_Context_id_t ctxid_in_effect,
+                                                              int receiver_rank, int tag)
+{
+    int nic_idx = 0;
+
+    /* TODO - If there is a communicator specific mapping, that should be checked/used here. */
+    /* TODO - We should use the per-communicator value for the maximum number of NICs in this
+     *        calculation once we have a per-communicator value for it. */
+    if (MPIDI_OFI_COMM(comm).enable_hashing) {
+        nic_idx = ((unsigned int) (MPIR_CONTEXT_READ_FIELD(PREFIX, ctxid_in_effect) +
+                                   receiver_rank + tag)) % MPIDI_OFI_global.num_nics;
+    }
+
+    return nic_idx;
+}
+
+/* Calculate the index of the NIC used to receive a message from sender_rank at receiver_rank
+ *
+ * comm - The communicator used to receive the message.
+ * ctxid_in_effect - The context ID that will be used to receive the message.
+ *                   On the sender side, this should be comm->context_id.
+ *                   On the receiver side, this should be comm->recvcontext_id.
+ * sender_rank - The rank of the sending process.
+ * tag - The tag of the message being sent.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm,
+                                                                MPIR_Context_id_t ctxid_in_effect,
+                                                                int sender_rank, int tag)
+{
+    int nic_idx = 0;
+
+    /* TODO - If there is a communicator specific mapping, that should be checked/used here. */
+    /* TODO - We should use the per-communicator value for the maximum number of NICs in this
+     *        calculation once we have a per-communicator value for it. */
+    if (MPIDI_OFI_COMM(comm).enable_hashing) {
+        nic_idx = ((unsigned int) (MPIR_CONTEXT_READ_FIELD(PREFIX, ctxid_in_effect) +
+                                   sender_rank + tag)) % MPIDI_OFI_global.num_nics;
+    }
+
+    return nic_idx;
+}
+
 #endif /* OFI_IMPL_H_INCLUDED */
