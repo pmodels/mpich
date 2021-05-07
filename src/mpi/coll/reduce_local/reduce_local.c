@@ -5,20 +5,51 @@
 
 #include "mpiimpl.h"
 
-/* any utility functions should go here, usually prefixed with PMPI_LOCAL to
- * correctly handle weak symbols and the profiling interface */
+static void call_user_op(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype,
+                         MPIR_User_function uop)
+{
+    /* Take off the global locks before calling user functions */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    (uop.c_function) ((void *) inbuf, inoutbuf, &count, &datatype);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+}
+
+static void call_user_op_large(const void *inbuf, void *inoutbuf, MPI_Count count,
+                               MPI_Datatype datatype, MPIR_User_function uop)
+{
+    /* Take off the global locks before calling user functions */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    (uop.c_large_function) ((void *) inbuf, inoutbuf, &count, &datatype);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+}
+
+#ifdef HAVE_CXX_BINDING
+static void call_user_op_cxx(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype,
+                             MPI_User_function * uop)
+{
+    /* Take off the global locks before calling user functions */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    (*MPIR_Process.cxx_call_op_fn) (inbuf, inoutbuf, count, datatype, uop);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+}
+#endif
+
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+static void call_user_op_f77(const void *inbuf, void *inoutbuf, MPI_Fint count, MPI_Fint datatype,
+                             MPIR_User_function * uop)
+{
+    /* Take off the global locks before calling user functions */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    (uop->f77_function) ((void *) inbuf, inoutbuf, &count, &datatype);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+}
+#endif
 
 int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
                       MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Op *op_ptr;
-#ifdef HAVE_CXX_BINDING
-    int is_cxx_uop = 0;
-#endif
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-    int is_f77_uop = 0;
-#endif
 
     if (count == 0)
         goto fn_exit;
@@ -34,54 +65,36 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         uop = MPIR_OP_HDL_TO_FN(op);
         (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
     } else {
-        MPI_User_function *uop;
         MPIR_Op_get_ptr(op, op_ptr);
 
 #ifdef HAVE_CXX_BINDING
         if (op_ptr->language == MPIR_LANG__CXX) {
-            uop = (MPI_User_function *) op_ptr->function.c_function;
-            is_cxx_uop = 1;
-        } else
-#endif
-        {
-            if (op_ptr->language == MPIR_LANG__C) {
-                uop = (MPI_User_function *) op_ptr->function.c_function;
-            } else {
-                uop = (MPI_User_function *) op_ptr->function.f77_function;
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-                is_f77_uop = 1;
-#endif
-            }
+            /* large count not supported */
+            MPIR_Assert(count <= INT_MAX);
+            MPIR_Assert(op_ptr->kind == MPIR_OP_KIND__USER ||
+                        op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE);
+            call_user_op_cxx(inbuf, inoutbuf, (int) count, datatype,
+                             (MPI_User_function *) op_ptr->function.c_function);
+            goto fn_exit;
         }
-
-        /* actually perform the reduction */
-        /* FIXME: properly support large count reduction */
-        MPIR_Assert(count <= INT_MAX);
-        int icount = (int) count;
-
-        /* Take off the global locks before calling user functions */
-        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-#ifdef HAVE_CXX_BINDING
-        if (is_cxx_uop) {
-            (*MPIR_Process.cxx_call_op_fn) (inbuf, inoutbuf, icount, datatype, uop);
-        } else
 #endif
-        {
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-            if (is_f77_uop) {
-                MPI_Fint lcount = (MPI_Fint) count;
-                MPI_Fint ldtype = (MPI_Fint) datatype;
-                MPII_F77_User_function *uop_f77 = (MPII_F77_User_function *) uop;
-
-                (*uop_f77) ((void *) inbuf, inoutbuf, &lcount, &ldtype);
-            } else {
-                (*uop) ((void *) inbuf, inoutbuf, &icount, &datatype);
-            }
-#else
-            (*uop) ((void *) inbuf, inoutbuf, &icount, &datatype);
-#endif
+        if (op_ptr->language == MPIR_LANG__FORTRAN) {
+            /* large count not supported */
+            MPIR_Assert(op_ptr->kind == MPIR_OP_KIND__USER ||
+                        op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE);
+            call_user_op_f77(inbuf, inoutbuf, (MPI_Fint) count, (MPI_Fint) datatype,
+                             op_ptr->function);
+            goto fn_exit;
         }
-        MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#endif
+        if (op_ptr->kind == MPIR_OP_KIND__USER_LARGE ||
+            op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE_LARGE) {
+            call_user_op_large(inbuf, inoutbuf, (MPI_Count) count, datatype, op_ptr->function);
+        } else {
+            MPIR_Assert(count <= INT_MAX);
+            call_user_op(inbuf, inoutbuf, (int) count, datatype, op_ptr->function);
+        }
     }
 
   fn_exit:

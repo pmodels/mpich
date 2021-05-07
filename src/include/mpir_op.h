@@ -37,7 +37,9 @@ typedef enum MPIR_Op_kind {
     MPIR_OP_KIND__REPLACE = 13,
     MPIR_OP_KIND__NO_OP = 14,
     MPIR_OP_KIND__USER_NONCOMMUTE = 32,
-    MPIR_OP_KIND__USER = 33
+    MPIR_OP_KIND__USER = 33,
+    MPIR_OP_KIND__USER_NONCOMMUTE_LARGE = 34,
+    MPIR_OP_KIND__USER_LARGE = 35
 } MPIR_Op_kind;
 
 #define MPIR_OP_N_BUILTIN 15
@@ -79,6 +81,7 @@ typedef enum MPIR_Op_kind {
   S*/
 typedef union MPIR_User_function {
     void (*c_function) (const void *, void *, const int *, const MPI_Datatype *);
+    void (*c_large_function) (const void *, void *, const MPI_Count *, const MPI_Datatype *);
     void (*f77_function) (const void *, void *, const MPI_Fint *, const MPI_Fint *);
 } MPIR_User_function;
 /* FIXME: Should there be "restrict" in the definitions above, e.g.,
