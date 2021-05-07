@@ -9,7 +9,7 @@
 
 #define MAP_LENGTH      (5)
 
-struct HYDT_topo_hwloc_info HYDT_topo_hwloc_info = { 0 };
+struct HYDT_topo_hwloc_info HYDT_topo_hwloc_info;
 
 static hwloc_topology_t topology;
 static int hwloc_initialized = 0;
