@@ -70,9 +70,9 @@ typedef struct MPIR_longdoubleint_loctype {
     break
 
 
-void MPIR_MAXLOC(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
+void MPIR_MAXLOC(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 {
-    int i, len = *Len;
+    MPI_Aint i, len = *Len;
 
 #ifdef HAVE_FORTRAN_BINDING
 #ifndef HAVE_NO_FORTRAN_MPI_TYPES_IN_C

@@ -7,7 +7,7 @@
 
 /* The order of entries in this table must match the definitions in
    mpi.h.in */
-MPI_User_function *MPIR_Op_table[] = {
+MPIR_op_function *MPIR_Op_table[] = {
     NULL,
     MPIR_MAXF,
     MPIR_MINF,

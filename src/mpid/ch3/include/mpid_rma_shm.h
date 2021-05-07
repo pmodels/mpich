@@ -596,10 +596,10 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
                                         MPI_Aint target_disp, MPI_Op op, MPIR_Win * win_ptr)
 {
     void *base = NULL, *dest_addr = NULL;
-    MPI_User_function *uop = NULL;
+    MPIR_op_function *uop = NULL;
     int disp_unit;
     MPI_Aint len;
-    int one, shm_locked = 0;
+    int shm_locked = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_FOP_OP);
 
@@ -628,7 +628,7 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
     MPIR_Memcpy(result_addr, dest_addr, len);
 
     uop = MPIR_OP_HDL_TO_FN(op);
-    one = 1;
+    MPI_Aint one = 1;
 
     (*uop) ((void *) origin_addr, dest_addr, &one, &datatype);
 

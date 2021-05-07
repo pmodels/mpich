@@ -12,9 +12,9 @@
  */
 #define MPIR_LPROD(a,b) ((a)*(b))
 
-void MPIR_PROD(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
+void MPIR_PROD(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 {
-    int i, len = *Len;
+    MPI_Aint i, len = *Len;
 
     switch (*type) {
 #undef MPIR_OP_TYPE_MACRO
