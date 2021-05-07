@@ -31,8 +31,8 @@ static int g_tbl_capacity = CONN_PLFD_TBL_INIT_SIZE;
 static sockconn_t *g_sc_tbl = NULL;
 struct pollfd *MPID_nem_tcp_plfd_tbl = NULL;
 
-sockconn_t MPID_nem_tcp_g_lstn_sc = { 0 };
-struct pollfd MPID_nem_tcp_g_lstn_plfd = { 0 };
+sockconn_t MPID_nem_tcp_g_lstn_sc;
+struct pollfd MPID_nem_tcp_g_lstn_plfd;
 
 /* We define this in order to trick the compiler into including
    information about the MPID_nem_tcp_vc_area type.  This is

@@ -33,11 +33,11 @@ static int init_pg(int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p);
 static int pg_compare_ids(void * id1, void * id2);
 static int pg_destroy(MPIDI_PG_t * pg );
 
-MPIDI_Process_t MPIDI_Process = { NULL };
-MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
-MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns = { NULL };
-MPIDI_CH3U_Win_hooks_t MPIDI_CH3U_Win_hooks = { NULL };
-MPIDI_CH3U_Win_pkt_ordering_t MPIDI_CH3U_Win_pkt_orderings = { 0 };
+MPIDI_Process_t MPIDI_Process;
+MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool;
+MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns;
+MPIDI_CH3U_Win_hooks_t MPIDI_CH3U_Win_hooks;
+MPIDI_CH3U_Win_pkt_ordering_t MPIDI_CH3U_Win_pkt_orderings;
 
 #if defined(MPL_USE_DBG_LOGGING)
 MPL_dbg_class MPIDI_CH3_DBG_CONNECT;
