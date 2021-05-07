@@ -174,6 +174,8 @@ typedef struct {
     int event_id;               /* fixed field, do not move */
     MPL_atomic_int_t util_id;
     MPI_Datatype datatype;
+    int nic_num;                /* Store the nic number so we can use it to cancel a request later
+                                 * if needed. */
     union {
         struct {
             void *buf;
