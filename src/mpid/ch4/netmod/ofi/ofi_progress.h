@@ -131,7 +131,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
             else if (ret == -FI_EAGAIN)
                 mpi_errno = MPI_SUCCESS;
             else
-                mpi_errno = MPIDI_OFI_handle_cq_error(vni, ret);
+                mpi_errno = MPIDI_OFI_handle_cq_error(ctx_idx, ret);
         }
 
         if (unlikely(mpi_errno == MPI_SUCCESS && MPIDI_OFI_global.deferred_am_isend_q)) {
