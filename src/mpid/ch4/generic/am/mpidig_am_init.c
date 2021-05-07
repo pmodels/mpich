@@ -127,10 +127,8 @@ int MPIDIG_am_init(void)
     MPIDI_global.comm_req_lists = (MPIDIG_comm_req_list_t *)
         MPL_calloc(MPIR_MAX_CONTEXT_MASK * MPIR_CONTEXT_INT_BITS,
                    sizeof(MPIDIG_comm_req_list_t), MPL_MEM_OTHER);
-#ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDI_global.posted_list = NULL;
     MPIDI_global.unexp_list = NULL;
-#endif
     MPIDI_global.part_posted_list = NULL;
     MPIDI_global.part_unexp_list = NULL;
 

@@ -187,13 +187,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
 #endif
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-#ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDIG_COMM(comm, posted_head_ptr) = &(MPIDI_global.posted_list);
     MPIDIG_COMM(comm, unexp_head_ptr) = &(MPIDI_global.unexp_list);
-#else
-    MPIDIG_COMM(comm, posted_head_ptr) = &(MPIDIG_COMM(comm, posted_list));
-    MPIDIG_COMM(comm, unexp_head_ptr) = &(MPIDIG_COMM(comm, unexp_list));
-#endif
 #endif
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_COMMIT_PRE_HOOK);
