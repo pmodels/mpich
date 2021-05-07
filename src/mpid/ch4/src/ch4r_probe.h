@@ -12,17 +12,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
                                                int context_offset, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Comm *root_comm;
     MPIR_Request *unexp_req;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IPROBE);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
-    root_comm = MPIDIG_context_id_to_comm(context_id);
 
     /* MPIDI_CS_ENTER(); */
-    unexp_req = MPIDIG_find_unexp(source, tag, context_id, &MPIDIG_COMM(root_comm, unexp_list));
+    unexp_req = MPIDIG_find_unexp(source, tag, context_id, NULL);
 
     if (unexp_req) {
         *flag = 1;
@@ -47,7 +45,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
                                                 MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Comm *root_comm;
     MPIR_Request *unexp_req;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IMPROBE);
@@ -55,10 +52,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
-    root_comm = MPIDIG_context_id_to_comm(context_id);
 
     /* MPIDI_CS_ENTER(); */
-    unexp_req = MPIDIG_dequeue_unexp(source, tag, context_id, &MPIDIG_COMM(root_comm, unexp_list));
+    unexp_req = MPIDIG_dequeue_unexp(source, tag, context_id, NULL);
 
     if (unexp_req) {
         *flag = 1;
@@ -66,9 +62,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
 
         (*message)->kind = MPIR_REQUEST_KIND__MPROBE;
         (*message)->comm = comm;
-        /* Notes on refcounting comm:
-         * We intentionally do nothing here because what we are supposed to do here
-         * is -1 for dequeue(unexp_list) and +1 for (*message)->comm */
+        MPIR_Comm_add_ref(comm);
 
         unexp_req->status.MPI_ERROR = MPI_SUCCESS;
         unexp_req->status.MPI_SOURCE = MPIDIG_REQUEST(unexp_req, rank);

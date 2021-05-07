@@ -70,25 +70,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Comm *MPIDIG_context_id_to_comm(uint64_t context_i
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX MPIDIG_rreq_t **MPIDIG_context_id_to_uelist(uint64_t context_id)
-{
-    int comm_idx = MPIDIG_get_context_index(context_id);
-    int subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id);
-    int is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, context_id);
-    MPIDIG_rreq_t **ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_CONTEXT_ID_TO_UELIST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_CONTEXT_ID_TO_UELIST);
-
-    MPIR_Assert(subcomm_type <= 3);
-    MPIR_Assert(is_localcomm <= 2);
-
-    ret = &MPIDI_global.comm_req_lists[comm_idx].uelist[is_localcomm][subcomm_type];
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_CONTEXT_ID_TO_UELIST);
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_id_to_context(uint64_t win_id)
 {
     MPIR_Context_id_t ret;
