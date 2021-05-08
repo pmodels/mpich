@@ -65,7 +65,7 @@ int MPII_Coll_finalize(void);
         if (mpi_errno)                                                  \
             MPIR_ERR_POP(mpi_errno);                                    \
                                                                         \
-        mpi_errno = MPIR_Sched_create(&s);                              \
+        mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);     \
         if (mpi_errno)                                                  \
             MPIR_ERR_POP(mpi_errno);                                    \
                                                                         \
@@ -73,7 +73,7 @@ int MPII_Coll_finalize(void);
         if (mpi_errno)                                                  \
             MPIR_ERR_POP(mpi_errno);                                    \
                                                                         \
-        mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);       \
+        mpi_errno = MPIR_Sched_start(s, comm_ptr, tag, request);        \
         if (mpi_errno)                                                  \
             MPIR_ERR_POP(mpi_errno);                                    \
     } while (0)
@@ -87,7 +87,7 @@ int MPII_Coll_finalize(void);
         if (mpi_errno)                                                  \
             MPIR_ERR_POP(mpi_errno);                                    \
                                                                         \
-        mpi_errno = MPIR_Sched_create(&s);                              \
+        mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);     \
         if (mpi_errno)                                                  \
             MPIR_ERR_POP(mpi_errno);                                    \
                                                                         \
@@ -95,9 +95,8 @@ int MPII_Coll_finalize(void);
         if (mpi_errno)                                                  \
             MPIR_ERR_POP(mpi_errno);                                    \
                                                                         \
-        mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);       \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
+        mpi_errno = MPIR_Sched_start(s, comm_ptr, tag, request);        \
+        MPIR_ERR_CHECK(mpi_errno);                                      \
     } while (0)
 
 /* functions for supporting GPU buffers in reduce collectives */
