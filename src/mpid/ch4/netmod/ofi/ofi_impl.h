@@ -380,8 +380,9 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
  * C and C++ components
  */
 /* Set max size based on OFI acc ordering limit. */
-MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_OFI_check_acc_order_size(MPIR_Win * win, MPI_Aint max_size)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_OFI_check_acc_order_size(MPIR_Win * win, MPI_Aint data_size)
 {
+    MPI_Aint max_size = data_size;
     /* Check ordering limit, a value of -1 guarantees ordering for any data size. */
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAR)
         && MPIDI_OFI_global.max_order_war != -1) {
