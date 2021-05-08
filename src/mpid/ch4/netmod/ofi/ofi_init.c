@@ -886,10 +886,9 @@ int MPIDI_OFI_post_init(void)
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPI_INT,
                                             MPI_MIN, MPIR_Process.comm_world, &errflag);
-    MPIR_ERR_CHECK(mpi_errno);
-
     MPIDI_OFI_global.num_vnis = tmp_num_vnis;
     MPIDI_OFI_global.num_nics = tmp_num_nics;
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* If the user did not ask to fallback to fewer NICs, throw an error if someone is missing a
      * NIC. */
