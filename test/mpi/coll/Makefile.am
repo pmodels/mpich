@@ -101,6 +101,7 @@ noinst_PROGRAMS =      \
     scattern           \
     scatterv           \
     uoplong            \
+    uop_equal	       \
     nballtoall1        \
     nbredscat          \
     nbredscat3	       \
