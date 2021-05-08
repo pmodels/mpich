@@ -33,6 +33,7 @@ int MPIR_Bcast_init_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
     MPIR_Request *req = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_COLL);
     MPIR_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
+    req->u.persist_coll.sched_type = MPIR_SCHED_INVALID;
     req->u.persist_coll.real_request = NULL;
 
     /* generate the schedule */
@@ -68,6 +69,7 @@ int MPIR_Bcast_init_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    req->u.persist_coll.sched_type = MPIR_SCHED_GENTRAN;
     req->u.persist_coll.sched = sched;
 
     *request = req;
