@@ -13,6 +13,12 @@
  */
 #include "mpidu_pre.h"
 
+enum MPIR_Sched_kind {
+    MPIR_SCHED_KIND_REGULAR = 0,
+    MPIR_SCHED_KIND_PERSISTENT, /* used by persistent collectives, do not free on completion */
+    MPIR_SCHED_KIND_GENERALIZED,        /* used by contextid code, callbacks may alter entries */
+};
+
 enum MPIDU_Sched_entry_type {
     MPIDU_SCHED_ENTRY_INVALID_LB = 0,
     MPIDU_SCHED_ENTRY_SEND,
@@ -109,6 +115,7 @@ struct MPIDU_Sched_entry {
     } u;
 };
 
+#define MPIDU_SCHED_MAXBUF 10
 struct MPIDU_Sched {
     size_t size;                /* capacity (in entries) of the entries array */
     size_t idx;                 /* index into entries array of first yet-outstanding entry */
@@ -116,6 +123,9 @@ struct MPIDU_Sched {
     int tag;
     struct MPIR_Request *req;   /* really needed? could cause MT problems... */
     struct MPIDU_Sched_entry *entries;
+    enum MPIR_Sched_kind kind;  /* regular, persistent, generalized */
+    int num_bufs;
+    void *bufs[MPIDU_SCHED_MAXBUF];     /* persistent buffers */
 
     struct MPIDU_Sched *next;   /* linked-list next pointer */
     struct MPIDU_Sched *prev;   /* linked-list next pointer */
@@ -125,10 +135,12 @@ struct MPIDU_Sched {
 int MPIDU_Sched_progress(int *made_progress);
 int MPIDU_Sched_are_pending(void);
 int MPIDU_Sched_next_tag(struct MPIR_Comm *comm_ptr, int *tag);
-int MPIDU_Sched_create(MPIR_Sched_t * sp);
+int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind);
 int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned);
-int MPIDU_Sched_start(MPIR_Sched_t * sp, struct MPIR_Comm *comm, int tag,
-                      struct MPIR_Request **req);
+int MPIDU_Sched_free(MPIR_Sched_t s);
+int MPIDU_Sched_reset(MPIR_Sched_t s);
+void *MPIDU_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
+int MPIDU_Sched_start(MPIR_Sched_t sp, struct MPIR_Comm *comm, int tag, struct MPIR_Request **req);
 int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
                      struct MPIR_Comm *comm, MPIR_Sched_t s);
 int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,

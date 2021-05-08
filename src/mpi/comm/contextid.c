@@ -426,7 +426,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /*If we are here, at least one element must be in the list, at least myself */
 
             /* only the first element in the list can own the mask. However, maybe the mask is used
-             * by another thread, which added another allcoation to the list before. So we have to check,
+             * by another thread, which added another allocation to the list before. So we have to check,
              * if the mask is used and mark, if we own it */
             if (mask_in_use || &st != next_gcn) {
                 memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
@@ -973,7 +973,7 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
     /* now create a schedule */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* add some entries to it */
@@ -983,7 +983,7 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
     MPIR_ERR_CHECK(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, req);
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, tag, req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -1014,7 +1014,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     /* now create a schedule */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* add some entries to it */
@@ -1026,7 +1026,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     MPIR_ERR_CHECK(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, req);
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, tag, req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:
