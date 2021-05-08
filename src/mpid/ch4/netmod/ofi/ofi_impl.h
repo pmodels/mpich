@@ -383,21 +383,20 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_OFI_check_acc_order_size(MPIR_Win * win, MPI_Aint data_size)
 {
     MPI_Aint max_size = data_size;
-    /* Check ordering limit, a value of -1 guarantees ordering for any data size. */
+    /* Check ordering limit:
+     * - A value of -1 guarantees ordering for any data size.
+     * - An order size value of 0 indicates that ordering is not guaranteed.
+     * The check below returns the supported positive max_size, or zero which indicates disabled acc.*/
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAR)
         && MPIDI_OFI_global.max_order_war != -1) {
-        /* An order size value of 0 indicates that ordering is not guaranteed. */
-        MPIR_Assert(MPIDI_OFI_global.max_order_war != 0);
         max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_war);
     }
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAW)
         && MPIDI_OFI_global.max_order_waw != -1) {
-        MPIR_Assert(MPIDI_OFI_global.max_order_waw != 0);
         max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_waw);
     }
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAW)
         && MPIDI_OFI_global.max_order_raw != -1) {
-        MPIR_Assert(MPIDI_OFI_global.max_order_raw != 0);
         max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_raw);
     }
     return max_size;
