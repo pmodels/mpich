@@ -33,7 +33,7 @@ int MPIR_Bcast_init_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
     MPIR_Request *req = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_COLL);
     MPIR_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    req->u.persist.real_request = NULL;
+    req->u.persist_coll.real_request = NULL;
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -68,7 +68,7 @@ int MPIR_Bcast_init_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
     }
 
     MPIR_ERR_CHECK(mpi_errno);
-    req->u.persist.sched = sched;
+    req->u.persist_coll.sched = sched;
 
     *request = req;
 
