@@ -429,6 +429,9 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDI_REQUEST(rreq, is_local) = is_local;
+#endif
 
         rreq->status.MPI_ERROR = hdr->error_bits;
         if (hdr->flags & MPIDIG_AM_SEND_FLAGS_RTS) {
