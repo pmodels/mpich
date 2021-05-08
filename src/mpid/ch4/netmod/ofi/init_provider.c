@@ -113,7 +113,6 @@ static int find_provider(struct fi_info **prov_out)
         MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = MPL_strdup(provname);
         hints->caps = prov->caps;
-        hints->addr_format = prov->addr_format;
 
         /* Now we have the hints with best matched provider, get the new prov_list */
         struct fi_info *old_prov_list = prov_list;

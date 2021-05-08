@@ -273,11 +273,6 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
                                                      prov->fabric_attr->prov_name));
 
-    if (MPIR_CVAR_OFI_SKIP_IPV6) {
-        if (prov->addr_format == FI_SOCKADDR_IN6) {
-            return 0;
-        }
-    }
     CHECK_CAP(enable_scalable_endpoints,
               prov->domain_attr->max_ep_tx_ctx <= 1 ||
               (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX);
