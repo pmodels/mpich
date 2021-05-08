@@ -208,9 +208,11 @@ struct MPIR_Request {
 #endif                          /* HAVE_DEBUGGER_SUPPORT */
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
+        } persist;              /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV */
+        struct {
+            struct MPIR_Request *real_request;
             struct MPII_Genutil_sched_t *sched;
-        } persist;              /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV
-                                 *   and MPIR_REQUEST_KIND__PREQUEST_COLL */
+        } persist_coll;         /* kind : MPIR_REQUEST_KIND__PREQUEST_COLL */
         struct {
             int partitions;     /* Needed for parameter error check */
             MPL_atomic_int_t active_flag;       /* flag indicating whether in a start-complete active period.

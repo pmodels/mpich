@@ -174,13 +174,13 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
 
         case MPIR_REQUEST_KIND__PREQUEST_COLL:
             {
-                if (request_ptr->u.persist.real_request != NULL) {
-                    MPIR_Request *prequest_ptr = request_ptr->u.persist.real_request;
+                if (request_ptr->u.persist_coll.real_request != NULL) {
+                    MPIR_Request *prequest_ptr = request_ptr->u.persist_coll.real_request;
 
                     /* reset persistent request to inactive state */
                     MPIR_cc_set(&request_ptr->cc, 0);
                     request_ptr->cc_ptr = &request_ptr->cc;
-                    request_ptr->u.persist.real_request = NULL;
+                    request_ptr->u.persist_coll.real_request = NULL;
 
                     MPIR_Request_extract_status(prequest_ptr, status);
                     mpi_errno = prequest_ptr->status.MPI_ERROR;
