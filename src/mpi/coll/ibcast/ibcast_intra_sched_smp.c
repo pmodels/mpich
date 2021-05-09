@@ -31,14 +31,12 @@ int MPIR_Ibcast_intra_sched_smp(void *buffer, MPI_Aint count, MPI_Datatype datat
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size;
     struct MPII_Ibcast_state *ibcast_state;
-    MPIR_SCHED_CHKPMEM_DECL(1);
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
 #endif
-    MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
-                              sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status",
-                              MPL_MEM_BUFFER);
+    ibcast_state = MPIR_Sched_alloc_state(s, sizeof(struct MPII_Ibcast_state));
+    MPIR_ERR_CHKANDJUMP(!ibcast_state, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
@@ -81,10 +79,8 @@ int MPIR_Ibcast_intra_sched_smp(void *buffer, MPI_Aint count, MPI_Datatype datat
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

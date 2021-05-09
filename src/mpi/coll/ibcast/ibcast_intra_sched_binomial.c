@@ -24,7 +24,6 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
     int src, dst;
     struct MPII_Ibcast_state *ibcast_state;
     void *tmp_buf = NULL;
-    MPIR_SCHED_CHKPMEM_DECL(2);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -36,10 +35,19 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
 
     MPIR_Datatype_is_contig(datatype, &is_contig);
 
-    MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
-                              sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Stauts",
-                              MPL_MEM_BUFFER);
+    /* we'll allocate tmp_buf along with ibcast_state.
+     * Alternatively, we can add init callback to allocate the tmp_buf.
+     */
+    MPI_Aint tmp_size = 0;
+    if (!is_contig) {
+        tmp_size = nbytes;
+    }
 
+    ibcast_state = MPIR_Sched_alloc_state(s, sizeof(struct MPII_Ibcast_state) + tmp_size);
+    MPIR_ERR_CHKANDJUMP(!ibcast_state, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    if (!is_contig) {
+        tmp_buf = ibcast_state + 1;
+    }
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
@@ -48,8 +56,6 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
     ibcast_state->n_bytes = nbytes;
 
     if (!is_contig) {
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
-
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
             mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, s);
@@ -146,10 +152,8 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
         }
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
