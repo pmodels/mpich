@@ -99,6 +99,44 @@ int MPII_Coll_finalize(void);
         MPIR_ERR_CHECK(mpi_errno);                                      \
     } while (0)
 
+#define MPII_GENTRAN_CREATE_SCHED_P() \
+    do { \
+        *sched_type_p = MPIR_SCHED_GENTRAN; \
+        *sched_p = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL); \
+        MPIR_ERR_CHKANDJUMP(!*sched_p, mpi_errno, MPI_ERR_OTHER, "**nomem"); \
+        MPIR_TSP_sched_create(*sched_p, is_persistent); \
+    } while (0)
+
+#define MPII_SCHED_CREATE_SCHED_P() \
+    do { \
+        MPIR_Sched_t s = MPIR_SCHED_NULL; \
+        int sched_kind = MPIR_SCHED_KIND_REGULAR; \
+        if (is_persistent) { \
+            sched_kind = MPIR_SCHED_KIND_PERSISTENT; \
+        } \
+        mpi_errno = MPIR_Sched_create(&s, sched_kind); \
+        MPIR_ERR_CHECK(mpi_errno); \
+        *sched_type_p = MPIR_SCHED_NORMAL; \
+        *sched_p = s; \
+    } while (0)
+
+#define MPII_SCHED_START(sched_type, sched, comm_ptr, request) \
+    do { \
+        if (sched_type == MPIR_SCHED_NORMAL) { \
+            int tag = -1; \
+            mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag); \
+            MPIR_ERR_CHECK(mpi_errno); \
+            \
+            mpi_errno = MPIR_Sched_start(sched, comm_ptr, tag, request); \
+            MPIR_ERR_CHECK(mpi_errno); \
+        } else if (sched_type == MPIR_SCHED_GENTRAN) { \
+            mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, request); \
+            MPIR_ERR_CHECK(mpi_errno); \
+        } else { \
+            MPIR_Assert(0); \
+        } \
+    } while (0)
+
 /* functions for supporting GPU buffers in reduce collectives */
 void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_Aint count,
                                  MPI_Datatype datatype, void **host_sendbuf, void **host_recvbuf);
