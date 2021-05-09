@@ -19,8 +19,16 @@ int MPIR_Persist_coll_start(MPIR_Request * preq)
     int mpi_errno = MPI_SUCCESS;
 
     if (preq->u.persist_coll.sched_type == MPIR_SCHED_NORMAL) {
-        /* to-be-implemented */
-        MPIR_Assert(0);
+        int tag = -1;
+        mpi_errno = MPIR_Sched_next_tag(preq->comm, &tag);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPIR_Sched_reset(preq->u.persist_coll.sched);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPIR_Sched_start(preq->u.persist_coll.sched,
+                                     preq->comm, tag, &preq->u.persist_coll.real_request);
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (preq->u.persist_coll.sched_type == MPIR_SCHED_GENTRAN) {
         MPIR_TSP_sched_reset(preq->u.persist_coll.sched);
         mpi_errno = MPIR_TSP_sched_start(preq->u.persist_coll.sched,
@@ -58,7 +66,7 @@ void MPIR_Persist_coll_free_cb(MPIR_Request * request)
     }
 
     if (request->u.persist_coll.sched_type == MPIR_SCHED_NORMAL) {
-        MPIR_Assert(0);
+        MPIR_Sched_free(request->u.persist_coll.sched);
     } else if (request->u.persist_coll.sched_type == MPIR_SCHED_GENTRAN) {
         MPII_Genutil_sched_free(request->u.persist_coll.sched);
     } else {
