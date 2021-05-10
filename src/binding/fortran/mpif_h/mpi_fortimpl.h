@@ -7,6 +7,10 @@
 #define MPI_FORTIMPL_H_INCLUDED
 
 #include "mpichconf.h"
+#include "mpi.h"
+#include "mpir_attr_generic.h"
+#include "mpii_f77interface.h"
+#include <sys/types.h>  /* for ssize_t */
 
 /* Handle different mechanisms for passing Fortran CHARACTER to routines.
  *
@@ -113,8 +117,6 @@
 #endif
 
 /* ------------------------------------------------------------------------- */
-
-#include "mpiimpl.h"
 
 /* If there is no MPI I/O support, and we are still using MPIO_Request,
    make sure that one is defined */
