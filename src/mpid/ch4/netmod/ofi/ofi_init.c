@@ -508,7 +508,7 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = MPIDI_OFI_dynproc_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGAIN, "eagain", NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGAIN, "eagain", NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
     MPIDI_OFI_global.num_comms_enabled_striping = 0;
     MPIDI_OFI_global.num_comms_enabled_hashing = 0;
 

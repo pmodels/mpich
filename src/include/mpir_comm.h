@@ -306,7 +306,7 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 void MPIR_Comm_hint_init(void);
 typedef int (*MPIR_Comm_hint_fn_t) (MPIR_Comm *, int, int);     /* comm, key, val */
 int MPIR_Comm_register_hint(int index, const char *hint_key, MPIR_Comm_hint_fn_t fn,
-                            int type, int attr);
+                            int type, int attr, int default_val);
 
 int MPIR_Comm_accept_impl(const char *port_name, MPIR_Info * info_ptr, int root,
                           MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
