@@ -137,7 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_IRECV);
 
     root_comm = MPIDIG_context_id_to_comm(context_id);
-    unexp_req = MPIDIG_dequeue_unexp(rank, tag, context_id, NULL);
+    unexp_req = MPIDIG_dequeue_unexp(rank, tag, context_id, &MPIDI_global.unexp_list);
 
     if (unexp_req) {
         if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_BUSY) {
@@ -252,7 +252,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
         /* Increment refcnt for comm before posting rreq to posted_list,
          * to make sure comm is alive while holding an entry in the posted_list */
         MPIR_Comm_add_ref(root_comm);
-        MPIDIG_enqueue_posted(rreq, NULL);
+        MPIDIG_enqueue_posted(rreq, &MPIDI_global.posted_list);
         /* MPIDI_CS_EXIT(); */
     } else {
         MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = rreq;
@@ -370,7 +370,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
         root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
 
         /* MPIDI_CS_ENTER(); */
-        found = MPIDIG_delete_posted(&MPIDIG_REQUEST(rreq, req->rreq), NULL);
+        found = MPIDIG_delete_posted(&MPIDIG_REQUEST(rreq, req->rreq), &MPIDI_global.posted_list);
         /* MPIDI_CS_EXIT(); */
 
         if (found) {

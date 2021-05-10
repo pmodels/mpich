@@ -20,7 +20,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
 
     /* MPIDI_CS_ENTER(); */
-    unexp_req = MPIDIG_find_unexp(source, tag, context_id, NULL);
+    unexp_req = MPIDIG_find_unexp(source, tag, context_id, &MPIDI_global.unexp_list);
 
     if (unexp_req) {
         *flag = 1;
@@ -54,7 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
 
     /* MPIDI_CS_ENTER(); */
-    unexp_req = MPIDIG_dequeue_unexp(source, tag, context_id, NULL);
+    unexp_req = MPIDIG_dequeue_unexp(source, tag, context_id, &MPIDI_global.unexp_list);
 
     if (unexp_req) {
         *flag = 1;
