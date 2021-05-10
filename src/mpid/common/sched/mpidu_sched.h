@@ -12,6 +12,7 @@
  *   hold a pointer to the schedule?  This could cause MT issues.
  */
 #include "mpidu_pre.h"
+#include "utarray.h"
 
 enum MPIR_Sched_kind {
     MPIR_SCHED_KIND_REGULAR = 0,
@@ -115,7 +116,6 @@ struct MPIDU_Sched_entry {
     } u;
 };
 
-#define MPIDU_SCHED_MAXBUF 10
 struct MPIDU_Sched {
     size_t size;                /* capacity (in entries) of the entries array */
     size_t idx;                 /* index into entries array of first yet-outstanding entry */
@@ -124,9 +124,7 @@ struct MPIDU_Sched {
     struct MPIR_Request *req;   /* really needed? could cause MT problems... */
     struct MPIDU_Sched_entry *entries;
     enum MPIR_Sched_kind kind;  /* regular, persistent, generalized */
-    int num_bufs;
-    void *bufs[MPIDU_SCHED_MAXBUF];     /* persistent buffers */
-
+    UT_array *buffers;
     struct MPIDU_Sched *next;   /* linked-list next pointer */
     struct MPIDU_Sched *prev;   /* linked-list next pointer */
 };

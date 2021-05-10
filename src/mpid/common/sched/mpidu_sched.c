@@ -446,7 +446,7 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind)
     s->req = NULL;
     s->entries = NULL;
     s->kind = kind;
-    s->num_bufs = 0;
+    s->buffers = NULL;
     s->next = NULL;     /* only needed for sanity checks */
     s->prev = NULL;     /* only needed for sanity checks */
 
@@ -480,8 +480,12 @@ int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned)
 int MPIDU_Sched_free(struct MPIDU_Sched *s)
 {
     MPL_free(s->entries);
-    for (int i = 0; i < s->num_bufs; i++) {
-        MPL_free(s->bufs[i]);
+    if (s->buffers) {
+        for (void **p = (void **)utarray_front(s->buffers); p;
+             p = (void **) utarray_next(s->buffers, p)) {
+            MPL_free(*p);
+        }
+        utarray_free(s->buffers);
     }
     MPL_free(s);
     return MPI_SUCCESS;
@@ -504,15 +508,17 @@ int MPIDU_Sched_reset(struct MPIDU_Sched *s)
 
 void *MPIDU_Sched_alloc_state(struct MPIDU_Sched *s, MPI_Aint size)
 {
-    int i = s->num_bufs;
-    if (i >= MPIDU_SCHED_MAXBUF) {
-        return NULL;
+    void *p = MPL_malloc(size, MPL_MEM_OTHER);
+    if (p == NULL) {
+        /* Caller should process error */
+        return p;
     }
-    s->bufs[i] = MPL_malloc(size, MPL_MEM_OTHER);
-    if (s->bufs[i]) {
-        s->num_bufs++;
+
+    if (s->buffers == NULL) {
+        utarray_new(s->buffers, &ut_ptr_icd, MPL_MEM_OTHER);
     }
-    return s->bufs[i];
+    utarray_push_back(s->buffers, &p, MPL_MEM_OTHER);
+    return p;
 }
 
 int MPIDU_Sched_start(struct MPIDU_Sched *s, MPIR_Comm * comm, int tag, MPIR_Request ** req)
