@@ -270,7 +270,7 @@ int MPID_Init_world(void)
     MPIR_Process.has_parent = has_parent;
 
     MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGER_THRESH, "eager_rendezvous_threshold",
-                            NULL, MPIR_COMM_HINT_TYPE_INT, 0);
+                            NULL, MPIR_COMM_HINT_TYPE_INT, 0, 0);
 
     mpi_errno = MPIDI_RMA_init();
     MPIR_ERR_CHECK(mpi_errno);
