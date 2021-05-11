@@ -10,20 +10,23 @@
  * ensuring that "premature user releases" of MPI_Op and MPI_Datatype objects
  * does not result in an error or segfault. */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "mpitest.h"
+#include <assert.h>
 
 #define COUNT (10)
 #define PRIME (17)
 
-#define my_assert(cond_)                                                  \
-    do {                                                                  \
-        if (!(cond_)) {                                                   \
-            fprintf(stderr, "assertion (%s) failed, aborting\n", #cond_); \
-            MPI_Abort(MPI_COMM_WORLD, 1);                                 \
-        }                                                                 \
+#define my_check(recvbuf, idx, val) \
+    do { \
+        if (recvbuf[idx] != (val)) { \
+            if (errs < 10) { \
+                fprintf(stderr, "Line %d: %s[%d] expect %d, got %d\n", __LINE__, #recvbuf, idx, val, recvbuf[idx]); \
+            } \
+            errs++; \
+        } \
     } while (0)
 
 static void sum_fn(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype)
@@ -51,6 +54,7 @@ void test_icoll_with_root(int rank, int size, int root);
 
 int main(int argc, char **argv)
 {
+    int errs = 0;
     int rank, size;
 
     MTest_Init(&argc, &argv);
@@ -68,7 +72,12 @@ int main(int argc, char **argv)
     test_icoll_with_root(rank, size, 0);
     test_icoll_with_root(rank, size, size - 1);
 
-    MTest_Finalize(0);
+    errs += test_icoll_with_root(rank, size, 0);
+    errs += test_icoll_with_root(rank, size, size - 1);
+    errs += test_icoll_with_root(rank, size, 0);
+    errs += test_icoll_with_root(rank, size, size - 1);
+
+    MTest_Finalize(errs);
     free(buf);
     free(recvbuf);
     free(sendcounts);
@@ -82,6 +91,7 @@ int main(int argc, char **argv)
 
 void test_icoll_with_root(int rank, int size, int root)
 {
+    int errs = 0;
     int i, j;
 
     /* MPI_Ibcast */
@@ -96,14 +106,12 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     for (i = 0; i < COUNT; ++i) {
-        if (buf[i] != i)
-            printf("buf[%d]=%d i=%d\n", i, buf[i], i);
-        my_assert(buf[i] == i);
+        my_check(buf, i, i);
     }
 
     /* MPI_Ibcast (again, but designed to stress scatter/allgather impls) */
     buf_alias = (signed char *) buf;
-    my_assert(COUNT * size * sizeof(int) > PRIME);      /* sanity */
+    assert(COUNT * size * sizeof(int) > PRIME);
     for (i = 0; i < PRIME; ++i) {
         if (rank == root)
             buf_alias[i] = i;
@@ -116,9 +124,7 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Ibcast(buf_alias, PRIME, MPI_SIGNED_CHAR, root, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < PRIME; ++i) {
-        if (buf_alias[i] != i)
-            printf("buf_alias[%d]=%d i=%d\n", i, buf_alias[i], i);
-        my_assert(buf_alias[i] == i);
+        my_check(buf_alias, i, i);
     }
 
     /* MPI_Ibarrier */
@@ -134,10 +140,7 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     if (rank == root) {
         for (i = 0; i < COUNT; ++i) {
-            if (recvbuf[i] != ((size * (size - 1) / 2) + (i * size)))
-                printf("got recvbuf[%d]=%d, expected %d\n", i, recvbuf[i],
-                       ((size * (size - 1) / 2) + (i * size)));
-            my_assert(recvbuf[i] == ((size * (size - 1) / 2) + (i * size)));
+            my_check(recvbuf, i, ((size * (size - 1) / 2) + (i * size)));
         }
     }
 
@@ -155,10 +158,7 @@ void test_icoll_with_root(int rank, int size, int root)
         MPI_Wait(&req, MPI_STATUS_IGNORE);
         if (rank == root) {
             for (i = 0; i < COUNT; ++i) {
-                if (recvbuf[i] != ((size * (size - 1) / 2) + (i * size)))
-                    printf("got recvbuf[%d]=%d, expected %d\n", i, recvbuf[i],
-                           ((size * (size - 1) / 2) + (i * size)));
-                my_assert(recvbuf[i] == ((size * (size - 1) / 2) + (i * size)));
+                my_check(recvbuf, i, ((size * (size - 1) / 2) + (i * size)));
             }
         }
     }
@@ -171,10 +171,7 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Iallreduce(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < COUNT; ++i) {
-        if (recvbuf[i] != ((size * (size - 1) / 2) + (i * size)))
-            printf("got recvbuf[%d]=%d, expected %d\n", i, recvbuf[i],
-                   ((size * (size - 1) / 2) + (i * size)));
-        my_assert(recvbuf[i] == ((size * (size - 1) / 2) + (i * size)));
+        my_check(recvbuf, i, ((size * (size - 1) / 2) + (i * size)));
     }
 
     /* MPI_Ialltoallv (a weak test, neither irregular nor sparse) */
@@ -193,8 +190,7 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
-            /*printf("recvbuf[%d*COUNT+%d]=%d, expecting %d\n", i, j, recvbuf[i*COUNT+j], (i + (rank * j))); */
-            my_assert(recvbuf[i * COUNT + j] == (i + (rank * j)));
+            my_check(recvbuf, i * COUNT + j, (i + (rank * j)));
         }
     }
 
@@ -208,12 +204,12 @@ void test_icoll_with_root(int rank, int size, int root)
     if (rank == root) {
         for (i = 0; i < size; ++i) {
             for (j = 0; j < COUNT; ++j) {
-                my_assert(recvbuf[i * COUNT + j] == i + j);
+                my_check(recvbuf, i * COUNT + j, i + j);
             }
         }
     } else {
         for (i = 0; i < size * COUNT; ++i) {
-            my_assert(recvbuf[i] == 0xdeadbeef);
+            my_check(recvbuf, i, 0xdeadbeef);
         }
     }
 
@@ -233,12 +229,12 @@ void test_icoll_with_root(int rank, int size, int root)
         if (rank == root) {
             for (i = 0; i < size; ++i) {
                 for (j = 0; j < COUNT; ++j) {
-                    my_assert(recvbuf[i * COUNT + j] == i + j);
+                    my_check(recvbuf, i * COUNT + j, i + j);
                 }
             }
         } else {
             for (i = 0; i < size * COUNT; ++i) {
-                my_assert(recvbuf[i] == 0xdeadbeef);
+                my_check(recvbuf, i, 0xdeadbeef);
             }
         }
     }
@@ -256,12 +252,12 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Iscatter(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, root, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (j = 0; j < COUNT; ++j) {
-        my_assert(recvbuf[j] == rank + j);
+        my_check(recvbuf, j, rank + j);
     }
     if (rank != root) {
         for (i = 0; i < size * COUNT; ++i) {
             /* check we didn't corrupt the sendbuf somehow */
-            my_assert(buf[i] == 0xdeadbeef);
+            my_check(buf, i, 0xdeadbeef);
         }
     }
 
@@ -282,18 +278,18 @@ void test_icoll_with_root(int rank, int size, int root)
                   &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (j = 0; j < COUNT; ++j) {
-        my_assert(recvbuf[j] == rank + j);
+        my_check(recvbuf, j, rank + j);
     }
     if (rank != root) {
         for (i = 0; i < size * COUNT; ++i) {
             /* check we didn't corrupt the sendbuf somehow */
-            my_assert(buf[i] == 0xdeadbeef);
+            my_check(buf, i, 0xdeadbeef);
         }
     }
     for (i = 1; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
             /* check we didn't corrupt the rest of the recvbuf */
-            my_assert(recvbuf[i * COUNT + j] == 0xdeadbeef);
+            my_check(recvbuf, i * COUNT + j, 0xdeadbeef);
         }
     }
 
@@ -308,12 +304,12 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Ireduce_scatter(buf, recvbuf, recvcounts, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (j = 0; j < COUNT; ++j) {
-        my_assert(recvbuf[j] == (size * rank + ((size - 1) * size) / 2));
+        my_check(recvbuf, j, (size * rank + ((size - 1) * size) / 2));
     }
     for (i = 1; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
             /* check we didn't corrupt the rest of the recvbuf */
-            my_assert(recvbuf[i * COUNT + j] == 0xdeadbeef);
+            my_check(recvbuf, i * COUNT + j, 0xdeadbeef);
         }
     }
 
@@ -327,12 +323,12 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Ireduce_scatter_block(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (j = 0; j < COUNT; ++j) {
-        my_assert(recvbuf[j] == (size * rank + ((size - 1) * size) / 2));
+        my_check(recvbuf, j, (size * rank + ((size - 1) * size) / 2));
     }
     for (i = 1; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
             /* check we didn't corrupt the rest of the recvbuf */
-            my_assert(recvbuf[i * COUNT + j] == 0xdeadbeef);
+            my_check(recvbuf, i * COUNT + j, 0xdeadbeef);
         }
     }
 
@@ -354,12 +350,12 @@ void test_icoll_with_root(int rank, int size, int root)
     if (rank == root) {
         for (i = 0; i < size; ++i) {
             for (j = 0; j < COUNT; ++j) {
-                my_assert(recvbuf[i * COUNT + j] == i + j);
+                my_check(recvbuf, i * COUNT + j, i + j);
             }
         }
     } else {
         for (i = 0; i < size * COUNT; ++i) {
-            my_assert(recvbuf[i] == 0xdeadbeef);
+            my_check(recvbuf, i, 0xdeadbeef);
         }
     }
 
@@ -374,8 +370,7 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
-            /*printf("recvbuf[%d*COUNT+%d]=%d, expecting %d\n", i, j, recvbuf[i*COUNT+j], (i + (i * j))); */
-            my_assert(recvbuf[i * COUNT + j] == (i + (rank * j)));
+            my_check(recvbuf, i * COUNT + j, (i + (rank * j)));
         }
     }
 
@@ -388,7 +383,7 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
-            my_assert(recvbuf[i * COUNT + j] == i + j);
+            my_check(recvbuf, i * COUNT + j, i + j);
         }
     }
 
@@ -407,7 +402,7 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
-            my_assert(recvbuf[i * COUNT + j] == i + j);
+            my_check(recvbuf, i * COUNT + j, i + j);
         }
     }
 
@@ -419,7 +414,7 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Iscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < COUNT; ++i) {
-        my_assert(recvbuf[i] == ((rank * (rank + 1) / 2) + (i * (rank + 1))));
+        my_check(recvbuf, i, ((rank * (rank + 1) / 2) + (i * (rank + 1))));
     }
 
     /* MPI_Iexscan */
@@ -431,7 +426,7 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < COUNT; ++i) {
         if (rank != 0)
-            my_assert(recvbuf[i] == ((rank * (rank + 1) / 2) + (i * (rank + 1)) - (rank + i)));
+            my_check(recvbuf, i, ((rank * (rank + 1) / 2) + (i * (rank + 1)) - (rank + i)));
     }
 
     /* MPI_Ialltoallw (a weak test, neither irregular nor sparse) */
@@ -452,8 +447,8 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
-            /*printf("recvbuf[%d*COUNT+%d]=%d, expecting %d\n", i, j, recvbuf[i*COUNT+j], (i + (rank * j))); */
-            my_assert(recvbuf[i * COUNT + j] == (i + (rank * j)));
+            my_check(recvbuf, i * COUNT + j, (i + (rank * j)));
         }
     }
+    return errs;
 }
