@@ -3,11 +3,11 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-external_subdirs = @mpl_srcdir@ @hwloc_srcdir@
-external_dist_subdirs = @mpl_dist_srcdir@ @hwloc_srcdir@
-external_includes = @mpl_includedir@ @hwloc_includedir@
-external_ldflags =
-external_libs = @mpl_lib@ @hwloc_lib@ @WRAPPER_LIBS@
+external_subdirs = @mpl_srcdir@
+external_dist_subdirs = @mpl_dist_srcdir@
+external_includes = @mpl_includedir@
+external_ldflags = @mpl_libdir@
+external_libs = @mpl_lib@ @WRAPPER_LIBS@
 
 bin_PROGRAMS =
 noinst_HEADERS =
@@ -16,7 +16,7 @@ EXTRA_DIST =
 SUFFIXES =
 doc1_src_txt =
 
-ACLOCAL_AMFLAGS = -I confdb
+ACLOCAL_AMFLAGS = -I confdb -I tools/topo/hwloc/hwloc/config
 AM_CPPFLAGS = -I$(top_srcdir)/include $(external_includes)
 AM_CFLAGS =
 
