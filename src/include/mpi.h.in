@@ -942,6 +942,10 @@ typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
                       void *);
 #define MPI_CONVERSION_FN_NULL ((MPI_Datarep_conversion_function *)0)
 
+typedef int (MPI_Datarep_conversion_function_c)(void *, MPI_Datatype, MPI_Count,
+             void *, MPI_Offset, void *);
+#define MPI_CONVERSION_FN_NULL_C ((MPI_Datarep_conversion_function_c *)0)
+
 typedef struct {
     void **storage_stack;
 } QMPI_Context;
