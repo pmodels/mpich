@@ -1203,54 +1203,105 @@ PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
 PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
 
 # ----------------------------------------------------------------------------
-# HWLOC / NETLOC
+# HWLOC
 # ----------------------------------------------------------------------------
+# Allow the user to override the hwloc location (from embedded to user
+# or system path)
+PAC_CHECK_PREFIX(hwloc)
 hwlocsrcdir=""
 AC_SUBST([hwlocsrcdir])
+hwloclibdir=""
+AC_SUBST([hwloclibdir])
 hwloclib=""
 AC_SUBST([hwloclib])
 
-m4_define([hwloc_embedded_dir],[modules/hwloc])
-PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
-PAC_CHECK_HEADER_LIB_OPTIONAL([netloc],[netloc.h],[netloc],[netloc_get_all_host_nodes])
+if test "$with_hwloc_prefix" = "no" ; then
+   have_hwloc=no
+elif test "$with_hwloc_prefix" = "embedded" ; then
+   # Disable visibility when setting up hwloc
+   PAC_PUSH_FLAG([enable_visibility])
+   enable_visibility=no;
+   HWLOC_SETUP_CORE([modules/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
+   if test "$have_hwloc" = "yes" ; then
+      hwlocsrcdir="modules/hwloc"
+      hwloclib="$HWLOC_EMBEDDED_LDADD"
+      PAC_PREPEND_FLAG([$HWLOC_EMBEDDED_LIBS], [WRAPPER_LIBS])
+      PAC_APPEND_FLAG([$HWLOC_EMBEDDED_LDFLAGS], [WRAPPER_LDFLAGS])
+      # if possible, do not expose hwloc symbols in libmpi.so
+      PAC_PREPEND_FLAG([$VISIBILITY_CFLAGS], [HWLOC_CFLAGS])
+   fi
+   PAC_POP_FLAG([enable_visibility])
+else
+   AC_CHECK_HEADERS([hwloc.h])
+   PAC_PUSH_FLAG([LIBS])
+   # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our
+   # minimum required version
+   AC_CHECK_LIB([hwloc],[hwloc_topology_set_pid])
+   PAC_POP_FLAG([LIBS])
+   AC_MSG_CHECKING([if non-embedded hwloc works])
+   if test "$ac_cv_header_hwloc_h" = "yes" -a "$ac_cv_lib_hwloc_hwloc_topology_set_pid" = "yes" ; then
+      have_hwloc=yes
+      PAC_PREPEND_FLAG([-lhwloc], [WRAPPER_LIBS])
+   else
+      have_hwloc=no
+   fi
+   AC_MSG_RESULT([$have_hwloc])
 
-if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
-    AC_MSG_CHECKING([if hwloc meets minimum version requirement])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <hwloc.h>], [
-                       #if HWLOC_API_VERSION < 0x00020000
-                       #error
-                       #endif
-                       return 0;])],[],[pac_have_hwloc=no])
-    AC_MSG_RESULT([$pac_have_hwloc])
+   # FIXME: Disable hwloc on Cygwin for now. The hwloc package,
+   # atleast as of 1.0.2, does not install correctly on Cygwin
+   AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
 
-    # if an old hwloc was specified by the user, throw an error
-    if test "$pac_have_hwloc" = "no" -a -n "$with_hwloc" -a "$with_hwloc" != "yes" ; then
-        AC_MSG_ERROR([hwloc installation does not meet minimum version requirement])
+   if test "$have_hwloc" = "yes" ; then
+      if test -d ${with_hwloc_prefix}/lib64 ; then
+         PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib64],[WRAPPER_LDFLAGS])
+      else
+         PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib],[WRAPPER_LDFLAGS])
+      fi
+   fi
+fi
+
+if test "$have_hwloc" = "yes" ; then
+   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
+fi
+
+HWLOC_DO_AM_CONDITIONALS
+
+# ----------------------------------------------------------------------------
+# NETLOC
+# ----------------------------------------------------------------------------
+AC_ARG_WITH([netloc-prefix],
+            [AS_HELP_STRING([[--with-netloc-prefix[=DIR]]],
+                            [use the NETLOC library installed in DIR]) or system to use the system library], [],
+                            [with_netloc_prefix=no])
+
+netloclibdir=""
+AC_SUBST([netloclibdir])
+
+if test "$have_hwloc" = "yes" ; then
+    if test "${with_netloc_prefix}" != "no" ; then
+        if test "${with_netloc_prefix}" != "system"; then
+            # The user specified an already-installed Netloc; just sanity check,
+            # don't subconfigure it
+            AS_IF([test -s "${with_netloc_prefix}/include/netloc.h"],
+              [:],[AC_MSG_ERROR([the Netloc installation in "${with_netloc_prefix}" appears broken])])
+            PAC_APPEND_FLAG([-I${with_netloc_prefix}/include],[CPPFLAGS])
+            PAC_APPEND_FLAG([-I${with_netloc_prefix}/include],[CFLAGS])
+            PAC_PREPEND_FLAG([-lnetloc],[WRAPPER_LIBS])
+            if test -d ${with_netloc_prefix}/lib64 ; then
+                PAC_APPEND_FLAG([-L${with_netloc_prefix}/lib64],[WRAPPER_LDFLAGS])
+                netloclibdir="-L${with_netloc_prefix}/lib64"
+            else
+                PAC_APPEND_FLAG([-L${with_netloc_prefix}/lib],[WRAPPER_LDFLAGS])
+                netloclibdir="-L${with_netloc_prefix}/lib"
+            fi
+       else
+           AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "netloc.h"
+                                   ],
+                                   [])],
+                          [AC_MSG_ERROR([the Netloc installation seems to be added from system path])], [])
+       fi
+       AC_DEFINE(HAVE_NETLOC,1,[Define if netloc is available in either user specified path or in system path])
     fi
-fi
-
-if test "$pac_have_hwloc" = "no" ; then
-    with_hwloc=embedded
-    pac_have_hwloc=yes
-    dnl TODO: check and configure embedded netloc
-fi
-
-if test "$with_hwloc" = "embedded" ; then
-    PAC_PUSH_FLAG([CFLAGS])
-    CFLAGS="$VISIBILITY_CFLAGS"
-    PAC_CONFIG_SUBDIR_ARGS([modules/hwloc], [--enable-embedded-mode --disable-visibility],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
-    PAC_POP_FLAG([CFLAGS])
-    hwlocsrcdir="${main_top_builddir}/modules/hwloc"
-    hwloclib="${main_top_builddir}/modules/hwloc/hwloc/libhwloc_embedded.la"
-    PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/hwloc/include],[CPPFLAGS])
-    PAC_APPEND_FLAG([-I${main_top_builddir}/modules/hwloc/include],[CPPFLAGS])
-fi
-
-if test "$pac_have_hwloc" = "yes" ; then
-    AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
-fi
-if test "$pac_have_netloc" = "yes" ; then
-    AC_DEFINE(HAVE_NETLOC,1,[Define if netloc is available])
 fi
 
 # ----------------------------------------------------------------------------
