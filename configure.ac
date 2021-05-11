@@ -1152,6 +1152,18 @@ if test "$with_hwloc" = "embedded" ; then
     PAC_APPEND_FLAG([-I${main_top_builddir}/modules/hwloc/include],[CPPFLAGS])
 fi
 
+# capture hwloc dependencies
+pcdir=""
+if test "${with_hwloc}" = "embedded" ; then
+    pcdir="${hwlocsrcdir}"
+elif test -f ${with_hwloc}/lib/pkgconfig/hwloc.pc ; then
+    pcdir="${with_hwloc}/lib/pkgconfig"
+fi
+PAC_LIB_DEPS(hwloc, $pcdir)
+if test "x$pac_hwloc_deps" != "x"; then
+    PAC_APPEND_FLAG([${pac_hwloc_deps}],[WRAPPER_LIBS])
+fi
+
 if test "$pac_have_hwloc" = "yes" ; then
     AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
 fi
