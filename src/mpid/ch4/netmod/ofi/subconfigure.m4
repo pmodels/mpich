@@ -323,9 +323,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     elif test -f ${with_libfabric}/lib/pkgconfig/libfabric.pc ; then
         pcdir="${with_libfabric}/lib/pkgconfig"
     fi
-    PAC_LIB_DEPS(fabric, $pcdir)
-    if test "x$ac_libfabric_deps" != "x"; then
-        PAC_APPEND_FLAG([${ac_libfabric_deps}],[WRAPPER_LIBS])
+    PAC_LIB_DEPS(libfabric, $pcdir)
+    if test "x$pac_libfabric_deps" != "x"; then
+        PAC_APPEND_FLAG([${pac_libfabric_deps}],[WRAPPER_LIBS])
     fi
 
     AC_ARG_ENABLE(ofi-domain,
