@@ -696,8 +696,12 @@ int MPIR_Ibarrier_inter_sched_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /******************************** Ibcast ********************************/
 /* request-based functions */
-int MPIR_Ibcast_allcomm_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                             MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ibcast_sched_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                           MPIR_Comm * comm_ptr, bool is_persistent,
+                           void **sched_p, enum MPIR_sched_type *sched_type_p);
+int MPIR_Ibcast_allcomm_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                                   MPIR_Comm * comm_ptr, bool is_persistent,
+                                   void **sched_p, enum MPIR_sched_type *sched_type_p);
 int MPIR_Ibcast_intra_gentran_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                                    MPIR_Comm * comm_ptr, int tree_type, int k, int maxbytes,
                                    MPIR_Request ** request);

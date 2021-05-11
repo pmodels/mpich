@@ -197,7 +197,7 @@ int MPIR_Isendrecv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
 
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_pt2pt_send(sendbuf, sendcount, sendtype, sendtag, dest, comm_ptr, s);
@@ -206,7 +206,7 @@ int MPIR_Isendrecv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
     MPIR_ERR_CHECK(mpi_errno);
 
     /* note: we are not using collective tag, so passing in 0 as a dummy */
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, 0, p_req);
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, 0, p_req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -265,7 +265,7 @@ int MPIR_Isendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &sched_tag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_pt2pt_send(tmpbuf, count, datatype, sendtag, dest, comm_ptr, s);
@@ -278,7 +278,7 @@ int MPIR_Isendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int
     mpi_errno = MPIR_Sched_cb(&release_temp_buffer, tmpbuf, s);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, sched_tag, p_req);
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, sched_tag, p_req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

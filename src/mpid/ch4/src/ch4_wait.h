@@ -20,6 +20,13 @@ MPL_STATIC_INLINE_PREFIX int get_vci_wrapper(MPIR_Request * req)
             /* TODO: skip it in MPIDI_set_progress_vci_n */
             vci = 0;
         }
+    } else if (req->kind == MPIR_REQUEST_KIND__PREQUEST_COLL) {
+        if (req->u.persist_coll.real_request) {
+            vci = MPIDI_Request_get_vci(req->u.persist_coll.real_request);
+        } else {
+            /* TODO: skip it in MPIDI_set_progress_vci_n */
+            vci = 0;
+        }
     } else {
         vci = MPIDI_Request_get_vci(req);
     }
