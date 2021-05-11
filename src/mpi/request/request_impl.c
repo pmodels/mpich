@@ -73,6 +73,16 @@ int MPIR_Cancel_impl(MPIR_Request * request_ptr)
                 break;
             }
 
+        case MPIR_REQUEST_KIND__PREQUEST_COLL:
+            {
+                if (request_ptr->u.persist_coll.real_request != NULL) {
+                    MPIR_Assert(0 && "Not supported");
+                } else {
+                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**requestpersistactive");
+                }
+                break;
+            }
+
         case MPIR_REQUEST_KIND__GREQUEST:
             {
                 mpi_errno =
@@ -210,8 +220,19 @@ int MPIR_Request_get_status_impl(MPIR_Request * request_ptr, int *flag, MPI_Stat
                 }
                 break;
             case MPIR_REQUEST_KIND__PREQUEST_RECV:
-            case MPIR_REQUEST_KIND__PREQUEST_COLL:
                 prequest_ptr = request_ptr->u.persist.real_request;
+                if (prequest_ptr != NULL) {
+                    MPIR_Request_extract_status(prequest_ptr, status);
+                    mpi_errno = prequest_ptr->status.MPI_ERROR;
+                } else {
+                    /* if the persistent request failed to start then
+                     * make the error code available */
+                    mpi_errno = request_ptr->status.MPI_ERROR;
+                    MPIR_Status_set_empty(status);
+                }
+                break;
+            case MPIR_REQUEST_KIND__PREQUEST_COLL:
+                prequest_ptr = request_ptr->u.persist_coll.real_request;
                 if (prequest_ptr != NULL) {
                     MPIR_Request_extract_status(prequest_ptr, status);
                     mpi_errno = prequest_ptr->status.MPI_ERROR;

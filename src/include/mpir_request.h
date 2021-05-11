@@ -150,6 +150,13 @@ extern MPIR_Object_alloc_t MPIR_Grequest_class_mem;
 
 #define MPIR_Request_is_complete(req_) (MPIR_cc_is_complete((req_)->cc_ptr))
 
+/* types of sched structure used in persistent collective */
+enum MPIR_sched_type {
+    MPIR_SCHED_INVALID,
+    MPIR_SCHED_NORMAL,
+    MPIR_SCHED_GENTRAN
+};
+
 /*S
   MPIR_Request - Description of the Request data structure
 
@@ -208,9 +215,12 @@ struct MPIR_Request {
 #endif                          /* HAVE_DEBUGGER_SUPPORT */
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
-            struct MPII_Genutil_sched_t *sched;
-        } persist;              /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV
-                                 *   and MPIR_REQUEST_KIND__PREQUEST_COLL */
+        } persist;              /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV */
+        struct {
+            struct MPIR_Request *real_request;
+            enum MPIR_sched_type sched_type;
+            void *sched;
+        } persist_coll;         /* kind : MPIR_REQUEST_KIND__PREQUEST_COLL */
         struct {
             int partitions;     /* Needed for parameter error check */
             MPL_atomic_int_t active_flag;       /* flag indicating whether in a start-complete active period.

@@ -322,8 +322,12 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "starting CB entry %d\n", (int) idx);
             if (e->u.cb.cb_type == MPIDU_SCHED_CB_TYPE_1) {
                 ret_errno = e->u.cb.u.cb_p(r->comm, s->tag, e->u.cb.cb_state);
-                /* Sched entries list can be reallocated inside callback */
-                e = &s->entries[idx];
+                if (s->kind == MPIR_SCHED_KIND_GENERALIZED) {
+                    /* Sched entries list can be reallocated inside callback */
+                    e = &s->entries[idx];
+                } else {
+                    MPIR_Assert(e == &s->entries[idx]);
+                }
                 if (unlikely(ret_errno)) {
                     if (MPIR_ERR_NONE == r->u.nbc.errflag) {
                         if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
@@ -338,8 +342,12 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                 }
             } else if (e->u.cb.cb_type == MPIDU_SCHED_CB_TYPE_2) {
                 ret_errno = e->u.cb.u.cb2_p(r->comm, s->tag, e->u.cb.cb_state, e->u.cb.cb_state2);
-                /* Sched entries list can be reallocated inside callback */
-                e = &s->entries[idx];
+                if (s->kind == MPIR_SCHED_KIND_GENERALIZED) {
+                    /* Sched entries list can be reallocated inside callback */
+                    e = &s->entries[idx];
+                } else {
+                    MPIR_Assert(e == &s->entries[idx]);
+                }
                 if (unlikely(ret_errno)) {
                     if (MPIR_ERR_NONE == r->u.nbc.errflag) {
                         if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
@@ -416,7 +424,7 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
 }
 
 /* creates a new opaque schedule object and returns a handle to it in (*sp) */
-int MPIDU_Sched_create(MPIR_Sched_t * sp)
+int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched *s;
@@ -437,6 +445,8 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp)
     s->tag = -1;
     s->req = NULL;
     s->entries = NULL;
+    s->kind = kind;
+    s->buffers = NULL;
     s->next = NULL;     /* only needed for sanity checks */
     s->prev = NULL;     /* only needed for sanity checks */
 
@@ -467,19 +477,59 @@ int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned)
     return mpi_errno;
 }
 
-/* sets (*sp) to MPIR_SCHED_NULL and gives you back a request pointer in (*req).
- * The caller is giving up ownership of the opaque schedule object. */
-int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request ** req)
+int MPIDU_Sched_free(struct MPIDU_Sched *s)
+{
+    MPL_free(s->entries);
+    if (s->buffers) {
+        for (void **p = (void **)utarray_front(s->buffers); p;
+             p = (void **) utarray_next(s->buffers, p)) {
+            MPL_free(*p);
+        }
+        utarray_free(s->buffers);
+    }
+    MPL_free(s);
+    return MPI_SUCCESS;
+}
+
+int MPIDU_Sched_reset(struct MPIDU_Sched *s)
+{
+    MPIR_Assert(s->kind == MPIR_SCHED_KIND_PERSISTENT);
+
+    for (int i = s->idx; i < s->num_entries; ++i) {
+        s->entries[i].status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
+    }
+    s->idx = 0;
+    s->tag = -1;
+    s->req = NULL;
+    s->next = NULL;     /* only needed for sanity checks */
+    s->prev = NULL;     /* only needed for sanity checks */
+    return MPI_SUCCESS;
+}
+
+void *MPIDU_Sched_alloc_state(struct MPIDU_Sched *s, MPI_Aint size)
+{
+    void *p = MPL_malloc(size, MPL_MEM_OTHER);
+    if (p == NULL) {
+        /* Caller should process error */
+        return p;
+    }
+
+    if (s->buffers == NULL) {
+        utarray_new(s->buffers, &ut_ptr_icd, MPL_MEM_OTHER);
+    }
+    utarray_push_back(s->buffers, &p, MPL_MEM_OTHER);
+    return p;
+}
+
+int MPIDU_Sched_start(struct MPIDU_Sched *s, MPIR_Comm * comm, int tag, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *r;
-    struct MPIDU_Sched *s = *sp;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_START);
 
     *req = NULL;
-    *sp = MPIR_SCHED_NULL;
 
     /* sanity check the schedule */
     MPIR_Assert(s->num_entries <= s->size);
@@ -951,7 +1001,6 @@ int MPIDU_Sched_cb2(MPIR_Sched_cb2_t * cb_p, void *cb_state, void *cb_state2, MP
     goto fn_exit;
 }
 
-
 /* returns TRUE in (*made_progress) if any of the outstanding schedules in state completed */
 static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made_progress)
 {
@@ -1075,9 +1124,11 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
 
             MPIR_Request_complete(s->req);
 
-            s->req = NULL;
-            MPL_free(s->entries);
-            MPL_free(s);
+            if (s->kind != MPIR_SCHED_KIND_PERSISTENT) {
+                MPIDU_Sched_free(s);
+            } else {
+                s->req = NULL;
+            }
 
             if (made_progress)
                 *made_progress = TRUE;
