@@ -51,6 +51,9 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
         MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    nbytes = type_size * count;
+
     /* we'll allocate tmp_buf along with ibcast_state.
      * Alternatively, we can add init callback to allocate the tmp_buf.
      */
@@ -65,8 +68,6 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
         tmp_buf = ibcast_state + 1;
     }
 
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-    nbytes = type_size * count;
     ibcast_state->n_bytes = nbytes;
     ibcast_state->curr_bytes = 0;
     if (is_contig) {
