@@ -69,6 +69,69 @@ int MPI_File_iwrite(MPI_File fh, ROMIO_CONST void *buf, int count,
     return error_code;
 }
 
+/* large count function */
+
+#ifdef HAVE_WEAK_SYMBOLS
+
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_File_iwrite_c = PMPI_File_iwrite_c
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_File_iwrite_c MPI_File_iwrite_c
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_File_iwrite_c as PMPI_File_iwrite_c
+/* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_File_iwrite_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
+                      MPIO_Request * request) __attribute__ ((weak, alias("PMPI_File_iwrite_c")));
+#endif
+
+#endif
+
+/*@
+    MPI_File_iwrite_c - Nonblocking write using individual file pointer
+
+Input Parameters:
+. fh - file handle (handle)
+. buf - initial address of buffer (choice)
+. count - number of elements in buffer (nonnegative integer)
+. datatype - datatype of each buffer element (handle)
+
+Output Parameters:
+. request - request object (handle)
+
+.N fortran
+@*/
+#ifdef HAVE_MPI_GREQUEST
+#include "mpiu_greq.h"
+#endif
+
+int MPI_File_iwrite_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
+                      MPI_Datatype datatype, MPI_Request * request)
+{
+    int error_code = MPI_SUCCESS;
+    static char myname[] = "MPI_FILE_IWRITE";
+#ifdef MPI_hpux
+    int fl_xmpi;
+
+    HPMP_IO_START(fl_xmpi, BLKMPIFILEIWRITE, TRDTSYSTEM, fh, datatype, count);
+#endif /* MPI_hpux */
+
+
+    error_code = MPIOI_File_iwrite(fh, (MPI_Offset) 0, ADIO_INDIVIDUAL,
+                                   buf, count, datatype, myname, request);
+
+    /* --BEGIN ERROR HANDLING-- */
+    if (error_code != MPI_SUCCESS)
+        error_code = MPIO_Err_return_file(fh, error_code);
+    /* --END ERROR HANDLING-- */
+
+#ifdef MPI_hpux
+    HPMP_IO_END(fl_xmpi, fh, datatype, count);
+#endif /* MPI_hpux */
+
+    return error_code;
+}
+
 /* prevent multiple definitions of this routine */
 #ifdef MPIO_BUILD_PROFILING
 int MPIOI_File_iwrite(MPI_File fh,
