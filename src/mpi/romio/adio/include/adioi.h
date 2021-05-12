@@ -95,9 +95,18 @@ struct ADIOI_Hints_struct {
 typedef struct ADIOI_Datarep {
     char *name;
     void *state;
+    int is_large;
     MPI_Datarep_extent_function *extent_fn;
-    MPI_Datarep_conversion_function *read_conv_fn;
-    MPI_Datarep_conversion_function *write_conv_fn;
+    union {
+        struct {
+            MPI_Datarep_conversion_function *read_conv_fn;
+            MPI_Datarep_conversion_function *write_conv_fn;
+        } small;
+        struct {
+            MPI_Datarep_conversion_function_c *read_conv_fn;
+            MPI_Datarep_conversion_function_c *write_conv_fn;
+        } large;
+    } u;
     struct ADIOI_Datarep *next; /* pointer to next datarep */
 } ADIOI_Datarep;
 
@@ -843,6 +852,12 @@ int MPIOI_File_write_shared(MPI_File fh, const void *buf, int count,
 int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, int count,
                              MPI_Datatype datatype, MPIO_Request * request);
 
+typedef void (*MPIOI_VOID_FN) (void *);
+int MPIOI_Register_datarep(const char *datarep,
+                           MPIOI_VOID_FN * read_conversion_fn,
+                           MPIOI_VOID_FN * write_conversion_fn,
+                           MPI_Datarep_extent_function * dtype_file_extent_fn,
+                           void *extra_state, int is_large);
 
 /* Unix-style file locking */
 
