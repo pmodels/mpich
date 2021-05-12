@@ -828,6 +828,20 @@ int MPIOI_File_iread_all(MPI_File fh,
                          void *buf,
                          int count, MPI_Datatype datatype, char *myname, MPI_Request * request);
 
+int MPIOI_File_read_ordered(MPI_File fh, void *buf, int count,
+                            MPI_Datatype datatype, MPI_Status * status);
+int MPIOI_File_read_ordered_begin(MPI_File fh, void *buf, int count, MPI_Datatype datatype);
+int MPIOI_File_read_shared(MPI_File fh, void *buf, int count,
+                           MPI_Datatype datatype, MPI_Status * status);
+int MPIOI_File_iread_shared(MPI_File fh, void *buf, int count,
+                            MPI_Datatype datatype, MPI_Request * request);
+int MPIOI_File_write_ordered(MPI_File fh, const void *buf, int count,
+                             MPI_Datatype datatype, MPI_Status * status);
+int MPIOI_File_write_ordered_begin(MPI_File fh, const void *buf, int count, MPI_Datatype datatype);
+int MPIOI_File_write_shared(MPI_File fh, const void *buf, int count,
+                            MPI_Datatype datatype, MPI_Status * status);
+int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, int count,
+                             MPI_Datatype datatype, MPIO_Request * request);
 
 
 /* Unix-style file locking */

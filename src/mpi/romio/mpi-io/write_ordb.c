@@ -40,6 +40,12 @@ Output Parameters:
 int MPI_File_write_ordered_begin(MPI_File fh, ROMIO_CONST void *buf, int count,
                                  MPI_Datatype datatype)
 {
+    return MPIOI_File_write_ordered_begin(fh, buf, count, datatype);
+}
+
+#ifdef MPIO_BUILD_PROFILING
+int MPIOI_File_write_ordered_begin(MPI_File fh, const void *buf, int count, MPI_Datatype datatype)
+{
     int error_code, nprocs, myrank;
     ADIO_Offset incr;
     MPI_Count datatype_size;
@@ -126,3 +132,4 @@ int MPI_File_write_ordered_begin(MPI_File fh, ROMIO_CONST void *buf, int count,
     /* FIXME: Check for error code from WriteStridedColl? */
     return error_code;
 }
+#endif
