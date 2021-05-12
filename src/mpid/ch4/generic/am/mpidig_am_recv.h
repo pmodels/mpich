@@ -370,7 +370,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
         root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
 
         /* MPIDI_CS_ENTER(); */
-        found = MPIDIG_delete_posted(&MPIDIG_REQUEST(rreq, req->rreq), &MPIDI_global.posted_list);
+        found = MPIDIG_delete_posted(rreq, &MPIDI_global.posted_list);
         /* MPIDI_CS_EXIT(); */
 
         if (found) {
