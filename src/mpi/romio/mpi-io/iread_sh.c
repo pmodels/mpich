@@ -45,6 +45,13 @@ Output Parameters:
 int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
                           MPI_Datatype datatype, MPI_Request * request)
 {
+    return MPIOI_File_iread_shared(fh, buf, count, datatype, request);
+}
+
+#ifdef MPIO_BUILD_PROFILING
+int MPIOI_File_iread_shared(MPI_File fh, void *buf, int count,
+                            MPI_Datatype datatype, MPI_Request * request)
+{
     int error_code, buftype_is_contig, filetype_is_contig;
     ADIO_Offset bufsize;
     ADIO_File adio_fh;
@@ -127,4 +134,5 @@ int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
     ROMIO_THREAD_CS_EXIT();
     return error_code;
 }
+#endif
 #endif

@@ -39,6 +39,12 @@ Output Parameters:
 @*/
 int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count, MPI_Datatype datatype)
 {
+    return MPIOI_File_read_ordered_begin(fh, buf, count, datatype);
+}
+
+#ifdef MPIO_BUILD_PROFILING
+int MPIOI_File_read_ordered_begin(MPI_File fh, void *buf, int count, MPI_Datatype datatype)
+{
     int error_code, nprocs, myrank;
     MPI_Count datatype_size;
     int source, dest;
@@ -129,3 +135,4 @@ int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count, MPI_Datatype 
 
     return error_code;
 }
+#endif
