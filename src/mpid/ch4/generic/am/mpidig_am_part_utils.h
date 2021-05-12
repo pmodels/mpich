@@ -54,28 +54,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_match(int rank, int tag,
         context_id == MPIDI_PART_REQUEST(req, context_id);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_part_enqueue(MPIR_Request * part_req,
-                                                  MPIDIG_part_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_part_enqueue(MPIR_Request * part_req, MPIDI_Devreq_t ** list)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PART_ENQUEUE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PART_ENQUEUE);
-    MPIDIG_PART_REQUEST(part_req, u.recv).request = part_req;
-    DL_APPEND(*list, &MPIDIG_PART_REQUEST(part_req, u.recv));
+    DL_APPEND(*list, &(part_req->dev));
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_ENQUEUE);
 }
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_part_dequeue(int rank, int tag,
                                                            MPIR_Context_id_t context_id,
-                                                           MPIDIG_part_rreq_t ** list)
+                                                           MPIDI_Devreq_t ** list)
 {
     MPIR_Request *part_req = NULL;
-    MPIDIG_part_rreq_t *curr, *tmp;
+    MPIDI_Devreq_t *curr, *tmp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PART_DEQUEUE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PART_DEQUEUE);
 
     DL_FOREACH_SAFE(*list, curr, tmp) {
-        if (MPIDIG_part_match(rank, tag, context_id, curr->request)) {
-            part_req = curr->request;
+        if (MPIDIG_part_match(rank, tag, context_id, MPL_container_of(curr, MPIR_Request, dev))) {
+            part_req = MPL_container_of(curr, MPIR_Request, dev);
             DL_DELETE(*list, curr);
             break;
         }

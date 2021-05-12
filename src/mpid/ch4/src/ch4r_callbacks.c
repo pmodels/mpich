@@ -83,7 +83,7 @@ void MPIDIG_progress_compl_list(void)
     DL_FOREACH_SAFE(MPIDI_global.cmpl_list, curr, tmp) {
         if (curr->seq_no == MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)) {
             DL_DELETE(MPIDI_global.cmpl_list, curr);
-            req = (MPIR_Request *) curr->request;
+            req = curr->request;
             MPIDIG_REQUEST(req, req->target_cmpl_cb) (req);
             goto do_check_again;
         }
