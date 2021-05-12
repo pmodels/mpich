@@ -15,7 +15,6 @@ enum {
     MPIDI_UCX_AMTYPE_NONE = 0,
     MPIDI_UCX_AMTYPE_SHORT,
     MPIDI_UCX_AMTYPE_PIPELINE,
-    MPIDI_UCX_AMTYPE_BULK
 };
 
 typedef struct {

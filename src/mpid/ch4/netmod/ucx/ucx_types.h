@@ -31,8 +31,7 @@
  *  3. Pipeline mode. Send data in multiple tag sends.
  */
 enum MPIDI_UCX_am_handler_ids {
-    MPIDI_UCX_AM_HANDLER_ID__BULK = 0,
-    MPIDI_UCX_AM_HANDLER_ID__SHORT,
+    MPIDI_UCX_AM_HANDLER_ID__SHORT = 0,
     MPIDI_UCX_AM_HANDLER_ID__PIPELINE
 };
 

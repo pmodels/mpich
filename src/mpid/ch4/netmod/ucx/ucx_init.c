@@ -359,10 +359,6 @@ int MPIDI_UCX_init_world(void)
 
     ucs_status_t ucx_status;
     ucx_status =
-        ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID__BULK,
-                                  &MPIDI_UCX_am_handler_bulk, NULL, UCP_AM_FLAG_WHOLE_MSG);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-    ucx_status =
         ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID__SHORT,
                                   &MPIDI_UCX_am_handler_short, NULL, UCP_AM_FLAG_WHOLE_MSG);
     MPIDI_UCX_CHK_STATUS(ucx_status);

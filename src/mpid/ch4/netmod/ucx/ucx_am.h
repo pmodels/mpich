@@ -9,23 +9,6 @@
 #include "ucx_impl.h"
 #include "ucx_am_impl.h"
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status)
-{
-    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPIR_Request *req = ucp_request->req;
-    int handler_id = req->dev.ch4.am.netmod_am.ucx.handler_id;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_AM_ISEND_CALLBACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_AM_ISEND_CALLBACK);
-
-    MPIR_gpu_free_host(req->dev.ch4.am.netmod_am.ucx.pack_buffer);
-    req->dev.ch4.am.netmod_am.ucx.pack_buffer = NULL;
-    MPIDIG_global.origin_cbs[handler_id] (req);
-    ucp_request->req = NULL;
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_AM_ISEND_CALLBACK);
-}
-
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
@@ -79,12 +62,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         case MPIDI_UCX_AMTYPE_PIPELINE:
             mpi_errno = MPIDI_UCX_do_am_isend_pipeline(rank, comm, handler_id, am_hdr, am_hdr_sz,
                                                        data, count, datatype, sreq, false);
-            /* cleanup preselected amtype to avoid problem with reused request */
-            MPIDI_UCX_AMREQUEST(sreq, am_type_choice) = MPIDI_UCX_AMTYPE_NONE;
-            break;
-        case MPIDI_UCX_AMTYPE_BULK:
-            mpi_errno = MPIDI_UCX_do_am_isend_bulk(rank, comm, handler_id, am_hdr, am_hdr_sz, data,
-                                                   count, datatype, sreq);
             /* cleanup preselected amtype to avoid problem with reused request */
             MPIDI_UCX_AMREQUEST(sreq, am_type_choice) = MPIDI_UCX_AMTYPE_NONE;
             break;
@@ -234,7 +211,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
     MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
 
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID__BULK,
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID__SHORT,
                                                              send_buf, am_hdr_sz + sizeof(ucx_hdr),
                                                              ucp_dt_make_contig(1),
                                                              &MPIDI_UCX_am_send_callback, 0);
@@ -278,7 +255,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Comm * comm,
     send_buf = MPL_malloc(am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
     MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
     MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID__BULK,
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID__SHORT,
                                                              send_buf, am_hdr_sz + sizeof(ucx_hdr),
                                                              ucp_dt_make_contig(1),
                                                              &MPIDI_UCX_am_send_callback, 0);
