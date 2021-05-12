@@ -4,6 +4,8 @@
  */
 
 #include "mpioimpl.h"
+#include <limits.h>
+#include <assert.h>
 
 #ifdef HAVE_WEAK_SYMBOLS
 
@@ -78,12 +80,14 @@ Output Parameters:
 int MPI_File_write_ordered_begin_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
                                    MPI_Datatype datatype)
 {
+    assert(count <= INT_MAX);
     return MPIOI_File_write_ordered_begin(fh, buf, count, datatype);
 }
 
 #ifdef MPIO_BUILD_PROFILING
 int MPIOI_File_write_ordered_begin(MPI_File fh, const void *buf, int count, MPI_Datatype datatype)
 {
+    assert(count <= INT_MAX);
     int error_code, nprocs, myrank;
     ADIO_Offset incr;
     MPI_Count datatype_size;

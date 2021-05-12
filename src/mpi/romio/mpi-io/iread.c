@@ -4,6 +4,8 @@
  */
 
 #include "mpioimpl.h"
+#include <limits.h>
+#include <assert.h>
 
 #ifdef HAVE_WEAK_SYMBOLS
 
@@ -108,6 +110,7 @@ Output Parameters:
 int MPI_File_iread_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype,
                      MPI_Request * request)
 {
+    assert(count <= INT_MAX);
     int error_code = MPI_SUCCESS;
     static char myname[] = "MPI_FILE_IREAD";
 #ifdef MPI_hpux
@@ -137,6 +140,7 @@ int MPI_File_iread_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datat
 int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *buf, int count,
                      MPI_Datatype datatype, char *myname, MPI_Request * request)
 {
+    assert(count <= INT_MAX);
     int error_code, buftype_is_contig, filetype_is_contig;
     MPI_Count datatype_size;
     ADIO_Status status;

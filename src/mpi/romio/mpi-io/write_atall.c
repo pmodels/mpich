@@ -4,6 +4,8 @@
  */
 
 #include "mpioimpl.h"
+#include <limits.h>
+#include <assert.h>
 
 #ifdef HAVE_WEAK_SYMBOLS
 
@@ -100,6 +102,7 @@ Output Parameters:
 int MPI_File_write_at_all_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
                             MPI_Count count, MPI_Datatype datatype, MPI_Status * status)
 {
+    assert(count <= INT_MAX);
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_AT_ALL";
 #ifdef MPI_hpux

@@ -4,6 +4,8 @@
  */
 
 #include "mpioimpl.h"
+#include <limits.h>
+#include <assert.h>
 
 #ifdef HAVE_WEAK_SYMBOLS
 
@@ -89,6 +91,7 @@ Output Parameters:
 int MPI_File_iwrite_shared_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
                              MPI_Datatype datatype, MPIO_Request * request)
 {
+    assert(count <= INT_MAX);
     return MPIOI_File_iwrite_shared(fh, buf, count, datatype, request);
 }
 
@@ -96,6 +99,7 @@ int MPI_File_iwrite_shared_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count
 int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, int count,
                              MPI_Datatype datatype, MPIO_Request * request)
 {
+    assert(count <= INT_MAX);
     int error_code, buftype_is_contig, filetype_is_contig;
     ADIO_File adio_fh;
     ADIO_Offset incr, bufsize;
