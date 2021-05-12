@@ -63,7 +63,7 @@ int MPIDI_OFI_find_provider(struct fi_info **prov_out)
     goto fn_exit;
 }
 
-static int MPIDI_OFI_get_required_version(void)
+int MPIDI_OFI_get_required_version(void)
 {
     if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
         return FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
@@ -106,6 +106,12 @@ static int find_provider(struct fi_info **prov_out)
         provname = prov->fabric_attr->prov_name;
         /* Initialize MPIDI_OFI_global.settings */
         MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings, provname);
+        /* The presets may have non-default minimum version requirement */
+        required_version = MPIDI_OFI_get_required_version();
+        if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+            printf("Required minimum FI_VERSION: %x, current version: %x\n", required_version,
+                   fi_version());
+        }
         /* NOTE: we fill the hints with optimal settings. In order to work for providers
          * that support halfway between minimal and optimal, we need try-loop to systematically
          * relax settings. The following code does this for the providers that we have tested.
@@ -113,7 +119,6 @@ static int find_provider(struct fi_info **prov_out)
         MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = MPL_strdup(provname);
         hints->caps = prov->caps;
-        hints->addr_format = prov->addr_format;
 
         /* Now we have the hints with best matched provider, get the new prov_list */
         struct fi_info *old_prov_list = prov_list;
@@ -126,11 +131,8 @@ static int find_provider(struct fi_info **prov_out)
             ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
         }
         if (ret || prov_list == NULL) {
-            if (prov->domain_attr->mr_mode & FI_MR_BASIC) {
-                hints->domain_attr->mr_mode = FI_MR_BASIC;
-            } else if (prov->domain_attr->mr_mode & FI_MR_SCALABLE) {
-                hints->domain_attr->mr_mode = FI_MR_SCALABLE;
-            }
+            /* relax mr_mode */
+            hints->domain_attr->mr_mode = prov->domain_attr->mr_mode;
             ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
         }
         /* free the old one, the new one will be freed in MPIDI_OFI_find_provider_cleanup */
