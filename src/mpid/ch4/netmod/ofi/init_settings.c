@@ -62,7 +62,7 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
     /* ------------------------------------------------------------------------ */
     hints->mode = FI_CONTEXT | FI_ASYNC_IOV | FI_RX_CQ_DATA;    /* We can handle contexts  */
 
-    if (fi_version() >= FI_VERSION(1, 5)) {
+    if (MPIDI_OFI_get_required_version() >= FI_VERSION(1, 5)) {
 #ifdef FI_CONTEXT2
         hints->mode |= FI_CONTEXT2;
 #endif
@@ -125,7 +125,7 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
     hints->domain_attr->resource_mgmt = FI_RM_ENABLED;
     hints->domain_attr->av_type = MPIDI_OFI_ENABLE_AV_TABLE ? FI_AV_TABLE : FI_AV_MAP;
 
-    if (fi_version() >= FI_VERSION(1, 5)) {
+    if (MPIDI_OFI_get_required_version() >= FI_VERSION(1, 5)) {
         hints->domain_attr->mr_mode = 0;
 #ifdef FI_RESTRICTED_COMP
         hints->domain_attr->mode = FI_RESTRICTED_COMP;
@@ -154,17 +154,12 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
          * FI_MR_SCALABLE is equivallent to all bits off in newer versions.
          */
         MPIR_Assert(MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS == MPIDI_OFI_ENABLE_MR_PROV_KEY);
+        MPIR_Assert(MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS == MPIDI_OFI_ENABLE_MR_ALLOCATED);
         if (MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
             hints->domain_attr->mr_mode = FI_MR_BASIC;
         } else {
             hints->domain_attr->mr_mode = FI_MR_SCALABLE;
         }
-    }
-    /* FI_MR_SCALABLE is implied by lack of mr_mode bits in >= v1.5.
-     * But at least sockets provider still need FI_MR_SCALABLE to be set
-     * or it will return FI_MR_BASIC. */
-    if (hints->domain_attr->mr_mode == 0) {
-        hints->domain_attr->mr_mode = FI_MR_SCALABLE;
     }
     hints->tx_attr->op_flags = FI_COMPLETION;
     hints->tx_attr->msg_order = FI_ORDER_SAS;
@@ -273,11 +268,6 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
                                                      prov->fabric_attr->prov_name));
 
-    if (MPIR_CVAR_OFI_SKIP_IPV6) {
-        if (prov->addr_format == FI_SOCKADDR_IN6) {
-            return 0;
-        }
-    }
     CHECK_CAP(enable_scalable_endpoints,
               prov->domain_attr->max_ep_tx_ctx <= 1 ||
               (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX);

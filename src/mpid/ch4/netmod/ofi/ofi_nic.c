@@ -84,29 +84,43 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
 {
     int mpi_errno = MPI_SUCCESS;
     int nic_count = 0;
+    int max_nics = MPIR_CVAR_CH4_OFI_MAX_NICS;
 
     if (MPIR_CVAR_CH4_OFI_MAX_NICS == 0 || MPIR_CVAR_CH4_OFI_MAX_NICS <= -2) {
         /* Invalid values for the CVAR will default to single nic */
-    } else {
-        struct fi_info *prov_iter = prov;
-        /* Count the number of NICs */
-        prov_iter = prov;
-        while (prov_iter && nic_count < MPIDI_OFI_MAX_NICS) {
-            struct fid_nic *nic = prov_iter->nic;
-            if (nic && nic->bus_attr->bus_type == FI_BUS_PCI &&
-                !MPIDI_OFI_nic_already_used(prov_iter, MPIDI_OFI_global.prov_use, nic_count)) {
-                MPIDI_OFI_global.prov_use[nic_count] = fi_dupinfo(prov_iter);
-                MPIR_Assert(MPIDI_OFI_global.prov_use[nic_count]);
-                nic_count++;
+        max_nics = 1;
+    }
+
+    /* Count the number of NICs */
+    struct fi_info *first_prov = NULL;
+    for (struct fi_info * p = prov; p; p = p->next) {
+        /* additional filtering */
+        if (MPIR_CVAR_OFI_SKIP_IPV6 && p->addr_format == FI_SOCKADDR_IN6) {
+            continue;
+        }
+        if (!first_prov) {
+            first_prov = p;
+        }
+        /* check the nic */
+        struct fid_nic *nic = p->nic;
+        if (nic && nic->bus_attr->bus_type == FI_BUS_PCI &&
+            !MPIDI_OFI_nic_already_used(p, MPIDI_OFI_global.prov_use, nic_count)) {
+            MPIDI_OFI_global.prov_use[nic_count] = fi_dupinfo(p);
+            MPIR_Assert(MPIDI_OFI_global.prov_use[nic_count]);
+            nic_count++;
+            if (nic_count == max_nics) {
+                break;
             }
-            prov_iter = prov_iter->next;
         }
     }
+
     if (nic_count == 0) {
-        /* If no NICs are detected, then force using first
-         * fi_info structure returned by fi_getinfo */
-        MPIDI_OFI_global.prov_use[0] = fi_dupinfo(prov);
+        /* If no NICs are detected, then force using first provider */
+        MPIDI_OFI_global.prov_use[0] = fi_dupinfo(first_prov);
         MPIR_Assert(MPIDI_OFI_global.prov_use[0]);
+        mpi_errno = setup_single_nic();
+        MPIR_ERR_CHECK(mpi_errno);
+    } else if (nic_count == 1) {
         mpi_errno = setup_single_nic();
         MPIR_ERR_CHECK(mpi_errno);
     } else {

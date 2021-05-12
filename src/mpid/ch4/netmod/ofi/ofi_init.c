@@ -1394,8 +1394,9 @@ static int update_global_limits(struct fi_info *prov)
 static void dump_global_settings(void)
 {
     fprintf(stdout, "==== Capability set configuration ====\n");
-    fprintf(stdout, "libfabric provider: %s\n",
-            MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name);
+    fprintf(stdout, "libfabric provider: %s - %s\n",
+            MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name,
+            MPIDI_OFI_global.prov_use[0]->fabric_attr->name);
     fprintf(stdout, "MPIDI_OFI_ENABLE_AV_TABLE: %d\n", MPIDI_OFI_ENABLE_AV_TABLE);
     fprintf(stdout, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d\n",
             MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
