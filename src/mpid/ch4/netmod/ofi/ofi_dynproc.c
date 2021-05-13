@@ -195,7 +195,10 @@ static int dynproc_wait_disconnect(int conn_id)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_conn_t *p_conn = &MPIDI_OFI_global.conn_mgr.conn_table[conn_id];
 
-    MPIDI_OFI_PROGRESS_WHILE(!p_conn->req->done, 0);
+    while (!p_conn->req->done) {
+        mpi_errno = MPIDI_NM_progress(0, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     p_conn->state = MPIDI_OFI_DYNPROC_DISCONNECTED;
     MPL_free(p_conn->req);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "conn_id=%d closed", conn_id));
