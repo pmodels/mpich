@@ -652,8 +652,6 @@ if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
 fi
 PAC_POP_FLAG([CFLAGS])
 
-# also needed by hwloc in embedded mode, must also come early for expansion
-# ordering reasons
 AC_USE_SYSTEM_EXTENSIONS
 
 dnl now that autoconf and core compilers are setup, init automake and libtool
@@ -1144,12 +1142,26 @@ fi
 if test "$with_hwloc" = "embedded" ; then
     PAC_PUSH_FLAG([CFLAGS])
     CFLAGS="$VISIBILITY_CFLAGS"
-    PAC_CONFIG_SUBDIR_ARGS([modules/hwloc], [--enable-embedded-mode --disable-visibility],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
+    hwloc_config_args="--enable-embedded-mode --disable-visibility"
+    hwloc_config_args="$hwloc_config_args --disable-libxml2"
+    hwloc_config_args="$hwloc_config_args --disable-nvml"
+    hwloc_config_args="$hwloc_config_args --disable-cuda"
+    hwloc_config_args="$hwloc_config_args --disable-opencl"
+    hwloc_config_args="$hwloc_config_args --disable-rsmi"
+    PAC_CONFIG_SUBDIR_ARGS([modules/hwloc], [$hwloc_config_args],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
     PAC_POP_FLAG([CFLAGS])
     hwlocsrcdir="${main_top_builddir}/modules/hwloc"
     hwloclib="${main_top_builddir}/modules/hwloc/hwloc/libhwloc_embedded.la"
     PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/hwloc/include],[CPPFLAGS])
     PAC_APPEND_FLAG([-I${main_top_builddir}/modules/hwloc/include],[CPPFLAGS])
+
+    # capture the line -- S["HWLOC_EMBEDDED_LIBS"]="-lm "
+    hwloc_embedded_libs=$(awk -F'"' '/^S."HWLOC_EMBEDDED_LIBS"/ {print $4}' modules/hwloc/config.status)
+    echo "hwloc_embedded_libs = $hwloc_embedded_libs"
+    if test -n "$hwloc_embedded_libs" ; then
+        dnl TODO: split and add individual lib
+        PAC_LIBS_ADD([$hwloc_embedded_libs])
+    fi
 fi
 
 if test "$pac_have_hwloc" = "yes" ; then
