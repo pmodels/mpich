@@ -127,7 +127,9 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
 
     /* Try matching a request or post a new one */
     MPIR_Request *unexp_req = NULL;
-    unexp_req = MPIDIG_part_dequeue(source, tag, comm->context_id, &MPIDI_global.part_unexp_list);
+    unexp_req =
+        MPIDIG_rreq_dequeue(source, tag, comm->context_id, &MPIDI_global.part_unexp_list,
+                            MPIDIG_PART);
     if (unexp_req) {
         /* Copy sender info from unexp_req to local part_rreq */
         MPIDIG_PART_REQUEST(*request, u.recv).sdata_size =
@@ -138,7 +140,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
         MPIDIG_part_match_rreq(*request);
         MPIDIG_PART_REQ_INC_FETCH_STATUS(*request);
     } else {
-        MPIDIG_part_enqueue(*request, &MPIDI_global.part_posted_list);
+        MPIDIG_enqueue_request(*request, &MPIDI_global.part_posted_list, MPIDIG_PART);
     }
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD

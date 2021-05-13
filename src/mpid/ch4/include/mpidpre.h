@@ -256,7 +256,7 @@ typedef struct MPIDI_part_request {
     int tag;
     MPIR_Context_id_t context_id;       /* temporarily store send context_id in unexp_rreq.
                                          * Valid also in posted_rreq so that single dequeue
-                                         * routine can be used. See MPIDIG_part_dequeue. */
+                                         * routine can be used. */
     MPI_Datatype datatype;
 } MPIDI_part_request_t;
 
