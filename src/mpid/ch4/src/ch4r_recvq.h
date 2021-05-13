@@ -26,6 +26,7 @@ int MPIDIG_recvq_init(void);
 enum MPIDIG_queue_type {
     MPIDIG_PT2PT_POSTED,
     MPIDIG_PT2PT_UNEXP,
+    MPIDIG_PART,
 };
 
 /* match queue PVAR macros */
@@ -75,7 +76,6 @@ enum MPIDIG_queue_type {
     } while (0)
 
 /* match and search functions */
-
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_match_request(int rank, int tag,
                                                    MPIR_Context_id_t context_id, MPIR_Request * req,
                                                    enum MPIDIG_queue_type qtype)
@@ -89,6 +89,10 @@ MPL_STATIC_INLINE_PREFIX bool MPIDIG_match_request(int rank, int tag,
         return (rank == MPIDIG_REQUEST(req, rank) || rank == MPI_ANY_SOURCE) &&
             (tag == MPIR_TAG_MASK_ERROR_BITS(MPIDIG_REQUEST(req, tag)) ||
              tag == MPI_ANY_TAG) && context_id == MPIDIG_REQUEST(req, context_id);
+    } else if (qtype == MPIDIG_PART) {
+        return rank == MPIDI_PART_REQUEST(req, rank) &&
+            tag == MPIR_TAG_MASK_ERROR_BITS(MPIDI_PART_REQUEST(req, tag)) &&
+            context_id == MPIDI_PART_REQUEST(req, context_id);
     } else {
         /* unknown queue type */
         MPIR_Assert(0);

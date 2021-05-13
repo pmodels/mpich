@@ -70,8 +70,8 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
 
     MPIDIG_part_send_init_msg_t *msg_hdr = (MPIDIG_part_send_init_msg_t *) am_hdr;
     MPIR_Request *posted_req = NULL;
-    posted_req = MPIDIG_part_dequeue(msg_hdr->src_rank, msg_hdr->tag, msg_hdr->context_id,
-                                     &MPIDI_global.part_posted_list);
+    posted_req = MPIDIG_rreq_dequeue(msg_hdr->src_rank, msg_hdr->tag, msg_hdr->context_id,
+                                     &MPIDI_global.part_posted_list, MPIDIG_PART);
     if (posted_req) {
         part_rreq_update_sinfo(posted_req, msg_hdr);
         MPIDIG_part_match_rreq(posted_req);
@@ -93,7 +93,7 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
         MPIDI_PART_REQUEST(unexp_req, context_id) = msg_hdr->context_id;
         part_rreq_update_sinfo(unexp_req, msg_hdr);
 
-        MPIDIG_part_enqueue(unexp_req, &MPIDI_global.part_unexp_list);
+        MPIDIG_enqueue_request(unexp_req, &MPIDI_global.part_unexp_list, MPIDIG_PART);
     }
 
     if (is_async)
