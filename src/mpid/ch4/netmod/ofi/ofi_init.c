@@ -1368,9 +1368,9 @@ static int update_global_limits(struct fi_info *prov)
     MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
     MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
     MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
-    MPIDI_OFI_global.tx_iov_limit = MIN(prov->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.rx_iov_limit = MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.rma_iov_limit = MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.tx_iov_limit = MPL_MIN(prov->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rx_iov_limit = MPL_MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rma_iov_limit = MPL_MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
 
     /* Ensure that we aren't trying to shove too many bits into the match_bits.
