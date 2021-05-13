@@ -27,7 +27,7 @@ AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive -Werror foreign 1.12.3 subdir
 
 AM_PROG_AR
 
-AC_CONFIG_HEADER(include/hydra_config.h)
+AC_CONFIG_HEADERS([include/hydra_config.h])
 
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -151,7 +151,6 @@ AC_SUBST(top_srcdir)
 PAC_ENABLE_COVERAGE
 
 # Check if the necessary headers are available
-AC_HEADER_STDC
 AC_CHECK_HEADERS(unistd.h strings.h sys/types.h sys/socket.h sched.h sys/stat.h sys/param.h \
 		 netinet/in.h netinet/tcp.h sys/un.h sys/time.h time.h ifaddrs.h arpa/inet.h \
 		 poll.h fcntl.h netdb.h winsock2.h windows.h)
@@ -218,7 +217,7 @@ fi
 # Check what bootstrap server we should use
 #########################################################################
 AC_ARG_WITH(hydra-bss,
-	[AC_HELP_STRING([--with-hydra-bss=name],
+	[AS_HELP_STRING([--with-hydra-bss=name],
 		[Bootstrap Server (user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt,manual,persist)])],
 	[ hydra_bss=$withval ],
 	[ hydra_bss="user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt,manual,persist" ])
@@ -660,7 +659,8 @@ if test "$ac_cv_func_gethostname" = "yes" ; then
 fi
 
 # Final output
-AC_OUTPUT(Makefile
+AC_CONFIG_FILES([Makefile
 	tools/bootstrap/src/bsci_init.c
 	hydra-doxygen.cfg
-)
+])
+AC_OUTPUT

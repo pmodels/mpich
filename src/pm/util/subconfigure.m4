@@ -104,8 +104,6 @@ dnl Is there libnsl needed for gethostbyname?
 dnl AC_SEARCH_LIBS(gethostbyname,nsl)
 AC_SEARCH_LIBS(socketpair,socket)
 dnl
-dnl Look for Standard headers
-AC_HEADER_STDC
 dnl Check for a specific header
 AC_CHECK_HEADERS(sys/types.h signal.h sys/ptrace.h sys/uio.h unistd.h)
 if test "$ac_cv_header_sys_uio_h" = "yes" ; then
@@ -183,7 +181,7 @@ dnl
 # FIXME: need to include the test, at least for any file that
 # might set _POSIX_SOURCE
 # putenv() sets environment variable
-AC_HAVE_FUNCS(putenv)
+AC_CHECK_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
 fi

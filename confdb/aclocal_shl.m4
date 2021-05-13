@@ -57,11 +57,11 @@ dnl D*/
 AC_DEFUN([PAC_ARG_SHAREDLIBS],[
 
 AC_ARG_ENABLE(shared,
-	AC_HELP_STRING([--enable-shared], [Enable shared library builds]),,
+	AS_HELP_STRING([--enable-shared], [Enable shared library builds]),,
 	enable_shared=no)
 
 AC_ARG_ENABLE(rpath,
-	AC_HELP_STRING([--enable-rpath],
+	AS_HELP_STRING([--enable-rpath],
 		[Determine whether the rpath is set when programs are
 		compiled and linked when shared libraries are built.
 		The default is yes; use --disable-rpath to turn this

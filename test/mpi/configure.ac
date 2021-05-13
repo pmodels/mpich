@@ -23,7 +23,7 @@ AC_INIT([mpich-testsuite],
         [mpich-testsuite],
         [http://www.mpich.org/])
 
-AC_CONFIG_HEADER(include/mpitestconf.h)
+AC_CONFIG_HEADERS([include/mpitestconf.h])
 AH_TOP([/*
  * Copyright (C) by Argonne National Laboratory
  *     See COPYRIGHT in top-level directory
@@ -93,7 +93,7 @@ if test "X$main_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
 fi
 
 AC_ARG_ENABLE(echo,
-	[AC_HELP_STRING([--enable-echo],[Turn on strong echoing. The default is enable=no.])],
+	[AS_HELP_STRING([--enable-echo],[Turn on strong echoing. The default is enable=no.])],
 	[set -x])
 
 AC_ARG_ENABLE(fortran,
@@ -142,7 +142,7 @@ IFS="$save_IFS"
 
 # DTPools switch
 AC_ARG_ENABLE([dtpools],
-              [AC_HELP_STRING([--disable-dtpools],[Disable dtpools tests])],,
+              [AS_HELP_STRING([--disable-dtpools],[Disable dtpools tests])],,
               [enable_dtpools=yes])
 
 if test "x${enable_dtpools}" = "xyes"; then
@@ -154,74 +154,74 @@ fi
 AC_SUBST(DTP_SWITCH)
 
 AC_ARG_ENABLE(cxx,
-	[AC_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
+	[AS_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
 
 AC_ARG_ENABLE(romio,
-	[AC_HELP_STRING([--enable-romio],[Enable ROMIO MPI I/O implementation])],,
+	[AS_HELP_STRING([--enable-romio],[Enable ROMIO MPI I/O implementation])],,
 	[enable_romio=yes])
 
 AC_ARG_ENABLE(spawn,
-	[AC_HELP_STRING([--enable-spawn],
+	[AS_HELP_STRING([--enable-spawn],
 		[Enable tests of the dynamic process parts of MPI-2 (default)])],,
 	[enable_spawn=yes])
 
 AC_ARG_ENABLE(rma,
-	[AC_HELP_STRING([--enable-rma],[Enable tests of the one sided parts of MPI-2 (default)])],,
+	[AS_HELP_STRING([--enable-rma],[Enable tests of the one sided parts of MPI-2 (default)])],,
 	[enable_rma=yes])
 
 AC_ARG_ENABLE(long-double-complex,
-	[AC_HELP_STRING([--enable-long-double-complex],
+	[AS_HELP_STRING([--enable-long-double-complex],
 		[Enable tests involving MPI_LONG_DOUBLE_COMPLEX (default)])],,
 	[enable_long_double_complex=yes])
 AC_ARG_ENABLE(long-double,
-	[AC_HELP_STRING([--enable-long-double-complex],
+	[AS_HELP_STRING([--enable-long-double-complex],
 		[Enable tests involving MPI_LONG_DOUBLE and related types (default)])],,
 	[enable_long_double=yes])
 
 AC_ARG_ENABLE(checkerrors,
-	[AC_HELP_STRING([--enable-checkerrors],
+	[AS_HELP_STRING([--enable-checkerrors],
 		[Add some tests for checking for errors in user programs])],,
 	[enable_checkerrors=yes])
 
 AC_ARG_ENABLE(perftest,
-	[AC_HELP_STRING([--enable-perftest],
+	[AS_HELP_STRING([--enable-perftest],
 		[Include tests for basic performance consistency (default)])],,
 	[enable_perftest=yes])
 
 AC_ARG_ENABLE(large-tests,
-	[AC_HELP_STRING([--enable-large-tests],
+	[AS_HELP_STRING([--enable-large-tests],
 		[Enable tests which require large (>2GB per proc) amount of memory])],,
 	[enable_large_tests=no])
 
 AC_ARG_ENABLE(ft-tests,
-	[AC_HELP_STRING([--enable-ft-tests],
+	[AS_HELP_STRING([--enable-ft-tests],
 		[Include tests for fault tolerance (default no)])],,
 	[enable_ft_tests=no])
 
 AC_ARG_ENABLE(comm-overlap-tests,
-	[AC_HELP_STRING([--enable-comm-overlap-tests],
+	[AS_HELP_STRING([--enable-comm-overlap-tests],
 		[Include tests for communicator overlap (default)])],,
 	[enable_comm_overlap_tests=yes])
 
 AC_ARG_ENABLE(checkfaults,
-	[AC_HELP_STRING([--enable-checkfaults],
+	[AS_HELP_STRING([--enable-checkfaults],
 		[Add some tests for checking on handling of faults in user programs])],,
 	[enable_checkfaults=no])
 
 AC_ARG_ENABLE(checkpointing,
-	[AC_HELP_STRING([--enable-checkpointing],
+	[AS_HELP_STRING([--enable-checkpointing],
 		[Add some tests for checkpointing])],,
 	[enable_checkpointing=no])
 
 AC_ARG_ENABLE(fast,
-	[AC_HELP_STRING([--enable-fast],
+	[AS_HELP_STRING([--enable-fast],
 		[Indicates that the MPI implementation may have been
 		built for fastest operation, such as building without
 		error checking.  Has the effect of
 		--enable-checkerrors=no])],,)
 
 AC_ARG_ENABLE(strictmpi,
-	[AC_HELP_STRING([--enable-strictmpi],
+	[AS_HELP_STRING([--enable-strictmpi],
 		[Only test for operations specifically defined by the
 		MPI standard.  This turns off tests for some common
 		extensions, including for combinations of predefined
@@ -246,18 +246,18 @@ AC_ARG_ENABLE(threads,
 	[enable_threads=default])
 
 AC_ARG_ENABLE(xfail,
-	[AC_HELP_STRING([--enable-xfail],
+	[AS_HELP_STRING([--enable-xfail],
 		[Run tests marked for expected failure])],,
 	[enable_xfail=no])
 
 AC_ARG_ENABLE(gpu-tests-only,
-        [AC_HELP_STRING([--enable-gpu-tests-only],
+        [AS_HELP_STRING([--enable-gpu-tests-only],
                 [Run only GPU tests])],,
         [enable_gpu_tests_only=no])
 
 # DTPools test generation
 AC_ARG_WITH(dtpools-datatypes,
-    [AC_HELP_STRING([--with-dtpools-datatypes=typelist],
+    [AS_HELP_STRING([--with-dtpools-datatypes=typelist],
         [Comma separated list of MPI datatypes to use for DTPools tests
          generation. Typelist can be of the form: 'MPI_INT,MPI_DOUBLE,...',
          for single element types, 'MPI_INT:4+MPI_DOUBLE:8,...', for multiple
@@ -271,12 +271,12 @@ AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_arg
 AC_CONFIG_COMMANDS([collcvartests],[$srcdir/maint/test_coll_algos.sh])
 
 AC_ARG_WITH(mpi,
-	[AC_HELP_STRING([--with-mpi=dir],
+	[AS_HELP_STRING([--with-mpi=dir],
 		[Use the selected MPI; compilation scripts for mpicc,
 		mpifort and mpicxx should be in dir/bin])],,)
 
 AC_ARG_WITH(pm,
-	AC_HELP_STRING([--with-pm=name],
+	AS_HELP_STRING([--with-pm=name],
 		[Specify the process manager for MPICH.  "no" or "none" are
                  valid values.  Multiple process managers may be specified as
                  long as they all use the same pmi interface by separating them
@@ -320,7 +320,7 @@ else
 fi
 
 AC_ARG_WITH(config-args,
-	[AC_HELP_STRING([--with-config-args=filename],
+	[AS_HELP_STRING([--with-config-args=filename],
 		[Specify configure argument file that contains the
 		values of variables that configure reads,
 		e.g. CC,CFLAGS,F77,FFLAGS,FC,FCFLAGS....  If the
@@ -705,7 +705,6 @@ AM_PROG_AR
 PAC_ARG_STRICT
 
 # General headers
-AC_HEADER_STDC
 dnl AC_CHECK_HEADERS(stdarg.h unistd.h string.h stdlib.h memory.h stdint.h)
 dnl unistd.h string.h stdlib.h memory.h stdint.h are checked by AC_PROG_CC.
 AC_CHECK_HEADERS(stdarg.h sys/time.h sys/resource.h)
@@ -1062,14 +1061,14 @@ dnl                     ac_cv_sizeof_MPI_Offset=`cat conftestval`
 dnl                 else
 dnl                     # failure
 dnl                     AC_MSG_WARN([Unable to run the program to determine the size of MPI_Offset])
-dnl                     echo "configure: failed program was:" >&AC_FD_CC
-dnl                     cat conftest.c >&AC_FD_CC
+dnl                     echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+dnl                     cat conftest.c >&AS_MESSAGE_LOG_FD
 dnl                 fi
 dnl             else
 dnl                 # failure
 dnl                 AC_MSG_WARN([Unable to build the program to determine the size of MPI_Offset])
-dnl                 echo "configure: failed program was:" >&AC_FD_CC
-dnl                 cat conftest.c >&AC_FD_CC
+dnl                 echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+dnl                 cat conftest.c >&AS_MESSAGE_LOG_FD
 dnl             fi
 dnl             rm -f conftest*
 dnl         ])

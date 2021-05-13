@@ -209,7 +209,6 @@ dnl message.  You can use '0' to specify undetermined.
 dnl
 dnl D*/
 AC_DEFUN([PAC_PROG_F77_CHECK_SIZEOF],[
-AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([AC_F77_LIBRARY_LDFLAGS])
 changequote(<<, >>)dnl
 dnl The name to #define.
@@ -237,9 +236,7 @@ AC_COMPILE_IFELSE([
     AC_LANG_PUSH([C])
     AC_RUN_IFELSE([
         AC_LANG_PROGRAM([
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
 #ifdef F77_NAME_UPPER
 #define cisize_ CISIZE
 #define isize_ ISIZE
@@ -303,7 +300,6 @@ dnl The cache variable name.
 define(<<PAC_CV_NAME>>, translit(pac_cv_f77_sizeof_$1, [ *], [__]))dnl
 changequote([,])dnl
 AC_CACHE_CHECK([for size of Fortran type $1],PAC_CV_NAME,[
-AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([PAC_PROG_F77_NAME_MANGLE])
 dnl if test "$cross_compiling" = yes ; then
 dnl     ifelse([$2],[],
@@ -313,9 +309,7 @@ dnl fi
 AC_LANG_PUSH([C])
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
 #ifdef F77_NAME_UPPER
 #define cisize_ CISIZE
 #define isize_ ISIZE
@@ -654,7 +648,6 @@ dnl Fortran routine MUST be named ftest unless you include code
 dnl to select the appropriate Fortran name.
 dnl 
 AC_DEFUN([PAC_PROG_F77_RUN_PROC_FROM_C],[
-AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([AC_F77_LIBRARY_LDFLAGS])
 AC_LANG_PUSH([Fortran 77])
 AC_COMPILE_IFELSE([
@@ -668,9 +661,7 @@ AC_COMPILE_IFELSE([
     AC_LANG_PUSH([C])
     AC_RUN_IFELSE([
         AC_LANG_SOURCE([
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
 #ifdef F77_NAME_UPPER
 #define ftest_ FTEST
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
@@ -708,7 +699,6 @@ dnl by trying to *run* a trivial program.  It only checks for *linking*.
 dnl 
 dnl
 AC_DEFUN([PAC_PROG_F77_IN_C_LIBS],[
-AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([AC_F77_LIBRARY_LDFLAGS])
 AC_MSG_CHECKING([for which Fortran libraries are needed to link C with Fortran])
 F77_IN_C_LIBS="invalid"
@@ -729,9 +719,7 @@ AC_COMPILE_IFELSE([
     # Create conftest for all link tests.
     AC_LANG_CONFTEST([
         AC_LANG_PROGRAM([
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
         ],[
 #ifdef F77_NAME_UPPER
 #define ftest_ FTEST
@@ -920,7 +908,6 @@ dnl sometimes requires -lSystemStubs.  If another library is needed,
 dnl add it to F77_OTHER_LIBS
 dnl
 AC_DEFUN([PAC_PROG_F77_AND_C_STDIO_LIBS],[
-AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([PAC_PROG_F77_NAME_MANGLE])
 # To simply the code in the cache_check macro, chose the routine name
 # first, in case we need it
@@ -941,9 +928,7 @@ pac_cv_prog_f77_and_c_stdio_libs=unknown
 AC_LANG_PUSH([C])
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
 int $confname(int a) {
     printf( "The answer is %d\n", a ); fflush(stdout); return 0;
 }
@@ -1131,8 +1116,8 @@ if test "$pac_linkwithf77" != "yes" -a "$pac_linkwithC" != "yes" ; then
         cobjtype="`${FILE} pac_conftest.$OBJEXT | sed -e \"s|pac_conftest\.$OBJEXT||g\"`"
         if test "$fobjtype" != "$cobjtype" ; then
             AC_MSG_ERROR([****  Incompatible Fortran and C Object File Types!  ****
-F77 Object File Type produced by \"${F77} ${FFLAGS}\" is : ${fobjtype}.
- C  Object File Type produced by \"${CC} ${CFLAGS}\" is : ${cobjtype}.])
+F77 Object File Type produced by "${F77} ${FFLAGS}" is : ${fobjtype}.
+ C  Object File Type produced by "${CC} ${CFLAGS}" is : ${cobjtype}.])
         fi
     fi
 fi
@@ -1249,7 +1234,6 @@ dnl
 dnl PAC_F77_INIT_WORKS_WITH_C
 dnl
 AC_DEFUN([PAC_F77_INIT_WORKS_WITH_C],[
-AC_REQUIRE([AC_HEADER_STDC])
 AC_MSG_CHECKING([whether Fortran init will work with C])
 pac_f_init_works_with_c=unknown
 AC_LANG_PUSH([Fortran 77])
@@ -1274,9 +1258,7 @@ AC_COMPILE_IFELSE([
     AC_LANG_PUSH([C])
     AC_LINK_IFELSE([
         AC_LANG_SOURCE([
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
 #ifdef F77_NAME_UPPER
 #define minit_ MINIT
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
@@ -1326,7 +1308,6 @@ dnl rest of the bits were ignored.  For now, we'll assume that there are
 dnl unique true and false values.
 dnl
 AC_DEFUN([PAC_F77_LOGICALS_IN_C],[
-AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([PAC_PROG_F77_NAME_MANGLE])
 pac_mpi_fint="$1"
 AC_MSG_CHECKING([for values of Fortran logicals])
@@ -1335,12 +1316,8 @@ pac_cv_prog_f77_true_false_value=""
 AC_LANG_PUSH([C])
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
-#if defined(HAVE_STDLIB_H) || defined(STDC_HEADERS)
 #include <stdlib.h>
-#endif
 #ifdef F77_NAME_UPPER
 #define ftest_ FTEST
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
