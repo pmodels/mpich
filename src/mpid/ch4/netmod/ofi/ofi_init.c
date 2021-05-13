@@ -1366,17 +1366,17 @@ static int update_global_limits(struct fi_info *prov)
     }
     MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_STRIPING_THRESHOLD;
     if (prov->ep_attr->max_order_raw_size > MPIR_AINT_MAX) {
-        MPIDI_OFI_global.max_order_raw = MPIR_AINT_MAX;
+        MPIDI_OFI_global.max_order_raw = -1;
     } else {
         MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
     }
     if (prov->ep_attr->max_order_war_size > MPIR_AINT_MAX) {
-        MPIDI_OFI_global.max_order_war = MPIR_AINT_MAX;
+        MPIDI_OFI_global.max_order_war = -1;
     } else {
         MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
     }
     if (prov->ep_attr->max_order_waw_size > MPIR_AINT_MAX) {
-        MPIDI_OFI_global.max_order_waw = MPIR_AINT_MAX;
+        MPIDI_OFI_global.max_order_waw = -1;
     } else {
         MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
     }
