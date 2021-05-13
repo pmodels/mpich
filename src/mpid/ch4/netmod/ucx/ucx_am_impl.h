@@ -9,15 +9,8 @@
 #include "ucx_impl.h"
 #include "mpidu_genq.h"
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_short_callback(void *request, ucs_status_t status)
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_short_req_cmpl(MPIR_Request * req, int handler_id)
 {
-    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPIR_Request *req = ucp_request->req;
-    int handler_id = MPIDI_UCX_AMREQUEST(req, handler_id);
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_AM_ISEND_SHORT_CALLBACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_AM_ISEND_SHORT_CALLBACK);
-
     if (MPIDI_UCX_AMREQUEST(req, is_gpu_pack_buffer)) {
         MPIDU_genq_private_pool_free_cell(MPIDI_UCX_global.pack_buf_pool,
                                           MPIDI_UCX_AMREQUEST(req, pack_buffer));
@@ -26,6 +19,17 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_short_callback(void *request, u
     }
     MPIDI_UCX_AMREQUEST(req, pack_buffer) = NULL;
     MPIDIG_global.origin_cbs[handler_id] (req);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_short_callback(void *request, ucs_status_t status)
+{
+    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
+    MPIR_Request *req = ucp_request->req;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_AM_ISEND_SHORT_CALLBACK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_AM_ISEND_SHORT_CALLBACK);
+
+    MPIDI_UCX_am_isend_short_req_cmpl(req, MPIDI_UCX_AMREQUEST(req, handler_id));
     ucp_request->req = NULL;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_AM_ISEND_SHORT_CALLBACK);
@@ -59,6 +63,38 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_pipeline_callback(void *request
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_AM_ISEND_SHORT_CALLBACK);
 }
 
+MPL_STATIC_INLINE_PREFIX MPIDI_UCX_ucp_request_t
+    * MPIDI_UCX_ucp_am_send_buffered(ucp_ep_h ep, const void *ucx_hdr, MPI_Aint ucx_hdr_sz,
+                                     const void *am_hdr, MPI_Aint am_hdr_sz, void *data,
+                                     MPI_Aint data_sz, MPIDI_UCX_am_request_t * send_req,
+                                     int ucx_am_handler_id, ucp_send_callback_t cb)
+{
+    MPIDI_UCX_ucp_request_t *ucp_request;
+
+    /* if the request does not have a buffer yet, create one and pack data in it.
+     * if the request already have a buffer, it means the data is prepacked. */
+    if (!send_req->pack_buffer) {
+        send_req->pack_buffer = MPL_malloc(ucx_hdr_sz + am_hdr_sz + data_sz, MPL_MEM_OTHER);
+        send_req->is_gpu_pack_buffer = false;
+        MPIR_Memcpy((char *) send_req->pack_buffer + ucx_hdr_sz + am_hdr_sz, data, data_sz);
+    }
+
+    MPIR_Memcpy(send_req->pack_buffer, ucx_hdr, ucx_hdr_sz);
+    if (am_hdr_sz) {
+        MPIR_Memcpy((char *) send_req->pack_buffer + ucx_hdr_sz, am_hdr, am_hdr_sz);
+    }
+
+    ucp_request =
+        (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, ucx_am_handler_id, send_req->pack_buffer,
+                                                   data_sz + am_hdr_sz + ucx_hdr_sz,
+                                                   ucp_dt_make_contig(1), cb, 0);
+
+  fn_exit:
+    return ucp_request;
+  fn_fail:
+    goto fn_exit;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_am_isend_short(int rank, MPIR_Comm * comm, int handler_id,
                                                          const void *am_hdr, MPI_Aint am_hdr_sz,
                                                          const void *data, MPI_Aint count,
@@ -78,6 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_am_isend_short(int rank, MPIR_Comm * c
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_DO_AM_ISEND_SHORT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_DO_AM_ISEND_SHORT);
 
+    /* STEP1: check buffer/DT type */
     if (!issue_deferred) {
         MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
 
@@ -100,10 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_am_isend_short(int rank, MPIR_Comm * c
         goto fn_deferred;
     }
 
-    /* initialize our portion of the hdr */
-    ucx_hdr.handler_id = handler_id;
-    ucx_hdr.data_sz = data_sz;
-
+    /* STEP2: getting pack buffer if needed */
     if (need_packing) {
         MPIR_Assert(data_sz <= MPIDI_UCX_DEFAULT_SHORT_SEND_SIZE);
         MPIDU_genq_private_pool_alloc_cell(MPIDI_UCX_global.pack_buf_pool, (void **) &send_buf);
@@ -114,49 +148,41 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_am_isend_short(int rank, MPIR_Comm * c
                 goto fn_exit;
             }
         }
-        MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
-        MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
+        MPIDI_UCX_AMREQUEST(sreq, pack_buffer) = send_buf;
+        MPIDI_UCX_AMREQUEST(sreq, is_gpu_pack_buffer) = true;
         mpi_errno = MPIR_Typerep_pack(data, count, datatype, 0,
                                       send_buf + am_hdr_sz + sizeof(ucx_hdr), data_sz, &last);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(last == data_sz);
     } else {
-        send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_OTHER);
-        if (send_buf == NULL) {
-            mpi_errno = MPI_ERR_OTHER;
-            goto fn_fail;
-        }
-        MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
-        MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
         MPIDI_Datatype_check_lb(datatype, dt_true_lb);
-        MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), data + dt_true_lb, data_sz);
     }
 
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
 
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nb(ep, MPIDI_UCX_AM_HANDLER_ID__SHORT,
-                                                             send_buf, data_sz + am_hdr_sz +
-                                                             sizeof(ucx_hdr), ucp_dt_make_contig(1),
-                                                             &MPIDI_UCX_am_isend_short_callback, 0);
+    /* initialize our portion of the hdr */
+    ucx_hdr.handler_id = handler_id;
+    ucx_hdr.data_sz = data_sz;
+
+    ucp_request = MPIDI_UCX_ucp_am_send_buffered(ep, &ucx_hdr, sizeof(ucx_hdr), am_hdr,
+                                                 am_hdr_sz, (char *) data + dt_true_lb,
+                                                 data_sz, &sreq->dev.ch4.am.netmod_am.ucx,
+                                                 MPIDI_UCX_AM_HANDLER_ID__SHORT,
+                                                 &MPIDI_UCX_am_isend_short_callback);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
+    /* STEP4: handles immediate send completion or preseve info for callback */
     if (ucp_request == NULL) {
         /* send is done. free all resources and complete the request */
-        if (need_packing) {
-            MPIDU_genq_private_pool_free_cell(MPIDI_UCX_global.pack_buf_pool, (void *) send_buf);
-        } else {
-            MPL_free(send_buf);
-        }
-        MPIDIG_global.origin_cbs[handler_id] (sreq);
+        MPIDI_UCX_am_isend_short_req_cmpl(sreq, handler_id);
     } else {
         /* set the ch4r request inside the UCP request */
-        MPIDI_UCX_AMREQUEST(sreq, pack_buffer) = send_buf;
         MPIDI_UCX_AMREQUEST(sreq, handler_id) = handler_id;
-        MPIDI_UCX_AMREQUEST(sreq, is_gpu_pack_buffer) = need_packing;
         ucp_request->req = sreq;
         ucp_request_release(ucp_request);
     }
 
+    /* STEP5: cleanup deferred req if needed */
     if (issue_deferred) {
         DL_DELETE(MPIDI_UCX_global.deferred_am_isend_q, MPIDI_UCX_AMREQUEST(sreq, deferred_req));
         MPL_free(MPIDI_UCX_AMREQUEST(sreq, deferred_req));
