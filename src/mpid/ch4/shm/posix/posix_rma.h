@@ -113,9 +113,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
         base = shared_table[local_target_rank].shm_base_addr;
     }
 
-    mpi_errno = MPIR_Localcopy(origin_addr, origin_count, origin_datatype,
-                               (char *) base + disp_unit * target_disp, target_count,
-                               target_datatype);
+    if (winattr & MPIDI_WINATTR_MR_PREFERRED) {
+        /* If MR-preferred is set, switch to nonblocking version which may slightly
+         * increase per-op+flush overhead. */
+        MPIR_Typerep_req typerep_req = MPIR_TYPEREP_REQ_NULL;
+        mpi_errno = MPIR_Ilocalcopy(origin_addr, origin_count, origin_datatype,
+                                    (char *) base + disp_unit * target_disp, target_count,
+                                    target_datatype, &typerep_req);
+        MPIDI_POSIX_rma_outstanding_req_enqueu(typerep_req, &win->dev.shm.posix);
+    } else {
+        /* By default issuing blocking copy for lower per-op latency. */
+        mpi_errno = MPIR_Localcopy(origin_addr, origin_count, origin_datatype,
+                                   (char *) base + disp_unit * target_disp, target_count,
+                                   target_datatype);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_PUT);
@@ -157,8 +168,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
         base = shared_table[local_target_rank].shm_base_addr;
     }
 
-    mpi_errno = MPIR_Localcopy((char *) base + disp_unit * target_disp, target_count,
-                               target_datatype, origin_addr, origin_count, origin_datatype);
+    if (winattr & MPIDI_WINATTR_MR_PREFERRED) {
+        /* If MR-preferred is set, switch to nonblocking version which may slightly
+         * increase per-op+flush overhead. */
+        MPIR_Typerep_req typerep_req = MPIR_TYPEREP_REQ_NULL;
+        mpi_errno = MPIR_Ilocalcopy((char *) base + disp_unit * target_disp, target_count,
+                                    target_datatype, origin_addr, origin_count, origin_datatype,
+                                    &typerep_req);
+        MPIDI_POSIX_rma_outstanding_req_enqueu(typerep_req, &win->dev.shm.posix);
+    } else {
+        /* By default issuing blocking copy for lower per-op latency. */
+        mpi_errno = MPIR_Localcopy((char *) base + disp_unit * target_disp, target_count,
+                                   target_datatype, origin_addr, origin_count, origin_datatype);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_GET);
