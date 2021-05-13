@@ -10,21 +10,9 @@
 #include "mpichconf.h"
 
 #include <stdio.h>
-#ifdef STDC_HEADERS
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#else
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#ifdef HAVE_STDARG_H
-#include <stdarg.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-#endif
 
 #ifdef HAVE_LIMITS_H
 #include <limits.h>

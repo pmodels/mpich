@@ -95,9 +95,7 @@ AC_MSG_CHECKING([for multiple __attribute__((alias)) support])
 #Compile the "other" __attribute__ object file.
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
 
 struct mpif_cmblk_t_ { int imember; };
 typedef struct mpif_cmblk_t_ mpif_cmblk_t;
@@ -168,9 +166,7 @@ if test "$pac_c_attr_alias_other" = "yes" ; then
 #   Link the "other" __attribute__ object file.
     AC_LINK_IFELSE([
         AC_LANG_PROGRAM([
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
  
 struct mpif_cmblk_t_ { int imember; };
 typedef struct mpif_cmblk_t_ mpif_cmblk_t;

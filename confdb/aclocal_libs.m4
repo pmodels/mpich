@@ -18,10 +18,10 @@ dnl TODO as written, this macro cannot handle a "with_option" arg that has "-"
 dnl characters in it.  Use AS_TR_SH (and possibly AS_VAR_* macros) to handle
 dnl this case if it ever arises.
 AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
-    AC_ARG_WITH([$1], [AC_HELP_STRING([--with-$1=[[PATH]]],PAC_WITH_LIB_HELP_STRING($1))])
+    AC_ARG_WITH([$1], [AS_HELP_STRING([--with-$1=[[PATH]]],PAC_WITH_LIB_HELP_STRING($1))])
 
     AC_ARG_WITH([$1-include],
-                [AC_HELP_STRING([--with-$1-include=PATH],
+                [AS_HELP_STRING([--with-$1-include=PATH],
                                 [specify path where $1 include directory can be found])],
                 [AS_CASE(["$withval"],
                          [yes|no|''],
@@ -29,7 +29,7 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
                           with_$1_include=""])],
                 [])
     AC_ARG_WITH([$1-lib],
-                [AC_HELP_STRING([--with-$1-lib=PATH],
+                [AS_HELP_STRING([--with-$1-lib=PATH],
                                 [specify path where $1 lib directory can be found])],
                 [AS_CASE(["$withval"],
                          [yes|no|''],

@@ -39,7 +39,7 @@ AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive -Werror foreign 1.12.3 subdir
 
 AM_PROG_AR
 
-AC_CONFIG_HEADER(libhydra/include/hydra_config.h)
+AC_CONFIG_HEADERS([libhydra/include/hydra_config.h])
 
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -173,7 +173,6 @@ AC_SUBST(top_srcdir)
 PAC_ENABLE_COVERAGE
 
 # Check if the necessary headers are available
-AC_HEADER_STDC
 AC_CHECK_HEADERS(unistd.h strings.h sys/types.h sys/socket.h sched.h sys/stat.h sys/param.h \
 		 netinet/in.h netinet/tcp.h sys/un.h sys/time.h time.h ifaddrs.h arpa/inet.h \
 		 poll.h fcntl.h netdb.h)
@@ -242,7 +241,7 @@ fi
 # Check what RMK we should use
 #########################################################################
 AC_ARG_WITH(hydra-rmk,
-	[AC_HELP_STRING([--with-hydra-rmk=name],
+	[AS_HELP_STRING([--with-hydra-rmk=name],
 		[RMK (slurm,ll,lsf,sge,pbs,cobalt)])],
 	[ hydra_rmk=$withval ],
 	[ hydra_rmk="slurm,ll,lsf,sge,pbs,cobalt" ])
@@ -281,7 +280,7 @@ AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_RMKS,"${hydra_rmk_names_unquoted}",[Definitio
 # Check what bstrap we should use
 #########################################################################
 AC_ARG_WITH(hydra-bstrap,
-	[AC_HELP_STRING([--with-hydra-bstrap=name],
+	[AS_HELP_STRING([--with-hydra-bstrap=name],
 		[Bstrap Server (ssh,rsh,slurm,ll,lsf,sge,pbs)])],
 	[ hydra_bstrap=$withval ],
 	[ hydra_bstrap="ssh,slurm,rsh,ll,sge" ])

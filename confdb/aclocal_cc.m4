@@ -131,7 +131,7 @@ AC_DEFUN([PAC_C_OPTIMIZATION],[
 	    break
         fi
     done
-    if test "$ac_cv_prog_gcc" = "yes" ; then
+    if test "$ac_cv_c_compiler_gnu" = "yes" ; then
 	for copt in "-fomit-frame-pointer" "-finline-functions" \
 		 "-funroll-loops" ; do
 	    PAC_C_CHECK_COMPILER_OPTION($copt,found_opt=yes,found_opt=no)
@@ -359,7 +359,7 @@ AC_DEFUN([PAC_PROG_CC_WORKS],
 [AC_PROG_CC_WORKS
 AC_MSG_CHECKING([whether the C compiler sets its return status correctly])
 AC_LANG_SAVE
-AC_LANG_C
+AC_LANG([C])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([],[[int a = bzzzt;]])],notbroken=no,notbroken=yes)
 AC_MSG_RESULT($notbroken)
 if test "$notbroken" = "no" ; then
@@ -641,7 +641,7 @@ dnl
 dnl D*/
 AC_DEFUN([PAC_ARG_STRICT],[
 AC_ARG_ENABLE(strict,
-	AC_HELP_STRING([--enable-strict], [Turn on strict compilation testing]),,enable_strict=no)
+	AS_HELP_STRING([--enable-strict], [Turn on strict compilation testing]),,enable_strict=no)
 PAC_CC_STRICT($enable_strict)
 CFLAGS="$CFLAGS $pac_cc_strict_flags"
 export CFLAGS
@@ -1242,7 +1242,7 @@ dnl __attribute__((pure)) but generates warnings for __attribute__((format...))
 dnl
 AC_DEFUN([PAC_C_GNU_ATTRIBUTE],[
 AC_REQUIRE([AC_PROG_CC_GNU])
-if test "$ac_cv_prog_gcc" = "yes" ; then
+if test "$ac_cv_c_compiler_gnu" = "yes" ; then
     AC_CACHE_CHECK([whether __attribute__ allowed], pac_cv_gnu_attr_pure,[
         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[int foo(int) __attribute__ ((pure));]],[[int a;]])],
             pac_cv_gnu_attr_pure=yes,pac_cv_gnu_attr_pure=no)

@@ -21,7 +21,7 @@ AC_DEFUN([PAC_ARG_SHARED_MEMORY],[
 
 # check how to allocate shared memory
 AC_ARG_WITH(shared-memory,
-    AC_HELP_STRING([--with-shared-memory[=auto|sysv|mmap]], [create shared memory using sysv or mmap (default is auto)]),,
+    AS_HELP_STRING([--with-shared-memory[=auto|sysv|mmap]],[create shared memory using sysv or mmap (default is auto)]),,
     with_shared_memory=auto)
 
 if test "$with_shared_memory" = auto -o "$with_shared_memory" = mmap; then
