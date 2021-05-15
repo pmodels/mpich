@@ -53,8 +53,47 @@ cvars:
         in MPI_Waitall and MPI_Testall implementation. A large number
         is likely to cause more cache misses.
 
+    - name        : MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT
+      category    : CH4
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Sets the timeout in seconds to dump outstanding requests when progress wait is not making progress for some time.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
+
+#ifdef MPICH_DEBUG_PROGRESS
+#define PROGRESS_START \
+    int iter = 0; \
+    MPL_time_t time_start; \
+    if (MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT > 0) { \
+        MPL_wtime(&time_start); \
+    }
+
+#define PROGRESS_CHECK \
+    if (MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT > 0) { \
+        iter++; \
+        if (iter == 0xffff) {\
+            double time_diff = 0.0; \
+            MPL_time_t time_cur; \
+            MPL_wtime(&time_cur); \
+            MPL_wtime_diff(&time_start, &time_cur, &time_diff); \
+            if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT) { \
+                MPIR_Request_debug(); \
+            } else { \
+                iter = 0; \
+            } \
+        } \
+    }
+
+#else
+#define PROGRESS_START do {} while (0)
+#define PROGRESS_CHECK do {} while (0)
+#endif
 
 int MPIR_Status_set_cancelled_impl(MPI_Status * status, int flag)
 {
@@ -856,9 +895,11 @@ int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progre
 {
     int mpi_errno = MPI_SUCCESS;
 
+    PROGRESS_START;
     while (!MPIR_Request_is_complete(request_ptr)) {
         mpi_errno = MPID_Progress_wait(state);
         MPIR_ERR_CHECK(mpi_errno);
+        PROGRESS_CHECK;
 
         if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
             mpi_errno = MPIR_Request_handle_proc_failed(request_ptr);
@@ -916,11 +957,13 @@ int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status arra
 {
     int mpi_errno = MPI_SUCCESS;
 
+    PROGRESS_START;
     if (requests_property & MPIR_REQUESTS_PROPERTY__NO_NULL) {
         for (int i = 0; i < count; ++i) {
             while (!MPIR_Request_is_complete(request_ptrs[i])) {
                 mpi_errno = MPID_Progress_wait(state);
                 MPIR_ERR_CHECK(mpi_errno);
+                PROGRESS_CHECK;
             }
         }
     } else {
@@ -935,6 +978,7 @@ int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status arra
 
                 mpi_errno = MPID_Progress_wait(state);
                 MPIR_ERR_CHECK(mpi_errno);
+                PROGRESS_CHECK;
             }
         }
     }
@@ -1149,6 +1193,7 @@ int MPIR_Waitany_state(int count, MPIR_Request * request_ptrs[], int *indx, MPI_
 {
     int mpi_errno = MPI_SUCCESS;
 
+    PROGRESS_START;
     for (;;) {
         int n_inactive = 0;
         int found_nonnull_req = FALSE;
@@ -1199,6 +1244,7 @@ int MPIR_Waitany_state(int count, MPIR_Request * request_ptrs[], int *indx, MPI_
         MPIR_ERR_CHECK(mpi_errno);
         /* Avoid blocking other threads since I am inside an infinite loop */
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        PROGRESS_CHECK;
     }
 
   fn_exit:
@@ -1307,6 +1353,7 @@ int MPIR_Waitsome_state(int incount, MPIR_Request * request_ptrs[],
     MPIR_ERR_CHECK(mpi_errno);
 
     int n_active = 0;
+    PROGRESS_START;
     for (;;) {
         int n_inactive = 0;
 
@@ -1347,6 +1394,7 @@ int MPIR_Waitsome_state(int incount, MPIR_Request * request_ptrs[],
         MPIR_ERR_CHECK(mpi_errno);
         /* Avoid blocking other threads since I am inside an infinite loop */
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        PROGRESS_CHECK;
     }
 
   fn_exit:
