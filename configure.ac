@@ -403,6 +403,7 @@ AC_ARG_ENABLE(g,
         mutex    - Enable error checking on pthread mutexes
         most     - Most of the above options, excluding some with severe
                    performance impacts.  Recommended for typical development.
+        progress - Enable debugging progress status
         yes      - synonym for "most" (*not* "all")
         all      - All of the above choices
 ],,enable_g=none)
@@ -1323,6 +1324,9 @@ for option in $enable_g ; do
         perform_handlealloc=yes
         perform_handle=yes
         ;;
+        progress)
+        perform_dbgprogress=yes
+        ;;
 	all)
         perform_memarena=yes
 	perform_memtracing=yes
@@ -1393,6 +1397,10 @@ fi
 
 if test -n "$perform_dbgmutex" ; then
    AC_DEFINE(MPICH_DEBUG_MUTEX,1,[Define to enable mutex debugging])
+fi
+
+if test -n "$perform_dbgprogress" ; then
+   AC_DEFINE(MPICH_DEBUG_PROGRESS,1,[Define to enable mutex debugging])
 fi
 
 pac_cross_compiling=no

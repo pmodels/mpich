@@ -457,3 +457,27 @@ int MPIR_Grequest_free(MPIR_Request * request_ptr)
 
     return mpi_errno;
 }
+
+void MPIR_Request_debug(void)
+{
+    for (int i = 0; i < MPIR_REQUEST_NUM_POOLS; i++) {
+        int n_pending = MPIR_Request_mem[i].num_allocated - MPIR_Request_mem[i].num_avail;
+        if (n_pending > 0) {
+            printf("%d pending requests in pool %d\n", n_pending, i);
+#ifdef MPICH_DEBUG_PROGRESS
+            if (i == 0) {
+                MPIR_Request *pool = MPIR_Request_direct;
+                for (int j = 0; j < MPIR_Request_mem[0].direct_size; j++) {
+                    MPIR_REQUEST_DEBUG(&pool[j]);
+                }
+            }
+            for (int k = 0; k < MPIR_Request_mem[i].indirect_size; k++) {
+                MPIR_Request *pool = MPIR_Request_mem[i].indirect[k];
+                for (int j = 0; j < REQUEST_NUM_INDICES; j++) {
+                    MPIR_REQUEST_DEBUG(&pool[j]);
+                }
+            }
+#endif
+        }
+    }
+}

@@ -221,6 +221,10 @@ struct MPIR_Request {
     struct MPIR_Request *next, *prev;
     UT_hash_handle hh;
 
+#ifdef MPICH_DEBUG_PROGRESS
+    char info[100];
+#endif
+
     /* Other, device-specific information */
 #ifdef MPID_DEV_REQUEST_DECL
      MPID_DEV_REQUEST_DECL
@@ -288,6 +292,24 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
             break; \
         } \
     } while (0)
+
+#ifdef MPICH_DEBUG_PROGRESS
+#define MPIR_REQUEST_SET_INFO(req, ...) \
+    do { \
+        MPL_snprintf((req)->info, 100, __VA_ARGS__); \
+    } while (0)
+
+#define MPIR_REQUEST_DEBUG(req) \
+    do { \
+        if (MPIR_cc_get((req)->cc) > 0) { \
+            printf("    %x: %s\n", (req)->handle, (req)->info); \
+        } \
+    } while (0)
+#else
+
+#define MPIR_REQUEST_SET_INFO(req, info) do { } while (0)
+#define MPIR_REQUEST_DEBUG(req) do { } while (0)
+#endif
 
 void MPII_init_request(void);
 
@@ -395,6 +417,9 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
     req->kind = kind;
     MPIR_cc_set(&req->cc, 1);
     req->cc_ptr = &req->cc;
+#ifdef MPICH_DEBUG_PROGRESS
+    req->info[0] = '\0';
+#endif
 
     req->status.MPI_ERROR = MPI_SUCCESS;
     MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
@@ -539,6 +564,9 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
         }
 
         MPID_Request_destroy_hook(req);
+#ifdef MPICH_DEBUG_PROGRESS
+        MPIR_cc_set(&req->cc, 0);
+#endif
 
         MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req, /* not info */ FALSE);
     }
@@ -713,5 +741,7 @@ int MPIR_Waitany(int count, MPI_Request array_of_requests[], MPIR_Request * requ
 int MPIR_Waitsome(int incount, MPI_Request array_of_requests[], MPIR_Request * request_ptrs[],
                   int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
 int MPIR_Parrived(MPIR_Request * request_ptr, int partition, int *flag);
+
+void MPIR_Request_debug(void);
 
 #endif /* MPIR_REQUEST_H_INCLUDED */
