@@ -78,7 +78,12 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPIR_Op ** p_o
 
 int MPIR_Op_create_large_impl(MPI_User_function_c * user_fn, int commute, MPIR_Op ** p_op_ptr)
 {
-    return MPIR_Op_create_impl((void *) user_fn, commute, p_op_ptr);
+    int mpi_errno = MPIR_Op_create_impl((void *) user_fn, commute, p_op_ptr);
+    if (mpi_errno == MPI_SUCCESS) {
+        (*p_op_ptr)->kind =
+            commute ? MPIR_OP_KIND__USER_LARGE : MPIR_OP_KIND__USER_NONCOMMUTE_LARGE;
+    }
+    return mpi_errno;
 }
 
 int MPIR_Op_free_impl(MPIR_Op * op_ptr)
@@ -111,10 +116,12 @@ int MPIR_Op_is_commutative(MPI_Op op)
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
         MPIR_Assert(op_ptr != NULL);
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
+        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE ||
+            op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE_LARGE) {
             return FALSE;
-        else
+        } else {
             return TRUE;
+        }
     }
 }
 

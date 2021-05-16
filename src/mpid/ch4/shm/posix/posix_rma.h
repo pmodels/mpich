@@ -639,8 +639,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
          * 0xf is the mask for op index in MPIR_Op_table,
          * and op should start from 1. */
         MPIR_Assert(((op) & 0xf) > 0);
-        MPI_User_function *uop = MPIR_OP_HDL_TO_FN(op);
-        int one = 1;
+        MPIR_op_function *uop = MPIR_OP_HDL_TO_FN(op);
+        MPI_Aint one = 1;
 
         (*uop) ((void *) origin_addr, target_addr, &one, &datatype);
     }
