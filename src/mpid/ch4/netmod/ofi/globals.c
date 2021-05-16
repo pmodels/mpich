@@ -5,7 +5,7 @@
 
 #include <mpidimpl.h>
 #include "ofi_impl.h"
-MPIDI_OFI_global_t MPIDI_OFI_global = { 0 };
+MPIDI_OFI_global_t MPIDI_OFI_global;
 
 MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_head = NULL;
 MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_tail = NULL;
