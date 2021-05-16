@@ -276,6 +276,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                     MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
                 rma_keys[i] = ctrl.rma_keys[i];
             }
+        } else {
+            /* zero them to avoid warnings */
+            for (i = 0; i < num_nics; i++) {
+                rma_keys[i] = 0;
+            }
         }
         for (i = 0; i < num_nics; i++) {
             MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vni_local, i)].domain,        /* In:  Domain Object */
