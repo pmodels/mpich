@@ -101,6 +101,8 @@ noinst_PROGRAMS =      \
     scattern           \
     scatterv           \
     uoplong            \
+    uoplong_large      \
+    uop_equal	       \
     nballtoall1        \
     nbredscat          \
     nbredscat3	       \
@@ -182,3 +184,7 @@ bcast_SOURCES = bcast.c
 
 bcast_comm_world_only_CPPFLAGS = -DBCAST_COMM_WORLD_ONLY $(AM_CPPFLAGS)
 bcast_comm_world_only_SOURCES = bcast.c
+
+uoplong_large_SOURCES = uoplong.c
+uoplong_large_CPPFLAGS = -DOP_LARGE $(AM_CPPFLAGS)
+
