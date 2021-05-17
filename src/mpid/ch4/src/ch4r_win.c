@@ -114,8 +114,7 @@ static void get_info_perf_preference_str(int val, char *buf, size_t maxlen)
     int c = 0;
 
     if (val & (1 << MPIDIG_RMA_LAT_PREFERRED)) {
-        MPIR_Assert(c < maxlen);
-        c += snprintf(buf + c, maxlen - c, "%slat", (c > 0) ? "," : "");
+        c += snprintf(buf, maxlen, "lat");
     }
     if (val & (1 << MPIDIG_RMA_MR_PREFERRED)) {
         MPIR_Assert(c < maxlen);
