@@ -192,7 +192,6 @@ typedef MPIDIG_acc_ack_msg_t MPIDIG_get_acc_ack_msg_t;
 
 typedef struct MPIDIG_comm_req_list_t {
     MPIR_Comm *comm[2][4];
-    MPIDIG_rreq_t *uelist[2][4];
 } MPIDIG_comm_req_list_t;
 
 typedef struct {
@@ -271,10 +270,8 @@ typedef struct MPIDI_CH4_Global_t {
     MPIR_Commops MPIR_Comm_fns_store;
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
-#ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDIG_rreq_t *posted_list;
     MPIDIG_rreq_t *unexp_list;
-#endif
     MPIDIG_part_rreq_t *part_posted_list;
     MPIDIG_part_rreq_t *part_unexp_list;
     MPIDIG_req_ext_t *cmpl_list;

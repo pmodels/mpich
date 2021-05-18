@@ -311,18 +311,6 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH4],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR CH4 DEVICE])
 
-AC_ARG_ENABLE(ch4r-per-comm-msg-queue,
-    [--enable-ch4r-per-comm-msg-queue=option
-       Enable use of per-communicator message queues for posted recvs/unexpected messages
-         yes       - Use per-communicator message queue. (Default)
-         no        - Use global queue for posted recvs/unexpected messages.
-    ],,enable_ch4r_per_comm_msg_queue=yes)
-
-if test "$enable_ch4r_per_comm_msg_queue" = "yes" ; then
-    AC_DEFINE([MPIDI_CH4U_USE_PER_COMM_QUEUE], [1],
-        [Define if CH4U will use per-communicator message queues])
-fi
-
 dnl Note: the maximum of 64 is due to the fact that we use 6 bits in the
 dnl request handle to encode pool index
 AC_ARG_WITH(ch4-max-vcis,

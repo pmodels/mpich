@@ -312,11 +312,9 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
                     (MPL_DBG_FDEST, "HDR: data_sz=%ld, flags=0x%X", hdr->data_sz, hdr->flags));
     root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
     if (root_comm) {
-      root_comm_retry:
         /* MPIDI_CS_ENTER(); */
         while (TRUE) {
-            rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
-                                         is_local, &MPIDIG_COMM(root_comm, posted_list));
+            rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id, is_local, NULL);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
             if (rreq) {
                 int is_cancelled;
@@ -379,32 +377,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
         MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-        if (root_comm) {
-            MPIR_Comm_add_ref(root_comm);
-            MPIDIG_enqueue_unexp(rreq, &MPIDIG_COMM(root_comm, unexp_list));
-        } else {
-            MPIR_Comm *root_comm_again;
-            /* This branch means that last time we checked, there was no communicator
-             * associated with the arriving message.
-             * In a multi-threaded environment, it is possible that the communicator
-             * has been created since we checked root_comm last time.
-             * If that is the case, the new message must be put into a queue in
-             * the new communicator. Otherwise that message will be lost forever.
-             * Here that strategy is to query root_comm again, and if found,
-             * simply re-execute the per-communicator enqueue logic above. */
-            root_comm_again = MPIDIG_context_id_to_comm(hdr->context_id);
-            if (unlikely(root_comm_again != NULL)) {
-                MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-                MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
-                                                  MPIDIG_REQUEST(rreq, buffer));
-                MPIDI_CH4_REQUEST_FREE(rreq);
-                MPID_Request_complete(rreq);
-                rreq = NULL;
-                root_comm = root_comm_again;
-                goto root_comm_retry;
-            }
-            MPIDIG_enqueue_unexp(rreq, MPIDIG_context_id_to_uelist(hdr->context_id));
-        }
+        MPIDIG_enqueue_unexp(rreq, NULL);
         MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
 
         /* at this point, we have created and enqueued the unexpected request. If the request is
@@ -429,6 +402,9 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDI_REQUEST(rreq, is_local) = is_local;
+#endif
 
         rreq->status.MPI_ERROR = hdr->error_bits;
         if (hdr->flags & MPIDIG_AM_SEND_FLAGS_RTS) {
