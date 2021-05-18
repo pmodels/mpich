@@ -1316,7 +1316,7 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av, i
         /* directly references the mapped fi_addr_t array instead               */
         fi_addr_t *mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (int i = 0; i < MPIR_Process.size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[nic][0][0] = mapped_table[i];
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[nic][0] = mapped_table[i];
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%" PRIu64,
                              i, (void *) &MPIDIU_get_av(0, i), mapped_table[i]));
@@ -1505,7 +1505,7 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
 
         for (int i = 0; i < num_nodes; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0][0] = mapped_table[i];
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0] = mapped_table[i];
         }
         MPL_free(mapped_table);
         /* Then, allgather all address names using init_comm */
@@ -1519,7 +1519,7 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
                 char *addrname = (char *) table + recv_bc_len * rank_map[i];
                 MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av,
                                             addrname, 1, &addr, 0ULL, NULL), avmap);
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest[0][0][0] = addr;
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest[0][0] = addr;
             }
         }
         MPIDU_bc_table_destroy();
@@ -1532,7 +1532,7 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
 
         for (int i = 0; i < size; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0][0] = mapped_table[i];
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
         }
         MPL_free(mapped_table);
         MPIDU_bc_table_destroy();
@@ -1544,15 +1544,50 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
     goto fn_exit;
 }
 
+/* NOTE:
+ * Each nic-vni is an endpoint with a unique address, and inside libfabric maintains
+ * one av table. Thus to fully store the address mapping, we'll need a multi-dim table as
+ *     av_table[src_nic][src_vni][dest_rank][dest_nic][dest_vni]
+ * Note, this table is for illustration, and different from MPIDI_OFI_addr_t.
+ *
+ * However, if we insert the address carefully, we can manage to make the av table inside
+ * each endpoint *identical*. Then, we can omit the dimension of [src_nic][src_vni].
+ *
+ * To achieve that, we use the following 3-step process (described with above illustrative av_table).
+ *
+ * 1. insert and store       av_table[ 0 ][ 0 ][rank][ 0 ][ 0 ]
+ *
+ * 2. insert and store       av_table[ 0 ][ 0 ][rank][nic][vni]
+ *
+ * 3. insert (but not store) av_table[nic][vni][rank][nic][vni]
+ *
+ * The step 1 is done in addr_exchange_root_vni. Step 2 and 3 are done in addr_exchange_all_vnis.
+ * Step 3 populates av tables inside libfabric for all non-zero endpoints, but they should be
+ * identical to the table in root endpoint, thus no need to store them in mpich. Thus the table is
+ * reduced to
+ *      av_table[rank] -> dest[nic][vni]
+ */
+
 static int addr_exchange_all_vnis(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-#ifdef MPIDI_OFI_VNI_USE_DOMAIN
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
     int num_vnis = MPIDI_OFI_global.num_vnis;
     int num_nics = MPIDI_OFI_global.num_nics;
+
+#ifndef MPIDI_OFI_VNI_USE_DOMAIN
+    /* with scalable endpoint as context, all vnis share the same address. For the
+     * purpose of address exchange, we hack it as having single vni.
+     */
+    num_vnis = 1;
+#endif
+
+    if (num_nics * num_vnis == 1) {
+        /* root address exchange already done. */
+        goto fn_exit;
+    }
 
     /* libfabric uses uniform name_len within a single provider */
     int name_len = MPIDI_OFI_global.addrnamelen;
@@ -1577,35 +1612,64 @@ static int addr_exchange_all_vnis(void)
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPI_BYTE,
                                             all_names, my_len, MPI_BYTE, comm, &errflag);
-    /* insert the addresses */
-    fi_addr_t *mapped_table;
-    mapped_table = (fi_addr_t *) MPL_malloc(size * num_vnis * num_nics * sizeof(fi_addr_t),
-                                            MPL_MEM_ADDRESS);
-    for (int nic = 0; nic < num_nics; nic++) {
+
+    /* Step 2: insert and store non-root nic/vni on the root context */
+    int root_ctx_idx = MPIDI_OFI_get_ctx_index(0, 0);
+    for (int r = 0; r < size; r++) {
+        MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
+        char *r_names = all_names + r * num_vnis * num_nics * name_len;
+        for (int nic = 0; nic < num_nics; nic++) {
+            for (int vni = 0; vni < num_vnis; vni++) {
+                if (nic == 0 && vni == 0) {
+                    continue;
+                }
+
+                fi_addr_t addr;
+                MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[root_ctx_idx].av,
+                                            r_names + (vni * num_nics + nic) * name_len, 1,
+                                            &addr, 0ULL, NULL), avmap);
+                av->dest[nic][vni] = addr;
+            }
+        }
+    }
+
+    /* Step 3: insert all nic/vni on non-root context, following exact order as step 1 and 2 */
+    for (int nic_local = 0; nic_local < num_nics; nic_local++) {
         for (int vni_local = 0; vni_local < num_vnis; vni_local++) {
-            /* Insert each set of addresses into each context so we can send messages from any
-             * vni/nic combination to any other vni/nic combination. */
-            int ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, nic);
-            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av, all_names,
-                                        size * num_vnis * num_nics, mapped_table, 0ULL, NULL),
-                           avmap);
+            if (nic_local == 0 && vni_local == 0) {
+                continue;
+            }
+            int ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, nic_local);
+
+            /* same order as step 1 */
             for (int r = 0; r < size; r++) {
-                MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
-                for (int vni_remote = 0; vni_remote < num_vnis; vni_remote++) {
-                    if (vni_local == 0 && vni_remote == 0 && nic == 0) {
-                        /* don't overwrite existing addr, or bad things will happen */
-                        continue;
+                char *r_name = all_names + r * num_vnis * num_nics * name_len;
+                fi_addr_t addr;
+                MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av,
+                                            r_name, 1, &addr, 0ULL, NULL), avmap);
+            }
+
+            /* same order as step 2 */
+            for (int r = 0; r < size; r++) {
+                char *r_names = all_names + r * num_vnis * num_nics * name_len;
+                for (int nic = 0; nic < num_nics; nic++) {
+                    for (int vni = 0; vni < num_vnis; vni++) {
+                        if (nic == 0 && vni == 0) {
+                            continue;
+                        }
+
+                        fi_addr_t addr;
+                        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av,
+                                                    r_names + (vni * num_nics + nic) * name_len, 1,
+                                                    &addr, 0ULL, NULL), avmap);
                     }
-                    int idx = (r * num_vnis * num_nics) + (vni_remote * num_nics) + nic;
-                    MPIR_Assert(mapped_table[idx] != FI_ADDR_NOTAVAIL);
-                    av->dest[nic][vni_local][vni_remote] = mapped_table[idx];
                 }
             }
         }
     }
+    /* *INDENT-ON* */
     MPL_free(all_names);
-    MPL_free(mapped_table);
-#endif
+
   fn_exit:
     return mpi_errno;
   fn_fail:
