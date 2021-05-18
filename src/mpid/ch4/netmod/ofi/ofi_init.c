@@ -1568,6 +1568,23 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
  *      av_table[rank] -> dest[nic][vni]
  */
 
+/* Macros to reduce clutter, so we can focus on the ordering logics.
+ * Note: they are not perfectly-wraaped, but tolearable since only used here. */
+#define GET_AV_AND_ADDRNAMES(rank) \
+    MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)); \
+    char *r_names = all_names + rank * num_vnis * num_nics * name_len;
+
+#define DO_AV_INSERT(ctx_idx, nic, vni) \
+    fi_addr_t addr; \
+    MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av, \
+                                r_names + (vni * num_nics + nic) * name_len, 1, \
+                                &addr, 0ULL, NULL), avmap);
+
+#define SKIP_ROOT(nic, vni) \
+    if (nic == 0 && vni == 0) { \
+        continue; \
+    }
+
 static int addr_exchange_all_vnis(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1576,6 +1593,7 @@ static int addr_exchange_all_vnis(void)
     int rank = MPIR_Process.rank;
     int num_vnis = MPIDI_OFI_global.num_vnis;
     int num_nics = MPIDI_OFI_global.num_nics;
+    MPIR_CHKLMEM_DECL(2);
 
 #ifndef MPIDI_OFI_VNI_USE_DOMAIN
     /* with scalable endpoint as context, all vnis share the same address. For the
@@ -1589,11 +1607,23 @@ static int addr_exchange_all_vnis(void)
         goto fn_exit;
     }
 
+    int *is_node_roots = NULL;
+    if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+        MPIR_CHKLMEM_MALLOC(is_node_roots, int *, size * sizeof(int),
+                            mpi_errno, "is_node_roots", MPL_MEM_ADDRESS);
+        for (int r = 0; r < size; r++) {
+            is_node_roots[r] = 0;
+        }
+        for (int i = 0; i < MPIR_Process.num_nodes; i++) {
+            is_node_roots[MPIR_Process.node_root_map[i]] = 1;
+        }
+    }
+
     /* libfabric uses uniform name_len within a single provider */
     int name_len = MPIDI_OFI_global.addrnamelen;
     int my_len = num_vnis * num_nics * name_len;
-    char *all_names = MPL_malloc(size * my_len, MPL_MEM_ADDRESS);
-    MPIR_Assert(all_names);
+    char *all_names;
+    MPIR_CHKLMEM_MALLOC(all_names, char *, size * my_len, mpi_errno, "all_names", MPL_MEM_ADDRESS);
     char *my_names = all_names + rank * my_len;
 
     /* put in my addrnames */
@@ -1616,18 +1646,11 @@ static int addr_exchange_all_vnis(void)
     /* Step 2: insert and store non-root nic/vni on the root context */
     int root_ctx_idx = MPIDI_OFI_get_ctx_index(0, 0);
     for (int r = 0; r < size; r++) {
-        MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
-        char *r_names = all_names + r * num_vnis * num_nics * name_len;
+        GET_AV_AND_ADDRNAMES(r);
         for (int nic = 0; nic < num_nics; nic++) {
             for (int vni = 0; vni < num_vnis; vni++) {
-                if (nic == 0 && vni == 0) {
-                    continue;
-                }
-
-                fi_addr_t addr;
-                MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[root_ctx_idx].av,
-                                            r_names + (vni * num_nics + nic) * name_len, 1,
-                                            &addr, 0ULL, NULL), avmap);
+                SKIP_ROOT(nic, vni);
+                DO_AV_INSERT(root_ctx_idx, nic, vni);
                 av->dest[nic][vni] = addr;
             }
         }
@@ -1636,45 +1659,52 @@ static int addr_exchange_all_vnis(void)
     /* Step 3: insert all nic/vni on non-root context, following exact order as step 1 and 2 */
     for (int nic_local = 0; nic_local < num_nics; nic_local++) {
         for (int vni_local = 0; vni_local < num_vnis; vni_local++) {
-            if (nic_local == 0 && vni_local == 0) {
-                continue;
-            }
+            SKIP_ROOT(nic_local, vni_local);
             int ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, nic_local);
 
-            /* same order as step 1 */
-            for (int r = 0; r < size; r++) {
-                MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
-                char *r_name = all_names + r * num_vnis * num_nics * name_len;
-                fi_addr_t addr;
-                MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av,
-                                            r_name, 1, &addr, 0ULL, NULL), avmap);
-                MPIR_Assert(av->dest[0][0] == addr);
+            /* -- same order as step 1 -- */
+            if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+                /* node roots */
+                for (int r = 0; r < size; r++) {
+                    if (is_node_roots[r]) {
+                        GET_AV_AND_ADDRNAMES(r);
+                        DO_AV_INSERT(ctx_idx, 0, 0);
+                        MPIR_Assert(av->dest[0][0] == addr);
+                    }
+                }
+                /* non-node-root */
+                for (int r = 0; r < size; r++) {
+                    if (!is_node_roots[r]) {
+                        GET_AV_AND_ADDRNAMES(r);
+                        DO_AV_INSERT(ctx_idx, 0, 0);
+                        MPIR_Assert(av->dest[0][0] == addr);
+                    }
+                }
+            } else {
+                /* !MPIR_CVAR_CH4_ROOTS_ONLY_PMI */
+                for (int r = 0; r < size; r++) {
+                    GET_AV_AND_ADDRNAMES(r);
+                    DO_AV_INSERT(ctx_idx, 0, 0);
+                    MPIR_Assert(av->dest[0][0] == addr);
+                }
             }
 
-            /* same order as step 2 */
+            /* -- same order as step 2 -- */
             for (int r = 0; r < size; r++) {
-                MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
-                char *r_names = all_names + r * num_vnis * num_nics * name_len;
+                GET_AV_AND_ADDRNAMES(r);
                 for (int nic = 0; nic < num_nics; nic++) {
                     for (int vni = 0; vni < num_vnis; vni++) {
-                        if (nic == 0 && vni == 0) {
-                            continue;
-                        }
-
-                        fi_addr_t addr;
-                        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av,
-                                                    r_names + (vni * num_nics + nic) * name_len, 1,
-                                                    &addr, 0ULL, NULL), avmap);
+                        SKIP_ROOT(nic, vni);
+                        DO_AV_INSERT(ctx_idx, nic, vni);
                         MPIR_Assert(av->dest[nic][vni] == addr);
                     }
                 }
             }
         }
     }
-    /* *INDENT-ON* */
-    MPL_free(all_names);
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
