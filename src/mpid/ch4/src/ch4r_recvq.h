@@ -75,6 +75,24 @@ enum MPIDIG_queue_type {
         }                                                                       \
     } while (0)
 
+#define MPIDIG_DO_ENQUEUE_EVENT(qtype_)                      \
+    do {                                                     \
+        if (qtype_ == MPIDIG_PT2PT_UNEXP) {                  \
+            MPIR_T_DO_EVENT(unexp_message_indices[0],        \
+                            MPI_T_CB_REQUIRE_MPI_RESTRICTED, \
+                            &MPIDIG_REQUEST(req, rank));     \
+        }                                                    \
+    } while (0)
+
+#define MPIDIG_DO_DEQUEUE_EVENT(qtype_)                      \
+    do {                                                     \
+        if (qtype_ == MPIDIG_PT2PT_UNEXP) {                  \
+            MPIR_T_DO_EVENT(unexp_message_indices[1],        \
+                            MPI_T_CB_REQUIRE_MPI_RESTRICTED, \
+                            &MPIDIG_REQUEST(req, rank));     \
+        }                                                    \
+    } while (0)
+
 /* match and search functions */
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_match_request(int rank, int tag,
                                                    MPIR_Context_id_t context_id, MPIR_Request * req,
@@ -107,6 +125,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_enqueue_request(MPIR_Request * req, MPIDI_D
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ENQUEUE_REQUEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ENQUEUE_REQUEST);
     DL_APPEND(*list, &(req->dev));
+    MPIDIG_DO_ENQUEUE_EVENT(qtype);
     MPIDIG_PVAR_QUEUE_LEVEL_INC(qtype);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ENQUEUE_REQUEST);
 }
@@ -129,6 +148,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_recvq_search(int rank, int tag,
         if (MPIDIG_match_request(rank, tag, context_id, req, qtype)) {
             if (dequeue == true) {
                 DL_DELETE(*list, curr);
+                MPIDIG_DO_DEQUEUE_EVENT(qtype);
                 MPIDIG_PVAR_QUEUE_LEVEL_DEC(qtype);
             }
             break;
