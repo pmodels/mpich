@@ -82,7 +82,7 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
 void MPIR_Typerep_debug(MPI_Datatype type);
 
 int MPIR_Typerep_reduce_is_supported(MPI_Op op, MPI_Datatype datatype);
-int MPIR_Typerep_op(void *source_buf, int source_count, MPI_Datatype source_dtp,
-                    void *target_buf, int target_count, MPI_Datatype target_dtp,
-                    MPI_Op acc_op, int src_kind);
+int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source_dtp,
+                    void *target_buf, MPI_Aint target_count, MPI_Datatype target_dtp, MPI_Op op,
+                    bool source_is_packed);
 #endif /* MPIR_TYPEREP_H_INCLUDED */
