@@ -1544,7 +1544,7 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
     goto fn_exit;
 }
 
-/* NOTE:
+/* NOTE on av insertion order:
  * Each nic-vni is an endpoint with a unique address, and inside libfabric maintains
  * one av table. Thus to fully store the address mapping, we'll need a multi-dim table as
  *     av_table[src_nic][src_vni][dest_rank][dest_nic][dest_vni]
@@ -1567,6 +1567,34 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
  * reduced to
  *      av_table[rank] -> dest[nic][vni]
  */
+
+/* with MPIDI_OFI_ENABLE_AV_TABLE, we potentially can omit storing av tables.
+ * The following routines ensures we can do that. It is static now, but we can
+ * easily export to global when we need to.
+ */
+static int get_av_table_index(int rank, int nic, int vni)
+{
+    if (nic == 0 && vni == 0) {
+        if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+            /* check node roots */
+            for (int i = 0; i < MPIR_Process.num_nodes; i++) {
+                if (MPIR_Process.node_root_map[i] == rank) {
+                    return i;
+                }
+            }
+            /* must be non-node-root */
+            int num_later_nodes = MPIR_Process.num_nodes - (MPIR_Process.node_map[rank] + 1);
+            return rank + num_later_nodes;
+        } else {
+            return rank;
+        }
+    } else {
+        int num_vnis = MPIDI_OFI_global.num_vnis;
+        int num_nics = MPIDI_OFI_global.num_nics;
+        int num_later_ranks = MPIR_Process.size - (rank + 1);
+        return rank * num_nics * num_vnis + nic * num_vnis + vni + num_later_ranks;
+    }
+}
 
 /* Macros to reduce clutter, so we can focus on the ordering logics.
  * Note: they are not perfectly-wraaped, but tolearable since only used here. */
@@ -1604,7 +1632,7 @@ static int addr_exchange_all_vnis(void)
 
     if (num_nics * num_vnis == 1) {
         /* root address exchange already done. */
-        goto fn_exit;
+        goto fn_check;
     }
 
     int *is_node_roots = NULL;
@@ -1703,6 +1731,17 @@ static int addr_exchange_all_vnis(void)
         }
     }
 
+  fn_check:
+    if (MPIDI_OFI_ENABLE_AV_TABLE) {
+        for (int r = 0; r < size; r++) {
+            MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
+            for (int nic = 0; nic < num_nics; nic++) {
+                for (int vni = 0; vni < num_vnis; vni++) {
+                    MPIR_Assert(av->dest[nic][vni] == get_av_table_index(r, nic, vni));
+                }
+            }
+        }
+    }
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
