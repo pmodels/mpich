@@ -51,7 +51,8 @@ int MPI_File_get_type_extent(MPI_File fh, MPI_Datatype datatype, MPI_Aint * exte
 
     /* FIXME: handle other file data representations */
 
-    error_code = MPI_Type_extent(datatype, extent);
+    MPI_Aint lb;
+    error_code = PMPI_Type_get_extent(datatype, &lb, extent);
 
   fn_exit:
     return error_code;
@@ -102,8 +103,8 @@ int MPI_File_get_type_extent_c(MPI_File fh, MPI_Datatype datatype, MPI_Count * e
 
     /* FIXME: handle other file data representations */
 
-    MPI_Aint extent_i;
-    error_code = PMPI_Type_extent(datatype, &extent_i);
+    MPI_Aint lb_i, extent_i;
+    error_code = PMPI_Type_get_extent(datatype, &lb_i, &extent_i);
     *extent = extent_i;
 
   fn_exit:
