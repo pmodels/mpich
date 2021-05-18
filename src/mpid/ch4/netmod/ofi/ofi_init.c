@@ -1365,12 +1365,24 @@ static int update_global_limits(struct fi_info *prov)
         MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
     }
     MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_STRIPING_THRESHOLD;
-    MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
-    MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
-    MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
-    MPIDI_OFI_global.tx_iov_limit = MIN(prov->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.rx_iov_limit = MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.rma_iov_limit = MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
+    if (prov->ep_attr->max_order_raw_size > MPIR_AINT_MAX) {
+        MPIDI_OFI_global.max_order_raw = -1;
+    } else {
+        MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
+    }
+    if (prov->ep_attr->max_order_war_size > MPIR_AINT_MAX) {
+        MPIDI_OFI_global.max_order_war = -1;
+    } else {
+        MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
+    }
+    if (prov->ep_attr->max_order_waw_size > MPIR_AINT_MAX) {
+        MPIDI_OFI_global.max_order_waw = -1;
+    } else {
+        MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
+    }
+    MPIDI_OFI_global.tx_iov_limit = MPL_MIN(prov->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rx_iov_limit = MPL_MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rma_iov_limit = MPL_MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
 
     /* Ensure that we aren't trying to shove too many bits into the match_bits.
@@ -1437,12 +1449,12 @@ static void dump_global_settings(void)
     fprintf(stdout, "max_buffered_send: %" PRIu64 "\n", MPIDI_OFI_global.max_buffered_write);
     fprintf(stdout, "max_buffered_write: %" PRIu64 "\n", MPIDI_OFI_global.max_buffered_send);
     fprintf(stdout, "max_msg_size: %" PRIu64 "\n", MPIDI_OFI_global.max_msg_size);
-    fprintf(stdout, "max_order_raw: %zd\n", MPIDI_OFI_global.max_order_raw);
-    fprintf(stdout, "max_order_war: %zd\n", MPIDI_OFI_global.max_order_war);
-    fprintf(stdout, "max_order_waw: %zd\n", MPIDI_OFI_global.max_order_waw);
-    fprintf(stdout, "tx_iov_limit: %zd\n", MPIDI_OFI_global.tx_iov_limit);
-    fprintf(stdout, "rx_iov_limit: %zd\n", MPIDI_OFI_global.rx_iov_limit);
-    fprintf(stdout, "rma_iov_limit: %zd\n", MPIDI_OFI_global.rma_iov_limit);
+    fprintf(stdout, "max_order_raw: " MPI_AINT_FMT_DEC_SPEC "\n", MPIDI_OFI_global.max_order_raw);
+    fprintf(stdout, "max_order_war: " MPI_AINT_FMT_DEC_SPEC "\n", MPIDI_OFI_global.max_order_war);
+    fprintf(stdout, "max_order_waw: " MPI_AINT_FMT_DEC_SPEC "\n", MPIDI_OFI_global.max_order_waw);
+    fprintf(stdout, "tx_iov_limit: " MPI_AINT_FMT_DEC_SPEC "\n", MPIDI_OFI_global.tx_iov_limit);
+    fprintf(stdout, "rx_iov_limit: " MPI_AINT_FMT_DEC_SPEC "\n", MPIDI_OFI_global.rx_iov_limit);
+    fprintf(stdout, "rma_iov_limit: " MPI_AINT_FMT_DEC_SPEC "\n", MPIDI_OFI_global.rma_iov_limit);
     fprintf(stdout, "max_mr_key_size: %" PRIu64 "\n", MPIDI_OFI_global.max_mr_key_size);
 }
 
