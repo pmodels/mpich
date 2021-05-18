@@ -1643,14 +1643,17 @@ static int addr_exchange_all_vnis(void)
 
             /* same order as step 1 */
             for (int r = 0; r < size; r++) {
+                MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
                 char *r_name = all_names + r * num_vnis * num_nics * name_len;
                 fi_addr_t addr;
                 MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av,
                                             r_name, 1, &addr, 0ULL, NULL), avmap);
+                MPIR_Assert(av->dest[0][0] == addr);
             }
 
             /* same order as step 2 */
             for (int r = 0; r < size; r++) {
+                MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
                 char *r_names = all_names + r * num_vnis * num_nics * name_len;
                 for (int nic = 0; nic < num_nics; nic++) {
                     for (int vni = 0; vni < num_vnis; vni++) {
@@ -1662,6 +1665,7 @@ static int addr_exchange_all_vnis(void)
                         MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av,
                                                     r_names + (vni * num_nics + nic) * name_len, 1,
                                                     &addr, 0ULL, NULL), avmap);
+                        MPIR_Assert(av->dest[nic][vni] == addr);
                     }
                 }
             }
