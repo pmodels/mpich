@@ -1150,9 +1150,15 @@ int MPIR_Ireduce_inter_sched_local_reduce_remote_send(const void *sendbuf, void 
 
 /******************************** Ireduce_scatter ********************************/
 /* request-based functions */
-int MPIR_Ireduce_scatter_allcomm_auto(const void *sendbuf, void *recvbuf,
-                                      const MPI_Aint * recvcounts, MPI_Datatype datatype, MPI_Op op,
-                                      MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ireduce_scatter_allcomm_sched_auto(const void *sendbuf, void *recvbuf,
+                                            const MPI_Aint * recvcounts, MPI_Datatype datatype,
+                                            MPI_Op op, MPIR_Comm * comm_ptr,
+                                            bool is_persistent, void **sched_p,
+                                            enum MPIR_sched_type *sched_type_p);
+int MPIR_Ireduce_scatter_sched_impl(const void *sendbuf, void *recvbuf, const MPI_Aint recvcounts[],
+                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                                    bool is_persistent, void **sched_p,
+                                    enum MPIR_sched_type *sched_type_p);
 
 /* sched-based functions */
 int MPIR_Ireduce_scatter_sched_auto(const void *sendbuf, void *recvbuf, const MPI_Aint * recvcounts,
