@@ -667,11 +667,18 @@ int MPIR_Ialltoallv_inter_sched_pairwise_exchange(const void *sendbuf, const MPI
 
 /******************************** Ialltoallw ********************************/
 /* request-based functions */
-int MPIR_Ialltoallw_allcomm_auto(const void *sendbuf, const MPI_Aint * sendcounts,
-                                 const MPI_Aint * sdispls, const MPI_Datatype * sendtypes,
-                                 void *recvbuf, const MPI_Aint * recvcounts,
-                                 const MPI_Aint * rdispls, const MPI_Datatype * recvtypes,
-                                 MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ialltoallw_allcomm_sched_auto(const void *sendbuf, const MPI_Aint * sendcounts,
+                                       const MPI_Aint * sdispls, const MPI_Datatype * sendtypes,
+                                       void *recvbuf, const MPI_Aint * recvcounts,
+                                       const MPI_Aint * rdispls, const MPI_Datatype * recvtypes,
+                                       MPIR_Comm * comm_ptr, bool is_persistent, void **sched_p,
+                                       enum MPIR_sched_type *sched_type_p);
+int MPIR_Ialltoallw_sched_impl(const void *sendbuf, const MPI_Aint sendcounts[],
+                               const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                               void *recvbuf, const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
+                               const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
+                               bool is_persistent, void **sched_p,
+                               enum MPIR_sched_type *sched_type_p);
 int MPIR_Ialltoallw_intra_gentran_blocked(const void *sendbuf, const MPI_Aint sendcounts[],
                                           const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                           void *recvbuf, const MPI_Aint recvcounts[],
