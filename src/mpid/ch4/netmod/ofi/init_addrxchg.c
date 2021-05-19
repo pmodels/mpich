@@ -67,11 +67,12 @@ static int get_av_table_index(int rank, int nic, int vni)
 }
 
 /* Step 1: exchange root contexts */
-int MPIDI_OFI_addr_exchange_root_ctx(MPIR_Comm * init_comm)
+int MPIDI_OFI_addr_exchange_root_ctx(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
+    MPIR_Comm *init_comm = NULL;
 
     /* No pre-published address table, need do address exchange. */
     /* First, each get its own name */
@@ -95,6 +96,9 @@ int MPIDI_OFI_addr_exchange_root_ctx(MPIR_Comm * init_comm)
         int num_nodes = MPIR_Process.num_nodes;
         int *node_roots = MPIR_Process.node_root_map;
         int *rank_map, recv_bc_len;
+
+        mpi_errno = MPIDI_create_init_comm(&init_comm);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* First, insert address of node-roots, init_comm become useful */
         fi_addr_t *mapped_table;
@@ -139,6 +143,9 @@ int MPIDI_OFI_addr_exchange_root_ctx(MPIR_Comm * init_comm)
     }
 
   fn_exit:
+    if (init_comm) {
+        MPIDI_destroy_init_comm(&init_comm);
+    }
     return mpi_errno;
   fn_fail:
     goto fn_exit;

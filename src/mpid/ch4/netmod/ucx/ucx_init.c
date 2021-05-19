@@ -91,10 +91,11 @@ static int init_worker(int vni)
     goto fn_exit;
 }
 
-static int initial_address_exchange(MPIR_Comm * init_comm)
+static int initial_address_exchange(void)
 {
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucx_status;
+    MPIR_Comm *init_comm = NULL;
 
     void *table;
     int recv_bc_len;
@@ -111,6 +112,9 @@ static int initial_address_exchange(MPIR_Comm * init_comm)
         int *node_roots = MPIR_Process.node_root_map;
         int num_nodes = MPIR_Process.num_nodes;
         int *rank_map;
+
+        mpi_errno = MPIDI_create_init_comm(&init_comm);
+        MPIR_ERR_CHECK(mpi_errno);
 
         for (int i = 0; i < num_nodes; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
@@ -149,6 +153,9 @@ static int initial_address_exchange(MPIR_Comm * init_comm)
     }
 
   fn_exit:
+    if (init_comm) {
+        MPIDI_destroy_init_comm(&init_comm);
+    }
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -274,20 +281,20 @@ int MPIDI_UCX_init_local(int *tag_bits)
     goto fn_exit;
 }
 
-int MPIDI_UCX_init_world(MPIR_Comm * init_comm)
+int MPIDI_UCX_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
     int tmp = MPIR_Process.tag_bits;
     mpi_errno = MPIDI_UCX_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.appnum,
-                                        &tmp, init_comm);
+                                        &tmp);
     /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
     MPIR_Assert(tmp == MPIR_Process.tag_bits);
 
     return mpi_errno;
 }
 
-int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
+int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
@@ -302,7 +309,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                                   &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
     MPIDI_UCX_CHK_STATUS(ucx_status);
 
-    mpi_errno = initial_address_exchange(init_comm);
+    mpi_errno = initial_address_exchange();
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

@@ -595,20 +595,20 @@ int MPIDI_OFI_init_local(int *tag_bits)
     goto fn_exit;
 }
 
-int MPIDI_OFI_init_world(MPIR_Comm * init_comm)
+int MPIDI_OFI_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
     int tmp = MPIR_Process.tag_bits;
     mpi_errno = MPIDI_OFI_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.appnum,
-                                        &tmp, init_comm);
+                                        &tmp);
     /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
     MPIR_Assert(tmp == MPIR_Process.tag_bits);
 
     return mpi_errno;
 }
 
-int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
+int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t optlen;
@@ -623,7 +623,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* If opening a named-AV didn't work, we need to do a full business card exchange for the first
      * VNI. All other VNIs can copy the address information from this on after the fact. */
     if (!MPIDI_OFI_global.got_named_av) {
-        mpi_errno = MPIDI_OFI_addr_exchange_root_ctx(init_comm);
+        mpi_errno = MPIDI_OFI_addr_exchange_root_ctx();
         MPIR_ERR_CHECK(mpi_errno);
     }
 
