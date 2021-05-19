@@ -898,10 +898,16 @@ int MPIR_Igatherv_allcomm_sched_linear(const void *sendbuf, MPI_Aint sendcount,
 
 /******************************** Ineighbor_allgather ********************************/
 /* request-based functions */
-int MPIR_Ineighbor_allgather_allcomm_auto(const void *sendbuf, MPI_Aint sendcount,
-                                          MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                          MPIR_Request ** request);
+int MPIR_Ineighbor_allgather_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount,
+                                                MPI_Datatype sendtype, void *recvbuf,
+                                                MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                MPIR_Comm * comm_ptr, bool is_persistent,
+                                                void **sched_p, enum MPIR_sched_type *sched_type_p);
+int MPIR_Ineighbor_allgather_sched_impl(const void *sendbuf, MPI_Aint sendcount,
+                                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                        bool is_persistent, void **sched_p,
+                                        enum MPIR_sched_type *sched_type_p);
 int MPIR_Ineighbor_allgather_allcomm_gentran_linear(const void *sendbuf, MPI_Aint sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     MPI_Aint recvcount, MPI_Datatype recvtype,
