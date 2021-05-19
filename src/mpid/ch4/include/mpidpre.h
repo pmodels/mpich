@@ -91,9 +91,6 @@ typedef struct MPIDIG_rreq_t {
     uint64_t ignore;
     MPIR_Request *peer_req_ptr;
     MPIR_Request *match_req;
-    MPIR_Request *request;
-
-    struct MPIDIG_rreq_t *prev, *next;
 } MPIDIG_rreq_t;
 
 typedef struct MPIDIG_part_am_req_t {
@@ -237,10 +234,6 @@ typedef struct MPIDIG_part_sreq {
 
 typedef struct MPIDIG_part_rreq {
     MPI_Aint sdata_size;        /* size of entire send data */
-
-    /* fields for posted/unexp list */
-    MPIR_Request *request;      /* pointer of part_req */
-    struct MPIDIG_part_rreq *prev, *next;
 } MPIDIG_part_rreq_t;
 
 typedef struct MPIDIG_part_request {
@@ -263,11 +256,11 @@ typedef struct MPIDI_part_request {
     int tag;
     MPIR_Context_id_t context_id;       /* temporarily store send context_id in unexp_rreq.
                                          * Valid also in posted_rreq so that single dequeue
-                                         * routine can be used. See MPIDIG_part_dequeue. */
+                                         * routine can be used. */
     MPI_Datatype datatype;
 } MPIDI_part_request_t;
 
-typedef struct {
+typedef struct MPIDI_Devreq_t {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
     /* Anysource handling. Netmod and shm specific requests are cross
@@ -299,6 +292,7 @@ typedef struct {
         MPIDI_workq_elemt_t command;
 #endif
     } ch4;
+    struct MPIDI_Devreq_t *next, *prev;
 } MPIDI_Devreq_t;
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)

@@ -47,8 +47,9 @@ int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
     root_comm = MPIDIG_context_id_to_comm(slmt_rts_hdr->context_id);
     if (root_comm) {
         while (TRUE) {
-            rreq = MPIDIG_dequeue_posted(slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
-                                         slmt_rts_hdr->context_id, 1, NULL);
+            rreq = MPIDIG_rreq_dequeue(slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
+                                       slmt_rts_hdr->context_id, &MPIDI_global.posted_list,
+                                       MPIDIG_PT2PT_POSTED);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
             if (rreq) {
                 int is_cancelled;
@@ -101,7 +102,7 @@ int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
         MPIDI_IPCI_REQUEST(rreq, unexp_rreq).src_lrank = slmt_rts_hdr->src_lrank;
         MPIDI_IPCI_REQUEST(rreq, unexp_rreq).sreq_ptr = slmt_rts_hdr->sreq_ptr;
 
-        MPIDIG_enqueue_unexp(rreq, NULL);
+        MPIDIG_enqueue_request(rreq, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
 
         IPC_TRACE("send_contig_lmt_rts_cb: enqueue unexpected, rreq=%p\n", rreq);
     }
