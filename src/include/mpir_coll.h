@@ -1258,9 +1258,13 @@ int MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(const vo
 
 /******************************** Iscan ********************************/
 /* request-based functions */
-int MPIR_Iscan_allcomm_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                            MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                            MPIR_Request ** request);
+int MPIR_Iscan_allcomm_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                  MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                                  bool is_persistent, void **sched_p,
+                                  enum MPIR_sched_type *sched_type_p);
+int MPIR_Iscan_sched_impl(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
+                          MPI_Op op, MPIR_Comm * comm_ptr, bool is_persistent, void **sched_p,
+                          enum MPIR_sched_type *sched_type_p);
 
 /* sched-based intracomm-only functions */
 int MPIR_Iscan_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
