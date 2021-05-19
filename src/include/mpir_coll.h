@@ -8,6 +8,16 @@
 
 #include "coll_impl.h"
 
+/* During init, not all algorithms are safe to use. For example, the csel
+ * may not have been initialized. We define a set of fallback routines that
+ * are safe to use during init. They are all intra algorithms.
+ */
+#define MPIR_Barrier_fallback    MPIR_Barrier_intra_dissemination
+#define MPIR_Allgather_fallback  MPIR_Allgather_intra_brucks
+#define MPIR_Allgatherv_fallback MPIR_Allgatherv_intra_brucks
+#define MPIR_Allreduce_fallback  MPIR_Allreduce_intra_recursive_doubling
+
+
 /* Internal point-to-point communication for collectives */
 /* These functions are used in the implementation of collective and
    other internal operations. They are wrappers around MPID send/recv
