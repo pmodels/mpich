@@ -47,6 +47,7 @@ typedef struct {
     int conn_id;
     int enable_striping;        /* Flag to enable striping per communicator. */
     int enable_hashing;         /* Flag to enable hashing per communicator. */
+    int *pref_nic;              /* Array to specify the preferred NIC for each rank (if needed) */
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_NONE = 0,
