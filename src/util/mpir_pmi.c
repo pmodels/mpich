@@ -770,7 +770,7 @@ char *MPIR_pmi_get_failed_procs(void)
   fn_exit:
     return failed_procs_string;
   fn_fail:
-    /* FIXME: approprate error messages here? */
+    /* FIXME: appropriate error messages here? */
     MPL_free(failed_procs_string);
     failed_procs_string = NULL;
     goto fn_exit;
