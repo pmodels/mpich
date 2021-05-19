@@ -1283,9 +1283,14 @@ int MPIR_Iscan_intra_gentran_recursive_doubling(const void *sendbuf, void *recvb
 
 /******************************** Iscatter ********************************/
 /* request-based functions */
-int MPIR_Iscatter_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                               void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                               MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Iscatter_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                     void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                                     int root, MPIR_Comm * comm_ptr, bool is_persistent,
+                                     void **sched_p, enum MPIR_sched_type *sched_type_p);
+int MPIR_Iscatter_sched_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                             void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                             MPIR_Comm * comm_ptr, bool is_persistent, void **sched_p,
+                             enum MPIR_sched_type *sched_type_p);
 int MPIR_Iscatter_intra_gentran_tree(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                      int root, MPIR_Comm * comm_ptr, int k,
