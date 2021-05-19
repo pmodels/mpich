@@ -20,9 +20,14 @@
 #define MPIDIG_PART_REQ_CTS 2   /* Indicating receiver is ready to receive data
                                  * (requests matched and start called) */
 
-/* Status to deactivate at request completion */
-#define MPIDIG_PART_SREQ_INACTIVE 0     /* Sender need 2 increments to be CTS: start and remote start */
-#define MPIDIG_PART_RREQ_INACTIVE 1     /* Receiver need 1 increments to be CTS: start */
+#define MPIDIG_PART_SEND_NUM_CONDS_TO_SUBTRACT 2        /* the number of conditions to subtract
+                                                         * from status on send completion.
+                                                         * One for send start, and one for receiving
+                                                         * CTS from receiver */
+#define MPIDIG_PART_RECV_NUM_CONDS_TO_SUBTRACT 1        /* the number of conditions to subtract
+                                                         * from status on recv completion.
+                                                         * Only one for recv start.
+                                                         */
 
 /* Atomically increase partitioned rreq status and fetch state after increase.
  * Called when receiver matches request, sender receives CTS, or either side calls start. */
