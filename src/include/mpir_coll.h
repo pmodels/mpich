@@ -401,10 +401,16 @@ int MPIR_Iallgatherv_intra_gentran_brucks(const void *sendbuf, MPI_Aint sendcoun
                                           const MPI_Aint recvcounts[], const MPI_Aint displs[],
                                           MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int k,
                                           MPIR_Request ** request);
-int MPIR_Iallgatherv_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                                  void *recvbuf, const MPI_Aint * recvcounts,
-                                  const MPI_Aint * displs, MPI_Datatype recvtype,
-                                  MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Iallgatherv_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount,
+                                        MPI_Datatype sendtype, void *recvbuf,
+                                        const MPI_Aint * recvcounts, const MPI_Aint * displs,
+                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                        bool is_persistent, void **sched_p,
+                                        enum MPIR_sched_type *sched_type_p);
+int MPIR_Iallgatherv_sched_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                void *recvbuf, const MPI_Aint recvcounts[], const MPI_Aint displs[],
+                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr, bool is_persistent,
+                                void **sched_p, enum MPIR_sched_type *sched_type_p);
 
 /* sched-based functions */
 int MPIR_Iallgatherv_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
