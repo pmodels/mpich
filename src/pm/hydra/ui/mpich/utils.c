@@ -440,6 +440,32 @@ static HYD_status profile_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void output_from_help_fn(void)
+{
+    printf("\n");
+    printf("-output-from: only show the output from this rank\n\n");
+}
+
+static HYD_status output_from_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_ui_info.output_from != -1) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_int(arg, &HYD_ui_info.output_from, atoi(**argv));
+    HYDU_ERR_POP(status, "error setting output_from\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static void prepend_rank_help_fn(void)
 {
     printf("\n");
@@ -1780,6 +1806,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"hostlist", hostlist_fn, hostlist_help_fn},
     {"ppn", ppn_fn, ppn_help_fn},
     {"profile", profile_fn, profile_help_fn},
+    {"output-from", output_from_fn, output_from_help_fn},
     {"prepend-rank", prepend_rank_fn, prepend_rank_help_fn},
     {"l", prepend_rank_fn, prepend_rank_help_fn},
     {"prepend-pattern", prepend_pattern_fn, prepend_pattern_help_fn},
