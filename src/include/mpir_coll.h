@@ -990,10 +990,16 @@ int MPIR_Ineighbor_allgatherv_allcomm_sched_linear(const void *sendbuf, MPI_Aint
 
 /******************************** Ineighbor_alltoall ********************************/
 /* request-based functions */
-int MPIR_Ineighbor_alltoall_allcomm_auto(const void *sendbuf, MPI_Aint sendcount,
-                                         MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                         MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                         MPIR_Request ** request);
+int MPIR_Ineighbor_alltoall_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount,
+                                               MPI_Datatype sendtype, void *recvbuf,
+                                               MPI_Aint recvcount, MPI_Datatype recvtype,
+                                               MPIR_Comm * comm_ptr, bool is_persistent,
+                                               void **sched_p, enum MPIR_sched_type *sched_type_p);
+int MPIR_Ineighbor_alltoall_sched_impl(const void *sendbuf, MPI_Aint sendcount,
+                                       MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                       bool is_persistent, void **sched_p,
+                                       enum MPIR_sched_type *sched_type_p);
 int MPIR_Ineighbor_alltoall_allcomm_gentran_linear(const void *sendbuf, MPI_Aint sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    MPI_Aint recvcount, MPI_Datatype recvtype,
