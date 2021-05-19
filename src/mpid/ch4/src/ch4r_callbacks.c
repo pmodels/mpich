@@ -315,8 +315,8 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         /* MPIDI_CS_ENTER(); */
         while (TRUE) {
             rreq =
-                MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id, is_local,
-                                      &MPIDI_global.posted_list);
+                MPIDIG_rreq_dequeue(hdr->src_rank, hdr->tag, hdr->context_id,
+                                    &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
             if (rreq) {
                 int is_cancelled;
@@ -379,7 +379,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
         MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-        MPIDIG_enqueue_unexp(rreq, &MPIDI_global.unexp_list);
+        MPIDIG_enqueue_request(rreq, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
         MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
 
         /* at this point, we have created and enqueued the unexpected request. If the request is
