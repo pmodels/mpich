@@ -341,9 +341,15 @@ int MPIR_Iallgather_intra_gentran_brucks(const void *sendbuf, MPI_Aint sendcount
                                          MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int k,
                                          MPIR_Request ** request);
-int MPIR_Iallgather_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                                 void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                 MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Iallgather_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount,
+                                       MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                       bool is_persistent, void **sched_p,
+                                       enum MPIR_sched_type *sched_type_p);
+int MPIR_Iallgather_sched_impl(const void *sendbuf, MPI_Aint sendcount,
+                               MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr, bool is_persistent,
+                               void **sched_p, enum MPIR_sched_type *sched_type_p);
 
 /* sched-based functions */
 int MPIR_Iallgather_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
