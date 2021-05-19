@@ -498,40 +498,10 @@ int MPID_Init_local(int requested, int *provided)
         /* Use the minimum tag_bits from the netmod and shmod */
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_LOCAL);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPID_Init_world(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_WORLD);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_WORLD);
 
     /* setup receive queue statistics */
     mpi_errno = MPIDIG_recvq_init();
     MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIDU_Init_shm_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    {
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_init_world();
-
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POPFATAL(mpi_errno);
-        }
-#endif
-
-        mpi_errno = MPIDI_NM_init_world();
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POPFATAL(mpi_errno);
-        }
-    }
 
     MPIDIG_am_check_init();
 
@@ -552,7 +522,36 @@ int MPID_Init_world(void)
     MPIR_Process.attrs.appnum = MPIR_Process.appnum;
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
 
-    destroy_init_comm(&init_comm);
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_LOCAL);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_Init_world(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_WORLD);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_WORLD);
+
+    mpi_errno = MPIDU_Init_shm_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno = MPIDI_SHM_init_world();
+
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
+#endif
+
+        mpi_errno = MPIDI_NM_init_world();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_WORLD);
