@@ -3,10 +3,10 @@ Non Native API:
       NM : tag_bits
      SHM : tag_bits
   init_world: int
-      NM : init_comm
+      NM : void
      SHM : void
   mpi_init_hook : int
-      NM : rank, size, appnum, tag_bits, init_comm
+      NM : rank, size, appnum, tag_bits
      SHM : rank, size, tag_bits
   mpi_finalize_hook : int
       NM : void
@@ -511,7 +511,6 @@ PARAM:
     idx: int
     info: MPIR_Info *
     info_p: MPIR_Info **
-    init_comm: MPIR_Comm *
     iov_len: size_t
     is_remote: bool
     length: MPI_Aint
