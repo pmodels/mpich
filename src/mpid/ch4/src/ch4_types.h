@@ -270,10 +270,10 @@ typedef struct MPIDI_CH4_Global_t {
     MPIR_Commops MPIR_Comm_fns_store;
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
-    MPIDIG_rreq_t *posted_list;
-    MPIDIG_rreq_t *unexp_list;
-    MPIDIG_part_rreq_t *part_posted_list;
-    MPIDIG_part_rreq_t *part_unexp_list;
+    MPIDI_Devreq_t *posted_list;
+    MPIDI_Devreq_t *unexp_list;
+    MPIDI_Devreq_t *part_posted_list;
+    MPIDI_Devreq_t *part_unexp_list;
     MPIDIG_req_ext_t *cmpl_list;
     MPL_atomic_uint64_t exp_seq_no;
     MPL_atomic_uint64_t nxt_seq_no;

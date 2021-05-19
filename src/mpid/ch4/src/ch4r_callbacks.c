@@ -83,7 +83,7 @@ void MPIDIG_progress_compl_list(void)
     DL_FOREACH_SAFE(MPIDI_global.cmpl_list, curr, tmp) {
         if (curr->seq_no == MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)) {
             DL_DELETE(MPIDI_global.cmpl_list, curr);
-            req = (MPIR_Request *) curr->request;
+            req = curr->request;
             MPIDIG_REQUEST(req, req->target_cmpl_cb) (req);
             goto do_check_again;
         }
@@ -314,7 +314,9 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
     if (root_comm) {
         /* MPIDI_CS_ENTER(); */
         while (TRUE) {
-            rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id, is_local, NULL);
+            rreq =
+                MPIDIG_rreq_dequeue(hdr->src_rank, hdr->tag, hdr->context_id,
+                                    &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
             if (rreq) {
                 int is_cancelled;
@@ -377,7 +379,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
         MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-        MPIDIG_enqueue_unexp(rreq, NULL);
+        MPIDIG_enqueue_request(rreq, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
         MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
 
         /* at this point, we have created and enqueued the unexpected request. If the request is
