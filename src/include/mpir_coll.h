@@ -1081,11 +1081,20 @@ int MPIR_Ineighbor_alltoallv_allcomm_sched_linear(const void *sendbuf, const MPI
 
 /******************************** Ineighbor_alltoallw ********************************/
 /* request-based functions */
-int MPIR_Ineighbor_alltoallw_allcomm_auto(const void *sendbuf, const MPI_Aint sendcounts[],
-                                          const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
-                                          void *recvbuf, const MPI_Aint recvcounts[],
-                                          const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                          MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ineighbor_alltoallw_allcomm_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
+                                                const MPI_Aint sdispls[],
+                                                const MPI_Datatype sendtypes[], void *recvbuf,
+                                                const MPI_Aint recvcounts[],
+                                                const MPI_Aint rdispls[],
+                                                const MPI_Datatype recvtypes[],
+                                                MPIR_Comm * comm_ptr, bool is_persistent,
+                                                void **sched_p, enum MPIR_sched_type *sched_type_p);
+int MPIR_Ineighbor_alltoallw_sched_impl(const void *sendbuf, const MPI_Aint sendcounts[],
+                                        const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                        void *recvbuf, const MPI_Aint recvcounts[],
+                                        const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                        MPIR_Comm * comm_ptr, bool is_persistent, void **sched_p,
+                                        enum MPIR_sched_type *sched_type_p);
 int MPIR_Ineighbor_alltoallw_allcomm_gentran_linear(const void *sendbuf,
                                                     const MPI_Aint sendcounts[],
                                                     const MPI_Aint sdispls[],
