@@ -1326,10 +1326,16 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
 
 /******************************** Iscatterv ********************************/
 /* request-based functions */
-int MPIR_Iscatterv_allcomm_auto(const void *sendbuf, const MPI_Aint * sendcounts,
-                                const MPI_Aint * displs, MPI_Datatype sendtype, void *recvbuf,
-                                MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                                MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Iscatterv_allcomm_sched_auto(const void *sendbuf, const MPI_Aint * sendcounts,
+                                      const MPI_Aint * displs, MPI_Datatype sendtype, void *recvbuf,
+                                      MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                                      MPIR_Comm * comm_ptr, bool is_persistent, void **sched_p,
+                                      enum MPIR_sched_type *sched_type_p);
+int MPIR_Iscatterv_sched_impl(const void *sendbuf, const MPI_Aint sendcounts[],
+                              const MPI_Aint displs[], MPI_Datatype sendtype, void *recvbuf,
+                              MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                              MPIR_Comm * comm_ptr, bool is_persistent, void **sched_p,
+                              enum MPIR_sched_type *sched_type_p);
 int MPIR_Iscatterv_allcomm_gentran_linear(const void *sendbuf, const MPI_Aint * sendcounts,
                                           const MPI_Aint * displs, MPI_Datatype sendtype,
                                           void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
