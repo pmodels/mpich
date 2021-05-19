@@ -538,9 +538,15 @@ int MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast(const void *sendbuf, v
 
 /******************************** Ialltoall ********************************/
 /* request-based functions */
-int MPIR_Ialltoall_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                                void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ialltoall_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount,
+                                      MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                      bool is_persistent, void **sched_p,
+                                      enum MPIR_sched_type *sched_type_p);
+int MPIR_Ialltoall_sched_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                              void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                              MPIR_Comm * comm_ptr, bool is_persistent, void **sched_p,
+                              enum MPIR_sched_type *sched_type_p);
 int MPIR_Ialltoall_intra_gentran_ring(const void *sendbuf, MPI_Aint sendcount,
                                       MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
