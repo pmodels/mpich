@@ -469,9 +469,15 @@ int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(const void *sendbuf, 
 
 /******************************** Iallreduce ********************************/
 /* request-based functions */
-int MPIR_Iallreduce_allcomm_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                 MPIR_Request ** request);
+int MPIR_Iallreduce_allcomm_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                                       bool is_persistent, void **sched_p,
+                                       enum MPIR_sched_type *sched_type_p);
+
+int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                               bool is_persistent, void **sched_p,
+                               enum MPIR_sched_type *sched_type_p);
 
 /* sched-based functions */
 int MPIR_Iallreduce_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
