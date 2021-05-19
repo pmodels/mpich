@@ -1103,9 +1103,13 @@ int MPIR_Ineighbor_alltoallw_allcomm_sched_linear(const void *sendbuf, const MPI
 
 /******************************** Ireduce ********************************/
 /* request-based functions */
-int MPIR_Ireduce_allcomm_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                              MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
-                              MPIR_Request ** request);
+int MPIR_Ireduce_allcomm_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                    MPI_Datatype datatype, MPI_Op op, int root,
+                                    MPIR_Comm * comm_ptr, bool is_persistent, void **sched_p,
+                                    enum MPIR_sched_type *sched_type_p);
+int MPIR_Ireduce_sched_impl(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                            MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
+                            bool is_persistent, void **sched_p, enum MPIR_sched_type *sched_type_p);
 int MPIR_Ireduce_intra_gentran_tree(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                     MPI_Datatype datatype, MPI_Op op, int root,
                                     MPIR_Comm * comm_ptr, int tree_type, int k, int maxbytes,
