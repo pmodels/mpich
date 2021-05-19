@@ -314,6 +314,7 @@ static int create_init_comm(MPIR_Comm ** comm)
         init_comm->remote_size = node_roots_comm_size;
         init_comm->local_size = node_roots_comm_size;
         init_comm->coll.pof2 = MPL_pof2(node_roots_comm_size);
+        init_comm->seq = 0;
         MPIDI_COMM(init_comm, map).mode = MPIDI_RANK_MAP_LUT_INTRA;
         mpi_errno = MPIDIU_alloc_lut(&lut, node_roots_comm_size);
         MPIR_ERR_CHECK(mpi_errno);
@@ -484,6 +485,8 @@ int MPID_Init_local(int requested, int *provided)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_LOCAL);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_LOCAL);
+
+    MPIDI_global.is_initialized = 0;
 
     switch (requested) {
         case MPI_THREAD_SINGLE:
@@ -662,8 +665,6 @@ int MPID_Init_world(void)
     destroy_init_comm(&init_comm);
     mpi_errno = init_builtin_comms();
     MPIR_ERR_CHECK(mpi_errno);
-
-    MPIDI_global.is_initialized = 0;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_WORLD);
