@@ -18,7 +18,10 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
             int was_enabled_striping = MPIDI_OFI_COMM(comm).enable_striping;
 
             /* Check if we should use striping */
-            if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING] != -1)
+            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] == 1) {
+                /* If the user specified a particular NIC, don't use striping. */
+                MPIDI_OFI_COMM(comm).enable_striping = 0;
+            } else if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING] != -1)
                 MPIDI_OFI_COMM(comm).enable_striping =
                     comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING];
             else
@@ -38,7 +41,10 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
             int was_enabled_hashing = MPIDI_OFI_COMM(comm).enable_hashing;
 
             /* Check if we should use hashing */
-            if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING] != -1)
+            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] == 1) {
+                /* If the user specified a particular NIC, don't use hashing.  */
+                MPIDI_OFI_COMM(comm).enable_hashing = 0;
+            } else if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING] != -1)
                 MPIDI_OFI_COMM(comm).enable_hashing =
                     comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING];
             else        /* If this value is -1, that means the user hasn't set a value. */
@@ -65,6 +71,50 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
     return mpi_errno;
 }
 
+static int update_nic_preferences(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm) {
+        /* If the user has set a preferred NIC, we need to exchange it with all processes and store
+         * it in the communciator object. If this happens while traffic is outstanding, it will
+         * cause problems so the user needs to quiesce traffic first. */
+        if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1) {
+            if (MPIDI_OFI_COMM(comm).pref_nic == NULL) {
+                MPIDI_OFI_COMM(comm).pref_nic = MPL_malloc(sizeof(int) * comm->remote_size,
+                                                           MPL_MEM_ADDRESS);
+            }
+
+            /* Make sure the NIC id is in a valid range. If the user went over the number of NICs,
+             * loop back around to the first NIC. */
+            comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] %= MPIDI_OFI_global.num_nics;
+
+            /* The user will be providing a value that is consistent across all process on the same
+             * node, but internally, the NICs are reordered so that index 0 is the NIC that will be
+             * used by default. Compare the user's preference to the original IDs stored when
+             * setting up the NICs during initialization. */
+            for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
+                if (MPIDI_OFI_global.nic_info[i].id ==
+                    comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC]) {
+                    MPIDI_OFI_COMM(comm).pref_nic[comm->rank] = i;
+                    break;
+                }
+            }
+
+            MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+            mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPI_INT,
+                                                    MPIDI_OFI_COMM(comm).pref_nic,
+                                                    comm->remote_size, MPI_INT, comm, &errflag);
+            MPIR_ERR_POP(mpi_errno);
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -79,6 +129,7 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     MPIDI_OFI_global.num_comms_enabled_hashing = 0;
     MPIDI_OFI_COMM(comm).enable_striping = 0;
     MPIDI_OFI_COMM(comm).enable_hashing = 0;
+    MPIDI_OFI_COMM(comm).pref_nic = NULL;
 
     /* eagain defaults to off */
     if (comm->hints[MPIR_COMM_HINT_EAGAIN] == 0) {
@@ -95,10 +146,21 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
             MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_HASHING;
     }
 
-    update_multi_nic_hints(comm);
+    mpi_errno = update_multi_nic_hints(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+    /* When setting up built in communicators, there won't be any way to do collectives yet. We also
+     * won't have any info hints to propagate so there won't be any preferences that need to be
+     * communicated. */
+    if (comm != MPIR_Process.comm_world) {
+        mpi_errno = update_nic_preferences(comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_PRE_HOOK);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
@@ -107,6 +169,8 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
+
+    MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
     return mpi_errno;
@@ -132,7 +196,13 @@ int MPIDI_OFI_comm_set_hints(MPIR_Comm * comm, MPIR_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    update_multi_nic_hints(comm);
+    mpi_errno = update_multi_nic_hints(comm);
+    MPIR_ERR_POP(mpi_errno);
+    mpi_errno = update_nic_preferences(comm);
+    MPIR_ERR_POP(mpi_errno);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

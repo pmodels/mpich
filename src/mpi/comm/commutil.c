@@ -182,6 +182,8 @@ void MPIR_Comm_hint_init(void)
                             NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, -1);
     MPIR_Comm_register_hint(MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING, "enable_multi_nic_hashing",
                             NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, -1);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_MULTI_NIC_PREF_NIC, "multi_nic_pref_nic", NULL,
+                            MPIR_COMM_HINT_TYPE_INT, 0, -1);
 }
 
 /* FIXME :
