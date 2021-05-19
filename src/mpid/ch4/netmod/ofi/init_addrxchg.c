@@ -119,7 +119,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(MPIR_Comm * init_comm)
                 char *addrname = (char *) table + recv_bc_len * rank_map[i];
                 MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av,
                                             addrname, 1, &addr, 0ULL, NULL), avmap);
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest[0][0] = addr;
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = addr;
             }
         }
         MPIDU_bc_table_destroy();
