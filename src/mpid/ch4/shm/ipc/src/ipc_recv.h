@@ -105,7 +105,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
 
     /* Try to match with an unexpected receive request */
     root_comm = MPIDIG_context_id_to_comm(context_id);
-    unexp_req = MPIDIG_dequeue_unexp(rank, tag, context_id, &MPIDI_global.unexp_list);
+    unexp_req =
+        MPIDIG_rreq_dequeue(rank, tag, context_id, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
         *request = unexp_req;
@@ -130,7 +131,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
         MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
 
         MPIR_Comm_add_ref(root_comm);   /* +1 for queuing into posted_list */
-        MPIDIG_enqueue_posted(rreq, &MPIDI_global.posted_list);
+        MPIDIG_enqueue_request(rreq, &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
 
         *request = rreq;
         MPIDI_POSIX_recv_posted_hook(*request, rank, comm);
