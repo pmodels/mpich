@@ -56,49 +56,6 @@ int MPIR_Coll_safe_to_block(void);
 
 int MPII_Coll_finalize(void);
 
-#define MPII_SCHED_WRAPPER_EMPTY(fn, comm_ptr, request)                 \
-    do {                                                                \
-        int tag = -1;                                                   \
-        MPIR_Sched_t s = MPIR_SCHED_NULL;                               \
-                                                                        \
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);                \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);     \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = fn(comm_ptr, s);                                    \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = MPIR_Sched_start(s, comm_ptr, tag, request);        \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-    } while (0)
-
-#define MPII_SCHED_WRAPPER(fn, comm_ptr, request, ...)                  \
-    do {                                                                \
-        int tag = -1;                                                   \
-        MPIR_Sched_t s = MPIR_SCHED_NULL;                               \
-                                                                        \
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);                \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);     \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = fn(__VA_ARGS__, comm_ptr, s);                       \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = MPIR_Sched_start(s, comm_ptr, tag, request);        \
-        MPIR_ERR_CHECK(mpi_errno);                                      \
-    } while (0)
-
 #define MPII_GENTRAN_CREATE_SCHED_P() \
     do { \
         *sched_type_p = MPIR_SCHED_GENTRAN; \
