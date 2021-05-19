@@ -731,7 +731,10 @@ int MPIR_Ialltoallw_inter_sched_pairwise_exchange(const void *sendbuf, const MPI
 
 /******************************** Ibarrier ********************************/
 /* request-based functions */
-int MPIR_Ibarrier_allcomm_auto(MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ibarrier_allcomm_sched_auto(MPIR_Comm * comm_ptr, bool is_persistent, void **sched_p,
+                                     enum MPIR_sched_type *sched_type_p);
+int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, bool is_persistent, void **sched_p,
+                             enum MPIR_sched_type *sched_type_p);
 
 /* sched-based functions */
 int MPIR_Ibarrier_sched_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
