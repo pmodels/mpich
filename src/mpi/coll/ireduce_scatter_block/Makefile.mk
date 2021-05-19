@@ -14,5 +14,4 @@ mpi_core_sources +=                          \
     src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block_intra_sched_recursive_doubling.c \
     src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block_intra_sched_noncommutative.c \
     src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv.c \
-    src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block_gentran_algos.c                    \
-    src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block_intra_gentran_recexch.c
+    src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block_gentran_algos.c
