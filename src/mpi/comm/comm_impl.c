@@ -5,11 +5,6 @@
 
 #include "mpiimpl.h"
 
-/* temporary declaration until auto-generated */
-int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringtag,
-                                     MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_ptr,
-                                     MPIR_Comm ** newcomm_ptr);
-
 /* used in MPIR_Comm_group_impl and MPIR_Comm_create_group_impl */
 static int comm_create_local_group(MPIR_Comm * comm_ptr)
 {

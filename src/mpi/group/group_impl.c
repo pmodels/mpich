@@ -6,10 +6,6 @@
 #include "mpiimpl.h"
 #include "group.h"
 
-/* temporary declaration until auto-generated */
-int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *pset_name,
-                                      MPIR_Group ** newgroup_ptr);
-
 int MPIR_Group_compare_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2, int *result)
 {
     int mpi_errno = MPI_SUCCESS;
