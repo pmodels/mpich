@@ -10,19 +10,28 @@
 
 int MPIDI_SHM_init_local(int *tag_bits)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     /* There is no restriction on the tag_bits from the posix shmod side */
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
-    return MPI_SUCCESS;
+
+    mpi_errno = MPIDI_POSIX_init_local(NULL);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDI_IPC_init_local();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_SHM_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int tmp = MPIR_Process.tag_bits;
-    mpi_errno = MPIDI_SHM_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, &tmp);
-    /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
-    MPIR_Assert(tmp == MPIR_Process.tag_bits);
+    mpi_errno = MPIDI_SHM_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, NULL);
 
     return mpi_errno;
 }
