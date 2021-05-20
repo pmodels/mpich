@@ -106,8 +106,8 @@ int MPIDU_bc_allgather(MPIR_Comm * allgather_comm, void *bc, int bc_len, int sam
     void *recv_buf = segment + local_size * recv_bc_len;
     if (rank == node_root) {
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        MPIR_Allgatherv(segment, local_size * recv_bc_len, MPI_BYTE, recv_buf,
-                        recv_cnts, recv_offs, MPI_BYTE, allgather_comm, &errflag);
+        MPIR_Allgatherv_fallback(segment, local_size * recv_bc_len, MPI_BYTE, recv_buf,
+                                 recv_cnts, recv_offs, MPI_BYTE, allgather_comm, &errflag);
 
     }
 
