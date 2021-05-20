@@ -122,15 +122,11 @@ static void *create_container(struct json_object *obj)
     return cnt;
 }
 
-int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
+int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, local_rank_0 = -1;
-
     MPIR_CHKPMEM_DECL(1);
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
 
     MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_POSIX_am_request_header_t)
                             < MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE);
@@ -172,22 +168,33 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
 
     choose_posix_eager();
 
+    MPIR_CHKPMEM_COMMIT();
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    MPIR_CHKPMEM_REAP();
+    goto fn_exit;
+}
+
+int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits /* unused */)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
+
     mpi_errno = MPIDI_POSIX_eager_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_POSIX_coll_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_CHKPMEM_COMMIT();
-
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    MPIR_CHKPMEM_REAP();
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 int MPIDI_POSIX_mpi_finalize_hook(void)

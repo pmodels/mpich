@@ -64,6 +64,11 @@ static void ipc_handle_free_hook(void *dptr)
     return;
 }
 
+int MPIDI_GPU_init_local(void)
+{
+    return MPI_SUCCESS;
+}
+
 int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
 {
     int mpl_err, mpi_errno = MPI_SUCCESS;

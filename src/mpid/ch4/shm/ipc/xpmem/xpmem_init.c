@@ -9,6 +9,11 @@
 #include "xpmem_seg.h"
 #include "shm_control.h"
 
+int MPIDI_XPMEM_init_local(void)
+{
+    return MPI_SUCCESS;
+}
+
 int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
