@@ -184,6 +184,44 @@ int MPIDI_CH3I_Comm_commit_pre_hook(MPIR_Comm *comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_COMMIT_PRE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_COMM_COMMIT_PRE_HOOK);
 
+    if (comm == MPIR_Process.comm_world) {
+        comm->rank        = MPIR_Process.rank;
+        comm->remote_size = MPIR_Process.size;
+        comm->local_size  = MPIR_Process.size;
+
+        mpi_errno = MPIDI_VCRT_Create(comm->remote_size, &comm->dev.vcrt);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**dev|vcrt_create",
+                                 "**dev|vcrt_create %s", "MPI_COMM_WORLD");
+        }
+
+        /* Initialize the connection table on COMM_WORLD from the process group's
+        connection table */
+        for (int p = 0; p < MPIR_Process.size; p++) {
+            MPIDI_VCR_Dup(&MPIDI_Process.my_pg->vct[p], &comm->dev.vcrt->vcr_table[p]);
+        }
+    } else if (comm == MPIR_Process.comm_self) {
+        comm->rank        = 0;
+        comm->remote_size = 1;
+        comm->local_size  = 1;
+
+        mpi_errno = MPIDI_VCRT_Create(comm->remote_size, &comm->dev.vcrt);
+        if (mpi_errno != MPI_SUCCESS)
+        {
+            MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**dev|vcrt_create",
+                                "**dev|vcrt_create %s", "MPI_COMM_SELF");
+        }
+
+        MPIDI_VCR_Dup(&MPIDI_Process.my_pg->vct[MPIR_Process.rank], &comm->dev.vcrt->vcr_table[0]);
+    } else if (comm == MPIR_Process.icomm_world) {
+        comm->rank        = MPIR_Process.rank;
+        comm->remote_size = MPIR_Process.size;
+        comm->local_size  = MPIR_Process.size;
+
+        MPIDI_VCRT_Add_ref(MPIR_Process.comm_world->dev.vcrt );
+        comm->dev.vcrt = MPIR_Process.comm_world->dev.vcrt;
+    }
+
     /* initialize the is_disconnected variable to FALSE.  this will be
      * set to TRUE if the communicator is freed by an
      * MPI_COMM_DISCONNECT call. */
