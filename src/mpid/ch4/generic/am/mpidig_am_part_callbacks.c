@@ -32,7 +32,7 @@ static int part_send_data_target_cmpl_cb(MPIR_Request * rreq)
 
     /* Reset part_rreq status to inactive */
     MPL_atomic_fetch_sub_int(&MPIDIG_PART_REQUEST(part_rreq, status),
-                             MPIDIG_PART_SEND_NUM_CONDS_TO_SUBTRACT);
+                             MPIDIG_PART_RECV_NUM_CONDS_TO_SUBTRACT);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PUT_DT_TARGET_CMPL_CB);
     return mpi_errno;
@@ -54,7 +54,7 @@ int MPIDIG_part_send_data_origin_cb(MPIR_Request * sreq)
 
     /* Reset part_sreq status to inactive */
     MPL_atomic_fetch_sub_int(&MPIDIG_PART_REQUEST(part_sreq, status),
-                             MPIDIG_PART_RECV_NUM_CONDS_TO_SUBTRACT);
+                             MPIDIG_PART_SEND_NUM_CONDS_TO_SUBTRACT);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_SEND_DATA_ORIGIN_CB);
     return mpi_errno;
