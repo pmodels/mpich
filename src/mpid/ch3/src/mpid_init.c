@@ -178,7 +178,6 @@ int MPID_Init_local(int requested, int *provided)
 int MPID_Init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Comm *comm;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_WORLD);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_WORLD);
     /*
@@ -187,11 +186,8 @@ int MPID_Init_world(void)
      * the basic information about the job has been extracted from PMI (e.g.,
      * the size and rank of this process, and the process group id)
      */
-    MPIDI_PG_t *pg = MPIDI_Process.my_pg;
     int has_parent = MPIR_Process.has_parent;
-    int pg_rank = MPIR_Process.rank;
-    int pg_size = MPIR_Process.size;
-    mpi_errno = MPIDI_CH3_Init(has_parent, pg, pg_rank);
+    mpi_errno = MPIDI_CH3_Init(has_parent, MPIDI_Process.my_pg, MPIR_Process.rank);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
@@ -202,72 +198,6 @@ int MPID_Init_world(void)
 
     /* Ask channel to expose Window packet ordering. */
     MPIDI_CH3_Win_pkt_orderings_init(&MPIDI_CH3U_Win_pkt_orderings);
-
-    /*
-     * Initialize the MPI_COMM_WORLD object
-     */
-    comm = MPIR_Process.comm_world;
-
-    comm->rank        = pg_rank;
-    comm->remote_size = pg_size;
-    comm->local_size  = pg_size;
-    
-    mpi_errno = MPIDI_VCRT_Create(comm->remote_size, &comm->dev.vcrt);
-    if (mpi_errno != MPI_SUCCESS)
-    {
-	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**dev|vcrt_create", 
-			     "**dev|vcrt_create %s", "MPI_COMM_WORLD");
-    }
-
-    /* Initialize the connection table on COMM_WORLD from the process group's
-       connection table */
-    for (int p = 0; p < pg_size; p++)
-    {
-	MPIDI_VCR_Dup(&pg->vct[p], &comm->dev.vcrt->vcr_table[p]);
-    }
-
-    mpi_errno = MPIR_Comm_commit(comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /*
-     * Initialize the MPI_COMM_SELF object
-     */
-    comm = MPIR_Process.comm_self;
-    comm->rank        = 0;
-    comm->remote_size = 1;
-    comm->local_size  = 1;
-    
-    mpi_errno = MPIDI_VCRT_Create(comm->remote_size, &comm->dev.vcrt);
-    if (mpi_errno != MPI_SUCCESS)
-    {
-	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**dev|vcrt_create", 
-			     "**dev|vcrt_create %s", "MPI_COMM_SELF");
-    }
-    
-    MPIDI_VCR_Dup(&pg->vct[pg_rank], &comm->dev.vcrt->vcr_table[0]);
-
-    mpi_errno = MPIR_Comm_commit(comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Currently, mpidpre.h always defines MPID_NEEDS_ICOMM_WORLD. */
-#ifdef MPID_NEEDS_ICOMM_WORLD
-    /*
-     * Initialize the MPIR_ICOMM_WORLD object (an internal, private version
-     * of MPI_COMM_WORLD) 
-     */
-    comm = MPIR_Process.icomm_world;
-
-    comm->rank        = pg_rank;
-    comm->remote_size = pg_size;
-    comm->local_size  = pg_size;
-    MPIDI_VCRT_Add_ref( MPIR_Process.comm_world->dev.vcrt );
-    comm->dev.vcrt = MPIR_Process.comm_world->dev.vcrt;
-    
-    mpi_errno = MPIR_Comm_commit(comm);
-    MPIR_ERR_CHECK(mpi_errno);
-#endif
-
-    MPIR_Process.has_parent = has_parent;
 
     MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGER_THRESH, "eager_rendezvous_threshold",
                             NULL, MPIR_COMM_HINT_TYPE_INT, 0, 0);

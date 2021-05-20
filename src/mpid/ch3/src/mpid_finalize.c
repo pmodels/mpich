@@ -106,17 +106,6 @@ int MPID_Finalize(void)
     if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
 #endif
 
-#ifdef MPID_NEEDS_ICOMM_WORLD
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world);
-    MPIR_ERR_CHECK(mpi_errno);
-#endif
-
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_self);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_world);
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Note that the CH3I_Progress_finalize call has been removed; the
        CH3_Finalize routine should call it */
     mpi_errno = MPIDI_CH3_Finalize();
