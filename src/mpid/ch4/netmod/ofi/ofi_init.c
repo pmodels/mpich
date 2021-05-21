@@ -605,29 +605,6 @@ int MPIDI_OFI_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int tmp = MPIR_Process.tag_bits;
-    mpi_errno = MPIDI_OFI_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.appnum,
-                                        &tmp);
-    /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
-    MPIR_Assert(tmp == MPIR_Process.tag_bits);
-
-    return mpi_errno;
-}
-
-int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits)
-{
-    int mpi_errno = MPI_SUCCESS;
-    size_t optlen;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
-
-    /* ------------------------------------------------------------------------ */
-    /* Address exchange (essentially activating the vnis)                       */
-    /* ------------------------------------------------------------------------ */
-
-    /* If opening a named-AV didn't work, we need to do a full business card exchange for the first
-     * VNI. All other VNIs can copy the address information from this on after the fact. */
     if (!MPIDI_OFI_global.got_named_av) {
         mpi_errno = MPIDI_OFI_addr_exchange_root_ctx();
         MPIR_ERR_CHECK(mpi_errno);
@@ -637,7 +614,65 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits)
         dump_dynamic_settings();
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_OFI_post_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int num_nics = MPIDI_OFI_global.num_nics;
+    int tmp_num_vnis = MPIDI_OFI_global.num_vnis;
+    int tmp_num_nics = MPIDI_OFI_global.num_nics;
+
+    /* Set the number of NICs and VNIs to 1 temporarily to avoid problems during the collective */
+    MPIDI_OFI_global.num_vnis = MPIDI_OFI_global.num_nics = 1;
+
+    /* Confirm that all processes have the same number of NICs */
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPI_INT,
+                                            MPI_MIN, MPIR_Process.comm_world, &errflag);
+    MPIDI_OFI_global.num_vnis = tmp_num_vnis;
+    MPIDI_OFI_global.num_nics = tmp_num_nics;
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* If the user did not ask to fallback to fewer NICs, throw an error if someone is missing a
+     * NIC. */
+    if (tmp_num_nics != num_nics) {
+        if (MPIR_CVAR_OFI_USE_MIN_NICS) {
+            MPIDI_OFI_global.num_nics = num_nics;
+
+            /* If we fall down to 1 nic, turn off multi-nic optimizations. */
+            if (num_nics == 1) {
+                MPIDI_OFI_COMM(MPIR_Process.comm_world).enable_striping = 0;
+            }
+        } else {
+            MPIR_ERR_CHKANDJUMP(num_nics != MPIDI_OFI_global.num_nics, mpi_errno, MPI_ERR_OTHER,
+                                "**ofi_num_nics");
+        }
+    }
+
+    /* FIXME: It would also be helpful to check that all of the NICs can communicate so we can fall
+     * back to other options if that is not the case (e.g., verbs are often configured with a
+     * different subnet for each "set" of nics). It's unknown how to write a good check for that. */
+
+    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+        for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
+            /* vni 0 nic 0 already created */
+            if (vni > 0 || nic > 0) {
+                mpi_errno = create_vni_context(vni, nic);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+        }
+    }
+
+    if (MPIDI_OFI_global.num_vnis > 1 || MPIDI_OFI_global.num_nics > 1) {
+        mpi_errno = MPIDI_OFI_addr_exchange_all_ctx();
+    }
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -834,61 +869,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPIDI_OFI_post_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int num_nics = MPIDI_OFI_global.num_nics;
-    int tmp_num_vnis = MPIDI_OFI_global.num_vnis;
-    int tmp_num_nics = MPIDI_OFI_global.num_nics;
-
-    /* Set the number of NICs and VNIs to 1 temporarily to avoid problems during the collective */
-    MPIDI_OFI_global.num_vnis = MPIDI_OFI_global.num_nics = 1;
-
-    /* Confirm that all processes have the same number of NICs */
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPI_INT,
-                                            MPI_MIN, MPIR_Process.comm_world, &errflag);
-    MPIDI_OFI_global.num_vnis = tmp_num_vnis;
-    MPIDI_OFI_global.num_nics = tmp_num_nics;
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* If the user did not ask to fallback to fewer NICs, throw an error if someone is missing a
-     * NIC. */
-    if (tmp_num_nics != num_nics) {
-        if (MPIR_CVAR_OFI_USE_MIN_NICS) {
-            MPIDI_OFI_global.num_nics = num_nics;
-
-            /* If we fall down to 1 nic, turn off multi-nic optimizations. */
-            if (num_nics == 1) {
-                MPIDI_OFI_COMM(MPIR_Process.comm_world).enable_striping = 0;
-            }
-        } else {
-            MPIR_ERR_CHKANDJUMP(num_nics != MPIDI_OFI_global.num_nics, mpi_errno, MPI_ERR_OTHER,
-                                "**ofi_num_nics");
-        }
-    }
-
-    /* FIXME: It would also be helpful to check that all of the NICs can communicate so we can fall
-     * back to other options if that is not the case (e.g., verbs are often configured with a
-     * different subnet for each "set" of nics). It's unknown how to write a good check for that. */
-
-    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
-        for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-            /* vni 0 nic 0 already created */
-            if (vni > 0 || nic > 0) {
-                mpi_errno = create_vni_context(vni, nic);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-        }
-    }
-
-    if (MPIDI_OFI_global.num_vnis > 1 || MPIDI_OFI_global.num_nics > 1) {
-        mpi_errno = MPIDI_OFI_addr_exchange_all_ctx();
-    }
-  fn_fail:
-    return mpi_errno;
 }
 
 int MPIDI_OFI_get_vci_attr(int vci)
