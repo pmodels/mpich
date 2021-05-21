@@ -316,7 +316,7 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPIR_ThreadInfo.isThreaded = 0;
 #endif
 
-    mpi_errno = MPII_finalize_local_proc_attrs();
+    mpi_errno = MPIR_finalize_builtin_comms();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Call the high-priority callbacks */
