@@ -108,16 +108,3 @@ int MPII_init_tag_ub(void)
 
     return MPI_SUCCESS;
 }
-
-int MPII_finalize_local_proc_attrs(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_finalize_builtin_comms();
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
