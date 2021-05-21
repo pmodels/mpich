@@ -4,6 +4,10 @@
  */
 
 #include "mpiimpl.h"
+/* for MPIR_TSP_sched_t */
+#include "tsp_gentran.h"
+#include "gentran_utils.h"
+#include "../igather/igather_tsp_tree_algos_prototypes.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -65,9 +69,10 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-int MPIR_Igather_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                              void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                              MPIR_Comm * comm_ptr, MPIR_Request ** request)
+int MPIR_Igather_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                                    int root, MPIR_Comm * comm_ptr, bool is_persistent,
+                                    void **sched_p, enum MPIR_sched_type *sched_type_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -88,40 +93,53 @@ int MPIR_Igather_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datat
     MPIR_Assert(cnt);
 
     switch (cnt->id) {
+        /* *INDENT-OFF* */
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Igather_intra_gentran_tree:
+            MPII_GENTRAN_CREATE_SCHED_P();
             mpi_errno =
-                MPIR_Igather_intra_gentran_tree(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                                recvtype, root, comm_ptr,
-                                                cnt->u.igather.intra_gentran_tree.k, request);
+                MPIR_TSP_Igather_sched_intra_tree(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                                  recvtype, root, comm_ptr,
+                                                  cnt->u.igather.intra_gentran_tree.k, *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Igather_intra_sched_auto:
-            MPII_SCHED_WRAPPER(MPIR_Igather_intra_sched_auto, comm_ptr, request, sendbuf, sendcount,
-                               sendtype, recvbuf, recvcount, recvtype, root);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno = MPIR_Igather_intra_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
+                                                      recvcount, recvtype, root, comm_ptr,
+                                                      *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Igather_intra_sched_binomial:
-            MPII_SCHED_WRAPPER(MPIR_Igather_intra_sched_binomial, comm_ptr, request, sendbuf,
-                               sendcount, sendtype, recvbuf, recvcount, recvtype, root);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno = MPIR_Igather_intra_sched_binomial(sendbuf, sendcount, sendtype, recvbuf,
+                                                          recvcount, recvtype, root, comm_ptr,
+                                                          *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Igather_inter_sched_auto:
-            MPII_SCHED_WRAPPER(MPIR_Igather_inter_sched_auto, comm_ptr, request, sendbuf, sendcount,
-                               sendtype, recvbuf, recvcount, recvtype, root);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno = MPIR_Igather_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
+                                                      recvcount, recvtype, root, comm_ptr,
+                                                      *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Igather_inter_sched_long:
-            MPII_SCHED_WRAPPER(MPIR_Igather_inter_sched_long, comm_ptr, request, sendbuf, sendcount,
-                               sendtype, recvbuf, recvcount, recvtype, root);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno = MPIR_Igather_inter_sched_long(sendbuf, sendcount, sendtype, recvbuf,
+                                                      recvcount, recvtype, root, comm_ptr,
+                                                      *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Igather_inter_sched_short:
-            MPII_SCHED_WRAPPER(MPIR_Igather_inter_sched_short, comm_ptr, request, sendbuf,
-                               sendcount, sendtype, recvbuf, recvcount, recvtype, root);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno = MPIR_Igather_inter_sched_short(sendbuf, sendcount, sendtype, recvbuf,
+                                                       recvcount, recvtype, root, comm_ptr,
+                                                       *sched_p);
             break;
 
         default:
             MPIR_Assert(0);
+        /* *INDENT-ON* */
     }
 
   fn_exit:
@@ -203,14 +221,12 @@ int MPIR_Igather_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
     return mpi_errno;
 }
 
-int MPIR_Igather_impl(const void *sendbuf, MPI_Aint sendcount,
-                      MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                      MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                      MPIR_Request ** request)
+int MPIR_Igather_sched_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                            void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                            MPIR_Comm * comm_ptr, bool is_persistent, void **sched_p,
+                            enum MPIR_sched_type *sched_type_p)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    *request = NULL;
 
     /* If the user picks one of the transport-enabled algorithms, branch there
      * before going down to the MPIR_Sched-based algorithms. */
@@ -220,61 +236,101 @@ int MPIR_Igather_impl(const void *sendbuf, MPI_Aint sendcount,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_CVAR_IGATHER_INTRA_ALGORITHM) {
+            /* *INDENT-OFF* */
             case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_gentran_tree:
+                MPII_GENTRAN_CREATE_SCHED_P();
                 mpi_errno =
-                    MPIR_Igather_intra_gentran_tree(sendbuf, sendcount, sendtype,
-                                                    recvbuf, recvcount, recvtype, root, comm_ptr,
-                                                    MPIR_CVAR_IGATHER_TREE_KVAL, request);
+                    MPIR_TSP_Igather_sched_intra_tree(sendbuf, sendcount, sendtype, recvbuf,
+                                                      recvcount, recvtype, root, comm_ptr,
+                                                      MPIR_CVAR_IGATHER_TREE_KVAL, *sched_p);
                 break;
 
             case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_sched_binomial:
-                MPII_SCHED_WRAPPER(MPIR_Igather_intra_sched_binomial, comm_ptr, request, sendbuf,
-                                   sendcount, sendtype, recvbuf, recvcount, recvtype, root);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno = MPIR_Igather_intra_sched_binomial(sendbuf, sendcount, sendtype, recvbuf,
+                                                              recvcount, recvtype, root, comm_ptr,
+                                                              *sched_p);
                 break;
 
             case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_sched_auto:
-                MPII_SCHED_WRAPPER(MPIR_Igather_intra_sched_auto, comm_ptr, request, sendbuf,
-                                   sendcount, sendtype, recvbuf, recvcount, recvtype, root);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno = MPIR_Igather_intra_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
+                                                          recvcount, recvtype, root, comm_ptr,
+                                                          *sched_p);
                 break;
 
             case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_auto:
                 mpi_errno =
-                    MPIR_Igather_allcomm_auto(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                              recvtype, root, comm_ptr, request);
+                    MPIR_Igather_allcomm_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
+                                                    recvcount, recvtype, root, comm_ptr,
+                                                    is_persistent, sched_p, sched_type_p);
                 break;
 
             default:
                 MPIR_Assert(0);
+            /* *INDENT-ON* */
         }
     } else {
         switch (MPIR_CVAR_IGATHER_INTER_ALGORITHM) {
+            /* *INDENT-OFF* */
             case MPIR_CVAR_IGATHER_INTER_ALGORITHM_sched_long:
-                MPII_SCHED_WRAPPER(MPIR_Igather_inter_sched_long, comm_ptr, request, sendbuf,
-                                   sendcount, sendtype, recvbuf, recvcount, recvtype, root);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno = MPIR_Igather_inter_sched_long(sendbuf, sendcount, sendtype, recvbuf,
+                                                          recvcount, recvtype, root, comm_ptr,
+                                                          *sched_p);
                 break;
 
             case MPIR_CVAR_IGATHER_INTER_ALGORITHM_sched_short:
-                MPII_SCHED_WRAPPER(MPIR_Igather_inter_sched_short, comm_ptr, request, sendbuf,
-                                   sendcount, sendtype, recvbuf, recvcount, recvtype, root);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno = MPIR_Igather_inter_sched_short(sendbuf, sendcount, sendtype, recvbuf,
+                                                           recvcount, recvtype, root, comm_ptr,
+                                                           *sched_p);
                 break;
 
             case MPIR_CVAR_IGATHER_INTER_ALGORITHM_sched_auto:
-                MPII_SCHED_WRAPPER(MPIR_Igather_inter_sched_auto, comm_ptr, request, sendbuf,
-                                   sendcount, sendtype, recvbuf, recvcount, recvtype, root);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno = MPIR_Igather_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
+                                                          recvcount, recvtype, root, comm_ptr,
+                                                          *sched_p);
                 break;
 
             case MPIR_CVAR_IGATHER_INTER_ALGORITHM_auto:
                 mpi_errno =
-                    MPIR_Igather_allcomm_auto(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                              recvtype, root, comm_ptr, request);
+                    MPIR_Igather_allcomm_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
+                                                    recvcount, recvtype, root, comm_ptr,
+                                                    is_persistent, sched_p, sched_type_p);
                 break;
 
             default:
                 MPIR_Assert(0);
+            /* *INDENT-ON* */
         }
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Igather_impl(const void *sendbuf, MPI_Aint sendcount,
+                      MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                      MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                      MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *request = NULL;
+
+    enum MPIR_sched_type sched_type;
+    void *sched;
+    mpi_errno = MPIR_Igather_sched_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                        root, comm_ptr, false, &sched, &sched_type);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPII_SCHED_START(sched_type, sched, comm_ptr, request);
 
   fn_exit:
     return mpi_errno;

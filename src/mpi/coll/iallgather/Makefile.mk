@@ -13,8 +13,4 @@ mpi_core_sources +=                                         \
     src/mpi/coll/iallgather/iallgather_intra_sched_brucks.c             \
     src/mpi/coll/iallgather/iallgather_intra_sched_ring.c               \
     src/mpi/coll/iallgather/iallgather_inter_sched_local_gather_remote_bcast.c \
-    src/mpi/coll/iallgather/iallgather_gentran_algos.c                    \
-    src/mpi/coll/iallgather/iallgather_intra_gentran_recexch_doubling.c    \
-    src/mpi/coll/iallgather/iallgather_intra_gentran_recexch_halving.c    \
-    src/mpi/coll/iallgather/iallgather_intra_gentran_brucks.c				\
-    src/mpi/coll/iallgather/iallgather_intra_gentran_ring.c
+    src/mpi/coll/iallgather/iallgather_gentran_algos.c

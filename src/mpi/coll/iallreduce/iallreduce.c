@@ -4,6 +4,13 @@
  */
 
 #include "mpiimpl.h"
+/* for MPIR_TSP_sched_t */
+#include "tsp_gentran.h"
+#include "gentran_utils.h"
+#include "../iallreduce/iallreduce_tsp_recexch_algos_prototypes.h"
+#include "../iallreduce/iallreduce_tsp_recexch_reduce_scatter_recexch_allgatherv_algos_prototypes.h"
+#include "../iallreduce/iallreduce_tsp_ring_algos_prototypes.h"
+#include "../iallreduce/iallreduce_tsp_tree_algos_prototypes.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -120,10 +127,10 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-
-int MPIR_Iallreduce_allcomm_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                 MPIR_Request ** request)
+int MPIR_Iallreduce_allcomm_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                                       bool is_persistent, void **sched_p,
+                                       enum MPIR_sched_type *sched_type_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -142,90 +149,113 @@ int MPIR_Iallreduce_allcomm_auto(const void *sendbuf, void *recvbuf, MPI_Aint co
     MPIR_Assert(cnt);
 
     switch (cnt->id) {
+        /* *INDENT-OFF* */
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_auto:
-            MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_auto, comm_ptr, request, sendbuf,
-                               recvbuf, count, datatype, op);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno = MPIR_Iallreduce_intra_sched_auto(sendbuf, recvbuf, count, datatype, op,
+                                                         comm_ptr, *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_naive:
-            MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_naive, comm_ptr, request, sendbuf,
-                               recvbuf, count, datatype, op);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno = MPIR_Iallreduce_intra_sched_naive(sendbuf, recvbuf, count, datatype, op,
+                                                          comm_ptr, *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_recursive_doubling:
-            MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_recursive_doubling, comm_ptr, request,
-                               sendbuf, recvbuf, count, datatype, op);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno =
+                MPIR_Iallreduce_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype,
+                                                               op, comm_ptr, *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_reduce_scatter_allgather:
-            MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_reduce_scatter_allgather, comm_ptr,
-                               request, sendbuf, recvbuf, count, datatype, op);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno =
+                MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(sendbuf, recvbuf, count,
+                                                                     datatype, op, comm_ptr,
+                                                                     *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_gentran_recexch_single_buffer:
+            MPII_GENTRAN_CREATE_SCHED_P();
             mpi_errno =
-                MPIR_Iallreduce_intra_gentran_recexch_single_buffer(sendbuf, recvbuf, count,
-                                                                    datatype, op, comm_ptr,
-                                                                    cnt->u.
-                                                                    iallreduce.intra_gentran_recexch_single_buffer.k,
-                                                                    request);
+                MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count, datatype, op,
+                                                        comm_ptr,
+                                                        MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER,
+                                                        cnt->u.
+                                                        iallreduce.intra_gentran_recexch_single_buffer.
+                                                        k, *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer:
+            MPII_GENTRAN_CREATE_SCHED_P();
             mpi_errno =
-                MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(sendbuf, recvbuf, count,
-                                                                      datatype, op, comm_ptr,
-                                                                      cnt->u.
-                                                                      iallreduce.intra_gentran_recexch_multiple_buffer.k,
-                                                                      request);
+                MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count, datatype, op,
+                                                        comm_ptr,
+                                                        MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
+                                                        cnt->u.
+                                                        iallreduce.intra_gentran_recexch_multiple_buffer.
+                                                        k, *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_gentran_tree:
+            MPII_GENTRAN_CREATE_SCHED_P();
             mpi_errno =
-                MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                                                   cnt->u.iallreduce.intra_gentran_tree.tree_type,
-                                                   cnt->u.iallreduce.intra_gentran_tree.k,
-                                                   cnt->u.iallreduce.intra_gentran_tree.chunk_size,
-                                                   cnt->u.iallreduce.
-                                                   intra_gentran_tree.buffer_per_child, request);
+                MPIR_TSP_Iallreduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op,
+                                                     comm_ptr,
+                                                     cnt->u.iallreduce.intra_gentran_tree.tree_type,
+                                                     cnt->u.iallreduce.intra_gentran_tree.k,
+                                                     cnt->u.iallreduce.
+                                                     intra_gentran_tree.chunk_size,
+                                                     cnt->u.iallreduce.
+                                                     intra_gentran_tree.buffer_per_child, *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_gentran_ring:
+            MPII_GENTRAN_CREATE_SCHED_P();
             mpi_errno =
-                MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                                                   request);
+                MPIR_TSP_Iallreduce_sched_intra_ring(sendbuf, recvbuf, count, datatype, op,
+                                                     comm_ptr, *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv:
+            MPII_GENTRAN_CREATE_SCHED_P();
             mpi_errno =
-                MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv(sendbuf,
-                                                                                        recvbuf,
-                                                                                        count,
-                                                                                        datatype,
-                                                                                        op,
-                                                                                        comm_ptr,
-                                                                                        cnt->
-                                                                                        u.iallreduce.intra_gentran_recexch_reduce_scatter_recexch_allgatherv.k,
-                                                                                        request);
+                MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(sendbuf,
+                                                                                          recvbuf,
+                                                                                          count,
+                                                                                          datatype,
+                                                                                          op,
+                                                                                          comm_ptr,
+                                                                                          cnt->
+                                                                                          u.iallreduce.intra_gentran_recexch_reduce_scatter_recexch_allgatherv.k,
+                                                                                          *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_smp:
-            MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_smp, comm_ptr, request, sendbuf, recvbuf,
-                               count, datatype, op);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno = MPIR_Iallreduce_intra_sched_smp(sendbuf, recvbuf, count, datatype, op,
+                                                        comm_ptr, *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_inter_sched_auto:
-            MPII_SCHED_WRAPPER(MPIR_Iallreduce_inter_sched_auto, comm_ptr, request, sendbuf,
-                               recvbuf, count, datatype, op);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno = MPIR_Iallreduce_inter_sched_auto(sendbuf, recvbuf, count, datatype, op,
+                                                         comm_ptr, *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast:
-            MPII_SCHED_WRAPPER(MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast, comm_ptr,
-                               request, sendbuf, recvbuf, count, datatype, op);
+            MPII_SCHED_CREATE_SCHED_P();
+            mpi_errno =
+                MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast(sendbuf, recvbuf, count,
+                                                                      datatype, op, comm_ptr,
+                                                                      *sched_p);
             break;
 
         default:
             MPIR_Assert(0);
+        /* *INDENT-ON* */
     }
 
   fn_exit:
@@ -317,15 +347,15 @@ int MPIR_Iallreduce_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint coun
     return mpi_errno;
 }
 
-int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                         MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                         MPIR_Request ** request)
+int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                               bool is_persistent, void **sched_p,
+                               enum MPIR_sched_type *sched_type_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative = MPIR_Op_is_commutative(op);
     int nranks = comm_ptr->local_size;
 
-    *request = NULL;
     /* If the user picks one of the transport-enabled algorithms, branch there
      * before going down to the MPIR_Sched-based algorithms. */
     /* TODO - Eventually the intention is to replace all of the
@@ -334,38 +364,45 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, MPI_Aint count,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM) {
+            /* *INDENT-OFF* */
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_single_buffer:
+                MPII_GENTRAN_CREATE_SCHED_P();
                 mpi_errno =
-                    MPIR_Iallreduce_intra_gentran_recexch_single_buffer(sendbuf, recvbuf, count,
-                                                                        datatype, op, comm_ptr,
-                                                                        MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL,
-                                                                        request);
+                    MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count, datatype, op,
+                                                            comm_ptr,
+                                                            MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER,
+                                                            MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL,
+                                                            *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_multiple_buffer:
+                MPII_GENTRAN_CREATE_SCHED_P();
                 mpi_errno =
-                    MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(sendbuf, recvbuf, count,
-                                                                          datatype, op, comm_ptr,
-                                                                          MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL,
-                                                                          request);
+                    MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count, datatype, op,
+                                                            comm_ptr,
+                                                            MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
+                                                            MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL,
+                                                            *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_tree:
+                MPII_GENTRAN_CREATE_SCHED_P();
                 mpi_errno =
-                    MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype,
-                                                       op, comm_ptr, MPIR_Iallreduce_tree_type,
-                                                       MPIR_CVAR_IALLREDUCE_TREE_KVAL,
-                                                       MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE,
-                                                       MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD,
-                                                       request);
+                    MPIR_TSP_Iallreduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op,
+                                                         comm_ptr, MPIR_Iallreduce_tree_type,
+                                                         MPIR_CVAR_IALLREDUCE_TREE_KVAL,
+                                                         MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE,
+                                                         MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD,
+                                                         *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_ring:
                 MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, is_commutative, mpi_errno,
                                                "Iallreduce gentran_ring cannot be applied.\n");
+                MPII_GENTRAN_CREATE_SCHED_P();
                 mpi_errno =
-                    MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,
-                                                       op, comm_ptr, request);
+                    MPIR_TSP_Iallreduce_sched_intra_ring(sendbuf, recvbuf, count, datatype, op,
+                                                         comm_ptr, *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_reduce_scatter_recexch_allgatherv:
@@ -377,66 +414,84 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, MPI_Aint count,
                  * number of ranks. If it not commutative or if the
                  * count < nranks, MPIR_Iallreduce_sched algorithm
                  * will be run */
+                MPII_GENTRAN_CREATE_SCHED_P();
                 mpi_errno =
-                    MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv
+                    MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv
                     (sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                     MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL, request);
+                     MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL, *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_sched_naive:
-                MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_naive, comm_ptr, request, sendbuf,
-                                   recvbuf, count, datatype, op);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno = MPIR_Iallreduce_intra_sched_naive(sendbuf, recvbuf, count, datatype, op,
+                                                              comm_ptr, *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_sched_recursive_doubling:
-                MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_recursive_doubling, comm_ptr,
-                                   request, sendbuf, recvbuf, count, datatype, op);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno = MPIR_Iallreduce_intra_sched_recursive_doubling(sendbuf, recvbuf, count,
+                                                                           datatype, op, comm_ptr,
+                                                                           *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_sched_reduce_scatter_allgather:
-                MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_reduce_scatter_allgather, comm_ptr,
-                                   request, sendbuf, recvbuf, count, datatype, op);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno = MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(sendbuf, recvbuf,
+                                                                                 count, datatype,
+                                                                                 op, comm_ptr,
+                                                                                 *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_sched_smp:
-                MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_smp, comm_ptr,
-                                   request, sendbuf, recvbuf, count, datatype, op);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno = MPIR_Iallreduce_intra_sched_smp(sendbuf, recvbuf, count, datatype, op,
+                                                            comm_ptr, *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_sched_auto:
-                MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_auto, comm_ptr, request, sendbuf,
-                                   recvbuf, count, datatype, op);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno = MPIR_Iallreduce_intra_sched_auto(sendbuf, recvbuf, count, datatype, op,
+                                                             comm_ptr, *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_auto:
                 mpi_errno =
-                    MPIR_Iallreduce_allcomm_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                                                 request);
+                    MPIR_Iallreduce_allcomm_sched_auto(sendbuf, recvbuf, count, datatype, op,
+                                                       comm_ptr, is_persistent, sched_p,
+                                                       sched_type_p);
                 break;
 
             default:
                 MPIR_Assert(0);
+            /* *INDENT-ON* */
         }
     } else {
         switch (MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM) {
+            /* *INDENT-OFF* */
             case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_sched_remote_reduce_local_bcast:
-                MPII_SCHED_WRAPPER(MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast, comm_ptr,
-                                   request, sendbuf, recvbuf, count, datatype, op);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno =
+                    MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast(sendbuf, recvbuf, count,
+                                                                          datatype, op, comm_ptr,
+                                                                          *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_sched_auto:
-                MPII_SCHED_WRAPPER(MPIR_Iallreduce_inter_sched_auto, comm_ptr, request, sendbuf,
-                                   recvbuf, count, datatype, op);
+                MPII_SCHED_CREATE_SCHED_P();
+                mpi_errno = MPIR_Iallreduce_inter_sched_auto(sendbuf, recvbuf, count, datatype, op,
+                                                             comm_ptr, *sched_p);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_auto:
                 mpi_errno =
-                    MPIR_Iallreduce_allcomm_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                                                 request);
+                    MPIR_Iallreduce_allcomm_sched_auto(sendbuf, recvbuf, count, datatype, op,
+                                                       comm_ptr, is_persistent, sched_p,
+                                                       sched_type_p);
                 break;
 
             default:
                 MPIR_Assert(0);
+            /* *INDENT-ON* */
         }
     }
 
@@ -445,12 +500,35 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, MPI_Aint count,
 
   fallback:
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_auto, comm_ptr, request, sendbuf,
-                           recvbuf, count, datatype, op);
+        MPII_SCHED_CREATE_SCHED_P();
+        mpi_errno = MPIR_Iallreduce_intra_sched_auto(sendbuf, recvbuf, count, datatype, op,
+                                                     comm_ptr, *sched_p);
     } else {
-        MPII_SCHED_WRAPPER(MPIR_Iallreduce_inter_sched_auto, comm_ptr, request, sendbuf,
-                           recvbuf, count, datatype, op);
+        MPII_SCHED_CREATE_SCHED_P();
+        mpi_errno = MPIR_Iallreduce_inter_sched_auto(sendbuf, recvbuf, count, datatype, op,
+                                                     comm_ptr, *sched_p);
     }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
+                         MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *request = NULL;
+
+    enum MPIR_sched_type sched_type;
+    void *sched;
+    mpi_errno = MPIR_Iallreduce_sched_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, false,
+                                           &sched, &sched_type);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPII_SCHED_START(sched_type, sched, comm_ptr, request);
 
   fn_exit:
     return mpi_errno;
