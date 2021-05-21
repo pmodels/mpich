@@ -23,16 +23,16 @@ int MPIDIG_do_cts(MPIR_Request * rreq)
                     (MPL_DBG_FDEST, "do cts req %p handle=0x%x", rreq, rreq->handle));
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(rreq, context_id),
+    mpi_errno = MPIDI_NM_am_send_hdr_reply(rreq->comm,
                                            MPIDIG_REQUEST(rreq, rank), MPIDIG_SEND_CTS, &am_hdr,
                                            (MPI_Aint) sizeof(am_hdr));
 #else
     if (MPIDI_REQUEST(rreq, is_local)) {
-        mpi_errno = MPIDI_SHM_am_send_hdr_reply(MPIDIG_REQUEST(rreq, context_id),
+        mpi_errno = MPIDI_SHM_am_send_hdr_reply(rreq->comm,
                                                 MPIDIG_REQUEST(rreq, rank),
                                                 MPIDIG_SEND_CTS, &am_hdr, sizeof(am_hdr));
     } else {
-        mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(rreq, context_id),
+        mpi_errno = MPIDI_NM_am_send_hdr_reply(rreq->comm,
                                                MPIDIG_REQUEST(rreq, rank),
                                                MPIDIG_SEND_CTS, &am_hdr, (MPI_Aint) sizeof(am_hdr));
     }
@@ -521,7 +521,7 @@ int MPIDIG_send_cts_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(sreq, is_local))
         mpi_errno =
-            MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(sreq, req->sreq).context_id,
+            MPIDI_SHM_am_isend_reply(sreq->comm,
                                      MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_DATA,
                                      &send_hdr, (MPI_Aint) sizeof(send_hdr),
                                      MPIDIG_REQUEST(sreq, req->sreq).src_buf,
@@ -531,7 +531,7 @@ int MPIDIG_send_cts_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_
 #endif
     {
         mpi_errno =
-            MPIDI_NM_am_isend_reply(MPIDIG_REQUEST(sreq, req->sreq).context_id,
+            MPIDI_NM_am_isend_reply(sreq->comm,
                                     MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_DATA,
                                     &send_hdr, (MPI_Aint) sizeof(send_hdr),
                                     MPIDIG_REQUEST(sreq, req->sreq).src_buf,

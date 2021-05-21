@@ -180,7 +180,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
 }
 
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Comm * comm,
                                                      int src_rank,
                                                      int handler_id,
                                                      const void *am_hdr,
@@ -200,14 +200,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     MPIR_Datatype *dt_ptr;
     int dt_contig;
     MPIDI_UCX_am_header_t ucx_hdr;
-    MPIR_Comm *use_comm;
     ucp_dt_iov_t *iov = sreq->dev.ch4.am.netmod_am.ucx.iov;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
 
-    use_comm = MPIDIG_context_id_to_comm(context_id);
-    ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank, 0, 0);
+    ep = MPIDI_UCX_COMM_TO_EP(comm, src_rank, 0, 0);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
@@ -347,7 +345,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Comm * comm,
                                                         int src_rank,
                                                         int handler_id, const void *am_hdr,
                                                         MPI_Aint am_hdr_sz)
@@ -357,13 +355,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     ucp_ep_h ep;
     char *send_buf;
     MPIDI_UCX_am_header_t ucx_hdr;
-    MPIR_Comm *use_comm;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_SEND_HDR_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_SEND_HDR_REPLY);
 
-    use_comm = MPIDIG_context_id_to_comm(context_id);
-    ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank, 0, 0);
+    ep = MPIDI_UCX_COMM_TO_EP(comm, src_rank, 0, 0);
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
