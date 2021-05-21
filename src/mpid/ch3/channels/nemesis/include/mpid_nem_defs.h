@@ -39,6 +39,11 @@ extern  char *MPID_nem_asymm_base_addr;
 
 #ifndef MPID_NEM_SYMMETRIC_QUEUES
 
+/* NOTE: we are casting to uintptr_t and using integer arithmetic here. While it is pedantically
+ * undefined usage, we don't anticipate issues because the REL addresses will not be directly accessed,
+ * and only consistency matters. We can't use pointer arithmetic here because both the address
+ * (p or a) and MPID_nem_asymm_base_addr could overflow `ptrdiff_t`.
+ */
 static inline MPID_nem_cell_ptr_t MPID_NEM_REL_TO_ABS (MPID_nem_cell_rel_ptr_t r)
 {
     void *p = MPL_atomic_relaxed_load_ptr(&r.p);
