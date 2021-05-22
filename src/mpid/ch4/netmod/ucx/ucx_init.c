@@ -421,7 +421,9 @@ int MPIDI_UCX_post_init(void)
     mpi_errno = all_vnis_address_exchange();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* flush all pending wireup operations or it may interfere with RMA flush_ops count */
+    /* Flush all pending wireup operations or it may interfere with RMA flush_ops count.
+     * Since this require progress in non-zero vnis, we need switch on is_initialized. */
+    MPIDI_global.is_initialized = 1;
     flush_all();
 
   fn_exit:
