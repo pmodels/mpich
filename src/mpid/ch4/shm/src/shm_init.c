@@ -31,28 +31,14 @@ int MPIDI_SHM_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIDI_SHM_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, NULL);
+    mpi_errno = MPIDI_POSIX_init_world();
+    MPIR_ERR_CHECK(mpi_errno);
 
-    return mpi_errno;
-}
-
-int MPIDI_SHM_mpi_init_hook(int rank, int size, int *tag_bits)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
-
-
-    ret = MPIDI_POSIX_mpi_init_hook(rank, size, tag_bits);
-    MPIR_ERR_CHECK(ret);
-
-    ret = MPIDI_IPC_mpi_init_hook(rank, size, tag_bits);
-    MPIR_ERR_CHECK(ret);
+    mpi_errno = MPIDI_IPC_init_world();
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
-    return ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
