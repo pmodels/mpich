@@ -183,6 +183,19 @@ def get_qmpi_typedef_from_func_decl(func_decl):
     func_decl = re.sub(" MPICH_ATTR_POINTER_WITH_TYPE_TAG\(.*,.*\)", "", func_decl, 1)
     return func_decl
 
+def need_skip_qmpi(func_name):
+    if func_name.lower() in G.FUNCS:
+        func = G.FUNCS[func_name.lower()];
+        if 'dir' not in func or 'not_implemented' in func:
+            return True
+        elif re.match(r'MPI_DUP_FN', func['name']):
+            return True
+        else:
+            return False
+    else:
+        # Warn?
+        return True
+
 def dump_mpi_proto_h(f):
     def dump_line(s, tail, Out):
         tlist = split_line_with_break(s, tail, 100)
@@ -244,12 +257,8 @@ def dump_mpi_proto_h(f):
         for l in G.mpi_declares:
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', l);
             func_name = m.group(1);
-            if func_name.lower() in G.FUNCS:
-                func = G.FUNCS[func_name.lower()];
-                if 'dir' not in func or 'not_implemented' in func:
-                    continue
-                if re.match(r'MPI_DUP_FN', func['name']):
-                    continue
+            if need_skip_qmpi(func_name):
+                continue
             print("    " + func_name.upper() + "_T,", file=Out)
         print("    MPI_LAST_FUNC_T", file=Out)
         print("};", file=Out)
@@ -258,13 +267,8 @@ def dump_mpi_proto_h(f):
         # -- QMPI prototypes --
         for func_decl in G.mpi_declares:
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
-            func_name = m.group(1);
-            if func_name.lower() in G.FUNCS:
-                func = G.FUNCS[func_name.lower()];
-                if 'dir' not in func or 'not_implemented' in func:
-                    continue
-                if re.match(r'MPI_DUP_FN', func['name']):
-                    continue
+            if need_skip_qmpi(m.group(1)):
+                continue
             func_decl = get_qmpi_decl_from_func_decl(func_decl)
             dump_proto_line(func_decl, Out)
 
@@ -273,13 +277,8 @@ def dump_mpi_proto_h(f):
         # -- QMPI function typedefs --
         for func_decl in G.mpi_declares:
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
-            func_name = m.group(1);
-            if func_name.lower() in G.FUNCS:
-                func = G.FUNCS[func_name.lower()];
-                if 'dir' not in func or 'not_implemented' in func:
-                    continue
-                if re.match(r'MPI_DUP_FN', func['name']):
-                    continue
+            if need_skip_qmpi(m.group(1)):
+                continue
             func_decl = get_qmpi_typedef_from_func_decl(func_decl)
             dump_line(func_decl, '', Out)
         print("", file=Out)
@@ -320,14 +319,9 @@ def dump_qmpi_register_h(f):
         for l in G.mpi_declares:
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', l);
             func_name = m.group(1);
-            if func_name.lower() in G.FUNCS:
-                func = G.FUNCS[func_name.lower()];
-                if 'dir' not in func or 'not_implemented' in func:
-                    continue
-                if re.match(r'MPI_DUP_FN', func['name']):
-                    continue
-            print("    MPIR_QMPI_pointers[%s_T] = (void (*)(void)) &Q%s;" % (func_name.upper(),
-                func_name), file=Out)
+            if need_skip_qmpi(func_name):
+                continue
+            print("    MPIR_QMPI_pointers[%s_T] = (void (*)(void)) &Q%s;" % (func_name.upper(), func_name), file=Out)
         print("", file=Out)
         print("    return MPI_SUCCESS;", file=Out)
         print("}", file=Out)
