@@ -38,7 +38,17 @@ def load_C_func_list(binding_dir="src/binding", silent=False):
             load_mpi_api(f, RE.m.group(1))
 
     # -- filter and sort func_list --
-    func_list = [f for f in G.FUNCS.values() if 'dir' in f and 'not_implemented' not in f]
+    func_list = []
+    for f in G.FUNCS.values():
+        if 'not_implemented' in f:
+            if not silent: print("    skip %s (not_implemented)" % f['name'])
+        elif RE.match(r'\w+_(function|FN)$', f['name']):
+            # skip various callback functions
+            continue
+        elif not 'dir' in f:
+            if not silent: print("    skip %s (not defined)" % f['name'])
+        else:
+            func_list.append(f)
     func_list.sort(key = lambda f: f['dir'])
 
     load_mpix_txt()
