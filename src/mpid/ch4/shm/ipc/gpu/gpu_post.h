@@ -33,7 +33,7 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle,
                              MPI_Datatype recv_type, void **vaddr);
 int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle);
 int MPIDI_GPU_init_local(void);
-int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits);
+int MPIDI_GPU_init_world(void);
 int MPIDI_GPU_mpi_finalize_hook(void);
 int MPIDI_GPU_ipc_handle_cache_insert(int rank, MPIR_Comm * comm, MPIDI_GPU_ipc_handle_t handle);
 

@@ -39,22 +39,19 @@ int MPIDI_IPC_init_local(void)
     goto fn_exit;
 }
 
-int MPIDI_IPC_mpi_init_hook(int rank, int size, int *tag_bits)
+int MPIDI_IPC_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_MPI_INIT_HOOK);
 
-    mpi_errno = MPIDI_XPMEM_mpi_init_hook(rank, size, tag_bits);
+    mpi_errno = MPIDI_XPMEM_init_world();
     MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_CVAR_ENABLE_GPU) {
-        mpi_errno = MPIDI_GPU_mpi_init_hook(rank, size, tag_bits);
+        mpi_errno = MPIDI_GPU_init_world();
         MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

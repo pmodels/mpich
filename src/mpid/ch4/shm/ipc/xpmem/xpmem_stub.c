@@ -11,7 +11,7 @@ int MPIDI_XPMEM_init_local(void)
     return MPI_SUCCESS;
 }
 
-int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits)
+int MPIDI_XPMEM_init_world(void)
 {
     return MPI_SUCCESS;
 }

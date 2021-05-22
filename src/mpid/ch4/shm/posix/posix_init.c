@@ -177,12 +177,12 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
     goto fn_exit;
 }
 
-int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits /* unused */)
+int MPIDI_POSIX_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
+    int rank = MPIR_Process.rank;
+    int size = MPIR_Process.size;
 
     mpi_errno = MPIDI_POSIX_eager_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
@@ -191,7 +191,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits /* unused */)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
