@@ -203,6 +203,11 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
         }
     }
 
+    {
+        int thr_err;
+        MPID_Thread_mutex_destroy(&(*win_ptr)->mutex, &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
     MPIR_Object_release_ref(*win_ptr, &in_use);
     /* MPI windows don't have reference count semantics, so this should always be true */
     MPIR_Assert(!in_use);

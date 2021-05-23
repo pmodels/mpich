@@ -287,6 +287,12 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     MPIDIG_WIN(win, targets) = targets;
 
+    {
+        int thr_err;
+        MPID_Thread_mutex_create(&win->mutex, &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
+
     win->errhandler = NULL;
     win->base = NULL;
     win->size = length;
@@ -439,6 +445,11 @@ static int win_finalize(MPIR_Win ** win_ptr)
     MPIDIU_map_erase(MPIDI_global.win_map, MPIDIG_WIN(win, win_id));
 
     MPIR_Comm_release(win->comm_ptr);
+    {
+        int thr_err;
+        MPID_Thread_mutex_destroy(&win->mutex, &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
     MPIR_Handle_obj_free(&MPIR_Win_mem, win);
 
   fn_exit:
