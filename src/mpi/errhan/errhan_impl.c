@@ -99,7 +99,8 @@ int MPIR_File_create_errhandler_impl(MPI_File_errhandler_function * file_errhand
    returning NULL for errhandler_ptr means the default handler, MPI_ERRORS_ARE_FATAL is used */
 int MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPI_Errhandler * errhandler)
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
     if (comm_ptr->errhandler) {
         *errhandler = comm_ptr->errhandler->handle;
         MPIR_Errhandler_add_ref(comm_ptr->errhandler);
@@ -107,14 +108,16 @@ int MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPI_Errhandler * errhand
         /* Use the default */
         *errhandler = MPI_ERRORS_ARE_FATAL;
     }
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
 
     return MPI_SUCCESS;
 }
 
 int MPIR_Win_get_errhandler_impl(MPIR_Win * win_ptr, MPI_Errhandler * errhandler)
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    MPID_THREAD_CS_ENTER(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, win_ptr->mutex);
 
     if (win_ptr->errhandler) {
         *errhandler = win_ptr->errhandler->handle;
@@ -124,7 +127,8 @@ int MPIR_Win_get_errhandler_impl(MPIR_Win * win_ptr, MPI_Errhandler * errhandler
         *errhandler = MPI_ERRORS_ARE_FATAL;
     }
 
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, win_ptr->mutex);
     return MPI_SUCCESS;
 }
 
@@ -166,7 +170,8 @@ int MPIR_File_get_errhandler_impl(MPI_File file, MPI_Errhandler * errhandler)
 
 int MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler_ptr)
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
 
     /* We don't bother with the case where the errhandler is NULL;
      * in this case, the error handler was the original, MPI_ERRORS_ARE_FATAL,
@@ -178,13 +183,15 @@ int MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhan
     MPIR_Errhandler_add_ref(errhandler_ptr);
     comm_ptr->errhandler = errhandler_ptr;
 
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
     return MPI_SUCCESS;
 }
 
 int MPIR_Win_set_errhandler_impl(MPIR_Win * win_ptr, MPIR_Errhandler * errhandler_ptr)
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    MPID_THREAD_CS_ENTER(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, win_ptr->mutex);
 
     /* We don't bother with the case where the errhandler is NULL;
      * in this case, the error handler was the original, MPI_ERRORS_ARE_FATAL,
@@ -196,7 +203,8 @@ int MPIR_Win_set_errhandler_impl(MPIR_Win * win_ptr, MPIR_Errhandler * errhandle
     MPIR_Errhandler_add_ref(errhandler_ptr);
     win_ptr->errhandler = errhandler_ptr;
 
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, win_ptr->mutex);
     return MPI_SUCCESS;
 }
 
@@ -320,11 +328,13 @@ int MPIR_Comm_call_errhandler_impl(MPIR_Comm * comm_ptr, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));  /* protect access to comm_ptr->errhandler */
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
 
     mpi_errno = call_errhandler(comm_ptr->errhandler, errorcode, comm_ptr->handle);
 
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
     return mpi_errno;
 }
 
@@ -332,11 +342,13 @@ int MPIR_Win_call_errhandler_impl(MPIR_Win * win_ptr, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));    /* protect access to win_ptr->errhandler */
+    MPID_THREAD_CS_ENTER(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, win_ptr->mutex);
 
     mpi_errno = call_errhandler(win_ptr->errhandler, errorcode, win_ptr->handle);
 
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, win_ptr->mutex);
     return mpi_errno;
 }
 

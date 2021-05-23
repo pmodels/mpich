@@ -228,8 +228,13 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Object_set_ref(*win_ptr, 1);
+    {
+        int thr_err;
+        MPID_Thread_mutex_create(&(*win_ptr)->mutex, &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
 
-    /* (*win_ptr)->errhandler is set by upper level; */
+    (*win_ptr)->errhandler = NULL;
     /* (*win_ptr)->base is set by caller; */
     (*win_ptr)->size = size;
     (*win_ptr)->disp_unit = disp_unit;
