@@ -5,9 +5,6 @@ Non Native API:
   init_world: int
       NM : void
      SHM : void
-  mpi_init_hook : int
-      NM : rank, size, appnum, tag_bits
-     SHM : rank, size, tag_bits
   mpi_finalize_hook : int
       NM : void
      SHM : void
