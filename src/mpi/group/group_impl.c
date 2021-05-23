@@ -628,7 +628,7 @@ int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *ps
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr;
 
-    if (strcmp(pset_name, "mpi://WORLD") == 0) {
+    if (MPL_stricmp(pset_name, "mpi://WORLD") == 0) {
         mpi_errno = MPIR_Group_create(MPIR_Process.size, &group_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -641,7 +641,7 @@ int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *ps
         }
         group_ptr->lrank_to_lpid[group_ptr->size - 1].next_lpid = -1;
         group_ptr->idx_of_first_lpid = 0;
-    } else if (strcmp(pset_name, "mpi://SELF") == 0) {
+    } else if (MPL_stricmp(pset_name, "mpi://SELF") == 0) {
         mpi_errno = MPIR_Group_create(1, &group_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
