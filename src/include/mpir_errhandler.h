@@ -32,6 +32,7 @@ typedef union errhandler_fn {
     void (*C_Comm_Handler_function) (MPI_Comm *, int *, ...);
     void (*F77_Handler_function) (MPI_Fint *, MPI_Fint *);
     void (*C_Win_Handler_function) (MPI_Win *, int *, ...);
+    void (*C_Session_Handler_function) (MPIX_Session *, int *, ...);
     void (*C_File_Handler_function) (MPI_File *, int *, ...);
 } errhandler_fn;
 

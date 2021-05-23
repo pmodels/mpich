@@ -49,6 +49,27 @@ int MPIR_Win_create_errhandler_impl(MPI_Win_errhandler_function * win_errhandler
     goto fn_exit;
 }
 
+int MPIR_Session_create_errhandler_impl(MPI_Session_errhandler_function * session_errhandler_fn,
+                                        MPIR_Errhandler ** errhandler_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errhandler *errhan_ptr;
+
+    errhan_ptr = (MPIR_Errhandler *) MPIR_Handle_obj_alloc(&MPIR_Errhandler_mem);
+    MPIR_ERR_CHKANDJUMP1(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem",
+                         "**nomem %s", "MPI_Errhandler");
+    errhan_ptr->language = MPIR_LANG__C;
+    errhan_ptr->kind = MPIR_SESSION;
+    MPIR_Object_set_ref(errhan_ptr, 1);
+    errhan_ptr->errfn.C_Session_Handler_function = session_errhandler_fn;
+
+    *errhandler_ptr = errhan_ptr;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_File_create_errhandler_impl(MPI_File_errhandler_function * file_errhandler_fn,
                                      MPIR_Errhandler ** errhandler_ptr)
 {
@@ -104,6 +125,19 @@ int MPIR_Win_get_errhandler_impl(MPIR_Win * win_ptr, MPI_Errhandler * errhandler
     }
 
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    return MPI_SUCCESS;
+}
+
+int MPIR_Session_get_errhandler_impl(MPIR_Session * session_ptr, MPI_Errhandler * errhandler)
+{
+    if (session_ptr->errhandler) {
+        *errhandler = session_ptr->errhandler->handle;
+        MPIR_Errhandler_add_ref(session_ptr->errhandler);
+    } else {
+        /* Use the default */
+        *errhandler = MPI_ERRORS_ARE_FATAL;
+    }
+
     return MPI_SUCCESS;
 }
 
@@ -163,6 +197,21 @@ int MPIR_Win_set_errhandler_impl(MPIR_Win * win_ptr, MPIR_Errhandler * errhandle
     win_ptr->errhandler = errhandler_ptr;
 
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    return MPI_SUCCESS;
+}
+
+int MPIR_Session_set_errhandler_impl(MPIR_Session * session_ptr, MPIR_Errhandler * errhandler_ptr)
+{
+    /* We don't bother with the case where the errhandler is NULL;
+     * in this case, the error handler was the original, MPI_ERRORS_ARE_FATAL,
+     * which is builtin and can never be freed. */
+    if (session_ptr->errhandler != NULL) {
+        MPIR_Errhandler_free_impl(session_ptr->errhandler);
+    }
+
+    MPIR_Errhandler_add_ref(errhandler_ptr);
+    session_ptr->errhandler = errhandler_ptr;
+
     return MPI_SUCCESS;
 }
 
@@ -288,6 +337,15 @@ int MPIR_Win_call_errhandler_impl(MPIR_Win * win_ptr, int errorcode)
     mpi_errno = call_errhandler(win_ptr->errhandler, errorcode, win_ptr->handle);
 
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    return mpi_errno;
+}
+
+int MPIR_Session_call_errhandler_impl(MPIR_Session * session_ptr, int errorcode)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = call_errhandler(session_ptr->errhandler, errorcode, session_ptr->handle);
+
     return mpi_errno;
 }
 
