@@ -116,6 +116,13 @@ subroutine MPI_Win_errhandler_function(win, error_code)
     integer :: error_code
 end subroutine
 
+subroutine MPI_Session_errhandler_function(session, error_code)
+    use mpi_f08_types, only : MPI_Session
+    implicit none
+    type(MPI_Session) :: session
+    integer :: error_code
+end subroutine
+
 subroutine MPI_File_errhandler_function(file, error_code)
     use mpi_f08_types, only : MPI_File
     implicit none
