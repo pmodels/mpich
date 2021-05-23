@@ -209,11 +209,17 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_init_comm_world();
-    MPIR_ERR_CHECK(mpi_errno);
+    bool need_init_builtin_comms = true;
+#ifdef ENABLE_LOCAL_SESSION_INIT
+    need_init_builtin_comms = is_world_model;
+#endif
+    if (need_init_builtin_comms) {
+        mpi_errno = MPIR_init_comm_world();
+        MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_init_comm_self();
-    MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIR_init_comm_self();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     /**********************************************************************/
     /* Section 5: contains post device initialization code.  Anything
@@ -244,8 +250,10 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
      * setup. */
     /**********************************************************************/
 
-    mpi_errno = MPID_InitCompleted();
-    MPIR_ERR_CHECK(mpi_errno);
+    if (is_world_model) {
+        mpi_errno = MPID_InitCompleted();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__INITIALIZED);
 
