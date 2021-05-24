@@ -356,25 +356,6 @@ static int generic_init(void)
 int MPID_Init(int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
-
-    mpi_errno = MPID_Init_local(requested, provided);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPID_Init_world();
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPID_Init_local(int requested, int *provided)
-{
-    int mpi_errno = MPI_SUCCESS;
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_LOCAL);
 
@@ -527,16 +508,6 @@ int MPID_Init_local(int requested, int *provided)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPID_Init_world(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_WORLD);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_WORLD);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_WORLD);
-    return mpi_errno;
 }
 
 int MPID_InitCompleted(void)

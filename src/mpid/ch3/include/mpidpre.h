@@ -532,10 +532,6 @@ typedef struct {
 
 int MPID_Init(int required, int *provided);
 
-int MPID_Init_local(int requested, int *provided);
-
-int MPID_Init_world(void);
-
 int MPID_InitCompleted( void );
 
 int MPID_Finalize(void);
