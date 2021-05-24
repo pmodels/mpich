@@ -157,9 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
     ack_ctrl_hdr.ipc_contig_slmt_fin.ipc_type = ipc_type;
     ack_ctrl_hdr.ipc_contig_slmt_fin.req_ptr = sreq_ptr;
     mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank),
-                                       MPIDIG_context_id_to_comm(MPIDIG_REQUEST
-                                                                 (rreq, context_id)),
-                                       MPIDI_IPC_SEND_CONTIG_LMT_FIN, &ack_ctrl_hdr);
+                                       rreq->comm, MPIDI_IPC_SEND_CONTIG_LMT_FIN, &ack_ctrl_hdr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
