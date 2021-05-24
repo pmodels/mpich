@@ -29,8 +29,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_prepare_recv_req(int rank, int tag,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
-                                                      MPI_Datatype datatype, MPIR_Comm * comm,
-                                                      int context_offset, MPIR_Request * rreq)
+                                                      MPI_Datatype datatype, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
@@ -175,8 +174,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
             if (MPIDIG_REQUEST(unexp_req, recv_ready)) {
                 /* if the unexpected recv is ready, the data is in the unexpected buffer. Just
                  * copy them to complete */
-                mpi_errno = MPIDIG_handle_unexpected(buf, count, datatype, root_comm, context_id,
-                                                     unexp_req);
+                mpi_errno = MPIDIG_handle_unexpected(buf, count, datatype, unexp_req);
                 MPIR_ERR_CHECK(mpi_errno);
                 if (*request == NULL) {
                     /* Regular (non-enqueuing) path: MPIDIG is responsbile for allocating
