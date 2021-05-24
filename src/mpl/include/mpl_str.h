@@ -8,7 +8,7 @@
 
 #include "mplconfig.h"
 
-/* NOTE: PATH_MAX is simply an arbitary convenience size. It only be used
+/* NOTE: PATH_MAX is simply an arbitrary convenience size. It only be used
  * in non-critical paths or where we are certain the file path is very short.
  * Critical paths should consider using dynamic buffer.
  */
