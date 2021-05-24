@@ -178,8 +178,8 @@ void MPIR_Comm_hint_init(void)
     MPIR_Comm_register_hint(MPIR_COMM_HINT_ALLOW_OVERTAKING, "mpi_assert_allow_overtaking",
                             NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
     /* Used by ch4:ofi, but needs to be initialized early to get the default value. */
-    MPIR_Comm_register_hint(MPIR_COMM_HINT_ENABLE_STRIPING, "enable_striping", NULL,
-                            MPIR_COMM_HINT_TYPE_BOOL, 0, -1);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING, "enable_multi_nic_striping",
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, -1);
     MPIR_Comm_register_hint(MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING, "enable_multi_nic_hashing",
                             NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, -1);
 }
