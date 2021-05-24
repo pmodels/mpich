@@ -301,7 +301,6 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
-    MPIR_Comm *root_comm;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
     void *pack_buf = NULL;
     bool do_cts = false;
@@ -310,29 +309,25 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "HDR: data_sz=%ld, flags=0x%X", hdr->data_sz, hdr->flags));
-    root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
-    if (root_comm) {
-        /* MPIDI_CS_ENTER(); */
-        while (TRUE) {
-            rreq =
-                MPIDIG_rreq_dequeue(hdr->src_rank, hdr->tag, hdr->context_id,
-                                    &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
+    /* MPIDI_CS_ENTER(); */
+    while (TRUE) {
+        rreq =
+            MPIDIG_rreq_dequeue(hdr->src_rank, hdr->tag, hdr->context_id,
+                                &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-            if (rreq) {
-                int is_cancelled;
-                mpi_errno = MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
-                MPIR_ERR_CHECK(mpi_errno);
-                if (!is_cancelled) {
-                    MPIR_Comm_release(root_comm);       /* -1 for posted_list */
-                    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
-                    continue;
-                }
+        if (rreq) {
+            int is_cancelled;
+            mpi_errno = MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
+            MPIR_ERR_CHECK(mpi_errno);
+            if (!is_cancelled) {
+                MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+                continue;
             }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
-            break;
         }
-        /* MPIDI_CS_EXIT(); */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+        break;
     }
+    /* MPIDI_CS_EXIT(); */
 
     if (rreq == NULL) {
         rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
@@ -397,10 +392,6 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "posted req %p handle=0x%x", rreq, rreq->handle));
 
-        /* rreq != NULL <=> root_comm != NULL */
-        MPIR_Assert(root_comm);
-        /* Decrement the refcnt when popping a request out from posted_list */
-        MPIR_Comm_release(root_comm);
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
