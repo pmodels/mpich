@@ -10,6 +10,8 @@
 #include "mpir_pmi.h"
 #include "mpidu_shm_seg.h"
 
+static int init_shm_initialized;
+
 #ifdef ENABLE_NO_LOCAL
 /* shared memory disabled, just stubs */
 
@@ -207,6 +209,8 @@ int MPIDU_Init_shm_init(void)
     mpi_errno = Init_shm_barrier();
     MPIR_CHKPMEM_COMMIT();
 
+    init_shm_initialized = 1;
+
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_INIT);
@@ -223,6 +227,10 @@ int MPIDU_Init_shm_finalize(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
 
+    if (!init_shm_initialized) {
+        goto fn_exit;
+    }
+
     mpi_errno = Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -233,8 +241,11 @@ int MPIDU_Init_shm_finalize(void)
         MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**detach_shar_mem");
     }
 
-  fn_exit:
     MPL_shm_hnd_finalize(&(memory.hnd));
+
+    init_shm_initialized = 0;
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
     return mpi_errno;
   fn_fail:
