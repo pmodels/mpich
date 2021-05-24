@@ -31,7 +31,6 @@ int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_IPC_ctrl_send_contig_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->ipc_contig_slmt_rts;
     MPIR_Request *rreq = NULL;
-    MPIR_Comm *root_comm;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT_RTS_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT_RTS_CB);
 
@@ -41,36 +40,29 @@ int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
               slmt_rts_hdr->src_lrank, slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
               slmt_rts_hdr->context_id);
 
-    /* Try to match a posted receive request.
-     * root_comm cannot be NULL if a posted receive request exists, because
-     * we increase its refcount at enqueue time. */
-    root_comm = MPIDIG_context_id_to_comm(slmt_rts_hdr->context_id);
-    if (root_comm) {
-        while (TRUE) {
-            rreq = MPIDIG_rreq_dequeue(slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
-                                       slmt_rts_hdr->context_id, &MPIDI_global.posted_list,
-                                       MPIDIG_PT2PT_POSTED);
+    /* Try to match a posted receive request. */
+    while (TRUE) {
+        rreq = MPIDIG_rreq_dequeue(slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
+                                   slmt_rts_hdr->context_id, &MPIDI_global.posted_list,
+                                   MPIDIG_PT2PT_POSTED);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-            if (rreq) {
-                int is_cancelled;
-                MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
-                if (!is_cancelled) {
-                    MPIR_Comm_release(root_comm);       /* -1 for posted_list */
-                    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
-                    continue;
-                }
-                /* NOTE: NM partner is freed at MPIDI_anysrc_try_cancel_partner,
-                 * no need to call MPIDI_anysrc_free_partner at completions
-                 */
+        if (rreq) {
+            int is_cancelled;
+            MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
+            if (!is_cancelled) {
+                MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+                continue;
             }
-#endif
-            break;
+            /* NOTE: NM partner is freed at MPIDI_anysrc_try_cancel_partner,
+             * no need to call MPIDI_anysrc_free_partner at completions
+             */
         }
+#endif
+        break;
     }
 
     if (rreq) {
         /* Matching receive was posted */
-        MPIR_Comm_release(root_comm);   /* -1 for posted_list */
         MPIDIG_REQUEST(rreq, rank) = slmt_rts_hdr->src_rank;
         MPIDIG_REQUEST(rreq, tag) = slmt_rts_hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = slmt_rts_hdr->context_id;

@@ -131,11 +131,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
-    MPIR_Comm *root_comm;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_IRECV);
 
-    root_comm = MPIDIG_context_id_to_comm(context_id);
     unexp_req =
         MPIDIG_rreq_dequeue(rank, tag, context_id, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
 
@@ -252,9 +250,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
 
     if (!unexp_req) {
         /* MPIDI_CS_ENTER(); */
-        /* Increment refcnt for comm before posting rreq to posted_list,
-         * to make sure comm is alive while holding an entry in the posted_list */
-        MPIR_Comm_add_ref(root_comm);
         MPIDIG_enqueue_request(rreq, &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
         /* MPIDI_CS_EXIT(); */
     } else {
@@ -363,14 +358,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, found;
-    MPIR_Comm *root_comm;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
 
     if (!MPIR_Request_is_complete(rreq) &&
         !MPIR_STATUS_GET_CANCEL_BIT(rreq->status) && !MPIDIG_REQUEST_IN_PROGRESS(rreq)) {
-        root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
 
         /* MPIDI_CS_ENTER(); */
         found = MPIDIG_delete_posted(rreq, &MPIDI_global.posted_list);
@@ -378,7 +371,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
 
         if (found) {
             MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
-            MPIR_Comm_release(root_comm);       /* -1 for posted_list */
         }
 
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
