@@ -693,8 +693,14 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
         }
     }
 
+    MPIR_Comm *comm;
+    if (rreq->kind == MPIR_REQUEST_KIND__RMA) {
+        comm = rreq->u.rma.win->comm_ptr;
+    } else {
+        comm = rreq->comm;
+    }
     mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).src_rank,
-                                              MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).context_id,
+                                              comm,
                                               MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).sreq_ptr);
 
     MPIR_ERR_CHECK(mpi_errno);

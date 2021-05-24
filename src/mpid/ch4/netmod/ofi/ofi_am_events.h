@@ -158,7 +158,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
                                                     uint64_t src,
                                                     size_t data_sz,
-                                                    MPIR_Context_id_t context_id,
                                                     int src_rank, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -179,7 +178,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
 
         am_req->req_hdr = MPIDI_OFI_AMREQUEST(rreq, req_hdr);
         am_req->event_id = MPIDI_OFI_EVENT_AM_READ;
-        comm = MPIDIG_context_id_to_comm(context_id);
+        if (rreq->kind == MPIR_REQUEST_KIND__RMA) {
+            comm = rreq->u.rma.win->comm_ptr;
+        } else {
+            comm = rreq->comm;
+        }
         MPIR_Assert(comm);
 
         /* am uses vni 0 */
@@ -276,7 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_rdma_read_ack(int rank, int context_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_rdma_read_ack(int rank, MPIR_Comm * comm,
                                                            MPIR_Request * sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -287,8 +290,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_rdma_read_ack(int rank, int context
 
     ack_msg.sreq_ptr = sreq_ptr;
     mpi_errno =
-        MPIDI_NM_am_send_hdr_reply(MPIDIG_context_id_to_comm(context_id), rank,
-                                   MPIDI_OFI_AM_RDMA_READ_ACK, &ack_msg,
+        MPIDI_NM_am_send_hdr_reply(comm, rank, MPIDI_OFI_AM_RDMA_READ_ACK, &ack_msg,
                                    (MPI_Aint) sizeof(ack_msg));
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -312,7 +314,7 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv_contig(void *p_data, MPI_Aint data_
     data_sz = MPL_MIN(data_sz, in_data_sz);
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_u.lmt_cntr) =
         ((data_sz - 1) / MPIDI_OFI_global.max_msg_size) + 1;
-    mpi_errno = MPIDI_OFI_do_rdma_read(p_data, lmt_msg->src_offset, data_sz, lmt_msg->context_id,
+    mpi_errno = MPIDI_OFI_do_rdma_read(p_data, lmt_msg->src_offset, data_sz,
                                        lmt_msg->src_rank, rreq);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
@@ -348,7 +350,7 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv_iov(struct iovec *iov, MPI_Aint iov
     for (int i = 0; i < iov_len && rem > 0; i++) {
         curr_len = MPL_MIN(rem, iov[i].iov_len);
         mpi_errno = MPIDI_OFI_do_rdma_read(iov[i].iov_base, lmt_msg->src_offset + done,
-                                           curr_len, lmt_msg->context_id, lmt_msg->src_rank, rreq);
+                                           curr_len, lmt_msg->src_rank, rreq);
         MPIR_ERR_CHECK(mpi_errno);
         rem -= curr_len;
         done += curr_len;
@@ -392,7 +394,7 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv_unpack(MPI_Aint in_data_sz, MPIR_Re
     }
 
     mpi_errno = MPIDI_OFI_do_rdma_read(p->unpack_buffer, lmt_msg->src_offset, p->pack_size,
-                                       lmt_msg->context_id, lmt_msg->src_rank, rreq);
+                                       lmt_msg->src_rank, rreq);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -414,7 +416,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq)
             p->pack_size = remain;
         }
         MPIDI_OFI_do_rdma_read(p->unpack_buffer, p->src_offset + offset, p->pack_size,
-                               p->context_id, p->src_rank, rreq);
+                               p->src_rank, rreq);
         return FALSE;
     } else {
         /* all done. */
