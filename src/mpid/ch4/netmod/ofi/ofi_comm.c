@@ -18,10 +18,11 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
             int was_enabled_striping = MPIDI_OFI_COMM(comm).enable_striping;
 
             /* Check if we should use striping */
-            if (comm->hints[MPIR_COMM_HINT_ENABLE_STRIPING] != -1)
-                MPIDI_OFI_COMM(comm).enable_striping = comm->hints[MPIR_COMM_HINT_ENABLE_STRIPING];
+            if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING] != -1)
+                MPIDI_OFI_COMM(comm).enable_striping =
+                    comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING];
             else
-                MPIDI_OFI_COMM(comm).enable_striping = MPIR_CVAR_CH4_OFI_ENABLE_STRIPING;
+                MPIDI_OFI_COMM(comm).enable_striping = MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_STRIPING;
 
             /* If striping was on and we disabled it here, decrement the global counter. */
             if (was_enabled_striping > 0 && MPIDI_OFI_COMM(comm).enable_striping == 0)
@@ -31,7 +32,7 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
                 MPIDI_OFI_global.num_comms_enabled_striping++;
 
             if (MPIDI_OFI_COMM(comm).enable_striping) {
-                MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_STRIPING_THRESHOLD;
+                MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_MULTI_NIC_STRIPING_THRESHOLD;
             }
 
             int was_enabled_hashing = MPIDI_OFI_COMM(comm).enable_hashing;

@@ -372,7 +372,7 @@ cvars:
         shmmod automatically uses an optimal number depending on what is detected on the
         system up to the limit determined by MPIDI_MAX_NICS (in ofi_types.h).
 
-    - name        : MPIR_CVAR_CH4_OFI_ENABLE_STRIPING
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_STRIPING
       category    : CH4
       type        : int
       default     : 1
@@ -382,7 +382,7 @@ cvars:
       description : >-
         If true, this cvar enables striping of large messages across multiple NICs.
 
-    - name        : MPIR_CVAR_CH4_OFI_STRIPING_THRESHOLD
+    - name        : MPIR_CVAR_CH4_OFI_MULTI_NIC_STRIPING_THRESHOLD
       category    : CH4
       type        : int
       default     : 1048576
@@ -1375,7 +1375,7 @@ static int update_global_limits(struct fi_info *prov)
     } else {
         MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
     }
-    MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_STRIPING_THRESHOLD;
+    MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_MULTI_NIC_STRIPING_THRESHOLD;
     if (prov->ep_attr->max_order_raw_size > MPIR_AINT_MAX) {
         MPIDI_OFI_global.max_order_raw = -1;
     } else {
