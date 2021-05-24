@@ -177,6 +177,8 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
     goto fn_exit;
 }
 
+static int posix_world_initialized;
+
 int MPIDI_POSIX_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -190,6 +192,8 @@ int MPIDI_POSIX_init_world(void)
     mpi_errno = MPIDI_POSIX_coll_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
+    posix_world_initialized = 1;
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -202,18 +206,22 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_FINALIZE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_FINALIZE_HOOK);
 
-    mpi_errno = MPIDI_POSIX_eager_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
+    if (posix_world_initialized) {
+        mpi_errno = MPIDI_POSIX_eager_finalize();
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPIDI_POSIX_coll_finalize();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     MPIDU_genq_private_pool_destroy_unsafe(MPIDI_POSIX_global.am_hdr_buf_pool);
 
     MPL_free(MPIDI_POSIX_global.active_rreq);
 
-    mpi_errno = MPIDI_POSIX_coll_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
-
     MPL_free(MPIDI_POSIX_global.local_ranks);
     /* MPL_free(MPIDI_POSIX_global.local_procs); */
+
+    posix_world_initialized = 0;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_FINALIZE_HOOK);
