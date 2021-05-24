@@ -66,7 +66,7 @@ static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
             recv_elem->peek = true;
             MPIR_Comm *comm_ptr = MPIDIG_context_id_to_comm(MPIDI_OFI_CONTEXT_MASK & wc->tag);
             recv_elem->comm_ptr = comm_ptr;
-            MPIDIU_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv_elem,
+            MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
                            MPL_MEM_BUFFER);
 
             huge_list_ptr =
@@ -180,7 +180,7 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
                 LL_DELETE(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, list_ptr);
 
                 recv_elem = list_ptr;
-                MPIDIU_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv_elem,
+                MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
                                MPL_MEM_COMM);
                 break;
             }
@@ -197,7 +197,7 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 
         recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        MPIDIU_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv_elem,
+        MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
                        MPL_MEM_BUFFER);
 
         list_ptr = (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*list_ptr), 1, MPL_MEM_BUFFER);
@@ -246,7 +246,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         comm = sreq->comm;
         num_nics = MPIDI_OFI_COMM(comm).enable_striping ? MPIDI_OFI_global.num_nics : 1;
         /* Look for the memory region using the sreq handle */
-        ptr = MPIDIU_map_lookup(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
+        ptr = MPIDIU_map_lookup(MPIDI_OFI_global.huge_send_counters, sreq->handle);
         MPIR_Assert(ptr != MPIDIU_MAP_NOT_FOUND);
 
         huge_send_mrs = (struct fid_mr **) ptr;
@@ -254,7 +254,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         /* Send a cleanup message to the receivier and clean up local
          * resources. */
         /* Clean up the local counter */
-        MPIDIU_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
+        MPIDIU_map_erase(MPIDI_OFI_global.huge_send_counters, sreq->handle);
 
         /* Clean up the memory region */
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
@@ -352,7 +352,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
                                           recv_elem->comm_ptr, recv_elem->remote_info.ackreq);
             MPIR_ERR_CHECK(mpi_errno);
 
-            MPIDIU_map_erase(MPIDI_OFI_COMM(recv_elem->comm_ptr).huge_recv_counters, key_to_erase);
+            MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters, key_to_erase);
             MPL_free(recv_elem);
 
             goto fn_exit;

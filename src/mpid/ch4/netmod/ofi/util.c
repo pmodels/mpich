@@ -195,8 +195,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
                 LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
                 recv_elem = (MPIDI_OFI_huge_recv_t *)
-                    MPIDIU_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
-                                      list_ptr->rreq->handle);
+                    MPIDIU_map_lookup(MPIDI_OFI_global.huge_recv_counters, list_ptr->rreq->handle);
 
                 /* If this is a "peek" element for an MPI_Probe, it shouldn't be matched. Grab the
                  * important information and remove the element from the list. */
@@ -204,7 +203,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
                     MPIR_STATUS_SET_COUNT(recv_elem->localreq->status, info->msgsize);
                     MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(recv_elem->localreq, util_id)),
                                                  MPIDI_OFI_PEEK_FOUND);
-                    MPIDIU_map_erase(MPIDI_OFI_COMM(recv_elem->comm_ptr).huge_recv_counters,
+                    MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters,
                                      recv_elem->localreq->handle);
                     MPL_free(recv_elem);
                     recv_elem = NULL;
