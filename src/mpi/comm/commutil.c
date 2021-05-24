@@ -527,6 +527,15 @@ static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+static void propagate_tainted(MPIR_Comm * comm)
+{
+    if (comm->node_comm != NULL)
+        comm->node_comm->tainted = comm->tainted;
+
+    if (comm->node_roots_comm != NULL)
+        comm->node_roots_comm->tainted = comm->tainted;
+}
+
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -629,6 +638,8 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         mpi_errno = MPIR_Comm_commit_internal(comm->node_roots_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
+
+    propagate_tainted(comm);
 
     comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
 
@@ -968,6 +979,7 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** out
 
     /* inherit tainted flag */
     newcomm_ptr->tainted = comm_ptr->tainted;
+    propagate_tainted(newcomm_ptr);
 
   fn_fail:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COPY_DATA);
