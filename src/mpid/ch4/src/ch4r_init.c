@@ -8,7 +8,7 @@
 
 int MPIDIG_init_comm(MPIR_Comm * comm)
 {
-    int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
+    int mpi_errno = MPI_SUCCESS, subcomm_type, is_localcomm;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_INIT_COMM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_INIT_COMM);
@@ -18,14 +18,11 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
 
-    comm_idx = MPIDIG_get_context_index(comm->recvcontext_id);
     subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id);
     is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id);
 
     MPIR_Assert(subcomm_type <= 3);
     MPIR_Assert(is_localcomm <= 1);
-
-    MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = comm;
 
     MPIDIG_COMM(comm, window_instance) = 0;
   fn_exit:
