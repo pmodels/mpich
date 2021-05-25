@@ -1,4 +1,38 @@
 ===============================================================================
+                               Changes in 3.4.2
+===============================================================================
+
+# Update configure options to support --disable-ze and --disable-cuda
+  to explicitly disable GPU-awareness
+
+# Update embedded hwloc to version 2.4.1. Fixes a build issue on
+  systems with OpenCL.
+
+# Fixes for Argobots thread package support.
+
+# Fixes for the DAOS ROMIO driver (thanks to Intel for contributing)
+
+# Fix additional bugs in GPU-aware nonblocking op collectives
+
+# Fix 'make check' errors with embedded MPL and json-c libraries
+
+# Fix support for GNI provider in ch4:ofi netmod
+
+# Fix bug in dynamic window memory registration with ch4:ofi netmod
+
+# Fix bug in persistent pt2pt when used with MPI_PROC_NULL
+
+# Fix bug in hydra nameserver when freeing published entries
+
+# Fix bugs in GPFS ROMIO driver (thanks to IBM for contributing)
+
+# Fix bug in darray type creation (thanks to IBM for contributing)
+
+# Fix bugs in XPMEM support
+
+# Fix bug in MPI_Comm_spawn_multiple where non-root args were not ignored
+
+===============================================================================
                                Changes in 3.4.1
 ===============================================================================
 
