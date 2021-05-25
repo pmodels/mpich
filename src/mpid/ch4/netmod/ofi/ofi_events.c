@@ -382,10 +382,10 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
     int vni_src = recv_elem->remote_info.vni_src;
     int vni_dst = recv_elem->remote_info.vni_dst;
     if (MPIDI_OFI_COMM(recv_elem->comm_ptr).enable_striping) {  /* if striping enabled */
-        MPIDI_OFI_cntr_incr(vni_src, nic);
+        MPIDI_OFI_cntr_incr(recv_elem->comm_ptr, vni_src, nic);
         if (recv_elem->cur_offset >= MPIDI_OFI_STRIPE_CHUNK_SIZE && bytesLeft > 0) {
             for (nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-                int ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, nic);
+                int ctx_idx = MPIDI_OFI_get_ctx_index(recv_elem->comm_ptr, vni_dst, nic);
                 remote_key = recv_elem->remote_info.rma_keys[nic];
 
                 bytesLeft = recv_elem->remote_info.msgsize - recv_elem->cur_offset;
@@ -407,9 +407,9 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
             }
         }
     } else {
-        int ctx_idx = MPIDI_OFI_get_ctx_index(vni_src, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(recv_elem->comm_ptr, vni_src, nic);
         remote_key = recv_elem->remote_info.rma_keys[nic];
-        MPIDI_OFI_cntr_incr(vni_src, nic);
+        MPIDI_OFI_cntr_incr(recv_elem->comm_ptr, vni_src, nic);
         MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx,  /* endpoint     */
                                      (void *) ((char *) recv_buf + recv_elem->cur_offset),      /* local buffer */
                                      bytesToGet,        /* bytes        */

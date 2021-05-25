@@ -53,7 +53,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id, rank,
                                                       MPIDI_OFI_init_get_tag(match_bits));
     MPIDI_OFI_REQUEST(rreq, nic_num) = receiver_nic;
-    ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
+    ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
 
     if (!flags) {
         flags = FI_COMPLETION | FI_REMOTE_CQ_DATA;
@@ -164,7 +164,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                                   tag);
     receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id, rank, tag);
     MPIDI_OFI_REQUEST(rreq, nic_num) = receiver_nic;
-    ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
+    ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
 
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, tag);
 
@@ -361,7 +361,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
 
     int vni = MPIDI_Request_get_vci(rreq);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, MPIDI_OFI_REQUEST(rreq, nic_num));
+    int ctx_idx = MPIDI_OFI_get_ctx_index(rreq->comm, vni, MPIDI_OFI_REQUEST(rreq, nic_num));
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDIG_mpi_cancel_recv(rreq);

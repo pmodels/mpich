@@ -144,7 +144,7 @@ static int dynproc_send_disconnect(int conn_id)
     msg.context = (void *) &req.context;
     msg.data = 0;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[ctx_idx].tx, &msg,
                                      FI_COMPLETION | FI_TRANSMIT_COMPLETE | FI_REMOTE_CQ_DATA),
                          0, tsendmsg, FALSE);
@@ -179,7 +179,7 @@ static int dynproc_post_recv_disconnect(int conn_id)
 
     int vni = 0;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
     MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                   &p_conn->req->data, sizeof(int), NULL,
                                   addr, match_bits, mask_bits, &p_conn->req->context),
