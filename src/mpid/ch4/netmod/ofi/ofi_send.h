@@ -31,7 +31,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->context_id, dst_rank, tag);
     receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->context_id, MPIR_Process.rank,
                                                       tag);
-    ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, sender_nic);
+    ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, sender_nic);
 
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
     MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
@@ -94,7 +94,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->context_id, MPIR_Process.rank,
                                                       MPIDI_OFI_init_get_tag(match_bits));
     MPIDI_OFI_REQUEST(sreq, nic_num) = sender_nic;
-    ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, MPIDI_OFI_REQUEST(sreq, nic_num));
+    ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, MPIDI_OFI_REQUEST(sreq, nic_num));
 
     /* everything fits in the IOV array */
     flags = FI_COMPLETION | FI_REMOTE_CQ_DATA;
@@ -181,7 +181,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->context_id, MPIR_Process.rank,
                                                       tag);
     MPIDI_OFI_REQUEST(sreq, nic_num) = sender_nic;
-    ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, MPIDI_OFI_REQUEST(sreq, nic_num));
+    ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, MPIDI_OFI_REQUEST(sreq, nic_num));
 
     if (type == MPIDI_OFI_SYNC_SEND) {  /* Branch should compile out */
         uint64_t ssend_match, ssend_mask;
@@ -194,7 +194,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIR_cc_inc(sreq->cc_ptr);
         ssend_match = MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, tag);
         ssend_match |= MPIDI_OFI_SYNC_SEND_ACK;
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vni_local, receiver_nic)].rx,        /* endpoint    */
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(comm, vni_local, receiver_nic)].rx,  /* endpoint    */
                                       NULL,     /* recvbuf     */
                                       0,        /* data sz     */
                                       NULL,     /* memregion descr  */
@@ -306,7 +306,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             }
         }
         for (i = 0; i < num_nics; i++) {
-            MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vni_local, i)].domain,        /* In:  Domain Object */
+            MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(comm, vni_local, i)].domain,  /* In:  Domain Object */
                                      send_buf,  /* In:  Lower memory address */
                                      data_sz,   /* In:  Length              */
                                      FI_REMOTE_READ,    /* In:  Expose MR for read  */

@@ -125,7 +125,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * r
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_repost_request_t *am = (MPIDI_OFI_am_repost_request_t *) req;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(req->comm, 0, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
@@ -150,7 +150,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
 
     for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-        int ctx_idx = MPIDI_OFI_get_ctx_index(vni_idx, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni_idx, nic);
         ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, &cq_entry, 1);
 
         if (unlikely(ret == -FI_EAGAIN))
@@ -196,7 +196,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
     MPIDI_OFI_lmt_msg_payload_t *lmt_info;
     struct iovec *iov;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, 0, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
@@ -274,7 +274,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     MPIDI_OFI_am_header_t *msg_hdr;
     struct iovec *iov;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, 0, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
@@ -324,7 +324,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     MPIDI_OFI_am_header_t *msg_hdr;
     struct iovec *iov;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, 0, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_PIPELINE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_PIPELINE);
@@ -478,7 +478,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(MPIR_Comm * comm, fi_addr_t addr,
                                                           const MPIDI_OFI_am_header_t * msg_hdrp,
                                                           const void *am_hdr, size_t am_hdr_sz)
 {
@@ -487,7 +487,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
     char *ibuf;
     size_t len;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, 0, nic);
 
     MPIDI_CH4_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__SEND, 0, 1);
     MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
@@ -521,7 +521,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
     char *buff;
     size_t buff_len;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, 0, nic);
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_INJECT);
@@ -542,7 +542,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
     addr = MPIDI_OFI_comm_to_phys(comm, rank, nic, 0, 0);
 
     if (unlikely(am_hdr_sz + sizeof(msg_hdr) > MPIDI_OFI_global.max_buffered_send)) {
-        mpi_errno = MPIDI_OFI_do_emulated_inject(addr, &msg_hdr, am_hdr, am_hdr_sz);
+        mpi_errno = MPIDI_OFI_do_emulated_inject(comm, addr, &msg_hdr, am_hdr, am_hdr_sz);
         goto fn_exit;
     }
 

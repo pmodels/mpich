@@ -698,7 +698,8 @@ static int flush_send(int dst, int nic, int vni, MPIDI_OFI_dynamic_process_reque
     req->done = 0;
     req->event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
-    MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vni, nic)].tx,
+    MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(NULL, vni,
+                                                                                   nic)].tx,
                                       &data, 4, NULL, 0, addr, match_bits, &req->context), vni,
                          tsenddata, FALSE);
 
@@ -724,7 +725,7 @@ static int flush_recv(int src, int nic, int vni, MPIDI_OFI_dynamic_process_reque
 
     /* we don't care the data and the tag field is not used */
     void *recvbuf = &(req->tag);
-    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vni, nic)].rx,
+    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(NULL, vni, nic)].rx,
                                   recvbuf, 4, NULL, addr, match_bits, mask_bits, &req->context),
                          vni, trecv, FALSE);
 
@@ -972,7 +973,7 @@ static int create_vni_context(int vni, int nic)
         tx = ep;
         rx = ep;
     }
-    ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+    ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
     MPIDI_OFI_global.ctx[ctx_idx].domain = domain;
     MPIDI_OFI_global.ctx[ctx_idx].av = av;
     MPIDI_OFI_global.ctx[ctx_idx].rma_cmpl_cntr = rma_cmpl_cntr;
@@ -990,7 +991,7 @@ static int create_vni_context(int vni, int nic)
         mpi_errno = create_vni_domain(&domain, &av, &rma_cmpl_cntr, nic);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+        ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
         domain = MPIDI_OFI_global.ctx[ctx_idx].domain;
         av = MPIDI_OFI_global.ctx[ctx_idx].av;
         rma_cmpl_cntr = MPIDI_OFI_global.ctx[ctx_idx].rma_cmpl_cntr;
@@ -1014,7 +1015,7 @@ static int create_vni_context(int vni, int nic)
             MPIDI_OFI_CALL(fi_enable(ep), ep_enable);
         }
     } else {
-        ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+        ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
         ep = MPIDI_OFI_global.ctx[ctx_idx].ep;
     }
 
@@ -1029,7 +1030,7 @@ static int create_vni_context(int vni, int nic)
     }
 
     if (vni == 0) {
-        ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+        ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
         MPIDI_OFI_global.ctx[ctx_idx].domain = domain;
         MPIDI_OFI_global.ctx[ctx_idx].av = av;
         MPIDI_OFI_global.ctx[ctx_idx].rma_cmpl_cntr = rma_cmpl_cntr;
@@ -1037,10 +1038,10 @@ static int create_vni_context(int vni, int nic)
     } else {
         /* non-zero vni share most fields with vni 0, copy them
          * so we don't have to switch during runtime */
-        MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vni, nic)] =
-            MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(0, nic)];
+        MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(NULL, vni, nic)] =
+            MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(NULL, 0, nic)];
     }
-    ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+    ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
     MPIDI_OFI_global.ctx[ctx_idx].cq = cq;
     MPIDI_OFI_global.ctx[ctx_idx].tx = tx;
     MPIDI_OFI_global.ctx[ctx_idx].rx = rx;
@@ -1056,7 +1057,7 @@ static int create_vni_context(int vni, int nic)
 static int destroy_vni_context(int vni, int nic)
 {
     int mpi_errno = MPI_SUCCESS;
-    int ctx_num = MPIDI_OFI_get_ctx_index(vni, nic);
+    int ctx_num = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
@@ -1466,7 +1467,7 @@ int ofi_am_post_recv(int vni, int nic)
     MPIR_Assert(vni == 0 && nic == 0);
 
     if (MPIDI_OFI_ENABLE_AM) {
-        int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
         size_t optlen = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
 
         MPIDI_OFI_CALL(fi_setopt(&(MPIDI_OFI_global.ctx[ctx_idx].rx->fid),
