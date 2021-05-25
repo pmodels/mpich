@@ -216,8 +216,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(send_buf, &attr);
-    if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
-        MPIDI_OFI_register_am_bufs();
+    if (data_sz &&
+        (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
+         attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
         if (!MPIDI_OFI_ENABLE_HMEM) {
             /* Force packing of GPU buffer in host memory */
             /* FIXME: at this point, GPU data takes host-buffer staging
@@ -414,7 +415,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         void *send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(send_buf, &attr);
-        if (attr.type == MPL_GPU_POINTER_DEV) {
+        if (data_sz > 0 &&
+            (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
+             attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
             MPIDI_OFI_register_am_bufs();
             if (!MPIDI_OFI_ENABLE_HMEM) {
                 /* Force pack for GPU buffer. */

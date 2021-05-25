@@ -731,4 +731,24 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_unregister_am_bufs(void)
 #undef CQ_D_HEAD
 #undef CQ_D_TAIL
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_malloc_pack_buffer(void **ptr, size_t pack_size)
+{
+    if (MPIDI_OFI_ENABLE_HMEM) {
+        return MPL_gpu_malloc_host(ptr, pack_size);
+    } else {
+        *ptr = MPL_malloc(pack_size, MPL_MEM_BUFFER);
+        return 0;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_free_pack_buffer(void *ptr)
+{
+    if (MPIDI_OFI_ENABLE_HMEM) {
+        return MPL_gpu_free_host(ptr);
+    } else {
+        MPL_free(ptr);
+        return 0;
+    }
+}
+
 #endif /* OFI_IMPL_H_INCLUDED */

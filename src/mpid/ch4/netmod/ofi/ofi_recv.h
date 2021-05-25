@@ -171,8 +171,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(recv_buf, &attr);
-    if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
-        MPIDI_OFI_register_am_bufs();
+    if (data_sz &&
+        (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
+         attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
         if (!MPIDI_OFI_ENABLE_HMEM) {
             /* FIXME: at this point, GPU data takes host-buffer staging
              * path for the whole chunk. For large memory size, pipeline
