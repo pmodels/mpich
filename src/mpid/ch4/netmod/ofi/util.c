@@ -167,13 +167,9 @@ void MPIDI_OFI_mr_key_allocator_destroy(void)
 static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 {
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
-    MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_HUGE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_HUGE);
-
-    /* Look up the communicator */
-    comm_ptr = MPIDIG_context_id_to_comm(info->comm_id);
 
     /* If there has been a posted receive, search through the list of unmatched
      * receives to find the one that goes with the incoming message. */
@@ -230,13 +226,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     }
 
     recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-    if (MPIDI_OFI_COMM(comm_ptr).enable_striping) {
-        recv_elem->cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
-    } else {
-        recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
-    }
     recv_elem->remote_info = *info;
-    recv_elem->comm_ptr = comm_ptr;
     recv_elem->next = NULL;
     MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
 
