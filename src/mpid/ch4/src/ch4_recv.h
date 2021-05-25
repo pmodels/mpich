@@ -64,22 +64,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CANCEL_RECV_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CANCEL_RECV_UNSAFE);
 
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
-#else
-    if (MPIDI_REQUEST(rreq, is_local)) {
-        MPIR_Request *partner_rreq = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
-        if (unlikely(partner_rreq)) {
-            /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
-            mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIDI_CH4_REQUEST_FREE(partner_rreq);
-        }
-        mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
+    if (rreq->comm && MPIDI_is_self_comm(rreq->comm)) {
+        mpi_errno = MPIDI_Self_cancel(rreq);
     } else {
+#ifdef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
-    }
+#else
+        if (MPIDI_REQUEST(rreq, is_local)) {
+            MPIR_Request *partner_rreq = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
+            if (unlikely(partner_rreq)) {
+                /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
+                mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq);
+                MPIR_ERR_CHECK(mpi_errno);
+                MPIDI_CH4_REQUEST_FREE(partner_rreq);
+            }
+            mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
+        } else {
+            mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
+        }
 #endif
+    }
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -272,20 +276,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_MRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_MRECV);
 
-    *rreq = NULL;
-
-    if (message == NULL || message->handle == MPIR_REQUEST_NULL_RECV) {
-        /* treat as though MPI_MESSAGE_NO_PROC was passed */
-        MPIR_Status_set_procnull(status);
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
-
     MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     message->kind = MPIR_REQUEST_KIND__RECV;
-    *rreq = message;
 
-    mpi_errno = MPIDI_imrecv(buf, count, datatype, message);
+    if (message->comm && MPIDI_is_self_comm(message->comm)) {
+        mpi_errno = MPIDI_Self_imrecv(buf, count, datatype, message, rreq);
+    } else {
+        *rreq = message;
+        mpi_errno = MPIDI_imrecv(buf, count, datatype, message);
+    }
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -303,16 +302,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IMRECV);
 
-    if (message == NULL) {
-        *rreqp = MPIR_Request_create_null_recv();
-        goto fn_exit;
-    }
-
     MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     message->kind = MPIR_REQUEST_KIND__RECV;
-    *rreqp = message;
 
-    mpi_errno = MPIDI_imrecv(buf, count, datatype, message);
+    if (message->comm && MPIDI_is_self_comm(message->comm)) {
+        mpi_errno = MPIDI_Self_imrecv(buf, count, datatype, message, rreqp);
+    } else {
+        *rreqp = message;
+        mpi_errno = MPIDI_imrecv(buf, count, datatype, message);
+    }
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IMRECV);
@@ -333,8 +331,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRECV);
 
-    MPIDI_av_entry_t *av = (rank == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, rank));
-    mpi_errno = MPIDI_irecv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
+    if (MPIDI_is_self_comm(comm)) {
+        mpi_errno =
+            MPIDI_Self_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+    } else {
+        MPIDI_av_entry_t *av = (rank == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, rank));
+        mpi_errno = MPIDI_irecv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
+    }
 
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:

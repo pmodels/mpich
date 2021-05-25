@@ -10,6 +10,7 @@
 #include "mpidig_am.h"
 #include "mpidu_shm.h"
 #include "ch4r_proc.h"
+#include "ch4_self.h"
 
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);

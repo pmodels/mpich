@@ -197,6 +197,16 @@ MPI_Neighbor_alltoallw:
 MPI_Reduce:
     .desc: Reduces values on all processes to a single value
     .docnotes: collops
+{ -- early_return --
+    if (comm_ptr->remote_size == 1 && comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+        if (mpi_errno) {
+            goto fn_fail;
+        } else {
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Reduce_local:
     .desc: Applies a reduction operator to local arguments.
