@@ -26,7 +26,7 @@ int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_AM_SREQ_HDR(sreq, lmt_mr)->fid), mr_unreg);
     MPL_atomic_fetch_sub_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 1);
 
-    MPIR_gpu_free_host(MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer));
+    MPIDI_OFI_gpu_free_pack_buffer(MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer));
 
     /* retrieve the handler_id of the original send request for origin cb. Note the handler_id
      * parameter is MPIDI_OFI_AM_RDMA_READ_ACK and should never be called with origin_cbs */

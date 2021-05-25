@@ -766,9 +766,10 @@ int MPIDI_OFI_init_local(int *tag_bits)
         MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE,
                                               MPIR_CVAR_CH4_OFI_NUM_PACK_BUFFERS_PER_CHUNK,
                                               MPIR_CVAR_CH4_OFI_MAX_NUM_PACK_BUFFERS,
-                                              host_alloc_registered,
-                                              host_free_registered,
-                                              &MPIDI_OFI_global.pack_buf_pool);
+                                              MPIDI_OFI_ENABLE_HMEM ? host_alloc_registered :
+                                              host_alloc,
+                                              MPIDI_OFI_ENABLE_HMEM ? host_free_registered :
+                                              host_free, &MPIDI_OFI_global.pack_buf_pool);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize RMA keys allocator */
@@ -1113,7 +1114,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         MPIDIU_map_destroy(MPIDI_OFI_global.am_recv_seq_tracker);
 
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
-            MPIR_gpu_free_host(MPIDI_OFI_global.am_bufs[i]);
+            MPIDI_OFI_gpu_free_pack_buffer(MPIDI_OFI_global.am_bufs[i]);
 
         MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.am_hdr_buf_pool);
 
@@ -1768,7 +1769,7 @@ int ofi_am_post_recv(int vni, int nic)
                                  FI_OPT_MIN_MULTI_RECV, &optlen, sizeof(optlen)), setopt);
 
         for (int i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
-            MPIR_gpu_malloc_host(&(MPIDI_OFI_global.am_bufs[i]), MPIDI_OFI_AM_BUFF_SZ);
+            MPIDI_OFI_gpu_malloc_pack_buffer(&(MPIDI_OFI_global.am_bufs[i]), MPIDI_OFI_AM_BUFF_SZ);
             MPIDI_OFI_global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
             MPIDI_OFI_global.am_reqs[i].index = i;
             MPIR_Assert(MPIDI_OFI_global.am_bufs[i]);

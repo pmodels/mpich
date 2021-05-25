@@ -173,7 +173,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     recv_buf = (char *) buf + dt_true_lb;
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(recv_buf, &attr);
-    if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
+    if (data_sz &&
+        (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
+         attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
         if (!MPIDI_OFI_ENABLE_HMEM) {
             /* FIXME: at this point, GPU data takes host-buffer staging
              * path for the whole chunk. For large memory size, pipeline
@@ -207,8 +209,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
          * However, once the new buffer pool infrastructure is setup, we would simply be
          * allocating a buffer from the pool, so whether it's a regular malloc buffer or a GPU
          * registered buffer should be equivalent with respect to performance. */
-        MPIR_gpu_malloc_host((void **) &MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer),
-                             data_sz);
+        MPIDI_OFI_gpu_malloc_pack_buffer((void **)
+                                         &MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer),
+                                         data_sz);
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer);

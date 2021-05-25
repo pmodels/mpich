@@ -277,7 +277,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         MPL_free(huge_send_mrs);
 
         if (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer)) {
-            MPIR_gpu_free_host(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
+            MPIDI_OFI_gpu_free_pack_buffer(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
         }
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
