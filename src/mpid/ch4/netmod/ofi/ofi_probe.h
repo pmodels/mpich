@@ -42,6 +42,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     } else {
         rreq = &r;
     }
+    rreq->comm = comm;
+    MPIR_Comm_add_ref(comm);
 
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, comm->recvcontext_id + context_offset, tag);
 
@@ -98,6 +100,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     }
 
   fn_exit:
+    if (message == NULL) {
+        MPIR_Comm_release(comm);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_IPROBE);
     return mpi_errno;
   fn_fail:
@@ -139,11 +144,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_exit;
-
-    if (*flag && *message) {
-        (*message)->comm = comm;
-        MPIR_Object_add_ref(comm);
-    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMPROBE);
