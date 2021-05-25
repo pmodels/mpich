@@ -182,6 +182,15 @@ MPI_Improbe:
 
 MPI_Imrecv:
     .desc: Nonblocking receive of message matched by MPI_Mprobe or MPI_Improbe.
+{ -- early_return --
+    if (message_ptr == NULL || message_ptr->handle == MPIR_REQUEST_NULL_RECV) {
+        MPIR_Request *rreq;
+        rreq = MPIR_Request_create_null_recv();
+        *request = rreq->handle;
+        *message = MPI_MESSAGE_NULL;
+        goto fn_exit;
+    }
+}
 {
     MPIR_Request *rreq = NULL;
 
@@ -300,6 +309,14 @@ MPI_Mprobe:
 
 MPI_Mrecv:
     .desc: Blocking receive of message matched by MPI_Mprobe or MPI_Improbe.
+{ -- early_return --
+    if (message_ptr == NULL || message_ptr->handle == MPIR_REQUEST_NULL_RECV) {
+        /* treat as though MPI_MESSAGE_NO_PROC was passed */
+        MPIR_Status_set_procnull(status);
+        *message = MPI_MESSAGE_NULL;
+        goto fn_exit;
+    }
+}
 {
     MPIR_Request *rreq = NULL;
     mpi_errno = MPID_Mrecv(buf, count, datatype, message_ptr, status, &rreq);

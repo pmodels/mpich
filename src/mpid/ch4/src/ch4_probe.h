@@ -110,14 +110,24 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROBE);
 
-    MPIDI_av_entry_t *av = (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
-    while (!flag) {
-        mpi_errno = MPIDI_iprobe(source, tag, comm, context_offset, av, &flag, status);
-        MPIR_ERR_CHECK(mpi_errno);
+    if (MPIDI_is_self_comm(comm)) {
+        /* There better be another thread sending the self message */
+        while (!flag) {
+            mpi_errno = MPIDI_Self_iprobe(source, tag, comm, context_offset, &flag, status);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        }
+    } else {
+        MPIDI_av_entry_t *av =
+            (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
+        while (!flag) {
+            mpi_errno = MPIDI_iprobe(source, tag, comm, context_offset, av, &flag, status);
+            MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPID_Progress_test(NULL);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+            mpi_errno = MPID_Progress_test(NULL);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        }
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROBE);
@@ -138,14 +148,26 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_MPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_MPROBE);
 
-    MPIDI_av_entry_t *av = (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
-    while (!flag) {
-        mpi_errno = MPIDI_improbe(source, tag, comm, context_offset, av, &flag, message, status);
-        MPIR_ERR_CHECK(mpi_errno);
+    if (MPIDI_is_self_comm(comm)) {
+        /* There better be another thread sending the self message */
+        while (!flag) {
+            mpi_errno =
+                MPIDI_Self_improbe(source, tag, comm, context_offset, &flag, message, status);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        }
+    } else {
+        MPIDI_av_entry_t *av =
+            (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
+        while (!flag) {
+            mpi_errno =
+                MPIDI_improbe(source, tag, comm, context_offset, av, &flag, message, status);
+            MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPID_Progress_test(NULL);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+            mpi_errno = MPID_Progress_test(NULL);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        }
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_MPROBE);
@@ -164,15 +186,21 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IMPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IMPROBE);
 
-    *flag = 0;
-    MPIDI_av_entry_t *av = (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
-
-    mpi_errno = MPIDI_improbe(source, tag, comm, context_offset, av, flag, message, status);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (!*flag) {
-        mpi_errno = MPID_Progress_test(NULL);
+    if (MPIDI_is_self_comm(comm)) {
+        mpi_errno = MPIDI_Self_improbe(source, tag, comm, context_offset, flag, message, status);
         MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        *flag = 0;
+        MPIDI_av_entry_t *av =
+            (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
+
+        mpi_errno = MPIDI_improbe(source, tag, comm, context_offset, av, flag, message, status);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (!*flag) {
+            mpi_errno = MPID_Progress_test(NULL);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
   fn_exit:
@@ -192,15 +220,21 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IPROBE);
 
-    *flag = 0;
-    MPIDI_av_entry_t *av = (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
-
-    mpi_errno = MPIDI_iprobe(source, tag, comm, context_offset, av, flag, status);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (!*flag) {
-        mpi_errno = MPID_Progress_test(NULL);
+    if (MPIDI_is_self_comm(comm)) {
+        mpi_errno = MPIDI_Self_iprobe(source, tag, comm, context_offset, flag, status);
         MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        *flag = 0;
+        MPIDI_av_entry_t *av =
+            (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
+
+        mpi_errno = MPIDI_iprobe(source, tag, comm, context_offset, av, flag, status);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (!*flag) {
+            mpi_errno = MPID_Progress_test(NULL);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
   fn_exit:

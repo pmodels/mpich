@@ -260,6 +260,17 @@ typedef struct MPIDI_part_request {
     MPI_Datatype datatype;
 } MPIDI_part_request_t;
 
+/* message queue within "self"-comms, i.e. MPI_COMM_SELF and all communicators with size of 1. */
+
+typedef struct {
+    void *buf;
+    MPI_Aint count;
+    MPI_Datatype datatype;
+    int tag;
+    int context_id;
+    MPIR_Request *match_req;    /* for mrecv */
+} MPIDI_self_request_t;
+
 typedef struct MPIDI_Devreq_t {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
@@ -278,6 +289,8 @@ typedef struct MPIDI_Devreq_t {
 
         /* Used by partitioned communication */
         MPIDI_part_request_t part_req;
+
+        MPIDI_self_request_t self;
 
         /* Used by the netmod direct apis */
         union {
@@ -300,6 +313,7 @@ typedef struct MPIDI_Devreq_t {
 #define MPIDI_PREQUEST(req,field)       (((req)->dev.ch4.preq).field)
 #define MPIDI_PART_REQUEST(req,field)   (((req)->dev.ch4.part_req).field)
 #define MPIDIG_PART_REQUEST(req, field)   (((req)->dev.ch4.part_req).am.field)
+#define MPIDI_SELF_REQUEST(req, field)  (((req)->dev.ch4.self).field)
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
 /* `(r)->dev.ch4.am.req` might not be allocated right after SHM_mpi_recv when

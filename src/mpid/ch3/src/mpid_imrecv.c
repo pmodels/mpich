@@ -13,14 +13,6 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
     MPIR_Comm *comm;
     MPIDI_VC_t *vc = NULL;
 
-    /* message==NULL is equivalent to MPI_MESSAGE_NO_PROC being passed at the
-     * upper level */
-    if (message == NULL)
-    {
-        *rreqp = MPIR_Request_create_null_recv();
-        goto fn_exit;
-    }
-
     MPIR_Assert(message != NULL);
     MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
 
