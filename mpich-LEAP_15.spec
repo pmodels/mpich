@@ -100,6 +100,7 @@ BuildRequires:  libtool
 BuildRequires:  libtool
 BuildRequires:  mpi-selector
 BuildRequires:  python-devel
+BuildRequires:  python3-devel
 BuildRequires:  sysfsutils
 BuildRequires:  libfabric-devel
 BuildRequires:  daos-devel
@@ -236,6 +237,7 @@ echo without HPC
     --mandir=%{p_mandir} \
     --docdir=%{_datadir}/doc/%{name} \
     --with-hwloc-prefix=embedded \
+    --with-hwloc=embedded \
     --enable-romio \
     --with-file-system=ufs+daos \
     --with-daos=/usr \
@@ -460,6 +462,9 @@ fi
 %endif # !testsuite
 
 %changelog
+* Thu May 27 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 3.4~a2-5
+- Add --with-hwloc=embedded to configure
+
 * Wed Jan 20 2021 Kenneth Cain <kenneth.c.cain@intel.com> - 3.4~a2-4
 - Update packaging for building with libdaos.so.1
 
