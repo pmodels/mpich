@@ -149,7 +149,8 @@ typedef enum MPII_Object_kind {
     MPIR_REQUEST = 0xb,
     MPIR_VCONN = 0xc,
     MPIR_GREQ_CLASS = 0xd,
-    MPIR_INTERNAL = 0xe,        /* used for various MPICH internal objects that
+    MPIR_SESSION = 0xe,
+    MPIR_INTERNAL = 0xf,        /* used for various MPICH internal objects that
                                  * do not require a handle */
 } MPII_Object_kind;
 
@@ -302,12 +303,27 @@ typedef MPL_atomic_int_t Handle_ref_count;
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_ref_, "incr");          \
         HANDLE_CHECK_REFCOUNT(objptr_,new_ref_,"incr");                 \
     } while (0)
-#define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
-    do {                                                                \
-        int new_ref_ = MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1; \
-        *(inuse_ptr) = new_ref_;                                        \
-        HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_ref_, "decr");          \
-        HANDLE_CHECK_REFCOUNT(objptr_,new_ref_,"decr");                 \
+#define MPIR_Object_release_ref_always(objptr_,inuse_ptr)                      \
+    do {                                                                       \
+        int new_ref_;                                                          \
+        /* If it is 1, we will just free it without a heavy atomic operation.  \
+         * Note that any concurrent add_ref() to a handle whose count is 1 is  \
+         * illegal and we do not consider.                                     \
+         *                                                                     \
+         * The similar optimization caused an error and was reverted.          \
+         * (See a5686ec3c42f0357119cab7f21df46389c7acec8)                      \
+         * The following uses acquire_load() instead of OPA_load_int(). */     \
+        if (MPL_atomic_acquire_load_int(&((objptr_)->ref_count)) == 1) {       \
+            MPL_atomic_relaxed_store_int(&((objptr_)->ref_count), 0);          \
+            new_ref_ = 0;                                                      \
+            *(inuse_ptr) = 0;                                                  \
+        } else {                                                               \
+            new_ref_ =                                                         \
+                MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1;      \
+            *(inuse_ptr) = new_ref_;                                           \
+        }                                                                      \
+        HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_ref_, "decr");                 \
+        HANDLE_CHECK_REFCOUNT(objptr_,new_ref_,"decr");                        \
     } while (0)
 #else /* MPICH_DEBUG_HANDLES */
 /* MPICH_THREAD_REFCOUNT == MPICH_REFCOUNT__LOCKFREE && !MPICH_DEBUG_HANDLES */
@@ -315,10 +331,17 @@ typedef MPL_atomic_int_t Handle_ref_count;
     do {                                        \
         MPL_atomic_fetch_add_int(&((objptr_)->ref_count), 1);  \
     } while (0)
-#define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
-    do {                                                                \
-        int new_ref_ = MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1; \
-        *(inuse_ptr) = new_ref_;                                        \
+#define MPIR_Object_release_ref_always(objptr_,inuse_ptr)                   \
+    do {                                                                    \
+        /* If it is 1, we will free it without a heavy atomic operation. */ \
+        if (MPL_atomic_acquire_load_int(&((objptr_)->ref_count)) == 1) {    \
+            MPL_atomic_relaxed_store_int(&((objptr_)->ref_count), 0);       \
+            *(inuse_ptr) = 0;                                               \
+        } else {                                                            \
+            int new_ref_ =                                                  \
+                MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1;   \
+            *(inuse_ptr) = new_ref_;                                        \
+        }                                                                   \
     } while (0)
 #endif /* MPICH_DEBUG_HANDLES */
 #else
@@ -392,7 +415,7 @@ typedef MPL_atomic_int_t Handle_ref_count;
  * cases.
  *
  * All *active* (in use) objects have the handle as the first value; objects
- * with referene counts have the reference count as the second value.  See
+ * with reference counts have the reference count as the second value.  See
  * MPIR_Object_add_ref and MPIR_Object_release_ref.
  *
  * NOTE: This macro *must* be invoked as the very first element of the structure! */
@@ -416,6 +439,9 @@ typedef struct MPIR_Object_alloc_t {
     int initialized;            /* */
     void **indirect;            /* Pointer to indirect object blocks */
     int indirect_size;          /* Number of allocated indirect blocks */
+    int num_allocated;          /* Total capacity of this allocator including both
+                                 * direct and indirect */
+    int num_avail;              /* Number of available objects including both direct and indirect */
     MPII_Object_kind kind;      /* Kind of object this is for */
     int size;                   /* Size of an individual object */
     void *direct;               /* Pointer to direct block, used
@@ -427,12 +453,17 @@ typedef struct MPIR_Object_alloc_t {
                                  * pointer is ignored. Ref. mpir_request.h.
                                  * NOTE: it is `void *` because mutex type not defined yet.
                                  */
+    /* The following padding is to avoid cache line sharing with other MPIR_Object_alloc_t.  This
+     * padding is particularly important for an array of per-vci MPI_Request pools. */
+    char pad[MPL_CACHELINE_SIZE];
 } MPIR_Object_alloc_t;
 static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t *);
+void *MPIR_Info_handle_obj_alloc(MPIR_Object_alloc_t *);
 static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t *,
                                                  int max_blocks, int max_indices);
 static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t *, void *);
-static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t *, void *);
+void MPIR_Info_handle_obj_free(MPIR_Object_alloc_t *, void *);
+static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t *, void *, bool is_info);
 static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
 
 
@@ -489,6 +520,7 @@ static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
 #define MPIR_Op_get_ptr(a,ptr)         MPIR_Getb_ptr(Op,OP,a,0x000000ff,ptr)
 #define MPIR_Info_get_ptr(a,ptr)       MPIR_Getb_ptr(Info,INFO,a,0x03ffffff,ptr)
 #define MPIR_Win_get_ptr(a,ptr)        MPIR_Get_ptr(Win,a,ptr)
+#define MPIR_Session_get_ptr(a,ptr)    MPIR_Get_ptr(Session,a,ptr)
 /* Request objects are handled differently. See mpir_request.h */
 #define MPIR_Grequest_class_get_ptr(a,ptr) MPIR_Get_ptr(Grequest_class,a,ptr)
 /* Keyvals have a special format. This is roughly MPIR_Get_ptrb, but

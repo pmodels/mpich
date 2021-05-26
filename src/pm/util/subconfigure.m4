@@ -31,12 +31,14 @@ if test "$enable_onsig" = "yes" ; then
     # It isn't enough to find ptrace.  We also need the ptrace 
     # parameters, which some systems, such as IRIX, do not define.
     if test "$ac_cv_func_ptrace" = yes ; then
-        AC_CACHE_CHECK([for ptrace named parameters],
-pac_cv_has_ptrace_parms,[
-        AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <sys/ptrace.h>],[int i = PTRACE_CONT;],pac_cv_has_ptrace_parms=yes,
-pac_cv_has_ptrace_parms=no)])
+        AC_CACHE_CHECK([for ptrace named parameters], pac_cv_has_ptrace_parms,[
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+                #include <sys/types.h>
+                #include <sys/ptrace.h>
+                ]],[[
+                int i = PTRACE_CONT;
+                ]])],pac_cv_has_ptrace_parms=yes, pac_cv_has_ptrace_parms=no)
+        ])
         if test "$pac_cv_has_ptrace_parms" = "yes" ; then
             AC_DEFINE(HAVE_PTRACE_CONT,,[Define if ptrace parameters available])
         fi
@@ -76,15 +78,16 @@ fi
 
 # Look for alternatives.  Is environ in unistd.h?
 AC_CACHE_CHECK([for environ in unistd.h],pac_cv_has_environ_in_unistd,[
-AC_TRY_COMPILE([#include <unistd.h>],[char **ep = environ;],
-pac_cv_has_environ_in_unistd=yes,pac_cv_has_environ_in_unistd=no)])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],[[char **ep = environ;]])],
+        pac_cv_has_environ_in_unistd=yes,pac_cv_has_environ_in_unistd=no)
+])
 
 if test "$pac_cv_has_environ_in_unistd" != "yes" ; then
     # Can we declare it and use it?
-    AC_CACHE_CHECK([for extern environ in runtime],
-    pac_cv_has_extern_environ,[
-    AC_TRY_LINK([extern char **environ;],[char **ep = environ;],
-    pac_cv_has_extern_environ=yes,pac_cv_has_extern_environ=no)])
+    AC_CACHE_CHECK([for extern environ in runtime], pac_cv_has_extern_environ,[
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char **environ;]],[[char **ep = environ;]])],
+            pac_cv_has_extern_environ=yes,pac_cv_has_extern_environ=no)
+    ])
     if test "$pac_cv_has_extern_environ" = "yes" ; then
 	AC_DEFINE(NEEDS_ENVIRON_DECL,1,[Define if environ decl needed] )
     fi
@@ -101,17 +104,18 @@ dnl Is there libnsl needed for gethostbyname?
 dnl AC_SEARCH_LIBS(gethostbyname,nsl)
 AC_SEARCH_LIBS(socketpair,socket)
 dnl
-dnl Look for Standard headers
-AC_HEADER_STDC
 dnl Check for a specific header
 AC_CHECK_HEADERS(sys/types.h signal.h sys/ptrace.h sys/uio.h unistd.h)
 if test "$ac_cv_header_sys_uio_h" = "yes" ; then
     # Test for iovec defined
-    AC_CACHE_CHECK([whether struct iovec is defined in sys/uio.h],
-    pac_cv_has_struct_iovec,[
-    AC_TRY_COMPILE([#include <sys/types.h>
-#include <sys/uio.h>],[struct iovec v],pac_cv_has_struct_iovec=yes,
-pac_cv_has_struct_iovec=no)])
+    AC_CACHE_CHECK([whether struct iovec is defined in sys/uio.h], pac_cv_has_struct_iovec,[
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <sys/types.h>
+            #include <sys/uio.h>
+            ]],[[
+            struct iovec v;
+            ]])], pac_cv_has_struct_iovec=yes, pac_cv_has_struct_iovec=no)
+    ])
     if test "$pac_cv_has_struct_iovec" = "yes" ; then
         AC_DEFINE(HAVE_IOVEC_DEFINITION,1,[Define if struct iovec defined in sys/uio.h])
     fi
@@ -132,20 +136,28 @@ if test "$ac_cv_func_sigaction" = "yes" ; then
     # Make sure that the fields that we need in sigaction are defined
     AC_CACHE_CHECK([for struct sigaction and sa_handler],
     pac_cv_struct_sigaction_with_sa_handler,[
-    AC_TRY_COMPILE([#include <signal.h>],[
-struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
-act.sa_handler = SIG_IGN;],
-    pac_cv_struct_sigaction_with_sa_handler=yes,
-    pac_cv_struct_sigaction_with_sa_handler=no)])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <signal.h>
+        ]],[[
+        struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+        act.sa_handler = SIG_IGN;
+        ]])],
+        pac_cv_struct_sigaction_with_sa_handler=yes,
+        pac_cv_struct_sigaction_with_sa_handler=no)
+    ])
     if test "$pac_cv_struct_sigaction_with_sa_handler" = "no" ; then
         AC_CACHE_CHECK([for struct sigaction and sa_handler with _POSIX_SOURCE],
-	pac_cv_struct_sigaction_with_sa_handler_needs_posix,[
-        AC_TRY_COMPILE([#define _POSIX_SOURCE
-#include <signal.h>],[
-struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
-act.sa_handler = SIG_IGN;],
-	pac_cv_struct_sigaction_with_sa_handler_needs_posix=yes,
-	pac_cv_struct_sigaction_with_sa_handler_needs_posix=no)])
+                       pac_cv_struct_sigaction_with_sa_handler_needs_posix,[
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+                #define _POSIX_SOURCE
+                #include <signal.h>
+                ]],[[
+                struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+                act.sa_handler = SIG_IGN;
+                ]])],
+                pac_cv_struct_sigaction_with_sa_handler_needs_posix=yes,
+                pac_cv_struct_sigaction_with_sa_handler_needs_posix=no)
+        ])
         if test "$pac_cv_struct_sigaction_with_sa_handler_needs_posix" = "yes" ; then
             sigaction_ok=yes
 	fi
@@ -169,7 +181,7 @@ dnl
 # FIXME: need to include the test, at least for any file that
 # might set _POSIX_SOURCE
 # putenv() sets environment variable
-AC_HAVE_FUNCS(putenv)
+AC_CHECK_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
 fi
@@ -189,7 +201,7 @@ if test "$ac_cv_func_select" != yes ; then
     AC_MSG_ERROR([select is required for the process manager utilities])
 else
     # Check that FD_ZERO works.  Under the Darwin xlc (version 6) compiler,
-    # FD_ZERO gets turned into a referece to __builtin_bzero, which is not
+    # FD_ZERO gets turned into a reference to __builtin_bzero, which is not
     # in the xlc libraries.  This is apparently due to xlc pretending that it
     # is GCC within the system header files (the same test that must 
     # succeed within the system header files to cause the declaration to
@@ -197,8 +209,9 @@ else
     # (sys/select.h is POSIX)
     if test "$ac_cv_header_sys_select_h" = yes ; then
         AC_CACHE_CHECK([whether FD_ZERO works],pac_cv_fdzero_works,[
-        AC_TRY_LINK([#include <sys/select.h>],[fd_set v; FD_ZERO(&v)],
-        pac_cv_fdzero_works=yes,pac_cv_fdzero_works=no)])
+            AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/select.h>]],[[fd_set v; FD_ZERO(&v)]])],
+                pac_cv_fdzero_works=yes,pac_cv_fdzero_works=no)
+        ])
         if test "$pac_cv_fdzero_works" != yes ; then
             AC_MSG_ERROR([Programs with FD_ZERO cannot be linked (check your system includes)])
 	fi
@@ -214,16 +227,21 @@ AC_CHECK_FUNCS([sched_setaffinity sched_getaffinity bindprocessor thread_policy_
 if test "$ac_cv_func_sched_setaffinity" = "yes" ; then
     # Test for the cpu process set type
     AC_CACHE_CHECK([whether cpu_set_t available],pac_cv_have_cpu_set_t,[
-    AC_TRY_COMPILE( [
-#include <sched.h>],[ cpu_set_t t; ],pac_cv_have_cpu_set_t=yes,pac_cv_have_cpu_set_t=no)])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sched.h>]],[[cpu_set_t t;]])],
+            pac_cv_have_cpu_set_t=yes,pac_cv_have_cpu_set_t=no)
+    ])
     if test "$pac_cv_have_cpu_set_t" = yes ; then
         AC_DEFINE(HAVE_CPU_SET_T,1,[Define if cpu_set_t is defined in sched.h])
 
-	AC_CACHE_CHECK([whether the CPU_SET and CPU_ZERO macros are defined],
-	pac_cv_cpu_set_defined,[
-        AC_TRY_LINK( [
-#include <sched.h>],[ cpu_set_t t; CPU_ZERO(&t); CPU_SET(1,&t); ],
-        pac_cv_cpu_set_defined=yes,pac_cv_cpu_set_defined=no)])
+	AC_CACHE_CHECK([whether the CPU_SET and CPU_ZERO macros are defined], pac_cv_cpu_set_defined,[
+            AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+                #include <sched.h>
+                ]],[[
+                cpu_set_t t;
+                CPU_ZERO(&t);
+                CPU_SET(1,&t);
+                ]])], pac_cv_cpu_set_defined=yes,pac_cv_cpu_set_defined=no)
+        ])
 	if test "$pac_cv_cpu_set_defined" = "yes" ; then
 	    AC_DEFINE(HAVE_CPU_SET_MACROS,1,[Define if CPU_SET and CPU_ZERO defined])
         fi
@@ -232,13 +250,14 @@ if test "$ac_cv_func_sched_setaffinity" = "yes" ; then
     fi
 fi
 if test "$ac_cv_func_thread_policy_set" = yes ; then
-    AC_CACHE_CHECK([whether thread affinity macros defined],
-    pac_cv_have_thread_affinity_policy,[
-    AC_TRY_COMPILE([#include <mach/thread_policy.h>],[
-#if !defined(THREAD_AFFINITY_POLICY) || !defined(THREAD_AFFINITY_TAG_NULL)
-    :'thread macros not defined
-],[pac_cv_have_thread_affinity_policy=yes],
-  [pac_cv_have_thread_affinity_policy=no])])
+    AC_CACHE_CHECK([whether thread affinity macros defined], pac_cv_have_thread_affinity_policy,[
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <mach/thread_policy.h>
+            ]],[[
+            #if !defined(THREAD_AFFINITY_POLICY) || !defined(THREAD_AFFINITY_TAG_NULL)
+                :'thread macros not defined
+            ]])],[pac_cv_have_thread_affinity_policy=yes], [pac_cv_have_thread_affinity_policy=no])
+    ])
     if test "$pac_cv_have_thread_affinity_policy" = yes ; then
         AC_DEFINE(HAVE_OSX_THREAD_AFFINITY,1,[Define is the OSX thread affinity policy macros defined])
     fi
@@ -248,17 +267,17 @@ AC_CHECK_HEADERS([string.h sys/time.h time.h stdlib.h sys/socket.h wait.h errno.
 AC_CHECK_FUNCS(time)
 # Check for socklen_t .  
 # (note the conditional inclusion of sys/socket.h)
-AC_CACHE_CHECK([whether socklen_t is defined (in sys/socket.h if present)],
-pac_cv_have_socklen_t,[
-AC_TRY_COMPILE([
-#include <sys/types.h>
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-typedef struct { double a; int b; } socklen_t;],
-[socklen_t a;a.a=1.0;],
-[pac_cv_have_socklen_t=no],
-[pac_cv_have_socklen_t=yes])])
+AC_CACHE_CHECK([whether socklen_t is defined (in sys/socket.h if present)], pac_cv_have_socklen_t,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <sys/types.h>
+        #ifdef HAVE_SYS_SOCKET_H
+        #include <sys/socket.h>
+        #endif
+        typedef struct { double a; int b; } socklen_t;
+        ]],[[
+        socklen_t a;a.a=1.0;
+        ]])],[pac_cv_have_socklen_t=no],[pac_cv_have_socklen_t=yes])
+])
 if test "$pac_cv_have_socklen_t" = yes ; then
     AC_DEFINE([HAVE_SOCKLEN_T],1,[Define if socklen_t is available])
 fi

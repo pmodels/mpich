@@ -45,7 +45,7 @@ static MPIR_Request *create_request(struct iovec * iov, int iov_count, int iov_o
  * pointed to by the iovec (which is assumed to be a
  * MPIDI_CH3_Pkt_t) are copied into the request, and a pointer to the request
  * is returned.  An error condition also results in a
- * request be allocated and the errror being returned in the status field of
+ * request be allocated and the error being returned in the status field of
  * the request.
  */
 
@@ -56,7 +56,7 @@ static MPIR_Request *create_request(struct iovec * iov, int iov_count, int iov_o
    seems like a flaw in the CH3 API. */
 
 /* NOTE - The completion action associated with a request created by
-   CH3_iStartMsgv() is alway MPIDI_CH3_CA_COMPLETE.  This
+   CH3_iStartMsgv() is always MPIDI_CH3_CA_COMPLETE.  This
    implies that CH3_iStartMsgv() can only be used when the entire message can
    be described by a single iovec of size
    MPL_IOV_LIMIT. */

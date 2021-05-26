@@ -470,7 +470,7 @@ sub ConvertTestlist {
 	}
 	elsif (/^c2fmult(\w*)\s+(.*)/) {
 	    # This is a special case for programs that are not Fortran
-	    # programs but are part of the Fortran tests; principly, these
+	    # programs but are part of the Fortran tests; principally, these
 	    # are the tests of MPI handle conversion
 	    # note the \w* instead of \w+; this allows us to match both
 	    # c2fmult.c and c2fmultio.c

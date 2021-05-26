@@ -30,13 +30,14 @@ enum {
  * Flags argument allows to control execution of different parts of progress function,
  * for aims of prioritization of different transports and reentrant-safety of progress call.
  *
- * MPIDI_PROGRESS_HOOKS - enables progress on progress hooks. Hooks may invoke upper-level logic internaly,
+ * MPIDI_PROGRESS_HOOKS - enables progress on progress hooks. Hooks may invoke upper-level logic internally,
  *      that's why MPIDI_Progress_test call with MPIDI_PROGRESS_HOOKS set isn't reentrant safe, and shouldn't be called from netmod's fallback logic.
  * MPIDI_PROGRESS_NM and MPIDI_PROGRESS_SHM enables progress on transports only, and guarantee reentrant-safety.
  */
 #define MPIDI_PROGRESS_HOOKS  (1)
 #define MPIDI_PROGRESS_NM     (1<<1)
 #define MPIDI_PROGRESS_SHM    (1<<2)
+#define MPIDI_PROGRESS_NM_LOCKLESS     (1<<3)   /* to support lockless MT model */
 
 #define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
 
@@ -85,6 +86,23 @@ typedef struct MPIDIG_ssend_ack_msg_t {
     MPIR_Request *sreq_ptr;
 } MPIDIG_ssend_ack_msg_t;
 
+typedef struct MPIDIG_part_send_init_msg_t {
+    int src_rank;
+    int tag;
+    MPIR_Context_id_t context_id;
+    MPIR_Request *sreq_ptr;
+    MPI_Aint data_sz;           /* size of entire send data */
+} MPIDIG_part_send_init_msg_t;
+
+typedef struct MPIDIG_part_cts_msg_t {
+    MPIR_Request *sreq_ptr;
+    MPIR_Request *rreq_ptr;
+} MPIDIG_part_cts_msg_t;
+
+typedef struct MPIDIG_part_send_data_msg_t {
+    MPIR_Request *rreq_ptr;
+} MPIDIG_part_send_data_msg_t;
+
 typedef struct MPIDIG_win_cntrl_msg_t {
     uint64_t win_id;
     uint32_t origin_rank;
@@ -100,6 +118,7 @@ typedef struct MPIDIG_put_msg_t {
     MPI_Aint target_datatype;
     MPI_Aint target_true_lb;
     int flattened_sz;
+    MPI_Aint origin_data_sz;
 } MPIDIG_put_msg_t;
 
 typedef struct MPIDIG_put_dt_ack_msg_t {
@@ -133,6 +152,7 @@ typedef struct MPIDIG_get_msg_t {
 
 typedef struct MPIDIG_get_ack_msg_t {
     MPIR_Request *greq_ptr;
+    MPI_Aint target_data_sz;
 } MPIDIG_get_ack_msg_t;
 
 typedef struct MPIDIG_cswap_req_msg_t {
@@ -157,7 +177,7 @@ typedef struct MPIDIG_acc_req_msg_t {
     MPI_Datatype target_datatype;
     MPI_Op op;
     MPI_Aint target_disp;
-    uint64_t result_data_sz;
+    MPI_Aint result_data_sz;
     int n_iov;
     int flattened_sz;
 } MPIDIG_acc_req_msg_t;
@@ -172,7 +192,6 @@ typedef MPIDIG_acc_ack_msg_t MPIDIG_get_acc_ack_msg_t;
 
 typedef struct MPIDIG_comm_req_list_t {
     MPIR_Comm *comm[2][4];
-    MPIDIG_rreq_t *uelist[2][4];
 } MPIDIG_comm_req_list_t;
 
 typedef struct {
@@ -213,13 +232,23 @@ typedef struct {
 /* Protects dynamic process tag, connection_id, avtable etc. */
 #define MPIDIU_THREAD_DYNPROC_MUTEX       MPIDI_global.m[6]
 
-#define MAX_CH4_MUTEXES 7
+/* Protects alloc_mem hash */
+#define MPIDIU_THREAD_ALLOC_MEM_MUTEX     MPIDI_global.m[7]
+
+#define MAX_CH4_MUTEXES 8
+
+extern MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[REQUEST_POOL_MAX];
 
 /* per-VCI structure -- using union to force minimum size */
 typedef union MPIDI_vci {
     struct {
         int attr;
         MPID_Thread_mutex_t lock;
+        /* The progress counts are mostly accessed in a VCI critical section and thus updated in a
+         * relaxed manner.  MPL_atomic_int_t is used here only for MPIDI_set_progress_vci() and
+         * MPIDI_set_progress_vci_n(), which access these progress counts outside a VCI critical
+         * section. */
+        MPL_atomic_int_t progress_count;
     } vci;
     char pad[MPL_CACHELINE_SIZE];
 } MPIDI_vci_t;
@@ -241,10 +270,10 @@ typedef struct MPIDI_CH4_Global_t {
     MPIR_Commops MPIR_Comm_fns_store;
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
-#ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
-    MPIDIG_rreq_t *posted_list;
-    MPIDIG_rreq_t *unexp_list;
-#endif
+    MPIDI_Devreq_t *posted_list;
+    MPIDI_Devreq_t *unexp_list;
+    MPIDI_Devreq_t *part_posted_list;
+    MPIDI_Devreq_t *part_unexp_list;
     MPIDIG_req_ext_t *cmpl_list;
     MPL_atomic_uint64_t exp_seq_no;
     MPL_atomic_uint64_t nxt_seq_no;
@@ -258,7 +287,6 @@ typedef struct MPIDI_CH4_Global_t {
 
     int n_vcis;
     MPIDI_vci_t vci[MPIDI_CH4_MAX_VCIS];
-    int progress_counts[MPIDI_CH4_MAX_VCIS];
 
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     /* TODO: move into MPIDI_vci to have per-vci workqueue */

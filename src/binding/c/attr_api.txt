@@ -1,0 +1,234 @@
+# vim: set ft=c:
+
+MPI_Attr_delete:
+    .desc: Deletes an attribute value associated with a key on a communicator
+    .replace: deprecated with MPI_Comm_delete_attr
+
+MPI_Attr_get:
+    .desc: Retrieves attribute value by key
+    .skip: Fortran
+    .replace: deprecated with MPI_Comm_get_attr
+    .seealso: MPI_Attr_put, MPI_Keyval_create, MPI_Attr_delete, MPI_Comm_get_attr
+
+MPI_Attr_put:
+    .desc: Stores attribute value associated with a key
+    .replace: deprecated with MPI_Comm_set_attr
+    .seealso: MPI_Attr_get, MPI_Keyval_create, MPI_Attr_delete, MPI_Comm_set_attr
+
+MPI_Keyval_create:
+    .desc: Creates a new attribute key
+    .replace: deprecated with MPI_Comm_create_keyval
+    .seealso: MPI_Keyval_free, MPI_Comm_create_keyval
+
+MPI_Keyval_free:
+    .desc: Frees an attribute key for communicators
+    .seealso: MPI_Keyval_create, MPI_Comm_free_keyval
+    .replace: deprecated with MPI_Comm_free_keyval
+
+MPI_Comm_create_keyval:
+    .desc: Create a new attribute key
+    .docnotes: AttrErrReturn
+    .seealso: MPI_Comm_free_keyval
+/*
+    Notes:
+    Key values are global (available for any and all communicators).
+
+    Default copy and delete functions are available.  These are
+    + MPI_COMM_NULL_COPY_FN   - empty copy function
+    . MPI_COMM_NULL_DELETE_FN - empty delete function
+    - MPI_COMM_DUP_FN         - simple dup function
+
+    There are subtle differences between C and Fortran that require that the
+    copy_fn be written in the same language from which 'MPI_Comm_create_keyval'
+    is called.
+    This should not be a problem for most users; only programmers using both
+    Fortran and C in the same program need to be sure that they follow this rule.
+*/
+
+MPI_Comm_delete_attr:
+    .desc: Deletes an attribute value associated with a key on a communicator
+    .seealso: MPI_Comm_set_attr, MPI_Comm_create_keyval
+    .extra: ignore_revoked_comm
+
+MPI_Comm_free_keyval:
+    .desc: Frees an attribute key for communicators
+{
+    MPIR_free_keyval(comm_keyval_ptr);
+    *comm_keyval = MPI_KEYVAL_INVALID;
+}
+
+MPI_Comm_get_attr:
+    .desc: Retrieves attribute value by key
+    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
+    .skip: Fortran
+    .extra: ignore_revoked_comm
+/*
+    Notes:
+        Attributes must be extracted from the same language as they were inserted
+        in with 'MPI_ATTR_PUT'.  The notes for C and Fortran below explain why.
+*/
+/*
+    Notes for C:
+        Even though the 'attribute_val' argument is declared as 'void *', it is
+        really the address of a void pointer (i.e., a 'void **').  Using
+        a 'void *', however, is more in keeping with C idiom and allows the
+        pointer to be passed without additional casts.
+
+    .N Fortran
+        The 'attribute_val' in Fortran is a pointer to a Fortran integer, not
+        a pointer to a 'void *'.
+*/
+
+MPI_Comm_set_attr:
+    .desc: Stores attribute value associated with a key
+    .seealso: MPI_Comm_create_keyval, MPI_Comm_delete_attr
+    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
+    .extra: ignore_revoked_comm
+/*
+    Notes:
+    Values of the permanent attributes 'MPI_TAG_UB', 'MPI_HOST', 'MPI_IO',
+    'MPI_WTIME_IS_GLOBAL', 'MPI_UNIVERSE_SIZE', 'MPI_LASTUSEDCODE', and
+    'MPI_APPNUM' may not be changed.
+
+    The type of the attribute value depends on whether C, C++, or Fortran
+    is being used.
+    In C and C++, an attribute value is a pointer ('void *'); in Fortran, it is an
+    address-sized integer.
+
+    If an attribute is already present, the delete function (specified when the
+    corresponding keyval was created) will be called.
+*/
+
+MPI_Type_create_keyval:
+    .desc: Create an attribute keyval for MPI datatypes
+    .docnotes: AttrErrReturn
+/*
+    Notes:
+    Key values are global (available for any and all derived datatypes).
+
+    Default copy and delete functions are available.  These are
+    + MPI_TYPE_NULL_COPY_FN   - empty copy function
+    . MPI_TYPE_NULL_DELETE_FN - empty delete function
+    - MPI_TYPE_DUP_FN         - simple dup function
+
+    There are subtle differences between C and Fortran that require that the
+    copy_fn be written in the same language from which 'MPI_Type_create_keyval'
+    is called.
+    This should not be a problem for most users; only programmers using both
+    Fortran and C in the same program need to be sure that they follow this rule.
+*/
+
+MPI_Type_delete_attr:
+    .desc: Deletes an attribute value associated with a key on a datatype
+
+MPI_Type_free_keyval:
+    .desc: Frees an attribute key for datatypes
+{
+    MPIR_free_keyval(type_keyval_ptr);
+    *type_keyval = MPI_KEYVAL_INVALID;
+}
+
+MPI_Type_get_attr:
+    .desc: Retrieves attribute value by key
+    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
+    .skip: Fortran
+/*
+    Notes:
+        Attributes must be extracted from the same language as they were inserted
+        in with 'MPI_ATTR_PUT'.  The notes for C and Fortran below explain why.
+*/
+/*
+    Notes for C:
+        Even though the 'attribute_val' argument is declared as 'void *', it is
+        really the address of a void pointer (i.e., a 'void **').  Using
+        a 'void *', however, is more in keeping with C idiom and allows the
+        pointer to be passed without additional casts.
+
+    .N Fortran
+        The 'attribute_val' in Fortran is a pointer to a Fortran integer, not
+        a pointer to a 'void *'.
+*/
+
+MPI_Type_set_attr:
+    .desc: Stores attribute value associated with a key
+    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
+/*
+    Notes:
+
+    The type of the attribute value depends on whether C or Fortran is being used.
+    In C, an attribute value is a pointer ('void *'); in Fortran, it is an
+    address-sized integer.
+
+    If an attribute is already present, the delete function (specified when the
+    corresponding keyval was created) will be called.
+*/
+
+MPI_Win_create_keyval:
+    .desc: Create an attribute keyval for MPI window objects
+    .docnotes: AttrErrReturn
+/*
+    Notes:
+    Key values are global (available for any and all communicators).
+
+    Default copy and delete functions are available.  These are
+    + MPI_WIN_NULL_COPY_FN   - empty copy function
+    . MPI_WIN_NULL_DELETE_FN - empty delete function
+    - MPI_WIN_DUP_FN         - simple dup function
+
+    There are subtle differences between C and Fortran that require that the
+    copy_fn be written in the same language from which 'MPI_Win_create_keyval'
+    is called.
+    This should not be a problem for most users; only programmers using both
+    Fortran and C in the same program need to be sure that they follow this rule.
+*/
+
+MPI_Win_delete_attr:
+    .desc: Deletes an attribute value associated with a key on a window
+
+MPI_Win_free_keyval:
+    .desc: Frees an attribute key for MPI RMA windows
+{
+    MPIR_free_keyval(win_keyval_ptr);
+    *win_keyval = MPI_KEYVAL_INVALID;
+}
+
+MPI_Win_get_attr:
+    .desc: Get attribute cached on an MPI window object
+    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
+    .skip: Fortran
+/*
+    Notes:
+    The following attributes are predefined for all MPI Window objects\:
+
+    + MPI_WIN_BASE - window base address.
+    . MPI_WIN_SIZE - window size, in bytes.
+    - MPI_WIN_DISP_UNIT - displacement unit associated with the window.
+
+    Attributes must be extracted from the same language as they were inserted
+    in with 'MPI_ATTR_PUT'.  The notes for C and Fortran below explain why.
+*/
+/*
+    Notes for C:
+        Even though the 'attribute_val' argument is declared as 'void *', it is
+        really the address of a void pointer (i.e., a 'void **').  Using
+        a 'void *', however, is more in keeping with C idiom and allows the
+        pointer to be passed without additional casts.
+
+    .N Fortran
+        The 'attribute_val' in Fortran is a pointer to a Fortran integer, not
+        a pointer to a 'void *'.
+*/
+
+MPI_Win_set_attr:
+    .desc: Stores attribute value associated with a key
+    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
+/*
+    Notes:
+
+    The type of the attribute value depends on whether C or Fortran is being used.
+    In C, an attribute value is a pointer ('void *'); in Fortran, it is an
+    address-sized integer.
+
+    If an attribute is already present, the delete function (specified when the
+    corresponding keyval was created) will be called.
+*/

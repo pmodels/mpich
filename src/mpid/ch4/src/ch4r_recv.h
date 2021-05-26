@@ -21,14 +21,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_reply_ssend(MPIR_Request * rreq)
         mpi_errno =
             MPIDI_SHM_am_send_hdr_reply(MPIDIG_REQUEST(rreq, context_id),
                                         MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &ack_msg,
-                                        sizeof(ack_msg));
+                                        (MPI_Aint) sizeof(ack_msg));
     else
 #endif
     {
         mpi_errno =
             MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(rreq, context_id),
                                        MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &ack_msg,
-                                       sizeof(ack_msg));
+                                       (MPI_Aint) sizeof(ack_msg));
     }
 
     MPIR_ERR_CHECK(mpi_errno);

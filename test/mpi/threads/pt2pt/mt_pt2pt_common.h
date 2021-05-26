@@ -37,7 +37,7 @@
 #define ISEND_FUN MPI_Isend
 #endif
 
-/* Large data tranfer */
+/* Large data transfer */
 #if defined(HUGE_COUNT)
 #define BUFF_ELEMENT_COUNT(iter, count) (count)
 /* Medium data transfer */

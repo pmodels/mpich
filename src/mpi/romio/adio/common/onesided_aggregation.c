@@ -19,8 +19,8 @@
  * file domains within aggregators corresponding to the target data blocks.  It
  * is designed to be initialized with a starting point for a given file domain
  * with an aggregator, after which the data access for data written to a given
- * file domain from this compute is linear and uninterupted, and this serves as
- * a key optimization for feeding the target aggs.  For contigous source data
+ * file domain from this compute is linear and uninterrupted, and this serves as
+ * a key optimization for feeding the target aggs.  For contiguous source data
  * the starting point is a single-value offset, for non-contiguous data it is
  * the number of extents, the index into the flattened buffer and the remnant
  * length beyond the flattened buffer index.  The validity of the usage of this
@@ -64,7 +64,7 @@ int ADIOI_OneSidedCleanup(ADIO_File fd)
     return ret;
 }
 
-/* This funtion packs a contigous buffer of data from the non-contgious source
+/* This function packs a contiguous buffer of data from the non-contgious source
  * buffer for a specified chunk of data and advances the FDSourceBufferState
  * machinery, so subsequent calls with the FDSourceBufferState will return the
  * next linear chunk.
@@ -193,7 +193,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
  * the collective buffer to the file system.  In this fashion the synchronization can be minimized as that
  * only needs to occur during the actual read from or write to the file system.  In the case of gpfs
  * this function is called just once.  The ADIOI_OneSidedStripeParms parameter is used to save the
- * state and re-use variables thru repetative calls to help in the case of lustre to avoid costly
+ * state and re-use variables thru repetitive calls to help in the case of lustre to avoid costly
  * recomputation, for consistency gpfs utilizes it as well but doesn't use some aspects of it.  This
  * function was originally first written for gpfs only and then modified to support lustre.
  */
@@ -406,7 +406,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     int numTargetAggs = 0;
 
     /* This data structure holds the beginning offset and len list index for the range to be written
-     * coresponding to the round and target agg.  Initialize to -1 to denote being unset.
+     * corresponding to the round and target agg.  Initialize to -1 to denote being unset.
      */
     int **targetAggsForMyDataFirstOffLenIndex =
         (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
@@ -417,7 +417,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     }
 
     /* This data structure holds the ending offset and len list index for the range to be written
-     * coresponding to the round and target agg.
+     * corresponding to the round and target agg.
      */
     int **targetAggsForMyDataLastOffLenIndex =
         (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
@@ -728,7 +728,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                         targetAggsForMyDataFirstOffLenIndex[targetAggsForMyDataCurrentRoundIter
                                                             [numTargetAggs]][numTargetAggs] =
                             blockIter;
-                        /* For the first additonal file domain the source buffer offset
+                        /* For the first additional file domain the source buffer offset
                          * will be incremented relative to the state of this first main
                          * loop but for subsequent full file domains the offset will be
                          * incremented by the size
@@ -1030,7 +1030,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
     /* This is the second main loop of the algorithm, actually nested loop of target aggs within rounds.  There are 2 flavors of this.
      * For romio_write_aggmethod of 1 each nested iteration for the target
-     * agg does an mpi_put on a contiguous chunk using a primative datatype
+     * agg does an mpi_put on a contiguous chunk using a primitive datatype
      * determined using the data structures from the first main loop.  For
      * romio_write_aggmethod of 2 each nested iteration for the target agg
      * builds up data to use in created a derived data type for 1 mpi_put that is done for the target agg for each round.
@@ -1781,7 +1781,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     int numSourceAggs = 0;
 
     /* This data structure holds the beginning offset and len list index for the range to be read
-     * coresponding to the round and source agg. Initialize to -1 to denote being unset.
+     * corresponding to the round and source agg. Initialize to -1 to denote being unset.
      */
     int **sourceAggsForMyDataFirstOffLenIndex =
         (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
@@ -1792,7 +1792,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     }
 
     /* This data structure holds the ending offset and len list index for the range to be read
-     * coresponding to the round and source agg.
+     * corresponding to the round and source agg.
      */
     int **sourceAggsForMyDataLastOffLenIndex =
         (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
@@ -2083,7 +2083,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                             blockIter;
 
 
-                        /* For the first additonal file domain the source buffer offset
+                        /* For the first additional file domain the source buffer offset
                          * will be incremented relative to the state of this first main
                          * loop but for subsequent full file domains the offset will be
                          * incremented by the size of the file domain.
@@ -2275,7 +2275,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
 
     /* This is the second main loop of the algorithm, actually nested loop of target aggs within rounds.  There are 2 flavors of this.
-     * For romio_read_aggmethod of 1 each nested iteration for the source agg does an mpi_put on a contiguous chunk using a primative datatype
+     * For romio_read_aggmethod of 1 each nested iteration for the source agg does an mpi_put on a contiguous chunk using a primitive datatype
      * determined using the data structures from the first main loop.  For romio_read_aggmethod of 2 each nested iteration for the source agg
      * builds up data to use in created a derived data type for 1 mpi_put that is done for the target agg for each round.
      * To support lustre there will need to be an additional layer of nesting for the multiple file domains

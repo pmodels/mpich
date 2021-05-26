@@ -119,7 +119,7 @@ static int check_iteration_data(int x)
 static int run_test(void)
 {
     int errors = 0;
-    int i, x;
+    int x;
     int dst = 0;
     MPI_Aint target_disp = 0;
 

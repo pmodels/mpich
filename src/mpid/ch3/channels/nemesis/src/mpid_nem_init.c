@@ -84,7 +84,7 @@ static int MPID_nem_init_stats(int n_local_ranks)
         MPI_UNSIGNED_LONG_LONG,
         nem_fbox_fall_back_to_queue_count, /* name */
         MPID_nem_fbox_fall_back_to_queue_count, /* address */
-        n_local_ranks, /* count, known at pvar registeration time */
+        n_local_ranks, /* count, known at pvar registration time */
         MPI_T_VERBOSITY_USER_DETAIL,
         MPI_T_BIND_NO_OBJECT,
         MPIR_T_PVAR_FLAG_CONTINUOUS, /* flags */
@@ -93,10 +93,7 @@ static int MPID_nem_init_stats(int n_local_ranks)
         "NEMESIS", /* category */
         "Array counting how many times nemesis had to fall back to the regular queue when sending messages between pairs of local processes");
 
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 int
@@ -314,7 +311,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* Register detroy hooks after netmod init so the netmod hooks get called
+    /* Register destroy hooks after netmod init so the netmod hooks get called
        before nemesis hooks. */
     mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(MPIDI_CH3I_comm_destroy, NULL);
     MPIR_ERR_CHECK(mpi_errno);

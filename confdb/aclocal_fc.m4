@@ -123,7 +123,7 @@ fi # is not cross compiling
 dnl
 dnl ------------------------------------------------------------------------
 dnl Special characteristics that have no autoconf counterpart but that
-dnl we need as part of the Fortran 90 support.  To distinquish these, they
+dnl we need as part of the Fortran 90 support.  To distinguish these, they
 dnl have a [PAC] prefix.
 dnl 
 dnl At least one version of the Cray compiler needs the option -em to
@@ -274,7 +274,7 @@ AC_COMPILE_IFELSE([],[
 rm -rf conftest.dSYM
 rm -f conftest.$ac_ext
 
-dnl Create the conftest here so the test isn't created everytime inside loop.
+dnl Create the conftest here so the test isn't created every time inside loop.
 AC_LANG_CONFTEST([AC_LANG_PROGRAM([],[use conf])])
 
 # Save the original FCFLAGS
@@ -312,7 +312,7 @@ if test "X$pac_cv_fc_module_incflag" = "X" ; then
         #     fullpathname.pc
         # The "fullpathname.pc" is generated, I believe, when a module is 
         # compiled.  
-        # Intel compilers use a wierd system: -cl,filename.pcl .  If no file is
+        # Intel compilers use a weird system: -cl,filename.pcl .  If no file is
         # specified, work.pcl and work.pc are created.  However, if you specify
         # a file, it must contain the name of a file ending in .pc .  Ugh!
         pac_cv_fc_module_incflag="unknown"
@@ -553,7 +553,6 @@ dnl
 dnl
 dnl
 AC_DEFUN([PAC_PROG_FC_AND_C_STDIO_LIBS],[
-AC_REQUIRE([AC_HEADER_STDC])
 # To simply the code in the cache_check macro, chose the routine name
 # first, in case we need it
 confname=conf1_
@@ -573,9 +572,7 @@ pac_cv_prog_fc_and_c_stdio_libs=unknown
 AC_LANG_PUSH(C)
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
 int $confname( int a )
 { printf( "The answer is %d\n", a ); fflush(stdout); return 0; }
     ])
@@ -1143,7 +1140,7 @@ END INTERFACE TEST_ASSUMED_RANK_ASYNC
 
 CONTAINS
 
-! Test TS 29113 asychronous attribute and optional
+! Test TS 29113 asynchronous attribute and optional
 SUBROUTINE test1(buf, count, ierr)
     INTEGER, ASYNCHRONOUS :: buf(*)
     INTEGER               :: count
@@ -1194,4 +1191,22 @@ else
 fi
 rm -f conftest1.$OBJEXT F08TS_MODULE.* f08ts_module.*
 AC_MSG_RESULT([$f08_works])
+])
+
+dnl
+dnl PAC_FC_CHECK_REAL128 check whether real128 is supported (for use_mpi_f08)
+dnl set pac_fc_has_real128 to yes if it's supported, otherwise, no.
+dnl
+AC_DEFUN([PAC_FC_CHECK_REAL128],[
+    AC_LANG_PUSH(Fortran)
+    AC_MSG_CHECKING([for Fortran 90 real128])
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+        program main
+            use iso_fortran_env
+            real(real128) x
+            x = 1.0
+        end
+    ])],[pac_fc_has_real128=yes],[pac_fc_has_real128=no])
+    AC_MSG_RESULT([$pac_fc_has_real128])
+    AC_LANG_POP(Fortran)
 ])

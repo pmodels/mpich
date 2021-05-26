@@ -11,7 +11,8 @@
  * algorithms can only handle ordered array of data and hence this function for
  * checking whether the data is ordered.
  */
-int MPII_Iallgatherv_is_displs_ordered(int size, const int recvcounts[], const int displs[])
+int MPII_Iallgatherv_is_displs_ordered(int size, const MPI_Aint recvcounts[],
+                                       const MPI_Aint displs[])
 {
     int i, pos = 0;
     for (i = 0; i < size; i++) {

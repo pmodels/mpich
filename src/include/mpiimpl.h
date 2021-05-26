@@ -10,21 +10,9 @@
 #include "mpichconf.h"
 
 #include <stdio.h>
-#ifdef STDC_HEADERS
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#else
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#ifdef HAVE_STDARG_H
-#include <stdarg.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-#endif
 
 #ifdef HAVE_LIMITS_H
 #include <limits.h>
@@ -73,23 +61,18 @@ int usleep(useconds_t usec);
 #define PMPI_LOCAL
 #endif
 
-/* Fix for universal endianess added in autoconf 2.62 */
+/* Fix for universal endianness added in autoconf 2.62 */
 #ifdef WORDS_UNIVERSAL_ENDIAN
 #if defined(__BIG_ENDIAN__)
 #elif defined(__LITTLE_ENDIAN__)
 #define WORDS_LITTLEENDIAN
 #else
-#error 'Universal endianess defined without __BIG_ENDIAN__ or __LITTLE_ENDIAN__'
+#error 'Universal endianness defined without __BIG_ENDIAN__ or __LITTLE_ENDIAN__'
 #endif
 #endif
 
 #if defined(HAVE_VSNPRINTF) && defined(NEEDS_VSNPRINTF_DECL) && !defined(vsnprintf)
 int vsnprintf(char *str, size_t size, const char *format, va_list ap);
-#endif
-
-/* Just in case __func__ is not supported won't break code */
-#ifndef HAVE__FUNC__
-#define __func__ "__func__"
 #endif
 
 /* pmix.h contains inline functions that calls malloc, calloc, and free,
@@ -162,6 +145,8 @@ typedef struct MPIR_Group MPIR_Group;
 struct MPIR_Topology;
 typedef struct MPIR_Topology MPIR_Topology;
 
+struct MPIR_Session;
+typedef struct MPIR_Session MPIR_Session;
 
 /*****************************************************************************/
 /******************* PART 3: DEVICE INDEPENDENT HEADERS **********************/
@@ -177,6 +162,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_refcount.h"
 #include "mpir_mem.h"
 #include "mpir_info.h"
+#include "mpir_errcodes.h"
 #include "mpir_errhandler.h"
 #include "mpir_attr_generic.h"
 #include "mpir_contextid.h"
@@ -233,6 +219,9 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_handlemem.h"
 #include "mpir_hwtopo.h"
 #include "mpir_nettopo.h"
+#include "mpir_impl.h"
+
+#include "mpir_gpu_util.h"
 
 /*****************************************************************************/
 /******************** PART 6: DEVICE "POST" FUNCTIONALITY ********************/

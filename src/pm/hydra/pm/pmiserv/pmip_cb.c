@@ -9,6 +9,8 @@
 #include "demux.h"
 #include "topo.h"
 
+#define MAX_GPU_STR_LEN   (128)
+
 struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
 
 static int pmi_storage_len = 0;
@@ -632,6 +634,38 @@ static HYD_status launch_procs(void)
             HYDU_ERR_POP(status, "unable to add env to list\n");
             MPL_free(str);
 
+            if (HYD_pmcd_pmip.user_global.gpus_per_proc == HYD_GPUS_PER_PROC_AUTO) {
+                /* nothing to do */
+            } else if (HYD_pmcd_pmip.user_global.gpus_per_proc == 0) {
+                str = HYDU_int_to_str(-1);
+
+                status = HYDU_append_env_to_list("CUDA_VISIBLE_DEVICES", str, &force_env);
+                HYDU_ERR_POP(status, "unable to add env to list\n");
+
+                MPL_free(str);
+            } else {
+                char cuda_str[MAX_GPU_STR_LEN] = { 0 };
+                int cuda_str_offset = 0;
+
+                for (int k = 0; k < HYD_pmcd_pmip.user_global.gpus_per_proc; k++) {
+                    int p = process_id * HYD_pmcd_pmip.user_global.gpus_per_proc + k;
+                    str = HYDU_int_to_str(p);
+
+                    if (k) {
+                        MPL_strncpy(cuda_str + cuda_str_offset, ",",
+                                    MAX_GPU_STR_LEN - cuda_str_offset);
+                        cuda_str_offset++;
+                    }
+                    MPL_strncpy(cuda_str + cuda_str_offset, str, MAX_GPU_STR_LEN - cuda_str_offset);
+                    cuda_str_offset += strlen(str);
+
+                    MPL_free(str);
+                }
+
+                status = HYDU_append_env_to_list("CUDA_VISIBLE_DEVICES", cuda_str, &force_env);
+                HYDU_ERR_POP(status, "unable to add env to list\n");
+            }
+
             if (HYD_pmcd_pmip.user_global.pmi_port) {
                 /* If we are using the PMI_PORT format */
 
@@ -730,7 +764,6 @@ static HYD_status launch_procs(void)
     HYDU_ERR_POP(status, "unable to send PID list upstream\n");
     HYDU_ASSERT(!closed, status);
 
-  fn_spawn_complete:
     /* Everything is spawned, register the required FDs  */
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
                                   HYD_pmcd_pmip.downstream.out, HYD_POLLIN,

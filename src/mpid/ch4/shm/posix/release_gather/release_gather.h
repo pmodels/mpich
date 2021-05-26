@@ -58,7 +58,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr);
  * shm bcast buffer before notifying the children. Children copy the data out of shm buffer when
  * notified by the parent */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_buf,
-                                                                    const int count,
+                                                                    MPI_Aint count,
                                                                     MPI_Datatype datatype,
                                                                     const int root,
                                                                     MPIR_Comm * comm_ptr,
@@ -266,7 +266,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
  * Children notify the parent when it arrives. In case of Reduce, each rank places its data in shm
  * reduce buffer. A parent reduces all its children data with its own before notifying its parent. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *inbuf, void *outbuf,
-                                                                   const int count,
+                                                                   MPI_Aint count,
                                                                    MPI_Datatype datatype, MPI_Op op,
                                                                    const int root,
                                                                    MPIR_Comm * comm_ptr,
@@ -328,7 +328,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
         children = release_gather_info_ptr->reduce_tree.children;
     }
 
-    /* Avoid checking for availabilty of next buffer if it is guaranteed to be available */
+    /* Avoid checking for availability of next buffer if it is guaranteed to be available */
     /* "acquire" makes sure no writes/reads are reordered before this load */
     if ((operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) &&
         (MPL_atomic_acquire_load_uint64(release_gather_info_ptr->gather_flag_addr)) >=

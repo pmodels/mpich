@@ -61,8 +61,8 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, struct iovec * iov, i
              * channel, thus insuring that the progress engine does
              * also try to write */
 
-            /* FIXME: the current code only agressively writes the first IOV.
-             * Eventually it should be changed to agressively write
+            /* FIXME: the current code only aggressively writes the first IOV.
+             * Eventually it should be changed to aggressively write
              * as much as possible.  Ideally, the code would be shared between
              * the send routines and the progress engine. */
             rc = MPIDI_CH3I_Sock_writev(vcch->sock, iov, n_iov, &nb);

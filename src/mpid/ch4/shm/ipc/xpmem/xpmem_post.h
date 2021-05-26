@@ -47,19 +47,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *vaddr, uintptr
     memset(&ipc_attr->ipc_handle, 0, sizeof(MPIDI_IPCI_ipc_handle_t));
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-    ipc_attr->ipc_type = MPIDI_IPCI_TYPE__XPMEM;
-    ipc_attr->ipc_handle.xpmem.src_offset = (uint64_t) vaddr;
-    ipc_attr->ipc_handle.xpmem.data_sz = data_sz;
-    ipc_attr->ipc_handle.xpmem.src_lrank = MPIR_Process.local_rank;
-    if (MPIR_CVAR_CH4_XPMEM_ENABLE)
+    if (MPIR_CVAR_CH4_XPMEM_ENABLE) {
+        ipc_attr->ipc_type = MPIDI_IPCI_TYPE__XPMEM;
+        ipc_attr->ipc_handle.xpmem.src_offset = (uint64_t) vaddr;
+        ipc_attr->ipc_handle.xpmem.data_sz = data_sz;
+        ipc_attr->ipc_handle.xpmem.src_lrank = MPIR_Process.local_rank;
         ipc_attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD;
-    else
-        ipc_attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
-#else
-    ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
-    ipc_attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
+        goto fn_exit;
+    }
 #endif
 
+    ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
+    ipc_attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
+
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+  fn_exit:
+#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_GET_IPC_ATTR);
     return MPI_SUCCESS;
 }

@@ -15,7 +15,7 @@ static char MTEST_Descrip[] = "Test of various send cancel calls";
 int main(int argc, char *argv[])
 {
     int errs = 0;
-    int rank, size, source, dest;
+    int rank, size, dest;
     MPI_Comm comm;
     MPI_Status status;
     MPI_Request req;
@@ -33,7 +33,6 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
 
-    source = 0;
     dest = size - 1;
 
     for (cs = 0; cs < 4; cs++) {

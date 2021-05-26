@@ -873,11 +873,8 @@ int MPIDI_CH3I_Progress_finalize(void)
         qn_head = ent;
     }
 
- fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 static int shm_connection_terminated(MPIDI_VC_t * vc)
@@ -1038,7 +1035,6 @@ static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, 
 
     mpi_errno = vc_ch->pkt_handler[netmod_pkt->subtype](vc, pkt, data, buflen, rreqp);
 
-fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PKT_NETMOD_HANDLER);
     return mpi_errno;
 }

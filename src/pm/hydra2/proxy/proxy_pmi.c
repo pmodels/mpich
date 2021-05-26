@@ -57,7 +57,7 @@ HYD_status proxy_process_pmi_cb(int fd, HYD_dmx_event_t events, void *userp)
         if (!strncmp(pmi_stash, "cmd=", strlen("cmd="))) {
             if (pmi_stash[count - 1] != '\n') {
                 /* if we reached the end of the buffer we read and did
-                 * not yet get a full comamnd, wait till we get at
+                 * not yet get a full command, wait till we get at
                  * least one more byte */
                 status =
                     HYD_sock_read(fd, pmi_stash + count, 1, &recvd, &closed,
@@ -84,7 +84,7 @@ HYD_status proxy_process_pmi_cb(int fd, HYD_dmx_event_t events, void *userp)
             if (count < (int) strlen("endcmd") ||
                 strncmp(&pmi_stash[count - strlen("endcmd")], "endcmd", strlen("endcmd"))) {
                 /* if we reached the end of the buffer we read and did
-                 * not yet get a full comamnd, wait till we get at
+                 * not yet get a full command, wait till we get at
                  * least one more byte */
                 status =
                     HYD_sock_read(fd, pmi_stash + count, 1, &recvd, &closed,

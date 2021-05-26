@@ -36,6 +36,7 @@
 #define MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
 #define MPIDI_OFI_AM_HDR_POOL_MAX_NUM_CELLS         (257 * 1024)
 #define MPIDI_OFI_NUM_CQ_BUFFERED          (1024)
+#define MPIDI_OFI_STRIPE_CHUNK_SIZE        (2048)       /* First chunk sent through the preferred NIC during striping */
 
 /* The number of bits in the immediate data field allocated to the source rank. */
 #define MPIDI_OFI_IDATA_SRC_BITS (30)
@@ -106,16 +107,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 #endif
 #endif
 
-
-#ifdef HAVE_FORTRAN_BINDING
-/* number of basic types defined in mpi.h */
-/* FIXME: should be defined in mpi.h or mpir_datatype.h and avoid magic number here */
-#define MPIDI_OFI_DT_SIZES 61
-#else
-#define MPIDI_OFI_DT_SIZES 40
-#endif
-#define MPIDI_OFI_OP_SIZES 15
-
 #define MPIDI_OFI_THREAD_UTIL_MUTEX     MPIDI_OFI_global.mutexes[0].m
 #define MPIDI_OFI_THREAD_PROGRESS_MUTEX MPIDI_OFI_global.mutexes[1].m
 #define MPIDI_OFI_THREAD_FI_MUTEX       MPIDI_OFI_global.mutexes[2].m
@@ -129,7 +120,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 #define MPIDI_OFI_REQUEST(req,field)       ((req)->dev.ch4.netmod.ofi.field)
 #define MPIDI_OFI_AV(av)                   ((av)->netmod.ofi)
 
-#define MPIDI_OFI_DATATYPE(dt)   ((dt)->dev.netmod.ofi)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 
 #define MPIDI_OFI_NUM_CQ_ENTRIES 8
@@ -146,6 +136,7 @@ enum {
     MPIDI_OFI_EVENT_SEND,
     MPIDI_OFI_EVENT_RECV,
     MPIDI_OFI_EVENT_AM_SEND,
+    MPIDI_OFI_EVENT_AM_SEND_RDMA,
     MPIDI_OFI_EVENT_AM_SEND_PIPELINE,
     MPIDI_OFI_EVENT_AM_RECV,
     MPIDI_OFI_EVENT_AM_READ,
@@ -168,14 +159,6 @@ enum {
     MPIDI_OFI_PEEK_START,
     MPIDI_OFI_PEEK_NOT_FOUND,
     MPIDI_OFI_PEEK_FOUND
-};
-
-enum {
-    MPIDI_OFI_DYNPROC_DISCONNECTED = 0,
-    MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_CHILD,
-    MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT,
-    MPIDI_OFI_DYNPROC_CONNECTED_CHILD,
-    MPIDI_OFI_DYNPROC_CONNECTED_PARENT
 };
 
 typedef struct {
@@ -235,6 +218,16 @@ typedef struct {
     struct fid_av *av;
     struct fid_ep *ep;
     struct fid_cntr *rma_cmpl_cntr;
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    MPL_atomic_uint64_t rma_issued_cntr;        /* atomic version in support of lockless mt model */
+#else
+    uint64_t rma_issued_cntr;
+#endif
+    /* rma using shared TX context */
+    struct fid_stx *rma_stx_ctx;
+    /* rma using dedicated scalable EP */
+    struct fid_ep *rma_sep;
+    UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
 
     struct fid_ep *tx;
     struct fid_ep *rx;
@@ -260,7 +253,6 @@ typedef struct {
     unsigned enable_av_table:1;
     unsigned enable_scalable_endpoints:1;
     unsigned enable_shared_contexts:1;
-    unsigned enable_mr_scalable:1;
     unsigned enable_mr_virt_address:1;
     unsigned enable_mr_allocated:1;
     unsigned enable_mr_prov_key:1;
@@ -272,6 +264,7 @@ typedef struct {
     unsigned enable_hmem:1;
     unsigned enable_data_auto_progress:1;
     unsigned enable_control_auto_progress:1;
+    unsigned require_rdm:1;
 
     int max_endpoints;
     int max_endpoints_bits;
@@ -287,31 +280,24 @@ typedef struct {
 } MPIDI_OFI_capabilities_t;
 
 typedef struct {
-    fi_addr_t dest;
-    int rank;
-    int state;
-} MPIDI_OFI_conn_t;
-
-typedef struct MPIDI_OFI_conn_manager_t {
-    int max_n_conn;             /* Maximum number of connections up to this point */
-    int n_conn;                 /* Current number of open connections */
-    int next_conn_id;           /* The next connection id to be used. */
-    int *free_conn_id;          /* The list of the next connection id to be used so we
-                                 * can garbage collect as we go. */
-    MPIDI_OFI_conn_t *conn_list;        /* The list of connection structs to track the
-                                         * outstanding dynamic process connections. */
-} MPIDI_OFI_conn_manager_t;
+    struct fi_info *nic;
+    int id;                     /* Unique NIC ID, consistent across intranode ranks */
+    int close;                  /* Boolean whether nic is close in terms of affinity */
+    int prefer;                 /* Preference to order (lower is more preferred) */
+    int count;                  /* Count of ranks which have this NIC as their preferred NIC */
+    int num_close_ranks;        /* number of ranks which are close to this NIC */
+    MPIR_hwtopo_gid_t parent;   /* Parent topology item of NIC which has affinity mask.
+                                 * This is typically the socket above the NIC */
+} MPIDI_OFI_nic_info_t;
 
 /* Global state data */
 #define MPIDI_KVSAPPSTRLEN 1024
 typedef struct {
     /* OFI objects */
     int avtid;
-    struct fi_info *prov_use;
+    struct fi_info *prov_use[MPIDI_OFI_MAX_NICS];
+    MPIDI_OFI_nic_info_t nic_info[MPIDI_OFI_MAX_NICS];
     struct fid_fabric *fabric;
-
-    struct fid_stx *rma_stx_ctx;        /* shared TX context for RMA */
-    struct fid_ep *rma_sep;     /* dedicated scalable EP for RMA */
 
     int got_named_av;
 
@@ -319,32 +305,35 @@ typedef struct {
     uint64_t max_buffered_send;
     uint64_t max_buffered_write;
     uint64_t max_msg_size;
+    uint64_t stripe_threshold;
     uint64_t max_short_send;
     uint64_t max_mr_key_size;
     uint64_t max_rma_key_bits;
     uint64_t max_huge_rmas;
     int rma_key_type_bits;
     int context_shift;
-    size_t tx_iov_limit;
-    size_t rx_iov_limit;
-    size_t rma_iov_limit;
+    MPI_Aint tx_iov_limit;
+    MPI_Aint rx_iov_limit;
+    MPI_Aint rma_iov_limit;
     int max_rma_sep_tx_cnt;     /* Max number of transmit context on one RMA scalable EP */
-    size_t max_order_raw;
-    size_t max_order_war;
-    size_t max_order_waw;
+    MPI_Aint max_order_raw;
+    MPI_Aint max_order_war;
+    MPI_Aint max_order_waw;
 
     /* Mutexes and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[MAX_OFI_MUTEXES];
-    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_VNIS];
+    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_VNIS * MPIDI_OFI_MAX_NICS];
     int num_vnis;
+    int num_nics;
+    int num_close_nics;
+    int num_comms_enabled_striping;     /* Number of active communicators with striping enabled */
+    int num_comms_enabled_hashing;      /* Number of active communicators with hashingenabled */
 
     /* Window/RMA Globals */
     void *win_map;
-    uint64_t rma_issued_cntr;
     /* OFI atomics limitation of each pair of <dtype, op> returned by the
      * OFI provider at MPI initialization.*/
-    MPIDI_OFI_atomic_valid_t win_op_table[MPIDI_OFI_DT_SIZES][MPIDI_OFI_OP_SIZES];
-    UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
+    MPIDI_OFI_atomic_valid_t win_op_table[MPIR_DATATYPE_N_PREDEFINED][MPIDIG_ACCU_NUM_OP];
 
     /* Active Message Globals */
     struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
@@ -372,8 +361,8 @@ typedef struct {
     /* Process management and PMI globals */
     int pname_set;
     int pname_len;
-    char addrname[FI_NAME_MAX];
-    size_t addrnamelen;
+    char addrname[MPIDI_OFI_MAX_NICS][FI_NAME_MAX];
+    size_t addrnamelen;         /* OFI uses the same name length within a provider. */
     char pname[MPI_MAX_PROCESSOR_NAME];
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
 
@@ -390,10 +379,6 @@ typedef struct {
 } MPIDI_OFI_global_t;
 
 typedef struct {
-    uint32_t index;
-} MPIDI_OFI_datatype_t;
-
-typedef struct {
     int16_t type;
     int16_t seqno;
     int origin_rank;
@@ -401,19 +386,19 @@ typedef struct {
     uintptr_t send_buf;
     size_t msgsize;
     int comm_id;
-    uint64_t rma_key;
+    uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
     int tag;
     int vni_src;
     int vni_dst;
 } MPIDI_OFI_send_control_t;
 
 typedef struct MPIDI_OFI_win_acc_hint {
-    uint64_t dtypes_max_count[MPIDI_OFI_DT_SIZES];      /* translate CH4 which_accumulate_ops hints to
-                                                         * atomicity support of all OFI datatypes. A datatype
-                                                         * is supported only when all enabled ops are valid atomic
-                                                         * provided by the OFI provider (recored in MPIDI_OFI_global.win_op_table).
-                                                         * Invalid <dtype, op> defined in MPI standard are excluded.
-                                                         * This structure is prepared at window creation time. */
+    uint64_t dtypes_max_count[MPIR_DATATYPE_N_PREDEFINED];      /* translate CH4 which_accumulate_ops hints to
+                                                                 * atomicity support of all OFI datatypes. A datatype
+                                                                 * is supported only when all enabled ops are valid atomic
+                                                                 * provided by the OFI provider (recorded in MPIDI_OFI_global.win_op_table).
+                                                                 * Invalid <dtype, op> defined in MPI standard are excluded.
+                                                                 * This structure is prepared at window creation time. */
 } MPIDI_OFI_win_acc_hint_t;
 
 enum {
@@ -505,6 +490,8 @@ typedef struct MPIDI_OFI_huge_recv {
     bool peek;                  /* Flag to indicate whether this struct has been created to track an uncompleted peek
                                  * operation. */
     size_t cur_offset;
+    size_t stripe_size;
+    int chunks_outstanding;
     MPIR_Comm *comm_ptr;
     MPIR_Request *localreq;
     struct fi_cq_tagged_entry wc;
@@ -513,7 +500,7 @@ typedef struct MPIDI_OFI_huge_recv {
 } MPIDI_OFI_huge_recv_t;
 
 /* The list of posted huge receives that haven't been matched yet. These need
- * to get matched up when handling the control message that starts transfering
+ * to get matched up when handling the control message that starts transferring
  * data from the remote memory region and we need a way of matching up the
  * control messages with the "real" requests. */
 typedef struct MPIDI_OFI_huge_recv_list {

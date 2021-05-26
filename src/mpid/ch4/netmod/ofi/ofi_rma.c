@@ -123,13 +123,15 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
             MPIDI_OFI_load_iov(origin_addr, origin_count, origin_datatype, origin_len,
                                &origin_iov_offset, origin_iov);
         if (j == target_iov_offset)
-            MPIDI_OFI_load_iov((const void *) target_mr.addr, target_count, target_datatype,
-                               target_len, &target_iov_offset, target_iov);
+            MPIDI_OFI_load_iov((const void *) (uintptr_t) target_mr.addr, target_count,
+                               target_datatype, target_len, &target_iov_offset, target_iov);
 
         msg_len = MPL_MIN(origin_iov[origin_cur].iov_len, target_iov[target_cur].iov_len);
 
+        int vni = MPIDI_OFI_WIN(win).vni;
+        int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(addr, 0, 0);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vni, vni);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -143,11 +145,11 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
         riov.key = target_mr.mr_key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         if (rma_type == MPIDI_OFI_PUT) {
-            MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write,
+            MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vni, rdma_write,
                                  FALSE);
             req->rma_type = MPIDI_OFI_PUT;
         } else {        /* MPIDI_OFI_GET */
-            MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write,
+            MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vni, rdma_write,
                                  FALSE);
             req->rma_type = MPIDI_OFI_GET;
         }
@@ -222,8 +224,10 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         MPIDI_OFI_pack_chunk *chunk = create_chunk(pack_buffer, 0, 0, req);
         MPIR_ERR_CHKANDSTMT(chunk == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
+        int vni = MPIDI_OFI_WIN(win).vni;
+        int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, 0, 0);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, nic, vni, vni);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -236,7 +240,8 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         riov.len = msg_len;
         riov.key = req->noncontig.put.target.key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write, FALSE);
+        MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vni, rdma_write,
+                             FALSE);
         req->noncontig.put.origin.pack_offset += msg_len;
 
         if (msg_len < req->noncontig.put.target.iov[target_cur].iov_len) {
@@ -304,8 +309,10 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
             create_chunk(pack_buffer, msg_len, req->noncontig.get.origin.pack_offset, req);
         MPIR_ERR_CHKANDSTMT(chunk == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
+        int vni = MPIDI_OFI_WIN(win).vni;
+        int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, 0, 0);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, nic, vni, vni);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -318,7 +325,8 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         riov.len = msg_len;
         riov.key = req->noncontig.get.target.key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write, FALSE);
+        MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vni, rdma_write,
+                             FALSE);
         req->noncontig.get.origin.pack_offset += msg_len;
 
         if (msg_len < req->noncontig.get.target.iov[target_cur].iov_len) {
@@ -388,7 +396,7 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
     req->noncontig.put.origin.total_bytes = origin_bytes;
 
     /* target */
-    req->noncontig.put.target.base = (void *) target_mr.addr;
+    req->noncontig.put.target.base = (void *) (uintptr_t) target_mr.addr;
     req->noncontig.put.target.count = target_count;
     req->noncontig.put.target.datatype = target_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
@@ -448,7 +456,7 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
     req->noncontig.get.origin.total_bytes = origin_bytes;
 
     /* target */
-    req->noncontig.get.target.base = (void *) target_mr.addr;
+    req->noncontig.get.target.base = (void *) (uintptr_t) target_mr.addr;
     req->noncontig.get.target.count = target_count;
     req->noncontig.get.target.datatype = target_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);

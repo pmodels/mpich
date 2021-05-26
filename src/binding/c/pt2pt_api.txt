@@ -1,0 +1,550 @@
+# vim: set ft=c:
+
+MPI_Bsend:
+    .desc: Basic send with user-provided buffering
+    .seealso: MPI_Buffer_attach, MPI_Ibsend, MPI_Bsend_init
+    .earlyreturn: pt2pt_proc_null
+/*
+    Notes:
+    This send is provided as a convenience function; it allows the user to
+    send messages without worring about where they are buffered (because the
+    user `must` have provided buffer space with 'MPI_Buffer_attach').
+
+    In deciding how much buffer space to allocate, remember that the buffer space
+    is not available for reuse by subsequent 'MPI_Bsend's unless you are certain
+    that the message
+    has been received (not just that it should have been received).  For example,
+    this code does not allocate enough buffer space
+    .vb
+        MPI_Buffer_attach(b, n*sizeof(double) + MPI_BSEND_OVERHEAD);
+        for (i=0; i<m; i++) {
+            MPI_Bsend(buf, n, MPI_DOUBLE, ...);
+        }
+    .ve
+    because only enough buffer space is provided for a single send, and the
+    loop may start a second 'MPI_Bsend' before the first is done making use of the
+    buffer.
+
+    In C, you can
+    force the messages to be delivered by
+    .vb
+        MPI_Buffer_detach(&b, &n);
+        MPI_Buffer_attach(b, n);
+    .ve
+    (The 'MPI_Buffer_detach' will not complete until all buffered messages are
+    delivered.)
+*/
+{
+    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, NULL);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Bsend_init:
+    .desc: Builds a handle for a buffered send
+    .seealso: MPI_Buffer_attach
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Bsend_init(buf, count, datatype, dest, tag, comm_ptr,
+                                MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+
+    /* return the handle of the request to the user */
+    MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
+}
+
+MPI_Buffer_attach:
+    .desc: Attaches a user-provided buffer for sending
+    .skip: ThreadSafe
+    .seealso: MPI_Buffer_detach, MPI_Bsend
+/*
+    Notes:
+    The size given should be the sum of the sizes of all outstanding Bsends that
+    you intend to have, plus 'MPI_BSEND_OVERHEAD' for each Bsend that you do.
+    For the purposes of calculating size, you should use 'MPI_Pack_size'.
+    In other words, in the code
+    .vb
+         MPI_Buffer_attach(buffer, size);
+         MPI_Bsend(..., count=20, datatype=type1,  ...);
+         ...
+         MPI_Bsend(..., count=40, datatype=type2, ...);
+    .ve
+    the value of 'size' in the 'MPI_Buffer_attach' call should be greater than
+    the value computed by
+    .vb
+         MPI_Pack_size(20, type1, comm, &s1);
+         MPI_Pack_size(40, type2, comm, &s2);
+         size = s1 + s2 + 2 * MPI_BSEND_OVERHEAD;
+    .ve
+    The 'MPI_BSEND_OVERHEAD' gives the maximum amount of space that may be used in
+    the buffer for use by the BSEND routines in using the buffer.  This value
+    is in 'mpi.h' (for C) and 'mpif.h' (for Fortran).
+
+    .N NotThreadSafe
+    Because the buffer for buffered sends (e.g., 'MPI_Bsend') is shared by all
+    threads in a process, the user is responsible for ensuring that only
+    one thread at a time calls this routine or 'MPI_Buffer_detach'.
+*/
+{
+    mpi_errno = MPIR_Bsend_attach(buffer, size);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Buffer_detach:
+    .desc: Removes an existing buffer (for use in MPI_Bsend etc)
+    .skip: ThreadSafe, Fortran
+    .seealso: MPI_Buffer_attach
+/*
+    Notes:
+        The reason that 'MPI_Buffer_detach' returns the address and size of the
+    buffer being detached is to allow nested libraries to replace and restore
+    the buffer.  For example, consider
+
+    .vb
+        int size, mysize, idummy;
+        void *ptr, *myptr, *dummy;
+        MPI_Buffer_detach(&ptr, &size);
+        MPI_Buffer_attach(myptr, mysize);
+        ...
+        ... library code ...
+        ...
+        MPI_Buffer_detach(&dummy, &idummy);
+        MPI_Buffer_attach(ptr, size);
+    .ve
+
+    This is much like the action of the Unix signal routine and has the same
+    strengths (it is simple) and weaknesses (it only works for nested usages).
+
+    Note that for this approach to work, MPI_Buffer_detach must return MPI_SUCCESS
+    even when there is no buffer to detach.  In that case, it returns a size of
+    zero.  The MPI 1.1 standard for 'MPI_BUFFER_DETACH' contains the text
+
+    .vb
+       The statements made in this section describe the behavior of MPI for
+       buffered-mode sends. When no buffer is currently associated, MPI behaves
+       as if a zero-sized buffer is associated with the process.
+    .ve
+
+    This could be read as applying only to the various Bsend routines.  This
+    implementation takes the position that this applies to 'MPI_BUFFER_DETACH'
+    as well.
+
+    .N NotThreadSafe
+    Because the buffer for buffered sends (e.g., 'MPI_Bsend') is shared by all
+    threads in a process, the user is responsible for ensuring that only
+    one thread at a time calls this routine or 'MPI_Buffer_attach'.
+
+    .N Fortran
+
+        The Fortran binding for this routine is different.  Because Fortran
+        does not have pointers, it is impossible to provide a way to use the
+        output of this routine to exchange buffers.  In this case, only the
+        size field is set.
+
+    Notes for C:
+        Even though the 'bufferptr' argument is declared as 'void *', it is
+        really the address of a void pointer.  See the rationale in the
+        standard for more details.
+*/
+
+MPI_Ibsend:
+    .desc: Starts a nonblocking buffered send
+    .earlyreturn: pt2pt_proc_null
+{
+    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, NULL);
+    if (mpi_errno)
+        goto fn_fail;
+
+    /* Ibsend is local-complete */
+    MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+    *request = request_ptr->handle;
+}
+
+MPI_Improbe:
+    .desc: Nonblocking matched probe.
+    .earlyreturn: pt2pt_proc_null
+{
+    MPIR_Request *msgp = NULL;
+
+    *message = MPI_MESSAGE_NULL;
+    mpi_errno = MPID_Improbe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, flag, &msgp, status);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (*flag) {
+        MPIR_Assert(msgp != NULL);
+        *message = msgp->handle;
+    }
+}
+
+MPI_Imrecv:
+    .desc: Nonblocking receive of message matched by MPI_Mprobe or MPI_Improbe.
+{ -- early_return --
+    if (message_ptr == NULL || message_ptr->handle == MPIR_REQUEST_NULL_RECV) {
+        MPIR_Request *rreq;
+        rreq = MPIR_Request_create_null_recv();
+        *request = rreq->handle;
+        *message = MPI_MESSAGE_NULL;
+        goto fn_exit;
+    }
+}
+{
+    MPIR_Request *rreq = NULL;
+
+    mpi_errno = MPID_Imrecv(buf, count, datatype, message_ptr, &rreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Assert(rreq != NULL);
+    *request = rreq->handle;
+    *message = MPI_MESSAGE_NULL;
+}
+
+MPI_Iprobe:
+    .desc: Nonblocking test for a message
+    .earlyreturn: pt2pt_proc_null
+{
+    /* FIXME: Is this correct for intercomms? */
+    mpi_errno = MPID_Iprobe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, flag, status);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Irecv:
+    .desc: Begins a nonblocking receive
+    .earlyreturn: pt2pt_proc_null
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr,
+                           MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    /* return the handle of the request to the user */
+    /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for irecv, lower-level access is
+     * responsible for its own consistency, while upper-level field access is
+     * controlled by the completion counter */
+    *request = request_ptr->handle;
+
+    /* Put this part after setting the request so that if the request is
+     * pending (which is still considered an error), it will still be set
+     * correctly here. For real error cases, the user might get garbage as
+     * their request value, but that's fine since the definition is
+     * undefined anyway. */
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Irsend:
+    .desc: Starts a nonblocking ready send
+    .earlyreturn: pt2pt_proc_null
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Irsend(buf, count, datatype, dest, tag, comm_ptr,
+                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+
+    /* return the handle of the request to the user */
+    /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for irsend, lower-level access is
+     * responsible for its own consistency, while upper-level field access is
+     * controlled by the completion counter */
+    *request = request_ptr->handle;
+}
+
+MPI_Isend:
+    .desc: Begins a nonblocking send
+    .earlyreturn: pt2pt_proc_null
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr,
+                           MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+
+    /* return the handle of the request to the user */
+    /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for isend, lower-level access is
+     * responsible for its own consistency, while upper-level field access is
+     * controlled by the completion counter */
+    *request = request_ptr->handle;
+}
+
+MPI_Issend:
+    .desc: Starts a nonblocking synchronous send
+    .earlyreturn: pt2pt_proc_null
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Issend(buf, count, datatype, dest, tag, comm_ptr,
+                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+
+    /* return the handle of the request to the user */
+    /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for issend, lower-level access is
+     * responsible for its own consistency, while upper-level field access is
+     * controlled by the completion counter */
+    *request = request_ptr->handle;
+}
+
+MPI_Mprobe:
+    .desc: Blocking matched probe.
+    .earlyreturn: pt2pt_proc_null
+{
+    MPIR_Request *msgp = NULL;
+
+    *message = MPI_MESSAGE_NULL;
+    mpi_errno = MPID_Mprobe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &msgp, status);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Assert(msgp != NULL);
+    *message = msgp->handle;
+}
+
+MPI_Mrecv:
+    .desc: Blocking receive of message matched by MPI_Mprobe or MPI_Improbe.
+{ -- early_return --
+    if (message_ptr == NULL || message_ptr->handle == MPIR_REQUEST_NULL_RECV) {
+        /* treat as though MPI_MESSAGE_NO_PROC was passed */
+        MPIR_Status_set_procnull(status);
+        *message = MPI_MESSAGE_NULL;
+        goto fn_exit;
+    }
+}
+{
+    MPIR_Request *rreq = NULL;
+    mpi_errno = MPID_Mrecv(buf, count, datatype, message_ptr, status, &rreq);
+    MPIR_ERR_CHECK(mpi_errno);
+    /* rreq == NULL implies message = MPI_MESSAGE_NO_PROC.
+     * I.e, status was set and no need to wait on rreq */
+    if (rreq != NULL) {
+        mpi_errno = MPID_Wait(rreq, status);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPIR_Request_completion_processing(rreq, status);
+        MPIR_Request_free(rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    *message = MPI_MESSAGE_NULL;
+}
+
+MPI_Probe:
+    .desc: Blocking test for a message
+    .earlyreturn: pt2pt_proc_null
+{
+    mpi_errno = MPID_Probe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, status);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Recv:
+    .desc: Blocking receive for a message
+    .earlyreturn: pt2pt_proc_null
+/*
+    Notes:
+    The 'count' argument indicates the maximum length of a message; the actual
+    length of the message can be determined with 'MPI_Get_count'.
+*/
+{
+    MPIR_Request *request_ptr = NULL;
+
+    /* MT: Note that MPID_Recv may release the SINGLE_CS if it
+     * decides to block internally.  MPID_Recv in that case will
+     * re-aquire the SINGLE_CS before returning */
+    mpi_errno = MPID_Recv(buf, count, datatype, source, tag, comm_ptr,
+                          MPIR_CONTEXT_INTRA_PT2PT, status, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    if (request_ptr == NULL) {
+        goto fn_exit;
+    }
+
+    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    mpi_errno = request_ptr->status.MPI_ERROR;
+    MPIR_Request_extract_status(request_ptr, status);
+    MPIR_Request_free(request_ptr);
+
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Recv_init:
+    .desc: Create a persistent request for a receive
+    .seealso: MPI_Start, MPI_Startall, MPI_Request_free
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Recv_init(buf, count, datatype, source, tag, comm_ptr,
+                               MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    /* return the handle of the request to the user */
+    MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
+}
+
+MPI_Rsend:
+    .desc: Blocking ready send
+    .earlyreturn: pt2pt_proc_null
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Rsend(buf, count, datatype, dest, tag, comm_ptr,
+                           MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    if (request_ptr == NULL) {
+        goto fn_exit;
+    }
+
+    /* If a request was returned, then we need to block until the request
+     * is complete */
+    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = request_ptr->status.MPI_ERROR;
+    MPIR_Request_free(request_ptr);
+
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Rsend_init:
+    .desc: Creates a persistent request for a ready send
+    .seealso: MPI_Start, MPI_Request_free, MPI_Send_init
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Rsend_init(buf, count, datatype, dest, tag, comm_ptr,
+                                MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    /* return the handle of the request to the user */
+    MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
+}
+
+MPI_Send:
+    .desc: Performs a blocking send
+    .seealso: MPI_Isend, MPI_Bsend
+    .earlyreturn: pt2pt_proc_null
+/*
+    Notes:
+    This routine may block until the message is received by the destination
+    process.
+*/
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Send(buf, count, datatype, dest, tag, comm_ptr,
+                          MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    if (request_ptr == NULL) {
+        goto fn_exit;
+    }
+
+    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = request_ptr->status.MPI_ERROR;
+    MPIR_Request_free(request_ptr);
+
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Send_init:
+    .desc: Create a persistent request for a standard send
+    .seealso: MPI_Start, MPI_Startall, MPI_Request_free
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Send_init(buf, count, datatype, dest, tag, comm_ptr,
+                               MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+
+    /* return the handle of the request to the user */
+    MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
+}
+
+MPI_Sendrecv:
+    .desc: Sends and receives a message
+
+MPI_Sendrecv_replace:
+    .desc: Sends and receives using a single buffer
+    .decl: MPIR_Sendrecv_replace_impl
+{
+#if defined(MPID_Sendrecv_replace)
+    mpi_errno = MPID_Sendrecv_replace(buf, count, datatype, dest,
+                                      sendtag, source, recvtag, comm_ptr, status);
+#else
+    mpi_errno = MPIR_Sendrecv_replace_impl(buf, count, datatype, dest,
+                                           sendtag, source, recvtag, comm_ptr, status);
+#endif
+
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Ssend:
+    .desc: Blocking synchronous send
+    .earlyreturn: pt2pt_proc_null
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Ssend(buf, count, datatype, dest, tag, comm_ptr,
+                           MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    if (request_ptr == NULL) {
+        goto fn_exit;
+    }
+
+    /* If a request was returned, then we need to block until the request
+     * is complete */
+    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = request_ptr->status.MPI_ERROR;
+    MPIR_Request_free(request_ptr);
+
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Ssend_init:
+    .desc: Creates a persistent request for a synchronous send
+{
+    MPIR_Request *request_ptr = NULL;
+
+    mpi_errno = MPID_Ssend_init(buf, count, datatype, dest, tag, comm_ptr,
+                                MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    /* return the handle of the request to the user */
+    MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
+}
+
+MPI_Isendrecv:
+    .desc: Starts a nonblocking send and receive
+
+MPI_Isendrecv_replace:
+    .desc: Starts a nonblocking send and receive with a single buffer

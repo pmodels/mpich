@@ -114,7 +114,7 @@ int ADIOI_GPFS_Calc_aggregator(ADIO_File fd,
      * * wkliao: implementation for file domain alignment
      * fd_start[] and fd_end[] have been aligned with file lock
      * boundaries when returned from ADIOI_Calc_file_domains() so cannot
-     * just use simple arithmatic as above *
+     * just use simple arithmetic as above *
      * rank_index = 0;
      * while (off > fd_end[rank_index]) rank_index++;
      * }
@@ -234,7 +234,7 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
     int naggs = nprocs_for_coll;
 
     /* Tweak the file domains so that no fd is smaller than a threshold.  We
-     * have to strike a balance between efficency and parallelism: somewhere
+     * have to strike a balance between efficiency and parallelism: somewhere
      * between 10k processes sending 32-byte requests and one process sending a
      * 320k request is a (system-dependent) sweet spot
 
@@ -705,6 +705,7 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
         } else {
             others_req[i].count = 0;
             others_req[i].offsets = NULL;
+            others_req[i].mem_ptrs = NULL;
             others_req[i].lens = NULL;
         }
     }

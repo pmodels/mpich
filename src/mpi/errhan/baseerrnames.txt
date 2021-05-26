@@ -35,7 +35,7 @@ MPI_ERR_UNKNOWN     13      **unknown
 MPI_ERR_INTERN      16      **intern
 # Multiple completion has two special error classes 
 MPI_ERR_IN_STATUS   17      **instatus
-MPI_ERR_PENDING     18      **inpending
+MPI_ERR_PENDING     18      **pending
 MPIX_ERR_PROC_FAILED_PENDING 19 **failure_pending
 # New MPI-2 Error classes 
 MPI_ERR_FILE        27      **file

@@ -110,7 +110,7 @@ int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MP
         goto fn_exit;
     }
 
-    mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+    mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, key, info_ptr, newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -187,13 +187,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
 #endif
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-#ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDIG_COMM(comm, posted_head_ptr) = &(MPIDI_global.posted_list);
     MPIDIG_COMM(comm, unexp_head_ptr) = &(MPIDI_global.unexp_list);
-#else
-    MPIDIG_COMM(comm, posted_head_ptr) = &(MPIDIG_COMM(comm, posted_list));
-    MPIDIG_COMM(comm, unexp_head_ptr) = &(MPIDIG_COMM(comm, unexp_list));
-#endif
 #endif
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_COMMIT_PRE_HOOK);
@@ -304,6 +299,23 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_FREE_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDI_NM_comm_set_hints(comm_ptr, info_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_comm_set_hints(comm_ptr, info_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -478,7 +490,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
 #endif /* HAVE_ERROR_CHECKING */
 
         /*
-         * Make an arbitrary decision about which group of processs is
+         * Make an arbitrary decision about which group of process is
          * the low group.  The LEADERS do this by comparing the
          * local process ids of the 0th member of the two groups
          * LUPID itself is not enough for determine is_low_group because both

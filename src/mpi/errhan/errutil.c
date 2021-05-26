@@ -16,12 +16,6 @@
    is used in only a few places, here and potentially in ROMIO) */
 #define USE_ERR_CODE_VALIST
 
-/* errcodes.h contains the macros used to access fields within an error
-   code and a description of the bits in an error code.  A brief
-   version of that description is included below */
-
-#include "errcodes.h"
-
 /* defmsg is generated automatically from the source files and contains
    all of the error messages, both the generic and specific.  Depending
    on the value of MPICH_ERROR_MSG_LEVEL, different amounts of message
@@ -86,7 +80,7 @@ cvars:
  *
  * MPICH_ERROR_MSG__NONE - No text messages at all
  * MPICH_ERROR_MSG__CLASS - Only messages for the MPI error classes
- * MPICH_ERROR_MSG__GENERIC - Only predefiend messages for the MPI error codes
+ * MPICH_ERROR_MSG__GENERIC - Only predefined messages for the MPI error codes
  * MPICH_ERROR_MSG__ALL - Instance specific error messages (and error message
  *                       stack)
  *
@@ -99,12 +93,12 @@ cvars:
  * A major subgroup in this section is the code to handle the instance-specific
  * messages (MPICH_ERROR_MSG__ALL only).
  *
- * An MPI error code is made up of a number of fields (see errcodes.h)
+ * An MPI error code is made up of a number of fields (see mpir_errcodes.h)
  * These ar
  *   is-dynamic? specific-msg-sequence# specific-msg-index
  *                                            generic-code is-fatal? class
  *
- * There are macros (defined in errcodes.h) that define these fields,
+ * There are macros (defined in mpir_errcodes.h) that define these fields,
  * their sizes, and masks and shifts that may be used to extract them.
  */
 
@@ -145,17 +139,12 @@ static int checkForUserErrcode(int);
 MPIR_Errhandler MPIR_Errhandler_builtin[MPIR_ERRHANDLER_N_BUILTIN];
 MPIR_Errhandler MPIR_Errhandler_direct[MPIR_ERRHANDLER_PREALLOC];
 
-MPIR_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, MPIR_ERRHANDLER,
+MPIR_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, 0, 0, MPIR_ERRHANDLER,
     sizeof(MPIR_Errhandler),
     MPIR_Errhandler_direct,
     MPIR_ERRHANDLER_PREALLOC,
-    NULL
+    NULL, {0}
 };
-
-void MPIR_Errhandler_free(MPIR_Errhandler * errhan_ptr)
-{
-    MPIR_Handle_obj_free(&MPIR_Errhandler_mem, errhan_ptr);
-}
 
 void MPIR_Err_init(void)
 {
@@ -208,20 +197,21 @@ void MPII_Errhandler_set_fc(MPI_Errhandler errhand)
 /* Special error handler to call if we are not yet initialized, or if we
    have finalized */
 /* --BEGIN ERROR HANDLING-- */
-void MPIR_Err_preOrPostInit(void)
+void MPIR_Err_Uninitialized(const char *funcname)
 {
-    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT) {
-        MPL_error_printf("Attempting to use an MPI routine before initializing MPICH\n");
-    } else if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) {
-        MPL_error_printf("Attempting to use an MPI routine after finalizing MPICH\n");
-    } else {
-        MPL_error_printf
-            ("Internal Error: Unknown state of MPI (neither initialized nor finalized)\n");
-    }
+    MPL_error_printf
+        ("Attempting to use an MPI routine (%s) before initializing or after finalizing MPICH\n",
+         funcname);
     exit(1);
 }
 
 /* --END ERROR HANDLING-- */
+
+/* Return true if the error util is initialized */
+int MPIR_Errutil_is_initialized(void)
+{
+    return (MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__UNINITIALIZED);
+}
 
 /* Return true if the error code indicates a fatal error */
 int MPIR_Err_is_fatal(int errcode)
@@ -242,8 +232,7 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
     checkValidErrcode(error_class, fcname, &errcode);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT ||
-        MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) {
+    if (!MPIR_Errutil_is_initialized()) {
         /* for whatever reason, we aren't initialized (perhaps error
          * during MPI_Init) */
         MPIR_Handle_fatal_error(MPIR_Process.comm_world, fcname, errcode);
@@ -494,7 +483,7 @@ static int checkValidErrcode(int error_class, const char fcname[], int *errcode_
 }
 
 /* Append an error code, error2, to the end of a list of messages in the error
-   ring whose head endcoded in error1_code.  An error code pointing at the
+   ring whose head encoded in error1_code.  An error code pointing at the
    combination is returned.  If the list of messages does not terminate cleanly
    (i.e. ring wrap has occurred), then the append is not performed. and error1
    is returned (although it may include the class of error2 if the class of
@@ -1266,7 +1255,7 @@ static int FindSpecificMsgIndex(const char msg[])
 {
     int i, c;
     for (i = 0; i < specific_msgs_len; i++) {
-        /* Check the sentinals to insure that the values are ok first */
+        /* Check the sentinels to insure that the values are ok first */
         if (specific_err_msgs[i].sentinal1 != 0xacebad03 ||
             specific_err_msgs[i].sentinal2 != 0xcb0bfa11) {
             /* Something bad has happened! Don't risk trying the
@@ -1375,7 +1364,7 @@ static const char *GetAssertString(int d)
 static const char *GetDTypeString(MPI_Datatype d)
 {
     static char default_str[64];
-    int num_integers, num_addresses, num_datatypes, combiner = 0;
+    int combiner = 0;
     char *str;
 
     if (HANDLE_GET_MPI_KIND(d) != MPIR_DATATYPE ||
@@ -1391,7 +1380,7 @@ static const char *GetDTypeString(MPI_Datatype d)
         return default_str;
     }
 
-    MPIR_Type_get_envelope(d, &num_integers, &num_addresses, &num_datatypes, &combiner);
+    combiner = MPIR_Type_get_combiner(d);
     if (combiner == MPI_COMBINER_NAMED) {
         str = MPIR_Datatype_builtin_to_string(d);
         if (str == NULL) {
@@ -1452,6 +1441,43 @@ static const char *GetMPIOpString(MPI_Op o)
     return default_str;
 }
 
+static const char *get_keyval_string(int keyval)
+{
+    static char default_str[64];
+
+    switch (keyval) {
+        case MPI_KEYVAL_INVALID:
+            return "MPI_KEYVAL_INVALID";
+        case MPI_TAG_UB:
+            return "MPI_TAG_UB";
+        case MPI_HOST:
+            return "MPI_HOST";
+        case MPI_IO:
+            return "MPI_IO";
+        case MPI_WTIME_IS_GLOBAL:
+            return "MPI_WTIME_IS_GLOBAL";
+        case MPI_UNIVERSE_SIZE:
+            return "MPI_UNIVERSE_SIZE";
+        case MPI_LASTUSEDCODE:
+            return "MPI_LASTUSEDCODE";
+        case MPI_APPNUM:
+            return "MPI_APPNUM";
+        case MPI_WIN_BASE:
+            return "MPI_WIN_BASE";
+        case MPI_WIN_SIZE:
+            return "MPI_WIN_SIZE";
+        case MPI_WIN_DISP_UNIT:
+            return "MPI_WIN_DISP_UNIT";
+        case MPI_WIN_CREATE_FLAVOR:
+            return "MPI_WIN_CREATE_FLAVOR";
+        case MPI_WIN_MODEL:
+            return "MPI_WIN_MODEL";
+    }
+    /* FIXME: default is not thread safe */
+    MPL_snprintf(default_str, sizeof(default_str), "keyval=0x%x", keyval);
+    return default_str;
+}
+
 /* ------------------------------------------------------------------------ */
 /* This routine takes an instance-specific string with format specifiers    */
 /* This routine makes use of the above routines, along with some inlined    */
@@ -1475,6 +1501,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
     MPI_Op O;
     MPI_Request R;
     MPI_Errhandler E;
+    MPI_Session S;
     char *s;
     int t, i, d, mpi_errno = MPI_SUCCESS;
     long long ll;
@@ -1655,6 +1682,18 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                 } else {
                     MPL_snprintf(str, maxlen, "errh=0x%x", E);
                 }
+                break;
+            case (int) 'S':
+                S = va_arg(list, MPI_Session);
+                if (S == MPI_SESSION_NULL) {
+                    MPL_strncpy(str, "MPI_SESSION_NULL", maxlen);
+                } else {
+                    MPL_snprintf(str, maxlen, "session=0x%x", S);
+                }
+                break;
+            case (int) 'K':
+                d = va_arg(list, int);
+                MPL_snprintf(str, maxlen, "%s", get_keyval_string(d));
                 break;
             case (int) 'c':
                 c = va_arg(list, MPI_Count);
@@ -1960,7 +1999,7 @@ static int FindGenericMsgIndex(const char msg[])
 {
     int i, c;
     for (i = 0; i < generic_msgs_len; i++) {
-        /* Check the sentinals to insure that the values are ok first */
+        /* Check the sentinels to insure that the values are ok first */
         if (generic_err_msgs[i].sentinal1 != 0xacebad03 ||
             generic_err_msgs[i].sentinal2 != 0xcb0bfa11) {
             /* Something bad has happened! Don't risk trying the

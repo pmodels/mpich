@@ -12,9 +12,9 @@
  * neighbor.
  */
 
-int MPIR_Ineighbor_allgather_allcomm_sched_linear(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgather_allcomm_sched_linear(const void *sendbuf, MPI_Aint sendcount,
                                                   MPI_Datatype sendtype, void *recvbuf,
-                                                  int recvcount, MPI_Datatype recvtype,
+                                                  MPI_Aint recvcount, MPI_Datatype recvtype,
                                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;

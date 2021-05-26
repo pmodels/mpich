@@ -36,7 +36,7 @@ cvars:
  * copying out of previous cells (pipelining).
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
-                                                                  int count,
+                                                                  MPI_Aint count,
                                                                   MPI_Datatype datatype,
                                                                   int root, MPIR_Comm * comm_ptr,
                                                                   MPIR_Errflag_t * errflag)
@@ -44,8 +44,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_BCAST_RELEASE_GATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_BCAST_RELEASE_GATHER);
 
-    int i, my_rank, num_chunks, chunk_count_floor, chunk_count_ceil;
-    int offset = 0, is_contig, ori_count = count;
+    int i, my_rank;
+    MPI_Aint num_chunks, chunk_count_floor, chunk_count_ceil;
+    MPI_Aint offset = 0;
+    int is_contig;
+    MPI_Aint ori_count = count;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint actual_packed_unpacked_bytes;
     MPI_Aint lb, true_lb, true_extent, extent, type_size;
@@ -81,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     if (is_contig) {
         MPIR_Datatype_get_size_macro(datatype, type_size);
     } else {
-        MPIR_Pack_size_impl(1, datatype, &type_size);
+        MPIR_Pack_size(1, datatype, &type_size);
     }
 
     if (!is_contig || type_size >= MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE) {
@@ -123,15 +126,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     /* Print chunking information */
 /* *INDENT-OFF* */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Bcast shmgr pipeline info: segsize=%d\
-                                             count=%d num_chunks=%d chunk_count_floor=%d\
-                                             chunk_count_ceil=%d \n",
-                                             cellsize, (int) (count * type_size), num_chunks,
+                                             count=" MPI_AINT_FMT_DEC_SPEC " num_chunks=" MPI_AINT_FMT_DEC_SPEC " chunk_count_floor=" MPI_AINT_FMT_DEC_SPEC "\
+                                             chunk_count_ceil=" MPI_AINT_FMT_DEC_SPEC " \n",
+                                             cellsize, count * type_size, num_chunks,
                                              chunk_count_floor, chunk_count_ceil));
 /* *INDENT-ON* */
 
     /* Do pipelined release-gather */
     for (i = 0; i < num_chunks; i++) {
-        int chunk_count = (i == 0) ? chunk_count_floor : chunk_count_ceil;
+        MPI_Aint chunk_count = (i == 0) ? chunk_count_floor : chunk_count_ceil;
 
         mpi_errno =
             MPIDI_POSIX_mpi_release_gather_release((char *) buffer + offset + true_lb,
@@ -201,14 +204,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
  * reduction and copying out of previous cells (pipelining).
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *sendbuf,
-                                                                   void *recvbuf, int count,
+                                                                   void *recvbuf, MPI_Aint count,
                                                                    MPI_Datatype datatype,
                                                                    MPI_Op op, int root,
                                                                    MPIR_Comm * comm_ptr,
                                                                    MPIR_Errflag_t * errflag)
 {
-    int i, num_chunks, chunk_size_floor, chunk_size_ceil;
-    int offset = 0, is_contig;
+    int i;
+    MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
+    MPI_Aint offset = 0;
+    int is_contig;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint lb, true_extent, extent, type_size;
 
@@ -257,7 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     if (is_contig) {
         MPIR_Datatype_get_size_macro(datatype, type_size);
     } else {
-        MPIR_Pack_size_impl(1, datatype, &type_size);
+        MPIR_Pack_size(1, datatype, &type_size);
     }
 
     if (sendbuf == MPI_IN_PLACE) {
@@ -271,13 +276,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
 
     /* Print chunking information */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Reduce shmgr pipeline info: segsize=%d count=%d num_chunks=%d chunk_size_floor=%d chunk_size_ceil=%d \n",
+                                             "Reduce shmgr pipeline info: segsize=%d count="
+                                             MPI_AINT_FMT_DEC_SPEC " num_chunks="
+                                             MPI_AINT_FMT_DEC_SPEC " chunk_size_floor="
+                                             MPI_AINT_FMT_DEC_SPEC " chunk_size_ceil="
+                                             MPI_AINT_FMT_DEC_SPEC " \n",
                                              MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE, count,
                                              num_chunks, chunk_size_floor, chunk_size_ceil));
 
     /* Do pipelined release-gather */
     for (i = 0; i < num_chunks; i++) {
-        int chunk_count = (i == 0) ? chunk_size_floor : chunk_size_ceil;
+        MPI_Aint chunk_count = (i == 0) ? chunk_size_floor : chunk_size_ceil;
 
         mpi_errno =
             MPIDI_POSIX_mpi_release_gather_release(NULL, 0, MPI_DATATYPE_NULL, root,
@@ -331,14 +340,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void *sendbuf,
                                                                       void *recvbuf,
-                                                                      int count,
+                                                                      MPI_Aint count,
                                                                       MPI_Datatype datatype,
                                                                       MPI_Op op,
                                                                       MPIR_Comm * comm_ptr,
                                                                       MPIR_Errflag_t * errflag)
 {
-    int i, num_chunks, chunk_size_floor, chunk_size_ceil;
-    int offset = 0, is_contig;
+    int i;
+    MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
+    MPI_Aint offset = 0;
+    int is_contig;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint lb, true_extent, extent, type_size;
 
@@ -382,7 +393,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     if (is_contig) {
         MPIR_Datatype_get_size_macro(datatype, type_size);
     } else {
-        MPIR_Pack_size_impl(1, datatype, &type_size);
+        MPIR_Pack_size(1, datatype, &type_size);
     }
 
     if (sendbuf == MPI_IN_PLACE) {
@@ -396,13 +407,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
 
     /* Print chunking information */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Reduce shmgr pipeline info: segsize=%d count=%d num_chunks=%d chunk_size_floor=%d chunk_size_ceil=%d \n",
+                                             "Reduce shmgr pipeline info: segsize=%d count="
+                                             MPI_AINT_FMT_DEC_SPEC " num_chunks="
+                                             MPI_AINT_FMT_DEC_SPEC " chunk_size_floor="
+                                             MPI_AINT_FMT_DEC_SPEC " chunk_size_ceil="
+                                             MPI_AINT_FMT_DEC_SPEC " \n",
                                              MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE, count,
                                              num_chunks, chunk_size_floor, chunk_size_ceil));
 
     /* Do pipelined release-gather */
     for (i = 0; i < num_chunks; i++) {
-        int chunk_count = (i == 0) ? chunk_size_floor : chunk_size_ceil;
+        MPI_Aint chunk_count = (i == 0) ? chunk_size_floor : chunk_size_ceil;
 
         mpi_errno =
             MPIDI_POSIX_mpi_release_gather_gather((char *) sendbuf + offset * extent,
@@ -418,7 +433,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
-
         mpi_errno =
             MPIDI_POSIX_mpi_release_gather_release((char *) recvbuf + offset * extent, chunk_count,
                                                    datatype, 0,

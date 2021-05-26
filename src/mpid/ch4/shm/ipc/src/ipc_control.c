@@ -22,11 +22,8 @@ int MPIDI_IPCI_send_contig_lmt_fin_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
     MPID_Request_complete(sreq);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT_FIN_CB);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
@@ -50,9 +47,9 @@ int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
     root_comm = MPIDIG_context_id_to_comm(slmt_rts_hdr->context_id);
     if (root_comm) {
         while (TRUE) {
-            rreq = MPIDIG_dequeue_posted(slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
-                                         slmt_rts_hdr->context_id, 1,
-                                         &MPIDIG_COMM(root_comm, posted_list));
+            rreq = MPIDIG_rreq_dequeue(slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
+                                       slmt_rts_hdr->context_id, &MPIDI_global.posted_list,
+                                       MPIDIG_PT2PT_POSTED);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
             if (rreq) {
                 int is_cancelled;
@@ -105,13 +102,7 @@ int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
         MPIDI_IPCI_REQUEST(rreq, unexp_rreq).src_lrank = slmt_rts_hdr->src_lrank;
         MPIDI_IPCI_REQUEST(rreq, unexp_rreq).sreq_ptr = slmt_rts_hdr->sreq_ptr;
 
-        if (root_comm) {
-            MPIR_Comm_add_ref(root_comm);       /* +1 for unexp_list */
-            MPIDIG_enqueue_unexp(rreq, &MPIDIG_COMM(root_comm, unexp_list));
-        } else {
-            MPIDIG_enqueue_unexp(rreq,
-                                 MPIDIG_context_id_to_uelist(MPIDIG_REQUEST(rreq, context_id)));
-        }
+        MPIDIG_enqueue_request(rreq, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
 
         IPC_TRACE("send_contig_lmt_rts_cb: enqueue unexpected, rreq=%p\n", rreq);
     }

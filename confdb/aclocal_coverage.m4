@@ -18,12 +18,12 @@ AC_ARG_VAR([GCOV],[name/path for the gcov utility])
 AC_CHECK_PROGS([GCOV],[gcov])
 
 AC_ARG_ENABLE([coverage],
-              [AC_HELP_STRING([--enable-coverage],
+              [AS_HELP_STRING([--enable-coverage],
                               [Turn on coverage analysis using gcc and gcov])],
               [],[enable_coverage=no])
 
 if test "$enable_coverage" = "yes" ; then
-    if test "$ac_cv_prog_gcc" = "yes" ; then
+    if test "$ac_cv_c_compiler_gnu" = "yes" ; then
         CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
         LIBS="$LIBS -lgcov"
         if test ${WRAPPER_CFLAGS+set} = set ; then

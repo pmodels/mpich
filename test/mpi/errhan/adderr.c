@@ -25,6 +25,27 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
+#if MPI_VERSION >= 4
+    /* add and delete a bunch of times */
+    for (int k = 0; k < 10000; k++) {
+        for (i = 0; i < NCLASSES; i++) {
+            MPI_Add_error_class(&newclass[i]);
+            for (j = 0; j < NCODES; j++) {
+                MPI_Add_error_code(newclass[i], &newcode[i][j]);
+                sprintf(string, "random incorrect string\n");
+                MPI_Add_error_string(newcode[i][j], string);
+            }
+        }
+        for (i = 0; i < NCLASSES; i++) {
+            for (j = 0; j < NCODES; j++) {
+                MPI_Delete_error_string(newcode[i][j]);
+                MPI_Delete_error_code(newcode[i][j]);
+            }
+            MPI_Delete_error_class(newclass[i]);
+        }
+    }
+#endif
+
     /* Initialize the new codes */
     for (i = 0; i < NCLASSES; i++) {
         MPI_Add_error_class(&newclass[i]);

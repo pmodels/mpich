@@ -10,7 +10,7 @@ if the compressed list format is recognized as valid. Otherwise, the test
 returns an error message.
 
 This test can be used to validate nodelist formats for the slurm resource
-manager and to report bugs in the existing code: src/pm/hydra/tools/boostrap/
+manager and to report bugs in the existing code: src/pm/hydra/tools/bootstrap/
 external/slurm_query_node_list.c
 
 Examples:

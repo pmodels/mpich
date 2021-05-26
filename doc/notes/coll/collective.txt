@@ -66,7 +66,7 @@ Brian's notes from this file:
 reminder: envelope = (context (communicator), source_rank, tag)
 
 QUESTION: what exactly are the semantics of a block?  Sends to the same
-destination are definitely ordered.  Sends to different desinations could
+destination are definitely ordered.  Sends to different destinations could
 proceed in parallel.  Should they?
 
 example:

@@ -42,7 +42,7 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
         /* ----------------------------------------------------- */
         /* Poll the completion queue                             */
         /* The strategy here is                                  */
-        /* ret>0 successfull poll, events returned               */
+        /* ret>0 successful poll, events returned               */
         /* ret==0 empty poll, no events/no error                 */
         /* ret<0, error, but some error instances should not     */
         /* cause MPI to terminate                                */

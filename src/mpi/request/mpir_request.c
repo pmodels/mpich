@@ -11,7 +11,7 @@ MPIR_Request MPIR_Request_builtins[MPIR_REQUEST_BUILTIN_COUNT];
 MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
 
-static void init_builtin_request(MPIR_Request * req, int handle, int kind)
+static void init_builtin_request(MPIR_Request * req, int handle, MPIR_Request_kind_t kind)
 {
     req->handle = handle;
     req->kind = kind;
@@ -31,9 +31,9 @@ void MPII_init_request(void)
 #endif
 
     /* *INDENT-OFF* */
-    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC, lock_ptr };
+    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC, lock_ptr, {0}};
     for (int i = 1; i < MPIR_REQUEST_NUM_POOLS; i++) {
-        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0, lock_ptr };
+        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0, lock_ptr, {0}};
     }
     /* *INDENT-ON* */
 
@@ -42,10 +42,13 @@ void MPII_init_request(void)
     /* lightweight request, one for each kind */
     for (int i = 0; i < MPIR_REQUEST_KIND__LAST; i++) {
         req = &MPIR_Request_builtins[i];
-        init_builtin_request(req, MPIR_REQUEST_COMPLETE + i, i);
+        init_builtin_request(req, MPIR_REQUEST_COMPLETE + i, (MPIR_Request_kind_t) i);
     }
     MPII_REQUEST_CLEAR_DBG(&MPIR_Request_builtins[MPIR_REQUEST_KIND__SEND]);
     MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.errflag = MPIR_ERR_NONE;
+    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_sendbuf = NULL;
+    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_recvbuf = NULL;
+    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.datatype = MPI_DATATYPE_NULL;
 
     /* for recv from MPI_PROC_NULL */
     req = MPIR_Request_builtins + HANDLE_INDEX(MPIR_REQUEST_NULL_RECV);
@@ -72,8 +75,25 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                 MPII_SENDQ_FORGET(request_ptr);
                 break;
             }
-        case MPIR_REQUEST_KIND__RECV:
         case MPIR_REQUEST_KIND__COLL:
+            {
+                MPII_Coll_req_t *coll = &request_ptr->u.nbc.coll;
+
+                if (coll->host_sendbuf) {
+                    MPIR_gpu_host_free(coll->host_sendbuf, coll->count, coll->datatype);
+                }
+
+                if (coll->host_recvbuf) {
+                    MPIR_gpu_swap_back(coll->host_recvbuf, coll->user_recvbuf,
+                                       coll->count, coll->datatype);
+                    MPIR_Datatype_release_if_not_builtin(coll->datatype);
+                }
+
+                MPIR_Request_extract_status(request_ptr, status);
+                mpi_errno = request_ptr->status.MPI_ERROR;
+                break;
+            }
+        case MPIR_REQUEST_KIND__RECV:
         case MPIR_REQUEST_KIND__RMA:
             {
                 MPIR_Request_extract_status(request_ptr, status);
@@ -149,6 +169,44 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                     /* --END ERROR HANDLING-- */
                 }
 
+                break;
+            }
+
+        case MPIR_REQUEST_KIND__PREQUEST_COLL:
+            {
+                if (request_ptr->u.persist_coll.real_request != NULL) {
+                    MPIR_Request *prequest_ptr = request_ptr->u.persist_coll.real_request;
+
+                    /* reset persistent request to inactive state */
+                    MPIR_cc_set(&request_ptr->cc, 0);
+                    request_ptr->cc_ptr = &request_ptr->cc;
+                    request_ptr->u.persist_coll.real_request = NULL;
+
+                    MPIR_Request_extract_status(prequest_ptr, status);
+                    mpi_errno = prequest_ptr->status.MPI_ERROR;
+
+                    MPIR_Request_free(prequest_ptr);
+                } else {
+                    MPIR_Status_set_empty(status);
+                    /* --BEGIN ERROR HANDLING-- */
+                    if (request_ptr->status.MPI_ERROR != MPI_SUCCESS) {
+                        /* if the persistent request failed to start then make the
+                         * error code available */
+                        mpi_errno = request_ptr->status.MPI_ERROR;
+                    }
+                    /* --END ERROR HANDLING-- */
+                }
+
+                break;
+            }
+
+        case MPIR_REQUEST_KIND__PART_SEND:
+        case MPIR_REQUEST_KIND__PART_RECV:
+            {
+                MPIR_Part_request_inactivate(request_ptr);
+
+                MPIR_Request_extract_status(request_ptr, status);
+                mpi_errno = request_ptr->status.MPI_ERROR;
                 break;
             }
 

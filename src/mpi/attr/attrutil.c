@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "attr.h"
 /*
  * Keyvals.  These are handled just like the other opaque objects in MPICH
  * The predefined keyvals (and their associated attributes) are handled
@@ -19,11 +18,11 @@
 /* Preallocated keyval objects */
 MPII_Keyval MPII_Keyval_direct[MPID_KEYVAL_PREALLOC];
 
-MPIR_Object_alloc_t MPII_Keyval_mem = { 0, 0, 0, 0, MPIR_KEYVAL,
+MPIR_Object_alloc_t MPII_Keyval_mem = { 0, 0, 0, 0, 0, 0, MPIR_KEYVAL,
     sizeof(MPII_Keyval),
     MPII_Keyval_direct,
     MPID_KEYVAL_PREALLOC,
-    NULL
+    NULL, {0}
 };
 
 #ifndef MPIR_ATTR_PREALLOC
@@ -33,11 +32,11 @@ MPIR_Object_alloc_t MPII_Keyval_mem = { 0, 0, 0, 0, MPIR_KEYVAL,
 /* Preallocated keyval objects */
 MPIR_Attribute MPID_Attr_direct[MPIR_ATTR_PREALLOC];
 
-MPIR_Object_alloc_t MPID_Attr_mem = { 0, 0, 0, 0, MPIR_ATTR,
+MPIR_Object_alloc_t MPID_Attr_mem = { 0, 0, 0, 0, 0, 0, MPIR_ATTR,
     sizeof(MPIR_Attribute),
     MPID_Attr_direct,
     MPIR_ATTR_PREALLOC,
-    NULL
+    NULL, {0}
 };
 
 /* Provides a way to trap all attribute allocations when debugging leaks. */
@@ -234,7 +233,7 @@ int MPIR_Attr_delete_list(int handle, MPIR_Attribute ** attr)
          * storage */
         new_p = p->next;
 
-        /* Check the sentinals first */
+        /* Check the sentinels first */
         /* --BEGIN ERROR HANDLING-- */
         if (p->pre_sentinal != 0 || p->post_sentinal != 0) {
             MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**attrsentinal");

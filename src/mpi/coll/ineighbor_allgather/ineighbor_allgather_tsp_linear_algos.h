@@ -12,9 +12,9 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a pipelined tree based broadcast */
-int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
                                                       MPI_Datatype sendtype, void *recvbuf,
-                                                      int recvcount, MPI_Datatype recvtype,
+                                                      MPI_Aint recvcount, MPI_Datatype recvtype,
                                                       MPIR_Comm * comm_ptr,
                                                       MPIR_TSP_sched_t * sched)
 {
@@ -65,10 +65,10 @@ int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, int s
 
 
 /* Non-blocking linear algo based neighbor_allgather */
-int MPIR_TSP_Ineighbor_allgather_allcomm_linear(const void *sendbuf, int sendcount,
-                                                MPI_Datatype sendtype, void *recvbuf, int recvcount,
-                                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                                MPIR_Request ** req)
+int MPIR_TSP_Ineighbor_allgather_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
+                                                MPI_Datatype sendtype, void *recvbuf,
+                                                MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                MPIR_Comm * comm_ptr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -80,7 +80,7 @@ int MPIR_TSP_Ineighbor_allgather_allcomm_linear(const void *sendbuf, int sendcou
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule pipelined tree algo */
     mpi_errno = MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(sendbuf, sendcount, sendtype,

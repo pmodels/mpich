@@ -19,6 +19,7 @@
 /* Undefine these in case they were set to 'error' */
 #undef malloc
 #undef calloc
+#undef realloc
 #undef free
 #undef strdup
 #undef mmap
@@ -161,7 +162,7 @@ static MPL_thread_mutex_t memalloc_mutex;
 
 #endif /* MPL_THREAD_PACKAGE_NAME */
 
-static void init_classes()
+static void init_classes(void)
 {
     int i;
 
@@ -178,7 +179,7 @@ static void init_classes()
    MPL_trinit - Setup the space package.  Only needed for
    error messages and flags.
 +*/
-void MPL_trinit()
+void MPL_trinit(void)
 {
     char *s;
 
@@ -604,11 +605,11 @@ Input Parameters:
 $   Block [id=%d(%d)] at address %lx is corrupted (probably write past end)
 $   Block allocated in <filename>[<linenumber>]
 
-   if the sentinal at the end of the block has been corrupted, and
+   if the sentinel at the end of the block has been corrupted, and
 
 $   Block at address %lx is corrupted
 
-   if the sentinal at the begining of the block has been corrupted.
+   if the sentinel at the beginning of the block has been corrupted.
 
    The address is the actual address of the block.  The id is the
    value of TRID.
@@ -992,3 +993,31 @@ char *MPL_strdup_no_spaces(const char *str)
 
     return newstr;
 }
+
+#ifdef MPL_USE_MEMORY_TRACING
+/* Direct functions. */
+void *MPL_direct_malloc(size_t size)
+{
+    return malloc(size);
+}
+
+void *MPL_direct_calloc(size_t nmemb, size_t size)
+{
+    return calloc(nmemb, size);
+}
+
+void *MPL_direct_realloc(void *ptr, size_t size)
+{
+    return realloc(ptr, size);
+}
+
+char *MPL_direct_strdup(const char *s)
+{
+    return strdup(s);
+}
+
+void MPL_direct_free(void *ptr)
+{
+    free(ptr);
+}
+#endif

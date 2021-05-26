@@ -14,9 +14,16 @@ mpi_core_sources   += src/mpid/ch4/netmod/ofi/func_table.c \
                       src/mpid/ch4/netmod/ofi/ofi_rma.c \
                       src/mpid/ch4/netmod/ofi/ofi_spawn.c \
                       src/mpid/ch4/netmod/ofi/ofi_win.c \
+                      src/mpid/ch4/netmod/ofi/ofi_part.c \
                       src/mpid/ch4/netmod/ofi/ofi_events.c \
                       src/mpid/ch4/netmod/ofi/ofi_progress.c \
+                      src/mpid/ch4/netmod/ofi/ofi_am_events.c \
+                      src/mpid/ch4/netmod/ofi/ofi_dynproc.c \
+                      src/mpid/ch4/netmod/ofi/ofi_nic.c \
                       src/mpid/ch4/netmod/ofi/globals.c \
+                      src/mpid/ch4/netmod/ofi/init_provider.c \
+                      src/mpid/ch4/netmod/ofi/init_settings.c \
+                      src/mpid/ch4/netmod/ofi/init_addrxchg.c \
                       src/mpid/ch4/netmod/ofi/util.c
 errnames_txt_files += src/mpid/ch4/netmod/ofi/errnames.txt
 external_subdirs   += @ofisrcdir@

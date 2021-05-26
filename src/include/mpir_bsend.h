@@ -20,7 +20,7 @@
  * The following datastructures are used:
  *
  *  BsendMsg_t  - Describes a user message, including the values of tag
- *                and datatype (*could* be used incase the data is already
+ *                and datatype (*could* be used in case the data is already
  *                contiguous; see below)
  *  BsendData_t - Describes a segment of the user buffer.  This data structure
  *                contains a BsendMsg_t for segments that contain a user
@@ -61,8 +61,8 @@ typedef struct MPII_Bsend_data {
 } MPII_Bsend_data_t;
 
 /* Function Prototypes for the bsend utility functions */
-int MPIR_Bsend_attach(void *, int);
-int MPIR_Bsend_detach(void *, int *);
+int MPIR_Bsend_attach(void *, MPI_Aint);
+int MPIR_Bsend_detach(void *, MPI_Aint *);
 int MPIR_Bsend_isend(const void *, int, MPI_Datatype, int, int, MPIR_Comm *, MPIR_Request **);
 int MPIR_Bsend_free_req_seg(MPIR_Request *);
 

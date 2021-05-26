@@ -17,9 +17,7 @@
 #include <stdint.h>
 #endif
 
-int count, size, rank;
-mtest_mem_type_e memtype;
-int errs;
+#include "mtest_dtp.h"
 
 struct int_test {
     int a;
@@ -61,8 +59,8 @@ struct double_test {
 #define DECL_MALLOC_IN_OUT_SOL(type)            \
     type *in, *out, *sol; /*allocated on host*/ \
     void *in_d, *out_d; /*allocated on device*/ \
-    MTestAlloc(count * sizeof(type), memtype, ((void **)&in), &in_d, 1);  \
-    MTestAlloc(count * sizeof(type), memtype, ((void **)&out), &out_d, 1);\
+    MTestCalloc(count * sizeof(type), memtype, ((void **)&in), &in_d, rank);  \
+    MTestCalloc(count * sizeof(type), memtype, ((void **)&out), &out_d, rank);\
     sol = (type *) calloc(count, sizeof(type));
 
 #define SET_INDEX_CONST(arr, val)               \
@@ -381,10 +379,11 @@ struct double_test {
 #define test_types_set5(op, post) do { } while (0)
 #endif
 
-int main(int argc, char **argv)
+static int test_allred(int count, mtest_mem_type_e evenmem, mtest_mem_type_e oddmem)
 {
-    MTest_Init(&argc, &argv);
-    MTestArgList *head = MTestArgListCreate(argc, argv);
+    int errs = 0;
+    int size, rank;
+    mtest_mem_type_e memtype;
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -398,23 +397,20 @@ int main(int argc, char **argv)
      * should a routine reject one of the operand/datatype pairs */
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
-    count = 10;
-    /* Allow an argument to override the count.
-     * Note that the product tests may fail if the count is very large.
-     */
-    count = MTestArgListGetInt(head, "count");
-
     if (count <= 0) {
         fprintf(stderr, "Invalid count argument %d\n", count);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    if (rank % 2 == 0)
-        memtype = MTestArgListGetMemType(head, "evenmemtype");
-    else
-        memtype = MTestArgListGetMemType(head, "oddmemtype");
+    if (rank == 0) {
+        MTestPrintfMsg(1, "./allred -evenmemtype=%s -oddmemtype=%s\n",
+                       MTest_memtype_name(evenmem), MTest_memtype_name(oddmem));
+    }
 
-    MTestArgListDestroy(head);
+    if (rank % 2 == 0)
+        memtype = evenmem;
+    else
+        memtype = oddmem;
 
     test_types_set2(sum, 1);
     test_types_set2(prod, 1);
@@ -471,6 +467,22 @@ int main(int argc, char **argv)
     minloc_test(struct double_test, MPI_DOUBLE_INT);
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+    return errs;
+}
+
+int main(int argc, char **argv)
+{
+    int errs = 0;
+
+    MTest_Init(&argc, &argv);
+
+    struct dtp_args dtp_args;
+    dtp_args_init(&dtp_args, MTEST_COLL_COUNT, argc, argv);
+    while (dtp_args_get_next(&dtp_args)) {
+        errs += test_allred(dtp_args.count, dtp_args.u.coll.evenmem, dtp_args.u.coll.oddmem);
+    }
+    dtp_args_finalize(&dtp_args);
+
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
 }

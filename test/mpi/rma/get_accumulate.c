@@ -63,7 +63,7 @@ static void reset_bufs(TYPE_C * win_ptr, TYPE_C * res_ptr, TYPE_C * val_ptr, TYP
 int main(int argc, char **argv)
 {
     int i, rank, nproc;
-    int j, count, errors = 0;
+    int count, errors = 0;
     TYPE_C *win_ptr, *res_ptr, *val_ptr;
     MPI_Win win;
 #if defined (GACC_TYPE_DERIVED)
@@ -75,8 +75,8 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
-    for (j = 0; j < NUM_COUNT; j++) {
-        count = test_counts[j];
+    for (int k = 0; k < NUM_COUNT; k++) {
+        count = test_counts[k];
         win_ptr = malloc(sizeof(TYPE_C) * nproc * count);
         res_ptr = malloc(sizeof(TYPE_C) * nproc * count);
         val_ptr = malloc(sizeof(TYPE_C) * count);

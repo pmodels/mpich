@@ -47,6 +47,15 @@ int DTP_pool_create(const char *base_type_str, MPI_Aint base_type_count, int see
     goto fn_exit;
 }
 
+/*
+ * DTP_pool_update_count - update base_type_count
+ */
+int DTP_pool_update_count(DTP_pool_s dtp, MPI_Aint base_type_count)
+{
+    DTPI_pool_s *dtpi = dtp.priv;
+    dtpi->base_type_count = base_type_count;
+    return DTP_SUCCESS;
+}
 
 /*
  * DTP_pool_free - free previously created pool
@@ -143,7 +152,7 @@ int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize)
         rc = MPI_Type_get_extent(obj->DTP_datatype, &lb, &extent);
         DTPI_ERR_CHK_MPI_RC(rc);
 
-        obj->DTP_bufsize = (extent * obj->DTP_type_count) + true_extent - extent;
+        obj->DTP_bufsize = (extent * obj->DTP_type_count) + (true_extent - extent);
 
         /* if the true_lb occurs after the actual buffer start, make
          * sure we allocate some additional bytes to accommodate for

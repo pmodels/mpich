@@ -182,7 +182,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, int count,
 #ifdef HAVE_STATUS_SET_BYTES
         MPIR_Status_set_bytes(status, datatype, bufsize);
         /* This isa temporary way of filling in status.  The right way is to
-         * keep tracke of how much data was actually read adn placed in buf
+         * keep tracke of how much data was actually read and placed in buf
          * by ADIOI_BUFFERED_READ. */
 #endif
 
@@ -846,7 +846,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, int count,
      * at empty region at offset N+1)
      *
      * As we discussed on mpich-discuss in may/june 2009, the code below might
-     * look wierd, but by putting fp_ind at the last byte written, the next
+     * look weird, but by putting fp_ind at the last byte written, the next
      * time we run through the strided code we'll update the fp_ind to the
      * right location. */
     if (file_ptr_type == ADIO_INDIVIDUAL) {

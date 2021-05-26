@@ -19,6 +19,7 @@ noinst_PROGRAMS =             \
     contigstruct              \
     cxx_types                 \
     dataalign                 \
+    dataalign2                \
     darray_pack               \
     darray_cyclic             \
     gaddress                  \
@@ -35,6 +36,7 @@ noinst_PROGRAMS =             \
     large_type                \
     large_type_sendrec        \
     large_vec                 \
+    type_large	              \
     lbub                      \
     lbub_oldapi               \
     localpack                 \
@@ -46,6 +48,7 @@ noinst_PROGRAMS =             \
     sendrecvt4                \
     simple_commit             \
     simple_pack               \
+    pack_external             \
     simple_pack_external      \
     simple_pack_external2     \
     simple_resized            \

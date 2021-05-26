@@ -37,15 +37,15 @@ Input Parameters:
 . is_out_vtcs - variable to denote if there is going to be an outgoing vertices
                 in the scheduler from this function (integer)
 . reduce_id - array with ids of reduces from the scheduler (integer array)
-. vtcs - array to specify depencies of a call to the scheduler (integer array)
+. vtcs - array to specify dependencies of a call to the scheduler (integer array)
 - sched - scheduler (handle)
 
 */
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *tmp_recvbuf,
-                                                       const int *recvcounts, int *displs,
-                                                       MPI_Datatype datatype, MPI_Op op,
-                                                       size_t extent, int tag, MPIR_Comm * comm,
-                                                       int k, int is_dist_halving,
+                                                       const MPI_Aint * recvcounts,
+                                                       MPI_Aint * displs, MPI_Datatype datatype,
+                                                       MPI_Op op, size_t extent, int tag,
+                                                       MPIR_Comm * comm, int k, int is_dist_halving,
                                                        int step2_nphases, int **step2_nbrs,
                                                        int rank, int nranks, int sink_id,
                                                        int is_out_vtcs, int *reduce_id_,
@@ -128,7 +128,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
 
 /* Routine to schedule a recursive exchange based reduce_scatter with distance halving in each phase */
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recvbuf,
-                                                 const int *recvcounts, MPI_Datatype datatype,
+                                                 const MPI_Aint * recvcounts, MPI_Datatype datatype,
                                                  MPI_Op op, MPIR_Comm * comm, int k,
                                                  int is_dist_halving, MPIR_TSP_sched_t * sched)
 {
@@ -145,7 +145,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     int dtcopy_id = -1, recv_id = -1, reduce_id = -1, sink_id = -1;
     int nvtcs, vtcs[2];
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
-    int *displs;
+    MPI_Aint *displs;
     int tag;
     MPIR_CHKLMEM_DECL(1);
 
@@ -174,7 +174,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
         return mpi_errno;
     }
 
-    MPIR_CHKLMEM_MALLOC(displs, int *, nranks * sizeof(int),
+    MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, nranks * sizeof(MPI_Aint),
                         mpi_errno, "displs buffer", MPL_MEM_COLL);
     displs[0] = 0;
     for (i = 1; i < nranks; i++) {
@@ -289,8 +289,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
 
 /* Non-blocking recursive exchange based Reduce_scatter */
 int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
-                                           const int *recvcounts, MPI_Datatype datatype, MPI_Op op,
-                                           MPIR_Comm * comm, MPIR_Request ** req, int k,
+                                           const MPI_Aint * recvcounts, MPI_Datatype datatype,
+                                           MPI_Op op, MPIR_Comm * comm, MPIR_Request ** req, int k,
                                            int rs_type)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -304,7 +304,7 @@ int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Ireduce_scatter_sched_intra_recexch(sendbuf, recvbuf, recvcounts, datatype,

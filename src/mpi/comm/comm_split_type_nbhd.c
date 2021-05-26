@@ -17,7 +17,6 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
                                         MPIR_Comm ** newcomm_ptr);
 static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
                                             int dimension, MPIR_Comm ** newcomm_ptr);
-static int compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info_args_are_equal);
 
 int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hintval,
                                       MPIR_Comm ** newcomm_ptr)
@@ -63,7 +62,8 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
     }
 
     *newcomm_ptr = NULL;
-    mpi_errno = compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
+    /* check whether all processes are using the same dirname */
+    mpi_errno = MPII_compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
 
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -79,7 +79,8 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
             hintval[0] = '\0';
         }
 
-        mpi_errno = compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
+        /* check whether all processes are using the same hint */
+        mpi_errno = MPII_compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
 
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -100,8 +101,11 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
 int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
                                          MPIR_Comm ** newcomm_ptr)
 {
+#ifndef HAVE_ROMIO
+    *newcomm_ptr = NULL;
+    return MPI_SUCCESS;
+#else
     int mpi_errno = MPI_SUCCESS;
-#ifdef HAVE_ROMIO
     MPI_Comm dummycomm;
     MPIR_Comm *dummycomm_ptr;
 
@@ -113,13 +117,13 @@ int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, con
 
     MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
     *newcomm_ptr = dummycomm_ptr;
-#endif
 
   fn_exit:
     return mpi_errno;
 
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
@@ -226,12 +230,7 @@ static int get_color_from_subset_bitmap(int node_index, int *bitmap, int bitmap_
     if (subset_size < min_size && i == bitmap_size)
         color = prev_comm_color;
 
-  fn_exit:
     return color;
-
-  fn_fail:
-    goto fn_exit;
-
 }
 
 static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_min_size,
@@ -480,11 +479,7 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
                                              newcomm_ptr);
     }
 
-  fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
@@ -522,63 +517,5 @@ static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
         mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
     }
 
-  fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *info_args_are_equal)
-{
-    int hintval_size = strlen(hintval);
-    int hintval_size_max;
-    int hintval_equal;
-    int hintval_equal_global = 0;
-    char *hintval_global = NULL;
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-
-    /* Find the maximum hintval size.  Each process locally compares
-     * its hintval size to the global max, and makes sure that this
-     * comparison is successful on all processes. */
-    mpi_errno =
-        MPID_Allreduce(&hintval_size, &hintval_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    hintval_equal = (hintval_size == hintval_size_max);
-
-    mpi_errno =
-        MPID_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
-                       comm_ptr, &errflag);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (!hintval_equal_global)
-        goto fn_exit;
-
-
-    /* Now that the sizes of the hintvals match, check to make sure
-     * the actual hintvals themselves are the equal */
-    hintval_global = (char *) MPL_malloc(strlen(hintval), MPL_MEM_OTHER);
-
-    mpi_errno =
-        MPID_Allreduce(hintval, hintval_global, strlen(hintval), MPI_CHAR,
-                       MPI_MAX, comm_ptr, &errflag);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    hintval_equal = !memcmp(hintval, hintval_global, strlen(hintval));
-
-    mpi_errno =
-        MPID_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
-                       comm_ptr, &errflag);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPL_free(hintval_global);
-
-    *info_args_are_equal = hintval_equal_global;
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }

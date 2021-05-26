@@ -1,0 +1,22 @@
+# lists parameters that used in MPIX_ functions that are not part of MPI standard
+# TODO: add Fortran type mappings
+
+LIS_KIND_MAP:
+    GPU_TYPE: integer
+    GREQUEST_CLASS: None
+
+SMALL_F08_KIND_MAP:
+    GPU_TYPE: INTEGER
+    GREQUEST_CLASS: INTEGER
+
+BIG_F08_KIND_MAP:
+    GPU_TYPE: INTEGER
+    GREQUEST_CLASS: INTEGER
+
+SMALL_C_KIND_MAP:
+    GPU_TYPE: int
+    GREQUEST_CLASS: MPIX_Grequest_class
+
+BIG_C_KIND_MAP:
+    GPU_TYPE: int
+    GREQUEST_CLASS: MPIX_Grequest_class

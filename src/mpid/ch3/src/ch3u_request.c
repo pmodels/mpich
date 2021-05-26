@@ -183,9 +183,6 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_SEND_IOV);
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -286,7 +283,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	/* --BEGIN ERROR HANDLING-- */
 	if (rreq->dev.iov_count == 0)
 	{
-	    /* If the data can't be unpacked, the we have a mis-match between
+	    /* If the data can't be unpacked, the we have a mismatch between
 	       the datatype and the amount of data received.  Adjust
 	       the segment info so that the remaining data is received and 
 	       thrown away. */
@@ -560,22 +557,19 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 
 int MPID_Request_complete(MPIR_Request *req)
 {
-    int incomplete, notify_counter;
+    int incomplete;
     int mpi_errno = MPI_SUCCESS;
 
     MPIDI_CH3U_Request_decrement_cc(req, &incomplete);
     if (!incomplete) {
         /* decrement completion_notification counter */
         if (req->completion_notification)
-            MPIR_cc_decr(req->completion_notification, &notify_counter);
+            MPIR_cc_dec(req->completion_notification);
 
 	MPIR_Request_free(req);
     }
 
- fn_exit:
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 void MPID_Request_free_hook(MPIR_Request *req)

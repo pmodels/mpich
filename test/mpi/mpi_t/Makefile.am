@@ -14,4 +14,5 @@ noinst_PROGRAMS =     \
     mpi_t_str   \
     mpit_vars   \
     cvarwrite   \
-    getindex
+    getindex    \
+    qmpi_test

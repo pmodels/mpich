@@ -92,7 +92,7 @@ int ADIOI_BG_gen_agg_ranklist(ADIO_File fd, int n_aggrs_per_pset)
     procInfo = ADIOI_BG_ProcInfo_new();
     ADIOI_BG_persInfo_init(confInfo, procInfo, s, r, n_aggrs_per_pset, fd->comm);
 
-    /* Gather BG personality infomation onto process 0 */
+    /* Gather BG personality information onto process 0 */
     /* if (r == 0) */
     all_procInfo = ADIOI_BG_ProcInfo_new_n(s);
 

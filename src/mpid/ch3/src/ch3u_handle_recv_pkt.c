@@ -11,7 +11,7 @@
  * This file contains the dispatch routine called by the ch3 progress 
  * engine to process messages.  
  *
- * This file is in transistion
+ * This file is in transition
  *
  * Where possible, the routines that create and send all packets of
  * a particular type are in the same file that contains the implementation 
@@ -427,7 +427,7 @@ int MPIDI_CH3I_Try_acquire_win_lock(MPIR_Win *win_ptr, int requested_lock)
 /* ------------------------------------------------------------------------ */
 /* Here are the functions that implement the packet actions.  They'll be moved
  * to more modular places where it will be easier to replace subsets of the
- * in order to experiement with alternative data transfer methods, such as
+ * in order to experiment with alternative data transfer methods, such as
  * sending some data with a rendezvous request or including data within
  * an eager message.                                                        
  *

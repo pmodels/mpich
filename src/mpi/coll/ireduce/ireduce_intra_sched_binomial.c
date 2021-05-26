@@ -5,7 +5,7 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
                                       MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {

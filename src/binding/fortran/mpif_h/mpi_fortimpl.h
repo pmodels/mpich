@@ -7,6 +7,10 @@
 #define MPI_FORTIMPL_H_INCLUDED
 
 #include "mpichconf.h"
+#include "mpi.h"
+#include "mpir_attr_generic.h"
+#include "mpii_f77interface.h"
+#include <sys/types.h>  /* for ssize_t */
 
 /* Handle different mechanisms for passing Fortran CHARACTER to routines.
  *
@@ -113,8 +117,6 @@
 #endif
 
 /* ------------------------------------------------------------------------- */
-
-#include "mpiimpl.h"
 
 /* If there is no MPI I/O support, and we are still using MPIO_Request,
    make sure that one is defined */
@@ -228,5 +230,13 @@ typedef char *MPID_FCHAR_T;
 #define MPI_File_f2c(a) ((MPI_File)(MPI_Aint)(a))
 #endif
 #endif /* MPI_MODE_RDONLY */
+
+/* The F90 attr copy/delete function prototype and calling convention */
+typedef void (FORT_CALL F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
+                                           MPI_Aint *, MPI_Fint *, MPI_Fint *);
+typedef void (FORT_CALL F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
+                                             MPI_Fint *);
+
+void MPII_Keyval_set_f90_proxy(int keyval);
 
 #endif /* MPI_FORTIMPL_H_INCLUDED */

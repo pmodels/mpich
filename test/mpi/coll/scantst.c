@@ -24,7 +24,7 @@ void addem(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
     (see 4.9.4).  The order is important.
 
     Note that the computation is in process rank (in the communicator)
-    order, independant of the root.
+    order, independent of the root.
  */
 void assoc(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
 {

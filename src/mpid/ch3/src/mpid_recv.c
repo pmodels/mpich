@@ -47,7 +47,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
     {
 	MPIDI_VC_t * vc;
 
-	/* Message was found in the unexepected queue */
+	/* Message was found in the unexpected queue */
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"request found in unexpected queue");
 
 	/* Release the message queue - we've removed this request from 
@@ -102,7 +102,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
                  * recv without also having a "pending recv" */
                 MPIR_Assert(recv_pending);
 
-		/* The data is still being transfered across the net.  
+		/* The data is still being transferred across the net.  
 		   We'll leave it to the progress engine to handle once the
 		   entire message has arrived. */
 		if (!HANDLE_IS_BUILTIN(datatype))

@@ -308,11 +308,8 @@ int MPIDI_CH3I_Comm_commit_post_hook(MPIR_Comm *comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_COLL_COMM_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_COLL_COMM_INIT_HOOK);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_COLL_COMM_INIT_HOOK);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_CH3I_Comm_destroy_hook(MPIR_Comm *comm)
@@ -343,6 +340,15 @@ int MPIDI_CH3I_Comm_destroy_hook(MPIR_Comm *comm)
     goto fn_exit;
 }
 
+int MPIDI_CH3I_Comm_set_hints(MPIR_Comm *comm_ptr, MPIR_Info *info_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_SET_HINTS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_COMM_SET_HINTS);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_COMM_SET_HINTS);
+    return mpi_errno;
+}
 
 int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPIR_Comm *, void *), void *param)
 {
@@ -411,11 +417,8 @@ static int register_hook_finalize(void *param)
         MPL_free(elt);
     }
 
- fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_REGISTER_HOOK_FINALIZE);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 
@@ -438,11 +441,8 @@ int comm_created(MPIR_Comm *comm, void *param)
 
     COMM_ADD(comm);
 
- fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_CREATED);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 int comm_destroyed(MPIR_Comm *comm, void *param)
@@ -456,11 +456,8 @@ int comm_destroyed(MPIR_Comm *comm, void *param)
     comm->dev.next = NULL;
     comm->dev.prev = NULL;
 
- fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_DESTROYED);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 
@@ -501,8 +498,6 @@ static int nonempty_intersection(MPIR_Comm *comm, MPIR_Group *group, int *flag)
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NONEMPTY_INTERSECTION);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 

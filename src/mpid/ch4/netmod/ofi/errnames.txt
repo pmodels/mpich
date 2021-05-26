@@ -69,6 +69,8 @@
 **ofid_peek %s %d %s %s:OFI peek failed (%s:%d:%s:%s)
 **ofid_send:OFI send failed
 **ofid_send %s %d %s %s:OFI send failed (%s:%d:%s:%s)
+**ofid_sendv:OFI send failed
+**ofid_sendv %s %d %s %s:OFI send failed (%s:%d:%s:%s)
 **ofid_inject:OFI inject failed
 **ofid_inject %s %d %s %s:OFI inject failed (%s:%d:%s:%s)
 **ofid_rdma_write:OFI rdma write failed
@@ -101,3 +103,7 @@
 **ofi_provider_mismatch %s %d %s %s:OFI Provider name does not match configure-time provider name (%s:%d:%s:%s)
 **ofid_cancel:OFI cancel failed
 **ofid_cancel %s %d %s %s:OFI cancel failed (%s:%d:%s:%s)
+**ofi_max_conn:OFI dynamic process reaches maximum connection
+**ofi_max_conn %d:OFI dynamic process reaches maximum connection (%d)
+**ofi_num_nics:OFI has a different number of nics available on different notes
+**ofi_num_nics %d %d:OFI has a different number of nics available on different notes (%d on this node and %d elsewhere)

@@ -33,6 +33,14 @@ cvars:
 
 extern int MPIR_CVAR_ENABLE_GPU;
 
+#undef ENABLE_GPU
+
+#ifdef MPL_HAVE_GPU
+#define ENABLE_GPU MPIR_CVAR_ENABLE_GPU
+#else
+#define ENABLE_GPU FALSE
+#endif
+
 MPL_STATIC_INLINE_PREFIX int MPIR_GPU_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
@@ -40,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_GPU_query_pointer_attr(const void *ptr, MPL_po
     /* Skip query if GPU support is disabled by CVAR. Because we assume
      * no GPU buffer is used. If the user disables GPU at configure time
      * (e.g., --without-cuda), then MPL fallback will handle the query. */
-    if (MPIR_CVAR_ENABLE_GPU) {
+    if (ENABLE_GPU) {
         mpl_err = MPL_gpu_query_pointer_attr(ptr, attr);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_query_ptr");
     } else {
@@ -52,6 +60,54 @@ MPL_STATIC_INLINE_PREFIX int MPIR_GPU_query_pointer_attr(const void *ptr, MPL_po
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_dev(const void *ptr)
+{
+    if (ENABLE_GPU && ptr != NULL) {
+        MPL_pointer_attr_t attr;
+        MPL_gpu_query_pointer_attr(ptr, &attr);
+
+        return attr.type == MPL_GPU_POINTER_DEV;
+    }
+
+    return false;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_gpu_register_host(const void *ptr, size_t size)
+{
+    if (ENABLE_GPU) {
+        return MPL_gpu_register_host(ptr, size);
+    }
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_gpu_unregister_host(const void *ptr)
+{
+    if (ENABLE_GPU) {
+        return MPL_gpu_unregister_host(ptr);
+    }
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_gpu_malloc_host(void **ptr, size_t size)
+{
+    if (ENABLE_GPU) {
+        return MPL_gpu_malloc_host(ptr, size);
+    } else {
+        *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
+        return MPI_SUCCESS;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_gpu_free_host(void *ptr)
+{
+    if (ENABLE_GPU) {
+        return MPL_gpu_free_host(ptr);
+    } else {
+        MPL_free(ptr);
+        return MPI_SUCCESS;
+    }
 }
 
 #endif /* MPIR_GPU_H_INCLUDED */

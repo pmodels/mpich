@@ -76,7 +76,7 @@ Isend/Irecv scenerio
 Persistent requests
 
 - We need to allow the method the opportunity to register memory reused in a
-  persistant sent.  We suggest accomplishing this by calling CA_register_mem()
+  persistent sent.  We suggest accomplishing this by calling CA_register_mem()
   during the MPI_<op>_init() and CA_unregister_mem() during the
   MPI_Request_free().
 
@@ -134,7 +134,7 @@ receives (which is the approach we should reward :)).
 
 - we decided to use a single unexpected queue since having multiple unexpected
   queues requires timestamp to order the messages.  the timestamp counter is a
-  point of global contention, just like the global unexpect queue.
+  point of global contention, just like the global unexpected queue.
 
 - this same argument can be applied to the posted queue case, but allowing for
   multiple queues here creates a much nicer search situation for the case where

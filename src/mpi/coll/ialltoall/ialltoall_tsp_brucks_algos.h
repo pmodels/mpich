@@ -66,9 +66,9 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     pow_k_phase = MPL_ipow(k, phase);
     /* first offset where the phase'th bit has value digitval */
     offset = pow_k_phase * digitval;
-    /* number of consecutive occurences of digitval */
+    /* number of consecutive occurrences of digitval */
     nconsecutive_occurrences = pow_k_phase;
-    /* distance between non-consecutive occurences of digitval */
+    /* distance between non-consecutive occurrences of digitval */
     delta = (k - 1) * pow_k_phase;
 
     dtcopy_id = MPL_malloc(sizeof(int) * comm_size, MPL_MEM_COLL);      /* NOTE: We do not need this much large array - make it more accurate */
@@ -81,17 +81,11 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
                 MPIR_TSP_sched_localcopy((char *) rbuf + offset * count * type_extent, count, rtype,
                                          (char *) pupbuf + *pupsize, count, rtype, sched, ninvtcs,
                                          invtcs);
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "packing rbuf+%ld to pupbuf+%d\n",
-                             offset * count * type_extent, *pupsize));
         } else {
             dtcopy_id[counter++] =
                 MPIR_TSP_sched_localcopy((char *) pupbuf + *pupsize, count, rtype,
                                          (char *) rbuf + offset * count * type_extent, count, rtype,
                                          sched, ninvtcs, invtcs);
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "unpacking from pupbuf+%d to rbuf+%ld\n", *pupsize,
-                             offset * count * type_extent));
         }
 
         offset += 1;
@@ -114,10 +108,10 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
 }
 
 int
-MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                      MPIR_Comm * comm, MPIR_TSP_sched_t * sched, int k,
-                                      int buffer_per_phase)
+MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
+                                      MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                      MPI_Datatype recvtype, MPIR_Comm * comm,
+                                      MPIR_TSP_sched_t * sched, int k, int buffer_per_phase)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;
@@ -163,8 +157,6 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
 
     max = size - 1;
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Ialltoall_brucks: num_ranks: %d, k: %d \n", size, k));
     /* calculate the number of bits required to represent a rank in base k */
     while (max) {
         nphases++;
@@ -173,13 +165,11 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
 
     /* calculate largest power of k that is smaller than 'size'.
      * This is used for allocating temporary space for sending
-     * and receving data. */
+     * and receiving data. */
     p_of_k = 1;
     for (i = 0; i < nphases - 1; i++) {
         p_of_k *= k;
     }
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Num phases: %d\n", nphases));
 
     if (is_inplace) {
         sendcount = recvcount;
@@ -194,16 +184,6 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
     MPIR_Type_get_true_extent_impl(recvtype, &r_lb, &r_true_extent);
     r_extent = MPL_MAX(r_extent, r_true_extent);
 
-#ifdef MPL_USE_DBG_LOGGING
-    {
-        size_t s_type_size;
-        MPIR_Datatype_get_size_macro(sendtype, s_type_size);
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST,
-                         "send_type_size: %ld, send_type_extent: %ld, send_count: %d\n",
-                         s_type_size, s_extent, sendcount));
-    }
-#endif
     tmp_buf = (void *) MPIR_TSP_sched_malloc(recvcount * size * r_extent, sched);       /* temporary buffer used for rotation
                                                                                          * also used as sendbuf when inplace is true */
     MPIR_Assert(tmp_buf != NULL);
@@ -225,11 +205,10 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
     MPIR_TSP_sched_localcopy(senddata, rank * sendcount, sendtype,
                              (void *) ((char *) recvbuf + (size - rank) * recvcount * r_extent),
                              rank * recvcount, recvtype, sched, n_invtcs, invtcs);
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Step 1 data rotation scheduled\n"));
 
     MPIR_TSP_sched_fence(sched);
 
-    /* Step 2: Allocate buffer space for packing/receving data for every phase */
+    /* Step 2: Allocate buffer space for packing/receiving data for every phase */
     delta = 1;
     MPIR_CHKLMEM_MALLOC(tmp_sbuf, void ***, sizeof(void **) * nphases, mpi_errno, "tmp_sbuf",
                         MPL_MEM_COLL);
@@ -255,9 +234,6 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
             }
         }
     }
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Allocated temporary buffer space for packing\n"));
 
     /* use invtcs in the following manner
      * 0..k-2 for pack ids
@@ -293,14 +269,10 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
                                  &packsize, sched, pack_ninvtcs, pack_invtcs);
             *unpack_invtcs = packids[j - 1];
             unpack_ninvtcs = 1;
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "phase %d, digit %d packing scheduled\n", i, j));
 
             sendids[j - 1] =
                 MPIR_TSP_sched_isend(tmp_sbuf[i][j - 1], packsize, MPI_BYTE, dst, tag,
                                      comm, sched, 1, &packids[j - 1]);
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "phase %d, digit %d send scheduled\n", i, j));
 
             if (i != 0 && buffer_per_phase == 0) {      /* this dependency holds only when we don't have dedicated recv buffer per phase */
                 *recv_invtcs = unpackids[j - 1];
@@ -309,8 +281,6 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
             recvids[j - 1] =
                 MPIR_TSP_sched_irecv(tmp_rbuf[i][j - 1], packsize, MPI_BYTE,
                                      src, tag, comm, sched, recv_ninvtcs, recv_invtcs);
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "phase %d, digit %d recv scheduled\n", i, j));
 
             *(unpack_invtcs + 1) = recvids[j - 1];
             unpack_ninvtcs = 2;
@@ -319,22 +289,13 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
                                  recvcount, i, k, j, size,
                                  &packsize, sched, unpack_ninvtcs, unpack_invtcs);
             num_unpacks_in_last_phase++;
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "phase %d, digit %d unpacking scheduled\n", i, j));
         }
         MPIR_Localcopy(unpackids, sizeof(int) * (k - 1), MPI_BYTE,
                        pack_invtcs, sizeof(int) * (k - 1), MPI_BYTE);
         pack_ninvtcs = k - 1;
 
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "phase %d scheduled\n", i));
-
         delta *= k;
     }
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Step 2 scheduled\n"));
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Step 2: num_unpacks_in_last_phase: %d\n",
-                     num_unpacks_in_last_phase));
 
     /* Step 3: rotate the buffer */
     /* TODO: MPICH implementation does some lower_bound adjustment
@@ -360,9 +321,6 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
                                            (size - i - 1) * recvcount * r_extent), recvcount,
                                  recvtype, sched, 2, invtcs);
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Step 3: data rearrangement scheduled\n"));
-
   fn_exit:
     for (i = 0; i < nphases; i++) {
         MPL_free(tmp_sbuf[i]);
@@ -378,8 +336,8 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
 }
 
 /* Non-blocking brucks based Alltoall */
-int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                     MPIR_Comm * comm_ptr, MPIR_Request ** req, int k,
                                     int buffer_per_phase)
 {
@@ -393,7 +351,7 @@ int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Data
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule pipelined tree algo */
     mpi_errno = MPIR_TSP_Ialltoall_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,

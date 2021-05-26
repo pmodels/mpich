@@ -119,7 +119,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     orig_fp = fd->fp_ind;
 
-    /* IO patten identification if cb_write isn't disabled */
+    /* IO pattern identification if cb_write isn't disabled */
     if (fd->hints->cb_write != ADIOI_HINT_DISABLE) {
         /* For this process's request, calculate the list of offsets and
          * lengths in the file and determine the start and end offsets.
@@ -139,7 +139,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         ADIO_Offset my_count_size = 0;
         /* One-sided aggregation needs the amount of data per rank as well
          * because the difference in starting and ending offsets for 1 byte is
-         * 0 the same as 0 bytes so it cannot be distiguished.
+         * 0 the same as 0 bytes so it cannot be distinguished.
          */
         if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
             count_sizes = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
@@ -1086,7 +1086,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
     fd->hints->cb_nodes = numStripedAggs;
 
     /* Declare ADIOI_OneSidedStripeParms here - these parameters will be locally managed
-     * for this invokation of ADIOI_LUSTRE_IterateOneSided.  This will allow for concurrent
+     * for this invocation of ADIOI_LUSTRE_IterateOneSided.  This will allow for concurrent
      * one-sided collective writes via multi-threading as well as multiple communicators.
      */
     ADIOI_OneSidedStripeParms stripeParms;
@@ -1100,7 +1100,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
     stripeParms.lastFlatBufIndice = 0;
     stripeParms.lastIndiceOffset = 0;
 
-    /* The general algorithm here is to divide the file up into segements, a segment
+    /* The general algorithm here is to divide the file up into segments, a segment
      * being defined as a contiguous region of the file which has up to one occurrence
      * of each stripe - the data for each stripe being written out by a particular
      * aggregator.  The segmentLen is the maximum size in bytes of each segment

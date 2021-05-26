@@ -10,4 +10,4 @@ EXTRA_DIST = testlist
 # avoid having to write many "foo_SOURCES = foo.f90" lines
 AM_DEFAULT_SOURCE_EXT = .f90
 
-noinst_PROGRAMS = infotestf90 infotest2f90
+noinst_PROGRAMS = infocrenvf90 infotestf90 infotest2f90 infogetstrf90

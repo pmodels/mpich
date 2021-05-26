@@ -60,13 +60,13 @@ $annoteFiles = 0;
 $annoteBaseDir = "";
 %AnnoteFilesMap = ();   # Clear the list of files 
 %AnnoteMissed   = ();   # Clear the mapping of filenames to "missed;total" lines
-%AnnoteFilesToOrig = (); # Map from annoted file key to original name (used for
+%AnnoteFilesToOrig = (); # Map from annotated file key to original name (used for
                          # indexing into AnnoteMissed)
 $gDebug = 0;
 $gDebugDetail = 0;
 
 # The line leaders are used to provide a common set of expressions to match
-# the begining of a line.  This matches the output from the gcov tools.
+# the beginning of a line.  This matches the output from the gcov tools.
 # There are two of these because the output from the tools associtated with
 # gcc version 2.x and 3.x are different.
 # As, apparently is 4.x.
@@ -783,7 +783,7 @@ sub ExpandDir {
 	    $otherdirs[$#otherdirs+1] = "$dir/$filename";
 	}
 	elsif ($filename =~ /(.*\.gcov)$/) {
-	    # Check for the presense of a "merged" gcov file and use instead
+	    # Check for the presence of a "merged" gcov file and use instead
 	    if (-f "$dir/$filename.merge") {
 		$files[$#files + 1] = "$dir/$filename.merge";
 	    }
@@ -979,7 +979,7 @@ sub skipBlock {
 	    /^$lineLeader4\/\*\s+--END $blockName--\s+\*\//) {
 	    last; 
 	}
-	# If we match the following but not the preceeding, there are extra 
+	# If we match the following but not the preceding, there are extra 
 	# spaces in the comment
 	if (/^\s*\/\*\s*--\s*END\s+$blockName\s*--\s*\*\/\s*/ ||
 	    /^\s*-:\s*\d+:\s*\/\*\s*--\s*END\s+$blockName\s*--\s*\*\/\s*/) {

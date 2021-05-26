@@ -14,7 +14,6 @@
 int main(int argc, char **argv)
 {
     int rank, size, err, ec;
-    char buf[10];
     MPI_Request request;
     MPI_Status status;
 

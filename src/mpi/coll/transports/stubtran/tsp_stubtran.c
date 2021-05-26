@@ -7,7 +7,7 @@
 #include "mpiimpl.h"
 #include "tsp_stubtran.h"
 
-int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched)
+int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched, bool is_persistent)
 {
     return MPI_SUCCESS;
 }
@@ -71,6 +71,11 @@ void *MPII_Stubutil_sched_malloc(size_t size, MPII_Stubutil_sched_t * sched)
 
 int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
                               MPII_Coll_req_t ** request)
+{
+    return MPI_SUCCESS;
+}
+
+int MPII_Stubutil_sched_reset(MPII_Stubutil_sched_t * sched)
 {
     return MPI_SUCCESS;
 }

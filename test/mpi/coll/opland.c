@@ -26,8 +26,6 @@ int main(int argc, char *argv[])
     char cinbuf[3], coutbuf[3];
     signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
-    float finbuf[3], foutbuf[3];
-    double dinbuf[3], doutbuf[3];
 
     MTest_Init(&argc, &argv);
 

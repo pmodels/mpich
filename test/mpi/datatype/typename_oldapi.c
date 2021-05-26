@@ -23,7 +23,7 @@ typedef struct mpi_names_t {
 static mpi_names_t mpi_names[] = {
     {MPI_LB, "MPI_LB"},
     {MPI_UB, "MPI_UB"},
-    {0, (char *) 0},    /* Sentinal used to indicate the last element */
+    {0, (char *) 0},    /* Sentinel used to indicate the last element */
 };
 
 int main(int argc, char **argv)

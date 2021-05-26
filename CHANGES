@@ -1,14 +1,51 @@
 ===============================================================================
+                               Changes in 4.0
+===============================================================================
+
+# Implemented basic MPI-4 session API using MPIX interface.
+
+# Implemented basic MPI-4 partitioned communication API using MPIX interface.
+
+# Implemented MPI-4 large-count API using MPIX interface.
+
+# Implemented MPI-4 Tool events API using MPIX_T interface.
+
+# Implemented MPI-4 persistent bcast -- MPIX_Bcast_init.
+
+# Implemented MPIX_Isendrecv and MPIX_Isendrecv_replace.
+
+# Implemented MPIX_Comm_idup_with_info.
+
+# Implemented MPIX_Delete_error_{class,code,string}.
+
+# Implemented MPIX_Info_get_string.
+
+# MPI_Info objects can be accessed before MPI_Init{_thread}.
+
+# Generate C API interface functions including man page notes and error
+  checking using Python scripts.
+
+# Generate Fortran mpi_f08 binding using Python scripts.
+
+# Support explicit --without-cuda configure option.
+
+# Drop support for UCX version < 1.7.0.
+
+# Configure now optionally require Python 3 (when F08 is enabled).
+
+===============================================================================
                                Changes in 3.4
 ===============================================================================
 
-# ch4 replaces ch3 as the default device configuration. Users must
-  select a netmod in order to build ch4, else configure will prompt
-  the user to choose.
+# ch4 replaces ch3 as the default device configuration. If no network
+  module is specified at configuration-time, MPICH will search the
+  user environment in order to select one to build. The user will be
+  prompted to choose if no preferred network library is detected.
 
-# Add support for Yaksa datatype engine.
+# Add support for Yaksa datatype engine (default in ch4).
 
-# Add support for GPU buffers in pt2pt communication.
+# Add support for GPU buffers (CUDA, Level Zero) in pt2pt,
+  collectives, and one-sided communication.
 
 # Add support for XPMEM.
 
@@ -17,9 +54,16 @@
 
 # Add DAOS ADIO driver to ROMIO (contributed by Intel).
 
+# Add Quobyte ADIO driver to ROMIO (contributed by Quobyte).
+
 # Add support for Arm compiler toolchain
 
+# Add support for NVIDIA HPC compilers
+
 # Add support for flang/f18 Fortran compiler
+
+# Add support for AddressSanitizer and UndefinedBehaviorSanitizer to
+  debug configuration
 
 # Remove mxm, llc, and portals4 netmods from ch3.
 
@@ -171,7 +215,7 @@
  # Added experimental support for Open Fabrics Interfaces (OFI) version 1.0.0.
    https://github.com/ofiwg/libfabric (thanks to Intel for code contribution)
 
- # The Myrinet MX network module, which had a life cyle from 1.1 till
+ # The Myrinet MX network module, which had a life cycle from 1.1 till
    3.1.2, has now been deleted.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
@@ -1187,7 +1231,7 @@ www.mcs.anl.gov/mpi/mpich2/mpich2_1_0_6changes.htm.
 
 - Many enhancements to MPE
 
-- Enhanced support for features and idiosyncracies of Fortran 77 and 
+- Enhanced support for features and idiosyncrasies of Fortran 77 and 
   Fortran 90 compilers, including gfortran, g95, and xlf
 
 - Enhanced support for C++ compilers that do not fully support abstract
@@ -1201,13 +1245,13 @@ www.mcs.anl.gov/mpi/mpich2/mpich2_1_0_6changes.htm.
 - Man pages for mpiexec and mpif90
 
 - Enhancements for developers, including a more flexible and general 
-  mechanism for inserting logging and information messages, controlable
+  mechanism for inserting logging and information messages, controllable
   with --mpich-dbg-xxx command line arguments or MPICH_DBG_XXX environment
   variables.
 
 - Note to developers: 
   This release contains many changes to the structure of the CH3
-  device implementation (in src/mpid/ch3), including signficant
+  device implementation (in src/mpid/ch3), including significant
   reworking of the files (many files have been combined into fewer files
   representing logical grouping of functions).  The next release of 
   MPICH2 will contain even more significant changes to the device 
@@ -1238,7 +1282,7 @@ www.mcs.anl.gov/mpi/mpich2/mpich2_1_0_6changes.htm.
     and provides count of real drawables in preview drawables.
 
   - new slog2 tools, slog2filter and slog2updater, which both are logfile
-    format convertors.  slog2filter removes undesirable categories of
+    format converters.  slog2filter removes undesirable categories of
     drawables as well as alters the slog2 file structure.  slog2updater
     is a slog2filter that reads in older logfile format, 2.0.5, and 
     writes out the latest format 2.0.6.
@@ -1555,7 +1599,7 @@ www.mcs.anl.gov/mpi/mpich2/mpich2_1_0_6changes.htm.
 - The CH3 interface and device now provide a mechanism for using RDMA (remote
   direct memory access) to transfer data between processes.
 
-- Logging capabilities for MPI and internal routines have been readded.  See
+- Logging capabilities for MPI and internal routines have been re-added.  See
   the documentation in doc/logging for details.
 
 - A "meminit" option was added to --enable-g to force all bytes associated with

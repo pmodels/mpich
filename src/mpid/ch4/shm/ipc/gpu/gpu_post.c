@@ -23,6 +23,8 @@ cvars:
 #include "gpu_pre.h"
 #include "gpu_types.h"
 
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+
 static int ipc_handle_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
                                    void **handle_obj)
 {
@@ -32,13 +34,11 @@ static int ipc_handle_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IPC_HANDLE_CACHE_SEARCH);
 
     *handle_obj = NULL;
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
         int mpl_err = MPL_SUCCESS;
         mpl_err = MPL_gavl_tree_search(gavl_tree, addr, len, handle_obj);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_search");
     }
-#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IPC_HANDLE_CACHE_SEARCH);
@@ -56,14 +56,12 @@ static int ipc_handle_cache_insert(MPL_gavl_tree_t gavl_tree, const void *addr, 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IPC_HANDLE_CACHE_INSERT);
 
     *insert_successful = false;
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
         int mpl_err = MPL_SUCCESS;
         mpl_err = MPL_gavl_tree_insert(gavl_tree, addr, len, handle_obj);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_insert");
         *insert_successful = true;
     }
-#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IPC_HANDLE_CACHE_INSERT);
@@ -81,7 +79,6 @@ static int get_map_device(int remote_global_dev_id,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_GET_MAP_DEVICE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_GET_MAP_DEVICE);
 
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     int recv_dev_id;
     int recv_dt_contig;
     MPIDI_GPUI_dev_id_t *avail_id = NULL;
@@ -106,13 +103,9 @@ static int get_map_device(int remote_global_dev_id,
         else
             *dev_id = avail_id->local_dev_id;
     }
-#endif
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_GET_MAP_DEVICE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int ipc_handle_cache_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len)
@@ -122,14 +115,12 @@ static int ipc_handle_cache_delete(MPL_gavl_tree_t gavl_tree, const void *addr, 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_IPC_HANDLE_DELETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IPC_HANDLE_DELETE);
 
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     int mpl_err = MPL_SUCCESS;
     if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
         mpl_err = MPL_gavl_tree_delete_range(gavl_tree, addr, len);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**mpl_gavl_delete_range");
     }
-#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IPC_HANDLE_DELETE);
@@ -137,6 +128,8 @@ static int ipc_handle_cache_delete(MPL_gavl_tree_t gavl_tree, const void *addr, 
   fn_fail:
     goto fn_exit;
 }
+
+#endif
 
 int MPIDI_GPU_ipc_handle_cache_insert(int rank, MPIR_Comm * comm, MPIDI_GPU_ipc_handle_t handle)
 {
@@ -165,13 +158,11 @@ int MPIDI_GPU_ipc_handle_cache_insert(int rank, MPIR_Comm * comm, MPIDI_GPU_ipc_
             MPL_free(handle_obj);
         }
     }
+  fn_fail:
 #endif
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_IPC_HANDLE_CACHE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
@@ -224,17 +215,15 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
 
     ipc_attr->ipc_handle.gpu.global_dev_id = tmp->global_dev_id;
     ipc_attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD;
+  fn_fail:
 #else
     /* Do not support IPC data transfer */
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
     ipc_attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
 #endif
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_GET_IPC_ATTR);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle,
@@ -295,13 +284,11 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle,
     } else {
         *vaddr = (void *) (handle_obj->mapped_base_addr + handle.offset);
     }
+  fn_fail:
 #endif
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_IPC_HANDLE_MAP);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle)
@@ -317,11 +304,9 @@ int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle)
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_unmap");
     }
+  fn_fail:
 #endif
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_IPC_HANDLE_UNMAP);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }

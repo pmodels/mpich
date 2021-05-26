@@ -16,7 +16,7 @@
 !
       data keys/"Key1", "key2", "KeY3", "A Key With Blanks","See Below", &
       &          "last"/
-      data values/"value 1", "value 2", "VaLue 3", "key=valu:3","false", &
+      data values/"value 1", "value 2", "VaLue 3", "key=value:3","false", &
       &            "no test"/
 !
       errs = 0

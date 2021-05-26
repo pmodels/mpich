@@ -21,7 +21,7 @@
 
 int main(int argc, char *argv[])
 {
-    int rank, size, i, type_size;
+    int rank, size, type_size;
     int errs = 0;
 
     MPI_Init(&argc, &argv);

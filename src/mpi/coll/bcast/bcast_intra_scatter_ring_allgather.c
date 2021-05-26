@@ -22,7 +22,7 @@
  * Total Cost = (lgp+p-1).alpha + 2.n.((p-1)/p).beta
  */
 int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
-                                            int count,
+                                            MPI_Aint count,
                                             MPI_Datatype datatype,
                                             int root,
                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -30,7 +30,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     int rank, comm_size;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int scatter_size;
+    MPI_Aint scatter_size;
     int j, i, is_contig;
     MPI_Aint nbytes, type_size;
     int left, right, jnext;
@@ -99,7 +99,8 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     j = rank;
     jnext = left;
     for (i = 1; i < comm_size; i++) {
-        int left_count, right_count, left_disp, right_disp, rel_j, rel_jnext;
+        MPI_Aint left_count, right_count, left_disp, right_disp;
+        int rel_j, rel_jnext;
 
         rel_j = (j - root + comm_size) % comm_size;
         rel_jnext = (jnext - root + comm_size) % comm_size;

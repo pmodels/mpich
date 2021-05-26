@@ -155,7 +155,7 @@ Action [Post Send Data],
     // at one time, amortizing the cost of checking for buffers and checking
     // flow control over a set of outgoing packets.  We are uncertain how
     // packing multiple buffers then posting multiple sends will affect
-    // peformance, but clearly amortizing costs when sending straight out of
+    // performance, but clearly amortizing costs when sending straight out of
     // the user buffer will be a win.
 
     if there are more data packets to send

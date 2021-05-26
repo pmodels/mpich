@@ -11,10 +11,10 @@
 
 /* Routine to schedule a scattered based alltoallv */
 /* Alltoallv doesn't support MPI_IN_PLACE */
-int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sendcounts[],
-                                              const int sdispls[], MPI_Datatype sendtype,
-                                              void *recvbuf, const int recvcounts[],
-                                              const int rdispls[], MPI_Datatype recvtype,
+int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Aint sendcounts[],
+                                              const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                              void *recvbuf, const MPI_Aint recvcounts[],
+                                              const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                               MPIR_Comm * comm, int batch_size, int bblock,
                                               MPIR_TSP_sched_t * sched)
 {
@@ -108,11 +108,12 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
 }
 
 /* Scattered sliding window based Alltoallv */
-int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcounts[],
-                                        const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
-                                        const int recvcounts[], const int rdispls[],
-                                        MPI_Datatype recvtype, MPIR_Comm * comm, int batch_size,
-                                        int bblock, MPIR_Request ** req)
+int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const MPI_Aint sendcounts[],
+                                        const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                        void *recvbuf, const MPI_Aint recvcounts[],
+                                        const MPI_Aint rdispls[], MPI_Datatype recvtype,
+                                        MPIR_Comm * comm, int batch_size, int bblock,
+                                        MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -124,7 +125,7 @@ int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcount
     /* Generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_ERR_CHKANDJUMP(!sched, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Ialltoallv_sched_intra_scattered(sendbuf, sendcounts, sdispls, sendtype,

@@ -110,7 +110,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
                conflict with release of the RTS request if the CTS is received
 	       (see handling of a rendezvous CTS packet in
                MPIDI_CH3U_Handle_recv_pkt()).  
-	       MPID_Request_fetch_and_clear_rts_sreq() is used to gurantee 
+	       MPID_Request_fetch_and_clear_rts_sreq() is used to guarantee 
 	       that atomicity. */
 	    MPIDI_Request_fetch_and_clear_rts_sreq(sreq, &rts_sreq);
 	    if (rts_sreq != NULL) 
@@ -305,11 +305,9 @@ int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 	if (MPIDI_Request_get_msg_type(sreq) == MPIDI_REQUEST_RNDV_MSG ||
 	    MPIDI_Request_get_type(sreq) == MPIDI_REQUEST_TYPE_SSEND)
 	{
-	    int cc;
-	    
 	    /* decrement the CC one additional time for the CTS/sync ack that 
 	       is never going to arrive */
-	    MPIDI_CH3U_Request_decrement_cc(sreq, &cc);
+	    MPIDI_CH3U_Request_dec_cc(sreq);
 	}
 		
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,"message cancelled");

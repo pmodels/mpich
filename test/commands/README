@@ -6,6 +6,6 @@ options that are part of the common MPICH extensions for mpiexec.
 
 In addition, the program testout.c can be used to check the buffering of
 stdio.  As a quality of implementation issue, users expect programs run
-by mpiexec to preserve their buffering choice (or at least the appearence of
+by mpiexec to preserve their buffering choice (or at least the appearance of
 it).  This program writes several lines of output with delays between each
 line; those delays should be observed when the program is run under mpiexec.

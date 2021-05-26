@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 ##
 ## Copyright (C) by Argonne National Laboratory
 ##     See COPYRIGHT in top-level directory
@@ -113,7 +113,6 @@ while read -r line ; do
     if test "$found" = "0" ; then
         dirs="$dirs $testdir"
         printf "" > ${builddir}/${testdir}/testlist.dtp
-        printf "" > ${builddir}/${testdir}/testlist.gpu
     fi
 
     # prepare extra args
@@ -139,66 +138,25 @@ while read -r line ; do
                 if [ $testsize -lt $mintestsize ] ; then testsize=$mintestsize; fi
                 if [ $testsize -gt $maxtestsize ] ; then testsize=$maxtestsize; fi
             fi
-            gputestsize=$((testsize / 2)) # reduce GPU test iteration to avoid timeouts
 
-            if [ $testdir = "pt2pt" ] ; then # only send/recv comm can use types from different pools
+            if [ $testdir = "pt2pt" ] || [ $testdir = "part" ]; then # only send/recv or partitioned comm can use types from different pools
                 # do combination of different send recv count where recv count >= send count
                 # limit the mixed pool case to only one
                 # TODO: this should be defined in the config file
                 for recvcount in $sendcount $((sendcount * 2)) ; do
                     echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
                     seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-sendmem=host arg=-recvmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=$((gputestsize / 2)) ${other_args} arg=-sendmem=reg_host arg=-recvmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-sendmem=device arg=-recvmem=host $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=$((gputestsize / 2)) ${other_args} arg=-sendmem=device arg=-recvmem=reg_host $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-sendmem=device arg=-recvmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
                 done
             elif [ $testdir = "rma" ] ; then
                 if [ $gacc = "1" ] ; then # specify resultmem for MPI_GET_ACCUMULATE tests
                     echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
                     seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-origmem=host arg=-targetmem=device arg=-resultmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=$((gputestsize / 2)) ${other_args} arg=-origmem=reg_host arg=-targetmem=device arg=-resultmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-origmem=device arg=-targetmem=host arg=-resultmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=$((gputestsize / 2)) ${other_args} arg=-origmem=device arg=-targetmem=reg_host arg=-resultmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-origmem=device arg=-targetmem=device arg=-resultmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-origmem=device arg=-targetmem=host arg=-resultmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-origmem=device arg=-targetmem=host arg=-resultmem=reg_host $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
                 else
                     echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
                     seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-origmem=host arg=-targetmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=$((gputestsize / 2)) ${other_args} arg=-origmem=reg_host arg=-targetmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-origmem=device arg=-targetmem=host $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=$((gputestsize / 2)) ${other_args} arg=-origmem=device arg=-targetmem=reg_host $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-origmem=device arg=-targetmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                    seed=$((seed + 1))
-                    fi
+                fi
             elif [ $testdir = "coll" ] ; then
-                echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} arg=-evenmemtype=host arg=-oddmemtype=host $timelimit" >> ${builddir}/${testdir}/testlist.dtp
-                seed=$((seed + 1))
-                echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-evenmemtype=host arg=-oddmemtype=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                seed=$((seed + 1))
-                echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-evenmemtype=device arg=-oddmemtype=reg_host $timelimit" >> ${builddir}/${testdir}/testlist.gpu
-                seed=$((seed + 1))
-                echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-evenmemtype=device arg=-oddmemtype=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
+                echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
                 seed=$((seed + 1))
             else
                 echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp

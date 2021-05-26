@@ -16,7 +16,7 @@ rm -f $file
 # Default number of processes to start (the test is for large numbers
 # of processes; use "manyconnect 10" to start with fewer for debugging)
 nconn=100
-# To avoid problems with listner queues, we pause every blockstart
+# To avoid problems with listener queues, we pause every blockstart
 # processes
 blockstart=10
 

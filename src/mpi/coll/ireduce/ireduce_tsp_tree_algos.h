@@ -12,14 +12,14 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a pipelined tree based reduce */
-int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
                                       MPIR_Comm * comm, int tree_type, int k, int chunk_size,
                                       int buffer_per_child, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j, t;
-    int num_chunks, chunk_size_floor, chunk_size_ceil;
+    MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
     size_t extent, type_size;
     MPI_Aint type_lb, true_extent;
@@ -44,10 +44,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Scheduling pipelined reduce on %d ranks, root=%d",
-                     MPIR_Comm_size(comm), root));
 
     size = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
@@ -76,11 +72,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     /* calculate chunking information for pipelining */
     MPIR_Algo_calculate_pipeline_chunk_info(chunk_size, type_size, count, &num_chunks,
                                             &chunk_size_floor, &chunk_size_ceil);
-    /* print chunking information */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Reduce pipeline info: chunk_size=%d count=%d num_chunks=%d chunk_size_floor=%d chunk_size_ceil=%d",
-                                             chunk_size, count, num_chunks,
-                                             chunk_size_floor, chunk_size_ceil));
 
     if (!is_commutative) {
         if (k > 1)
@@ -97,7 +88,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 
-    /* identify my locaion in the tree */
+    /* identify my location in the tree */
     is_tree_root = (rank == tree_root) ? 1 : 0;
     is_tree_leaf = (num_children == 0) ? 1 : 0;
     is_tree_intermediate = (!is_tree_leaf && !is_tree_root);
@@ -189,11 +180,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
                 }
             }
 
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "Schedule receive from child %d", child));
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "Posting receive at address %p", recv_address));
-
             recv_id[i] = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,
                                               sched, nvtcs, vtcs);
 
@@ -206,7 +192,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
                                                            datatype, op, sched, nvtcs, vtcs);
             } else {    /* wait for the previous reduce to complete */
 
-                /* NOTE: Make sure that knomial tree is being constructed differently for reduce for optimal performace.
+                /* NOTE: Make sure that knomial tree is being constructed differently for reduce for optimal performance.
                  * In bcast, leftmost subtree is the largest while it should be the opposite in case of reduce */
 
                 if (i > 0) {
@@ -263,7 +249,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
 
 
 /* Non-blocking tree based reduce */
-int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                 MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm,
                                 MPIR_Request ** req, int tree_type, int k, int chunk_size,
                                 int buffer_per_child)
@@ -279,7 +265,7 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule pipelined tree algo */
     mpi_errno =

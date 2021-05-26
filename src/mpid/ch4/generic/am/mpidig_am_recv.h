@@ -82,7 +82,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
          */
         if (nbytes > 0) {
             char *addr = (char *) buf + dt_true_lb;
-            assert(addr);       /* to supress gcc-8 warning: -Wnonnull */
+            assert(addr);       /* to suppress gcc-8 warning: -Wnonnull */
             MPIR_Typerep_copy(addr, MPIDIG_REQUEST(rreq, buffer), nbytes);
         }
     }
@@ -101,7 +101,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* Decrement the refrence counter for the request object (for the reference held by the sending
+    /* Decrement the reference counter for the request object (for the reference held by the sending
      * process). */
     MPID_Request_complete(rreq);
   fn_exit:
@@ -109,6 +109,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_am_recv(MPIR_Request * rreq)
+{
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    return MPIDI_NM_am_recv(rreq);
+#else
+    if (MPIDI_REQUEST(rreq, is_local)) {
+        return MPIDI_SHM_am_recv(rreq);
+    } else {
+        return MPIDI_NM_am_recv(rreq);
+    }
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -124,18 +137,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_IRECV);
 
     root_comm = MPIDIG_context_id_to_comm(context_id);
-    unexp_req = MPIDIG_dequeue_unexp(rank, tag, context_id, &MPIDIG_COMM(root_comm, unexp_list));
+    unexp_req =
+        MPIDIG_rreq_dequeue(rank, tag, context_id, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
-        MPIR_Comm_release(root_comm);   /* -1 for removing from unexp_list */
         if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_BUSY) {
             MPIDIG_REQUEST(unexp_req, req->status) |= MPIDIG_REQ_MATCHED;
         } else if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_RTS) {
+            /* the count for unexpected long message is the data size */
+            MPI_Aint data_sz = MPIDIG_REQUEST(unexp_req, count);
             /* Matching receive is now posted, tell the netmod/shmmod */
             MPIR_Datatype_add_ref_if_not_builtin(datatype);
             MPIDIG_REQUEST(unexp_req, datatype) = datatype;
             MPIDIG_REQUEST(unexp_req, buffer) = (char *) buf;
             MPIDIG_REQUEST(unexp_req, count) = count;
+            MPIDIG_REQUEST(unexp_req, recv_ready) = true;
             if (*request == NULL) {
                 /* Regular (non-enqueuing) path: MPIDIG is responsbile for allocating
                  * a request. Here we simply return `unexp_req` */
@@ -151,26 +167,66 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
                 MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
             }
             MPIDIG_REQUEST(unexp_req, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
+            MPIDIG_recv_type_init(data_sz, unexp_req);
             mpi_errno = MPIDIG_do_cts(unexp_req);
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
         } else {
-            mpi_errno =
-                MPIDIG_handle_unexpected(buf, count, datatype, root_comm, context_id, unexp_req);
-            MPIR_ERR_CHECK(mpi_errno);
-            if (*request == NULL) {
-                /* Regular (non-enqueuing) path: MPIDIG is responsbile for allocating
-                 * a request. Here we simply return `unexp_req`, which is already completed. */
-                *request = unexp_req;
+            if (MPIDIG_REQUEST(unexp_req, recv_ready)) {
+                /* if the unexpected recv is ready, the data is in the unexpected buffer. Just
+                 * copy them to complete */
+                mpi_errno = MPIDIG_handle_unexpected(buf, count, datatype, root_comm, context_id,
+                                                     unexp_req);
+                MPIR_ERR_CHECK(mpi_errno);
+                if (*request == NULL) {
+                    /* Regular (non-enqueuing) path: MPIDIG is responsbile for allocating
+                     * a request. Here we simply return `unexp_req`, which is already completed. */
+                    *request = unexp_req;
+                } else {
+                    /* Enqueuing path: CH4 already allocated request as `*request`.
+                     * Since the real operations has completed in `unexp_req`, here we
+                     * simply copy the status to `*request` and complete it. */
+                    (*request)->status = unexp_req->status;
+                    MPIR_Request_add_ref(*request);
+                    MPID_Request_complete(*request);
+                    /* Need to free here because we don't return this to user */
+                    MPIDI_CH4_REQUEST_FREE(unexp_req);
+                }
             } else {
-                /* Enqueuing path: CH4 already allocated request as `*request`.
-                 * Since the real operations has completed in `unexp_req`, here we
-                 * simply copy the status to `*request` and complete it. */
-                (*request)->status = unexp_req->status;
-                MPIR_Request_add_ref(*request);
-                MPID_Request_complete(*request);
-                /* Need to free here because we don't return this to user */
-                MPIR_Request_free_unsafe(unexp_req);
+                /* if the unexpected recv is not ready, we put user recv buffer info and let
+                 * transport layer to start the recv. */
+                /* the count for unexpected long message is the data size */
+                MPI_Aint data_sz = MPIDIG_REQUEST(unexp_req, count);
+                /* Matching receive is now posted, tell the netmod/shmmod */
+                MPIR_Datatype_add_ref_if_not_builtin(datatype);
+                MPIDIG_REQUEST(unexp_req, datatype) = datatype;
+                MPIDIG_REQUEST(unexp_req, buffer) = (char *) buf;
+                MPIDIG_REQUEST(unexp_req, count) = count;
+                MPIDIG_REQUEST(unexp_req, recv_ready) = true;
+                if (*request == NULL) {
+                    /* Regular (non-enqueuing) path: MPIDIG is responsbile for allocating
+                     * a request. Here we simply return `unexp_req` */
+                    *request = unexp_req;
+                    /* Mark `match_req` as NULL so that we know nothing else to complete when
+                     * `unexp_req` finally completes. (See below) */
+                    MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = NULL;
+                } else {
+                    /* Enqueuing path: CH4 already allocated a request.
+                     * Record the passed `*request` to `match_req` so that we can complete it
+                     * later when `unexp_req` completes.
+                     * See MPIDI_recv_target_cmpl_cb for actual completion handler. */
+                    MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
+                }
+                MPIDIG_REQUEST(unexp_req, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
+                MPIDIG_REQUEST(unexp_req, req->seq_no) =
+                    MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                                (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
+                                 MPIDIG_REQUEST(unexp_req, req->seq_no),
+                                 MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
+                MPIDIG_recv_type_init(data_sz, unexp_req);
+                MPIDIG_do_am_recv(unexp_req);
+                MPIR_ERR_CHECK(mpi_errno);
             }
             goto fn_exit;
         }
@@ -197,7 +253,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
         /* Increment refcnt for comm before posting rreq to posted_list,
          * to make sure comm is alive while holding an entry in the posted_list */
         MPIR_Comm_add_ref(root_comm);
-        MPIDIG_enqueue_posted(rreq, &MPIDIG_COMM(root_comm, posted_list));
+        MPIDIG_enqueue_request(rreq, &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
         /* MPIDI_CS_EXIT(); */
     } else {
         MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = rreq;
@@ -205,33 +261,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_IRECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv(void *buf,
-                                             MPI_Aint count,
-                                             MPI_Datatype datatype,
-                                             int rank,
-                                             int tag,
-                                             MPIR_Comm * comm,
-                                             int context_offset, MPI_Status * status,
-                                             MPIR_Request ** request, int is_local)
-{
-    int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_RECV);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-
-    mpi_errno =
-        MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIDI_REQUEST_SET_LOCAL(*request, is_local, NULL);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_RECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -258,15 +287,38 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_BUSY) {
         MPIDIG_REQUEST(message, req->status) |= MPIDIG_REQ_UNEXP_CLAIMED;
     } else if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_RTS) {
+        /* the count for unexpected long message is the data size */
+        MPI_Aint data_sz = MPIDIG_REQUEST(message, count);
         /* Matching receive is now posted, tell the netmod */
         MPIDIG_REQUEST(message, datatype) = datatype;
         MPIDIG_REQUEST(message, buffer) = (char *) buf;
         MPIDIG_REQUEST(message, count) = count;
+        MPIDIG_REQUEST(message, recv_ready) = true;
         MPIDIG_REQUEST(message, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
+        MPIDIG_recv_type_init(data_sz, message);
         MPIDIG_do_cts(message);
     } else {
-        mpi_errno = MPIDIG_handle_unexp_mrecv(message);
-        MPIR_ERR_CHECK(mpi_errno);
+        if (MPIDIG_REQUEST(message, recv_ready)) {
+            mpi_errno = MPIDIG_handle_unexp_mrecv(message);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            /* the count for unexpected long message is the data size */
+            MPI_Aint data_sz = MPIDIG_REQUEST(message, count);
+            /* Matching receive is now posted, tell the netmod */
+            MPIDIG_REQUEST(message, datatype) = datatype;
+            MPIDIG_REQUEST(message, buffer) = (char *) buf;
+            MPIDIG_REQUEST(message, count) = count;
+            MPIDIG_REQUEST(message, recv_ready) = true;
+            MPIDIG_REQUEST(message, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
+            MPIDIG_REQUEST(message, req->seq_no) =
+                MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
+                             MPIDIG_REQUEST(message, req->seq_no),
+                             MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
+            MPIDIG_recv_type_init(data_sz, message);
+            MPIDIG_do_am_recv(message);
+        }
     }
     /* MPIDI_CS_EXIT(); */
 
@@ -319,9 +371,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
         root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
 
         /* MPIDI_CS_ENTER(); */
-        found =
-            MPIDIG_delete_posted(&MPIDIG_REQUEST(rreq, req->rreq),
-                                 &MPIDIG_COMM(root_comm, posted_list));
+        found = MPIDIG_delete_posted(rreq, &MPIDI_global.posted_list);
         /* MPIDI_CS_EXIT(); */
 
         if (found) {

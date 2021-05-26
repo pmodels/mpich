@@ -3,11 +3,11 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "mpitest.h"
 
 /* tests noncontiguous reads/writes using nonblocking collective I/O */
 
@@ -15,7 +15,7 @@
  *
  * . generalized file writing/reading to handle arbitrary number of processors
  * . provides the "cb_config_list" hint with several permutations of the
- *   avaliable processors.
+ *   available processors.
  *   [ makes use of code copied from ROMIO's ADIO code to collect the names of
  *   the processors ]
  */
@@ -23,7 +23,8 @@
 /* we are going to muck with this later to make it evenly divisible by however many compute nodes we have */
 #define STARTING_SIZE 5000
 
-int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg, int verbose);
+int test_file(const char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg,
+              int verbose);
 
 #define ADIOI_Free free
 #define ADIOI_Malloc malloc
@@ -248,8 +249,8 @@ void simple_shuffle_str(int mynod, int len, ADIO_cb_name_array array, char *dest
 
 int main(int argc, char **argv)
 {
-    int i, mynod, nprocs, len, errs = 0, sum_errs = 0, verbose = 0;
-    char *filename;
+    int i, mynod, nprocs, len, errs = 0, verbose = 0;
+    char *filename = NULL;
     char *cb_config_string;
     int cb_config_len;
     ADIO_cb_name_array array;
@@ -331,7 +332,8 @@ int main(int argc, char **argv)
 
 #define SEEDER(x,y,z) ((x)*1000000 + (y) + (x)*(z))
 
-int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg, int verbose)
+int test_file(const char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg,
+              int verbose)
 {
     MPI_Datatype typevec, typevec2, newtype;
     int *buf, i, blocklength, errcode, errors = 0;

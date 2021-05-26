@@ -66,7 +66,7 @@ static mpi_names_t mpi_names[] = {
     {MPI_LONG_LONG, "MPI_LONG_LONG"},
     {MPI_UNSIGNED_LONG_LONG, "MPI_UNSIGNED_LONG_LONG"},
     {MPI_LONG_DOUBLE_INT, "MPI_LONG_DOUBLE_INT"},
-    {0, (char *) 0},    /* Sentinal used to indicate the last element */
+    {0, (char *) 0},    /* Sentinel used to indicate the last element */
 };
 
 /*
@@ -110,7 +110,7 @@ int f2ctype_(MPI_Fint * fhandle, MPI_Fint * typeidx)
          * if *must* act like it - e.g., the datatype name must be the same */
         MPI_Type_get_name(ctype, mytypename, &mytypenamelen);
         if (strcmp(mytypename, mpi_names[*typeidx].name) != 0 &&
-            /* LONG_LONG is a synonym of LONG_LONG_INT, thus LONG_LONG_INT is also a vaild name */
+            /* LONG_LONG is a synonym of LONG_LONG_INT, thus LONG_LONG_INT is also a valid name */
             (ctype != MPI_LONG_LONG || strcmp(mytypename, "MPI_LONG_LONG_INT") != 0)) {
             errs++;
             printf("C and Fortran types for %s (c name is %s) do not match f=%d, ctof=%d.\n",

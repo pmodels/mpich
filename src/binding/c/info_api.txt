@@ -1,0 +1,81 @@
+# vim: set ft=c:
+
+MPI_Info_create:
+    .desc: Creates a new info object
+    .skip: initcheck
+{
+    MPIR_Info *info_ptr = NULL;
+    mpi_errno = MPIR_Info_alloc(&info_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    *info = info_ptr->handle;
+    /* (info_ptr)->cookie = MPIR_INFO_COOKIE; */
+    /* this is the first structure in this linked list. it is
+     * always kept empty. new (key,value) pairs are added after it. */
+}
+
+MPI_Info_delete:
+    .desc: Deletes a (key,value) pair from info
+    .skip: initcheck
+    .extra: NotThreadSafe
+
+MPI_Info_dup:
+    .desc: Returns a duplicate of the info object
+    .skip: initcheck
+
+MPI_Info_free:
+    .desc: Frees an info object
+    .skip: initcheck
+
+MPI_Info_get:
+    .desc: Retrieves the value associated with a key
+    .skip: initcheck
+/*
+.N Deprecated
+   'MPI_Info_get_string' should be used instead of this routine.
+*/
+
+MPI_Info_get_nkeys:
+    .desc: Returns the number of currently defined keys in info
+    .skip: initcheck
+
+MPI_Info_get_nthkey:
+    .desc: Returns the nth defined key in info
+    .skip: initcheck
+
+MPI_Info_get_valuelen:
+    .desc: Retrieves the length of the value associated with a key
+    .skip: initcheck
+/*
+.N Deprecated
+   'MPI_Info_get_string' should be used instead of this routine.
+*/
+
+MPI_Info_set:
+    .desc: Adds a (key,value) pair to info
+    .skip: initcheck
+    .docnotes: NotThreadSafe
+{ -- error_check --
+    MPIR_ERR_CHKANDJUMP((strlen(value) > MPI_MAX_INFO_VAL), mpi_errno, MPI_ERR_INFO_VALUE,
+                        "**infovallong");
+}
+
+MPI_Info_get_string:
+    .desc: Retrieves the value associated with a key
+    .skip: initcheck
+
+MPI_Info_create_env:
+    .desc: Creates an info object containing information about the application
+    .skip: initcheck, validate-ARGUMENT_COUNT, validate-ARGUMENT_LIST
+/*
+    Notes for C:
+        'MPI_Info_create_env' accepts NULL as input parameters. Doing so impacts
+        the returned value.
+
+    Notes for Fortran:
+        The Fortran binding for 'MPI_Info_create_env' does not take argc and argv.
+        .vb
+            subroutine MPI_INFO_CREATE_ENV(info, ierr)
+            integer info, ierr
+        .ve
+*/

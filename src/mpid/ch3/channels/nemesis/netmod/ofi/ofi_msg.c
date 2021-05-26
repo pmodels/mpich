@@ -61,9 +61,8 @@
         gl_data.rts_cts_in_flight++;                                    \
         GET_PGID_AND_SET_MATCH();                                       \
         VC_READY_CHECK(vc);                                             \
-        c = 1;                                                          \
-        MPIR_cc_incr(sreq->cc_ptr, &c);                                 \
-        MPIR_cc_incr(sreq->cc_ptr, &c);                                 \
+        MPIR_cc_inc(sreq->cc_ptr);                                      \
+        MPIR_cc_inc(sreq->cc_ptr);                                      \
         REQ_OFI(sreq)->event_callback   = MPID_nem_ofi_data_callback;   \
         REQ_OFI(sreq)->pack_buffer      = pack_buffer;                  \
         REQ_OFI(sreq)->pack_buffer_size = pkt_len;                      \

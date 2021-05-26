@@ -1,0 +1,184 @@
+# vim: set ft=c:
+
+MPI_Abort:
+    .desc: Terminates MPI execution environment
+    .skip: ThreadSafe, validate-ERROR_CODE
+    .extra: ignore_revoked_comm
+/*
+    Notes:
+    Terminates all MPI processes associated with the communicator 'comm'; in
+    most systems (all to date), terminates `all` processes.
+
+    .N NotThreadSafe
+    Because the 'MPI_Abort' routine is intended to ensure that an MPI
+    process (and possibly an entire job), it cannot wait for a thread to
+    release a lock or other mechanism for atomic access.
+*/
+
+MPI_Finalize:
+    .desc: Terminates MPI execution environment
+    .skip: ThreadSafe, global_cs
+/*
+    Notes:
+    All processes must call this routine before exiting.  The number of
+    processes running `after` this routine is called is undefined;
+    it is best not to perform much more than a 'return rc' after calling
+    'MPI_Finalize'.
+
+    Thread and Signal Safety:
+    The MPI standard requires that 'MPI_Finalize' be called `only` by the same
+    thread that initialized MPI with either 'MPI_Init' or 'MPI_Init_thread'.
+*/
+
+MPI_Finalized:
+    .desc: Indicates whether 'MPI_Finalize' has been called.
+    .skip: initcheck
+    .include: mpi_init.h
+{
+    *flag = MPII_world_is_finalized();
+}
+
+MPI_Init:
+    .desc: Initialize the MPI execution environment
+    .skip: ThreadSafe, Fortran, initcheck, validate-ARGUMENT_COUNT, validate-ARGUMENT_LIST
+    .seealso: MPI_Init_thread, MPI_Finalize
+    .include: mpi_init.h
+/*
+    Notes:
+       The MPI standard does not say what a program can do before an 'MPI_INIT' or
+       after an 'MPI_FINALIZE'.  In the MPICH implementation, you should do
+       as little as possible.  In particular, avoid anything that changes the
+       external state of the program, such as opening files, reading standard
+       input or writing to standard output.
+
+    Thread and Signal Safety:
+        This routine must be called by one thread only.  That thread is called
+        the `main thread` and must be the thread that calls 'MPI_Finalize'.
+
+    Notes for C:
+        As of MPI-2, 'MPI_Init' will accept NULL as input parameters. Doing so
+        will impact the values stored in 'MPI_INFO_ENV'.
+
+    Notes for Fortran:
+    The Fortran binding for 'MPI_Init' has only the error return
+    .vb
+        subroutine MPI_INIT(ierr)
+        integer ierr
+    .ve
+*/
+{ -- error_check --
+    MPIR_ERRTEST_INITTWICE();
+}
+
+MPI_Initialized:
+    .desc: Indicates whether 'MPI_Init' has been called.
+    .skip: initcheck
+    .include: mpi_init.h
+{
+    *flag = MPII_world_is_initialized();
+}
+
+MPI_Init_thread:
+    .desc: Initialize the MPI execution environment
+    .skip: ThreadSafe, Fortran, initcheck, validate-THREAD_LEVEL, validate-ARGUMENT_COUNT, validate-ARGUMENT_LIST
+    .seealso: MPI_Init, MPI_Finalize
+    .include: mpi_init.h
+/*
+    Command line arguments:
+    MPI specifies no command-line arguments but does allow an MPI
+    implementation to make use of them.  See 'MPI_INIT' for a description of
+    the command line arguments supported by 'MPI_INIT' and 'MPI_INIT_THREAD'.
+
+    Notes:
+    The valid values for the level of thread support are\:
+    + MPI_THREAD_SINGLE - Only one thread will execute.
+    . MPI_THREAD_FUNNELED - The process may be multi-threaded, but only the main
+    thread will make MPI calls (all MPI calls are funneled to the
+    main thread).
+    . MPI_THREAD_SERIALIZED - The process may be multi-threaded, and multiple
+    threads may make MPI calls, but only one at a time: MPI calls are not
+    made concurrently from two distinct threads (all MPI calls are serialized).
+    - MPI_THREAD_MULTIPLE - Multiple threads may call MPI, with no restrictions.
+*/
+/*
+    Notes for Fortran:
+    Note that the Fortran binding for this routine does not have the 'argc' and
+    'argv' arguments. ('MPI_INIT_THREAD(required, provided, ierror)')
+*/
+{ -- error_check --
+    MPIR_ERRTEST_INITTWICE();
+}
+
+MPI_Is_thread_main:
+    .desc: Returns a flag indicating whether this thread called 'MPI_Init' or 'MPI_Init_thread'
+    .skip: global_cs
+{
+#if MPICH_THREAD_LEVEL <= MPI_THREAD_FUNNELED || ! defined(MPICH_IS_THREADED)
+    {
+        *flag = TRUE;
+    }
+#else
+    {
+        MPID_Thread_id_t my_thread_id;
+
+        MPID_Thread_self(&my_thread_id);
+        MPID_Thread_same(&MPIR_ThreadInfo.main_thread, &my_thread_id, flag);
+    }
+#endif
+}
+
+MPI_Query_thread:
+    .desc: Return the level of thread support provided by the MPI library
+    .skip: global_cs
+/*
+    Notes:
+    The valid values for the level of thread support are\:
+    + MPI_THREAD_SINGLE - Only one thread will execute.
+    . MPI_THREAD_FUNNELED - The process may be multi-threaded, but only the main
+    thread will make MPI calls (all MPI calls are funneled to the
+    main thread).
+    . MPI_THREAD_SERIALIZED - The process may be multi-threaded, and multiple
+    threads may make MPI calls, but only one at a time: MPI calls are not
+    made concurrently from two distinct threads (all MPI calls are serialized).
+    - MPI_THREAD_MULTIPLE - Multiple threads may call MPI, with no restrictions.
+
+    If 'MPI_Init' was called instead of 'MPI_Init_thread', the level of
+    thread support is defined by the implementation.  This routine allows
+    you to find out the provided level.  It is also useful for library
+    routines that discover that MPI has already been initialized and
+    wish to determine what level of thread support is available.
+*/
+{
+    *provided = MPIR_ThreadInfo.thread_provided;
+}
+
+MPI_Session_init:
+    .desc: Initialize an MPI session
+    .skip: initcheck
+
+MPI_Session_finalize:
+    .desc: Finalize an MPI Session
+    .skip: ThreadSafe, global_cs
+
+MPI_Session_get_num_psets:
+    .desc: Get number of available processes sets
+
+MPI_Session_get_nth_pset:
+    .desc: Get the nth processes set
+{ -- error_check -- pset_name
+    if (*pset_len) {
+        MPIR_ERRTEST_ARGNULL(pset_name, "pset_name", mpi_errno);
+    }
+}
+
+MPI_Session_get_info:
+    .desc: Get the info hints associated to the session
+
+MPI_Session_get_pset_info:
+    .desc: Get the info associated with the processes set
+
+MPI_Group_from_session_pset:
+    .desc: Get group from a session processes set
+
+MPI_Comm_create_from_group:
+    .desc: Create communicator from a group

@@ -92,7 +92,7 @@ int MPIR_Init_async_thread(void)
 
     /* Dup comm world for the progress thread */
     MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
-    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, NULL, &progress_comm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &progress_comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPID_Thread_create((MPID_Thread_func_t) progress_fn, NULL, &progress_thread_id, &err);
@@ -139,16 +139,12 @@ int MPIR_Finalize_async_thread(void)
     return mpi_errno;
 }
 
-/* called inside MPIR_Init_thread */
+/* called inside MPIR_Init_thread_impl */
 int MPII_init_async(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIR_CVAR_ASYNC_PROGRESS) {
-#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS
-        printf("WARNING: Asynchronous progress is not supported with Argobots\n");
-        goto fn_fail;
-#else
         if (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE) {
             mpi_errno = MPID_Init_async_thread();
             if (mpi_errno)
@@ -158,7 +154,6 @@ int MPII_init_async(void)
         } else {
             printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
         }
-#endif
     }
   fn_exit:
     return mpi_errno;

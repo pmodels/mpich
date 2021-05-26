@@ -1,0 +1,606 @@
+# vim: set ft=c:
+
+MPI_Alloc_mem:
+    .desc: Allocate memory for message passing and RMA
+    .error: MPI_ERR_NO_MEM
+/*
+    Notes:
+    Using this routine from Fortran requires that the Fortran compiler accept
+    a common pointer extension.  See Section 4.11 (Memory Allocation) in the
+    MPI-2 standard for more information and examples.
+
+    Also note that while 'baseptr' is a 'void *' type, this is
+    simply to allow easy use of any pointer object for this parameter.
+    In fact, this argument is really a 'void **' type, that is, a
+    pointer to a pointer.
+*/
+{
+    void *ap = MPID_Alloc_mem(size, info_ptr);
+
+    /* --BEGIN ERROR HANDLING-- */
+    if (!ap) {
+        mpi_errno =
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_NO_MEM, "**allocmem", 0);
+        goto fn_fail;
+    }
+    /* --END ERROR HANDLING-- */
+
+    MPL_VG_MEM_INIT(ap, size);
+    *(void **) baseptr = ap;
+}
+
+MPI_Free_mem:
+    .desc: Free memory allocated with MPI_Alloc_mem
+    .skip: validate-base
+{ -- early_return --
+    if (base == NULL) {
+        goto fn_exit;
+    }
+}
+{
+    mpi_errno = MPID_Free_mem(base);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
+
+MPI_Accumulate:
+    .desc: Accumulate data into the target process using remote memory access
+    .skip: ThreadSafe
+    .seealso: MPI_Raccumulate
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+
+MPI_Compare_and_swap:
+    .desc: Perform one-sided atomic compare-and-swap.
+    .skip: ThreadSafe, validate-DATATYPE
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+/*
+    Notes:
+    This operation is atomic with respect to other "accumulate" operations.
+
+    The parameter datatype must belong to one of the following categories of
+    predefined datatypes: C integer, Fortran integer, Logical, Multi-language
+    types, or Byte as specified in Section 5.9.2 on page 176. The origin and result
+    buffers (origin_addr and result_addr) must be disjoint.
+*/
+{ -- error_check --
+    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+    /* Check if datatype is a C integer, Fortran Integer,
+     * logical, or byte, per the classes given on page 165. */
+    MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype, mpi_errno);
+}
+
+MPI_Fetch_and_op:
+    .desc: Perform one-sided read-modify-write.
+    .skip: ThreadSafe, validate-BUFFER
+    .seealso: MPI_Get_accumulate
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+    .error: MPI_ERR_OP
+/*
+    Notes:
+    This operations is atomic with respect to other "accumulate" operations.
+
+    The generic functionality of 'MPI_Get_accumulate' might limit the performance of
+    fetch-and-increment or fetch-and-add calls that might be supported by special
+    hardware operations. 'MPI_Fetch_and_op' thus allows for a fast implementation
+    of a commonly used subset of the functionality of 'MPI_Get_accumulate'.
+
+    The origin and result buffers (origin_addr and result_addr) must be disjoint.
+    Any of the predefined operations for 'MPI_Reduce', as well as 'MPI_NO_OP' or
+    'MPI_REPLACE', can be specified as op; user-defined functions cannot be used. The
+    datatype argument must be a predefined datatype.
+*/
+{ -- error_check --
+    if (op != MPI_NO_OP) {
+        /* NOTE: when op is MPI_NO_OP, origin_addr is allowed to be NULL.
+         * In such case, MPI_Fetch_and_op equals to an atomic GET. */
+         MPIR_ERRTEST_ARGNULL(origin_addr, "origin_addr", mpi_errno);
+    }
+    MPIR_ERRTEST_ARGNULL(result_addr, "result_addr", mpi_errno);
+    if (!MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**typenotpredefined");
+    }
+    if (!HANDLE_IS_BUILTIN(op)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OP, "**opnotpredefined");
+    }
+}
+
+MPI_Get:
+    .desc: Get data from a memory window on a remote process
+    .seealso: MPI_Rget
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+
+MPI_Get_accumulate:
+    .desc: Perform an atomic, one-sided read-and-accumulate operation
+    .skip: ThreadSafe
+    .seealso: MPI_Rget_accumulate MPI_Fetch_and_op
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+/*
+    Notes:
+    This operations is atomic with respect to other "accumulate" operations.
+
+    The get and accumulate steps are executed atomically for each basic element in
+    the datatype (see MPI 3.0 Section 11.7 for details). The predefined operation
+    'MPI_REPLACE' provides fetch-and-set behavior.
+
+    The origin and result buffers (origin_addr and result_addr) must be disjoint.
+    Each datatype argument must be a predefined datatype or a derived datatype
+    where all basic components are of the same predefined datatype. All datatype
+    arguments must be constructed from the same predefined datatype. The
+    operation op applies to elements of that predefined type. target_datatype must
+    not specify overlapping entries, and the target buffer must fit in the target
+    window or in attached memory in a dynamic window.
+
+    Any of the predefined operations for 'MPI_Reduce', as well as 'MPI_NO_OP' or
+    'MPI_REPLACE' can be specified as op. User-defined functions cannot be used. A
+    new predefined operation, 'MPI_NO_OP', is defined. It corresponds to the
+    associative function f (a, b) = a; i.e., the current value in the target memory
+    is returned in the result buffer at the origin and no operation is performed on
+    the target buffer. 'MPI_NO_OP' can be used only in 'MPI_Get_accumulate',
+    'MPI_Rget_accumulate', and 'MPI_Fetch_and_op'. 'MPI_NO_OP' cannot be used in
+    'MPI_Accumulate', 'MPI_Raccumulate', or collective reduction operations, such as
+    'MPI_Reduce' and others.
+*/
+
+MPI_Put:
+    .desc: Put data into a memory window on a remote process
+    .seealso: MPI_Rput
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+
+MPI_Raccumulate:
+    .desc: Accumulate data into the target process using remote memory access
+    .skip: ThreadSafe
+    .seealso: MPI_Accumulate
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+/*
+    Notes:
+    The basic components of both the origin and target datatype must be the same
+    predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
+*/
+
+MPI_Rget:
+    .desc: Get data from a memory window on a remote process
+    .seealso: MPI_Get
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+
+MPI_Rget_accumulate:
+    .desc: Perform an atomic, one-sided read-and-accumulate
+    .skip: ThreadSafe
+    .seealso: MPI_Get_accumulate MPI_Fetch_and_op
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+/*
+    Notes:
+    This operations is atomic with respect to other "accumulate" operations.
+
+    The get and accumulate steps are executed atomically for each basic element in
+    the datatype (see MPI 3.0 Section 11.7 for details). The predefined operation
+    'MPI_REPLACE' provides fetch-and-set behavior.
+
+    The basic components of both the origin and target datatype must be the same
+    predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
+*/
+
+MPI_Rput:
+    .desc: Put data into a memory window on a remote process and return a request
+    .seealso: MPI_Put
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+
+MPI_Win_allocate:
+    .desc: Create and allocate an MPI Window object for one-sided communication
+    .seealso: MPI_Win_allocate_shared MPI_Win_create MPI_Win_create_dynamic MPI_Win_free
+    .impl: mpid
+
+MPI_Win_allocate_shared:
+    .desc: Create an MPI Window object for one-sided communication and shared memory access, and allocate memory at each process
+    .seealso: MPI_Win_allocate MPI_Win_create MPI_Win_create_dynamic MPI_Win_free MPI_Win_shared_query
+    .impl: mpid
+/*
+    This is a collective call executed by all processes in the group of comm. On
+    each process i, it allocates memory of at least size bytes that is shared among
+    all processes in comm, and returns a pointer to the locally allocated segment
+    in baseptr that can be used for load/store accesses on the calling process. The
+    locally allocated memory can be the target of load/store accesses by remote
+    processes; the base pointers for other processes can be queried using the
+    function 'MPI_Win_shared_query'.
+
+    The call also returns a window object that can be used by all processes in comm
+    to perform RMA operations. The size argument may be different at each process
+    and size = 0 is valid. It is the user''s responsibility to ensure that the
+    communicator comm represents a group of processes that can create a shared
+    memory segment that can be accessed by all processes in the group. The
+    allocated memory is contiguous across process ranks unless the info key
+    alloc_shared_noncontig is specified. Contiguous across process ranks means that
+    the first address in the memory segment of process i is consecutive with the
+    last address in the memory segment of process i - 1. This may enable the user
+    to calculate remote address offsets with local information only.
+*/
+
+MPI_Win_attach:
+    .desc: Attach memory to a dynamic window
+    .seealso: MPI_Win_create_dynamic MPI_Win_detach
+    .impl: mpid
+{ -- early_return --
+    if (size == 0)
+        goto fn_exit;
+}
+
+MPI_Win_complete:
+    .desc: Completes an RMA operations begun after an MPI_Win_start
+    .impl: mpid
+
+MPI_Win_create:
+    .desc: Create an MPI Window object for one-sided communication
+    .seealso: MPI_Win_allocate MPI_Win_allocate_shared MPI_Win_create_dynamic MPI_Win_free
+    .impl: mpid
+/*
+    Notes:
+
+    The displacement unit argument is provided to facilitate address arithmetic in
+    RMA operations: the target displacement argument of an RMA operation is scaled
+    by the factor disp_unit specified by the target process, at window creation.
+
+    The info argument provides optimization hints to the runtime about the expected
+    usage pattern of the window. The following info keys are predefined.
+
+    . no_locks - If set to true, then the implementation may assume that passive
+        target synchronization (i.e., 'MPI_Win_lock', 'MPI_Win_lock_all') will not be used on
+        the given window. This implies that this window is not used for 3-party
+        communication, and RMA can be implemented with no (less) asynchronous agent
+        activity at this process.
+
+    . accumulate_ordering - Controls the ordering of accumulate operations at the
+        target.  The argument string should contain a comma-separated list of the
+        following read/write ordering rules, where e.g. "raw" means read-after-write:
+        "rar,raw,war,waw".
+
+    . accumulate_ops - If set to same_op, the implementation will assume that all
+        concurrent accumulate calls to the same target address will use the same
+        operation. If set to same_op_no_op, then the implementation will assume that
+        all concurrent accumulate calls to the same target address will use the same
+        operation or 'MPI_NO_OP'. This can eliminate the need to protect access for
+        certain operation types where the hardware can guarantee atomicity. The default
+        is same_op_no_op.
+*/
+
+MPI_Win_create_dynamic:
+    .desc: Create an MPI Window object for one-sided communication
+    .seealso: MPI_Win_attach MPI_Win_detach MPI_Win_allocate MPI_Win_allocate_shared MPI_Win_create MPI_Win_free
+    .impl: mpid
+/*
+    Notes:
+
+    Users are cautioned that displacement arithmetic can overflow in variables of
+    type 'MPI_Aint' and result in unexpected values on some platforms. This issue may
+    be addressed in a future version of MPI.
+
+    Memory in this window may not be used as the target of one-sided accesses in
+    this window until it is attached using the function 'MPI_Win_attach'. That is, in
+    addition to using 'MPI_Win_create_dynamic' to create an MPI window, the user must
+    use 'MPI_Win_attach' before any local memory may be the target of an MPI RMA
+    operation. Only memory that is currently accessible may be attached.
+*/
+
+MPI_Win_detach:
+    .desc: Detach memory from a dynamic window
+    .seealso: MPI_Win_create_dynamic MPI_Win_attach
+    .impl: mpid
+/*
+    Notes:
+    Memory also becomes detached when the associated dynamic memory window is freed.
+*/
+{ -- early_return --
+    if (base == NULL)
+        goto fn_exit;
+}
+
+MPI_Win_fence:
+    .desc: Perform an MPI fence synchronization on a MPI window
+    .skip: validate-ASSERT
+    .impl: mpid
+    .error: MPI_ERR_ARG
+/*
+    Notes:
+    The 'assert' argument is used to indicate special conditions for the
+    fence that an implementation may use to optimize the 'MPI_Win_fence'
+    operation.  The value zero is always correct.  Other assertion values
+    may be or''ed together.  Assertions that are valid for 'MPI_Win_fence' are\:
+
+    + MPI_MODE_NOSTORE - the local window was not updated by local stores
+      (or local get or receive calls) since last synchronization.
+    . MPI_MODE_NOPUT - the local window will not be updated by put or accumulate
+      calls after the fence call, until the ensuing (fence) synchronization.
+    . MPI_MODE_NOPRECEDE - the fence does not complete any sequence of locally
+      issued RMA calls. If this assertion is given by any process in the window
+      group, then it must be given by all processes in the group.
+    - MPI_MODE_NOSUCCEED - the fence does not start any sequence of locally
+      issued RMA calls. If the assertion is given by any process in the window
+      group, then it must be given by all processes in the group.
+*/
+{ -- error_check --
+    CHECKMASK: assert, assert, MPI_MODE_NOSTORE MPI_MODE_NOPUT MPI_MODE_NOPRECEDE MPI_MODE_NOSUCCEED
+}
+
+MPI_Win_flush:
+    .desc: Complete all outstanding RMA operations at the given target
+    .seealso: MPI_Win_flush_all MPI_Win_flush_local MPI_Win_flush_local_all MPI_Win_lock MPI_Win_lock_all
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+
+MPI_Win_flush_all:
+    .desc: Complete all outstanding RMA operations at all targets
+    .seealso: MPI_Win_flush MPI_Win_flush_local MPI_Win_flush_local_all MPI_Win_lock MPI_Win_lock_all
+    .impl: mpid
+
+MPI_Win_flush_local:
+    .desc: Complete locally all outstanding RMA operations at the given target
+    .seealso: MPI_Win_flush MPI_Win_flush_all MPI_Win_flush_local_all MPI_Win_lock MPI_Win_lock_all
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+
+MPI_Win_flush_local_all:
+    .desc: Complete locally all outstanding RMA operations at all targets
+    .seealso: MPI_Win_flush MPI_Win_flush_all MPI_Win_flush_local MPI_Win_lock MPI_Win_lock_all
+    .impl: mpid
+
+MPI_Win_free:
+    .desc: Free an MPI RMA window
+/*
+    Notes:
+    If successfully freed, 'win' is set to 'MPI_WIN_NULL'.
+*/
+{
+    if (MPIR_Process.attr_free && win_ptr->attributes) {
+        mpi_errno = MPIR_Process.attr_free(win_ptr->handle, &win_ptr->attributes);
+    }
+    /*
+     * If the user attribute free function returns an error,
+     * then do not free the window
+     */
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    /* We need to release the error handler */
+    if (win_ptr->errhandler && !(HANDLE_IS_BUILTIN(win_ptr->errhandler->handle))) {
+        int in_use;
+        MPIR_Errhandler_release_ref(win_ptr->errhandler, &in_use);
+        if (!in_use) {
+            MPIR_Handle_obj_free(&MPIR_Errhandler_mem, win_ptr->errhandler);
+        }
+    }
+
+    mpi_errno = MPID_Win_free(&win_ptr);
+    if (mpi_errno)
+        goto fn_fail;
+    *win = MPI_WIN_NULL;
+}
+
+MPI_Win_get_group:
+    .desc: Get the MPI Group of the window object
+/*
+    Notes:
+    The group is a duplicate of the group from the communicator used to
+    create the MPI window, and should be freed with 'MPI_Group_free' when
+    it is no longer needed.  This group can be used to form the group of
+    neighbors for the routines 'MPI_Win_post' and 'MPI_Win_start'.
+*/
+{
+    MPIR_Group *group_ptr = NULL;
+    MPIR_Comm *win_comm_ptr = win_ptr->comm_ptr;
+    mpi_errno = MPIR_Comm_group_impl(win_comm_ptr, &group_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+    *group = group_ptr->handle;
+}
+
+MPI_Win_get_info:
+    .desc: Returns a new info object containing the hints of the window
+    .seealso: MPI_Win_set_info
+    .impl: mpid
+/*
+    Notes:
+
+    The info object returned in info_used will contain all hints currently active
+    for this window. This set of hints may be greater or smaller than the set of
+    hints specified when the window was created, as the system may not recognize
+    some hints set by the user, and may recognize other hints that the user has not
+    set.
+*/
+
+MPI_Win_get_name:
+    .desc: Get the print name associated with the MPI RMA window
+{
+    MPL_strncpy(win_name, win_ptr->name, MPI_MAX_OBJECT_NAME);
+    *resultlen = (int) strlen(win_name);
+}
+
+MPI_Win_lock:
+    .desc: Begin an RMA access epoch at the target process
+    .skip: validate-ASSERT, validate-LOCK_TYPE
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+/*
+    Notes:
+    The name of this routine is misleading.  In particular, this
+    routine need not block, except when the target process is the calling
+    process.
+
+    Implementations may restrict the use of RMA communication that is
+    synchronized
+    by lock calls to windows in memory allocated by 'MPI_Alloc_mem'. Locks can
+    be used portably only in such memory.
+
+    The 'assert' argument is used to indicate special conditions for the
+    fence that an implementation may use to optimize the 'MPI_Win_lock'
+    operation.  The value zero is always correct.  Other assertion values
+    may be or''ed together.  Assertions that are valid for 'MPI_Win_lock' are\:
+
+    . MPI_MODE_NOCHECK - no other process holds, or will attempt to acquire a
+      conflicting lock, while the caller holds the window lock. This is useful
+      when mutual exclusion is achieved by other means, but the coherence
+      operations that may be attached to the lock and unlock calls are still
+      required.
+*/
+{ -- error_check --
+    CHECKMASK: assert, assert, MPI_MODE_NOCHECK
+    CHECKENUM: lock_type, locktype, MPI_LOCK_SHARED MPI_LOCK_EXCLUSIVE
+}
+
+MPI_Win_lock_all:
+    .desc: Begin an RMA access epoch at all processes on the given window
+    .seealso: MPI_Win_unlock_all
+    .skip: validate-ASSERT
+    .impl: mpid
+/*
+    Notes:
+
+    This call is not collective.
+
+    The 'assert' argument is used to indicate special conditions for the fence that
+    an implementation may use to optimize the 'MPI_Win_lock_all' operation.  The
+    value zero is always correct.  Other assertion values may be or''ed together.
+    Assertions that are valid for 'MPI_Win_lock_all' are\:
+
+    . 'MPI_MODE_NOCHECK' - No other process holds, or will attempt to acquire a
+      conflicting lock, while the caller holds the window lock. This is useful
+      when mutual exclusion is achieved by other means, but the coherence
+      operations that may be attached to the lock and unlock calls are still
+      required.
+
+    There may be additional overheads associated with using 'MPI_Win_lock' and
+    'MPI_Win_lock_all' concurrently on the same window. These overheads could be
+    avoided by specifying the assertion 'MPI_MODE_NOCHECK' when possible
+*/
+{ -- error_check --
+    CHECKMASK: assert, assert, MPI_MODE_NOCHECK
+}
+
+MPI_Win_post:
+    .desc: Start an RMA exposure epoch
+    .skip: ThreadSafe, validate-ASSERT
+    .impl: mpid
+/*
+    Notes:
+    The 'assert' argument is used to indicate special conditions for the
+    fence that an implementation may use to optimize the 'MPI_Win_post'
+    operation.  The value zero is always correct.  Other assertion values
+    may be or''ed together.  Assertions that are valid for 'MPI_Win_post' are\:
+
+    + MPI_MODE_NOCHECK - the matching calls to 'MPI_WIN_START' have not yet
+      occurred on any origin processes when the call to 'MPI_WIN_POST' is made.
+      The nocheck option can be specified by a post call if and only if it is
+      specified by each matching start call.
+    . MPI_MODE_NOSTORE - the local window was not updated by local stores (or
+      local get or receive calls) since last synchronization. This may avoid
+      the need for cache synchronization at the post call.
+    - MPI_MODE_NOPUT - the local window will not be updated by put or accumulate
+      calls after the post call, until the ensuing (wait) synchronization. This
+      may avoid the need for cache synchronization at the wait call.
+*/
+{ -- error_check --
+    CHECKMASK: assert, assert, MPI_MODE_NOCHECK MPI_MODE_NOSTORE MPI_MODE_NOPUT
+}
+
+MPI_Win_set_info:
+    .desc: Set new values for the hints of the window associated with win
+    .seealso: MPI_Win_get_info
+    .impl: mpid
+/*
+    Notes:
+
+    Some info items that an implementation can use when it creates a window cannot
+    easily be changed once the window has been created. Thus, an implementation may
+    ignore hints issued in this call that it would have accepted in a creation
+    call.
+*/
+
+MPI_Win_set_name:
+    .desc: Set the print name for an MPI RMA window
+{
+    MPL_strncpy(win_ptr->name, win_name, MPI_MAX_OBJECT_NAME);
+}
+
+MPI_Win_shared_query:
+    .desc: Query the size and base pointer for a patch of a shared memory window
+    .seealso: MPI_Win_allocate_shared
+/*
+    Notes:
+    The returned baseptr points to the calling process' address space of the
+    shared segment belonging to the target rank.
+*/
+{
+    mpi_errno = MPID_Win_shared_query(win_ptr, rank, size, disp_unit, baseptr);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
+{ -- large_count --
+    int disp_unit_c;
+    mpi_errno = MPID_Win_shared_query(win_ptr, rank, size, &disp_unit_c, baseptr);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+    *disp_unit = disp_unit_c;
+}
+
+MPI_Win_start:
+    .desc: Start an RMA access epoch for MPI
+    .impl: mpid
+    .skip: validate-ASSERT
+/*
+    Notes:
+    The 'assert' argument is used to indicate special conditions for the
+    fence that an implementation may use to optimize the 'MPI_Win_start'
+    operation.  The value zero is always correct.  Other assertion values
+    may be or''ed together.  Assertions that are valid for 'MPI_Win_start' are\:
+
+    . MPI_MODE_NOCHECK - the matching calls to 'MPI_WIN_POST' have already
+      completed on all target processes when the call to 'MPI_WIN_START' is made.
+      The nocheck option can be specified in a start call if and only if it is
+      specified in each matching post call. This is similar to the optimization
+      of ready-send that may save a handshake when the handshake is implicit in
+      the code. (However, ready-send is matched by a regular receive, whereas
+      both start and post must specify the nocheck option.)
+*/
+{ -- error_check --
+    CHECKMASK: assert, assert, MPI_MODE_NOCHECK
+}
+
+MPI_Win_sync:
+    .desc: Synchronize public and private copies of the given window
+    .seealso: MPI_Win_flush MPI_Win_flush_all MPI_Win_flush_local MPI_Win_flush_local_all
+    .impl: mpid
+
+MPI_Win_test:
+    .desc: Test whether an RMA exposure epoch has completed
+    .seealso: MPI_Win_wait, MPI_Win_post
+    .impl: mpid
+
+MPI_Win_unlock:
+    .desc: Completes an RMA access epoch at the target process
+    .seealso: MPI_Win_lock
+    .impl: mpid
+    .earlyreturn: pt2pt_proc_null
+
+MPI_Win_unlock_all:
+    .desc: Completes an RMA access epoch at all processes on the given window
+    .seealso: MPI_Win_lock_all
+    .impl: mpid
+/*
+    Notes:
+    This call is not collective.
+*/
+
+MPI_Win_wait:
+    .desc: Completes an RMA exposure epoch begun with MPI_Win_post
+    .impl: mpid

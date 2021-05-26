@@ -59,6 +59,12 @@ int MPID_Startall(int count, MPIR_Request * requests[])
         if (preq->dev.match.parts.rank == MPI_PROC_NULL)
             continue;
 
+        if (preq->kind == MPIR_REQUEST_KIND__PREQUEST_COLL) {
+            mpi_errno = MPIR_Persist_coll_start(preq);
+            MPIR_ERR_CHECK(mpi_errno);
+            continue;
+        }
+
 	/* FIXME: The odd 7th arg (match.context_id - comm->context_id) 
 	   is probably to get the context offset.  Do we really need the
 	   context offset? Is there any case where the offset isn't zero? */
@@ -145,6 +151,8 @@ int MPID_Startall(int count, MPIR_Request * requests[])
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_STARTALL);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* FIXME:
@@ -256,7 +264,7 @@ int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 }
 
 /* 
- * FIXME: The ch3 implmentation of the persistent routines should
+ * FIXME: The ch3 implementation of the persistent routines should
  * be very simple and use common code as much as possible.  All
  * persistent routine should be in the same file, along with 
  * startall.  Consider using function pointers to specify the 
@@ -306,4 +314,21 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RECV_INIT);
     return mpi_errno;
+}
+
+int MPID_Bcast_init( void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+               MPIR_Comm *comm_ptr, MPIR_Info* info_ptr, MPIR_Request **request )
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST_INIT);
+
+    mpi_errno = MPIR_Bcast_init_impl(buffer, count, datatype, root, comm_ptr, info_ptr, request);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIDI_Request_set_type(*request, MPIDI_REQUEST_TYPE_PERSISTENT_COLL);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BCAST_INIT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

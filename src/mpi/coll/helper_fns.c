@@ -395,7 +395,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(sendtag);
-            MPL_FALLTHROUGH;
+            /* fall through */
         default:
             MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
@@ -404,7 +404,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
 
     if (count > 0 && dest != MPI_PROC_NULL) {
-        MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);
+        MPIR_Pack_size(count, datatype, &tmpbuf_size);
         MPIR_CHKLMEM_MALLOC(tmpbuf, void *, tmpbuf_size, mpi_errno, "temporary send buffer",
                             MPL_MEM_BUFFER);
 

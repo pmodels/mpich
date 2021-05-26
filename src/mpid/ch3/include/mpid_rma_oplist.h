@@ -124,10 +124,7 @@ static inline int MPIDI_CH3I_Win_set_active(MPIR_Win * win_ptr)
         DL_APPEND(MPIDI_RMA_Win_active_list_head, win_ptr);
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -146,10 +143,7 @@ static inline int MPIDI_CH3I_Win_set_inactive(MPIR_Win * win_ptr)
         }
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -319,10 +313,7 @@ static inline int MPIDI_CH3I_Win_find_target(MPIR_Win * win_ptr, int target_rank
 
     (*e) = t;
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* MPIDI_CH3I_Win_enqueue_op(): given an operation, enqueue it to the

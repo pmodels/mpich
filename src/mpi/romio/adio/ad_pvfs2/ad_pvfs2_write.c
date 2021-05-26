@@ -137,7 +137,7 @@ void ADIOI_PVFS2_WriteStrided(ADIO_File fd, const void *buf, int count,
      * - 'true' Datatype (from avery)
      * - new List I/O (from avery)
      * - classic List I/O  (the one that's always been in ROMIO)
-     * I imagine we'll keep Datatype as an optional optimization, and afer a
+     * I imagine we'll keep Datatype as an optional optimization, and after a
      * release or two promote it to the default
      */
 

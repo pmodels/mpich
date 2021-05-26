@@ -15,7 +15,7 @@
  * The implementation is based on Baidu's ring algorithm
  * for Machine Learning/Deep Learning. The algorithm is
  * explained here: http://andrew.gibiansky.com/ */
-int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                          MPI_Datatype datatype, MPI_Op op,
                                          MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
@@ -24,7 +24,8 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
     int nranks, is_inplace, rank;
     size_t extent;
     MPI_Aint lb, true_extent;
-    int *cnts, *displs, recv_id, *reduce_id, nvtcs, vtcs;
+    MPI_Aint *cnts, *displs;
+    int recv_id, *reduce_id, nvtcs, vtcs;
     int send_rank, recv_rank, total_count;
     void *tmpbuf;
     int tag;
@@ -41,8 +42,10 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
 
-    MPIR_CHKLMEM_MALLOC(cnts, int *, nranks * sizeof(int), mpi_errno, "cnts", MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(displs, int *, nranks * sizeof(int), mpi_errno, "displs", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, nranks * sizeof(MPI_Aint), mpi_errno, "cnts",
+                        MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, nranks * sizeof(MPI_Aint), mpi_errno, "displs",
+                        MPL_MEM_COLL);
 
     for (i = 0; i < nranks; i++)
         cnts[i] = 0;
@@ -96,12 +99,6 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
 
         MPIR_TSP_sched_isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
                              datatype, dst, tag, comm, sched, nvtcs, &vtcs);
-
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST,
-                         "displs[recv_rank:%d]:%d, cnts[recv_rank:%d, displs[send_rank:%d]:%d, cnts[send_rank:%d]:%d]:%d ",
-                         recv_rank, displs[recv_rank], recv_rank, cnts[recv_rank], send_rank,
-                         displs[send_rank], send_rank, cnts[send_rank]));
     }
     MPIR_CHKLMEM_MALLOC(reduce_id, int *, 2 * sizeof(int), mpi_errno, "reduce_id", MPL_MEM_COLL);
 
@@ -122,7 +119,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
 }
 
 /* Non-blocking ring based Allreduce */
-int MPIR_TSP_Iallreduce_intra_ring(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Iallreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                    MPIR_Request ** req)
 {
@@ -136,7 +133,7 @@ int MPIR_TSP_Iallreduce_intra_ring(const void *sendbuf, void *recvbuf, int count
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_ERR_CHKANDJUMP(!sched, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Iallreduce_sched_intra_ring(sendbuf, recvbuf, count, datatype, op, comm, sched);

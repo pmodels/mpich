@@ -337,7 +337,7 @@ const char *mpit_scopeToStr(int scope)
             p = "SCOPE_ALL_EQ";
             break;
         default:
-            p = "Unrecoginized scope";
+            p = "Unrecognized scope";
             break;
     }
     return p;
@@ -510,10 +510,10 @@ const char *mpit_errclasscheck(int err)
     const char *p = 0;
     switch (err) {
         case MPI_T_ERR_CVAR_SET_NOT_NOW:
-            p = "MPI_T cvar not set";
+            p = "MPI_T cvar cannot be set at this moment";
             break;
         case MPI_T_ERR_CVAR_SET_NEVER:
-            p = "MPI_T cvar was never set";
+            p = "MPI_T cvar cannot be set until end of execution";
             break;
         case MPI_T_ERR_PVAR_NO_STARTSTOP:
             p = "MPI_T pvar does not support start and stop";
@@ -535,9 +535,6 @@ const char *mpit_errclasscheck(int err)
             break;
         case MPI_T_ERR_INVALID_INDEX:
             p = "MPI_T index invalid";
-            break;
-        case MPI_T_ERR_INVALID_ITEM:
-            p = "MPI_T item index out of range";
             break;
         case MPI_T_ERR_INVALID_HANDLE:
             p = "MPI_T handle invalid";

@@ -81,6 +81,33 @@ void ccompareint2aint_(MPI_Fint * in1, MPI_Aint * in2, MPI_Fint * result);
 void ccompareint2void_(MPI_Fint * in1, void *in2, MPI_Fint * result);
 void ccompareaint2void_(MPI_Aint * in1, void *in2, MPI_Fint * result);
 
+void cgetenvbool_(const char str[], MPI_Fint * val, int d);
+void cattrinit_(MPI_Fint * fverbose);
+void cgetsizes_(MPI_Fint * ptrSize, MPI_Fint * intSize, MPI_Fint * aintSize);
+void ccreatekeys_(MPI_Fint * ccomm1_key, MPI_Fint * ccomm2_key,
+                  MPI_Fint * ctype2_key, MPI_Fint * cwin2_key);
+void cfreekeys_(void);
+void ctoctest_(MPI_Fint * errs);
+int cmpi1read(MPI_Comm comm, int key, void *expected, const char *msg);
+int cmpi2read(MPI_Comm comm, int key, void *expected, const char *msg);
+int cmpi2readtype(MPI_Datatype dtype, int key, void *expected, const char *msg);
+int cmpi2readwin(MPI_Win win, int key, void *expected, const char *msg);
+void cmpif1read_(MPI_Fint * fcomm, MPI_Fint * fkey, MPI_Fint * expected,
+                 MPI_Fint * errs, const char *msg, int msglen);
+void cmpif2read_(MPI_Fint * fcomm, MPI_Fint * fkey, MPI_Aint * expected,
+                 MPI_Fint * errs, const char *msg, int msglen);
+void cmpif2readtype_(MPI_Fint * ftype, MPI_Fint * fkey, MPI_Aint * expected,
+                     MPI_Fint * errs, const char *msg, int msglen);
+void cmpif2readwin_(MPI_Fint * fwin, MPI_Fint * fkey, MPI_Aint * expected,
+                    MPI_Fint * errs, const char *msg, int msglen);
+void csetmpi_(MPI_Fint * fcomm, MPI_Fint * fkey, MPI_Fint * val, MPI_Fint * errs);
+void csetmpi2_(MPI_Fint * fcomm, MPI_Fint * fkey, MPI_Aint * val, MPI_Fint * errs);
+void csetmpitype_(MPI_Fint * ftype, MPI_Fint * fkey, MPI_Aint * val, MPI_Fint * errs);
+void csetmpiwin_(MPI_Fint * fwin, MPI_Fint * fkey, MPI_Aint * val, MPI_Fint * errs);
+void ccompareint2aint_(MPI_Fint * in1, MPI_Aint * in2, MPI_Fint * result);
+void ccompareint2void_(MPI_Fint * in1, void *in2, MPI_Fint * result);
+void ccompareaint2void_(MPI_Aint * in1, void *in2, MPI_Fint * result);
+
 /* ----------------------------------------------------------------------- */
 /* Initialization functions                                                */
 /* ----------------------------------------------------------------------- */
@@ -166,7 +193,7 @@ static int TYPE_DELETE_FN(MPI_Datatype dtype, int keyval, void *outval, void *ex
 {
     if (verbose)
         printf(" In C MPI type delete function, extra = %p\n", extra);
-    /* We reverse the incrment used in copy (checked after free of the type) */
+    /* We reverse the increment used in copy (checked after free of the type) */
     *(int *) outval = *(int *) outval - 1;
     return MPI_SUCCESS;
 }
@@ -175,8 +202,6 @@ static int TYPE_DELETE_FN(MPI_Datatype dtype, int keyval, void *outval, void *ex
    win_dup function */
 static int WIN_COPY_FN(MPI_Win win, int keyval, void *extra, void *inval, void *outval, int *flag)
 {
-    int inValue = *(int *) inval;
-
     if (verbose)
         printf("PANIC: In C MPI win copy function (should never happen)\n");
     *flag = 1;

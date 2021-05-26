@@ -9,16 +9,14 @@
 
 #define BAD_ANSWER 100000
 
-int assoc(int *, int *, int *, MPI_Datatype *);
-
 /*
     The operation is inoutvec[i] = invec[i] op inoutvec[i]
     (see 4.9.4).  The order is important.
 
     Note that the computation is in process rank (in the communicator)
-    order, independant of the root.
+    order, independent of the root.
  */
-int assoc(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
+static void assoc(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
 {
     int i;
     for (i = 0; i < *len; i++) {
@@ -30,7 +28,6 @@ int assoc(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
         } else
             inoutvec[i] = invec[i];
     }
-    return (1);
 }
 
 int main(int argc, char **argv)

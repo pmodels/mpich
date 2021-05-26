@@ -30,7 +30,7 @@
 int main(int argc, char *argv[])
 {
     MPI_Datatype column[LOOPS], xpose[LOOPS];
-    double t[NUM_SIZES], ttmp, tmin, tmax, tmean, tdiff;
+    double t[NUM_SIZES], ttmp, tmean;
     double tMeanLower, tMeanHigher;
     int size;
     int i, j, errs = 0, nrows, ncols;

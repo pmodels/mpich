@@ -200,7 +200,7 @@ static inline int MPID_nem_ofi_cts_send_callback(cq_tagged_entry_t * wc, MPIR_Re
 /* ------------------------------------------------------------------------ */
 static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
-    int c, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     size_t pkt_len;
     char *pack_buffer = NULL;
     MPIDI_VC_t *vc;
@@ -219,9 +219,8 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_R
      */
     if (pack_buffer == NULL)
         pkt_len = 0;
-    c = 1;
     MPID_nem_ofi_create_req(&new_rreq, 1);
-    MPIR_cc_incr(new_rreq->cc_ptr, &c);
+    MPIR_cc_inc(new_rreq->cc_ptr);
     new_rreq->dev.OnDataAvail = NULL;
     new_rreq->dev.next = NULL;
     REQ_OFI(new_rreq)->event_callback = MPID_nem_ofi_handle_packet;
@@ -364,7 +363,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
 
 /* ------------------------------------------------------------------------ */
 /* MPID_nem_ofi_cm_finalize                                                 */
-/* Clean up and cancle the requests initiated by the cm_init routine        */
+/* Clean up and cancel the requests initiated by the cm_init routine        */
 /* ------------------------------------------------------------------------ */
 int MPID_nem_ofi_cm_finalize()
 {

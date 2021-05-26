@@ -81,7 +81,7 @@ writeordbef.$(OBJEXT): iooffset.h
 writeordf.$(OBJEXT): iooffset.h
 
 
-# these files are genereated using testmerge (see below)
+# these files are generated using testmerge (see below)
 generated_io_sources = \
     iwriteatf.f        \
     iwriteatallf.f     \

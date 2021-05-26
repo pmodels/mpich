@@ -7,7 +7,7 @@
 # This hook prevent from pushing a branch that is not rebased on
 # latest MPICH main branch.
 #
-# It fetchs the hash of the latest main branch from github and compares
+# It fetches the hash of the latest main branch from github and compares
 # the local branch. It returns 1 if either the hash of the latest
 # main branch does not exist in the local git repo or the branch needs
 # rebasing.

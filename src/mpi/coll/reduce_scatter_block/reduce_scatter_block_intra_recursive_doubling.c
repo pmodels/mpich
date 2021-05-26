@@ -22,7 +22,7 @@
  */
 int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
                                                        void *recvbuf,
-                                                       int recvcount,
+                                                       MPI_Aint recvcount,
                                                        MPI_Datatype datatype,
                                                        MPI_Op op,
                                                        MPIR_Comm * comm_ptr,

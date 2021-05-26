@@ -18,11 +18,12 @@
 #include "shm_coll.h"
 #include "shm_p2p.h"
 #include "shm_rma.h"
+#include "shm_part.h"
 #include "shm_hooks.h"
 #endif
 
 #include "shm_am.h"
-#include "shm_init.h"
+#include "shm_progress.h"
 #include "shm_misc.h"
 #include "shm_types.h"
 #include "shm_control.h"

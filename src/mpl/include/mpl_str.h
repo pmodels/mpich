@@ -8,6 +8,14 @@
 
 #include "mplconfig.h"
 
+/* NOTE: PATH_MAX is simply an arbitary convenience size. It only be used
+ * in non-critical paths or where we are certain the file path is very short.
+ * Critical paths should consider using dynamic buffer.
+ */
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 /* *INDENT-ON* */
 #if defined(__cplusplus)
 extern "C" {

@@ -19,11 +19,11 @@
  * *** Modification: We post only a small number of isends and irecvs at a time
  * and wait on them as suggested by Tony Ladd. ***
  */
-int MPIR_Ialltoallw_intra_sched_blocked(const void *sendbuf, const int sendcounts[],
-                                        const int sdispls[], const MPI_Datatype sendtypes[],
-                                        void *recvbuf, const int recvcounts[], const int rdispls[],
-                                        const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
-                                        MPIR_Sched_t s)
+int MPIR_Ialltoallw_intra_sched_blocked(const void *sendbuf, const MPI_Aint sendcounts[],
+                                        const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                        void *recvbuf, const MPI_Aint recvcounts[],
+                                        const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, i;

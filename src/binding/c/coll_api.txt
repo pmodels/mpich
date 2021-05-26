@@ -1,0 +1,238 @@
+# vim: set ft=c:
+
+MPI_Allgather:
+    .desc: Gathers data from all tasks and distribute the combined data to all tasks
+/*
+    Notes:
+     The MPI standard (1.0 and 1.1) says that
+    .n
+    .n
+     The jth block of data sent from  each process is received by every process
+     and placed in the jth block of the buffer 'recvbuf'.
+    .n
+    .n
+     This is misleading; a better description is
+    .n
+    .n
+     The block of data sent from the jth process is received by every
+     process and placed in the jth block of the buffer 'recvbuf'.
+    .n
+    .n
+     This text was suggested by Rajeev Thakur and has been adopted as a
+     clarification by the MPI Forum.
+*/
+
+MPI_Allgatherv:
+    .desc: Gathers data from all tasks and deliver the combined data to all tasks
+/*
+    Notes:
+     The MPI standard (1.0 and 1.1) says that
+    .n
+    .n
+     The jth block of data sent from
+     each process is received by every process and placed in the jth block of the
+     buffer 'recvbuf'.
+    .n
+    .n
+     This is misleading; a better description is
+    .n
+    .n
+     The block of data sent from the jth process is received by every
+     process and placed in the jth block of the buffer 'recvbuf'.
+    .n
+    .n
+     This text was suggested by Rajeev Thakur, and has been adopted as a
+     clarification to the MPI standard by the MPI-Forum.
+*/
+
+MPI_Allreduce:
+    .desc: Combines values from all processes and distributes the result back to all processes
+    .docnotes: collops
+
+MPI_Alltoall:
+    .desc: Sends data from all to all processes
+
+MPI_Alltoallv:
+    .desc: Sends data from all to all processes; each process may send a different amount of data and provide displacements for the input and output data.
+
+MPI_Alltoallw:
+    .desc: Generalized all-to-all communication allowing different datatypes, counts, and displacements for each partner
+
+MPI_Barrier:
+    .desc: Blocks until all processes in the communicator have reached this routine.
+/*
+    Notes:
+    Blocks the caller until all processes in the communicator have called it;
+    that is, the call returns at any process only after all members of the
+    communicator have entered the call.
+*/
+
+MPI_Bcast:
+    .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator
+
+MPI_Bcast_init:
+    .desc: Creates a persistent request for broadcast
+
+MPI_Exscan:
+    .desc: Computes the exclusive scan (partial reductions) of data on a collection of processes
+    .docnotes: collops
+    .extra: errtest_comm_intra
+/*
+    Notes:
+      'MPI_Exscan' is like 'MPI_Scan', except that the contribution from the
+       calling process is not included in the result at the calling process
+       (it is contributed to the subsequent processes, of course).
+*/
+
+MPI_Gather:
+    .desc: Gathers together values from a group of processes
+
+MPI_Gatherv:
+    .desc: Gathers into specified locations from all processes in a group
+
+MPI_Iallgather:
+    .desc: Gathers data from all tasks and distribute the combined data to all tasks in a nonblocking way
+
+MPI_Iallgatherv:
+    .desc: Gathers data from all tasks and deliver the combined data to all tasks in a nonblocking way
+
+MPI_Iallreduce:
+    .desc: Combines values from all processes and distributes the result back to all processes in a nonblocking way
+
+MPI_Ialltoall:
+    .desc: Sends data from all to all processes in a nonblocking way
+
+MPI_Ialltoallv:
+    .desc: Sends data from all to all processes in a nonblocking way; each process may send a different amount of data and provide displacements for the input and output data.
+
+MPI_Ialltoallw:
+    .desc: Nonblocking generalized all-to-all communication allowing different datatypes, counts, and displacements for each partner
+
+MPI_Ibarrier:
+    .desc: Notifies the process that it has reached the barrier and returns immediately
+/*
+    Notes:
+    MPI_Ibarrier is a nonblocking version of MPI_barrier. By calling MPI_Ibarrier,
+    a process notifies that it has reached the barrier. The call returns
+    immediately, independent of whether other processes have called MPI_Ibarrier.
+    The usual barrier semantics are enforced at the corresponding completion
+    operation (test or wait), which in the intra-communicator case will complete
+    only after all other processes in the communicator have called MPI_Ibarrier. In
+    the intercommunicator case, it will complete when all processes in the remote
+    group have called MPI_Ibarrier.
+*/
+
+MPI_Ibcast:
+    .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator in a nonblocking way
+
+MPI_Iexscan:
+    .desc: Computes the exclusive scan (partial reductions) of data on a collection of processes in a nonblocking way
+    .docnotes: collops
+    .extra: errtest_comm_intra
+
+MPI_Igather:
+    .desc: Gathers together values from a group of processes in a nonblocking way
+
+MPI_Igatherv:
+    .desc: Gathers into specified locations from all processes in a group in a nonblocking way
+
+MPI_Ineighbor_allgather:
+    .desc: Nonblocking version of MPI_Neighbor_allgather.
+
+MPI_Ineighbor_allgatherv:
+    .desc: Nonblocking version of MPI_Neighbor_allgatherv.
+
+MPI_Ineighbor_alltoall:
+    .desc: Nonblocking version of MPI_Neighbor_alltoall.
+
+MPI_Ineighbor_alltoallv:
+    .desc: Nonblocking version of MPI_Neighbor_alltoallv.
+
+MPI_Ineighbor_alltoallw:
+    .desc: Nonblocking version of MPI_Neighbor_alltoallw.
+
+MPI_Ireduce:
+    .desc: Reduces values on all processes to a single value in a nonblocking way
+
+MPI_Ireduce_scatter:
+    .desc: Combines values and scatters the results in a nonblocking way
+
+MPI_Ireduce_scatter_block:
+    .desc: Combines values and scatters the results in a nonblocking way
+
+MPI_Iscan:
+    .desc: Computes the scan (partial reductions) of data on a collection of processes in a nonblocking way
+    .docnotes: collops
+    .extra: errtest_comm_intra
+
+MPI_Iscatter:
+    .desc: Sends data from one process to all other processes in a communicator in a nonblocking way
+
+MPI_Iscatterv:
+    .desc: Scatters a buffer in parts to all processes in a communicator in a nonblocking way
+
+MPI_Neighbor_allgather:
+    .desc: Gathers data from all neighboring processes and distribute the combined data to all neighboring processes
+/*
+    Notes:
+    In this function, each process i gathers data items from each process j if an edge (j,i) exists in the topology graph, and each process i sends the same data items to all processes j where an edge (i,j) exists. The send buffer is sent to each neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
+*/
+
+MPI_Neighbor_allgatherv:
+    .desc: The vector variant of MPI_Neighbor_allgather.
+
+MPI_Neighbor_alltoall:
+    .desc: Sends and Receivs data from all neighboring processes
+/*
+    Notes:
+    In this function, each process i receives data items from each process j if an edge (j,i) exists in the topology graph or Cartesian topology.  Similarly, each process i sends data items to all processes j where an edge (i,j) exists. This call is more general than MPI_NEIGHBOR_ALLGATHER in that different data items can be sent to each neighbor. The k-th block in send buffer is sent to the k-th neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
+*/
+
+MPI_Neighbor_alltoallv:
+    .desc: The vector variant of MPI_Neighbor_alltoall allows sending/receiving different numbers of elements to and from each neighbor.
+
+MPI_Neighbor_alltoallw:
+    .desc: Like MPI_Neighbor_alltoallv but it allows one to send and receive with different types to and from each neighbor.
+
+MPI_Reduce:
+    .desc: Reduces values on all processes to a single value
+    .docnotes: collops
+{ -- early_return --
+    if (comm_ptr->remote_size == 1 && comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+        if (mpi_errno) {
+            goto fn_fail;
+        } else {
+            goto fn_exit;
+        }
+    }
+}
+
+MPI_Reduce_local:
+    .desc: Applies a reduction operator to local arguments.
+    .docnotes: collops
+{
+    mpi_errno = MPIR_Reduce_local(inbuf, inoutbuf, count, datatype, op);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
+
+MPI_Reduce_scatter:
+    .desc: Combines values and scatters the results
+    .docnotes: collops
+
+MPI_Reduce_scatter_block:
+    .desc: Combines values and scatters the results
+    .docnotes: collops
+
+MPI_Scan:
+    .desc: Computes the scan (partial reductions) of data on a collection of processes
+    .docnotes: collops
+    .extra: errtest_comm_intra
+
+MPI_Scatter:
+    .desc: Sends data from one process to all other processes in a communicator
+
+MPI_Scatterv:
+    .desc: Scatters a buffer in parts to all processes in a communicator

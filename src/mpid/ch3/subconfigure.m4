@@ -78,14 +78,8 @@ AC_CHECK_HEADERS(assert.h limits.h string.h sys/types.h sys/uio.h uuid/uuid.h \
 # is a prerequisite.
 AC_CHECK_HEADERS([net/if.h], [], [],
 [#include <stdio.h>
-#ifdef STDC_HEADERS
-# include <stdlib.h>
-# include <stddef.h>
-#else
-# ifdef HAVE_STDLIB_H
-#  include <stdlib.h>
-# endif
-#endif
+#include <stdlib.h>
+#include <stddef.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -103,9 +97,6 @@ if test "$ac_cv_func_gethostname" = "yes" ; then
 fi
 
 AC_CHECK_FUNCS(CFUUIDCreate uuid_generate time)
-
-# ensure that atomic primitives are available
-AC_MSG_CHECKING([for OpenPA atomic primitive availability])
 
 AC_C_BIGENDIAN
 

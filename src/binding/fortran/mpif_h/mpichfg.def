@@ -1088,6 +1088,12 @@ EXPORTS
 	mpi_info_create__=pmpi_info_create__
 	_mpi_info_create_=pmpi_info_create__
 	mpi_info_create_=pmpi_info_create__
+	pmpi_info_create_env__
+	pmpi_info_create_env_=pmpi_info_create_env__
+	_pmpi_info_create_env_=pmpi_info_create_env__
+	mpi_info_create_env__=pmpi_info_create_env__
+	_mpi_info_create_env_=pmpi_info_create_env__
+	mpi_info_create_env_=pmpi_info_create_env__
 	pmpi_info_delete__
 	pmpi_info_delete_=pmpi_info_delete__
 	_pmpi_info_delete_=pmpi_info_delete__
@@ -1112,6 +1118,12 @@ EXPORTS
 	mpi_info_get__=pmpi_info_get__
 	_mpi_info_get_=pmpi_info_get__
 	mpi_info_get_=pmpi_info_get__
+	pmpi_info_get_string__
+	pmpi_info_get_string_=pmpi_info_get_string__
+	_pmpi_info_get_string_=pmpi_info_get_string__
+	mpi_info_get_string__=pmpi_info_get_string__
+	_mpi_info_get_string_=pmpi_info_get_string__
+	mpi_info_get_string_=pmpi_info_get_string__
 	pmpi_info_get_nkeys__
 	pmpi_info_get_nkeys_=pmpi_info_get_nkeys__
 	_pmpi_info_get_nkeys_=pmpi_info_get_nkeys__

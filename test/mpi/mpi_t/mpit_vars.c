@@ -6,26 +6,30 @@
 /* To print out all MPI_T control variables, performance variables and their
    categories in the MPI implementation. But whether they function well as
    expected, is not tested.
+   2021-02-17: added sources and events
  */
 
+#include "mpitest.h"
 #include <stdio.h>
 #include <strings.h>
 #include <string.h>     /* For strncpy */
 #include <stdlib.h>
 #include "mpi.h"
-#include "mpitest.h"
 
-char *mpit_scopeToStr(int scope);
-char *mpit_bindingToStr(int binding);
-char *mpit_validDtypeStr(MPI_Datatype datatype);
-char *mpit_varclassToStr(int varClass);
-char *mpit_verbosityToStr(int verbosity);
+const char *mpit_scopeToStr(int scope);
+const char *mpit_bindingToStr(int binding);
+const char *mpit_validDtypeStr(MPI_Datatype datatype);
+const char *mpit_varclassToStr(int varClass);
+const char *mpit_verbosityToStr(int verbosity);
+const char *mpit_errclassToStr(int err);
 int perfvarReadInt(int pvarIndex, int isContinuous, int *found);
 unsigned int perfvarReadUint(int pvarIndex, int isContinuous, int *found);
 double perfvarReadDouble(int pvarIndex, int isContinuous, int *found);
 int PrintControlVars(FILE * fp);
 int PrintPerfVars(FILE * fp);
 int PrintCategories(FILE * fp);
+int PrintSources(FILE * fp);
+int PrintEvents(FILE * fp);
 
 static int verbose = 0;
 
@@ -50,12 +54,82 @@ int main(int argc, char *argv[])
 
     PrintCategories(stdout);
 
+    PrintSources(stdout);
+
+    PrintEvents(stdout);
+
     /* Put MPI_T_finalize() after MPI_Finalize() will cause mpich memory
      * tracing facility falsely reports memory leaks, though these memories
      * are freed in MPI_T_finalize().
      */
     MPI_T_finalize();
     MTest_Finalize(0);
+
+    return 0;
+}
+
+int PrintSources(FILE * fp)
+{
+#if MTEST_HAVE_MIN_MPI_VERSION(4,0)
+    int num_sources;
+    char name[128];
+    int name_len;
+    char desc[1024];
+    int desc_len;
+    int verbosity;
+    MPI_T_source_order ordering;
+    MPI_Count ticks_per_second;
+    MPI_Count max_ticks;
+
+    MPI_T_source_get_num(&num_sources);
+    if (verbose)
+        fprintf(fp, "%d MPI Event Sources\n", num_sources);
+    for (i = 0; i < num_sources; i++) {
+        name_len = sizeof(name);
+        desc_len = sizeof(desc);
+        MPI_T_source_get_info(i, name, &name_len, desc, &desc_len, &verbosity, &ordering,
+                              &ticks_per_second, &max_ticks, NULL);
+        if (verbose) {
+            fprintf(fp, "name: %s\n", name);
+            fprintf(fp, "desc: %s\n", desc);
+            fprintf(fp, "verbosity: %s\n", mpit_verbosityToStr(verbosity));
+            /* FIXME: convert ordering to string */
+            fprintf(fp, "ordering: %d\n", ordering);
+        }
+    }
+#endif
+
+    return 0;
+}
+
+int PrintEvents(FILE * fp)
+{
+#if MTEST_HAVE_MIN_MPI_VERSION(4,0)
+    int num_events;
+    char name[128];
+    int name_len;
+    int verbosity;
+    MPI_T_enum enumtype;
+    char desc[1024];
+    int desc_len;
+    int bind;
+
+    MPI_T_event_get_num(&num_events);
+    if (verbose)
+        fprintf(fp, "%d MPI Events\n", num_events);
+    for (i = 0; i < num_events; i++) {
+        name_len = sizeof(name);
+        desc_len = sizeof(desc);
+        MPI_T_event_get_info(i, name, &name_len, &verbosity, NULL, NULL, NULL, &enumtype, NULL,
+                             desc, &desc_len, &bind);
+        if (verbose) {
+            fprintf(fp, "name: %s\n", name);
+            fprintf(fp, "desc: %s\n", desc);
+            fprintf(fp, "verbosity: %s\n", mpit_verbosityToStr(verbosity));
+            fprintf(fp, "bind: %s\n", mpit_bindingToStr(bind));
+        }
+    }
+#endif
 
     return 0;
 }
@@ -261,9 +335,9 @@ int PrintCategories(FILE * fp)
 
 /* --- Support routines --- */
 
-char *mpit_validDtypeStr(MPI_Datatype datatype)
+const char *mpit_validDtypeStr(MPI_Datatype datatype)
 {
-    char *p = 0;
+    const char *p = 0;
     if (datatype == MPI_INT)
         p = "MPI_INT";
     else if (datatype == MPI_UNSIGNED)
@@ -300,9 +374,9 @@ char *mpit_validDtypeStr(MPI_Datatype datatype)
     return p;
 }
 
-char *mpit_scopeToStr(int scope)
+const char *mpit_scopeToStr(int scope)
 {
-    char *p = 0;
+    const char *p = 0;
     switch (scope) {
         case MPI_T_SCOPE_CONSTANT:
             p = "SCOPE_CONSTANT";
@@ -326,15 +400,15 @@ char *mpit_scopeToStr(int scope)
             p = "SCOPE_ALL_EQ";
             break;
         default:
-            p = "Unrecoginized scope";
+            p = "Unrecognized scope";
             break;
     }
     return p;
 }
 
-char *mpit_bindingToStr(int binding)
+const char *mpit_bindingToStr(int binding)
 {
-    char *p;
+    const char *p;
     switch (binding) {
         case MPI_T_BIND_NO_OBJECT:
             p = "NO_OBJECT";
@@ -375,9 +449,9 @@ char *mpit_bindingToStr(int binding)
     return p;
 }
 
-char *mpit_varclassToStr(int varClass)
+const char *mpit_varclassToStr(int varClass)
 {
-    char *p = 0;
+    const char *p = 0;
     switch (varClass) {
         case MPI_T_PVAR_CLASS_STATE:
             p = "CLASS_STATE";
@@ -416,9 +490,9 @@ char *mpit_varclassToStr(int varClass)
     return p;
 }
 
-char *mpit_verbosityToStr(int verbosity)
+const char *mpit_verbosityToStr(int verbosity)
 {
-    char *p = 0;
+    const char *p = 0;
     switch (verbosity) {
         case MPI_T_VERBOSITY_USER_BASIC:
             p = "VERBOSITY_USER_BASIC";
@@ -454,9 +528,9 @@ char *mpit_verbosityToStr(int verbosity)
     return p;
 }
 
-char *mpit_errclassToStr(int err)
+const char *mpit_errclassToStr(int err)
 {
-    char *p = 0;
+    const char *p = 0;
     switch (err) {
         case MPI_T_ERR_MEMORY:
             p = "ERR_MEMORY";
@@ -469,9 +543,6 @@ char *mpit_errclassToStr(int err)
             break;
         case MPI_T_ERR_INVALID_INDEX:
             p = "ERR_INVALID_INDEX";
-            break;
-        case MPI_T_ERR_INVALID_ITEM:
-            p = "ERR_INVALID_ITEM";
             break;
         case MPI_T_ERR_INVALID_HANDLE:
             p = "ERR_INVALID_HANDLE";

@@ -39,7 +39,7 @@ AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive -Werror foreign 1.12.3 subdir
 
 AM_PROG_AR
 
-AC_CONFIG_HEADER(libhydra/include/hydra_config.h)
+AC_CONFIG_HEADERS([libhydra/include/hydra_config.h])
 
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -49,6 +49,9 @@ PAC_RESET_LINK_FLAGS()
 WRAPPER_LIBS=""
 export WRAPPER_LIBS
 AC_SUBST(WRAPPER_LIBS)
+
+# let confdb macro know that we are using WRAPPER FLAGS
+m4_define([use_wrapper_flags], [1])
 
 PAC_ARG_STRICT
 
@@ -81,7 +84,6 @@ LT_INIT
 AC_PROG_MKDIR_P
 AC_PROG_INSTALL
 PAC_ARG_CACHING
-PAC_CC_FUNCTION_NAME_SYMBOL
 
 # Build information
 # these values come from the m4_include above
@@ -171,7 +173,6 @@ AC_SUBST(top_srcdir)
 PAC_ENABLE_COVERAGE
 
 # Check if the necessary headers are available
-AC_HEADER_STDC
 AC_CHECK_HEADERS(unistd.h strings.h sys/types.h sys/socket.h sched.h sys/stat.h sys/param.h \
 		 netinet/in.h netinet/tcp.h sys/un.h sys/time.h time.h ifaddrs.h arpa/inet.h \
 		 poll.h fcntl.h netdb.h)
@@ -204,26 +205,30 @@ if test "$ac_cv_func_putenv" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
 fi
 
-AC_TRY_LINK([
-	#include <stdio.h>
-	#include <sys/types.h>
-	#include <ifaddrs.h>
-	],
-	[return getifaddrs(NULL);],
-	[AC_DEFINE([HAVE_GETIFADDRS],1,[Define to '1' if getifaddrs is present and usable])])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    #include <stdio.h>
+    #include <sys/types.h>
+    #include <ifaddrs.h>
+    ]],[[
+    return getifaddrs(NULL);
+    ]])],[
+    AC_DEFINE([HAVE_GETIFADDRS],1,[Define to '1' if getifaddrs is present and usable])
+])
 
 # Check what we need to do about the environ extern
-AC_CACHE_CHECK([for environ in unistd.h],pac_cv_environ_in_unistd,
-	[AC_TRY_COMPILE([#include <unistd.h>],[char **x = environ;],
-	pac_cv_environ_in_unistd=yes,pac_cv_environ_in_unistd=no)])
+AC_CACHE_CHECK([for environ in unistd.h],pac_cv_environ_in_unistd, [
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],[[char **x = environ;]])],
+	pac_cv_environ_in_unistd=yes,pac_cv_environ_in_unistd=no)
+])
 if test "$pac_cv_environ_in_unistd" = "yes" ; then
     # We have environ defined in unistd.h; we are done
     AC_DEFINE(HAVE_EXTERN_ENVIRON,1,[Define if environ extern is available])
 else
     # See if we can declare it
-    AC_CACHE_CHECK([for manually declared extern environ], pac_cv_manual_extern_environ,
-	[AC_TRY_LINK([#include <unistd.h>],[extern char ** environ; char **x = environ;],
-	pac_cv_manual_extern_environ=yes,pac_cv_manual_extern_environ=no)])
+    AC_CACHE_CHECK([for manually declared extern environ], pac_cv_manual_extern_environ, [
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],[[extern char ** environ; char **x = environ;]])],
+            pac_cv_manual_extern_environ=yes,pac_cv_manual_extern_environ=no)
+    ])
     if test "$pac_cv_manual_extern_environ" = "yes" ; then
         # We can manually declare the extern
         AC_DEFINE(MANUAL_EXTERN_ENVIRON,1,[Define if environ decl needed])
@@ -236,7 +241,7 @@ fi
 # Check what RMK we should use
 #########################################################################
 AC_ARG_WITH(hydra-rmk,
-	[AC_HELP_STRING([--with-hydra-rmk=name],
+	[AS_HELP_STRING([--with-hydra-rmk=name],
 		[RMK (slurm,ll,lsf,sge,pbs,cobalt)])],
 	[ hydra_rmk=$withval ],
 	[ hydra_rmk="slurm,ll,lsf,sge,pbs,cobalt" ])
@@ -275,7 +280,7 @@ AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_RMKS,"${hydra_rmk_names_unquoted}",[Definitio
 # Check what bstrap we should use
 #########################################################################
 AC_ARG_WITH(hydra-bstrap,
-	[AC_HELP_STRING([--with-hydra-bstrap=name],
+	[AS_HELP_STRING([--with-hydra-bstrap=name],
 		[Bstrap Server (ssh,rsh,slurm,ll,lsf,sge,pbs)])],
 	[ hydra_bstrap=$withval ],
 	[ hydra_bstrap="ssh,slurm,rsh,ll,sge" ])
@@ -338,7 +343,7 @@ else
 fi
 
 # FIXME: Disable hwloc on Cygwin for now. The hwloc package,
-# atleast as of 1.0.2, does not install correctly on Cygwin
+# at least as of 1.0.2, does not install correctly on Cygwin
 AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
 
 if test "$have_hwloc" = "yes" ; then
@@ -457,21 +462,29 @@ sigaction_ok=no
 if test "$ac_cv_func_sigaction" = "yes" ; then
     # Make sure that the fields that we need in sigaction are defined
     AC_CACHE_CHECK([for struct sigaction and sa_handler],
-    pac_cv_struct_sigaction_with_sa_handler,[
-    AC_TRY_COMPILE([#include <signal.h>],[
-struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
-act.sa_handler = SIG_IGN;],
-    pac_cv_struct_sigaction_with_sa_handler=yes,
-    pac_cv_struct_sigaction_with_sa_handler=no)])
+                    pac_cv_struct_sigaction_with_sa_handler,[
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <signal.h>
+            ]],[[
+            struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+            act.sa_handler = SIG_IGN;
+            ]])],
+            pac_cv_struct_sigaction_with_sa_handler=yes,
+            pac_cv_struct_sigaction_with_sa_handler=no)
+    ])
     if test "$pac_cv_struct_sigaction_with_sa_handler" = "no" ; then
         AC_CACHE_CHECK([for struct sigaction and sa_handler with _POSIX_SOURCE],
-	pac_cv_struct_sigaction_with_sa_handler_needs_posix,[
-        AC_TRY_COMPILE([#define _POSIX_SOURCE
-#include <signal.h>],[
-struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
-act.sa_handler = SIG_IGN;],
-	pac_cv_struct_sigaction_with_sa_handler_needs_posix=yes,
-	pac_cv_struct_sigaction_with_sa_handler_needs_posix=no)])
+                        pac_cv_struct_sigaction_with_sa_handler_needs_posix,[
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+                #define _POSIX_SOURCE
+                #include <signal.h>
+                ]],[[
+                struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+                act.sa_handler = SIG_IGN;
+                ]])],
+                pac_cv_struct_sigaction_with_sa_handler_needs_posix=yes,
+                pac_cv_struct_sigaction_with_sa_handler_needs_posix=no)
+        ])
         if test "$pac_cv_struct_sigaction_with_sa_handler_needs_posix" = "yes" ; then
             sigaction_ok=yes
 	fi

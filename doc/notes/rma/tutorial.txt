@@ -38,13 +38,13 @@ Communication operations (requests)
 * MPI_Put(origin_addr, origin_count, origin_datatype,
           target_rank, target_disp, target_count, target_datatype, win)
 
-  * target buffer must not overlap with other communcation operations during
+  * target buffer must not overlap with other communication operations during
     the same exposure epoch
 
 * MPI_Get(origin_addr, origin_count, origin_datatype,
           target_rank, target_disp, target_count, target_datatype, win)
 
-  * target buffer must not overlap with other communcation operations during
+  * target buffer must not overlap with other communication operations during
     the same exposure epoch
 
 * MPI_Accumulate(origin_addr, origin_count, origin_datatype,

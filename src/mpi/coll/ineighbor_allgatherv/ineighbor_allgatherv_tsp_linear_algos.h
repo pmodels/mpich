@@ -12,9 +12,10 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule linear algorithm fir neighbor_allgatherv */
-int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
                                                        MPI_Datatype sendtype, void *recvbuf,
-                                                       const int recvcounts[], const int displs[],
+                                                       const MPI_Aint recvcounts[],
+                                                       const MPI_Aint displs[],
                                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                                        MPIR_TSP_sched_t * sched)
 {
@@ -64,11 +65,11 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int 
 
 
 /* Non-blocking linear algo based neighbor_allgatherv */
-int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
-                                                 const int recvcounts[], const int displs[],
-                                                 MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                                 MPIR_Request ** req)
+                                                 const MPI_Aint recvcounts[],
+                                                 const MPI_Aint displs[], MPI_Datatype recvtype,
+                                                 MPIR_Comm * comm_ptr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -80,7 +81,7 @@ int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, int sendco
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule pipelined tree algo */
     mpi_errno = MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype,

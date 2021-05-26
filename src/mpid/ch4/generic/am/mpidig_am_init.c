@@ -49,6 +49,8 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+MPIDIG_global_t MPIDIG_global;
+
 static int dynamic_am_handler_id = MPIDIG_HANDLER_STATIC_MAX;
 
 static void *host_alloc(uintptr_t size);
@@ -65,7 +67,7 @@ static void *host_alloc_buffer_registered(uintptr_t size)
 {
     void *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
     MPIR_Assert(ptr);
-    MPL_gpu_register_host(ptr, size);
+    MPIR_gpu_register_host(ptr, size);
     return ptr;
 }
 
@@ -76,7 +78,7 @@ static void host_free(void *ptr)
 
 static void host_free_buffer_registered(void *ptr)
 {
-    MPL_gpu_unregister_host(ptr);
+    MPIR_gpu_unregister_host(ptr);
     MPL_free(ptr);
 }
 
@@ -125,14 +127,17 @@ int MPIDIG_am_init(void)
     MPIDI_global.comm_req_lists = (MPIDIG_comm_req_list_t *)
         MPL_calloc(MPIR_MAX_CONTEXT_MASK * MPIR_CONTEXT_INT_BITS,
                    sizeof(MPIDIG_comm_req_list_t), MPL_MEM_OTHER);
-#ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDI_global.posted_list = NULL;
     MPIDI_global.unexp_list = NULL;
-#endif
+    MPIDI_global.part_posted_list = NULL;
+    MPIDI_global.part_unexp_list = NULL;
 
     MPIDI_global.cmpl_list = NULL;
     MPL_atomic_store_uint64(&MPIDI_global.exp_seq_no, 0);
     MPL_atomic_store_uint64(&MPIDI_global.nxt_seq_no, 0);
+
+    MPL_atomic_store_int(&MPIDIG_global.rma_am_flag, 0);
+    MPIR_cc_set(&MPIDIG_global.rma_am_poll_cntr, 0);
 
     mpi_errno =
         MPIDU_genq_private_pool_create_unsafe(MPIDIU_REQUEST_POOL_CELL_SIZE,
@@ -157,6 +162,12 @@ int MPIDIG_am_init(void)
                      &MPIDIG_send_data_origin_cb, &MPIDIG_send_data_target_msg_cb);
 
     MPIDIG_am_reg_cb(MPIDIG_SSEND_ACK, NULL, &MPIDIG_ssend_ack_target_msg_cb);
+
+    MPIDIG_am_reg_cb(MPIDIG_PART_SEND_INIT, NULL, &MPIDIG_part_send_init_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_PART_CTS, NULL, &MPIDIG_part_cts_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_PART_SEND_DATA, &MPIDIG_part_send_data_origin_cb,
+                     &MPIDIG_part_send_data_target_msg_cb);
+
     MPIDIG_am_reg_cb(MPIDIG_PUT_REQ, &MPIDIG_put_origin_cb, &MPIDIG_put_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_ACK, NULL, &MPIDIG_put_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_GET_REQ, &MPIDIG_get_origin_cb, &MPIDIG_get_target_msg_cb);

@@ -24,15 +24,12 @@
 #include "ch4_csel_container.h"
 #include "ch4i_workq_types.h"
 
-/* Currently, workq is a configure-time only option and guarded by macro
- * MPIDI_CH4_USE_WORK_QUEUES. If we want to enable runtime option, we will
- * need to switch everywhere from "#ifdef MPIDI_CH4_USE_WORK_QUEUES" into
- * runtime "if - else".
- */
 #ifdef MPIDI_CH4_USE_MT_DIRECT
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_DIRECT
 #elif defined MPIDI_CH4_USE_MT_HANDOFF
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_HANDOFF
+#elif defined MPIDI_CH4_USE_MT_LOCKLESS
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_LOCKLESS
 #elif defined MPIDI_CH4_USE_MT_RUNTIME
 #define MPIDI_CH4_MT_MODEL MPIDI_global.settings.mt_model
 #else
@@ -79,7 +76,7 @@ typedef enum {
 typedef struct MPIDIG_sreq_t {
     /* persistent send fields */
     const void *src_buf;
-    MPI_Count count;
+    MPI_Aint count;
     MPI_Datatype datatype;
     int rank;
     MPIR_Context_id_t context_id;
@@ -94,10 +91,11 @@ typedef struct MPIDIG_rreq_t {
     uint64_t ignore;
     MPIR_Request *peer_req_ptr;
     MPIR_Request *match_req;
-    MPIR_Request *request;
-
-    struct MPIDIG_rreq_t *prev, *next;
 } MPIDIG_rreq_t;
+
+typedef struct MPIDIG_part_am_req_t {
+    MPIR_Request *part_req_ptr;
+} MPIDIG_part_am_req_t;
 
 typedef struct MPIDIG_put_req_t {
     MPIR_Win *win_ptr;
@@ -109,6 +107,7 @@ typedef struct MPIDIG_put_req_t {
     MPI_Datatype origin_datatype;
     void *target_addr;
     MPI_Datatype target_datatype;
+    MPI_Aint origin_data_sz;
 } MPIDIG_put_req_t;
 
 typedef struct MPIDIG_get_req_t {
@@ -140,8 +139,10 @@ typedef struct MPIDIG_acc_req_t {
     int target_count;
     void *target_addr;
     void *flattened_dt;
-    void *data;
-    size_t data_sz;
+    void *data;                 /* for origin_data received and result_data being sent (in GET_ACC).
+                                 * Not to be confused with result_addr below which saves the
+                                 * result_addr parameter. */
+    MPI_Aint result_data_sz;    /* only used in GET_ACC */
     MPI_Op op;
     void *result_addr;
     int result_count;
@@ -160,6 +161,7 @@ typedef enum {
 
 typedef struct MPIDIG_req_async {
     MPIDIG_recv_type recv_type;
+    bool is_device_buffer;
     MPI_Aint in_data_sz;
     MPI_Aint offset;
     struct iovec *iov_ptr;      /* used with MPIDIG_RECV_IOV */
@@ -183,6 +185,7 @@ typedef struct MPIDIG_req_ext_t {
         MPIDIG_get_req_t greq;
         MPIDIG_cswap_req_t creq;
         MPIDIG_acc_req_t areq;
+        MPIDIG_part_am_req_t part_am_req;
     };
 
     MPIDIG_rreq_async_t recv_async;
@@ -210,6 +213,7 @@ typedef struct MPIDIG_req_t {
     int tag;
     MPIR_Context_id_t context_id;
     MPI_Datatype datatype;
+    bool recv_ready;            /* indicating if the request is ready for data */
 } MPIDIG_req_t;
 
 /* Structure to capture arguments for pt2pt persistent communications */
@@ -223,7 +227,51 @@ typedef struct MPIDI_prequest {
     MPI_Datatype datatype;
 } MPIDI_prequest_t;
 
+/* Structures for partitioned pt2pt request */
+typedef struct MPIDIG_part_sreq {
+    MPIR_cc_t ready_cntr;
+} MPIDIG_part_sreq_t;
+
+typedef struct MPIDIG_part_rreq {
+    MPI_Aint sdata_size;        /* size of entire send data */
+} MPIDIG_part_rreq_t;
+
+typedef struct MPIDIG_part_request {
+    MPL_atomic_int_t status;    /* see MPIDIG_PART_REQ_INC_FETCH_STATUS */
+    MPIR_Request *peer_req_ptr;
+    union {
+        MPIDIG_part_sreq_t send;
+        MPIDIG_part_rreq_t recv;
+    } u;
+} MPIDIG_part_request_t;
+
+typedef struct MPIDI_part_request {
+    MPIDIG_part_request_t am;
+
+    /* partitioned attributes */
+    void *buffer;
+    int partitions;
+    MPI_Aint count;             /* count per partition */
+    int rank;
+    int tag;
+    MPIR_Context_id_t context_id;       /* temporarily store send context_id in unexp_rreq.
+                                         * Valid also in posted_rreq so that single dequeue
+                                         * routine can be used. */
+    MPI_Datatype datatype;
+} MPIDI_part_request_t;
+
+/* message queue within "self"-comms, i.e. MPI_COMM_SELF and all communicators with size of 1. */
+
 typedef struct {
+    void *buf;
+    MPI_Aint count;
+    MPI_Datatype datatype;
+    int tag;
+    int context_id;
+    MPIR_Request *match_req;    /* for mrecv */
+} MPIDI_self_request_t;
+
+typedef struct MPIDI_Devreq_t {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
     /* Anysource handling. Netmod and shm specific requests are cross
@@ -239,6 +287,11 @@ typedef struct {
         /* Used by pt2pt persistent communication */
         MPIDI_prequest_t preq;
 
+        /* Used by partitioned communication */
+        MPIDI_part_request_t part_req;
+
+        MPIDI_self_request_t self;
+
         /* Used by the netmod direct apis */
         union {
         MPIDI_NM_REQUEST_DECL} netmod;
@@ -252,11 +305,15 @@ typedef struct {
         MPIDI_workq_elemt_t command;
 #endif
     } ch4;
+    struct MPIDI_Devreq_t *next, *prev;
 } MPIDI_Devreq_t;
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDIG_REQUEST(req,field)       (((req)->dev.ch4.am).field)
 #define MPIDI_PREQUEST(req,field)       (((req)->dev.ch4.preq).field)
+#define MPIDI_PART_REQUEST(req,field)   (((req)->dev.ch4.part_req).field)
+#define MPIDIG_PART_REQUEST(req, field)   (((req)->dev.ch4.part_req).am.field)
+#define MPIDI_SELF_REQUEST(req, field)  (((req)->dev.ch4.self).field)
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
 /* `(r)->dev.ch4.am.req` might not be allocated right after SHM_mpi_recv when
@@ -298,25 +355,12 @@ typedef enum {
     MPIDIG_ACCU_SAME_OP_NO_OP
 } MPIDIG_win_info_accumulate_ops;
 
+#define MPIDIG_ACCU_NUM_OP (MPIR_OP_N_BUILTIN)  /* builtin reduce op + cswap */
+
 typedef enum {
-    MPIDIG_ACCU_OP_SHIFT_FIRST = 0,
-    MPIDIG_ACCU_MAX_SHIFT = 0,  /* 1<<0 */
-    MPIDIG_ACCU_MIN_SHIFT = 1,
-    MPIDIG_ACCU_SUM_SHIFT = 2,
-    MPIDIG_ACCU_PROD_SHIFT = 3,
-    MPIDIG_ACCU_MAXLOC_SHIFT = 4,
-    MPIDIG_ACCU_MINLOC_SHIFT = 5,
-    MPIDIG_ACCU_BAND_SHIFT = 6,
-    MPIDIG_ACCU_BOR_SHIFT = 7,
-    MPIDIG_ACCU_BXOR_SHIFT = 8,
-    MPIDIG_ACCU_LAND_SHIFT = 9,
-    MPIDIG_ACCU_LOR_SHIFT = 10,
-    MPIDIG_ACCU_LXOR_SHIFT = 11,
-    MPIDIG_ACCU_REPLACE_SHIFT = 12,
-    MPIDIG_ACCU_NO_OP_SHIFT = 13,       /* atomic get */
-    MPIDIG_ACCU_CSWAP_SHIFT = 14,
-    MPIDIG_ACCU_OP_SHIFT_LAST
-} MPIDIG_win_info_accu_op_shift_t;
+    MPIDIG_RMA_LAT_PREFERRED = 0,
+    MPIDIG_RMA_MR_PREFERRED,
+} MPIDIG_win_info_perf_preference;
 
 typedef struct MPIDIG_win_info_args_t {
     int no_locks;
@@ -328,7 +372,7 @@ typedef struct MPIDIG_win_info_args_t {
 
     /* hints to tradeoff atomicity support */
     uint32_t which_accumulate_ops;      /* Arbitrary combination of {1<<max|1<<min|1<<sum|...}
-                                         * with bit shift defined in MPIDIG_win_info_accu_op_shift_t.
+                                         * with bit shift defined by op index (0<=index<MPIDIG_ACCU_NUM_OP).
                                          * any_op and none are two special values.
                                          * any_op by default. */
     bool accumulate_noncontig_dtype;    /* true by default. */
@@ -336,6 +380,9 @@ typedef struct MPIDIG_win_info_args_t {
                                          * TODO: can be set to win_size.*/
     bool disable_shm_accumulate;        /* false by default. */
     bool coll_attach;           /* false by default. Valid only for dynamic window */
+    int perf_preference;        /* Arbitrary combination of MPIDIG_win_info_perf_preference.
+                                 * By default MPICH/CH4 tends to optimize for low latency.
+                                 * MPICH may ignore invalid combination. */
 
     /* alloc_shm: MPICH specific hint (same in CH3).
      * If true, MPICH will try to use shared memory routines for the window.
@@ -448,10 +495,11 @@ typedef enum {
     MPIDI_WINATTR_ACCU_NO_SHM = 4,      /* shortcut of disable_shm_accumulate in MPIDIG_win_info_args_t. */
     MPIDI_WINATTR_ACCU_SAME_OP_NO_OP = 8,
     MPIDI_WINATTR_NM_REACHABLE = 16,    /* whether a netmod may reach the window. Set by netmod at win init.
-                                         * It only indicates whether the win type is supported. Per-target check
-                                         * may be required separately. */
+                                         * Each netmod decides the definition of "reachable" at win_init based on
+                                         * its internal optimization. */
     MPIDI_WINATTR_NM_DYNAMIC_MR = 32,   /* whether the memory region is registered dynamically. Valid only for
                                          * dynamic window. Set by netmod. */
+    MPIDI_WINATTR_MR_PREFERRED = 64,    /* message rate preferred flag. Default 0, set by user hint. */
     MPIDI_WINATTR_LAST_BIT
 } MPIDI_winattr_bit_t;
 
@@ -475,8 +523,6 @@ typedef struct {
 typedef unsigned MPIDI_locality_t;
 
 typedef struct MPIDIG_comm_t {
-    MPIDIG_rreq_t *posted_list;
-    MPIDIG_rreq_t *unexp_list;
     uint32_t window_instance;
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIDIG_rreq_t **posted_head_ptr;

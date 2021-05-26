@@ -4,6 +4,7 @@
  */
 
 #include "mpiimpl.h"
+#include <strings.h>    /* for strcasecmp */
 
 #ifdef HAVE_HWLOC
 #include "hwloc.h"
@@ -51,49 +52,45 @@ typedef enum {
  * is not directly available outside the topology layer anyway (it has to
  * be queried using get_depth). In this case, when we calculate the depth
  * from the gid we do the opposite operation, restoring the sign. */
-#define HWTOPO_GET_GID(class, depth, idx) ({              \
-    MPIR_Assert(class != HWTOPO_CLASS__INVALID);          \
-    MPIR_hwtopo_gid_t gid_;                               \
-    int depth_ = (class != HWTOPO_CLASS__NORMAL) ?        \
-                 -depth : depth;                          \
-    do {                                                  \
-        MPIR_Assert(depth <= HWTOPO_GID_DEPTH_MAX);       \
-        MPIR_Assert(idx   <= HWTOPO_GID_INDEX_MAX);       \
-        gid_  = (class  << HWTOPO_GID_CLASS_SHIFT);       \
-        gid_ |= (depth_ << HWTOPO_GID_DEPTH_SHIFT);       \
-        gid_ |= (idx    << HWTOPO_GID_INDEX_SHIFT);       \
-    } while (0);                                          \
-    gid_;                                                 \
-})
+static MPIR_hwtopo_gid_t HWTOPO_GET_GID(hwtopo_class_e class, int depth, int idx)
+{
+    MPIR_Assert(class != HWTOPO_CLASS__INVALID);
+    MPIR_hwtopo_gid_t gid;
+    int depth_ = (class != HWTOPO_CLASS__NORMAL) ? -depth : depth;
+    MPIR_Assert(depth <= HWTOPO_GID_DEPTH_MAX);
+    MPIR_Assert(idx <= HWTOPO_GID_INDEX_MAX);
+    gid = (class << HWTOPO_GID_CLASS_SHIFT);
+    gid |= (depth_ << HWTOPO_GID_DEPTH_SHIFT);
+    gid |= (idx << HWTOPO_GID_INDEX_SHIFT);
+    return gid;
+}
 
-#define HWTOPO_GET_CLASS(gid) ({                          \
-    int class_;                                           \
-    do {                                                  \
-        class_ = (gid & HWTOPO_GID_CLASS_MASK);           \
-        class_ = (class_ >> HWTOPO_GID_CLASS_SHIFT);      \
-    } while (0);                                          \
-    class_;                                               \
-})
+static hwtopo_class_e HWTOPO_GET_CLASS(MPIR_hwtopo_gid_t gid)
+{
+    int class;
+    class = (gid & HWTOPO_GID_CLASS_MASK);
+    class = (class >> HWTOPO_GID_CLASS_SHIFT);
+    return (hwtopo_class_e) class;
+}
 
-#define HWTOPO_GET_DEPTH(gid) ({                          \
-    int depth_;                                           \
-    do {                                                  \
-        depth_ = (gid & HWTOPO_GID_DEPTH_MASK);           \
-        depth_ = (depth_ >> HWTOPO_GID_DEPTH_SHIFT);      \
-        if (HWTOPO_GET_CLASS(gid) != HWTOPO_CLASS__NORMAL) \
-            depth_ = -depth_;                             \
-    } while (0);                                          \
-    depth_;                                               \
-})
+static int HWTOPO_GET_DEPTH(MPIR_hwtopo_gid_t gid)
+{
+    int depth;
+    depth = (gid & HWTOPO_GID_DEPTH_MASK);
+    depth = (depth >> HWTOPO_GID_DEPTH_SHIFT);
+    if (HWTOPO_GET_CLASS(gid) != HWTOPO_CLASS__NORMAL) {
+        depth = -depth;
+    }
+    return depth;
+}
 
-#define HWTOPO_GET_INDEX(gid) ({                          \
-    int index_;                                           \
-    do {                                                  \
-        index_ = (gid & HWTOPO_GID_INDEX_MASK);           \
-        index_ = (index_ >> HWTOPO_GID_INDEX_SHIFT);      \
-    } while (0);                                          \
-    index_;                                               \
-})
+static int HWTOPO_GET_INDEX(MPIR_hwtopo_gid_t gid)
+{
+    int idx;
+    idx = (gid & HWTOPO_GID_INDEX_MASK);
+    idx = (idx >> HWTOPO_GID_INDEX_SHIFT);
+    return idx;
+}
 
 #ifdef HAVE_HWLOC
 static hwloc_obj_type_t get_hwloc_obj_type(MPIR_hwtopo_type_e type)
@@ -336,7 +333,7 @@ MPIR_hwtopo_type_e MPIR_hwtopo_get_type_id(const char *name)
     };
 
     for (int i = 0; node_info[i].val; i++) {
-        if (!strcmp(node_info[i].val, name)) {
+        if (!strcasecmp(node_info[i].val, name)) {
             query_type = node_info[i].type;
             break;
         }
@@ -462,6 +459,24 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_name(const char *name)
             hwtopo_class_e class = get_type_class(non_io_ancestor->type);
             gid = HWTOPO_GET_GID(class, non_io_ancestor->depth, non_io_ancestor->logical_index);
         }
+    } else if (!strcmp(name, "bindset")) {
+        char buf[100];          /* covers up to 800 PUs */
+        memset(buf, 0, 100);
+        int num_pus = hwloc_get_nbobjs_by_type(hwloc_topology, HWLOC_OBJ_PU);
+        int n = MPL_MIN(8 * 100, num_pus);
+        int j = 0;
+        int k = 0;
+        for (int i = 0; i < n; i++) {
+            if (hwloc_bitmap_isset(bindset, i)) {
+                buf[j] |= (1 << k);
+            }
+            k++;
+            if (k >= 8) {
+                j++;
+                k = 0;
+            }
+        }
+        HASH_VALUE(buf, j, gid);
     } else
 #endif
     {
@@ -535,4 +550,63 @@ uint64_t MPIR_hwtopo_get_node_mem(void)
 #endif
 
     return size;
+}
+
+#ifdef HAVE_HWLOC
+static hwloc_obj_t get_first_non_io_obj_by_pci(int domain, int bus, int dev, int func)
+{
+    hwloc_obj_t io_device = hwloc_get_pcidev_by_busid(hwloc_topology, domain, bus, dev, func);
+    MPIR_Assert(io_device);
+    hwloc_obj_t first_non_io = hwloc_get_non_io_ancestor_obj(hwloc_topology, io_device);
+    MPIR_Assert(first_non_io);
+    return first_non_io;
+}
+
+/* Determine if PCI device is "close" to this process by checking if this process's affinity is
+ * included in PCI device's affinity or if PCI device's affinity is included in this process's
+ * affinity */
+static bool pci_device_is_close(hwloc_obj_t device)
+{
+    return (hwloc_bitmap_isincluded(bindset, device->cpuset) ||
+            hwloc_bitmap_isincluded(device->cpuset, bindset));
+}
+#endif
+
+bool MPIR_hwtopo_is_dev_close_by_name(const char *name)
+{
+    bool is_close = false;
+    if (!bindset_is_valid)
+        return is_close;
+#ifdef HAVE_HWLOC
+    MPIR_hwtopo_gid_t gid = MPIR_hwtopo_get_obj_by_name(name);
+    int hwloc_obj_index = HWTOPO_GET_INDEX(gid);
+    int hwloc_obj_depth = HWTOPO_GET_DEPTH(gid);
+    is_close = pci_device_is_close(hwloc_get_obj_by_depth(hwloc_topology, hwloc_obj_depth,
+                                                          hwloc_obj_index));
+#endif
+    return is_close;
+}
+
+bool MPIR_hwtopo_is_dev_close_by_pci(int domain, int bus, int dev, int func)
+{
+    bool is_close = false;
+    if (!bindset_is_valid)
+        return is_close;
+#ifdef HAVE_HWLOC
+    is_close = pci_device_is_close(get_first_non_io_obj_by_pci(domain, bus, dev, func));
+#endif
+    return is_close;
+}
+
+MPIR_hwtopo_gid_t MPIR_hwtopo_get_dev_parent_by_pci(int domain, int bus, int dev, int func)
+{
+    MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_ROOT;
+    if (!bindset_is_valid)
+        return gid;
+#ifdef HAVE_HWLOC
+    hwloc_obj_t first_non_io = get_first_non_io_obj_by_pci(domain, bus, dev, func);
+    hwtopo_class_e class = get_type_class(first_non_io->type);
+    gid = HWTOPO_GET_GID(class, first_non_io->depth, first_non_io->logical_index);
+#endif
+    return gid;
 }

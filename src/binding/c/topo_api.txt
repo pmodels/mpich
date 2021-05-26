@@ -1,0 +1,289 @@
+# vim: set ft=c:
+
+MPI_Cart_coords:
+    .desc: Determines process coords in cartesian topology given rank in group
+    .skip: global_cs
+    .extra: ignore_revoked_comm
+{ -- error_check -- coords
+    MPIR_Topology *cart_ptr;
+    cart_ptr = MPIR_Topology_get(comm_ptr);
+    MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
+    MPIR_ERR_CHKANDJUMP2((cart_ptr->topo.cart.ndims > maxdims), mpi_errno, MPI_ERR_ARG,
+                         "**dimsmany", "**dimsmany %d %d", cart_ptr->topo.cart.ndims, maxdims);
+    if (cart_ptr->topo.cart.ndims > 0) {
+        MPIR_ERRTEST_ARGNULL(coords, "coords", mpi_errno);
+    }
+}
+
+MPI_Cart_create:
+    .desc: Makes a new communicator to which topology information has been attached
+    .extra: errtest_comm_intra
+    .impl: topo_fns->cartCreate
+/*
+    Algorithm:
+    We ignore 'reorder' info currently.
+*/
+{ -- error_check -- dims, periods
+    if (ndims > 0) {
+        MPIR_ERRTEST_ARGNULL(dims, "dims", mpi_errno);
+        MPIR_ERRTEST_ARGNULL(periods, "periods", mpi_errno);
+    }
+}
+
+MPI_Cart_get:
+    .desc: Retrieves Cartesian topology information associated with a communicator
+    .extra: ignore_revoked_comm
+    .skip: global_cs
+{ -- error_check -- dims, periods, coords
+    if (maxdims > 0) {
+        MPIR_ERRTEST_ARGNULL(dims, "dims", mpi_errno);
+        MPIR_ERRTEST_ARGNULL(periods, "periods", mpi_errno);
+        MPIR_ERRTEST_ARGNULL(coords, "coords", mpi_errno);
+    }
+}
+
+MPI_Cart_map:
+    .desc: Maps process to Cartesian topology information
+    .skip: global_cs
+    .extra: ignore_revoked_comm
+    .impl: topo_fns->cartMap
+{ -- error_check -- dims, periods
+    if (ndims > 0) {
+        MPIR_ERRTEST_ARGNULL(dims, "dims", mpi_errno);
+        MPIR_ERRTEST_ARGNULL(periods, "periods", mpi_errno);
+    }
+}
+
+MPI_Cart_rank:
+    .desc: Determines process rank in communicator given Cartesian location
+    .skip: global_cs
+    .extra: ignore_revoked_comm
+/*
+    Notes:
+     Out-of-range coordinates are erroneous for non-periodic dimensions.
+     Versions of MPICH before 1.2.2 returned 'MPI_PROC_NULL' for the rank in this
+     case.
+*/
+{ -- error_check -- coords
+    MPIR_Topology *cart_ptr = MPIR_Topology_get(comm_ptr);
+    MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART),
+                        mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
+    int ndims = cart_ptr->topo.cart.ndims;
+    if (ndims != 0) {
+        MPIR_ERRTEST_ARGNULL(coords, "coords", mpi_errno);
+    }
+    for (int i = 0; i < ndims; i++) {
+        if (!cart_ptr->topo.cart.periodic[i]) {
+            int coord = coords[i];
+            MPIR_ERR_CHKANDJUMP3((coord < 0 || coord >= cart_ptr->topo.cart.dims[i]),
+                                  mpi_errno, MPI_ERR_ARG, "**cartcoordinvalid",
+                                  "**cartcoordinvalid %d %d %d", i, coords[i],
+                                  cart_ptr->topo.cart.dims[i] - 1);
+        }
+    }
+}
+
+MPI_Cart_shift:
+    .desc: Returns the shifted source and destination ranks, given a shift direction and amount
+    .skip: global_cs
+    .extra: ignore_revoked_comm
+/*
+    Notes:
+    The 'direction' argument is in the range '[0,n-1]' for an n-dimensional
+    Cartesian mesh.
+*/
+{ -- error_check -- disp
+}
+
+MPI_Cart_sub:
+    .desc: Partitions a communicator into subgroups which form lower-dimensional cartesian subgrids
+{ -- error_check --
+    MPIR_Topology *cart_ptr = MPIR_Topology_get(comm_ptr);
+    MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART),
+                        mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
+    int ndims = cart_ptr->topo.cart.ndims;
+    if (ndims != 0) {
+        MPIR_ERRTEST_ARGNULL(remain_dims, "remain_dims", mpi_errno);
+    }
+}
+
+MPI_Cartdim_get:
+    .desc: Retrieves Cartesian topology information associated with a communicator
+    .skip: global_cs
+    .extra: ignore_revoked_comm
+
+MPI_Dims_create:
+    .desc: Creates a division of processors in a cartesian grid
+{ -- error_check -- dims
+    if (!(nnodes == 1 && ndims == 0)) {
+        /* nnodes == 1 && ndims == 0 is allowed.
+         * When ndims is 0, dims can be NULL. */
+        MPIR_ERRTEST_ARGNULL(dims, "dims", mpi_errno);
+    }
+}
+
+MPI_Dist_graph_create:
+    .desc: MPI_DIST_GRAPH_CREATE returns a handle to a new communicator to which the distributed graph topology information is attached
+    .extra: errtest_comm_intra
+{ -- error_check -- sources, degrees, destinations, weights
+    if (n > 0) {
+        int have_degrees = 0;
+        MPIR_ERRTEST_ARGNULL(sources, "sources", mpi_errno);
+        MPIR_ERRTEST_ARGNULL(degrees, "degrees", mpi_errno);
+        for (int i = 0; i < n; ++i) {
+            if (degrees[i]) {
+                have_degrees = 1;
+                break;
+            }
+        }
+        if (have_degrees) {
+            MPIR_ERRTEST_ARGNULL(destinations, "destinations", mpi_errno);
+            if (weights != MPI_UNWEIGHTED)
+                MPIR_ERRTEST_ARGNULL(weights, "weights", mpi_errno);
+        }
+    }
+}
+
+MPI_Dist_graph_create_adjacent:
+    .desc: returns a handle to a new communicator to which the distributed graph topology information is attached
+    .skip: validate-DEGREE
+    .extra: errtest_comm_intra
+{ -- error_check -- indegree, outdegree, sources, sourceweights, destinations, destweights
+    MPIR_ERRTEST_ARGNEG(indegree, "indegree", mpi_errno);
+    MPIR_ERRTEST_ARGNEG(outdegree, "outdegree", mpi_errno);
+
+    if (indegree > 0) {
+        MPIR_ERRTEST_ARGNULL(sources, "sources", mpi_errno);
+        if (sourceweights == MPI_UNWEIGHTED && destweights != MPI_UNWEIGHTED) {
+            MPIR_ERR_SET(mpi_errno, MPI_ERR_TOPOLOGY, "**unweightedboth");
+            goto fn_fail;
+        }
+        /* TODO check ranges for array elements too (**argarrayneg / **rankarray) */
+    }
+    if (outdegree > 0) {
+        MPIR_ERRTEST_ARGNULL(destinations, "destinations", mpi_errno);
+        if (destweights == MPI_UNWEIGHTED && sourceweights != MPI_UNWEIGHTED) {
+            MPIR_ERR_SET(mpi_errno, MPI_ERR_TOPOLOGY, "**unweightedboth");
+            goto fn_fail;
+        }
+    }
+}
+
+MPI_Dist_graph_neighbors:
+    .desc: Provides adjacency information for a distributed graph topology
+{ -- error_check -- maxindegree, maxoutdegree, sourceweights, destweights
+    MPIR_Topology *topo_ptr = NULL;
+    topo_ptr = MPIR_Topology_get(comm_ptr);
+    MPIR_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY, "**notdistgraphtopo");
+    MPIR_ERRTEST_ARGNEG(maxindegree, "maxindegree", mpi_errno);
+    MPIR_ERRTEST_ARGNEG(maxoutdegree, "maxoutdegree", mpi_errno);
+    MPIR_ERR_CHKANDJUMP3((maxindegree < topo_ptr->topo.dist_graph.indegree), mpi_errno,
+                         MPI_ERR_ARG, "**argtoosmall", "**argtoosmall %s %d %d",
+                         "maxindegree", maxindegree, topo_ptr->topo.dist_graph.indegree);
+    MPIR_ERR_CHKANDJUMP3((maxoutdegree < topo_ptr->topo.dist_graph.outdegree), mpi_errno,
+                         MPI_ERR_ARG, "**argtoosmall", "**argtoosmall %s %d %d",
+                         "maxoutdegree", maxoutdegree, topo_ptr->topo.dist_graph.outdegree);
+}
+
+MPI_Dist_graph_neighbors_count:
+    .desc: Provides adjacency information for a distributed graph topology
+    .extra: ignore_revoked_comm
+
+MPI_Graph_get:
+    .desc: Retrieves graph topology information associated with a communicator
+    .skip: global_cs
+    .extra: ignore_revoked_comm
+
+MPI_Graph_map:
+    .desc: Maps process to graph topology information
+    .skip: global_cs
+    .impl: topo_fns->graphMap
+{ -- error_check -- nnodes, index, edges
+    MPIR_ERR_CHKANDJUMP(comm_ptr->local_size < nnodes, mpi_errno, MPI_ERR_ARG, "**graphnnodes");
+    MPIR_ERRTEST_ARGNULL(indx, "indx", mpi_errno);
+    MPIR_ERRTEST_ARGNULL(edges, "edges", mpi_errno);
+}
+
+MPI_Graph_neighbors:
+    .desc: Returns the neighbors of a node associated
+    .skip: global_cs
+
+MPI_Graph_create:
+    .desc: Makes a new communicator to which topology information
+    .extra: errtest_comm_intra
+    .impl: topo_fns->graphCreate
+/*
+    Notes:
+    Each process must provide a description of the entire graph, not just the
+    neighbors of the calling process.
+    
+    Algorithm:
+    We ignore the 'reorder' info currently.
+*/
+{ -- error_check -- nnodes, indx, edges
+    int comm_size = comm_old_ptr->remote_size;
+
+    /* Check that the communicator is large enough */
+    if (nnodes > comm_size) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_ARG,
+                                         "**topotoolarge", "**topotoolarge %d %d", nnodes, comm_size);
+        if (mpi_errno)
+            goto fn_fail;
+    }
+
+    if (nnodes > 0) {
+        MPIR_ERRTEST_ARGNULL(indx, "indx", mpi_errno);
+        MPIR_ERRTEST_ARGNULL(edges, "edges", mpi_errno);
+        /* Check that index is monotone nondecreasing */
+        /* Use ERR_ARG instead of ERR_TOPOLOGY because there is no
+         * topology yet */
+        for (int i = 0; i < nnodes; i++) {
+            if (indx[i] < 0) {
+                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_ARG,
+                                                "**indexneg", "**indexneg %d %d", i, indx[i]);
+                if (mpi_errno)
+                    goto fn_fail;
+            }
+            if (i + 1 < nnodes && indx[i] > indx[i + 1]) {
+                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_ARG,
+                                                "**indexnonmonotone", "**indexnonmonotone %d %d %d", i, indx[i], indx[i + 1]);
+                if (mpi_errno)
+                    goto fn_fail;
+            }
+        }
+        /* Check that edge number is in range. Note that the
+         * edges refer to a rank in the communicator, and can
+         * be greater than nnodes */
+        for (int i = 0; i < indx[nnodes - 1]; i++) {
+            if (edges[i] > comm_size || edges[i] < 0) {
+                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_ARG,
+                                                 "**edgeoutrange", "**edgeoutrange %d %d %d", i, edges[i], comm_size);
+                if (mpi_errno)
+                    goto fn_fail;
+            }
+        }
+    }
+}
+{ -- early_return --
+    /* Test for empty communicator */
+    if (nnodes == 0) {
+        *comm_graph = MPI_COMM_NULL;
+        goto fn_exit;
+    }
+}
+
+MPI_Graphdims_get:
+    .desc: Retrieves graph topology information associated with a communicator
+    .skip: global_cs
+    .extra: ignore_revoked_comm
+
+MPI_Graph_neighbors_count:
+    .desc: Returns the number of neighbors of a node
+    .skip: global_cs
+    .extra: ignore_revoked_comm
+
+MPI_Topo_test:
+    .desc: Determines the type of topology (if any) associated with a communicator
+    .skip: global_cs
+    .extra: ignore_revoked_comm
+    .seealso: MPI_Graph_create, MPI_Cart_create

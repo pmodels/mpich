@@ -143,12 +143,11 @@ static inline int ADD_SUFFIX(send_normal) (struct MPIDI_VC * vc,
 
     if (send_type == MPIDI_OFI_SYNC_SEND) {
         /* ---------------------------------------------------- */
-        /* For syncronous send, we post a receive to catch the  */
+        /* For synchronous send, we post a receive to catch the  */
         /* match ack, but use the tag protocol bits to avoid    */
         /* matching with MPI level messages.                    */
         /* ---------------------------------------------------- */
-        int c = 1;
-        MPIR_cc_incr(sreq->cc_ptr, &c);
+        MPIR_cc_inc(sreq->cc_ptr);
         MPID_nem_ofi_create_req(&sync_req, 1);
         sync_req->dev.OnDataAvail = NULL;
         sync_req->dev.next = NULL;

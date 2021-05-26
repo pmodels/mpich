@@ -136,6 +136,8 @@
 /coll/opminloc
 /coll/opprod
 /coll/opsum
+/coll/p_bcast
+/coll/p_bcast2
 /coll/red3
 /coll/red4
 /coll/red_scat_block
@@ -157,6 +159,7 @@
 /coll/summary.xml
 /coll/testlist
 /coll/uoplong
+/coll/ring_neighbor_alltoall
 /comm/cfree
 /comm/cmfree
 /comm/cmsplit
@@ -181,6 +184,7 @@
 /comm/ctxsplit
 /comm/dup
 /comm/dup_with_info
+/comm/idup_with_info
 /comm/dupic
 /comm/ic1
 /comm/ic2
@@ -559,6 +563,8 @@
 /f08/ext/ctypesfromc.c
 /f08/ext/ctypesinf90
 /f08/hello_usempif08
+/f08/info/infocrenvf90
+/f08/info/infogetstrf90
 /f08/info/infotest2f90
 /f08/info/infotestf90
 /f08/init/baseenvf90
@@ -708,6 +714,8 @@
 /f77/ext/c2fmult
 /f77/ext/ctypesinf
 /f77/ext/testlist
+/f77/info/infocrenvf
+/f77/info/infogetstrf
 /f77/info/infotest
 /f77/info/infotest2f
 /f77/info/infotestf
@@ -892,6 +900,8 @@
 /f90/info/
 /f90/info/Makefile.sm
 /f90/info/infotest
+/f90/info/infocrenvf90.f90
+/f90/info/infogetstrf90.f90
 /f90/info/infotest2f90.f90
 /f90/info/infotestf90.f90
 /f90/info/testlist
@@ -1046,15 +1056,18 @@
 /impls/mpich/testlist
 /impls/mpich/comm/testlist
 /impls/testlist
+/info/infocreateenv
 /info/infodel
 /info/infodup
 /info/infoenv
 /info/infoget
+/info/infogetstring
 /info/infomany
 /info/infomany2
 /info/infoorder
 /info/infotest
 /info/infovallen
+/info/info_no_init
 /init/attrself
 /init/exitst1
 /init/exitst2
@@ -1099,6 +1112,8 @@
 /mpi_t/getindex
 /mpi_t/mpi_t_str
 /mpi_t/mpit_vars
+/mpi_t/qmpi_test
+/part/nonblocking_pready
 /perf/allredtrace
 /perf/commcreatep
 /perf/dtpack
@@ -1457,6 +1472,7 @@
 /topo/cartsuball
 /topo/cartzero
 /topo/dgraph_unwgt
+/topo/dims0
 /topo/dims1
 /topo/dims2
 /topo/dims3
@@ -1493,3 +1509,5 @@
 /pt2pt/testlist.gpu
 /rma/testlist.dtp
 /rma/testlist.gpu
+
+/include/mtest_mpix.h

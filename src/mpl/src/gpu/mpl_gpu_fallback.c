@@ -5,11 +5,9 @@
 
 #include "mpl.h"
 
-int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
 {
-    attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
-    attr->device = -1;
-
+    *dev_cnt = *dev_id = -1;
     return MPL_SUCCESS;
 }
 
@@ -66,12 +64,12 @@ int MPL_gpu_free(void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_init(int *device_count, int *max_dev_id_ptr)
+int MPL_gpu_init(void)
 {
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_finalize()
+int MPL_gpu_finalize(void)
 {
     return MPL_SUCCESS;
 }

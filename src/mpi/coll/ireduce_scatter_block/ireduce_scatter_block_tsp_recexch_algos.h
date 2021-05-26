@@ -13,7 +13,7 @@
 
 /* Routine to schedule a recursive exchange based reduce_scatter with distance halving in each phase */
 int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void *recvbuf,
-                                                       int recvcount, MPI_Datatype datatype,
+                                                       MPI_Aint recvcount, MPI_Datatype datatype,
                                                        MPI_Op op, MPIR_Comm * comm, int k,
                                                        MPIR_TSP_sched_t * sched)
 {
@@ -37,7 +37,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_BLOCK_SCHED_INTRA_RECEXCH);
 
     if (recvcount == 0) {
-        return mpi_errno;
+        goto fn_exit;
     }
 
     /* For correctness, transport based collectives need to get the
@@ -61,7 +61,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
         if (!is_inplace)
             MPIR_TSP_sched_localcopy(sendbuf, total_count, datatype, recvbuf, total_count,
                                      datatype, sched, 0, NULL);
-        return mpi_errno;
+        goto fn_exit;
     }
 
     /* get the neighbors, the function allocates the required memory */
@@ -71,9 +71,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     in_step2 = (step1_sendto == -1);    /* whether this rank participates in Step 2 */
     tmp_results = MPIR_TSP_sched_malloc(total_count * extent, sched);
     tmp_recvbuf = MPIR_TSP_sched_malloc(total_count * extent, sched);
-
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Beforeinitial dt copy\n"));
 
     if (in_step2) {
         if (!is_inplace)
@@ -85,7 +82,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
                                                  tmp_results, total_count, datatype, sched, 0,
                                                  NULL);
     }
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "After initial dt copy\n"));
 
     /* Step 1 */
     if (!in_step2) {
@@ -115,8 +111,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     step1_id = MPIR_TSP_sched_sink(sched);      /* sink for all the tasks up to end of Step 1 */
 
     /* Step 2 */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Start Step2"));
-
     for (phase = step2_nphases - 1; phase >= 0 && step1_sendto == -1; phase--) {
         for (i = 0; i < k - 1; i++) {
             dst = step2_nbrs[phase][i];
@@ -132,10 +126,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
 
             MPII_Recexchalgo_get_count_and_offset(dst, phase, k, nranks, &send_cnt, &offset);
             send_offset = offset * extent * recvcount;
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST,
-                             "phase %d sending to %d send_offset %d send_count %d \n", phase, dst,
-                             send_offset, send_cnt * recvcount));
 
             send_id =
                 MPIR_TSP_sched_isend((char *) tmp_results + send_offset, send_cnt * recvcount,
@@ -143,10 +133,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
 
             MPII_Recexchalgo_get_count_and_offset(rank, phase, k, nranks, &recv_cnt, &offset);
             recv_offset = offset * extent * recvcount;
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST,
-                             "phase %d recving from %d recv_offset %d recv_count %d \n", phase, dst,
-                             recv_offset, recv_cnt * recvcount));
 
             recv_id =
                 MPIR_TSP_sched_irecv(tmp_recvbuf, recv_cnt * recvcount,
@@ -169,7 +155,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
             MPIR_TSP_sched_localcopy((char *) tmp_results + rank * recvcount * extent, recvcount,
                                      datatype, recvbuf, recvcount, datatype, sched, nvtcs, vtcs);
     }
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "After Step 2\n"));
 
     /* Step 3: This is reverse of Step 1. Ranks that participated in Step 2
      * send the data to non-partcipating ranks */
@@ -183,8 +168,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
         MPIR_TSP_sched_isend((char *) tmp_results + recvcount * step1_recvfrom[i] * extent,
                              recvcount, datatype, step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs);
     }
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Done Step 3\n"));
 
   fn_exit:
     /* free all allocated memory for storing nbrs */
@@ -200,9 +183,10 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
 
 
 /* Non-blocking recexch based REDUCE_SCATTER_BLOCK */
-int MPIR_TSP_Ireduce_scatter_block_intra_recexch(const void *sendbuf, void *recvbuf, int recvcount,
-                                                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                                 MPIR_Request ** req, int k)
+int MPIR_TSP_Ireduce_scatter_block_intra_recexch(const void *sendbuf, void *recvbuf,
+                                                 MPI_Aint recvcount, MPI_Datatype datatype,
+                                                 MPI_Op op, MPIR_Comm * comm, MPIR_Request ** req,
+                                                 int k)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -215,7 +199,7 @@ int MPIR_TSP_Ireduce_scatter_block_intra_recexch(const void *sendbuf, void *recv
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(sendbuf, recvbuf, recvcount, datatype,

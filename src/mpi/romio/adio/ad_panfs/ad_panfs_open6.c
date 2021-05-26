@@ -130,7 +130,7 @@ void ADIOI_PANFS_Open6(ADIO_File fd, int *error_code)
                         myname);
                 layout_max_faults = 2;
             }
-            /* as of 6.0.x release, we only support RS enconding */
+            /* as of 6.0.x release, we only support RS encoding */
             if (layout_encoding != PAN_FS_CLIENT_LAYOUT_RAIDN_ENCODING_RS) {
                 FPRINTF(stderr,
                         "%s: panfs_layout_encoding is not a valid value: %u. Setting to default of %u\n",

@@ -63,7 +63,7 @@ Turning off Fortran (-nof77 being assumed)])
         WDEF="-D$FORTRANNAMES"
     fi
     # Delete confftest files with any extension.  This catches the case
-    # where auxillary files, such as coverage files, are removed.
+    # where auxiliary files, such as coverage files, are removed.
     rm -f confftest.*
     ])dnl
 dnl
@@ -541,7 +541,7 @@ if test -z "$ac_f90ext" ; then
     fi
     AC_MSG_CHECKING([for extension for Fortran 90 programs])
     ac_f90ext="f90"
-    ac_f90compile='${FC-f90} -c $FCFLAGS conftest.$ac_f90ext 1>&AC_FD_CC'
+    ac_f90compile='${FC-f90} -c $FCFLAGS conftest.$ac_f90ext 1>&AS_MESSAGE_LOG_FD'
     cat > conftest.$ac_f90ext <<EOF
       program conftest
       end
@@ -630,7 +630,7 @@ define(PAC_GET_XFS_MEMALIGN,
 [AC_MSG_CHECKING([for memory alignment needed for direct I/O])
 rm -f memalignval
 rm -f /tmp/romio_tmp.bin
-AC_TEST_PROGRAM([#include <stdio.h>
+AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -643,7 +643,7 @@ main() {
   fcntl(fd, F_DIOINFO, &st);
   fprintf( f, "%u\n", st.d_mem);
   exit(0);
-}],Pac_CV_NAME=`cat memalignval`,Pac_CV_NAME="")
+}]])],[Pac_CV_NAME=`cat memalignval`],[Pac_CV_NAME=""],[])
 rm -f memalignval
 rm -f /tmp/romio_tmp.bin
 if test -n "$Pac_CV_NAME" -a "$Pac_CV_NAME" != 0 ; then
@@ -804,7 +804,7 @@ EOF
   $CC $USER_CFLAGS -I$MPI_INCLUDE_DIR -o conftest$EXEEXT mpitest.c $MPI_LIB > /dev/null 2>&1
   if test -x conftest$EXEEXT ; then
      AC_MSG_RESULT(yes)
-     AC_DEFINE(HAVE_MPI_GREQUEST,1,[Define if generalized requests avaliable])
+     AC_DEFINE(HAVE_MPI_GREQUEST,1,[Define if generalized requests available])
      DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST 1"
   else
      AC_MSG_RESULT(no)
@@ -827,7 +827,7 @@ EOF
   $CC $USER_CFLAGS -I$MPI_INCLUDE_DIR -o conftest$EXEEXT mpitest.c $MPI_LIB > /dev/null 2>&1
   if test -x conftest$EXEEXT ; then
      AC_MSG_RESULT(yes)
-     AC_DEFINE(HAVE_MPI_GREQUEST_EXTENTIONS,1,[Define if non-standard generalized requests extensions avaliable])
+     AC_DEFINE(HAVE_MPI_GREQUEST_EXTENTIONS,1,[Define if non-standard generalized requests extensions available])
      DEFINE_HAVE_MPI_GREQUEST_EXTENSIONS="#define HAVE_MPI_GREQUEST_EXTENSIONS 1"
   else
      AC_MSG_RESULT(no)

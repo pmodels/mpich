@@ -90,19 +90,19 @@
      endif
      call MPI_RECV( aint, 1, MPI_AINT, 0, 0, MPI_COMM_WORLD, s, ierr )
      if (taint .ne. aint) then
-        print *, "Address-sized int not correctly transfered"
+        print *, "Address-sized int not correctly transferred"
         print *, "Value should be ", taint, " but is ", aint
         errs = errs + 1
      endif
      call MPI_RECV( oint, 1, MPI_OFFSET, 0, 1, MPI_COMM_WORLD, s, ierr )
      if (toint .ne. oint) then
-        print *, "Offset-sized int not correctly transfered"
+        print *, "Offset-sized int not correctly transferred"
         print *, "Value should be ", toint, " but is ", oint
         errs = errs + 1
      endif
      call MPI_RECV( iint, 1, MPI_INTEGER, 0, 2, MPI_COMM_WORLD, s, ierr )
      if (tiint .ne. iint) then
-        print *, "Integer (by kind) not correctly transfered"
+        print *, "Integer (by kind) not correctly transferred"
         print *, "Value should be ", tiint, " but is ", iint
         errs = errs + 1
      endif

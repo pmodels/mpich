@@ -104,6 +104,17 @@ static HYD_status pmi_port_fn(char *arg, char ***argv)
     return status;
 }
 
+static HYD_status gpus_per_proc_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_pmcd_pmip.user_global.gpus_per_proc = atoi(**argv);
+
+    (*argv)++;
+
+    return status;
+}
+
 static HYD_status rmk_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -551,8 +562,9 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
 
     for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
 
+    errno = 0;
     count = strtol(**argv, NULL, 10);
-    if (errno == ERANGE || errno == EINVAL)
+    if (errno != 0)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Exec arg not convertible to integer\n");
     for (i = 0; i < count; i++) {
         (*argv)++;
@@ -577,6 +589,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"debug", debug_fn, NULL},
     {"usize", usize_fn, NULL},
     {"pmi-port", pmi_port_fn, NULL},
+    {"gpus-per-proc", gpus_per_proc_fn, NULL},
     {"rmk", rmk_fn, NULL},
     {"launcher", launcher_fn, NULL},
     {"launcher-exec", launcher_exec_fn, NULL},

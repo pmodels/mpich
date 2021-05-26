@@ -13,7 +13,7 @@
 /*                    auxiliary functions                      */
 /* =========================================================== */
 
-/* immed_copy() copys data from origin buffer to
+/* immed_copy() copies data from origin buffer to
    IMMED packet header. */
 static inline int immed_copy(void *src, void *dest, size_t len)
 {
@@ -50,8 +50,6 @@ static inline int immed_copy(void *src, void *dest, size_t len)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IMMED_COPY);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* =========================================================== */

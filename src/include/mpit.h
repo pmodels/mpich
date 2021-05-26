@@ -28,7 +28,7 @@ extern UT_array *pvar_table;
 /* Hash tables to quick locate category, cvar, pvar indices by their names */
 extern name2index_hash_t *cat_hash;
 extern name2index_hash_t *cvar_hash;
-/* pvar names are unique per pvar class. So we use multiple hashs */
+/* pvar names are unique per pvar class. So we use multiple hashes */
 extern name2index_hash_t *pvar_hashs[MPIR_T_PVAR_CLASS_NUMBER];
 
 /* See description in mpit.c */
@@ -38,6 +38,7 @@ extern int MPIR_T_cat_add_pvar(const char *cat_name, int pvar_index);
 extern int MPIR_T_cat_add_cvar(const char *cat_name, int cvar_index);
 extern int MPIR_T_cat_add_subcat(const char *parent_name, const char *child_name);
 extern int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc);
+extern int MPIR_T_cat_add_event(const char *cat_name, int event_index);
 
 static inline cvar_table_entry_t *LOOKUP_CVAR_BY_NAME(const char *cvar_name)
 {
@@ -98,7 +99,7 @@ static inline cvar_table_entry_t *LOOKUP_CVAR_BY_NAME(const char *cvar_name)
     } while (0)
 
 /* Register a static cvar. A static pvar has NO binding and its address
- * and count are known at registeration time.
+ * and count are known at registration time.
  * Attention: name_ is a token not a string
 */
 #define MPIR_T_CVAR_REGISTER_STATIC(dtype_, name_, addr_, count_, verb_, \
@@ -110,7 +111,7 @@ static inline cvar_table_entry_t *LOOKUP_CVAR_BY_NAME(const char *cvar_name)
     } while (0)
 
 /* Register a dynamic cvar, which may have object binding and whose
- * address and count may be unknown at registeration time. It is
+ * address and count may be unknown at registration time. It is
  * developers' duty to provide self-contained arguments.
 */
 #define MPIR_T_CVAR_REGISTER_DYNAMIC(dtype_, name_, addr_, count_, etype_, \
@@ -126,8 +127,8 @@ static inline cvar_table_entry_t *LOOKUP_CVAR_BY_NAME(const char *cvar_name)
 #define MPIR_T_PVAR_STMT(MODULE, stmt_) \
     PVAR_GATED_ACTION(MODULE, stmt_)
 
-/* The following are interfaces for each pvar classe,
- * basically including delcaration, access and registeration.
+/* The following are interfaces for each pvar class,
+ * basically including delcaration, access and registration.
  */
 
 /* STATE */

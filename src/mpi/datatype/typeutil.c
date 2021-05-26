@@ -14,11 +14,13 @@
 MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN];
 MPIR_Datatype MPIR_Datatype_direct[MPIR_DATATYPE_PREALLOC];
 
-MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, MPIR_DATATYPE,
+MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, 0, 0, MPIR_DATATYPE,
     sizeof(MPIR_Datatype), MPIR_Datatype_direct,
     MPIR_DATATYPE_PREALLOC,
-    NULL
+    NULL, {0}
 };
+
+MPI_Datatype MPIR_Datatype_index_to_predefined[MPIR_DATATYPE_N_PREDEFINED];
 
 static int pairtypes_finalize_cb(void *dummy);
 static int datatype_attr_finalize_cb(void *dummy);
@@ -110,6 +112,32 @@ static mpi_names_t mpi_pairtypes[] = {
     type_name_entry(MPI_SHORT_INT),
     type_name_entry(MPI_LONG_DOUBLE_INT),
 };
+
+static void predefined_index_init(void)
+{
+    int i;
+
+    for (i = 0; i < MPIR_DATATYPE_N_PREDEFINED; i++)
+        MPIR_Datatype_index_to_predefined[i] = MPI_DATATYPE_NULL;
+
+    /* Set index to handle mapping for builtin datatypes */
+    for (i = 0; i < sizeof(mpi_dtypes) / sizeof(mpi_dtypes[0]); i++) {
+        MPI_Datatype d = mpi_dtypes[i].dtype;
+        if (d != MPI_DATATYPE_NULL) {
+            int index = MPIR_Datatype_predefined_get_index(d);
+            MPIR_Datatype_index_to_predefined[index] = d;
+        }
+    }
+
+    /* Set index to handle mapping for pairtype datatypes */
+    for (i = 0; i < sizeof(mpi_pairtypes) / sizeof(mpi_pairtypes[0]); i++) {
+        MPI_Datatype d = mpi_pairtypes[i].dtype;
+        if (d != MPI_DATATYPE_NULL) {
+            int index = MPIR_Datatype_predefined_get_index(d);
+            MPIR_Datatype_index_to_predefined[index] = d;
+        }
+    }
+}
 
 static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
 {
@@ -204,6 +232,7 @@ int MPIR_Datatype_init_predefined(void)
     }
 
     MPIR_Add_finalize(pairtypes_finalize_cb, 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
+    predefined_index_init();
 
   fn_fail:
     return mpi_errno;
@@ -308,14 +337,13 @@ int MPIR_Datatype_commit_pairtypes(void)
         if (mpi_pairtypes[i].dtype != MPI_DATATYPE_NULL) {
             int err;
 
-            err = MPIR_Type_commit(&mpi_pairtypes[i].dtype);
+            err = MPIR_Type_commit_impl(&mpi_pairtypes[i].dtype);
 
             /* --BEGIN ERROR HANDLING-- */
             if (err) {
                 return MPIR_Err_create_code(MPI_SUCCESS,
                                             MPIR_ERR_RECOVERABLE,
-                                            "MPIR_Type_commit",
-                                            __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+                                            __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
             }
             /* --END ERROR HANDLING-- */
         }
@@ -418,87 +446,6 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
     return MPI_SUCCESS;
 }
 
-void MPII_Datatype_get_contents_ints(MPIR_Datatype_contents * cp, int *user_ints)
-{
-    char *ptr;
-    int epsilon;
-    int struct_sz, types_sz;
-
-    struct_sz = sizeof(MPIR_Datatype_contents);
-    types_sz = cp->nr_types * sizeof(MPI_Datatype);
-
-    /* pad the struct, types, and ints before we allocate.
-     *
-     * note: it's not necessary that we pad the aints,
-     *       because they are last in the region.
-     */
-    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
-        struct_sz += MAX_ALIGNMENT - epsilon;
-    }
-    if ((epsilon = types_sz % MAX_ALIGNMENT)) {
-        types_sz += MAX_ALIGNMENT - epsilon;
-    }
-
-    ptr = ((char *) cp) + struct_sz + types_sz;
-    MPIR_Memcpy(user_ints, ptr, cp->nr_ints * sizeof(int));
-
-    return;
-}
-
-void MPII_Datatype_get_contents_aints(MPIR_Datatype_contents * cp, MPI_Aint * user_aints)
-{
-    char *ptr;
-    int epsilon;
-    int struct_sz, ints_sz, types_sz;
-
-    struct_sz = sizeof(MPIR_Datatype_contents);
-    types_sz = cp->nr_types * sizeof(MPI_Datatype);
-    ints_sz = cp->nr_ints * sizeof(int);
-
-    /* pad the struct, types, and ints before we allocate.
-     *
-     * note: it's not necessary that we pad the aints,
-     *       because they are last in the region.
-     */
-    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
-        struct_sz += MAX_ALIGNMENT - epsilon;
-    }
-    if ((epsilon = types_sz % MAX_ALIGNMENT)) {
-        types_sz += MAX_ALIGNMENT - epsilon;
-    }
-    if ((epsilon = ints_sz % MAX_ALIGNMENT)) {
-        ints_sz += MAX_ALIGNMENT - epsilon;
-    }
-
-    ptr = ((char *) cp) + struct_sz + types_sz + ints_sz;
-    MPIR_Memcpy(user_aints, ptr, cp->nr_aints * sizeof(MPI_Aint));
-
-    return;
-}
-
-void MPII_Datatype_get_contents_types(MPIR_Datatype_contents * cp, MPI_Datatype * user_types)
-{
-    char *ptr;
-    int epsilon;
-    int struct_sz;
-
-    struct_sz = sizeof(MPIR_Datatype_contents);
-
-    /* pad the struct, types, and ints before we allocate.
-     *
-     * note: it's not necessary that we pad the aints,
-     *       because they are last in the region.
-     */
-    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
-        struct_sz += MAX_ALIGNMENT - epsilon;
-    }
-
-    ptr = ((char *) cp) + struct_sz;
-    MPIR_Memcpy(user_types, ptr, cp->nr_types * sizeof(MPI_Datatype));
-
-    return;
-}
-
 /* MPII_Datatype_indexed_count_contig()
  *
  * Determines the actual number of contiguous blocks represented by the
@@ -509,7 +456,7 @@ void MPII_Datatype_get_contents_types(MPIR_Datatype_contents * cp, MPI_Datatype 
  */
 MPI_Aint MPII_Datatype_indexed_count_contig(MPI_Aint count,
                                             const MPI_Aint * blocklength_array,
-                                            const void *displacement_array,
+                                            const MPI_Aint * displacement_array,
                                             int dispinbytes, MPI_Aint old_extent)
 {
     MPI_Aint i, contig_count = 1;
@@ -518,7 +465,7 @@ MPI_Aint MPII_Datatype_indexed_count_contig(MPI_Aint count,
     if (count) {
         /* Skip any initial zero-length blocks */
         for (first = 0; first < count; ++first)
-            if ((MPI_Aint) blocklength_array[first])
+            if (blocklength_array[first])
                 break;
 
         if (first == count) {   /* avoid invalid reads later on */
@@ -526,36 +473,34 @@ MPI_Aint MPII_Datatype_indexed_count_contig(MPI_Aint count,
             return contig_count;
         }
 
-        cur_blklen = (MPI_Aint) blocklength_array[first];
+        cur_blklen = blocklength_array[first];
         if (!dispinbytes) {
-            MPI_Aint cur_tdisp = (MPI_Aint) ((int *) displacement_array)[first];
+            MPI_Aint cur_tdisp = displacement_array[first];
 
             for (i = first + 1; i < count; ++i) {
                 if (blocklength_array[i] == 0) {
                     continue;
-                } else if (cur_tdisp + (MPI_Aint) cur_blklen ==
-                           (MPI_Aint) ((int *) displacement_array)[i]) {
+                } else if (cur_tdisp + cur_blklen == displacement_array[i]) {
                     /* adjacent to current block; add to block */
-                    cur_blklen += (MPI_Aint) blocklength_array[i];
+                    cur_blklen += blocklength_array[i];
                 } else {
-                    cur_tdisp = (MPI_Aint) ((int *) displacement_array)[i];
-                    cur_blklen = (MPI_Aint) blocklength_array[i];
+                    cur_tdisp = displacement_array[i];
+                    cur_blklen = blocklength_array[i];
                     contig_count++;
                 }
             }
         } else {
-            MPI_Aint cur_bdisp = (MPI_Aint) ((MPI_Aint *) displacement_array)[first];
+            MPI_Aint cur_bdisp = displacement_array[first];
 
             for (i = first + 1; i < count; ++i) {
                 if (blocklength_array[i] == 0) {
                     continue;
-                } else if (cur_bdisp + (MPI_Aint) cur_blklen * old_extent ==
-                           (MPI_Aint) ((MPI_Aint *) displacement_array)[i]) {
+                } else if (cur_bdisp + cur_blklen * old_extent == displacement_array[i]) {
                     /* adjacent to current block; add to block */
-                    cur_blklen += (MPI_Aint) blocklength_array[i];
+                    cur_blklen += blocklength_array[i];
                 } else {
-                    cur_bdisp = (MPI_Aint) ((MPI_Aint *) displacement_array)[i];
-                    cur_blklen = (MPI_Aint) blocklength_array[i];
+                    cur_bdisp = displacement_array[i];
+                    cur_blklen = blocklength_array[i];
                     contig_count++;
                 }
             }
@@ -566,31 +511,29 @@ MPI_Aint MPII_Datatype_indexed_count_contig(MPI_Aint count,
 
 MPI_Aint MPII_Datatype_blockindexed_count_contig(MPI_Aint count,
                                                  MPI_Aint blklen,
-                                                 const void *disp_array,
+                                                 const MPI_Aint disp_array[],
                                                  int dispinbytes, MPI_Aint old_extent)
 {
     int i, contig_count = 1;
 
     if (!dispinbytes) {
-        /* this is from the MPI type, is of type int */
-        MPI_Aint cur_tdisp = (MPI_Aint) ((int *) disp_array)[0];
+        MPI_Aint cur_tdisp = disp_array[0];
 
         for (i = 1; i < count; i++) {
-            MPI_Aint next_tdisp = (MPI_Aint) ((int *) disp_array)[i];
+            MPI_Aint next_tdisp = disp_array[i];
 
-            if (cur_tdisp + (MPI_Aint) blklen != next_tdisp) {
+            if (cur_tdisp + blklen != next_tdisp) {
                 contig_count++;
             }
             cur_tdisp = next_tdisp;
         }
     } else {
-        /* this is from the MPI type, is of type MPI_Aint */
-        MPI_Aint cur_bdisp = (MPI_Aint) ((MPI_Aint *) disp_array)[0];
+        MPI_Aint cur_bdisp = disp_array[0];
 
         for (i = 1; i < count; i++) {
-            MPI_Aint next_bdisp = (MPI_Aint) ((MPI_Aint *) disp_array)[i];
+            MPI_Aint next_bdisp = disp_array[i];
 
-            if (cur_bdisp + (MPI_Aint) blklen * old_extent != next_bdisp) {
+            if (cur_bdisp + blklen * old_extent != next_bdisp) {
                 contig_count++;
             }
             cur_bdisp = next_bdisp;

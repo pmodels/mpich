@@ -584,7 +584,6 @@ int MPIR_Csel_create_from_file(const char *json_file,
 
     MPIR_Csel_create_from_buf(json, create_container, csel_);
 
-  fn_exit:
     return 0;
 }
 
@@ -705,7 +704,6 @@ int MPIR_Csel_prune(void *root_csel, MPIR_Comm * comm_ptr, void **comm_csel_)
         node = node->failure;
     }
 
-  fn_exit:
     *comm_csel_ = comm_csel;
     return mpi_errno;
 }
@@ -831,7 +829,7 @@ static inline bool is_block_regular(MPIR_Csel_coll_sig_s coll_info)
 {
     bool is_regular = true;
     int i = 0;
-    const int *recvcounts = NULL;
+    const MPI_Aint *recvcounts = NULL;
 
     switch (coll_info.coll_type) {
         case MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER:

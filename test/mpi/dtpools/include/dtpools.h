@@ -42,4 +42,7 @@ int DTP_obj_get_description(DTP_obj_s obj, char **desc);
 int DTP_obj_buf_init(DTP_obj_s obj, void *buf, int val_start, int val_stride, MPI_Aint val_count);
 int DTP_obj_buf_check(DTP_obj_s obj, void *buf, int val_start, int val_stride, MPI_Aint val_count);
 
+/* Some tests need be able to reset count, e.g. pt2pt tests */
+int DTP_pool_update_count(DTP_pool_s dtp, MPI_Aint basic_type_count);
+
 #endif /* DTPOOLS_H_INCLUDED */

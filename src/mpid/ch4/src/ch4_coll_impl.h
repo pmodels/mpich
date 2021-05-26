@@ -67,7 +67,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * co
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, int count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, MPI_Aint count,
                                                                  MPI_Datatype datatype,
                                                                  int root, MPIR_Comm * comm,
                                                                  MPIR_Errflag_t * errflag)
@@ -153,7 +153,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, i
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, int count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, MPI_Aint count,
                                                                 MPI_Datatype datatype,
                                                                 int root, MPIR_Comm * comm,
                                                                 MPIR_Errflag_t * errflag)
@@ -198,7 +198,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, int count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, MPI_Aint count,
                                                                  MPI_Datatype datatype,
                                                                  int root, MPIR_Comm * comm,
                                                                  MPIR_Errflag_t * errflag)
@@ -215,7 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, i
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void *sendbuf,
-                                                                     void *recvbuf, int count,
+                                                                     void *recvbuf, MPI_Aint count,
                                                                      MPI_Datatype datatype,
                                                                      MPI_Op op,
                                                                      MPIR_Comm * comm,
@@ -286,7 +286,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *sendbuf,
-                                                                    void *recvbuf, int count,
+                                                                    void *recvbuf, MPI_Aint count,
                                                                     MPI_Datatype datatype,
                                                                     MPI_Op op,
                                                                     MPIR_Comm * comm,
@@ -304,7 +304,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void *sendbuf,
-                                                                     void *recvbuf, int count,
+                                                                     void *recvbuf, MPI_Aint count,
                                                                      MPI_Datatype datatype,
                                                                      MPI_Op op,
                                                                      MPIR_Comm * comm,
@@ -326,7 +326,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *sendbuf,
-                                                                  void *recvbuf, int count,
+                                                                  void *recvbuf, MPI_Aint count,
                                                                   MPI_Datatype datatype,
                                                                   MPI_Op op, int root,
                                                                   MPIR_Comm * comm,
@@ -413,7 +413,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sendbuf,
-                                                                 void *recvbuf, int count,
+                                                                 void *recvbuf, MPI_Aint count,
                                                                  MPI_Datatype datatype,
                                                                  MPI_Op op, int root,
                                                                  MPIR_Comm * comm,
@@ -552,7 +552,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sen
 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_gamma(const void *sendbuf,
-                                                                  void *recvbuf, int count,
+                                                                  void *recvbuf, MPI_Aint count,
                                                                   MPI_Datatype datatype,
                                                                   MPI_Op op, int root,
                                                                   MPIR_Comm * comm,
@@ -570,10 +570,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_gamma(const void *se
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *sendbuf,
-                                                                    int sendcount,
+                                                                    MPI_Aint sendcount,
                                                                     MPI_Datatype sendtype,
                                                                     void *recvbuf,
-                                                                    int recvcount,
+                                                                    MPI_Aint recvcount,
                                                                     MPI_Datatype recvtype,
                                                                     MPIR_Comm * comm_ptr,
                                                                     MPIR_Errflag_t * errflag)
@@ -592,12 +592,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intra_composition_alpha(const void *sendbuf,
-                                                                     const int *sendcounts,
-                                                                     const int *sdispls,
+                                                                     const MPI_Aint * sendcounts,
+                                                                     const MPI_Aint * sdispls,
                                                                      MPI_Datatype sendtype,
                                                                      void *recvbuf,
-                                                                     const int *recvcounts,
-                                                                     const int *rdispls,
+                                                                     const MPI_Aint * recvcounts,
+                                                                     const MPI_Aint * rdispls,
                                                                      MPI_Datatype recvtype,
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag)
@@ -616,13 +616,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intra_composition_alpha(const void 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void *sendbuf,
-                                                                     const int sendcounts[],
-                                                                     const int sdispls[],
+                                                                     const MPI_Aint sendcounts[],
+                                                                     const MPI_Aint sdispls[],
                                                                      const MPI_Datatype
                                                                      sendtypes[],
                                                                      void *recvbuf,
-                                                                     const int recvcounts[],
-                                                                     const int rdispls[],
+                                                                     const MPI_Aint recvcounts[],
+                                                                     const MPI_Aint rdispls[],
                                                                      const MPI_Datatype
                                                                      recvtypes[],
                                                                      MPIR_Comm * comm_ptr,
@@ -643,10 +643,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void *sendbuf,
-                                                                     int sendcount,
+                                                                     MPI_Aint sendcount,
                                                                      MPI_Datatype sendtype,
                                                                      void *recvbuf,
-                                                                     int recvcount,
+                                                                     MPI_Aint recvcount,
                                                                      MPI_Datatype recvtype,
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag)
@@ -665,11 +665,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void *sendbuf,
-                                                                      int sendcount,
+                                                                      MPI_Aint sendcount,
                                                                       MPI_Datatype sendtype,
                                                                       void *recvbuf,
-                                                                      const int *recvcounts,
-                                                                      const int *displs,
+                                                                      const MPI_Aint * recvcounts,
+                                                                      const MPI_Aint * displs,
                                                                       MPI_Datatype recvtype,
                                                                       MPIR_Comm * comm_ptr,
                                                                       MPIR_Errflag_t * errflag)
@@ -688,9 +688,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_intra_composition_alpha(const void *sendbuf,
-                                                                  int sendcount,
+                                                                  MPI_Aint sendcount,
                                                                   MPI_Datatype sendtype,
-                                                                  void *recvbuf, int recvcount,
+                                                                  void *recvbuf, MPI_Aint recvcount,
                                                                   MPI_Datatype recvtype,
                                                                   int root, MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag)
@@ -709,11 +709,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_intra_composition_alpha(const void *se
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_intra_composition_alpha(const void *sendbuf,
-                                                                   int sendcount,
+                                                                   MPI_Aint sendcount,
                                                                    MPI_Datatype sendtype,
                                                                    void *recvbuf,
-                                                                   const int *recvcounts,
-                                                                   const int *displs,
+                                                                   const MPI_Aint * recvcounts,
+                                                                   const MPI_Aint * displs,
                                                                    MPI_Datatype recvtype,
                                                                    int root, MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag)
@@ -732,10 +732,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_intra_composition_alpha(const void *s
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intra_composition_alpha(const void *sendbuf,
-                                                                   int sendcount,
+                                                                   MPI_Aint sendcount,
                                                                    MPI_Datatype sendtype,
                                                                    void *recvbuf,
-                                                                   int recvcount,
+                                                                   MPI_Aint recvcount,
                                                                    MPI_Datatype recvtype,
                                                                    int root, MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag)
@@ -754,11 +754,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intra_composition_alpha(const void *s
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_composition_alpha(const void *sendbuf,
-                                                                    const int *sendcounts,
-                                                                    const int *displs,
+                                                                    const MPI_Aint * sendcounts,
+                                                                    const MPI_Aint * displs,
                                                                     MPI_Datatype sendtype,
                                                                     void *recvbuf,
-                                                                    int recvcount,
+                                                                    MPI_Aint recvcount,
                                                                     MPI_Datatype recvtype,
                                                                     int root, MPIR_Comm * comm,
                                                                     MPIR_Errflag_t * errflag)
@@ -778,7 +778,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_composition_alpha(const void *
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_composition_alpha(const void *sendbuf,
                                                                           void *recvbuf,
-                                                                          const int
+                                                                          const MPI_Aint
                                                                           recvcounts[],
                                                                           MPI_Datatype
                                                                           datatype, MPI_Op op,
@@ -800,7 +800,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_composition_alpha(const 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_intra_composition_alpha(const void
                                                                                 *sendbuf,
                                                                                 void *recvbuf,
-                                                                                int recvcount,
+                                                                                MPI_Aint recvcount,
                                                                                 MPI_Datatype
                                                                                 datatype,
                                                                                 MPI_Op op,
@@ -824,7 +824,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_intra_composition_alpha(
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *sendbuf,
                                                                 void *recvbuf,
-                                                                int count,
+                                                                MPI_Aint count,
                                                                 MPI_Datatype datatype,
                                                                 MPI_Op op,
                                                                 MPIR_Comm * comm_ptr,
@@ -937,7 +937,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
      * scan result. for example, to node 3, it will have reduce result
      * of rank 1,2,3,4,5,6 in tempbuf.
      * then we should broadcast this result in the local node, and
-     * reduce it with recvbuf to get final result if nessesary. */
+     * reduce it with recvbuf to get final result if necessary. */
 
     if (comm_ptr->node_comm != NULL) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -980,7 +980,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_beta(const void *sendbuf,
                                                                void *recvbuf,
-                                                               int count,
+                                                               MPI_Aint count,
                                                                MPI_Datatype datatype,
                                                                MPI_Op op,
                                                                MPIR_Comm * comm_ptr,
@@ -999,7 +999,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_beta(const void *sendb
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Exscan_intra_composition_alpha(const void *sendbuf,
                                                                   void *recvbuf,
-                                                                  int count,
+                                                                  MPI_Aint count,
                                                                   MPI_Datatype datatype,
                                                                   MPI_Op op,
                                                                   MPIR_Comm * comm_ptr,

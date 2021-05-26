@@ -14,7 +14,7 @@ chop $WWWRoot;
 # $URLBase = "http://";
 # End of line character (\r\n is DOS-friendly)
 $eol = "\r\n";
-# Number of colums in table of names
+# Number of columns in table of names
 $TableCols = 3;
 #
 # Process arguments for any changes

@@ -153,6 +153,7 @@ Group_translate_ranks
 Group_union
 Ibsend
 Info_create
+Info_create_env
 Info_delete
 Info_dup
 Info_free
@@ -160,6 +161,7 @@ Info_get
 Info_get_nkeys
 Info_get_nthkey
 Info_get_valuelen
+Info_get_string
 Info_set
 Initialized
 Intercomm_create

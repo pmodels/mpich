@@ -31,7 +31,7 @@ MPI_T_pvar_handle uqsize_handle;
 
 /* The first receive will block waiting for the last send, since messages from
  * a given rank are received in order. */
-void reversed_tags_test()
+static void reversed_tags_test()
 {
     size_t unexpected_recvq_buffer_size;
 
@@ -69,17 +69,19 @@ void reversed_tags_test()
 /* Rendezvous-based messages will never be unexpected (except for the initial RTS,
  * which has an empty buffer anyhow).
  */
-void rndv_test()
+static void rndv_test()
 {
     size_t unexpected_recvq_buffer_size;
 
     if (rank == 0) {
-        int send_buf[RNDV_SIZE] = { 0x5678 };
+        int *send_buf = calloc(RNDV_SIZE, sizeof(int));
+        send_buf[0] = 0x5678;
 
         MPI_Send(send_buf, RNDV_SIZE, MPI_INT, 1, 0, MPI_COMM_WORLD);
         MPI_Send(send_buf, RNDV_SIZE, MPI_INT, 1, 0, MPI_COMM_WORLD);
+        free(send_buf);
     } else if (rank == 1) {
-        int recv_buf[RNDV_SIZE];
+        int *recv_buf = malloc(RNDV_SIZE * sizeof(int));
         MPI_Status status;
 
         MPI_Recv(recv_buf, RNDV_SIZE, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
@@ -89,6 +91,7 @@ void rndv_test()
         MPI_Recv(recv_buf, RNDV_SIZE, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         TRY(MPI_T_pvar_read(session, uqsize_handle, &unexpected_recvq_buffer_size));
         assert(unexpected_recvq_buffer_size == 0);
+        free(recv_buf);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);        /* make sure this test is over before going to the next one */

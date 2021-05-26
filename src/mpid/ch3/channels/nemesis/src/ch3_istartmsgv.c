@@ -17,11 +17,11 @@
  * pointed to by the iovec (which is assumed to be a MPIDI_CH3_Pkt_t)
  * are copied into the request, and a pointer to the request is
  * returned.  An error condition also results in a request be
- * allocated and the errror being returned in the status field of the
+ * allocated and the error being returned in the status field of the
  * request.
  */
 
-/* NOTE - The completion action associated with a request created by CH3_iStartMsgv() is alway null (onDataAvail = 0).  This
+/* NOTE - The completion action associated with a request created by CH3_iStartMsgv() is always null (onDataAvail = 0).  This
    implies that CH3_iStartMsgv() can only be used when the entire message can be described by a single iovec of size
    MPL_IOV_LIMIT. */
 

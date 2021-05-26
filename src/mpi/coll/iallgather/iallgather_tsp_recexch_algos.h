@@ -13,7 +13,8 @@
 int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int nranks, int k, int p_of_k,
                                                           int log_pofk, int T, void *recvbuf,
                                                           MPI_Datatype recvtype, size_t recv_extent,
-                                                          int recvcount, int tag, MPIR_Comm * comm,
+                                                          MPI_Aint recvcount, int tag,
+                                                          MPIR_Comm * comm,
                                                           MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -55,7 +56,7 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int nranks, 
 int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *step1_recvfrom,
                                                   int step1_nrecvs, int is_inplace, int rank,
                                                   int tag, const void *sendbuf, void *recvbuf,
-                                                  size_t recv_extent, int recvcount,
+                                                  size_t recv_extent, MPI_Aint recvcount,
                                                   MPI_Datatype recvtype, int n_invtcs, int *invtx,
                                                   MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
@@ -93,7 +94,7 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int step2_np
                                                   int **step2_nbrs, int rank, int nranks, int k,
                                                   int p_of_k, int log_pofk, int T, int *nrecvs_,
                                                   int **recv_id_, int tag, void *recvbuf,
-                                                  size_t recv_extent, int recvcount,
+                                                  size_t recv_extent, MPI_Aint recvcount,
                                                   MPI_Datatype recvtype, int is_dist_halving,
                                                   MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
@@ -163,8 +164,8 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int step2_np
 
 int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *step1_recvfrom,
                                                   int step1_nrecvs, int step2_nphases,
-                                                  void *recvbuf, int recvcount, int nranks, int k,
-                                                  int nrecvs, int *recv_id, int tag,
+                                                  void *recvbuf, MPI_Aint recvcount, int nranks,
+                                                  int k, int nrecvs, int *recv_id, int tag,
                                                   MPI_Datatype recvtype, MPIR_Comm * comm,
                                                   MPIR_TSP_sched_t * sched)
 {
@@ -198,10 +199,11 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *step1_r
  * paper, Sack et al, "Faster topology-aware collective algorithms through
  * non-minimal communication", 2012.
  * */
-int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
-                                            MPI_Datatype sendtype, void *recvbuf, int recvcount,
-                                            MPI_Datatype recvtype, MPIR_Comm * comm,
-                                            int is_dist_halving, int k, MPIR_TSP_sched_t * sched)
+int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
+                                            MPI_Datatype sendtype, void *recvbuf,
+                                            MPI_Aint recvcount, MPI_Datatype recvtype,
+                                            MPIR_Comm * comm, int is_dist_halving, int k,
+                                            MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i;
@@ -302,10 +304,10 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
 
 
 /* Non-blocking recexch based Allgather */
-int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                      MPIR_Comm * comm, MPIR_Request ** req, int allgather_type,
-                                      int k)
+int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
+                                      MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                      MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req,
+                                      int allgather_type, int k)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -318,7 +320,7 @@ int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, int sendcount, MPI_Da
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Iallgather_sched_intra_recexch(sendbuf, sendcount, sendtype, recvbuf, recvcount,

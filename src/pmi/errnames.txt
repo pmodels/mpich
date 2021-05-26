@@ -58,7 +58,7 @@
 **pmi_fullinit: PMI2 init with process manager failed
 **pmi_fullinit %s: PMI2 init with process manager failed: %s
 **pmi_version: PMI2 version mismatch
-**pmi_version %s %s %s %s: PMI2 version mismatch (server version %s.%s, client verison %s.%s)
+**pmi_version %s %s %s %s: PMI2 version mismatch (server version %s.%s, client version %s.%s)
 **pmi_finalize: PMI2 Finalize failed
 **pmi_finalize %s: PMI2 Finalize failed: %s
 **pmi_jobgetid: PMI2 Job_GetID failed

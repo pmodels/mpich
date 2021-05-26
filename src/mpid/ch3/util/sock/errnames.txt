@@ -6,11 +6,11 @@
 **ch3|sock|connrefused:[ch3:sock] connection refused
 **ch3|sock|connrefused %s %d %s:[ch3:sock] failed to connect to process %s:%d (%s)
 **ch3|sock|connterm:[ch3:sock] active connection unexpectedly terminated
-**ch3|sock|connfailed:[ch3:sock] failed to connnect to remote process
+**ch3|sock|connfailed:[ch3:sock] failed to connect to remote process
 **ch3|sock|badsock:[ch3:sock] internal error - bad sock
 **ch3|sock|failure:[ch3:sock] unknown failure
 **ch3|sock|failure %d:[ch3:sock] unknown failure, sock_errno=%d
-**ch3|sock|badpacket:[ch3:sock] received packet of unknow type
+**ch3|sock|badpacket:[ch3:sock] received packet of unknown type
 **ch3|sock|badpacket %d:[ch3:sock] received packet of unknown type (%d)
 **ch3|sock|postread:attempt to post a read operation failed
 **ch3|sock|immedread:immediate read operation failed

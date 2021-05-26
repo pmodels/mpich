@@ -19,10 +19,10 @@
  * FIXME: change algorithm to match intracommunicator alltoallv
  */
 
-int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const int sendcounts[],
-                                           const int sdispls[], const MPI_Datatype sendtypes[],
-                                           void *recvbuf, const int recvcounts[],
-                                           const int rdispls[], const MPI_Datatype recvtypes[],
+int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint sendcounts[],
+                                           const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                           void *recvbuf, const MPI_Aint recvcounts[],
+                                           const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
                                            MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int local_size, remote_size, max_size, i;

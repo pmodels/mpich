@@ -3,6 +3,7 @@ gaddress 1
 lbub 1
 lbub_oldapi 1 strict=FALSE
 localpack 1
+pack_external 1
 simple_pack 1
 simple_pack_external 1
 simple_pack_external2 1
@@ -61,6 +62,8 @@ vecblklen 1
 hvecblklen 1
 longdouble 1
 dataalign 2
+dataalign2 1
+type_large 1
 @largetest@large_count 1
 cxx_types 1
 @largetest@large_type 1

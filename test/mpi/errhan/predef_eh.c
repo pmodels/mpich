@@ -13,7 +13,7 @@
  * communicators does not cause a problem at finalize time.  Regression
  * test for ticket #1591 */
 
-void errf(MPI_Comm * comm, int *ec)
+static void errf(MPI_Comm * comm, int *ec)
 {
     /* do nothing */
 }

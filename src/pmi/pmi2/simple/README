@@ -9,7 +9,7 @@ implementation yet.  The files have been added to the repository so that they
 can be reviewed by interested parties, particularly 3rd-parties that
 will need to interface to this second-generation interface.
 
-A major issue that PMI verison 2 needs to address is thread-safety and
+A major issue that PMI version 2 needs to address is thread-safety and
 responsiveness.  In particular, no thread that is waiting on a PMI call can
 block other threads, even PMI_Spawn.  The design sketched out here
 addresses these issues as well as providing a relatively simple model

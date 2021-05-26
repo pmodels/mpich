@@ -12,7 +12,7 @@
 #include "../iallgatherv/iallgatherv_tsp_recexch_algos_prototypes.h"
 
 /* Routine to schedule a scatter followed by recursive exchange based broadcast */
-int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
+int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count,
                                                     MPI_Datatype datatype, int root,
                                                     MPIR_Comm * comm, int scatterv_k,
                                                     int allgatherv_k, MPIR_TSP_sched_t * sched)
@@ -23,7 +23,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
     int size, rank, tag;
     int i, j, x, is_contig;
     void *tmp_buf = NULL;
-    int *cnts, *displs;
+    MPI_Aint *cnts, *displs;
     size_t nbytes;
     int tree_type;
     MPIR_Treealgo_tree_t my_tree, parents_tree;
@@ -56,8 +56,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
     extent = MPL_MAX(extent, true_extent);
 
     nbytes = type_size * count;
-    MPIR_CHKLMEM_MALLOC(cnts, int *, sizeof(int) * size, mpi_errno, "cnts", MPL_MEM_COLL);      /* to store counts of each rank */
-    MPIR_CHKLMEM_MALLOC(displs, int *, sizeof(int) * size, mpi_errno, "displs", MPL_MEM_COLL);  /* to store displs of each rank */
+    MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, sizeof(MPI_Aint) * size, mpi_errno, "cnts", MPL_MEM_COLL);    /* to store counts of each rank */
+    MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, sizeof(MPI_Aint) * size, mpi_errno, "displs", MPL_MEM_COLL);        /* to store displs of each rank */
 
     total_count = 0;
     for (i = 0; i < size; i++)
@@ -194,7 +194,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
 
 
 /* Non-blocking scatter followed by recursive exchange allgather  based broadcast */
-int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, int count, MPI_Datatype datatype,
+int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, MPI_Aint count, MPI_Datatype datatype,
                                               int root, MPIR_Comm * comm, int scatterv_k,
                                               int allgatherv_k, MPIR_Request ** req)
 {
@@ -209,7 +209,7 @@ int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, int count, MPI_Datat
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule scatter followed by recursive exchange allgather algo */
     mpi_errno =

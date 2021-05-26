@@ -7,12 +7,12 @@ State [Unbound]
 
 State [Bound, Unconnected]
     Event [VC-Open]
-	/* An operation involved outgoing communcation was requested for this
+	/* An operation involved outgoing communication was requested for this
 	 * virtual connection.  Before we can perform such a request, we need
 	 * to establish a real connection with the destination process.  We
 	 * also may need to initialize at least the receive side state machine
 	 * now so that any unexpected incoming packets arriving shortly after
-	 * connection establishment are properly handled.  We could intialize
+	 * connection establishment are properly handled.  We could initialize
 	 * send state machine, but it can't actually start sending until the
 	 * connection has been established.
 	 */

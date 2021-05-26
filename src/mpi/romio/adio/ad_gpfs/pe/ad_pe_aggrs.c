@@ -36,7 +36,7 @@
  *  . the ranks of the aggregators :        fd->hints->ranklist
  * If MP_IONODEFILE is defined, POE determines all tasks on every node listed
  * in the node file and defines MP_IOTASKLIST with them, making them all
- * aggregators.  Alternatively, the user can explictly set MP_IOTASKLIST
+ * aggregators.  Alternatively, the user can explicitly set MP_IOTASKLIST
  * themselves.  The format of the MP_IOTASKLIST is a colon-delimited list of
  * task ids, the first entry being the total number of aggregators, for example
  * to specify 4 aggregators on task ids 0,8,16,24  the value would be:

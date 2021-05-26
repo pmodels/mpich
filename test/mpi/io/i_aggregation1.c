@@ -9,12 +9,12 @@
 
 /* Uses nonblocking collective I/O.*/
 
+#include "mpitest.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <mpi.h>
 #include <stdio.h>
 #include <string.h>
-#include "mpitest.h"
 
 #define NUM_OBJS 4
 #define OBJ_SIZE 1048576
@@ -83,7 +83,7 @@ static MPI_Offset get_offset(int rank, int num_objs, int obj_size, int which_obj
     return offset;
 }
 
-static void write_file(char *target, int rank, MPI_Info * info)
+static void write_file(const char *target, int rank, MPI_Info * info)
 {
     MPI_File wfh;
     MPI_Request *request;
@@ -137,7 +137,7 @@ static void write_file(char *target, int rank, MPI_Info * info)
     free(request);
 }
 
-static void read_file(char *target, int rank, MPI_Info * info, int *corrupt_blocks)
+static void read_file(const char *target, int rank, MPI_Info * info, int *corrupt_blocks)
 {
     MPI_File rfh;
     MPI_Offset *offset;
@@ -236,7 +236,7 @@ set_hints(MPI_Info *info, char *hints) {
 int main(int argc, char *argv[])
 {
     int nproc = 1, rank = 0;
-    char *target = NULL;
+    const char *target = NULL;
     int c;
     MPI_Info info;
     int mpi_ret;

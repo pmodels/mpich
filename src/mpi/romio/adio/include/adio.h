@@ -428,7 +428,7 @@ int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
 int MPIO_Err_return_file(MPI_File mpi_fh, int error_code);
 int MPIO_Err_return_comm(MPI_Comm mpi_comm, int error_code);
 
-/* request managment helper functions */
+/* request management helper functions */
 void MPIO_Completed_request_create(MPI_File * fh, MPI_Offset nbytes,
                                    int *error_code, MPI_Request * request);
 

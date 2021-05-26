@@ -43,7 +43,6 @@ static void signal_cb(int signum)
     HYDU_sock_write(HYD_server_info.cmd_pipe[1], &cmd, sizeof(cmd), &sent, &closed,
                     HYDU_SOCK_COMM_MSGWAIT);
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return;
 }
@@ -166,6 +165,38 @@ int main(int argc, char **argv)
         }
     }
 
+    if (HYD_server_info.user_global.skip_launch_node) {
+        struct HYD_node *newlist = NULL, *tail = NULL;
+        struct HYD_node *next;
+        int node_id = 0;
+        for (node = HYD_server_info.node_list; node; node = next) {
+            next = node->next;
+            if (MPL_host_is_local(node->hostname)) {
+                MPL_free(node->hostname);
+                MPL_free(node->user);
+                MPL_free(node->local_binding);
+                MPL_free(node);
+            } else {
+                node->next = NULL;
+                if (newlist == NULL) {
+                    assert(tail == NULL);
+                    newlist = node;
+                } else {
+                    tail->next = node;
+                }
+                tail = node;
+                node->node_id = node_id++;
+            }
+        }
+
+        if (newlist == NULL) {
+            status = HYD_INVALID_PARAM;
+            HYDU_ERR_POP(status, "no nodes available to launch processes\n");
+        } else {
+            HYD_server_info.node_list = newlist;
+        }
+    }
+
     if (HYD_server_info.user_global.debug)
         for (node = HYD_server_info.node_list; node; node = node->next)
             HYDU_dump_noprefix(stdout, "host: %s\n", node->hostname);
@@ -210,7 +241,7 @@ int main(int argc, char **argv)
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
     /* NOTE:
-     *   user may accidently give on command line -np 0, or even -np -1,
+     *   user may accidentally give on command line -np 0, or even -np -1,
      *   these cases will all be treated as if it is being ignored.
      */
     HYD_server_info.pg_list.pg_process_count = 0;

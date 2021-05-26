@@ -12,7 +12,7 @@
  */
 
 int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
-                                             int count,
+                                             MPI_Aint count,
                                              MPI_Datatype datatype,
                                              int root,
                                              MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)

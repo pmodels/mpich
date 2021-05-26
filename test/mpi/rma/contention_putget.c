@@ -6,7 +6,7 @@
 /** Contended RMA put/get test -- James Dinan <dinan@mcs.anl.gov>
   *
   * Each process issues COUNT put and get operations to non-overlapping
-  * locations on every other processs.
+  * locations on every other process.
   */
 
 #include <stdio.h>

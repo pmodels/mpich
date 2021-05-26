@@ -12,9 +12,9 @@
  * neighbor.
  */
 
-int MPIR_Ineighbor_alltoall_allcomm_sched_linear(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_alltoall_allcomm_sched_linear(const void *sendbuf, MPI_Aint sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
-                                                 int recvcount, MPI_Datatype recvtype,
+                                                 MPI_Aint recvcount, MPI_Datatype recvtype,
                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -42,7 +42,12 @@ int MPIR_Ineighbor_alltoall_allcomm_sched_linear(const void *sendbuf, int sendco
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    for (l = 0; l < indegree; ++l) {
+    /* receive needs to happen in the opposite order of sends.  This
+     * is to cover the case of Cartesian graphs where the same process
+     * might be both the left and right neighbor.  In this case, we
+     * need to make sure the first message (which is from the right
+     * neighbor) is received in the last buffer. */
+    for (l = indegree - 1; l >= 0; l--) {
         char *rb = ((char *) recvbuf) + l * recvcount * recvtype_extent;
         mpi_errno = MPIR_Sched_recv(rb, recvcount, recvtype, srcs[l], comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);

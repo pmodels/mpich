@@ -6,11 +6,11 @@
 /* This test is going to test the atomicity for "read-modify-write" in GACC
  * operations */
 
-/* This test is similiar with atomic_rmw_fop.c.
+/* This test is similar with atomic_rmw_fop.c.
  * There are three processes involved in this test: P0 (origin_shm), P1 (origin_am),
  * and P2 (dest). P0 and P1 issues multiple GACC with MPI_SUM and OP_COUNT integers
  * (value 1) to P2 via SHM and AM respectively. The correct results should be that the
- * results on P0 and P1 never be the same for intergers on the corresponding index
+ * results on P0 and P1 never be the same for integers on the corresponding index
  * in [0...OP_COUNT-1].
  */
 
@@ -31,7 +31,7 @@ int dest, origin_shm, origin_am;
 int *orig_buf = NULL, *result_buf = NULL, *target_buf = NULL, *check_buf = NULL;
 MPI_Win win;
 
-void checkResults(int loop_k, int *errors)
+static void checkResults(int loop_k, int *errors)
 {
     int i, j, m;
     MPI_Status status;
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 {
     int i, k;
     int errors = 0;
-    int my_buf_num;
+    int my_buf_num = 0;         /* to suppress warning */
     MPI_Datatype origin_dtp, target_dtp;
 
     MTest_Init(&argc, &argv);

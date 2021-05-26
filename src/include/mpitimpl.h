@@ -18,13 +18,21 @@
 #include "uthash.h"
 #include "mpir_objects.h"
 
+/* MPI T should not use MPIR_ error routines. */
+#include "mpit_err.h"
+#include "mpit_mem.h"
+
 #ifdef HAVE_ERROR_CHECKING
 typedef enum {
     MPIR_T_OBJECT_INVALID = 0,
     MPIR_T_ENUM_HANDLE,
     MPIR_T_CVAR_HANDLE,
     MPIR_T_PVAR_HANDLE,
-    MPIR_T_PVAR_SESSION
+    MPIR_T_PVAR_SESSION,
+    MPIR_T_SOURCE,
+    MPIR_T_EVENT,
+    MPIR_T_EVENT_REG,
+    MPIR_T_EVENT_INSTANCE
 } MPIR_T_object_kind;
 #endif
 
@@ -50,6 +58,7 @@ typedef struct {
     UT_array *cvar_indices;
     UT_array *pvar_indices;
     UT_array *subcat_indices;
+    UT_array *event_indices;
     const char *desc;
 } cat_table_entry_t;
 
@@ -288,7 +297,7 @@ typedef struct MPIR_T_pvar_handle_s {
     /* Bytes of an element of datatype */
     int bytes;
 
-    /* Basic flags copied from pvar info + auxilary flags in pvar handle */
+    /* Basic flags copied from pvar info + auxiliary flags in pvar handle */
     int flags;
 
     /* Store info here in case we need other fields */
@@ -304,7 +313,7 @@ typedef struct MPIR_T_pvar_handle_s {
      *
      * For pvars of counter, timer or aggregate type, we cache their value at
      * the last start time in offset, their current value in current, and
-     * their accumlated value in accum. Generally, when such a pvar is running,
+     * their accumulated value in accum. Generally, when such a pvar is running,
      * reading the pvar should return
      *      accum[i] + current[i] - offset[i], 0 <= i < count - 1.
      * When the pvar is stopped, reading just returns accum.
@@ -1232,7 +1241,92 @@ extern MPID_Thread_mutex_t mpi_t_mutex;
 #endif
 
 /* Init and finalize routines */
+
+extern void MPIR_T_pvar_env_init(void);
 extern int MPIR_T_env_init(void);
 extern void MPIR_T_env_finalize(void);
+extern void MPIR_T_events_finalize(void);
+
+typedef MPI_Count(*MPIR_T_timestamp_fn) (void);
+
+typedef struct MPIR_T_source_s {
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_T_object_kind kind;
+#endif
+    int index;
+    char *name;
+    char *desc;
+    MPI_T_source_order ordering;
+    MPIR_T_timestamp_fn timestamp_fn;
+    MPI_Count ticks_per_second;
+    MPI_Count max_ticks;
+
+    UT_hash_handle hh;          /* Makes this structure hashable */
+} MPIR_T_source_t;
+
+void MPIR_T_register_source(const char *name, const char *desc, MPI_T_source_order ordering,
+                            MPIR_T_timestamp_fn timestamp_fn, MPI_Count ticks_per_second,
+                            MPI_Count max_ticks, int *index);
+
+typedef struct MPIR_T_event_s {
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_T_object_kind kind;
+#endif
+    int index;
+    int source_index;
+    char *name;
+    MPIR_T_verbosity_t verbosity;
+    MPI_Datatype *array_of_datatypes;
+    MPI_Aint *array_of_displacements;
+    int num_elements;
+    MPIR_T_enum_t *enumtype;
+    char *desc;
+    MPIR_T_bind_t bind;
+
+    struct MPIR_T_event_registration_s *reg_list_head;
+    struct MPIR_T_event_registration_s *reg_list_tail;
+
+    UT_hash_handle hh;          /* Makes this structure hashable */
+} MPIR_T_event_t;
+
+void MPIR_T_register_event(int source_index, const char *name, MPIR_T_verbosity_t verbosity,
+                           MPI_Datatype array_of_datatypes[], MPI_Aint array_of_displacements[],
+                           MPI_Aint num_elements, const char *desc, MPIR_T_bind_t bind,
+                           const char *category, int *index);
+
+typedef struct MPIR_T_event_cb_s {
+    MPI_T_event_cb_function *cb_function;
+    void *user_data;
+} MPIR_T_event_cb_t;
+
+typedef struct MPIR_T_event_registration_s {
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_T_object_kind kind;
+#endif
+    MPIR_T_event_t *event;
+    void *obj_handle;
+    MPIR_T_event_cb_t callbacks[4];     /* one for each safety level */
+    MPI_T_event_dropped_cb_function *dropped_cb;
+    MPI_Count dropped_count;
+
+    struct MPIR_T_event_registration_s *next;
+} MPIR_T_event_registration_t;
+
+typedef struct MPIR_T_event_instance_s {
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_T_object_kind kind;
+#endif
+    MPIR_T_event_t *event;
+    MPI_Count timestamp;
+    void *data;
+} MPIR_T_event_instance_t;
+
+void MPIR_T_event_instance(int event_index, MPI_T_cb_safety cb_safety, void *data);
+
+#ifdef HAVE_MPIT_EVENTS
+#define MPIR_T_DO_EVENT(...) MPIR_T_event_instance(__VA_ARGS__)
+#else
+#define MPIR_T_DO_EVENT(...) do {} while (0)
+#endif
 
 #endif /* MPITIMPL_H_INCLUDED */
