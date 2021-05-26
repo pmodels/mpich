@@ -159,6 +159,8 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     }
 
     comm_ptr = rreq->comm;
+    MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
+                            wc->len);
     /* Check to see if the tracker is already in the unexpected list.
      * Otherwise, allocate one. */
     {
@@ -402,6 +404,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
                                              remote_key,        /* Key */
                                              (void *) &recv_elem->context), nic,        /* Context */
                                      rdma_readfrom, FALSE);
+                MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[receiver_nic], bytesToGet);
                 recv_elem->cur_offset += bytesToGet;
                 recv_elem->chunks_outstanding++;
             }
@@ -419,6 +422,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
                                      remote_key,        /* Key          */
                                      (void *) &recv_elem->context), vni_src, rdma_readfrom,     /* Context */
                              FALSE);
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[receiver_nic], bytesToGet);
         recv_elem->cur_offset += bytesToGet;
     }
 
