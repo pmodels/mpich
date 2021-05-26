@@ -33,10 +33,6 @@ static inline int test(MPI_Comm comm, int rank, int orig_rank, int target_rank,
     targettype = target.dtp_obj.DTP_datatype;
     targetcount = target.dtp_obj.DTP_type_count;
 
-    char *orig_desc, *target_desc;
-    DTP_obj_get_description(orig.dtp_obj, &orig_desc);
-    DTP_obj_get_description(target.dtp_obj, &target_desc);
-
     if (rank == target_rank) {
 #if defined(USE_GET)
         MTest_dtp_init(&target, 0, 1, count);
@@ -104,9 +100,6 @@ static inline int test(MPI_Comm comm, int rank, int orig_rank, int target_rank,
         MPI_Win_fence(0, win);
         MPI_Win_fence(0, win);
     }
-
-    free(orig_desc);
-    free(target_desc);
 
     return errs;
 }

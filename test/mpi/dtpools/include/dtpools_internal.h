@@ -435,6 +435,7 @@ typedef struct DTPI_Attr {
 typedef struct {
     DTP_pool_s dtp;
     DTPI_Attr_s *attr_tree;
+    const char *desc;
 } DTPI_obj_s;
 
 int DTPI_obj_free(DTPI_obj_s * obj_priv);

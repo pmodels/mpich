@@ -392,10 +392,7 @@ static inline int MTest_dtp_destroy(struct mtest_obj *obj)
 /* utilitis for each instance of dtp obj */
 static inline void MTest_dtp_print_desc(struct mtest_obj *obj)
 {
-    char *desc;
-    DTP_obj_get_description(obj->dtp_obj, &desc);
-    printf("%s [%s]\n", obj->name, desc);
-    free(desc);
+    printf("%s [%s]\n", obj->name, DTP_obj_get_description(obj->dtp_obj));
 }
 
 static inline int MTest_dtp_init(struct mtest_obj *obj, int start, int stride, int count)
