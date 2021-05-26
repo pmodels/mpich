@@ -116,6 +116,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq, in
 
     MPIR_Request *sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__PART, 1);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    sreq->comm = part_sreq->comm;
+    MPIR_Comm_add_ref(sreq->comm);
 
     MPIDIG_part_send_data_msg_t am_hdr;
     am_hdr.rreq_ptr = MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr);
