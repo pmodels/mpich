@@ -619,7 +619,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
         case MPIDI_AMTYPE_RDMA_READ:
             {
                 /* buffer always copied together (there is no payload, just LMT header) */
-#if NEEDS_STRICT_ALIGNMENT
+#ifdef NEEDS_STRICT_ALIGNMENT
                 MPIDI_OFI_lmt_msg_payload_t temp_rdma_lmt_msg;
                 if (!has_alignment_copy) {
                     memcpy(&temp_rdma_lmt_msg,
@@ -651,7 +651,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     if ((uo_msg = MPIDI_OFI_am_claim_unordered_msg(fi_src_addr, next_seqno)) != NULL) {
         am_hdr = &uo_msg->am_hdr;
         orig_buf = am_hdr;
-#if NEEDS_STRICT_ALIGNMENT
+#ifdef NEEDS_STRICT_ALIGNMENT
         /* alignment is ensured for this unordered message as it copies to a temporary buffer
          * in MPIDI_OFI_am_enqueue_unordered_msg */
         has_alignment_copy = 1;
