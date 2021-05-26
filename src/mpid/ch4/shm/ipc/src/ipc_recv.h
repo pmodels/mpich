@@ -109,6 +109,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
         MPIDIG_rreq_dequeue(rank, tag, context_id, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
+        unexp_req->comm = comm;
+        MPIR_Comm_add_ref(comm);
         *request = unexp_req;
         /* - Mark as DEQUEUED so that progress engine can complete a matched BUSY
          * rreq once all data arrived;
@@ -126,6 +128,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
 
         rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        rreq->comm = comm;
+        MPIR_Comm_add_ref(comm);
 
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);

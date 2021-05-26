@@ -140,6 +140,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
         MPIDIG_rreq_dequeue(rank, tag, context_id, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
+        unexp_req->comm = comm;
+        MPIR_Comm_add_ref(comm);
         if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_BUSY) {
             MPIDIG_REQUEST(unexp_req, req->status) |= MPIDIG_REQ_MATCHED;
         } else if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_RTS) {
@@ -236,6 +238,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     } else if (alloc_req) {
         rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        rreq->comm = comm;
+        MPIR_Comm_add_ref(comm);
     } else {
         rreq = *request;
         MPIR_Assert(0);
