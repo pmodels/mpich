@@ -98,7 +98,6 @@ typedef struct MPIDIG_part_am_req_t {
 } MPIDIG_part_am_req_t;
 
 typedef struct MPIDIG_put_req_t {
-    MPIR_Win *win_ptr;
     MPIR_Request *preq_ptr;
     void *flattened_dt;
     MPIR_Datatype *dt;
@@ -111,7 +110,6 @@ typedef struct MPIDIG_put_req_t {
 } MPIDIG_put_req_t;
 
 typedef struct MPIDIG_get_req_t {
-    MPIR_Win *win_ptr;
     MPIR_Request *greq_ptr;
     void *addr;
     MPI_Datatype datatype;
@@ -122,7 +120,6 @@ typedef struct MPIDIG_get_req_t {
 } MPIDIG_get_req_t;
 
 typedef struct MPIDIG_cswap_req_t {
-    MPIR_Win *win_ptr;
     MPIR_Request *creq_ptr;
     void *addr;
     MPI_Datatype datatype;
@@ -131,7 +128,6 @@ typedef struct MPIDIG_cswap_req_t {
 } MPIDIG_cswap_req_t;
 
 typedef struct MPIDIG_acc_req_t {
-    MPIR_Win *win_ptr;
     MPIR_Request *req_ptr;
     MPI_Datatype origin_datatype;
     MPI_Datatype target_datatype;
