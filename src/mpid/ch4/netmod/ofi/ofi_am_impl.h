@@ -153,32 +153,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx)
     for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
         int ctx_idx = MPIDI_OFI_get_ctx_index(vni_idx, nic);
         ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, &cq_entry, 1);
-    }
 
-    if (unlikely(ret == -FI_EAGAIN))
-        goto fn_exit;
+        if (unlikely(ret == -FI_EAGAIN))
+            goto fn_exit;
 
-    if (ret < 0) {
-        mpi_errno = MPIDI_OFI_handle_cq_error_util(vni_idx, ret);
-        goto fn_fail;
-    }
+        if (ret < 0) {
+            mpi_errno = MPIDI_OFI_handle_cq_error_util(ctx_idx, ret);
+            goto fn_fail;
+        }
 
-    /* If the statically allocated buffered list is full or we've already
-     * started using the dynamic list, continue using it. */
-    if (((MPIDI_OFI_global.cq_buffered_static_head + 1) %
-         MPIDI_OFI_NUM_CQ_BUFFERED == MPIDI_OFI_global.cq_buffered_static_tail) ||
-        (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head)) {
-        MPIDI_OFI_cq_list_t *list_entry =
-            (MPIDI_OFI_cq_list_t *) MPL_malloc(sizeof(MPIDI_OFI_cq_list_t), MPL_MEM_BUFFER);
-        MPIR_Assert(list_entry);
-        list_entry->cq_entry = cq_entry;
-        LL_APPEND(MPIDI_OFI_global.cq_buffered_dynamic_head,
-                  MPIDI_OFI_global.cq_buffered_dynamic_tail, list_entry);
-    } else {
-        MPIDI_OFI_global.cq_buffered_static_list[MPIDI_OFI_global.
-                                                 cq_buffered_static_head].cq_entry = cq_entry;
-        MPIDI_OFI_global.cq_buffered_static_head =
-            (MPIDI_OFI_global.cq_buffered_static_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+        /* If the statically allocated buffered list is full or we've already
+         * started using the dynamic list, continue using it. */
+        if (((MPIDI_OFI_global.cq_buffered_static_head + 1) %
+             MPIDI_OFI_NUM_CQ_BUFFERED == MPIDI_OFI_global.cq_buffered_static_tail) ||
+            (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head)) {
+            MPIDI_OFI_cq_list_t *list_entry =
+                (MPIDI_OFI_cq_list_t *) MPL_malloc(sizeof(MPIDI_OFI_cq_list_t), MPL_MEM_BUFFER);
+            MPIR_Assert(list_entry);
+            list_entry->cq_entry = cq_entry;
+            LL_APPEND(MPIDI_OFI_global.cq_buffered_dynamic_head,
+                      MPIDI_OFI_global.cq_buffered_dynamic_tail, list_entry);
+        } else {
+            MPIDI_OFI_global.cq_buffered_static_list[MPIDI_OFI_global.
+                                                     cq_buffered_static_head].cq_entry = cq_entry;
+            MPIDI_OFI_global.cq_buffered_static_head =
+                (MPIDI_OFI_global.cq_buffered_static_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+        }
     }
 
   fn_exit:

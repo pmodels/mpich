@@ -20,18 +20,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     int mpi_errno = MPI_SUCCESS;
     int vni_local = vni_src;
     int vni_remote = vni_dst;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, nic);
+    int sender_nic = 0, receiver_nic = 0;
+    int ctx_idx = 0;
     uint64_t match_bits;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
+
+    /* Calculate the correct NICs. */
+    sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->context_id, dst_rank, tag);
+    receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->context_id, MPIR_Process.rank,
+                                                      tag);
+    ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, sender_nic);
+
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
     MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                         buf,
                                         data_sz,
                                         cq_data,
-                                        MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote),
+                                        MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
+                                                             vni_remote),
                                         match_bits),
                          vni_local, tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
   fn_exit:
@@ -67,8 +75,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     MPI_Aint num_contig, size;
     int vni_local = vni_src;
     int vni_remote = vni_dst;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, nic);
+    int sender_nic = 0, receiver_nic = 0;
+    int ctx_idx = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -79,6 +87,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
                          &num_contig);
     if (num_contig > MPIDI_OFI_global.tx_iov_limit)
         goto pack;
+
+    /* Calculate the correct NICs. */
+    sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->context_id, dst_rank,
+                                                  MPIDI_OFI_init_get_tag(match_bits));
+    receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->context_id, MPIR_Process.rank,
+                                                      MPIDI_OFI_init_get_tag(match_bits));
+    MPIDI_OFI_REQUEST(sreq, nic_num) = sender_nic;
+    ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, MPIDI_OFI_REQUEST(sreq, nic_num));
 
     /* everything fits in the IOV array */
     flags = FI_COMPLETION | FI_REMOTE_CQ_DATA;
@@ -104,7 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.ignore = 0ULL;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
     msg.data = cq_data;
-    msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote);
+    msg.addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local, vni_remote);
 
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                      &msg, flags), vni_local, tsendv, FALSE);
@@ -137,8 +153,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     bool force_gpu_pack = false;
     int vni_local = vni_src;
     int vni_remote = vni_dst;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, nic);
+    int sender_nic = 0, receiver_nic = 0;
+    int ctx_idx = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
@@ -160,6 +176,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
+    /* Calculate the correct NICs. */
+    sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->context_id, dst_rank, tag);
+    receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->context_id, MPIR_Process.rank,
+                                                      tag);
+    MPIDI_OFI_REQUEST(sreq, nic_num) = sender_nic;
+    ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, MPIDI_OFI_REQUEST(sreq, nic_num));
+
     if (type == MPIDI_OFI_SYNC_SEND) {  /* Branch should compile out */
         uint64_t ssend_match, ssend_mask;
         MPIDI_OFI_ssendack_request_t *ackreq;
@@ -171,11 +194,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIR_cc_inc(sreq->cc_ptr);
         ssend_match = MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, tag);
         ssend_match |= MPIDI_OFI_SYNC_SEND_ACK;
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx, /* endpoint    */
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vni_local, receiver_nic)].rx,        /* endpoint    */
                                       NULL,     /* recvbuf     */
                                       0,        /* data sz     */
                                       NULL,     /* memregion descr  */
-                                      MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote),   /* remote proc */
+                                      MPIDI_OFI_av_to_phys(addr, sender_nic, vni_local, vni_remote),    /* remote proc */
                                       ssend_match,      /* match bits  */
                                       0ULL,     /* mask bits   */
                                       (void *) &(ackreq->context)), vni_local, trecvsync, FALSE);
@@ -239,9 +262,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                             send_buf,
                                             data_sz,
                                             cq_data,
-                                            MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote),
-                                            match_bits), vni_local, tinjectdata,
-                             FALSE /* eagain */);
+                                            MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
+                                                                 vni_remote), match_bits),
+                             vni_local, tinjectdata, FALSE /* eagain */);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
     } else if ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping)
                || (data_sz < MPIDI_OFI_global.stripe_threshold &&
@@ -249,10 +272,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           send_buf, data_sz, NULL /* desc */ ,
                                           cq_data,
-                                          MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote),
-                                          match_bits,
-                                          (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                             vni_local, tsenddata, FALSE /* eagain */);
+                                          MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
+                                                               vni_remote), match_bits,
+                                          (void *) &(MPIDI_OFI_REQUEST(sreq, context))), vni_local,
+                             tsenddata, FALSE /* eagain */);
     } else if (unlikely(1)) {
         MPIDI_OFI_send_control_t ctrl;
         int i, num_nics = MPIDI_OFI_global.num_nics;
@@ -315,7 +338,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           send_buf, msg_size, NULL /* desc */ ,
                                           cq_data,
-                                          MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote),
+                                          MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
+                                                               vni_remote),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
                              vni_local, tsenddata, FALSE /* eagain */);

@@ -372,8 +372,7 @@ cvars:
         shmmod automatically uses an optimal number depending on what is detected on the
         system up to the limit determined by MPIDI_MAX_NICS (in ofi_types.h).
 
-
-    - name        : MPIR_CVAR_CH4_OFI_ENABLE_STRIPING
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_STRIPING
       category    : CH4
       type        : int
       default     : 1
@@ -383,7 +382,7 @@ cvars:
       description : >-
         If true, this cvar enables striping of large messages across multiple NICs.
 
-    - name        : MPIR_CVAR_CH4_OFI_STRIPING_THRESHOLD
+    - name        : MPIR_CVAR_CH4_OFI_MULTI_NIC_STRIPING_THRESHOLD
       category    : CH4
       type        : int
       default     : 1048576
@@ -392,6 +391,20 @@ cvars:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Striping will happen for message sizes beyond this threshold.
+
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_HASHING
+      category    : CH4
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Multi-NIC hashing means to use more than one NIC to send and receive messages above a
+        certain size.  If set to positive number, this feature will be turned on. If set to 0, this
+        feature will be turned off. If the number is -1, MPICH automatically determines whether to
+        use multi-nic hashing depending on what is detected on the system (e.g., number of NICs
+        available, number of processes sharing the NICs).
 
     - name        : MPIR_CVAR_OFI_USE_MIN_NICS
       category    : DEVELOPER
@@ -495,7 +508,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = MPIDI_OFI_dynproc_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGAIN, "eagain", NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGAIN, "eagain", NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
+    MPIDI_OFI_global.num_comms_enabled_striping = 0;
+    MPIDI_OFI_global.num_comms_enabled_hashing = 0;
 
     MPIDI_OFI_global.deferred_am_isend_q = NULL;
 
@@ -1360,7 +1375,7 @@ static int update_global_limits(struct fi_info *prov)
     } else {
         MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
     }
-    MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_STRIPING_THRESHOLD;
+    MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_MULTI_NIC_STRIPING_THRESHOLD;
     if (prov->ep_attr->max_order_raw_size > MPIR_AINT_MAX) {
         MPIDI_OFI_global.max_order_raw = -1;
     } else {

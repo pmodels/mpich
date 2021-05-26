@@ -304,6 +304,23 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+int MPID_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDI_NM_comm_set_hints(comm_ptr, info_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_comm_set_hints(comm_ptr, info_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_Comm * peer_comm,
                                 int remote_leader, int *remote_size, int **remote_lupids,
                                 int *is_low_group)

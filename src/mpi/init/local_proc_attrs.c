@@ -71,6 +71,9 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
      * dimsCreate */
     MPIR_Process.dimsCreate = 0;
 
+    /* Init communicator hints */
+    MPIR_Comm_hint_init();
+
     /* "Allocate" from the reserved space for builtin communicators and
      * (partially) initialize predefined communicators.  comm_parent is
      * initially NULL and will be allocated by the device if the process group
@@ -126,9 +129,6 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
 
     /* Set the number of tag bits. The device may override this value. */
     MPIR_Process.tag_bits = MPIR_TAG_BITS_DEFAULT;
-
-    /* Init communicator hints */
-    MPIR_Comm_hint_init();
 
     return mpi_errno;
 }

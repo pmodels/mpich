@@ -25,6 +25,9 @@ Non Native API:
   mpi_comm_disconnect : int
       NM : comm_ptr
      SHM : comm_ptr
+  comm_set_hints : int
+      NM : comm_ptr, info
+     SHM : comm_ptr, info
   mpi_open_port : int
       NM : info, port_name-2
      SHM : info, port_name-2

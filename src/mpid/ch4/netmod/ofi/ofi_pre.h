@@ -48,6 +48,7 @@ typedef struct {
     /* support for connection */
     int conn_id;
     int enable_striping;        /* Flag to enable striping per communicator. */
+    int enable_hashing;         /* Flag to enable hashing per communicator. */
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_NONE = 0,
@@ -173,6 +174,8 @@ typedef struct {
     int event_id;               /* fixed field, do not move */
     MPL_atomic_int_t util_id;
     MPI_Datatype datatype;
+    int nic_num;                /* Store the nic number so we can use it to cancel a request later
+                                 * if needed. */
     union {
         struct {
             void *buf;
