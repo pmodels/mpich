@@ -34,8 +34,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     MPI_Aint num_contig, size;
     int vni_remote = vni_src;
     int vni_local = vni_dst;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, nic);
+    int ctx_idx = 0;
+    int sender_nic = 0, receiver_nic = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_IOV);
@@ -46,6 +46,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
                          &num_contig);
     if (num_contig > MPIDI_OFI_global.rx_iov_limit)
         goto unpack;
+
+    /* Calculate the correct NICs. */
+    sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->recvcontext_id, MPIR_Process.rank,
+                                                  MPIDI_OFI_init_get_tag(match_bits));
+    receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id, rank,
+                                                      MPIDI_OFI_init_get_tag(match_bits));
+    MPIDI_OFI_REQUEST(rreq, nic_num) = receiver_nic;
+    ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
 
     if (!flags) {
         flags = FI_COMPLETION | FI_REMOTE_CQ_DATA;
@@ -81,8 +89,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
     msg.data = 0;
     msg.addr =
-        (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr, nic, vni_local,
-                                                                         vni_remote);
+        (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr, sender_nic,
+                                                                         vni_local, vni_remote);
 
     MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg, flags), vni_local,
                          trecv, FALSE);
@@ -122,8 +130,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     bool force_gpu_pack = false;
     int vni_remote = vni_src;
     int vni_local = vni_dst;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, nic);
+    int sender_nic = 0, receiver_nic = 0;
+    int ctx_idx = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
@@ -150,6 +158,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
 
     *request = rreq;
+
+    /* Calculate the correct NICs. */
+    sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->recvcontext_id, MPIR_Process.rank,
+                                                  tag);
+    receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id, rank, tag);
+    MPIDI_OFI_REQUEST(rreq, nic_num) = receiver_nic;
+    ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
 
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, tag);
 
@@ -233,7 +248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                       data_sz,
                                       NULL,
                                       (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC :
-                                      MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote),
+                                      MPIDI_OFI_av_to_phys(addr, sender_nic, vni_local, vni_remote),
                                       match_bits, mask_bits,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), vni_local,
                              trecv, FALSE);
@@ -347,8 +362,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
 
     int vni = MPIDI_Request_get_vci(rreq);
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, MPIDI_OFI_REQUEST(rreq, nic_num));
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDIG_mpi_cancel_recv(rreq);

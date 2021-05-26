@@ -49,12 +49,13 @@ struct MPIR_HINT {
     MPIR_Comm_hint_fn_t fn;
     int type;
     int attr;                   /* e.g. whether this key is local */
+    int default_val;
 };
 static struct MPIR_HINT MPIR_comm_hint_list[MPIR_COMM_HINT_MAX];
 static int next_comm_hint_index = MPIR_COMM_HINT_PREDEFINED_COUNT;
 
 int MPIR_Comm_register_hint(int idx, const char *hint_key, MPIR_Comm_hint_fn_t fn,
-                            int type, int attr)
+                            int type, int attr, int default_val)
 {
     if (idx == 0) {
         idx = next_comm_hint_index;
@@ -64,7 +65,7 @@ int MPIR_Comm_register_hint(int idx, const char *hint_key, MPIR_Comm_hint_fn_t f
         MPIR_Assert(idx > 0 && idx < MPIR_COMM_HINT_PREDEFINED_COUNT);
     }
     MPIR_comm_hint_list[idx] = (struct MPIR_HINT) {
-    hint_key, fn, type, attr};
+    hint_key, fn, type, attr, default_val};
     return idx;
 }
 
@@ -107,6 +108,8 @@ static int get_string_value(char *s, int type, int val)
  */
 int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_Info *curr_info;
     LL_FOREACH(info, curr_info) {
         if (curr_info->key == NULL)
@@ -126,8 +129,15 @@ int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
             }
         }
     }
+
+    mpi_errno = MPID_Comm_set_hints(comm_ptr, info);
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* FIXME: run collective to ensure hints consistency */
+  fn_exit:
     return MPI_SUCCESS;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
@@ -160,13 +170,18 @@ int MPII_Comm_check_hints(MPIR_Comm * comm)
 void MPIR_Comm_hint_init(void)
 {
     MPIR_Comm_register_hint(MPIR_COMM_HINT_NO_ANY_TAG, "mpi_assert_no_any_tag",
-                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
     MPIR_Comm_register_hint(MPIR_COMM_HINT_NO_ANY_SOURCE, "mpi_assert_no_any_source",
-                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
     MPIR_Comm_register_hint(MPIR_COMM_HINT_EXACT_LENGTH, "mpi_assert_exact_length",
-                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
     MPIR_Comm_register_hint(MPIR_COMM_HINT_ALLOW_OVERTAKING, "mpi_assert_allow_overtaking",
-                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
+    /* Used by ch4:ofi, but needs to be initialized early to get the default value. */
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING, "enable_multi_nic_striping",
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, -1);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING, "enable_multi_nic_hashing",
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, -1);
 }
 
 /* FIXME :
@@ -216,6 +231,11 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->seq = 0;    /* default to 0, to be updated at Comm_commit */
     comm_p->tainted = 0;
     memset(comm_p->hints, 0, sizeof(comm_p->hints));
+    for (int i = 0; i < next_comm_hint_index; i++) {
+        if (MPIR_comm_hint_list[i].key) {
+            comm_p->hints[i] = MPIR_comm_hint_list[i].default_val;
+        }
+    }
 
     comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
     comm_p->node_comm = NULL;

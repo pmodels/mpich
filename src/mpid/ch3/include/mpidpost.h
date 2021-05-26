@@ -221,6 +221,8 @@ int MPIDI_CH3I_Comm_commit_pre_hook(struct MPIR_Comm *);
 int MPIDI_CH3I_Comm_destroy_hook(struct MPIR_Comm *);
 int MPIDI_CH3I_Comm_commit_post_hook(struct MPIR_Comm *);
 
+int MPIDI_CH3I_Comm_set_hints(MPIR_Comm *, MPIR_Info *info_ptr);
+
 /*
   Device override hooks for asynchronous progress threads
 */
