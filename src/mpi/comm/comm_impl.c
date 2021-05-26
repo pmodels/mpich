@@ -17,7 +17,7 @@ static int comm_create_local_group(MPIR_Comm * comm_ptr)
 
     group_ptr->is_local_dense_monotonic = TRUE;
 
-    int comm_world_size = MPIR_Process.comm_world->local_size;
+    int comm_world_size = MPIR_Process.size;
     for (int i = 0; i < n; i++) {
         int lpid;
         (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, FALSE);
@@ -237,7 +237,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         int wsize;
         subsetOfWorld = 1;
-        wsize = MPIR_Process.comm_world->local_size;
+        wsize = MPIR_Process.size;
         for (i = 0; i < n; i++) {
             int g_lpid = group_ptr->lrank_to_lpid[i].lpid;
 
