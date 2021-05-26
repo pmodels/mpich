@@ -425,6 +425,7 @@ static void dump_global_settings(void);
 static void dump_dynamic_settings(void);
 static int create_vni_context(int vni, int nic);
 static int destroy_vni_context(int vni, int nic);
+static int ofi_pvar_init(void);
 
 static int ofi_am_init(void);
 static int ofi_am_post_recv(int vni, int nic);
@@ -433,6 +434,29 @@ static void *host_alloc(uintptr_t size);
 static void *host_alloc_registered(uintptr_t size);
 static void host_free(void *ptr);
 static void host_free_registered(void *ptr);
+
+static int ofi_pvar_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
+                                              MPI_UNSIGNED_LONG_LONG,
+                                              nic_sent_bytes_count,
+                                              MPI_T_VERBOSITY_USER_DETAIL,
+                                              MPI_T_BIND_NO_OBJECT,
+                                              (MPIR_T_PVAR_FLAG_READONLY |
+                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
+                                              "number of bytes sent through a particular NIC");
+
+    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
+                                              MPI_UNSIGNED_LONG_LONG,
+                                              nic_recvd_bytes_count,
+                                              MPI_T_VERBOSITY_USER_DETAIL,
+                                              MPI_T_BIND_NO_OBJECT,
+                                              (MPIR_T_PVAR_FLAG_READONLY |
+                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
+                                              "number of bytes received through a particular NIC");
+    return mpi_errno;
+}
 
 static void *host_alloc(uintptr_t size)
 {
@@ -520,6 +544,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPIDI_OFI_global.num_comms_enabled_hashing = 0;
 
     MPIDI_OFI_global.deferred_am_isend_q = NULL;
+
+    mpi_errno = ofi_pvar_init();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* -------------------------------- */
     /* Set up the libfabric provider(s) */

@@ -63,6 +63,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
     count = wc->len;
     MPIR_STATUS_SET_COUNT(rreq->status, count);
 
+    MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
+                            wc->len);
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_cancelled;
     MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);

@@ -42,6 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                                              vni_remote),
                                         match_bits),
                          vni_local, tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
+    MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     return mpi_errno;
@@ -124,6 +125,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
 
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                      &msg, flags), vni_local, tsendv, FALSE);
+    MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -265,6 +267,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                             MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
                                                                  vni_remote), match_bits),
                              vni_local, tinjectdata, FALSE /* eagain */);
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
     } else if ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping)
                || (data_sz < MPIDI_OFI_global.stripe_threshold &&
@@ -276,6 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                                                vni_remote), match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))), vni_local,
                              tsenddata, FALSE /* eagain */);
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
     } else if (unlikely(1)) {
         MPIDI_OFI_send_control_t ctrl;
         int i, num_nics = MPIDI_OFI_global.num_nics;
@@ -343,6 +347,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
                              vni_local, tsenddata, FALSE /* eagain */);
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], msg_size);
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
         ctrl.seqno = 0;
         ctrl.tag = tag;
