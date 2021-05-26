@@ -109,28 +109,18 @@ int main(int argc, char *argv[])
 
         if (attrval != 1) {
             errs++;
-            char *desc;
-            DTP_obj_get_description(obj, &desc);
-            cerr << "attrval is " << attrval << ", should be 1, before dup in type " << desc
-                << "\n";
-            free(desc);
+            cerr << "attrval is " << attrval << ", should be 1, before dup in type " << DTP_obj_get_description(obj) << "\n";
         }
         duptype = type.Dup();
         /* Check that the attribute was copied */
         if (attrval != 2) {
             errs++;
-            char *desc;
-            DTP_obj_get_description(obj, &desc);
-            cerr << "Attribute not incremented when type dup'ed (" << desc << ")\n";
-            free(desc);
+            cerr << "Attribute not incremented when type dup'ed (" << DTP_obj_get_description(obj) << ")\n";
         }
         duptype.Free();
         if (attrval != 1) {
             errs++;
-            char *desc;
-            DTP_obj_get_description(obj, &desc);
-            cerr << "Attribute not decremented when duptype " << desc << " freed\n";
-            free(desc);
+            cerr << "Attribute not decremented when duptype " << DTP_obj_get_description(obj) << " freed\n";
         }
         /* Check that the attribute was freed in the duptype */
 
@@ -138,10 +128,7 @@ int main(int argc, char *argv[])
             DTP_obj_free(obj);
             if (attrval != 0) {
                 errs++;
-                char *desc;
-                DTP_obj_get_description(obj, &desc);
-                cerr << "Attribute not decremented when type " << desc << "reed\n";
-                free(desc);
+                cerr << "Attribute not decremented when type " << DTP_obj_get_description(obj) << "reed\n";
             }
         } else {
             MPI_Type_delete_attr(type, saveKeyval);
