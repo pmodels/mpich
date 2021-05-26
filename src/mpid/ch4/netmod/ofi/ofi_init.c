@@ -741,12 +741,13 @@ static int flush_send_queue(void)
     MPIDI_OFI_dynamic_process_request_t *reqs;
     /* TODO - Iterate over each NIC in addition to each VNI when multi-NIC within the same
      * process is implemented. */
-    int num_reqs = MPIDI_OFI_global.num_vnis * 2;
+    int num_vnis = (MPIDI_global.is_initialized ? MPIDI_OFI_global.num_vnis : 1);
+    int num_reqs = num_vnis * 2;
     reqs = MPL_malloc(sizeof(MPIDI_OFI_dynamic_process_request_t) * num_reqs, MPL_MEM_OTHER);
 
     /* Apparently by sending self messages can flush the send queue */
     int rank = MPIR_Process.rank;
-    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+    for (int vni = 0; vni < num_vnis; vni++) {
         mpi_errno = flush_send(rank, 0, vni, &reqs[vni * 2]);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = flush_recv(rank, 0, vni, &reqs[vni * 2 + 1]);
@@ -755,7 +756,7 @@ static int flush_send_queue(void)
 
     bool all_done = false;
     while (!all_done) {
-        for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+        for (int vni = 0; vni < num_vnis; vni++) {
             mpi_errno = MPIDI_NM_progress(vni, 0);
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -814,8 +815,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     /* Tearing down endpoints in reverse order they were created */
     for (int nic = MPIDI_OFI_global.num_nics - 1; nic >= 0; nic--) {
         for (int vni = MPIDI_OFI_global.num_vnis - 1; vni >= 0; vni--) {
-            mpi_errno = destroy_vni_context(vni, nic);
-            MPIR_ERR_CHECK(mpi_errno);
+            if (MPIDI_global.is_initialized || (vni == 0 && nic == 0)) {
+                mpi_errno = destroy_vni_context(vni, nic);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
         }
     }
 
