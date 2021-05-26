@@ -280,7 +280,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
             (*new_group_ptr)->lrank_to_lpid[k].lpid = lpid;
             if (i == group_ptr1->rank)
                 (*new_group_ptr)->rank = k;
-            if (lpid > MPIR_Process.comm_world->local_size ||
+            if (lpid > MPIR_Process.size ||
                 (k > 0 && (*new_group_ptr)->lrank_to_lpid[k - 1].lpid != (lpid - 1))) {
                 (*new_group_ptr)->is_local_dense_monotonic = FALSE;
             }

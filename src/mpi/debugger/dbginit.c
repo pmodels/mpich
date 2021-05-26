@@ -206,8 +206,8 @@ void MPII_Wait_for_debugger(void)
     init_lock();
 
 #ifdef MPIU_PROCTABLE_NEEDED
-    int rank = MPIR_Process.comm_world->rank;
-    int size = MPIR_Process.comm_world->local_size;
+    int rank = MPIR_Process.rank;
+    int size = MPIR_Process.size;
     int i, maxsize;
 
     /* FIXME: In MPICH, the executables may not have the information

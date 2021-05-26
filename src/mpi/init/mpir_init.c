@@ -285,7 +285,7 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
 int MPII_Finalize(MPIR_Session * session_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank = MPIR_Process.comm_world->rank;
+    int rank = MPIR_Process.rank;
     bool is_world_model = (session_ptr == NULL);
 
     MPL_initlock_lock(&init_lock);

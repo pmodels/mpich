@@ -35,7 +35,7 @@ void MPII_init_dbg_logging(void)
     /* FIXME: This is a hack to handle the common case of two worlds.
      * If the parent comm is not NULL, we always give the world number
      * as "1" (false). */
-    MPL_dbg_init(MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank);
+    MPL_dbg_init(MPIR_Process.comm_parent != NULL, MPIR_Process.rank);
 
     MPIR_DBG_INIT = MPL_dbg_class_alloc("INIT", "init");
     MPIR_DBG_PT2PT = MPL_dbg_class_alloc("PT2PT", "pt2pt");
