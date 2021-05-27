@@ -152,6 +152,8 @@ int MPIDIG_part_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data
     /* Setup an AM rreq to receive data */
     MPIR_Request *rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__PART, 1);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    rreq->comm = part_rreq->comm;
+    MPIR_Comm_add_ref(rreq->comm);
 
     MPIDIG_REQUEST(rreq, buffer) = MPIDI_PART_REQUEST(part_rreq, buffer);
     MPIDIG_REQUEST(rreq, datatype) = MPIDI_PART_REQUEST(part_rreq, datatype);

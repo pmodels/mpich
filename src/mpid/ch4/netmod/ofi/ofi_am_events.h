@@ -286,8 +286,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_rdma_read_ack(int rank, int context
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_RDMA_READ_ACK);
 
     ack_msg.sreq_ptr = sreq_ptr;
-    mpi_errno = MPIDI_NM_am_send_hdr_reply(context_id, rank, MPIDI_OFI_AM_RDMA_READ_ACK, &ack_msg,
-                                           (MPI_Aint) sizeof(ack_msg));
+    mpi_errno =
+        MPIDI_NM_am_send_hdr_reply(MPIDIG_context_id_to_comm(context_id), rank,
+                                   MPIDI_OFI_AM_RDMA_READ_ACK, &ack_msg,
+                                   (MPI_Aint) sizeof(ack_msg));
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
