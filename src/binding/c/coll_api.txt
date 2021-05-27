@@ -199,6 +199,9 @@ MPI_Reduce:
     .docnotes: collops
 { -- early_return --
     if (comm_ptr->remote_size == 1 && comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if (sendbuf == MPI_IN_PLACE) {
+            goto fn_exit;
+        }
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
         if (mpi_errno) {
             goto fn_fail;
