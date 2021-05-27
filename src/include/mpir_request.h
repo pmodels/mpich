@@ -226,6 +226,9 @@ struct MPIR_Request {
             MPL_atomic_int_t active_flag;       /* flag indicating whether in a start-complete active period.
                                                  * Value is 0 or 1. */
         } part;                 /* kind : MPIR_REQUEST_KIND__PART_SEND or MPIR_REQUEST_KIND__PART_RECV */
+        struct {
+            MPIR_Win *win;
+        } rma;                  /* kind : MPIR_REQUEST_KIND__RMA */
     } u;
 
     /* Other, device-specific information */

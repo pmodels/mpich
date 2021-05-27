@@ -47,11 +47,11 @@ Non Native API:
       NM*: rank, comm, handler_id, am_hdrs, iov_len, data, count, datatype, sreq
      SHM*: rank, comm, handler_id, am_hdrs, iov_len, data, count, datatype, sreq
   am_send_hdr_reply : int
-      NM*: context_id, src_rank, handler_id, am_hdr, am_hdr_sz
-     SHM*: context_id, src_rank, handler_id, am_hdr, am_hdr_sz
+      NM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz
+     SHM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz
   am_isend_reply : int
-      NM*: context_id, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
-     SHM*: context_id, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
+      NM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
+     SHM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
   am_recv: int
       NM*: rreq
      SHM*: rreq

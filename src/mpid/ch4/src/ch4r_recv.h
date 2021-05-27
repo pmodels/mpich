@@ -19,14 +19,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_reply_ssend(MPIR_Request * rreq)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(rreq, is_local))
         mpi_errno =
-            MPIDI_SHM_am_send_hdr_reply(MPIDIG_REQUEST(rreq, context_id),
+            MPIDI_SHM_am_send_hdr_reply(rreq->comm,
                                         MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &ack_msg,
                                         (MPI_Aint) sizeof(ack_msg));
     else
 #endif
     {
         mpi_errno =
-            MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(rreq, context_id),
+            MPIDI_NM_am_send_hdr_reply(rreq->comm,
                                        MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &ack_msg,
                                        (MPI_Aint) sizeof(ack_msg));
     }

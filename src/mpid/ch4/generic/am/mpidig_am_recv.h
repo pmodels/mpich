@@ -29,8 +29,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_prepare_recv_req(int rank, int tag,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
-                                                      MPI_Datatype datatype, MPIR_Comm * comm,
-                                                      int context_offset, MPIR_Request * rreq)
+                                                      MPI_Datatype datatype, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
@@ -132,15 +131,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
-    MPIR_Comm *root_comm;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_IRECV);
 
-    root_comm = MPIDIG_context_id_to_comm(context_id);
     unexp_req =
         MPIDIG_rreq_dequeue(rank, tag, context_id, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
+        unexp_req->comm = comm;
+        MPIR_Comm_add_ref(comm);
         if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_BUSY) {
             MPIDIG_REQUEST(unexp_req, req->status) |= MPIDIG_REQ_MATCHED;
         } else if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_RTS) {
@@ -175,8 +174,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
             if (MPIDIG_REQUEST(unexp_req, recv_ready)) {
                 /* if the unexpected recv is ready, the data is in the unexpected buffer. Just
                  * copy them to complete */
-                mpi_errno = MPIDIG_handle_unexpected(buf, count, datatype, root_comm, context_id,
-                                                     unexp_req);
+                mpi_errno = MPIDIG_handle_unexpected(buf, count, datatype, unexp_req);
                 MPIR_ERR_CHECK(mpi_errno);
                 if (*request == NULL) {
                     /* Regular (non-enqueuing) path: MPIDIG is responsbile for allocating
@@ -238,6 +236,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     } else if (alloc_req) {
         rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        rreq->comm = comm;
+        MPIR_Comm_add_ref(comm);
     } else {
         rreq = *request;
         MPIR_Assert(0);
@@ -250,9 +250,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
 
     if (!unexp_req) {
         /* MPIDI_CS_ENTER(); */
-        /* Increment refcnt for comm before posting rreq to posted_list,
-         * to make sure comm is alive while holding an entry in the posted_list */
-        MPIR_Comm_add_ref(root_comm);
         MPIDIG_enqueue_request(rreq, &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
         /* MPIDI_CS_EXIT(); */
     } else {
@@ -361,14 +358,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, found;
-    MPIR_Comm *root_comm;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
 
     if (!MPIR_Request_is_complete(rreq) &&
         !MPIR_STATUS_GET_CANCEL_BIT(rreq->status) && !MPIDIG_REQUEST_IN_PROGRESS(rreq)) {
-        root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
 
         /* MPIDI_CS_ENTER(); */
         found = MPIDIG_delete_posted(rreq, &MPIDI_global.posted_list);
@@ -376,7 +371,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
 
         if (found) {
             MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
-            MPIR_Comm_release(root_comm);       /* -1 for posted_list */
         }
 
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);

@@ -44,6 +44,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
     MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *request = sreq;
+    sreq->comm = comm;
+    MPIR_Comm_add_ref(comm);
     MPIDIG_REQUEST(sreq, buffer) = (void *) buf;
     MPIDIG_REQUEST(sreq, datatype) = datatype;
     MPIDIG_REQUEST(sreq, rank) = rank;
