@@ -12,6 +12,7 @@ iccreate 8
 ctxalloc 2 timeLimit=300
 ctxsplit 4 timeLimit=300
 cmfree 4
+cmfree2 2
 cmsplit 4
 cmsplit2 12
 probe_intercomm 2
