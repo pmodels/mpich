@@ -15,6 +15,9 @@
 #elif defined MPL_HAVE_ZE
 #define MPL_HAVE_GPU MPL_GPU_TYPE_ZE
 #include "mpl_gpu_ze.h"
+#elif defined MPL_HAVE_HIP
+#define MPL_HAVE_GPU MPL_GPU_TYPE_HIP
+#include "mpl_gpu_hip.h"
 #else
 #include "mpl_gpu_fallback.h"
 #endif
@@ -36,6 +39,7 @@ typedef enum {
     MPL_GPU_TYPE_NONE = 0,
     MPL_GPU_TYPE_CUDA,
     MPL_GPU_TYPE_ZE,
+    MPL_GPU_TYPE_HIP,
 } MPL_gpu_type_t;
 
 #ifndef MPL_HAVE_GPU
