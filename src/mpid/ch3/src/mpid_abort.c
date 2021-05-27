@@ -67,6 +67,10 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
     MPL_error_printf("%s\n", error_msg);
     fflush(stderr);
 
+    if (MPIR_CVAR_COREDUMP_ON_ABORT) {
+        abort();
+    }
+
     /* FIXME: What is the scope for PMI_Abort?  Shouldn't it be one or more
        process groups?  Shouldn't abort of a communicator abort either the
        process groups of the communicator or only the current process?

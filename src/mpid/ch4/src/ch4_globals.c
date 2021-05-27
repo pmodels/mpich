@@ -121,6 +121,11 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ABORT);
     fflush(stderr);
     fflush(stdout);
+
+    if (MPIR_CVAR_COREDUMP_ON_ABORT) {
+        abort();
+    }
+
     if (NULL == comm || (MPIR_Comm_size(comm) == 1 && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM))
         MPL_exit(exit_code);
 
