@@ -25,6 +25,7 @@ noinst_PROGRAMS =     \
     icsplit           \
     iccreate          \
     cmfree            \
+    cmfree2           \
     icm               \
     cmsplit           \
     cmsplit2          \
