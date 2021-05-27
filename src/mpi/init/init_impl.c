@@ -19,6 +19,15 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : Disable printing of abort error message.
 
+    - name        : MPIR_CVAR_COREDUMP_ON_ABORT
+      category    : ERROR_HANDLING
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : Call libc abort() to generate a corefile
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
