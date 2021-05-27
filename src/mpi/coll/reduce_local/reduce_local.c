@@ -36,11 +36,11 @@ static void call_user_op_cxx(const void *inbuf, void *inoutbuf, int count, MPI_D
 
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
 static void call_user_op_f77(const void *inbuf, void *inoutbuf, MPI_Fint count, MPI_Fint datatype,
-                             MPIR_User_function * uop)
+                             MPIR_User_function uop)
 {
     /* Take off the global locks before calling user functions */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    (uop->f77_function) ((void *) inbuf, inoutbuf, &count, &datatype);
+    (uop.f77_function) ((void *) inbuf, inoutbuf, &count, &datatype);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 #endif
