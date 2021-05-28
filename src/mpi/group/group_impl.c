@@ -641,7 +641,6 @@ int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *ps
         }
         group_ptr->lrank_to_lpid[group_ptr->size - 1].next_lpid = -1;
         group_ptr->idx_of_first_lpid = 0;
-        group_ptr->pset_name = "mpi://WORLD";
     } else if (strcmp(pset_name, "mpi://SELF") == 0) {
         mpi_errno = MPIR_Group_create(1, &group_ptr);
         MPIR_ERR_CHECK(mpi_errno);
@@ -652,7 +651,6 @@ int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *ps
         group_ptr->lrank_to_lpid[0].lpid = MPIR_Process.rank;
         group_ptr->lrank_to_lpid[0].next_lpid = -1;
         group_ptr->idx_of_first_lpid = 0;
-        group_ptr->pset_name = "mpi://SELF";
     } else {
         /* TODO: Implement pset struct, locate pset struct ptr */
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**psetinvalidname");
