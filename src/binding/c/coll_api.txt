@@ -86,6 +86,11 @@ MPI_Barrier:
 
 MPI_Bcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        goto fn_exit;
+    }
+}
 
 MPI_Bcast_init:
     .desc: Creates a persistent request for broadcast
@@ -164,6 +169,13 @@ MPI_Ibarrier:
 
 MPI_Ibcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Iexscan:
     .desc: Computes the exclusive scan (partial reductions) of data on a collection of processes in a nonblocking way

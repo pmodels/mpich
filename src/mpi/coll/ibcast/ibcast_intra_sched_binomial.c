@@ -28,11 +28,6 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    if (comm_size == 1) {
-        /* nothing to add, this is a useless broadcast */
-        goto fn_exit;
-    }
-
     MPIR_Datatype_is_contig(datatype, &is_contig);
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
