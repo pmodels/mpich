@@ -250,9 +250,6 @@ int MPIR_Iallgather_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MP
     int comm_size, recvtype_size;
     int tot_bytes;
 
-    if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
-        return MPI_SUCCESS;
-
     comm_size = comm_ptr->local_size;
 
     MPIR_Datatype_get_size_macro(recvtype, recvtype_size);

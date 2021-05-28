@@ -21,6 +21,13 @@ MPI_Allgather:
      This text was suggested by Rajeev Thakur and has been adopted as a
      clarification by the MPI Forum.
 */
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((sendcount == 0 && sendbuf != MPI_IN_PLACE) || recvcount == 0) {
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Allgatherv:
     .desc: Gathers data from all tasks and deliver the combined data to all tasks
@@ -92,6 +99,15 @@ MPI_Gatherv:
 
 MPI_Iallgather:
     .desc: Gathers data from all tasks and distribute the combined data to all tasks in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((sendcount == 0 && sendbuf != MPI_IN_PLACE) || recvcount == 0) {
+            MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+            *request = request_ptr->handle;
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Iallgatherv:
     .desc: Gathers data from all tasks and deliver the combined data to all tasks in a nonblocking way
