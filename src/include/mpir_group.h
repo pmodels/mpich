@@ -60,8 +60,6 @@ struct MPIR_Group {
     MPII_Group_pmap_t *lrank_to_lpid;   /* Array mapping a local rank to local
                                          * process number */
     int is_local_dense_monotonic;       /* see NOTE-G1 */
-    const char *pset_name;      /* set to one of the pre-configured pset names,
-                                 * or NULL if it is not directly from a pset */
 
     /* We may want some additional data for the RMA syncrhonization calls */
     /* Other, device-specific information */
