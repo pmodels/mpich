@@ -10,7 +10,7 @@ from local_python.binding_f08 import *
 from local_python import RE
 
 def main():
-    # currently support -no-real128, -no-mpiio
+    # currently support -no-real128, -no-mpiio, -aint-is-int
     G.parse_cmdline()
 
     binding_dir = "src/binding"
@@ -24,17 +24,37 @@ def main():
         func_list.extend(get_mpiio_func_list())
     func_list.extend(get_type_create_f90_func_list())
 
-    # f08_cdesc.c
-    G.out = []
-    G.decls = []
+    skip_large_list = []
+    # skip large variations because MPI_ADDRESS_KIND == MPI_COUNT_KIND
+    if 'aint-is-int' not in G.opts:
+        skip_large_list.extend(["MPI_Op_create", "MPI_Register_datarep", "MPI_Type_create_resized", "MPI_Type_get_extent", "MPI_Type_get_true_extent", "MPI_File_get_type_extent"])
+    # skip File large count functions because it is not implemented yet
+    for func in func_list:
+        if func['name'].startswith('MPI_File_') or func['name'] == 'MPI_Register_datarep':
+            skip_large_list.append(func['name'])
+
+    # preprocess
     for func in func_list:
         check_func_directives(func)
         if '_skip_fortran' in func:
             continue
+        if function_has_POLY_parameters(func) and func['name'] not in skip_large_list:
+            func['_need_large'] = True
+        else:
+            func['_need_large'] = False
         process_func_parameters(func)
+    func_list = [f for f in func_list if '_skip_fortran' not in f]
+
+    # f08_cdesc.c
+    G.out = []
+    G.decls = []
+    for func in func_list:
         if need_cdesc(func):
             G.out.append("")
-            dump_f08_wrappers_c(func)
+            dump_f08_wrappers_c(func, False)
+            if func['_need_large']:
+                G.out.append("")
+                dump_f08_wrappers_c(func, True)
     f = "%s/wrappers_c/f08_cdesc.c" % f08_dir
     dump_cdesc_c(f, G.out)
     f = "%s/wrappers_c/cdesc_proto.h" % f08_dir
@@ -43,9 +63,9 @@ def main():
     # f08ts.f90
     G.out = []
     for func in func_list:
-        if '_skip_fortran' in func:
-            continue
-        dump_f08_wrappers_f(func)
+        dump_f08_wrappers_f(func, False)
+        if func['_need_large']:
+            dump_f08_wrappers_f(func, True)
     f = "%s/wrappers_f/f08ts.f90" % f08_dir
     dump_f90_file(f, G.out)
 
@@ -62,12 +82,12 @@ def main():
     G.out = []
     dump_interface_module_open("mpi_c_interface_cdesc")
     for func in func_list:
-        if '_skip_fortran' in func:
-            continue
         if need_cdesc(func):
-            dump_mpi_c_interface_cdesc(func)
+            dump_mpi_c_interface_cdesc(func, False)
+            if func['_need_large']:
+                dump_mpi_c_interface_cdesc(func, True)
     f_sync_reg = {'name':"MPI_F_sync_reg", 'parameters':[{'name':"buf", 'kind':"BUFFER", 't':'', 'large_only':None, 'param_direction':"in"}]}
-    dump_mpi_c_interface_cdesc(f_sync_reg)
+    dump_mpi_c_interface_cdesc(f_sync_reg, False)
     dump_interface_module_close("mpi_c_interface_cdesc")
     f = "%s/mpi_c_interface_cdesc.f90" % f08_dir
     dump_f90_file(f, G.out)
@@ -75,10 +95,10 @@ def main():
     G.out = []
     dump_interface_module_open("mpi_c_interface_nobuf")
     for func in func_list:
-        if '_skip_fortran' in func:
-            continue
         if not need_cdesc(func):
-            dump_mpi_c_interface_nobuf(func)
+            dump_mpi_c_interface_nobuf(func, False)
+            if func['_need_large']:
+                dump_mpi_c_interface_nobuf(func, True)
     dump_interface_module_close("mpi_c_interface_nobuf")
     f = "%s/mpi_c_interface_nobuf.f90" % f08_dir
     dump_f90_file(f, G.out)
@@ -95,9 +115,16 @@ def main():
     G.out.append("")
     G.out.append("IMPLICIT NONE")
     for func in func_list:
-        if '_skip_fortran' in func:
-            continue
-        dump_mpi_f08(func)
+        G.out.append("")
+        func_name = get_function_name(func, False)
+        G.out.append("INTERFACE %s" % func_name)
+        G.out.append("INDENT")
+        dump_mpi_f08(func, False)
+        if func['_need_large']:
+            G.out.append("")
+            dump_mpi_f08(func, True)
+        G.out.append("DEDENT")
+        G.out.append("END INTERFACE %s" % func_name)
     G.out.append("")
     dump_F_module_close("mpi_f08")
 
