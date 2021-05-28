@@ -335,6 +335,10 @@ typedef struct {
      * OFI provider at MPI initialization.*/
     MPIDI_OFI_atomic_valid_t win_op_table[MPIR_DATATYPE_N_PREDEFINED][MPIDIG_ACCU_NUM_OP];
 
+    /* huge protocol globals */
+    void *huge_send_counters;
+    void *huge_recv_counters;
+
     /* Active Message Globals */
     struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];

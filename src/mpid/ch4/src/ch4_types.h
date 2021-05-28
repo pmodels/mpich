@@ -190,10 +190,6 @@ typedef struct MPIDIG_acc_ack_msg_t {
 
 typedef MPIDIG_acc_ack_msg_t MPIDIG_get_acc_ack_msg_t;
 
-typedef struct MPIDIG_comm_req_list_t {
-    MPIR_Comm *comm[2][4];
-} MPIDIG_comm_req_list_t;
-
 typedef struct {
     int max_n_avts;
     int n_avts;
@@ -266,7 +262,6 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDIU_avt_manager avt_mgr;
     int is_ch4u_initialized;
     int **node_map, max_node_id;
-    MPIDIG_comm_req_list_t *comm_req_lists;
     MPIR_Commops MPIR_Comm_fns_store;
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;

@@ -71,9 +71,6 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_PRE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_PRE_HOOK);
 
-    MPIDIU_map_create(&MPIDI_OFI_COMM(comm).huge_send_counters, MPL_MEM_COMM);
-    MPIDIU_map_create(&MPIDI_OFI_COMM(comm).huge_recv_counters, MPL_MEM_COMM);
-
     /* no connection for non-dynamic or non-root-rank of intercomm */
     MPIDI_OFI_COMM(comm).conn_id = -1;
 
@@ -116,9 +113,6 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
         (MPIDI_OFI_COMM(comm).enable_striping != 0 ? 1 : 0);
     MPIDI_OFI_global.num_comms_enabled_hashing -=
         (MPIDI_OFI_COMM(comm).enable_hashing != 0 ? 1 : 0);
-
-    MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_send_counters);
-    MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_recv_counters);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
     return mpi_errno;

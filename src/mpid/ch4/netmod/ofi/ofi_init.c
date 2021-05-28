@@ -492,6 +492,10 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPIDIU_map_create(&MPIDI_OFI_global.win_map, MPL_MEM_RMA);
     MPIDIU_map_create(&MPIDI_OFI_global.req_map, MPL_MEM_OTHER);
 
+    /* Create huge protocol maps */
+    MPIDIU_map_create(&MPIDI_OFI_global.huge_send_counters, MPL_MEM_COMM);
+    MPIDIU_map_create(&MPIDI_OFI_global.huge_recv_counters, MPL_MEM_COMM);
+
     /* Create pack buffer pool */
     mpi_errno =
         MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE,
@@ -842,6 +846,9 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
     MPIDIU_map_destroy(MPIDI_OFI_global.req_map);
+
+    MPIDIU_map_destroy(MPIDI_OFI_global.huge_send_counters);
+    MPIDIU_map_destroy(MPIDI_OFI_global.huge_recv_counters);
 
     if (MPIDI_OFI_ENABLE_AM) {
         while (MPIDI_OFI_global.am_unordered_msgs) {
