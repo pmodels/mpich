@@ -65,15 +65,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* if there is only 1 rank, copy data from sendbuf
-     * to recvbuf and exit */
-    if (nranks == 1) {
-        if (!is_inplace && count > 0)
-            MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype, sched, 0,
-                                     NULL);
-        return mpi_errno;
-    }
-
     /* get the neighbors, the function allocates the required memory */
     MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,
                                    &step1_recvfrom, &step1_nrecvs,
