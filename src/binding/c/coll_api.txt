@@ -58,6 +58,11 @@ MPI_Allreduce:
 
 MPI_Alltoall:
     .desc: Sends data from all to all processes
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && recvcount == 0) {
+        goto fn_exit;
+    }
+}
 
 MPI_Alltoallv:
     .desc: Sends data from all to all processes; each process may send a different amount of data and provide displacements for the input and output data.
@@ -117,6 +122,13 @@ MPI_Iallreduce:
 
 MPI_Ialltoall:
     .desc: Sends data from all to all processes in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && recvcount == 0) {
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Ialltoallv:
     .desc: Sends data from all to all processes in a nonblocking way; each process may send a different amount of data and provide displacements for the input and output data.
