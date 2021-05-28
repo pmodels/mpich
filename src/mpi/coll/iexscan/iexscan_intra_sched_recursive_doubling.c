@@ -59,9 +59,6 @@ int MPIR_Iexscan_intra_sched_recursive_doubling(const void *sendbuf, void *recvb
     void *partial_scan, *tmp_buf;
     MPIR_SCHED_CHKPMEM_DECL(2);
 
-    if (count == 0)
-        goto fn_exit;
-
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
