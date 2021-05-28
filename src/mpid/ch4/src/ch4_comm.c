@@ -133,8 +133,20 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_COMMIT_PRE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_COMMIT_PRE_HOOK);
 
-    /* comm_world and comm_self are already initialized */
-    if (comm != MPIR_Process.comm_world && comm != MPIR_Process.comm_self) {
+    if (comm == MPIR_Process.comm_world) {
+        MPIDI_COMM(comm, map).mode = MPIDI_RANK_MAP_DIRECT_INTRA;
+        MPIDI_COMM(comm, map).avtid = 0;
+        MPIDI_COMM(comm, map).size = MPIR_Process.size;
+        MPIDI_COMM(comm, local_map).mode = MPIDI_RANK_MAP_NONE;
+        MPIDIU_avt_add_ref(0);
+    } else if (comm == MPIR_Process.comm_self) {
+        MPIDI_COMM(comm, map).mode = MPIDI_RANK_MAP_OFFSET_INTRA;
+        MPIDI_COMM(comm, map).avtid = 0;
+        MPIDI_COMM(comm, map).size = 1;
+        MPIDI_COMM(comm, map).reg.offset = MPIR_Process.rank;
+        MPIDI_COMM(comm, local_map).mode = MPIDI_RANK_MAP_NONE;
+        MPIDIU_avt_add_ref(0);
+    } else {
         MPIDI_comm_create_rank_map(comm);
         /* add ref to avts */
         switch (MPIDI_COMM(comm, map).mode) {
