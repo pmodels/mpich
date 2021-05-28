@@ -797,9 +797,12 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIDI_OFI_mr_key_allocator_destroy();
 
     if (strcmp("sockets", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
-        /* sockets provider need flush any last lightweight send */
-        mpi_errno = flush_send_queue();
-        MPIR_ERR_CHECK(mpi_errno);
+        /* sockets provider need flush any last lightweight send. Only do it if we initialized
+         * world. Sockets provider can't even send self messages otherwise. */
+        if (MPIDI_global.is_initialized) {
+            mpi_errno = flush_send_queue();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
         /* verbs;ofi_rxm provider need barrier to prevent message loss */
         mpi_errno = MPIR_pmi_barrier();
