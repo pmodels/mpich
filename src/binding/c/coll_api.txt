@@ -113,6 +113,13 @@ MPI_Exscan:
 
 MPI_Gather:
     .desc: Gathers together values from a group of processes
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((MPIR_Comm_rank(comm_ptr) == root && recvcount == 0) || (MPIR_Comm_rank(comm_ptr) != root && sendcount == 0)) {
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Gatherv:
     .desc: Gathers into specified locations from all processes in a group
@@ -196,6 +203,15 @@ MPI_Iexscan:
 
 MPI_Igather:
     .desc: Gathers together values from a group of processes in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((MPIR_Comm_rank(comm_ptr) == root && recvcount == 0) || (MPIR_Comm_rank(comm_ptr) != root && sendcount == 0)) {
+            MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+            *request = request_ptr->handle;
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Igatherv:
     .desc: Gathers into specified locations from all processes in a group in a nonblocking way
