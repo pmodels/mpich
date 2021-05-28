@@ -34,9 +34,6 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (count == 0)
-        goto fn_exit;
-
     nranks = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
 
