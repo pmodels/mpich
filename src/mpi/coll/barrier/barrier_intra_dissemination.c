@@ -22,10 +22,6 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errf
     int mpi_errno_ret = MPI_SUCCESS;
 
     size = comm_ptr->local_size;
-    /* Trivial barriers return immediately */
-    if (size == 1)
-        goto fn_exit;
-
     rank = comm_ptr->rank;
 
     mask = 0x1;
@@ -46,7 +42,6 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errf
         mask <<= 1;
     }
 
-  fn_exit:
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)

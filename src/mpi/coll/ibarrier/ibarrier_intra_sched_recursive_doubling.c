@@ -28,10 +28,6 @@ int MPIR_Ibarrier_intra_sched_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Sche
     size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    /* Trivial barriers return immediately */
-    if (size == 1)
-        goto fn_exit;
-
     mask = 0x1;
     while (mask < size) {
         dst = (rank + mask) % size;
