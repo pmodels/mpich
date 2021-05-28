@@ -235,12 +235,6 @@ def parse_param_attributes(p):
     else:
         p['asynchronous'] = False
 
-def function_has_POLY_parameters(func):
-    for p in func['parameters']:
-        if p['kind'].startswith('POLY'):
-            return True
-    return False
-
 # FIXME: until ROMIO interface are generated
 def get_mpiio_func_list():
     io_func_name_list = [

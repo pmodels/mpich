@@ -7,6 +7,45 @@ from local_python import MPI_API_Global as G
 from local_python import RE
 import re
 
+def get_kind_map(lang, is_large=False):
+    if lang.upper() == 'C':
+        if is_large:
+            return G.MAPS['BIG_C_KIND_MAP']
+        else:
+            return G.MAPS['SMALL_C_KIND_MAP']
+    elif lang.upper() == 'F08':
+        if is_large:
+            return G.MAPS['BIG_F08_KIND_MAP']
+        else:
+            return G.MAPS['SMALL_F08_KIND_MAP']
+    elif lang.upper() == 'F90':
+        return G.MAPS['SMALL_F90_KIND_MAP']
+    elif lang.upper() == "LIS":
+        return G.MAPS['LIS_KIND_MAP']
+    else:
+        raise Exception("Kind Mapping for [%s] not available" % lang)
+
+def function_has_POLY_parameters(func):
+    for p in func['parameters']:
+        if p['kind'].startswith('POLY'):
+            return True
+    return False
+
+def get_function_name(func, is_large=False):
+    big_use_mpix = True
+    if is_large:
+        name = func['name'] + "_c"
+        if big_use_mpix:
+            G.mpix_symbols[name] = "functions"
+            name = re.sub(r'MPI_', 'MPIX_', name)
+        return name
+    else:
+        name = func['name']
+        if 'mpix' in func:
+            G.mpix_symbols[name] = "functions"
+            name = re.sub(r'MPI_', 'MPIX_', name)
+        return name
+
 def split_line_with_break(s, tail, N=100):
     """Breaks a long line with proper indentations.
     This simplistic routine splits on ", ", thus only works with function declarations
