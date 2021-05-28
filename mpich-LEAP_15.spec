@@ -85,7 +85,8 @@ BuildRequires:  fdupes
 BuildRequires:  hwloc-devel >= 1.6
 BuildRequires:  libtool
 BuildRequires:  pkg-config
-BuildRequires:  python-devel
+BuildRequires:  python2-devel
+BuildRequires:  python3-devel
 %ifnarch s390 s390x %{arm}
 BuildRequires:  valgrind-devel
 %endif
@@ -97,10 +98,7 @@ BuildRequires:  librdmacm-devel
 BuildRequires:  libnuma-devel
 %endif
 BuildRequires:  libtool
-BuildRequires:  libtool
 BuildRequires:  mpi-selector
-BuildRequires:  python-devel
-BuildRequires:  python3-devel
 BuildRequires:  sysfsutils
 BuildRequires:  libfabric-devel
 BuildRequires:  daos-devel
@@ -444,8 +442,8 @@ fi
 %{p_includedir}
 %{p_libdir}/*.so
 %{p_libdir}/pkgconfig/mpich.pc
-%{p_libdir}/pkgconfig/json-c.pc
-%{p_libdir}/pkgconfig/yaksa.pc
+#%{p_libdir}/pkgconfig/json-c.pc
+#%{p_libdir}/pkgconfig/yaksa.pc
 
 %if 0%{?build_static_devel}
 %files devel-static
