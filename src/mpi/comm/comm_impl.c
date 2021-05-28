@@ -726,25 +726,42 @@ static int get_tag_from_stringtag(const char *stringtag)
     return hash % (MPIR_Process.attrs.tag_ub);
 }
 
+static bool is_world_group(MPIR_Group * group_ptr)
+{
+    return (group_ptr->size == MPIR_Process.size && group_ptr->size > 1);
+}
+
+static bool is_self_group(MPIR_Group * group_ptr)
+{
+    return (group_ptr->size == 1);
+}
+
 int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringtag,
                                      MPIR_Info * info_ptr, MPIR_Errhandler * errhan_ptr,
                                      MPIR_Comm ** p_newcom_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    int use_comm_world = 0;
 
-    /* This implementation assumes an internal MPI_COMM_WORLD already exist.
-     *
-     * Refer to TODOs below inside the branches:
-     * The next implementation will relax but assume the first call to this function will
-     * either from a "world" pset or "self" pset, during former a comm world will be created.
-     *
-     * The final implementation will further relax and allow partial initializations.
-     */
+    /* NOTE: only world or self is supported without first establishing comm_world.  */
 
-    /* NOTE: tag will be used with MPIR_TAG_COLL_BIT on, ref. MPIR_Get_contextid_sparse_group */
-    int tag = get_tag_from_stringtag(stringtag);
-
+    MPL_initlock_lock(&MPIR_init_lock);
     if (MPIR_Process.comm_world) {
+        use_comm_world = 1;
+    } else if (is_world_group(group_ptr)) {
+        mpi_errno = MPIR_init_comm_world();
+        MPIR_ERR_CHECK(mpi_errno);
+        use_comm_world = 1;
+    } else if (!MPIR_Process.comm_self && is_self_group(group_ptr)) {
+        mpi_errno = MPIR_init_comm_self();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    MPL_initlock_unlock(&MPIR_init_lock);
+
+    if (use_comm_world) {
+        /* NOTE: tag will be used with MPIR_TAG_COLL_BIT on, ref. MPIR_Get_contextid_sparse_group */
+        int tag = get_tag_from_stringtag(stringtag);
+
         /* Because the group_ptr may not be derived from a communicator, local_group in
          * comm_world may not have been created */
         static MPL_initlock_t lock = MPL_INITLOCK_INITIALIZER;
@@ -755,24 +772,12 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
         MPL_initlock_unlock(&lock);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
-    } else if (group_ptr->pset_name && strcmp(group_ptr->pset_name, "mpi://WORLD") == 0) {
-        /* TODO: once we init process is split into local init and world init, we need call
-         * world-init in this branch and then call MPIR_Comm_dup_impl(MPIR_Process.comm_world, ...)
-         */
-        MPIR_Assert(0 && "not implemented");
-        goto fn_fail;
-    } else if (group_ptr->pset_name && strcmp(group_ptr->pset_name, "mpi://SELF") == 0) {
-        /* TODO: We need refactor a function to create a self-comm as local-only operation,
-         * then just call the self-comm-creation here. */
-        /* TODO: Ideally, a single process application never need world-init and we should
-         * be able to do on-demand dynamic connections afterwards. Essentially world-init will
-         * be replaced with dynamic init. This is needed in next branch. */
-        MPIR_Assert(0 && "not implemented");
-        goto fn_fail;
     } else {
-        /* TODO: dynamically check and establish connections */
-        MPIR_Assert(0 && "not implemented");
-        goto fn_fail;
+        /* Currently only self comm is allowed here */
+        MPIR_Assert(is_self_group(group_ptr));
+
+        mpi_errno = MPIR_Comm_dup_impl(MPIR_Process.comm_self, p_newcom_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (info_ptr) {
