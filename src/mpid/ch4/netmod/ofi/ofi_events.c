@@ -64,9 +64,9 @@ static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
             recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_COMM);
             MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
             recv_elem->peek = true;
-            MPIR_Comm *comm_ptr = MPIDIG_context_id_to_comm(MPIDI_OFI_CONTEXT_MASK & wc->tag);
+            MPIR_Comm *comm_ptr = rreq->comm;
             recv_elem->comm_ptr = comm_ptr;
-            MPIDIU_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv_elem,
+            MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
                            MPL_MEM_BUFFER);
 
             huge_list_ptr =
@@ -180,7 +180,7 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
                 LL_DELETE(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, list_ptr);
 
                 recv_elem = list_ptr;
-                MPIDIU_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv_elem,
+                MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
                                MPL_MEM_COMM);
                 break;
             }
@@ -197,7 +197,7 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 
         recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        MPIDIU_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv_elem,
+        MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
                        MPL_MEM_BUFFER);
 
         list_ptr = (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*list_ptr), 1, MPL_MEM_BUFFER);
@@ -220,6 +220,11 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     recv_elem->localreq = rreq;
     recv_elem->done_fn = MPIDI_OFI_recv_event;
     recv_elem->wc = *wc;
+    if (MPIDI_OFI_COMM(comm_ptr).enable_striping) {
+        recv_elem->cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
+    } else {
+        recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
+    }
     MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
 
   fn_exit:
@@ -246,7 +251,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         comm = sreq->comm;
         num_nics = MPIDI_OFI_COMM(comm).enable_striping ? MPIDI_OFI_global.num_nics : 1;
         /* Look for the memory region using the sreq handle */
-        ptr = MPIDIU_map_lookup(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
+        ptr = MPIDIU_map_lookup(MPIDI_OFI_global.huge_send_counters, sreq->handle);
         MPIR_Assert(ptr != MPIDIU_MAP_NOT_FOUND);
 
         huge_send_mrs = (struct fid_mr **) ptr;
@@ -254,7 +259,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         /* Send a cleanup message to the receivier and clean up local
          * resources. */
         /* Clean up the local counter */
-        MPIDIU_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
+        MPIDIU_map_erase(MPIDI_OFI_global.huge_send_counters, sreq->handle);
 
         /* Clean up the memory region */
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
@@ -352,7 +357,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
                                           recv_elem->comm_ptr, recv_elem->remote_info.ackreq);
             MPIR_ERR_CHECK(mpi_errno);
 
-            MPIDIU_map_erase(MPIDI_OFI_COMM(recv_elem->comm_ptr).huge_recv_counters, key_to_erase);
+            MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters, key_to_erase);
             MPL_free(recv_elem);
 
             goto fn_exit;
@@ -693,8 +698,14 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
         }
     }
 
+    MPIR_Comm *comm;
+    if (rreq->kind == MPIR_REQUEST_KIND__RMA) {
+        comm = rreq->u.rma.win->comm_ptr;
+    } else {
+        comm = rreq->comm;
+    }
     mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).src_rank,
-                                              MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).context_id,
+                                              comm,
                                               MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).sreq_ptr);
 
     MPIR_ERR_CHECK(mpi_errno);

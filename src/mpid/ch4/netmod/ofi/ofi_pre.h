@@ -43,8 +43,6 @@ typedef struct {
 } MPIDI_OFI_Global_t;
 
 typedef struct {
-    void *huge_send_counters;
-    void *huge_recv_counters;
     /* support for connection */
     int conn_id;
     int enable_striping;        /* Flag to enable striping per communicator. */

@@ -167,13 +167,9 @@ void MPIDI_OFI_mr_key_allocator_destroy(void)
 static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 {
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
-    MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_HUGE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_HUGE);
-
-    /* Look up the communicator */
-    comm_ptr = MPIDIG_context_id_to_comm(info->comm_id);
 
     /* If there has been a posted receive, search through the list of unmatched
      * receives to find the one that goes with the incoming message. */
@@ -195,8 +191,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
                 LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
                 recv_elem = (MPIDI_OFI_huge_recv_t *)
-                    MPIDIU_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
-                                      list_ptr->rreq->handle);
+                    MPIDIU_map_lookup(MPIDI_OFI_global.huge_recv_counters, list_ptr->rreq->handle);
 
                 /* If this is a "peek" element for an MPI_Probe, it shouldn't be matched. Grab the
                  * important information and remove the element from the list. */
@@ -204,7 +199,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
                     MPIR_STATUS_SET_COUNT(recv_elem->localreq->status, info->msgsize);
                     MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(recv_elem->localreq, util_id)),
                                                  MPIDI_OFI_PEEK_FOUND);
-                    MPIDIU_map_erase(MPIDI_OFI_COMM(recv_elem->comm_ptr).huge_recv_counters,
+                    MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters,
                                      recv_elem->localreq->handle);
                     MPL_free(recv_elem);
                     recv_elem = NULL;
@@ -231,13 +226,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     }
 
     recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-    if (MPIDI_OFI_COMM(comm_ptr).enable_striping) {
-        recv_elem->cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
-    } else {
-        recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
-    }
     recv_elem->remote_info = *info;
-    recv_elem->comm_ptr = comm_ptr;
     recv_elem->next = NULL;
     MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
 
