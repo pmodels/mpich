@@ -105,6 +105,11 @@ MPI_Exscan:
        calling process is not included in the result at the calling process
        (it is contributed to the subsequent processes, of course).
 */
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count == 0) {
+        goto fn_exit;
+    }
+}
 
 MPI_Gather:
     .desc: Gathers together values from a group of processes
@@ -181,6 +186,13 @@ MPI_Iexscan:
     .desc: Computes the exclusive scan (partial reductions) of data on a collection of processes in a nonblocking way
     .docnotes: collops
     .extra: errtest_comm_intra
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count == 0) {
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Igather:
     .desc: Gathers together values from a group of processes in a nonblocking way
