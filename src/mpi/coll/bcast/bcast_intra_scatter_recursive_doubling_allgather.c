@@ -51,10 +51,6 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
     rank = comm_ptr->rank;
     relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
 
-    /* If there is only one process, return */
-    if (comm_size == 1)
-        goto fn_exit;
-
 #ifdef HAVE_ERROR_CHECKING
     /* This algorithm can currently handle only power of 2 cases,
      * non-power of 2 is still experimental */

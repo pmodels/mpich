@@ -72,10 +72,6 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
     MPIR_Assert(MPL_is_pof2(comm_size, NULL));
 #endif /* HAVE_ERROR_CHECKING */
 
-    /* If there is only one process, return */
-    if (comm_size == 1)
-        goto fn_exit;
-
     if (HANDLE_IS_BUILTIN(datatype)) {
         is_contig = 1;
     } else {
