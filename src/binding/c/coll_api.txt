@@ -78,6 +78,11 @@ MPI_Barrier:
     that is, the call returns at any process only after all members of the
     communicator have entered the call.
 */
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        goto fn_exit;
+    }
+}
 
 MPI_Bcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator
@@ -149,6 +154,13 @@ MPI_Ibarrier:
     the intercommunicator case, it will complete when all processes in the remote
     group have called MPI_Ibarrier.
 */
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Ibcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator in a nonblocking way
