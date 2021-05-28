@@ -251,13 +251,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (nranks == 1) {  /*If only one rank, copy sendbuf to recvbuf and return */
-        if (!is_inplace)
-            MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype,
-                                     recvbuf, recvcounts[rank], recvtype, sched, 0, NULL);
-        return 0;
-    }
-
     /* get the neighbors, the function allocates the required memory */
     MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,
                                    &step1_recvfrom, &step1_nrecvs,

@@ -51,6 +51,15 @@ MPI_Allgatherv:
      This text was suggested by Rajeev Thakur, and has been adopted as a
      clarification to the MPI standard by the MPI-Forum.
 */
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcounts[0], recvtype);
+        }
+        goto fn_exit;
+    }
+}
+
 
 MPI_Allreduce:
     .desc: Combines values from all processes and distributes the result back to all processes
@@ -138,6 +147,16 @@ MPI_Iallgather:
 
 MPI_Iallgatherv:
     .desc: Gathers data from all tasks and deliver the combined data to all tasks in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcounts[0], recvtype);
+        }
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Iallreduce:
     .desc: Combines values from all processes and distributes the result back to all processes in a nonblocking way
