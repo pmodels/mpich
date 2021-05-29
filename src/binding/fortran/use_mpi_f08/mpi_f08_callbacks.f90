@@ -104,7 +104,6 @@ end subroutine
 
 subroutine MPI_Comm_errhandler_function(comm,error_code)
     use mpi_f08_types, only : MPI_Comm
-    use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
     type(MPI_Comm) :: comm
     integer :: error_code
@@ -112,15 +111,20 @@ end subroutine
 
 subroutine MPI_Win_errhandler_function(win, error_code)
     use mpi_f08_types, only : MPI_Win
-    use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
     type(MPI_Win) :: win
     integer :: error_code
 end subroutine
 
+subroutine MPI_Session_errhandler_function(session, error_code)
+    use mpi_f08_types, only : MPI_Session
+    implicit none
+    type(MPI_Session) :: session
+    integer :: error_code
+end subroutine
+
 subroutine MPI_File_errhandler_function(file, error_code)
     use mpi_f08_types, only : MPI_File
-    use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
     type(MPI_File) :: file
     integer :: error_code

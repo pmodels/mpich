@@ -287,6 +287,10 @@ typedef int MPI_Group;
 typedef int MPI_Win;
 #define MPI_WIN_NULL ((MPI_Win)0x20000000)
 
+/* for session */
+typedef int MPIX_Session;
+#define MPIX_SESSION_NULL     ((MPIX_Session)0x38000000)
+
 /* File and IO */
 /* This define lets ROMIO know that MPI_File has been defined */
 #define MPI_FILE_DEFINED
@@ -404,10 +408,12 @@ typedef int (MPI_Win_delete_attr_function)(MPI_Win, int, void *, void *);
 typedef void (MPI_Comm_errhandler_function)(MPI_Comm *, int *, ...);
 typedef void (MPI_File_errhandler_function)(MPI_File *, int *, ...);
 typedef void (MPI_Win_errhandler_function)(MPI_Win *, int *, ...);
+typedef void (MPIX_Session_errhandler_function)(MPIX_Session *, int *, ...);
 /* names that were added in MPI-2.0 and deprecated in MPI-2.2 */
 typedef MPI_Comm_errhandler_function MPI_Comm_errhandler_fn;
 typedef MPI_File_errhandler_function MPI_File_errhandler_fn;
 typedef MPI_Win_errhandler_function MPI_Win_errhandler_fn;
+typedef MPIX_Session_errhandler_function MPIX_Session_errhandler_fn;
 
 /* Built in (0x1 in 30-31), errhandler (0x5 in bits 26-29, allkind (0
    in 22-25), index in the low bits */
@@ -521,10 +527,6 @@ typedef int MPI_Info;
 #define MPI_INFO_ENV          ((MPI_Info)0x5c000001)
 #define MPI_MAX_INFO_KEY       255
 #define MPI_MAX_INFO_VAL      1024
-
-/* for session */
-typedef int MPIX_Session;
-#define MPIX_SESSION_NULL     ((MPIX_Session)0x38000000)
 
 /* for subarray and darray constructors */
 #define MPI_ORDER_C              56

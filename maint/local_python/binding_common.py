@@ -111,13 +111,13 @@ def get_C_param(param, mapping):
     want_star, want_bracket = '', ''
     param_type = mapping[kind]
 
-    if param_type in G.mpix_symbols:
-        param_type = re.sub(r'MPI_', 'MPIX_', param_type)
-
     if param['func_type']:
         param_type = param['func_type']
         if mapping['_name'].startswith("BIG_"):
             param_type += "_c"
+
+    if param_type in G.mpix_symbols:
+        param_type = re.sub(r'MPI_', 'MPIX_', param_type)
 
     if not param_type:
         raise Exception("Type mapping [%s] %s not found!" % (mapping, kind))

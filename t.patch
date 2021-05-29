@@ -1,0 +1,120 @@
+commit 5dd6706a8f12010e866e09bf3841c1313e3d63fd
+Author: Hui Zhou <hzhou321@anl.gov>
+Date:   Wed May 26 14:11:34 2021 -0500
+
+    ch4: replace the usage of MPIR_Process.comm_world
+    
+    This makes the code more robust since the avalability is not guaranteed.
+
+diff --git a/src/mpid/ch4/netmod/ofi/ofi_am_impl.h b/src/mpid/ch4/netmod/ofi/ofi_am_impl.h
+index c19b73dd1..cfe10e33b 100644
+--- a/src/mpid/ch4/netmod/ofi/ofi_am_impl.h
++++ b/src/mpid/ch4/netmod/ofi/ofi_am_impl.h
+@@ -36,8 +36,7 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
+                      "Generated seqno=%d for dest_rank=%d "
+                      "(context_id=0x%08x, src_addr=%" PRIx64 ", dest_addr=%" PRIx64 ")\n",
+                      old_seq, dest_rank, comm->context_id,
+-                     MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank,
+-                                            nic, 0, 0), addr));
++                     MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, 0, 0), addr));
+ 
+     return old_seq;
+ }
+@@ -211,8 +210,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
+     msg_hdr->payload_sz = 0;    /* LMT info sent as header */
+     msg_hdr->am_type = MPIDI_AMTYPE_RDMA_READ;
+     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
+-    msg_hdr->fi_src_addr
+-        = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank, nic, 0, 0);
++    msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, 0, 0);
+ 
+     lmt_info = &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_info);
+     lmt_info->context_id = comm->context_id;
+@@ -291,8 +289,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
+     msg_hdr->payload_sz = data_sz;
+     msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
+     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
+-    msg_hdr->fi_src_addr
+-        = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank, nic, 0, 0);
++    msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, 0, 0);
+ 
+     iov = MPIDI_OFI_AMREQUEST_HDR(sreq, iov);
+ 
+@@ -341,8 +338,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
+     msg_hdr->payload_sz = seg_sz;
+     msg_hdr->am_type = MPIDI_AMTYPE_PIPELINE;
+     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
+-    msg_hdr->fi_src_addr
+-        = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank, nic, 0, 0);
++    msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, 0, 0);
+ 
+     iov = send_req->iov;
+ 
+@@ -539,8 +535,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
+     msg_hdr.payload_sz = 0;
+     msg_hdr.am_type = MPIDI_AMTYPE_SHORT_HDR;
+     msg_hdr.seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
+-    msg_hdr.fi_src_addr
+-        = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank, nic, 0, 0);
++    msg_hdr.fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, 0, 0);
+ 
+     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
+ 
+diff --git a/src/mpid/ch4/netmod/ofi/ofi_impl.h b/src/mpid/ch4/netmod/ofi/ofi_impl.h
+index 8e760e461..8fb5d9d79 100644
+--- a/src/mpid/ch4/netmod/ofi/ofi_impl.h
++++ b/src/mpid/ch4/netmod/ofi/ofi_impl.h
+@@ -460,6 +460,13 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av, i
+ #endif
+ }
+ 
++MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_rank_to_phys(int rank, int nic,
++                                                          int vni_local, int vni_remote)
++{
++    MPIDI_av_entry_t *av = &MPIDIU_get_av(0, rank);
++    return MPIDI_OFI_av_to_phys(av, nic, vni_local, vni_remote);
++}
++
+ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int nic,
+                                                           int vni_local, int vni_remote)
+ {
+diff --git a/src/mpid/ch4/src/ch4_globals.c b/src/mpid/ch4/src/ch4_globals.c
+index 4cdeb5a9c..036320090 100644
+--- a/src/mpid/ch4/src/ch4_globals.c
++++ b/src/mpid/ch4/src/ch4_globals.c
+@@ -89,7 +89,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
+ 
+     char world_str[MPI_MAX_ERROR_STRING] = "";
+     if (MPIR_Process.comm_world) {
+-        int rank = MPIR_Process.comm_world->rank;
++        int rank = MPIR_Process.rank;
+         snprintf(world_str, sizeof(world_str), " on node %d", rank);
+     }
+ 
+diff --git a/src/mpid/ch4/src/ch4_impl.h b/src/mpid/ch4/src/ch4_impl.h
+index 3a459ed0e..21d28f768 100644
+--- a/src/mpid/ch4/src/ch4_impl.h
++++ b/src/mpid/ch4/src/ch4_impl.h
+@@ -934,7 +934,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_win_rank_to_av(MPIR_Win * win,
+ MPL_STATIC_INLINE_PREFIX int MPIDIU_win_comm_rank(MPIR_Win * win, MPIDI_winattr_t winattr)
+ {
+     if (winattr & MPIDI_WINATTR_DIRECT_INTRA_COMM)
+-        return MPIR_Process.comm_world->rank;
++        return MPIR_Process.rank;
+     else
+         return win->comm_ptr->rank;
+ }
+diff --git a/src/mpid/ch4/src/ch4_init.c b/src/mpid/ch4/src/ch4_init.c
+index af942998d..5158aa6b8 100644
+--- a/src/mpid/ch4/src/ch4_init.c
++++ b/src/mpid/ch4/src/ch4_init.c
+@@ -649,8 +649,7 @@ int MPID_Get_processor_name(char *name, int namelen, int *resultlen)
+             MPIDI_global.pname_len = (int) strlen(MPIDI_global.pname);
+ 
+ #else
+-        MPL_snprintf(MPIDI_global.pname, MPI_MAX_PROCESSOR_NAME, "%d",
+-                     MPIR_Process.comm_world->rank);
++        MPL_snprintf(MPIDI_global.pname, MPI_MAX_PROCESSOR_NAME, "%d", MPIR_Process.rank);
+         MPIDI_global.pname_len = (int) strlen(MPIDI_global.pname);
+ #endif
+         MPIDI_global.pname_set = 1;
