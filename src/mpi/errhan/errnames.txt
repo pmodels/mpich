@@ -276,6 +276,7 @@ be in the range 0 to %d
 **errhandlernull:Null errhandler 
 **errhandnotfile:Error handler is not a file error handler
 **errhandnotwin:Error handler is not a win error handler
+**errhandnotsession:Error handler is not a session error handler
 **storageorder:Invalid storage order
 **storageorder %d: Invalid storage order (%d)
 **darraydist:For MPI_DISTRIBUTE_NONE, the number of processes in that \

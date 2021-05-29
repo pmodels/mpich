@@ -33,21 +33,17 @@ def main():
 
     # -- Generating code --
     for func in func_list:
-        if 'not_implemented' in func:
-            print("  skip %s (not_implemented)" % func['name'])
-            pass
-        else:
-            G.out = []
-            G.err_codes = {}
+        G.out = []
+        G.err_codes = {}
 
-            # dumps the code to G.out array
-            # Note: set func['_has_poly'] = False to skip embiggenning
-            func['_has_poly'] = function_has_POLY_parameters(func)
-            if func['_has_poly']:
-                dump_mpi_c(func, False)
-                dump_mpi_c(func, True)
-            else:
-                dump_mpi_c(func, False)
+        # dumps the code to G.out array
+        # Note: set func['_has_poly'] = False to skip embiggenning
+        func['_has_poly'] = function_has_POLY_parameters(func)
+        if func['_has_poly']:
+            dump_mpi_c(func, False)
+            dump_mpi_c(func, True)
+        else:
+            dump_mpi_c(func, False)
 
         file_path = get_func_file_path(func, c_dir)
         dump_c_file(file_path, G.out)

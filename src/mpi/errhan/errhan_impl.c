@@ -49,6 +49,27 @@ int MPIR_Win_create_errhandler_impl(MPI_Win_errhandler_function * win_errhandler
     goto fn_exit;
 }
 
+int MPIR_Session_create_errhandler_impl(MPI_Session_errhandler_function * session_errhandler_fn,
+                                        MPIR_Errhandler ** errhandler_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errhandler *errhan_ptr;
+
+    errhan_ptr = (MPIR_Errhandler *) MPIR_Handle_obj_alloc(&MPIR_Errhandler_mem);
+    MPIR_ERR_CHKANDJUMP1(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem",
+                         "**nomem %s", "MPI_Errhandler");
+    errhan_ptr->language = MPIR_LANG__C;
+    errhan_ptr->kind = MPIR_SESSION;
+    MPIR_Object_set_ref(errhan_ptr, 1);
+    errhan_ptr->errfn.C_Session_Handler_function = session_errhandler_fn;
+
+    *errhandler_ptr = errhan_ptr;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_File_create_errhandler_impl(MPI_File_errhandler_function * file_errhandler_fn,
                                      MPIR_Errhandler ** errhandler_ptr)
 {
@@ -78,7 +99,8 @@ int MPIR_File_create_errhandler_impl(MPI_File_errhandler_function * file_errhand
    returning NULL for errhandler_ptr means the default handler, MPI_ERRORS_ARE_FATAL is used */
 int MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPI_Errhandler * errhandler)
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
     if (comm_ptr->errhandler) {
         *errhandler = comm_ptr->errhandler->handle;
         MPIR_Errhandler_add_ref(comm_ptr->errhandler);
@@ -86,14 +108,16 @@ int MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPI_Errhandler * errhand
         /* Use the default */
         *errhandler = MPI_ERRORS_ARE_FATAL;
     }
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
 
     return MPI_SUCCESS;
 }
 
 int MPIR_Win_get_errhandler_impl(MPIR_Win * win_ptr, MPI_Errhandler * errhandler)
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    MPID_THREAD_CS_ENTER(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, win_ptr->mutex);
 
     if (win_ptr->errhandler) {
         *errhandler = win_ptr->errhandler->handle;
@@ -103,7 +127,21 @@ int MPIR_Win_get_errhandler_impl(MPIR_Win * win_ptr, MPI_Errhandler * errhandler
         *errhandler = MPI_ERRORS_ARE_FATAL;
     }
 
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, win_ptr->mutex);
+    return MPI_SUCCESS;
+}
+
+int MPIR_Session_get_errhandler_impl(MPIR_Session * session_ptr, MPI_Errhandler * errhandler)
+{
+    if (session_ptr->errhandler) {
+        *errhandler = session_ptr->errhandler->handle;
+        MPIR_Errhandler_add_ref(session_ptr->errhandler);
+    } else {
+        /* Use the default */
+        *errhandler = MPI_ERRORS_ARE_FATAL;
+    }
+
     return MPI_SUCCESS;
 }
 
@@ -132,7 +170,8 @@ int MPIR_File_get_errhandler_impl(MPI_File file, MPI_Errhandler * errhandler)
 
 int MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler_ptr)
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
 
     /* We don't bother with the case where the errhandler is NULL;
      * in this case, the error handler was the original, MPI_ERRORS_ARE_FATAL,
@@ -144,13 +183,15 @@ int MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhan
     MPIR_Errhandler_add_ref(errhandler_ptr);
     comm_ptr->errhandler = errhandler_ptr;
 
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
     return MPI_SUCCESS;
 }
 
 int MPIR_Win_set_errhandler_impl(MPIR_Win * win_ptr, MPIR_Errhandler * errhandler_ptr)
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    MPID_THREAD_CS_ENTER(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, win_ptr->mutex);
 
     /* We don't bother with the case where the errhandler is NULL;
      * in this case, the error handler was the original, MPI_ERRORS_ARE_FATAL,
@@ -162,7 +203,23 @@ int MPIR_Win_set_errhandler_impl(MPIR_Win * win_ptr, MPIR_Errhandler * errhandle
     MPIR_Errhandler_add_ref(errhandler_ptr);
     win_ptr->errhandler = errhandler_ptr;
 
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, win_ptr->mutex);
+    return MPI_SUCCESS;
+}
+
+int MPIR_Session_set_errhandler_impl(MPIR_Session * session_ptr, MPIR_Errhandler * errhandler_ptr)
+{
+    /* We don't bother with the case where the errhandler is NULL;
+     * in this case, the error handler was the original, MPI_ERRORS_ARE_FATAL,
+     * which is builtin and can never be freed. */
+    if (session_ptr->errhandler != NULL) {
+        MPIR_Errhandler_free_impl(session_ptr->errhandler);
+    }
+
+    MPIR_Errhandler_add_ref(errhandler_ptr);
+    session_ptr->errhandler = errhandler_ptr;
+
     return MPI_SUCCESS;
 }
 
@@ -194,19 +251,27 @@ int MPIR_File_set_errhandler_impl(MPI_File file, MPIR_Errhandler * errhan_ptr)
 #endif
 }
 
-int MPIR_Comm_call_errhandler_impl(MPIR_Comm * comm_ptr, int errorcode)
+static int call_errhandler(MPIR_Errhandler * errhandler, int errorcode, int handle)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));  /* protect access to comm_ptr->errhandler */
+    int kind = HANDLE_GET_MPI_KIND(handle);
+    int cxx_kind = 0;
 
     /* Check for predefined error handlers */
-    if (!comm_ptr->errhandler || comm_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL) {
-        mpi_errno = MPIR_Err_return_comm(comm_ptr, "MPI_Comm_call_errhandler", errorcode);
+    if (!errhandler || errhandler->handle == MPI_ERRORS_ARE_FATAL) {
+        const char *fcname = NULL;
+        if (kind == MPIR_COMM) {
+            fcname = "MPI_Comm_call_errhandler";
+        } else if (kind == MPIR_WIN) {
+            fcname = "MPI_Win_call_errhandler";
+        } else if (kind == MPIR_SESSION) {
+            fcname = "MPI_Session_call_errhandler";
+        }
+        MPIR_Handle_fatal_error(NULL, fcname, errorcode);
+        /* not expected to return */
         goto fn_exit;
-    }
-
-    if (comm_ptr->errhandler->handle == MPI_ERRORS_RETURN) {
+    } else if (errhandler->handle == MPI_ERRORS_RETURN) {
         /* MPI_ERRORS_RETURN should always return MPI_SUCCESS */
         goto fn_exit;
     }
@@ -216,23 +281,28 @@ int MPIR_Comm_call_errhandler_impl(MPIR_Comm * comm_ptr, int errorcode)
      * be thrown.
      */
 #ifdef HAVE_CXX_BINDING
-    if (comm_ptr->errhandler->handle == MPIR_ERRORS_THROW_EXCEPTIONS) {
+    if (errhandler->handle == MPIR_ERRORS_THROW_EXCEPTIONS) {
         mpi_errno = errorcode;
         goto fn_exit;
     }
 #endif
 
     /* Process any user-defined error handling function */
-    switch (comm_ptr->errhandler->language) {
+    switch (errhandler->language) {
         case MPIR_LANG__C:
-            (*comm_ptr->errhandler->errfn.C_Comm_Handler_function) (&comm_ptr->handle, &errorcode);
+            (*errhandler->errfn.C_Comm_Handler_function) (&handle, &errorcode);
             break;
 #ifdef HAVE_CXX_BINDING
         case MPIR_LANG__CXX:
-            MPIR_Process.cxx_call_errfn(0, &comm_ptr->handle,
-                                        &errorcode,
-                                        (void (*)(void)) comm_ptr->errhandler->
-                                        errfn.C_Comm_Handler_function);
+            if (kind == MPIR_COMM) {
+                cxx_kind = 0;
+            } else if (kind == MPIR_WIN) {
+                cxx_kind = 2;
+            } else {
+                MPIR_Assert(0 && "not supported");
+            }
+            MPIR_Process.cxx_call_errfn(cxx_kind, &handle, &errorcode,
+                                        (void (*)(void)) errhandler->errfn.C_Comm_Handler_function);
             break;
 #endif
 #ifdef HAVE_FORTRAN_BINDING
@@ -243,14 +313,28 @@ int MPIR_Comm_call_errhandler_impl(MPIR_Comm * comm_ptr, int errorcode)
                  * convert.  As this is not performance critical, we
                  * do this even if MPI_Fint and int are the same size. */
                 MPI_Fint ferr = errorcode;
-                MPI_Fint commhandle = comm_ptr->handle;
-                (*comm_ptr->errhandler->errfn.F77_Handler_function) (&commhandle, &ferr);
+                MPI_Fint commhandle = handle;
+                (*errhandler->errfn.F77_Handler_function) (&commhandle, &ferr);
             }
             break;
 #endif
     }
+
   fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    return mpi_errno;
+}
+
+int MPIR_Comm_call_errhandler_impl(MPIR_Comm * comm_ptr, int errorcode)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
+
+    mpi_errno = call_errhandler(comm_ptr->errhandler, errorcode, comm_ptr->handle);
+
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
     return mpi_errno;
 }
 
@@ -258,57 +342,22 @@ int MPIR_Win_call_errhandler_impl(MPIR_Win * win_ptr, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));    /* protect access to win_ptr->errhandler */
+    MPID_THREAD_CS_ENTER(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, win_ptr->mutex);
 
-    if (!win_ptr->errhandler || win_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL) {
-        mpi_errno = MPIR_Err_return_win(win_ptr, "MPI_Win_call_errhandler", errorcode);
-        goto fn_exit;
-    }
+    mpi_errno = call_errhandler(win_ptr->errhandler, errorcode, win_ptr->handle);
 
-    if (win_ptr->errhandler->handle == MPI_ERRORS_RETURN) {
-        /* MPI_ERRORS_RETURN should always return MPI_SUCCESS */
-        goto fn_exit;
-    }
+    MPID_THREAD_CS_EXIT(POBJ, win_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, win_ptr->mutex);
+    return mpi_errno;
+}
 
-    /* Check for the special case of errors-throw-exception.  In this case
-     * return the error code; the C++ wrapper will cause an exception to
-     * be thrown.
-     */
-#ifdef HAVE_CXX_BINDING
-    if (win_ptr->errhandler->handle == MPIR_ERRORS_THROW_EXCEPTIONS) {
-        mpi_errno = errorcode;
-        goto fn_exit;
-    }
-#endif
-    switch (win_ptr->errhandler->language) {
-        case MPIR_LANG__C:
-            (*win_ptr->errhandler->errfn.C_Win_Handler_function) (&win_ptr->handle, &errorcode);
-            break;
-#ifdef HAVE_CXX_BINDING
-        case MPIR_LANG__CXX:
-            MPIR_Process.cxx_call_errfn(2, &win_ptr->handle,
-                                        &errorcode,
-                                        (void (*)(void)) win_ptr->errhandler->
-                                        errfn.C_Win_Handler_function);
-            break;
-#endif
-#ifdef HAVE_FORTRAN_BINDING
-        case MPIR_LANG__FORTRAN90:
-        case MPIR_LANG__FORTRAN:
-            {
-                /* If int and MPI_Fint aren't the same size, we need to
-                 * convert.  As this is not performance critical, we
-                 * do this even if MPI_Fint and int are the same size. */
-                MPI_Fint ferr = errorcode;
-                MPI_Fint winhandle = win_ptr->handle;
-                (*win_ptr->errhandler->errfn.F77_Handler_function) (&winhandle, &ferr);
-            }
-            break;
-#endif
-    }
+int MPIR_Session_call_errhandler_impl(MPIR_Session * session_ptr, int errorcode)
+{
+    int mpi_errno = MPI_SUCCESS;
 
-  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    mpi_errno = call_errhandler(session_ptr->errhandler, errorcode, session_ptr->handle);
+
     return mpi_errno;
 }
 
