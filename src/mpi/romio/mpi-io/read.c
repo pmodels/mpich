@@ -21,6 +21,19 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
     __attribute__ ((weak, alias("PMPI_File_read")));
 #endif
 
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_File_read_c = PMPI_File_read_c
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_File_read_c MPI_File_read_c
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_File_read_c as PMPI_File_read_c
+/* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_File_read_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype,
+                    MPI_Status * status)
+    __attribute__ ((weak, alias("PMPI_File_read_c")));
+#endif
+
 /* Include mapping from MPI->PMPI */
 #define MPIO_BUILD_PROFILING
 #include "mpioprof.h"
@@ -64,25 +77,6 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 
 /* large count function */
 
-#ifdef HAVE_WEAK_SYMBOLS
-
-#if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_File_read_c = PMPI_File_read_c
-#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_File_read_c MPI_File_read_c
-#elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_File_read_c as PMPI_File_read_c
-/* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_read_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype,
-                    MPI_Status * status)
-    __attribute__ ((weak, alias("PMPI_File_read_c")));
-#endif
-
-/* Include mapping from MPI->PMPI */
-#define MPIO_BUILD_PROFILING
-#include "mpioprof.h"
-#endif
 
 /* status object not filled currently */
 
