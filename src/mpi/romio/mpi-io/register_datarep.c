@@ -52,10 +52,82 @@ Input Parameters:
 .N fortran
 
   @*/
+
 int MPI_Register_datarep(ROMIO_CONST char *datarep,
                          MPI_Datarep_conversion_function * read_conversion_fn,
                          MPI_Datarep_conversion_function * write_conversion_fn,
                          MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
+{
+    int is_large = false;
+    return MPIOI_Register_datarep(datarep, (MPIOI_VOID_FN *) read_conversion_fn,
+                                  (MPIOI_VOID_FN *) write_conversion_fn,
+                                  dtype_file_extent_fn, extra_state, is_large);
+}
+
+/* large count function */
+
+#ifdef HAVE_WEAK_SYMBOLS
+
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_Register_datarep_c = PMPI_Register_datarep_c
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_Register_datarep_c MPI_Register_datarep_c
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_Register_datarep_c as PMPI_Register_datarep_c
+/* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Register_datarep_c(const char *datarep,
+                           MPI_Datarep_conversion_function_c * read_conversion_fn,
+                           MPI_Datarep_conversion_function_c * write_conversion_fn,
+                           MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
+    __attribute__ ((weak, alias("PMPI_Register_datarep_c")));
+#endif
+
+#endif
+
+/*@
+  MPI_Register_datarep_c - Register functions for user-defined data
+                         representations
+
+Input Parameters:
++ datarep - data representation name (string)
+. read_conversion_fn - function invoked to convert from file representation to
+                 native representation (function)
+. write_conversion_fn - function invoked to convert from native representation to
+                  file representation (function)
+. dtype_file_extent_fn - function invoked to get the exted of a datatype as represented
+                  in the file (function)
+- extra_state - pointer to extra state that is passed to each of the
+                three functions
+
+ Notes:
+ This function allows the user to provide routines to convert data from
+ an external representation, used within a file, and the native representation,
+ used within the CPU.  There is one predefined data representation,
+ 'external32'.  Please consult the MPI-2 standard for details on this
+ function.
+
+.N fortran
+
+  @*/
+
+int MPI_Register_datarep_c(ROMIO_CONST char *datarep,
+                           MPI_Datarep_conversion_function_c * read_conversion_fn,
+                           MPI_Datarep_conversion_function_c * write_conversion_fn,
+                           MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
+{
+    int is_large = true;
+    return MPIOI_Register_datarep(datarep, (MPIOI_VOID_FN *) read_conversion_fn,
+                                  (MPIOI_VOID_FN *) write_conversion_fn,
+                                  dtype_file_extent_fn, extra_state, is_large);
+}
+
+#ifdef MPIO_BUILD_PROFILING
+int MPIOI_Register_datarep(const char *datarep,
+                           MPIOI_VOID_FN * read_conversion_fn,
+                           MPIOI_VOID_FN * write_conversion_fn,
+                           MPI_Datarep_extent_function * dtype_file_extent_fn,
+                           void *extra_state, int is_large)
 {
     int error_code;
     ADIOI_Datarep *adio_datarep;
@@ -117,8 +189,17 @@ int MPI_Register_datarep(ROMIO_CONST char *datarep,
     adio_datarep = ADIOI_Malloc(sizeof(ADIOI_Datarep));
     adio_datarep->name = ADIOI_Strdup(datarep);
     adio_datarep->state = extra_state;
-    adio_datarep->read_conv_fn = read_conversion_fn;
-    adio_datarep->write_conv_fn = write_conversion_fn;
+    adio_datarep->is_large = is_large;
+    if (is_large) {
+        adio_datarep->u.large.read_conv_fn =
+            (MPI_Datarep_conversion_function_c *) read_conversion_fn;
+        adio_datarep->u.large.write_conv_fn =
+            (MPI_Datarep_conversion_function_c *) write_conversion_fn;
+    } else {
+        adio_datarep->u.small.read_conv_fn = (MPI_Datarep_conversion_function *) read_conversion_fn;
+        adio_datarep->u.small.write_conv_fn =
+            (MPI_Datarep_conversion_function *) write_conversion_fn;
+    }
     adio_datarep->extent_fn = dtype_file_extent_fn;
     adio_datarep->next = ADIOI_Datarep_head;
 
@@ -131,3 +212,4 @@ int MPI_Register_datarep(ROMIO_CONST char *datarep,
 
     return error_code;
 }
+#endif

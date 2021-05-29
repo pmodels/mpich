@@ -4,6 +4,8 @@
  */
 
 #include "mpioimpl.h"
+#include <limits.h>
+#include <assert.h>
 
 #ifdef HAVE_WEAK_SYMBOLS
 
@@ -44,6 +46,55 @@ Output Parameters:
 int MPI_File_write_ordered(MPI_File fh, ROMIO_CONST void *buf, int count,
                            MPI_Datatype datatype, MPI_Status * status)
 {
+    return MPIOI_File_write_ordered(fh, buf, count, datatype, status);
+}
+
+/* large count function */
+
+#ifdef HAVE_WEAK_SYMBOLS
+
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_File_write_ordered_c = PMPI_File_write_ordered_c
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_File_write_ordered_c MPI_File_write_ordered_c
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_File_write_ordered_c as PMPI_File_write_ordered_c
+/* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_File_write_ordered_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
+                             MPI_Status * status)
+    __attribute__ ((weak, alias("PMPI_File_write_ordered_c")));
+#endif
+
+#endif
+
+
+/*@
+    MPI_File_write_ordered_c - Collective write using shared file pointer
+
+Input Parameters:
+. fh - file handle (handle)
+. buf - initial address of buffer (choice)
+. count - number of elements in buffer (nonnegative integer)
+. datatype - datatype of each buffer element (handle)
+
+Output Parameters:
+. status - status object (Status)
+
+.N fortran
+@*/
+int MPI_File_write_ordered_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
+                             MPI_Datatype datatype, MPI_Status * status)
+{
+    assert(count <= INT_MAX);
+    return MPIOI_File_write_ordered(fh, buf, count, datatype, status);
+}
+
+#ifdef MPIO_BUILD_PROFILING
+int MPIOI_File_write_ordered(MPI_File fh, const void *buf, int count,
+                             MPI_Datatype datatype, MPI_Status * status)
+{
+    assert(count <= INT_MAX);
     int error_code, nprocs, myrank;
     ADIO_Offset incr;
     MPI_Count datatype_size;
@@ -125,3 +176,4 @@ int MPI_File_write_ordered(MPI_File fh, ROMIO_CONST void *buf, int count,
     /* FIXME: Check for error code from WriteStridedColl? */
     return error_code;
 }
+#endif
