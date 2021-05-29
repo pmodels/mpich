@@ -57,6 +57,11 @@ int main(int argc, char **argv)
     MPI_Bcast_init(sbuf, NUM_INTS, MPI_INT, root, comm, info, &req);
 
     for (i = 0; i < count; i++) {
+        if (rank != root) {
+            for (j = 0; j < NUM_INTS; ++j) {
+                sbuf[j] = -1;
+            }
+        }
         MPI_Start(&req);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
         /* Check the results */
