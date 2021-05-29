@@ -22,6 +22,21 @@ int MPI_Register_datarep(const char *datarep, MPI_Datarep_conversion_function * 
     __attribute__ ((weak, alias("PMPI_Register_datarep")));
 #endif
 
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_Register_datarep_c = PMPI_Register_datarep_c
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_Register_datarep_c MPI_Register_datarep_c
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_Register_datarep_c as PMPI_Register_datarep_c
+/* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Register_datarep_c(const char *datarep,
+                           MPI_Datarep_conversion_function_c * read_conversion_fn,
+                           MPI_Datarep_conversion_function_c * write_conversion_fn,
+                           MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
+    __attribute__ ((weak, alias("PMPI_Register_datarep_c")));
+#endif
+
 /* Include mapping from MPI->PMPI */
 #define MPIO_BUILD_PROFILING
 #include "mpioprof.h"
@@ -66,24 +81,6 @@ int MPI_Register_datarep(ROMIO_CONST char *datarep,
 
 /* large count function */
 
-#ifdef HAVE_WEAK_SYMBOLS
-
-#if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_Register_datarep_c = PMPI_Register_datarep_c
-#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_Register_datarep_c MPI_Register_datarep_c
-#elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_Register_datarep_c as PMPI_Register_datarep_c
-/* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Register_datarep_c(const char *datarep,
-                           MPI_Datarep_conversion_function_c * read_conversion_fn,
-                           MPI_Datarep_conversion_function_c * write_conversion_fn,
-                           MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
-    __attribute__ ((weak, alias("PMPI_Register_datarep_c")));
-#endif
-
-#endif
 
 /*@
   MPI_Register_datarep_c - Register functions for user-defined data
