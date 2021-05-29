@@ -157,6 +157,67 @@
 #define MPI_File_c2f PMPI_File_c2f
 #endif
 
+#undef MPI_File_read_c
+#define MPI_File_read_c PMPI_File_read_c
+#undef MPI_File_read_all_c
+#define MPI_File_read_all_c PMPI_File_read_all_c
+#undef MPI_File_read_all_begin_c
+#define MPI_File_read_all_begin_c PMPI_File_read_all_begin_c
+#undef MPI_File_read_at_c
+#define MPI_File_read_at_c PMPI_File_read_at_c
+#undef MPI_File_read_at_all_c
+#define MPI_File_read_at_all_c PMPI_File_read_at_all_c
+#undef MPI_File_read_at_all_begin_c
+#define MPI_File_read_at_all_begin_c PMPI_File_read_at_all_begin_c
+#undef MPI_File_read_ordered_c
+#define MPI_File_read_ordered_c PMPI_File_read_ordered_c
+#undef MPI_File_read_ordered_begin_c
+#define MPI_File_read_ordered_begin_c PMPI_File_read_ordered_begin_c
+#undef MPI_File_read_shared_c
+#define MPI_File_read_shared_c PMPI_File_read_shared_c
+#undef MPI_File_write_c
+#define MPI_File_write_c PMPI_File_write_c
+#undef MPI_File_write_all_c
+#define MPI_File_write_all_c PMPI_File_write_all_c
+#undef MPI_File_write_all_begin_c
+#define MPI_File_write_all_begin_c PMPI_File_write_all_begin_c
+#undef MPI_File_write_at_c
+#define MPI_File_write_at_c PMPI_File_write_at_c
+#undef MPI_File_write_at_all_c
+#define MPI_File_write_at_all_c PMPI_File_write_at_all_c
+#undef MPI_File_write_at_all_begin_c
+#define MPI_File_write_at_all_begin_c PMPI_File_write_at_all_begin_c
+#undef MPI_File_write_ordered_c
+#define MPI_File_write_ordered_c PMPI_File_write_ordered_c
+#undef MPI_File_write_ordered_begin_c
+#define MPI_File_write_ordered_begin_c PMPI_File_write_ordered_begin_c
+#undef MPI_File_write_shared_c
+#define MPI_File_write_shared_c PMPI_File_write_shared_c
+#undef MPI_File_iread_c
+#define MPI_File_iread_c PMPI_File_iread_c
+#undef MPI_File_iread_all_c
+#define MPI_File_iread_all_c PMPI_File_iread_all_c
+#undef MPI_File_iread_at_c
+#define MPI_File_iread_at_c PMPI_File_iread_at_c
+#undef MPI_File_iread_at_all_c
+#define MPI_File_iread_at_all_c PMPI_File_iread_at_all_c
+#undef MPI_File_iread_shared_c
+#define MPI_File_iread_shared_c PMPI_File_iread_shared_c
+#undef MPI_File_iwrite_c
+#define MPI_File_iwrite_c PMPI_File_iwrite_c
+#undef MPI_File_iwrite_all_c
+#define MPI_File_iwrite_all_c PMPI_File_iwrite_all_c
+#undef MPI_File_iwrite_at_c
+#define MPI_File_iwrite_at_c PMPI_File_iwrite_at_c
+#undef MPI_File_iwrite_at_all_c
+#define MPI_File_iwrite_at_all_c PMPI_File_iwrite_at_all_c
+#undef MPI_File_iwrite_shared_c
+#define MPI_File_iwrite_shared_c PMPI_File_iwrite_shared_c
+#undef MPI_File_get_type_extent_c
+#define MPI_File_get_type_extent_c PMPI_File_get_type_extent_c
+#undef MPI_Register_datarep_c
+#define MPI_Register_datarep_c PMPI_Register_datarep_c
+
 #undef MPIO_Test
 #undef PMPIO_Test
 #define MPIO_Test PMPIO_Test
