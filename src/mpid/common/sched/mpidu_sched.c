@@ -495,7 +495,7 @@ int MPIDU_Sched_reset(struct MPIDU_Sched *s)
 {
     MPIR_Assert(s->kind == MPIR_SCHED_KIND_PERSISTENT);
 
-    for (int i = s->idx; i < s->num_entries; ++i) {
+    for (int i = 0; i < s->num_entries; ++i) {
         s->entries[i].status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
     }
     s->idx = 0;
