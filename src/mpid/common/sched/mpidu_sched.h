@@ -124,7 +124,8 @@ struct MPIDU_Sched {
     struct MPIR_Request *req;   /* really needed? could cause MT problems... */
     struct MPIDU_Sched_entry *entries;
     enum MPIR_Sched_kind kind;  /* regular, persistent, generalized */
-    UT_array *buffers;
+    UT_array *buffers;          /* buffers to be freed when sched is freed */
+    UT_array *handles;          /* ref_count to be released when sched is freed */
     struct MPIDU_Sched *next;   /* linked-list next pointer */
     struct MPIDU_Sched *prev;   /* linked-list next pointer */
 };
