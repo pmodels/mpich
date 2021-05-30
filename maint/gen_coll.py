@@ -193,7 +193,7 @@ def dump_allcomm_sched_auto(name):
         if 'extra_params' in algo:
             algo_args += ", " + get_algo_extra_args(algo, "csel")
             algo_params += ", " + get_algo_extra_params(algo)
-        add_prototype("int MPIR_TSP_%s_sched_%s_%s(%s, void *sched)" % (Name, commkind, algo_name, algo_params))
+        add_prototype("int MPIR_TSP_%s_sched_%s_%s(%s, MPIR_TSP_sched_t * sched)" % (Name, commkind, algo_name, algo_params))
         dump_split(3, "mpi_errno = MPIR_TSP_%s_sched_%s_%s(%s, *sched_p);" % (Name, commkind, algo_name, algo_args))
 
     def dump_cnt_algo_sched(algo, commkind):
@@ -659,6 +659,9 @@ def dump_prototypes(f, prototypes):
             print(l, file=Out)
         print("#ifndef COLL_ALGOS_H_INCLUDED", file=Out)
         print("#define COLL_ALGOS_H_INCLUDED", file=Out)
+        print("", file=Out)
+        print("#include \"tsp_gentran.h\"", file=Out)
+        print("", file=Out)
         for l in prototypes:
             lines = split_line_with_break(l + ';', '', 80)
             for l2 in lines:
