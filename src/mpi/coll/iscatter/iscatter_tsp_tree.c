@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "tsp_gentran.h"
 #include "treealgo.h"
 
 /* Routine to schedule a tree based scatter */

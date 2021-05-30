@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "tsp_gentran.h"
 
 /* Routine to schedule a scattered based alltoallv */
 /* Alltoallv doesn't support MPI_IN_PLACE */

@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "tsp_gentran.h"
 #include "algo_common.h"
 #include "recexchalgo.h"
 #include "iallreduce_tsp_recursive_exchange_common.h"

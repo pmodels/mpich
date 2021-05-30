@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "tsp_gentran.h"
 /* The below code is an implementation of alltoall ring algorithm,
  * the dependencies are show below (buf1 and buf2 are temporary buffers
  * used for execution of the ring algorithm) :

@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "tsp_gentran.h"
 #include "iallgatherv.h"
 
 /* XXX The code has work around to deal with a known failure with a ICC version

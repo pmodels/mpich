@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "tsp_gentran.h"
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 

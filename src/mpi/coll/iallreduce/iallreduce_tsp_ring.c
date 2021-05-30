@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "tsp_gentran.h"
 #include "algo_common.h"
 
 /* Routine to schedule a ring exchange based allreduce.
