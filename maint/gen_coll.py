@@ -20,7 +20,6 @@ def main():
     G.prototypes_hash = {}
     G.prototypes = []
     G.out.append("#include \"mpiimpl.h\"")
-    G.out.append("#include \"tsp_prototypes.h\"")
     G.out.append("#include \"iallgatherv/iallgatherv.h\"")
     for a in coll_names:
         dump_coll(a, "blocking")

@@ -12,7 +12,9 @@ mpi_core_sources +=                                           \
     src/mpi/coll/iallgatherv/iallgatherv_intra_sched_brucks.c             \
     src/mpi/coll/iallgatherv/iallgatherv_intra_sched_ring.c               \
     src/mpi/coll/iallgatherv/iallgatherv_inter_sched_remote_gather_local_bcast.c \
-    src/mpi/coll/iallgatherv/iallgatherv_gentran_algos.c                    \
+    src/mpi/coll/iallgatherv/iallgatherv_tsp_brucks.c \
+    src/mpi/coll/iallgatherv/iallgatherv_tsp_recexch.c \
+    src/mpi/coll/iallgatherv/iallgatherv_tsp_ring.c \
     src/mpi/coll/iallgatherv/iallgatherv_utils.c
 
 noinst_HEADERS += \
