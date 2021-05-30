@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "tsp_gentran.h"
 #include "recexchalgo.h"
 
 int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int nranks, int k, int p_of_k,
