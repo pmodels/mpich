@@ -85,8 +85,8 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         return;
     }
 
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
+    PMPI_Comm_size(fd->comm, &nprocs);
+    PMPI_Comm_rank(fd->comm, &myrank);
 
 /* the number of processes that actually perform I/O, nprocs_for_coll,
  * is stored in the hints off the ADIO_File structure
@@ -113,8 +113,8 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * 2 * sizeof(ADIO_Offset));
         end_offsets = st_offsets + nprocs;
 
-        MPI_Allgather(&start_offset, 1, ADIO_OFFSET, st_offsets, 1, ADIO_OFFSET, fd->comm);
-        MPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1, ADIO_OFFSET, fd->comm);
+        PMPI_Allgather(&start_offset, 1, ADIO_OFFSET, st_offsets, 1, ADIO_OFFSET, fd->comm);
+        PMPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1, ADIO_OFFSET, fd->comm);
 
         /* are the accesses of different processes interleaved? */
         for (i = 1; i < nprocs; i++)
@@ -210,10 +210,10 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     MPE_Log_event(ADIOI_MPE_postwrite_a, 0, NULL);
 #endif
     if (fd->hints->cb_nodes == 1)
-        MPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
+        PMPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
     else {
         tmp_error = *error_code;
-        MPI_Allreduce(&tmp_error, error_code, 1, MPI_INT, MPI_MAX, fd->comm);
+        PMPI_Allreduce(&tmp_error, error_code, 1, MPI_INT, MPI_MAX, fd->comm);
     }
 #ifdef ADIOI_MPE_LOGGING
     MPE_Log_event(ADIOI_MPE_postwrite_b, 0, NULL);
@@ -239,7 +239,7 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     if (status) {
         MPI_Count bufsize, size;
         /* Don't set status if it isn't needed */
-        MPI_Type_size_x(datatype, &size);
+        PMPI_Type_size_x(datatype, &size);
         bufsize = size * count;
         MPIR_Status_set_bytes(status, datatype, bufsize);
     }
@@ -328,7 +328,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
         ntimes = 0;     /* this process does no writing. */
     }
 
-    MPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX, fd->comm);
+    PMPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX, fd->comm);
 
     write_buf = fd->io_buf;
 
@@ -346,7 +346,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
 
     send_size = partial_recv + nprocs;
     /* total size of data to be sent to each proc. in an iteration.
-     * Of size nprocs so that I can use MPI_Alltoall later. */
+     * Of size nprocs so that I can use PMPI_Alltoall later. */
 
     recv_size = send_size + nprocs;
     /* total size of data to be recd. from each proc. in an iteration. */
@@ -368,7 +368,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
     if (!buftype_is_contig) {
         flat_buf = ADIOI_Flatten_and_find(datatype);
     }
-    MPI_Type_extent(datatype, &buftype_extent);
+    PMPI_Type_extent(datatype, &buftype_extent);
 
 
 /* I need to check if there are any outstanding nonblocking writes to
@@ -379,7 +379,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
 
     /*ADIOI_Complete_async(error_code);
      * if (*error_code != MPI_SUCCESS) return;
-     * MPI_Barrier(fd->comm);
+     * PMPI_Barrier(fd->comm);
      */
 
     done = 0;
@@ -429,7 +429,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                         count[i]++;
                         ADIOI_Assert((((ADIO_Offset) (uintptr_t) write_buf) + req_off - off) ==
                                      (ADIO_Offset) (uintptr_t) (write_buf + req_off - off));
-                        MPI_Address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
+                        PMPI_Address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
                         ADIOI_Assert((off + size - req_off) == (int) (off + size - req_off));
                         recv_size[i] += (int) (MPL_MIN(off + size - req_off, (unsigned) req_len));
 
@@ -542,7 +542,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
 /* exchange recv_size info so that each process knows how much to
    send to whom. */
 
-    MPI_Alltoall(recv_size, 1, MPI_INT, send_size, 1, MPI_INT, fd->comm);
+    PMPI_Alltoall(recv_size, 1, MPI_INT, send_size, 1, MPI_INT, fd->comm);
 
     /* create derived datatypes for recv */
 
@@ -576,7 +576,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
                                          &(others_req[i].mem_ptrs[start_pos[i]]),
                                          MPI_BYTE, recv_types + j);
             /* absolute displacements; use MPI_BOTTOM in recv */
-            MPI_Type_commit(recv_types + j);
+            PMPI_Type_commit(recv_types + j);
             j++;
         }
     }
@@ -660,8 +660,8 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         j = 0;
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
-                MPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
-                          fd->comm, requests + j);
+                PMPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
+                           fd->comm, requests + j);
                 j++;
             }
         }
@@ -678,8 +678,8 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         j = 0;
         for (i = 0; i < nprocs; i++)
             if (send_size[i]) {
-                MPI_Isend(((char *) buf) + buf_idx[i], send_size[i],
-                          MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, send_req + j);
+                PMPI_Isend(((char *) buf) + buf_idx[i], send_size[i],
+                           MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, send_req + j);
                 j++;
                 buf_idx[i] += send_size[i];
             }
@@ -709,15 +709,15 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         for (i = 0; i < nprocs; i++) {
             MPI_Status wkl_status;
             if (recv_size[i]) {
-                MPI_Recv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
-                         fd->comm, &wkl_status);
+                PMPI_Recv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
+                          fd->comm, &wkl_status);
                 j++;
             }
         }
     }
 
     for (i = 0; i < nprocs_recv; i++)
-        MPI_Type_free(recv_types + i);
+        PMPI_Type_free(recv_types + i);
     ADIOI_Free(recv_types);
 
 #ifdef MPI_STATUSES_IGNORE
@@ -739,17 +739,17 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
     if (fd->atomicity) {
         /* bug fix from Wei-keng Liao and Kenin Coloma */
         while (!i)
-            MPI_Testall(nprocs_send, send_req, &i, statuses);
+            PMPI_Testall(nprocs_send, send_req, &i, statuses);
     } else {
         while (!i)
-            MPI_Testall(nprocs_send + nprocs_recv, requests, &i, statuses);
+            PMPI_Testall(nprocs_send + nprocs_recv, requests, &i, statuses);
     }
 #else
     if (fd->atomicity)
         /* bug fix from Wei-keng Liao and Kenin Coloma */
-        MPI_Waitall(nprocs_send, send_req, statuses);
+        PMPI_Waitall(nprocs_send, send_req, statuses);
     else
-        MPI_Waitall(nprocs_send + nprocs_recv, requests, statuses);
+        PMPI_Waitall(nprocs_send + nprocs_recv, requests, statuses);
 #endif
 
 #ifdef AGGREGATION_PROFILE
@@ -892,8 +892,8 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                         curr_to_proc[p] += size;
                     ADIOI_BUF_COPY}
                     if (send_buf_idx[p] == send_size[p]) {
-                        MPI_Isend(send_buf[p], send_size[p], MPI_BYTE, p,
-                                  myrank + p + 100 * iter, fd->comm, requests + jj);
+                        PMPI_Isend(send_buf[p], send_size[p], MPI_BYTE, p,
+                                   myrank + p + 100 * iter, fd->comm, requests + jj);
                         jj++;
                     }
                 } else {

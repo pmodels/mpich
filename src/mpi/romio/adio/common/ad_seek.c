@@ -38,8 +38,8 @@ ADIO_Offset ADIOI_GEN_SeekIndividual(ADIO_File fd, ADIO_Offset offset, int whenc
     else {
         flat_file = ADIOI_Flatten_and_find(fd->filetype);
 
-        MPI_Type_extent(fd->filetype, &filetype_extent);
-        MPI_Type_size_x(fd->filetype, &filetype_size);
+        PMPI_Type_extent(fd->filetype, &filetype_extent);
+        PMPI_Type_size_x(fd->filetype, &filetype_size);
         if (!filetype_size) {
             /* Since offset relative to the filetype size, we can't
              * do compute the offset when that result is zero.

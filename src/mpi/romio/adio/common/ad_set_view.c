@@ -62,26 +62,26 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
     /* free copies of old etypes and filetypes and delete flattened
      * version of filetype if necessary */
 
-    MPI_Type_get_envelope(fd->etype, &i, &j, &k, &combiner);
+    PMPI_Type_get_envelope(fd->etype, &i, &j, &k, &combiner);
     if (combiner != MPI_COMBINER_NAMED)
-        MPI_Type_free(&(fd->etype));
+        PMPI_Type_free(&(fd->etype));
 
-    MPI_Type_get_envelope(fd->filetype, &i, &j, &k, &combiner);
+    PMPI_Type_get_envelope(fd->filetype, &i, &j, &k, &combiner);
     if (combiner != MPI_COMBINER_NAMED)
-        MPI_Type_free(&(fd->filetype));
+        PMPI_Type_free(&(fd->filetype));
 
     /* set new info */
     ADIO_SetInfo(fd, info, &err);
 
     /* set new etypes and filetypes */
 
-    MPI_Type_get_envelope(etype, &i, &j, &k, &combiner);
+    PMPI_Type_get_envelope(etype, &i, &j, &k, &combiner);
     if (combiner == MPI_COMBINER_NAMED) {
         fd->etype = etype;
         etype_is_contig = 1;
     } else {
-        MPI_Type_contiguous(1, etype, &copy_etype);
-        MPI_Type_commit(&copy_etype);
+        PMPI_Type_contiguous(1, etype, &copy_etype);
+        PMPI_Type_commit(&copy_etype);
         fd->etype = copy_etype;
         ADIOI_Datatype_iscontig(fd->etype, &etype_is_contig);
     }
@@ -89,13 +89,13 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
     if (0 == check_type(flat_etype, fd->orig_access_mode, myname, "etype", error_code))
         return;
 
-    MPI_Type_get_envelope(filetype, &i, &j, &k, &combiner);
+    PMPI_Type_get_envelope(filetype, &i, &j, &k, &combiner);
     if (combiner == MPI_COMBINER_NAMED) {
         fd->filetype = filetype;
         filetype_is_contig = 1;
     } else {
-        MPI_Type_contiguous(1, filetype, &copy_filetype);
-        MPI_Type_commit(&copy_filetype);
+        PMPI_Type_contiguous(1, filetype, &copy_filetype);
+        PMPI_Type_commit(&copy_filetype);
         fd->filetype = copy_filetype;
         ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
     }
@@ -104,7 +104,7 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
     if (0 == check_type(flat_file, fd->orig_access_mode, myname, "filetype", error_code))
         return;
 
-    MPI_Type_size_x(fd->etype, &(fd->etype_size));
+    PMPI_Type_size_x(fd->etype, &(fd->etype_size));
     fd->disp = disp;
 
     /* reset MPI-IO file pointer to point to the first byte that can

@@ -42,18 +42,18 @@ static MPI_Datatype make_stats_type(ADIO_File fd)
     MPI_Datatype newtype;
 
     lens[BLOCKSIZE] = 1;
-    MPI_Address(&fd->blksize, &offsets[BLOCKSIZE]);
+    PMPI_Address(&fd->blksize, &offsets[BLOCKSIZE]);
     types[BLOCKSIZE] = MPI_LONG;
 
     lens[STRIPE_SIZE] = lens[STRIPE_FACTOR] = lens[START_IODEVICE] = 1;
     types[STRIPE_SIZE] = types[STRIPE_FACTOR] = types[START_IODEVICE] = MPI_INT;
-    MPI_Address(&fd->hints->striping_unit, &offsets[STRIPE_SIZE]);
-    MPI_Address(&fd->hints->striping_factor, &offsets[STRIPE_FACTOR]);
-    MPI_Address(&fd->hints->start_iodevice, &offsets[START_IODEVICE]);
+    PMPI_Address(&fd->hints->striping_unit, &offsets[STRIPE_SIZE]);
+    PMPI_Address(&fd->hints->striping_factor, &offsets[STRIPE_FACTOR]);
+    PMPI_Address(&fd->hints->start_iodevice, &offsets[START_IODEVICE]);
 
 
-    MPI_Type_create_struct(STAT_ITEMS, lens, offsets, types, &newtype);
-    MPI_Type_commit(&newtype);
+    PMPI_Type_create_struct(STAT_ITEMS, lens, offsets, types, &newtype);
+    PMPI_Type_commit(&newtype);
     return newtype;
 
 }
@@ -80,14 +80,14 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
             fd->comm = MPI_COMM_SELF;
             (*(fd->fns->ADIOI_xxx_Open)) (fd, error_code);
             fd->comm = tmp_comm;
-            MPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
+            PMPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
             /* if no error, close the file and reopen normally below */
             if (*error_code == MPI_SUCCESS)
                 (*(fd->fns->ADIOI_xxx_Close)) (fd, error_code);
 
             fd->access_mode = access_mode;      /* back to original */
         } else
-            MPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
+            PMPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
 
         if (*error_code != MPI_SUCCESS) {
             return;
@@ -117,7 +117,7 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
              * lower-level file system driver (e.g. 'bluegene') collected it
              * (not all do)*/
             stats_type = make_stats_type(fd);
-            MPI_Bcast(MPI_BOTTOM, 1, stats_type, fd->hints->ranklist[0], fd->comm);
+            PMPI_Bcast(MPI_BOTTOM, 1, stats_type, fd->hints->ranklist[0], fd->comm);
             ADIOI_Assert(fd->blksize > 0);
             /* some file systems (e.g. lustre) will inform the user via the
              * info object about the file configuration.  deferred open,
@@ -133,7 +133,7 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
             ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
 
             *error_code = MPI_SUCCESS;
-            MPI_Type_free(&stats_type);
+            PMPI_Type_free(&stats_type);
             return;
         }
     }
@@ -169,8 +169,8 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
      * communicator, not just those who participated in open */
 
     stats_type = make_stats_type(fd);
-    MPI_Bcast(MPI_BOTTOM, 1, stats_type, fd->hints->ranklist[0], fd->comm);
-    MPI_Type_free(&stats_type);
+    PMPI_Bcast(MPI_BOTTOM, 1, stats_type, fd->hints->ranklist[0], fd->comm);
+    PMPI_Type_free(&stats_type);
     /* file domain code will get terribly confused in a hard-to-debug way if
      * gpfs blocksize not sensible */
     ADIOI_Assert(fd->blksize > 0);

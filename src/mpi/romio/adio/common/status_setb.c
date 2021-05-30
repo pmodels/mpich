@@ -17,7 +17,7 @@ int MPIR_Status_set_bytes(MPI_Status * status, MPI_Datatype datatype, MPI_Count 
     /* it's ok that ROMIO stores number-of-bytes in status, not
      * count-of-copies, as long as MPI_GET_COUNT knows what to do */
     if (status != MPI_STATUS_IGNORE)
-        MPI_Status_set_elements_x(status, MPI_BYTE, nbytes);
+        PMPI_Status_set_elements_x(status, MPI_BYTE, nbytes);
     return MPI_SUCCESS;
 }
 #endif

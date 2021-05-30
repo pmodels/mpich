@@ -27,8 +27,8 @@ void ADIOI_Get_position(ADIO_File fd, ADIO_Offset * offset)
     else {
         flat_file = ADIOI_Flatten_and_find(fd->filetype);
 
-        MPI_Type_size_x(fd->filetype, &filetype_size);
-        MPI_Type_extent(fd->filetype, &filetype_extent);
+        PMPI_Type_size_x(fd->filetype, &filetype_size);
+        PMPI_Type_extent(fd->filetype, &filetype_extent);
 
         disp = fd->disp;
         byte_offset = fd->fp_ind;

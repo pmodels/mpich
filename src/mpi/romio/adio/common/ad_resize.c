@@ -14,7 +14,7 @@ void ADIOI_GEN_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
     int err, rank;
     static char myname[] = "ADIOI_GEN_RESIZE";
 
-    MPI_Comm_rank(fd->comm, &rank);
+    PMPI_Comm_rank(fd->comm, &rank);
 
     /* first aggregator performs ftruncate() */
     if (rank == fd->hints->ranklist[0]) {
@@ -27,7 +27,7 @@ void ADIOI_GEN_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
     }
 
     /* bcast success/errno value */
-    MPI_Bcast(&err, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
+    PMPI_Bcast(&err, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
 
     /* --BEGIN ERROR HANDLING-- */
     if (err != 0) {

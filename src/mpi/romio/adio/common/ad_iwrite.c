@@ -52,7 +52,7 @@ void ADIOI_GEN_IwriteContig(ADIO_File fd, const void *buf, int count,
     int aio_errno = 0;
     static char myname[] = "ADIOI_GEN_IWRITECONTIG";
 
-    MPI_Type_size_x(datatype, &typesize);
+    PMPI_Type_size_x(datatype, &typesize);
     len = count * typesize;
 
     if (file_ptr_type == ADIO_INDIVIDUAL)
@@ -92,7 +92,7 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int count, MPI_Datatype type,
     MPI_Status status;
     MPI_Count len, typesize;
 
-    MPI_Type_size_x(type, &typesize);
+    PMPI_Type_size_x(type, &typesize);
     len = count * typesize;
 
 #if defined(ROMIO_XFS)
@@ -209,7 +209,7 @@ void ADIOI_GEN_IwriteStrided(ADIO_File fd, const void *buf, int count,
     ADIO_WriteStrided(fd, buf, count, datatype, file_ptr_type, offset, &status, error_code);
 
     if (*error_code == MPI_SUCCESS) {
-        MPI_Type_size_x(datatype, &typesize);
+        PMPI_Type_size_x(datatype, &typesize);
         nbytes = (MPI_Offset) count *(MPI_Offset) typesize;
     }
     MPIO_Completed_request_create(&fd, nbytes, error_code, request);
@@ -233,7 +233,7 @@ int ADIOI_GEN_aio_poll_fn(void *extra_state, MPI_Status * status)
     } else if (errno == 0) {
         ssize_t n = aio_return(aio_req->aiocbp);
         aio_req->nbytes = n;
-        errcode = MPI_Grequest_complete(aio_req->req);
+        errcode = PMPI_Grequest_complete(aio_req->req);
         /* --BEGIN ERROR HANDLING-- */
         if (errcode != MPI_SUCCESS) {
             errcode = MPIO_Err_create_code(MPI_SUCCESS,
@@ -263,7 +263,7 @@ int ADIOI_GEN_aio_wait_fn(int count, void **array_of_states, double timeout, MPI
 
     cblist = (const struct aiocb **) ADIOI_Calloc(count, sizeof(struct aiocb *));
 
-    starttime = MPI_Wtime();
+    starttime = PMPI_Wtime();
     if (timeout > 0) {
         aio_timer.tv_sec = (time_t) timeout;
         aio_timer.tv_nsec = timeout - aio_timer.tv_sec;
@@ -287,7 +287,7 @@ int ADIOI_GEN_aio_wait_fn(int count, void **array_of_states, double timeout, MPI
                 if (errno == 0) {
                     ssize_t n = aio_return(aio_reqlist[i]->aiocbp);
                     aio_reqlist[i]->nbytes = n;
-                    errcode = MPI_Grequest_complete(aio_reqlist[i]->req);
+                    errcode = PMPI_Grequest_complete(aio_reqlist[i]->req);
                     if (errcode != MPI_SUCCESS) {
                         errcode = MPIO_Err_create_code(MPI_SUCCESS,
                                                        MPIR_ERR_RECOVERABLE,
@@ -303,7 +303,7 @@ int ADIOI_GEN_aio_wait_fn(int count, void **array_of_states, double timeout, MPI
                 /* TODO: need to handle error conditions somehow */
             }
         }       /* TODO: also need to handle errors here  */
-        if ((timeout > 0) && (timeout < (MPI_Wtime() - starttime)))
+        if ((timeout > 0) && (timeout < (PMPI_Wtime() - starttime)))
             break;
     }
 
@@ -331,10 +331,10 @@ int ADIOI_GEN_aio_query_fn(void *extra_state, MPI_Status * status)
 
     aio_req = (ADIOI_AIO_Request *) extra_state;
 
-    MPI_Status_set_elements_x(status, MPI_BYTE, aio_req->nbytes);
+    PMPI_Status_set_elements_x(status, MPI_BYTE, aio_req->nbytes);
 
     /* can never cancel so always true */
-    MPI_Status_set_cancelled(status, 0);
+    PMPI_Status_set_cancelled(status, 0);
 
     /* choose not to return a value for this */
     status->MPI_SOURCE = MPI_UNDEFINED;

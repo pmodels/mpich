@@ -26,7 +26,7 @@ int ADIOI_Info_check_and_install_int(ADIO_File fd, MPI_Info info, const char *ke
         intval = atoi(value);
         tmp_val = intval;
 
-        MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
+        PMPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
         /* --BEGIN ERROR HANDLING-- */
         if (tmp_val != intval) {
             MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(funcname, key, error_code);
@@ -74,7 +74,7 @@ int ADIOI_Info_check_and_install_enabled(ADIO_File fd, MPI_Info info, const char
 
         tmp_val = *local_cache;
 
-        MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
+        PMPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
         /* --BEGIN ERROR HANDLING-- */
         if (tmp_val != *local_cache) {
             MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(funcname, key, error_code);
@@ -113,7 +113,7 @@ int ADIOI_Info_check_and_install_true(ADIO_File fd, MPI_Info info, const char *k
         }
         tmp_val = *local_cache;
 
-        MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
+        PMPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
         /* --BEGIN ERROR HANDLING-- */
         if (tmp_val != *local_cache) {
             MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(funcname, key, error_code);

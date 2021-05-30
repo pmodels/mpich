@@ -68,8 +68,8 @@ void ADIOI_Calc_file_realms(ADIO_File fd, ADIO_Offset min_st_offset, ADIO_Offset
             file_realm_types = fd->file_realm_types;
         }
         *file_realm_st_offs = min_st_offset;
-        MPI_Type_contiguous((max_end_offset - min_st_offset + 1), MPI_BYTE, file_realm_types);
-        MPI_Type_commit(file_realm_types);
+        PMPI_Type_contiguous((max_end_offset - min_st_offset + 1), MPI_BYTE, file_realm_types);
+        PMPI_Type_commit(file_realm_types);
         ADIOI_Flatten_datatype(*file_realm_types);
     } else if (fd->file_realm_st_offs == NULL) {
         file_realm_st_offs = (ADIO_Offset *)
@@ -221,9 +221,9 @@ void ADIOI_Create_fr_simpletype(int size, int nprocs_for_coll, MPI_Datatype * si
     old_types[0] = MPI_BYTE;
     old_types[1] = MPI_UB;
 
-    MPI_Type_struct(count, blocklens, indices, old_types, simpletype);
+    PMPI_Type_struct(count, blocklens, indices, old_types, simpletype);
 
-    MPI_Type_commit(simpletype);
+    PMPI_Type_commit(simpletype);
 }
 
 /* Verify that file realms are covering (PFRs) and non-overlapping */

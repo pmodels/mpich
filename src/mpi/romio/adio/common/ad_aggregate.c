@@ -100,7 +100,7 @@ int ADIOI_Calc_aggregator(ADIO_File fd,
         FPRINTF(stderr,
                 "Error in ADIOI_Calc_aggregator(): rank_index(%d) >= fd->hints->cb_nodes (%d) fd_size=%lld off=%lld\n",
                 rank_index, fd->hints->cb_nodes, (long long) fd_size, (long long) off);
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        PMPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     /* remember here that even in Rajeev's original code it was the case that
@@ -271,7 +271,7 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
 /* count_my_req_per_proc[i] gives the no. of contig. requests of this
    process in process i's file domain. calloc initializes to zero.
    I'm allocating memory of size nprocs, so that I can do an
-   MPI_Alltoall later on.*/
+   PMPI_Alltoall later on.*/
 
     buf_idx = (MPI_Aint *) ADIOI_Malloc(nprocs * sizeof(MPI_Aint));
 /* buf_idx is relevant only if buftype_is_contig.
@@ -448,8 +448,8 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 #endif
     count_others_req_per_proc = (int *) ADIOI_Malloc(nprocs * sizeof(int));
 
-    MPI_Alltoall(count_my_req_per_proc, 1, MPI_INT,
-                 count_others_req_per_proc, 1, MPI_INT, fd->comm);
+    PMPI_Alltoall(count_my_req_per_proc, 1, MPI_INT,
+                  count_others_req_per_proc, 1, MPI_INT, fd->comm);
 
     *others_req_ptr = (ADIOI_Access *) ADIOI_Malloc(nprocs * sizeof(ADIOI_Access));
     others_req = *others_req_ptr;
@@ -487,24 +487,24 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     j = 0;
     for (i = 0; i < nprocs; i++) {
         if (others_req[i].count) {
-            MPI_Irecv(others_req[i].offsets, 2 * others_req[i].count,
-                      ADIO_OFFSET, i, i + myrank, fd->comm, &requests[j++]);
+            PMPI_Irecv(others_req[i].offsets, 2 * others_req[i].count,
+                       ADIO_OFFSET, i, i + myrank, fd->comm, &requests[j++]);
         }
     }
 
     for (i = 0; i < nprocs; i++) {
         if (my_req[i].count) {
-            MPI_Isend(my_req[i].offsets, 2 * my_req[i].count,
-                      ADIO_OFFSET, i, i + myrank, fd->comm, &requests[j++]);
+            PMPI_Isend(my_req[i].offsets, 2 * my_req[i].count,
+                       ADIO_OFFSET, i, i + myrank, fd->comm, &requests[j++]);
         }
     }
 
     if (j) {
 #ifdef MPI_STATUSES_IGNORE
-        MPI_Waitall(j, requests, MPI_STATUSES_IGNORE);
+        PMPI_Waitall(j, requests, MPI_STATUSES_IGNORE);
 #else
         MPI_Status *statuses = (MPI_Status *) ADIOI_Malloc(j * sizeof(MPI_Status));
-        MPI_Waitall(j, requests, statuses);
+        PMPI_Waitall(j, requests, statuses);
         ADIOI_Free(statuses);
 #endif
     }
@@ -534,9 +534,9 @@ void ADIOI_Icalc_others_req(ADIOI_NBC_Request * nbc_req, int *error_code)
 #endif
     vars->count_others_req_per_proc = (int *) ADIOI_Malloc(vars->nprocs * sizeof(int));
 
-    *error_code = MPI_Ialltoall(vars->count_my_req_per_proc, 1, MPI_INT,
-                                vars->count_others_req_per_proc, 1, MPI_INT, vars->fd->comm,
-                                &vars->req1);
+    *error_code = PMPI_Ialltoall(vars->count_my_req_per_proc, 1, MPI_INT,
+                                 vars->count_others_req_per_proc, 1, MPI_INT, vars->fd->comm,
+                                 &vars->req1);
 
     if (nbc_req->rdwr == ADIOI_READ) {
         nbc_req->data.rd.state = ADIOI_IRC_STATE_ICALC_OTHERS_REQ;
@@ -609,15 +609,15 @@ void ADIOI_Icalc_others_req_main(ADIOI_NBC_Request * nbc_req, int *error_code)
     j = 0;
     for (i = 0; i < nprocs; i++) {
         if (others_req[i].count) {
-            MPI_Irecv(others_req[i].offsets, 2 * others_req[i].count,
-                      ADIO_OFFSET, i, i + myrank, fd->comm, &vars->req2[j++]);
+            PMPI_Irecv(others_req[i].offsets, 2 * others_req[i].count,
+                       ADIO_OFFSET, i, i + myrank, fd->comm, &vars->req2[j++]);
         }
     }
 
     for (i = 0; i < nprocs; i++) {
         if (my_req[i].count) {
-            MPI_Isend(my_req[i].offsets, 2 * my_req[i].count,
-                      ADIO_OFFSET, i, i + myrank, fd->comm, &vars->req2[j++]);
+            PMPI_Isend(my_req[i].offsets, 2 * my_req[i].count,
+                       ADIO_OFFSET, i, i + myrank, fd->comm, &vars->req2[j++]);
         }
     }
 

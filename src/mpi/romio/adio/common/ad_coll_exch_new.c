@@ -67,8 +67,8 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
                            view_state * client_file_view_state_arr)
 {
     /* Convert my own fileview to an ADIOI_Flattened type and a
-     * disp. MPI_Alltoall the count of ADIOI_Flatlist nodes.
-     * MPI_Isend/Irecv the block_lens, indices of ADIOI_Flatlist node
+     * disp. PMPI_Alltoall the count of ADIOI_Flatlist nodes.
+     * PMPI_Isend/Irecv the block_lens, indices of ADIOI_Flatlist node
      * to/from each of the aggregators with the rest of the file view
      * state. */
 
@@ -95,8 +95,8 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
     /* The memtype will be freed after the call.  The filetype will be
      * freed in the close and should have been flattened in the file
      * view. */
-    MPI_Type_size_x(datatype, &memtype_sz);
-    MPI_Type_extent(datatype, &memtype_extent);
+    PMPI_Type_size_x(datatype, &memtype_sz);
+    PMPI_Type_extent(datatype, &memtype_extent);
     if (memtype_sz == memtype_extent) {
         memtype_is_contig = 1;
         flat_mem_p = ADIOI_Flatten_and_find(datatype);
@@ -105,8 +105,8 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
         flat_mem_p = ADIOI_Flatten_and_find(datatype);
     }
 
-    MPI_Type_extent(fd->filetype, &filetype_extent);
-    MPI_Type_size_x(fd->filetype, &filetype_sz);
+    PMPI_Type_extent(fd->filetype, &filetype_extent);
+    PMPI_Type_size_x(fd->filetype, &filetype_sz);
     flat_file_p = ADIOI_Flatten_and_find(fd->filetype);
     if (filetype_extent == filetype_sz) {
         flat_file_p->blocklens[0] = memtype_sz * count;
@@ -132,8 +132,8 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
             recv_count_arr = ADIOI_Calloc(nprocs, sizeof(amount_and_extra_data_t));
             recv_req_arr = ADIOI_Malloc(nprocs * sizeof(MPI_Request));
             for (i = 0; i < nprocs; i++)
-                MPI_Irecv(&recv_count_arr[i], sizeof(amount_and_extra_data_t),
-                          MPI_BYTE, i, COUNT_EXCH, fd->comm, &recv_req_arr[i]);
+                PMPI_Irecv(&recv_count_arr[i], sizeof(amount_and_extra_data_t),
+                           MPI_BYTE, i, COUNT_EXCH, fd->comm, &recv_req_arr[i]);
         }
 
         /* only send data to aggregators */
@@ -146,8 +146,8 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
             send_count_arr[i].sz = disp_off_sz_ext_typesz[3];
             send_count_arr[i].ext = disp_off_sz_ext_typesz[4];
             send_count_arr[i].type_sz = disp_off_sz_ext_typesz[5];
-            MPI_Isend(&send_count_arr[i], sizeof(amount_and_extra_data_t),
-                      MPI_BYTE, fd->hints->ranklist[i], COUNT_EXCH, fd->comm, &send_req_arr[i]);
+            PMPI_Isend(&send_count_arr[i], sizeof(amount_and_extra_data_t),
+                       MPI_BYTE, fd->hints->ranklist[i], COUNT_EXCH, fd->comm, &send_req_arr[i]);
         }
     }
 
@@ -204,11 +204,12 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 #endif
 
     if (fd->hints->cb_alltoall != ADIOI_HINT_DISABLE) {
-        ret = MPI_Alltoall(send_count_arr, sizeof(amount_and_extra_data_t),
-                           MPI_BYTE,
-                           recv_count_arr, sizeof(amount_and_extra_data_t), MPI_BYTE, fd->comm);
+        ret = PMPI_Alltoall(send_count_arr, sizeof(amount_and_extra_data_t),
+                            MPI_BYTE,
+                            recv_count_arr, sizeof(amount_and_extra_data_t), MPI_BYTE, fd->comm);
         if (ret != MPI_SUCCESS) {
-            fprintf(stderr, "ADIOI_Exchange_file_views: MPI_Alltoall failed " "with error %d", ret);
+            fprintf(stderr, "ADIOI_Exchange_file_views: PMPI_Alltoall failed " "with error %d",
+                    ret);
             return;
         }
     } else {
@@ -218,10 +219,10 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
         statuses = (MPI_Status *) ADIOI_Malloc(1 + nprocs * sizeof(MPI_Status));
 #endif
         if (fd->is_agg) {
-            MPI_Waitall(nprocs, recv_req_arr, statuses);
+            PMPI_Waitall(nprocs, recv_req_arr, statuses);
             ADIOI_Free(recv_req_arr);
         }
-        MPI_Waitall(fd->hints->cb_nodes, send_req_arr, statuses);
+        PMPI_Waitall(fd->hints->cb_nodes, send_req_arr, statuses);
 #ifndef MPI_STATUSES_IGNORE
         ADIOI_Free(statuses);
 #endif
@@ -298,13 +299,13 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
         recv_req_arr = (MPI_Request *) ADIOI_Calloc(2 * (recv_req_arr_sz), sizeof(MPI_Request));
         for (i = 0; i < nprocs; i++) {
             if (recv_count_arr[i].count > 0) {
-                MPI_Irecv(client_file_view_state_arr[i].flat_type_p->indices,
-                          recv_count_arr[i].count, ADIO_OFFSET, i,
-                          INDICES, fd->comm, &recv_req_arr[j]);
+                PMPI_Irecv(client_file_view_state_arr[i].flat_type_p->indices,
+                           recv_count_arr[i].count, ADIO_OFFSET, i,
+                           INDICES, fd->comm, &recv_req_arr[j]);
                 j++;
-                MPI_Irecv(client_file_view_state_arr[i].flat_type_p->blocklens,
-                          recv_count_arr[i].count, ADIO_OFFSET, i,
-                          BLOCK_LENS, fd->comm, &recv_req_arr[j]);
+                PMPI_Irecv(client_file_view_state_arr[i].flat_type_p->blocklens,
+                           recv_count_arr[i].count, ADIO_OFFSET, i,
+                           BLOCK_LENS, fd->comm, &recv_req_arr[j]);
                 j++;
             }
         }
@@ -314,13 +315,13 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
         j = 0;
         for (i = 0; i < nprocs; i++) {
             if (send_count_arr[i].count > 0) {
-                MPI_Isend(flat_file_p->indices,
-                          send_count_arr[i].count, ADIO_OFFSET, i,
-                          INDICES, fd->comm, &send_req_arr[j]);
+                PMPI_Isend(flat_file_p->indices,
+                           send_count_arr[i].count, ADIO_OFFSET, i,
+                           INDICES, fd->comm, &send_req_arr[j]);
                 j++;
-                MPI_Isend(flat_file_p->blocklens,
-                          send_count_arr[i].count, ADIO_OFFSET, i,
-                          BLOCK_LENS, fd->comm, &send_req_arr[j]);
+                PMPI_Isend(flat_file_p->blocklens,
+                           send_count_arr[i].count, ADIO_OFFSET, i,
+                           BLOCK_LENS, fd->comm, &send_req_arr[j]);
                 j++;
             }
         }
@@ -328,13 +329,13 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
         j = 0;
         for (i = 0; i < fd->hints->cb_nodes; i++) {
             if (send_count_arr[i].count > 0) {
-                MPI_Isend(flat_file_p->indices,
-                          send_count_arr[i].count, ADIO_OFFSET,
-                          fd->hints->ranklist[i], INDICES, fd->comm, &send_req_arr[j]);
+                PMPI_Isend(flat_file_p->indices,
+                           send_count_arr[i].count, ADIO_OFFSET,
+                           fd->hints->ranklist[i], INDICES, fd->comm, &send_req_arr[j]);
                 j++;
-                MPI_Isend(flat_file_p->blocklens,
-                          send_count_arr[i].count, ADIO_OFFSET,
-                          fd->hints->ranklist[i], BLOCK_LENS, fd->comm, &send_req_arr[j]);
+                PMPI_Isend(flat_file_p->blocklens,
+                           send_count_arr[i].count, ADIO_OFFSET,
+                           fd->hints->ranklist[i], BLOCK_LENS, fd->comm, &send_req_arr[j]);
                 j++;
             }
         }
@@ -351,12 +352,12 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 #endif
 
     if (send_req_arr_sz > 0) {
-        MPI_Waitall(2 * send_req_arr_sz, send_req_arr, statuses);
+        PMPI_Waitall(2 * send_req_arr_sz, send_req_arr, statuses);
         ADIOI_Free(send_count_arr);
         ADIOI_Free(send_req_arr);
     }
     if (recv_req_arr_sz > 0) {
-        MPI_Waitall(2 * recv_req_arr_sz, recv_req_arr, statuses);
+        PMPI_Waitall(2 * recv_req_arr_sz, recv_req_arr, statuses);
         ADIOI_Free(recv_count_arr);
         ADIOI_Free(recv_req_arr);
     }

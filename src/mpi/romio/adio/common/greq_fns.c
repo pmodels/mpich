@@ -23,6 +23,7 @@ void MPIO_Completed_request_create(MPI_File * fh, MPI_Offset bytes,
     if (*error_code != MPI_SUCCESS)
         *error_code = MPIO_Err_return_file(*fh, *error_code);
     /* --END ERROR HANDLING-- */
-    MPI_Grequest_start(MPIU_Greq_query_fn, MPIU_Greq_free_fn, MPIU_Greq_cancel_fn, status, request);
-    MPI_Grequest_complete(*request);
+    PMPI_Grequest_start(MPIU_Greq_query_fn, MPIU_Greq_free_fn, MPIU_Greq_cancel_fn, status,
+                        request);
+    PMPI_Grequest_complete(*request);
 }

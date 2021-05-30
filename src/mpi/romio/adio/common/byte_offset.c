@@ -26,7 +26,7 @@ void ADIOI_Get_byte_offset(ADIO_File fd, ADIO_Offset offset, ADIO_Offset * disp)
     else {
         flat_file = ADIOI_Flatten_and_find(fd->filetype);
 
-        MPI_Type_size_x(fd->filetype, &filetype_size);
+        PMPI_Type_size_x(fd->filetype, &filetype_size);
         n_etypes_in_filetype = filetype_size / etype_size;
         n_filetypes = offset / n_etypes_in_filetype;
         etype_in_filetype = offset % n_etypes_in_filetype;
@@ -43,7 +43,7 @@ void ADIOI_Get_byte_offset(ADIO_File fd, ADIO_Offset offset, ADIO_Offset * disp)
         }
 
         /* abs. offset in bytes in the file */
-        MPI_Type_extent(fd->filetype, &filetype_extent);
+        PMPI_Type_extent(fd->filetype, &filetype_extent);
         *disp =
             fd->disp + n_filetypes * ADIOI_AINT_CAST_TO_OFFSET filetype_extent +
             abs_off_in_filetype;

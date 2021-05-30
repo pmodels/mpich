@@ -107,8 +107,8 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
     }
 
 
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
+    PMPI_Comm_size(fd->comm, &nprocs);
+    PMPI_Comm_rank(fd->comm, &myrank);
 
     /* number of aggregators, cb_nodes, is stored in the hints */
     nprocs_for_coll = fd->hints->cb_nodes;
@@ -140,8 +140,8 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
         st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * 2 * sizeof(ADIO_Offset));
         end_offsets = st_offsets + nprocs;
 
-        MPI_Allgather(&start_offset, 1, ADIO_OFFSET, st_offsets, 1, ADIO_OFFSET, fd->comm);
-        MPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1, ADIO_OFFSET, fd->comm);
+        PMPI_Allgather(&start_offset, 1, ADIO_OFFSET, st_offsets, 1, ADIO_OFFSET, fd->comm);
+        PMPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1, ADIO_OFFSET, fd->comm);
 
         /* are the accesses of different processes interleaved? */
         for (i = 1; i < nprocs; i++)
@@ -252,7 +252,7 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
     ADIOI_Free(fd_start);
 
 #ifdef HAVE_STATUS_SET_BYTES
-    MPI_Type_size_x(datatype, &size);
+    PMPI_Type_size_x(datatype, &size);
     bufsize = size * count;
     MPIR_Status_set_bytes(status, datatype, bufsize);
 /* This is a temporary way of filling in status. The right way is to
@@ -295,10 +295,10 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
 
-    MPI_Type_size_x(fd->filetype, &filetype_size);
-    MPI_Type_extent(fd->filetype, &filetype_extent);
-    MPI_Type_lb(fd->filetype, &filetype_lb);
-    MPI_Type_size_x(datatype, &buftype_size);
+    PMPI_Type_size_x(fd->filetype, &filetype_size);
+    PMPI_Type_extent(fd->filetype, &filetype_extent);
+    PMPI_Type_lb(fd->filetype, &filetype_lb);
+    PMPI_Type_size_x(datatype, &buftype_size);
     etype_size = fd->etype_size;
 
     if (!filetype_size) {
@@ -553,7 +553,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
         ntimes = (int) ((end_loc - st_loc + coll_bufsize) / coll_bufsize);
     }
 
-    MPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX, fd->comm);
+    PMPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX, fd->comm);
 
     read_buf = fd->io_buf;      /* Allocated at open time */
 
@@ -574,7 +574,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
 
     recv_size = send_size + nprocs;
     /* total size of data to be recd. from each proc. in an iteration.
-     * Of size nprocs so that I can use MPI_Alltoall later. */
+     * Of size nprocs so that I can use PMPI_Alltoall later. */
 
     recd_from_proc = recv_size + nprocs;
     /* amount of data recd. so far from each proc. Used in
@@ -588,13 +588,13 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
     if (!buftype_is_contig) {
         flat_buf = ADIOI_Flatten_and_find(datatype);
     }
-    MPI_Type_extent(datatype, &buftype_extent);
+    PMPI_Type_extent(datatype, &buftype_extent);
 
     done = 0;
     off = st_loc;
     for_curr_iter = for_next_iter = 0;
 
-    MPI_Comm_rank(fd->comm, &rank);
+    PMPI_Comm_rank(fd->comm, &rank);
 
     for (m = 0; m < ntimes; m++) {
         /* read buf of size coll_bufsize (or less) */
@@ -666,7 +666,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
                         count[i]++;
                         ADIOI_Assert((((ADIO_Offset) (uintptr_t) read_buf) + req_off - real_off) ==
                                      (ADIO_Offset) (uintptr_t) (read_buf + req_off - real_off));
-                        MPI_Address(read_buf + req_off - real_off, &(others_req[i].mem_ptrs[j]));
+                        PMPI_Address(read_buf + req_off - real_off, &(others_req[i].mem_ptrs[j]));
                         ADIOI_Assert((real_off + real_size - req_off) ==
                                      (int) (real_off + real_size - req_off));
                         send_size[i] +=
@@ -774,7 +774,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 /* exchange send_size info so that each process knows how much to
    receive from whom and how much memory to allocate. */
 
-    MPI_Alltoall(send_size, 1, MPI_INT, recv_size, 1, MPI_INT, fd->comm);
+    PMPI_Alltoall(send_size, 1, MPI_INT, recv_size, 1, MPI_INT, fd->comm);
 
     nprocs_recv = 0;
     nprocs_send = 0;
@@ -802,8 +802,8 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
         j = 0;
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
-                MPI_Irecv(((char *) buf) + buf_idx[i], recv_size[i],
-                          MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, requests + j);
+                PMPI_Irecv(((char *) buf) + buf_idx[i], recv_size[i],
+                           MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, requests + j);
                 j++;
                 buf_idx[i] += recv_size[i];
             }
@@ -818,8 +818,8 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
         j = 0;
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
-                MPI_Irecv(recv_buf[i], recv_size[i], MPI_BYTE, i,
-                          myrank + i + 100 * iter, fd->comm, requests + j);
+                PMPI_Irecv(recv_buf[i], recv_size[i], MPI_BYTE, i,
+                           myrank + i + 100 * iter, fd->comm, requests + j);
                 j++;
 #ifdef RDCOLL_DEBUG
                 DBG_FPRINTF(stderr, "node %d, recv_size %d, tag %d \n",
@@ -845,10 +845,10 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                          &(others_req[i].mem_ptrs[start_pos[i]]),
                                          MPI_BYTE, &send_type);
             /* absolute displacement; use MPI_BOTTOM in send */
-            MPI_Type_commit(&send_type);
-            MPI_Isend(MPI_BOTTOM, 1, send_type, i, myrank + i + 100 * iter,
-                      fd->comm, requests + nprocs_recv + j);
-            MPI_Type_free(&send_type);
+            PMPI_Type_commit(&send_type);
+            PMPI_Isend(MPI_BOTTOM, 1, send_type, i, myrank + i + 100 * iter,
+                       fd->comm, requests + nprocs_recv + j);
+            PMPI_Type_free(&send_type);
             if (partial_send[i])
                 others_req[i].lens[k] = tmp;
             j++;
@@ -867,9 +867,9 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 #ifdef NEEDS_MPI_TEST
         j = 0;
         while (!j)
-            MPI_Testall(nprocs_recv, requests, &j, statuses);
+            PMPI_Testall(nprocs_recv, requests, &j, statuses);
 #else
-        MPI_Waitall(nprocs_recv, requests, statuses);
+        PMPI_Waitall(nprocs_recv, requests, statuses);
 #endif
 
         /* if noncontiguous, to the copies from the recv buffers */
@@ -883,9 +883,9 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 
     /* wait on the sends */
 #ifdef MPI_STATUSES_IGNORE
-    MPI_Waitall(nprocs_send, requests + nprocs_recv, MPI_STATUSES_IGNORE);
+    PMPI_Waitall(nprocs_send, requests + nprocs_recv, MPI_STATUSES_IGNORE);
 #else
-    MPI_Waitall(nprocs_send, requests + nprocs_recv, statuses + nprocs_recv);
+    PMPI_Waitall(nprocs_send, requests + nprocs_recv, statuses + nprocs_recv);
 
     ADIOI_Free(statuses);
 #endif

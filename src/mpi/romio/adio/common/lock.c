@@ -59,7 +59,7 @@ int ADIOI_GEN_SetLock(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int w
         char errMsg[ADIOI_NTFS_ERR_MSG_MAX];
         /*
          * FPRINTF(stderr, "File locking failed in ADIOI_GEN_SetLock.\n");
-         * MPI_Abort(MPI_COMM_WORLD, 1);
+         * PMPI_Abort(MPI_COMM_WORLD, 1);
          */
         ret_val = GetLastError();
         if (ret_val == ERROR_IO_PENDING) {
@@ -147,7 +147,7 @@ int ADIOI_GEN_SetLock(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int w
         perror("ADIOI_GEN_SetLock:");
         FPRINTF(stderr, "ADIOI_GEN_SetLock:offset %llu, length %llu\n", (unsigned long long) offset,
                 (unsigned long long) len);
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        PMPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     if (!err)   /* report fcntl failure errno's (EBADF), otherwise */
@@ -190,7 +190,7 @@ int ADIOI_GEN_SetLock64(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int
         perror("ADIOI_GEN_SetLock64:");
         FPRINTF(stderr, "ADIOI_GEN_SetLock:offset %llu, length %llu\n", (unsigned long long) offset,
                 (unsigned long long) len);
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        PMPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     error_code = (err == 0) ? MPI_SUCCESS : MPI_ERR_UNKNOWN;

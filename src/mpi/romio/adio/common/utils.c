@@ -29,10 +29,10 @@ static int type_create_contiguous_x(MPI_Count count, MPI_Datatype oldtype, MPI_D
     int c = (int) (count / INT_MAX);    /* OK to cast until 'count' is 256 bits */
     int r = count % INT_MAX;
 
-    MPI_Type_vector(c, INT_MAX, INT_MAX, oldtype, &chunks);
-    MPI_Type_contiguous(r, oldtype, &remainder);
+    PMPI_Type_vector(c, INT_MAX, INT_MAX, oldtype, &chunks);
+    PMPI_Type_contiguous(r, oldtype, &remainder);
 
-    MPI_Type_get_extent(oldtype, &lb, &extent);
+    PMPI_Type_get_extent(oldtype, &lb, &extent);
 
     blocklens[0] = 1;
     blocklens[1] = 1;
@@ -41,15 +41,15 @@ static int type_create_contiguous_x(MPI_Count count, MPI_Datatype oldtype, MPI_D
     types[0] = chunks;
     types[1] = remainder;
 
-    MPI_Type_create_struct(2, blocklens, disps, types, newtype);
+    PMPI_Type_create_struct(2, blocklens, disps, types, newtype);
 
-    MPI_Type_free(&chunks);
-    MPI_Type_free(&remainder);
+    PMPI_Type_free(&chunks);
+    PMPI_Type_free(&remainder);
 
     return MPI_SUCCESS;
 }
 
-/* like MPI_Type_create_hindexed, except array_of_lengths can be a larger datatype.
+/* like PMPI_Type_create_hindexed, except array_of_lengths can be a larger datatype.
  *
  * Hindexed provides 'count' pairs of (displacement, length), but what if
  * length is longer than an integer?  We will create 'count' types, using
@@ -91,12 +91,12 @@ int ADIOI_Type_create_hindexed_x(int count,
     }
 
     if (is_big) {
-        ret = MPI_Type_create_struct(count, blocklens, array_of_displacements, types, newtype);
+        ret = PMPI_Type_create_struct(count, blocklens, array_of_displacements, types, newtype);
         for (i = 0; i < count; i++)
             if (types[i] != oldtype)
-                MPI_Type_free(&(types[i]));
+                PMPI_Type_free(&(types[i]));
     } else {
-        ret = MPI_Type_create_hindexed(count, blocklens, array_of_displacements, oldtype, newtype);
+        ret = PMPI_Type_create_hindexed(count, blocklens, array_of_displacements, oldtype, newtype);
     }
     ADIOI_Free(types);
     ADIOI_Free(blocklens);

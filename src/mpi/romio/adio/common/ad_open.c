@@ -76,8 +76,8 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     fd->io_buf_window = MPI_WIN_NULL;
     fd->io_buf_put_amounts_window = MPI_WIN_NULL;
 
-    MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &procs);
+    PMPI_Comm_rank(comm, &rank);
+    PMPI_Comm_size(comm, &procs);
 /* create and initialize info object */
     fd->hints = (ADIOI_Hints *) ADIOI_Calloc(1, sizeof(struct ADIOI_Hints_struct));
     if (fd->hints == NULL) {
@@ -107,17 +107,17 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     else
         syshints_processed = 1;
 
-    MPI_Allreduce(&syshints_processed, &can_skip, 1, MPI_INT, MPI_MIN, fd->comm);
+    PMPI_Allreduce(&syshints_processed, &can_skip, 1, MPI_INT, MPI_MIN, fd->comm);
     if (!can_skip) {
         if (ADIOI_syshints == MPI_INFO_NULL)
-            MPI_Info_create(&ADIOI_syshints);
+            PMPI_Info_create(&ADIOI_syshints);
         ADIOI_process_system_hints(fd, ADIOI_syshints);
     }
 
     ADIOI_incorporate_system_hints(info, ADIOI_syshints, &dupinfo);
     ADIO_SetInfo(fd, dupinfo, &err);
     if (dupinfo != MPI_INFO_NULL) {
-        *error_code = MPI_Info_free(&dupinfo);
+        *error_code = PMPI_Info_free(&dupinfo);
         if (*error_code != MPI_SUCCESS)
             goto fn_exit;
     }
@@ -185,7 +185,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     }
 
   fn_exit:
-    MPI_Allreduce(error_code, &max_error_code, 1, MPI_INT, MPI_MAX, comm);
+    PMPI_Allreduce(error_code, &max_error_code, 1, MPI_INT, MPI_MAX, comm);
     if (max_error_code != MPI_SUCCESS) {
 
         /* If the file was successfully opened, close it */
@@ -207,7 +207,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
             ADIOI_Free(fd->hints->cb_config_list);
         ADIOI_Free(fd->hints);
         if (fd->info != MPI_INFO_NULL)
-            MPI_Info_free(&(fd->info));
+            PMPI_Info_free(&(fd->info));
         ADIOI_Free(fd->io_buf);
         ADIOI_Free(fd);
         fd = ADIO_FILE_NULL;

@@ -34,7 +34,7 @@ void ADIO_Get_shared_fp(ADIO_File fd, ADIO_Offset incr, ADIO_Offset * shared_fp,
 #endif
 
     if (fd->shared_fp_fd == ADIO_FILE_NULL) {
-        MPI_Comm_dup(MPI_COMM_SELF, &dupcommself);
+        PMPI_Comm_dup(MPI_COMM_SELF, &dupcommself);
         fd->shared_fp_fd = ADIO_Open(MPI_COMM_SELF, dupcommself,
                                      fd->shared_fp_fname,
                                      fd->file_system,

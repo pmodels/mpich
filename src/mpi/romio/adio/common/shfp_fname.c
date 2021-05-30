@@ -68,10 +68,10 @@ void ADIOI_Shfp_fname(ADIO_File fd, int rank, int *error_code)
         MPL_strnapp(fd->shared_fp_fname, tmp, PATH_MAX);
 
         len = (int) strlen(fd->shared_fp_fname);
-        MPI_Bcast(&len, 1, MPI_INT, 0, fd->comm);
-        MPI_Bcast(fd->shared_fp_fname, len + 1, MPI_CHAR, 0, fd->comm);
+        PMPI_Bcast(&len, 1, MPI_INT, 0, fd->comm);
+        PMPI_Bcast(fd->shared_fp_fname, len + 1, MPI_CHAR, 0, fd->comm);
     } else {
-        MPI_Bcast(&len, 1, MPI_INT, 0, fd->comm);
-        MPI_Bcast(fd->shared_fp_fname, len + 1, MPI_CHAR, 0, fd->comm);
+        PMPI_Bcast(&len, 1, MPI_INT, 0, fd->comm);
+        PMPI_Bcast(fd->shared_fp_fname, len + 1, MPI_CHAR, 0, fd->comm);
     }
 }

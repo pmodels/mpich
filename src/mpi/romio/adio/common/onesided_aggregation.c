@@ -41,13 +41,13 @@ static int ADIOI_OneSidedSetup(ADIO_File fd, int procs)
 {
     int ret = MPI_SUCCESS;
 
-    ret = MPI_Win_create(fd->io_buf, fd->hints->cb_buffer_size, 1,
-                         MPI_INFO_NULL, fd->comm, &fd->io_buf_window);
+    ret = PMPI_Win_create(fd->io_buf, fd->hints->cb_buffer_size, 1,
+                          MPI_INFO_NULL, fd->comm, &fd->io_buf_window);
     if (ret != MPI_SUCCESS)
         goto fn_exit;
     fd->io_buf_put_amounts = 0;
-    ret = MPI_Win_create(&(fd->io_buf_put_amounts), sizeof(int), sizeof(int),
-                         MPI_INFO_NULL, fd->comm, &fd->io_buf_put_amounts_window);
+    ret = PMPI_Win_create(&(fd->io_buf_put_amounts), sizeof(int), sizeof(int),
+                          MPI_INFO_NULL, fd->comm, &fd->io_buf_put_amounts_window);
 
   fn_exit:
     return ret;
@@ -57,9 +57,9 @@ int ADIOI_OneSidedCleanup(ADIO_File fd)
 {
     int ret = MPI_SUCCESS;
     if (fd->io_buf_window != MPI_WIN_NULL)
-        ret = MPI_Win_free(&fd->io_buf_window);
+        ret = PMPI_Win_free(&fd->io_buf_window);
     if (fd->io_buf_put_amounts_window != MPI_WIN_NULL)
-        ret = MPI_Win_free(&fd->io_buf_put_amounts_window);
+        ret = PMPI_Win_free(&fd->io_buf_put_amounts_window);
 
     return ret;
 }
@@ -245,7 +245,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
 #ifdef ROMIO_GPFS
     double startTimeBase, endTimeBase;
-    startTimeBase = MPI_Wtime();
+    startTimeBase = PMPI_Wtime();
 #endif
 
     MPI_Status status;
@@ -254,8 +254,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     ADIOI_IO_ThreadFuncData io_thread_args;
 
     int nprocs, myrank;
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
+    PMPI_Comm_size(fd->comm, &nprocs);
+    PMPI_Comm_rank(fd->comm, &myrank);
 #ifdef onesidedtrace
     printf("ADIOI_OneSidedWriteAggregation started on rank %d\n", myrank);
 #endif
@@ -282,7 +282,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         if ((stripeSize == 0) || stripe_parms->firstStripedWriteCall) {
             stripe_parms->flatBuf = ADIOI_Flatten_and_find(datatype);
             flatBuf = stripe_parms->flatBuf;
-            MPI_Type_extent(datatype, &(stripe_parms->bufTypeExtent));
+            PMPI_Type_extent(datatype, &(stripe_parms->bufTypeExtent));
             bufTypeExtent = stripe_parms->bufTypeExtent;
         }
 #ifdef onesidedtrace
@@ -1019,12 +1019,12 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         }
     }   // if iAmUsedAgg
     if (romio_onesided_always_rmw && ((stripeSize == 0) || (segmentIter == 0))) // wait until the first buffer is read
-        MPI_Barrier(fd->comm);
+        PMPI_Barrier(fd->comm);
 
 #ifdef ROMIO_GPFS
-    endTimeBase = MPI_Wtime();
+    endTimeBase = PMPI_Wtime();
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_SETUP] += (endTimeBase - startTimeBase);
-    startTimeBase = MPI_Wtime();
+    startTimeBase = PMPI_Wtime();
 #endif
 
 
@@ -1193,16 +1193,16 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                              */
 
                             if (romio_write_aggmethod == 1) {
-                                MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0,
-                                             write_buf_window);
+                                PMPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0,
+                                              write_buf_window);
                                 char *putSourceData = NULL;
                                 if (bufTypeIsContig) {
-                                    MPI_Put(((char *) buf) +
-                                            currentFDSourceBufferState[aggIter].sourceBufferOffset,
-                                            bufferAmountToSend, MPI_BYTE,
-                                            targetAggsForMyData[aggIter],
-                                            targetDisplacementToUseThisRound, bufferAmountToSend,
-                                            MPI_BYTE, write_buf_window);
+                                    PMPI_Put(((char *) buf) +
+                                             currentFDSourceBufferState[aggIter].sourceBufferOffset,
+                                             bufferAmountToSend, MPI_BYTE,
+                                             targetAggsForMyData[aggIter],
+                                             targetDisplacementToUseThisRound, bufferAmountToSend,
+                                             MPI_BYTE, write_buf_window);
                                     currentFDSourceBufferState[aggIter].sourceBufferOffset +=
                                         (ADIO_Offset) bufferAmountToSend;
                                 } else {
@@ -1212,13 +1212,13 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                                                      bufferAmountToSend, 1,
                                                                      &currentFDSourceBufferState
                                                                      [aggIter], putSourceData);
-                                    MPI_Put(putSourceData, bufferAmountToSend, MPI_BYTE,
-                                            targetAggsForMyData[aggIter],
-                                            targetDisplacementToUseThisRound, bufferAmountToSend,
-                                            MPI_BYTE, write_buf_window);
+                                    PMPI_Put(putSourceData, bufferAmountToSend, MPI_BYTE,
+                                             targetAggsForMyData[aggIter],
+                                             targetDisplacementToUseThisRound, bufferAmountToSend,
+                                             MPI_BYTE, write_buf_window);
 
                                 }
-                                MPI_Win_unlock(targetAggsForMyData[aggIter], write_buf_window);
+                                PMPI_Win_unlock(targetAggsForMyData[aggIter], write_buf_window);
                                 if (!bufTypeIsContig)
                                     ADIOI_Free(putSourceData);
                             }
@@ -1277,14 +1277,14 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                     if (romio_write_aggmethod == 2) {
 
                         MPI_Datatype sourceBufferDerivedDataType, targetBufferDerivedDataType;
-                        MPI_Type_create_struct(targetAggContigAccessCount, targetAggBlockLengths,
-                                               sourceBufferDisplacements, targetAggDataTypes,
-                                               &sourceBufferDerivedDataType);
-                        MPI_Type_commit(&sourceBufferDerivedDataType);
-                        MPI_Type_create_struct(targetAggContigAccessCount, targetAggBlockLengths,
-                                               targetAggDisplacements, targetAggDataTypes,
-                                               &targetBufferDerivedDataType);
-                        MPI_Type_commit(&targetBufferDerivedDataType);
+                        PMPI_Type_create_struct(targetAggContigAccessCount, targetAggBlockLengths,
+                                                sourceBufferDisplacements, targetAggDataTypes,
+                                                &sourceBufferDerivedDataType);
+                        PMPI_Type_commit(&sourceBufferDerivedDataType);
+                        PMPI_Type_create_struct(targetAggContigAccessCount, targetAggBlockLengths,
+                                                targetAggDisplacements, targetAggDataTypes,
+                                                &targetBufferDerivedDataType);
+                        PMPI_Type_commit(&targetBufferDerivedDataType);
 
 #ifdef onesidedtrace
                         printf
@@ -1292,20 +1292,20 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                              targetAggsForMyData[aggIter], targetAggContigAccessCount);
 #endif
                         if (targetAggContigAccessCount > 0) {
-                            MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0,
-                                         write_buf_window);
+                            PMPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0,
+                                          write_buf_window);
                             if (bufTypeIsContig) {
-                                MPI_Put(((char *) buf), 1, sourceBufferDerivedDataType,
-                                        targetAggsForMyData[aggIter], 0, 1,
-                                        targetBufferDerivedDataType, write_buf_window);
+                                PMPI_Put(((char *) buf), 1, sourceBufferDerivedDataType,
+                                         targetAggsForMyData[aggIter], 0, 1,
+                                         targetBufferDerivedDataType, write_buf_window);
                             } else {
-                                MPI_Put(derivedTypePackedSourceBuffer, 1,
-                                        sourceBufferDerivedDataType, targetAggsForMyData[aggIter],
-                                        0, 1, targetBufferDerivedDataType, write_buf_window);
+                                PMPI_Put(derivedTypePackedSourceBuffer, 1,
+                                         sourceBufferDerivedDataType, targetAggsForMyData[aggIter],
+                                         0, 1, targetBufferDerivedDataType, write_buf_window);
                             }
 
 
-                            MPI_Win_unlock(targetAggsForMyData[aggIter], write_buf_window);
+                            PMPI_Win_unlock(targetAggsForMyData[aggIter], write_buf_window);
                         }
 
                         if (allocatedDerivedTypeArrays) {
@@ -1318,17 +1318,18 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     ADIOI_Free(derivedTypePackedSourceBuffer);
                         }
                         if (targetAggContigAccessCount > 0) {
-                            MPI_Type_free(&sourceBufferDerivedDataType);
-                            MPI_Type_free(&targetBufferDerivedDataType);
+                            PMPI_Type_free(&sourceBufferDerivedDataType);
+                            PMPI_Type_free(&targetBufferDerivedDataType);
                         }
                     }
                     if (!romio_onesided_no_rmw) {
-                        MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0,
-                                     fd->io_buf_put_amounts_window);
-                        MPI_Accumulate(&numBytesPutThisAggRound, 1, MPI_INT,
-                                       targetAggsForMyData[aggIter], 0, 1, MPI_INT, MPI_SUM,
-                                       fd->io_buf_put_amounts_window);
-                        MPI_Win_unlock(targetAggsForMyData[aggIter], fd->io_buf_put_amounts_window);
+                        PMPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0,
+                                      fd->io_buf_put_amounts_window);
+                        PMPI_Accumulate(&numBytesPutThisAggRound, 1, MPI_INT,
+                                        targetAggsForMyData[aggIter], 0, 1, MPI_INT, MPI_SUM,
+                                        fd->io_buf_put_amounts_window);
+                        PMPI_Win_unlock(targetAggsForMyData[aggIter],
+                                        fd->io_buf_put_amounts_window);
                     }
                 }       // baseoffset != -1
             }   // target aggs
@@ -1357,7 +1358,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 #ifdef onesidedtrace
             printf("first barrier roundIter %d\n", roundIter);
 #endif
-            MPI_Barrier(fd->comm);
+            PMPI_Barrier(fd->comm);
         }
 
         if ((iAmUsedAgg || stripe_parms->iWasUsedStripingAgg) &&
@@ -1533,14 +1534,14 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 #ifdef onesidedtrace
             printf("second barrier roundIter %d --- waiting in loop this time\n", roundIter);
 #endif
-            MPI_Barrier(fd->comm);
+            PMPI_Barrier(fd->comm);
         }
 
     }   /* for-loop roundIter */
 
 
 #ifdef ROMIO_GPFS
-    endTimeBase = MPI_Wtime();
+    endTimeBase = PMPI_Wtime();
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH] += (endTimeBase - startTimeBase);
 #endif
 
@@ -1608,7 +1609,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
 #ifdef ROMIO_GPFS
     double startTimeBase, endTimeBase;
-    startTimeBase = MPI_Wtime();
+    startTimeBase = PMPI_Wtime();
 #endif
 
     MPI_Status status;
@@ -1617,8 +1618,8 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     ADIOI_IO_ThreadFuncData io_thread_args;
 
     int nprocs, myrank;
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
+    PMPI_Comm_size(fd->comm, &nprocs);
+    PMPI_Comm_rank(fd->comm, &myrank);
 
     /* Initialize to self here to avoid uninitialized warnings. */
     io_thread = pthread_self();
@@ -1646,7 +1647,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
         /* Flatten the non-contiguous source datatype.
          */
         flatBuf = ADIOI_Flatten_and_find(datatype);
-        MPI_Type_extent(datatype, &bufTypeExtent);
+        PMPI_Type_extent(datatype, &bufTypeExtent);
 #ifdef onesidedtrace
         printf("flatBuf->count is %d bufTypeExtent is %d\n", flatBuf->count, bufTypeExtent);
         for (i = 0; i < flatBuf->count; i++)
@@ -2268,9 +2269,9 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
     }
 #ifdef ROMIO_GPFS
-    endTimeBase = MPI_Wtime();
+    endTimeBase = PMPI_Wtime();
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_SETUP] += (endTimeBase - startTimeBase);
-    startTimeBase = MPI_Wtime();
+    startTimeBase = PMPI_Wtime();
 #endif
 
 
@@ -2392,7 +2393,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
             }
             // wait until the read buffers are full before we start pulling from the source procs
-            MPI_Barrier(fd->comm);
+            PMPI_Barrier(fd->comm);
 
             int aggIter;
             for (aggIter = 0; aggIter < numSourceAggs; aggIter++) {
@@ -2523,29 +2524,29 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                              * the MPI_Win_unlock is done to make sure the data has arrived first.
                              */
                             if (romio_read_aggmethod == 1) {
-                                MPI_Win_lock(MPI_LOCK_SHARED, sourceAggsForMyData[aggIter], 0,
-                                             read_buf_window);
+                                PMPI_Win_lock(MPI_LOCK_SHARED, sourceAggsForMyData[aggIter], 0,
+                                              read_buf_window);
                                 char *getSourceData = NULL;
                                 if (bufTypeIsContig) {
-                                    MPI_Get(((char *) buf) +
-                                            currentFDSourceBufferState[aggIter].sourceBufferOffset,
-                                            bufferAmountToRecv, MPI_BYTE,
-                                            sourceAggsForMyData[aggIter],
-                                            sourceDisplacementToUseThisRound, bufferAmountToRecv,
-                                            MPI_BYTE, read_buf_window);
+                                    PMPI_Get(((char *) buf) +
+                                             currentFDSourceBufferState[aggIter].sourceBufferOffset,
+                                             bufferAmountToRecv, MPI_BYTE,
+                                             sourceAggsForMyData[aggIter],
+                                             sourceDisplacementToUseThisRound, bufferAmountToRecv,
+                                             MPI_BYTE, read_buf_window);
                                     currentFDSourceBufferState[aggIter].sourceBufferOffset +=
                                         (ADIO_Offset) bufferAmountToRecv;
 
                                 } else {
                                     getSourceData =
                                         (char *) ADIOI_Malloc(bufferAmountToRecv * sizeof(char));
-                                    MPI_Get(getSourceData, bufferAmountToRecv, MPI_BYTE,
-                                            sourceAggsForMyData[aggIter],
-                                            sourceDisplacementToUseThisRound, bufferAmountToRecv,
-                                            MPI_BYTE, read_buf_window);
+                                    PMPI_Get(getSourceData, bufferAmountToRecv, MPI_BYTE,
+                                             sourceAggsForMyData[aggIter],
+                                             sourceDisplacementToUseThisRound, bufferAmountToRecv,
+                                             MPI_BYTE, read_buf_window);
 
                                 }
-                                MPI_Win_unlock(sourceAggsForMyData[aggIter], read_buf_window);
+                                PMPI_Win_unlock(sourceAggsForMyData[aggIter], read_buf_window);
                                 if (!bufTypeIsContig) {
                                     nonContigSourceDataBufferAdvance(((char *) buf), flatBuf,
                                                                      bufferAmountToRecv, 0,
@@ -2592,30 +2593,30 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                     if (romio_read_aggmethod == 2) {
                         MPI_Datatype recvBufferDerivedDataType, sourceBufferDerivedDataType;
 
-                        MPI_Type_create_struct(sourceAggContigAccessCount, sourceAggBlockLengths,
-                                               recvBufferDisplacements, sourceAggDataTypes,
-                                               &recvBufferDerivedDataType);
-                        MPI_Type_commit(&recvBufferDerivedDataType);
-                        MPI_Type_create_struct(sourceAggContigAccessCount, sourceAggBlockLengths,
-                                               sourceAggDisplacements, sourceAggDataTypes,
-                                               &sourceBufferDerivedDataType);
-                        MPI_Type_commit(&sourceBufferDerivedDataType);
+                        PMPI_Type_create_struct(sourceAggContigAccessCount, sourceAggBlockLengths,
+                                                recvBufferDisplacements, sourceAggDataTypes,
+                                                &recvBufferDerivedDataType);
+                        PMPI_Type_commit(&recvBufferDerivedDataType);
+                        PMPI_Type_create_struct(sourceAggContigAccessCount, sourceAggBlockLengths,
+                                                sourceAggDisplacements, sourceAggDataTypes,
+                                                &sourceBufferDerivedDataType);
+                        PMPI_Type_commit(&sourceBufferDerivedDataType);
 
                         if (sourceAggContigAccessCount > 0) {
 
-                            MPI_Win_lock(MPI_LOCK_SHARED, sourceAggsForMyData[aggIter], 0,
-                                         read_buf_window);
+                            PMPI_Win_lock(MPI_LOCK_SHARED, sourceAggsForMyData[aggIter], 0,
+                                          read_buf_window);
                             if (bufTypeIsContig) {
-                                MPI_Get(((char *) buf), 1, recvBufferDerivedDataType,
-                                        sourceAggsForMyData[aggIter], 0, 1,
-                                        sourceBufferDerivedDataType, read_buf_window);
+                                PMPI_Get(((char *) buf), 1, recvBufferDerivedDataType,
+                                         sourceAggsForMyData[aggIter], 0, 1,
+                                         sourceBufferDerivedDataType, read_buf_window);
                             } else {
-                                MPI_Get(derivedTypePackedSourceBuffer, 1, recvBufferDerivedDataType,
-                                        sourceAggsForMyData[aggIter], 0, 1,
-                                        sourceBufferDerivedDataType, read_buf_window);
+                                PMPI_Get(derivedTypePackedSourceBuffer, 1,
+                                         recvBufferDerivedDataType, sourceAggsForMyData[aggIter], 0,
+                                         1, sourceBufferDerivedDataType, read_buf_window);
                             }
 
-                            MPI_Win_unlock(sourceAggsForMyData[aggIter], read_buf_window);
+                            PMPI_Win_unlock(sourceAggsForMyData[aggIter], read_buf_window);
                             if (!bufTypeIsContig) {
                                 nonContigSourceDataBufferAdvance(((char *) buf), flatBuf,
                                                                  derivedTypePackedSourceBufferOffset,
@@ -2636,8 +2637,8 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                     ADIOI_Free(derivedTypePackedSourceBuffer);
                         }
                         if (sourceAggContigAccessCount > 0) {
-                            MPI_Type_free(&recvBufferDerivedDataType);
-                            MPI_Type_free(&sourceBufferDerivedDataType);
+                            PMPI_Type_free(&recvBufferDerivedDataType);
+                            PMPI_Type_free(&sourceBufferDerivedDataType);
                         }
                     }
                 }       // baseoffset != -1
@@ -2645,14 +2646,14 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
         }       // contig_access_count > 0
         /* the source procs recv the requested data to the aggs */
 
-        MPI_Barrier(fd->comm);
+        PMPI_Barrier(fd->comm);
 
         nextRoundFDStart = currentRoundFDStart + coll_bufsize;
 
     }   /* for-loop roundIter */
 
 #ifdef ROMIO_GPFS
-    endTimeBase = MPI_Wtime();
+    endTimeBase = PMPI_Wtime();
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH] += (endTimeBase - startTimeBase);
 #endif
 

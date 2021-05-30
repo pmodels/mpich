@@ -264,7 +264,7 @@ static inline int get_next_fr_off(ADIO_File fd,
 
     /* Calculate how many times to loop through the fr_type
      * and where the next fr_off is. */
-    MPI_Type_extent(*fr_type_p, &fr_extent);
+    PMPI_Type_extent(*fr_type_p, &fr_extent);
     tmp_off = off - fr_st_off;
     fr_dtype_ct = tmp_off / fr_extent;
     off_rem = tmp_off % fr_extent;
@@ -706,9 +706,9 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
     /* Create all the client and aggregate MPI_Datatypes */
     for (i = 0; i < nprocs; i++) {
         if (client_comm_sz_arr[i] > 0) {
-            MPI_Type_hindexed(client_ol_ct_arr[i], client_blk_arr[i],
-                              client_disp_arr[i], MPI_BYTE, &(client_comm_dtype_arr[i]));
-            MPI_Type_commit(&(client_comm_dtype_arr[i]));
+            PMPI_Type_hindexed(client_ol_ct_arr[i], client_blk_arr[i],
+                               client_disp_arr[i], MPI_BYTE, &(client_comm_dtype_arr[i]));
+            PMPI_Type_commit(&(client_comm_dtype_arr[i]));
         } else {
             client_comm_dtype_arr[i] = MPI_BYTE;
         }
@@ -720,11 +720,11 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
 
     if (agg_ol_ct > 0) {
         if (agg_ol_ct == 1)
-            MPI_Type_contiguous(agg_blk_arr[0], MPI_BYTE, agg_dtype_p);
+            PMPI_Type_contiguous(agg_blk_arr[0], MPI_BYTE, agg_dtype_p);
         else if (agg_ol_ct > 1)
-            MPI_Type_hindexed(agg_ol_ct, agg_blk_arr, agg_disp_arr, MPI_BYTE, agg_dtype_p);
+            PMPI_Type_hindexed(agg_ol_ct, agg_blk_arr, agg_disp_arr, MPI_BYTE, agg_dtype_p);
 
-        MPI_Type_commit(agg_dtype_p);
+        PMPI_Type_commit(agg_dtype_p);
 
         ADIOI_Free(agg_disp_arr);
         ADIOI_Free(agg_blk_arr);
@@ -741,7 +741,7 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
 /* All sizes from all aggregators are gathered on the clients, which
  * then call this function, which will generate the comm datatypes for
  * each aggregator (agg_comm_dtype_arr) in the upcoming
- * MPI_Alltoallw() */
+ * PMPI_Alltoallw() */
 int ADIOI_Build_client_reqs(ADIO_File fd,
                             int nprocs,
                             view_state * my_mem_view_state_arr,
@@ -995,9 +995,9 @@ int ADIOI_Build_client_reqs(ADIO_File fd,
     /* Create all the aggregator MPI_Datatypes */
     for (i = 0; i < nprocs; i++) {
         if (agg_comm_sz_arr[i] > 0) {
-            MPI_Type_hindexed(agg_ol_ct_arr[i], agg_blk_arr[i],
-                              agg_disp_arr[i], MPI_BYTE, &(agg_comm_dtype_arr[i]));
-            MPI_Type_commit(&(agg_comm_dtype_arr[i]));
+            PMPI_Type_hindexed(agg_ol_ct_arr[i], agg_blk_arr[i],
+                               agg_disp_arr[i], MPI_BYTE, &(agg_comm_dtype_arr[i]));
+            PMPI_Type_commit(&(agg_comm_dtype_arr[i]));
         } else {
             agg_comm_dtype_arr[i] = MPI_BYTE;
         }
@@ -1692,8 +1692,8 @@ int ADIOI_Build_client_req(ADIO_File fd,
 
     /* Create the aggregator MPI_Datatype */
     if (agg_comm_sz > 0) {
-        MPI_Type_hindexed(agg_ol_ct, agg_blk_arr, agg_disp_arr, MPI_BYTE, agg_comm_dtype_p);
-        MPI_Type_commit(agg_comm_dtype_p);
+        PMPI_Type_hindexed(agg_ol_ct, agg_blk_arr, agg_disp_arr, MPI_BYTE, agg_comm_dtype_p);
+        PMPI_Type_commit(agg_comm_dtype_p);
     } else {
         *agg_comm_dtype_p = MPI_BYTE;
     }

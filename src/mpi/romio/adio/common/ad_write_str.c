@@ -152,7 +152,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
     ADIOI_Datatype_iscontig(datatype, &buftype_is_contig);
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
 
-    MPI_Type_size_x(fd->filetype, &filetype_size);
+    PMPI_Type_size_x(fd->filetype, &filetype_size);
     if (!filetype_size) {
 #ifdef HAVE_STATUS_SET_BYTES
         MPIR_Status_set_bytes(status, datatype, 0);
@@ -161,9 +161,9 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
         return;
     }
 
-    MPI_Type_extent(fd->filetype, &filetype_extent);
-    MPI_Type_size_x(datatype, &buftype_size);
-    MPI_Type_extent(datatype, &buftype_extent);
+    PMPI_Type_extent(fd->filetype, &filetype_extent);
+    PMPI_Type_size_x(datatype, &buftype_size);
+    PMPI_Type_extent(datatype, &buftype_extent);
     etype_size = fd->etype_size;
 
     ADIOI_Assert((buftype_size * count) == ((MPI_Count) buftype_size * (ADIO_Offset) count));

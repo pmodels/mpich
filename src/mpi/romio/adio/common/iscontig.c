@@ -18,7 +18,7 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
     if (*flag) {
         MPI_Aint true_extent, true_lb;
 
-        MPI_Type_get_true_extent(datatype, &true_lb, &true_extent);
+        PMPI_Type_get_true_extent(datatype, &true_lb, &true_extent);
 
         if (true_lb > 0)
             *flag = 0;
@@ -42,7 +42,7 @@ int MPI_SGI_type_is_contig(MPI_Datatype datatype);
 void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 {
     MPI_Aint displacement;
-    MPI_Type_lb(datatype, &distplacement);
+    PMPI_Type_lb(datatype, &distplacement);
 
     /* SGI's MPI_SGI_type_is_contig() returns true for indexed
      * datatypes with holes at the beginning, which causes
@@ -65,7 +65,7 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
     MPI_Aint *adds;
     MPI_Datatype *types;
 
-    MPI_Type_get_envelope(datatype, &nints, &nadds, &ntypes, &combiner);
+    PMPI_Type_get_envelope(datatype, &nints, &nadds, &ntypes, &combiner);
 
     switch (combiner) {
         case MPI_COMBINER_NAMED:
@@ -75,12 +75,12 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
             ints = (int *) ADIOI_Malloc((nints + 1) * sizeof(int));
             adds = (MPI_Aint *) ADIOI_Malloc((nadds + 1) * sizeof(MPI_Aint));
             types = (MPI_Datatype *) ADIOI_Malloc((ntypes + 1) * sizeof(MPI_Datatype));
-            MPI_Type_get_contents(datatype, nints, nadds, ntypes, ints, adds, types);
+            PMPI_Type_get_contents(datatype, nints, nadds, ntypes, ints, adds, types);
             ADIOI_Datatype_iscontig(types[0], flag);
 
-            MPI_Type_get_envelope(types[0], &ni, &na, &nt, &cb);
+            PMPI_Type_get_envelope(types[0], &ni, &na, &nt, &cb);
             if (cb != MPI_COMBINER_NAMED)
-                MPI_Type_free(types);
+                PMPI_Type_free(types);
 
             ADIOI_Free(ints);
             ADIOI_Free(adds);

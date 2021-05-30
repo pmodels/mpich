@@ -270,8 +270,8 @@ void ADIOI_GEN_IwriteStridedColl(ADIO_File fd, const void *buf, int count,
     vars->file_ptr_type = file_ptr_type;
     vars->offset = offset;
 
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
+    PMPI_Comm_size(fd->comm, &nprocs);
+    PMPI_Comm_rank(fd->comm, &myrank);
     vars->nprocs = nprocs;
     vars->myrank = myrank;
 
@@ -300,14 +300,14 @@ void ADIOI_GEN_IwriteStridedColl(ADIO_File fd, const void *buf, int count,
         vars->st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * 2 * sizeof(ADIO_Offset));
         vars->end_offsets = vars->st_offsets + nprocs;
 
-        *error_code = MPI_Iallgather(&vars->start_offset, 1, ADIO_OFFSET,
-                                     vars->st_offsets, 1, ADIO_OFFSET,
-                                     fd->comm, &vars->req_offset[0]);
+        *error_code = PMPI_Iallgather(&vars->start_offset, 1, ADIO_OFFSET,
+                                      vars->st_offsets, 1, ADIO_OFFSET,
+                                      fd->comm, &vars->req_offset[0]);
         if (*error_code != MPI_SUCCESS)
             return;
-        *error_code = MPI_Iallgather(&vars->end_offset, 1, ADIO_OFFSET,
-                                     vars->end_offsets, 1, ADIO_OFFSET,
-                                     fd->comm, &vars->req_offset[1]);
+        *error_code = PMPI_Iallgather(&vars->end_offset, 1, ADIO_OFFSET,
+                                      vars->end_offsets, 1, ADIO_OFFSET,
+                                      fd->comm, &vars->req_offset[1]);
 
         nbc_req->data.wr.state = ADIOI_IWC_STATE_GEN_IWRITESTRIDEDCOLL;
         return;
@@ -505,12 +505,12 @@ static void ADIOI_GEN_IwriteStridedColl_bcast(ADIOI_NBC_Request * nbc_req, int *
 #endif
     vars->error_code = *error_code;
     if (fd->hints->cb_nodes == 1) {
-        *error_code = MPI_Ibcast(&vars->error_code, 1, MPI_INT,
-                                 fd->hints->ranklist[0], fd->comm, &vars->req_err);
+        *error_code = PMPI_Ibcast(&vars->error_code, 1, MPI_INT,
+                                  fd->hints->ranklist[0], fd->comm, &vars->req_err);
     } else {
         vars->tmp_error = *error_code;
-        *error_code = MPI_Iallreduce(&vars->tmp_error, &vars->error_code, 1,
-                                     MPI_INT, MPI_MAX, fd->comm, &vars->req_err);
+        *error_code = PMPI_Iallreduce(&vars->tmp_error, &vars->error_code, 1,
+                                      MPI_INT, MPI_MAX, fd->comm, &vars->req_err);
     }
 
     nbc_req->data.wr.state = ADIOI_IWC_STATE_GEN_IWRITESTRIDEDCOLL_BCAST;
@@ -558,7 +558,7 @@ static void ADIOI_GEN_IwriteStridedColl_fini(ADIOI_NBC_Request * nbc_req, int *e
 
     /* This is a temporary way of filling in status. The right way is to
      * keep track of how much data was actually written during collective I/O. */
-    MPI_Type_size_x(vars->datatype, &size);
+    PMPI_Type_size_x(vars->datatype, &size);
     nbc_req->nbytes = size * vars->count;
 
     /* free the struct for parameters and variables */
@@ -568,7 +568,7 @@ static void ADIOI_GEN_IwriteStridedColl_fini(ADIOI_NBC_Request * nbc_req, int *e
     }
 
     /* make the request complete */
-    *error_code = MPI_Grequest_complete(nbc_req->req);
+    *error_code = PMPI_Grequest_complete(nbc_req->req);
     nbc_req->data.wr.state = ADIOI_IWC_STATE_COMPLETE;
 }
 
@@ -634,8 +634,8 @@ static void ADIOI_Iexch_and_write(ADIOI_NBC_Request * nbc_req, int *error_code)
         vars->ntimes = 0;       /* this process does no writing. */
     }
 
-    *error_code = MPI_Iallreduce(&vars->ntimes, &vars->max_ntimes, 1, MPI_INT,
-                                 MPI_MAX, fd->comm, &vars->req1);
+    *error_code = PMPI_Iallreduce(&vars->ntimes, &vars->max_ntimes, 1, MPI_INT,
+                                  MPI_MAX, fd->comm, &vars->req1);
 
     vars->write_buf = fd->io_buf;
 
@@ -653,7 +653,7 @@ static void ADIOI_Iexch_and_write(ADIOI_NBC_Request * nbc_req, int *error_code)
 
     vars->send_size = (int *) ADIOI_Malloc(nprocs * sizeof(int));
     /* total size of data to be sent to each proc. in an iteration.
-     * Of size nprocs so that I can use MPI_Alltoall later. */
+     * Of size nprocs so that I can use PMPI_Alltoall later. */
 
     vars->recv_size = (int *) ADIOI_Malloc(nprocs * sizeof(int));
     /* total size of data to be recd. from each proc. in an iteration. */
@@ -675,7 +675,7 @@ static void ADIOI_Iexch_and_write(ADIOI_NBC_Request * nbc_req, int *error_code)
     if (!vars->buftype_is_contig) {
         vars->flat_buf = ADIOI_Flatten_and_find(datatype);
     }
-    MPI_Type_extent(datatype, &vars->buftype_extent);
+    PMPI_Type_extent(datatype, &vars->buftype_extent);
 
 
     /* I need to check if there are any outstanding nonblocking writes to
@@ -686,13 +686,13 @@ static void ADIOI_Iexch_and_write(ADIOI_NBC_Request * nbc_req, int *error_code)
 
     /*ADIOI_Complete_async(error_code);
      * if (*error_code != MPI_SUCCESS) return;
-     * MPI_Barrier(fd->comm);
+     * PMPI_Barrier(fd->comm);
      */
 
     vars->done = 0;
     vars->off = st_loc;
 
-    /* set the state to wait until MPI_Ialltoall finishes. */
+    /* set the state to wait until PMPI_Ialltoall finishes. */
     nbc_req->data.wr.state = ADIOI_IWC_STATE_IEXCH_AND_WRITE;
 }
 
@@ -773,7 +773,7 @@ static void ADIOI_Iexch_and_write_l1_begin(ADIOI_NBC_Request * nbc_req, int *err
                     count[i]++;
                     ADIOI_Assert((((ADIO_Offset) (uintptr_t) write_buf) + req_off - off) ==
                                  (ADIO_Offset) (uintptr_t) (write_buf + req_off - off));
-                    MPI_Address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
+                    PMPI_Address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
                     ADIOI_Assert((off + size - req_off) == (int) (off + size - req_off));
                     recv_size[i] += (int) (MPL_MIN(off + size - req_off, (unsigned) req_len));
 
@@ -997,8 +997,8 @@ static void ADIOI_W_Iexchange_data(ADIOI_NBC_Request * nbc_req, int *error_code)
     /* exchange recv_size info so that each process knows how much to
      * send to whom. */
 
-    *error_code = MPI_Ialltoall(vars->recv_size, 1, MPI_INT, vars->send_size, 1,
-                                MPI_INT, vars->fd->comm, &vars->req1);
+    *error_code = PMPI_Ialltoall(vars->recv_size, 1, MPI_INT, vars->send_size, 1,
+                                 MPI_INT, vars->fd->comm, &vars->req1);
 
     nbc_req->data.wr.state = ADIOI_IWC_STATE_W_IEXCHANGE_DATA;
 }
@@ -1050,7 +1050,7 @@ static void ADIOI_W_Iexchange_data_hole(ADIOI_NBC_Request * nbc_req, int *error_
                                          &(others_req[i].mem_ptrs[start_pos[i]]),
                                          MPI_BYTE, recv_types + j);
             /* absolute displacements; use MPI_BOTTOM in recv */
-            MPI_Type_commit(recv_types + j);
+            PMPI_Type_commit(recv_types + j);
             j++;
         }
     }
@@ -1159,8 +1159,8 @@ static void ADIOI_W_Iexchange_data_send(ADIOI_NBC_Request * nbc_req, int *error_
         j = 0;
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
-                MPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
-                          fd->comm, vars->requests + j);
+                PMPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
+                           fd->comm, vars->requests + j);
                 j++;
             }
         }
@@ -1177,8 +1177,8 @@ static void ADIOI_W_Iexchange_data_send(ADIOI_NBC_Request * nbc_req, int *error_
         j = 0;
         for (i = 0; i < nprocs; i++)
             if (send_size[i]) {
-                MPI_Isend(((char *) buf) + buf_idx[i], send_size[i],
-                          MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, vars->send_req + j);
+                PMPI_Isend(((char *) buf) + buf_idx[i], send_size[i],
+                           MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, vars->send_req + j);
                 j++;
                 buf_idx[i] += send_size[i];
             }
@@ -1214,8 +1214,8 @@ static void ADIOI_W_Iexchange_data_send(ADIOI_NBC_Request * nbc_req, int *error_
         j = 0;
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
-                MPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
-                          fd->comm, vars->req3 + j);
+                PMPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
+                           fd->comm, vars->req3 + j);
                 j++;
             }
         }
@@ -1237,15 +1237,15 @@ static void ADIOI_W_Iexchange_data_wait(ADIOI_NBC_Request * nbc_req, int *error_
     int i;
 
     for (i = 0; i < nprocs_recv; i++)
-        MPI_Type_free(recv_types + i);
+        PMPI_Type_free(recv_types + i);
     ADIOI_Free(recv_types);
 
     i = 0;
     if (fd->atomicity) {
         /* bug fix from Wei-keng Liao and Kenin Coloma */
-        MPI_Testall(nprocs_send, vars->send_req, &i, MPI_STATUSES_IGNORE);
+        PMPI_Testall(nprocs_send, vars->send_req, &i, MPI_STATUSES_IGNORE);
     } else {
-        MPI_Testall(nprocs_send + nprocs_recv, vars->requests, &i, MPI_STATUSES_IGNORE);
+        PMPI_Testall(nprocs_send + nprocs_recv, vars->requests, &i, MPI_STATUSES_IGNORE);
     }
 
     if (i) {
@@ -1291,10 +1291,10 @@ static int ADIOI_GEN_iwc_query_fn(void *extra_state, MPI_Status * status)
 
     nbc_req = (ADIOI_NBC_Request *) extra_state;
 
-    MPI_Status_set_elements_x(status, MPI_BYTE, nbc_req->nbytes);
+    PMPI_Status_set_elements_x(status, MPI_BYTE, nbc_req->nbytes);
 
     /* can never cancel so always true */
-    MPI_Status_set_cancelled(status, 0);
+    PMPI_Status_set_cancelled(status, 0);
 
     /* choose not to return a value for this */
     status->MPI_SOURCE = MPI_UNDEFINED;
@@ -1330,7 +1330,7 @@ static int ADIOI_GEN_iwc_poll_fn(void *extra_state, MPI_Status * status)
     switch (nbc_req->data.wr.state) {
         case ADIOI_IWC_STATE_GEN_IWRITESTRIDEDCOLL:
             wsc_vars = nbc_req->data.wr.wsc_vars;
-            errcode = MPI_Testall(2, wsc_vars->req_offset, &flag, MPI_STATUSES_IGNORE);
+            errcode = PMPI_Testall(2, wsc_vars->req_offset, &flag, MPI_STATUSES_IGNORE);
             if (errcode == MPI_SUCCESS && flag) {
                 ADIOI_GEN_IwriteStridedColl_inter(nbc_req, &errcode);
             }
@@ -1338,7 +1338,7 @@ static int ADIOI_GEN_iwc_poll_fn(void *extra_state, MPI_Status * status)
 
         case ADIOI_IWC_STATE_GEN_IWRITESTRIDEDCOLL_INDIO:
             wsc_vars = nbc_req->data.wr.wsc_vars;
-            errcode = MPI_Test(&wsc_vars->req_ind_io, &flag, MPI_STATUS_IGNORE);
+            errcode = PMPI_Test(&wsc_vars->req_ind_io, &flag, MPI_STATUS_IGNORE);
             if (errcode == MPI_SUCCESS && flag) {
                 /* call the last function */
                 ADIOI_GEN_IwriteStridedColl_fini(nbc_req, &errcode);
@@ -1347,7 +1347,7 @@ static int ADIOI_GEN_iwc_poll_fn(void *extra_state, MPI_Status * status)
 
         case ADIOI_IWC_STATE_GEN_IWRITESTRIDEDCOLL_BCAST:
             wsc_vars = nbc_req->data.wr.wsc_vars;
-            errcode = MPI_Test(&wsc_vars->req_err, &flag, MPI_STATUS_IGNORE);
+            errcode = PMPI_Test(&wsc_vars->req_err, &flag, MPI_STATUS_IGNORE);
             if (errcode == MPI_SUCCESS && flag) {
                 errcode = wsc_vars->error_code;
                 ADIOI_GEN_IwriteStridedColl_free(nbc_req, &errcode);
@@ -1356,7 +1356,7 @@ static int ADIOI_GEN_iwc_poll_fn(void *extra_state, MPI_Status * status)
 
         case ADIOI_IWC_STATE_ICALC_OTHERS_REQ:
             cor_vars = nbc_req->cor_vars;
-            errcode = MPI_Test(&cor_vars->req1, &flag, MPI_STATUS_IGNORE);
+            errcode = PMPI_Test(&cor_vars->req1, &flag, MPI_STATUS_IGNORE);
             if (errcode == MPI_SUCCESS && flag) {
                 ADIOI_Icalc_others_req_main(nbc_req, &errcode);
             }
@@ -1365,8 +1365,8 @@ static int ADIOI_GEN_iwc_poll_fn(void *extra_state, MPI_Status * status)
         case ADIOI_IWC_STATE_ICALC_OTHERS_REQ_MAIN:
             cor_vars = nbc_req->cor_vars;
             if (cor_vars->num_req2) {
-                errcode = MPI_Testall(cor_vars->num_req2, cor_vars->req2,
-                                      &flag, MPI_STATUSES_IGNORE);
+                errcode = PMPI_Testall(cor_vars->num_req2, cor_vars->req2,
+                                       &flag, MPI_STATUSES_IGNORE);
                 if (errcode == MPI_SUCCESS && flag) {
                     ADIOI_Icalc_others_req_fini(nbc_req, &errcode);
                 }
@@ -1377,7 +1377,7 @@ static int ADIOI_GEN_iwc_poll_fn(void *extra_state, MPI_Status * status)
 
         case ADIOI_IWC_STATE_IEXCH_AND_WRITE:
             eaw_vars = nbc_req->data.wr.eaw_vars;
-            errcode = MPI_Test(&eaw_vars->req1, &flag, MPI_STATUS_IGNORE);
+            errcode = PMPI_Test(&eaw_vars->req1, &flag, MPI_STATUS_IGNORE);
             if (errcode == MPI_SUCCESS && flag) {
                 eaw_vars->m = 0;
                 ADIOI_Iexch_and_write_l1_begin(nbc_req, &errcode);
@@ -1386,7 +1386,7 @@ static int ADIOI_GEN_iwc_poll_fn(void *extra_state, MPI_Status * status)
 
         case ADIOI_IWC_STATE_IEXCH_AND_WRITE_L1_BODY:
             eaw_vars = nbc_req->data.wr.eaw_vars;
-            errcode = MPI_Test(&eaw_vars->req3, &flag, MPI_STATUS_IGNORE);
+            errcode = PMPI_Test(&eaw_vars->req3, &flag, MPI_STATUS_IGNORE);
             if (errcode == MPI_SUCCESS && flag) {
                 ADIOI_Iexch_and_write_l1_end(nbc_req, &errcode);
             }
@@ -1394,7 +1394,7 @@ static int ADIOI_GEN_iwc_poll_fn(void *extra_state, MPI_Status * status)
 
         case ADIOI_IWC_STATE_W_IEXCHANGE_DATA:
             wed_vars = nbc_req->data.wr.wed_vars;
-            errcode = MPI_Test(&wed_vars->req1, &flag, MPI_STATUS_IGNORE);
+            errcode = PMPI_Test(&wed_vars->req1, &flag, MPI_STATUS_IGNORE);
             if (errcode == MPI_SUCCESS && flag) {
                 ADIOI_W_Iexchange_data_hole(nbc_req, &errcode);
             }
@@ -1402,7 +1402,7 @@ static int ADIOI_GEN_iwc_poll_fn(void *extra_state, MPI_Status * status)
 
         case ADIOI_IWC_STATE_W_IEXCHANGE_DATA_HOLE:
             wed_vars = nbc_req->data.wr.wed_vars;
-            errcode = MPI_Test(&wed_vars->req2, &flag, MPI_STATUSES_IGNORE);
+            errcode = PMPI_Test(&wed_vars->req2, &flag, MPI_STATUSES_IGNORE);
             if (errcode == MPI_SUCCESS && flag) {
                 /* --BEGIN ERROR HANDLING-- */
                 if (wed_vars->err != MPI_SUCCESS) {
@@ -1419,8 +1419,8 @@ static int ADIOI_GEN_iwc_poll_fn(void *extra_state, MPI_Status * status)
 
         case ADIOI_IWC_STATE_W_IEXCHANGE_DATA_SEND:
             wed_vars = nbc_req->data.wr.wed_vars;
-            errcode = MPI_Testall(wed_vars->nprocs_recv, wed_vars->req3,
-                                  &flag, MPI_STATUSES_IGNORE);
+            errcode = PMPI_Testall(wed_vars->nprocs_recv, wed_vars->req3,
+                                   &flag, MPI_STATUSES_IGNORE);
             if (errcode == MPI_SUCCESS && flag) {
                 ADIOI_W_Iexchange_data_wait(nbc_req, &errcode);
             }
@@ -1430,12 +1430,12 @@ static int ADIOI_GEN_iwc_poll_fn(void *extra_state, MPI_Status * status)
             wed_vars = nbc_req->data.wr.wed_vars;
             if (wed_vars->fd->atomicity) {
                 /* bug fix from Wei-keng Liao and Kenin Coloma */
-                errcode = MPI_Testall(wed_vars->nprocs_send, wed_vars->send_req,
-                                      &flag, MPI_STATUSES_IGNORE);
+                errcode = PMPI_Testall(wed_vars->nprocs_send, wed_vars->send_req,
+                                       &flag, MPI_STATUSES_IGNORE);
             } else {
-                errcode = MPI_Testall(wed_vars->nprocs_send +
-                                      wed_vars->nprocs_recv,
-                                      wed_vars->requests, &flag, MPI_STATUSES_IGNORE);
+                errcode = PMPI_Testall(wed_vars->nprocs_send +
+                                       wed_vars->nprocs_recv,
+                                       wed_vars->requests, &flag, MPI_STATUSES_IGNORE);
             }
             if (errcode == MPI_SUCCESS && flag) {
                 ADIOI_W_Iexchange_data_fini(nbc_req, &errcode);
@@ -1468,7 +1468,7 @@ static int ADIOI_GEN_iwc_wait_fn(int count, void **array_of_states,
 
     nbc_reqlist = (ADIOI_NBC_Request **) array_of_states;
 
-    starttime = MPI_Wtime();
+    starttime = PMPI_Wtime();
     for (i = 0; i < count; i++) {
         while (nbc_reqlist[i]->data.wr.state != ADIOI_IWC_STATE_COMPLETE) {
             errcode = ADIOI_GEN_iwc_poll_fn(nbc_reqlist[i], MPI_STATUS_IGNORE);
@@ -1481,7 +1481,7 @@ static int ADIOI_GEN_iwc_wait_fn(int count, void **array_of_states,
             }
             /* --END ERROR HANDLING-- */
 
-            if ((timeout > 0) && (timeout < (MPI_Wtime() - starttime)))
+            if ((timeout > 0) && (timeout < (PMPI_Wtime() - starttime)))
                 goto fn_exit;
 
             /* If the progress engine is blocked, we have to yield for another

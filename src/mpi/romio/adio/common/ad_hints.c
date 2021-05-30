@@ -34,14 +34,14 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 
     if (fd->info == MPI_INFO_NULL) {
         if (users_info == MPI_INFO_NULL)
-            MPI_Info_create(&(fd->info));
+            PMPI_Info_create(&(fd->info));
         else
             /* duplicate users_info to preserve hints not used in ROMIO */
-            MPI_Info_dup(users_info, &(fd->info));
+            PMPI_Info_dup(users_info, &(fd->info));
     }
     info = fd->info;
 
-    MPI_Comm_size(fd->comm, &nprocs);
+    PMPI_Comm_size(fd->comm, &nprocs);
 
     /* Note that fd->hints is allocated at file open time; thus it is
      * not necessary to allocate it, or check for allocation, here.

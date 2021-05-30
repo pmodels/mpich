@@ -23,8 +23,8 @@ void ADIOI_FAKE_IreadContig(ADIO_File fd, void *buf, int count,
      */
     ADIO_ReadContig(fd, buf, count, datatype, file_ptr_type, offset, &status, error_code);
     if (*error_code == MPI_SUCCESS) {
-        MPI_Type_size_x(datatype, &typesize);
-        MPI_Get_count(&status, datatype, &read_count);
+        PMPI_Type_size_x(datatype, &typesize);
+        PMPI_Get_count(&status, datatype, &read_count);
         nbytes = read_count * typesize;
     } else {
         nbytes = 0;
@@ -50,8 +50,8 @@ void ADIOI_FAKE_IreadStrided(ADIO_File fd, void *buf, int count,
      */
     ADIO_ReadStrided(fd, buf, count, datatype, file_ptr_type, offset, &status, error_code);
     if (*error_code == MPI_SUCCESS) {
-        MPI_Type_size_x(datatype, &typesize);
-        MPI_Get_count(&status, datatype, &read_count);
+        PMPI_Type_size_x(datatype, &typesize);
+        PMPI_Get_count(&status, datatype, &read_count);
         nbytes = read_count * typesize;
     } else {
         nbytes = 0;

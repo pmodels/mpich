@@ -88,8 +88,8 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
     int aggs_client_count = 0;
     int clients_agg_count = 0;
 
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
+    PMPI_Comm_size(fd->comm, &nprocs);
+    PMPI_Comm_rank(fd->comm, &myrank);
 #ifdef DEBUG
     fprintf(stderr, "p%d: entering ADIOI_IOStridedColl\n", myrank);
 #endif
@@ -123,7 +123,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
         /* allocate an array of start/end pairs */
         all_st_end_offsets = (ADIO_Offset *)
             ADIOI_Malloc(2 * nprocs * sizeof(ADIO_Offset));
-        MPI_Allgather(st_end_offset, 2, ADIO_OFFSET, all_st_end_offsets, 2, ADIO_OFFSET, fd->comm);
+        PMPI_Allgather(st_end_offset, 2, ADIO_OFFSET, all_st_end_offsets, 2, ADIO_OFFSET, fd->comm);
 
         min_st_offset = all_st_end_offsets[0];
         max_end_offset = all_st_end_offsets[1];
@@ -178,11 +178,11 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
         return;
     }
 
-    MPI_Type_extent(datatype, &extent);
+    PMPI_Type_extent(datatype, &extent);
 #ifdef DEBUG2
     bufextent = extent * count;
 #endif
-    MPI_Type_size_x(datatype, &size);
+    PMPI_Type_size_x(datatype, &size);
     bufsize = size * (MPI_Count) count;
 
     /* Calculate file realms */
@@ -326,12 +326,12 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                                      ADIOI_READ, status, error_code);
                     if (*error_code != MPI_SUCCESS)
                         return;
-                    MPI_Type_free(&agg_dtype);
+                    PMPI_Type_free(&agg_dtype);
                 }
 #ifdef DEBUG
                 fprintf(stderr, "expecting from [agg](disp,size,cnt)=");
                 for (i = 0; i < nprocs; i++) {
-                    MPI_Type_size_x(agg_comm_dtype_arr[i], &size);
+                    PMPI_Type_size_x(agg_comm_dtype_arr[i], &size);
                     fprintf(stderr, "[%d](%d,%d,%d)", i, alltoallw_disps[i],
                             size, agg_alltoallw_counts[i]);
                     if (i != nprocs - 1)
@@ -342,7 +342,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                     fprintf(stderr, "sending to [client](disp,size,cnt)=");
                     for (i = 0; i < nprocs; i++) {
                         if (fd->is_agg)
-                            MPI_Type_size_x(client_comm_dtype_arr[i], &size);
+                            PMPI_Type_size_x(client_comm_dtype_arr[i], &size);
                         else
                             size = -1;
 
@@ -368,7 +368,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
 #else
                     agg_comm_statuses = ADIOI_Malloc(aggs_client_count * sizeof(MPI_Status));
 #endif
-                    MPI_Waitall(aggs_client_count, agg_comm_requests, agg_comm_statuses);
+                    PMPI_Waitall(aggs_client_count, agg_comm_requests, agg_comm_statuses);
 #ifdef AGGREGATION_PROFILE
                     MPE_Log_event(5033, 0, NULL);
 #endif
@@ -384,7 +384,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
 #else
                     client_comm_statuses = ADIOI_Malloc(clients_agg_count * sizeof(MPI_Status));
 #endif
-                    MPI_Waitall(clients_agg_count, client_comm_requests, client_comm_statuses);
+                    PMPI_Waitall(clients_agg_count, client_comm_requests, client_comm_statuses);
 #ifdef AGGREGATION_PROFILE
                     MPE_Log_event(5039, 0, NULL);
 #endif
@@ -411,7 +411,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
 #ifdef DEBUG
                 fprintf(stderr, "sending to [agg](disp,size,cnt)=");
                 for (i = 0; i < nprocs; i++) {
-                    MPI_Type_size_x(agg_comm_dtype_arr[i], &size);
+                    PMPI_Type_size_x(agg_comm_dtype_arr[i], &size);
                     fprintf(stderr, "[%d](%d,%d,%d)", i, alltoallw_disps[i],
                             size, agg_alltoallw_counts[i]);
                     if (i != nprocs - 1)
@@ -421,7 +421,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                 fprintf(stderr, "expecting from [client](disp,size,cnt)=");
                 for (i = 0; i < nprocs; i++) {
                     if (fd->is_agg)
-                        MPI_Type_size_x(client_comm_dtype_arr[i], &size);
+                        PMPI_Type_size_x(client_comm_dtype_arr[i], &size);
                     else
                         size = -1;
 
@@ -443,7 +443,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
 #else
                     client_comm_statuses = ADIOI_Malloc(clients_agg_count * sizeof(MPI_Status));
 #endif
-                    MPI_Waitall(clients_agg_count, client_comm_requests, client_comm_statuses);
+                    PMPI_Waitall(clients_agg_count, client_comm_requests, client_comm_statuses);
 #ifdef AGGREGATION_PROFILE
                     MPE_Log_event(5039, 0, NULL);
 #endif
@@ -471,7 +471,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                         ADIOI_Malloc(aggs_client_count * sizeof(MPI_Status));
 #endif
 
-                    MPI_Waitall(aggs_client_count, agg_comm_requests, agg_comm_statuses);
+                    PMPI_Waitall(aggs_client_count, agg_comm_requests, agg_comm_statuses);
 #ifdef AGGREGATION_PROFILE
                     MPE_Log_event(5033, 0, NULL);
 #endif
@@ -491,7 +491,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                                      ADIOI_WRITE, status, error_code);
                     if (*error_code != MPI_SUCCESS)
                         return;
-                    MPI_Type_free(&agg_dtype);
+                    PMPI_Type_free(&agg_dtype);
                 }
 
             }
@@ -507,15 +507,15 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                                      ADIOI_READ, status, error_code);
                     if (*error_code != MPI_SUCCESS)
                         return;
-                    MPI_Type_free(&agg_dtype);
+                    PMPI_Type_free(&agg_dtype);
                 }
 #ifdef AGGREGATION_PROFILE
                 MPE_Log_event(5032, 0, NULL);
 #endif
-                MPI_Alltoallw(cb_buf, client_alltoallw_counts, alltoallw_disps,
-                              client_comm_dtype_arr,
-                              buf, agg_alltoallw_counts, alltoallw_disps,
-                              agg_comm_dtype_arr, fd->comm);
+                PMPI_Alltoallw(cb_buf, client_alltoallw_counts, alltoallw_disps,
+                               client_comm_dtype_arr,
+                               buf, agg_alltoallw_counts, alltoallw_disps,
+                               agg_comm_dtype_arr, fd->comm);
 #ifdef AGGREGATION_PROFILE
                 MPE_Log_event(5033, 0, NULL);
 #endif
@@ -523,10 +523,10 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
 #ifdef AGGREGATION_PROFILE
                 MPE_Log_event(5032, 0, NULL);
 #endif
-                MPI_Alltoallw(buf, agg_alltoallw_counts, alltoallw_disps,
-                              agg_comm_dtype_arr,
-                              cb_buf, client_alltoallw_counts, alltoallw_disps,
-                              client_comm_dtype_arr, fd->comm);
+                PMPI_Alltoallw(buf, agg_alltoallw_counts, alltoallw_disps,
+                               agg_comm_dtype_arr,
+                               cb_buf, client_alltoallw_counts, alltoallw_disps,
+                               client_comm_dtype_arr, fd->comm);
 #ifdef AGGREGATION_PROFILE
                 MPE_Log_event(5033, 0, NULL);
 #endif
@@ -536,7 +536,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                                      ADIOI_WRITE, status, error_code);
                     if (*error_code != MPI_SUCCESS)
                         return;
-                    MPI_Type_free(&agg_dtype);
+                    PMPI_Type_free(&agg_dtype);
                 }
             }
         }
@@ -546,13 +546,13 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
             if (buffered_io_size > 0) {
                 for (i = 0; i < nprocs; i++) {
                     if (client_comm_sz_arr[i] > 0)
-                        MPI_Type_free(&client_comm_dtype_arr[i]);
+                        PMPI_Type_free(&client_comm_dtype_arr[i]);
                 }
             }
         }
         for (i = 0; i < nprocs; i++) {
             if (agg_comm_sz_arr[i] > 0)
-                MPI_Type_free(&agg_comm_dtype_arr[i]);
+                PMPI_Type_free(&agg_comm_dtype_arr[i]);
         }
 
         /* figure out next set up requests */
@@ -607,11 +607,11 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
     if (fd->hints->cb_pfr != ADIOI_HINT_ENABLE) {
         /* AAR, FSIZE, and User provided uniform File realms */
         if (1) {
-            MPI_Type_free(&fd->file_realm_types[0]);
+            PMPI_Type_free(&fd->file_realm_types[0]);
         } else {
             for (i = 0; i < fd->hints->cb_nodes; i++) {
                 ADIOI_Datatype_iscontig(fd->file_realm_types[i], &is_contig);
-                MPI_Type_free(&fd->file_realm_types[i]);
+                PMPI_Type_free(&fd->file_realm_types[i]);
             }
         }
         ADIOI_Free(fd->file_realm_types);
@@ -621,9 +621,9 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
 
     if (fd->is_agg) {
         if (buffered_io_size > 0)
-            MPI_Type_free(&agg_dtype);
+            PMPI_Type_free(&agg_dtype);
         for (i = 0; i < nprocs; i++) {
-            MPI_Type_free(&client_comm_dtype_arr[i]);
+            PMPI_Type_free(&client_comm_dtype_arr[i]);
             ADIOI_Free(client_file_view_state_arr[i].flat_type_p->indices);
             ADIOI_Free(client_file_view_state_arr[i].flat_type_p->blocklens);
             ADIOI_Free(client_file_view_state_arr[i].flat_type_p);
@@ -633,7 +633,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
     }
     for (i = 0; i < nprocs; i++)
         if (agg_comm_sz_arr[i] > 0)
-            MPI_Type_free(&agg_comm_dtype_arr[i]);
+            PMPI_Type_free(&agg_comm_dtype_arr[i]);
 
     ADIOI_Free(client_comm_sz_arr);
     ADIOI_Free(client_comm_dtype_arr);
@@ -692,11 +692,11 @@ void ADIOI_Calc_bounds(ADIO_File fd, int count, MPI_Datatype buftype,
 
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
 
-    MPI_Type_size_x(fd->filetype, &filetype_size);
+    PMPI_Type_size_x(fd->filetype, &filetype_size);
     ADIOI_Assert(filetype_size != 0);
-    MPI_Type_extent(fd->filetype, &filetype_extent);
-    MPI_Type_size_x(fd->etype, &etype_size);
-    MPI_Type_size_x(buftype, &buftype_size);
+    PMPI_Type_extent(fd->filetype, &filetype_extent);
+    PMPI_Type_size_x(fd->etype, &etype_size);
+    PMPI_Type_size_x(buftype, &buftype_size);
 
     total_io = buftype_size * count;
 
@@ -855,8 +855,8 @@ void ADIOI_IOFiletype(ADIO_File fd, void *buf, int count,
     else
         MPE_Log_event(5008, 0, NULL);
 #endif
-    MPI_Type_extent(custom_ftype, &f_extent);
-    MPI_Type_size_x(custom_ftype, &f_size);
+    PMPI_Type_extent(custom_ftype, &f_extent);
+    PMPI_Type_size_x(custom_ftype, &f_size);
     f_ds_percent = 100 * f_size / f_extent;
 
     /* temporarily store file view information */
@@ -943,8 +943,8 @@ static void Exch_data_amounts(ADIO_File fd, int nprocs,
     MPI_Status status;
     /* Aggregators send amounts for data requested to clients */
     if (fd->hints->cb_alltoall != ADIOI_HINT_DISABLE) {
-        MPI_Alltoall(client_comm_sz_arr, sizeof(ADIO_Offset), MPI_BYTE,
-                     agg_comm_sz_arr, sizeof(ADIO_Offset), MPI_BYTE, fd->comm);
+        PMPI_Alltoall(client_comm_sz_arr, sizeof(ADIO_Offset), MPI_BYTE,
+                      agg_comm_sz_arr, sizeof(ADIO_Offset), MPI_BYTE, fd->comm);
 
         if (fd->is_agg) {
             for (i = 0; i < nprocs; i++)
@@ -969,13 +969,13 @@ static void Exch_data_amounts(ADIO_File fd, int nprocs,
         recv_requests = ADIOI_Malloc(fd->hints->cb_nodes * sizeof(MPI_Request));
         /* post all receives - only receive from aggregators */
         for (i = 0; i < fd->hints->cb_nodes; i++)
-            MPI_Irecv(&agg_comm_sz_arr[fd->hints->ranklist[i]],
-                      sizeof(ADIO_Offset), MPI_BYTE, fd->hints->ranklist[i],
-                      AMT_TAG, fd->comm, &recv_requests[i]);
+            PMPI_Irecv(&agg_comm_sz_arr[fd->hints->ranklist[i]],
+                       sizeof(ADIO_Offset), MPI_BYTE, fd->hints->ranklist[i],
+                       AMT_TAG, fd->comm, &recv_requests[i]);
 
         /* Barrier is needed here if we're worried about unexpected
          * messages being dropped */
-        /* MPI_Barrier (fd->comm); */
+        /* PMPI_Barrier (fd->comm); */
         send_requests = NULL;
         if (fd->is_agg) {
             /* only aggregators send data */
@@ -983,8 +983,8 @@ static void Exch_data_amounts(ADIO_File fd, int nprocs,
 
             /* post all sends */
             for (i = 0; i < nprocs; i++) {
-                MPI_Isend(&client_comm_sz_arr[i], sizeof(ADIO_Offset),
-                          MPI_BYTE, i, AMT_TAG, fd->comm, &send_requests[i]);
+                PMPI_Isend(&client_comm_sz_arr[i], sizeof(ADIO_Offset),
+                           MPI_BYTE, i, AMT_TAG, fd->comm, &send_requests[i]);
 
                 if (client_comm_sz_arr[i] > 0)
                     client_alltoallw_counts[i] = 1;
@@ -995,7 +995,7 @@ static void Exch_data_amounts(ADIO_File fd, int nprocs,
 
         *aggregators_done = 0;
         for (i = 0; i < fd->hints->cb_nodes; i++) {
-            MPI_Waitany(fd->hints->cb_nodes, recv_requests, &recv_idx, &status);
+            PMPI_Waitany(fd->hints->cb_nodes, recv_requests, &recv_idx, &status);
             if (agg_comm_sz_arr[fd->hints->ranklist[recv_idx]] == -1)
                 *aggregators_done = *aggregators_done + 1;
             else if (agg_comm_sz_arr[fd->hints->ranklist[recv_idx]] > 0)
@@ -1008,10 +1008,10 @@ static void Exch_data_amounts(ADIO_File fd, int nprocs,
         if (fd->is_agg) {
             /* wait for all sends to complete */
 #ifdef MPI_STATUSES_IGNORE
-            MPI_Waitall(nprocs, send_requests, MPI_STATUSES_IGNORE);
+            PMPI_Waitall(nprocs, send_requests, MPI_STATUSES_IGNORE);
 #else
             MPI_Status *send_statuses = ADIOI_Malloc(nprocs * sizeof(MPI_Status));
-            MPI_Waitall(nprocs, send_requests, send_statuses);
+            PMPI_Waitall(nprocs, send_requests, send_statuses);
             ADIOI_Free(send_statuses);
 #endif
             ADIOI_Free(send_requests);
@@ -1050,11 +1050,11 @@ static void post_aggregator_comm(MPI_Comm comm, int rw_type,
         for (i = 0; i < nproc; i++) {
             if (client_comm_sz_arr[i] > 0) {
                 if (rw_type == ADIOI_WRITE)
-                    MPI_Irecv(cb_buf, 1, client_comm_dtype_arr[i], i,
-                              DATA_TAG, comm, &requests[aggs_client_count]);
+                    PMPI_Irecv(cb_buf, 1, client_comm_dtype_arr[i], i,
+                               DATA_TAG, comm, &requests[aggs_client_count]);
                 else
-                    MPI_Isend(cb_buf, 1, client_comm_dtype_arr[i], i,
-                              DATA_TAG, comm, &requests[aggs_client_count]);
+                    PMPI_Isend(cb_buf, 1, client_comm_dtype_arr[i], i,
+                               DATA_TAG, comm, &requests[aggs_client_count]);
 
                 aggs_client_count++;
             }
@@ -1070,8 +1070,8 @@ static void post_client_comm(ADIO_File fd, int rw_type,
 {
     if (agg_alltoallw_count) {
         if (rw_type == ADIOI_READ)
-            MPI_Irecv(buf, 1, agg_comm_dtype, agg_rank, DATA_TAG, fd->comm, request);
+            PMPI_Irecv(buf, 1, agg_comm_dtype, agg_rank, DATA_TAG, fd->comm, request);
         else
-            MPI_Isend(buf, 1, agg_comm_dtype, agg_rank, DATA_TAG, fd->comm, request);
+            PMPI_Isend(buf, 1, agg_comm_dtype, agg_rank, DATA_TAG, fd->comm, request);
     }
 }

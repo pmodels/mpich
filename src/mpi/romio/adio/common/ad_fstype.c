@@ -560,14 +560,14 @@ static void ADIO_FileSysType_fncall_scalable(MPI_Comm comm, const char *filename
 {
     int rank;
     int buf[2];
-    MPI_Comm_rank(comm, &rank);
+    PMPI_Comm_rank(comm, &rank);
 
     if (rank == 0) {
         ADIO_FileSysType_fncall(filename, file_system, error_code);
         buf[0] = *file_system;
         buf[1] = *error_code;
     }
-    MPI_Bcast(buf, 2, MPI_INT, 0, comm);
+    PMPI_Bcast(buf, 2, MPI_INT, 0, comm);
     *file_system = buf[0];
     *error_code = buf[1];
 }
@@ -701,13 +701,13 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
              * http://lists.mcs.anl.gov/pipermail/mpich-discuss/2007-August/002648.html)
              */
 
-            MPI_Allreduce(&myerrcode, &max_code, 1, MPI_INT, MPI_MAX, comm);
+            PMPI_Allreduce(&myerrcode, &max_code, 1, MPI_INT, MPI_MAX, comm);
             if (max_code != MPI_SUCCESS) {
                 *error_code = max_code;
                 return;
             }
             /* ensure everyone came up with the same file system type */
-            MPI_Allreduce(&file_system, &min_code, 1, MPI_INT, MPI_MIN, comm);
+            PMPI_Allreduce(&file_system, &min_code, 1, MPI_INT, MPI_MIN, comm);
             if (min_code == ADIO_NFS)
                 file_system = ADIO_NFS;
         }

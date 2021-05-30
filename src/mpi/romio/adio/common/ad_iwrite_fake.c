@@ -24,8 +24,8 @@ void ADIOI_FAKE_IwriteContig(ADIO_File fd, const void *buf, int count,
      */
     ADIO_WriteContig(fd, buf, count, datatype, file_ptr_type, offset, &status, error_code);
     if (*error_code == MPI_SUCCESS) {
-        MPI_Type_size_x(datatype, &typesize);
-        MPI_Get_count(&status, datatype, &write_count);
+        PMPI_Type_size_x(datatype, &typesize);
+        PMPI_Get_count(&status, datatype, &write_count);
         nbytes = write_count * typesize;
     } else {
         nbytes = 0;
@@ -52,8 +52,8 @@ void ADIOI_FAKE_IwriteStrided(ADIO_File fd, const void *buf, int count,
      */
     ADIO_WriteStrided(fd, buf, count, datatype, file_ptr_type, offset, &status, error_code);
     if (*error_code == MPI_SUCCESS) {
-        MPI_Type_size_x(datatype, &typesize);
-        MPI_Get_count(&status, datatype, &write_count);
+        PMPI_Type_size_x(datatype, &typesize);
+        PMPI_Get_count(&status, datatype, &write_count);
         nbytes = write_count * typesize;
     } else {
         nbytes = 0;

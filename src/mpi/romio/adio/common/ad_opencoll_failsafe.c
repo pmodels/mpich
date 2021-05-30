@@ -30,14 +30,14 @@ void ADIOI_FAILSAFE_OpenColl(ADIO_File fd, int rank, int access_mode, int *error
             tmp_comm = fd->comm;
             fd->comm = MPI_COMM_SELF;
             (*(fd->fns->ADIOI_xxx_Open)) (fd, error_code);
-            MPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], tmp_comm);
+            PMPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], tmp_comm);
             /* if no error, close the file and reopen normally below */
             if (*error_code == MPI_SUCCESS)
                 (*(fd->fns->ADIOI_xxx_Close)) (fd, error_code);
             /* and put it all back the way we found it for subsequent code */
             fd->comm = tmp_comm;
         } else
-            MPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
+            PMPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
         if (*error_code != MPI_SUCCESS) {
             return;
         } else {

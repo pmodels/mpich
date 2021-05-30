@@ -111,7 +111,7 @@ void ADIOI_Complete_async(int *error_code)
         request = ADIOI_Async_list_head->request;
         (*request)->queued = -1;        /* ugly internal hack that prevents
                                          * ADIOI_xxxComplete from freeing the request object.
-                                         * This is required, because the user will call MPI_Wait
+                                         * This is required, because the user will call PMPI_Wait
                                          * later, which would require status to be filled. */
         switch ((*request)->optype) {
             case ADIOI_READ:

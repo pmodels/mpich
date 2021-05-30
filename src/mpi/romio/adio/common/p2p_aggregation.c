@@ -32,8 +32,8 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
     ADIOI_IO_ThreadFuncData io_thread_args;
 
     int nprocs, myrank;
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
+    PMPI_Comm_size(fd->comm, &nprocs);
+    PMPI_Comm_rank(fd->comm, &myrank);
 
     /* Initialize to self here to avoid uninitialized warnings. */
     io_thread = pthread_self();
@@ -44,7 +44,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
     int iAmUsedAgg = 0;
 
 #ifdef ROMIO_GPFS
-    startTimeBase = MPI_Wtime();
+    startTimeBase = PMPI_Wtime();
 #endif
 
     int naggs = fd->hints->cb_nodes;
@@ -195,9 +195,9 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
     int *bufferAmountsToSendThisRound = (int *) ADIOI_Malloc(numTargetAggs * sizeof(int));
 
 #ifdef ROMIO_GPFS
-    endTimeBase = MPI_Wtime();
+    endTimeBase = PMPI_Wtime();
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_MYREQ] += (endTimeBase - startTimeBase);
-    startTimeBase = MPI_Wtime();
+    startTimeBase = PMPI_Wtime();
 #endif
 
     /* each iteration of this loop writes a coll_bufsize portion of the file
@@ -275,9 +275,9 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
                     /* only need to be pinged by the agg for rounds after the first one - for the first one just
                      * send the data without being pinged */
                     if (roundIter > 0)
-                        MPI_Irecv(&amountOfDataReqestedByTargetAgg[numTargetAggsThisRound], 1,
-                                  MPI_INT, targetAggsForMyData[i], 0,
-                                  fd->comm, &mpiSizeToSendRequest[numTargetAggsThisRound]);
+                        PMPI_Irecv(&amountOfDataReqestedByTargetAgg[numTargetAggsThisRound], 1,
+                                   MPI_INT, targetAggsForMyData[i], 0,
+                                   fd->comm, &mpiSizeToSendRequest[numTargetAggsThisRound]);
                     numTargetAggsThisRound++;
 
                 }
@@ -331,9 +331,9 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 #endif
             if (dataSizeGottenThisRoundPerProc[i] > 0) {
                 if (roundIter > 0) {
-                    MPI_Isend(&dataSizeGottenThisRoundPerProc[i], 1, MPI_INT,
-                              sourceProcsForMyData[i], 0, fd->comm,
-                              &mpiSendDataSizeRequest[numSourceProcsSentData]);
+                    PMPI_Isend(&dataSizeGottenThisRoundPerProc[i], 1, MPI_INT,
+                               sourceProcsForMyData[i], 0, fd->comm,
+                               &mpiSendDataSizeRequest[numSourceProcsSentData]);
                     numSourceProcsSentData++;
                 }
             }
@@ -346,8 +346,8 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
             /* the source procs aren't pinged by the target aggs on the first round */
             if (roundIter > 0) {
 
-                MPI_Waitany(numTargetAggsThisRound, mpiSizeToSendRequest,
-                            &irecv, &mpiWaitAnyStatusFromTargetAggs);
+                PMPI_Waitany(numTargetAggsThisRound, mpiSizeToSendRequest,
+                             &irecv, &mpiWaitAnyStatusFromTargetAggs);
 
 #ifdef p2pcontigtrace
                 printf
@@ -358,10 +358,10 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 #endif
                 ADIOI_Assert(amountOfDataReqestedByTargetAgg[irecv] ==
                              bufferAmountsToSendThisRound[irecv]);
-                MPI_Isend(&((char *) buf)[sendBufferOffsetsThisRound[irecv]],
-                          bufferAmountsToSendThisRound[irecv], MPI_BYTE,
-                          targetAggsForMyData[targetAggIndexesForMyDataThisRound[irecv]], 0,
-                          fd->comm, &mpiSendDataToTargetAggRequest[irecv]);
+                PMPI_Isend(&((char *) buf)[sendBufferOffsetsThisRound[irecv]],
+                           bufferAmountsToSendThisRound[irecv], MPI_BYTE,
+                           targetAggsForMyData[targetAggIndexesForMyDataThisRound[irecv]], 0,
+                           fd->comm, &mpiSendDataToTargetAggRequest[irecv]);
 
             } else {
 #ifdef p2pcontigtrace
@@ -370,17 +370,17 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
                      i, bufferAmountsToSendThisRound[i], sendBufferOffsetsThisRound[i],
                      targetAggsForMyData[targetAggIndexesForMyDataThisRound[i]]);
 #endif
-                MPI_Isend(&((char *) buf)[sendBufferOffsetsThisRound[i]],
-                          bufferAmountsToSendThisRound[i], MPI_BYTE,
-                          targetAggsForMyData[targetAggIndexesForMyDataThisRound[i]], 0, fd->comm,
-                          &mpiSendDataToTargetAggRequest[i]);
+                PMPI_Isend(&((char *) buf)[sendBufferOffsetsThisRound[i]],
+                           bufferAmountsToSendThisRound[i], MPI_BYTE,
+                           targetAggsForMyData[targetAggIndexesForMyDataThisRound[i]], 0, fd->comm,
+                           &mpiSendDataToTargetAggRequest[i]);
             }
             numDataSendToWaitFor++;
         }
 
 #ifdef ROMIO_GPFS
         gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_SETUP] += (endTimeBase - startTimeBase);
-        startTimeBase = MPI_Wtime();
+        startTimeBase = PMPI_Wtime();
 #endif
 
         /* the aggs receive the data from the source procs */
@@ -398,21 +398,21 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
                     ("receiving data from rank %d dataSizeGottenThisRoundPerProc is %d currentWBOffset is %d\n",
                      sourceProcsForMyData[i], dataSizeGottenThisRoundPerProc[i], currentWBOffset);
 #endif
-                MPI_Irecv(&((char *) write_buf)[currentWBOffset], dataSizeGottenThisRoundPerProc[i],
-                          MPI_BYTE, sourceProcsForMyData[i], 0,
-                          fd->comm, &mpiRecvDataRequest[numDataRecvToWaitFor]);
+                PMPI_Irecv(&((char *) write_buf)[currentWBOffset],
+                           dataSizeGottenThisRoundPerProc[i], MPI_BYTE, sourceProcsForMyData[i], 0,
+                           fd->comm, &mpiRecvDataRequest[numDataRecvToWaitFor]);
                 mpiRequestMapPerProc[numDataRecvToWaitFor] = i;
                 numDataRecvToWaitFor++;
             }
 #ifdef p2pcontigtrace
-            printf("MPI_Irecv from rank %d\n", targetAggsForMyData[i]);
+            printf("PMPI_Irecv from rank %d\n", targetAggsForMyData[i]);
 #endif
         }
 
         int totalDataReceivedThisRound = 0;
         for (i = 0; i < numDataRecvToWaitFor; i++) {
-            MPI_Waitany(numDataRecvToWaitFor, mpiRecvDataRequest,
-                        &irecv, &mpiWaitAnyStatusFromSourceProcs);
+            PMPI_Waitany(numDataRecvToWaitFor, mpiRecvDataRequest,
+                         &irecv, &mpiWaitAnyStatusFromSourceProcs);
             totalDataReceivedThisRound +=
                 dataSizeGottenThisRoundPerProc[mpiRequestMapPerProc[irecv]];
             totalAmountDataReceived += dataSizeGottenThisRoundPerProc[mpiRequestMapPerProc[irecv]];
@@ -431,16 +431,16 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 
         }
 
-        /* clean up the MPI_Request object for the MPI_Isend which told the
+        /* clean up the MPI_Request object for the PMPI_Isend which told the
          * source procs how much data to send */
         for (i = 0; i < numSourceProcsSentData; i++) {
-            MPI_Waitany(numSourceProcsSentData, mpiSendDataSizeRequest,
-                        &isend, &mpiIsendStatusForSize);
+            PMPI_Waitany(numSourceProcsSentData, mpiSendDataSizeRequest,
+                         &isend, &mpiIsendStatusForSize);
         }
 
 
 #ifdef ROMIO_GPFS
-        endTimeBase = MPI_Wtime();
+        endTimeBase = PMPI_Wtime();
         gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_NET] += (endTimeBase - startTimeBase);
 #endif
         /* the aggs now write the data */
@@ -493,13 +493,13 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
         if (iAmUsedAgg)
             currentRoundFDStart += coll_bufsize;
         for (i = 0; i < numDataSendToWaitFor; i++) {
-            MPI_Wait(&mpiSendDataToTargetAggRequest[i], &mpiIsendStatusForData);
+            PMPI_Wait(&mpiSendDataToTargetAggRequest[i], &mpiIsendStatusForData);
         }
 
     }   /* for-loop roundIter */
 
 #ifdef ROMIO_GPFS
-    endTimeBase = MPI_Wtime();
+    endTimeBase = PMPI_Wtime();
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH] += (endTimeBase - startTimeBase);
 #endif
 
@@ -535,7 +535,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
     ADIOI_Free(mpiRequestMapPerProc);
 
     /* TODO: still need a barrier here? */
-    MPI_Barrier(fd->comm);
+    PMPI_Barrier(fd->comm);
     return;
 }
 
@@ -559,12 +559,12 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
     ADIOI_IO_ThreadFuncData io_thread_args;
 
 #ifdef ROMIO_GPFS
-    startTimeBase = MPI_Wtime();
+    startTimeBase = PMPI_Wtime();
 #endif
 
     int nprocs, myrank;
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
+    PMPI_Comm_size(fd->comm, &nprocs);
+    PMPI_Comm_rank(fd->comm, &myrank);
 
     /* Initialize to self here to avoid uninitialized warnings. */
     io_thread = pthread_self();
@@ -708,7 +708,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 #endif
 
 #ifdef ROMIO_GPFS
-    endTimeBase = MPI_Wtime();
+    endTimeBase = PMPI_Wtime();
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_MYREQ] += (endTimeBase - startTimeBase);
 #endif
 
@@ -740,7 +740,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
                 currentReadBuf = 1;
 
 #ifdef ROMIO_GPFS
-                endTimeBase = MPI_Wtime();
+                endTimeBase = PMPI_Wtime();
 #endif
             }
 
@@ -913,10 +913,10 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 
         /* the target procs get the data from the source aggs */
         for (i = 0; i < numSourceAggsThisRound; i++) {
-            MPI_Irecv(&((char *) buf)[recvBufferOffsetsThisRound[i]],
-                      bufferAmountsToGetThisRound[i], MPI_BYTE,
-                      sourceAggsForMyData[sourceAggIndexesForMyDataThisRound[i]], 0, fd->comm,
-                      &mpiRecvDataFromSourceAggsRequest[i]);
+            PMPI_Irecv(&((char *) buf)[recvBufferOffsetsThisRound[i]],
+                       bufferAmountsToGetThisRound[i], MPI_BYTE,
+                       sourceAggsForMyData[sourceAggIndexesForMyDataThisRound[i]], 0, fd->comm,
+                       &mpiRecvDataFromSourceAggsRequest[i]);
         }
 
         /* the source aggs send the data to the target procs */
@@ -929,10 +929,10 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 
             /* only send to target procs that will recv > 0 count data */
             if (dataSizeSentThisRoundPerProc[i] > 0) {
-                MPI_Isend(&((char *) read_buf)[currentWBOffset],
-                          dataSizeSentThisRoundPerProc[i],
-                          MPI_BYTE, targetProcsForMyData[i], 0,
-                          fd->comm, &mpiSendDataToTargetProcRequest[numTargetProcsSentThisRound]);
+                PMPI_Isend(&((char *) read_buf)[currentWBOffset],
+                           dataSizeSentThisRoundPerProc[i],
+                           MPI_BYTE, targetProcsForMyData[i], 0,
+                           fd->comm, &mpiSendDataToTargetProcRequest[numTargetProcsSentThisRound]);
                 numTargetProcsSentThisRound++;
                 remainingDataAmountToSendPerProc[i] -= dataSizeSentThisRoundPerProc[i];
                 remainingDataOffsetToSendPerProc[i] += dataSizeSentThisRoundPerProc[i];
@@ -941,19 +941,19 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 
         /* wait for the target procs to get their data */
         for (i = 0; i < numSourceAggsThisRound; i++) {
-            MPI_Waitany(numSourceAggsThisRound, mpiRecvDataFromSourceAggsRequest,
-                        &irecv, &mpiWaitAnyStatusFromSourceProcs);
+            PMPI_Waitany(numSourceAggsThisRound, mpiRecvDataFromSourceAggsRequest,
+                         &irecv, &mpiWaitAnyStatusFromSourceProcs);
         }
 
         nextRoundFDStart = currentRoundFDStart + coll_bufsize;
 
-        /* clean up the MPI_Isend MPI_Requests */
+        /* clean up the PMPI_Isend MPI_Requests */
         for (i = 0; i < numTargetProcsSentThisRound; i++) {
-            MPI_Waitany(numTargetProcsSentThisRound, mpiSendDataToTargetProcRequest,
-                        &isend, &mpiIsendStatusForData);
+            PMPI_Waitany(numTargetProcsSentThisRound, mpiSendDataToTargetProcRequest,
+                         &isend, &mpiIsendStatusForData);
         }
 
-        MPI_Barrier(fd->comm);  /* need to sync up the source aggs which did the isend with the target procs which did the irecvs to give the target procs time to get the data before overwriting with next round readcontig */
+        PMPI_Barrier(fd->comm); /* need to sync up the source aggs which did the isend with the target procs which did the irecvs to give the target procs time to get the data before overwriting with next round readcontig */
 
     }   /* for-loop roundIter */
 
@@ -983,7 +983,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
     ADIOI_Free(bufferAmountsToGetThisRound);
 
     /* TODO: is Barrier here needed? */
-    MPI_Barrier(fd->comm);
+    PMPI_Barrier(fd->comm);
 
     return;
 

@@ -67,9 +67,9 @@ int ADIOI_cb_bcast_rank_map(ADIO_File fd)
     char *p;
     int i;
 
-    MPI_Bcast(&(fd->hints->cb_nodes), 1, MPI_INT, 0, fd->comm);
+    PMPI_Bcast(&(fd->hints->cb_nodes), 1, MPI_INT, 0, fd->comm);
     if (fd->hints->cb_nodes > 0) {
-        MPI_Comm_rank(fd->comm, &my_rank);
+        PMPI_Comm_rank(fd->comm, &my_rank);
         if (my_rank != 0) {
             fd->hints->ranklist = ADIOI_Malloc(fd->hints->cb_nodes * sizeof(int));
             if (fd->hints->ranklist == NULL) {
@@ -79,7 +79,7 @@ int ADIOI_cb_bcast_rank_map(ADIO_File fd)
                 return error_code;
             }
         }
-        MPI_Bcast(fd->hints->ranklist, fd->hints->cb_nodes, MPI_INT, 0, fd->comm);
+        PMPI_Bcast(fd->hints->ranklist, fd->hints->cb_nodes, MPI_INT, 0, fd->comm);
     }
     /* TEMPORARY -- REMOVE WHEN NO LONGER UPDATING INFO FOR
      * FS-INDEP. */
@@ -126,11 +126,11 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm, MPI_Comm dupcomm, ADIO_cb_name_arr
 
     if (ADIOI_cb_config_list_keyval == MPI_KEYVAL_INVALID) {
         /* cleaned up by ADIOI_End_call */
-        MPI_Keyval_create((MPI_Copy_function *) ADIOI_cb_copy_name_array,
-                          (MPI_Delete_function *) ADIOI_cb_delete_name_array,
-                          &ADIOI_cb_config_list_keyval, NULL);
+        PMPI_Keyval_create((MPI_Copy_function *) ADIOI_cb_copy_name_array,
+                           (MPI_Delete_function *) ADIOI_cb_delete_name_array,
+                           &ADIOI_cb_config_list_keyval, NULL);
     } else {
-        MPI_Attr_get(comm, ADIOI_cb_config_list_keyval, (void *) &array, &found);
+        PMPI_Attr_get(comm, ADIOI_cb_config_list_keyval, (void *) &array, &found);
         if (found) {
             ADIOI_Assert(array != NULL);
             *arrayp = array;
@@ -138,10 +138,10 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm, MPI_Comm dupcomm, ADIO_cb_name_arr
         }
     }
 
-    MPI_Comm_size(dupcomm, &commsize);
-    MPI_Comm_rank(dupcomm, &commrank);
+    PMPI_Comm_size(dupcomm, &commsize);
+    PMPI_Comm_rank(dupcomm, &commrank);
 
-    MPI_Get_processor_name(my_procname, &my_procname_len);
+    PMPI_Get_processor_name(my_procname, &my_procname_len);
 
     /* allocate space for everything */
     array = (ADIO_cb_name_array) ADIOI_Malloc(sizeof(*array));
@@ -170,7 +170,7 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm, MPI_Comm dupcomm, ADIO_cb_name_arr
         array->names = NULL;
     }
     /* gather lengths first */
-    MPI_Gather(&my_procname_len, 1, MPI_INT, procname_len, 1, MPI_INT, 0, dupcomm);
+    PMPI_Gather(&my_procname_len, 1, MPI_INT, procname_len, 1, MPI_INT, 0, dupcomm);
 
     if (commrank == 0) {
 #ifdef CB_CONFIG_LIST_DEBUG
@@ -212,14 +212,14 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm, MPI_Comm dupcomm, ADIO_cb_name_arr
 
     /* now gather strings */
     if (commrank == 0) {
-        MPI_Gatherv(my_procname, my_procname_len + 1, MPI_CHAR,
-                    procname[0], procname_len, disp, MPI_CHAR, 0, dupcomm);
+        PMPI_Gatherv(my_procname, my_procname_len + 1, MPI_CHAR,
+                     procname[0], procname_len, disp, MPI_CHAR, 0, dupcomm);
     } else {
         /* if we didn't do this, we would need to allocate procname[]
          * on all processes...which seems a little silly.
          */
-        MPI_Gatherv(my_procname, my_procname_len + 1, MPI_CHAR,
-                    NULL, NULL, NULL, MPI_CHAR, 0, dupcomm);
+        PMPI_Gatherv(my_procname, my_procname_len + 1, MPI_CHAR,
+                     NULL, NULL, NULL, MPI_CHAR, 0, dupcomm);
     }
 
     if (commrank == 0) {
@@ -242,8 +242,8 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm, MPI_Comm dupcomm, ADIO_cb_name_arr
      * it next time an open is performed on this same comm, and on the
      * dupcomm, so we can use it in I/O operations.
      */
-    MPI_Attr_put(comm, ADIOI_cb_config_list_keyval, array);
-    MPI_Attr_put(dupcomm, ADIOI_cb_config_list_keyval, array);
+    PMPI_Attr_put(comm, ADIOI_cb_config_list_keyval, array);
+    PMPI_Attr_put(dupcomm, ADIOI_cb_config_list_keyval, array);
     *arrayp = array;
     return 0;
 }

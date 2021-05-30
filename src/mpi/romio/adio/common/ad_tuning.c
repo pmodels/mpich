@@ -39,10 +39,10 @@ int romio_tunegather;
  *   libraries like PNETCDF which may count on read-modify-write functionality for certain
  *   features (like fill values).  Possible values:
  *   - 0 - Normal two-phase collective IO is used.
- *   - 1 - A separate one-sided MPI_Put or MPI_Get is used for each contiguous chunk of data
+ *   - 1 - A separate one-sided PMPI_Put or PMPI_Get is used for each contiguous chunk of data
  *         for a compute to write to or read from the collective buffer on the aggregator.
  *   - 2 - An MPI derived datatype is created using all the contiguous chunks and just one
- *         call to MPI_Put or MPI_Get is done with the derived datatype.  On Blue Gene /Q
+ *         call to PMPI_Put or PMPI_Get is done with the derived datatype.  On Blue Gene /Q
  *         optimal performance for this is achieved when paired with PAMID_TYPED_ONESIDED=1.
  *   - Default is 0
  *
@@ -70,8 +70,8 @@ int romio_tunegather;
  *
  * - ROMIO_TUNEGATHER - Tune how starting and ending offsets are communicated
  *   for aggregator collective i/o.  Possible values:
- *   - 0 - Use two or three MPI_Allgather's to collect starting and ending offsets.
- *   - 1 - Use MPI_Allreduce(MPI_MAX) to collect starting and ending offsets.
+ *   - 0 - Use two or three PMPI_Allgather's to collect starting and ending offsets.
+ *   - 1 - Use PMPI_Allreduce(MPI_MAX) to collect starting and ending offsets.
  *   - Default is 1.
  *
  */

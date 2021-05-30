@@ -42,10 +42,10 @@ void ADIOI_Info_print_keyvals(MPI_Info info)
     if (info == MPI_INFO_NULL)
         return;
 
-    MPI_Info_get_nkeys(info, &nkeys);
+    PMPI_Info_get_nkeys(info, &nkeys);
 
     for (i = 0; i < nkeys; i++) {
-        MPI_Info_get_nthkey(info, i, key);
+        PMPI_Info_get_nthkey(info, i, key);
         ADIOI_Info_get(info, key, MPI_MAX_INFO_VAL, value, &flag);
         printf("key = %-25s value = %-10s\n", key, value);
     }
@@ -102,7 +102,7 @@ static int file_to_info_all(int fd, MPI_Info info, int rank, MPI_Comm comm)
         if (ret == -1)
             buffer[0] = '\0';
     }
-    MPI_Bcast(buffer, HINTFILE_MAX_SIZE, MPI_BYTE, 0, comm);
+    PMPI_Bcast(buffer, HINTFILE_MAX_SIZE, MPI_BYTE, 0, comm);
 
     token = strtok_r(buffer, "\n", &pos1);
     if (token == NULL)
@@ -141,7 +141,7 @@ void ADIOI_process_system_hints(ADIO_File fd, MPI_Info info)
 {
     int hintfd = -1, rank;
 
-    MPI_Comm_rank(fd->comm, &rank);
+    PMPI_Comm_rank(fd->comm, &rank);
     if (rank == 0) {
         hintfd = find_file();
     }
@@ -164,7 +164,7 @@ void ADIOI_incorporate_system_hints(MPI_Info info, MPI_Info sysinfo, MPI_Info * 
     if (sysinfo == MPI_INFO_NULL)
         nkeys_sysinfo = 0;
     else
-        MPI_Info_get_nkeys(sysinfo, &nkeys_sysinfo);
+        PMPI_Info_get_nkeys(sysinfo, &nkeys_sysinfo);
 
     /* short-circuit: return immediately if no hints to process */
     if (info == MPI_INFO_NULL && nkeys_sysinfo == 0) {
@@ -173,17 +173,17 @@ void ADIOI_incorporate_system_hints(MPI_Info info, MPI_Info sysinfo, MPI_Info * 
     }
 
     if (info == MPI_INFO_NULL)
-        MPI_Info_create(new_info);
+        PMPI_Info_create(new_info);
     else {
         /* tiny optimization: if 'info' has no keys, we can skip the check if a
          * hint is set: no keys means nothing has been set, and there's nothing
          * we might step on */
-        MPI_Info_get_nkeys(info, &nkeys_info);
-        MPI_Info_dup(info, new_info);
+        PMPI_Info_get_nkeys(info, &nkeys_info);
+        PMPI_Info_dup(info, new_info);
     }
 
     for (i = 0; i < nkeys_sysinfo; i++) {
-        MPI_Info_get_nthkey(sysinfo, i, key);
+        PMPI_Info_get_nthkey(sysinfo, i, key);
         /* don't care about the value, just want to know if hint set already */
         if (info != MPI_INFO_NULL && nkeys_info)
             ADIOI_Info_get_valuelen(info, key, &valuelen, &flag);

@@ -88,7 +88,7 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
         MPE_Log_get_state_eventIDs(&ADIOI_MPE_iwrite_a, &ADIOI_MPE_iwrite_b);
 
         int comm_world_rank;
-        MPI_Comm_rank(MPI_COMM_WORLD, &comm_world_rank);
+        PMPI_Comm_rank(MPI_COMM_WORLD, &comm_world_rank);
 
         if (comm_world_rank == 0) {
             MPE_Describe_state(ADIOI_MPE_open_a, ADIOI_MPE_open_b, "open", "orange");
@@ -110,5 +110,5 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
 #endif
 
     *error_code = MPI_SUCCESS;
-    MPI_Op_create(my_consensus, 1, &ADIO_same_amode);
+    PMPI_Op_create(my_consensus, 1, &ADIO_same_amode);
 }

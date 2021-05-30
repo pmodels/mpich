@@ -43,11 +43,11 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
         goto fn_exit;
     }
 
-    MPI_Type_size_x(datatype, &datatype_size);
+    PMPI_Type_size_x(datatype, &datatype_size);
     len = (ADIO_Offset) datatype_size *(ADIO_Offset) count;
 
 #ifdef ROMIO_GPFS
-    io_time = MPI_Wtime();
+    io_time = PMPI_Wtime();
     if (gpfsmpio_timing) {
         gpfsmpio_prof_cw[GPFSMPIO_CIO_DATA_SIZE] += len;
     }
@@ -92,7 +92,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 
 #ifdef ROMIO_GPFS
     if (gpfsmpio_timing)
-        gpfsmpio_prof_cw[GPFSMPIO_CIO_T_POSI_RW] += (MPI_Wtime() - io_time);
+        gpfsmpio_prof_cw[GPFSMPIO_CIO_T_POSI_RW] += (PMPI_Wtime() - io_time);
 #endif
     fd->fp_sys_posn = offset + bytes_xfered;
 
@@ -101,7 +101,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
     }
 #ifdef ROMIO_GPFS
     if (gpfsmpio_timing)
-        gpfsmpio_prof_cw[GPFSMPIO_CIO_T_MPIO_RW] += (MPI_Wtime() - io_time);
+        gpfsmpio_prof_cw[GPFSMPIO_CIO_T_MPIO_RW] += (PMPI_Wtime() - io_time);
 #endif
 
   fn_exit:

@@ -47,11 +47,11 @@ void ADIO_Close(ADIO_File fd, int *error_code)
         /* if we are doing aggregation and deferred open, then it's possible
          * that rank 0 does not have access to the file. make sure only an
          * aggregator deletes the file.*/
-        MPI_Comm_rank(fd->comm, &myrank);
+        PMPI_Comm_rank(fd->comm, &myrank);
         if (myrank == fd->hints->ranklist[0]) {
             ADIO_Delete(fd->filename, &err);
         }
-        MPI_Barrier(fd->comm);
+        PMPI_Barrier(fd->comm);
     }
 
     if (fd->fortran_handle != -1) {
@@ -81,10 +81,10 @@ void ADIO_Close(ADIO_File fd, int *error_code)
     if (fd->hints->cb_pfr == ADIOI_HINT_ENABLE) {
         /* AAR, FSIZE, and User provided uniform File realms */
         if (1) {
-            MPI_Type_free(&fd->file_realm_types[0]);
+            PMPI_Type_free(&fd->file_realm_types[0]);
         } else {
             for (i = 0; i < fd->hints->cb_nodes; i++) {
-                MPI_Type_free(&fd->file_realm_types[i]);
+                PMPI_Type_free(&fd->file_realm_types[i]);
             }
         }
         ADIOI_Free(fd->file_realm_st_offs);
@@ -94,18 +94,18 @@ void ADIO_Close(ADIO_File fd, int *error_code)
 
 
 
-    MPI_Comm_free(&(fd->comm));
+    PMPI_Comm_free(&(fd->comm));
     ADIOI_Free(fd->filename);
 
-    MPI_Type_get_envelope(fd->etype, &i, &j, &k, &combiner);
+    PMPI_Type_get_envelope(fd->etype, &i, &j, &k, &combiner);
     if (combiner != MPI_COMBINER_NAMED)
-        MPI_Type_free(&(fd->etype));
+        PMPI_Type_free(&(fd->etype));
 
-    MPI_Type_get_envelope(fd->filetype, &i, &j, &k, &combiner);
+    PMPI_Type_get_envelope(fd->filetype, &i, &j, &k, &combiner);
     if (combiner != MPI_COMBINER_NAMED)
-        MPI_Type_free(&(fd->filetype));
+        PMPI_Type_free(&(fd->filetype));
 
-    MPI_Info_free(&(fd->info));
+    PMPI_Info_free(&(fd->info));
 
     ADIOI_Free(fd->io_buf);
     ADIOI_OneSidedCleanup(fd);
