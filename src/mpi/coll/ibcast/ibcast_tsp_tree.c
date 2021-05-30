@@ -3,13 +3,10 @@
  *     See COPYRIGHT in top-level directory
  */
 
-/* Header protection (i.e., IBCAST_TSP_TREE_ALGOS_H_INCLUDED) is
- * intentionally omitted since this header might get included multiple
- * times within the same .c file. */
-
+#include "mpiimpl.h"
+#include "tsp_gentran.h"
 #include "algo_common.h"
 #include "treealgo.h"
-#include "tsp_namespace_def.h"
 
 /* Routine to schedule a pipelined tree based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
