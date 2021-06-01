@@ -296,6 +296,16 @@ MPI_Ireduce_scatter:
 
 MPI_Ireduce_scatter_block:
     .desc: Combines values and scatters the results in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (MPIR_Comm_size(comm_ptr) == 1 || recvcount == 0)) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, recvcount, datatype, recvbuf, recvcount, datatype);
+        }
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Iscan:
     .desc: Computes the scan (partial reductions) of data on a collection of processes in a nonblocking way
@@ -373,6 +383,14 @@ MPI_Reduce_scatter:
 MPI_Reduce_scatter_block:
     .desc: Combines values and scatters the results
     .docnotes: collops
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (MPIR_Comm_size(comm_ptr) == 1 || recvcount == 0)) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, recvcount, datatype, recvbuf, recvcount, datatype);
+        }
+        goto fn_exit;
+    }
+}
 
 MPI_Scan:
     .desc: Computes the scan (partial reductions) of data on a collection of processes

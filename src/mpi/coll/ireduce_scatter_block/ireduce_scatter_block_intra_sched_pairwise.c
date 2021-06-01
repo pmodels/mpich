@@ -41,10 +41,6 @@ int MPIR_Ireduce_scatter_block_intra_sched_pairwise(const void *sendbuf, void *r
         total_count += recvcount;
     }
 
-    if (total_count == 0) {
-        goto fn_exit;
-    }
-
     if (sendbuf != MPI_IN_PLACE) {
         /* copy local data into recvbuf */
         mpi_errno = MPIR_Sched_copy(((char *) sendbuf + disps[rank] * extent),
