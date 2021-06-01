@@ -42,11 +42,6 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_halving(const void *sendbuf
         total_count += recvcount;
     }
 
-    if (total_count == 0) {
-        MPIR_SCHED_CHKPMEM_REAP(s);
-        goto fn_exit;
-    }
-
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* allocate temp. buffer to receive incoming data */
