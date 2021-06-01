@@ -321,6 +321,15 @@ MPI_Iscan:
 
 MPI_Iscatter:
     .desc: Sends data from one process to all other processes in a communicator in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((MPIR_Comm_rank(comm_ptr) == root && sendcount == 0) || (MPIR_Comm_rank(comm_ptr) != root && recvcount == 0)) {
+            MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+            *request = request_ptr->handle;
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Iscatterv:
     .desc: Scatters a buffer in parts to all processes in a communicator in a nonblocking way
@@ -411,6 +420,13 @@ MPI_Scan:
 
 MPI_Scatter:
     .desc: Sends data from one process to all other processes in a communicator
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((MPIR_Comm_rank(comm_ptr) == root && sendcount == 0) || (MPIR_Comm_rank(comm_ptr) != root && recvcount == 0)) {
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Scatterv:
     .desc: Scatters a buffer in parts to all processes in a communicator
