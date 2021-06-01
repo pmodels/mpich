@@ -373,4 +373,7 @@ int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info);
 int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info);
 int MPII_Comm_check_hints(MPIR_Comm * comm_ptr);
 
+int MPIR_init_comm_self(void);
+int MPIR_init_comm_world(void);
+int MPIR_finalize_builtin_comms(void);
 #endif /* MPIR_COMM_H_INCLUDED */

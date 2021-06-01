@@ -29,8 +29,7 @@
     match_bits |= (uint64_t)vc->port_name_tag<<                         \
         (MPIDI_OFI_PORT_SHIFT);                                              \
   }else{                                                                \
-      match_bits |= (uint64_t)MPIR_Process.comm_world->rank <<          \
-          (MPIDI_OFI_PSOURCE_SHIFT);                                         \
+      match_bits |= (uint64_t)MPIR_Process.rank << (MPIDI_OFI_PSOURCE_SHIFT); \
   }                                                                     \
   match_bits |= MPIDI_OFI_MSG_RTS;                                           \
 })

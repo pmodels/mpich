@@ -551,7 +551,7 @@ int MPIDI_CH3_Sockconn_handle_connect_event( MPIDI_CH3I_Connection_t *conn,
         }
 	MPIDI_Pkt_init(openpkt, MPIDI_CH3I_PKT_SC_OPEN_REQ);
 	openpkt->pg_id_len = (int) strlen(MPIDI_Process.my_pg->id) + 1;
-	openpkt->pg_rank = MPIR_Process.comm_world->rank;
+	openpkt->pg_rank = MPIR_Process.rank;
 	
 	mpi_errno = connection_post_send_pkt_and_pgid(conn);
 	if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
@@ -857,7 +857,7 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 	if (pg == MPIDI_Process.my_pg) {
 	    /* the other process is in the same comm_world; just compare the 
 	       ranks */
-	    if (MPIR_Process.comm_world->rank < pg_rank) {
+	    if (MPIR_Process.rank < pg_rank) {
 		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,(MPL_DBG_FDEST,
                 "vc=%p,conn=%p:Accept head-to-head connection (my process group), discarding vcch->conn=%p",vc,conn, vcch->conn));
 
@@ -1136,7 +1136,7 @@ int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
 	    MPL_DBG_VCCHSTATECHANGE(vc,VC_STATE_FAILED);
 	    vcch->state = MPIDI_CH3I_VC_STATE_FAILED;
 	    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER, "**ch3|sock|postconnect",
-		"**ch3|sock|postconnect %d %d %s", MPIR_Process.comm_world->rank, vc->pg_rank, val);
+		"**ch3|sock|postconnect %d %d %s", MPIR_Process.rank, vc->pg_rank, val);
 	    goto fn_fail;
 	}
 	/* --END ERROR HANDLING-- */

@@ -89,7 +89,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
 
     char world_str[MPI_MAX_ERROR_STRING] = "";
     if (MPIR_Process.comm_world) {
-        int rank = MPIR_Process.comm_world->rank;
+        int rank = MPIR_Process.rank;
         snprintf(world_str, sizeof(world_str), " on node %d", rank);
     }
 

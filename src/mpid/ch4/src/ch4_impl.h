@@ -916,7 +916,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_win_rank_to_av(MPIR_Win * win,
 MPL_STATIC_INLINE_PREFIX int MPIDIU_win_comm_rank(MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     if (winattr & MPIDI_WINATTR_DIRECT_INTRA_COMM)
-        return MPIR_Process.comm_world->rank;
+        return MPIR_Process.rank;
     else
         return win->comm_ptr->rank;
 }

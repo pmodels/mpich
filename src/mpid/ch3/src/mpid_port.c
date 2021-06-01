@@ -259,7 +259,7 @@ static int MPIDI_Open_port(MPIR_Info *info_ptr, char *port_name)
     int len;
     int port_name_tag = 0; /* this tag is added to the business card,
                               which is then returned as the port name */
-    int myRank = MPIR_Process.comm_world->rank;
+    int myRank = MPIR_Process.rank;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OPEN_PORT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OPEN_PORT);
