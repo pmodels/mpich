@@ -270,6 +270,16 @@ MPI_Ineighbor_alltoallw:
 
 MPI_Ireduce:
     .desc: Reduces values on all processes to a single value in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (count == 0 || MPIR_Comm_size(comm_ptr) == 1)) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+        }
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Ireduce_scatter:
     .desc: Combines values and scatters the results in a nonblocking way
@@ -315,7 +325,7 @@ MPI_Reduce:
     .desc: Reduces values on all processes to a single value
     .docnotes: collops
 { -- early_return --
-    if (comm_ptr->remote_size == 1 && comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+    if ((comm_ptr->remote_size == 1 || count == 0) && comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         if (sendbuf == MPI_IN_PLACE) {
             goto fn_exit;
         }

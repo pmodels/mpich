@@ -24,9 +24,6 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
     void *tmp_buf;
     MPIR_CHKLMEM_DECL(2);
 
-    if (count == 0)
-        return MPI_SUCCESS;
-
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 

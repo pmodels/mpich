@@ -49,19 +49,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     rank = MPIR_Comm_rank(comm);
     is_root = (rank == root);
 
-    /* take care of trivial cases */
-    if (count == 0) {
-        goto fn_exit;
-    }
-
-    if (size == 1) {
-        if (sendbuf != MPI_IN_PLACE) {
-            MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype, sched,
-                                     0, NULL);
-        }
-        goto fn_exit;
-    }
-
     /* main algorithm */
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
