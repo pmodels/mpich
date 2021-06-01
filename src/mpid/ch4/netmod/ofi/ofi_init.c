@@ -705,8 +705,7 @@ static int flush_send(int dst, int nic, int vni, MPIDI_OFI_dynamic_process_reque
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Comm *comm = MPIR_Process.comm_world;
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_comm_rank_to_av(comm, dst), nic, vni, vni);
+    fi_addr_t addr = MPIDI_OFI_AV(&MPIDIU_get_av(0, dst)).dest[nic][vni];
     static int data = 0;
     uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
                                                  MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
@@ -730,8 +729,7 @@ static int flush_recv(int src, int nic, int vni, MPIDI_OFI_dynamic_process_reque
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Comm *comm = MPIR_Process.comm_world;
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_comm_rank_to_av(comm, src), nic, vni, vni);
+    fi_addr_t addr = MPIDI_OFI_AV(&MPIDIU_get_av(0, src)).dest[nic][vni];
     uint64_t mask_bits = 0;
     uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
                                                  MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
@@ -819,8 +817,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         MPIR_ERR_CHECK(mpi_errno);
     } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
         /* verbs;ofi_rxm provider need barrier to prevent message loss */
-        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        mpi_errno = MPIR_Barrier_allcomm_auto(MPIR_Process.comm_world, &errflag);
+        mpi_errno = MPIR_pmi_barrier();
         MPIR_ERR_CHECK(mpi_errno);
     }
 

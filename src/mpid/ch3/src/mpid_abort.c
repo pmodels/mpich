@@ -37,14 +37,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
 	}
 	else
 	{
-	    if (MPIR_Process.comm_world != NULL)
-	    {
-		rank = MPIR_Process.comm_world->rank;
-	    }
-	    else
-	    {
-		rank = -1;
-	    }
+            rank = MPIR_Process.rank;
 	}
 
 	if (mpi_errno != MPI_SUCCESS)

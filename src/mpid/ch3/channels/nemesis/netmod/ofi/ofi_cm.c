@@ -547,7 +547,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     str_errno = MPL_str_add_int_arg(&bc, &my_bc_len, "tag", new_vc->port_name_tag);
     MPIR_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
     MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_get_business_card
-                         (MPIR_Process.comm_world->rank, &bc, &my_bc_len));
+                         (MPIR_Process.rank, &bc, &my_bc_len));
     my_bc_len = MPIDI_OFI_KVSAPPSTRLEN - my_bc_len;
 
     MPID_nem_ofi_create_req(&sreq, 1);
@@ -557,7 +557,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     REQ_OFI(sreq)->event_callback = MPID_nem_ofi_connect_to_root_callback;
     REQ_OFI(sreq)->pack_buffer = my_bc;
     if (gl_data.api_set == API_SET_1) {
-        conn_req_send_bits = init_sendtag(0, MPIR_Process.comm_world->rank, 0, MPIDI_OFI_CONN_REQ);
+        conn_req_send_bits = init_sendtag(0, MPIR_Process.rank, 0, MPIDI_OFI_CONN_REQ);
         FI_RC_RETRY(fi_tsend(gl_data.endpoint,
                              REQ_OFI(sreq)->pack_buffer,
                              my_bc_len,
@@ -570,7 +570,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
                                  REQ_OFI(sreq)->pack_buffer,
                                  my_bc_len,
                                  gl_data.mr,
-                                 MPIR_Process.comm_world->rank,
+                                 MPIR_Process.rank,
                                  VC_OFI(new_vc)->direct_addr,
                                  conn_req_send_bits, &(REQ_OFI(sreq)->ofi_context)), tsend);
     }

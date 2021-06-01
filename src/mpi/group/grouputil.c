@@ -89,7 +89,6 @@ int MPIR_Group_create(int nproc, MPIR_Group ** new_group_ptr)
     (*new_group_ptr)->idx_of_first_lpid = -1;
 
     (*new_group_ptr)->is_local_dense_monotonic = FALSE;
-    (*new_group_ptr)->pset_name = NULL;
     return mpi_errno;
 }
 

@@ -188,8 +188,6 @@ static void *create_container(struct json_object *obj)
 static int choose_netmod(void);
 static int create_init_comm(MPIR_Comm **);
 static void destroy_init_comm(MPIR_Comm **);
-static int init_builtin_comms(void);
-static void finalize_builtin_comms(void);
 static void init_av_table(void);
 static void finalize_av_table(void);
 
@@ -351,49 +349,6 @@ static void destroy_init_comm(MPIR_Comm ** comm_ptr)
         MPIR_Handle_obj_free(&MPIR_Comm_mem, comm);
         *comm_ptr = NULL;
     }
-}
-
-static int init_builtin_comms(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* ---------------------------------- */
-    /* Initialize MPI_COMM_SELF           */
-    /* ---------------------------------- */
-    MPIR_Process.comm_self->rank = 0;
-    MPIR_Process.comm_self->remote_size = 1;
-    MPIR_Process.comm_self->local_size = 1;
-
-    /* ---------------------------------- */
-    /* Initialize MPI_COMM_WORLD          */
-    /* ---------------------------------- */
-    MPIR_Process.comm_world->rank = MPIR_Process.rank;
-    MPIR_Process.comm_world->remote_size = MPIR_Process.size;
-    MPIR_Process.comm_world->local_size = MPIR_Process.size;
-
-    /* initialize rank_map */
-    MPIDI_COMM(MPIR_Process.comm_world, map).mode = MPIDI_RANK_MAP_DIRECT_INTRA;
-    MPIDI_COMM(MPIR_Process.comm_world, map).avtid = 0;
-    MPIDI_COMM(MPIR_Process.comm_world, map).size = MPIR_Process.size;
-    MPIDI_COMM(MPIR_Process.comm_world, local_map).mode = MPIDI_RANK_MAP_NONE;
-    MPIDIU_avt_add_ref(0);
-
-    MPIDI_COMM(MPIR_Process.comm_self, map).mode = MPIDI_RANK_MAP_OFFSET_INTRA;
-    MPIDI_COMM(MPIR_Process.comm_self, map).avtid = 0;
-    MPIDI_COMM(MPIR_Process.comm_self, map).size = 1;
-    MPIDI_COMM(MPIR_Process.comm_self, map).reg.offset = MPIR_Process.rank;
-    MPIDI_COMM(MPIR_Process.comm_self, local_map).mode = MPIDI_RANK_MAP_NONE;
-    MPIDIU_avt_add_ref(0);
-
-    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static void init_av_table(void)
@@ -663,8 +618,6 @@ int MPID_Init_world(void)
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
 
     destroy_init_comm(&init_comm);
-    mpi_errno = init_builtin_comms();
-    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_WORLD);
@@ -701,13 +654,6 @@ int MPID_InitCompleted(void)
 
   fn_fail:
     goto fn_exit;
-}
-
-static void finalize_builtin_comms(void)
-{
-    /* Release builtin comms */
-    MPIR_Comm_release_always(MPIR_Process.comm_world);
-    MPIR_Comm_release_always(MPIR_Process.comm_self);
 }
 
 static void finalize_av_table(void)
@@ -750,7 +696,6 @@ int MPID_Finalize(void)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    finalize_builtin_comms();
     generic_finalize();
 
     finalize_av_table();
@@ -809,8 +754,7 @@ int MPID_Get_processor_name(char *name, int namelen, int *resultlen)
             MPIDI_global.pname_len = (int) strlen(MPIDI_global.pname);
 
 #else
-        MPL_snprintf(MPIDI_global.pname, MPI_MAX_PROCESSOR_NAME, "%d",
-                     MPIR_Process.comm_world->rank);
+        MPL_snprintf(MPIDI_global.pname, MPI_MAX_PROCESSOR_NAME, "%d", MPIR_Process.rank);
         MPIDI_global.pname_len = (int) strlen(MPIDI_global.pname);
 #endif
         MPIDI_global.pname_set = 1;

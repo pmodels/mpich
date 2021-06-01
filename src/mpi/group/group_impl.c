@@ -6,10 +6,6 @@
 #include "mpiimpl.h"
 #include "group.h"
 
-/* temporary declaration until auto-generated */
-int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *pset_name,
-                                      MPIR_Group ** newgroup_ptr);
-
 int MPIR_Group_compare_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2, int *result)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -284,7 +280,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
             (*new_group_ptr)->lrank_to_lpid[k].lpid = lpid;
             if (i == group_ptr1->rank)
                 (*new_group_ptr)->rank = k;
-            if (lpid > MPIR_Process.comm_world->local_size ||
+            if (lpid > MPIR_Process.size ||
                 (k > 0 && (*new_group_ptr)->lrank_to_lpid[k - 1].lpid != (lpid - 1))) {
                 (*new_group_ptr)->is_local_dense_monotonic = FALSE;
             }
@@ -632,7 +628,7 @@ int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *ps
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr;
 
-    if (strcmp(pset_name, "mpi://WORLD") == 0) {
+    if (MPL_stricmp(pset_name, "mpi://WORLD") == 0) {
         mpi_errno = MPIR_Group_create(MPIR_Process.size, &group_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -645,8 +641,7 @@ int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *ps
         }
         group_ptr->lrank_to_lpid[group_ptr->size - 1].next_lpid = -1;
         group_ptr->idx_of_first_lpid = 0;
-        group_ptr->pset_name = "mpi://WORLD";
-    } else if (strcmp(pset_name, "mpi://SELF") == 0) {
+    } else if (MPL_stricmp(pset_name, "mpi://SELF") == 0) {
         mpi_errno = MPIR_Group_create(1, &group_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -656,7 +651,6 @@ int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *ps
         group_ptr->lrank_to_lpid[0].lpid = MPIR_Process.rank;
         group_ptr->lrank_to_lpid[0].next_lpid = -1;
         group_ptr->idx_of_first_lpid = 0;
-        group_ptr->pset_name = "mpi://SELF";
     } else {
         /* TODO: Implement pset struct, locate pset struct ptr */
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**psetinvalidname");
