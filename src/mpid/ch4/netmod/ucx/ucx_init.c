@@ -362,6 +362,12 @@ int MPIDI_UCX_post_init(void)
 int MPIDI_UCX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    if (!MPIDI_global.is_initialized) {
+        /* Nothing to do */
+        return mpi_errno;
+    }
+
     ucs_status_ptr_t ucp_request;
     ucs_status_ptr_t *pending;
 
