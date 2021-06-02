@@ -122,15 +122,11 @@ static void *create_container(struct json_object *obj)
     return cnt;
 }
 
-int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
+int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, local_rank_0 = -1;
-
     MPIR_CHKPMEM_DECL(1);
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
 
     MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_POSIX_am_request_header_t)
                             < MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE);
@@ -144,14 +140,13 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
     /* Populate these values with transformation information about each rank and its original
      * information in MPI_COMM_WORLD. */
 
-    MPIDI_POSIX_global.local_procs = MPIR_Process.node_local_map;
     MPIDI_POSIX_global.local_ranks = (int *) MPL_malloc(MPIR_Process.size * sizeof(int),
                                                         MPL_MEM_SHM);
     for (i = 0; i < MPIR_Process.size; ++i) {
         MPIDI_POSIX_global.local_ranks[i] = -1;
     }
     for (i = 0; i < MPIR_Process.local_size; i++) {
-        MPIDI_POSIX_global.local_ranks[MPIDI_POSIX_global.local_procs[i]] = i;
+        MPIDI_POSIX_global.local_ranks[MPIR_Process.node_local_map[i]] = i;
     }
     local_rank_0 = MPIR_Process.node_local_map[0];
     MPIDI_POSIX_global.num_local = MPIR_Process.local_size;
@@ -172,22 +167,36 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
 
     choose_posix_eager();
 
+    MPIR_CHKPMEM_COMMIT();
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    MPIR_CHKPMEM_REAP();
+    goto fn_exit;
+}
+
+static int posix_world_initialized;
+
+int MPIDI_POSIX_init_world(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int rank = MPIR_Process.rank;
+    int size = MPIR_Process.size;
+
     mpi_errno = MPIDI_POSIX_eager_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_POSIX_coll_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_CHKPMEM_COMMIT();
+    posix_world_initialized = 1;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    MPIR_CHKPMEM_REAP();
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 int MPIDI_POSIX_mpi_finalize_hook(void)
@@ -196,18 +205,21 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_FINALIZE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_FINALIZE_HOOK);
 
-    mpi_errno = MPIDI_POSIX_eager_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
+    if (posix_world_initialized) {
+        mpi_errno = MPIDI_POSIX_eager_finalize();
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPIDI_POSIX_coll_finalize();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     MPIDU_genq_private_pool_destroy_unsafe(MPIDI_POSIX_global.am_hdr_buf_pool);
 
     MPL_free(MPIDI_POSIX_global.active_rreq);
 
-    mpi_errno = MPIDI_POSIX_coll_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
-
     MPL_free(MPIDI_POSIX_global.local_ranks);
-    /* MPL_free(MPIDI_POSIX_global.local_procs); */
+
+    posix_world_initialized = 0;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_FINALIZE_HOOK);

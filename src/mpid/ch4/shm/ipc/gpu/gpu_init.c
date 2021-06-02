@@ -64,15 +64,18 @@ static void ipc_handle_free_hook(void *dptr)
     return;
 }
 
-int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
+int MPIDI_GPU_init_local(void)
+{
+    return MPI_SUCCESS;
+}
+
+int MPIDI_GPU_init_world(void)
 {
     int mpl_err, mpi_errno = MPI_SUCCESS;
     int device_count;
     int my_max_dev_id, node_max_dev_id = -1;
     MPL_gpu_device_handle_t dev_handle;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GPU_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GPU_MPI_INIT_HOOK);
     MPIR_CHKPMEM_DECL(1);
 
     MPIDI_GPUI_global.initialized = 0;
@@ -225,7 +228,6 @@ int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
     MPIDI_GPUI_global.initialized = 1;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();

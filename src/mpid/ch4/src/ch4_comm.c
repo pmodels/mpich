@@ -139,6 +139,16 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
         MPIDI_COMM(comm, map).size = MPIR_Process.size;
         MPIDI_COMM(comm, local_map).mode = MPIDI_RANK_MAP_NONE;
         MPIDIU_avt_add_ref(0);
+
+        mpi_errno = MPIDU_Init_shm_init();
+        MPIR_ERR_CHECK(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno = MPIDI_SHM_init_world();
+        MPIR_ERR_CHECK(mpi_errno);
+#endif
+        mpi_errno = MPIDI_NM_init_world();
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (comm == MPIR_Process.comm_self) {
         MPIDI_COMM(comm, map).mode = MPIDI_RANK_MAP_OFFSET_INTRA;
         MPIDI_COMM(comm, map).avtid = 0;
@@ -214,6 +224,13 @@ int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_COMMIT_POST_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_COMMIT_POST_HOOK);
+
+    if (comm == MPIR_Process.comm_world) {
+        mpi_errno = MPIDI_NM_post_init();
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPIDI_global.is_initialized = 1;
+    }
 
     mpi_errno = MPIDI_NM_mpi_comm_commit_post_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);

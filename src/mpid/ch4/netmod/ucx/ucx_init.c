@@ -91,10 +91,11 @@ static int init_worker(int vni)
     goto fn_exit;
 }
 
-static int initial_address_exchange(MPIR_Comm * init_comm)
+static int initial_address_exchange(void)
 {
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucx_status;
+    MPIR_Comm *init_comm = NULL;
 
     void *table;
     int recv_bc_len;
@@ -111,6 +112,9 @@ static int initial_address_exchange(MPIR_Comm * init_comm)
         int *node_roots = MPIR_Process.node_root_map;
         int num_nodes = MPIR_Process.num_nodes;
         int *rank_map;
+
+        mpi_errno = MPIDI_create_init_comm(&init_comm);
+        MPIR_ERR_CHECK(mpi_errno);
 
         for (int i = 0; i < num_nodes; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
@@ -149,6 +153,9 @@ static int initial_address_exchange(MPIR_Comm * init_comm)
     }
 
   fn_exit:
+    if (init_comm) {
+        MPIDI_destroy_init_comm(&init_comm);
+    }
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -274,24 +281,9 @@ int MPIDI_UCX_init_local(int *tag_bits)
     goto fn_exit;
 }
 
-int MPIDI_UCX_init_world(MPIR_Comm * init_comm)
+int MPIDI_UCX_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    int tmp = MPIR_Process.tag_bits;
-    mpi_errno = MPIDI_UCX_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.appnum,
-                                        &tmp, init_comm);
-    /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
-    MPIR_Assert(tmp == MPIR_Process.tag_bits);
-
-    return mpi_errno;
-}
-
-int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
 
     /* initialize worker for vni 0 */
     mpi_errno = init_worker(0);
@@ -302,22 +294,80 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                                   &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
     MPIDI_UCX_CHK_STATUS(ucx_status);
 
-    mpi_errno = initial_address_exchange(init_comm);
+    mpi_errno = initial_address_exchange();
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:
-    if (MPIDI_UCX_global.ctx[0].worker != NULL)
+    if (MPIDI_UCX_global.ctx[0].worker != NULL) {
         ucp_worker_destroy(MPIDI_UCX_global.ctx[0].worker);
+    }
+    goto fn_exit;
+}
 
+/* static functions for MPIDI_UCX_post_init */
+static void flush_cb(void *request, ucs_status_t status)
+{
+}
+
+static void flush_all(void)
+{
+    void *reqs[MPIDI_CH4_MAX_VCIS];
+    for (int vni = 0; vni < MPIDI_UCX_global.num_vnis; vni++) {
+        reqs[vni] = ucp_worker_flush_nb(MPIDI_UCX_global.ctx[vni].worker, 0, &flush_cb);
+    }
+    for (int vni = 0; vni < MPIDI_UCX_global.num_vnis; vni++) {
+        if (reqs[vni] == NULL) {
+            continue;
+        } else if (UCS_PTR_IS_ERR(reqs[vni])) {
+            continue;
+        } else {
+            ucs_status_t status;
+            do {
+                MPID_Progress_test(NULL);
+                status = ucp_request_check_status(reqs[vni]);
+            } while (status == UCS_INPROGRESS);
+            ucp_request_release(reqs[vni]);
+        }
+    }
+}
+
+int MPIDI_UCX_post_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIDI_UCX_global.num_vnis == 1) {
+        goto fn_exit;
+    }
+
+    for (int i = 1; i < MPIDI_UCX_global.num_vnis; i++) {
+        mpi_errno = init_worker(i);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    mpi_errno = all_vnis_address_exchange();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Flush all pending wireup operations or it may interfere with RMA flush_ops count.
+     * Since this require progress in non-zero vnis, we need switch on is_initialized. */
+    MPIDI_global.is_initialized = 1;
+    flush_all();
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
     goto fn_exit;
 }
 
 int MPIDI_UCX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    if (!MPIDI_global.is_initialized) {
+        /* Nothing to do */
+        return mpi_errno;
+    }
+
     ucs_status_ptr_t ucp_request;
     ucs_status_ptr_t *pending;
 
@@ -375,59 +425,6 @@ int MPIDI_UCX_mpi_finalize_hook(void)
   fn_fail:
     goto fn_exit;
 
-}
-
-/* static functions for MPIDI_UCX_post_init */
-static void flush_cb(void *request, ucs_status_t status)
-{
-}
-
-static void flush_all(void)
-{
-    void *reqs[MPIDI_CH4_MAX_VCIS];
-    for (int vni = 0; vni < MPIDI_UCX_global.num_vnis; vni++) {
-        reqs[vni] = ucp_worker_flush_nb(MPIDI_UCX_global.ctx[vni].worker, 0, &flush_cb);
-    }
-    for (int vni = 0; vni < MPIDI_UCX_global.num_vnis; vni++) {
-        if (reqs[vni] == NULL) {
-            continue;
-        } else if (UCS_PTR_IS_ERR(reqs[vni])) {
-            continue;
-        } else {
-            ucs_status_t status;
-            do {
-                MPID_Progress_test(NULL);
-                status = ucp_request_check_status(reqs[vni]);
-            } while (status == UCS_INPROGRESS);
-            ucp_request_release(reqs[vni]);
-        }
-    }
-}
-
-int MPIDI_UCX_post_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPIDI_UCX_global.num_vnis == 1) {
-        goto fn_exit;
-    }
-
-    for (int i = 1; i < MPIDI_UCX_global.num_vnis; i++) {
-        mpi_errno = init_worker(i);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-    mpi_errno = all_vnis_address_exchange();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Flush all pending wireup operations or it may interfere with RMA flush_ops count.
-     * Since this require progress in non-zero vnis, we need switch on is_initialized. */
-    MPIDI_global.is_initialized = 1;
-    flush_all();
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_UCX_get_vci_attr(int vci)
