@@ -140,14 +140,13 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
     /* Populate these values with transformation information about each rank and its original
      * information in MPI_COMM_WORLD. */
 
-    MPIDI_POSIX_global.local_procs = MPIR_Process.node_local_map;
     MPIDI_POSIX_global.local_ranks = (int *) MPL_malloc(MPIR_Process.size * sizeof(int),
                                                         MPL_MEM_SHM);
     for (i = 0; i < MPIR_Process.size; ++i) {
         MPIDI_POSIX_global.local_ranks[i] = -1;
     }
     for (i = 0; i < MPIR_Process.local_size; i++) {
-        MPIDI_POSIX_global.local_ranks[MPIDI_POSIX_global.local_procs[i]] = i;
+        MPIDI_POSIX_global.local_ranks[MPIR_Process.node_local_map[i]] = i;
     }
     local_rank_0 = MPIR_Process.node_local_map[0];
     MPIDI_POSIX_global.num_local = MPIR_Process.local_size;
@@ -219,7 +218,6 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     MPL_free(MPIDI_POSIX_global.active_rreq);
 
     MPL_free(MPIDI_POSIX_global.local_ranks);
-    /* MPL_free(MPIDI_POSIX_global.local_procs); */
 
     posix_world_initialized = 0;
 
