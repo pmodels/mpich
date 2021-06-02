@@ -62,16 +62,19 @@ static int finalize_failed_procs_group(void *param)
     return mpi_errno;
 }
 
+static int init_local(int requested, int *provided);
+static int init_world(void);
+
 int MPID_Init(int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
-    mpi_errno = MPID_Init_local(requested, provided);
+    mpi_errno = init_local(requested, provided);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPID_Init_world();
+    mpi_errno = init_world();
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -84,7 +87,7 @@ int MPID_Init(int requested, int *provided)
     /* --END ERROR HANDLING-- */
 }
 
-int MPID_Init_local(int requested, int *provided)
+int init_local(int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_LOCAL);
@@ -175,7 +178,7 @@ int MPID_Init_local(int requested, int *provided)
     goto fn_exit;
 }
 
-int MPID_Init_world(void)
+int init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_WORLD);

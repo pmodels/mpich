@@ -67,7 +67,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *vaddr, uintptr
     return MPI_SUCCESS;
 }
 
-int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits);
+int MPIDI_XPMEM_init_local(void);
+int MPIDI_XPMEM_init_world(void);
 int MPIDI_XPMEM_mpi_finalize_hook(void);
 int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t mem_handle, void **vaddr);
 

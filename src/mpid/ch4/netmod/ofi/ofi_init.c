@@ -426,6 +426,9 @@ static void dump_dynamic_settings(void);
 static int create_vni_context(int vni, int nic);
 static int destroy_vni_context(int vni, int nic);
 
+static int ofi_am_init(void);
+static int ofi_am_post_recv(int vni, int nic);
+
 static void *host_alloc(uintptr_t size);
 static void *host_alloc_registered(uintptr_t size);
 static void host_free(void *ptr);
@@ -587,6 +590,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* index datatypes for RMA atomics. */
     MPIDI_OFI_index_datatypes(MPIDI_OFI_global.ctx[0].tx);
 
+    ofi_am_init();
+    ofi_am_post_recv(0, 0);
+
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
     MPIDI_OFI_find_provider_cleanup();
@@ -595,100 +601,78 @@ int MPIDI_OFI_init_local(int *tag_bits)
     goto fn_exit;
 }
 
-int MPIDI_OFI_init_world(MPIR_Comm * init_comm)
+int MPIDI_OFI_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int tmp = MPIR_Process.tag_bits;
-    mpi_errno = MPIDI_OFI_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.appnum,
-                                        &tmp, init_comm);
-    /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
-    MPIR_Assert(tmp == MPIR_Process.tag_bits);
-
-    return mpi_errno;
-}
-
-int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
-{
-    int mpi_errno = MPI_SUCCESS;
-    size_t optlen;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
-
-    /* ------------------------------------------------------------------------ */
-    /* Address exchange (essentially activating the vnis)                       */
-    /* ------------------------------------------------------------------------ */
-
-    /* If opening a named-AV didn't work, we need to do a full business card exchange for the first
-     * VNI. All other VNIs can copy the address information from this on after the fact. */
     if (!MPIDI_OFI_global.got_named_av) {
-        mpi_errno = MPIDI_OFI_addr_exchange_root_ctx(init_comm);
+        mpi_errno = MPIDI_OFI_addr_exchange_root_ctx();
         MPIR_ERR_CHECK(mpi_errno);
     }
-
-    /* ---------------------------------- */
-    /* Initialize Active Message          */
-    /* ---------------------------------- */
-    if (MPIDI_OFI_ENABLE_AM) {
-        /* Maximum possible message size for short message send (=eager send)
-         * See MPIDI_OFI_do_am_isend for short/long switching logic */
-        MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_OFI_global.max_msg_size);
-        MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_OFI_am_request_header_t)
-                                < MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
-        MPL_COMPILE_TIME_ASSERT(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE
-                                >= sizeof(MPIDI_OFI_am_send_pipeline_request_t));
-        mpi_errno =
-            MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
-                                                  MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
-                                                  MPIDI_OFI_AM_HDR_POOL_MAX_NUM_CELLS,
-                                                  host_alloc, host_free,
-                                                  &MPIDI_OFI_global.am_hdr_buf_pool);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        MPIDI_OFI_global.cq_buffered_dynamic_head = MPIDI_OFI_global.cq_buffered_dynamic_tail =
-            NULL;
-        MPIDI_OFI_global.cq_buffered_static_head = MPIDI_OFI_global.cq_buffered_static_tail = 0;
-        optlen = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
-
-        int nic = 0;
-        int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
-        MPIDI_OFI_CALL(fi_setopt(&(MPIDI_OFI_global.ctx[ctx_idx].rx->fid),
-                                 FI_OPT_ENDPOINT,
-                                 FI_OPT_MIN_MULTI_RECV, &optlen, sizeof(optlen)), setopt);
-
-        MPIDIU_map_create(&MPIDI_OFI_global.am_recv_seq_tracker, MPL_MEM_BUFFER);
-        MPIDIU_map_create(&MPIDI_OFI_global.am_send_seq_tracker, MPL_MEM_BUFFER);
-        MPIDI_OFI_global.am_unordered_msgs = NULL;
-
-        for (int i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
-            MPIR_gpu_malloc_host(&(MPIDI_OFI_global.am_bufs[i]), MPIDI_OFI_AM_BUFF_SZ);
-            MPIDI_OFI_global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
-            MPIDI_OFI_global.am_reqs[i].index = i;
-            MPIR_Assert(MPIDI_OFI_global.am_bufs[i]);
-            MPIDI_OFI_global.am_iov[i].iov_base = MPIDI_OFI_global.am_bufs[i];
-            MPIDI_OFI_global.am_iov[i].iov_len = MPIDI_OFI_AM_BUFF_SZ;
-            MPIDI_OFI_global.am_msg[i].msg_iov = &MPIDI_OFI_global.am_iov[i];
-            MPIDI_OFI_global.am_msg[i].desc = NULL;
-            MPIDI_OFI_global.am_msg[i].addr = FI_ADDR_UNSPEC;
-            MPIDI_OFI_global.am_msg[i].context = &MPIDI_OFI_global.am_reqs[i].context;
-            MPIDI_OFI_global.am_msg[i].iov_count = 1;
-            MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx,
-                                            &MPIDI_OFI_global.am_msg[i],
-                                            FI_MULTI_RECV | FI_COMPLETION), 0, prepost, FALSE);
-        }
-
-        MPIDIG_am_reg_cb(MPIDI_OFI_INTERNAL_HANDLER_CONTROL, NULL, &MPIDI_OFI_control_handler);
-        MPIDIG_am_reg_cb(MPIDI_OFI_AM_RDMA_READ_ACK, NULL, &MPIDI_OFI_am_rdma_read_ack_handler);
-    }
-    MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
-    MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
 
     if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
         dump_dynamic_settings();
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_OFI_post_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int num_nics = MPIDI_OFI_global.num_nics;
+    int tmp_num_vnis = MPIDI_OFI_global.num_vnis;
+    int tmp_num_nics = MPIDI_OFI_global.num_nics;
+
+    /* Set the number of NICs and VNIs to 1 temporarily to avoid problems during the collective */
+    MPIDI_OFI_global.num_vnis = MPIDI_OFI_global.num_nics = 1;
+
+    /* Confirm that all processes have the same number of NICs */
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPI_INT,
+                                            MPI_MIN, MPIR_Process.comm_world, &errflag);
+    MPIDI_OFI_global.num_vnis = tmp_num_vnis;
+    MPIDI_OFI_global.num_nics = tmp_num_nics;
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* If the user did not ask to fallback to fewer NICs, throw an error if someone is missing a
+     * NIC. */
+    if (tmp_num_nics != num_nics) {
+        if (MPIR_CVAR_OFI_USE_MIN_NICS) {
+            MPIDI_OFI_global.num_nics = num_nics;
+
+            /* If we fall down to 1 nic, turn off multi-nic optimizations. */
+            if (num_nics == 1) {
+                MPIDI_OFI_COMM(MPIR_Process.comm_world).enable_striping = 0;
+            }
+        } else {
+            MPIR_ERR_CHKANDJUMP(num_nics != MPIDI_OFI_global.num_nics, mpi_errno, MPI_ERR_OTHER,
+                                "**ofi_num_nics");
+        }
+    }
+
+    /* FIXME: It would also be helpful to check that all of the NICs can communicate so we can fall
+     * back to other options if that is not the case (e.g., verbs are often configured with a
+     * different subnet for each "set" of nics). It's unknown how to write a good check for that. */
+
+    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+        for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
+            /* vni 0 nic 0 already created */
+            if (vni > 0 || nic > 0) {
+                mpi_errno = create_vni_context(vni, nic);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+        }
+    }
+
+    if (MPIDI_OFI_global.num_vnis > 1 || MPIDI_OFI_global.num_nics > 1) {
+        mpi_errno = MPIDI_OFI_addr_exchange_all_ctx();
+    }
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -757,12 +741,13 @@ static int flush_send_queue(void)
     MPIDI_OFI_dynamic_process_request_t *reqs;
     /* TODO - Iterate over each NIC in addition to each VNI when multi-NIC within the same
      * process is implemented. */
-    int num_reqs = MPIDI_OFI_global.num_vnis * 2;
+    int num_vnis = (MPIDI_global.is_initialized ? MPIDI_OFI_global.num_vnis : 1);
+    int num_reqs = num_vnis * 2;
     reqs = MPL_malloc(sizeof(MPIDI_OFI_dynamic_process_request_t) * num_reqs, MPL_MEM_OTHER);
 
     /* Apparently by sending self messages can flush the send queue */
     int rank = MPIR_Process.rank;
-    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+    for (int vni = 0; vni < num_vnis; vni++) {
         mpi_errno = flush_send(rank, 0, vni, &reqs[vni * 2]);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = flush_recv(rank, 0, vni, &reqs[vni * 2 + 1]);
@@ -771,7 +756,7 @@ static int flush_send_queue(void)
 
     bool all_done = false;
     while (!all_done) {
-        for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+        for (int vni = 0; vni < num_vnis; vni++) {
             mpi_errno = MPIDI_NM_progress(vni, 0);
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -812,9 +797,12 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIDI_OFI_mr_key_allocator_destroy();
 
     if (strcmp("sockets", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
-        /* sockets provider need flush any last lightweight send */
-        mpi_errno = flush_send_queue();
-        MPIR_ERR_CHECK(mpi_errno);
+        /* sockets provider need flush any last lightweight send. Only do it if we initialized
+         * world. Sockets provider can't even send self messages otherwise. */
+        if (MPIDI_global.is_initialized) {
+            mpi_errno = flush_send_queue();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
         /* verbs;ofi_rxm provider need barrier to prevent message loss */
         mpi_errno = MPIR_pmi_barrier();
@@ -830,8 +818,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     /* Tearing down endpoints in reverse order they were created */
     for (int nic = MPIDI_OFI_global.num_nics - 1; nic >= 0; nic--) {
         for (int vni = MPIDI_OFI_global.num_vnis - 1; vni >= 0; vni--) {
-            mpi_errno = destroy_vni_context(vni, nic);
-            MPIR_ERR_CHECK(mpi_errno);
+            if (MPIDI_global.is_initialized || (vni == 0 && nic == 0)) {
+                mpi_errno = destroy_vni_context(vni, nic);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
         }
     }
 
@@ -885,61 +875,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPIDI_OFI_post_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int num_nics = MPIDI_OFI_global.num_nics;
-    int tmp_num_vnis = MPIDI_OFI_global.num_vnis;
-    int tmp_num_nics = MPIDI_OFI_global.num_nics;
-
-    /* Set the number of NICs and VNIs to 1 temporarily to avoid problems during the collective */
-    MPIDI_OFI_global.num_vnis = MPIDI_OFI_global.num_nics = 1;
-
-    /* Confirm that all processes have the same number of NICs */
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPI_INT,
-                                            MPI_MIN, MPIR_Process.comm_world, &errflag);
-    MPIDI_OFI_global.num_vnis = tmp_num_vnis;
-    MPIDI_OFI_global.num_nics = tmp_num_nics;
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* If the user did not ask to fallback to fewer NICs, throw an error if someone is missing a
-     * NIC. */
-    if (tmp_num_nics != num_nics) {
-        if (MPIR_CVAR_OFI_USE_MIN_NICS) {
-            MPIDI_OFI_global.num_nics = num_nics;
-
-            /* If we fall down to 1 nic, turn off multi-nic optimizations. */
-            if (num_nics == 1) {
-                MPIDI_OFI_COMM(MPIR_Process.comm_world).enable_striping = 0;
-            }
-        } else {
-            MPIR_ERR_CHKANDJUMP(num_nics != MPIDI_OFI_global.num_nics, mpi_errno, MPI_ERR_OTHER,
-                                "**ofi_num_nics");
-        }
-    }
-
-    /* FIXME: It would also be helpful to check that all of the NICs can communicate so we can fall
-     * back to other options if that is not the case (e.g., verbs are often configured with a
-     * different subnet for each "set" of nics). It's unknown how to write a good check for that. */
-
-    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
-        for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-            /* vni 0 nic 0 already created */
-            if (vni > 0 || nic > 0) {
-                mpi_errno = create_vni_context(vni, nic);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-        }
-    }
-
-    if (MPIDI_OFI_global.num_vnis > 1 || MPIDI_OFI_global.num_nics > 1) {
-        mpi_errno = MPIDI_OFI_addr_exchange_all_ctx();
-    }
-  fn_fail:
-    return mpi_errno;
 }
 
 int MPIDI_OFI_get_vci_attr(int vci)
@@ -1479,4 +1414,85 @@ static void dump_dynamic_settings(void)
     fprintf(stdout, "num_vnis: %d\n", MPIDI_OFI_global.num_vnis);
     fprintf(stdout, "num_nics: %d\n", MPIDI_OFI_global.num_nics);
     fprintf(stdout, "======================================\n");
+}
+
+/* static functions for AM */
+
+int ofi_am_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIDI_OFI_ENABLE_AM) {
+        /* Maximum possible message size for short message send (=eager send)
+         * See MPIDI_OFI_do_am_isend for short/long switching logic */
+        MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_OFI_global.max_msg_size);
+        MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_OFI_am_request_header_t)
+                                < MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
+        MPL_COMPILE_TIME_ASSERT(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE
+                                >= sizeof(MPIDI_OFI_am_send_pipeline_request_t));
+        mpi_errno =
+            MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
+                                                  MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
+                                                  MPIDI_OFI_AM_HDR_POOL_MAX_NUM_CELLS,
+                                                  host_alloc, host_free,
+                                                  &MPIDI_OFI_global.am_hdr_buf_pool);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPIDI_OFI_global.cq_buffered_dynamic_head = MPIDI_OFI_global.cq_buffered_dynamic_tail =
+            NULL;
+        MPIDI_OFI_global.cq_buffered_static_head = MPIDI_OFI_global.cq_buffered_static_tail = 0;
+
+        MPIDIU_map_create(&MPIDI_OFI_global.am_recv_seq_tracker, MPL_MEM_BUFFER);
+        MPIDIU_map_create(&MPIDI_OFI_global.am_send_seq_tracker, MPL_MEM_BUFFER);
+        MPIDI_OFI_global.am_unordered_msgs = NULL;
+
+        MPIDIG_am_reg_cb(MPIDI_OFI_INTERNAL_HANDLER_CONTROL, NULL, &MPIDI_OFI_control_handler);
+        MPIDIG_am_reg_cb(MPIDI_OFI_AM_RDMA_READ_ACK, NULL, &MPIDI_OFI_am_rdma_read_ack_handler);
+    }
+    MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
+    MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int ofi_am_post_recv(int vni, int nic)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Only root ctx for now */
+    MPIR_Assert(vni == 0 && nic == 0);
+
+    if (MPIDI_OFI_ENABLE_AM) {
+        int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+        size_t optlen = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
+
+        MPIDI_OFI_CALL(fi_setopt(&(MPIDI_OFI_global.ctx[ctx_idx].rx->fid),
+                                 FI_OPT_ENDPOINT,
+                                 FI_OPT_MIN_MULTI_RECV, &optlen, sizeof(optlen)), setopt);
+
+        for (int i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
+            MPIR_gpu_malloc_host(&(MPIDI_OFI_global.am_bufs[i]), MPIDI_OFI_AM_BUFF_SZ);
+            MPIDI_OFI_global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
+            MPIDI_OFI_global.am_reqs[i].index = i;
+            MPIR_Assert(MPIDI_OFI_global.am_bufs[i]);
+            MPIDI_OFI_global.am_iov[i].iov_base = MPIDI_OFI_global.am_bufs[i];
+            MPIDI_OFI_global.am_iov[i].iov_len = MPIDI_OFI_AM_BUFF_SZ;
+            MPIDI_OFI_global.am_msg[i].msg_iov = &MPIDI_OFI_global.am_iov[i];
+            MPIDI_OFI_global.am_msg[i].desc = NULL;
+            MPIDI_OFI_global.am_msg[i].addr = FI_ADDR_UNSPEC;
+            MPIDI_OFI_global.am_msg[i].context = &MPIDI_OFI_global.am_reqs[i].context;
+            MPIDI_OFI_global.am_msg[i].iov_count = 1;
+            MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx,
+                                            &MPIDI_OFI_global.am_msg[i],
+                                            FI_MULTI_RECV | FI_COMPLETION), 0, prepost, FALSE);
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

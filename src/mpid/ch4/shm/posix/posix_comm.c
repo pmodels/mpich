@@ -34,9 +34,13 @@ int MPIDI_POSIX_mpi_comm_commit_post_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_COMM_COMMIT_POST_HOOK);
 
     /* prune selection tree */
-    mpi_errno = MPIR_Csel_prune(MPIDI_global.shm.posix.csel_root, comm,
-                                &MPIDI_POSIX_COMM(comm, csel_comm));
-    MPIR_ERR_CHECK(mpi_errno);
+    if (MPIDI_global.shm.posix.csel_root) {
+        mpi_errno = MPIR_Csel_prune(MPIDI_global.shm.posix.csel_root, comm,
+                                    &MPIDI_POSIX_COMM(comm, csel_comm));
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        MPIDI_POSIX_COMM(comm, csel_comm) = NULL;
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_COMM_COMMIT_POST_HOOK);

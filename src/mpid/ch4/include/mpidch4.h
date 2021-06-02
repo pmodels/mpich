@@ -13,8 +13,6 @@
  */
 
 int MPID_Init(int, int *);
-int MPID_Init_local(int requested, int *provided);
-int MPID_Init_world(void);
 int MPID_InitCompleted(void);
 MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Cancel_send(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
@@ -369,7 +367,8 @@ extern MPL_dbg_class MPIDI_CH4_DBG_COMM;
 extern MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
 #endif /* MPL_USE_DBG_LOGGING */
 
-
-
+/* routines only used during init */
+int MPIDI_create_init_comm(MPIR_Comm ** comm_ptr);
+void MPIDI_destroy_init_comm(MPIR_Comm ** comm_ptr);
 
 #endif /* MPIDCH4_H_INCLUDED */
