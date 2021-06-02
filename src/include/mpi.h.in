@@ -288,8 +288,8 @@ typedef int MPI_Win;
 #define MPI_WIN_NULL ((MPI_Win)0x20000000)
 
 /* for session */
-typedef int MPIX_Session;
-#define MPIX_SESSION_NULL     ((MPIX_Session)0x38000000)
+typedef int MPI_Session;
+#define MPI_SESSION_NULL     ((MPI_Session)0x38000000)
 
 /* File and IO */
 /* This define lets ROMIO know that MPI_File has been defined */
@@ -408,12 +408,12 @@ typedef int (MPI_Win_delete_attr_function)(MPI_Win, int, void *, void *);
 typedef void (MPI_Comm_errhandler_function)(MPI_Comm *, int *, ...);
 typedef void (MPI_File_errhandler_function)(MPI_File *, int *, ...);
 typedef void (MPI_Win_errhandler_function)(MPI_Win *, int *, ...);
-typedef void (MPIX_Session_errhandler_function)(MPIX_Session *, int *, ...);
+typedef void (MPI_Session_errhandler_function)(MPI_Session *, int *, ...);
 /* names that were added in MPI-2.0 and deprecated in MPI-2.2 */
 typedef MPI_Comm_errhandler_function MPI_Comm_errhandler_fn;
 typedef MPI_File_errhandler_function MPI_File_errhandler_fn;
 typedef MPI_Win_errhandler_function MPI_Win_errhandler_fn;
-typedef MPIX_Session_errhandler_function MPIX_Session_errhandler_fn;
+typedef MPI_Session_errhandler_function MPI_Session_errhandler_fn;
 
 /* Built in (0x1 in 30-31), errhandler (0x5 in bits 26-29, allkind (0
    in 22-25), index in the low bits */
@@ -547,8 +547,8 @@ typedef int MPI_Info;
 
 /* predefined types for MPI_Comm_split_type */
 #define MPI_COMM_TYPE_SHARED    1
-#define MPIX_COMM_TYPE_HW_GUIDED 2
-#define MPIX_COMM_TYPE_HW_UNGUIDED 3
+#define MPI_COMM_TYPE_HW_GUIDED 2
+#define MPI_COMM_TYPE_HW_UNGUIDED 3
 
 /* MPICH-specific types */
 #define MPIX_COMM_TYPE_NEIGHBORHOOD 4
@@ -621,7 +621,7 @@ extern struct MPIR_T_pvar_handle_s * const MPI_T_PVAR_ALL_HANDLES MPICH_API_PUBL
 typedef enum MPIR_T_verbosity_t {
     /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
-    MPIX_T_VERBOSITY_INVALID = 0,
+    MPI_T_VERBOSITY_INVALID = 0,
 
     /* arbitrarily shift values to aid debugging and reduce accidental errors */
     MPI_T_VERBOSITY_USER_BASIC = 221,
@@ -640,7 +640,7 @@ typedef enum MPIR_T_verbosity_t {
 typedef enum MPIR_T_bind_t {
     /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
-    MPIX_T_BIND_INVALID = 0,
+    MPI_T_BIND_INVALID = 0,
 
     /* arbitrarily shift values to aid debugging and reduce accidental errors */
     MPI_T_BIND_NO_OBJECT = 9700,
@@ -659,7 +659,7 @@ typedef enum MPIR_T_bind_t {
 typedef enum MPIR_T_scope_t {
     /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
-    MPIX_T_SCOPE_INVALID = 0,
+    MPI_T_SCOPE_INVALID = 0,
 
     /* arbitrarily shift values to aid debugging and reduce accidental errors */
     MPI_T_SCOPE_CONSTANT = 60438,
@@ -674,7 +674,7 @@ typedef enum MPIR_T_scope_t {
 typedef enum MPIR_T_pvar_class_t {
     /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
-    MPIX_T_PVAR_CLASS_INVALID = 0,
+    MPI_T_PVAR_CLASS_INVALID = 0,
 
     /* arbitrarily shift values to aid debugging and reduce accidental errors */
     MPIR_T_PVAR_CLASS_FIRST = 240,
@@ -909,9 +909,9 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_T_ERR_INVALID_NAME      73  /* Name doesn't match */
 #define MPI_T_ERR_INVALID           74  /* Generic error code for MPI_T added in MPI-3.1 */
 
-#define MPIX_ERR_SESSION            75  /* Invalid session handle */
+#define MPI_ERR_SESSION            75  /* Invalid session handle */
 
-#define MPIX_T_ERR_NOT_SUPPORTED    76  /* Requested functionality not supported */
+#define MPI_T_ERR_NOT_SUPPORTED    76  /* Requested functionality not supported */
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
