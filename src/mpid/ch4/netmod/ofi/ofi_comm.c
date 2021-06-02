@@ -85,6 +85,16 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
         comm->hints[MPIR_COMM_HINT_EAGAIN] = FALSE;
     }
 
+    if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING] == -1) {
+        comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING] =
+            MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_STRIPING;
+    }
+
+    if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING] == -1) {
+        comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING] =
+            MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_HASHING;
+    }
+
     update_multi_nic_hints(comm);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_PRE_HOOK);
