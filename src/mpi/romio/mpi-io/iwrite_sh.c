@@ -22,6 +22,19 @@ int MPI_File_iwrite_shared(MPI_File fh, const void *buf, int count, MPI_Datatype
     __attribute__ ((weak, alias("PMPI_File_iwrite_shared")));
 #endif
 
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_File_iwrite_shared_c = PMPI_File_iwrite_shared_c
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_File_iwrite_shared_c MPI_File_iwrite_shared_c
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_File_iwrite_shared_c as PMPI_File_iwrite_shared_c
+/* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_File_iwrite_shared_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
+                             MPIO_Request * request)
+    __attribute__ ((weak, alias("PMPI_File_iwrite_shared_c")));
+#endif
+
 /* Include mapping from MPI->PMPI */
 #define MPIO_BUILD_PROFILING
 #include "mpioprof.h"
@@ -53,22 +66,6 @@ int MPI_File_iwrite_shared(MPI_File fh, ROMIO_CONST void *buf, int count,
 
 /* large count function */
 
-#ifdef HAVE_WEAK_SYMBOLS
-
-#if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_File_iwrite_shared_c = PMPI_File_iwrite_shared_c
-#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_File_iwrite_shared_c MPI_File_iwrite_shared_c
-#elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_File_iwrite_shared_c as PMPI_File_iwrite_shared_c
-/* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_iwrite_shared_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
-                             MPIO_Request * request)
-    __attribute__ ((weak, alias("PMPI_File_iwrite_shared_c")));
-#endif
-
-#endif
 
 /*@
     MPI_File_iwrite_shared_c - Nonblocking write using shared file pointer
