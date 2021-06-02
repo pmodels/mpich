@@ -49,9 +49,6 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    if (((rank == root) && (recvcount == 0)) || ((rank != root) && (sendcount == 0)))
-        goto fn_exit;
-
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     /* Use binomial tree algorithm. */

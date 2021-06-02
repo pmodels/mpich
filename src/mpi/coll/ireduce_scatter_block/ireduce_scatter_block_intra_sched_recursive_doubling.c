@@ -40,10 +40,6 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(const void *sendbu
         total_count += recvcount;
     }
 
-    if (total_count == 0) {
-        goto fn_exit;
-    }
-
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* need to allocate temporary buffer to receive incoming data */

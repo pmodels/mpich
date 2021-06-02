@@ -81,9 +81,6 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    if (((rank == root) && (sendcount == 0)) || ((rank != root) && (recvcount == 0)))
-        goto fn_exit;
-
     MPIR_SCHED_CHKPMEM_MALLOC(ss, struct shared_state *, sizeof(struct shared_state), mpi_errno,
                               "shared_state", MPL_MEM_BUFFER);
     ss->sendcount = sendcount;
