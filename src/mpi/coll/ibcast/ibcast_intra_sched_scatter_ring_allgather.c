@@ -41,10 +41,6 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    /* If there is only one process, return */
-    if (comm_size == 1)
-        goto fn_exit;
-
     if (HANDLE_IS_BUILTIN(datatype))
         is_contig = 1;
     else {

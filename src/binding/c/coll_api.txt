@@ -21,6 +21,13 @@ MPI_Allgather:
      This text was suggested by Rajeev Thakur and has been adopted as a
      clarification by the MPI Forum.
 */
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((sendcount == 0 && sendbuf != MPI_IN_PLACE) || recvcount == 0) {
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Allgatherv:
     .desc: Gathers data from all tasks and deliver the combined data to all tasks
@@ -44,13 +51,35 @@ MPI_Allgatherv:
      This text was suggested by Rajeev Thakur, and has been adopted as a
      clarification to the MPI standard by the MPI-Forum.
 */
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcounts[0], recvtype);
+        }
+        goto fn_exit;
+    }
+}
+
 
 MPI_Allreduce:
     .desc: Combines values from all processes and distributes the result back to all processes
     .docnotes: collops
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+        }
+        goto fn_exit;
+    }
+}
 
 MPI_Alltoall:
     .desc: Sends data from all to all processes
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && recvcount == 0) {
+        goto fn_exit;
+    }
+}
 
 MPI_Alltoallv:
     .desc: Sends data from all to all processes; each process may send a different amount of data and provide displacements for the input and output data.
@@ -66,9 +95,19 @@ MPI_Barrier:
     that is, the call returns at any process only after all members of the
     communicator have entered the call.
 */
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        goto fn_exit;
+    }
+}
 
 MPI_Bcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        goto fn_exit;
+    }
+}
 
 MPI_Bcast_init:
     .desc: Creates a persistent request for broadcast
@@ -83,24 +122,72 @@ MPI_Exscan:
        calling process is not included in the result at the calling process
        (it is contributed to the subsequent processes, of course).
 */
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count == 0) {
+        goto fn_exit;
+    }
+}
 
 MPI_Gather:
     .desc: Gathers together values from a group of processes
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((MPIR_Comm_rank(comm_ptr) == root && recvcount == 0) || (MPIR_Comm_rank(comm_ptr) != root && sendcount == 0)) {
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Gatherv:
     .desc: Gathers into specified locations from all processes in a group
 
 MPI_Iallgather:
     .desc: Gathers data from all tasks and distribute the combined data to all tasks in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((sendcount == 0 && sendbuf != MPI_IN_PLACE) || recvcount == 0) {
+            MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+            *request = request_ptr->handle;
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Iallgatherv:
     .desc: Gathers data from all tasks and deliver the combined data to all tasks in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcounts[0], recvtype);
+        }
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Iallreduce:
     .desc: Combines values from all processes and distributes the result back to all processes in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+        }
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Ialltoall:
     .desc: Sends data from all to all processes in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && recvcount == 0) {
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Ialltoallv:
     .desc: Sends data from all to all processes in a nonblocking way; each process may send a different amount of data and provide displacements for the input and output data.
@@ -121,17 +208,47 @@ MPI_Ibarrier:
     the intercommunicator case, it will complete when all processes in the remote
     group have called MPI_Ibarrier.
 */
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Ibcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Iexscan:
     .desc: Computes the exclusive scan (partial reductions) of data on a collection of processes in a nonblocking way
     .docnotes: collops
     .extra: errtest_comm_intra
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count == 0) {
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Igather:
     .desc: Gathers together values from a group of processes in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((MPIR_Comm_rank(comm_ptr) == root && recvcount == 0) || (MPIR_Comm_rank(comm_ptr) != root && sendcount == 0)) {
+            MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+            *request = request_ptr->handle;
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Igatherv:
     .desc: Gathers into specified locations from all processes in a group in a nonblocking way
@@ -153,20 +270,66 @@ MPI_Ineighbor_alltoallw:
 
 MPI_Ireduce:
     .desc: Reduces values on all processes to a single value in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (count == 0 || MPIR_Comm_size(comm_ptr) == 1)) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+        }
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Ireduce_scatter:
     .desc: Combines values and scatters the results in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, recvcounts[0], datatype, recvbuf, recvcounts[0], datatype);
+        }
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Ireduce_scatter_block:
     .desc: Combines values and scatters the results in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (MPIR_Comm_size(comm_ptr) == 1 || recvcount == 0)) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, recvcount, datatype, recvbuf, recvcount, datatype);
+        }
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Iscan:
     .desc: Computes the scan (partial reductions) of data on a collection of processes in a nonblocking way
     .docnotes: collops
     .extra: errtest_comm_intra
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count == 0) {
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+}
 
 MPI_Iscatter:
     .desc: Sends data from one process to all other processes in a communicator in a nonblocking way
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((MPIR_Comm_rank(comm_ptr) == root && sendcount == 0) || (MPIR_Comm_rank(comm_ptr) != root && recvcount == 0)) {
+            MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+            *request = request_ptr->handle;
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Iscatterv:
     .desc: Scatters a buffer in parts to all processes in a communicator in a nonblocking way
@@ -198,7 +361,7 @@ MPI_Reduce:
     .desc: Reduces values on all processes to a single value
     .docnotes: collops
 { -- early_return --
-    if (comm_ptr->remote_size == 1 && comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+    if ((comm_ptr->remote_size == 1 || count == 0) && comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         if (sendbuf == MPI_IN_PLACE) {
             goto fn_exit;
         }
@@ -224,18 +387,46 @@ MPI_Reduce_local:
 MPI_Reduce_scatter:
     .desc: Combines values and scatters the results
     .docnotes: collops
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, recvcounts[0], datatype, recvbuf, recvcounts[0], datatype);
+        }
+        goto fn_exit;
+    }
+}
 
 MPI_Reduce_scatter_block:
     .desc: Combines values and scatters the results
     .docnotes: collops
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (MPIR_Comm_size(comm_ptr) == 1 || recvcount == 0)) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Localcopy(sendbuf, recvcount, datatype, recvbuf, recvcount, datatype);
+        }
+        goto fn_exit;
+    }
+}
 
 MPI_Scan:
     .desc: Computes the scan (partial reductions) of data on a collection of processes
     .docnotes: collops
     .extra: errtest_comm_intra
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count == 0) {
+        goto fn_exit;
+    }
+}
 
 MPI_Scatter:
     .desc: Sends data from one process to all other processes in a communicator
+{ -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if ((MPIR_Comm_rank(comm_ptr) == root && sendcount == 0) || (MPIR_Comm_rank(comm_ptr) != root && recvcount == 0)) {
+            goto fn_exit;
+        }
+    }
+}
 
 MPI_Scatterv:
     .desc: Scatters a buffer in parts to all processes in a communicator

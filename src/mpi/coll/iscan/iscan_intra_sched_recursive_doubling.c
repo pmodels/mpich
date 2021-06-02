@@ -17,9 +17,6 @@ int MPIR_Iscan_intra_sched_recursive_doubling(const void *sendbuf, void *recvbuf
     void *tmp_buf = NULL;
     MPIR_SCHED_CHKPMEM_DECL(2);
 
-    if (count == 0)
-        goto fn_exit;
-
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 

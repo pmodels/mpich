@@ -36,10 +36,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_BLOCK_SCHED_INTRA_RECEXCH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_BLOCK_SCHED_INTRA_RECEXCH);
 
-    if (recvcount == 0) {
-        goto fn_exit;
-    }
-
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
@@ -54,15 +50,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     MPIR_Assert(MPIR_Op_is_commutative(op) == 1);
 
     total_count = nranks * recvcount;
-
-    /* if there is only 1 rank, copy data from sendbuf
-     * to recvbuf and exit */
-    if (nranks == 1) {
-        if (!is_inplace)
-            MPIR_TSP_sched_localcopy(sendbuf, total_count, datatype, recvbuf, total_count,
-                                     datatype, sched, 0, NULL);
-        goto fn_exit;
-    }
 
     /* get the neighbors, the function allocates the required memory */
     MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,
@@ -169,7 +156,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
                              recvcount, datatype, step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs);
     }
 
-  fn_exit:
     /* free all allocated memory for storing nbrs */
     for (i = 0; i < step2_nphases; i++)
         MPL_free(step2_nbrs[i]);

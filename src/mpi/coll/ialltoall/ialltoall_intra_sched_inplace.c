@@ -34,9 +34,6 @@ int MPIR_Ialltoall_intra_sched_inplace(const void *sendbuf, MPI_Aint sendcount,
     MPIR_Assert(sendbuf == MPI_IN_PLACE);
 #endif
 
-    if (recvcount == 0)
-        goto fn_exit;
-
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
     MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
