@@ -910,12 +910,13 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_T_ERR_INVALID           74  /* Generic error code for MPI_T added in MPI-3.1 */
 
 #define MPI_ERR_SESSION            75  /* Invalid session handle */
+#define MPI_ERR_PROC_ABORTED       76  /* Trying to communicate with aborted processes */
 
-#define MPI_T_ERR_NOT_SUPPORTED    76  /* Requested functionality not supported */
+#define MPI_T_ERR_NOT_SUPPORTED    77  /* Requested functionality not supported */
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
-#define MPICH_ERR_LAST_CLASS 76     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 77     /* It is also helpful to know the
 				       last valid class */
 
 #define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
