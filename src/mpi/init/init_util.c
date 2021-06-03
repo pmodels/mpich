@@ -20,7 +20,7 @@ typedef struct Finalize_func_t {
 } Finalize_func_t;
 /* When full debugging is enabled, each MPI handle type has a finalize handler
    installed to detect unfreed handles.  */
-#define MAX_FINALIZE_FUNC 64
+#define MAX_FINALIZE_FUNC 256
 static MPL_initlock_t fstack_lock = MPL_INITLOCK_INITIALIZER;
 static Finalize_func_t fstack[MAX_FINALIZE_FUNC];
 static int fstack_sp = 0;
