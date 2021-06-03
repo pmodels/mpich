@@ -1632,7 +1632,7 @@ MPI_Pready:
     request: REQUEST, direction=INOUT, [partitioned communication request]
 MPI_Pready_list:
     length: ARRAY_LENGTH, direction=IN, [list length]
-    array_of_partitions: PARTITION, direction=INOUT, length=length, [array of partitions]
+    array_of_partitions: PARTITION, direction=IN, length=length, [array of partitions]
     request: REQUEST, direction=INOUT, [partitioned communication request]
 MPI_Pready_range:
     partition_low: PARTITION, direction=IN, [partition to mark lowest partition ready for transfer]
