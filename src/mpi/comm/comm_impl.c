@@ -780,12 +780,14 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (info_ptr) {
-        MPII_Comm_set_hints(*p_newcom_ptr, info_ptr);
-    }
+    if (*p_newcom_ptr) {
+        if (info_ptr) {
+            MPII_Comm_set_hints(*p_newcom_ptr, info_ptr);
+        }
 
-    if (errhan_ptr) {
-        MPIR_Comm_set_errhandler_impl(*p_newcom_ptr, errhan_ptr);
+        if (errhan_ptr) {
+            MPIR_Comm_set_errhandler_impl(*p_newcom_ptr, errhan_ptr);
+        }
     }
 
   fn_exit:
