@@ -57,24 +57,24 @@ C
 C
        errs = 0
 
-       call mpix_info_create_env( i1, ierr )
-       call mpix_info_create_env( i2, ierr )
+       call mpi_info_create_env( i1, ierr )
+       call mpi_info_create_env( i2, ierr )
 
        call test_info( i1, i2, errs )
        call mpi_info_free( i1, ierr )
-       call mpix_info_create_env( i1, ierr )
+       call mpi_info_create_env( i1, ierr )
 
        call mpi_init( ierr )
 
        call test_info( i1, i2, errs )
        call mpi_info_free( i1, ierr )
-       call mpix_info_create_env( i1, ierr )
+       call mpi_info_create_env( i1, ierr )
 
        call mpi_finalize( ierr )
 
        call test_info( i1, i2, errs )
        call mpi_info_free( i1, ierr )
-       call mpix_info_create_env( i1, ierr )
+       call mpi_info_create_env( i1, ierr )
 
        call test_info( i1, i2, errs )
        call mpi_info_free( i1, ierr )
