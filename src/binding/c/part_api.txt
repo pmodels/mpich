@@ -92,8 +92,14 @@ MPI_Parrived:
 { -- error_check -- partition
     MPIR_ERRTEST_PARTITION(partition, request_ptr, mpi_errno);
 }
+{ -- early_return --
+    if (request == MPI_REQUEST_NULL) {
+        *flag = TRUE;
+        goto fn_exit;
+    }
+}
 {
-    mpi_errno = MPIR_Parrived(request, request_ptr, partition, flag);
+    mpi_errno = MPIR_Parrived(request_ptr, partition, flag);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 }
