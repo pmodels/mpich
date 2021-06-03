@@ -53,7 +53,7 @@ static int my_elems_size = 0;
 static int my_elems_count = 0;
 
 /* Allocate a new shared linked list element */
-MPI_Aint alloc_elem(int value, MPI_Win win)
+static MPI_Aint alloc_elem(int value, MPI_Win win)
 {
     MPI_Aint disp;
     llist_elem_t *elem_ptr;

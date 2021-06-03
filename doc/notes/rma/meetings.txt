@@ -217,7 +217,7 @@ another example, looking at shmem combined with remote access
 two pairs of processes on same nodes
 
 shared memory lock on single node allows one process to look directly into the
-window information so that he doesn't ahve to go through the agent of the other
+window information so that he doesn't have to go through the agent of the other
 process on the local node.  that same lock will be used by the communication
 agent for a given process to ensure that things are kept sane in the off-node
 case; in other words, this lock is utilized by processes on the same node
@@ -325,7 +325,7 @@ have as much as we do in the fence case.
 
 the accumulate is odd as usual.  if you're the only person in the target's
 group, then you don't have to do the element-wise locking/atomicity (or
-window-wise locking/unlocking depending on implementaiton).
+window-wise locking/unlocking depending on implementation).
 
 brian: it would be helpful for the origin to know if he needs to lock or not
 during accumulate operations.  this would allow him to know if he needs to lock
@@ -482,7 +482,7 @@ operation was requested during this access epoch.  After Win_complete() detects
 that all get operations have completed, if the flag is not set, it will
 decrements the reference counts of the logged datatypes and free the access
 epoch structure.  If the flag is set, the datatype reference counts may only be
-decremented once an explicit ackowledgement has been received from the target
+decremented once an explicit acknowledgement has been received from the target
 informing the origin that all operations requested by that access
 epoch have been completed.
 

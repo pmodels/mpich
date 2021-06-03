@@ -32,6 +32,7 @@ int MPL_env2range(const char *envName, int *lowPtr, int *highPtr)
         }
         *lowPtr = low;
         *highPtr = high;
+        return 1;
     }
     return 0;
 }

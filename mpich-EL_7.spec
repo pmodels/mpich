@@ -189,7 +189,7 @@ mpich support for Python 3.
         --mandir=%{_mandir}/%{name}-%{_arch}                    \
         --docdir=%{_datadir}/%{name}/doc                        \
         --htmldir=%{_datadir}/%{name}/doc                       \
-        --with-hwloc-prefix=embedded                            \
+        --with-hwloc=embedded                                   \
         --enable-fortran=all                                    \
         --enable-romio                                          \
         --with-file-system=ufs+daos                             \
@@ -346,6 +346,9 @@ find %{buildroot} -type f -name "*.la" -delete
 %{python3_sitearch}/%{name}.pth
 
 %changelog
+* Thu May 27 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 3.4~a2-3
+- Replace --with-hwloc-prefix with --with-hwloc on configure command
+
 * Wed Jan 20 2021 Kenneth Cain <kenneth.c.cain@intel.com> - 3.4~a2-2
 - Update packaging for building with libdaos.so.1
 

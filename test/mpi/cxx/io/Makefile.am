@@ -69,7 +69,7 @@ nodist_writeordbenosx_SOURCES =   writeordbenosx.cxx
 nodist_writeshnosx_SOURCES =      writeshnosx.cxx
 nodist_writeatallbenosx_SOURCES = writeatallbenosx.cxx
 
-# these files are genereated using testmerge (see below)
+# these files are generated using testmerge (see below)
 generated_io_sources =   \
     iwriteatx.cxx        \
     iwritex.cxx          \

@@ -13,9 +13,9 @@
  *
  * We use this as our medium-sized-message algorithm.
  */
-int MPIR_Ialltoall_intra_sched_permuted_sendrecv(const void *sendbuf, int sendcount,
+int MPIR_Ialltoall_intra_sched_permuted_sendrecv(const void *sendbuf, MPI_Aint sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
-                                                 int recvcount, MPI_Datatype recvtype,
+                                                 MPI_Aint recvcount, MPI_Datatype recvtype,
                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;

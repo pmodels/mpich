@@ -40,13 +40,16 @@ cvars:
 */
 
 /* Definitions local to src/mpi/init only */
-int MPIR_Init_thread(int *, char ***, int, int *);
+int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
+                     MPIR_Session ** p_session_ptr);
+int MPII_Finalize(MPIR_Session * session_ptr);
 
 void MPII_thread_mutex_create(void);
 void MPII_thread_mutex_destroy(void);
 
 int MPII_init_local_proc_attrs(int *p_thread_required);
 int MPII_finalize_local_proc_attrs(void);
+int MPII_init_tag_ub(void);
 
 void MPII_init_windows(void);
 void MPII_init_binding_cxx(void);
@@ -56,6 +59,51 @@ void MPII_init_dbg_logging(void);
 
 int MPII_init_async(void);
 int MPII_finalize_async(void);
+
+void MPII_Call_finalize_callbacks(int min_prio, int max_prio);
+
+/* MPI_Init[_thread]/MPI_Finalize only can be used in "world" model where it only
+ * can be initialized and finalized once, while we can have multiple sessions.
+ * Following inline functions are used to track the world model state in functions
+ * MPI_Initialized, MPI_Finalized, MPI_Init, MPI_Init_thread, and MPI_Finalize
+ */
+
+/* Possible values for process world_model_state */
+#define MPICH_WORLD_MODEL_UNINITIALIZED 0
+#define MPICH_WORLD_MODEL_INITIALIZED   1
+#define MPICH_WORLD_MODEL_FINALIZED     2
+
+extern MPL_atomic_int_t MPIR_world_model_state;
+
+static inline void MPII_world_set_initilized(void)
+{
+    MPL_atomic_store_int(&MPIR_world_model_state, MPICH_WORLD_MODEL_INITIALIZED);
+}
+
+static inline void MPII_world_set_finalized(void)
+{
+    MPL_atomic_store_int(&MPIR_world_model_state, MPICH_WORLD_MODEL_FINALIZED);
+}
+
+static inline bool MPII_world_is_initialized(void)
+{
+    return (MPL_atomic_load_int(&MPIR_world_model_state) == MPICH_WORLD_MODEL_INITIALIZED);
+}
+
+static inline bool MPII_world_is_finalized(void)
+{
+    return (MPL_atomic_load_int(&MPIR_world_model_state) == MPICH_WORLD_MODEL_FINALIZED);
+}
+
+/* defined here instead of mpir_err.h to keep the symbols within this header */
+#define MPIR_ERRTEST_INITTWICE() \
+    if (MPL_atomic_load_int(&MPIR_world_model_state) != MPICH_WORLD_MODEL_UNINITIALIZED) { \
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, \
+                                         __func__, __LINE__, MPI_ERR_OTHER, "**inittwice", 0); \
+        goto fn_fail; \
+    }
+
+/* Other inline routines used in Init/Finalize */
 
 static inline void MPII_pre_init_memory_tracing(void)
 {

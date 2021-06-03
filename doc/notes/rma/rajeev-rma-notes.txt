@@ -11,7 +11,7 @@ aware of and makes progress on one-sided as well as send-recv ops.
 
 * An asynchronous agent kicks in periodically. The agent could be a
 thread, process, or signal handler. The agent calls the general
-progress function MPID_Make_progress and therefore makes progres on
+progress function MPID_Make_progress and therefore makes progress on
 everything. 
  (Q: If the agent is a process, how does it access the request queue
 on the main MPI process?)

@@ -165,7 +165,7 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
     if (fd->access_mode != orig_amode_excl)
         fd->access_mode = orig_amode_excl;
 
-    /* broadcast information to all proceses in
+    /* broadcast information to all processes in
      * communicator, not just those who participated in open */
 
     stats_type = make_stats_type(fd);

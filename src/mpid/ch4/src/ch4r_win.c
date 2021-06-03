@@ -35,50 +35,26 @@ static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr)
         *ops_ptr = 0;
         return;
     } else if (!strncmp(value, "any_op", strlen("any_op"))) {
-        MPIDIG_win_info_accu_op_shift_t op_shift;
         /* add all ops */
-        for (op_shift = MPIDIG_ACCU_OP_SHIFT_FIRST; op_shift < MPIDIG_ACCU_OP_SHIFT_LAST;
-             op_shift++)
-            ops |= (1 << op_shift);
+        int op_index;
+        for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++)
+            ops |= (1 << op_index);
         *ops_ptr = ops;
         return;
     }
 
     token = (char *) strtok_r(value, ",", &savePtr);
     while (token != NULL) {
-
-        /* traverse op list (exclude null and last) and add the op if set */
-        if (!strncmp(token, "max", strlen("max")))
-            ops |= (1 << MPIDIG_ACCU_MAX_SHIFT);
-        else if (!strncmp(token, "min", strlen("min")))
-            ops |= (1 << MPIDIG_ACCU_MIN_SHIFT);
-        else if (!strncmp(token, "sum", strlen("sum")))
-            ops |= (1 << MPIDIG_ACCU_SUM_SHIFT);
-        else if (!strncmp(token, "prod", strlen("prod")))
-            ops |= (1 << MPIDIG_ACCU_PROD_SHIFT);
-        else if (!strncmp(token, "maxloc", strlen("maxloc")))
-            ops |= (1 << MPIDIG_ACCU_MAXLOC_SHIFT);
-        else if (!strncmp(token, "minloc", strlen("minloc")))
-            ops |= (1 << MPIDIG_ACCU_MINLOC_SHIFT);
-        else if (!strncmp(token, "band", strlen("band")))
-            ops |= (1 << MPIDIG_ACCU_BAND_SHIFT);
-        else if (!strncmp(token, "bor", strlen("bor")))
-            ops |= (1 << MPIDIG_ACCU_BOR_SHIFT);
-        else if (!strncmp(token, "bxor", strlen("bxor")))
-            ops |= (1 << MPIDIG_ACCU_BXOR_SHIFT);
-        else if (!strncmp(token, "land", strlen("land")))
-            ops |= (1 << MPIDIG_ACCU_LAND_SHIFT);
-        else if (!strncmp(token, "lor", strlen("lor")))
-            ops |= (1 << MPIDIG_ACCU_LOR_SHIFT);
-        else if (!strncmp(token, "lxor", strlen("lxor")))
-            ops |= (1 << MPIDIG_ACCU_LXOR_SHIFT);
-        else if (!strncmp(token, "replace", strlen("replace")))
-            ops |= (1 << MPIDIG_ACCU_REPLACE_SHIFT);
-        else if (!strncmp(token, "no_op", strlen("no_op")))
-            ops |= (1 << MPIDIG_ACCU_NO_OP_SHIFT);
-        else if (!strncmp(token, "cswap", strlen("cswap")) ||
-                 !strncmp(token, "compare_and_swap", strlen("compare_and_swap")))
-            ops |= (1 << MPIDIG_ACCU_CSWAP_SHIFT);
+        /* Use OP_NULL for special cswap */
+        if (!strncmp(token, "cswap", strlen("cswap")) ||
+            !strncmp(token, "compare_and_swap", strlen("compare_and_swap"))) {
+            ops |= (1 << MPIDIU_win_acc_op_get_index(MPI_OP_NULL));
+        } else {
+            /* search other reduce op by short name */
+            MPI_Op op = MPIR_Op_builtin_search_by_shortname(token);
+            MPIR_Assert(op != MPI_OP_NULL);
+            ops |= (1 << MPIDIU_win_acc_op_get_index(op));
+        }
 
         token = (char *) strtok_r(NULL, ",", &savePtr);
     }
@@ -90,44 +66,60 @@ static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr)
 
 static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen)
 {
-    int c = 0;
-
-    MPIR_Assert(maxlen >= strlen("max,min,sum,prod,maxloc,minloc,band,bor,"
-                                 "bxor,land,lor,lxor,replace,no_op,cswap") + 1);
-
-    if (val & (1 << MPIDIG_ACCU_MAX_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "max");
-    if (val & (1 << MPIDIG_ACCU_MIN_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%smin", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_SUM_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%ssum", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_PROD_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%sprod", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_MAXLOC_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%smaxloc", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_MINLOC_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%sminloc", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_BAND_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%sband", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_BOR_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%sbor", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_BXOR_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%sbxor", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_LAND_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%sland", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_LOR_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%slor", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_LXOR_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%slxor", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_REPLACE_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%sreplace", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_NO_OP_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%sno_op", (c > 0) ? "," : "");
-    if (val & (1 << MPIDIG_ACCU_CSWAP_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%scswap", (c > 0) ? "," : "");
+    int c = 0, op_index;
+    for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
+        if (val & (1 << op_index)) {
+            MPIR_Assert(c < maxlen);
+            if (op_index == 0) {
+                c += snprintf(buf + c, maxlen - c, "%scswap", (c > 0) ? "," : "");
+            } else {
+                MPI_Op op = MPIDIU_win_acc_get_op(op_index);
+                const char *short_name = MPIR_Op_builtin_get_shortname(op);
+                c += snprintf(buf + c, maxlen - c, "%s%s", (c > 0) ? "," : "", short_name);
+            }
+        }
+    }
 
     if (c == 0)
         strncpy(buf, "none", maxlen);
+}
+
+static void parse_info_perf_preference_str(const char *str, int *preference_ptr)
+{
+    int preference = 0;
+    char *value, *token, *savePtr = NULL;
+
+    value = (char *) str;
+    /* str can never be NULL. */
+    MPIR_Assert(value);
+
+    token = (char *) strtok_r(value, ",", &savePtr);
+    while (token != NULL) {
+        if (!strncmp(token, "lat", strlen("lat"))) {
+            preference |= (1 << MPIDIG_RMA_LAT_PREFERRED);
+        } else if (!strncmp(token, "mr", strlen("mr"))) {
+            preference |= (1 << MPIDIG_RMA_MR_PREFERRED);
+        }
+
+        token = (char *) strtok_r(NULL, ",", &savePtr);
+    }
+
+    /* update info only when any valid value is set */
+    if (preference)
+        *preference_ptr = preference;
+}
+
+static void get_info_perf_preference_str(int val, char *buf, size_t maxlen)
+{
+    int c = 0;
+
+    if (val & (1 << MPIDIG_RMA_LAT_PREFERRED)) {
+        c += snprintf(buf, maxlen, "lat");
+    }
+    if (val & (1 << MPIDIG_RMA_MR_PREFERRED)) {
+        MPIR_Assert(c < maxlen);
+        c += snprintf(buf + c, maxlen - c, "%smr", (c > 0) ? "," : "");
+    }
 }
 
 static void update_winattr_after_set_info(MPIR_Win * win)
@@ -141,6 +133,11 @@ static void update_winattr_after_set_info(MPIR_Win * win)
         MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_SAME_OP_NO_OP;
     else
         MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_ACCU_SAME_OP_NO_OP);
+
+    if (MPIDIG_WIN(win, info_args).perf_preference & (1 << MPIDIG_RMA_MR_PREFERRED))
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_MR_PREFERRED;
+    else
+        MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_MR_PREFERRED);
 }
 
 static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
@@ -252,6 +249,9 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
                 MPIDIG_WIN(win, info_args).coll_attach = true;
             else
                 MPIDIG_WIN(win, info_args).coll_attach = false;
+        } else if (is_init && !strcmp(curr_ptr->key, "perf_preference")) {
+            parse_info_perf_preference_str(curr_ptr->value,
+                                           &MPIDIG_WIN(win, info_args).perf_preference);
         }
       next:
         curr_ptr = curr_ptr->next;
@@ -271,7 +271,6 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIR_Win *win = (MPIR_Win *) MPIR_Handle_obj_alloc(&MPIR_Win_mem);
     MPIDIG_win_target_t *targets = NULL;
     MPIR_Comm *win_comm_ptr;
-    MPIDIG_win_info_accu_op_shift_t op_shift;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_INIT);
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDIG_WIN_INIT);
@@ -283,7 +282,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     /* Duplicate the original communicator here to avoid having collisions
      * between internal collectives */
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, NULL, &win_comm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &win_comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_WIN(win, targets) = targets;
@@ -321,9 +320,10 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     }
 
     /* default any op */
+    int op_index;
     MPIDIG_WIN(win, info_args).which_accumulate_ops = 0;
-    for (op_shift = MPIDIG_ACCU_OP_SHIFT_FIRST; op_shift < MPIDIG_ACCU_OP_SHIFT_LAST; op_shift++)
-        MPIDIG_WIN(win, info_args).which_accumulate_ops |= (1 << op_shift);
+    for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++)
+        MPIDIG_WIN(win, info_args).which_accumulate_ops |= (1 << op_index);
     MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype = true;
     MPIDIG_WIN(win, info_args).accumulate_max_bytes = -1;
     MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
@@ -394,14 +394,14 @@ static int win_finalize(MPIR_Win ** win_ptr)
 
     /* Make progress till all OPs have been completed */
     do {
-        int all_local_completed = 0, all_remote_completed = 0;
+        bool all_local_completed, all_remote_completed;
 
         /* NOTE: MPID_Win_free does not take on locks */
         mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPIDIG_win_check_all_targets_local_completed(win, &all_local_completed);
-        MPIDIG_win_check_all_targets_remote_completed(win, &all_remote_completed);
+        all_local_completed = MPIDIG_win_check_all_targets_local_completed(win);
+        all_remote_completed = MPIDIG_win_check_all_targets_remote_completed(win);
 
         /* Local completion counter might be updated later than remote completion
          * (at request completion), so we need to check it before release entire
@@ -800,12 +800,20 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "coll_attach", "false");
     MPIR_ERR_CHECK(mpi_errno);
 
+    {   /* Keep buf as a local variable for perf_preference key. */
+        char buf[128];
+        get_info_perf_preference_str(MPIDIG_WIN(win, info_args).perf_preference, &buf[0],
+                                     sizeof(buf));
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "perf_preference", buf);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_GET_INFO);
     return mpi_errno;
   fn_fail:
     if (*info_p_p != NULL) {
-        MPIR_Info_free(*info_p_p);
+        MPIR_Info_free_impl(*info_p_p);
         *info_p_p = NULL;
     }
     goto fn_exit;

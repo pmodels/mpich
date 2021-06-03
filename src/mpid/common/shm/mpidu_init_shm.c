@@ -81,7 +81,7 @@ static int Init_shm_barrier_init(int is_root)
     return MPI_SUCCESS;
 }
 
-static int Init_shm_barrier()
+static int Init_shm_barrier(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT_SHM_BARRIER);

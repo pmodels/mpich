@@ -115,7 +115,7 @@ void ADIOI_PVFS2_AIO_contig(ADIO_File fd, void *buf, int count,
     }
     /* --END ERROR HANDLING-- */
 
-    /* posted. defered completion */
+    /* posted. deferred completion */
     if (ret == 0) {
         if (ADIOI_PVFS2_greq_class == 0) {
             MPIX_Grequest_class_create(ADIOI_GEN_aio_query_fn,

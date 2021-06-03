@@ -28,7 +28,7 @@
 		  "base-Init_thread" => 1,
 		  "base-Init" => 1,
 		  );
-# These functions are primarily from MPI-1, and follow a differnt rule.
+# These functions are primarily from MPI-1, and follow a different rule.
 # ?? Should these have a place in the definition file instead of here?
 %FuncHasClassAtEnd = ( 
 		       "comm-Send" => 1,

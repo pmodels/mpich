@@ -29,26 +29,11 @@ extern char HYD_print_prefix_str[DBG_PREFIX_LEN];
         HYD_PRINT_NOPREFIX(fp, __VA_ARGS__);    \
     }
 
-#if defined HAVE__FUNC__
-#define FUNC __func__
-#elif defined HAVE_CAP__FUNC__
-#define FUNC __FUNC__
-#elif defined HAVE__FUNCTION__
-#define FUNC __FUNCTION__
-#endif
-
-#if defined __FILE__ && defined FUNC
+#if defined __FILE__
 #define HYD_ERR_PRINT(...)                                              \
     {                                                                   \
         PRINT_PREFIX(stderr);                                           \
-        HYD_PRINT_NOPREFIX(stderr, "%s (%s:%d): ", FUNC, __FILE__, __LINE__); \
-        HYD_PRINT_NOPREFIX(stderr, __VA_ARGS__);                        \
-    }
-#elif defined __FILE__
-#define HYD_ERR_PRINT(...)                                              \
-    {                                                                   \
-        PRINT_PREFIX(stderr);                                           \
-        HYD_PRINT_NOPREFIX(stderr, "%s (%d): ", __FILE__, __LINE__);    \
+        HYD_PRINT_NOPREFIX(stderr, "%s (%s:%d): ", __func__, __FILE__, __LINE__); \
         HYD_PRINT_NOPREFIX(stderr, __VA_ARGS__);                        \
     }
 #else

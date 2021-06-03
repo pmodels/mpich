@@ -168,7 +168,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
         ADIO_Offset my_count_size = 0;
         /* One-sided aggregation needs the amount of data per rank as well
          * because the difference in starting and ending offsets for 1 byte is
-         * 0 the same as 0 bytes so it cannot be distiguished.
+         * 0 the same as 0 bytes so it cannot be distinguished.
          */
         if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
             count_sizes = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
@@ -425,8 +425,12 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
     GPFSMPIO_T_CIO_REPORT(0, fd, myrank, nprocs);
 
     /* free all memory allocated for collective I/O */
-    ADIOI_Free(others_req[0].offsets);
-    ADIOI_Free(others_req[0].mem_ptrs);
+    if (others_req[0].offsets) {
+        ADIOI_Free(others_req[0].offsets);
+    }
+    if (others_req[0].mem_ptrs) {
+        ADIOI_Free(others_req[0].mem_ptrs);
+    }
     ADIOI_Free(others_req);
 
     ADIOI_Free(buf_idx);

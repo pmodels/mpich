@@ -61,17 +61,23 @@ AC_CHECK_FUNCS([sigaction signal sigset])
 sigaction_ok=no
 if test "$ac_cv_func_sigaction" = "yes" ; then
     AC_CACHE_CHECK([for struct sigaction],pac_cv_struct_sigaction,[
-    AC_TRY_COMPILE([#include <signal.h>],[
-struct sigaction act; sigaddset( &act.sa_mask, SIGINT );],
-    pac_cv_struct_sigaction="yes",pac_cv_struct_sigaction="no")])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <signal.h>
+            ]],[[
+            struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+            ]])], pac_cv_struct_sigaction="yes",pac_cv_struct_sigaction="no")
+    ])
     if test "$pac_cv_struct_sigaction" = "no" ; then
-        AC_CACHE_CHECK([for struct sigaction with _POSIX_SOURCE],
-	pac_cv_struct_sigaction_needs_posix,[
-        AC_TRY_COMPILE([#define _POSIX_SOURCE
-#include <signal.h>],[
-struct sigaction act; sigaddset( &act.sa_mask, SIGINT );],
-       pac_cv_struct_sigaction_needs_posix="yes",
-       pac_cv_struct_sigaction_needs_posix="no")])
+        AC_CACHE_CHECK([for struct sigaction with _POSIX_SOURCE], pac_cv_struct_sigaction_needs_posix,[
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+                #define _POSIX_SOURCE
+                #include <signal.h>
+                ]],[[
+                struct sigaction act; sigaddset( &act.sa_mask, SIGINT );
+                ]])],
+                pac_cv_struct_sigaction_needs_posix="yes",
+                pac_cv_struct_sigaction_needs_posix="no")
+        ])
         if test "$pac_cv_struct_sigaction_needs_posix" = "yes" ; then
             sigaction_ok=yes
 	fi

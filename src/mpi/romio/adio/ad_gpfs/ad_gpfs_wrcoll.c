@@ -157,7 +157,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         ADIO_Offset my_count_size = 0;
         /* One-sided aggregation needs the amount of data per rank as well
          * because the difference in starting and ending offsets for 1 byte is
-         * 0 the same as 0 bytes so it cannot be distiguished.
+         * 0 the same as 0 bytes so it cannot be distinguished.
          */
         if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
             count_sizes = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
@@ -360,7 +360,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
             ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count, buf,
                                            datatype, error_code, firstFileOffset, lastFileOffset,
                                            currentValidDataIndex, fd_start, fd_end, &holeFound,
-                                           noStripeParms);
+                                           &noStripeParms);
             romio_onesided_no_rmw = prev_romio_onesided_no_rmw;
             GPFSMPIO_T_CIO_REPORT(1, fd, myrank, nprocs);
             ADIOI_Free(offset_list);
@@ -447,8 +447,12 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     GPFSMPIO_T_CIO_REPORT(1, fd, myrank, nprocs);
 
     /* free all memory allocated for collective I/O */
-    ADIOI_Free(others_req[0].offsets);
-    ADIOI_Free(others_req[0].mem_ptrs);
+    if (others_req[0].offsets) {
+        ADIOI_Free(others_req[0].offsets);
+    }
+    if (others_req[0].mem_ptrs) {
+        ADIOI_Free(others_req[0].mem_ptrs);
+    }
     ADIOI_Free(others_req);
 
     ADIOI_Free(buf_idx);
@@ -1049,7 +1053,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
      * processes are operating on noncontigous data.  But holes can also show
      * up at the beginning or end of the file domain (see John Bent ROMIO REQ
      * #835). Missing these holes would result in us writing more data than
-     * recieved by everyone else. */
+     * received by everyone else. */
     *hole = 0;
     if (off != srt_off[0])      /* hole at the front */
         *hole = 1;
@@ -1541,7 +1545,7 @@ static void ADIOI_W_Exchange_data_alltoallv(ADIO_File fd, const void *buf, char 
         for (i = 0; i < nprocs; i++) {
             if (send_size[i]) {
                 sbuf_ptr = all_send_buf + sdispls[i];
-                memcpy(sbuf_ptr, buf + buf_idx[i], send_size[i]);
+                memcpy(sbuf_ptr, (char *) buf + buf_idx[i], send_size[i]);
                 buf_idx[i] += send_size[i];
             }
         }

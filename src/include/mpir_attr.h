@@ -138,7 +138,7 @@ typedef void *MPII_Attr_val_t;
   Notes:
   Attributes don''t have 'ref_count's because they don''t have reference
   count semantics.  That is, there are no shallow copies or duplicates
-  of an attibute.  An attribute is copied when the communicator that
+  of an attribute.  An attribute is copied when the communicator that
   it is attached to is duplicated.  Subsequent operations, such as
   'MPI_Comm_attr_free', can change the attribute list for one of the
   communicators but not the other, making it impractical to keep the
@@ -187,5 +187,21 @@ typedef struct MPIR_Attribute {
      MPID_DEV_ATTR_DECL
 #endif
 } MPIR_Attribute;
+
+/*
+  Keyval and attribute storage
+ */
+extern MPIR_Object_alloc_t MPII_Keyval_mem;
+extern MPIR_Object_alloc_t MPID_Attr_mem;
+extern MPII_Keyval MPII_Keyval_direct[];
+
+int MPIR_Attr_dup_list(int, MPIR_Attribute *, MPIR_Attribute **);
+int MPIR_Attr_delete_list(int, MPIR_Attribute **);
+MPIR_Attribute *MPID_Attr_alloc(void);
+void MPID_Attr_free(MPIR_Attribute * attr_ptr);
+int MPIR_Call_attr_delete(int, MPIR_Attribute *);
+int MPIR_Call_attr_copy(int, MPIR_Attribute *, void **, int *);
+
+void MPIR_free_keyval(MPII_Keyval * keyval_ptr);
 
 #endif /* MPIR_ATTR_H_INCLUDED */

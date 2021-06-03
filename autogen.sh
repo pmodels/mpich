@@ -114,7 +114,6 @@ MAKE=${MAKE-make}
 
 # amdirs are the directories that make use of autoreconf
 amdirs=". src/mpl"
-# amdirs="$amdirs src/util/logging/rlog"
 
 autoreconf_args="-if"
 export autoreconf_args
@@ -542,6 +541,18 @@ fi
 
 
 ########################################################################
+## Checking for bash
+########################################################################
+
+echo_n "Checking for bash... "
+if test "`which bash 2>&1 > /dev/null ; echo $?`" = "0" ;then
+    echo "done"
+else
+    echo "bash not found" ;
+    exit 1;
+fi
+
+########################################################################
 ## Checking for UNIX find
 ########################################################################
 
@@ -587,6 +598,27 @@ else
 	rm -rf ./maint/__random_dir__
 	exit 1
     fi
+fi
+
+########################################################################
+## Check for Python 3
+########################################################################
+
+echo_n "Checking for Python 3... "
+PYTHON=
+if test 3 = `python -c 'import sys; print(sys.version_info[0])'`; then
+    PYTHON=python
+fi
+
+if test -z "$PYTHON" -a 3 = `python3 -c 'import sys; print(sys.version_info[0])'`; then
+    PYTHON=python3
+fi
+
+if test -z "$PYTHON" ; then
+    echo "not found"
+    exit 1
+else
+    echo "$PYTHON"
 fi
 
 ########################################################################
@@ -742,6 +774,13 @@ echo_n "Building ROMIO glue code... "
 ( cd src/glue/romio && chmod a+x ./all_romio_symbols && ./all_romio_symbols ../../mpi/romio/include/mpio.h.in )
 echo "done"
 
+########################################################################
+## Building C interfaces
+########################################################################
+
+echo_n "generating MPI C functions..."
+$PYTHON maint/gen_binding_c.py
+echo "done"
 
 ########################################################################
 ## Building non-C interfaces
@@ -763,11 +802,7 @@ if [ $do_bindings = "yes" ] ; then
         elif find src/binding/fortran/use_mpi -name 'buildiface' -newer 'src/binding/fortran/use_mpi/mpi_base.f90' >/dev/null 2>&1 ; then
 	    build_f90=yes
         fi
-        if [ ! -s src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.c ] ; then
-	    build_f08=yes
-        elif find src/binding/fortran/use_mpi_f08 -name 'buildiface' -newer 'src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.c' >/dev/null 2>&1 ; then
-	    build_f08=yes
-        fi
+        build_f08=yes
     fi
 
     if [ $build_f77 = "yes" ] ; then
@@ -788,12 +823,7 @@ if [ $do_bindings = "yes" ] ; then
 	echo_n "Building Fortran 08 interface... "
 	# Top-level files
 	( cd src/binding/fortran/use_mpi_f08 && chmod a+x ./buildiface && ./buildiface )
-        # Delete the old Makefile.mk
-        ( rm -f src/binding/fortran/use_mpi_f08/wrappers_c/Makefile.mk )
-        # Execute once for mpi.h.in ...
-	( cd src/binding/fortran/use_mpi_f08/wrappers_c && chmod a+x ./buildiface && ./buildiface ../../../../include/mpi.h.in )
-        # ... and once for mpio.h.in
-	( cd src/binding/fortran/use_mpi_f08/wrappers_c && chmod a+x ./buildiface && ./buildiface ../../../../mpi/romio/include/mpio.h.in )
+        # generate src/binding/fortran/use_mpi_f08/wrappers_c/...
 	echo "done"
     fi
 
@@ -842,7 +872,7 @@ if [ $do_geterrmsgs = "yes" ] ; then
             fi
             rm -f .err .err2
         else
-            # Incase it exists but has zero size
+            # In case it exists but has zero size
             rm -f .err
         fi
 	if [ -s unusederr.txt ] ; then
@@ -990,12 +1020,22 @@ if [ "$do_build_configure" = "yes" ] ; then
                 flang_patch_requires_rebuild=no
                 arm_patch_requires_rebuild=no
                 ibm_patch_requires_rebuild=no
-                nvc_patch_requires_rebuild=no
                 sys_lib_dlsearch_path_patch_requires_rebuild=no
+                macos_patch_requires_rebuild=no
                 echo_n "Patching libtool.m4 for system dynamic library search path..."
                 patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/sys_lib_dlsearch_path_spec.patch
                 if [ $? -eq 0 ] ; then
                     sys_lib_dlsearch_path_patch_requires_rebuild=yes
+                    # Remove possible leftovers, which don't imply a failure
+                    rm -f $amdir/confdb/libtool.m4.orig
+                    echo "done"
+                else
+                    echo "failed"
+                fi
+                echo_n "Patching libtool.m4 for compatibility macOS BigSur..."
+                patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/big-sur.patch
+                if [ $? -eq 0 ] ; then
+                    macos_patch_requires_rebuild=yes
                     # Remove possible leftovers, which don't imply a failure
                     rm -f $amdir/confdb/libtool.m4.orig
                     echo "done"
@@ -1053,22 +1093,12 @@ if [ "$do_build_configure" = "yes" ] ; then
                     else
                         echo "failed"
                     fi
-                    echo_n "Patching libtool.m4 for compatibility with NVIDIA HPC compilers..."
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/nv-compiler.patch
-                    if [ $? -eq 0 ] ; then
-                        nvc_patch_requires_rebuild=yes
-                        # Remove possible leftovers, which don't imply a failure
-                        rm -f $amdir/confdb/libtool.m4.orig
-                        echo "done"
-                    else
-                        echo "failed"
-                    fi
                 fi
 
                 if [ $ifort_patch_requires_rebuild = "yes" ] || [ $oracle_patch_requires_rebuild = "yes" ] \
                     || [ $arm_patch_requires_rebuild = "yes" ] || [ $ibm_patch_requires_rebuild = "yes" ] \
-                    || [ $nvc_patch_requires_rebuild = "yes" ] \
-                    || [ $sys_lib_dlsearch_path_patch_requires_rebuild = "yes" ] || [ $flang_patch_requires_rebuild = "yes" ]; then
+                    || [ $sys_lib_dlsearch_path_patch_requires_rebuild = "yes" ] || [ $flang_patch_requires_rebuild = "yes" ] \
+                    || [ $macos_patch_requires_rebuild = "yes" ]; then
                     # Rebuild configure
                     (cd $amdir && $autoconf -f) || exit 1
                     # Reset libtool.m4 timestamps to avoid confusing make
@@ -1079,6 +1109,15 @@ if [ "$do_build_configure" = "yes" ] ; then
     done
 fi
 
+echo
+echo
+echo "###########################################################"
+echo "## Generating CH4 API boilerplates"
+echo "###########################################################"
+echo
+
+echo_n "generating ch4 API boilerplates... "
+$PYTHON ./maint/gen_ch4_api.py
 
 echo
 echo

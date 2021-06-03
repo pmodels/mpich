@@ -16,7 +16,7 @@ dnl to config.log, i.e. AC_TRY_EVAL does not log anything to config.log.
 dnl If autoconf provides AC_COMMAND_IFELSE or AC_EVAL_IFELSE,
 dnl AC_COMMAND_IFELSE dnl should be replaced by the official autoconf macros.
 dnl
-dnl PAC_COMMAND_IFELSE(COMMMAND,[ACTION-IF-RUN-OK],[ACTION-IF-RUN-FAIL])
+dnl PAC_COMMAND_IFELSE(COMMAND,[ACTION-IF-RUN-OK],[ACTION-IF-RUN-FAIL])
 dnl
 AC_DEFUN([PAC_COMMAND_IFELSE],[
 AS_IF([PAC_RUNLOG([$1])],[

@@ -57,8 +57,8 @@ int MPIDU_bc_allgather(MPIR_Comm * allgather_comm, void *bc, int bc_len, int sam
         return mpi_errno;
     }
 
-    int *recv_cnts = MPL_calloc(num_nodes, sizeof(int), MPL_MEM_OTHER);
-    int *recv_offs = MPL_calloc(num_nodes, sizeof(int), MPL_MEM_OTHER);
+    MPI_Aint *recv_cnts = MPL_calloc(num_nodes, sizeof(MPI_Aint), MPL_MEM_OTHER);
+    MPI_Aint *recv_offs = MPL_calloc(num_nodes, sizeof(MPI_Aint), MPL_MEM_OTHER);
     for (i = 0; i < size; i++) {
         int node_id = MPIR_Process.node_map[i];
         recv_cnts[node_id]++;
@@ -106,8 +106,8 @@ int MPIDU_bc_allgather(MPIR_Comm * allgather_comm, void *bc, int bc_len, int sam
     void *recv_buf = segment + local_size * recv_bc_len;
     if (rank == node_root) {
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        MPIR_Allgatherv(segment, local_size * recv_bc_len, MPI_BYTE, recv_buf,
-                        recv_cnts, recv_offs, MPI_BYTE, allgather_comm, &errflag);
+        MPIR_Allgatherv_fallback(segment, local_size * recv_bc_len, MPI_BYTE, recv_buf,
+                                 recv_cnts, recv_offs, MPI_BYTE, allgather_comm, &errflag);
 
     }
 
@@ -141,6 +141,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (!same_len) {
         /* if business cards can be different length, use the max value length */
         recv_bc_len = MPID_MAX_BC_SIZE;
+        /* Note: ret_bc_len is only touched if !same_len */
         *ret_bc_len = recv_bc_len;
     }
 

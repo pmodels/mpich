@@ -7,15 +7,9 @@
 #include "mpitestconf.h"
 #include "mpitest.h"
 #include "dtypes.h"
-#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
-#endif
-#if defined(HAVE_STDLIB_H) || defined(STDC_HEADERS)
 #include <stdlib.h>
-#endif
-#if defined(HAVE_STRING_H) || defined(STDC_HEADERS)
 #include <string.h>
-#endif
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #endif
@@ -55,6 +49,8 @@ static int basic_only = 0;
    has been received.
  */
 
+#define MYNAME_SIZE MPI_MAX_OBJECT_NAME + 50
+
 /*
    Add a predefined MPI type to the tests.  _count instances of the
    type will be sent.
@@ -83,9 +79,9 @@ static int basic_only = 0;
   outbufs[cnt] = (void *)malloc(sizeof(_ctype) * (_count));	\
   a = (_ctype *)inbufs[cnt]; for (i=0; i<(_count); i++) a[i] = i;	\
   a = (_ctype *)outbufs[cnt]; for (i=0; i<(_count); i++) a[i] = 0;	\
-  myname = (char *)malloc(100);\
+  myname = (char *)malloc(MYNAME_SIZE);\
   MPI_Type_get_name(_mpitype, _basename, &_basenamelen); \
-  snprintf(myname, 100, "Contig type %s", _basename);	\
+  snprintf(myname, MYNAME_SIZE, "Contig type %s", _basename);	\
   MPI_Type_set_name(types[cnt], myname); \
   free(myname); \
   counts[cnt]  = 1;  bytesize[cnt] = sizeof(_ctype) * (_count); cnt++; }
@@ -104,9 +100,9 @@ static int basic_only = 0;
   outbufs[cnt] = (void *)calloc(sizeof(_ctype) * (_count) * (_stride),1); \
   a = (_ctype *)inbufs[cnt]; for (i=0; i<(_count); i++) a[i*(_stride)] = i; \
   a = (_ctype *)outbufs[cnt]; for (i=0; i<(_count); i++) a[i*(_stride)] = 0; \
-  myname = (char *)malloc(100);\
+  myname = (char *)malloc(MYNAME_SIZE);\
   MPI_Type_get_name(_mpitype, _basename, &_basenamelen); \
-  snprintf(myname, 100, "Vector type %s", _basename);		\
+  snprintf(myname, MYNAME_SIZE, "Vector type %s", _basename);		\
   MPI_Type_set_name(types[cnt], myname); \
   free(myname); \
   counts[cnt]  = 1; bytesize[cnt] = sizeof(_ctype) * (_count) * (_stride) ;\
@@ -129,14 +125,14 @@ static int basic_only = 0;
   outbufs[cnt] = (void *)malloc(sizeof(_ctype) * (_count)); \
   a = (_ctype *)inbufs[cnt]; for (i=0; i<(_count); i++) a[i] = i; \
   a = (_ctype *)outbufs[cnt]; for (i=0; i<(_count); i++) a[i] = 0; \
-  myname = (char *)malloc(100);\
+  myname = (char *)malloc(MYNAME_SIZE);\
   MPI_Type_get_name(_mpitype, _basename, &_basenamelen); \
-  snprintf(myname, 100, "Index type %s", _basename);		\
+  snprintf(myname, MYNAME_SIZE, "Index type %s", _basename);		\
   MPI_Type_set_name(types[cnt], myname); \
   free(myname); \
   counts[cnt]  = 1;  bytesize[cnt] = sizeof(_ctype) * (_count); cnt++; }
 
-/* This defines a structure of two basic members; by chosing things like
+/* This defines a structure of two basic members; by choosing things like
    (char, double), various packing and alignment tests can be made */
 #define SETUPSTRUCT2TYPE(_mpitype1,_ctype1,_mpitype2,_ctype2,_count,_tname) { \
   int i; char *myname;						\
@@ -159,8 +155,8 @@ static int basic_only = 0;
       a[i].a2 = i; }							\
   a = (struct name *)outbufs[cnt]; for (i=0; i<(_count); i++) { a[i].a1 = 0; \
       a[i].a2 = 0; }							\
-  myname = (char *)malloc(100);					\
-  snprintf(myname, 100, "Struct type %s", _tname);		\
+  myname = (char *)malloc(MYNAME_SIZE);					\
+  snprintf(myname, MYNAME_SIZE, "Struct type %s", _tname);		\
   MPI_Type_set_name(types[cnt], myname); \
   free(myname); \
   counts[cnt]  = (_count);  bytesize[cnt] = sizeof(struct name) * (_count);cnt++; }
@@ -176,9 +172,9 @@ static int basic_only = 0;
   outbufs[cnt] = (void *)calloc(sizeof(_ctype) * (_count) * (_stride),1);\
   a = (_ctype *)inbufs[cnt]; for (i=0; i<(_count); i++) a[i*(_stride)] = i;  \
   a = (_ctype *)outbufs[cnt]; for (i=0; i<(_count); i++) a[i*(_stride)] = 0; \
-  myname = (char *)malloc(100);					\
+  myname = (char *)malloc(MYNAME_SIZE);					\
   MPI_Type_get_name(_mpitype, _basename, &_basenamelen); \
-  snprintf(myname, 100, "Struct (MPI_UB) type %s", _basename);	\
+  snprintf(myname, MYNAME_SIZE, "Struct (MPI_UB) type %s", _basename);	\
   MPI_Type_set_name(types[cnt], myname); \
   free(myname); \
   counts[cnt]  = (_count);  \
@@ -344,7 +340,7 @@ int MTestDatatype2Check(void *inbuf, void *outbuf, int size_bytes)
 /*
  * This is a version of CheckData that prints error messages
  */
-int MtestDatatype2CheckAndPrint(void *inbuf, void *outbuf, int size_bytes,
+int MTestDatatype2CheckAndPrint(void *inbuf, void *outbuf, int size_bytes,
                                 char *typename, int typenum)
 {
     int errloc, world_rank;

@@ -10,4 +10,4 @@ EXTRA_DIST = testlist
 # avoid having to write many "foo_SOURCES = foo.f" lines
 AM_DEFAULT_SOURCE_EXT = .f
 
-noinst_PROGRAMS = infotestf infotest2f
+noinst_PROGRAMS = infocrenvf infotestf infotest2f infogetstrf

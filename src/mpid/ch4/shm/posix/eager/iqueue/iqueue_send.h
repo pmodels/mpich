@@ -25,33 +25,33 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_eager_buf_limit(void)
  *
  * grank   - The global rank (the rank in MPI_COMM_WORLD) of the receiving process.
  * msg_hdr - The header of the message to be sent. This can be NULL if there is no header to be sent
- *           (such as if the header was sent in a previous chunk).
- * iov     - The array of iovec entries to be sent.
- * iov_num - The number of entries in the iovec array.
+ *           (such as if the header was sent in a previous chunk, am_hdr will be NULL too in this
+ *           case.
+ * am_hdr, am_hdr_sz    - am header this could be NULL if not sending the first chunk
+ * buf, count, datatype - Data buffer and signature for the send buffer. They could be NULL in the
+ *                        case of a header-only message
+ * offset               - current offset.
+ * bytes_sent           - output variable for how much data actually been sent, pass NULL if no data
+ *                        need to be send
  */
 MPL_STATIC_INLINE_PREFIX int
-MPIDI_POSIX_eager_send(int grank,
-                       MPIDI_POSIX_am_header_t ** msg_hdr, struct iovec **iov, size_t * iov_num)
+MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void *am_hdr,
+                       MPI_Aint am_hdr_sz, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                       MPI_Aint offset, MPI_Aint * bytes_sent)
 {
     MPIDI_POSIX_eager_iqueue_transport_t *transport;
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
     MPIDU_genq_shmem_queue_t terminal;
-    size_t i, iov_done, capacity, available;
+    size_t capacity, available;
     char *payload;
     int ret = MPIDI_POSIX_OK;
+    MPI_Aint packed_size = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
 
     /* Get the transport object that holds all of the global variables. */
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
-
-    /* TODO: This function can only send one cell at a time. For a large
-     * message that require multiple cells this function has to be invoked
-     * multiple times. Can we try to send all data in this call? Moreover,
-     * we have to traverse the transport to find an empty cell, can we find
-     * all needed cells in single traversal? When putting them into the terminal,
-     * can we put all in single insertion? */
 
     /* Try to get a new cell to hold the message */
     MPIDU_genq_shmem_pool_cell_alloc(transport->cell_pool, (void **) &cell);
@@ -71,59 +71,43 @@ MPIDI_POSIX_eager_send(int grank,
 
     /* Figure out the capacity of each cell */
     capacity = MPIDI_POSIX_EAGER_IQUEUE_CELL_CAPACITY(transport);
+
     available = capacity;
 
     cell->from = MPIDI_POSIX_global.my_local_rank;
 
     /* If this is the beginning of the message, mark it as the head. Otherwise it will be the
      * tail. */
-    if (*msg_hdr) {
-        cell->am_header = **msg_hdr;
-        *msg_hdr = NULL;        /* completed header copy */
+    cell->payload_size = 0;
+    if (am_hdr) {
+        MPI_Aint resized_am_hdr_sz = MPL_ROUND_UP_ALIGN(am_hdr_sz, MAX_ALIGNMENT);
+        cell->am_header = *msg_hdr;
         cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_HDR;
+        /* send am_hdr if this is the first segment */
+        MPIR_Typerep_copy(payload, am_hdr, am_hdr_sz);
+        /* make sure the data region starts at the boundary of MAX_ALIGNMENT */
+        payload = payload + resized_am_hdr_sz;
+        cell->payload_size += resized_am_hdr_sz;
+        cell->am_header.am_hdr_sz = resized_am_hdr_sz;
+        available -= cell->am_header.am_hdr_sz;
     } else {
         cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_DATA;
     }
 
-    /* Pack the data into the cells */
-    iov_done = 0;
-    for (i = 0; i < *iov_num; i++) {
-        /* Optimize for the case where the message will fit into the cell. */
-        if (likely(available >= (*iov)[i].iov_len)) {
-            MPIR_Typerep_copy(payload, (*iov)[i].iov_base, (*iov)[i].iov_len);
-
-            payload += (*iov)[i].iov_len;
-            available -= (*iov)[i].iov_len;
-
-            iov_done++;
-        } else {
-            /* If the message won't fit, put as much as we can and update the iovec for the next
-             * time around. */
-            MPIR_Typerep_copy(payload, (*iov)[i].iov_base, available);
-
-            (*iov)[i].iov_base = (char *) (*iov)[i].iov_base + available;
-            (*iov)[i].iov_len -= available;
-
-            available = 0;
-
-            break;
-        }
+    /* We want to skip packing of send buffer is there is no data to be sent . buf == NULL is
+     * not a correct check here because derived datatype can use absolute address for displacement
+     * which requires buffer address passed as MPI_BOTTOM which is usually NULL. count == 0 is also
+     * not reliable because the derived datatype could have zero block size which contains no
+     * data. */
+    if (bytes_sent) {
+        MPIR_Typerep_pack(buf, count, datatype, offset, payload, available, &packed_size);
+        cell->payload_size += packed_size;
     }
-
-    cell->payload_size = capacity - available;
 
     MPIDU_genq_shmem_queue_enqueue(transport->cell_pool, terminal, (void *) cell);
 
-    /* Update the user counter for number of iovecs left */
-    *iov_num -= iov_done;
-
-    /* Check to see if we finished all of the iovecs that came from the caller. If not, update
-     * the iov pointer. If so, set it to NULL. Either way, the caller will know the status of
-     * the operation from the value of iov. */
-    if (*iov_num) {
-        *iov = &((*iov)[iov_done]);
-    } else {
-        *iov = NULL;
+    if (bytes_sent) {
+        *bytes_sent = packed_size;
     }
 
   fn_exit:

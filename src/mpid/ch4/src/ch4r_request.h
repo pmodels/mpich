@@ -13,26 +13,13 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t
                                                              int ref_count)
 {
     MPIR_Request *req;
-    int i;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_CREATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_CREATE);
 
-    req = MPIR_Request_create_from_pool(kind, 0);
+    MPIDI_CH4_REQUEST_CREATE(req, kind, 0, ref_count);
     if (req == NULL)
         goto fn_fail;
-
-    /* as long as ref_count is a constant, any compiler should be able
-     * to unroll the below loop.  when threading is not enabled, the
-     * compiler should be able to combine the below individual
-     * increments to a single increment of "ref_count - 1".
-     *
-     * FIXME: when threading is enabled, the ref_count increase is an
-     * atomic operation, so it might be more inefficient.  we should
-     * use a new API to increase the ref_count value instead of the
-     * for loop. */
-    for (i = 0; i < ref_count - 1; i++)
-        MPIR_Request_add_ref(req);
 
     MPIDI_NM_am_request_init(req);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -44,6 +31,9 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t
                                        (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
+    /* init the request as ready for data as this is the common case, CH4 will should set them to
+     * false when needed */
+    MPIDIG_REQUEST(req, recv_ready) = true;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_CREATE);
@@ -72,6 +62,9 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
                                        (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
+    /* init the request as ready for data as this is the common case, CH4 will should set them to
+     * false when needed */
+    MPIDIG_REQUEST(req, recv_ready) = true;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_INIT);
     return req;
@@ -101,10 +94,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
         if (!MPIR_STATUS_GET_CANCEL_BIT(anysrc_partner->status)) {
             if (MPIDI_REQUEST(rreq, is_local)) {
                 /* SHM, cancel NM partner */
+                /* canceling a netmod recv request in libfabric ultimately
+                 * has one of the two results: 1. COMPLETION event 2. or,
+                 * FI_ECANCELED.
+                 * MPIDI_NM_mpi_cancel_recv() may not wait for COMPLETION
+                 * event when fi_cancel returns FI_NOENT. In other cases,
+                 * progress call is invoked and recv_event may happen
+                 * for recv completion. In this case, it frees up
+                 * anysrc_partner in recv_event(). Therefore, increase
+                 * ref count here to prevent free since here we will check
+                 * the request status */
+                MPIR_Request_add_ref(anysrc_partner);
                 mpi_errno = MPIDI_NM_mpi_cancel_recv(anysrc_partner);
                 MPIR_ERR_CHECK(mpi_errno);
                 if (!MPIR_STATUS_GET_CANCEL_BIT(anysrc_partner->status)) {
-                    /* failed, cancel SHM rreq instead
+                    /* either complete or failed, cancel SHM rreq instead
                      * NOTE: comm and datatype will be defreferenced at caller site
                      */
                     MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
@@ -116,13 +120,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
                     MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
                     MPIDI_REQUEST_ANYSOURCE_PARTNER(anysrc_partner) = NULL;
                     /* cancel freed it once, freed once more on behalf of mpi-layer */
-                    MPIR_Request_free_unsafe(anysrc_partner);
+                    MPIDI_CH4_REQUEST_FREE(anysrc_partner);
                 }
+                MPIDI_CH4_REQUEST_FREE(anysrc_partner);
             } else {
                 /* NM, cancel SHM partner */
-                int c;
                 /* prevent free, we'll complete it separately */
-                MPIR_cc_incr(anysrc_partner->cc_ptr, &c);
+                MPIR_cc_inc(anysrc_partner->cc_ptr);
                 mpi_errno = MPIDI_SHM_mpi_cancel_recv(anysrc_partner);
                 MPIR_ERR_CHECK(mpi_errno);
 
@@ -155,7 +159,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
              * final free for NM request happen at call-site MPID_Request_complete
              * final free for SHM partner happen at mpi-layer
              */
-            MPIR_Request_free_unsafe(rreq);
+            MPIDI_CH4_REQUEST_FREE(rreq);
         } else {
             /* SHM, NM partner should already been freed (this branch can't happen) */
             MPIR_Assert(0);

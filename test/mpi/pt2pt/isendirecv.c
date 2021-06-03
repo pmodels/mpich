@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 {
     int errs = 0;
     int elems = 20;
-    int rank, nproc, dest, i;
+    int rank, nproc, i;
     float *in_buf, *out_buf;
     MPI_Comm comm;
     MPI_Request *reqs;

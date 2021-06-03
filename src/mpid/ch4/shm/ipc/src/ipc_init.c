@@ -32,8 +32,10 @@ int MPIDI_IPC_mpi_init_hook(int rank, int size, int *tag_bits)
     mpi_errno = MPIDI_XPMEM_mpi_init_hook(rank, size, tag_bits);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_GPU_mpi_init_hook(rank, size, tag_bits);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (MPIR_CVAR_ENABLE_GPU) {
+        mpi_errno = MPIDI_GPU_mpi_init_hook(rank, size, tag_bits);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MPI_INIT_HOOK);

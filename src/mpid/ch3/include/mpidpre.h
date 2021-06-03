@@ -163,6 +163,7 @@ typedef union {
 #define MPID_Comm_commit_pre_hook(comm_) MPIDI_CH3I_Comm_commit_pre_hook(comm_)
 #define MPID_Comm_commit_post_hook(comm_) MPIDI_CH3I_Comm_commit_post_hook(comm_)
 #define MPID_Comm_free_hook(comm_) MPIDI_CH3I_Comm_destroy_hook(comm_)
+#define MPID_Comm_set_hints(comm_, info_) MPIDI_CH3I_Comm_set_hints(comm_, info_)
 
 #ifndef HAVE_MPIDI_VCRT
 #define HAVE_MPIDI_VCRT
@@ -181,8 +182,8 @@ typedef struct MPIDI_CH3I_comm
                              * disconnected as a part of
                              * MPI_COMM_DISCONNECT; FALSE otherwise. */
 
-    struct MPIDI_VCRT *vcrt;          /* virtual connecton reference table */
-    struct MPIDI_VCRT *local_vcrt;    /* local virtual connecton reference table */
+    struct MPIDI_VCRT *vcrt;          /* virtual connection reference table */
+    struct MPIDI_VCRT *local_vcrt;    /* local virtual connection reference table */
 
     struct MPIR_Comm *next; /* next pointer for list of communicators */
     struct MPIR_Comm *prev; /* prev pointer for list of communicators */
@@ -219,7 +220,7 @@ MPIDI_CH3I_comm_t;
  * the last op piggybacked with a FLUSH flag to
  * detect remote completion;
  * (4) UNLOCK means origin issues all pending operations
- * incuding the last op piggybacked with an UNLOCK
+ * including the last op piggybacked with an UNLOCK
  * flag to release the lock on target and detect remote
  * completion.
  * Note that FLUSH_LOCAL is a superset of NONE, FLUSH
@@ -447,7 +448,7 @@ typedef struct MPIDI_Request {
     void *ext_hdr_ptr; /* Pointer to extended packet header.
                         * It is allocated in RMA issuing/pkt_handler functions,
                         * and freed when release request. */
-    intptr_t ext_hdr_sz;
+    MPI_Aint ext_hdr_sz;
 
     struct MPIDI_RMA_Target *rma_target_ptr;
 
@@ -530,6 +531,10 @@ typedef struct {
 #define MPID_NEEDS_ICOMM_WORLD
 
 int MPID_Init(int required, int *provided);
+
+int MPID_Init_local(int requested, int *provided);
+
+int MPID_Init_world(void);
 
 int MPID_InitCompleted( void );
 
@@ -616,6 +621,9 @@ int MPID_Recv_init( void *buf, int count, MPI_Datatype datatype,
 
 int MPID_Startall(int count, MPIR_Request *requests[]);
 
+int MPID_Bcast_init(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+               MPIR_Comm *comm_ptr, MPIR_Info* info_ptr, MPIR_Request **request);
+
 int MPID_Probe(int, int, MPIR_Comm *, int, MPI_Status *);
 int MPID_Iprobe(int, int, MPIR_Comm *, int, int *, MPI_Status *);
 
@@ -633,6 +641,17 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
 
 int MPID_Cancel_send(MPIR_Request *);
 int MPID_Cancel_recv(MPIR_Request *);
+
+int MPID_Psend_init(void *buf, int partitions, MPI_Count count, MPI_Datatype datatype,
+                    int dest, int tag, MPIR_Comm *comm, MPIR_Info *info,
+                    MPIR_Request **request );
+int MPID_Precv_init(void *buf, int partitions, MPI_Count count, MPI_Datatype datatype,
+                    int source, int tag, MPIR_Comm *comm, MPIR_Info *info,
+                    MPIR_Request **request );
+
+int MPID_Pready_range(int partition_low, int partition_high, MPIR_Request *sreq);
+int MPID_Pready_list(int length, int array_of_partitions[], MPIR_Request *sreq);
+int MPID_Parrived(MPIR_Request *rreq, int partition, int *flag);
 
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp);
 
@@ -709,7 +728,7 @@ int MPID_Win_sync(MPIR_Win *win);
 
 void MPID_Progress_start(MPID_Progress_state * state);
 int MPID_Progress_wait(MPID_Progress_state * state);
-void MPID_Progress_end(MPID_Progress_state * stae);
+void MPID_Progress_end(MPID_Progress_state * state);
 int MPID_Progress_poke(void);
 
 int MPID_Get_processor_name( char *name, int namelen, int *resultlen);
@@ -721,7 +740,7 @@ void MPID_Request_free_hook(MPIR_Request *);
 void MPID_Request_destroy_hook(MPIR_Request *);
 int MPID_Request_complete(MPIR_Request *);
 
-void *MPID_Alloc_mem( size_t size, MPIR_Info *info );
+void *MPID_Alloc_mem(MPI_Aint size, MPIR_Info *info );
 int MPID_Free_mem( void *ptr );
 
 /* Prototypes and definitions for the node ID code.  This is used to support

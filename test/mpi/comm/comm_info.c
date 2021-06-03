@@ -11,11 +11,10 @@
 
 int main(int argc, char **argv)
 {
-    int i, j, rank;
+    int rank;
     MPI_Info info_in, info_out;
     int errors = 0, errs = 0;
     MPI_Comm comm;
-    void *base;
     char invalid_key[] = "invalid_test_key";
     char buf[MPI_MAX_INFO_VAL];
     int flag;

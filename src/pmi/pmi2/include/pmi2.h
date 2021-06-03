@@ -300,7 +300,7 @@ D*/
   Input Parameters:
   + jobid - the job id identifying the key-value space in which to look
     for key.  If jobid is NULL, look in the key-value space of this job.
-  . src_pmi_id - the pmi id of the process which put this keypair.  This
+  . src_pmi_id - the pmi id of the process which put this key pair.  This
     is just a hint to the server.  PMI2_ID_NULL should be passed if no
     hint is provided.
   . key - key

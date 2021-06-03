@@ -1,0 +1,7 @@
+# The dtp test will iterate over all typelist and counts, each time will repeat [repeat] times and select seed, testsize, memtypes accordingly
+# set MPITEST_VERBOSE=1 to the list of tests being run.
+
+getfence1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:2 arg=-counts=1,17,50,100,512,65530 arg=-seed=300 arg=-testsizes=2,20 arg=-memtype=random timeLimit=600
+putfence1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:2 arg=-counts=1,17,50,100,512,65530 arg=-seed=320 arg=-testsizes=2,20 arg=-memtype=random timeLimit=600
+accfence1 4 arg=-typelist=MPI_INT arg=-counts=1,17,50,100,512,1018,65530 arg=-seed=330 arg=-testsizes=2,50 arg=-memtype=random timeLimit=600
+lock_dt   2 arg=-typelist=MPI_INT arg=-counts=1,17,50,100,512,1018,65530 arg=-seed=340 arg=-testsizes=2,50 arg=-memtype=random timeLimit=600

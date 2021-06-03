@@ -9,6 +9,7 @@
 #include "ofi_am.h"
 #include "ofi_events.h"
 #include "ofi_proc.h"
+#include "ofi_progress.h"
 #include "ofi_unimpl.h"
 
 #ifdef MPIDI_ENABLE_AM_ONLY
@@ -20,6 +21,7 @@
 #include "ofi_send.h"
 #include "ofi_win.h"
 #include "ofi_rma.h"
+#include "ofi_part.h"
 #endif
 
 /* Not-inlined OFI netmod functions */

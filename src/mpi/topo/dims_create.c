@@ -6,13 +6,6 @@
 #include "mpiimpl.h"
 
 /*
- * This CVAR is used for debugging support.  An alternative would be
- * to use the MPIU_DBG interface, which predates the CVAR interface,
- * and also provides different levels of debugging support.  In the
- * long run, the MPIU_DBG interface should be updated to make use of
- * CVARs.
- */
-/*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 categories:
@@ -34,62 +27,24 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-/* -- Begin Profiling Symbol Block for routine MPI_Dims_create */
-#if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_Dims_create = PMPI_Dims_create
-#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_Dims_create  MPI_Dims_create
-#elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_Dims_create as PMPI_Dims_create
-#elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Dims_create(int nnodes, int ndims, int dims[])
-    __attribute__ ((weak, alias("PMPI_Dims_create")));
-#endif
-/* -- End Profiling Symbol Block */
+static MPIR_T_pvar_timer_t PVAR_TIMER_dims_getdivs;
+static MPIR_T_pvar_timer_t PVAR_TIMER_dims_sort;
+static MPIR_T_pvar_timer_t PVAR_TIMER_dims_fact;
+static MPIR_T_pvar_timer_t PVAR_TIMER_dims_basefact;
+static MPIR_T_pvar_timer_t PVAR_TIMER_dims_div;
+static MPIR_T_pvar_timer_t PVAR_TIMER_dims_bal;
 
-
-
-/* Because we store factors with their multiplicities, a small array can
-   store all of the factors for a large number (grows *faster* than n
-   factorial). */
-#define MAX_FACTORS 10
-/* 2^20 is a millon */
-#define MAX_DIMS    20
-
-typedef struct Factors {
-    int val, cnt;
-} Factors;
-
-/* These routines may be global if we are not using weak symbols */
-PMPI_LOCAL int MPIR_Dims_create_init(void);
-PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[]);
-
-/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
-   the MPI routines.  You can use USE_WEAK_SYMBOLS to see if MPICH is
-   using weak symbols to implement the MPI routines. */
-
-#ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Dims_create
-#define MPI_Dims_create PMPI_Dims_create
-
-PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_getdivs;
-PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_sort;
-PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_fact;
-PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_basefact;
-PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_div;
-PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_bal;
-
-PMPI_LOCAL unsigned long long PVAR_COUNTER_dims_npruned;
-PMPI_LOCAL unsigned long long PVAR_COUNTER_dims_ndivmade;
-PMPI_LOCAL unsigned long long PVAR_COUNTER_dims_optbalcalls;
+static unsigned long long PVAR_COUNTER_dims_npruned;
+static unsigned long long PVAR_COUNTER_dims_ndivmade;
+static unsigned long long PVAR_COUNTER_dims_optbalcalls;
 
 /* MPI_Dims_create and PMPI_Dims_create must see the same variable for this
    one-time initialization flag.  If this file must be compiled twice,
    this variable is defined here and as external for the other build. */
-volatile int MPIR_DIMS_initPCVars = 1;
+static volatile int MPIR_DIMS_initPCVars = 1;
 
 /* This routine is called once to define any PVARS and CVARS */
-PMPI_LOCAL int MPIR_Dims_create_init(void)
+static int MPIR_Dims_create_init(void)
 {
 
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(DIMS,
@@ -153,6 +108,17 @@ PMPI_LOCAL int MPIR_Dims_create_init(void)
    which will significantly reduce the number of elements included here.
 */
 #include "primes.h"
+
+/* Because we store factors with their multiplicities, a small array can
+   store all of the factors for a large number (grows *faster* than n
+   factorial). */
+#define MAX_FACTORS 10
+/* 2^20 is a million */
+#define MAX_DIMS    20
+
+typedef struct Factors {
+    int val, cnt;
+} Factors;
 
 /* Local only routines.  These should *not* have standard prefix */
 static int factor_num(int, Factors[], int *);
@@ -368,7 +334,7 @@ static int factor_to_divisors(int nf, Factors * factors, int ndiv, int divs[])
  *
  * First, distribute factors to dims[0..nd-1].  The purpose is to get the
  * initial factors set and to ensure that the smallest dimension is > 1.
- * Second, distibute the remaining factors, starting with the largest, to
+ * Second, distribute the remaining factors, starting with the largest, to
  * the elements of dims with the smallest index i such that
  *   dims[i-1] > dims[i]*val
  * or to dims[0] if no i satisfies.
@@ -576,13 +542,14 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
 }
 
 
+
 /* FIXME: The error checking should really be part of MPI_Dims_create,
    not part of MPIR_Dims_create_impl.  That slightly changes the
    semantics of Dims_create provided by the device, but only by
    removing the need to check for errors */
 
 
-PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
+int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
 {
     Factors f[MAX_FACTORS];
     int nf, nprimes = 0, i, j, k, val, nextidx;
@@ -592,6 +559,17 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
     int chosen[MAX_DIMS], foundDecomp;
     int *divs;
     MPIR_CHKLMEM_DECL(1);
+
+    /* Initialize pvars and cvars if this is the first call */
+    if (MPIR_DIMS_initPCVars) {
+        MPIR_Dims_create_init();
+        MPIR_DIMS_initPCVars = 0;
+    }
+
+    if (MPIR_Process.dimsCreate != NULL) {
+        mpi_errno = MPIR_Process.dimsCreate(nnodes, ndims, dims);
+        goto fn_exit;
+    }
 
     /* Find the number of unspecified dimensions in dims and the product
      * of the positive values in dims */
@@ -821,92 +799,8 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
         }
     }
 
-    return MPI_SUCCESS;
-  fn_fail:
-    return mpi_errno;
-}
-
-#else
-/* MPI_Dims_create and PMPI_Dims_create must see the same variable for this
-   one-time initialization flag */
-extern volatile int MPIR_DIMS_initPCVars;
-
-#endif /* PMPI Local */
-
-
-/*@
-    MPI_Dims_create - Creates a division of processors in a cartesian grid
-
-Input Parameters:
-+ nnodes - number of nodes in a grid (integer)
-- ndims - number of cartesian dimensions (integer)
-
-Input/Output Parameters:
-. dims - integer array of size  'ndims' specifying the number of nodes in each
- dimension.  A value of 0 indicates that 'MPI_Dims_create' should fill in a
- suitable value.
-
-.N ThreadSafe
-
-.N Fortran
-
-.N Errors
-.N MPI_SUCCESS
-@*/
-int MPI_Dims_create(int nnodes, int ndims, int dims[])
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_DIMS_CREATE);
-
-    MPIR_ERRTEST_INITIALIZED_ORDIE();
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_DIMS_CREATE);
-
-    if (ndims == 0)
-        goto fn_exit;
-
-    /* Validate parameters and objects (post conversion) */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_ARGNEG(nnodes, "nnodes", mpi_errno);
-            MPIR_ERRTEST_ARGNEG(ndims, "ndims", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(dims, "dims", mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
-
-    /* Initialize pvars and cvars if this is the first call */
-    if (MPIR_DIMS_initPCVars) {
-        MPIR_Dims_create_init();
-        MPIR_DIMS_initPCVars = 0;
-    }
-
-    /* ... body of routine ...  */
-    if (MPIR_Process.dimsCreate != NULL) {
-        mpi_errno = MPIR_Process.dimsCreate(nnodes, ndims, dims);
-    } else {
-        mpi_errno = MPIR_Dims_create_impl(nnodes, ndims, dims);
-    }
-    MPIR_ERR_CHECK(mpi_errno);
-    /* ... end of body of routine ... */
-
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_DIMS_CREATE);
     return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_dims_create", "**mpi_dims_create %d %d %p", nnodes, ndims,
-                                 dims);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

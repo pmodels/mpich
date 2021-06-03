@@ -43,7 +43,7 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
 
 #ifdef HAVE_ERROR_CHECKING
     /* Because the PARAM system has not been initialized, temporarily
-     * uncondtionally enable error checks.  Once the PARAM system is
+     * unconditionally enable error checks.  Once the PARAM system is
      * initialized, this may be reset */
     MPIR_Process.do_error_checks = 1;
 #if (HAVE_ERROR_CHECKING == MPID_ERROR_LEVEL_RUNTIME)
@@ -71,9 +71,12 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
      * dimsCreate */
     MPIR_Process.dimsCreate = 0;
 
+    /* Init communicator hints */
+    MPIR_Comm_hint_init();
+
     /* "Allocate" from the reserved space for builtin communicators and
      * (partially) initialize predefined communicators.  comm_parent is
-     * intially NULL and will be allocated by the device if the process group
+     * initially NULL and will be allocated by the device if the process group
      * was started using one of the MPI_Comm_spawn functions. */
     MPIR_Process.comm_world = MPIR_Comm_builtin + 0;
     MPII_Comm_init(MPIR_Process.comm_world);
@@ -114,12 +117,12 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
     MPII_COMML_REMEMBER(MPIR_Process.comm_self);
 
     /* create MPI_INFO_NULL object */
-    /* FIXME: Currently this info object is empty, we need to add data to this
-     * as defined by the standard. */
     MPIR_Info *info_ptr;
     info_ptr = MPIR_Info_builtin + 1;
     info_ptr->handle = MPI_INFO_ENV;
     MPIR_Object_set_ref(info_ptr, 1);
+    /* Add data to MPI_INFO_ENV. */
+    MPIR_Info_setup_env(info_ptr);
     info_ptr->next = NULL;
     info_ptr->key = NULL;
     info_ptr->value = NULL;
@@ -127,12 +130,15 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
     /* Set the number of tag bits. The device may override this value. */
     MPIR_Process.tag_bits = MPIR_TAG_BITS_DEFAULT;
 
-    /* Init communicator hints */
-    MPIR_Comm_hint_init();
+    return mpi_errno;
+}
 
+int MPII_init_tag_ub(void)
+{
     /* Set tag_ub as function of tag_bits set by the device */
     MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;
 
+    /* TODO: turn assertions into error code */
     /* Assert: tag_ub should be a power of 2 minus 1 */
     MPIR_Assert(((unsigned) MPIR_Process.
                  attrs.tag_ub & ((unsigned) MPIR_Process.attrs.tag_ub + 1)) == 0);
@@ -140,10 +146,7 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
     /* Assert: tag_ub is at least the minimum asked for in the MPI spec */
     MPIR_Assert(MPIR_Process.attrs.tag_ub >= 32767);
 
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPI_SUCCESS;
 }
 
 int MPII_finalize_local_proc_attrs(void)

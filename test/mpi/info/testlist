@@ -1,3 +1,4 @@
+
 infodup 1
 infodel 1
 infovallen 1
@@ -6,4 +7,7 @@ infomany 1
 infomany2 1
 infotest 1
 infoget 1
+infogetstring 1
 infoenv 1
+info_no_init 1
+infocreateenv 1

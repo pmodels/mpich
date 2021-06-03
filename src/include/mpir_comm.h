@@ -88,6 +88,8 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
      * Potentially, we can use macros and configure to hide them */
     MPIR_COMM_HINT_EAGER_THRESH,        /* ch3 */
     MPIR_COMM_HINT_EAGAIN,      /* ch4:ofi */
+    MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING,   /* ch4:ofi */
+    MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING,    /* ch4:ofi */
     /* dynamic hints starts here */
     MPIR_COMM_HINT_PREDEFINED_COUNT
 };
@@ -272,22 +274,14 @@ static inline int MPIR_Comm_release(MPIR_Comm * comm_ptr)
 int MPIR_Comm_release_always(MPIR_Comm * comm_ptr);
 
 int MPIR_Comm_create(MPIR_Comm **);
-int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
-                           MPIR_Comm ** newcomm);
-
-/* implements the logic for MPI_Comm_create for intracommunicators only */
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
 
 
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
 
 int MPIR_Comm_is_parent_comm(MPIR_Comm *);
-
-int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm, MPIR_Request ** reqp);
-
-int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_agree(MPIR_Comm * comm_ptr, int *flag);
 
 #if defined(HAVE_ROMIO)
 int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm);
@@ -312,49 +306,23 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 void MPIR_Comm_hint_init(void);
 typedef int (*MPIR_Comm_hint_fn_t) (MPIR_Comm *, int, int);     /* comm, key, val */
 int MPIR_Comm_register_hint(int index, const char *hint_key, MPIR_Comm_hint_fn_t fn,
-                            int type, int attr);
+                            int type, int attr, int default_val);
 
-int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr);
-int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
-                                 MPI_Comm_delete_attr_function * comm_delete_attr_fn,
-                                 int *comm_keyval, void *extra_state);
 int MPIR_Comm_accept_impl(const char *port_name, MPIR_Info * info_ptr, int root,
                           MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root,
                            MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function * function,
-                                     MPI_Errhandler * errhandler);
-int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
-                                 MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_ptr);
-int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
-int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr);
-void MPIR_Comm_free_keyval_impl(int keyval);
-void MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler ** errhandler_ptr);
-void MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler_ptr);
-void MPIR_Comm_get_name_impl(MPIR_Comm * comm, char *comm_name, int *resultlen);
-int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_intracomm_ptr);
-int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
-                               MPIR_Comm * peer_comm_ptr, int remote_leader, int tag,
-                               MPIR_Comm ** new_intercomm_ptr);
-int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr);
-int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr);
-int MPIR_Comm_group_failed_impl(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr);
-int MPIR_Comm_remote_group_failed_impl(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr);
-int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int split_type, int key,
-                              MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int split_type, int key,
-                                 MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_split_type_node_topo(MPIR_Comm * comm_ptr, int split_type, int key,
+
+int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
+                                   MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
+                                     MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_node_topo(MPIR_Comm * comm_ptr, int key,
                                    MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type(MPIR_Comm * comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
                          MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
-                              MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val,
-                            MPIR_Attr_type attrType);
 
 int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
                                       MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
@@ -362,7 +330,6 @@ int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, con
                                          MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type_network_topo(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
                                       MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_compare_impl(MPIR_Comm * comm_ptr1, MPIR_Comm * comm_ptr2, int *result);
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and
    a private (non-user accessible) dup of comm world that is provided
@@ -388,7 +355,7 @@ int MPII_Comm_init(MPIR_Comm *);
 int MPII_Comm_is_node_consecutive(MPIR_Comm *);
 
 int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm ** outcomm_ptr);
-int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr);
+int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** outcomm_ptr);
 
 int MPII_Setup_intercomm_localcomm(MPIR_Comm *);
 

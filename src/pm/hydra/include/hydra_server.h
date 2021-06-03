@@ -26,6 +26,7 @@ struct HYD_server_info_s {
     char *iface_ip_env_name;
     char *nameserver;
     char *localhost;
+    time_t time_start;
 
      HYD_status(*stdout_cb) (int pgid, int proxy_id, int rank, void *buf, int buflen);
      HYD_status(*stderr_cb) (int pgid, int proxy_id, int rank, void *buf, int buflen);

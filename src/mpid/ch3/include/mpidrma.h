@@ -818,7 +818,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
                                    MPIDI_RMA_Acc_srcbuf_kind_t srckind)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_User_function *uop = NULL;
+    MPIR_op_function *uop = NULL;
     MPI_Aint source_dtp_size = 0, source_dtp_extent = 0;
     int is_empty_source = FALSE;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DO_ACCUMULATE_OP);
@@ -845,7 +845,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                          __func__, __LINE__, MPI_ERR_OP,
                                          "**opnotpredefined", "**opnotpredefined %d", acc_op);
-        return mpi_errno;
+        goto fn_exit;
         /* --END ERROR HANDLING-- */
     }
 
@@ -864,12 +864,13 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             curr_target_buf = target_buf;
         }
 
-        (*uop) (source_buf, curr_target_buf, &source_count, &source_dtp);
+        MPI_Aint tmp_count = source_count;
+        (*uop) (source_buf, curr_target_buf, &tmp_count, &source_dtp);
     }
     else {
         /* derived datatype */
         struct iovec *typerep_vec;
-        int i, count;
+        int i;
         MPI_Aint vec_len, type_extent, type_size, src_type_stride;
         MPI_Datatype type;
         MPIR_Datatype*dtp;
@@ -887,8 +888,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             mpi_errno =
                 MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**nomem", 0);
-            MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
-            return mpi_errno;
+            goto fn_exit;
         }
         /* --END ERROR HANDLING-- */
 
@@ -923,7 +923,8 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
                 continue;
             }
 
-            MPIR_Assign_trunc(count, curr_len / type_size, int);
+            MPI_Aint count;
+            MPIR_Assign_trunc(count, curr_len / type_size, MPI_Aint);
 
             (*uop) ((char *) source_buf + src_type_stride * accumulated_count,
                     (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
@@ -950,8 +951,6 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
 
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 

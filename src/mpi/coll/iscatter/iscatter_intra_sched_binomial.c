@@ -63,9 +63,10 @@ static int calc_curr_count(MPIR_Comm * comm, int tag, void *state)
 
    End Algorithm: MPI_Scatter
 */
-int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                       int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
+                                       MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                       MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                                       MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint extent = 0;
@@ -181,7 +182,7 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, int sendcount, MPI_D
     }
 
     /* This process is responsible for all processes that have bits
-     * set from the LSB upto (but not including) mask.  Because of
+     * set from the LSB up to (but not including) mask.  Because of
      * the "not including", we start by shifting mask back down
      * one. */
 

@@ -10,9 +10,9 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a ring based allgather */
-int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
+int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
                                          MPI_Datatype sendtype, void *recvbuf,
-                                         int recvcount, MPI_Datatype recvtype,
+                                         MPI_Aint recvcount, MPI_Datatype recvtype,
                                          MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -60,10 +60,6 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
             MPIR_TSP_sched_localcopy((char *) data_buf + rank * recvcount * recvtype_extent,
                                      sendcount, sendtype, (char *) buf1, recvcount, recvtype, sched,
                                      0, NULL);
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST,
-                         "copying data  to tmp_buf  on add:%p on %d rank before for loop from sendbuf:%p and dtcopy_id:%d",
-                         buf1, rank, (char *) data_buf + rank * sendtype_extent, dtcopy_id[0]));
     } else {
         /* Copy your data into your recvbuf from your sendbuf */
         MPIR_TSP_sched_localcopy((char *) sendbuf, sendcount, sendtype,
@@ -96,9 +92,6 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
             vtcs[0] = dtcopy_id[0];
             send_id[0] = MPIR_TSP_sched_isend((char *) sbuf, recvcount, recvtype,
                                               dst, tag, comm, sched, nvtcs, vtcs);
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "posting recv at address=%p, count=%d", rbuf,
-                             size * recvcount));
             nvtcs = 0;
         } else {
             nvtcs = 2;
@@ -106,9 +99,6 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
             vtcs[1] = send_id[(i - 1) % 3];
             send_id[i % 3] = MPIR_TSP_sched_isend((char *) sbuf, recvcount, recvtype,
                                                   dst, tag, comm, sched, nvtcs, vtcs);
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "posting recv at address=%p, count=%d", rbuf,
-                             size * recvcount));
             if (i == 1) {
                 nvtcs = 2;
                 vtcs[0] = send_id[0];
@@ -129,10 +119,6 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
                                                     (char *) recvbuf +
                                                     copy_dst * recvcount * recvtype_extent,
                                                     recvcount, recvtype, sched, 1, &recv_id[i % 3]);
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST, "copying from location=%p to location=%p",
-                         (char *) rbuf + rank * recvcount * recvtype_extent,
-                         (char *) recvbuf + copy_dst * recvcount * recvtype_extent));
 
         data_buf = sbuf;
         sbuf = rbuf;
@@ -148,8 +134,8 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
 }
 
 /* Non-blocking ring based Allgather */
-int MPIR_TSP_Iallgather_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_TSP_Iallgather_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                    MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -163,7 +149,7 @@ int MPIR_TSP_Iallgather_intra_ring(const void *sendbuf, int sendcount, MPI_Datat
     /* Generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_ERR_CHKANDJUMP(!sched, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Iallgather_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf,

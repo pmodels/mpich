@@ -11,10 +11,10 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a recursive exchange based alltoallv */
-int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const int sendcounts[],
-                                            const int sdispls[], MPI_Datatype sendtype,
-                                            void *recvbuf, const int recvcounts[],
-                                            const int rdispls[], MPI_Datatype recvtype,
+int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint sendcounts[],
+                                            const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                            void *recvbuf, const MPI_Aint recvcounts[],
+                                            const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                             MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -81,10 +81,11 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const int sendc
 
 
 /* Non-blocking inplace based ALLTOALLV */
-int MPIR_TSP_Ialltoallv_intra_inplace(const void *sendbuf, const int sendcounts[],
-                                      const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
-                                      const int recvcounts[], const int rdispls[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req)
+int MPIR_TSP_Ialltoallv_intra_inplace(const void *sendbuf, const MPI_Aint sendcounts[],
+                                      const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                      void *recvbuf, const MPI_Aint recvcounts[],
+                                      const MPI_Aint rdispls[], MPI_Datatype recvtype,
+                                      MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -97,7 +98,7 @@ int MPIR_TSP_Ialltoallv_intra_inplace(const void *sendbuf, const int sendcounts[
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Ialltoallv_sched_intra_inplace(sendbuf, sendcounts, sdispls, sendtype, recvbuf,

@@ -51,6 +51,13 @@ int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
     return MPL_SUCCESS;
 }
 
+int MPL_wtime_to_ticks(MPL_time_t * t, long long int *val)
+{
+    *val = *t;
+
+    return MPL_SUCCESS;
+}
+
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = *t * wtime_mult;
@@ -68,6 +75,17 @@ int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 int MPL_wtick(double *wtick)
 {
     *wtick = tickval;
+
+    return MPL_SUCCESS;
+}
+
+int MPL_ticks_per_second(long long int *ticks_per_second)
+{
+    mach_timebase_info_data_t info;
+    mach_timebase_info(&info);
+
+    /* use timebase to convert 1 billion nanoseconds to ticks */
+    *ticks_per_second = (1000000000 * info.denom) / info.numer;
 
     return MPL_SUCCESS;
 }

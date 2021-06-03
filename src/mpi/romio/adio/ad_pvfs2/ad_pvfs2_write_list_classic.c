@@ -896,7 +896,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
      * at empty region at offset N+1).
      *
      * As we discussed on mpich-discuss in may/june 2009, the code below might
-     * look wierd, but by putting fp_ind at the last byte written, the next
+     * look weird, but by putting fp_ind at the last byte written, the next
      * time we run through the strided code we'll update the fp_ind to the
      * right location. */
     if (file_ptr_type == ADIO_INDIVIDUAL) {

@@ -14,14 +14,15 @@
 #undef MPIR_TSP_Ialltoallw_sched_intra_inplace
 #define MPIR_TSP_Ialltoallw_sched_intra_inplace                MPIR_TSP_NAMESPACE(Ialltoallw_sched_intra_inplace)
 
-int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcounts[],
-                                            const int sdispls[], const MPI_Datatype sendtypes[],
-                                            void *recvbuf, const int recvcounts[],
-                                            const int rdispls[], const MPI_Datatype recvtypes[],
-                                            MPIR_Comm * comm, MPIR_TSP_sched_t * s);
+int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint sendcounts[],
+                                            const MPI_Aint sdispls[],
+                                            const MPI_Datatype sendtypes[], void *recvbuf,
+                                            const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
+                                            const MPI_Datatype recvtypes[], MPIR_Comm * comm,
+                                            MPIR_TSP_sched_t * s);
 
-int MPIR_TSP_Ialltoallw_intra_inplace(const void *sendbuf, const int sendcounts[],
-                                      const int sdispls[], const MPI_Datatype sendtypes[],
-                                      void *recvbuf, const int recvcounts[], const int rdispls[],
-                                      const MPI_Datatype recvtypes[], MPIR_Comm * comm,
-                                      MPIR_Request ** req);
+int MPIR_TSP_Ialltoallw_intra_inplace(const void *sendbuf, const MPI_Aint sendcounts[],
+                                      const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                      void *recvbuf, const MPI_Aint recvcounts[],
+                                      const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                      MPIR_Comm * comm, MPIR_Request ** req);

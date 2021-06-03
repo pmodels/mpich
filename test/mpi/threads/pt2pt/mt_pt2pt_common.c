@@ -70,7 +70,7 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    /* Setup bufer for bsend */
+    /* Setup buffer for bsend */
 #if defined(BSEND) || defined(IBSEND)
     {
         int n_experiment_grps = 3;
@@ -95,7 +95,6 @@ int main(int argc, char **argv)
         MTestPrintfMsg(1, "Testing MT Send-Recv with same comm, same tag\n");
 
     for (i = 0; i < NTHREADS; i++) {
-        int err;
         params[i].buff = malloc(sizeof(int) * BUFF_ELEMENT_COUNT(iter, count));
         params[i].id = i;
         params[i].iter = iter;

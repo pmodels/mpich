@@ -70,7 +70,7 @@ int main(int argc, char **argv)
         name[0] = 0;
         mpi_names[i].dtype.Get_name(name, namelen);
         if (strncmp(name, mpi_names[i].name, MPI::MAX_OBJECT_NAME) &&
-            /* LONG_LONG is a synonym of LONG_LONG_INT, thus LONG_LONG_INT is also a vaild name */
+            /* LONG_LONG is a synonym of LONG_LONG_INT, thus LONG_LONG_INT is also a valid name */
             (mpi_names[i].dtype != MPI::LONG_LONG ||
              strncmp(name, "MPI_LONG_LONG_INT", MPI::MAX_OBJECT_NAME))) {
             errs++;
@@ -161,7 +161,7 @@ void InitMPINames(void)
         {MPI::COMPLEX, "MPI::COMPLEX"},
         {MPI::DOUBLE_COMPLEX, "MPI::DOUBLE_COMPLEX"},
         {MPI::LONG_DOUBLE_COMPLEX, "MPI::LONG_DOUBLE_COMPLEX"},
-        {0, (char *) 0},        /* Sentinal used to indicate the last element */
+        {0, (char *) 0},        /* Sentinel used to indicate the last element */
     };
 
     mpi_names = new mpi_names_t[sizeof(lmpi_names) / sizeof(mpi_names_t)];

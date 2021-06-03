@@ -11,8 +11,9 @@
  * Root receives from all processes, everyone else sends to root.
  */
 
-int MPIR_Igatherv_allcomm_sched_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                       void *recvbuf, const int recvcounts[], const int displs[],
+int MPIR_Igatherv_allcomm_sched_linear(const void *sendbuf, MPI_Aint sendcount,
+                                       MPI_Datatype sendtype, void *recvbuf,
+                                       const MPI_Aint recvcounts[], const MPI_Aint displs[],
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                        MPIR_Sched_t s)
 {

@@ -1,0 +1,516 @@
+# vim: set ft=c:
+
+MPI_Address:
+    location: BUFFER, asynchronous=True, suppress=f08_intent, [location in caller memory]
+    address: DISPLACEMENT, direction=out, [address of location]
+    .desc: Gets the address of a location in memory
+    .skip: global_cs
+    .replace: removed with MPI_Get_address
+
+MPI_Get_address:
+    .desc: Get the address of a location in memory
+    .skip: Fortran, global_cs
+/*
+    Notes:
+    This routine is provided for both the Fortran and C programmers.
+    On many systems, the address returned by this routine will be the same
+    as produced by the C '&' operator, but this is not required in C and
+    may not be true of systems with word- rather than byte-oriented
+    instructions or systems with segmented address spaces.
+*/
+/*
+    .N Fortran
+
+     In Fortran, the integer type is always signed.  This can cause problems
+     on systems where the address fits into a four byte unsigned integer but
+     the value is larger than the largest signed integer.  For example, a system
+     with more than 2 GBytes of memory may have addresses that do not fit within
+     a four byte signed integer.  Unfortunately, there is no easy solution to
+     this problem, as there is no Fortran datatype that can be used here (using
+     a longer integer type will cause other problems, as well as surprising
+     users when the size of the integer type is larger that the size of a pointer
+     in C).  In this case, it is recommended that you use C to manipulate
+     addresses.
+*/
+{ -- error_check -- location
+    /* location can be NULL (MPI_BOTTOM) */
+}
+{
+    /* SX_4 needs to set CHAR_PTR_IS_ADDRESS
+     * The reason is that it computes the different in two pointers in
+     * an "int", and addresses typically have the high (bit 31) bit set;
+     * thus the difference, when cast as MPI_Aint (long), is sign-extended,
+     * making the absolute address negative.  Without a copy of the C
+     * standard, I can't tell if this is a compiler bug or a language bug.
+     */
+#ifdef CHAR_PTR_IS_ADDRESS
+    *address = (MPI_Aint) location;
+#else
+    /* Note that this is the "portable" way to generate an address.
+     * The difference of two pointers is the number of elements
+     * between them, so this gives the number of chars between location
+     * and ptr.  As long as sizeof(char) represents one byte,
+     * of bytes from 0 to location */
+    *address = (MPI_Aint) ((char *) location - (char *) MPI_BOTTOM);
+#endif
+    /* The same code is used in MPI_Address */
+}
+
+MPI_Get_count:
+    .desc: Gets the number of "top level" elements
+    .skip: global_cs
+    .poly_impl: use_aint
+/*
+    Notes:
+    If the size of the datatype is zero, this routine will return a count of
+    zero.  If the amount of data in 'status' is not an exact multiple of the
+    size of 'datatype' (so that 'count' would not be integral), a 'count' of
+    'MPI_UNDEFINED' is returned instead.
+*/
+
+MPI_Get_elements:
+    .desc: Returns the number of basic elements
+    .skip: global_cs
+/*
+    Notes:
+    If the size of the datatype is zero and the amount of data returned as
+    determined by 'status' is also zero, this routine will return a count of
+    zero.  This is consistent with a clarification made by the MPI Forum.
+*/
+{
+    MPI_Count count_x;
+    MPI_Count byte_count = MPIR_STATUS_GET_COUNT(*status);
+    mpi_errno = MPIR_Get_elements_x_impl(&byte_count, datatype, &count_x);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+
+    /* clip the value if it cannot be correctly returned to the user */
+    *count = (count_x > INT_MAX) ? MPI_UNDEFINED : (int) count_x;
+}
+{ -- large_count --
+    MPI_Count byte_count = MPIR_STATUS_GET_COUNT(*status);
+    mpi_errno = MPIR_Get_elements_x_impl(&byte_count, datatype, count);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
+
+MPI_Get_elements_x:
+    .desc: Returns the number of basic elements
+    .skip: initcheck
+    .skip: global_cs
+{
+    MPI_Count byte_count = MPIR_STATUS_GET_COUNT(*status);
+    mpi_errno = MPIR_Get_elements_x_impl(&byte_count, datatype, count);
+    MPIR_ERR_CHECK(mpi_errno);
+}
+
+MPI_Pack:
+    .desc: Packs a datatype into contiguous memory
+    .skip: global_cs
+    .poly_impl: use_aint
+/*
+    Notes (from the specifications):
+    The input value of position is the first location in the output buffer to be
+    used for packing.  position is incremented by the size of the packed message,
+    and the output value of position is the first location in the output buffer
+    following the locations occupied by the packed message.  The comm argument is
+    the communicator that will be subsequently used for sending the packed
+    message.
+*/
+{ -- error_check -- inbuf, outbuf
+    if (incount > 0) {
+        MPIR_ERRTEST_ARGNULL(inbuf, "inbuf", mpi_errno);
+    }
+}
+
+MPI_Pack_external:
+    .desc: Packs a datatype into contiguous memory, using the external32 format
+    .poly_impl: use_aint
+{ -- early_return --
+    if (incount == 0) {
+        goto fn_exit;
+    }
+}
+
+MPI_Pack_external_size:
+    .desc: Returns the upper bound on the amount of space needed to pack a message using MPI_Pack_external.
+    .poly_impl: use_aint
+
+MPI_Pack_size:
+    .desc: Returns the upper bound on the amount of space needed to pack a message
+    .poly_impl: use_aint
+/*
+    Notes:
+    The MPI standard document describes this in terms of 'MPI_Pack', but it
+    applies to both 'MPI_Pack' and 'MPI_Unpack'.  That is, the value 'size' is
+    the maximum that is needed by either 'MPI_Pack' or 'MPI_Unpack'.
+*/
+
+MPI_Unpack:
+    .desc: Unpack a buffer according to a datatype into contiguous memory
+    .seealso: MPI_Pack, MPI_Pack_size
+    .poly_impl: use_aint
+{ -- error_check -- inbuf, outbuf
+    if (outcount > 0) {
+        MPIR_ERRTEST_ARGNULL(outbuf, "outbuf", mpi_errno);
+    }
+}
+
+MPI_Unpack_external:
+    .desc: Unpack a buffer (packed with MPI_Pack_external) according to a datatype into contiguous memory
+    .poly_impl: use_aint
+{ -- early_return --
+    if (insize == 0) {
+        goto fn_exit;
+    }
+}
+
+MPI_Register_datarep: not_implemented
+    .desc: Register a set of user-provided data conversion
+{
+    /* FIXME UNIMPLEMENTED */
+    mpi_errno =
+        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
+                             "**notimpl", 0);
+}
+
+MPI_Status_set_elements:
+    .desc: Set the number of elements in a status
+{
+    mpi_errno = MPIR_Status_set_elements_x_impl(status, datatype, (MPI_Count) count);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
+
+MPI_Status_set_elements_x:
+    .desc: Set the number of elements in a status
+    .skip: initcheck
+
+MPI_Type_commit:
+    .desc: Commits the datatype
+{ -- early_return --
+    if (MPIR_DATATYPE_IS_PREDEFINED(*datatype)) {
+        goto fn_exit;
+    }
+}
+
+MPI_Type_free:
+    .desc: Frees the datatype
+/*
+    Predefined types:
+    The MPI standard states that (in Opaque Objects)
+    .Bqs
+    MPI provides certain predefined opaque objects and predefined, static handles
+    to these objects. Such objects may not be destroyed.
+    .Bqe
+    Thus, it is an error to free a predefined datatype.  The same section makes
+    it clear that it is an error to free a null datatype.
+*/
+{ -- error_check --
+    if (MPIR_DATATYPE_IS_PREDEFINED(*datatype)) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                         __func__, __LINE__, MPI_ERR_TYPE,
+                                         "**dtypeperm", 0);
+        goto fn_fail;
+    }
+}
+{
+    MPIR_Type_free_impl(datatype);
+}
+
+MPI_Type_extent:
+    datatype: DATATYPE, [datatype to get information on]
+    extent: DISPLACEMENT_AINT_COUNT_SMALL, direction=out, [extent of datatype]
+    .desc: Returns the extent of a datatype
+    .skip: global_cs
+    .replace: removed with MPI_Type_get_extent
+{
+    MPIR_Datatype_get_extent_macro(datatype, *extent);
+}
+
+MPI_Type_lb:
+    datatype: DATATYPE, [datatype to get information on]
+    displacement: DISPLACEMENT_AINT_COUNT_SMALL, direction=out, [displacement of lower bound from origin, in bytes]
+    .desc: Returns the lower-bound of a datatype
+    .skip: global_cs
+    .replace: removed with MPI_Type_Get_extent
+{
+    MPIR_Type_lb_impl(datatype, displacement);
+}
+
+MPI_Type_ub:
+    datatype: DATATYPE, [datatype to get information on]
+    displacement: DISPLACEMENT_AINT_COUNT_SMALL, direction=out, [displacement of upper bound from origin, in bytes]
+    .desc: Returns the upper bound of a datatype
+    .skip: global_cs
+    .replace: removed with MPI_Type_get_extent
+{
+    if (HANDLE_IS_BUILTIN(datatype))
+        *displacement = MPIR_Datatype_get_basic_size(datatype);
+    else
+        *displacement = datatype_ptr->ub;
+}
+
+MPI_Type_get_contents:
+    .desc: get type contents
+    .skip: ThreadSafe
+{ -- error_check --
+    if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE, "**contentspredef", 0);
+        goto fn_fail;
+    }
+}
+
+MPI_Type_get_envelope:
+    .desc: get type envelope
+    .skip: ThreadSafe
+
+MPI_Type_get_extent:
+    .desc: Get the lower bound and extent for a Datatype
+    .skip: global_cs
+    .poly_impl: use_aint
+
+MPI_Type_get_extent_x:
+    .desc: Get the lower bound and extent as MPI_Count values for a datatype
+    .skip: initcheck
+{
+    MPIR_Type_get_extent_x_impl(datatype, lb, extent);
+}
+
+MPI_Type_get_true_extent:
+    .desc: Get the true lower bound and extent for a datatype
+    .skip: global_cs
+    .poly_impl: use_aint
+
+MPI_Type_get_true_extent_x:
+    .desc: Get the true lower bound and extent as MPI_Count values for a datatype
+    .skip: initcheck
+{
+    MPIR_Type_get_true_extent_x_impl(datatype, true_lb, true_extent);
+}
+
+MPI_Type_size:
+    .desc: Return the number of bytes occupied by entries in the datatype
+    .skip: global_cs
+    .poly_impl: use_aint
+
+MPI_Type_size_x:
+    .desc: Return the number of bytes occupied by entries in the datatype
+    .skip: initcheck
+
+MPI_Type_set_name:
+    .desc: set datatype name
+    .skip: ThreadSafe
+{
+    /* Include the null in MPI_MAX_OBJECT_NAME */
+    MPL_strncpy(datatype_ptr->name, type_name, MPI_MAX_OBJECT_NAME);
+}
+
+MPI_Type_get_name:
+    .desc: Get the print name for a datatype
+    .docnotes: ThreadSafeNoUpdate, NULL
+{
+    /* Include the null in MPI_MAX_OBJECT_NAME */
+    MPL_strncpy(type_name, datatype_ptr->name, MPI_MAX_OBJECT_NAME);
+    *resultlen = (int) strlen(type_name);
+}
+
+MPI_Type_contiguous:
+    .desc: Creates a contiguous datatype
+
+MPI_Type_create_darray:
+    .desc: Create a datatype representing a distributed array
+    .skip: validate-ORDER, validate-RANK_NNI
+{ -- error_check --
+    CHECKENUM: order, storageorder, MPI_ORDER_C MPI_ORDER_FORTRAN
+    MPIR_ERR_CHKANDJUMP3((rank < 0 || rank >= size), mpi_errno, MPI_ERR_RANK,
+                          "**argrange", "**argrange %s %d %d", "rank", rank, (size - 1));
+}
+
+MPI_Type_create_subarray:
+    .desc: Create a datatype for a subarray of a regular, multidimensional array
+    .skip: validate-ORDER
+{ -- error_check --
+    CHECKENUM: order, storageorder, MPI_ORDER_C MPI_ORDER_FORTRAN
+}
+
+MPI_Type_create_hindexed:
+    .desc: Create a datatype for an indexed datatype with displacements in bytes
+
+MPI_Type_create_hindexed_block:
+    .desc: Create an hindexed datatype with constant-sized blocks
+
+MPI_Type_create_hvector:
+    .desc: Create a datatype with a constant stride given in bytes
+
+MPI_Type_create_indexed_block:
+    .desc: Create an indexed datatype with constant-sized blocks
+/* -- notes-2 --
+    Notes:
+    The indices are displacements, and are based on a zero origin.  A common error
+    is to do something like the following
+    .vb
+        integer a(100)
+        integer blens(10), indices(10)
+        do i=1,10
+    10       indices(i) = 1 + (i-1)*10
+        call MPI_TYPE_CREATE_INDEXED_BLOCK(10,1,indices,MPI_INTEGER,newtype,ierr)
+        call MPI_TYPE_COMMIT(newtype,ierr)
+        call MPI_SEND(a,1,newtype,...)
+    .ve
+    expecting this to send "a(1),a(11),..." because the indices have values
+    "1,11,...".   Because these are `displacements` from the beginning of "a",
+    it actually sends "a(1+1),a(1+11),...".
+    
+    If you wish to consider the displacements as indices into a Fortran array,
+    consider declaring the Fortran array with a zero origin
+    .vb
+        integer a(0:99)
+    .ve
+*/
+
+MPI_Type_create_resized:
+    .desc: Create a datatype with a new lower bound and extent from an existing datatype
+
+MPI_Type_create_struct:
+    .desc: Create an MPI datatype from a general set of datatypes, displacements, and block sizes
+
+MPI_Type_dup:
+    .desc: Duplicate a datatype
+
+MPI_Type_hindexed:
+    count: DTYPE_NUM_ELEM_NNI_SMALL, [number of blocks -- also number of entries in array_of_displacements and array_of_blocklengths]
+    array_of_blocklengths: DTYPE_NUM_ELEM_NNI_SMALL, length=count, [number of elements in each block]
+    array_of_displacements: DISPLACEMENT_AINT_COUNT_SMALL, length=count, [byte displacement of each block]
+    oldtype: DATATYPE, [old datatype]
+    newtype: DATATYPE, direction=out, [new datatype]
+    .desc: Creates an indexed datatype with offsets in bytes
+    .skip: Fortran
+    .replace: removed with MPI_Type_create_hindexed
+/* -- notes-2 --
+    .N Fortran
+    The array_of_displacements are displacements, and are based on a zero origin.  A common error
+    is to do something like to following
+    .vb
+        integer a(100)
+        integer array_of_blocklengths(10), array_of_displacements(10)
+        do i=1,10
+             array_of_blocklengths(i)   = 1
+    10       array_of_displacements(i) = (1 + (i-1)*10) * sizeofint
+        call MPI_TYPE_HINDEXED(10,array_of_blocklengths,array_of_displacements,MPI_INTEGER,newtype,ierr)
+        call MPI_TYPE_COMMIT(newtype,ierr)
+        call MPI_SEND(a,1,newtype,...)
+    .ve
+    expecting this to send "a(1),a(11),..." because the array_of_displacements have values
+    "1,11,...".   Because these are `displacements` from the beginning of "a",
+    it actually sends "a(1+1),a(1+11),...".
+    
+    If you wish to consider the displacements as array_of_displacements into a Fortran array,
+    consider declaring the Fortran array with a zero origin
+    .vb
+        integer a(0:99)
+    .ve
+*/
+
+MPI_Type_hvector:
+    count: DTYPE_NUM_ELEM_NNI_SMALL, [number of blocks]
+    blocklength: DTYPE_NUM_ELEM_NNI_SMALL, [number of elements in each block]
+    stride: DTYPE_STRIDE_BYTES_SMALL, [number of bytes between start of each block]
+    oldtype: DATATYPE, [old datatype]
+    newtype: DATATYPE, direction=out, [new datatype]
+    .desc: type_hvector
+    .replace: removed with MPI_Type_create_hvector
+    .skip: validate-DTYPE_STRIDE_BYTES_SMALL
+
+MPI_Type_indexed:
+    .desc: Creates an indexed datatype
+    .skip: Fortran
+/* -- notes-2 --
+    .N Fortran
+    The array_of_displacements are displacements, and are based on a zero origin.  A common error
+    is to do something like to following
+    .vb
+        integer a(100)
+        integer array_of_blocklengths(10), array_of_displacements(10)
+        do i=1,10
+             array_of_blocklengths(i)   = 1
+    10       array_of_displacements(i) = 1 + (i-1)*10
+        call MPI_TYPE_INDEXED(10,array_of_blocklengths,array_of_displacements,MPI_INTEGER,newtype,ierr)
+        call MPI_TYPE_COMMIT(newtype,ierr)
+        call MPI_SEND(a,1,newtype,...)
+    .ve
+    expecting this to send "a(1),a(11),..." because the array_of_displacements have values
+    "1,11,...".   Because these are `displacements` from the beginning of "a",
+    it actually sends "a(1+1),a(1+11),...".
+    
+    If you wish to consider the displacements as array_of_displacements into a Fortran array,
+    consider declaring the Fortran array with a zero origin
+    .vb
+        integer a(0:99)
+    .ve
+*/
+
+MPI_Type_struct:
+    count: DTYPE_NUM_ELEM_NNI_SMALL, [number of blocks also number of entries in arrays array_of_types, array_of_displacements, and array_of_blocklengths]
+    array_of_blocklengths: DTYPE_NUM_ELEM_NNI_SMALL, length=count, [number of elements in each block]
+    array_of_displacements: DISPLACEMENT_AINT_COUNT_SMALL, length=count, [byte displacement of each block]
+    array_of_types: DATATYPE, length=count, [types of elements in each block]
+    newtype: DATATYPE, direction=out, [new datatype]
+    .desc: Creates a struct datatype
+    .replace: removed with MPI_Type_create_struct
+/*
+    Notes:
+    If an upperbound is set explicitly by using the MPI datatype 'MPI_UB', the
+    corresponding index must be positive.
+    
+    The MPI standard originally made vague statements about padding and alignment;
+    this was intended to allow the simple definition of structures that could
+    be sent with a count greater than one.  For example,
+    .vb
+        struct { int a; char b; } foo;
+    .ve
+    may have 'sizeof(foo) > sizeof(int) + sizeof(char)'; for example,
+    'sizeof(foo) == 2*sizeof(int)'.  The initial version of the MPI standard
+    defined the extent of a datatype as including an `epsilon` that would have
+    allowed an implementation to make the extent an MPI datatype
+    for this structure equal to '2*sizeof(int)'.
+    However, since different systems might define different paddings, there was
+    much discussion by the MPI Forum about what was the correct value of
+    epsilon, and one suggestion was to define epsilon as zero.
+    This would have been the best thing to do in MPI 1.0, particularly since
+    the 'MPI_UB' type allows the user to easily set the end of the structure.
+    Unfortunately, this change did not make it into the final document.
+    Currently, this routine does not add any padding, since the amount of
+    padding needed is determined by the compiler that the user is using to
+    build their code, not the compiler used to construct the MPI library.
+    A later version of MPICH may provide for some natural choices of padding
+    (e.g., multiple of the size of the largest basic member), but users are
+    advised to never depend on this, even with vendor MPI implementations.
+    Instead, if you define a structure datatype and wish to send or receive
+    multiple items, you should explicitly include an 'MPI_UB' entry as the
+    last member of the structure.  For example, the following code can be used
+    for the structure foo
+    .vb
+        blen[0] = 1; array_of_displacements[0] = 0; oldtypes[0] = MPI_INT;
+        blen[1] = 1; array_of_displacements[1] = &foo.b - &foo; oldtypes[1] = MPI_CHAR;
+        blen[2] = 1; array_of_displacements[2] = sizeof(foo); oldtypes[2] = MPI_UB;
+        MPI_Type_struct(3, blen, array_of_displacements, oldtypes, &newtype);
+    .ve
+*/
+
+MPI_Type_vector:
+    .desc: Creates a vector (strided) datatype
+
+MPI_Type_match_size:
+    .desc: Find an MPI datatype matching a specified size
+    .skip: validate-TYPECLASS, validate-TYPECLASS_SIZE
+/*
+    Notes:
+    'typeclass' is one of 'MPI_TYPECLASS_REAL', 'MPI_TYPECLASS_INTEGER' and
+    'MPI_TYPECLASS_COMPLEX', corresponding to the desired typeclass.
+    The function returns an MPI datatype matching a local variable of type
+    '(typeclass, size)'.
+*/

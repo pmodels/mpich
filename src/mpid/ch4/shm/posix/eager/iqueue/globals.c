@@ -6,4 +6,4 @@
 #include "iqueue_impl.h"
 #include "iqueue_types.h"
 
-MPIDI_POSIX_eager_iqueue_transport_t MPIDI_POSIX_eager_iqueue_transport_global = { 0 };
+MPIDI_POSIX_eager_iqueue_transport_t MPIDI_POSIX_eager_iqueue_transport_global;

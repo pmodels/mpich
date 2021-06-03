@@ -43,7 +43,7 @@ extern MPIR_Tree_type_t MPIR_Ibcast_tree_type;
 extern void *MPIR_Csel_root;
 extern char MPII_coll_generic_json[];
 
-/* Function to initialze communicators for collectives */
+/* Function to initialize communicators for collectives */
 int MPIR_Coll_comm_init(MPIR_Comm * comm);
 
 /* Function to cleanup any communicators for collectives */
@@ -56,53 +56,49 @@ int MPIR_Coll_safe_to_block(void);
 
 int MPII_Coll_finalize(void);
 
-#define MPII_SCHED_WRAPPER_EMPTY(fn, comm_ptr, request)                 \
-    do {                                                                \
-        int tag = -1;                                                   \
-        MPIR_Sched_t s = MPIR_SCHED_NULL;                               \
-                                                                        \
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);                \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = MPIR_Sched_create(&s);                              \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = fn(comm_ptr, s);                                    \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);       \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
+#define MPII_GENTRAN_CREATE_SCHED_P() \
+    do { \
+        *sched_type_p = MPIR_SCHED_GENTRAN; \
+        *sched_p = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL); \
+        MPIR_ERR_CHKANDJUMP(!*sched_p, mpi_errno, MPI_ERR_OTHER, "**nomem"); \
+        MPIR_TSP_sched_create(*sched_p, is_persistent); \
     } while (0)
 
-#define MPII_SCHED_WRAPPER(fn, comm_ptr, request, ...)                  \
-    do {                                                                \
-        int tag = -1;                                                   \
-        MPIR_Sched_t s = MPIR_SCHED_NULL;                               \
-                                                                        \
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);                \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = MPIR_Sched_create(&s);                              \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = fn(__VA_ARGS__, comm_ptr, s);                       \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
-                                                                        \
-        mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);       \
-        if (mpi_errno)                                                  \
-            MPIR_ERR_POP(mpi_errno);                                    \
+#define MPII_SCHED_CREATE_SCHED_P() \
+    do { \
+        MPIR_Sched_t s = MPIR_SCHED_NULL; \
+        int sched_kind = MPIR_SCHED_KIND_REGULAR; \
+        if (is_persistent) { \
+            sched_kind = MPIR_SCHED_KIND_PERSISTENT; \
+        } \
+        mpi_errno = MPIR_Sched_create(&s, sched_kind); \
+        MPIR_ERR_CHECK(mpi_errno); \
+        *sched_type_p = MPIR_SCHED_NORMAL; \
+        *sched_p = s; \
+    } while (0)
+
+#define MPII_SCHED_START(sched_type, sched, comm_ptr, request) \
+    do { \
+        if (sched_type == MPIR_SCHED_NORMAL) { \
+            int tag = -1; \
+            mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag); \
+            MPIR_ERR_CHECK(mpi_errno); \
+            \
+            mpi_errno = MPIR_Sched_start(sched, comm_ptr, tag, request); \
+            MPIR_ERR_CHECK(mpi_errno); \
+        } else if (sched_type == MPIR_SCHED_GENTRAN) { \
+            mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, request); \
+            MPIR_ERR_CHECK(mpi_errno); \
+        } else { \
+            MPIR_Assert(0); \
+        } \
     } while (0)
 
 /* functions for supporting GPU buffers in reduce collectives */
 void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_Aint count,
                                  MPI_Datatype datatype, void **host_sendbuf, void **host_recvbuf);
 void MPIR_Coll_host_buffer_free(void *host_sendbuf, void *host_recvbuf);
+void MPIR_Coll_host_buffer_swap_back(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
+                                     MPI_Aint count, MPI_Datatype datatype, MPIR_Request * request);
 
 #endif /* COLL_IMPL_H_INCLUDED */

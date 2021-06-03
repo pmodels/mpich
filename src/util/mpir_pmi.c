@@ -334,6 +334,7 @@ static int optimized_put(const char *key, const char *val, int is_local)
     int mpi_errno = MPI_SUCCESS;
 #if defined(USE_PMI1_API)
     mpi_errno = MPIR_pmi_kvs_put(key, val);
+    MPIR_ERR_CHECK(mpi_errno);
 #elif defined(USE_PMI2_API)
     if (!is_local) {
         mpi_errno = MPIR_pmi_kvs_put(key, val);
@@ -487,7 +488,7 @@ static int get_ex(int src, const char *key, void *buf, int *p_size, int is_local
 static int optional_bcast_barrier(MPIR_PMI_DOMAIN domain)
 {
 #if defined(USE_PMI1_API)
-    /* unless bcast is skipped alltogether */
+    /* unless bcast is skipped altogether */
     if (domain == MPIR_PMI_DOMAIN_ALL && MPIR_Process.size == 1) {
         return MPI_SUCCESS;
     } else if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS && MPIR_Process.num_nodes == 1) {

@@ -1,0 +1,66 @@
+#! /usr/bin/env bash
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
+# This script is used for CI testing, to use --
+#    git rebase --verbose --exec maint/hooks/spellchecker [base-commit]
+
+# Redirect output to stderr.
+exec 1>&2
+
+MIRROR=/tmp/${USER}/mpich-spellchecker-$$
+TMP_FILENAME=/tmp/${USER}/mpich-tmp-$$
+
+# Checkout a copy of the current index into MIRROR
+git checkout-index --prefix=$MIRROR/ -af
+
+# Remove files from MIRROR which are no longer present in the index
+git diff-index --cached --name-only --diff-filter=D -z HEAD | \
+    (cd $MIRROR && xargs -0 rm -f --)
+
+# This will check the previous commit again when not amending a commit, but that
+# should be ok if the patches are correct.
+filestring=`git diff --cached --name-only --diff-filter=ACM HEAD~1`
+
+# Everything else happens in the temporary build tree
+pushd $MIRROR > /dev/null
+
+ret=0
+
+# check commit message
+git log --format=%B -n 1 HEAD > commit-message
+cp commit-message ${TMP_FILENAME}
+bash maint/spellcheck.sh commit-message
+diff commit-message ${TMP_FILENAME}
+if [ $? != 0 ] ; then
+    ret=1
+fi
+rm -f commit-message
+
+# This won't work if we ever have a file with a space in the name
+for file in $filestring
+do
+    if [[ -f $file && $file != *.tex ]]; then
+        cp -p ${file} ${TMP_FILENAME}
+        output=$(bash maint/spellcheck.sh ${file})
+        diffs=$(git --no-pager diff ${file} ${TMP_FILENAME})
+        if test -n "$output" -o -n "$diffs" ; then
+            echo "$output"
+            echo "$diffs"
+            ret=1
+        fi
+    fi
+done
+
+popd > /dev/null
+
+rm -rf ${MIRROR} ${TMP_FILENAME}
+
+if [ $ret != 0 ] ; then
+    RED='\033[0;31m'
+    NC='\033[0m' # No Color
+    echo -e "${RED}== SPELLCHECKER SCRIPT FAILED ==${NC}"
+    exit $ret
+fi

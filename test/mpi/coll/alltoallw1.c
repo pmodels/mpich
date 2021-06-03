@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
 
     /* Create the local matrices.
      * Initialize the input matrix so that the entries are
-     * consequtive integers, by row, starting at 0.
+     * consecutive integers, by row, starting at 0.
      */
     if (rank == size - 1) {
         localA = (float *) malloc(gN * lmlast * sizeof(float));
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
     Transpose(localA, localB, gM, gN, comm);
 
     /* check the transposed matrix
-     * In the global matrix, the transpose has consequtive integers,
+     * In the global matrix, the transpose has consecutive integers,
      * organized by columns.
      */
     if (rank == size - 1) {

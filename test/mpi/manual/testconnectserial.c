@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     char *actualFname = NULL;
     char *globalFname = NULL;
     int totalSize, expectedRank, size, cachedRank;
-    char portName[MPI_MAX_PORT_NAME];
+    char portName[MPI_MAX_PORT_NAME + 1];
     int rankToAccept = 1;
 
     /* Debug - print out where we picked up the MPICH build from */
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
          * wait their turn by checking for the correct file to show up */
         actualFname = writePortToFile(portName, "%s.%d", fname, rankToAccept++);
 
-        /* The wrapper script I'm using checks for the existance of "fname", so
+        /* The wrapper script I'm using checks for the existence of "fname", so
          * create that - even though it isn't used  */
         globalFname = writePortToFile(portName, fname);
         installExitHandler(globalFname);

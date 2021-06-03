@@ -108,6 +108,7 @@
         enddo
       endif
 !
+      deallocate(sndbuf, rcvbuf)
       call mpi_type_free( type, ierr )
       call mtest_finalize( errs )
 

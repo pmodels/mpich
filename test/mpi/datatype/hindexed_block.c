@@ -153,7 +153,7 @@ int hindexed_block_contig_test(void)
 /* hindexed_block_vector_test()
  *
  * Tests behavior with a hindexed_block of some vector types;
- * this shouldn't be easily convertable into anything else.
+ * this shouldn't be easily convertible into anything else.
  *
  * Returns the number of errors encountered.
  */

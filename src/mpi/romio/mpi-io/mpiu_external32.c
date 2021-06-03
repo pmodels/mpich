@@ -129,7 +129,7 @@ int MPIU_datatype_full_size(MPI_Datatype datatype, MPI_Aint * size)
     return error_code;
 }
 
-/* given a buffer, count, and datatype, return an apropriately allocated, sized
+/* given a buffer, count, and datatype, return an appropriately allocated, sized
  * and external32-formatted buffer, suitable for handing off to a subsequent
  * write routine.  Caller is responsible for freeing 'newbuf' */
 int MPIU_external32_buffer_setup(const void *buf, int count, MPI_Datatype type, void **newbuf)

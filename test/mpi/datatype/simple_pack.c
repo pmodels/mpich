@@ -63,9 +63,9 @@ int builtin_float_test(void)
 {
     int nints, nadds, ntypes, combiner;
 
-    int err, errs = 0;
+    int errs = 0;
 
-    err = MPI_Type_get_envelope(MPI_FLOAT, &nints, &nadds, &ntypes, &combiner);
+    MPI_Type_get_envelope(MPI_FLOAT, &nints, &nadds, &ntypes, &combiner);
 
     if (combiner != MPI_COMBINER_NAMED)
         errs++;
@@ -190,7 +190,7 @@ int optimizable_vector_of_basics_test(void)
     char *buf;
     int i, sizeofint, sizeoftype, position;
 
-    int err, errs = 0;
+    int errs = 0;
 
     MPI_Type_size(MPI_INT, &sizeofint);
 
@@ -201,7 +201,7 @@ int optimizable_vector_of_basics_test(void)
     }
 
     /* set up type */
-    err = MPI_Type_vector(10, 2, 2, MPI_INT, &parent_type);
+    MPI_Type_vector(10, 2, 2, MPI_INT, &parent_type);
 
     MPI_Type_commit(&parent_type);
 
@@ -217,7 +217,7 @@ int optimizable_vector_of_basics_test(void)
     buf = (char *) malloc(sizeoftype);
 
     position = 0;
-    err = MPI_Pack(array, 1, parent_type, buf, sizeoftype, &position, MPI_COMM_WORLD);
+    MPI_Pack(array, 1, parent_type, buf, sizeoftype, &position, MPI_COMM_WORLD);
 
     if (position != sizeoftype) {
         errs++;
@@ -227,7 +227,7 @@ int optimizable_vector_of_basics_test(void)
 
     memset(array, 0, 20 * sizeof(int));
     position = 0;
-    err = MPI_Unpack(buf, sizeoftype, &position, array, 1, parent_type, MPI_COMM_WORLD);
+    MPI_Unpack(buf, sizeoftype, &position, array, 1, parent_type, MPI_COMM_WORLD);
 
     if (position != sizeoftype) {
         errs++;

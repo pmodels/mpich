@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     value = new char[MPI::MAX_INFO_VAL];
 
     info = MPI::Info::Create();
-    /* Use only named keys incase the info implementation only supports
+    /* Use only named keys in case the info implementation only supports
      * the predefined keys (e.g., IBM) */
     for (i = 0; i < NKEYS; i++) {
         info.Set(keys[i], values[i]);

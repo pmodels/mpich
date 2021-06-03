@@ -7,8 +7,8 @@
 #include "bsci.h"
 #include "bscu.h"
 
-struct HYDT_bsci_fns HYDT_bsci_fns = { 0 };
-struct HYDT_bsci_info HYDT_bsci_info = { 0 };
+struct HYDT_bsci_fns HYDT_bsci_fns;
+struct HYDT_bsci_info HYDT_bsci_info;
 
 /* *INDENT-OFF* */
 static const char *launcher_array[] = { @hydra_launcher_array@ };

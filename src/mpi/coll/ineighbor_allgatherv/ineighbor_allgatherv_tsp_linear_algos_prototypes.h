@@ -14,13 +14,14 @@
 #undef MPIR_TSP_Ineighor_allgatherv_sched_allcomm_linear
 #define MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear  MPIR_TSP_NAMESPACE(Ineighbor_allgatherv_sched_allcomm_linear)
 
-int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
                                                        MPI_Datatype sendtype, void *recvbuf,
-                                                       const int recvcounts[], const int displs[],
+                                                       const MPI_Aint recvcounts[],
+                                                       const MPI_Aint displs[],
                                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                                        MPIR_TSP_sched_t * sched);
-int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
-                                                 const int recvcounts[], const int displs[],
-                                                 MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                                 MPIR_Request ** req);
+                                                 const MPI_Aint recvcounts[],
+                                                 const MPI_Aint displs[], MPI_Datatype recvtype,
+                                                 MPIR_Comm * comm_ptr, MPIR_Request ** req);

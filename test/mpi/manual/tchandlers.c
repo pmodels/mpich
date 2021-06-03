@@ -19,7 +19,9 @@
 
 #include "connectstuff.h"
 
-static char sFnameToDelete[PATH_MAX];
+/* FNAME_SIZE is 10 less than PATH_MAX to avoid warnings during snprintf */
+#define FNAME_SIZE PATH_MAX - 10
+static char sFnameToDelete[FNAME_SIZE];
 static int sWatchdogTimeout = -1;
 static size_t sWatchdogStrokeCount = 0;
 
@@ -95,11 +97,11 @@ void installExitHandler(const char *fname)
 {
     /* Install signal handler */
     struct sigaction new_action;
-    if (strlen(fname) > PATH_MAX) {
+    if (strlen(fname) > FNAME_SIZE) {
         msg("Fname: <%s> too long - aborting", fname);
         _exit(12);
     }
-    strncpy(sFnameToDelete, fname, PATH_MAX);
+    strncpy(sFnameToDelete, fname, FNAME_SIZE);
     new_action.sa_handler = term_handler;
     sigemptyset(&new_action.sa_mask);
     new_action.sa_flags = 0;

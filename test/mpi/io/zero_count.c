@@ -17,7 +17,8 @@ int main(int argc, char **argv)
 {
     int errs = 0;
     int len, rank, get_size;
-    char buf[10], *filename = __FILE__;
+    char buf[10];
+    const char *filename = __FILE__;
     MPI_File fh;
     MPI_Status status;
 

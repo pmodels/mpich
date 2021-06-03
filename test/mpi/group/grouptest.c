@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if (size < 8) {
-        fprintf(stderr, "Test requires 8 processes (16 prefered) only %d provided\n", size);
+        fprintf(stderr, "Test requires 8 processes (16 preferred) only %d provided\n", size);
         errs++;
     }
 

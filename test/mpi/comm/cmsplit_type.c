@@ -45,16 +45,74 @@ int main(int argc, char *argv[])
     /* Check to see if MPI_COMM_TYPE_SHARED works correctly */
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
     if (comm == MPI_COMM_NULL) {
-        printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
+        printf("MPI_COMM_TYPE_SHARED (no hint): got MPI_COMM_NULL\n");
         errs++;
     } else {
         MPI_Comm_rank(comm, &rank);
         MPI_Comm_size(comm, &size);
         if (rank == 0 && verbose)
-            printf("Created shared subcommunicator of size %d\n", size);
+            printf("MPI_COMM_TYPE_SHARED (no hint): Created shared subcommunicator of size %d\n",
+                   size);
         MPI_Comm_free(&comm);
     }
 
+    /* Check to see if MPI_COMM_TYPE_HW_GUIDED works correctly */
+    for (i = 0; split_topo[i]; i++) {
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "mpi_hw_resource_type", split_topo[i]);
+        int ret;
+        ret = MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_GUIDED, 0, info, &comm);
+        /* result will depend on platform and process bindings, just check returns */
+        if (ret != MPI_SUCCESS) {
+            printf("MPI_COMM_TYPE_HW_GUIDED (%s) failed\n", split_topo[i]);
+            errs++;
+        } else if (comm != MPI_COMM_NULL) {
+            MPI_Comm_free(&comm);
+        }
+        MPI_Info_free(&info);
+    }
+
+    /* Test MPI_COMM_TYPE_HW_GUIDED: pass MPI_INFO_NULL, it must return MPI_COMM_NULL. */
+    info = MPI_INFO_NULL;
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_GUIDED, 0, info, &comm);
+    if (comm != MPI_COMM_NULL) {
+        printf("MPI_COMM_TYPE_HW_GUIDED with MPI_INFO_NULL didn't return MPI_COMM_NULL\n");
+        errs++;
+        MPI_Comm_free(&comm);
+    }
+
+    /* Test MPI_COMM_TYPE_HW_GUIDED: info without correct key, it must return MPI_COMM_NULL. */
+    MPI_Info_create(&info);
+    /* note: shmem_topo is the wrong key for MPI_COMM_TYPE_HW_GUIDED */
+    MPI_Info_set(info, "shmem_topo", split_topo[0]);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_GUIDED, 0, info, &comm);
+    if (comm != MPI_COMM_NULL) {
+        printf("MPI_COMM_TYPE_HW_GUIDED without correct key didn't return MPI_COMM_NULL\n");
+        errs++;
+        MPI_Comm_free(&comm);
+    }
+    MPI_Info_free(&info);
+
+    /* Check to see if MPI_COMM_TYPE_HW_UNGUIDED works correctly */
+    MPI_Info_create(&info);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_UNGUIDED, 0, info, &comm);
+    if (comm != MPI_COMM_NULL) {
+        int newsize;
+        MPI_Comm_size(comm, &newsize);
+        if (!(newsize < world_size)) {
+            printf("MPI_COMM_TYPE_HW_UNGUIDED: Expected comm to be a proper sub communicator\n");
+            errs++;
+        }
+        char resource_type[100] = "";
+        int has_key = 0;
+        MPI_Info_get(info, "mpi_hw_resource_type", 100, resource_type, &has_key);
+        if (!has_key || strlen(resource_type) == 0) {
+            printf("MPI_COMM_TYPE_HW_UNGUIDED: info for mpi_hw_resource_type not returned\n");
+            errs++;
+        }
+
+        MPI_Comm_free(&comm);
+    }
 
     /* test for topology hints: pass a valid info value, but do not
      * expect that the MPI implementation will respect it.  */
@@ -66,7 +124,8 @@ int main(int argc, char *argv[])
             int newsize;
             MPI_Comm_size(comm, &newsize);
             if (newsize > size) {
-                printf("Expected comm size to be at most the node size\n");
+                printf("MPI_COMM_TYPE_SHARED (shmem_topo): comm size (%d) > node size (%d)\n",
+                       newsize, size);
                 errs++;
             }
             MPI_Comm_free(&comm);
@@ -87,7 +146,8 @@ int main(int argc, char *argv[])
         int newsize;
         MPI_Comm_size(comm, &newsize);
         if (newsize > size) {
-            printf("Expected comm size to be at most the node size\n");
+            printf("MPI_COMM_TYPE_SHARED (shmem_topo): comm size (%d) > node size (%d)\n",
+                   newsize, size);
             errs++;
         }
         MPI_Comm_free(&comm);
@@ -107,7 +167,8 @@ int main(int argc, char *argv[])
         int newsize;
         MPI_Comm_size(comm, &newsize);
         if (newsize > size) {
-            printf("Expected comm size to be at most the node size\n");
+            printf("MPI_COMM_TYPE_SHARED (shmem_topo): comm size (%d) > node size (%d)\n",
+                   newsize, size);
             errs++;
         }
         MPI_Comm_free(&comm);
@@ -122,14 +183,15 @@ int main(int argc, char *argv[])
     MPI_Info_set(info, "shmem_topo", "__garbage_value__");
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
     if (comm == MPI_COMM_NULL) {
-        printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
+        printf("MPI_COMM_TYPE_SHARED (shmem_topo): invalid info value result in MPI_COMM_NULL\n");
         errs++;
     } else {
         int newsize;
 
         MPI_Comm_size(comm, &newsize);
         if (newsize != size) {
-            printf("Expected comm size to be the same as node size\n");
+            printf("MPI_COMM_TYPE_SHARED (shmem_topo): comm size (%d) != node size (%d)\n",
+                   size, size);
             errs++;
         }
         MPI_Comm_free(&comm);
@@ -148,13 +210,13 @@ int main(int argc, char *argv[])
         MPI_Info_set(info, "nbhd_common_dirname", ".");
     MPI_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_NEIGHBORHOOD, 0, info, &comm);
     if (comm == MPI_COMM_NULL) {
-        printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
+        printf("MPIX_COMM_TYPE_NEIGHBORHOOD: got MPI_COMM_NULL\n");
         errs++;
     } else {
         MPI_Comm_rank(comm, &rank);
         MPI_Comm_size(comm, &size);
         if (rank == 0 && verbose)
-            printf("Correctly created common-file subcommunicator of size %d\n", size);
+            printf("MPIX_COMM_TYPE_NEIGHBORHOOD: common-file subcommunicator size = %d\n", size);
         MPI_Comm_free(&comm);
     }
 
@@ -167,7 +229,7 @@ int main(int argc, char *argv[])
         MPI_Info_set(info, "nbhd_common_dirname", "__second_garbage_value__");
     MPI_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_NEIGHBORHOOD, 0, info, &comm);
     if (world_size > 1 && comm != MPI_COMM_NULL) {
-        printf("Expected MPI_COMM_NULL, but got non null communicator\n");
+        printf("MPIX_COMM_TYPE_NEIGHBORHOOD: mismatched hints got non null communicator\n");
         MPI_Comm_free(&comm);
         errs++;
     }
@@ -177,14 +239,10 @@ int main(int argc, char *argv[])
     MPI_Info_set(info, "mpix_tooth_fairy", "enable");
     MPI_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_NEIGHBORHOOD, 0, info, &comm);
     if (comm != MPI_COMM_NULL) {
-        printf("Expected a NULL communicator, but got something else\n");
+        printf("MPIX_COMM_TYPE_NEIGHBORHOOD: bad info value didn't return NULL communicator\n");
         errs++;
         MPI_Comm_free(&comm);
-    } else {
-        if (rank == 0 && verbose)
-            printf("Unknown hint correctly resulted in NULL communicator\n");
     }
-
 
     MPI_Info_free(&info);
 #endif
@@ -196,11 +254,10 @@ int main(int argc, char *argv[])
         MPI_Info_set(info, "network_topo", split_topo_network[i]);
         MPI_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_NEIGHBORHOOD, 0, info, &comm);
         if (comm != MPI_COMM_NULL) {
-            int newsize, world_size;
+            int newsize;
             MPI_Comm_size(comm, &newsize);
-            MPI_Comm_size(MPI_COMM_WORLD, &world_size);
             if (newsize > world_size) {
-                printf("Expected comm size to be at most the comm world size\n");
+                printf("MPIX_COMM_TYPE_NEIGHBORHOOD (network_topo): impossible\n");
                 errs++;
             }
             MPI_Comm_free(&comm);
@@ -213,12 +270,12 @@ int main(int argc, char *argv[])
     MPI_Comm_split_type(MPI_COMM_WORLD, (wrank % 2 == 0) ? MPI_COMM_TYPE_SHARED : MPI_UNDEFINED, 0,
                         MPI_INFO_NULL, &comm);
     if ((wrank % 2) && (comm != MPI_COMM_NULL)) {
-        printf("Expected MPI_COMM_NULL, but did not get one\n");
+        printf("MPI_UNDEFINED: Expected MPI_COMM_NULL, but did not get one\n");
         errs++;
     }
     if (wrank % 2 == 0) {
         if (comm == MPI_COMM_NULL) {
-            printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
+            printf("MPI_UNDEFINED: Expected a non-null communicator, but got MPI_COMM_NULL\n");
             errs++;
         } else {
             MPI_Comm_rank(comm, &rank);

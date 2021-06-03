@@ -11,12 +11,6 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
     *rreq = NULL;
 
-    if (message == NULL) {
-        /* treat as though MPI_MESSAGE_NO_PROC was passed */
-        MPIR_Status_set_procnull(status);
-        goto fn_exit;
-    }
-
     /* There is no optimized MPID_Mrecv at this time because there is no real
      * optimization potential in that case.  MPID_Recv exists to prevent
      * creating a request unnecessarily for messages that are already present

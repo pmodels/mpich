@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 #include "dataloop_internal.h"
+#include "typerep_util.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -358,11 +359,11 @@ void MPII_Dataloop_alloc_and_copy(int kind,
             /* need space for dataloop pointers and extents */
             ptr_sz = count * sizeof(MPII_Dataloop *);
             extent_sz = count * sizeof(MPI_Aint);
-            MPL_FALLTHROUGH;
+            /* fall through */
         case MPII_DATALOOP_KIND_INDEXED:
             /* need space for block sizes */
             blk_sz = count * sizeof(MPI_Aint);
-            MPL_FALLTHROUGH;
+            /* fall through */
         case MPII_DATALOOP_KIND_BLOCKINDEXED:
             /* need space for block offsets */
             off_sz = count * sizeof(MPI_Aint);
@@ -522,14 +523,14 @@ void MPIR_Dataloop_create_resized(MPI_Datatype oldtype, MPI_Aint extent, void **
 MPI_Aint MPIR_Dataloop_size_external32(MPI_Datatype type)
 {
     if (HANDLE_IS_BUILTIN(type)) {
-        return MPII_Dataloop_get_basic_size_external32(type);
+        return MPII_Typerep_get_basic_size_external32(type);
     } else {
         MPII_Dataloop *dlp = NULL;
 
         MPIR_DATALOOP_GET_LOOPPTR(type, dlp);
         MPIR_Assert(dlp != NULL);
 
-        return MPII_Dataloop_stream_size(dlp, MPII_Dataloop_get_basic_size_external32);
+        return MPII_Dataloop_stream_size(dlp, MPII_Typerep_get_basic_size_external32);
     }
 }
 

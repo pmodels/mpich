@@ -6,14 +6,11 @@
 # mpi_sources includes only the routines that are MPI function entry points
 # The code for the MPI operations (e.g., MPI_SUM) is not included in
 # mpi_sources
-mpi_sources += \
-    src/mpi/coll/ireduce/ireduce.c
 
 mpi_core_sources += \
+    src/mpi/coll/ireduce/ireduce.c \
     src/mpi/coll/ireduce/ireduce_intra_sched_binomial.c                   \
     src/mpi/coll/ireduce/ireduce_intra_sched_reduce_scatter_gather.c      \
     src/mpi/coll/ireduce/ireduce_intra_sched_smp.c                        \
     src/mpi/coll/ireduce/ireduce_inter_sched_local_reduce_remote_send.c	\
-    src/mpi/coll/ireduce/ireduce_gentran_algos.c                    \
-    src/mpi/coll/ireduce/ireduce_intra_gentran_tree.c    					\
-    src/mpi/coll/ireduce/ireduce_intra_gentran_ring.c
+    src/mpi/coll/ireduce/ireduce_gentran_algos.c

@@ -38,7 +38,6 @@ int main(int argc, char **argv)
     MPI_Group_free(&basegroup);
     MPI_Group_free(&g1);
     MPI_Group_free(&g2);
-    MPI_Comm_free(&comm);
     MPI_Comm_free(&newcomm);
     MPI_Comm_free(&dupcomm);
     MTest_Finalize(errs);

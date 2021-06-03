@@ -48,7 +48,7 @@ extern int MPIR_partial_attach_ok;
  * use of asm(""), recommended by the GCC manual, prevented the
  * inlining of this call.  Rather than place it in a separate file
  * (and still risk whole-program analysis removal), we use a globally
- * visable function pointer. */
+ * visible function pointer. */
 extern int (*MPIR_breakpointFn) (void);
 int MPIR_Breakpoint(void);
 

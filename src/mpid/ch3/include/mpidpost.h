@@ -157,11 +157,17 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPIR_Comm * comm_ptr,
 #define MPIDI_CH3U_Request_increment_cc(req_, was_incomplete_)   \
     MPIR_cc_incr((req_)->cc_ptr, was_incomplete_)
 
+/* versions that do not require return */
+#define MPIDI_CH3U_Request_dec_cc(req_)   \
+    MPIR_cc_dec((req_)->cc_ptr)
+#define MPIDI_CH3U_Request_inc_cc(req_)   \
+    MPIR_cc_inc((req_)->cc_ptr)
 /*
  * Device level request management macros
  */
 
 #define MPID_Prequest_free_hook(req_) do {} while(0)
+#define MPID_Part_request_free_hook(req_) do {} while(0)
 
 /*
  * Device level progress engine macros
@@ -214,6 +220,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request * request_pt
 int MPIDI_CH3I_Comm_commit_pre_hook(struct MPIR_Comm *);
 int MPIDI_CH3I_Comm_destroy_hook(struct MPIR_Comm *);
 int MPIDI_CH3I_Comm_commit_post_hook(struct MPIR_Comm *);
+
+int MPIDI_CH3I_Comm_set_hints(MPIR_Comm *, MPIR_Info *info_ptr);
 
 /*
   Device override hooks for asynchronous progress threads

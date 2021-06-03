@@ -179,7 +179,7 @@ standard.
  The predefined operations are
 
 +I  MPI_MAX - return the maximum
-.  MPI_MIN - return the minumum
+.  MPI_MIN - return the minimum
 .  MPI_SUM - return the sum
 .  MPI_PROD - return the product
 .  MPI_LAND - return the logical and
@@ -321,7 +321,7 @@ Window flavors:
 
 Window Memory Model:
 +I MPI_WIN_SEPARATE - Separate public and private copies of window memory
-- MPI_WIN_UNIFIED - The publich and private copies are identical (by which
+- MPI_WIN_UNIFIED - The public and private copies are identical (by which
  we mean that updates are eventually observed without additional RMA operations)
 
 Window Lock Types:
@@ -403,7 +403,7 @@ Special value for error codes array:
 .    MPI_T_PVAR_CLASS_PERCENTAGE    - percentage utilization of a resource
 .    MPI_T_PVAR_CLASS_HIGHWATERMARK - high watermark of a resource
 .    MPI_T_PVAR_CLASS_LOWWATERMARK  - low watermark of a resource
-.    MPI_T_PVAR_CLASS_COUNTER       - number of occurances of an event
+.    MPI_T_PVAR_CLASS_COUNTER       - number of occurrences of an event
 .    MPI_T_PVAR_CLASS_AGGREGATE     - aggregate value over an event (e.g.,
  sum of all memory allocations)
 .    MPI_T_PVAR_CLASS_TIMER         - aggretate time spent executing event
@@ -528,13 +528,12 @@ Error codes for MPI_T:
 . MPI_T_ERR_NOT_INITIALIZED   - Interface not initialized
 . MPI_T_ERR_CANNOT_INIT       - Interface not in the state to be initialized
 . MPI_T_ERR_INVALID_INDEX     - The index is invalid or has been deleted
-. MPI_T_ERR_INVALID_ITEM      - Item index queried is out of range
 . MPI_T_ERR_INVALID_HANDLE    - The handle is invalid
 . MPI_T_ERR_OUT_OF_HANDLES    - No more handles available
 . MPI_T_ERR_OUT_OF_SESSIONS   - No more sessions available
 . MPI_T_ERR_INVALID_SESSION   - Session argument is not valid
-. MPI_T_ERR_CVAR_SET_NOT_NOW  - Cvar can''t be set at this moment
-. MPI_T_ERR_CVAR_SET_NEVER    - Cvar can''t be set until end of execution
+. MPI_T_ERR_CVAR_SET_NOT_NOW  - Cvar cannot be set at this moment
+. MPI_T_ERR_CVAR_SET_NEVER    - Cvar cannot be set until end of execution
 . MPI_T_ERR_PVAR_NO_STARTSTOP - Pvar can''t be started or stopped
 . MPI_T_ERR_PVAR_NO_WRITE     - Pvar can''t be written or reset
 . MPI_T_ERR_PVAR_NO_ATOMIC    - Pvar can''t be R/W atomically

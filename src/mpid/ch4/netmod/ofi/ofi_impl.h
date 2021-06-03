@@ -7,6 +7,8 @@
 #define OFI_IMPL_H_INCLUDED
 
 #include <mpidimpl.h>
+#include "ofi_dynproc.h"
+/* NOTE: headers with global struct need be included before ofi_types.h */
 #include "ofi_types.h"
 #include "mpidch4r.h"
 #include "mpidig_am.h"
@@ -20,24 +22,12 @@
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 #define MPIDI_OFI_COMM_TO_INDEX(comm,rank) \
     MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
-#define MPIDI_OFI_TO_PHYS(avtid, lpid)                                 \
-    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest[0][0]
+#define MPIDI_OFI_TO_PHYS(avtid, lpid, _nic) \
+    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest[_nic][0]
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
-/* Get op index.
- * TODO: OP_NULL is the oddball. Change configure to table this correctly */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
-{
-    int op_index;
-    if (op == MPI_OP_NULL)
-        op_index = MPIDI_OFI_OP_SIZES - 1;
-    else
-        op_index = (0x000000FFU & op) - 1;
-    return op_index;
-}
-
-int MPIDI_OFI_progress(int vci, int blocking);
+int MPIDI_OFI_progress_uninlined(int vni);
 
 /* vni mapping */
 /* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
@@ -45,7 +35,19 @@ int MPIDI_OFI_progress(int vci, int blocking);
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
                                                int src_rank, int dst_rank, int tag)
 {
+#if MPIDI_CH4_MAX_VCIS == 1
+    return 0;
+#else
     return MPIDI_get_vci(flag, comm_ptr, src_rank, dst_rank, tag) % MPIDI_OFI_global.num_vnis;
+#endif
+}
+
+/* for RMA, vni need be persistent with window */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_win_vni(MPIR_Win * win)
+{
+    int win_idx = 0;
+    return MPIDI_get_vci(SRC_VCI_FROM_SENDER, win->comm_ptr, 0, 0, win_idx) %
+        MPIDI_OFI_global.num_vnis;
 }
 
 /*
@@ -53,7 +55,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
  */
 #define MPIDI_OFI_PROGRESS(vni)                                   \
     do {                                                          \
-        mpi_errno = MPIDI_OFI_progress(vni, 0);                   \
+        mpi_errno = MPIDI_NM_progress(vni, 0);                   \
         MPIR_ERR_CHECK(mpi_errno);                                \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
@@ -99,10 +101,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
         /* FIXME: by fixing the recursive locking interface to account
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
-         * operation can be avoided since we are inside a finite loop. */\
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);     \
+         * operation can be avoided since we are inside a finite loop. */ \
+        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_);			  \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
+        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_);			     \
         MPIR_ERR_CHECK(mpi_errno);                               \
         _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \
@@ -113,7 +115,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
 #define MPIDI_OFI_VCI_PROGRESS(vci_)                                    \
     do {                                                                \
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                \
-        mpi_errno = MPIDI_OFI_progress(vci_, 0);                        \
+        mpi_errno = MPIDI_NM_progress(vci_, 0);                        \
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);                 \
         MPIR_ERR_CHECK(mpi_errno);                                      \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
@@ -123,7 +125,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
     do {                                                                    \
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                    \
         while (cond) {                                                      \
-            mpi_errno = MPIDI_OFI_progress(vci_, 0);                        \
+            mpi_errno = MPIDI_NM_progress(vci_, 0);                        \
             if (mpi_errno) {                                                \
                 MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);             \
                 MPIR_ERR_POP(mpi_errno);                                    \
@@ -177,6 +179,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
 
+#define MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_)            \
+    do {                                                        \
+        if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {      \
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
+        }                                                       \
+    } while (0)
+
+#define MPIDI_OFI_THREAD_CS_ENTER_REC_VCI_OPTIONAL(vci_)        \
+    do {                                                        \
+        if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {      \
+            MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(vci_).lock);     \
+        }                                                       \
+    } while (0)
+
+#define MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_)         \
+    do {                                                    \
+        if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {  \
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock); \
+        }                                                   \
+    } while (0)
+
 #define MPIDI_OFI_CALL_RETURN(FUNC, _ret)                               \
         do {                                                            \
             (_ret) = FUNC;                                              \
@@ -199,9 +222,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
 
 #define MPIDI_OFI_REQUEST_CREATE(req, kind, vni) \
     do {                                                      \
-        (req) = MPIR_Request_create_from_pool(kind, vni);  \
+        MPIDI_CH4_REQUEST_CREATE(req, kind, vni, 2);                    \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
-        MPIR_Request_add_ref((req));                                \
     } while (0)
 
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
@@ -222,33 +244,72 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_winfo_mr_key(MPIR_Win * w, int rank)
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
 {
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    /* Lockless mode requires to use atomic operation, in order to make
+     * cntrs thread-safe. */
+    MPL_atomic_fetch_add_uint64(MPIDI_OFI_WIN(win).issued_cntr, 1);
+#else
     (*MPIDI_OFI_WIN(win).issued_cntr)++;
+#endif
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
+/* Calculate the OFI context index.
+ * The total number of OFI contexts will be the number of nics * number of vcis
+ * Each nic will contain num_vcis vnis. Each corresponding to their respective vci index. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_ctx_index(int vni, int nic)
 {
-    MPIDI_OFI_global.rma_issued_cntr++;
+    return nic * MPIDI_OFI_global.num_vnis + vni;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(int vni, int nic)
+{
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+#else
+    /* NOTE: shared with ctx[0] */
+    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+#endif
+
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    MPL_atomic_fetch_add_uint64(&MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr, 1);
+#else
+    MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr++;
+#endif
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_set(int ctx_idx, int val)
+{
+#if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
+    MPL_atomic_store_uint64(&MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr, val);
+#else
+    MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr = val;
+#endif
 }
 
 /* Externs:  see util.c for definition */
-int MPIDI_OFI_handle_cq_error_util(int ep_idx, ssize_t ret);
+#define MPIDI_OFI_LOCAL_MR_KEY 0
+#define MPIDI_OFI_COLL_MR_KEY 1
+#define MPIDI_OFI_INVALID_MR_KEY 0xFFFFFFFFFFFFFFFFULL
+int MPIDI_OFI_handle_cq_error_util(int ctx_idx, ssize_t ret);
 int MPIDI_OFI_retry_progress(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint data_sz,
                               int is_local, int is_async, MPIR_Request ** req);
+int MPIDI_OFI_am_rdma_read_ack_handler(int handler_id, void *am_hdr, void *data,
+                                       MPI_Aint in_data_sz, int is_local, int is_async,
+                                       MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
-void MPIDI_OFI_index_datatypes(void);
+void MPIDI_OFI_index_datatypes(struct fid_ep *ep);
 int MPIDI_OFI_mr_key_allocator_init(void);
-uint64_t MPIDI_OFI_mr_key_alloc(void);
-void MPIDI_OFI_mr_key_free(uint64_t index);
+uint64_t MPIDI_OFI_mr_key_alloc(int key_type, uint64_t requested_key);
+void MPIDI_OFI_mr_key_free(int key_type, uint64_t index);
 void MPIDI_OFI_mr_key_allocator_destroy(void);
 
 /* RMA */
 #define MPIDI_OFI_INIT_CHUNK_CONTEXT(win,sigreq)                        \
     do {                                                                \
         if (sigreq) {                                                   \
-            int tmp;                                                    \
             MPIDI_OFI_chunk_request *creq;                              \
-            MPIR_cc_incr((*sigreq)->cc_ptr, &tmp);                      \
+            MPIR_cc_inc((*sigreq)->cc_ptr);                             \
             creq=(MPIDI_OFI_chunk_request*)MPL_malloc(sizeof(*creq), MPL_MEM_BUFFER); \
             MPIR_ERR_CHKANDSTMT(creq == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem"); \
             creq->event_id = MPIDI_OFI_EVENT_CHUNK_DONE;                \
@@ -319,23 +380,23 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
  * C and C++ components
  */
 /* Set max size based on OFI acc ordering limit. */
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, size_t max_size)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_OFI_check_acc_order_size(MPIR_Win * win, MPI_Aint data_size)
 {
-    /* Check ordering limit, a value of -1 guarantees ordering for any data size. */
+    MPI_Aint max_size = data_size;
+    /* Check ordering limit:
+     * - A value of -1 guarantees ordering for any data size.
+     * - An order size value of 0 indicates that ordering is not guaranteed.
+     * The check below returns the supported positive max_size, or zero which indicates disabled acc.*/
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAR)
         && MPIDI_OFI_global.max_order_war != -1) {
-        /* An order size value of 0 indicates that ordering is not guaranteed. */
-        MPIR_Assert(MPIDI_OFI_global.max_order_war != 0);
         max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_war);
     }
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAW)
         && MPIDI_OFI_global.max_order_waw != -1) {
-        MPIR_Assert(MPIDI_OFI_global.max_order_waw != 0);
         max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_waw);
     }
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAW)
         && MPIDI_OFI_global.max_order_raw != -1) {
-        MPIR_Assert(MPIDI_OFI_global.max_order_raw != 0);
         max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_raw);
     }
     return max_size;
@@ -380,31 +441,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_vci_to_vni_assert(int vci)
     return vni;
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av, int nic,
                                                         int vni_local, int vni_remote)
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[vni_local][vni_remote], 0,
-                          MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][vni_remote], 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        return MPIDI_OFI_AV(av).dest[vni_local][vni_remote];
+        return MPIDI_OFI_AV(av).dest[nic][vni_remote];
     }
 #else /* MPIDI_OFI_VNI_USE_SEPCTX */
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[0][0], vni_remote, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][0], vni_remote, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         MPIR_Assert(vni_remote == 0);
-        return MPIDI_OFI_AV(av).dest[0][0];
+        return MPIDI_OFI_AV(av).dest[nic][0];
     }
 #endif
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank,
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int nic,
                                                           int vni_local, int vni_remote)
 {
     MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, rank);
-    return MPIDI_OFI_av_to_phys(av, vni_local, vni_remote);
+    return MPIDI_OFI_av_to_phys(av, nic, vni_local, vni_remote);
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
@@ -485,6 +545,58 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_COUNT_IOV);
     return total_iov;
+}
+
+/* Calculate the index of the NIC used to send a message from sender_rank to receiver_rank
+ *
+ * comm - The communicator used to send the message.
+ * ctxid_in_effect - The context ID that will be used to send the message.
+ *                   On the sender side, this should be comm->context_id.
+ *                   On the receiver side, this should be comm->recvcontext_id.
+ * receiver_rank - The rank of the receiving process.
+ * tag - The tag of the message being sent.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_sender_nic_index(MPIR_Comm * comm,
+                                                              MPIR_Context_id_t ctxid_in_effect,
+                                                              int receiver_rank, int tag)
+{
+    int nic_idx = 0;
+
+    /* TODO - If there is a communicator specific mapping, that should be checked/used here. */
+    /* TODO - We should use the per-communicator value for the maximum number of NICs in this
+     *        calculation once we have a per-communicator value for it. */
+    if (MPIDI_OFI_COMM(comm).enable_hashing) {
+        nic_idx = ((unsigned int) (MPIR_CONTEXT_READ_FIELD(PREFIX, ctxid_in_effect) +
+                                   receiver_rank + tag)) % MPIDI_OFI_global.num_nics;
+    }
+
+    return nic_idx;
+}
+
+/* Calculate the index of the NIC used to receive a message from sender_rank at receiver_rank
+ *
+ * comm - The communicator used to receive the message.
+ * ctxid_in_effect - The context ID that will be used to receive the message.
+ *                   On the sender side, this should be comm->context_id.
+ *                   On the receiver side, this should be comm->recvcontext_id.
+ * sender_rank - The rank of the sending process.
+ * tag - The tag of the message being sent.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm,
+                                                                MPIR_Context_id_t ctxid_in_effect,
+                                                                int sender_rank, int tag)
+{
+    int nic_idx = 0;
+
+    /* TODO - If there is a communicator specific mapping, that should be checked/used here. */
+    /* TODO - We should use the per-communicator value for the maximum number of NICs in this
+     *        calculation once we have a per-communicator value for it. */
+    if (MPIDI_OFI_COMM(comm).enable_hashing) {
+        nic_idx = ((unsigned int) (MPIR_CONTEXT_READ_FIELD(PREFIX, ctxid_in_effect) +
+                                   sender_rank + tag)) % MPIDI_OFI_global.num_nics;
+    }
+
+    return nic_idx;
 }
 
 #endif /* OFI_IMPL_H_INCLUDED */

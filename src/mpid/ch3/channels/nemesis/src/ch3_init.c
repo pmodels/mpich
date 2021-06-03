@@ -35,9 +35,9 @@ static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
 
     if (stype == MPI_COMM_TYPE_SHARED) {
         if (MPIDI_CH3I_Shm_supported()) {
-            mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, stype, key, info_ptr, newcomm_ptr);
+            mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, key, info_ptr, newcomm_ptr);
         } else {
-            mpi_errno = MPIR_Comm_split_type_self(comm_ptr, stype, key, newcomm_ptr);
+            mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
         }
     } else if (stype == MPIX_COMM_TYPE_NEIGHBORHOOD) {
         mpi_errno = MPIR_Comm_split_type_neighborhood(comm_ptr, stype, key, info_ptr, newcomm_ptr);

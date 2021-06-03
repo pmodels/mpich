@@ -12,9 +12,9 @@
  */
 #define MPIR_LSUM(a,b) ((a)+(b))
 
-void MPIR_SUM(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
+void MPIR_SUM(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 {
-    int i, len = *Len;
+    MPI_Aint i, len = *Len;
 
     switch (*type) {
 #undef MPIR_OP_TYPE_MACRO

@@ -37,8 +37,12 @@ typedef enum MPIR_Op_kind {
     MPIR_OP_KIND__REPLACE = 13,
     MPIR_OP_KIND__NO_OP = 14,
     MPIR_OP_KIND__USER_NONCOMMUTE = 32,
-    MPIR_OP_KIND__USER = 33
+    MPIR_OP_KIND__USER = 33,
+    MPIR_OP_KIND__USER_NONCOMMUTE_LARGE = 34,
+    MPIR_OP_KIND__USER_LARGE = 35
 } MPIR_Op_kind;
+
+#define MPIR_OP_N_BUILTIN 15
 
 /*S
   MPIR_User_function - Definition of a user function for MPI_Op types.
@@ -53,7 +57,7 @@ typedef enum MPIR_Op_kind {
   We need to include a Fortran version, since those arguments will
   have type 'MPI_Fint *' instead.  We also need to add a test to the
   test suite for this case; in fact, we need tests for each of the handle
-  types to ensure that the transfered handle works correctly.
+  types to ensure that the transferred handle works correctly.
 
   This is part of the collective module because user-defined operations
   are valid only for the collective computation routines and not for
@@ -77,6 +81,7 @@ typedef enum MPIR_Op_kind {
   S*/
 typedef union MPIR_User_function {
     void (*c_function) (const void *, void *, const int *, const MPI_Datatype *);
+    void (*c_large_function) (const void *, void *, const MPI_Count *, const MPI_Datatype *);
     void (*f77_function) (const void *, void *, const MPI_Fint *, const MPI_Fint *);
 } MPIR_User_function;
 /* FIXME: Should there be "restrict" in the definitions above, e.g.,
@@ -106,7 +111,6 @@ typedef struct MPIR_Op {
      MPID_DEV_OP_DECL
 #endif
 } MPIR_Op;
-#define MPIR_OP_N_BUILTIN 15
 extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
 extern MPIR_Op MPIR_Op_direct[];
 extern MPIR_Object_alloc_t MPIR_Op_mem;
@@ -126,20 +130,47 @@ extern MPIR_Object_alloc_t MPIR_Op_mem;
         }                                                \
     } while (0)
 
-void MPIR_MAXF(void *, void *, int *, MPI_Datatype *);
-void MPIR_MINF(void *, void *, int *, MPI_Datatype *);
-void MPIR_SUM(void *, void *, int *, MPI_Datatype *);
-void MPIR_PROD(void *, void *, int *, MPI_Datatype *);
-void MPIR_LAND(void *, void *, int *, MPI_Datatype *);
-void MPIR_BAND(void *, void *, int *, MPI_Datatype *);
-void MPIR_LOR(void *, void *, int *, MPI_Datatype *);
-void MPIR_BOR(void *, void *, int *, MPI_Datatype *);
-void MPIR_LXOR(void *, void *, int *, MPI_Datatype *);
-void MPIR_BXOR(void *, void *, int *, MPI_Datatype *);
-void MPIR_MAXLOC(void *, void *, int *, MPI_Datatype *);
-void MPIR_MINLOC(void *, void *, int *, MPI_Datatype *);
-void MPIR_REPLACE(void *, void *, int *, MPI_Datatype *);
-void MPIR_NO_OP(void *, void *, int *, MPI_Datatype *);
+
+/* Query index of builtin op */
+MPL_STATIC_INLINE_PREFIX int MPIR_Op_builtin_get_index(MPI_Op op)
+{
+    if (op == MPI_OP_NULL) {
+        return 0;
+    } else {
+        MPIR_Assert(HANDLE_IS_BUILTIN(op));
+        return (0x000000ff & op);
+    }
+}
+
+/* Query builtin op by using index (from 1 to MPIR_OP_N_BUILTIN-1)
+ * Note: index 0 refers to MPI_OP_NULL (0x18000000) */
+MPL_STATIC_INLINE_PREFIX MPI_Op MPIR_Op_builtin_get_op(int index)
+{
+    if (index == 0) {
+        return MPI_OP_NULL;
+    } else {
+        MPIR_Assert(index > 0 && index < MPIR_OP_N_BUILTIN);
+        return (MPI_Op) (0x58000000 | index);
+    }
+}
+
+MPI_Datatype MPIR_Op_builtin_search_by_shortname(const char *short_name);
+const char *MPIR_Op_builtin_get_shortname(MPI_Op op);
+
+void MPIR_MAXF(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_MINF(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_SUM(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_PROD(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_LAND(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_BAND(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_LOR(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_BOR(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_LXOR(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_BXOR(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_MAXLOC(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_MINLOC(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_REPLACE(void *, void *, MPI_Aint *, MPI_Datatype *);
+void MPIR_NO_OP(void *, void *, MPI_Aint *, MPI_Datatype *);
 
 int MPIR_MAXF_check_dtype(MPI_Datatype);
 int MPIR_MINF_check_dtype(MPI_Datatype);
@@ -177,8 +208,9 @@ int MPIR_NO_OP_check_dtype(MPI_Datatype);
         }                                                \
     } while (0)                                          \
 
-#define MPIR_PREDEF_OP_COUNT 14
-extern MPI_User_function *MPIR_Op_table[];
+/* internal op function, uses MPI_Aint for count */
+typedef void (MPIR_op_function) (void *, void *, MPI_Aint *, MPI_Datatype *);
+extern MPIR_op_function *MPIR_Op_table[];
 
 typedef int (MPIR_Op_check_dtype_fn) (MPI_Datatype);
 extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
@@ -186,10 +218,6 @@ extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 #define MPIR_OP_HDL_TO_FN(op) MPIR_Op_table[((op)&0xf)]
 #define MPIR_OP_HDL_TO_DTYPE_FN(op) MPIR_Op_check_dtype_table[((op)&0xf)]
 
-int MPIR_Op_commutative(MPIR_Op * op_ptr, int *commute);
-
 int MPIR_Op_is_commutative(MPI_Op);
 
-int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op);
-void MPIR_Op_free_impl(MPI_Op * op);
 #endif /* MPIR_OP_H_INCLUDED */

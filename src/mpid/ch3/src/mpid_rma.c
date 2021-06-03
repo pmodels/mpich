@@ -32,7 +32,7 @@ cvars:
       description : >-
         Size (in bytes) of available lock data this window can provided. If
         current buffered lock data is more than this value, the process will
-        drop the upcoming operation data. Requires a positive calue.
+        drop the upcoming operation data. Requires a positive value.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -130,7 +130,7 @@ int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** 
 
 
 /* The memory allocation functions */
-void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPID_Alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     void *ap = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLOC_MEM);
@@ -153,7 +153,6 @@ int MPID_Free_mem(void *ptr)
 
     MPIDI_CH3I_Free_mem(ptr);
 
-  fn_fail:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FREE_MEM);
     return mpi_errno;
 }
@@ -225,7 +224,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     MPIR_ERR_CHKANDJUMP1(!(*win_ptr), mpi_errno, MPI_ERR_OTHER, "**nomem",
                          "**nomem %s", "MPIR_Win_mem");
 
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, NULL, &win_comm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &win_comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Object_set_ref(*win_ptr, 1);

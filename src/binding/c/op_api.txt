@@ -1,0 +1,33 @@
+# vim: set ft=c:
+
+MPI_Op_create:
+    .desc: Creates a user-defined combination function handle
+    .docnotes: collops
+    .seealso: MPI_Op_free
+    .poly_impl: separate
+/*
+    Notes on the user function:
+    The calling list for the user function type is
+    .vb
+        typedef void (MPI_User_function) (void * a,
+                      void * b, int * len, MPI_Datatype *);
+    .ve
+    where the operation is 'b[i] = a[i] op b[i]', for 'i=0,...,len-1'.  A pointer
+    to the datatype given to the MPI collective computation routine (i.e.,
+    'MPI_Reduce', 'MPI_Allreduce', 'MPI_Scan', or 'MPI_Reduce_scatter') is also
+    passed to the user-specified routine.
+*/
+
+MPI_Op_free:
+    .desc: Frees a user-defined combination function handle
+{ -- error_check --
+    if (HANDLE_IS_BUILTIN(*op)) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                         MPI_ERR_OP, "**permop", 0);
+        goto fn_fail;
+    }
+}
+
+MPI_Op_commutative:
+    .desc: Queries an MPI reduction operation for its commutativity
+    .docnotes: NULL

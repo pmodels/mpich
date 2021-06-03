@@ -16,7 +16,7 @@
 /* Routine to schedule a recursive exchange based allreduce */
 int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(const void *sendbuf,
                                                                               void *recvbuf,
-                                                                              int count,
+                                                                              MPI_Aint count,
                                                                               MPI_Datatype datatype,
                                                                               MPI_Op op,
                                                                               MPIR_Comm * comm,
@@ -36,7 +36,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     int p_of_k, log_pofk, T;
     int per_nbr_buffer = 0, rem = 0;
     int nvtcs, sink_id, *recv_id = NULL, *vtcs = NULL;
-    int *send_id = NULL, *reduce_id = NULL, *cnts = NULL, *displs = NULL;
+    int *send_id = NULL, *reduce_id = NULL;
+    MPI_Aint *cnts = NULL, *displs = NULL;
     bool in_step2 = false;
     void *tmp_recvbuf;
     void **step1_recvbuf = NULL;
@@ -108,8 +109,10 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Start Step2"));
 
     if (in_step2) {
-        MPIR_CHKLMEM_MALLOC(cnts, int *, sizeof(int) * nranks, mpi_errno, "cnts", MPL_MEM_COLL);
-        MPIR_CHKLMEM_MALLOC(displs, int *, sizeof(int) * nranks, mpi_errno, "displs", MPL_MEM_COLL);
+        MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, sizeof(MPI_Aint) * nranks, mpi_errno, "cnts",
+                            MPL_MEM_COLL);
+        MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, sizeof(MPI_Aint) * nranks, mpi_errno, "displs",
+                            MPL_MEM_COLL);
         int idx = 0;
         rem = nranks - p_of_k;
 
@@ -182,7 +185,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
 
 /* Non-blocking recexch_reduce_scatter_recexch_allgatherv based ALLREDUCE */
 int MPIR_TSP_Iallreduce_intra_recexch_reduce_scatter_recexch_allgatherv(const void *sendbuf,
-                                                                        void *recvbuf, int count,
+                                                                        void *recvbuf,
+                                                                        MPI_Aint count,
                                                                         MPI_Datatype datatype,
                                                                         MPI_Op op, MPIR_Comm * comm,
                                                                         MPIR_Request ** req, int k)
@@ -200,7 +204,7 @@ int MPIR_TSP_Iallreduce_intra_recexch_reduce_scatter_recexch_allgatherv(const vo
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(sendbuf, recvbuf,

@@ -81,7 +81,7 @@ shared memory), Hydra process management) of MPICH up and running.
     you will have to duplicate it on the other machines after
     installation.
 
-(d) Configure MPICH specifying the installation directory:
+(d) Configure MPICH specifying the installation directory and device:
 
     for csh and tcsh:
 
@@ -90,6 +90,20 @@ shared memory), Hydra process management) of MPICH up and running.
     for bash and sh:
 
       ./configure --prefix=/home/<USERNAME>/mpich-install 2>&1 | tee c.txt
+
+    The configure will try to determine the best device (the internal
+    network modules) based on system environment. It will abort when it
+    can't decide which is the best choice. Supply the device option to
+    proceed. E.g.
+
+      ./configure --prefix=... --with-device=ch4:ofi |...
+
+    or:
+
+      ./configure --prefix=... --with-device=ch4:ucx |...
+
+    Refer to section below -- Alternate Channels and Devices -- for
+    more details.
 
     Bourne-like shells, sh and bash, accept "2>&1 |".  Csh-like shell,
     csh and tcsh, accept "|&". If a failure occurs, the configure
@@ -711,7 +725,7 @@ If the C compiler that is used to build MPICH libraries supports both
 multiple weak symbols and multiple aliases of common symbols, the
 Fortran binding can support multiple Fortran compilers. The
 multiple weak symbols support allow MPICH to provide different name
-mangling scheme (of subroutine names) required by differen Fortran
+mangling scheme (of subroutine names) required by different Fortran
 compilers. The multiple aliases of common symbols support enables
 MPICH to equal different common block symbols of the MPI Fortran
 constant, e.g. MPI_IN_PLACE, MPI_STATUS_IGNORE. So they are understood
@@ -819,6 +833,37 @@ environment variables README.envvar.
 
 13. Threads
 ===========
+
+The supported thread level are configured by option:
+
+    --enable-threads={single,funneled,serialized,multiple}
+
+The default depends on the configured device. With ch4, "multiple" is the
+default. Set thread level to "single" provides best performance when application
+does not use multiple threads. Use "multiple" to allow application to access
+MPI from multiple threads concurrently.
+
+With "multiple" thread level, there are a few choices for the internal critical
+section models. This is controlled by configure option:
+
+    --enable-thread-cs={global,per-vci}
+
+Current default is to use "global" cs. Applications that do heavy concurrent
+MPI communications may experience slow down due to this global cs. The
+"per-vci" cs internally will use multiple VCI (virtual communication
+interface) critical sections, thus can provide much better performance. To
+achieve the best performance, applications should try to expose as much
+parallel information to MPI as possible. For example, if each threads use
+separate communicators, MPICH may be able to assign separate VCI for each
+thread, thus achieving the maximum performance.
+
+The multiple VCI support may increase the resource allocation and overheads
+during initialization. By default, only a single vci is used. Set
+
+    MPIR_CVAR_CH4_NUM_VCIS=<N>
+
+to enable multiple vcis at runtime. For best performance, match number of VCIs
+to the number threads application is using.
 
 MPICH supports multiple threading packages.  The default is posix
 threads (pthreads), but solaris threads, windows threads and argobots

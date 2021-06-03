@@ -16,6 +16,16 @@ categories :
       description : A category for CH4 UCX netmod variables
 
 cvars:
+    - name        : MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG
+      category    : CH4_UCX
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Prints out the ucx netmod capability.
+
     - name        : MPIR_CVAR_CH4_UCX_MAX_VNIS
       category    : CH4_UCX
       type        : int
@@ -51,7 +61,7 @@ static void init_num_vnis(void)
     }
 
     /* for best performance, we ensure 1-to-1 vci/vni mapping. ref: MPIDI_OFI_vci_to_vni */
-    /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. overide MPIDI_global.n_vcis */
+    /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. override MPIDI_global.n_vcis */
     MPIR_Assert(num_vnis == MPIDI_global.n_vcis);
 
     MPIDI_UCX_global.num_vnis = num_vnis;
@@ -202,32 +212,30 @@ static int all_vnis_address_exchange(void)
     goto fn_exit;
 }
 
-int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
+int MPIDI_UCX_init_local(int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
+
     ucp_config_t *config;
     ucs_status_t ucx_status;
     uint64_t features = 0;
     ucp_params_t ucp_params;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
-
     init_num_vnis();
 
     /* unable to support extended context id in current match bit configuration */
-    MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_TAG_BITS);
+    MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_ID_BITS);
 
     ucx_status = ucp_config_read(NULL, NULL, &config);
     MPIDI_UCX_CHK_STATUS(ucx_status);
 
     /* For now use only the tag feature */
-    features = UCP_FEATURE_TAG | UCP_FEATURE_RMA;
+    features = UCP_FEATURE_TAG | UCP_FEATURE_RMA | UCP_FEATURE_AM;
     ucp_params.features = features;
     ucp_params.request_size = sizeof(MPIDI_UCX_ucp_request_t);
     ucp_params.request_init = request_init_callback;
     ucp_params.request_cleanup = NULL;
-    ucp_params.estimated_num_eps = size;
+    ucp_params.estimated_num_eps = MPIR_Process.size;
 
     ucp_params.field_mask = UCP_PARAM_FIELD_FEATURES |
         UCP_PARAM_FIELD_REQUEST_SIZE |
@@ -242,14 +250,60 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
 
+    if (MPIDI_UCX_TAG_BITS > MPIR_TAG_BITS_DEFAULT) {
+        *tag_bits = MPIR_TAG_BITS_DEFAULT;
+    } else {
+        *tag_bits = MPIDI_UCX_TAG_BITS;
+    }
+
+    if (MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG && MPIR_Process.rank == 0) {
+        printf("==== UCX netmod Capability ====\n");
+        printf("MPIDI_UCX_CONTEXT_ID_BITS: %d\n", MPIDI_UCX_CONTEXT_ID_BITS);
+        printf("MPIDI_UCX_RANK_BITS: %d\n", MPIDI_UCX_RANK_BITS);
+        printf("num_vnis: %d\n", MPIDI_UCX_global.num_vnis);
+        printf("tag_bits: %d\n", *tag_bits);
+        printf("===============================\n");
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    if (MPIDI_UCX_global.context != NULL)
+        ucp_cleanup(MPIDI_UCX_global.context);
+
+    goto fn_exit;
+}
+
+int MPIDI_UCX_init_world(MPIR_Comm * init_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int tmp = MPIR_Process.tag_bits;
+    mpi_errno = MPIDI_UCX_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.appnum,
+                                        &tmp, init_comm);
+    /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
+    MPIR_Assert(tmp == MPIR_Process.tag_bits);
+
+    return mpi_errno;
+}
+
+int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
+
     /* initialize worker for vni 0 */
     mpi_errno = init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
 
+    ucs_status_t ucx_status =
+        ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID,
+                                  &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
+
     mpi_errno = initial_address_exchange(init_comm);
     MPIR_ERR_CHECK(mpi_errno);
-
-    *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
@@ -257,9 +311,6 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
   fn_fail:
     if (MPIDI_UCX_global.ctx[0].worker != NULL)
         ucp_worker_destroy(MPIDI_UCX_global.ctx[0].worker);
-
-    if (MPIDI_UCX_global.context != NULL)
-        ucp_cleanup(MPIDI_UCX_global.context);
 
     goto fn_exit;
 }
@@ -290,7 +341,7 @@ int MPIDI_UCX_mpi_finalize_hook(void)
         }
     }
 
-    /* now complete the outstaning requests! Important: call progress inbetween, otherwise we
+    /* now complete the outstaning requests! Important: call progress in between, otherwise we
      * deadlock! */
     int completed = p;
     while (completed != 0) {
@@ -359,6 +410,10 @@ int MPIDI_UCX_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    if (MPIDI_UCX_global.num_vnis == 1) {
+        goto fn_exit;
+    }
+
     for (int i = 1; i < MPIDI_UCX_global.num_vnis; i++) {
         mpi_errno = init_worker(i);
         MPIR_ERR_CHECK(mpi_errno);
@@ -366,7 +421,9 @@ int MPIDI_UCX_post_init(void)
     mpi_errno = all_vnis_address_exchange();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* flush all pending wireup operations or it may interfere with RMA flush_ops count */
+    /* Flush all pending wireup operations or it may interfere with RMA flush_ops count.
+     * Since this require progress in non-zero vnis, we need switch on is_initialized. */
+    MPIDI_global.is_initialized = 1;
     flush_all();
 
   fn_exit:
@@ -394,17 +451,12 @@ int MPIDI_UCX_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
     return MPI_SUCCESS;
 }
 
-int MPIDI_UCX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[])
-{
-    return MPI_SUCCESS;
-}
-
 int MPIDI_UCX_mpi_free_mem(void *ptr)
 {
     return MPIDIG_mpi_free_mem(ptr);
 }
 
-void *MPIDI_UCX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_UCX_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }

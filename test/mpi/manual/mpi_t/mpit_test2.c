@@ -7,7 +7,7 @@
  * presence of two performance variables: "posted_recvq_length" and
  * "unexpected_recvq_length".  Some information about these variables
  * is printed to stdout and then a few messages are sent/received to
- * show that theses variables are reporting useful information.
+ * show that these variables are reporting useful information.
  *
  * Author: Dave Goodell <goodell@mcs.anl.gov.
  */

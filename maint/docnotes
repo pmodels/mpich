@@ -1,6 +1,6 @@
 This file contains the named document blocks for use in generating the 
 documentation.  This is divided into several main blocks:
-   Threads and interrups/signals
+   Threads and interrupts/signals
    Fortran
    Misc MPI (e.g., status null)
    Error classes
@@ -99,7 +99,7 @@ N*/
 N*/
 
 /*N FortStatusArray
- The 'status' argument must be declared as an array of sise 'MPI_STATUS_SIZE',
+ The 'status' argument must be declared as an array of size 'MPI_STATUS_SIZE',
  as in 'integer status(MPI_STATUS_SIZE,10)' (assuming no more than 10 
  requests are provided as input).
 N*/
@@ -150,13 +150,17 @@ N*/
 N*/
 
 -----------------------------------------------------------------------------
-MPI-2 deprecated some routines (see 2.6.1)
+Deprecated routines (see 2.6.1)
 /*N Deprecated
  Deprecated Function:
- The MPI-2 standard deprecated a number of routines because MPI-2 provides
- better versions.  This routine is one of those that was deprecated.  The
- routine may continue to be used, but new code should use the replacement
- routine.
+ The current MPI standard defines this routine as deprecated. The routine may
+ continue to be used, but new code should use the replacement routine.
+N*/
+Removed routines (see 2.6.1)
+/*N Removed
+ Removed Function:
+ The current MPI standard defines this routine as removed. The user should use
+ the replacement routine.
 N*/
 -----------------------------------------------------------------------------
 /*N Errhandler
@@ -252,7 +256,7 @@ N*/
 N*/
 /*N MPI_ERR_PERM_KEY
 . MPI_ERR_ARG - Invalid argument; the error code associated with this
-  error indicates an attempt to free or chnage an MPI permanent keyval (e.g., 
+  error indicates an attempt to free or change an MPI permanent keyval (e.g., 
   'MPI_TAG_UB').
 N*/
 /*N MPI_ERR_UNKNOWN
@@ -297,7 +301,7 @@ N*/
   to indicate which requests have not completed.  In most cases, only
   one request with an error will be detected in each call to an MPI routine
   that tests multiple requests.  The requests that have not been processed
-  (because an error occured in one of the requests) will have their
+  (because an error occurred in one of the requests) will have their
   'MPI_ERROR' field marked with 'MPI_ERR_PENDING'.
 N*/
 /*N MPI_ERR_PENDING
@@ -310,7 +314,7 @@ N*/
   'MPI_Start' or 'MPI_Startall', not a persistent request.
 N*/
 /*N MPI_ERR_BUFFER_ALIAS
-.   MPI_ERR_BUFFER - This error class is associcated with an error code that
+.   MPI_ERR_BUFFER - This error class is associated with an error code that
     indicates that two buffer arguments are `aliased`; that is, the 
     describe overlapping storage (often the exact same storage).  This
     is prohibited in MPI (because it is prohibited by the Fortran 
@@ -468,6 +472,10 @@ N*/
 . MPI_ERR_UNSUPPORTED_DATAREP - 
 N*/
 
+/*N MPI_ERR_SESSION
+. MPI_ERR_SESSION - Invalid session handle
+N*/
+
 /*N MPI_T_ERR_NOT_INITIALIZED
 . MPI_T_ERR_NOT_INITIALIZED - The MPI tool information interface is not initialized.
 N*/
@@ -482,10 +490,6 @@ N*/
 
 /*N MPI_T_ERR_INVALID_INDEX
 . MPI_T_ERR_INVALID_INDEX - Index is invalid or has been deleted.
-N*/
-
-/*N MPI_T_ERR_INVALID_ITEM
-. MPI_T_ERR_INVALID_ITEM - Item index queried is out of range.
 N*/
 
 /*N MPI_T_ERR_INVALID_NAME
@@ -526,6 +530,10 @@ N*/
 
 /*N MPI_T_ERR_PVAR_NO_ATOMIC
 . MPI_T_ERR_PVAR_NO_ATOMIC - The performance variable can not be read/write atomically.
+N*/
+
+/*N MPI_T_ERR_INVALID
+. MPI_T_ERR_INVALID - Invalid use of the interface or bad parameter values(s).
 N*/
 
 /*N NULL

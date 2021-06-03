@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 int AllocateGrid(int nx, int ny, int **srcArray, int **destArray)
 {
     int *src, *dest;
-    int i, j;
+    int i;
     src = (int *) malloc(nx * ny * sizeof(int));
     dest = (int *) malloc(nx * ny * sizeof(int));
     if (!src || !dest) {

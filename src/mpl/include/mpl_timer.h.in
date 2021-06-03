@@ -163,6 +163,21 @@ int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3);
 int MPL_wtime_touint(MPL_time_t * timeval, unsigned int *val);
 
 /*@
+  MPL_wtime_to_ticks - Converts a timestamp to raw clock ticks.
+  Input Parameter:
+. timeval - 'MPL_time_t' time stamp
+
+  Output Parameter:
+. val - long long int generated from the timestamp.
+
+  Notes:
+  This routine is intended to be used as an integer timestamp.
+
+
+  @*/
+int MPL_wtime_to_ticks(MPL_time_t * timeval, long long int *val);
+
+/*@
   MPL_wtime_todouble - Converts a timestamp to a double
 
   Input Parameter:
@@ -195,6 +210,21 @@ int MPL_wtime_todouble(MPL_time_t * timeval, double *seconds);
   Timer
   @*/
 int MPL_wtick(double *);
+
+/*@
+  MPL_ticks_per_second - Provide the number of raw ticks per second
+
+  Return value:
+  Number of raw ticks representing a second of wall time.
+
+  Note that in some cases, the value may be estimated.  No application
+  should expect either the same estimate in different runs or the same
+  value on different processes.
+
+  Module:
+  Timer
+  @*/
+int MPL_ticks_per_second(long long int *ticks_per_second);
 
 /*@
   MPL_wtime_init - Initialize the timer

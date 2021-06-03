@@ -42,14 +42,9 @@ int main(int argc, char **argv)
     int desc_len;
     char desc[STR_SZ + 1] = ""; /* +1 to check for overrun */
     int verb;
-    MPI_Datatype dtype;
-    int count;
     int bind;
     int scope;
     int provided;
-
-    /* Init'ed to a garbage value, to trigger MPI_T bugs easily if there are. */
-    MPI_T_enum enumtype = (MPI_T_enum) 0x31415926;
 
     MTest_Init(&argc, &argv);
     MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
@@ -63,6 +58,10 @@ int main(int argc, char **argv)
     MPI_T_cvar_get_num(&num_cvars);
     for (i = 0; i < num_cvars; ++i) {
         int full_name_len, full_desc_len;
+        MPI_Datatype dtype;
+        /* Init'ed to a garbage value, to trigger MPI_T bugs easily if there are. */
+        MPI_T_enum enumtype = (MPI_T_enum) 0x31415926;
+
         /* pass NULL string, non-zero lengths; should get full lengths */
         full_name_len = full_desc_len = 1;
         MPI_T_cvar_get_info(i, NULL, &full_name_len, &verb, &dtype,
@@ -112,7 +111,7 @@ int main(int argc, char **argv)
     /* check string handling for performance variables */
     MPI_T_pvar_get_num(&num_pvars);
     for (i = 0; i < num_pvars; ++i) {
-        int varclass, bind, readonly, continuous, atomic;
+        int varclass, readonly, continuous, atomic;
         MPI_Datatype dtype;
         MPI_T_enum enumtype;
 

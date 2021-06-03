@@ -21,9 +21,9 @@
 
    Cost = (p-1).alpha + n.((p-1)/p).beta
 */
-int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
                                            MPI_Datatype sendtype, void *recvbuf,
-                                           const int recvcounts[], const int displs[],
+                                           const MPI_Aint recvcounts[], const MPI_Aint displs[],
                                            MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                            MPIR_TSP_sched_t * sched)
 {
@@ -93,10 +93,10 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount,
 }
 
 /* Non-blocking linear algorithm for gatherv */
-int MPIR_TSP_Igatherv_allcomm_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                     void *recvbuf, const int recvcounts[], const int displs[],
-                                     MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                     MPIR_Request ** req)
+int MPIR_TSP_Igatherv_allcomm_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                     void *recvbuf, const MPI_Aint recvcounts[],
+                                     const MPI_Aint displs[], MPI_Datatype recvtype, int root,
+                                     MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -108,7 +108,7 @@ int MPIR_TSP_Igatherv_allcomm_linear(const void *sendbuf, int sendcount, MPI_Dat
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_ERR_CHKANDJUMP(!sched, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule linear algo */
     mpi_errno =

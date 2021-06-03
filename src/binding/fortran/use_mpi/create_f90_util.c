@@ -60,7 +60,7 @@ int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
                                     MPI_ERR_INTERN, "**f90typetoomany", 0);
     }
     if (nAlloc == 0) {
-        /* Install the finalize callback that frees these datatyeps.
+        /* Install the finalize callback that frees these datatypes.
          * Set the priority high enough that this will be executed
          * before the handle allocation check */
         MPIR_Add_finalize(MPIR_FreeF90Datatypes, 0, 2);
@@ -96,7 +96,8 @@ int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
         }
 
         MPIR_Datatype_get_ptr(type->d, new_dtp);
-        mpi_errno = MPIR_Datatype_set_contents(new_dtp, combiner, nvals, 0, 0, vals, NULL, NULL);
+        mpi_errno = MPIR_Datatype_set_contents(new_dtp, combiner, nvals, 0, 0, 0,
+                                               vals, NULL, NULL, NULL);
         MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef NDEBUG
@@ -105,7 +106,7 @@ int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
             MPI_Datatype new_basic = MPI_DATATYPE_NULL;
             /* we used MPIR_Type_contiguous and then stomped it's contents
              * information, so make sure that the basic_type is usable by
-             * MPIR_Type_commit */
+             * MPIR_Type_commit_impl */
             MPIR_Datatype_get_basic_type(old, old_basic);
             MPIR_Datatype_get_basic_type(new_dtp->handle, new_basic);
             MPIR_Assert(new_basic == old_basic);
@@ -114,7 +115,7 @@ int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
 
         /* the MPI Standard requires that these types are pre-committed
          * (MPI-2.2, sec 16.2.5, pg 492) */
-        mpi_errno = MPIR_Type_commit(&type->d);
+        mpi_errno = MPIR_Type_commit_impl(&type->d);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -202,7 +203,8 @@ static int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
         }
 
         MPIR_Datatype_get_ptr(*new_ptr, new_dtp);
-        mpi_errno = MPIR_Datatype_set_contents(new_dtp, combiner, nvals, 0, 0, vals, NULL, NULL);
+        mpi_errno = MPIR_Datatype_set_contents(new_dtp, combiner, nvals, 0, 0, 0,
+                                               vals, NULL, NULL, NULL);
     }
 
     return mpi_errno;

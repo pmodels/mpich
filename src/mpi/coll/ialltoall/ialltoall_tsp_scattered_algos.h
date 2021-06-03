@@ -38,9 +38,9 @@ cvars:
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a scattered based alltoall */
-int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, int sendcount,
+int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, MPI_Aint sendcount,
                                              MPI_Datatype sendtype, void *recvbuf,
-                                             int recvcount, MPI_Datatype recvtype,
+                                             MPI_Aint recvcount, MPI_Datatype recvtype,
                                              MPIR_Comm * comm, int batch_size, int bblock,
                                              MPIR_TSP_sched_t * sched)
 {
@@ -154,9 +154,9 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, int sendcount,
 }
 
 /* Scattered sliding window based Alltoall */
-int MPIR_TSP_Ialltoall_intra_scattered(const void *sendbuf, int sendcount,
+int MPIR_TSP_Ialltoall_intra_scattered(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
-                                       int recvcount, MPI_Datatype recvtype,
+                                       MPI_Aint recvcount, MPI_Datatype recvtype,
                                        MPIR_Comm * comm, int batch_size, int bblock,
                                        MPIR_Request ** req)
 {
@@ -170,7 +170,7 @@ int MPIR_TSP_Ialltoall_intra_scattered(const void *sendbuf, int sendcount,
     /* Generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Ialltoall_sched_intra_scattered(sendbuf, sendcount, sendtype,

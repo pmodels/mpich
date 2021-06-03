@@ -12,7 +12,7 @@
    Extended from bcastlength.c
 */
 
-int verbose = 1;
+int verbose = 0;
 
 int main(int argc, char *argv[])
 {

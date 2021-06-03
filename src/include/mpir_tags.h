@@ -46,7 +46,7 @@
 
 /* These macros must be used carefully. These macros will not work with
  * negative tags. By definition, users are not to use negative tags and the
- * only negative tag in MPICH is MPI_ANY_TAG which is checked seperately, but
+ * only negative tag in MPICH is MPI_ANY_TAG which is checked separately, but
  * if there is a time where negative tags become more common, this setup won't
  * work anymore. */
 

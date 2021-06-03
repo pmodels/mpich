@@ -11,10 +11,10 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a linear algorithm for scatterv */
-int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
-                                            const int displs[], MPI_Datatype sendtype,
-                                            void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                            int root, MPIR_Comm * comm_ptr,
+int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint sendcounts[],
+                                            const MPI_Aint displs[], MPI_Datatype sendtype,
+                                            void *recvbuf, MPI_Aint recvcount,
+                                            MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                             MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -81,9 +81,9 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int sendc
 
 
 /* Non-blocking linear algorithm for scatterv */
-int MPIR_TSP_Iscatterv_allcomm_linear(const void *sendbuf, const int sendcounts[],
-                                      const int displs[], MPI_Datatype sendtype, void *recvbuf,
-                                      int recvcount, MPI_Datatype recvtype, int root,
+int MPIR_TSP_Iscatterv_allcomm_linear(const void *sendbuf, const MPI_Aint sendcounts[],
+                                      const MPI_Aint displs[], MPI_Datatype sendtype, void *recvbuf,
+                                      MPI_Aint recvcount, MPI_Datatype recvtype, int root,
                                       MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -96,7 +96,7 @@ int MPIR_TSP_Iscatterv_allcomm_linear(const void *sendbuf, const int sendcounts[
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_ERR_CHKANDJUMP(!sched, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule linear algo */
     mpi_errno =

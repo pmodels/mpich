@@ -34,6 +34,14 @@ int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
     return MPL_SUCCESS;
 }
 
+int MPL_wtime_to_ticks(MPL_time_t * t, long long int *val)
+{
+    *val = t->tv_sec * 1000000000;
+    *val += t->tv_nsec;
+
+    return MPL_SUCCESS;
+}
+
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = ((double) (t->tv_sec - time_epoch) + 1.0e-9 * (double) (t->tv_nsec));
@@ -74,13 +82,21 @@ int MPL_wtick(double *wtick)
     return MPL_SUCCESS;
 }
 
+int MPL_ticks_per_second(long long int *ticks_per_second)
+{
+    /* nanoseconds */
+    *ticks_per_second = 1000000000;
+
+    return MPL_SUCCESS;
+}
+
 int MPL_wtime_init(void)
 {
     if (is_initialized)
         goto fn_exit;
 
     /* set a closer time_epoch so MPL_wtime_todouble retain ns resolution */
-    /* time across process are still relavant within 1 hour */
+    /* time across process are still relevant within 1 hour */
     MPL_time_t t;
     MPL_wtime(&t);
     time_epoch = t.tv_sec - t.tv_sec % (3600);

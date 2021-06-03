@@ -47,7 +47,7 @@
     The MPI library may be used with any compiler that uses the same 
     lengths for basic data objects (such as 'long double') and that 
     uses compatible run-time libraries.  On many systems, the various
-    compilers are compatible and may be used interchangably.  There are 
+    compilers are compatible and may be used interchangeably.  There are 
     exceptions; if you use the 'MPICH_F77' environment variable or the 
     '\-f77=name' command-line argument to override the choice of compiler
     and encounter problems, try reconfiguring MPICH with the new compiler 

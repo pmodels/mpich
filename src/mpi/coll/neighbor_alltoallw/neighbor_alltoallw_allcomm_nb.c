@@ -5,9 +5,9 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Neighbor_alltoallw_allcomm_nb(const void *sendbuf, const int sendcounts[],
+int MPIR_Neighbor_alltoallw_allcomm_nb(const void *sendbuf, const MPI_Aint sendcounts[],
                                        const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
-                                       void *recvbuf, const int recvcounts[],
+                                       void *recvbuf, const MPI_Aint recvcounts[],
                                        const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
                                        MPIR_Comm * comm_ptr)
 {

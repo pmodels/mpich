@@ -12,11 +12,13 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule linear algorithm for neighbor_alltoallv */
-int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
-                                                      const int sdispls[], MPI_Datatype sendtype,
-                                                      void *recvbuf, const int recvcounts[],
-                                                      const int rdispls[], MPI_Datatype recvtype,
-                                                      MPIR_Comm * comm_ptr,
+int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf,
+                                                      const MPI_Aint sendcounts[],
+                                                      const MPI_Aint sdispls[],
+                                                      MPI_Datatype sendtype, void *recvbuf,
+                                                      const MPI_Aint recvcounts[],
+                                                      const MPI_Aint rdispls[],
+                                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                                       MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -68,10 +70,10 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const
 
 
 /* Non-blocking linear algo based neighbor_alltoallv */
-int MPIR_TSP_Ineighbor_alltoallv_allcomm_linear(const void *sendbuf, const int sendcounts[],
-                                                const int sdispls[], MPI_Datatype sendtype,
-                                                void *recvbuf, const int recvcounts[],
-                                                const int rdispls[], MPI_Datatype recvtype,
+int MPIR_TSP_Ineighbor_alltoallv_allcomm_linear(const void *sendbuf, const MPI_Aint sendcounts[],
+                                                const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                                void *recvbuf, const MPI_Aint recvcounts[],
+                                                const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                                 MPIR_Comm * comm_ptr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -84,7 +86,7 @@ int MPIR_TSP_Ineighbor_alltoallv_allcomm_linear(const void *sendbuf, const int s
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule pipelined tree algo */
     mpi_errno =

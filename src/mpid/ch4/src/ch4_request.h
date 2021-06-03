@@ -50,7 +50,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
    properly.
 
    The CH4I_request functions are even more bare bones.
-   They create request objects that are not useable by the
+   They create request objects that are not usable by the
    lower layers until further initialization takes place.
 
    CH4R_request_xxx functions can be used to create and destroy
@@ -75,7 +75,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
 */
 MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
 {
-    int incomplete, notify_counter;
+    int incomplete;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REQUEST_COMPLETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REQUEST_COMPLETE);
@@ -87,7 +87,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
     if (!incomplete) {
         /* decrement completion_notification counter */
         if (req->completion_notification)
-            MPIR_cc_decr(req->completion_notification, &notify_counter);
+            MPIR_cc_dec(req->completion_notification);
 
         if (MPIDIG_REQUEST(req, req)) {
             MPIDU_genq_private_pool_free_cell(MPIDI_global.request_pool, MPIDIG_REQUEST(req, req));
@@ -97,7 +97,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
             MPIDI_SHM_am_request_finalize(req);
 #endif
         }
-        MPIR_Request_free_unsafe(req);
+        MPIDI_CH4_REQUEST_FREE(req);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REQUEST_COMPLETE);
@@ -118,6 +118,16 @@ MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
     MPIR_Datatype_release_if_not_builtin(MPIDI_PREQUEST(req, datatype));
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PREQUEST_FREE_HOOK);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPID_Part_request_free_hook(MPIR_Request * req)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PART_REQUEST_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PART_REQUEST_FREE_HOOK);
+
+    MPIR_Datatype_release_if_not_builtin(MPIDI_PART_REQUEST(req, datatype));
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PART_REQUEST_FREE_HOOK);
 }
 
 #endif /* CH4_REQUEST_H_INCLUDED */

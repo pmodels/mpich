@@ -57,8 +57,9 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 		  "**notimpl %s", __func__);
 #   endif
     
-fn_fail:
-fn_exit:
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

@@ -34,6 +34,15 @@ int MPIDI_SHM_mpi_comm_commit_post_hook(MPIR_Comm * comm)
     return ret;
 }
 
+int MPIDI_SHM_comm_set_hints(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int ret;
+
+    ret = MPIDI_POSIX_comm_set_hints(comm, info);
+
+    return ret;
+}
+
 int MPIDI_SHM_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int ret;

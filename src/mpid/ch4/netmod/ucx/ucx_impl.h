@@ -28,9 +28,9 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_init_tag(MPIR_Context_id_t contextid
 {
     uint64_t ucp_tag = 0;
     ucp_tag = contextid;
-    ucp_tag = (ucp_tag << MPIDI_UCX_SOURCE_SHIFT);
+    ucp_tag = (ucp_tag << MPIDI_UCX_RANK_BITS);
     ucp_tag |= source;
-    ucp_tag = (ucp_tag << MPIDI_UCX_TAG_SHIFT);
+    ucp_tag = (ucp_tag << MPIDI_UCX_TAG_BITS);
     ucp_tag |= (MPIDI_UCX_TAG_MASK & tag);
     return ucp_tag;
 }
@@ -43,7 +43,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_tag_mask(int mpi_tag, int src)
         tag_mask &= ~MPIR_TAG_USABLE_BITS;
 
     if (src == MPI_ANY_SOURCE)
-        tag_mask &= ~(MPIDI_UCX_SOURCE_MASK);
+        tag_mask &= ~(MPIDI_UCX_RANK_MASK);
 
     return tag_mask;
 }
@@ -53,12 +53,12 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_recv_tag(int mpi_tag, int src,
 {
     uint64_t ucp_tag = contextid;
 
-    ucp_tag = (ucp_tag << MPIDI_UCX_SOURCE_SHIFT);
+    ucp_tag = (ucp_tag << MPIDI_UCX_RANK_BITS);
     if (src != MPI_ANY_SOURCE)
-        ucp_tag |= (src & UCS_MASK(MPIDI_UCX_CONTEXT_RANK_BITS));
-    ucp_tag = ucp_tag << MPIDI_UCX_TAG_SHIFT;
+        ucp_tag |= (src & UCS_MASK(MPIDI_UCX_RANK_BITS));
+    ucp_tag = ucp_tag << MPIDI_UCX_TAG_BITS;
     if (mpi_tag != MPI_ANY_TAG)
-        ucp_tag |= (MPIDI_UCX_TAG_MASK & mpi_tag);
+        ucp_tag |= (mpi_tag & UCS_MASK(MPIDI_UCX_TAG_BITS));
     return ucp_tag;
 }
 
@@ -69,7 +69,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_tag(uint64_t match_bits)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
 {
-    return ((int) ((match_bits & MPIDI_UCX_SOURCE_MASK) >> MPIDI_UCX_TAG_SHIFT));
+    return ((int) ((match_bits & MPIDI_UCX_RANK_MASK) >> MPIDI_UCX_TAG_BITS));
 }
 
 #define MPIDI_UCX_CHK_STATUS(STATUS)                                    \
@@ -101,8 +101,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
 MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_target(int rank, MPIR_Win * win,
                                                             MPIDI_winattr_t winattr)
 {
-    /* zero win target does not have rkey. */
-    return (winattr & MPIDI_WINATTR_NM_REACHABLE) && MPIDI_UCX_WIN_INFO(win, rank).rkey != NULL;
+    /* unmapped win target does not have rkey. */
+    return (winattr & MPIDI_WINATTR_NM_REACHABLE) || (MPIDI_UCX_WIN(win).info_table &&
+                                                      MPIDI_UCX_WIN_INFO(win, rank).rkey != NULL);
 }
 
 /* This function implements netmod vci to vni(context) mapping.
@@ -122,4 +123,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_vni(int flag, MPIR_Comm * comm_ptr,
     return MPIDI_get_vci(flag, comm_ptr, src_rank, dst_rank, tag) % MPIDI_UCX_global.num_vnis;
 }
 
+/* for rma, we need ensure rkey is consistent with the per-vni ep,
+ * which essentially means we only need consistent vni per-window */
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_win_vni(MPIR_Win * win)
+{
+    int win_idx = 0;
+    return MPIDI_get_vci(SRC_VCI_FROM_SENDER, win->comm_ptr, 0, 0, win_idx) %
+        MPIDI_UCX_global.num_vnis;
+}
+
+/* Need both local and remote vni to be the same, or the synchronization call
+ * may blocked at flushing the remote ep (due to missing remote progress) */
+#define MPIDI_UCX_WIN_TO_EP(win,rank,vni) \
+    MPIDI_UCX_AV(MPIDIU_comm_rank_to_av(win->comm_ptr, rank)).dest[vni][vni]
+
+#define MPIDI_UCX_WIN_AV_TO_EP(av, vni) MPIDI_UCX_AV((av)).dest[vni][vni]
+
+ucs_status_t MPIDI_UCX_am_handler(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
+                                  unsigned flags);
 #endif /* UCX_IMPL_H_INCLUDED */

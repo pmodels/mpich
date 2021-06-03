@@ -25,7 +25,7 @@ typedef struct {
 
 static int errs = 0;
 
-void verify_result(twoint_t * data, int len, twoint_t expected, const char *test_name)
+static void verify_result(twoint_t * data, int len, twoint_t expected, const char *test_name)
 {
     int i;
     for (i = 0; i < len; i++) {
@@ -39,8 +39,8 @@ void verify_result(twoint_t * data, int len, twoint_t expected, const char *test
 
 /* Check non-deterministic result of none ordering.
  * Expected result has two possibilities. */
-void verify_nondeterministic_result(twoint_t * data,
-                                    int len, twoint_t * expected, const char *test_name)
+static void verify_nondeterministic_result(twoint_t * data,
+                                           int len, twoint_t * expected, const char *test_name)
 {
     int i;
     for (i = 0; i < len; i++) {
@@ -58,7 +58,10 @@ void verify_nondeterministic_result(twoint_t * data,
 int main(int argc, char **argv)
 {
     int me, nproc, i;
-    twoint_t *data, *mine, *mine_plus, *expected;
+    twoint_t *data;
+    twoint_t *mine = NULL;
+    twoint_t *mine_plus = NULL;
+    twoint_t *expected = NULL;
     MPI_Win win;
     MPI_Info info_in;
 
@@ -111,7 +114,7 @@ int main(int argc, char **argv)
         data[0].val = 0;
     }
     MPI_Win_fence(0, win);
-    /* 1.b. Large arrary test */
+    /* 1.b. Large array test */
     if (me == nproc - 1) {
         MPI_Accumulate(mine, ARRAY_LEN, MPI_2INT, 0, 0, ARRAY_LEN, MPI_2INT, MPI_REPLACE, win);
         MPI_Accumulate(mine_plus, ARRAY_LEN, MPI_2INT, 0, 0, ARRAY_LEN, MPI_2INT, MPI_REPLACE, win);

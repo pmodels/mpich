@@ -913,7 +913,7 @@ int ADIOI_Build_client_reqs(ADIO_File fd,
                         break;
                     case REAL_OFF:
                         /* Set the ol list for the memtypes that will
-                         * map to each aggregator, coaslescing if
+                         * map to each aggregator, coalescing if
                          * possible. */
                         agg_next_off_idx = agg_ol_cur_ct_arr[cur_off_proc];
                         if (agg_mem_next_off_arr[cur_off_proc] != agg_mem_st_reg) {
@@ -1212,7 +1212,7 @@ int ADIOI_Build_client_pre_req(ADIO_File fd,
                         break;
                     case REAL_OFF:
                         /* Set the ol list for the memtype that
-                         * will map to our aggregator, coaslescing
+                         * will map to our aggregator, coalescing
                          * if possible. */
                         agg_next_off_idx = agg_ol_cur_ct;
                         if (agg_mem_next_off != agg_mem_st_reg) {
@@ -1370,7 +1370,7 @@ static int process_pre_req(ADIO_File fd,
             break;
         case REAL_OFF:
             /* Set the ol list for the memtype that will map to our
-             * aggregator, coaslescing if possible. */
+             * aggregator, coalescing if possible. */
             for (i = 0; i < my_mem_view_state_p->pre_ol_ct; i++) {
                 agg_disp_arr[i] = my_mem_view_state_p->pre_disp_arr[i];
                 agg_blk_arr[i] = my_mem_view_state_p->pre_blk_arr[i];
@@ -1612,7 +1612,7 @@ int ADIOI_Build_client_req(ADIO_File fd,
                         break;
                     case REAL_OFF:
                         /* Set the ol list for the memtype that
-                         * will map to our aggregator, coaslescing
+                         * will map to our aggregator, coalescing
                          * if possible. */
                         agg_next_off_idx = agg_ol_cur_ct;
                         if (agg_mem_next_off != agg_mem_st_reg) {

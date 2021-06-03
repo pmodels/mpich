@@ -50,7 +50,7 @@ void right(void *a, void *b, int *count, MPI_Datatype * type)
 }
 
 /* Just performs a simple sum but can be marked as non-commutative to
-   potentially tigger different logic in the implementation. */
+   potentially trigger different logic in the implementation. */
 void nc_sum(void *a, void *b, int *count, MPI_Datatype * type);
 void nc_sum(void *a, void *b, int *count, MPI_Datatype * type)
 {

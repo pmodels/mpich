@@ -143,7 +143,7 @@ int blockindexed_contig_test(void)
 /* blockindexed_vector_test()
  *
  * Tests behavior with a blockindexed of some vector types;
- * this shouldn't be easily convertable into anything else.
+ * this shouldn't be easily convertible into anything else.
  *
  * Returns the number of errors encountered.
  */

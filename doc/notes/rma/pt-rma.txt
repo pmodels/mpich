@@ -1,6 +1,6 @@
 Below is the current design for passive target RMA on top of CH3.
 
-We assume that there is some asychronous agent (thread) that
+We assume that there is some asynchronous agent (thread) that
 periodically pokes the progress engine, i.e., periodically calls
 MPID_Progress_test(). We need to do a general poke of the progress
 engine because we don't know whether there will be passive target RMA

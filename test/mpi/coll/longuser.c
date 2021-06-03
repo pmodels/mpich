@@ -8,19 +8,17 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
-int add(double *, double *, int *, MPI_Datatype *);
 /*
  * User-defined operation on a long value (tests proper handling of
  * possible pipelining in the implementation of reductions with user-defined
  * operations).
  */
-int add(double *invec, double *inoutvec, int *len, MPI_Datatype * dtype)
+static void add(double *invec, double *inoutvec, int *len, MPI_Datatype * dtype)
 {
     int i, n = *len;
     for (i = 0; i < n; i++) {
         inoutvec[i] = invec[i] + inoutvec[i];
     }
-    return 0;
 }
 
 int main(int argc, char **argv)

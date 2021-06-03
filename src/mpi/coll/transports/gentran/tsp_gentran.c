@@ -25,7 +25,7 @@ UT_icd vtx_type_t_icd = {
     NULL
 };
 
-int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
+int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched, bool is_persistent)
 {
     sched->total_vtcs = 0;
     sched->completed_vtcs = 0;
@@ -39,6 +39,8 @@ int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
 
     sched->issued_head = NULL;
     sched->issued_tail = NULL;
+
+    sched->is_persistent = is_persistent;
 
     return MPI_SUCCESS;
 }
@@ -58,6 +60,12 @@ void MPII_Genutil_sched_free(MPII_Genutil_sched_t * sched)
         if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
             MPL_free(vtx->u.imcast.req);
             utarray_free(vtx->u.imcast.dests);
+        } else if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__SCHED) {
+            /* In normal case, sub schedule is free'ed when it is done
+             * only when the sub-scheduler is persistent */
+            if (vtx->u.sched.is_persistent) {
+                MPII_Genutil_sched_free(vtx->u.sched.sched);
+            }
         } else if (vtx->vtx_kind > MPII_GENUTIL_VTX_KIND__LAST) {
             MPII_Genutil_vtx_type_t *type = vtype + vtx->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
             MPIR_Assert(type != NULL);
@@ -359,7 +367,7 @@ void MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched)
     int fence_id;
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Gentran: scheduling a fence"));
 
-    /* fence operation is an extension to fence, so we can resuse the fence call */
+    /* fence operation is an extension to fence, so we can reuse the fence call */
     fence_id = MPII_Genutil_sched_sink(sched);
     /* change the vertex kind from SINK to FENCE */
     vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, fence_id);
@@ -411,10 +419,12 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     MPIR_Request_add_ref(reqp);
 
     if (unlikely(sched->total_vtcs == 0)) {
-        MPII_Genutil_sched_free(sched);
+        if (!sched->is_persistent)
+            MPII_Genutil_sched_free(sched);
         MPIR_Request_complete(reqp);
         goto fn_exit;
     }
+    MPIR_Assert(sched->completed_vtcs == 0);
     /* Kick start progress on this collective's schedule */
     mpi_errno = MPII_Genutil_sched_poke(sched, &is_complete, &made_progress);
     if (is_complete) {

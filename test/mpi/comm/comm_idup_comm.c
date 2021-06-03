@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     int ranges[1][3];
     int isLeft, rleader;
     MPI_Group world_group, high_group, even_group;
-    MPI_Comm local_comm, inter_comm, test_comm, outcomm;
+    MPI_Comm local_comm, inter_comm, outcomm;
     MPI_Comm idupcomms[NUM_IDUPS];
     MPI_Request reqs[NUM_IDUPS];
 

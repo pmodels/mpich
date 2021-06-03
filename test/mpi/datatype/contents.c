@@ -86,9 +86,9 @@ int builtin_float_test(void)
 {
     int nints, nadds, ntypes, combiner;
 
-    int err, errs = 0;
+    int errs = 0;
 
-    err = MPI_Type_get_envelope(MPI_FLOAT, &nints, &nadds, &ntypes, &combiner);
+    MPI_Type_get_envelope(MPI_FLOAT, &nints, &nadds, &ntypes, &combiner);
 
     if (combiner != MPI_COMBINER_NAMED)
         errs++;
@@ -292,13 +292,13 @@ int optimizable_vector_of_basics_test(void)
     MPI_Aint *adds = NULL;
     MPI_Datatype *types;
 
-    int err, errs = 0;
+    int errs = 0;
 
     /* set up type */
-    err = MPI_Type_vector(10, 2, 2, MPI_INT, &parent_type);
+    MPI_Type_vector(10, 2, 2, MPI_INT, &parent_type);
 
     /* decode */
-    err = MPI_Type_get_envelope(parent_type, &nints, &nadds, &ntypes, &combiner);
+    MPI_Type_get_envelope(parent_type, &nints, &nadds, &ntypes, &combiner);
 
     if (nints != 3)
         errs++;
@@ -325,7 +325,7 @@ int optimizable_vector_of_basics_test(void)
         adds = malloc(nadds * sizeof(*adds));
     types = malloc(ntypes * sizeof(*types));
 
-    err = MPI_Type_get_contents(parent_type, nints, nadds, ntypes, ints, adds, types);
+    MPI_Type_get_contents(parent_type, nints, nadds, ntypes, ints, adds, types);
 
     if (ints[0] != 10)
         errs++;
@@ -374,13 +374,13 @@ int indexed_of_basics_test(void)
     MPI_Aint *adds = NULL;
     MPI_Datatype *types;
 
-    int err, errs = 0;
+    int errs = 0;
 
     /* set up type */
-    err = MPI_Type_indexed(s_count, s_blocklengths, s_displacements, MPI_INT, &parent_type);
+    MPI_Type_indexed(s_count, s_blocklengths, s_displacements, MPI_INT, &parent_type);
 
     /* decode */
-    err = MPI_Type_get_envelope(parent_type, &nints, &nadds, &ntypes, &combiner);
+    MPI_Type_get_envelope(parent_type, &nints, &nadds, &ntypes, &combiner);
 
     if (nints != 7)
         errs++;
@@ -407,7 +407,7 @@ int indexed_of_basics_test(void)
         adds = malloc(nadds * sizeof(*adds));
     types = malloc(ntypes * sizeof(*types));
 
-    err = MPI_Type_get_contents(parent_type, nints, nadds, ntypes, ints, adds, types);
+    MPI_Type_get_contents(parent_type, nints, nadds, ntypes, ints, adds, types);
 
     if (ints[0] != s_count)
         errs++;

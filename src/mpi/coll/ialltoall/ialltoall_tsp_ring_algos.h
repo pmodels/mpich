@@ -37,9 +37,10 @@ copy (buf1)<--recv (buf1)            send (buf2)   /
 */
 
 /* Routine to schedule a ring based allgather */
-int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                        MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
+int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
+                                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                        MPI_Datatype recvtype, MPIR_Comm * comm,
+                                        MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst, copy_dst;
@@ -166,7 +167,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
                                      (char *) recvbuf + copy_dst * recvcount * recvtype_extent,
                                      recvcount, recvtype, sched, 1, &recv_id[i % 3]);
 
-        /* swap sbuf and rbuf - using data_buf as intermeidate buffer */
+        /* swap sbuf and rbuf - using data_buf as intermediate buffer */
         data_buf = sbuf;
         sbuf = rbuf;
         rbuf = data_buf;
@@ -180,8 +181,8 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
 }
 
 /* Non-blocking ring based Alltoall */
-int MPIR_TSP_Ialltoall_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+int MPIR_TSP_Ialltoall_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                   MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -194,7 +195,8 @@ int MPIR_TSP_Ialltoall_intra_ring(const void *sendbuf, int sendcount, MPI_Dataty
     /* Generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_ERR_CHKANDJUMP(!sched, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_TSP_sched_create(sched);
+
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Ialltoall_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf,

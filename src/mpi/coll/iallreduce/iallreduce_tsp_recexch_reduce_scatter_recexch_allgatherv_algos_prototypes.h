@@ -16,7 +16,7 @@
 
 int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(const void *sendbuf,
                                                                               void *recvbuf,
-                                                                              int count,
+                                                                              MPI_Aint count,
                                                                               MPI_Datatype datatype,
                                                                               MPI_Op op,
                                                                               MPIR_Comm * comm,
@@ -25,7 +25,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
                                                                               sched);
 
 int MPIR_TSP_Iallreduce_intra_recexch_reduce_scatter_recexch_allgatherv(const void *sendbuf,
-                                                                        void *recvbuf, int count,
+                                                                        void *recvbuf,
+                                                                        MPI_Aint count,
                                                                         MPI_Datatype datatype,
                                                                         MPI_Op op, MPIR_Comm * comm,
                                                                         MPIR_Request ** req, int k);

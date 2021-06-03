@@ -37,8 +37,8 @@ cvars:
  * Cost = lgp.alpha + n.((p-1)/p).beta where n is the total size of the data
  * gathered at the root.
  */
-int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                               void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
+int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                               void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
                                MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int comm_size, rank;

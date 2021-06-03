@@ -20,9 +20,9 @@
  * performs twice as fast as recursive doubling for long messages (on
  * Myrinet and IBM SP).
  */
-int MPIR_Iallgather_intra_sched_ring(const void *sendbuf, int sendcount, MPI_Datatype
-                                     sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallgather_intra_sched_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype
+                                     sendtype, void *recvbuf, MPI_Aint recvcount,
+                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;

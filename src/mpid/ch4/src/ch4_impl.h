@@ -10,10 +10,27 @@
 #include "mpidig_am.h"
 #include "mpidu_shm.h"
 #include "ch4r_proc.h"
+#include "ch4_self.h"
 
-int MPIDI_Progress_test(int flags);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
+
+/* Request creation with locking for LOCKLESS MT model */
+#define MPIDI_CH4_REQUEST_CREATE(req, kind, pool, ref_count)            \
+    do {                                                                \
+        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS)                \
+            (req) = MPIR_Request_create_from_pool_safe(kind, pool, ref_count); \
+        else                                                            \
+            (req) = MPIR_Request_create_from_pool(kind, pool, ref_count); \
+    } while (0)
+
+#define MPIDI_CH4_REQUEST_FREE(req)                                \
+    do {                                                           \
+        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS)           \
+            MPIR_Request_free_safe(req);                           \
+        else                                                       \
+            MPIR_Request_free_unsafe(req);                         \
+    } while (0)
 
 /* Static inlines */
 
@@ -54,25 +71,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Comm *MPIDIG_context_id_to_comm(uint64_t context_i
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX MPIDIG_rreq_t **MPIDIG_context_id_to_uelist(uint64_t context_id)
-{
-    int comm_idx = MPIDIG_get_context_index(context_id);
-    int subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id);
-    int is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, context_id);
-    MPIDIG_rreq_t **ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_CONTEXT_ID_TO_UELIST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_CONTEXT_ID_TO_UELIST);
-
-    MPIR_Assert(subcomm_type <= 3);
-    MPIR_Assert(is_localcomm <= 2);
-
-    ret = &MPIDI_global.comm_req_lists[comm_idx].uelist[is_localcomm][subcomm_type];
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_CONTEXT_ID_TO_UELIST);
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_id_to_context(uint64_t win_id)
 {
     MPIR_Context_id_t ret;
@@ -109,7 +107,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_request_complete(MPIR_Request * req)
 
     MPIR_cc_decr(req->cc_ptr, &incomplete);
     if (!incomplete) {
-        MPIR_Request_free_unsafe(req);
+        MPIDI_CH4_REQUEST_FREE(req);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_REQUEST_COMPLETE);
@@ -323,6 +321,24 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
         }                                                       \
     } while (0)
 
+#define MPIDI_Datatype_check_contig_lb(datatype_, dt_contig_out_, dt_true_lb_) \
+    do {                                                                       \
+        if (IS_BUILTIN(datatype_)) {                                           \
+            (dt_contig_out_) = TRUE;                                           \
+            (dt_true_lb_)    = 0;                                              \
+        } else {                                                               \
+            MPIR_Datatype *dt_ptr_;                                            \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));                     \
+            if (dt_ptr_) {                                                     \
+                (dt_contig_out_) = (dt_ptr_)->is_contig;                       \
+                (dt_true_lb_)    = (dt_ptr_)->true_lb;                         \
+            } else {                                                           \
+                (dt_contig_out_) = 1;                                          \
+                (dt_true_lb_)    = 0;                                          \
+            }                                                                  \
+        }                                                                      \
+    } while (0)
+
 #define MPIDI_Datatype_check_lb(datatype_, dt_true_lb_)    \
     do {                                                   \
         if (IS_BUILTIN(datatype_)) {                       \
@@ -414,60 +430,35 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank,
 
     ret = (z < size);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
     return ret;
 }
 
-/* TODO: Several unbounded loops call this macro. One way to avoid holding the
- * ALLFUNC_MUTEX lock forever is to insert YIELD in each loop. We choose to
- * insert it here for simplicity, but this might not be the best place. One
- * needs to investigate the appropriate place to yield the lock. */
-/* NOTE: Taking off VCI lock is necessary to avoid recursive locking and allow
- * more granular per-vci locks */
-/* TODO: MPIDI_global.vci_lock probably will be changed into granular generic lock
+/* Following progress macros are currently used by window synchronization calls.
+ *
+ * CAUTION: the macro uses MPIR_ERR_CHECK, be careful of it escaping the
+ * critical section.
+ *
+ * NOTE: when used in a loop, we insert a yield of global lock to prevent
+ * blocking other progress (under global granularity).
  */
 
-#define MPIDIU_PROGRESS()                                   \
-    do {                                                        \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
-        mpi_errno = MPID_Progress_test(NULL);                       \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock); \
-        MPIR_ERR_CHECK(mpi_errno);  \
+/* declare to avoid header order dance */
+MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci);
+
+#define MPIDIU_PROGRESS_WHILE(cond, vci)         \
+    while (cond) {                          \
+        mpi_errno = MPIDI_progress_test_vci(vci);   \
+        MPIR_ERR_CHECK(mpi_errno); \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
-    } while (0)
+    }
 
-/* Optimized versions to avoid exessive locking/unlocking */
-/* FIXME: use inline function rather macros for cleaner semantics */
-
-#define MPIDIU_PROGRESS_WHILE(cond)         \
-    do {                                        \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
-        while (cond) {                          \
-            mpi_errno = MPID_Progress_test(NULL);   \
-            if (mpi_errno) break;               \
-            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
-        } \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock); \
-        MPIR_ERR_CHECK(mpi_errno);              \
-    } while (0)
-
-/* This macro is refactored for original code that progress in a do-while loop
- * NOTE: it's already inside the progress lock and it is calling progress again.
- *       To avoid recursive locking, we yield the lock here.
- * TODO: Can we consolidate with previous macro? Double check the reasoning.
- */
-#define MPIDIU_PROGRESS_DO_WHILE(cond) \
-    do {                                        \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
-        do {                          \
-            mpi_errno = MPID_Progress_test(NULL);   \
-            if (mpi_errno) break;               \
-            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
-        } while (cond); \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock); \
-        MPIR_ERR_CHECK(mpi_errno);              \
-    } while (0)
+#define MPIDIU_PROGRESS_DO_WHILE(cond, vci) \
+    do { \
+        mpi_errno = MPIDI_progress_test_vci(vci); \
+        MPIR_ERR_CHECK(mpi_errno); \
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
+    } while (cond)
 
 #ifdef HAVE_ERROR_CHECKING
 #define MPIDIG_EPOCH_CHECK_SYNC(win, mpi_errno, stmt)               \
@@ -674,8 +665,6 @@ MPL_STATIC_INLINE_PREFIX uintptr_t MPIDIG_win_base_at_target(const MPIR_Win * wi
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
                                                         MPIR_cc_t ** local_cmpl_cnts_ptr)
 {
-    int c = 0;
-
     /* Increase per-window counters for fence, and per-target counters for
      * all other synchronization. */
     switch (MPIDIG_WIN(win, sync).access_epoch_type) {
@@ -688,15 +677,15 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_cmpl_cnts_incr(MPIR_Win * win, int targ
             {
                 MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_get(win, target_rank);
 
-                MPIR_cc_incr(&target_ptr->local_cmpl_cnts, &c);
-                MPIR_cc_incr(&target_ptr->remote_cmpl_cnts, &c);
+                MPIR_cc_inc(&target_ptr->local_cmpl_cnts);
+                MPIR_cc_inc(&target_ptr->remote_cmpl_cnts);
 
                 *local_cmpl_cnts_ptr = &target_ptr->local_cmpl_cnts;
                 break;
             }
         default:
-            MPIR_cc_incr(&MPIDIG_WIN(win, local_cmpl_cnts), &c);
-            MPIR_cc_incr(&MPIDIG_WIN(win, remote_cmpl_cnts), &c);
+            MPIR_cc_inc(&MPIDIG_WIN(win, local_cmpl_cnts));
+            MPIR_cc_inc(&MPIDIG_WIN(win, remote_cmpl_cnts));
 
             *local_cmpl_cnts_ptr = &MPIDIG_WIN(win, local_cmpl_cnts);
             break;
@@ -706,18 +695,17 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_cmpl_cnts_incr(MPIR_Win * win, int targ
 /* Increase counter for active message acc ops. */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win, int target_rank)
 {
-    int c = 0;
     switch (MPIDIG_WIN(win, sync).access_epoch_type) {
         case MPIDIG_EPOTYPE_LOCK:
         case MPIDIG_EPOTYPE_LOCK_ALL:
         case MPIDIG_EPOTYPE_START:
             {
                 MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_get(win, target_rank);
-                MPIR_cc_incr(&target_ptr->remote_acc_cmpl_cnts, &c);
+                MPIR_cc_inc(&target_ptr->remote_acc_cmpl_cnts);
                 break;
             }
         default:
-            MPIR_cc_incr(&MPIDIG_WIN(win, remote_acc_cmpl_cnts), &c);
+            MPIR_cc_inc(&MPIDIG_WIN(win, remote_acc_cmpl_cnts));
             break;
     }
 }
@@ -725,7 +713,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win
 /* Decrease counter for active message acc ops. */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
 {
-    int c = 0;
     switch (MPIDIG_WIN(win, sync).access_epoch_type) {
         case MPIDIG_EPOTYPE_LOCK:
         case MPIDIG_EPOTYPE_LOCK_ALL:
@@ -733,11 +720,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win
             {
                 MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, target_rank);
                 MPIR_Assert(target_ptr);
-                MPIR_cc_decr(&target_ptr->remote_acc_cmpl_cnts, &c);
+                MPIR_cc_dec(&target_ptr->remote_acc_cmpl_cnts);
                 break;
             }
         default:
-            MPIR_cc_decr(&MPIDIG_WIN(win, remote_acc_cmpl_cnts), &c);
+            MPIR_cc_dec(&MPIDIG_WIN(win, remote_acc_cmpl_cnts));
             break;
     }
 
@@ -745,8 +732,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
 {
-    int c = 0;
-
     /* Decrease per-window counter for fence, and per-target counters for
      * all other synchronization. */
     switch (MPIDIG_WIN(win, sync).access_epoch_type) {
@@ -756,21 +741,23 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_cmpl_cnt_decr(MPIR_Win * win, in
             {
                 MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, target_rank);
                 MPIR_Assert(target_ptr);
-                MPIR_cc_decr(&target_ptr->remote_cmpl_cnts, &c);
+                MPIR_cc_dec(&target_ptr->remote_cmpl_cnts);
                 break;
             }
         default:
-            MPIR_cc_decr(&MPIDIG_WIN(win, remote_cmpl_cnts), &c);
+            MPIR_cc_dec(&MPIDIG_WIN(win, remote_cmpl_cnts));
             break;
     }
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win,
-                                                                            int *allcompleted)
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win)
 {
     int rank = 0;
 
-    *allcompleted = 1;
+    if (!MPIDIG_WIN(win, targets))
+        return true;
+
+    bool allcompleted = true;
     MPIDIG_win_target_t *target_ptr = NULL;
     for (rank = 0; rank < win->comm_ptr->local_size; rank++) {
         target_ptr = MPIDIG_win_target_find(win, rank);
@@ -778,37 +765,44 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_remote_completed(MPIR
             continue;
         if (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
             MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0) {
-            *allcompleted = 0;
+            allcompleted = false;
             break;
         }
     }
+    return allcompleted;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_local_completed(MPIR_Win * win,
-                                                                           int *allcompleted)
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_win_check_all_targets_local_completed(MPIR_Win * win)
 {
     int rank = 0;
 
-    *allcompleted = 1;
+    if (!MPIDIG_WIN(win, targets))
+        return true;
+
+    bool allcompleted = true;
     MPIDIG_win_target_t *target_ptr = NULL;
     for (rank = 0; rank < win->comm_ptr->local_size; rank++) {
         target_ptr = MPIDIG_win_target_find(win, rank);
         if (!target_ptr)
             continue;
         if (MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0) {
-            *allcompleted = 0;
+            allcompleted = false;
             break;
         }
     }
+    return allcompleted;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_group_local_completed(MPIR_Win * win,
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_win_check_group_local_completed(MPIR_Win * win,
                                                                      int *ranks_in_win_grp,
-                                                                     int grp_siz, int *allcompleted)
+                                                                     int grp_siz)
 {
     int i = 0;
 
-    *allcompleted = 1;
+    if (!MPIDIG_WIN(win, targets))
+        return true;
+
+    bool allcompleted = true;
     MPIDIG_win_target_t *target_ptr = NULL;
     for (i = 0; i < grp_siz; i++) {
         int rank = ranks_in_win_grp[i];
@@ -816,10 +810,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_group_local_completed(MPIR_Win * 
         if (!target_ptr)
             continue;
         if (MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0) {
-            *allcompleted = 0;
+            allcompleted = false;
             break;
         }
     }
+    return allcompleted;
 }
 
 /* Map function interfaces in CH4 level */
@@ -864,9 +859,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_map_set_unsafe(void *in_map, uint64_t id, v
 MPL_STATIC_INLINE_PREFIX void MPIDIU_map_set(void *in_map, uint64_t id, void *val,
                                              MPL_memory_class class)
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIDIU_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_UTIL_MUTEX);
     MPIDIU_map_set_unsafe(in_map, id, val, class);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDIU_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_UTIL_MUTEX);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIU_map_erase(void *in_map, uint64_t id)
@@ -904,7 +899,7 @@ MPL_STATIC_INLINE_PREFIX void *MPIDIU_map_update(void *in_map, uint64_t id, void
     MPIDIU_map_t *map;
     MPIDIU_map_entry_t *map_entry;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_UTIL_MUTEX);
     map = (MPIDIU_map_t *) in_map;
     HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
     if (map_entry == NULL) {
@@ -914,7 +909,7 @@ MPL_STATIC_INLINE_PREFIX void *MPIDIU_map_update(void *in_map, uint64_t id, void
         rc = map_entry->value;
         map_entry->value = new_val;
     }
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_UTIL_MUTEX);
     return rc;
 }
 
@@ -957,15 +952,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_win_rank_to_intra_rank(MPIR_Win * win, int r
 }
 
 /* Wait until active message acc ops are done. */
-MPL_STATIC_INLINE_PREFIX int MPIDIG_wait_am_acc(MPIR_Win * win, int target_rank, int order_needed)
+/* NOTE: this function is currently only called from ofi_rma.h, it is being called
+ * outside per-vci critical section */
+MPL_STATIC_INLINE_PREFIX int MPIDIG_wait_am_acc(MPIR_Win * win, int target_rank)
 {
     int mpi_errno = MPI_SUCCESS;
-    if (MPIDIG_WIN(win, info_args).accumulate_ordering & order_needed) {
-        MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, target_rank);
-        while ((target_ptr && MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0) ||
-               MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) != 0) {
-            MPIDIU_PROGRESS();
-        }
+    MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, target_rank);
+    MPID_Progress_state state;
+    state.vci_count = 1;
+    state.vci[0] = 0;   /* MPIDIG only uses vci 0 for now */
+    state.flag = MPIDI_PROGRESS_ALL;
+    /* skip other state fields for MPID_Progress_test */
+    while ((target_ptr && MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0) ||
+           MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) != 0) {
+        mpi_errno = MPID_Progress_test(&state);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
   fn_exit:
     return mpi_errno;
@@ -984,7 +986,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
                                                    MPI_Op acc_op, int src_kind)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_User_function *uop = NULL;
+    MPIR_op_function *uop = NULL;
     MPI_Aint source_dtp_size = 0, source_dtp_extent = 0;
     int is_empty_source = FALSE;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMPUTE_ACC_OP);
@@ -1014,14 +1016,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         /* --END ERROR HANDLING-- */
     }
 
+    void *save_targetbuf = NULL;
+    void *host_targetbuf = NULL;
+
+    host_targetbuf = MPIR_gpu_host_swap(target_buf, target_count, target_dtp);
+    if (host_targetbuf) {
+        save_targetbuf = target_buf;
+        target_buf = host_targetbuf;
+    }
 
     if (is_empty_source == TRUE || HANDLE_IS_BUILTIN(target_dtp)) {
         /* directly apply op if target dtp is predefined dtp OR source buffer is empty */
-        (*uop) (source_buf, target_buf, &source_count, &source_dtp);
+        MPI_Aint tmp_count = source_count;
+        (*uop) (source_buf, target_buf, &tmp_count, &source_dtp);
     } else {
         /* derived datatype */
         struct iovec *typerep_vec;
-        int i, count;
+        int i;
         MPI_Aint vec_len, type_extent, type_size, src_type_stride;
         MPI_Datatype type;
         MPIR_Datatype *dtp;
@@ -1083,7 +1094,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
                 continue;
             }
 
-            MPIR_Assign_trunc(count, curr_len / type_size, int);
+            MPI_Aint count;
+            MPIR_Assign_trunc(count, curr_len / type_size, MPI_Aint);
 
             if (src_ptr) {
                 MPI_Aint unpacked_size;
@@ -1113,9 +1125,68 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         MPL_free(typerep_vec);
     }
 
+    if (save_targetbuf) {
+        MPIR_gpu_swap_back(target_buf, save_targetbuf, target_count, target_dtp);
+        target_buf = save_targetbuf;
+    }
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMPUTE_ACC_OP);
     return mpi_errno;
+}
+
+/* NOTE: the slot for MPI_OP_NULL refers to RMA cswap */
+MPL_STATIC_INLINE_PREFIX int MPIDIU_win_acc_op_get_index(MPI_Op op)
+{
+    return MPIR_Op_builtin_get_index(op);
+}
+
+MPL_STATIC_INLINE_PREFIX MPI_Op MPIDIU_win_acc_get_op(int index)
+{
+    return MPIR_Op_builtin_get_op(index);
+}
+
+/* Determine whether need poll progress for RMA target-side active message.
+ * The polling interval is set globally as we don't distinguish target-side
+ * AM handling per-window.  */
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_rma_need_poll_am(void)
+{
+    bool poll_flag = false;
+
+    if (MPIR_CVAR_CH4_RMA_ENABLE_DYNAMIC_AM_PROGRESS) {
+        int interval;
+        MPIR_cc_incr(&MPIDIG_global.rma_am_poll_cntr, &interval);
+
+        /* Always poll if any RMA target-side AM has arrived because
+         * we expect more incoming AM now. */
+        if (MPL_atomic_load_int(&MPIDIG_global.rma_am_flag)) {
+            poll_flag = true;
+        } else {
+            /* Otherwise poll with low frequency to reduce latency */
+            poll_flag = ((interval + 1) % MPIR_CVAR_CH4_RMA_AM_PROGRESS_LOW_FREQ_INTERVAL
+                         == 0) ? true : false;
+        }
+    } else if (MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL > 1) {
+        int interval;
+        MPIR_cc_incr(&MPIDIG_global.rma_am_poll_cntr, &interval);
+
+        /* User explicitly controls the polling frequency */
+        poll_flag = ((interval + 1) % MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL == 0) ? true : false;
+    } else if (MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL == 1) {
+        /* Skip cntr update when interval == 1, as we always poll (default)  */
+        poll_flag = true;
+    } else {
+        /* User explicitly disables polling */
+        poll_flag = false;
+    }
+
+    return poll_flag;
+}
+
+/* Set flag to indicate a target-side AM has arrived. */
+MPL_STATIC_INLINE_PREFIX void MPIDIG_rma_set_am_flag(void)
+{
+    MPL_atomic_store_int(&MPIDIG_global.rma_am_flag, 1);
 }
 
 #endif /* CH4_IMPL_H_INCLUDED */

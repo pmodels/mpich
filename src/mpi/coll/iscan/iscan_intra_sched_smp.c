@@ -6,8 +6,9 @@
 #include "mpiimpl.h"
 
 
-int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                               MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = comm_ptr->rank;
@@ -117,7 +118,7 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, int count, MP
      * scan result. for example, to node 3, it will have reduce result
      * of rank 1,2,3,4,5,6 in tempbuf.
      * then we should broadcast this result in the local node, and
-     * reduce it with recvbuf to get final result if nessesary. */
+     * reduce it with recvbuf to get final result if necessary. */
 
     if (MPIR_Get_internode_rank(comm_ptr, rank) != 0) {
         /* we aren't on "node 0", so our node leader (possibly us) received

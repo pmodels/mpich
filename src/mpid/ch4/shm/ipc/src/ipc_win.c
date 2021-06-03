@@ -73,9 +73,8 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
     MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(2);
 
-    /* Skip IPC initialization if no local process or all submodules
-     * are disabled. */
-    if (!shm_comm_ptr || !MPIR_CVAR_CH4_XPMEM_ENABLE)
+    /* Skip IPC initialization if no local process */
+    if (!shm_comm_ptr)
         goto fn_exit;
 
     /* Determine IPC type based on buffer type and submodule availability.
@@ -163,6 +162,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                     mpi_errno =
                         MPIDI_XPMEM_ipc_handle_map(ipc_shared_table[i].ipc_handle.xpmem,
                                                    &shared_table[i].shm_base_addr);
+                    MPIR_ERR_CHECK(mpi_errno);
                     break;
                 case MPIDI_IPCI_TYPE__GPU:
                     /* FIXME: remote win buffer should be mapped to each of their corresponding
@@ -171,6 +171,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                         MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,
                                                  ipc_attr.gpu_attr.device, MPI_BYTE,
                                                  &shared_table[i].shm_base_addr);
+                    MPIR_ERR_CHECK(mpi_errno);
                     break;
                 case MPIDI_IPCI_TYPE__NONE:
                     /* no-op */
@@ -216,6 +217,4 @@ int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MPI_WIN_FREE_HOOK);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }

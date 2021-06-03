@@ -238,7 +238,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_lock_all(int assert, MPIR_Win *
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_cmpl_hook(MPIR_Win * win ATTRIBUTE((unused)))
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_cmpl_hook(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_WIN_CMPL_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_WIN_CMPL_HOOK);
@@ -246,11 +246,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_cmpl_hook(MPIR_Win * win ATTRIB
     /* Always perform barrier to ensure ordering of local load/store. */
     MPL_atomic_read_write_barrier();
 
+    MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
+    MPIDI_POSIX_rma_outstanding_req_flushall(posix_win);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_WIN_CMPL_HOOK);
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_local_cmpl_hook(MPIR_Win * win ATTRIBUTE((unused)))
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_local_cmpl_hook(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_WIN_LOCAL_CMPL_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_WIN_LOCAL_CMPL_HOOK);
@@ -258,12 +261,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_local_cmpl_hook(MPIR_Win * win 
     /* Always perform barrier to ensure ordering of local load/store. */
     MPL_atomic_read_write_barrier();
 
+    MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
+    MPIDI_POSIX_rma_outstanding_req_flushall(posix_win);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_WIN_LOCAL_CMPL_HOOK);
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_target_cmpl_hook(int rank ATTRIBUTE((unused)),
-                                                              MPIR_Win * win ATTRIBUTE((unused)))
+                                                              MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_TARGET_CMPL_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_TARGET_CMPL_HOOK);
@@ -271,19 +277,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_target_cmpl_hook(int rank ATTRIBUTE
     /* Always perform barrier to ensure ordering of local load/store. */
     MPL_atomic_read_write_barrier();
 
+    MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
+    MPIDI_POSIX_rma_outstanding_req_flushall(posix_win);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_TARGET_CMPL_HOOK);
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_target_local_cmpl_hook(int rank ATTRIBUTE((unused)),
-                                                                    MPIR_Win *
-                                                                    win ATTRIBUTE((unused)))
+                                                                    MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_TARGET_LOCAL_CMPL_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_TARGET_LOCAL_CMPL_HOOK);
 
     /* Always perform barrier to ensure ordering of local load/store. */
     MPL_atomic_read_write_barrier();
+
+    MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
+    MPIDI_POSIX_rma_outstanding_req_flushall(posix_win);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_TARGET_LOCAL_CMPL_HOOK);
     return MPI_SUCCESS;
@@ -322,5 +333,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_op_cs_exit_hook(MPIR_Win * win)
   fn_fail:
     goto fn_exit;
 }
+
+/* non-inlined function prototypes */
+
+int MPIDI_POSIX_shm_win_init_hook(MPIR_Win * win);
 
 #endif /* POSIX_WIN_H_INCLUDED */

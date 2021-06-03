@@ -68,7 +68,7 @@ AC_DEFUN([PAC_CHECK_VISIBILITY],[
     # Check if the compiler has support for visibility, like some
     # versions of gcc, icc, Sun Studio cc.
     AC_ARG_ENABLE(visibility,
-        AC_HELP_STRING([--enable-visibility],
+        AS_HELP_STRING([--enable-visibility],
             [enable visibility feature of certain compilers/linkers (default: enabled on platforms that support it)]))
 
     case ${target} in

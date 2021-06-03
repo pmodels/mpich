@@ -8,7 +8,7 @@
 
 int HYDT_dmxu_num_cb_fds = 0;
 struct HYDT_dmxu_callback *HYDT_dmxu_cb_list = NULL;
-struct HYDT_dmxu_fns HYDT_dmxu_fns = { 0 };
+struct HYDT_dmxu_fns HYDT_dmxu_fns;
 
 static int got_sigttin = 0;
 static int stdin_valid;

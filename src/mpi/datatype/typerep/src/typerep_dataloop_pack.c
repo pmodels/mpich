@@ -5,24 +5,28 @@
 
 #include "mpiimpl.h"
 #include <dataloop.h>
+#include "typerep_pre.h"
 
-int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes)
+int MPIR_Typerep_icopy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
+                       MPIR_Typerep_req * typereq_req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_COPY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_COPY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_ICOPY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_ICOPY);
 
     MPIR_Memcpy(outbuf, inbuf, num_bytes);
 
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_COPY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_ICOPY);
     return MPI_SUCCESS;
-  fn_fail:
-    goto fn_exit;
 }
 
-int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
-                      MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
-                      MPI_Aint * actual_pack_bytes)
+int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes)
+{
+    return MPIR_Typerep_icopy(outbuf, inbuf, num_bytes, NULL);
+}
+
+int MPIR_Typerep_ipack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
+                       MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
+                       MPI_Aint * actual_pack_bytes, MPIR_Typerep_req * typereq_req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Segment *segp;
@@ -76,9 +80,18 @@ int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype
     goto fn_exit;
 }
 
-int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize,
-                        void *outbuf, MPI_Aint outcount, MPI_Datatype datatype, MPI_Aint outoffset,
-                        MPI_Aint * actual_unpack_bytes)
+int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
+                      MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
+                      MPI_Aint * actual_pack_bytes)
+{
+    return MPIR_Typerep_ipack(inbuf, incount, datatype, inoffset, outbuf, max_pack_bytes,
+                              actual_pack_bytes, NULL);
+}
+
+
+int MPIR_Typerep_iunpack(const void *inbuf, MPI_Aint insize,
+                         void *outbuf, MPI_Aint outcount, MPI_Datatype datatype, MPI_Aint outoffset,
+                         MPI_Aint * actual_unpack_bytes, MPIR_Typerep_req * typereq_req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Segment *segp;
@@ -132,4 +145,18 @@ int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize,
+                        void *outbuf, MPI_Aint outcount, MPI_Datatype datatype, MPI_Aint outoffset,
+                        MPI_Aint * actual_unpack_bytes)
+{
+    return MPIR_Typerep_iunpack(inbuf, insize, outbuf, outcount, datatype, outoffset,
+                                actual_unpack_bytes, NULL);
+}
+
+int MPIR_Typerep_wait(MPIR_Typerep_req typereq_req)
+{
+    /* All nonblocking operations are actually blocking. Thus, do nothing in wait. */
+    return MPI_SUCCESS;
 }

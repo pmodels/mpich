@@ -3,7 +3,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-AC_PREREQ(2.63)
+AC_PREREQ(2.69)
 
 AC_INIT([MPL], [0.1])
 
@@ -44,7 +44,7 @@ else
    AC_MSG_ERROR([Version information not found. Configuration aborted.])
 fi
 
-AC_CONFIG_HEADER([include/config.h])
+AC_CONFIG_HEADERS([include/config.h])
 AC_CONFIG_COMMANDS([prefix-config],[perl $srcdir/confdb/cmd_prefix_config_h.pl MPL include/config.h include/mplconfig.h])
 
 # Non-verbose make
@@ -59,13 +59,13 @@ PAC_C_BUILTIN_EXPECT
 PAC_C_STATIC_ASSERT
 
 AC_ARG_ENABLE(embedded,
-    AC_HELP_STRING([--enable-embedded], [Build MPL in embedded mode (default is no)]),
+    AS_HELP_STRING([--enable-embedded], [Build MPL in embedded mode (default is no)]),
     [embedded=yes],
     [embedded=no])
 AM_CONDITIONAL([MPL_EMBEDDED_MODE],[test "x${embedded}" = "xyes"])
 
 AC_ARG_ENABLE(g,
-    AC_HELP_STRING([--enable-g=option],
+    AS_HELP_STRING([--enable-g=option],
 	[
 		Control the level of debugging support in MPL.
 		"option" is a list of comma separated names.  Default
@@ -311,10 +311,12 @@ if test -z "$timer_type" ; then
 	# do arithmetic with hrtime_t .
         AC_CACHE_CHECK([that hrtime_t is properly defined for gethrtime],
 	pac_cv_hrtime_works,[
-	AC_TRY_COMPILE([
-#include <sys/time.h>
-],[hrtime_t t1, t2; t1 = 1; t2 = 2; t1 = t1 + t2;],
-pac_cv_hrtime_works=yes,pac_cv_hrtime_works=no)])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+                #include <sys/time.h>
+            ]],[[
+                hrtime_t t1, t2; t1 = 1; t2 = 2; t1 = t1 + t2;
+            ]])],
+            pac_cv_hrtime_works=yes,pac_cv_hrtime_works=no)])
 	# A more ambitious test would look to see if casting an 
 	# hrtime_t to int64_t works, and even more ambitious
 	# would check whether long or long long was 64 bits (or even
@@ -363,21 +365,27 @@ case "$timer_type" in
     # Make sure that we can use struct timespec
     AC_CACHE_CHECK([whether struct timespec is defined in time.h],
                     pac_cv_struct_timespec_defined,[
-    AC_TRY_COMPILE([
-#include <time.h>],[
-    struct timespec t;],pac_cv_struct_timespec_defined=yes,
-    pac_cv_struct_timespec_defined=no)
-])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <time.h>
+            ]],[[
+            struct timespec t;
+            ]])],
+            pac_cv_struct_timespec_defined=yes,
+            pac_cv_struct_timespec_defined=no)
+    ])
     if test "$pac_cv_struct_timespec_defined" != "yes" ; then
         # Try again, but with -D_XOPEN_SOURCE=500 (works for AIX)
         AC_CACHE_CHECK([whether struct timespec is defined in time.h with _XOPEN_SOURCE=500],
                     pac_cv_struct_timespec_defined_with_xopen500,[
-        AC_TRY_COMPILE([
-#define _XOPEN_SOURCE 500
-#include <time.h>],[
-    struct timespec t;],pac_cv_struct_timespec_defined_with_xopen500=yes,
-    pac_cv_struct_timespec_defined_with_xopen500=no)
-])
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+                #define _XOPEN_SOURCE 500
+                #include <time.h>
+                ]],[[
+                struct timespec t;
+                ]])],
+                pac_cv_struct_timespec_defined_with_xopen500=yes,
+                pac_cv_struct_timespec_defined_with_xopen500=no)
+        ])
 	if test "$pac_cv_struct_timespec_defined_with_xopen500" = "yes" ; then
 	    # We need to define _XOPEN_SOURCE=500, but we need to ensure that
 	    # this is done before any include files are loaded.  At
@@ -391,19 +399,26 @@ case "$timer_type" in
     # time.h is required (see pages 45 and 46 in the POSIX standard).
     # See if we can compile
     AC_CACHE_CHECK([for CLOCK_REALTIME defined in time.h],pac_cv_posix_clock_realtime,[
-    AC_TRY_COMPILE([
-#include <time.h>],[
-    clockid_t cid = CLOCK_REALTIME;],pac_cv_posix_clock_realtime=yes,
-pac_cv_posix_clock_realtime=no)])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <time.h>
+            ]],[[
+            clockid_t cid = CLOCK_REALTIME;
+            ]])],
+            pac_cv_posix_clock_realtime=yes,
+            pac_cv_posix_clock_realtime=no)
+    ])
     if test "$pac_cv_posix_clock_realtime" = "no" ; then
          AC_MSG_WARN([POSIX timer requires definitions in time.h])
 	 # Check for the definition in sys/time.h, which is where
 	 # OpenBSD and FreeBSD have put it by mistake
-         AC_TRY_COMPILE([
-#include <time.h>
-#include <sys/time.h>],[
-    clockid_t cid = CLOCK_REALTIME;],pac_cv_posix_clock_realtime=yes,
-pac_cv_posix_clock_realtime=no)
+         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <time.h>
+            #include <sys/time.h>
+            ]],[[
+            clockid_t cid = CLOCK_REALTIME;
+            ]])],
+            pac_cv_posix_clock_realtime=yes,
+            pac_cv_posix_clock_realtime=no)
 	if test "$pac_cv_posix_clock_realtime" = yes ; then
 	    AC_MSG_WARN([sys/time.h required for POSIX timer])
 	    AC_DEFINE(NEEDS_SYS_TIME_H,1,[Define if sys/time.h is required to get timer definitions])
@@ -426,76 +441,73 @@ pac_cv_posix_clock_realtime=no)
 
     linux86_cycle|linux86_cycle_2)
     
-# The following AC_TRY_RUN statements are needed because x86_64 compilers
+# The following AC_RUN_IFELSE statements are needed because x86_64 compilers
 # usually know about rdtscp but the cpu may or may not actually implement the
 # feature.  This is not cross-compile safe, unfortunately.  In the long run we
 # should allow the user to override this with a configure flag.
-    AC_CACHE_CHECK([that linux86 cycle counter is available],
-        pac_cv_linux86_cycle,
-            AC_TRY_RUN([
-int main()
-{
-    /* rdtscp */
-    long long var, *var_ptr=&var;
-    __asm__ __volatile__("rdtscp; shl \$32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
-    return 0;
-}
-            ],pac_cv_linux86_cycle=rdtscp,
-                AC_TRY_RUN([[
-int main()
-{
-    /* cpuid 64 */
-    long long var, *var_ptr=&var;
-    __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx ; shl $32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
-    return 0;
-}
-                ]],pac_cv_linux86_cycle=cpuid_rdtsc64,
-                    AC_TRY_RUN([[[
-int main()
-{
-    /* cpuid 32 */
-    long long var, *var_ptr=&var;
-    __asm__ __volatile__("push %%ebx ; cpuid ; rdtsc ; pop %%ebx" : "=A" (*var_ptr) : : "ecx");
-    return 0;
-}
-                    ]]],pac_cv_linux86_cycle=cpuid_rdtsc32,
-                        AC_TRY_RUN([[[[
-int main()
-{
-    /* simple */
-    long long var, *var_ptr=&var;
-    __asm__ __volatile__("rdtsc" : "=A" (*var_ptr));
-    return 0;
-}
-                        ]]]],pac_cv_linux86_cycle=rdtsc,
-                        pac_cv_linux86_cycle=no)
-                    )
-                ),
-dnl The if-cross-compiling clause from the first AC_TRY_RUN.  Hope that if the
-dnl compiler knows about the instruction then it's supported by the target
-dnl platform.
-                AC_TRY_COMPILE(,[[
-                    long long var, *var_ptr=&var;
-                    __asm__ __volatile__("rdtscp; shl \$32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
-                ]],pac_cv_linux86_cycle=rdtscp,
-                    AC_TRY_COMPILE(,[[[
-                        long long var, *var_ptr=&var;
-                        __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx ; shl $32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
-                    ]]],pac_cv_linux86_cycle=cpuid_rdtsc64,
-                        AC_TRY_COMPILE(,[[[[
-                            long long var, *var_ptr=&var;
-                            __asm__ __volatile__("push %%ebx ; cpuid ; rdtsc ; pop %%ebx" : "=A" (*var_ptr) : : "ecx");
-                        ]]]],pac_cv_linux86_cycle=cpuid_rdtsc32,
-                            AC_TRY_COMPILE(,[[[[[
-                                long long var, *var_ptr=&var;
-                                __asm__ __volatile__("rdtsc" : "=A" (*var_ptr));
-                            ]]]]],pac_cv_linux86_cycle=rdtsc,
-                            pac_cv_linux86_cycle=no)
-                        )
-                    )
-                )
-            )
-    )
+    AC_CACHE_CHECK([that linux86 cycle counter is available], pac_cv_linux86_cycle, [
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+            int main()
+            {
+                /* rdtscp */
+                long long var, *var_ptr=&var;
+                __asm__ __volatile__("rdtscp; shl \$32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+                return 0;
+            }
+            ]])],pac_cv_linux86_cycle=rdtscp,[
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+            int main()
+            {
+                /* cpuid 64 */
+                long long var, *var_ptr=&var;
+                __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx ; shl $32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+                return 0;
+            }
+            ]])],pac_cv_linux86_cycle=cpuid_rdtsc64,[
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+            int main()
+            {
+                /* cpuid 32 */
+                long long var, *var_ptr=&var;
+                __asm__ __volatile__("push %%ebx ; cpuid ; rdtsc ; pop %%ebx" : "=A" (*var_ptr) : : "ecx");
+                return 0;
+            }
+            ]])],pac_cv_linux86_cycle=cpuid_rdtsc32,[
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+            int main()
+            {
+                /* simple */
+                long long var, *var_ptr=&var;
+                __asm__ __volatile__("rdtsc" : "=A" (*var_ptr));
+                return 0;
+            }
+            ]])],pac_cv_linux86_cycle=rdtsc,
+            pac_cv_linux86_cycle=no)
+        ])])], dnl closing the last 3 AC_RUN_IFELSE
+        [
+        dnl The if-cross-compiling clause from the first AC_RUN_IFELSE.  Hope that if the
+        dnl compiler knows about the instruction then it's supported by the target
+        dnl platform.
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[[
+            long long var, *var_ptr=&var;
+            __asm__ __volatile__("rdtscp; shl \$32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+            ]])],pac_cv_linux86_cycle=rdtscp,[
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[[
+            long long var, *var_ptr=&var;
+            __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx ; shl $32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+            ]])],pac_cv_linux86_cycle=cpuid_rdtsc64,[
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[[
+            long long var, *var_ptr=&var;
+            __asm__ __volatile__("push %%ebx ; cpuid ; rdtsc ; pop %%ebx" : "=A" (*var_ptr) : : "ecx");
+            ]])],pac_cv_linux86_cycle=cpuid_rdtsc32,[
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[[
+            long long var, *var_ptr=&var;
+            __asm__ __volatile__("rdtsc" : "=A" (*var_ptr));
+            ]])],pac_cv_linux86_cycle=rdtsc,
+            pac_cv_linux86_cycle=no
+        )])])]) dnl closing the 4 AC_COMPILE_IFELSE
+        ]) dnl end of first AC_RUN_IFELSE
+    ]) dnl end of AC_CACHE_CHECK
 
     case "$pac_cv_linux86_cycle" in
         "rdtscp")
@@ -522,47 +534,45 @@ dnl platform.
     ;;
 
     gcc_ia64_cycle)
-    AC_CACHE_CHECK([that IPF timer is available],
-pac_cv_ia64_cycle,[
-    AC_TRY_COMPILE(,[
-    long var, *var_ptr=&var;
-#ifdef __INTEL_COMPILER
-#include "ia64regs.h"
-    var=__getReg(_IA64_REG_AR_ITC);
-#else
-    __asm__ __volatile__("mov %0=ar.itc" : "=r" (var_ptr));
-#endif
-],pac_cv_gcc_ia64_cycle=yes,pac_cv_gcc_ia64_cycle=no)])
-    if test "$pac_cv_gcc_ia64_cycle" != "yes" ; then
-        AC_MSG_ERROR([IPF cycle counter is not available on this system and or with the $CC compiler])
-     fi
-     MPL_TIMER_TYPE="long"
-     ;;
+        AC_CACHE_CHECK([that IPF timer is available], pac_cv_ia64_cycle,[
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[[
+                long var, *var_ptr=&var;
+            #ifdef __INTEL_COMPILER
+            #include "ia64regs.h"
+                var=__getReg(_IA64_REG_AR_ITC);
+            #else
+                __asm__ __volatile__("mov %0=ar.itc" : "=r" (var_ptr));
+            #endif
+            ]])],pac_cv_gcc_ia64_cycle=yes,pac_cv_gcc_ia64_cycle=no)])
+        if test "$pac_cv_gcc_ia64_cycle" != "yes" ; then
+            AC_MSG_ERROR([IPF cycle counter is not available on this system and or with the $CC compiler])
+        fi
+        MPL_TIMER_TYPE="long"
+        ;;
 
     mach_absolute_time)
-    AC_CHECK_FUNC(mach_absolute_time,,[AC_MSG_ERROR([mach_absolute_time is not available])])
-    AC_CHECK_FUNC(mach_timebase_info,,[AC_MSG_ERROR([mach_timebase_info is not available])])
-    MPL_TIMER_TYPE="uint64_t"
-    ;;
+        AC_CHECK_FUNC(mach_absolute_time,,[AC_MSG_ERROR([mach_absolute_time is not available])])
+        AC_CHECK_FUNC(mach_timebase_info,,[AC_MSG_ERROR([mach_timebase_info is not available])])
+        MPL_TIMER_TYPE="uint64_t"
+        ;;
 
     ppc64_cycle)
-    AC_CACHE_CHECK([that ppc64 timebase cycle counter is available],
-                pac_cv_ppc64_cycle,[
-    AC_TRY_COMPILE([
-    ],[
-        unsigned temp;
-        asm volatile ("mfspr %0,%1" : "=r" (temp)        : "i" (0x10D));
-    ],pac_cv_ppc64_cycle=yes,
-    pac_cv_ppc64_cycle=no)
-    ])
-    if test "$pac_cv_ppc64_cycle" != "yes" ; then
-        AC_MSG_ERROR([The PPC64 cycle counter is not available on this system and or with the $CC compiler])
-    fi
-    MPL_TIMER_TYPE="uint64_t"
-    ;;
+        AC_CACHE_CHECK([that ppc64 timebase cycle counter is available], pac_cv_ppc64_cycle,[
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[[
+                unsigned temp;
+                asm volatile ("mfspr %0,%1" : "=r" (temp)        : "i" (0x10D));
+                ]])],
+                pac_cv_ppc64_cycle=yes,
+                pac_cv_ppc64_cycle=no)
+        ])
+        if test "$pac_cv_ppc64_cycle" != "yes" ; then
+            AC_MSG_ERROR([The PPC64 cycle counter is not available on this system and or with the $CC compiler])
+        fi
+        MPL_TIMER_TYPE="uint64_t"
+        ;;
     *)
-    AC_MSG_ERROR([Invalid timer type $timer_type])
-    ;;
+        AC_MSG_ERROR([Invalid timer type $timer_type])
+        ;;
 esac
 # Convert timer type to upper case
 timer_type=`echo $timer_type | \
@@ -800,16 +810,14 @@ if test "${with_thread_package}" = "pthreads" -o "${with_proc_mutex_package}" = 
   # Check for PTHREAD_MUTEX_ERRORCHECK_NP and PTHREAD_MUTEX_ERRORCHECK
   AC_CACHE_CHECK([whether pthread.h defines PTHREAD_MUTEX_ERRORCHECK_NP],
   pac_cv_has_pthread_mutex_errorcheck_np,[
-  AC_TRY_COMPILE([#include <pthread.h>],
-                 [int a=PTHREAD_MUTEX_ERRORCHECK_NP;],
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]],[[int a=PTHREAD_MUTEX_ERRORCHECK_NP;]])],
                  pac_cv_has_pthread_mutex_errorcheck_np=yes,
                  pac_cv_has_pthread_mutex_errorcheck_np=no)])
-  AC_CACHE_CHECK([whether pthread.h defines PTHREAD_MUTEX_ERRORCHECK],
-  pac_cv_has_pthread_mutex_errorcheck,[
-  AC_TRY_COMPILE([#include <pthread.h>],
-                 [int a=PTHREAD_MUTEX_ERRORCHECK;],
+  AC_CACHE_CHECK([whether pthread.h defines PTHREAD_MUTEX_ERRORCHECK], pac_cv_has_pthread_mutex_errorcheck,[
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]],[[int a=PTHREAD_MUTEX_ERRORCHECK;]])],
                  pac_cv_has_pthread_mutex_errorcheck=yes,
-                 pac_cv_has_pthread_mutex_errorcheck=no)])
+                 pac_cv_has_pthread_mutex_errorcheck=no)
+  ])
 
   if test "$pac_cv_has_pthread_mutex_errorcheck" = yes ; then
       AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK,
@@ -833,7 +841,7 @@ PAC_ARG_ATOMIC_PRIMITIVES
 
 AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_SOURCE([[
     #include "$1"
-    int main()
+    int main(void)
     {
         struct MPL_atomic_int_t a, b;
         int c;
@@ -935,12 +943,12 @@ fi
 #######################################################################
 
 # mkstemp() is a better replacement for mktemp()
-AC_HAVE_FUNCS(mkstemp)
+AC_CHECK_FUNCS(mkstemp)
 if test "$ac_cv_func_mkstemp" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],mkstemp)
 fi
 # fdopen() converts from an fd to a FILE*
-AC_HAVE_FUNCS(fdopen)
+AC_CHECK_FUNCS(fdopen)
 if test "$ac_cv_func_fdopen" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdio.h>],fdopen)
 fi
@@ -964,7 +972,7 @@ PAC_ARG_SHARED_MEMORY
 
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,
-        [AC_HELP_STRING([--enable-versioning],[Enable library versioning])],,
+        [AS_HELP_STRING([--enable-versioning],[Enable library versioning])],,
         [enable_versioning=yes])
 
 if test "$enable_versioning" = "yes" ; then
@@ -982,26 +990,27 @@ AC_SUBST(libmpl_so_versionflags)
 #######################################################################
 have_gpu="no"
 # Check CUDA availability
-PAC_SET_HEADER_LIB_PATH([cuda])
-PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cudart=yes],[have_cudart=no])
-PAC_CHECK_HEADER_LIB([cuda.h],[cuda],[cuMemGetAddressRange],[have_cuda=yes],[have_cuda=no])
-if test "X${have_cudart}" = "Xyes" -a \
-    "X${have_cuda}" = "Xyes" ; then
+PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSynchronize])
+if test "$pac_have_cuda" = "yes" ; then
+    # also require -lcuda (in addition to -lcudart)
+    PAC_CHECK_HEADER_LIB([cuda.h],[cuda],[cuMemGetAddressRange], pac_have_cuda=yes, pac_have_cuda=no)
+fi
+if test "X${pac_have_cuda}" = "Xyes" ; then
+    PAC_LIBS_ADD(-lcuda)
     AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
     have_gpu="yes"
 fi
-AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${have_cudart}" = "Xyes" -a "X${have_cuda}" = "Xyes"])
+AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
 
 if test "$have_gpu" = "no" ; then
     # Check Level Zero availability when no other GPU library is available
-    PAC_SET_HEADER_LIB_PATH([ze])
-    PAC_CHECK_HEADER_LIB([level_zero/ze_api.h],[ze_loader],[zeInit],[have_ze=yes],[have_ze=no])
-    if test "X${have_ze}" = "Xyes" ; then
+    PAC_CHECK_HEADER_LIB_OPTIONAL([ze],[level_zero/ze_api.h],[ze_loader],[zeInit])
+    if test "X${pac_have_ze}" = "Xyes" ; then
         AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
         have_gpu="yes"
     fi
 fi
-AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${have_ze}" = "Xyes"])
+AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
 #######################################################################
 ## END OF GPU CODE
 #######################################################################
@@ -1066,15 +1075,15 @@ AC_CHECK_FUNCS(inet_ntop getifaddrs)
 
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
-AX_GCC_VAR_ATTRIBUTE(aligned)
-AX_GCC_VAR_ATTRIBUTE(used)
 
-dnl Check for fallthrough attribute
 PAC_PUSH_ALL_FLAGS
 dnl This check requires removing -Wall and -Wextra first or it will fail. Just
 dnl clear them all.
 CFLAGS=""
-AX_GCC_FUNC_ATTRIBUTE(fallthrough)
+
+AX_GCC_VAR_ATTRIBUTE(aligned)
+AX_GCC_VAR_ATTRIBUTE(used)
+
 PAC_POP_ALL_FLAGS
 
 dnl Final output

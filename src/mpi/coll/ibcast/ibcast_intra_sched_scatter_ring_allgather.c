@@ -24,8 +24,9 @@
  *
  * Total Cost = (lgp+p-1).alpha + 2.n.((p-1)/p).beta
  */
-int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, int count, MPI_Datatype datatype,
-                                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
+                                                   MPI_Datatype datatype, int root,
+                                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank;
@@ -36,7 +37,6 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, int count, MPI_
     void *tmp_buf = NULL;
 
     struct MPII_Ibcast_state *ibcast_state;
-    MPIR_SCHED_CHKPMEM_DECL(4);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -51,11 +51,23 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, int count, MPI_
         MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
-    MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
-                              sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status",
-                              MPL_MEM_BUFFER);
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
+
+    /* we'll allocate tmp_buf along with ibcast_state.
+     * Alternatively, we can add init callback to allocate the tmp_buf.
+     */
+    MPI_Aint tmp_size = 0;
+    if (!is_contig) {
+        tmp_size = nbytes;
+    }
+
+    ibcast_state = MPIR_Sched_alloc_state(s, sizeof(struct MPII_Ibcast_state) + tmp_size);
+    MPIR_ERR_CHKANDJUMP(!ibcast_state, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    if (!is_contig) {
+        tmp_buf = ibcast_state + 1;
+    }
+
     ibcast_state->n_bytes = nbytes;
     ibcast_state->curr_bytes = 0;
     if (is_contig) {
@@ -64,8 +76,6 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, int count, MPI_
 
         tmp_buf = (char *) buffer + true_lb;
     } else {
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
-
         if (rank == root) {
             mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, s);
             MPIR_ERR_CHECK(mpi_errno);
@@ -132,10 +142,8 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, int count, MPI_
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

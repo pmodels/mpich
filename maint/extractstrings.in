@@ -9,7 +9,7 @@
 # of routines for processing files and maintaining a cache of the results.
 # It uses a more sophisticated
 # approach to avoid rescanning all files by keeping track of local changes
-# It does this on a directory-by-directory basis as a comprimise between
+# It does this on a directory-by-directory basis as a compromise between
 # doing the minimal work but limiting the number and size of the "extra"
 # files.  In this case, for each directory, the following dot file is 
 # produced (with a <name> provided depending on use:
@@ -58,7 +58,7 @@
 # Data structures
 # Within a directory
 #   fileInfo{filename} = extracted info
-#   filesUpdated[]     = array of file names that match critera
+#   filesUpdated[]     = array of file names that match criteria
 #   fileInCache{filename} = comparison info
 #   
 # -------------------------------------------------------------------------

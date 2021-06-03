@@ -130,7 +130,7 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "step 1 nbr computation completed"));
 
     /* Step 2 */
-    if (*step1_sendto == -1) {  /* calulate step2_nbrs only for participating ranks */
+    if (*step1_sendto == -1) {  /* calculate step2_nbrs only for participating ranks */
         int *digit = (int *) MPL_malloc(sizeof(int) * log_p_of_k, MPL_MEM_COLL);
         MPIR_Assert(digit != NULL);
         int temprank = newrank;

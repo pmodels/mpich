@@ -36,11 +36,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     ofilib=""
     AC_SUBST([ofilib])
 
-    ofi_embedded=""
-    if test $have_libfabric = no ; then
-        ofi_embedded="yes"
-    fi
-
     runtime_capabilities="no"
     no_providers="no"
     # $netmod_args - contains the OFI provider
@@ -50,7 +45,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     elif test "x$netmod_args" = "x" || test "$netmod_args" = "runtime"; then
         runtime_capabilities="yes"
         no_providers="yes"
-        AC_MSG_NOTICE([Using runtime capability set due to no selected provider or explicity runtime selection])
+        AC_MSG_NOTICE([Using runtime capability set due to no selected provider or explicitly runtime selection])
     fi
 
     if test "$no_providers" = "no" ; then
@@ -194,7 +189,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 enable_sockets="yes"
                 ;;
             "gni")
-                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_GNI], [1], [Define to use gni capability set])
                 enable_gni="yes"
                 ;;
             "bgq")
@@ -263,7 +258,11 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         esac
     fi
 
-    if test "${ofi_embedded}" = "yes" ; then
+    if test "$pac_have_libfabric" = "no" ; then
+        with_libfabric=embedded
+    fi
+    if test "$with_libfabric" = "embedded" ; then
+        ofi_embedded="yes"
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an embedded libfabric])
         ofi_subdir_args="--enable-embedded"
 
@@ -314,7 +313,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         ofilib="modules/libfabric/src/libfabric.la"
     else
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an external libfabric])
-        PAC_APPEND_FLAG([-lfabric],[WRAPPER_LIBS])
+        PAC_LIBS_ADD([-lfabric])
     fi
 
     # check for libfabric depedence libs

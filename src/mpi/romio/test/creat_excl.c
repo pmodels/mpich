@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 /*
- * the new defered open code made some changes to the way we manage CREAT|EXCL,
+ * the new deferred open code made some changes to the way we manage CREAT|EXCL,
  * so test out that code path */
 
 struct options {

@@ -6,7 +6,7 @@ m4_init
 dnl get the real version values
 m4_include([maint/version.m4])dnl
 
-dnl The m4sugar langauage switches the default diversion to "KILL", and causes
+dnl The m4sugar language switches the default diversion to "KILL", and causes
 dnl all normal output to be thrown away.  We switch to the default (0) diversion
 dnl to restore output.
 m4_divert_push([])dnl

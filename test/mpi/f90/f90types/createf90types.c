@@ -51,17 +51,17 @@ static int checkType(const char str[], int p, int r, int f90kind, int err, MPI_D
             errs++;
             printf("Wrong combiner type (got %d, should be %d) for %s\n", combiner, f90kind, str);
         } else {
-            int parms[2];
+            int ints[2];
             MPI_Datatype outtype;
-            parms[0] = 0;
-            parms[1] = 0;
+            ints[0] = 0;
+            ints[1] = 0;
 
             if (ndtypes != 0) {
                 errs++;
                 printf
                     ("Section 8.6 states that the array_of_datatypes entry is empty for the create_f90 types\n");
             }
-            MPI_Type_get_contents(dtype, 2, 0, 1, parms, 0, &outtype);
+            MPI_Type_get_contents(dtype, 2, 0, 1, ints, 0, &outtype);
             switch (combiner) {
                 case MPI_COMBINER_F90_REAL:
                 case MPI_COMBINER_F90_COMPLEX:
@@ -69,10 +69,10 @@ static int checkType(const char str[], int p, int r, int f90kind, int err, MPI_D
                         errs++;
                         printf("Returned %d integer values, 2 expected for %s\n", nints, str);
                     }
-                    if (parms[0] != p || parms[1] != r) {
+                    if (ints[0] != p || ints[1] != r) {
                         errs++;
                         printf("Returned (p=%d,r=%d); expected (p=%d,r=%d) for %s\n",
-                               parms[0], parms[1], p, r, str);
+                               ints[0], ints[1], p, r, str);
                     }
                     break;
                 case MPI_COMBINER_F90_INTEGER:
@@ -80,9 +80,9 @@ static int checkType(const char str[], int p, int r, int f90kind, int err, MPI_D
                         errs++;
                         printf("Returned %d integer values, 1 expected for %s\n", nints, str);
                     }
-                    if (parms[0] != p) {
+                    if (ints[0] != p) {
                         errs++;
-                        printf("Returned (p=%d); expected (p=%d) for %s\n", parms[0], p, str);
+                        printf("Returned (p=%d); expected (p=%d) for %s\n", ints[0], p, str);
                     }
                     break;
                 default:

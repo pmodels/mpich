@@ -14,12 +14,13 @@
 #undef MPIR_TSP_Iallgatherv_sched_intra_brucks
 #define MPIR_TSP_Iallgatherv_sched_intra_brucks           MPIR_TSP_NAMESPACE(Iallgatherv_sched_intra_brucks)
 
-int MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount,
+int MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                             MPI_Datatype sendtype, void *recvbuf,
-                                            const int recvcounts[], const int displs[],
+                                            const MPI_Aint recvcounts[], const MPI_Aint displs[],
                                             MPI_Datatype recvtype, MPIR_Comm * comm,
                                             MPIR_TSP_sched_t * s, int k);
-int MPIR_TSP_Iallgatherv_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                      void *recvbuf, const int recvcounts[], const int displs[],
+int MPIR_TSP_Iallgatherv_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
+                                      MPI_Datatype sendtype, void *recvbuf,
+                                      const MPI_Aint recvcounts[], const MPI_Aint displs[],
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                       MPIR_Request ** request, int k);

@@ -12,7 +12,7 @@
 /* style: allow:printf:2 sig:0 */
 
 /*
- * This program provides a convienient way to test some of the debugger
+ * This program provides a convenient way to test some of the debugger
  * interface functionality, including message queues and named communicators
  */
 

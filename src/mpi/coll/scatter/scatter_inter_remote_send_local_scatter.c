@@ -13,10 +13,11 @@
  * Cost: (lgp+1).alpha + n.((p-1)/p).beta + n.beta
  */
 
-int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendcount,
+int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
-                                                 int recvcount, MPI_Datatype recvtype, int root,
-                                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                                 MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                 int root, MPIR_Comm * comm_ptr,
+                                                 MPIR_Errflag_t * errflag)
 {
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;

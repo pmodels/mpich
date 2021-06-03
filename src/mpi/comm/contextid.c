@@ -309,9 +309,9 @@ struct gcn_state {
 struct gcn_state *next_gcn = NULL;
 
 /* All pending context_id allocations are added to a list. The context_id allocations are ordered
- * according to the context_id of of parrent communicator and the tag, wherby blocking context_id
+ * according to the context_id of of parent communicator and the tag, wherby blocking context_id
  * allocations  can have the same tag, while nonblocking operations cannot. In the non-blocking
- * case, the user is reponsible for the right tags if "comm_create_group" is used */
+ * case, the user is responsible for the right tags if "comm_create_group" is used */
 static void add_gcn_to_list(struct gcn_state *new_state)
 {
     struct gcn_state *tmp = NULL;
@@ -426,7 +426,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /*If we are here, at least one element must be in the list, at least myself */
 
             /* only the first element in the list can own the mask. However, maybe the mask is used
-             * by another thread, which added another allcoation to the list bevore. So we have to check,
+             * by another thread, which added another allocation to the list before. So we have to check,
              * if the mask is used and mark, if we own it */
             if (mask_in_use || &st != next_gcn) {
                 memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
@@ -472,8 +472,8 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                                              MPI_INT, MPI_BAND, comm_ptr, group_ptr, coll_tag,
                                              &errflag);
         } else {
-            mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
-                                       MPI_INT, MPI_BAND, comm_ptr, &errflag);
+            mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
+                                            MPI_INT, MPI_BAND, comm_ptr, &errflag);
         }
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -580,8 +580,8 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                 mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN,
                                                  comm_ptr, group_ptr, coll_tag, &errflag);
             } else {
-                mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT,
-                                           MPI_MIN, comm_ptr, &errflag);
+                mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, &minfree, 1, MPI_INT,
+                                                MPI_MIN, comm_ptr, &errflag);
             }
 
             if (minfree > 0) {
@@ -597,7 +597,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
         }
         if (st.first_iter == 1) {
             st.first_iter = 0;
-            /* to avoid deadlocks, the element is not added to the list bevore the first iteration */
+            /* to avoid deadlocks, the element is not added to the list before the first iteration */
             if (!ignore_id && *context_id == 0) {
                 MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
                 MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
@@ -973,7 +973,7 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
     /* now create a schedule */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* add some entries to it */
@@ -983,7 +983,7 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
     MPIR_ERR_CHECK(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, req);
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, tag, req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -1014,7 +1014,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     /* now create a schedule */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* add some entries to it */
@@ -1026,7 +1026,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     MPIR_ERR_CHECK(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, req);
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, tag, req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:

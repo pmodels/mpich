@@ -11,7 +11,7 @@
 /* many calls are deliberately passed bogus values, are expected to fail, and
  * then checked to see if we get the right error message.  Other
  * calls are expected to succeed but the preciese return string is not checked.  This
- * rouine and MPI_CHECK macro handle these unexpected error cases */
+ * routine and MPI_CHECK macro handle these unexpected error cases */
 static void handle_error(int errcode, const char *str)
 {
     char msg[MPI_MAX_ERROR_STRING];

@@ -71,6 +71,7 @@ cvars:
         Specifies the CH4 multi-threading model. Possible values are:
         direct (default)
         handoff
+        lockless
 
     - name        : MPIR_CVAR_CH4_NUM_VCIS
       category    : CH4
@@ -226,12 +227,7 @@ static int choose_netmod(void)
     goto fn_exit;
 }
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-/* NOTE: MPIDI_CH4_USE_MT_RUNTIME currently are not supported. The key part is
- * guarded by "#if 0".
- */
-/* TODO: move them to ch4i_workq_init.c. */
-
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
 static const char *get_mt_model_name(int mt);
 static void print_runtime_configurations(void);
 static int parse_mt_model(const char *name);
@@ -240,6 +236,7 @@ static int set_runtime_configurations(void);
 static const char *mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
     "direct",
     "handoff",
+    "lockless",
 };
 
 static const char *get_mt_model_name(int mt)
@@ -271,12 +268,13 @@ static int parse_mt_model(const char *name)
     }
     return -1;
 }
+#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 
 static int set_runtime_configurations(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-#if 0   /* defined(MPIDI_CH4_USE_MT_RUNTIME) */
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
     int mt = parse_mt_model(MPIR_CVAR_CH4_MT_MODEL);
     if (mt < 0)
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
@@ -290,13 +288,11 @@ static int set_runtime_configurations(void)
                "unless --enable-ch4-mt=runtime is given at the configure time.\n");
 #endif /* MPIDI_CH4_USE_MT_RUNTIME */
 
-#if 0   /* defined(MPIDI_CH4_USE_MT_RUNTIME) */
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
   fn_fail:
 #endif
     return mpi_errno;
 }
-
-#endif /* MPIDI_CH4_USE_WORK_QUEUES */
 
 static int create_init_comm(MPIR_Comm ** comm)
 {
@@ -318,6 +314,7 @@ static int create_init_comm(MPIR_Comm ** comm)
         init_comm->remote_size = node_roots_comm_size;
         init_comm->local_size = node_roots_comm_size;
         init_comm->coll.pof2 = MPL_pof2(node_roots_comm_size);
+        init_comm->seq = 0;
         MPIDI_COMM(init_comm, map).mode = MPIDI_RANK_MAP_LUT_INTRA;
         mpi_errno = MPIDIU_alloc_lut(&lut, node_roots_comm_size);
         MPIR_ERR_CHECK(mpi_errno);
@@ -450,9 +447,7 @@ static int generic_init(void)
     return mpi_errno;
 }
 
-#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
-#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
-#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
@@ -466,12 +461,32 @@ static int generic_init(void)
 
 int MPID_Init(int requested, int *provided)
 {
-    int mpi_errno = MPI_SUCCESS, rank, size, appnum;
-    MPIR_Comm *init_comm = NULL;
-    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
-
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
+
+    mpi_errno = MPID_Init_local(requested, provided);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPID_Init_world();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_Init_local(int requested, int *provided)
+{
+    int mpi_errno = MPI_SUCCESS;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_LOCAL);
+
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_LOCAL);
+
+    MPIDI_global.is_initialized = 0;
 
     switch (requested) {
         case MPI_THREAD_SINGLE:
@@ -508,57 +523,42 @@ int MPID_Init(int requested, int *provided)
     mpi_errno = MPIR_pmi_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    rank = MPIR_Process.rank;
-    size = MPIR_Process.size;
-    appnum = MPIR_Process.appnum;
+    /* Create all ch4-layer granular locks.
+     * Note: some locks (e.g. MPIDIU_THREAD_HCOLL_MUTEX) may be unused due to configuration.
+     * It is harmless to create them anyway rather than adding #ifdefs.
+     */
+    for (int i = 0; i < MAX_CH4_MUTEXES; i++) {
+        int err;
+        MPID_Thread_mutex_create(&MPIDI_global.m[i], &err);
+        MPIR_Assert(err == 0);
+    }
 
-    int err;
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-#ifdef HAVE_LIBHCOLL
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-#endif
-
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = set_runtime_configurations();
-    MPIR_ERR_CHECK(mpi_errno);
+    if (mpi_errno != MPI_SUCCESS)
+        return mpi_errno;
 
-    MPIDI_workq_init(&MPIDI_global.workqueue);
-
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
+    int rank = MPIR_Process.rank;
     if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
         print_runtime_configurations();
-#endif
+#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
+
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPIDI_workq_init(&MPIDI_global.workqueue);
+#endif /* #ifdef MPIDI_CH4_USE_WORK_QUEUES */
+
+    /* These mutex are used for the lockless MT model. */
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
+        for (int i = 0; i < MPIR_REQUEST_NUM_POOLS; i++) {
+            int err;
+            MPID_Thread_mutex_create(&(MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[i]), &err);
+            MPIR_Assert(err == 0);
+        }
+    }
 
     init_av_table();
 
     mpi_errno = generic_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* setup receive queue statistics */
-    mpi_errno = MPIDIG_recvq_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = create_init_comm(&init_comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIDU_Init_shm_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize multiple VCIs */
@@ -573,32 +573,74 @@ int MPID_Init(int requested, int *provided)
     }
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        int err;
         MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
 
         /* NOTE: 1-1 vci-pool mapping */
-        MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
+        /* For lockless, use a separate set of mutexes */
+        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS)
+            MPIR_Request_register_pool_lock(i, &MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[i]);
+        else
+            MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
 
         /* TODO: workq */
     }
-
     {
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &shm_tag_bits);
+        mpi_errno = MPIDI_SHM_init_local(&shm_tag_bits);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 #endif
 
-        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits, init_comm);
+        mpi_errno = MPIDI_NM_init_local(&nm_tag_bits);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 
         /* Use the minimum tag_bits from the netmod and shmod */
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
+    }
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_LOCAL);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_Init_world(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Comm *init_comm = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_WORLD);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_WORLD);
+
+    /* setup receive queue statistics */
+    mpi_errno = MPIDIG_recvq_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = create_init_comm(&init_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDU_Init_shm_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno = MPIDI_SHM_init_world();
+
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
+#endif
+
+        mpi_errno = MPIDI_NM_init_world(init_comm);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
     }
 
     MPIDIG_am_check_init();
@@ -617,17 +659,15 @@ int MPID_Init(int requested, int *provided)
     MPIDI_global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
     MPIR_Comm_fns = &MPIDI_global.MPIR_Comm_fns_store;
 
-    MPIR_Process.attrs.appnum = appnum;
+    MPIR_Process.attrs.appnum = MPIR_Process.appnum;
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
 
     destroy_init_comm(&init_comm);
     mpi_errno = init_builtin_comms();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDI_global.is_initialized = 0;
-
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_WORLD);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -720,31 +760,14 @@ int MPID_Finalize(void)
 
     MPIR_pmi_finalize();
 
-    int err;
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_UTIL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-#ifdef HAVE_LIBHCOLL
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
-    MPIR_Assert(err == 0);
-#endif
-
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
-    MPIR_Assert(err == 0);
+    for (int i = 0; i < MAX_CH4_MUTEXES; i++) {
+        int err;
+        MPID_Thread_mutex_destroy(&MPIDI_global.m[i], &err);
+        MPIR_Assert(err == 0);
+    }
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        int err;
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
     }
@@ -806,26 +829,174 @@ int MPID_Get_processor_name(char *name, int namelen, int *resultlen)
     goto fn_exit;
 }
 
-void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
+typedef enum {
+    ALLOC_MEM_BUF_TYPE__UNSET,
+    ALLOC_MEM_BUF_TYPE__DDR,
+    ALLOC_MEM_BUF_TYPE__HBM,
+    ALLOC_MEM_BUF_TYPE__NETMOD,
+    ALLOC_MEM_BUF_TYPE__SHMMOD,
+} alloc_mem_buf_type_e;
+
+typedef struct {
+    void *user_buf;
+
+    void *real_buf;
+    alloc_mem_buf_type_e buf_type;
+    size_t size;
+
+    UT_hash_handle hh;
+} alloc_mem_container_s;
+
+static alloc_mem_container_s *alloc_mem_container_list = NULL;
+
+void *MPID_Alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
-    void *p;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLOC_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLOC_MEM);
 
-    p = MPIDI_NM_mpi_alloc_mem(size, info_ptr);
+    char val[MPI_MAX_INFO_VAL + 1];
+    MPIR_hwtopo_gid_t mem_gid = MPIR_HWTOPO_GID_ROOT;
+    alloc_mem_buf_type_e buf_type = ALLOC_MEM_BUF_TYPE__UNSET;
+    void *user_buf = NULL;
+    void *real_buf;
+    int alignment = MAX_ALIGNMENT;
 
+    MPIR_Info *curr_info;
+    LL_FOREACH(info_ptr, curr_info) {
+        if (curr_info->key == NULL)
+            continue;
+
+        int flag = 0;
+        MPIR_Info_get_impl(info_ptr, "mpich_buf_type", MPI_MAX_INFO_VAL, val, &flag);
+
+        if (flag) {
+            if (!strcmp(val, "ddr")) {
+                mem_gid = MPIR_hwtopo_get_obj_by_type(MPIR_HWTOPO_TYPE__DDR);
+                if (mem_gid == MPIR_HWTOPO_GID_ROOT) {
+                    buf_type = ALLOC_MEM_BUF_TYPE__UNSET;
+                } else {
+                    buf_type = ALLOC_MEM_BUF_TYPE__DDR;
+                }
+            } else if (!strcmp(val, "hbm")) {
+                mem_gid = MPIR_hwtopo_get_obj_by_type(MPIR_HWTOPO_TYPE__HBM);
+                if (mem_gid == MPIR_HWTOPO_GID_ROOT) {
+                    /* if mem_gid = MPIR_HWTOPO_GID_ROOT and mem_type
+                     * is non-default (DDR) it can mean either that
+                     * the requested memory type is not available in
+                     * the system or the requested memory type is
+                     * available but there are many devices of such
+                     * type and the process requesting memory is not
+                     * bound to any of them. Regardless the reason we
+                     * do not fall back to the default allocation and
+                     * return a NULL pointer to the upper layer
+                     * instead. */
+                    goto fn_exit;
+                } else {
+                    buf_type = ALLOC_MEM_BUF_TYPE__HBM;
+                }
+            } else if (!strcmp(val, "network")) {
+                buf_type = ALLOC_MEM_BUF_TYPE__NETMOD;
+            } else if (!strcmp(val, "shmem")) {
+                buf_type = ALLOC_MEM_BUF_TYPE__SHMMOD;
+            } else {
+                assert(0);
+            }
+        }
+
+        MPIR_Info_get_impl(info_ptr, "mpi_minimum_memory_alignment", MPI_MAX_INFO_VAL, val, &flag);
+        if (flag) {
+            alignment = atoi(val);
+        }
+    }
+
+    switch (buf_type) {
+        case ALLOC_MEM_BUF_TYPE__HBM:
+        case ALLOC_MEM_BUF_TYPE__DDR:
+            /* requested memory type is available in the system and
+             * process is bound to the corresponding device; allocate
+             * memory and bind it to device. */
+            assert(mem_gid != MPIR_HWTOPO_GID_ROOT);
+            real_buf =
+                MPL_mmap(NULL, size + alignment, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1,
+                         0, MPL_MEM_USER);
+            MPIR_hwtopo_mem_bind(real_buf, size + alignment, mem_gid);
+            break;
+
+        case ALLOC_MEM_BUF_TYPE__NETMOD:
+            real_buf = MPIDI_NM_mpi_alloc_mem(size + alignment, info_ptr);
+            break;
+
+        case ALLOC_MEM_BUF_TYPE__SHMMOD:
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            real_buf = MPIDI_SHM_mpi_alloc_mem(size + alignment, info_ptr);
+#else
+            goto fn_exit;
+#endif
+            break;
+
+        default:
+            real_buf = MPIDIG_mpi_alloc_mem(size + alignment, info_ptr);
+            break;
+    }
+
+    alloc_mem_container_s *container;
+    container = (alloc_mem_container_s *) MPL_malloc(sizeof(alloc_mem_container_s), MPL_MEM_USER);
+
+    int diff = alignment - (int) ((uintptr_t) real_buf % alignment);
+    user_buf = (void *) ((uintptr_t) real_buf + diff);
+
+    container->real_buf = real_buf;
+    container->user_buf = user_buf;
+    container->buf_type = buf_type;
+    container->size = size + alignment;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+    HASH_ADD_PTR(alloc_mem_container_list, user_buf, container, MPL_MEM_USER);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLOC_MEM);
-    return p;
+    return user_buf;
 }
 
-int MPID_Free_mem(void *ptr)
+int MPID_Free_mem(void *user_buf)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_FREE_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FREE_MEM);
-    mpi_errno = MPIDI_NM_mpi_free_mem(ptr);
 
+    alloc_mem_container_s *container;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+    HASH_FIND_PTR(alloc_mem_container_list, &user_buf, container);
+    assert(container);
+    HASH_DEL(alloc_mem_container_list, container);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+
+    switch (container->buf_type) {
+        case ALLOC_MEM_BUF_TYPE__HBM:
+        case ALLOC_MEM_BUF_TYPE__DDR:
+            MPL_munmap(container->real_buf, container->size, MPL_MEM_USER);
+            break;
+
+        case ALLOC_MEM_BUF_TYPE__NETMOD:
+            mpi_errno = MPIDI_NM_mpi_free_mem(container->real_buf);
+            break;
+
+        case ALLOC_MEM_BUF_TYPE__SHMMOD:
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            mpi_errno = MPIDI_SHM_mpi_free_mem(container->real_buf);
+#else
+            assert(0);
+#endif
+            break;
+
+        default:
+            MPIDIG_mpi_free_mem(container->real_buf);
+            break;
+    }
     MPIR_ERR_CHECK(mpi_errno);
+    MPL_free(container);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FREE_MEM);

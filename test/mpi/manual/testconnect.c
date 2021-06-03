@@ -18,6 +18,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
 
 char *fname;
 int cachedRank = -1;
@@ -69,7 +70,7 @@ int main(int argc, char **argv)
 
     MPI_Init(0, 0);
 
-    /* the existance of the file is used to decide which processes
+    /* the existence of the file is used to decide which processes
      * first do a connect to the root process.  */
     fh = fopen(fname, "rt");
     if (fh == NULL) {
@@ -85,8 +86,8 @@ int main(int argc, char **argv)
         }
         comm = MPI_COMM_WORLD;
     } else {
-        char *cerr;
-        cerr = fgets(port, MPI_MAX_PORT_NAME, fh);
+        char *s = fgets(port, MPI_MAX_PORT_NAME, fh);
+        assert(s != NULL);
         fclose(fh);
         if (doPrint) {
             printf("[%d] about to connect: Port from %s is: %s\n", myNum, fname, port);

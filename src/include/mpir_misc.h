@@ -56,8 +56,13 @@ extern const char MPII_Version_F77[] MPICH_API_PUBLIC;
 extern const char MPII_Version_FC[] MPICH_API_PUBLIC;
 extern const char MPII_Version_custom[] MPICH_API_PUBLIC;
 
+#include "typerep_pre.h"        /* needed for MPIR_Typerep_req */
+
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
+int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                    MPIR_Typerep_req * typereq_req);
 
 /*@ MPIR_Add_finalize - Add a routine to be called when MPI_Finalize is invoked
 
@@ -82,10 +87,6 @@ int MPIR_Find_external(struct MPIR_Comm *comm, int *external_size_p, int *extern
                        int **external_ranks_p, int **internode_table_p);
 int MPIR_Get_internode_rank(MPIR_Comm * comm_ptr, int r);
 int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
-
-int MPIR_Close_port_impl(const char *port_name);
-int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name);
-int MPIR_Cancel(MPIR_Request * request_ptr);
 
 /* Default routines for asynchronous progress thread */
 int MPIR_Init_async_thread(void);

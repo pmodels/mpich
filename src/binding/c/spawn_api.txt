@@ -1,0 +1,153 @@
+# vim: set ft=c:
+
+MPI_Comm_get_parent:
+    .desc: Return the parent communicator for this process
+    .skip: global_cs
+/*
+    Notes:
+    If a process was started with 'MPI_Comm_spawn' or 'MPI_Comm_spawn_multiple',
+    'MPI_Comm_get_parent' returns the parent intercommunicator of the current
+    process. This parent intercommunicator is created implicitly inside of
+    'MPI_Init' and is the same intercommunicator returned by 'MPI_Comm_spawn'
+    in the parents.
+
+    If the process was not spawned, 'MPI_Comm_get_parent' returns
+    'MPI_COMM_NULL'.
+
+    After the parent communicator is freed or disconnected, 'MPI_Comm_get_parent'
+    returns 'MPI_COMM_NULL'.
+*/
+{
+    *parent = (MPIR_Process.comm_parent == NULL) ? MPI_COMM_NULL :
+        (MPIR_Process.comm_parent)->handle;
+}
+
+MPI_Comm_join:
+    .desc: Create a communicator by joining two processes connected by a socket
+/*
+    Notes:
+    The socket must be quiescent before 'MPI_COMM_JOIN' is called and after
+    'MPI_COMM_JOIN' returns. More specifically, on entry to 'MPI_COMM_JOIN', a
+    read on the socket will not read any data that was written to the socket
+    before the remote process called 'MPI_COMM_JOIN'.
+*/
+
+MPI_Comm_spawn:
+    .desc: Spawn up to maxprocs instances of a single MPI application
+    .extra: errtest_comm_intra
+    .skip: validate-STRING_ARRAY, validate-ERROR_CODE
+{ -- error_check -- info, command, maxprocs
+    if (comm_ptr->rank == root) {
+        MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
+        MPIR_ERRTEST_ARGNULL(command, "command", mpi_errno);
+        MPIR_ERRTEST_ARGNEG(maxprocs, "maxprocs", mpi_errno);
+    }
+}
+{ -- handle_ptr -- info
+    MPIR_Info *info_ptr = NULL;
+    if (comm_ptr->rank == root) {
+        MPIR_Info_get_ptr(info, info_ptr);
+    }
+}
+
+MPI_Comm_spawn_multiple:
+    .desc: Spawn up multiple MPI applications
+    .skip: ThreadSafe
+    .extra: errtest_comm_intra
+    .skip: validate-STRING_ARRAY, validate-STRING_2DARRAY, validate-COMM_SIZE, validate-INFO, validate-ERROR_CODE
+    .error: MPI_ERR_INFO
+{ -- declare --
+    MPIR_Info **array_of_info_ptrs = NULL;
+}
+{ -- handle_ptr -- array_of_info
+    if (comm_ptr->rank == root) {
+        array_of_info_ptrs = MPL_malloc(count * sizeof(MPIR_Info *), MPL_MEM_OTHER);
+        for (int i = 0; i < count; i++) {
+            MPIR_Info_get_ptr(array_of_info[i], array_of_info_ptrs[i]);
+        }
+    }
+}
+{ -- clean_up --
+    if (array_of_info_ptrs) {
+        MPL_free(array_of_info_ptrs);
+    }
+}
+{ -- error_check --
+    if (comm_ptr->rank == root) {
+        MPIR_ERRTEST_ARGNULL(array_of_info, "array_of_info", mpi_errno);
+        MPIR_ERRTEST_ARGNULL(array_of_commands, "array_of_commands", mpi_errno);
+        MPIR_ERRTEST_ARGNULL(array_of_maxprocs, "array_of_maxprocs", mpi_errno);
+        MPIR_ERRTEST_ARGNONPOS(count, "count", mpi_errno, MPI_ERR_ARG);
+        for (int i = 0; i < count; i++) {
+            MPIR_ERRTEST_INFO_OR_NULL(array_of_info[i], mpi_errno);
+            MPIR_ERRTEST_ARGNULL(array_of_commands[i], "array_of_commands[i]", mpi_errno);
+            MPIR_ERRTEST_ARGNEG(array_of_maxprocs[i], "array_of_maxprocs[i]", mpi_errno);
+        }
+    }
+}
+
+MPI_Open_port:
+    .desc: Establish an address that can be used to establish connections between groups of MPI processes
+/*
+    Notes:
+    MPI copies a system-supplied port name into 'port_name'. 'port_name' identifies
+    the newly opened port and can be used by a client to contact the server.
+    The maximum size string that may be supplied by the system is
+    'MPI_MAX_PORT_NAME'.
+
+     Reserved Info Key Values:
+    + ip_port - Value contains IP port number at which to establish a port.
+    - ip_address - Value contains IP address at which to establish a port.
+     If the address is not a valid IP address of the host on which the
+     'MPI_OPEN_PORT' call is made, the results are undefined.
+*/
+
+MPI_Close_port:
+    .desc: close port
+
+MPI_Comm_accept:
+    .desc: Accept a request to form a new intercommunicator
+{ -- error_check -- port_name
+    if (comm_ptr->rank == root) {
+        MPIR_ERRTEST_ARGNULL(port_name, "port_name", mpi_errno);
+    }
+}
+
+MPI_Comm_connect:
+    .desc: Make a request to form a new intercommunicator
+{ -- error_check -- port_name
+    if (comm_ptr->rank == root) {
+        MPIR_ERRTEST_ARGNULL(port_name, "port_name", mpi_errno);
+    }
+}
+
+MPI_Comm_disconnect:
+    .desc: Disconnect from a communicator
+    .seealso: MPI_Comm_connect, MPI_Comm_join
+    .extra: ignore_revoked_comm
+/*
+    Notes:
+    This routine waits for all pending communication to complete, then frees the
+    communicator and sets 'comm' to 'MPI_COMM_NULL'.  It may not be called
+    with 'MPI_COMM_WORLD' or 'MPI_COMM_SELF'.
+*/
+
+MPI_Lookup_name:
+    .desc: Lookup a port given a service name
+/*
+    Notes:
+    If the 'service_name' is found, MPI copies the associated value into
+    'port_name'.  The maximum size string that may be supplied by the system is
+    'MPI_MAX_PORT_NAME'.
+*/
+
+MPI_Publish_name:
+    .desc: Publish a service name for use with MPI_Comm_connect
+/*
+    Notes:
+    The maximum size string that may be supplied for 'port_name' is
+    'MPI_MAX_PORT_NAME'.
+*/
+
+MPI_Unpublish_name:
+    .desc: Unpublish a service name published with MPI_Publish_name
