@@ -3,7 +3,7 @@
 Summary:        A high-performance implementation of MPI
 Name:           mpich
 Version:        3.4~a2
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        MIT
 URL:            http://www.mpich.org/
 
