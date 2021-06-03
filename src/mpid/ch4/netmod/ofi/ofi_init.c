@@ -689,7 +689,7 @@ static int flush_send(int dst, int nic, int vni, MPIDI_OFI_dynamic_process_reque
 {
     int mpi_errno = MPI_SUCCESS;
 
-    fi_addr_t addr = MPIDI_OFI_AV(&MPIDIU_get_av(0, dst)).dest[nic][vni];
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, dst), nic, vni, vni);
     static int data = 0;
     uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
                                                  MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
@@ -713,7 +713,7 @@ static int flush_recv(int src, int nic, int vni, MPIDI_OFI_dynamic_process_reque
 {
     int mpi_errno = MPI_SUCCESS;
 
-    fi_addr_t addr = MPIDI_OFI_AV(&MPIDIU_get_av(0, src)).dest[nic][vni];
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, src), nic, vni, vni);
     uint64_t mask_bits = 0;
     uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
                                                  MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
