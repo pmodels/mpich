@@ -22,7 +22,10 @@ int MPIDI_create_init_comm(MPIR_Comm ** comm)
         int node_roots_comm_rank = MPIR_Process.node_map[world_rank];
         MPIR_Comm *init_comm = NULL;
         MPIDI_rank_map_lut_t *lut = NULL;
-        MPIR_Comm_create(&init_comm);
+
+        mpi_errno = MPIR_Comm_create(&init_comm);
+        MPIR_ERR_CHECK(mpi_errno);
+
         init_comm->context_id = 0 << MPIR_CONTEXT_PREFIX_SHIFT;
         init_comm->recvcontext_id = 0 << MPIR_CONTEXT_PREFIX_SHIFT;
         init_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
