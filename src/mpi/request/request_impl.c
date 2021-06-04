@@ -1442,14 +1442,9 @@ int MPIR_Waitsome(int incount, MPI_Request array_of_requests[], MPIR_Request * r
     goto fn_exit;
 }
 
-int MPIR_Parrived(MPI_Request * request, MPIR_Request * request_ptr, int partition, int *flag)
+int MPIR_Parrived(MPIR_Request * request_ptr, int partition, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    if (*request == MPI_REQUEST_NULL) {
-        *flag = TRUE;
-        goto fn_exit;
-    }
 
     /* For non-NULL request, query device layer */
     MPIR_Assert(request_ptr != NULL);

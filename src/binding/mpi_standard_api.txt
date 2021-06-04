@@ -1621,7 +1621,7 @@ MPI_Pack_size:
     comm: COMMUNICATOR, [communicator argument to packing call]
     size: POLYNUM_BYTES_NNI, direction=out, [upper bound on size of packed message, in bytes]
 MPI_Parrived:
-    request: REQUEST, direction=INOUT, [partitioned communication request]
+    request: REQUEST, direction=IN, [partitioned communication request]
     partition: PARTITION, direction=IN, [partition to be tested]
     flag: LOGICAL_BOOLEAN, direction=out, [true if operation completed on the specified partition, false if not]
 MPI_Pcontrol:
@@ -1629,15 +1629,15 @@ MPI_Pcontrol:
     varargs: VARARGS
 MPI_Pready:
     partition: PARTITION, direction=IN, [partition to mark ready for transfer]
-    request: REQUEST, direction=INOUT, [partitioned communication request]
+    request: REQUEST, direction=IN, [partitioned communication request]
 MPI_Pready_list:
     length: ARRAY_LENGTH, direction=IN, [list length]
-    array_of_partitions: PARTITION, direction=INOUT, length=length, [array of partitions]
-    request: REQUEST, direction=INOUT, [partitioned communication request]
+    array_of_partitions: PARTITION, direction=IN, length=length, [array of partitions]
+    request: REQUEST, direction=IN, [partitioned communication request]
 MPI_Pready_range:
     partition_low: PARTITION, direction=IN, [partition to mark lowest partition ready for transfer]
     partition_high: PARTITION, direction=IN, [partition to mark highest partition ready for transfer]
-    request: REQUEST, direction=INOUT, [partitioned communication request]
+    request: REQUEST, direction=IN, [partitioned communication request]
 MPI_Precv_init:
     buf: BUFFER, direction=IN, [initial address of recv buffer (choice)]
     partitions: PARTITION, direction=IN, [number of partitions]

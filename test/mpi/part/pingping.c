@@ -47,7 +47,7 @@ static void send_test(void *sbuf, int partitions, MPI_Count count, MPI_Datatype 
 
     /* Set partition ready separately to test partial data transfer */
     for (int i = 0; i < partitions; i++)
-        MPI_Pready(i, &req);
+        MPI_Pready(i, req);
 
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     MPI_Request_free(&req);
