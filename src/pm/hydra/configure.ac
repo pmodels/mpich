@@ -411,7 +411,13 @@ for hydra_topolib in ${hydra_topolibs}; do
                     hydra_use_embedded_hwloc=yes
                     PAC_PUSH_FLAG([CFLAGS])
                     CFLAGS=""
-                    PAC_CONFIG_SUBDIR_ARGS([tools/topo/hwloc/hwloc], [--enable-embedded-mode --disable-visibility],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
+                    hwloc_config_args="--enable-embedded-mode --disable-visibility"
+                    hwloc_config_args="$hwloc_config_args --disable-libxml2"
+                    hwloc_config_args="$hwloc_config_args --disable-nvml"
+                    hwloc_config_args="$hwloc_config_args --disable-cuda"
+                    hwloc_config_args="$hwloc_config_args --disable-opencl"
+                    hwloc_config_args="$hwloc_config_args --disable-rsmi"
+                    PAC_CONFIG_SUBDIR_ARGS([tools/topo/hwloc/hwloc], [$hwloc_config_args],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
                     PAC_POP_FLAG([CFLAGS])
                     dnl Note that single quote is intentional to pass the variable as is
                     hwloc_srcdir="tools/topo/hwloc/hwloc"
