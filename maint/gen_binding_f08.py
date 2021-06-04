@@ -27,7 +27,7 @@ def main():
     skip_large_list = []
     # skip large variations because MPI_ADDRESS_KIND == MPI_COUNT_KIND
     if 'aint-is-int' not in G.opts:
-        skip_large_list.extend(["MPI_Op_create", "MPI_Register_datarep", "MPI_Type_create_resized", "MPI_Type_get_extent", "MPI_Type_get_true_extent", "MPI_File_get_type_extent"])
+        skip_large_list.extend(["MPI_Op_create", "MPI_Register_datarep", "MPI_Type_create_resized", "MPI_Type_get_extent", "MPI_Type_get_true_extent", "MPI_File_get_type_extent", "MPI_Win_allocate", "MPI_Win_allocate_shared", "MPI_Win_create", "MPI_Win_shared_query"])
     # skip File large count functions because it is not implemented yet
     for func in func_list:
         if func['name'].startswith('MPI_File_') or func['name'] == 'MPI_Register_datarep':
