@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     if (rank == 0) {
         MPIX_Psend_init(&a, 1, 1, MPI_INT, 1, 0, MPI_COMM_WORLD, MPI_INFO_NULL, &request);
         MPI_Start(&request);
-        MPIX_Pready(0, &request);
+        MPIX_Pready(0, request);
         MPI_Send(NULL, 0, MPI_DATATYPE_NULL, 1, 0, MPI_COMM_WORLD);
         MPI_Wait(&request, MPI_STATUS_IGNORE);
     } else if (rank == 1) {

@@ -66,7 +66,7 @@ static int check_recv_buf(int iter)
 
 /* Test subroutines */
 #ifdef TEST_PREADY_RANGE
-static void test_pready_range(int iter, MPI_Request * req_ptr)
+static void test_pready_range(int iter, MPI_Request req)
 {
     for (int lo = 0; lo < spart; lo += range) {
         /* check edge value for high */
@@ -78,13 +78,13 @@ static void test_pready_range(int iter, MPI_Request * req_ptr)
 
         MTestPrintfMsg(1, "Rank %d sends partition range %d:%d "
                        "with count %ld of basic elements\n", rank, lo, high, scount);
-        MPI_Pready_range(lo, high, req_ptr);
+        MPI_Pready_range(lo, high, req);
     }
 }
 #endif
 
 #ifdef TEST_PREADY_LIST
-static void test_pready_list(int iter, MPI_Request * req_ptr)
+static void test_pready_list(int iter, MPI_Request req)
 {
     int *arrayp = calloc(range, sizeof(int));
 
@@ -102,7 +102,7 @@ static void test_pready_list(int iter, MPI_Request * req_ptr)
 
         MTestPrintfMsg(1, "Rank %d sends partition range %d:%d "
                        "with count %ld of basic elements\n", rank, lo, high, scount);
-        MPI_Pready_list(np, arrayp, req_ptr);
+        MPI_Pready_list(np, arrayp, req);
     }
 
     free(arrayp);
@@ -110,7 +110,7 @@ static void test_pready_list(int iter, MPI_Request * req_ptr)
 #endif
 
 #ifdef TEST_PREADY_LIST_NON_CONSECUTIVE
-static void test_pready_list_non_consecutive(int iter, MPI_Request * req_ptr)
+static void test_pready_list_non_consecutive(int iter, MPI_Request req)
 {
     int *arrayp = calloc(range, sizeof(int));
 
@@ -130,7 +130,7 @@ static void test_pready_list_non_consecutive(int iter, MPI_Request * req_ptr)
             MTestPrintfMsg(1, "%d ", i);
         }
         MTestPrintfMsg(1, "] with count %ld of basic elements\n", scount);
-        MPI_Pready_list(np_even, arrayp, req_ptr);
+        MPI_Pready_list(np_even, arrayp, req);
 
         /* issue odd elements in current range */
         MTestPrintfMsg(1, "Rank %d sends odd partitions [", rank, lo, high, scount);
@@ -140,7 +140,7 @@ static void test_pready_list_non_consecutive(int iter, MPI_Request * req_ptr)
             MTestPrintfMsg(1, "%d ", i);
         }
         MTestPrintfMsg(1, "] with count %ld of basic elements\n", scount);
-        MPI_Pready_list(np_odd, arrayp, req_ptr);
+        MPI_Pready_list(np_odd, arrayp, req);
     }
     free(arrayp);
 }
@@ -189,18 +189,18 @@ int main(int argc, char *argv[])
             MPI_Start(&req);
 
 #ifdef TEST_PREADY_RANGE
-            test_pready_range(iter, &req);
+            test_pready_range(iter, req);
 #elif defined(TEST_PREADY_LIST)
-            test_pready_list(iter, &req);
+            test_pready_list(iter, req);
 #elif defined(TEST_PREADY_LIST_NON_CONSECUTIVE)
-            test_pready_list_non_consecutive(iter, &req);
+            test_pready_list_non_consecutive(iter, req);
 #else /* default test pready */
             for (int i = 0; i < spart; i++) {
                 fill_send_partition(i, iter);
 
                 MTestPrintfMsg(1, "Rank %d sends partition %d with count %ld of basic elements\n",
                                rank, i, scount);
-                MPI_Pready(i, &req);
+                MPI_Pready(i, req);
             }
 #endif
 
