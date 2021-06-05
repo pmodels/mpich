@@ -26,9 +26,9 @@
 !
        do i = 1, 9
           vl = MPI_MAX_INFO_KEY
-          call mpix_info_get_string( i1, keys(i), vl, value1, f1, ierr )
+          call mpi_info_get_string( i1, keys(i), vl, value1, f1, ierr )
           vl = MPI_MAX_INFO_KEY
-          call mpix_info_get_string( i2, keys(i), vl, value2, f2, ierr )
+          call mpi_info_get_string( i2, keys(i), vl, value2, f2, ierr )
 !
 !         if ( f1 ) then
 !            print *, "keys: ", trim(keys(i)), "value1: ", trim(value1)
@@ -57,24 +57,24 @@
 !
        errs = 0
 
-       call mpix_info_create_env( i1, ierr )
-       call mpix_info_create_env( i2, ierr )
+       call mpi_info_create_env( i1, ierr )
+       call mpi_info_create_env( i2, ierr )
 
        call test_info( i1, i2, errs )
        call mpi_info_free( i1, ierr )
-       call mpix_info_create_env( i1, ierr )
+       call mpi_info_create_env( i1, ierr )
 
        call mpi_init( ierr )
 
        call test_info( i1, i2, errs )
        call mpi_info_free( i1, ierr )
-       call mpix_info_create_env( i1, ierr )
+       call mpi_info_create_env( i1, ierr )
 
        call mpi_finalize( ierr )
 
        call test_info( i1, i2, errs )
        call mpi_info_free( i1, ierr )
-       call mpix_info_create_env( i1, ierr )
+       call mpi_info_create_env( i1, ierr )
 
        call test_info( i1, i2, errs )
        call mpi_info_free( i1, ierr )
