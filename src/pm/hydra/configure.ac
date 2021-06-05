@@ -403,7 +403,7 @@ for hydra_topolib in ${hydra_topolibs}; do
 	hwloc)
                 m4_define([hwloc_embedded_dir],[tools/topo/hwloc/hwloc])
                 PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
-                if test "$pac_have_hwloc" = "no" ; then
+                if test "$pac_have_hwloc" = "no" -a "$with_hwloc" != "no"; then
                     with_hwloc=embedded
                     pac_have_hwloc=yes
                 fi
