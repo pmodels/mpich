@@ -4647,8 +4647,6 @@ int MPI_Status_c2f( const MPI_Status *c_status, MPI_Fint *f_status )
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
 
-    # MPI_Info_create_env is from MPI-4, use MPIX prefix
-    $out_prefix = "mpix_";
     my $uc_prefix = uc($out_prefix);
 
     $OUTFD = "INFOCRENV";
