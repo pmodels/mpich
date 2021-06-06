@@ -1775,21 +1775,13 @@ fi
 #
 # First, determine whether we are/can support the language bindings
 #
-# Since F90/F90FLAGS are replaced by FC/FCFLAGS, rather than silently
-# substituting them, i.e. FC=$F90 and FCFLAGS=$F90FLAGS, we choose to emit
-# an error message and abort to avoid any ambiguous/hidden bug in choosing
-# Fortran90 compilers.
-if test -n "$F90" -o -n "$F90FLAGS" ; then
-    AC_MSG_ERROR([F90 and F90FLAGS are replaced by FC and FCFLAGS respectively in this configure, please unset F90/F90FLAGS and set FC/FCFLAGS instead and rerun configure again.])
-fi
-# ----------------------------------------------------------------------------
 # Handle default choices for the Fortran compilers
 # Note that these have already been set above
 
-if test "$enable_f77" = "yes"; then
-    if test "$F77" = "" -o "$F77" = "no"; then
-        # No Fortran 77 compiler found; abort
-        AC_MSG_ERROR([No Fortran 77 compiler found. If you don't need to
+if test "$enable_fc" = "yes"; then
+    if test "$FC" = "" -o "$FC" = "no"; then
+        # No Fortran compiler found; abort
+        AC_MSG_ERROR([No Fortran compiler found. If you don't need to
         build any Fortran programs, you can disable Fortran support using
         --disable-fortran. If you do want to build Fortran
         programs, you need to install a Fortran compiler such as gfortran
