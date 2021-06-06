@@ -93,7 +93,6 @@ dnl To let other scripts and in particular the configure in test/mpi
 dnl know that they are being invoked from within the MPICH configure,
 dnl the following environment variables are set and exported:
 dnl    FROM_MPICH
-dnl    MPICH_ENABLE_F77
 dnl    MPICH_ENABLE_FC
 dnl    MPICH_ENABLE_CXX
 dnl
@@ -4966,10 +4965,8 @@ dnl steps because it does not depend on them.
 # that the correct decisions are made since this configure happens before the
 # MPICH library is built.
 MPICH_ENABLE_CXX=$enable_cxx
-MPICH_ENABLE_F77=$enable_f77
 MPICH_ENABLE_FC=$enable_fc
 export MPICH_ENABLE_CXX
-export MPICH_ENABLE_F77
 export MPICH_ENABLE_FC
 AM_CONDITIONAL([BUILD_CXX_BINDING],[test "$enable_cxx" = "yes"])
 AM_CONDITIONAL([BUILD_F77_BINDING],[test "$enable_f77" = "yes"])
