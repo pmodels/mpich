@@ -26,6 +26,7 @@ $Text::Wrap::unexpand = 0; # disable hard tabs in output
 # set true to enable debug output
 my $debug = 0;
 my @cvars = ();
+my %cvars; # used for duplication detection
 my @categories=();
 my $yaml = YAML::Tiny->new();
 my @dirs = ();
@@ -689,7 +690,17 @@ sub ProcessFile {
                 die "ERROR: cvar $cvar->{name} has no class in $cfile\n" unless exists $cvar->{class};
                 die "ERROR: cvar $cvar->{name} has no description in $cfile\n" unless exists $cvar->{description};
             }
-            push (@cvars, @{$info->{cvars}});
+            foreach my $cvar (@{$info->{cvars}}) {
+                if (!$cvars{$cvar->{name}}) {
+                    $cvars{$cvar->{name}} = $cvar;
+                    push (@cvars, $cvar);
+                } else {
+                    my $prev = $cvars{$cvar->{name}};
+                    if (cvar_cmp($prev, $cvar) != 0) {
+                        die "ERROR: duplicate CVAR definition, $cvar->{name}, and they are not the same\n";
+                    }
+                }
+            }
         }
 
         if (exists $info->{categories}) {
@@ -730,4 +741,30 @@ sub ExpandDir {
     foreach $dir (@subdirs) {
         ExpandDir($dir);
     }
+}
+
+# Compare two cvar, return 0 if they are duplicate and compatible. Other wise, return non-zero.
+# This is useful so we can have duplicated cvar definition is separate modules, e.g. ch3:ofi and ch4:ofi.
+sub cvar_cmp {
+    my ($a, $b) = @_;
+    if ($a->{category} ne $b->{category}) {
+        return 1;
+    }
+    if ($a->{type} ne $b->{type}) {
+        return 1;
+    }
+    if ($a->{default} ne $b->{default}) {
+        return 1;
+    }
+    if ($a->{scope} ne $b->{scope}) {
+        return 1;
+    }
+    if ($a->{class} ne $b->{class}) {
+        return 1;
+    }
+    if ($a->{verbosity} ne $b->{verbosity}) {
+        return 1;
+    }
+    # they are the same
+    return 0;
 }
