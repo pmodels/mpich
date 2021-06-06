@@ -442,18 +442,8 @@ dnl In addition, we check whether f77 and fc can work together.
 AC_ARG_ENABLE(fortran,
 [  --enable-fortran=option - Control the level of Fortran support in the MPICH implementation.
 	yes|all   - Enable all available Fortran implementations (F77, F90+)
-	f77       - Enable Fortran 77 support
-	fc        - Enable Fortran 90 and 2008 support
 	no|none   - No Fortran support
 ],,[enable_fortran=all])
-
-AC_ARG_ENABLE(f77,
-	AS_HELP_STRING([--enable-f77],
-		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_f77=yes])
-
-AC_ARG_ENABLE(fc,
-	AS_HELP_STRING([--enable-fc],
-		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_fc=yes])
 
 AC_ARG_ENABLE(cxx,
 	AS_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
@@ -710,42 +700,24 @@ AC_PROG_CXX
 : ${FCFLAGS=""}
 AC_PROG_FC
 
-save_IFS="$IFS"
-IFS=","
 enable_f77=no
 enable_fc=no
-for option in $enable_fortran ; do
-    case "$option" in
-        yes|all)
-		enable_f77=yes
-		enable_fc=yes
-		;;
-        no|none)
-		;;
-        f77)
-		enable_f77=yes
-		;;
-        fc)
-		enable_fc=yes
-		;;
-        *)
-		IFS="$save_IFS"
-		AC_MSG_WARN([Unknown value $option for --enable-fortran])
-		IFS=","
-		;;
-    esac
-done
-IFS="$save_IFS"
+case "$enable_fortran" in
+    yes|all)
+            enable_f77=yes
+            enable_fc=yes
+            ;;
+    no|none)
+            ;;
+    *)
+            AC_MSG_WARN([Unknown value $option for --enable-fortran])
+            ;;
+esac
 
-if test "$enable_f77" = "no" ; then
-   if test "$enable_fc" = "yes" ; then
-      AC_MSG_ERROR([Fortran 90 support requires enabling Fortran 77])
-   fi
-fi
-
-if test ! -z "$FC" -a -z "$F77" ; then
-   F77=$FC
-   if test ! -z "$FCFLAGS" -a -z "$FFLAGS" ; then
+# HACK, use $FC as F77. We should remove all the F77 usages.
+if test "$enable_fc" = "yes" ; then
+    F77=$FC
+   if test ! -z "$FCFLAGS" ; then
       FFLAGS=$FCFLAGS
    fi
 fi
@@ -5121,7 +5093,7 @@ if test "X$enable_shared" = "Xyes" ; then
             PAC_POP_FLAG([LDFLAGS])
 
             # Technically we may not be able to use the same form of the argument
-            # for all four compilers (CC/CXX/F77/FC).  But we only think this is
+            # for all three compilers (CC/CXX/FC).  But we only think this is
             # necessary for Darwin for now, so this unconditional, single-var
             # approximation will work for now.
             if test "X$pac_cv_wl_flat_namespace_works" = "Xyes" ; then
