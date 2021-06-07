@@ -7,6 +7,7 @@ from local_python import MPI_API_Global as G
 from local_python.mpi_api import *
 from local_python.binding_c import *
 from local_python import RE
+from local_python.info_hints import collect_info_hint_blocks
 import glob
 
 def main():
@@ -33,7 +34,11 @@ def main():
         mapping = G.MAPS['SMALL_C_KIND_MAP']
         G.mpi_declares.append(get_declare_function(func, False, "proto"))
 
-    G.check_write_path(c_dir + '/mansrc/')
+    if 'output-mansrc' in G.opts:
+        G.check_write_path(c_dir + '/mansrc/')
+        G.hints = collect_info_hint_blocks("src")
+    else:
+        G.hints = None
 
     # -- Generating code --
     G.out = []
