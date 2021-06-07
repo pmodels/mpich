@@ -848,6 +848,26 @@ def dump_profiling(func):
     G.out.append("")
 
 def dump_manpage(func, out):
+    def dump_description(s):
+        words = s.split()
+        n = len(words)
+        i0 = 0
+        i = 0
+        l = 0
+        for w in words:
+            if l == 0:
+                l += len(w)
+            else:
+                l += len(w) + 1
+                if l > 80:
+                    out.append('  ' + ' '.join(words[i0:i]))
+                    i0 = i
+                    l = len(w)
+            i += 1
+            continue
+        if l > 0:
+            out.append('  ' + ' '.join(words[i0:]))
+    # ----
     out.append("/*D")
     out.append("   %s - %s" % (get_function_name(func, False), func['desc']))
     out.append("")
@@ -904,6 +924,15 @@ def dump_manpage(func, out):
 
         if RE.search(r'with\s+(\w+)', func['replace']):
             out.append("   The replacement for this routine is '%s'." % RE.m.group(1))
+        out.append("")
+
+    # document info keys
+    if G.hints and func['name'] in G.hints:
+        print("Got info hints in %s" % func['name'])
+        out.append("Info hints:")
+        for a in G.hints[func['name']]:
+            out.append(". %s - %s, default = %s." % (a['name'], a['type'], a['default']))
+            dump_description(a['description'])
         out.append("")
 
     for note in func['_docnotes']:
