@@ -7,8 +7,7 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Bcast_init_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                         MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, MPIR_Request ** request)
+int MPIR_Barrier_init_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -22,8 +21,11 @@ int MPIR_Bcast_init_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
     req->u.persist_coll.sched_type = MPIR_SCHED_INVALID;
     req->u.persist_coll.real_request = NULL;
 
-    mpi_errno = MPIR_Ibcast_sched_impl(buffer, count, datatype, root, comm_ptr, true,   /* is_persistent */
-                                       &req->u.persist_coll.sched, &req->u.persist_coll.sched_type);
+    /* *INDENT-OFF* */
+    mpi_errno = MPIR_Ibarrier_sched_impl(comm_ptr, true,   /* is_persistent */
+                                         &req->u.persist_coll.sched,
+                                         &req->u.persist_coll.sched_type);
+    /* *INDENT-ON* */
     MPIR_ERR_CHECK(mpi_errno);
 
     *request = req;
@@ -34,18 +36,16 @@ int MPIR_Bcast_init_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
     goto fn_exit;
 }
 
-int MPIR_Bcast_init(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                    MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, MPIR_Request ** request)
+int MPIR_Barrier_init(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
         ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&
-         MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE)) {
-        mpi_errno = MPID_Bcast_init(buffer, count, datatype, root, comm_ptr, info_ptr, request);
+         MPIR_CVAR_IBARRIER_DEVICE_COLLECTIVE)) {
+        mpi_errno = MPID_Barrier_init(comm_ptr, info_ptr, request);
     } else {
-        mpi_errno =
-            MPIR_Bcast_init_impl(buffer, count, datatype, root, comm_ptr, info_ptr, request);
+        mpi_errno = MPIR_Barrier_init_impl(comm_ptr, info_ptr, request);
     }
 
     return mpi_errno;
