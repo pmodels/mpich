@@ -213,6 +213,19 @@ static const char *get_prov_addr(struct fi_info *prov)
     return addr_str;
 }
 
+/* return a score of preference. Default is 0.
+ * Return < 0 for less favorable providers.
+ * Return > 0 for more favorable providers.
+ */
+static int provider_preference(const char *prov_name)
+{
+    if (MPL_stricmp(prov_name, "UDP;ofi_rxd") == 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
 static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *list)
 {
     bool provname_is_set = (provname &&
@@ -224,6 +237,7 @@ static struct fi_info *pick_provider_from_list(const char *provname, struct fi_i
     MPIDI_OFI_init_settings(&minimal_settings, MPIDI_OFI_SET_NAME_MINIMAL);
 
     int best_score = 0;
+    int best_pref_score = 0;
     struct fi_info *best_prov = NULL;
     for (struct fi_info * prov = list; prov; prov = prov->next) {
         if (provname_is_set && 0 != strcmp(provname, prov->fabric_attr->prov_name)) {
@@ -233,13 +247,15 @@ static struct fi_info *pick_provider_from_list(const char *provname, struct fi_i
         }
 
         int score = MPIDI_OFI_match_provider(prov, &optimal_settings, &minimal_settings);
-        if (best_score < score) {
+        int pref_score = provider_preference(prov->fabric_attr->prov_name);
+        if (best_score < score || (best_score == score && best_pref_score < pref_score)) {
             best_score = score;
+            best_pref_score = pref_score;
             best_prov = prov;
         }
         if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
-            printf("provider: %s, score = %d, %s\n", prov->fabric_attr->prov_name, score,
-                   get_prov_addr(prov));
+            printf("provider: %s, score = %d, pref = %d, %s\n", prov->fabric_attr->prov_name,
+                   score, pref_score, get_prov_addr(prov));
         }
     }
 
