@@ -802,6 +802,8 @@ if [ $do_bindings = "yes" ] ; then
 	( cd src/binding/fortran/use_mpi_f08 && chmod a+x ./buildiface && ./buildiface )
         # Delete the old Makefile.mk
         ( rm -f src/binding/fortran/use_mpi_f08/wrappers_c/Makefile.mk )
+        # Delete the old cdesc.h
+        ( rm -f src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.h )
         # Execute once for mpi.h.in ...
 	( cd src/binding/fortran/use_mpi_f08/wrappers_c && chmod a+x ./buildiface && ./buildiface ../../../../include/mpi.h.in )
         # ... and once for mpio.h.in
