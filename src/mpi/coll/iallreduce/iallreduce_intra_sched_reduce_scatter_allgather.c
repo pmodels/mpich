@@ -17,7 +17,6 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
     int *cnts, *disps;
-    MPIR_SCHED_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(2);
 
 #ifdef HAVE_ERROR_CHECKING
@@ -33,8 +32,8 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)), mpi_errno,
-                              "temporary buffer", MPL_MEM_BUFFER);
+    tmp_buf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+    MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *) ((char *) tmp_buf - true_lb);
@@ -218,11 +217,9 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
         }
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

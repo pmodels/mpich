@@ -21,7 +21,6 @@ int MPIR_Iallgather_inter_sched_local_gather_remote_bcast(const void *sendbuf, M
     MPI_Aint sendtype_sz;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIR_SCHED_CHKPMEM_DECL(1);
 
     local_size = comm_ptr->local_size;
     remote_size = comm_ptr->remote_size;
@@ -31,8 +30,8 @@ int MPIR_Iallgather_inter_sched_local_gather_remote_bcast(const void *sendbuf, M
         /* In each group, rank 0 allocates temp. buffer for local
          * gather */
         MPIR_Datatype_get_size_macro(sendtype, sendtype_sz);
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, sendcount * local_size * sendtype_sz, mpi_errno,
-                                  "tmp_buf", MPL_MEM_BUFFER);
+        tmp_buf = MPIR_Sched_alloc_state(s, sendcount * local_size * sendtype_sz);
+        MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
     } else {
         /* silence -Wmaybe-uninitialized due to MPIR_{Igather,Ibcast}_sched by non-zero ranks */
         sendtype_sz = 0;
@@ -94,10 +93,8 @@ int MPIR_Iallgather_inter_sched_local_gather_remote_bcast(const void *sendbuf, M
         MPIR_SCHED_BARRIER(s);
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

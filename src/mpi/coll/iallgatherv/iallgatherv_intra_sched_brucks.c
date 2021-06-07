@@ -16,7 +16,6 @@ int MPIR_Iallgatherv_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
     int send_cnt, dst, total_count, pof2, src, rem;
     int incoming_count, curr_count;
     void *tmp_buf;
-    MPIR_SCHED_CHKPMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -32,8 +31,8 @@ int MPIR_Iallgatherv_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
         goto fn_exit;
 
     /* allocate a temporary buffer of the same size as recvbuf. */
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, total_count * recvtype_sz, mpi_errno, "tmp_buf",
-                              MPL_MEM_BUFFER);
+    tmp_buf = MPIR_Sched_alloc_state(s, total_count * recvtype_sz);
+    MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     /* copy local data to the top of tmp_buf */
     if (sendbuf != MPI_IN_PLACE) {
@@ -125,10 +124,8 @@ int MPIR_Iallgatherv_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
         send_cnt += recvcounts[i];
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

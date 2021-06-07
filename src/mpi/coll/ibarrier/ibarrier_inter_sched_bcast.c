@@ -9,7 +9,6 @@ int MPIR_Ibarrier_inter_sched_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, root;
-    MPIR_SCHED_CHKPMEM_DECL(1);
     char *buf = NULL;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
@@ -33,7 +32,8 @@ int MPIR_Ibarrier_inter_sched_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
      * have reached the barrier. We do a 1-byte bcast because a 0-byte
      * bcast will just return without doing anything. */
 
-    MPIR_SCHED_CHKPMEM_MALLOC(buf, char *, 1, mpi_errno, "bcast buf", MPL_MEM_BUFFER);
+    buf = MPIR_Sched_alloc_state(s, sizeof(char));
+    MPIR_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
     buf[0] = 'D';       /* avoid valgrind warnings */
 
     /* first broadcast from left to right group, then from right to
@@ -63,10 +63,8 @@ int MPIR_Ibarrier_inter_sched_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
