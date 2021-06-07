@@ -547,7 +547,7 @@ def process_func_parameters(func):
             do_handle_ptr = 1
             if kind == "INFO" and not RE.match(r'mpi_(info_.*|.*_set_info)$', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_INFO_NULL"
-            elif kind == "REQUEST" and RE.match(r'mpi_(wait|test|request_get_status)', func_name, re.IGNORECASE):
+            elif kind == "REQUEST" and RE.match(r'mpi_(wait|test|request_get_status|parrived)', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_REQUEST_NULL"
         elif kind == "RANK" and name == "root":
             validation_list.insert(0, {'kind': "ROOT", 'name': name})
