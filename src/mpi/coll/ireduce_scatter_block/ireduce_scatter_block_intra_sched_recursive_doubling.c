@@ -22,7 +22,6 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(const void *sendbu
     int received;
     MPI_Datatype sendtype, recvtype;
     int nprocs_completed, tmp_mask, tree_root, is_commutative;
-    MPIR_SCHED_CHKPMEM_DECL(5);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -31,8 +30,8 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(const void *sendbu
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     is_commutative = MPIR_Op_is_commutative(op);
 
-    MPIR_SCHED_CHKPMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps",
-                              MPL_MEM_BUFFER);
+    disps = MPIR_Sched_alloc_state(s, comm_size * sizeof(int));
+    MPIR_ERR_CHKANDJUMP(!disps, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     total_count = 0;
     for (i = 0; i < comm_size; i++) {
@@ -43,15 +42,15 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(const void *sendbu
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* need to allocate temporary buffer to receive incoming data */
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_recvbuf, void *, total_count * (MPL_MAX(true_extent, extent)),
-                              mpi_errno, "tmp_recvbuf", MPL_MEM_BUFFER);
+    tmp_recvbuf = MPIR_Sched_alloc_state(s, total_count * (MPL_MAX(extent, true_extent)));
+    MPIR_ERR_CHKANDJUMP(!tmp_recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
     /* adjust for potential negative lower bound in datatype */
     tmp_recvbuf = (void *) ((char *) tmp_recvbuf - true_lb);
 
     /* need to allocate another temporary buffer to accumulate
      * results */
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_results, void *, total_count * (MPL_MAX(true_extent, extent)),
-                              mpi_errno, "tmp_results", MPL_MEM_BUFFER);
+    tmp_results = MPIR_Sched_alloc_state(s, total_count * (MPL_MAX(extent, true_extent)));
+    MPIR_ERR_CHKANDJUMP(!tmp_recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
     /* adjust for potential negative lower bound in datatype */
     tmp_results = (void *) ((char *) tmp_results - true_lb);
 
@@ -237,10 +236,8 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(const void *sendbu
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(s);
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
