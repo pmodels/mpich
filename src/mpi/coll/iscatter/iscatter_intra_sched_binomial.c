@@ -76,13 +76,12 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
     int tmp_buf_size = 0;
     void *tmp_buf = NULL;
     struct shared_state *ss = NULL;
-    MPIR_SCHED_CHKPMEM_DECL(4);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    MPIR_SCHED_CHKPMEM_MALLOC(ss, struct shared_state *, sizeof(struct shared_state), mpi_errno,
-                              "shared_state", MPL_MEM_BUFFER);
+    ss = MPIR_Sched_alloc_state(s, sizeof(struct shared_state));
+    MPIR_ERR_CHKANDJUMP(!ss, mpi_errno, MPI_ERR_OTHER, "**nomem");
     ss->sendcount = sendcount;
 
     if (rank == root)
@@ -107,8 +106,8 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
      * receive data of max size (ss->nbytes*comm_size)/2 */
     if (relative_rank && !(relative_rank % 2)) {
         tmp_buf_size = (ss->nbytes * comm_size) / 2;
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf",
-                                  MPL_MEM_BUFFER);
+        tmp_buf = MPIR_Sched_alloc_state(s, tmp_buf_size);
+        MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
     /* if the root is not rank 0, we reorder the sendbuf in order of
@@ -118,8 +117,8 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
     if (rank == root) {
         if (root != 0) {
             tmp_buf_size = ss->nbytes * comm_size;
-            MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf",
-                                      MPL_MEM_BUFFER);
+            tmp_buf = MPIR_Sched_alloc_state(s, tmp_buf_size);
+            MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
             if (recvbuf != MPI_IN_PLACE)
                 mpi_errno = MPIR_Sched_copy(((char *) sendbuf + extent * sendcount * rank),
@@ -241,10 +240,8 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
         MPIR_SCHED_BARRIER(s);
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

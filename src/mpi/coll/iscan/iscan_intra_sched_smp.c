@@ -18,7 +18,6 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
     void *tempbuf = NULL;
     void *prefulldata = NULL;
     void *localfulldata = NULL;
-    MPIR_SCHED_CHKPMEM_DECL(3);
 
     /* In order to use the SMP-aware algorithm, the "op" can be
      * either commutative or non-commutative, but we require a
@@ -38,19 +37,19 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tempbuf, void *, count * (MPL_MAX(extent, true_extent)),
-                              mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+    tempbuf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+    MPIR_ERR_CHKANDJUMP(!tempbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
     tempbuf = (void *) ((char *) tempbuf - true_lb);
 
     /* Create prefulldata and localfulldata on local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
-        MPIR_SCHED_CHKPMEM_MALLOC(prefulldata, void *, count * (MPL_MAX(extent, true_extent)),
-                                  mpi_errno, "prefulldata for scan", MPL_MEM_BUFFER);
+        prefulldata = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+        MPIR_ERR_CHKANDJUMP(!prefulldata, mpi_errno, MPI_ERR_OTHER, "**nomem");
         prefulldata = (void *) ((char *) prefulldata - true_lb);
 
         if (node_comm != NULL) {
-            MPIR_SCHED_CHKPMEM_MALLOC(localfulldata, void *, count * (MPL_MAX(extent, true_extent)),
-                                      mpi_errno, "localfulldata for scan", MPL_MEM_BUFFER);
+            localfulldata = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+            MPIR_ERR_CHKANDJUMP(!localfulldata, mpi_errno, MPI_ERR_OTHER, "**nomem");
             localfulldata = (void *) ((char *) localfulldata - true_lb);
         }
     }
@@ -135,10 +134,8 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

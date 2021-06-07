@@ -14,7 +14,6 @@ int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Ai
     int mask, relrank, source, lroot;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf;
-    MPIR_SCHED_CHKPMEM_DECL(2);
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
@@ -28,17 +27,16 @@ int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Ai
 
     is_commutative = MPIR_Op_is_commutative(op);
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)),
-                              mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+    tmp_buf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+    MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *) ((char *) tmp_buf - true_lb);
 
     /* If I'm not the root, then my recvbuf may not be valid, therefore
      * I have to allocate a temporary one */
     if (rank != root) {
-        MPIR_SCHED_CHKPMEM_MALLOC(recvbuf, void *,
-                                  count * (MPL_MAX(extent, true_extent)),
-                                  mpi_errno, "receive buffer", MPL_MEM_BUFFER);
+        recvbuf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+        MPIR_ERR_CHKANDJUMP(!recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
         recvbuf = (void *) ((char *) recvbuf - true_lb);
     }
 
@@ -145,10 +143,8 @@ int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Ai
         }
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
