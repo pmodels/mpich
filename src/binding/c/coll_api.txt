@@ -29,6 +29,9 @@ MPI_Allgather:
     }
 }
 
+MPI_Allgather_init:
+    .desc: Create a persistent request for allgather.
+
 MPI_Allgatherv:
     .desc: Gathers data from all tasks and deliver the combined data to all tasks
 /*
@@ -61,6 +64,9 @@ MPI_Allgatherv:
 }
 
 
+MPI_Allgatherv_init:
+    .desc: Create a persistent request for allgatherv.
+
 MPI_Allreduce:
     .desc: Combines values from all processes and distributes the result back to all processes
     .docnotes: collops
@@ -73,6 +79,9 @@ MPI_Allreduce:
     }
 }
 
+MPI_Allreduce_init:
+    .desc: Create a persistent request for allreduce
+
 MPI_Alltoall:
     .desc: Sends data from all to all processes
 { -- early_return --
@@ -81,11 +90,20 @@ MPI_Alltoall:
     }
 }
 
+MPI_Alltoall_init:
+    .desc: Create a persistent request for alltoall.
+
 MPI_Alltoallv:
     .desc: Sends data from all to all processes; each process may send a different amount of data and provide displacements for the input and output data.
 
+MPI_Alltoallv_init:
+    .desc: Create a persistent request for alltoallv.
+
 MPI_Alltoallw:
     .desc: Generalized all-to-all communication allowing different datatypes, counts, and displacements for each partner
+
+MPI_Alltoallw_init:
+    .desc: Create a persistent request for alltoallw.
 
 MPI_Barrier:
     .desc: Blocks until all processes in the communicator have reached this routine.
@@ -100,6 +118,9 @@ MPI_Barrier:
         goto fn_exit;
     }
 }
+
+MPI_Barrier_init:
+    .desc: Creates a persistent request for barrier
 
 MPI_Bcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator
@@ -128,6 +149,9 @@ MPI_Exscan:
     }
 }
 
+MPI_Exscan_init:
+    .desc: Creates a persistent request for exscan
+
 MPI_Gather:
     .desc: Gathers together values from a group of processes
 { -- early_return --
@@ -138,8 +162,14 @@ MPI_Gather:
     }
 }
 
+MPI_Gather_init:
+    .desc: Create a persistent request for gather.
+
 MPI_Gatherv:
     .desc: Gathers into specified locations from all processes in a group
+
+MPI_Gatherv_init:
+    .desc: Create a persistent request for gatherv.
 
 MPI_Iallgather:
     .desc: Gathers data from all tasks and distribute the combined data to all tasks in a nonblocking way
@@ -341,8 +371,15 @@ MPI_Neighbor_allgather:
     In this function, each process i gathers data items from each process j if an edge (j,i) exists in the topology graph, and each process i sends the same data items to all processes j where an edge (i,j) exists. The send buffer is sent to each neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
 */
 
+MPI_Neighbor_allgather_init:
+    .desc: Create a persistent request for neighbor_allgather.
+
+
 MPI_Neighbor_allgatherv:
     .desc: The vector variant of MPI_Neighbor_allgather.
+
+MPI_Neighbor_allgatherv_init:
+    .desc: Create a persistent request for neighbor_allgatherv.
 
 MPI_Neighbor_alltoall:
     .desc: Sends and Receivs data from all neighboring processes
@@ -351,11 +388,20 @@ MPI_Neighbor_alltoall:
     In this function, each process i receives data items from each process j if an edge (j,i) exists in the topology graph or Cartesian topology.  Similarly, each process i sends data items to all processes j where an edge (i,j) exists. This call is more general than MPI_NEIGHBOR_ALLGATHER in that different data items can be sent to each neighbor. The k-th block in send buffer is sent to the k-th neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
 */
 
+MPI_Neighbor_alltoall_init:
+    .desc: Create a persistent request for neighbor_alltoall.
+
 MPI_Neighbor_alltoallv:
     .desc: The vector variant of MPI_Neighbor_alltoall allows sending/receiving different numbers of elements to and from each neighbor.
 
+MPI_Neighbor_alltoallv_init:
+    .desc: Create a persistent request for neighbor_alltoallv.
+
 MPI_Neighbor_alltoallw:
     .desc: Like MPI_Neighbor_alltoallv but it allows one to send and receive with different types to and from each neighbor.
+
+MPI_Neighbor_alltoallw_init:
+    .desc: Create a persistent request for neighbor_alltoallw.
 
 MPI_Reduce:
     .desc: Reduces values on all processes to a single value
@@ -373,6 +419,9 @@ MPI_Reduce:
         }
     }
 }
+
+MPI_Reduce_init:
+    .desc: Create a persistent request for reduce
 
 MPI_Reduce_local:
     .desc: Applies a reduction operator to local arguments.
@@ -396,6 +445,9 @@ MPI_Reduce_scatter:
     }
 }
 
+MPI_Reduce_scatter_init:
+    .desc: Create a persistent request for reduce_scatter.
+
 MPI_Reduce_scatter_block:
     .desc: Combines values and scatters the results
     .docnotes: collops
@@ -408,6 +460,9 @@ MPI_Reduce_scatter_block:
     }
 }
 
+MPI_Reduce_scatter_block_init:
+    .desc: Create a persistent request for reduce_scatter_block.
+
 MPI_Scan:
     .desc: Computes the scan (partial reductions) of data on a collection of processes
     .docnotes: collops
@@ -417,6 +472,9 @@ MPI_Scan:
         goto fn_exit;
     }
 }
+
+MPI_Scan_init:
+    .desc: Create a persistent request for scan.
 
 MPI_Scatter:
     .desc: Sends data from one process to all other processes in a communicator
@@ -428,5 +486,11 @@ MPI_Scatter:
     }
 }
 
+MPI_Scatter_init:
+    .desc: Create a persistent request for scatter.
+
 MPI_Scatterv:
     .desc: Scatters a buffer in parts to all processes in a communicator
+
+MPI_Scatterv_init:
+    .desc: Create a persistent request for scatterv.

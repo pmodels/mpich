@@ -26,7 +26,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     int is_commutative;
     int size;
     int rank;
-    int num_children;
+    int num_children = 0;
     int tree_root;              /* Root of the tree over which reduction is performed.
                                  * This can be different from root of the collective operation.
                                  * When root is non-zero and op is non-commutative, the reduction
@@ -38,6 +38,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     void **child_buffer = NULL; /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which reduced data is present */
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
+    int dtcopy_id = -1;
     int nvtcs;
     int tag;
     MPIR_CHKLMEM_DECL(3);
@@ -108,19 +109,23 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     if (is_tree_root && is_root) {
         reduce_buffer = recvbuf;
         if (sendbuf != MPI_IN_PLACE)
-            MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+            dtcopy_id = MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype,
+                                                 sched, 0, NULL);
     } else if (is_tree_root && !is_root) {
         reduce_buffer = MPIR_TSP_sched_malloc(extent * count, sched);
         reduce_buffer = (void *) ((char *) reduce_buffer - type_lb);
-        MPIR_Localcopy(sendbuf, count, datatype, reduce_buffer, count, datatype);
+        dtcopy_id = MPIR_TSP_sched_localcopy(sendbuf, count, datatype, reduce_buffer, count,
+                                             datatype, sched, 0, NULL);
     } else if (is_tree_intermediate && is_root) {
         reduce_buffer = recvbuf;
         if (sendbuf != MPI_IN_PLACE)
-            MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+            dtcopy_id = MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype,
+                                                 sched, 0, NULL);
     } else if (is_tree_intermediate && !is_root) {
         reduce_buffer = MPIR_TSP_sched_malloc(extent * count, sched);
         reduce_buffer = (void *) ((char *) reduce_buffer - type_lb);
-        MPIR_Localcopy(sendbuf, count, datatype, reduce_buffer, count, datatype);
+        dtcopy_id = MPIR_TSP_sched_localcopy(sendbuf, count, datatype, reduce_buffer, count,
+                                             datatype, sched, 0, NULL);
     } else if (is_tree_leaf && is_root) {
         if (sendbuf == MPI_IN_PLACE)
             reduce_buffer = recvbuf;
@@ -133,10 +138,12 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     /* initialize arrays to store graph vertex indices */
     MPIR_CHKLMEM_MALLOC(vtcs, int *, sizeof(int) * (num_children + 1),
                         mpi_errno, "vtcs buffer", MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(reduce_id, int *, sizeof(int) * num_children,
-                        mpi_errno, "reduce_id buffer", MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * num_children,
-                        mpi_errno, "recv_id buffer", MPL_MEM_COLL);
+    if (num_children > 0) {
+        MPIR_CHKLMEM_MALLOC(reduce_id, int *, sizeof(int) * num_children,
+                            mpi_errno, "reduce_id buffer", MPL_MEM_COLL);
+        MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * num_children,
+                            mpi_errno, "recv_id buffer", MPL_MEM_COLL);
+    }
 
     /* do pipelined reduce */
     /* NOTE: Make sure you are handling non-contiguous datatypes
@@ -156,15 +163,16 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
             int child = *(int *) utarray_eltptr(my_tree.children, i);
 
             /* Setup the dependencies for posting receive for child's data */
-            if (buffer_per_child) {     /* no dependency, just post the receive */
-                nvtcs = 0;
-            } else {
-                if (i == 0) {   /* this is the first receive and therefore no dependency */
-                    nvtcs = 0;
-                } else {        /* wait for the previous reduce to complete, before posting the next receive */
-                    vtcs[0] = reduce_id[i - 1];
+            if (buffer_per_child || i == 0) {   /* no dependency, just post the receive */
+                if (dtcopy_id >= 0) {
+                    vtcs[0] = dtcopy_id;
                     nvtcs = 1;
+                } else {
+                    nvtcs = 0;
                 }
+            } else {
+                vtcs[0] = reduce_id[i - 1];
+                nvtcs = 1;
             }
 
             recv_id[i] = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,

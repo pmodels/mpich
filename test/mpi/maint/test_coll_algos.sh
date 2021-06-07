@@ -88,6 +88,7 @@ for algo_name in ${algo_names}; do
                 echo "reduce 10 ${env}" >> ${testlist_cvar}
                 echo "red3 10 ${env}" >> ${testlist_cvar}
                 echo "red4 10 ${env}" >> ${testlist_cvar}
+                echo "p_red 5 ${env}" >> ${testlist_cvar}
                 env=""
             done
         done
@@ -100,6 +101,7 @@ for algo_name in ${algo_names}; do
         echo "reduce 10 ${env}" >> ${testlist_cvar}
         echo "red3 10 ${env}" >> ${testlist_cvar}
         echo "red4 10 ${env}" >> ${testlist_cvar}
+        echo "p_red 5 ${env}" >> ${testlist_cvar}
         env=""
     fi
 done
@@ -138,6 +140,7 @@ for algo_name in ${algo_names}; do
                     echo "allred5 5 ${env}" >> ${testlist_cvar}
                     echo "allred6 4 ${env}" >> ${testlist_cvar}
                     echo "allred6 7 ${env}" >> ${testlist_cvar}
+                    echo "p_allred 7 ${env}" >> ${testlist_cvar}
                     env=""
                 done
             else #test recursive exchange algorithms
@@ -154,6 +157,7 @@ for algo_name in ${algo_names}; do
                 echo "allred5 5 ${env}" >> ${testlist_cvar}
                 echo "allred6 4 ${env}" >> ${testlist_cvar}
                 echo "allred6 7 ${env}" >> ${testlist_cvar}
+                echo "p_allred 7 ${env}" >> ${testlist_cvar}
                 env=""
             fi
         done
@@ -170,6 +174,7 @@ for algo_name in ${algo_names}; do
         echo "allred5 5 ${env}" >> ${testlist_cvar}
         echo "allred6 4 ${env}" >> ${testlist_cvar}
         echo "allred6 7 ${env}" >> ${testlist_cvar}
+        echo "p_allred 7 ${env}" >> ${testlist_cvar}
         env=""
     fi
 done
@@ -197,6 +202,7 @@ for algo_name in ${algo_names}; do
 
         echo "allgather2 10 ${env}" >> ${testlist_cvar}
         echo "allgather3 10 ${env}" >> ${testlist_cvar}
+        echo "p_allgather 10 ${env}" >> ${testlist_cvar}
         env=""
     done
 done
@@ -228,6 +234,7 @@ for algo_name in ${algo_names}; do
             echo "allgatherv2 10 ${env}" >> ${testlist_cvar}
             echo "allgatherv3 10 ${env}" >> ${testlist_cvar}
             echo "allgatherv4 4 timeLimit=600 ${env}" >> ${testlist_cvar}
+            echo "p_allgatherv 10 ${env}" >> ${testlist_cvar}
             env=""
         done
     else
@@ -235,6 +242,7 @@ for algo_name in ${algo_names}; do
         echo "allgatherv2 10 ${env}" >> ${testlist_cvar}
         echo "allgatherv3 10 ${env}" >> ${testlist_cvar}
         echo "allgatherv4 4 timeLimit=600 ${env}" >> ${testlist_cvar}
+        echo "p_allgatherv 10 ${env}" >> ${testlist_cvar}
         env=""
     fi
 done
@@ -267,6 +275,7 @@ for algo_name in ${algo_names}; do
         echo "red_scat_block2 10 ${env}" >> ${testlist_cvar}
         echo "redscatblk3 8 ${env}" >> ${testlist_cvar}
         echo "redscatblk3 10 ${env}" >> ${testlist_cvar}
+        echo "p_red_scat_block 4 ${env}" >> ${testlist_cvar}
         env=""
     done
 done
@@ -298,6 +307,7 @@ for algo_name in ${algo_names}; do
         echo "redscat2 5 ${env}" >> ${testlist_cvar}
         echo "redscat2 10 ${env}" >> ${testlist_cvar}
         echo "redscat3 8 ${env}" >> ${testlist_cvar}
+        echo "p_redscat 4 ${env}" >> ${testlist_cvar}
         env=""
     done
 done
@@ -325,6 +335,7 @@ for algo_name in ${algo_names}; do
         echo "scattern 4 ${env}" >> ${testlist_cvar}
         echo "scatter2 4 ${env}" >> ${testlist_cvar}
         echo "scatter3 4 ${env}" >> ${testlist_cvar}
+        echo "p_scatter 4 ${env}" >> ${testlist_cvar}
         env=""
     done
 done
@@ -351,6 +362,7 @@ for algo_name in ${algo_names}; do
 
         echo "gather 4 ${env}" >> ${testlist_cvar}
         echo "gather2 4 ${env}" >> ${testlist_cvar}
+        echo "p_gather 4 ${env}" >> ${testlist_cvar}
         env=""
     done
 done
@@ -374,6 +386,7 @@ for algo_name in ${algo_names}; do
     if [ "${algo_name}" != "gentran_scattered" ]; then
         env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name}"
         echo "alltoall1 8 ${env}" >> ${testlist_cvar}
+        echo "p_alltoall 8 ${env}" >> ${testlist_cvar}
         env=""
     else
         for task in ${outstandingtasks}; do
@@ -383,6 +396,7 @@ for algo_name in ${algo_names}; do
                 env="${env} env=MPIR_CVAR_IALLTOALL_SCATTERED_OUTSTANDING_TASKS=${task}"
 
                 echo "alltoall1 8 ${env}" >> ${testlist_cvar}
+                echo "p_alltoall 8 ${env}" >> ${testlist_cvar}
                 env=""
             done
         done
@@ -400,6 +414,8 @@ for algo_name in ${algo_names}; do
 
         echo "alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=0" >> ${testlist_cvar}
         echo "alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=1" >> ${testlist_cvar}
+        echo "p_alltoall 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=0" >> ${testlist_cvar}
+        echo "p_alltoall 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=1" >> ${testlist_cvar}
         env=""
     done
 done
@@ -423,6 +439,7 @@ for algo_name in ${algo_names}; do
 
     echo "scantst 4 ${env}" >> ${testlist_cvar}
     echo "op_coll 4 ${env}" >> ${testlist_cvar}
+    echo "p_scan 4 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -471,6 +488,7 @@ for algo_name in ${algo_names}; do
                 env="${env} env=MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS=${task}"
                 echo "alltoallv 8 ${env}" >> ${testlist_cvar}
                 echo "alltoallv0 10 ${env}" >> ${testlist_cvar}
+                echo "p_alltoallv 10 ${env}" >> ${testlist_cvar}
                 env=""
             done
         done
@@ -484,6 +502,7 @@ for algo_name in ${algo_names}; do
 
     echo "alltoallv 10 ${env}" >> ${testlist_cvar}
     echo "alltoallv0 10 ${env}" >> ${testlist_cvar}
+    echo "p_alltoallv 10 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -505,6 +524,7 @@ for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM=${algo_name}"
 
     echo "neighb_allgather 4 ${env}" >> ${testlist_cvar}
+    echo "p_neighb_allgather 4 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -526,6 +546,7 @@ for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTRA_ALGORITHM=${algo_name}"
 
     echo "neighb_allgatherv 4 ${env}" >> ${testlist_cvar}
+    echo "p_neighb_allgatherv 4 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -547,6 +568,7 @@ for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALL_INTRA_ALGORITHM=${algo_name}"
 
     echo "neighb_alltoall 4 ${env}" >> ${testlist_cvar}
+    echo "p_neighb_alltoall 4 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -568,6 +590,7 @@ for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM=${algo_name}"
 
     echo "neighb_alltoallv 4 ${env}" >> ${testlist_cvar}
+    echo "p_neighb_alltoallv 4 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -590,6 +613,7 @@ for algo_name in ${algo_names}; do
         env="${testing_env} env=MPIR_CVAR_IGATHERV_INTRA_ALGORITHM=${algo_name}"
 
         echo "gatherv 5 ${env}" >> ${testlist_cvar}
+        echo "p_gatherv 5 ${env}" >> ${testlist_cvar}
         env=""
     done
 done
@@ -617,6 +641,7 @@ for algo_name in ${algo_names}; do
     echo "alltoallw_zeros 2 ${env}" >> ${testlist_cvar}
     echo "alltoallw_zeros 5 ${env}" >> ${testlist_cvar}
     echo "alltoallw_zeros 8 ${env}" >> ${testlist_cvar}
+    echo "p_alltoallw 10 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -720,6 +745,7 @@ for algo_name in ${algo_names}; do
         env="${testing_env} env=MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM=${algo_name}"
 
         echo "scatterv 4 ${env}" >> ${testlist_cvar}
+        echo "p_scatterv 4 ${env}" >> ${testlist_cvar}
         env=""
     done
 done

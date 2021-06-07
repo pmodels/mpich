@@ -14,4 +14,5 @@ mpi_core_sources +=												\
     src/mpi/coll/alltoall/alltoall_intra_brucks.c						\
     src/mpi/coll/alltoall/alltoall_intra_scattered.c					\
     src/mpi/coll/alltoall/alltoall_intra_pairwise.c					\
-    src/mpi/coll/alltoall/alltoall_inter_pairwise_exchange.c
+    src/mpi/coll/alltoall/alltoall_inter_pairwise_exchange.c		\
+    src/mpi/coll/alltoall/alltoall_init.c

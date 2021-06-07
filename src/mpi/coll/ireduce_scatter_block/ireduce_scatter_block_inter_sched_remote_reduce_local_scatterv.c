@@ -25,7 +25,6 @@ int MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(const vo
     MPI_Aint true_extent, true_lb = 0, extent;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIR_SCHED_CHKPMEM_DECL(1);
 
     rank = comm_ptr->rank;
     local_size = comm_ptr->local_size;
@@ -38,8 +37,8 @@ int MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(const vo
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPIR_Datatype_get_extent_macro(datatype, extent);
 
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, total_count * (MPL_MAX(extent, true_extent)),
-                                  mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        tmp_buf = MPIR_Sched_alloc_state(s, total_count * (MPL_MAX(extent, true_extent)));
+        MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *) ((char *) tmp_buf - true_lb);
@@ -92,10 +91,8 @@ int MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(const vo
                                          recvbuf, recvcount, datatype, 0, newcomm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

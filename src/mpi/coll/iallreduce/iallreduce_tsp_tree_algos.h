@@ -30,6 +30,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     MPIR_Treealgo_tree_t my_tree;
     void **child_buffer;        /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which allreduced data is present */
+    int dtcopy_id = -1;
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
     int sink_id;
     int nvtcs;
@@ -92,8 +93,10 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     /* Set reduce_buffer based on location in the tree */
     /* FIXME: This can also be pipelined along with rest of the reduction */
     reduce_buffer = recvbuf;
-    if (sendbuf != MPI_IN_PLACE)
-        MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+    if (sendbuf != MPI_IN_PLACE) {
+        dtcopy_id = MPIR_TSP_sched_localcopy(sendbuf, count, datatype,
+                                             recvbuf, count, datatype, sched, 0, NULL);
+    }
 
     /* initialize arrays to store graph vertex indices */
     MPIR_CHKLMEM_MALLOC(vtcs, int *, sizeof(int) * (num_children + 1),
@@ -121,15 +124,17 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
             int child = *(int *) utarray_eltptr(my_tree.children, i);
 
             /* Setup the dependencies for posting receive for child's data */
-            if (buffer_per_child) {     /* no dependency, just post the receive */
-                nvtcs = 0;
-            } else {
-                if (i == 0) {   /* this is the first receive and therefore no dependency */
-                    nvtcs = 0;
-                } else {        /* wait for the previous allreduce to complete, before posting the next receive */
-                    vtcs[0] = reduce_id[i - 1];
+            if (buffer_per_child || i == 0) {   /* no dependency, just post the receive */
+                if (dtcopy_id >= 0) {
+                    vtcs[0] = dtcopy_id;
                     nvtcs = 1;
+                } else {
+                    nvtcs = 0;
                 }
+            } else {
+                /* wait for the previous allreduce to complete, before posting the next receive */
+                vtcs[0] = reduce_id[i - 1];
+                nvtcs = 1;
             }
 
             recv_id[i] = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,

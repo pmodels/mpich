@@ -301,8 +301,6 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                 MPIR_Reduce_local(e->u.reduce.inbuf, e->u.reduce.inoutbuf, e->u.reduce.count,
                                   e->u.reduce.datatype, e->u.reduce.op);
             MPIR_ERR_CHECK(mpi_errno);
-            MPIR_Op_release_if_not_builtin(e->u.reduce.op);
-            MPIR_Datatype_release_if_not_builtin(e->u.reduce.datatype);
             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             break;
         case MPIDU_SCHED_ENTRY_COPY:
@@ -310,8 +308,6 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
             mpi_errno = MPIR_Localcopy(e->u.copy.inbuf, e->u.copy.incount, e->u.copy.intype,
                                        e->u.copy.outbuf, e->u.copy.outcount, e->u.copy.outtype);
             MPIR_ERR_CHECK(mpi_errno);
-            MPIR_Datatype_release_if_not_builtin(e->u.copy.intype);
-            MPIR_Datatype_release_if_not_builtin(e->u.copy.outtype);
             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             break;
         case MPIDU_SCHED_ENTRY_NOP:
@@ -496,6 +492,8 @@ int MPIDU_Sched_free(struct MPIDU_Sched *s)
                 MPIR_Comm_release(comm);
             } else if (HANDLE_GET_MPI_KIND(*p) == MPIR_DATATYPE) {
                 MPIR_Datatype_release_if_not_builtin(*p);
+            } else if (HANDLE_GET_MPI_KIND(*p) == MPIR_OP) {
+                MPIR_Op_release_if_not_builtin(*p);
             } else {
                 MPIR_Assert(0);
             }
@@ -925,6 +923,10 @@ int MPIDU_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Da
 
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIR_Op_add_ref_if_not_builtin(op);
+    if (s->kind != MPIR_SCHED_KIND_GENERALIZED) {
+        sched_add_ref(s, datatype);
+        sched_add_ref(s, op);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -963,6 +965,10 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
 
     MPIR_Datatype_add_ref_if_not_builtin(intype);
     MPIR_Datatype_add_ref_if_not_builtin(outtype);
+    if (s->kind != MPIR_SCHED_KIND_GENERALIZED) {
+        sched_add_ref(s, intype);
+        sched_add_ref(s, outtype);
+    }
 
     /* some sanity checking up front */
 #if defined(HAVE_ERROR_CHECKING) && !defined(NDEBUG)

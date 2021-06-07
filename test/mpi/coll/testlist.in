@@ -176,3 +176,24 @@ p_bcast 4 strict=false
 p_bcast2 8 strict=false
 
 coll_large 8
+p_allred 4 strict=false
+p_red 4 strict=false
+p_alltoall 8 strict=false
+p_allgather 10 strict=false
+p_allgatherv 10 strict=false
+p_red_scat_block 4 strict=false
+p_redscat 4 strict=false
+p_scan 4 strict=false
+p_gather 4 strict=false
+p_gatherv 5 strict=false
+p_scatter 4 strict=false
+p_scatterv 4 strict=false
+p_alltoallv 10 strict=false
+p_alltoallw 10 strict=false
+p_exscan 5 strict=false
+p_barrier 2 strict=false
+p_neighb_allgather 4 strict=false
+p_neighb_allgatherv 4 strict=false
+p_neighb_alltoall 4 strict=false
+p_neighb_alltoallv 4 strict=false
+p_neighb_alltoallw 4 strict=false
