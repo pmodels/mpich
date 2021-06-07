@@ -57,7 +57,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq, int is
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_POST_PREADY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_POST_PREADY);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    /* note: already in critical section */
 
     /* Send data when all partitions are ready */
     if (MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) ==
@@ -68,7 +68,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq, int is
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_POST_PREADY);
     return mpi_errno;
   fn_fail:
@@ -129,7 +128,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int par
         *flag = FALSE;
 
         /* Trigger progress to process AM packages in case wait with parrived in a loop. */
-        mpi_errno = MPID_Progress_test(NULL);
+        mpi_errno = MPIDI_progress_test_vci(0);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
