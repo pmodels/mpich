@@ -63,6 +63,17 @@ Show=eval
 #
 # End of initialization of variables
 #---------------------------------------------------------------------
+
+# Check recursive situaltions
+# User mistakes, e.g. setting MPICH_CC=mpicc, may end up recursively running
+# this script. A simple check to bail if that's the case.
+if [ -n "$MPICH_RECURSION_CHECK" ] ; then
+    echo "This script ($0) is being called recursively, check that MPICH_F77 does not refer to mpif77."
+    exit 1
+fi
+MPICH_RECURSION_CHECK=1
+export MPICH_RECURSION_CHECK
+
 # Environment Variables.
 # The environment variables MPICH_F77 may be used to override the 
 # default choices.
