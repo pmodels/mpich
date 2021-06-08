@@ -169,6 +169,10 @@ AC_ARG_ENABLE(rma,
 	[AS_HELP_STRING([--enable-rma],[Enable tests of the one sided parts of MPI-2 (default)])],,
 	[enable_rma=yes])
 
+AC_ARG_ENABLE(part,
+	[AS_HELP_STRING([--enable-part],[Enable tests of partitioned communication of MPI-4 (default)])],,
+	[enable_part=yes])
+
 AC_ARG_ENABLE(long-double-complex,
 	[AS_HELP_STRING([--enable-long-double-complex],
 		[Enable tests involving MPI_LONG_DOUBLE_COMPLEX (default)])],,
@@ -503,6 +507,14 @@ else
     AC_DEFINE(HAVE_MPI_WIN_CREATE,1,[Define if MPI_Win_create is available])
 fi
 AC_SUBST(rmadir)
+
+# Also allow partitioned communication to be disabled
+AC_ARG_VAR([MPI_NO_PART],[set to "yes" to disable partitioned communication tests])
+partdir=part
+if test "$enable_part" != "yes" -o "$MPI_NO_PART" = "yes" ; then
+    partdir="#"
+fi
+AC_SUBST(partdir)
 
 faultsdir=#
 if test "$enable_checkfaults" = "yes" ; then
