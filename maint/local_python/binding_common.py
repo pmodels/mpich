@@ -32,12 +32,8 @@ def function_has_POLY_parameters(func):
     return False
 
 def get_function_name(func, is_large=False):
-    big_use_mpix = True
     if is_large:
         name = func['name'] + "_c"
-        if big_use_mpix:
-            G.mpix_symbols[name] = "functions"
-            name = re.sub(r'MPI_', 'MPIX_', name)
         return name
     else:
         name = func['name']
