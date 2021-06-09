@@ -28,6 +28,10 @@
 
 # Multi-NIC support in ch4:ofi.
 
+   A full list of changes is available at the following link:
+
+     http://www.mpich.org/static/downloads/4.0a2/shortlog
+
 ===============================================================================
                                Changes in 3.4
 ===============================================================================
