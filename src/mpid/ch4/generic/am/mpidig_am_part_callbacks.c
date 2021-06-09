@@ -30,10 +30,6 @@ static int part_send_data_target_cmpl_cb(MPIR_Request * rreq)
     /* Internally set partitioned rreq complete via completion_notification. */
     MPID_Request_complete(rreq);
 
-    /* Reset part_rreq status to inactive */
-    MPL_atomic_fetch_sub_int(&MPIDIG_PART_REQUEST(part_rreq, status),
-                             MPIDIG_PART_RECV_NUM_CONDS_TO_SUBTRACT);
-
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PUT_DT_TARGET_CMPL_CB);
     return mpi_errno;
 }
@@ -51,10 +47,6 @@ int MPIDIG_part_send_data_origin_cb(MPIR_Request * sreq)
 
     /* Internally set partitioned sreq complete via completion_notification. */
     MPID_Request_complete(sreq);
-
-    /* Reset part_sreq status to inactive */
-    MPL_atomic_fetch_sub_int(&MPIDIG_PART_REQUEST(part_sreq, status),
-                             MPIDIG_PART_SEND_NUM_CONDS_TO_SUBTRACT);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_SEND_DATA_ORIGIN_CB);
     return mpi_errno;
@@ -79,7 +71,7 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
         MPIDIG_part_match_rreq(posted_req);
 
         /* If rreq matches and local start has been called, notify sender CTS */
-        if (MPIDIG_PART_REQ_INC_FETCH_STATUS(posted_req) == MPIDIG_PART_REQ_CTS) {
+        if (MPIR_Part_request_is_active(posted_req)) {
             mpi_errno = MPIDIG_part_issue_cts(posted_req);
         }
     } else {
@@ -125,7 +117,7 @@ int MPIDIG_part_cts_target_msg_cb(int handler_id, void *am_hdr, void *data,
     MPIR_Assert(part_sreq);
 
     MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr) = msg_hdr->rreq_ptr;
-    MPIDIG_PART_REQ_INC_FETCH_STATUS(part_sreq);
+    MPIDIG_PART_REQUEST(part_sreq, recv_epoch)++;
     mpi_errno = MPIDIG_post_pready(part_sreq, is_local);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_CTS_TARGET_MSG_CB);
@@ -145,9 +137,6 @@ int MPIDIG_part_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data
     MPIDIG_part_send_data_msg_t *msg_hdr = (MPIDIG_part_send_data_msg_t *) am_hdr;
     MPIR_Request *part_rreq = msg_hdr->rreq_ptr;
     MPIR_Assert(part_rreq);
-
-    /* Erroneous if received data with a non-CTS rreq */
-    MPIDIG_PART_CHECK_RREQ_CTS(part_rreq);
 
     /* Setup an AM rreq to receive data */
     MPIR_Request *rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__PART, 1);

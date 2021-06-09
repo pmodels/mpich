@@ -52,7 +52,8 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
 static void part_req_am_init(MPIR_Request * part_req)
 {
     MPIDIG_PART_REQUEST(part_req, peer_req_ptr) = NULL;
-    MPL_atomic_store_int(&MPIDIG_PART_REQUEST(part_req, status), MPIDIG_PART_REQ_UNSET);
+    MPIDIG_PART_REQUEST(part_req, send_epoch) = 0;
+    MPIDIG_PART_REQUEST(part_req, recv_epoch) = 0;
 }
 
 int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
@@ -136,7 +137,6 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
         MPIDI_CH4_REQUEST_FREE(unexp_req);
 
         MPIDIG_part_match_rreq(*request);
-        MPIDIG_PART_REQ_INC_FETCH_STATUS(*request);
     } else {
         MPIDIG_enqueue_request(*request, &MPIDI_global.part_posted_list, MPIDIG_PART);
     }
