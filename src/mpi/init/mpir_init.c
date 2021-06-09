@@ -122,7 +122,6 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
 
     init_counter++;
     if (init_counter > 1) {
-        *provided = MPIR_ThreadInfo.thread_provided;
         goto fn_exit;
     }
     /**********************************************************************/
@@ -273,21 +272,22 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 #endif
 
-    mpi_errno = MPII_init_async();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (provided)
-        *provided = MPIR_ThreadInfo.thread_provided;
-
   fn_exit:
     if (is_world_model) {
         MPII_world_set_initilized();
+
+        mpi_errno = MPII_init_async();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    if (provided) {
+        *provided = MPIR_ThreadInfo.thread_provided;
     }
     MPL_initlock_unlock(&MPIR_init_lock);
     return mpi_errno;
 
   fn_fail:
-    goto fn_exit;
+    MPL_initlock_unlock(&MPIR_init_lock);
+    return mpi_errno;
 }
 
 int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provided)
