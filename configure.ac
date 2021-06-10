@@ -5353,11 +5353,18 @@ AC_CONFIG_FILES([Makefile \
 AC_OUTPUT
 
 if test ${device_name} = "ch4" ; then
+    t_netmod=$ch4_netmods
+    if test "$ch4_netmods" = "ofi" -a "$with_libfabric" = "embedded"; then
+        t_netmod="ofi (embedded libfabric)"
+    elif test "$ch4_netmods" = "ucx" -a "$with_ucx" = "embedded"; then
+        t_netmod="ucx (embedded)"
+    fi
 cat <<EOF
 ***
 *** device: ch4
-*** netmods: ${ch4_netmods}
+*** netmods: ${t_netmod}
 *** shm: ${ch4_shm}
+*** gpu: ${GPU_SUPPORT}
 ***
 EOF
 elif test ${DEVICE} = "ch3:nemesis" ; then

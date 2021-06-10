@@ -988,7 +988,10 @@ AC_SUBST(libmpl_so_versionflags)
 #######################################################################
 ## START OF GPU CODE
 #######################################################################
+GPU_SUPPORT=
+AC_SUBST(GPU_SUPPORT)
 have_gpu="no"
+
 # Check CUDA availability
 PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSynchronize])
 if test "$pac_have_cuda" = "yes" ; then
@@ -999,6 +1002,7 @@ if test "X${pac_have_cuda}" = "Xyes" ; then
     PAC_LIBS_ADD(-lcuda)
     AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
     have_gpu="yes"
+    GPU_SUPPORT="CUDA"
 fi
 AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
 
@@ -1008,6 +1012,7 @@ if test "$have_gpu" = "no" ; then
     if test "X${pac_have_ze}" = "Xyes" ; then
         AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
         have_gpu="yes"
+        GPU_SUPPORT="ZE"
     fi
 fi
 AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
