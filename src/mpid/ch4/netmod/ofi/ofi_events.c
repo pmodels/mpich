@@ -321,9 +321,9 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_HUGE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_HUGE_EVENT);
 
-    if (recv_elem->localreq && recv_elem->cur_offset != 0) {    /* If this is true, then the message has a posted
-                                                                 * receive already and we'll be able to find the
-                                                                 * struct describing the transfer. */
+    /* If this is true, then the message has a posted receive already and we'll be able to find the
+     * struct describing the transfer. */
+    if (recv_elem->localreq && recv_elem->cur_offset != 0 && recv_elem->remote_info.msgsize != 0) {
         if (MPIDI_OFI_COMM(recv_elem->comm_ptr).enable_striping) {
             /* Subtract one stripe_chunk_size because we send the first chunk via a regular message
              * instead of the memory region */
