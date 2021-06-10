@@ -1192,8 +1192,6 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
 
             if (s->kind != MPIR_SCHED_KIND_PERSISTENT) {
                 MPIDU_Sched_free(s);
-            } else {
-                s->req = NULL;
             }
 
             if (made_progress)
