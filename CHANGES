@@ -2,23 +2,16 @@
                                Changes in 4.0
 ===============================================================================
 
-# Implemented basic MPI-4 session API using MPIX interface.
+# All MPI-4 APIs have been implemented. Major MPI-4 features include MPI
+  sessions, partitioned point-to-point communications, events in the MPI tool
+  information interface, large-count functions, persistent collectives,
+  MPI_Comm_idup_with_info, MPI_Isendrecv and MPI_Isendrecv_replace,
+  MPI_Info_get_string, MPI_Comm_split_type with new split_type --
+  MPI_COMM_TYPE_HW_GUIDED and MPI_COMM_TYPE_HW_UNGUIDED.
 
-# Implemented basic MPI-4 partitioned communication API using MPIX interface.
+# Add QMPI (experimental) support.
 
-# Implemented MPI-4 large-count API using MPIX interface.
-
-# Implemented MPI-4 Tool events API using MPIX_T interface.
-
-# Implemented MPI-4 persistent bcast -- MPIX_Bcast_init.
-
-# Implemented MPIX_Isendrecv and MPIX_Isendrecv_replace.
-
-# Implemented MPIX_Comm_idup_with_info.
-
-# Implemented MPIX_Delete_error_{class,code,string}.
-
-# Implemented MPIX_Info_get_string.
+# Add MPIX_Delete_error_{class,code,string}.
 
 # MPI_Info objects can be accessed before MPI_Init{_thread}.
 
@@ -32,6 +25,12 @@
 # Drop support for UCX version < 1.7.0.
 
 # Configure now optionally require Python 3 (when F08 is enabled).
+
+# Multi-NIC support in ch4:ofi.
+
+   A full list of changes is available at the following link:
+
+     http://www.mpich.org/static/downloads/4.0a2/shortlog
 
 ===============================================================================
                                Changes in 3.4

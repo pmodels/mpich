@@ -527,6 +527,27 @@ to "error" instead of the default "warn" by using:
   UCX_LOG_LEVEL=error
   export UCX_LOG_LEVEL
 
+GPU support
+***********
+
+GPU support is automatically enabled if CUDA or ZE runtime is detected
+during configure. To specify where CUDA or ZE is installed, use:
+
+  --with-cuda=<path>  or --with-ze=<path>
+
+If the lib/ and include/ are not in the same path, both can be specified
+separately, for example:
+
+  --with-cuda-include= and --with-cuda-lib=
+
+In addition, if CUDA or ZE support can be explicitly disabled by using:
+
+  --without-cuda  or  --without-ze
+
+If desirable, GPU support can be disabled during runtime by setting
+environment variable MPIR_CVAR_ENABLE_GPU=0. This may help avoid the GPU
+initialization and detection overhead for non-GPU applications.
+
 -------------------------------------------------------------------------
 
 5. Alternate Process Managers
