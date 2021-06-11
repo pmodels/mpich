@@ -247,7 +247,6 @@ typedef struct MPIDI_part_request {
 
     /* partitioned attributes */
     void *buffer;
-    int partitions;
     MPI_Aint count;             /* count per partition */
     int rank;
     int tag;
