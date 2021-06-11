@@ -975,6 +975,7 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
     MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Sched_set_tag(s, tag);
 
     /* add some entries to it */
     mpi_errno =
@@ -983,7 +984,7 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
     MPIR_ERR_CHECK(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(s, comm_ptr, tag, req);
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -1016,6 +1017,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
     MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Sched_set_tag(s, tag);
 
     /* add some entries to it */
 
@@ -1026,7 +1028,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     MPIR_ERR_CHECK(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(s, comm_ptr, tag, req);
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:

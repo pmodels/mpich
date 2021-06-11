@@ -134,12 +134,13 @@ struct MPIDU_Sched {
 int MPIDU_Sched_progress(int *made_progress);
 int MPIDU_Sched_are_pending(void);
 int MPIDU_Sched_next_tag(struct MPIR_Comm *comm_ptr, int *tag);
+void MPIDU_Sched_set_tag(MPIR_Sched_t s, int tag);
 int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind);
 int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned);
 int MPIDU_Sched_free(MPIR_Sched_t s);
 int MPIDU_Sched_reset(MPIR_Sched_t s);
 void *MPIDU_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
-int MPIDU_Sched_start(MPIR_Sched_t sp, struct MPIR_Comm *comm, int tag, struct MPIR_Request **req);
+int MPIDU_Sched_start(MPIR_Sched_t sp, struct MPIR_Comm *comm, struct MPIR_Request **req);
 int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
                      struct MPIR_Comm *comm, MPIR_Sched_t s);
 int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,

@@ -104,6 +104,7 @@ noinst_PROGRAMS =      \
     p_neighb_alltoall  \
     p_neighb_alltoallv \
     p_neighb_alltoallw \
+    p_order            \
     red3               \
     red4               \
     red_scat_block     \
