@@ -160,13 +160,23 @@ static int find_provider(struct fi_info **prov_out)
     }
 
     /* last sanity check */
-    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
-        MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_SAFE,
-                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE) || (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL || defined(MPIDI_OFI_VNI_USE_DOMAIN))
+    MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_DOMAIN,
+                        mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+#else
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
+            MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_SAFE,
+                                mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+        } else {
+            MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_COMPLETION,
+                                mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+        }
     } else {
         MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_DOMAIN,
                             mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
     }
+#endif
 
     MPIDI_OFI_set_auto_progress(prov_list);
     *prov_out = prov_list;
