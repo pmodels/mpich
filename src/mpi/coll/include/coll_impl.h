@@ -73,6 +73,10 @@ int MPII_Coll_finalize(void);
         } \
         mpi_errno = MPIR_Sched_create(&s, sched_kind); \
         MPIR_ERR_CHECK(mpi_errno); \
+        int tag = -1; \
+        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag); \
+        MPIR_ERR_CHECK(mpi_errno); \
+        MPIR_Sched_set_tag(s, tag); \
         *sched_type_p = MPIR_SCHED_NORMAL; \
         *sched_p = s; \
     } while (0)
@@ -80,11 +84,7 @@ int MPII_Coll_finalize(void);
 #define MPII_SCHED_START(sched_type, sched, comm_ptr, request) \
     do { \
         if (sched_type == MPIR_SCHED_NORMAL) { \
-            int tag = -1; \
-            mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag); \
-            MPIR_ERR_CHECK(mpi_errno); \
-            \
-            mpi_errno = MPIR_Sched_start(sched, comm_ptr, tag, request); \
+            mpi_errno = MPIR_Sched_start(sched, comm_ptr, request); \
             MPIR_ERR_CHECK(mpi_errno); \
         } else if (sched_type == MPIR_SCHED_GENTRAN) { \
             mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, request); \

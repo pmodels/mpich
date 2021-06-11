@@ -199,6 +199,11 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     return mpi_errno;
 }
 
+void MPIDU_Sched_set_tag(struct MPIDU_Sched *s, int tag)
+{
+    s->tag = tag;
+}
+
 /* initiates the schedule entry "e" in the NBC described by "s", where
  * "e" is at "idx" in "s".  This means posting nonblocking sends/recvs,
  * performing reductions, calling callbacks, etc. */
@@ -512,7 +517,7 @@ int MPIDU_Sched_reset(struct MPIDU_Sched *s)
         s->entries[i].status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
     }
     s->idx = 0;
-    s->tag = -1;
+    /* do not reset tag */
     s->req = NULL;
     s->next = NULL;     /* only needed for sanity checks */
     s->prev = NULL;     /* only needed for sanity checks */
@@ -542,7 +547,7 @@ static void sched_add_ref(struct MPIDU_Sched *s, int handle)
     utarray_push_back(s->handles, &handle, MPL_MEM_OTHER);
 }
 
-int MPIDU_Sched_start(struct MPIDU_Sched *s, MPIR_Comm * comm, int tag, MPIR_Request ** req)
+int MPIDU_Sched_start(struct MPIDU_Sched *s, MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *r;
@@ -574,7 +579,6 @@ int MPIDU_Sched_start(struct MPIDU_Sched *s, MPIR_Comm * comm, int tag, MPIR_Req
     *req = r;
     /* cc is 1, which is fine b/c we only use it as a signal, rather than
      * incr/decr on every constituent operation */
-    s->tag = tag;
 
     /* Now kick off any initial operations.  Do this before we tell the progress
      * engine about this req+sched, otherwise we have more MT issues to worry
@@ -1192,8 +1196,6 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
 
             if (s->kind != MPIR_SCHED_KIND_PERSISTENT) {
                 MPIDU_Sched_free(s);
-            } else {
-                s->req = NULL;
             }
 
             if (made_progress)

@@ -46,6 +46,7 @@
  * separate potentially allows more parallelism in the future, but it also
  * pushes more work onto the clients of this interface. */
 int MPIR_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag);
+void MPIR_Sched_set_tag(MPIR_Sched_t s, int tag);
 
 /* the device must provide a typedef for MPIR_Sched_t in mpidpre.h */
 
@@ -64,7 +65,7 @@ void *MPIR_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
  * comm should be the primary (user) communicator with which this collective is
  * associated, even if other hidden communicators are used for a subset of the
  * operations.  It will be used for error handling and similar operations. */
-int MPIR_Sched_start(MPIR_Sched_t s, MPIR_Comm * comm, int tag, MPIR_Request ** req);
+int MPIR_Sched_start(MPIR_Sched_t s, MPIR_Comm * comm, MPIR_Request ** req);
 
 /* send and recv take a comm ptr to enable hierarchical collectives */
 int MPIR_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
