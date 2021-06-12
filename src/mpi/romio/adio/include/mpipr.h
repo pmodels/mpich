@@ -173,6 +173,28 @@
 #define MPI_Isend PMPI_Isend
 #undef MPI_Issend
 #define MPI_Issend PMPI_Issend
+#undef MPI_Ialltoall
+#define MPI_Ialltoall PMPI_Ialltoall
+#undef MPI_Iallgather
+#define MPI_Iallgather PMPI_Iallgather
+#undef MPI_Iallreduce
+#define MPI_Iallreduce PMPI_Iallreduce
+#undef MPI_Ibcast
+#define MPI_Ibcast PMPI_Ibcast
+#undef MPI_Accumulate
+#define MPI_Accumulate PMPI_Accumulate
+#undef MPI_Get
+#define MPI_Get PMPI_Get
+#undef MPI_Put
+#define MPI_Put PMPI_Put
+#undef MPI_Win_create
+#define MPI_Win_create PMPI_Win_create
+#undef MPI_Win_free
+#define MPI_Win_free PMPI_Win_free
+#undef MPI_Win_lock
+#define MPI_Win_lock PMPI_Win_lock
+#undef MPI_Win_unlock
+#define MPI_Win_unlock PMPI_Win_unlock
 #undef MPI_Keyval_create
 #define MPI_Keyval_create PMPI_Keyval_create
 #undef MPI_Keyval_free
@@ -256,6 +278,10 @@
 #define MPI_Type_create_indexed_block PMPI_Type_create_indexed_block
 #undef MPI_Type_create_hindexed_block
 #define MPI_Type_create_hindexed_block PMPI_Type_create_hindexed_block
+#undef MPI_Type_create_hindexed
+#define MPI_Type_create_hindexed PMPI_Type_create_hindexed
+#undef MPI_Type_create_struct
+#define MPI_Type_create_struct PMPI_Type_create_struct
 /* #define MPI_Type_create_subarray PMPI_Type_create_subarray */
 #undef MPI_Type_extent
 #define MPI_Type_extent PMPI_Type_extent
@@ -283,6 +309,8 @@
 #define MPI_Type_struct PMPI_Type_struct
 #undef MPI_Type_ub
 #define MPI_Type_ub PMPI_Type_ub
+#undef MPI_Type_get_extent
+#define MPI_Type_get_extent PMPI_Type_get_extent
 #undef MPI_Type_vector
 #define MPI_Type_vector PMPI_Type_vector
 #undef MPI_Unpack
