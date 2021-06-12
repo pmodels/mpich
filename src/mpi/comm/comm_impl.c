@@ -750,13 +750,12 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
         use_comm_world = 1;
     } else if (is_world_group(group_ptr)) {
         mpi_errno = MPIR_init_comm_world();
-        MPIR_ERR_CHECK(mpi_errno);
         use_comm_world = 1;
     } else if (!MPIR_Process.comm_self && is_self_group(group_ptr)) {
         mpi_errno = MPIR_init_comm_self();
-        MPIR_ERR_CHECK(mpi_errno);
     }
     MPL_initlock_unlock(&MPIR_init_lock);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (use_comm_world) {
         /* NOTE: tag will be used with MPIR_TAG_COLL_BIT on, ref. MPIR_Get_contextid_sparse_group */
@@ -780,12 +779,14 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (info_ptr) {
-        MPII_Comm_set_hints(*p_newcom_ptr, info_ptr);
-    }
+    if (*p_newcom_ptr) {
+        if (info_ptr) {
+            MPII_Comm_set_hints(*p_newcom_ptr, info_ptr);
+        }
 
-    if (errhan_ptr) {
-        MPIR_Comm_set_errhandler_impl(*p_newcom_ptr, errhan_ptr);
+        if (errhan_ptr) {
+            MPIR_Comm_set_errhandler_impl(*p_newcom_ptr, errhan_ptr);
+        }
     }
 
   fn_exit:
