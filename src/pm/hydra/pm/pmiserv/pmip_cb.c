@@ -821,8 +821,11 @@ static HYD_status parse_exec_params(char **t_argv)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "proxy core count not available\n");
 
     /* Set default values */
-    if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB != NULL)
-        HYD_pmcd_pmip.user_global.topolib = MPL_strdup(HYDRA_DEFAULT_TOPOLIB);
+    if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB != NULL) {
+        /* need to prevent compiler seeing MPL_strdup(NULL) or it will warn */
+        const char *topolib = HYDRA_DEFAULT_TOPOLIB;
+        HYD_pmcd_pmip.user_global.topolib = MPL_strdup(topolib);
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

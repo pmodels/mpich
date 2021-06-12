@@ -1137,7 +1137,7 @@ if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
     fi
 fi
 
-if test "$pac_have_hwloc" = "no" ; then
+if test "$pac_have_hwloc" = "no" -a "$with_hwloc" != "no"; then
     with_hwloc=embedded
     pac_have_hwloc=yes
     dnl TODO: check and configure embedded netloc
