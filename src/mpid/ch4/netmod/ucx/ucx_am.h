@@ -7,6 +7,7 @@
 #define UCX_AM_H_INCLUDED
 
 #include "ucx_impl.h"
+#include "ucx_am_impl.h"
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status)
 {

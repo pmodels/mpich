@@ -23,6 +23,8 @@
 #define MPIDI_UCX_WIN(win) ((win)->dev.netmod.ucx)
 #define MPIDI_UCX_WIN_INFO(win, rank) MPIDI_UCX_WIN(win).info_table[rank]
 
+#define MPIDI_UCX_AMREQUEST(req,field)     ((req)->dev.ch4.am.netmod_am.ucx.field)
+
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_init_tag(MPIR_Context_id_t contextid, int source,
                                                      uint64_t tag)
 {
@@ -141,4 +143,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_win_vni(MPIR_Win * win)
 
 ucs_status_t MPIDI_UCX_am_handler_bulk(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
                                        unsigned flags);
+ucs_status_t MPIDI_UCX_am_handler_short(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
+                                        unsigned flags);
 #endif /* UCX_IMPL_H_INCLUDED */

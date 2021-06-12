@@ -38,10 +38,36 @@ cvars:
         that UCX netmod exposes. If set to 0 (the default) or bigger than
         MPIR_CVAR_CH4_NUM_VCIS, the number of exposed VNIs is set to MPIR_CVAR_CH4_NUM_VCIS.
 
+    - name        : MPIR_CVAR_CH4_UCX_NUM_PACK_BUFFERS_PER_CHUNK
+      category    : CH4_UCX
+      type        : int
+      default     : 16
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of buffers for packing/unpacking messages in
+        each block of the pool.
+
+    - name        : MPIR_CVAR_CH4_UCX_MAX_NUM_PACK_BUFFERS
+      category    : CH4_UCX
+      type        : int
+      default     : 256
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the max number of buffers for packing/unpacking messages
+        in the pool.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 static void request_init_callback(void *request);
+static void *host_alloc(uintptr_t size);
+static void *host_alloc_registered(uintptr_t size);
+static void host_free(void *ptr);
+static void host_free_registered(void *ptr);
 
 static void request_init_callback(void *request)
 {
@@ -49,6 +75,30 @@ static void request_init_callback(void *request)
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     ucp_request->req = NULL;
 
+}
+
+static void *host_alloc(uintptr_t size)
+{
+    return MPL_malloc(size, MPL_MEM_BUFFER);
+}
+
+static void *host_alloc_registered(uintptr_t size)
+{
+    void *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
+    MPIR_Assert(ptr);
+    MPIR_gpu_register_host(ptr, size);
+    return ptr;
+}
+
+static void host_free(void *ptr)
+{
+    MPL_free(ptr);
+}
+
+static void host_free_registered(void *ptr)
+{
+    MPIR_gpu_unregister_host(ptr);
+    MPL_free(ptr);
 }
 
 static void init_num_vnis(void)
@@ -285,13 +335,35 @@ int MPIDI_UCX_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    MPL_COMPILE_TIME_ASSERT(MPIDI_UCX_AM_HDR_POOL_CELL_SIZE >= sizeof(MPIDI_UCX_am_request_t));
+
     /* initialize worker for vni 0 */
     mpi_errno = init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
 
-    ucs_status_t ucx_status =
+    mpi_errno =
+        MPIDU_genq_private_pool_create_unsafe(MPIDI_UCX_AM_HDR_POOL_CELL_SIZE,
+                                              MPIDI_UCX_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
+                                              MPIDI_UCX_AM_HDR_POOL_MAX_NUM_CELLS,
+                                              host_alloc, host_free,
+                                              &MPIDI_UCX_global.am_hdr_buf_pool);
+    mpi_errno =
+        MPIDU_genq_private_pool_create_unsafe(MPIDI_UCX_DEFAULT_SHORT_SEND_SIZE,
+                                              MPIR_CVAR_CH4_UCX_NUM_PACK_BUFFERS_PER_CHUNK,
+                                              MPIR_CVAR_CH4_UCX_MAX_NUM_PACK_BUFFERS,
+                                              host_alloc_registered,
+                                              host_free_registered,
+                                              &MPIDI_UCX_global.pack_buf_pool);
+    MPIDI_UCX_global.deferred_am_isend_q = NULL;
+
+    ucs_status_t ucx_status;
+    ucx_status =
         ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID__BULK,
                                   &MPIDI_UCX_am_handler_bulk, NULL, UCP_AM_FLAG_WHOLE_MSG);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
+    ucx_status =
+        ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID__SHORT,
+                                  &MPIDI_UCX_am_handler_short, NULL, UCP_AM_FLAG_WHOLE_MSG);
     MPIDI_UCX_CHK_STATUS(ucx_status);
 
     mpi_errno = initial_address_exchange();
@@ -406,6 +478,9 @@ int MPIDI_UCX_mpi_finalize_hook(void)
     for (int i = 0; i < p; i++) {
         ucp_request_release(pending[i]);
     }
+
+    MPIDU_genq_private_pool_destroy_unsafe(MPIDI_UCX_global.am_hdr_buf_pool);
+    MPIDU_genq_private_pool_destroy_unsafe(MPIDI_UCX_global.pack_buf_pool);
 
     mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);

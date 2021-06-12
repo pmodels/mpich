@@ -19,6 +19,9 @@
 
 /* Active Message Stuff */
 #define MPIDI_UCX_DEFAULT_SHORT_SEND_SIZE      (16*1024)
+#define MPIDI_UCX_AM_HDR_POOL_CELL_SIZE            (1024)
+#define MPIDI_UCX_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
+#define MPIDI_UCX_AM_HDR_POOL_MAX_NUM_CELLS         (256 * 1024)
 
 /*
  *  UCX level am handler IDs are for differentiating AM message transferred in different modes:
@@ -28,7 +31,8 @@
  *  3. Pipeline mode. Send data in multiple tag sends.
  */
 enum MPIDI_UCX_am_handler_ids {
-    MPIDI_UCX_AM_HANDLER_ID__BULK = 0
+    MPIDI_UCX_AM_HANDLER_ID__BULK = 0,
+    MPIDI_UCX_AM_HANDLER_ID__SHORT
 };
 
 typedef struct {
@@ -42,6 +46,9 @@ typedef struct {
     ucp_context_h context;
     MPIDI_UCX_context_t ctx[MPIDI_CH4_MAX_VCIS];
     int num_vnis;
+    MPIDU_genq_private_pool_t am_hdr_buf_pool;
+    MPIDU_genq_private_pool_t pack_buf_pool;
+    MPIDI_UCX_deferred_am_isend_req_t *deferred_am_isend_q;
 } MPIDI_UCX_global_t;
 
 #define MPIDI_UCX_AV(av)     ((av)->netmod.ucx)
