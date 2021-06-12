@@ -22,14 +22,17 @@ HYD_status HYDT_topo_init(char *user_topolib, char *user_binding, char *user_map
 
     HYDU_FUNC_ENTER();
 
-    if (user_topolib)
+    if (user_topolib) {
         HYDT_topo_info.topolib = MPL_strdup(user_topolib);
-    else if (MPL_env2str("HYDRA_TOPOLIB", &topolib))
+    } else if (MPL_env2str("HYDRA_TOPOLIB", &topolib)) {
         HYDT_topo_info.topolib = MPL_strdup(topolib);
-    else if (HYDRA_DEFAULT_TOPOLIB != NULL)
-        HYDT_topo_info.topolib = MPL_strdup(HYDRA_DEFAULT_TOPOLIB);
-    else
+    } else if (HYDRA_DEFAULT_TOPOLIB != NULL) {
+        /* need to prevent compiler seeing MPL_strdup(NULL) or it will warn */
+        topolib = HYDRA_DEFAULT_TOPOLIB;
+        HYDT_topo_info.topolib = MPL_strdup(topolib);
+    } else {
         HYDT_topo_info.topolib = NULL;
+    }
 
     if (user_binding)
         binding = user_binding;
