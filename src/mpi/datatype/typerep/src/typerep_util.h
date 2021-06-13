@@ -25,15 +25,6 @@
 
 /* Relying on the common predefined macros */
 
-/* Some platforms, like AIX, use BYTE_ORDER instead of __BYTE_ORDER */
-#ifndef __BYTE_ORDER
-#if defined(BYTE_ORDER) /* e.g. AIX */
-#define __BYTE_ORDER BYTE_ORDER
-#elif defined(__BYTE_ORDER__)   /* e.g. clang */
-#define __BYTE_ORDER __BYTE_ORDER__
-#endif
-#endif /* __BYTE_ORDER */
-
 #if defined(WORDS_BIGENDIAN)
 #define BLENDIAN 0
 
@@ -42,19 +33,27 @@
 
 #else
 
+#ifndef __BYTE_ORDER
+#if defined(BYTE_ORDER) /* e.g. AIX */
+#define __BYTE_ORDER BYTE_ORDER
+#elif defined(__BYTE_ORDER__)   /* e.g. clang */
+#define __BYTE_ORDER __BYTE_ORDER__
+#endif
+#endif /* __BYTE_ORDER */
+
 #ifndef __BIG_ENDIAN
 #if defined(_BIG_ENDIAN)
 #define __BIG_ENDIAN _BIG_ENDIAN
 #elif define(__BIG_ENDIAN__)
 #define __BIG_ENDIAN __BIG_ENDIAN__
 #endif
+#endif /* __BIG_ENDIAN */
 
 #if !defined(__BYTE_ORDER) || !defined(__BIG_ENDIAN)
 #error This code assumes that __BYTE_ORDER and __BIG_ENDIAN are defined
 #endif
-/* FIXME: I don't understand this. Whether ntohl being a macro or defined seems have
- * nothing to do with the logic. */
-#if ((defined(_BIG_ENDIAN) && !defined(ntohl)) || (__BYTE_ORDER == __BIG_ENDIAN))
+
+#if defined(_BIG_ENDIAN) || (__BYTE_ORDER == __BIG_ENDIAN)
 #define BLENDIAN 0      /* detected host arch byte order is big endian */
 #else
 #define BLENDIAN 1      /* detected host arch byte order is little endian */
