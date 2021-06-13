@@ -254,10 +254,6 @@ AC_CONFIG_MACRO_DIR([confdb])
 FROM_MPICH=yes
 export FROM_MPICH
 
-# Save a copy of precious flags as USER_* before any of these flags
-# are being modified by configure tests.
-PAC_PREFIX_ALL_FLAGS(USER)
-
 # WRAPPER_xFLAGS are used by mpicc and friends.
 #
 # WRAPPER_CFLAGS and other compile flags are used for compile options
@@ -313,6 +309,10 @@ CPPFLAGS="$CPPFLAGS $MPICHLIB_CPPFLAGS"
 CXXFLAGS="$CXXFLAGS $MPICHLIB_CXXFLAGS"
 FFLAGS="$FFLAGS $MPICHLIB_FFLAGS"
 FCFLAGS="$FCFLAGS $MPICHLIB_FCFLAGS"
+
+# Save a copy of precious flags as USER_* before any of these flags
+# are being modified by configure tests.
+PAC_PREFIX_ALL_FLAGS(USER)
 
 dnl include all subsystem m4 fragments now that the core autoconf functionality
 dnl has been setup.  No fragment should do anything except define
