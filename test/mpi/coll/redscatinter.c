@@ -69,7 +69,7 @@ int main(int argc, char **argv)
         }
 
         for (i = 0; i < sendcount; i++) {
-            sendbuf[i] = (long long) (rank * sendcount + i);
+            sendbuf[i] = (long long) rank *sendcount + i;
         }
         recvbuf = (long long *) malloc(recvcount * sizeof(long long));
         if (!recvbuf) {
