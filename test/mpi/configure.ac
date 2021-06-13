@@ -799,6 +799,32 @@ if test "$have_gpu" = "no" ; then
 fi
 AM_CONDITIONAL([HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
 
+# Check HIP availability
+if test "$have_gpu" = "no" ; then
+    AC_DEFINE([__HIP_PLATFORM_AMD__],[1],[AMD GPU HIP available])
+    PAC_CHECK_HEADER_LIB_OPTIONAL([hip],[hip/hip_runtime_api.h],[amdhip64],[hipStreamSynchronize])
+    hip_CPPFLAGS=""
+    hip_LDFLAGS=""
+    hip_LIBS=""
+    if test "X$pac_have_hip" = "Xyes" ; then
+       AC_DEFINE([HAVE_HIP],[1],[Define if HIP is available])
+       have_gpu="yes"
+       if test -n "${with_hip}" -a "$with_hip" != "no" ; then
+          hip_CPPFLAGS="-I${with_hip}/include"
+          if test -d ${with_hip}/lib64 ; then
+              hip_LDFLAGS="-L${with_hip}/lib64 -L${with_hip}/lib"
+          else
+              hip_LDFLAGS="-L${with_hip}/lib"
+          fi
+       fi
+       hip_LIBS="-lamdhip64"
+    fi
+    AC_SUBST([hip_CPPFLAGS])
+    AC_SUBST([hip_LDFLAGS])
+    AC_SUBST([hip_LIBS])
+fi
+AM_CONDITIONAL([HAVE_HIP],[test "X${pac_have_hip}" = "Xyes"])
+
 PAC_POP_FLAG([CPPFLAGS])
 PAC_POP_FLAG([LDFLAGS])
 PAC_POP_FLAG([LIBS])
