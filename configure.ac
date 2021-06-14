@@ -5304,7 +5304,7 @@ export pkgconfigdir
 if test "$f08_works" = "yes" ; then
     PAC_CHECK_PYTHON
     PAC_FC_CHECK_REAL128
-    cmd="$PYTHON maint/gen_binding_f08.py"
+    cmd="$PYTHON $srcdir/maint/gen_binding_f08.py"
     if test "$pac_fc_has_real128" = "no" ; then
         cmd="$cmd -no-real128"
     fi
