@@ -146,6 +146,7 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RECV_HUGE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RECV_HUGE_EVENT);
 
+    bool ready_to_get = false;
     /* Check that the sender didn't underflow the message by sending less than
      * the huge message threshold. When striping is enabled underflow occurs if
      * the sender sends < MPIDI_OFI_STRIPE_CHUNK_SIZE through the huge message protocol
@@ -187,7 +188,9 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
         }
     }
 
-    if (recv_elem == NULL) {
+    if (recv_elem) {
+        ready_to_get = true;
+    } else {
         MPIDI_OFI_huge_recv_list_t *list_ptr;
 
         MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
@@ -225,7 +228,9 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     } else {
         recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
     }
-    MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
+    if (ready_to_get) {
+        MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_RECV_HUGE_EVENT);
@@ -407,6 +412,8 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
                                  FALSE);
             recv_elem->cur_offset += bytesToGet;
         }
+    } else {
+        MPIR_Assert(0);
     }
 
   fn_exit:
