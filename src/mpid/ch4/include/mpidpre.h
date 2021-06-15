@@ -254,6 +254,8 @@ typedef struct MPIDI_part_request {
                                          * Valid also in posted_rreq so that single dequeue
                                          * routine can be used. */
     MPI_Datatype datatype;
+    union {
+    MPIDI_NM_PART_DECL} netmod;
 } MPIDI_part_request_t;
 
 /* message queue within "self"-comms, i.e. MPI_COMM_SELF and all communicators with size of 1. */
