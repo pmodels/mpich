@@ -270,9 +270,11 @@ AC_ARG_WITH(dtpools-datatypes,
 # parse args for typegen.sh script
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
 
+PAC_CHECK_PYTHON
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
 #Test collectives algorithms with CVARs
-AC_CONFIG_COMMANDS([collcvartests],[$srcdir/maint/test_coll_algos.sh])
+cmd="$PYTHON $srcdir/maint/gen_coll_cvar.py"
+AC_CONFIG_COMMANDS([collcvartests],[$cmd_gen_coll],[cmd_gen_coll="$cmd"])
 
 AC_ARG_WITH(mpi,
 	[AS_HELP_STRING([--with-mpi=dir],
