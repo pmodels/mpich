@@ -3,8 +3,18 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+import os
 import re
 import sys
+
+def get_srcdir():
+    m = re.match(r'(.*)\/maint\/local_python', __file__)
+    if m:
+        return m.group(1)
+    elif re.match(r'maint\/local_python', __file__):
+        return "."
+    else:
+        raise Exception("Can't determine srcdir from __file__")
 
 # RE class allows convenience of using regex capture in a condition
 class RE:
@@ -18,6 +28,15 @@ class RE:
 
 # Global data used across modules
 class MPI_API_Global:
+    srcdir = get_srcdir()
+
+    def get_srcdir_path(path):
+        # assume path is a relative path from top srcdir
+        return MPI_API_Global.srcdir + "/" + path
+
+    def check_write_path(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
     # command line options and arguments
     opts = {}
     args = []
@@ -27,7 +46,7 @@ class MPI_API_Global:
     FUNCS = {}
     MAPS = {}
     default_descriptions = {}
-    # misc globals used during code genration
+    # misc globals used during code generation
     err_codes = {}
     mpi_sources = []
     mpi_declares = []

@@ -8,13 +8,16 @@ from local_python.mpi_api import *
 from local_python.binding_common import *
 from local_python.binding_f08 import *
 from local_python import RE
+import os
 
 def main():
     # currently support -no-real128, -no-mpiio, -aint-is-int
     G.parse_cmdline()
 
-    binding_dir = "src/binding"
+    binding_dir = G.get_srcdir_path("src/binding")
     f08_dir = "src/binding/fortran/use_mpi_f08"
+    G.check_write_path("%s/wrappers_f" % f08_dir)
+    G.check_write_path("%s/wrappers_c" % f08_dir)
     func_list = load_C_func_list(binding_dir, True) # suppress noise
     if "no-mpiio" in G.opts:
         # a few MPI_File_xxx functions are already in (MPI_File_xxx_errhandler)
