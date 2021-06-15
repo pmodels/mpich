@@ -9,6 +9,7 @@
 #include "ch4_impl.h"
 #include "mpidig_am_part_utils.h"
 
+void MPIDIG_part_match_rreq(MPIR_Request * part_req);
 int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
                           MPI_Datatype datatype, int dest, int tag,
                           MPIR_Comm * comm, MPIR_Info * info, int is_local,
