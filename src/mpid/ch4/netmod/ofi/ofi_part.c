@@ -24,3 +24,8 @@ int MPIDI_OFI_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
     return MPIDIG_mpi_precv_init(buf, partitions, count, datatype, source, tag, comm,
                                  info, 0 /*is_local */ , request);
 }
+
+int MPIDI_OFI_precv_matched_hook(MPIR_Request * part_req)
+{
+    return MPI_SUCCESS;
+}
