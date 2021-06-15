@@ -15,16 +15,15 @@
 # Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
 
-%global daos_major 1
-
 # Static libraries are disabled by default
 # for non HPC builds
 # To enable them, simply uncomment:
 # % define build_static_devel 1
 
 %define pname mpich
-%define vers  3.4~a2
-%define _vers 3_4
+
+%define vers  4.0~a1
+%define _vers 4_0
 
 %define build_flavor ofi
 %{bcond_with hpc}
@@ -62,12 +61,18 @@
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        5
+Release:        1.g032b3aeb2%{?dist}
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
 Url:            http://www.mpich.org/
-Source0:        http://www.mpich.org/static/downloads/%{version}/mpich-%{vers}.tar.gz
+
+# upstream_version is version with ~ removed
+%{lua:
+    rpm.define("upstream_version " .. string.gsub(rpm.expand("%{version}"), "~", ""))
+}
+
+Source0:        http://www.mpich.org/static/downloads/%{upstream_version}/%{name}-%{upstream_version}.tar.gz
 Source1:        mpivars.sh
 Source2:        mpivars.csh
 Source3:        macros.hpc-mpich
@@ -102,7 +107,6 @@ BuildRequires:  mpi-selector
 BuildRequires:  sysfsutils
 BuildRequires:  libfabric-devel
 BuildRequires:  daos-devel
-Provides:       %{package_name}-daos-%{daos_major}
 
 Provides:       mpi
 %if %{without hpc}
@@ -204,7 +208,7 @@ echo with HPC
 %if %{without hpc}
 echo without HPC
 %endif
-%setup -q -n mpich-%{version}%{?rc_ver}
+%setup -q -n mpich-%{upstream_version}
 #patch0
 
 %build
@@ -457,6 +461,12 @@ fi
 %endif # !testsuite
 
 %changelog
+* Thu Jun 03 2021 Brian J. Murrell <brian.murrell@intel.com> - 4.0~a1-1
+- Build with DAOS
+- Update to 4.0a1 git hash 032b3aeb2
+- Fix Python 3 support
+- Remove virtual provides
+
 * Thu May 27 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 3.4~a2-5
 - Replace --with-hwloc-prefix with --with-hwloc on configure command
 
