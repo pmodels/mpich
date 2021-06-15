@@ -8,7 +8,6 @@ from local_python.binding_common import *
 from local_python import RE
 
 import sys
-import os
 import re
 import copy
 
@@ -73,8 +72,6 @@ def dump_mpi_c(func, is_large=False):
 def get_func_file_path(func, root_dir):
     file_path = None
     dir_path = root_dir + '/' + func['dir']
-    if not os.path.isdir(dir_path):
-        os.mkdir(dir_path)
     if 'file' in func:
         file_path = dir_path + '/' + func['file'] + ".c"
     elif RE.match(r'MPI_T_(\w+)', func['name'], re.IGNORECASE):
