@@ -198,6 +198,10 @@ typedef struct {
     int dummy;
 } MPIDI_OFI_op_t;
 
+typedef struct {
+    int dummy;
+} MPIDI_OFI_part_t;
+
 struct MPIDI_OFI_win_request;
 struct MPIDI_OFI_win_hint;
 
