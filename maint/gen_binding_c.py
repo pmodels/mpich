@@ -8,10 +8,9 @@ from local_python.mpi_api import *
 from local_python.binding_c import *
 from local_python import RE
 import glob
-import os
 
 def main():
-    binding_dir = "src/binding"
+    binding_dir = G.get_srcdir_path("src/binding")
     c_dir = "src/binding/c"
     func_list = load_C_func_list(binding_dir)
 
@@ -46,11 +45,16 @@ def main():
             dump_mpi_c(func, False)
 
         file_path = get_func_file_path(func, c_dir)
+        G.check_write_path(file_path)
         dump_c_file(file_path, G.out)
 
         # add to mpi_sources for dump_Makefile_mk()
         G.mpi_sources.append(file_path)
 
+    G.check_write_path(c_dir)
+    G.check_write_path("src/include")
+    G.check_write_path("src/mpi_t")
+    G.check_write_path("src/include/mpi_proto.h")
     dump_Makefile_mk("%s/Makefile.mk" % c_dir)
     dump_mpir_impl_h("src/include/mpir_impl.h")
     dump_errnames_txt("%s/errnames.txt" % c_dir)
