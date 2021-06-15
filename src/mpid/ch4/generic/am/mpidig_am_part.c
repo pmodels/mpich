@@ -56,7 +56,7 @@ static void part_req_am_init(MPIR_Request * part_req)
     MPIDIG_PART_REQUEST(part_req, recv_epoch) = 0;
 }
 
-void MPIDIG_part_match_rreq(MPIR_Request * part_req)
+void MPIDIG_precv_matched(MPIR_Request * part_req)
 {
     MPI_Aint sdata_size = MPIDIG_PART_REQUEST(part_req, u.recv).sdata_size;
 
@@ -161,7 +161,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
         MPIDIG_PART_REQUEST(*request, peer_req_ptr) = MPIDIG_PART_REQUEST(unexp_req, peer_req_ptr);
         MPIDI_CH4_REQUEST_FREE(unexp_req);
 
-        MPIDIG_part_match_rreq(*request);
+        MPIDIG_precv_matched(*request);
     } else {
         MPIDIG_enqueue_request(*request, &MPIDI_global.part_posted_list, MPIDIG_PART);
     }
