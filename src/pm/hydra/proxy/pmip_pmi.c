@@ -513,7 +513,8 @@ HYD_status fn_keyval_cache(struct pmip_pg *pg, struct PMIU_cmd *pmi)
     int i;
     for (i = 0; i < pg->num_elems; i++) {
         struct cache_elem *elem = pg->cache_get + i;
-        HASH_ADD_STR(pg->hash_get, key, elem, MPL_MEM_PM);
+        struct cache_elem *replaced;
+        HASH_REPLACE_STR(pg->hash_get, key, elem, replaced, MPL_MEM_PM);
     }
     for (; i < pg->num_elems + num_tokens; i++) {
         struct cache_elem *elem = pg->cache_get + i;
@@ -521,7 +522,8 @@ HYD_status fn_keyval_cache(struct pmip_pg *pg, struct PMIU_cmd *pmi)
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->key, HYD_INTERNAL_ERROR, "%s", "");
         elem->val = MPL_strdup(tokens[i - pg->num_elems].val);
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->val, HYD_INTERNAL_ERROR, "%s", "");
-        HASH_ADD_STR(pg->hash_get, key, elem, MPL_MEM_PM);
+        struct cache_elem *replaced;
+        HASH_REPLACE_STR(pg->hash_get, key, elem, replaced, MPL_MEM_PM);
     }
     pg->num_elems += num_tokens;
 
