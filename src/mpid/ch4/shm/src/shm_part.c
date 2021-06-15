@@ -24,3 +24,8 @@ int MPIDI_SHM_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
     return MPIDI_POSIX_mpi_precv_init(buf, partitions, count, datatype, source, tag, comm,
                                       info, av, request);
 }
+
+int MPIDI_SHM_precv_matched_hook(MPIR_Request * part_req)
+{
+    return MPIDI_POSIX_precv_matched_hook(part_req);
+}

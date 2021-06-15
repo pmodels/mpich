@@ -79,6 +79,14 @@ void MPIDIG_precv_matched(MPIR_Request * part_req)
                                      (int) rdata_size, (int) sdata_size);
         }
     }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_REQUEST(part_req, is_local))
+        MPIDI_SHM_precv_matched_hook(part_req);
+    else
+#endif
+    {
+        MPIDI_NM_precv_matched_hook(part_req);
+    }
 }
 
 int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
