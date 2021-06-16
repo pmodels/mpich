@@ -129,15 +129,11 @@ typedef struct MPII_Genutil_sched_t {
 
 typedef MPII_Genutil_vtx_t vtx_t;
 
-typedef int (*MPII_Genutil_sched_issue_fn) (void *data, int *done);
-typedef int (*MPII_Genutil_sched_complete_fn) (void *data, int *is_completed);
-typedef int (*MPII_Genutil_sched_free_fn) (void *data);
-
 typedef struct {
     int id;
-    MPII_Genutil_sched_issue_fn issue_fn;
-    MPII_Genutil_sched_complete_fn complete_fn;
-    MPII_Genutil_sched_free_fn free_fn;
+    MPIR_TSP_sched_issue_fn issue_fn;
+    MPIR_TSP_sched_complete_fn complete_fn;
+    MPIR_TSP_sched_free_fn free_fn;
 } MPII_Genutil_vtx_type_t;
 
 #endif /* TSP_GENTRAN_TYPES_H_INCLUDED */
