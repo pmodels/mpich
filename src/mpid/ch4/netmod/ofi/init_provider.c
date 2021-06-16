@@ -7,6 +7,25 @@
 #include "ofi_impl.h"
 #include "ofi_init.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_OFI_USE_PROVIDER
+      category    : DEVELOPER
+      type        : string
+      default     : NULL
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If non-null, choose an OFI provider by name. If using with the CH4
+        device and using an older libfabric installation than the recommended
+        version to accompany this MPICH version, unexpected results may occur.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* There are two configurations: with or without RUNTIME_CHECKS.
  *
  * 1. With RUNTIME_CHECKS.
