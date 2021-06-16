@@ -26,7 +26,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If set to true, the gentran based brucks algorithm will allocate
+        If set to true, the tsp based brucks algorithm will allocate
         dedicated send and receive buffers for every neighbor in the brucks
         algorithm. Otherwise, it would reuse a single buffer for sending
         and receiving data to/from neighbors

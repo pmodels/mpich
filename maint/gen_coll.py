@@ -214,7 +214,7 @@ def dump_allcomm_sched_auto(name):
                     continue
             G.out.append("case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_%s_%s_%s:" % (Name, use_commkind, algo['name']))
             G.out.append("INDENT")
-            if RE.match(r'(gentran|tsp)_(.+)', algo['name']):
+            if RE.match(r'(tsp)_(.+)', algo['name']):
                 dump_cnt_algo_tsp(algo, use_commkind, RE.m.group(2))
             else:
                 dump_cnt_algo_sched(algo, use_commkind)
@@ -343,7 +343,7 @@ def dump_sched_impl(name):
                 if 'restrictions' in algo:
                     dump_fallback(algo)
                     need_fallback = True
-                if RE.match(r'(gentran|auto)_(.+)', algo['name']):
+                if RE.match(r'(tsp)_(.+)', algo['name']):
                     dump_algo_tsp(algo, commkind, RE.m.group(2))
                 else:
                     dump_algo_sched(algo, commkind)

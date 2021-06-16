@@ -579,7 +579,7 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Request_free(MPIR_Request * req)
 }
 
 /* Requests that are not created inside device (general requests, nonblocking collective
- * requests such as sched, gentran, hcoll) should call MPIR_Request_complete.
+ * requests such as sched, tsp, hcoll) should call MPIR_Request_complete.
  * MPID_Request_complete are called inside device critical section, therefore, potentially
  * are unsafe to call outside the device. (NOTE: this will come into effect with ch4 multi-vci.)
  */
