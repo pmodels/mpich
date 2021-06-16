@@ -58,9 +58,7 @@ int MPII_Coll_finalize(void);
 #define MPII_GENTRAN_CREATE_SCHED_P() \
     do { \
         *sched_type_p = MPIR_SCHED_GENTRAN; \
-        *sched_p = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL); \
-        MPIR_ERR_CHKANDJUMP(!*sched_p, mpi_errno, MPI_ERR_OTHER, "**nomem"); \
-        MPIR_TSP_sched_create(*sched_p, is_persistent); \
+        MPIR_TSP_sched_create(sched_p, is_persistent); \
     } while (0)
 
 #define MPII_SCHED_CREATE_SCHED_P() \

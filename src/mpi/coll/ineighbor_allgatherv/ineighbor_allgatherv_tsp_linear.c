@@ -13,7 +13,7 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, MPI_
                                                        const MPI_Aint recvcounts[],
                                                        const MPI_Aint displs[],
                                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                                       MPIR_TSP_sched_t * sched)
+                                                       MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
@@ -68,16 +68,15 @@ int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, MPI_Aint s
                                                  MPIR_Comm * comm_ptr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
     *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_ALLCOMM_LINEAR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_ALLCOMM_LINEAR);
 
     /* generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched, false);
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* schedule pipelined tree algo */
     mpi_errno = MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype,

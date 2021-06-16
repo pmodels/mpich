@@ -11,7 +11,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
                                           MPI_Datatype sendtype, void *recvbuf,
                                           const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                           MPI_Datatype recvtype, MPIR_Comm * comm,
-                                          MPIR_TSP_sched_t * sched)
+                                          MPIR_TSP_sched_t sched)
 {
     size_t extent;
     MPI_Aint lb, true_extent;
@@ -149,7 +149,7 @@ int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI
                                     MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RING);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RING);
@@ -157,9 +157,8 @@ int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI
     *req = NULL;
 
     /* generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_ERR_CHKANDJUMP(!sched, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_TSP_sched_create(sched, false);
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_TSP_Iallgatherv_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcounts,

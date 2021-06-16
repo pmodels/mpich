@@ -10,7 +10,7 @@ int
 MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
                                        MPI_Aint recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm * comm, int k, MPIR_TSP_sched_t * sched)
+                                       MPIR_Comm * comm, int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;
@@ -152,7 +152,7 @@ int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MP
                                      MPIR_Comm * comm_ptr, int k, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_BRUCKS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_BRUCKS);
@@ -160,9 +160,7 @@ int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MP
     *req = NULL;
 
     /* generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched, false);
+    MPIR_TSP_sched_create(&sched, false);
 
     mpi_errno = MPIR_TSP_Iallgather_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
                                                        recvcount, recvtype, comm_ptr, k, sched);

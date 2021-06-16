@@ -14,7 +14,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
                                                                   const MPI_Aint * recvcounts,
                                                                   const MPI_Aint * displs, int tag,
                                                                   MPIR_Comm * comm,
-                                                                  MPIR_TSP_sched_t * sched)
+                                                                  MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int partner, offset, count, send_offset, recv_offset;
@@ -69,7 +69,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int 
                                                           const MPI_Aint * displs,
                                                           MPI_Datatype recvtype, int n_invtcs,
                                                           int *invtx, MPIR_Comm * comm,
-                                                          MPIR_TSP_sched_t * sched)
+                                                          MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int send_offset, recv_offset, i;
@@ -108,7 +108,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
                                                    size_t recv_extent, const MPI_Aint * recvcounts,
                                                    const MPI_Aint * displs, MPI_Datatype recvtype,
                                                    int is_dist_halving, MPIR_Comm * comm,
-                                                   MPIR_TSP_sched_t * sched)
+                                                   MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int phase, i, j, count, nbr, send_offset, recv_offset, offset, rank_for_offset;
@@ -187,7 +187,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int 
                                                           const MPI_Aint * recvcounts, int nranks,
                                                           int k, int nrecvs, int *recv_id, int tag,
                                                           MPI_Datatype recvtype, MPIR_Comm * comm,
-                                                          MPIR_TSP_sched_t * sched)
+                                                          MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int total_count = 0, i;
@@ -219,7 +219,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
                                              MPI_Datatype sendtype, void *recvbuf,
                                              const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                              MPI_Datatype recvtype, MPIR_Comm * comm,
-                                             int is_dist_halving, int k, MPIR_TSP_sched_t * sched)
+                                             int is_dist_halving, int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i;
@@ -327,7 +327,7 @@ int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                                        int algo_type, int k)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RECEXCH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RECEXCH);
@@ -335,9 +335,8 @@ int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     *req = NULL;
 
     /* generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched, false);
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_TSP_Iallgatherv_sched_intra_recexch(sendbuf, sendcount, sendtype, recvbuf, recvcounts,

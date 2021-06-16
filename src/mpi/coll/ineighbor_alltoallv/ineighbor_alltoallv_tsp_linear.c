@@ -15,7 +15,7 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf,
                                                       const MPI_Aint recvcounts[],
                                                       const MPI_Aint rdispls[],
                                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                                      MPIR_TSP_sched_t * sched)
+                                                      MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
@@ -73,16 +73,15 @@ int MPIR_TSP_Ineighbor_alltoallv_allcomm_linear(const void *sendbuf, const MPI_A
                                                 MPIR_Comm * comm_ptr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
     *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALLV_ALLCOMM_LINEAR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALLV_ALLCOMM_LINEAR);
 
     /* generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched, false);
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* schedule pipelined tree algo */
     mpi_errno =

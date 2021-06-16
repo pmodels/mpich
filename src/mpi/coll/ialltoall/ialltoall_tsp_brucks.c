@@ -44,7 +44,7 @@ cvars:
 static int
 brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int count,
                  int phase, int k, int digitval, int comm_size, int *pupsize,
-                 MPIR_TSP_sched_t * sched, int ninvtcs, int *invtcs)
+                 MPIR_TSP_sched_t sched, int ninvtcs, int *invtcs)
 {
     MPI_Aint type_extent, type_lb, type_true_extent;
     int pow_k_phase, offset, nconsecutive_occurrences, delta;
@@ -107,7 +107,7 @@ int
 MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                       MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                       MPI_Datatype recvtype, MPIR_Comm * comm,
-                                      int k, int buffer_per_phase, MPIR_TSP_sched_t * sched)
+                                      int k, int buffer_per_phase, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;
@@ -338,16 +338,15 @@ int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MPI
                                     MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
     *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_BRUCKS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_BRUCKS);
 
     /* generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched, false);
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* schedule pipelined tree algo */
     mpi_errno = MPIR_TSP_Ialltoall_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,

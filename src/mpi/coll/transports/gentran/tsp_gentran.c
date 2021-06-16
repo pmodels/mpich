@@ -25,8 +25,11 @@ UT_icd vtx_type_t_icd = {
     NULL
 };
 
-int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched, bool is_persistent)
+int MPII_Genutil_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
 {
+    MPII_Genutil_sched_t *sched = MPL_malloc(sizeof(MPII_Genutil_sched_t), MPL_MEM_COLL);
+    MPIR_Assert(sched != NULL);
+
     sched->total_vtcs = 0;
     sched->completed_vtcs = 0;
     sched->last_fence = -1;
@@ -42,6 +45,7 @@ int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched, bool is_persistent)
 
     sched->is_persistent = is_persistent;
 
+    *s = sched;
     return MPI_SUCCESS;
 }
 
@@ -88,10 +92,11 @@ void MPII_Genutil_sched_free(MPII_Genutil_sched_t * sched)
     MPL_free(sched);
 }
 
-int MPII_Genutil_sched_new_type(MPII_Genutil_sched_t * sched, MPII_Genutil_sched_issue_fn issue_fn,
+int MPII_Genutil_sched_new_type(MPIR_TSP_sched_t s, MPII_Genutil_sched_issue_fn issue_fn,
                                 MPII_Genutil_sched_complete_fn complete_fn,
                                 MPII_Genutil_sched_free_fn free_fn)
 {
+    MPII_Genutil_sched_t *sched = s;
     MPII_Genutil_vtx_type_t *newtype;
     int type_id;
 
@@ -107,9 +112,9 @@ int MPII_Genutil_sched_new_type(MPII_Genutil_sched_t * sched, MPII_Genutil_sched
 }
 
 int MPII_Genutil_sched_generic(int type_id, void *data,
-                               MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs,
-                               int *vtx_id)
+                               MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs, int *vtx_id)
 {
+    MPII_Genutil_sched_t *sched = s;
     int mpi_errno = MPI_SUCCESS;
     vtx_t *vtxp;
 
@@ -137,9 +142,9 @@ int MPII_Genutil_sched_isend(const void *buf,
                              MPI_Datatype dt,
                              int dest,
                              int tag,
-                             MPIR_Comm * comm_ptr,
-                             MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
+                             MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
 {
+    MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
     int vtx_id;
 
@@ -168,9 +173,9 @@ int MPII_Genutil_sched_irecv(void *buf,
                              MPI_Datatype dt,
                              int source,
                              int tag,
-                             MPIR_Comm * comm_ptr,
-                             MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
+                             MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
 {
+    MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
     int vtx_id;
 
@@ -201,9 +206,9 @@ int MPII_Genutil_sched_imcast(const void *buf,
                               UT_array * dests,
                               int num_dests,
                               int tag,
-                              MPIR_Comm * comm_ptr,
-                              MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
+                              MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
 {
+    MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
     int vtx_id;
 
@@ -236,9 +241,9 @@ int MPII_Genutil_sched_issend(const void *buf,
                               MPI_Datatype dt,
                               int dest,
                               int tag,
-                              MPIR_Comm * comm_ptr,
-                              MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
+                              MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
 {
+    MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
     int vtx_id;
 
@@ -262,9 +267,10 @@ int MPII_Genutil_sched_issend(const void *buf,
 }
 
 int MPII_Genutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count,
-                                    MPI_Datatype datatype, MPI_Op op, MPII_Genutil_sched_t * sched,
+                                    MPI_Datatype datatype, MPI_Op op, MPIR_TSP_sched_t s,
                                     int n_in_vtcs, int *in_vtcs)
 {
+    MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
     int vtx_id;
 
@@ -290,8 +296,9 @@ int MPII_Genutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count
 
 int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                 MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
+                                 MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
 {
+    MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
     int vtx_id;
 
@@ -376,8 +383,9 @@ void MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched)
     sched->last_fence = fence_id;
 }
 
-int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
+int MPII_Genutil_sched_selective_sink(MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
 {
+    MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
     int vtx_id;
 
@@ -394,15 +402,17 @@ int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtc
 
 }
 
-void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched)
+void *MPII_Genutil_sched_malloc(size_t size, MPIR_TSP_sched_t s)
 {
+    MPII_Genutil_sched_t *sched = s;
     void *addr = MPL_malloc(size, MPL_MEM_COLL);
     utarray_push_back(sched->buffers, &addr, MPL_MEM_COLL);
     return addr;
 }
 
-int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPIR_Request ** req)
+int MPII_Genutil_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** req)
 {
+    MPII_Genutil_sched_t *sched = s;
     int mpi_errno = MPI_SUCCESS;
     int is_complete;
     int made_progress;

@@ -192,7 +192,7 @@ def dump_allcomm_sched_auto(name):
         if 'extra_params' in algo:
             algo_args += ", " + get_algo_extra_args(algo, "csel")
             algo_params += ", " + get_algo_extra_params(algo)
-        add_prototype("int MPIR_TSP_%s_sched_%s_%s(%s, MPIR_TSP_sched_t * sched)" % (Name, commkind, algo_name, algo_params))
+        add_prototype("int MPIR_TSP_%s_sched_%s_%s(%s, MPIR_TSP_sched_t sched)" % (Name, commkind, algo_name, algo_params))
         dump_split(3, "mpi_errno = MPIR_TSP_%s_sched_%s_%s(%s, *sched_p);" % (Name, commkind, algo_name, algo_args))
 
     def dump_cnt_algo_sched(algo, commkind):
