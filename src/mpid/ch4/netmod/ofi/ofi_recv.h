@@ -242,7 +242,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
-    if (!flags) /* Branch should compile out */
+    MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
+    MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
+    if (!flags) {
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                       recv_buf,
                                       data_sz,
@@ -252,10 +254,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                       match_bits, mask_bits,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), vni_local,
                              trecv, FALSE);
-    else {
-        MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
-        MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
-
+    } else {
         msg.msg_iov = &MPIDI_OFI_REQUEST(rreq, util.iov);
         msg.desc = NULL;
         msg.iov_count = 1;
