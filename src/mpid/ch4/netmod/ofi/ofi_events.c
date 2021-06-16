@@ -324,6 +324,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
     if (recv_elem->localreq && recv_elem->cur_offset != 0) {    /* If this is true, then the message has a posted
                                                                  * receive already and we'll be able to find the
                                                                  * struct describing the transfer. */
+        void *recv_buf = MPIDI_OFI_REQUEST(recv_elem->localreq, util.iov.iov_base);
         if (MPIDI_OFI_COMM(recv_elem->comm_ptr).enable_striping) {
             /* Subtract one stripe_chunk_size because we send the first chunk via a regular message
              * instead of the memory region */
@@ -380,7 +381,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
                     bytesToGet =
                         (bytesLeft <= recv_elem->stripe_size) ? bytesLeft : recv_elem->stripe_size;
 
-                    MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx, (void *) ((uintptr_t) recv_elem->wc.buf + recv_elem->cur_offset),    /* local buffer */
+                    MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx, (void *) ((char *) recv_buf + recv_elem->cur_offset),        /* local buffer */
                                                  bytesToGet,    /* bytes */
                                                  NULL,  /* descriptor */
                                                  MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank, nic, vni_dst, vni_src), recv_rbase(recv_elem) + recv_elem->cur_offset, /* remote maddr */
@@ -396,7 +397,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
             remote_key = recv_elem->remote_info.rma_keys[nic];
             MPIDI_OFI_cntr_incr(vni_src, nic);
             MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx,      /* endpoint     */
-                                         (void *) ((uintptr_t) recv_elem->wc.buf + recv_elem->cur_offset),      /* local buffer */
+                                         (void *) ((char *) recv_buf + recv_elem->cur_offset),  /* local buffer */
                                          bytesToGet,    /* bytes        */
                                          NULL,  /* descriptor   */
                                          MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank, nic, vni_src, vni_dst),        /* Destination  */
