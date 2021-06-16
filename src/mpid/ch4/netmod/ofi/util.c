@@ -171,6 +171,8 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_HUGE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_HUGE);
 
+    bool ready_to_get = false;
+
     /* If there has been a posted receive, search through the list of unmatched
      * receives to find the one that goes with the incoming message. */
     {
@@ -211,8 +213,10 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
         }
     }
 
-    if (recv_elem == NULL) {    /* Put the struct describing the transfer on an
-                                 * unexpected list to be retrieved later */
+    if (recv_elem) {
+        ready_to_get = true;
+    } else {
+        /* Put the struct describing the transfer on an unexpected list to be retrieved later */
         MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
                         (MPL_DBG_FDEST, "CREATING UNEXPECTED HUGE RECV: (%d, %d, %d)",
                          info->comm_id, info->origin_rank, info->tag));
@@ -228,7 +232,9 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
     recv_elem->remote_info = *info;
     recv_elem->next = NULL;
-    MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
+    if (ready_to_get) {
+        MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_GET_HUGE);
 
