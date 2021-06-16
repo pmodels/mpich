@@ -12,7 +12,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
                                               void *recvbuf, const MPI_Aint recvcounts[],
                                               const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                               MPIR_Comm * comm, int batch_size, int bblock,
-                                              MPIR_TSP_sched_t * sched)
+                                              MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int src, dst;
@@ -112,16 +112,15 @@ int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const MPI_Aint send
                                         MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
     *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_SCATTERED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_SCATTERED);
 
     /* Generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_ERR_CHKANDJUMP(!sched, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_TSP_sched_create(sched, false);
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_TSP_Ialltoallv_sched_intra_scattered(sendbuf, sendcounts, sdispls, sendtype,

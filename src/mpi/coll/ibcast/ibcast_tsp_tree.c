@@ -10,7 +10,7 @@
 /* Routine to schedule a pipelined tree based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                                      MPIR_Comm * comm, int tree_type, int k, int chunk_size,
-                                     MPIR_TSP_sched_t * sched)
+                                     MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -88,7 +88,7 @@ int MPIR_TSP_Ibcast_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype dataty
                                int chunk_size)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_INTRA_TREE);
@@ -96,9 +96,8 @@ int MPIR_TSP_Ibcast_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype dataty
     *req = NULL;
 
     /* generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched, false);
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* schedule pipelined tree algo */
     mpi_errno = MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm,

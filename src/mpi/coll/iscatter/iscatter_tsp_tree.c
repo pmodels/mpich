@@ -10,7 +10,7 @@
 int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                       int k, MPIR_TSP_sched_t * sched)
+                                       int k, MPIR_TSP_sched_t sched)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_ISCATTER_SCHED_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_ISCATTER_SCHED_INTRA_TREE);
@@ -184,7 +184,7 @@ int MPIR_TSP_Iscatter_intra_tree(const void *sendbuf, MPI_Aint sendcount,
                                  MPIR_Request ** req, int k)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_ISCATTER_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_ISCATTER_INTRA_TREE);
@@ -192,9 +192,8 @@ int MPIR_TSP_Iscatter_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     *req = NULL;
 
     /* generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched, false);
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* schedule tree algo */
     mpi_errno = MPIR_TSP_Iscatter_sched_intra_tree(sendbuf, sendcount, sendtype,

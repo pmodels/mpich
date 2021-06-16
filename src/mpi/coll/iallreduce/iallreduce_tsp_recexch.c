@@ -12,7 +12,7 @@
 int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                             MPI_Datatype datatype, MPI_Op op,
                                             MPIR_Comm * comm, int per_nbr_buffer, int k,
-                                            MPIR_TSP_sched_t * sched)
+                                            MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
@@ -264,7 +264,7 @@ int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Ai
                                       MPIR_Request ** req, int recexch_type, int k)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_RECEXCH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_RECEXCH);
@@ -272,9 +272,8 @@ int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Ai
     *req = NULL;
 
     /* generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched, false);
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count, datatype, op, comm,

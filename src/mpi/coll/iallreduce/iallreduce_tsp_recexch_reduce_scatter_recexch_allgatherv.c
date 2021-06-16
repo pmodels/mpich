@@ -16,7 +16,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
                                                                               MPI_Op op,
                                                                               MPIR_Comm * comm,
                                                                               int k,
-                                                                              MPIR_TSP_sched_t *
+                                                                              MPIR_TSP_sched_t
                                                                               sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -178,7 +178,7 @@ int MPIR_TSP_Iallreduce_intra_recexch_reduce_scatter_recexch_allgatherv(const vo
                                                                         MPIR_Request ** req, int k)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
     *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL
@@ -188,9 +188,8 @@ int MPIR_TSP_Iallreduce_intra_recexch_reduce_scatter_recexch_allgatherv(const vo
 
 
     /* generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched, false);
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(sendbuf, recvbuf,

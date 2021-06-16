@@ -12,7 +12,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                                             const MPI_Datatype sendtypes[], void *recvbuf,
                                             const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
                                             const MPI_Datatype recvtypes[], MPIR_Comm * comm,
-                                            int bblock, MPIR_TSP_sched_t * sched)
+                                            int bblock, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
@@ -85,7 +85,7 @@ int MPIR_TSP_Ialltoallw_intra_blocked(const void *sendbuf, const MPI_Aint sendco
                                       MPIR_Comm * comm, int bblock, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t *sched;
+    MPIR_TSP_sched_t sched;
     *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLW_INTRA_BLOCKED);
@@ -93,9 +93,8 @@ int MPIR_TSP_Ialltoallw_intra_blocked(const void *sendbuf, const MPI_Aint sendco
 
 
     /* generate the schedule */
-    sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_ERR_CHKANDJUMP(!sched, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_TSP_sched_create(sched, false);
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_TSP_Ialltoallw_sched_intra_blocked(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
