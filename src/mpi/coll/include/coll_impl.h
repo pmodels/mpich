@@ -8,7 +8,6 @@
 #ifndef COLL_IMPL_H_INCLUDED
 #define COLL_IMPL_H_INCLUDED
 
-#include "stubtran_impl.h"
 #include "gentran_impl.h"
 
 #include "../algorithms/stubalgo/stubalgo.h"

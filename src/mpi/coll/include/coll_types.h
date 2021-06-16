@@ -7,7 +7,6 @@
 #define COLL_TYPES_H_INCLUDED
 
 /* include types from transports */
-#include "tsp_stubtran_types.h"
 #include "tsp_gentran_types.h"
 
 /* Type definitions from all algorithms */

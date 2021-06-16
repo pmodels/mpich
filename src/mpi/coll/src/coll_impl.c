@@ -101,8 +101,6 @@ int MPII_Coll_init(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize transports */
-    mpi_errno = MPII_Stubtran_init();
-    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPII_Gentran_init();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -139,8 +137,6 @@ int MPII_Coll_finalize(void)
 
     mpi_errno = MPII_Gentran_finalize();
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPII_Stubtran_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Csel_free(MPIR_Csel_root);
     MPIR_ERR_CHECK(mpi_errno);
@@ -173,8 +169,6 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize any transport data structures */
-    mpi_errno = MPII_Stubtran_comm_init(comm);
-    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPII_Gentran_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -202,8 +196,6 @@ int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* cleanup transport data */
-    mpi_errno = MPII_Stubtran_comm_cleanup(comm);
-    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPII_Gentran_comm_cleanup(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
