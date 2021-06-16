@@ -101,7 +101,7 @@ int MPII_Coll_init(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize transports */
-    mpi_errno = MPII_Gentran_init();
+    mpi_errno = MPII_TSP_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize algorithms */
@@ -135,7 +135,7 @@ int MPII_Coll_finalize(void)
     /* deregister non blocking collectives progress hook */
     MPIR_Progress_hook_deregister(MPIR_Nbc_progress_hook_id);
 
-    mpi_errno = MPII_Gentran_finalize();
+    mpi_errno = MPII_TSP_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Csel_free(MPIR_Csel_root);
@@ -151,7 +151,7 @@ int MPII_Coll_finalize(void)
  * block for a recv operation */
 int MPIR_Coll_safe_to_block(void)
 {
-    return MPII_Gentran_scheds_are_pending() == false;
+    return MPII_TSP_scheds_are_pending() == false;
 }
 
 /* Function to initialize communicators for collectives */
@@ -169,7 +169,7 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize any transport data structures */
-    mpi_errno = MPII_Gentran_comm_init(comm);
+    mpi_errno = MPII_TSP_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Csel_prune(MPIR_Csel_root, comm, &comm->csel_comm);
@@ -196,7 +196,7 @@ int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* cleanup transport data */
-    mpi_errno = MPII_Gentran_comm_cleanup(comm);
+    mpi_errno = MPII_TSP_comm_cleanup(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

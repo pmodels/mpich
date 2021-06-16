@@ -659,8 +659,6 @@ def dump_prototypes(f, prototypes):
         print("#ifndef COLL_ALGOS_H_INCLUDED", file=Out)
         print("#define COLL_ALGOS_H_INCLUDED", file=Out)
         print("", file=Out)
-        print("#include \"tsp_gentran.h\"", file=Out)
-        print("", file=Out)
         for l in prototypes:
             lines = split_line_with_break(l + ';', '', 80)
             for l2 in lines:

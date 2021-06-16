@@ -8,7 +8,7 @@
 #ifndef COLL_IMPL_H_INCLUDED
 #define COLL_IMPL_H_INCLUDED
 
-#include "gentran_impl.h"
+#include "tsp_impl.h"
 
 #include "../algorithms/stubalgo/stubalgo.h"
 #include "../algorithms/treealgo/treealgo.h"
