@@ -78,8 +78,13 @@ def split_line_with_break(s, tail, N=100):
                 tlist.append(',')
                 out_list.append(''.join(tlist))
                 # start new line with leading spaces
-                tlist = [' ' * n_lead, a]
-                n = n_lead + len(a)
+                # if lead is too much, it won't look good
+                if n_lead > N - 40:
+                    tlist = [' ' * 20, a]
+                    n = 20 + len(a)
+                else:
+                    tlist = [' ' * n_lead, a]
+                    n = n_lead + len(a)
         # leave last segment with tail
     else:
         # only break long function declaration or call for now
