@@ -9,6 +9,10 @@
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
+categories :
+   - name : COLLECTIVE
+     description : A category for collective communication variables.
+
 cvars:
     - name        : MPIR_CVAR_DEVICE_COLLECTIVES
       category    : COLLECTIVE

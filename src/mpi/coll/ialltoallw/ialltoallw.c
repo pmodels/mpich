@@ -11,54 +11,6 @@
 #include "../ialltoallw/ialltoallw_tsp_inplace_algos_prototypes.h"
 
 /*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select ialltoallw algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
-        sched_blocked           - Force blocked algorithm
-        sched_inplace           - Force inplace algorithm
-        gentran_blocked   - Force generic transport based blocked algorithm
-        gentran_inplace   - Force generic transport based inplace algorithm
-
-    - name        : MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select ialltoallw algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
-        sched_pairwise_exchange - Force pairwise exchange algorithm
-
-    - name        : MPIR_CVAR_IALLTOALLW_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ialltoallw will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 int MPIR_Ialltoallw_allcomm_sched_auto(const void *sendbuf, const MPI_Aint * sendcounts,
