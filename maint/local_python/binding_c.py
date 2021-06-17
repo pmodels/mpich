@@ -2244,8 +2244,6 @@ def get_declare_function(func, is_large, kind=""):
         s += " MPICH_API_PUBLIC"
     return s
 
-    G.out.append(s)
-
 def get_C_params(func, mapping):
     param_list = []
     for p in func['c_parameters']:
