@@ -9,38 +9,6 @@
 #include "gentran_utils.h"
 
 /*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select iexscan algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
-        sched_recursive_doubling - Force recursive doubling algorithm
-
-    - name        : MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Iexscan will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 

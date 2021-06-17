@@ -6,63 +6,6 @@
 #include "mpiimpl.h"
 
 /*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 2048
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        use the short message algorithm for intercommunicator MPI_Scatter if the
-        send buffer size is < this value (in bytes)
-
-    - name        : MPIR_CVAR_SCATTER_INTRA_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select scatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
-        binomial - Force binomial algorithm
-        nb       - Force nonblocking algorithm
-
-    - name        : MPIR_CVAR_SCATTER_INTER_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select scatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
-        linear                    - Force linear algorithm
-        nb                        - Force nonblocking algorithm
-        remote_send_local_scatter - Force remote-send-local-scatter algorithm
-
-    - name        : MPIR_CVAR_SCATTER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Scatter will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 

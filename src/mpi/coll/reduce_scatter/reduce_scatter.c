@@ -6,65 +6,6 @@
 #include "mpiimpl.h"
 
 /*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 524288
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        the long message algorithm will be used if the operation is commutative
-        and the send buffer size is >= this value (in bytes)
-
-    - name        : MPIR_CVAR_REDUCE_SCATTER_INTRA_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select reduce_scatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
-        nb                 - Force nonblocking algorithm
-        noncommutative     - Force noncommutative algorithm
-        pairwise           - Force pairwise algorithm
-        recursive_doubling - Force recursive doubling algorithm
-        recursive_halving  - Force recursive halving algorithm
-
-    - name        : MPIR_CVAR_REDUCE_SCATTER_INTER_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select reduce_scatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
-        nb                          - Force nonblocking algorithm
-        remote_reduce_local_scatter - Force remote-reduce-local-scatter algorithm
-
-    - name        : MPIR_CVAR_REDUCE_SCATTER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Reduce_scatter will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 /* This is the machine-independent implementation of reduce_scatter. The algorithm is:

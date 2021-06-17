@@ -10,63 +10,6 @@
 #include "../iscatter/iscatter_tsp_tree_algos_prototypes.h"
 
 /*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_ISCATTER_INTRA_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select iscatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
-        sched_binomial     - Force binomial algorithm
-        gentran_tree       - Force genetric transport based tree algorithm
-
-    - name        : MPIR_CVAR_ISCATTER_TREE_KVAL
-      category    : COLLECTIVE
-      type        : int
-      default     : 2
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        k value for tree based iscatter
-
-    - name        : MPIR_CVAR_ISCATTER_INTER_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select iscatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
-        sched_linear                    - Force linear algorithm
-        sched_remote_send_local_scatter - Force remote-send-local-scatter algorithm
-
-    - name        : MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Iscatter will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 /* helper callbacks and associated state structures */

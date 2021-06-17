@@ -6,51 +6,6 @@
 #include "mpiimpl.h"
 
 /*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_GATHERV_INTRA_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select gatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
-        linear - Force linear algorithm
-        nb     - Force nonblocking algorithm
-
-    - name        : MPIR_CVAR_GATHERV_INTER_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select gatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
-        linear - Force linear algorithm
-        nb     - Force nonblocking algorithm
-
-    - name        : MPIR_CVAR_GATHERV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Gatherv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 int MPIR_Gatherv_allcomm_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
