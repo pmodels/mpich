@@ -135,9 +135,9 @@ int MPIR_Ireduce_scatter_allcomm_sched_auto(const void *sendbuf, void *recvbuf,
             mpi_errno =
                 MPIR_TSP_Ireduce_scatter_sched_intra_recexch(sendbuf, recvbuf, recvcounts, datatype,
                                                              op, comm_ptr,
+                                                             IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_DOUBLING,
                                                              cnt->u.ireduce_scatter.
                                                              intra_gentran_recexch.k,
-                                                             IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_DOUBLING,
                                                              *sched_p);
             break;
 
@@ -285,8 +285,8 @@ int MPIR_Ireduce_scatter_sched_impl(const void *sendbuf, void *recvbuf, const MP
                 mpi_errno =
                     MPIR_TSP_Ireduce_scatter_sched_intra_recexch(sendbuf, recvbuf, recvcounts,
                                                                  datatype, op, comm_ptr,
-                                                                 MPIR_CVAR_IREDUCE_SCATTER_RECEXCH_KVAL,
                                                                  IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_DOUBLING,
+                                                                 MPIR_CVAR_IREDUCE_SCATTER_RECEXCH_KVAL,
                                                                  *sched_p);
                 break;
 

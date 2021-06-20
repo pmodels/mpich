@@ -147,10 +147,10 @@ int MPIR_Ialltoall_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount,
             MPII_GENTRAN_CREATE_SCHED_P();
             mpi_errno =
                 MPIR_TSP_Ialltoall_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
-                                                      recvcount, recvtype, comm_ptr, *sched_p,
+                                                      recvcount, recvtype, comm_ptr,
                                                       cnt->u.ialltoall.intra_gentran_brucks.k,
-                                                      cnt->u.ialltoall.
-                                                      intra_gentran_brucks.buffer_per_phase);
+                                                      cnt->u.ialltoall.intra_gentran_brucks.buffer_per_phase,
+                                                      *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ialltoall_intra_gentran_scattered:
@@ -315,9 +315,10 @@ int MPIR_Ialltoall_sched_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datat
                 MPII_GENTRAN_CREATE_SCHED_P();
                 mpi_errno =
                     MPIR_TSP_Ialltoall_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
-                                                          recvcount, recvtype, comm_ptr, *sched_p,
+                                                          recvcount, recvtype, comm_ptr,
                                                           MPIR_CVAR_IALLTOALL_BRUCKS_KVAL,
-                                                          MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR);
+                                                          MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR,
+                                                          *sched_p);
                 break;
 
             case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_gentran_scattered:

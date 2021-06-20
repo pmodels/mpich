@@ -159,8 +159,9 @@ int MPIR_Iallgather_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount,
             MPII_GENTRAN_CREATE_SCHED_P();
             mpi_errno =
                 MPIR_TSP_Iallgather_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
-                                                       recvcount, recvtype, comm_ptr, *sched_p,
-                                                       cnt->u.iallgather.intra_gentran_brucks.k);
+                                                       recvcount, recvtype, comm_ptr,
+                                                       cnt->u.iallgather.intra_gentran_brucks.k,
+                                                       *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallgather_intra_sched_auto:
@@ -348,8 +349,8 @@ int MPIR_Iallgather_sched_impl(const void *sendbuf, MPI_Aint sendcount,
                 mpi_errno =
                     MPIR_TSP_Iallgather_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
                                                            recvcount, recvtype, comm_ptr,
-                                                           *sched_p,
-                                                           MPIR_CVAR_IALLGATHER_BRUCKS_KVAL);
+                                                           MPIR_CVAR_IALLGATHER_BRUCKS_KVAL,
+                                                           *sched_p);
                 break;
 
             case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_gentran_ring:

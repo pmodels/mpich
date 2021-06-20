@@ -28,10 +28,10 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
 
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recvbuf,
                                                  const MPI_Aint * recvcounts, MPI_Datatype datatype,
-                                                 MPI_Op op, MPIR_Comm * comm, int k,
-                                                 int is_dist_halving, MPIR_TSP_sched_t * sched);
+                                                 MPI_Op op, MPIR_Comm * comm, int is_dist_halving,
+                                                 int k, MPIR_TSP_sched_t * sched);
 
 int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
                                            const MPI_Aint * recvcounts, MPI_Datatype datatype,
-                                           MPI_Op op, MPIR_Comm * comm, MPIR_Request ** req, int k,
-                                           int rs_type);
+                                           MPI_Op op, MPIR_Comm * comm,
+                                           int rs_type, int k, MPIR_Request ** req);
