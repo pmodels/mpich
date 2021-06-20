@@ -111,7 +111,7 @@ int
 MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                       MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                       MPI_Datatype recvtype, MPIR_Comm * comm,
-                                      MPIR_TSP_sched_t * sched, int k, int buffer_per_phase)
+                                      int k, int buffer_per_phase, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;
@@ -338,8 +338,8 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 /* Non-blocking brucks based Alltoall */
 int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                     void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                    MPIR_Comm * comm_ptr, MPIR_Request ** req, int k,
-                                    int buffer_per_phase)
+                                    MPIR_Comm * comm_ptr, int k, int buffer_per_phase,
+                                    MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -355,8 +355,8 @@ int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MPI
 
     /* schedule pipelined tree algo */
     mpi_errno = MPIR_TSP_Ialltoall_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
-                                                      recvcount, recvtype, comm_ptr, sched,
-                                                      k, buffer_per_phase);
+                                                      recvcount, recvtype, comm_ptr,
+                                                      k, buffer_per_phase, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */

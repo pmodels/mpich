@@ -34,7 +34,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                         MPI_Datatype sendtype, void *recvbuf,
                                         const MPI_Aint recvcounts[], const MPI_Aint displs[],
                                         MPI_Datatype recvtype, MPIR_Comm * comm,
-                                        MPIR_TSP_sched_t * sched, int k)
+                                        int k, MPIR_TSP_sched_t * sched)
 {
     int i, j, l;
     int nphases = 0;
@@ -277,7 +277,7 @@ int MPIR_TSP_Iallgatherv_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                       MPI_Datatype sendtype, void *recvbuf,
                                       const MPI_Aint recvcounts[], const MPI_Aint displs[],
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                      MPIR_Request ** req, int k)
+                                      int k, MPIR_Request ** req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_BRUCKS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_BRUCKS);
@@ -293,7 +293,7 @@ int MPIR_TSP_Iallgatherv_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     mpi_errno = MPIR_TSP_Iallgatherv_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
                                                         recvcounts, displs, recvtype, comm_ptr,
-                                                        sched, k);
+                                                        k, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */

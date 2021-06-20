@@ -17,8 +17,8 @@
 int MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                           MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                           MPI_Datatype recvtype, MPIR_Comm * comm,
-                                          MPIR_TSP_sched_t * s, int k, int buffer_per_phase);
+                                          int k, int buffer_per_phase, MPIR_TSP_sched_t * s);
 int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                     void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                    MPIR_Comm * comm_ptr, MPIR_Request ** request, int k,
-                                    int buffer_per_phase);
+                                    MPIR_Comm * comm_ptr, int k, int buffer_per_phase,
+                                    MPIR_Request ** request);
