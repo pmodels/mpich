@@ -175,6 +175,12 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
         case MPIR_REQUEST_KIND__PREQUEST_COLL:
             {
                 if (request_ptr->u.persist_coll.real_request != NULL) {
+                    MPII_Coll_req_t *coll = &request_ptr->u.persist_coll.coll;
+                    if (coll->host_recvbuf) {
+                        MPIR_Localcopy(coll->host_recvbuf, coll->count, coll->datatype,
+                                       coll->user_recvbuf, coll->count, coll->datatype);
+                    }
+
                     MPIR_Request *prequest_ptr = request_ptr->u.persist_coll.real_request;
 
                     /* reset persistent request to inactive state */
