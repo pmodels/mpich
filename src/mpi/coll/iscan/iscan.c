@@ -35,12 +35,6 @@ int MPIR_Iscan_allcomm_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint c
 
     switch (cnt->id) {
         /* *INDENT-OFF* */
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iscan_intra_sched_auto:
-            MPII_SCHED_CREATE_SCHED_P();
-            mpi_errno = MPIR_Iscan_intra_sched_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                                                    *sched_p);
-            break;
-
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iscan_intra_sched_recursive_doubling:
             MPII_SCHED_CREATE_SCHED_P();
             mpi_errno = MPIR_Iscan_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype,
@@ -69,23 +63,6 @@ int MPIR_Iscan_allcomm_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint c
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPIR_Iscan_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                                MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-        mpi_errno = MPIR_Iscan_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    } else {
-        mpi_errno =
-            MPIR_Iscan_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                      comm_ptr, s);
-    }
-
-    return mpi_errno;
 }
 
 int MPIR_Iscan_sched_impl(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
@@ -118,12 +95,6 @@ int MPIR_Iscan_sched_impl(const void *sendbuf, void *recvbuf, MPI_Aint count, MP
             MPII_SCHED_CREATE_SCHED_P();
             mpi_errno = MPIR_Iscan_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr,
                                                    *sched_p);
-            break;
-
-        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_sched_auto:
-            MPII_SCHED_CREATE_SCHED_P();
-            mpi_errno = MPIR_Iscan_intra_sched_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                                                    *sched_p);
             break;
 
         case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_auto:
