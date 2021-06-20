@@ -8,7 +8,6 @@
 # mpi_sources
 
 mpi_core_sources +=                                         \
-    src/mpi/coll/iallgather/iallgather.c \
     src/mpi/coll/iallgather/iallgather_intra_sched_recursive_doubling.c \
     src/mpi/coll/iallgather/iallgather_intra_sched_brucks.c             \
     src/mpi/coll/iallgather/iallgather_intra_sched_ring.c               \

@@ -8,7 +8,5 @@
 # mpi_sources
 
 mpi_core_sources +=									\
-    src/mpi/coll/gatherv/gatherv.c \
-    src/mpi/coll/gatherv/gatherv_init.c \
     src/mpi/coll/gatherv/gatherv_allcomm_nb.c \
     src/mpi/coll/gatherv/gatherv_allcomm_linear.c

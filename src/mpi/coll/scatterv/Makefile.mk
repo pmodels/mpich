@@ -8,7 +8,5 @@
 # mpi_sources
 
 mpi_core_sources +=							\
-    src/mpi/coll/scatterv/scatterv.c \
-    src/mpi/coll/scatterv/scatterv_init.c \
     src/mpi/coll/scatterv/scatterv_allcomm_nb.c \
     src/mpi/coll/scatterv/scatterv_allcomm_linear.c

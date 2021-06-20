@@ -8,8 +8,6 @@
 # mpi_sources
 
 mpi_core_sources +=										\
-    src/mpi/coll/barrier/barrier.c \
-    src/mpi/coll/barrier/barrier_init.c \
     src/mpi/coll/barrier/barrier_allcomm_nb.c	\
     src/mpi/coll/barrier/barrier_intra_dissemination.c	\
     src/mpi/coll/barrier/barrier_intra_smp.c				\
