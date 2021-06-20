@@ -8,7 +8,6 @@
 # mpi_sources
 
 mpi_core_sources +=                             \
-    src/mpi/coll/ialltoall/ialltoall.c \
     src/mpi/coll/ialltoall/ialltoall_intra_sched_inplace.c  \
     src/mpi/coll/ialltoall/ialltoall_intra_sched_brucks.c   \
     src/mpi/coll/ialltoall/ialltoall_intra_sched_permuted_sendrecv.c  \

@@ -8,7 +8,6 @@
 # mpi_sources
 
 mpi_core_sources += \
-    src/mpi/coll/ibcast/ibcast.c \
     src/mpi/coll/ibcast/ibcast_intra_sched_binomial.c                             \
     src/mpi/coll/ibcast/ibcast_intra_sched_scatter_ring_allgather.c               \
     src/mpi/coll/ibcast/ibcast_intra_sched_scatter_recursive_doubling_allgather.c \
