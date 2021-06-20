@@ -266,3 +266,23 @@ void MPIR_Coll_host_buffer_swap_back(void *host_sendbuf, void *host_recvbuf, voi
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
     }
 }
+
+void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
+                                       MPI_Aint count, MPI_Datatype datatype,
+                                       MPIR_Request * request)
+{
+    if (!host_sendbuf && !host_recvbuf) {
+        /* no copy (or free) at completion necessary, just return */
+        return;
+    }
+
+    /* data will be copied later during request completion */
+    request->u.persist_coll.coll.host_sendbuf = host_sendbuf;
+    request->u.persist_coll.coll.host_recvbuf = host_recvbuf;
+    if (host_recvbuf) {
+        request->u.persist_coll.coll.user_recvbuf = in_recvbuf;
+        request->u.persist_coll.coll.count = count;
+        request->u.persist_coll.coll.datatype = datatype;
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    }
+}
