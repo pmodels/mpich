@@ -44,13 +44,6 @@ int MPIR_Ialltoallv_allcomm_sched_auto(const void *sendbuf, const MPI_Aint * sen
 
     switch (cnt->id) {
         /* *INDENT-OFF* */
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ialltoallv_intra_sched_auto:
-            MPII_SCHED_CREATE_SCHED_P();
-            mpi_errno = MPIR_Ialltoallv_intra_sched_auto(sendbuf, sendcounts, sdispls, sendtype,
-                                                         recvbuf, recvcounts, rdispls, recvtype,
-                                                         comm_ptr, *sched_p);
-            break;
-
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ialltoallv_intra_sched_blocked:
             MPII_SCHED_CREATE_SCHED_P();
             mpi_errno = MPIR_Ialltoallv_intra_sched_blocked(sendbuf, sendcounts, sdispls, sendtype,
@@ -95,13 +88,6 @@ int MPIR_Ialltoallv_allcomm_sched_auto(const void *sendbuf, const MPI_Aint * sen
                                                         comm_ptr, *sched_p);
             break;
 
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ialltoallv_inter_sched_auto:
-            MPII_SCHED_CREATE_SCHED_P();
-            mpi_errno = MPIR_Ialltoallv_inter_sched_auto(sendbuf, sendcounts, sdispls, sendtype,
-                                                         recvbuf, recvcounts, rdispls, recvtype,
-                                                         comm_ptr, *sched_p);
-            break;
-
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ialltoallv_inter_sched_pairwise_exchange:
             MPII_SCHED_CREATE_SCHED_P();
             mpi_errno = MPIR_Ialltoallv_inter_sched_pairwise_exchange(sendbuf, sendcounts, sdispls,
@@ -119,62 +105,6 @@ int MPIR_Ialltoallv_allcomm_sched_auto(const void *sendbuf, const MPI_Aint * sen
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPIR_Ialltoallv_intra_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
-                                     const MPI_Aint sdispls[], MPI_Datatype sendtype, void *recvbuf,
-                                     const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
-                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
-
-    if (sendbuf == MPI_IN_PLACE) {
-        mpi_errno = MPIR_Ialltoallv_intra_sched_inplace(sendbuf, sendcounts, sdispls,
-                                                        sendtype, recvbuf, recvcounts,
-                                                        rdispls, recvtype, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Ialltoallv_intra_sched_blocked(sendbuf, sendcounts, sdispls,
-                                                        sendtype, recvbuf, recvcounts,
-                                                        rdispls, recvtype, comm_ptr, s);
-    }
-
-    return mpi_errno;
-}
-
-int MPIR_Ialltoallv_inter_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
-                                     const MPI_Aint sdispls[], MPI_Datatype sendtype, void *recvbuf,
-                                     const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
-                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Ialltoallv_inter_sched_pairwise_exchange(sendbuf, sendcounts, sdispls,
-                                                              sendtype, recvbuf, recvcounts,
-                                                              rdispls, recvtype, comm_ptr, s);
-
-    return mpi_errno;
-}
-
-int MPIR_Ialltoallv_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
-                               const MPI_Aint sdispls[], MPI_Datatype sendtype, void *recvbuf,
-                               const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
-                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Ialltoallv_intra_sched_auto(sendbuf, sendcounts, sdispls,
-                                                     sendtype, recvbuf, recvcounts, rdispls,
-                                                     recvtype, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Ialltoallv_inter_sched_auto(sendbuf, sendcounts, sdispls,
-                                                     sendtype, recvbuf, recvcounts, rdispls,
-                                                     recvtype, comm_ptr, s);
-    }
-
-    return mpi_errno;
 }
 
 int MPIR_Ialltoallv_sched_impl(const void *sendbuf, const MPI_Aint sendcounts[],
@@ -246,13 +176,6 @@ int MPIR_Ialltoallv_sched_impl(const void *sendbuf, const MPI_Aint sendcounts[],
                                                                 *sched_p);
                 break;
 
-            case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_sched_auto:
-                MPII_SCHED_CREATE_SCHED_P();
-                mpi_errno = MPIR_Ialltoallv_intra_sched_auto(sendbuf, sendcounts, sdispls, sendtype,
-                                                             recvbuf, recvcounts, rdispls, recvtype,
-                                                             comm_ptr, *sched_p);
-                break;
-
             case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_auto:
                 mpi_errno =
                     MPIR_Ialltoallv_allcomm_sched_auto(sendbuf, sendcounts, sdispls, sendtype,
@@ -277,13 +200,6 @@ int MPIR_Ialltoallv_sched_impl(const void *sendbuf, const MPI_Aint sendcounts[],
                                                                           comm_ptr, *sched_p);
                 break;
 
-            case MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM_sched_auto:
-                MPII_SCHED_CREATE_SCHED_P();
-                mpi_errno = MPIR_Ialltoallv_inter_sched_auto(sendbuf, sendcounts, sdispls, sendtype,
-                                                             recvbuf, recvcounts, rdispls, recvtype,
-                                                             comm_ptr, *sched_p);
-                break;
-
             case MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM_auto:
                 mpi_errno =
                     MPIR_Ialltoallv_allcomm_sched_auto(sendbuf, sendcounts, sdispls, sendtype,
@@ -302,18 +218,9 @@ int MPIR_Ialltoallv_sched_impl(const void *sendbuf, const MPI_Aint sendcounts[],
     goto fn_exit;
 
   fallback:
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        MPII_SCHED_CREATE_SCHED_P();
-        mpi_errno = MPIR_Ialltoallv_intra_sched_auto(sendbuf, sendcounts, sdispls, sendtype,
-                                                     recvbuf, recvcounts, rdispls, recvtype,
-                                                     comm_ptr, *sched_p);
-    } else {
-        MPII_SCHED_CREATE_SCHED_P();
-        mpi_errno = MPIR_Ialltoallv_inter_sched_auto(sendbuf, sendcounts, sdispls, sendtype,
-                                                     recvbuf, recvcounts, rdispls, recvtype,
-                                                     comm_ptr, *sched_p);
-    }
-
+    mpi_errno = MPIR_Ialltoallv_allcomm_sched_auto(sendbuf, sendcounts, sdispls, sendtype,
+                                                   recvbuf, recvcounts, rdispls, recvtype,
+                                                   comm_ptr, is_persistent, sched_p, sched_type_p);
   fn_exit:
     return mpi_errno;
   fn_fail:

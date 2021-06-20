@@ -56,25 +56,11 @@ int MPIR_Iscatter_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount, MP
                                                    cnt->u.iscatter.intra_gentran_tree.k, *sched_p);
             break;
 
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iscatter_intra_sched_auto:
-            MPII_SCHED_CREATE_SCHED_P();
-            mpi_errno = MPIR_Iscatter_intra_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                                       recvcount, recvtype, root, comm_ptr,
-                                                       *sched_p);
-            break;
-
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iscatter_intra_sched_binomial:
             MPII_SCHED_CREATE_SCHED_P();
             mpi_errno = MPIR_Iscatter_intra_sched_binomial(sendbuf, sendcount, sendtype, recvbuf,
                                                            recvcount, recvtype, root, comm_ptr,
                                                            *sched_p);
-            break;
-
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iscatter_inter_sched_auto:
-            MPII_SCHED_CREATE_SCHED_P();
-            mpi_errno = MPIR_Iscatter_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                                       recvcount, recvtype, root, comm_ptr,
-                                                       *sched_p);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iscatter_inter_sched_linear:
@@ -101,78 +87,6 @@ int MPIR_Iscatter_allcomm_sched_auto(const void *sendbuf, MPI_Aint sendcount, MP
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPIR_Iscatter_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIR_Iscatter_intra_sched_binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                           recvtype, root, comm_ptr, s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Iscatter_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int local_size, remote_size, sendtype_size, recvtype_size, nbytes;
-    int mpi_errno = MPI_SUCCESS;
-
-    remote_size = comm_ptr->remote_size;
-    local_size = comm_ptr->local_size;
-
-    if (root == MPI_ROOT) {
-        MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
-        nbytes = sendtype_size * sendcount * remote_size;
-    } else {
-        MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
-        nbytes = recvtype_size * recvcount * local_size;
-    }
-
-    if (nbytes < MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE) {
-        mpi_errno =
-            MPIR_Iscatter_inter_sched_remote_send_local_scatter(sendbuf, sendcount, sendtype,
-                                                                recvbuf, recvcount, recvtype, root,
-                                                                comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Iscatter_inter_sched_linear(sendbuf, sendcount, sendtype,
-                                                     recvbuf, recvcount, recvtype, root, comm_ptr,
-                                                     s);
-    }
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Iscatter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                             void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                             int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Iscatter_intra_sched_auto(sendbuf, sendcount, sendtype,
-                                                   recvbuf, recvcount, recvtype, root, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Iscatter_inter_sched_auto(sendbuf, sendcount, sendtype,
-                                                   recvbuf, recvcount, recvtype, root, comm_ptr, s);
-    }
-
-    return mpi_errno;
 }
 
 int MPIR_Iscatter_sched_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
@@ -205,13 +119,6 @@ int MPIR_Iscatter_sched_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
                                                                comm_ptr, *sched_p);
                 break;
 
-            case MPIR_CVAR_ISCATTER_INTRA_ALGORITHM_sched_auto:
-                MPII_SCHED_CREATE_SCHED_P();
-                mpi_errno = MPIR_Iscatter_intra_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                                           recvcount, recvtype, root, comm_ptr,
-                                                           *sched_p);
-                break;
-
             case MPIR_CVAR_ISCATTER_INTRA_ALGORITHM_auto:
                 mpi_errno =
                     MPIR_Iscatter_allcomm_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
@@ -240,13 +147,6 @@ int MPIR_Iscatter_sched_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
                                                                         sendtype, recvbuf,
                                                                         recvcount, recvtype, root,
                                                                         comm_ptr, *sched_p);
-                break;
-
-            case MPIR_CVAR_ISCATTER_INTER_ALGORITHM_sched_auto:
-                MPII_SCHED_CREATE_SCHED_P();
-                mpi_errno = MPIR_Iscatter_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                                           recvcount, recvtype, root, comm_ptr,
-                                                           *sched_p);
                 break;
 
             case MPIR_CVAR_ISCATTER_INTER_ALGORITHM_auto:

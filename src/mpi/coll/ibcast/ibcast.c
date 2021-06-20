@@ -67,12 +67,6 @@ int MPIR_Ibcast_allcomm_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype da
                                 *sched_p);
             break;
 
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_sched_auto:
-            MPII_SCHED_CREATE_SCHED_P();
-            mpi_errno = MPIR_Ibcast_intra_sched_auto(buffer, count, datatype, root, comm_ptr, *sched_p);
-            MPIR_ERR_CHECK(mpi_errno);
-            break;
-
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_sched_binomial:
             MPII_SCHED_CREATE_SCHED_P();
             mpi_errno = MPIR_Ibcast_intra_sched_binomial(buffer, count, datatype, root, comm_ptr, *sched_p);
@@ -97,12 +91,6 @@ int MPIR_Ibcast_allcomm_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype da
             MPIR_ERR_CHECK(mpi_errno);
             break;
 
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_inter_sched_auto:
-            MPII_SCHED_CREATE_SCHED_P();
-            mpi_errno = MPIR_Ibcast_inter_sched_auto(buffer, count, datatype, root, comm_ptr, *sched_p);
-            MPIR_ERR_CHECK(mpi_errno);
-            break;
-
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_inter_sched_flat:
             MPII_SCHED_CREATE_SCHED_P();
             mpi_errno = MPIR_Ibcast_inter_sched_flat(buffer, count, datatype, root, comm_ptr, *sched_p);
@@ -118,80 +106,6 @@ int MPIR_Ibcast_allcomm_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype da
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int comm_size;
-    MPI_Aint type_size, nbytes;
-
-    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
-
-    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-        mpi_errno = MPIR_Ibcast_intra_sched_smp(buffer, count, datatype, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        goto fn_exit;
-    }
-
-    comm_size = comm_ptr->local_size;
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-    nbytes = type_size * count;
-
-    /* simplistic implementation for now */
-    if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
-        mpi_errno = MPIR_Ibcast_intra_sched_binomial(buffer, count, datatype, root, comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {    /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */
-
-        if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPL_is_pof2(comm_size, NULL))) {
-            mpi_errno =
-                MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(buffer, count,
-                                                                             datatype, root,
-                                                                             comm_ptr, s);
-            MPIR_ERR_CHECK(mpi_errno);
-        } else {
-            mpi_errno =
-                MPIR_Ibcast_intra_sched_scatter_ring_allgather(buffer, count, datatype, root,
-                                                               comm_ptr, s);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* Provides a "flat" broadcast for intercommunicators that doesn't
- * know anything about hierarchy.  It will choose between several
- * different algorithms based on the given parameters. */
-int MPIR_Ibcast_inter_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Ibcast_inter_sched_flat(buffer, count, datatype, root, comm_ptr, s);
-
-    return mpi_errno;
-}
-
-int MPIR_Ibcast_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                           MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Ibcast_intra_sched_auto(buffer, count, datatype, root, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Ibcast_inter_sched_auto(buffer, count, datatype, root, comm_ptr, s);
-    }
-
-    return mpi_errno;
 }
 
 int MPIR_Ibcast_sched_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
@@ -260,12 +174,6 @@ int MPIR_Ibcast_sched_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, 
                 MPIR_ERR_CHECK(mpi_errno);
                 break;
 
-            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_sched_auto:
-                MPII_SCHED_CREATE_SCHED_P();
-                mpi_errno = MPIR_Ibcast_intra_sched_auto(buffer, count, datatype, root, comm_ptr, *sched_p);
-                MPIR_ERR_CHECK(mpi_errno);
-                break;
-
             case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_auto:
                 mpi_errno = MPIR_Ibcast_allcomm_sched_auto(buffer, count, datatype, root, comm_ptr,
                                                            is_persistent, sched_p, sched_type_p);
@@ -280,12 +188,6 @@ int MPIR_Ibcast_sched_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, 
             case MPIR_CVAR_IBCAST_INTER_ALGORITHM_sched_flat:
                 MPII_SCHED_CREATE_SCHED_P();
                 mpi_errno = MPIR_Ibcast_inter_sched_flat(buffer, count, datatype, root, comm_ptr, *sched_p);
-                MPIR_ERR_CHECK(mpi_errno);
-                break;
-
-            case MPIR_CVAR_IBCAST_INTER_ALGORITHM_sched_auto:
-                MPII_SCHED_CREATE_SCHED_P();
-                mpi_errno = MPIR_Ibcast_inter_sched_auto(buffer, count, datatype, root, comm_ptr, *sched_p);
                 MPIR_ERR_CHECK(mpi_errno);
                 break;
 

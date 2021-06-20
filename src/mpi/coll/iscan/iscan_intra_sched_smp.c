@@ -124,7 +124,7 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
          * "prefulldata" from another leader into "tempbuf" */
 
         if (node_comm != NULL) {
-            mpi_errno = MPIR_Ibcast_sched_auto(tempbuf, count, datatype, 0, node_comm, s);
+            mpi_errno = MPIR_Ibcast_intra_sched_auto(tempbuf, count, datatype, 0, node_comm, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
