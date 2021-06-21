@@ -58,18 +58,23 @@ AC_DEFUN([PAC_PREFIX_ALL_FLAGS],[
 	PAC_PREFIX_FLAG($1, EXTRA_LIBS)
 ])
 
+AC_DEFUN([PAC_CHECK_FGREP_WORD],[
+    AC_PROG_FGREP
+    AC_MSG_CHECKING([if fgrep support -w option])
+    if echo 'ab*c' | $FGREP -w -e 'ab*c' >/dev/null 2>&1 ; then
+        pac_has_fgrep_word="yes"
+        AC_MSG_RESULT([$pac_has_fgrep_word])
+    else
+        pac_has_fgrep_word="no"
+        AC_MSG_RESULT([$pac_has_fgrep_word])
+        AC_MSG_WARN([fgrep does not support -w option, skip flag deduplication])
+    fi
+])
 AC_DEFUN([PAC_FGREP_WORD],[
-	AC_REQUIRE([AC_PROG_FGREP])
-        AC_CACHE_CHECK([check if fgrep support -w option], ac_cv_path_FGREP_has_word,
-           [if echo 'ab*c' | $GREP -Fw 'ab*c' >/dev/null 2>&1
-           then ac_cv_path_FGREP_has_word="yes"
-           else
-               ac_cv_path_FGREP_has_word="no"
-               AC_WARNING([grep does not support -w option, skip flag deduplication])
-           fi])
-        if test x$ac_cv_path_FGREP_has_word = "xyes"; then
+	AC_REQUIRE([PAC_CHECK_FGREP_WORD])
+        if test x$pac_has_fgrep_word = "xyes"; then
             AS_IF(
-                    [echo "$$2" | $FGREP -ew "$1" >/dev/null 2>&1],
+                    [echo "$$2" | $FGREP -w -e "$1" >/dev/null 2>&1],
                     [$3],
                     [$4]
             )
