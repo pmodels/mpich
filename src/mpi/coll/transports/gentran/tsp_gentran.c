@@ -74,7 +74,7 @@ void MPII_Genutil_sched_free(MPII_Genutil_sched_t * sched)
             MPII_Genutil_vtx_type_t *type = vtype + vtx->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
             MPIR_Assert(type != NULL);
             if (type->free_fn != NULL) {
-                int mpi_errno = type->free_fn(vtx);
+                int mpi_errno = type->free_fn(vtx->u.generic.data);
                 /* TODO: change this function to return mpi_errno */
                 MPIR_Assert(mpi_errno == MPI_SUCCESS);
             }
