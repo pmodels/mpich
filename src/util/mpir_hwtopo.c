@@ -327,6 +327,7 @@ MPIR_hwtopo_type_e MPIR_hwtopo_get_type_id(const char *name)
         {"l5ucache", MPIR_HWTOPO_TYPE__L5CACHE},
         {"l5cache", MPIR_HWTOPO_TYPE__L5CACHE},
         {"numanode", MPIR_HWTOPO_TYPE__DDR},
+        {"numa", MPIR_HWTOPO_TYPE__DDR},
         {"ddr", MPIR_HWTOPO_TYPE__DDR},
         {"hbm", MPIR_HWTOPO_TYPE__HBM},
         {NULL, MPIR_HWTOPO_TYPE__MAX}
