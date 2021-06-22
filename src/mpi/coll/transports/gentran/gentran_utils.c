@@ -166,7 +166,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                                                    MPII_Genutil_vtx_type_t *) +
                         vtxp->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
                     MPIR_Assert(vtype != NULL);
-                    mpi_errno = vtype->issue_fn(vtxp, &done);
+                    mpi_errno = vtype->issue_fn(vtxp->u.generic.data, &done);
                     MPIR_Assert(mpi_errno == MPI_SUCCESS);
                     if (done)
                         vtx_record_completion(vtxp, sched);
@@ -529,7 +529,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
                                                                    MPII_Genutil_vtx_type_t *) +
                         vtxp->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
                     MPIR_Assert(vtype != NULL);
-                    mpi_errno = vtype->complete_fn(vtxp, &is_completed);
+                    mpi_errno = vtype->complete_fn(vtxp->u.generic.data, &is_completed);
                     MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno,
                                         MPI_ERR_OTHER, "**other");
                     if (is_completed) {
