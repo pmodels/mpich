@@ -1,4 +1,8 @@
 mpi_t_str 1
+mpit_isendirecv 2 arg=0 arg=0
+mpit_isendirecv 2 arg=0 arg=1
+mpit_isendirecv 2 arg=1 arg=0
+mpit_isendirecv 2 arg=1 arg=1
 mpit_vars 1
 cvarwrite 1
 getindex 1

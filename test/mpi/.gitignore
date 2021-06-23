@@ -1226,6 +1226,7 @@
 /mpi_t/cvarwrite
 /mpi_t/getindex
 /mpi_t/mpi_t_str
+/mpi_t/mpit_isendirecv
 /mpi_t/mpit_vars
 /mpi_t/qmpi_test
 /part/multipart
