@@ -96,7 +96,6 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
     }
 
     ibcast_state->n_bytes = nbytes;
-    ibcast_state->curr_bytes = 0;
     if (is_contig) {
         /* contiguous. no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -123,7 +122,9 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
     if (curr_size < 0)
         curr_size = 0;
     /* curr_size bytes already inplace */
-    ibcast_state->curr_bytes = curr_size;
+    ibcast_state->initial_bytes = curr_size;
+    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_init_length, ibcast_state, s);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize because the compiler can't tell that it is always initialized when used */
     incoming_count = -1;
