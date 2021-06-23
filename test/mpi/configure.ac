@@ -461,17 +461,14 @@ MPILIBLOC=""
 AC_SUBST(MPILIBLOC)
 
 # more variables that must be marked precious for proper re-configure operation
-AC_ARG_VAR([MPICH_ENABLE_F77],["yes" if the enclosing MPICH build supports Fortran 77])
 AC_ARG_VAR([MPICH_ENABLE_FC],["yes" if the enclosing MPICH build supports modern Fortran])
 AC_ARG_VAR([MPICH_ENABLE_CXX],["yes" if the enclosing MPICH build supports C++])
 
 # If we're building from MPICH, check the MPICH_ENABLE_xxx environment
 # variables for enable defaults
 if test "$FROM_MPICH" = yes ; then
-    if test -n "$MPICH_ENABLE_F77" ; then
-        enable_f77=$MPICH_ENABLE_F77
-    fi
     if test -n "$MPICH_ENABLE_FC" ; then
+        enable_f77=$MPICH_ENABLE_FC
         enable_fc=$MPICH_ENABLE_FC
     fi
     if test -n "$MPICH_ENABLE_CXX" ; then
