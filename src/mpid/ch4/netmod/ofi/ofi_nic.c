@@ -146,6 +146,14 @@ static int setup_single_nic(void)
     MPIDI_OFI_global.nic_info[0].count = MPIR_Process.local_size;
     MPIDI_OFI_global.nic_info[0].num_close_ranks = MPIR_Process.local_size;
 
+    char nics_str[32];
+    MPIR_Info *info_ptr = NULL;
+    MPIR_Info_get_ptr(MPI_INFO_ENV, info_ptr);
+    snprintf(nics_str, 32, "%d", 1);
+    MPIR_Info_set_impl(info_ptr, "num_nics", nics_str);
+    snprintf(nics_str, 32, "%d", 1);
+    MPIR_Info_set_impl(info_ptr, "num_close_nics", nics_str);
+
     return MPI_SUCCESS;
 }
 
@@ -243,6 +251,15 @@ static int setup_multi_nic(int nic_count)
     for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
         MPIDI_OFI_global.prov_use[i] = nics[i].nic;
     }
+
+    /* Set some info keys on MPI_INFO_ENV to reflect the number of available (close) NICs */
+    char nics_str[32];
+    MPIR_Info *info_ptr = NULL;
+    MPIR_Info_get_ptr(MPI_INFO_ENV, info_ptr);
+    snprintf(nics_str, 32, "%d", MPIDI_OFI_global.num_nics);
+    MPIR_Info_set_impl(info_ptr, "num_nics", nics_str);
+    snprintf(nics_str, 32, "%d", MPIDI_OFI_global.num_close_nics);
+    MPIR_Info_set_impl(info_ptr, "num_close_nics", nics_str);
 
     return mpi_errno;
 }

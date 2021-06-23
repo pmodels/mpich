@@ -14,6 +14,19 @@
 #include "mpidig_am.h"
 #include "ch4_impl.h"
 
+extern unsigned long long PVAR_COUNTER_nic_sent_bytes_count[MPIDI_OFI_MAX_NICS] ATTRIBUTE((unused));
+extern unsigned long long PVAR_COUNTER_nic_recvd_bytes_count[MPIDI_OFI_MAX_NICS]
+ATTRIBUTE((unused));
+extern unsigned long long PVAR_COUNTER_striped_nic_sent_bytes_count[MPIDI_OFI_MAX_NICS]
+ATTRIBUTE((unused));
+extern unsigned long long PVAR_COUNTER_striped_nic_recvd_bytes_count[MPIDI_OFI_MAX_NICS]
+ATTRIBUTE((unused));
+extern unsigned long long PVAR_COUNTER_rma_pref_phy_nic_put_bytes_count[MPIDI_OFI_MAX_NICS]
+ATTRIBUTE((unused));
+extern unsigned long long PVAR_COUNTER_rma_pref_phy_nic_get_bytes_count[MPIDI_OFI_MAX_NICS]
+ATTRIBUTE((unused));
+
+
 #define MPIDI_OFI_ENAVAIL   -1  /* OFI resource not available */
 #define MPIDI_OFI_EPERROR   -2  /* OFI endpoint error */
 
@@ -256,18 +269,22 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
 /* Calculate the OFI context index.
  * The total number of OFI contexts will be the number of nics * number of vcis
  * Each nic will contain num_vcis vnis. Each corresponding to their respective vci index. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_ctx_index(int vni, int nic)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_ctx_index(MPIR_Comm * comm_ptr, int vni, int nic)
 {
-    return nic * MPIDI_OFI_global.num_vnis + vni;
+    if (comm_ptr == NULL || MPIDI_OFI_COMM(comm_ptr).pref_nic == NULL) {
+        return nic * MPIDI_OFI_global.num_vnis + vni;
+    } else {
+        return MPIDI_OFI_COMM(comm_ptr).pref_nic[comm_ptr->rank] * MPIDI_OFI_global.num_vnis + vni;
+    }
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(int vni, int nic)
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(MPIR_Comm * comm, int vni, int nic)
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni, nic);
 #else
     /* NOTE: shared with ctx[0] */
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, 0, nic);
 #endif
 
 #if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
