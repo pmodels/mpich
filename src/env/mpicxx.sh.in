@@ -106,6 +106,7 @@ linking=yes
 allargs=""
 interlib_deps=yes
 static_mpi=no
+showinfo=""
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
@@ -144,6 +145,16 @@ for arg in "$@" ; do
     -show)
     addarg=no
     Show=echo
+    ;;
+    -show-compile-info)
+    addarg=no
+    Show=echo
+    show_info=compile
+    ;;
+    -show-link-info)
+    addarg=no
+    Show=echo
+    show_info=link
     ;;
     -config=*)
     addarg=no
@@ -261,7 +272,19 @@ fi
 # Place the -L before any args in case there are any mpi libraries in there.
 # Eventually, we'll want to move this after any non-MPI implementation 
 # libraries
-if [ "$linking" = yes ] ; then
+if [ "$show_info" = compile ] ; then
+    echo ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} -I$includedir
+elif [ "$show_info" = link ] ; then
+    if [ "$nativelinking" = yes ] ; then
+        echo ${final_ldflags}
+    else
+        if [ "$static_mpi" = no ] ; then
+            echo ${final_ldflags} -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
+        else
+            echo ${final_ldflags} -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
+        fi
+    fi
+elif [ "$linking" = yes ] ; then
     if [ "$nativelinking" = yes ] ; then
         $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} $allargs -I$includedir
         rc=$?
