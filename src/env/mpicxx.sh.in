@@ -202,11 +202,8 @@ for arg in "$@" ; do
 	# Other arguments.  We are careful to handle arguments with 
 	# quotes (we try to quote all arguments in case they include 
 	# any spaces)
-    *\"*) 
-    qarg="'"$arg"'"
-    ;;
     *\'*) 
-    qarg='\"'"$arg"'\"'
+    qarg="'"`echo $arg | sed -e "s/'/'\"'\"'/g"`"'"
     ;;
     *)
     qarg="'$arg'"
