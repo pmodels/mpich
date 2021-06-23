@@ -370,9 +370,9 @@ if [ "$linking" = yes ] ; then
         rc=$?
     else
         if [ "$static_mpi" = no ] ; then
-          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} "${allargs[@]}" $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
+          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} $allargs $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
         else
-          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} "${allargs[@]}" $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
+          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} $allargs $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
         fi
         rc=$?
     fi

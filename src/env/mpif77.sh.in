@@ -335,9 +335,9 @@ if [ "$linking" = yes ] ; then
         rc=$?
     else
         if [ "$static_mpi" = no ] ; then
-          $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @F77_OTHER_LIBS@
+          $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} $allargs -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @F77_OTHER_LIBS@
         else
-          $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @F77_OTHER_LIBS@
+          $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} $allargs -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @F77_OTHER_LIBS@
         fi
         rc=$?
     fi
