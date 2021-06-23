@@ -93,7 +93,6 @@ dnl To let other scripts and in particular the configure in test/mpi
 dnl know that they are being invoked from within the MPICH configure,
 dnl the following environment variables are set and exported:
 dnl    FROM_MPICH
-dnl    MPICH_ENABLE_F77
 dnl    MPICH_ENABLE_FC
 dnl    MPICH_ENABLE_CXX
 dnl
@@ -443,18 +442,8 @@ dnl In addition, we check whether f77 and fc can work together.
 AC_ARG_ENABLE(fortran,
 [  --enable-fortran=option - Control the level of Fortran support in the MPICH implementation.
 	yes|all   - Enable all available Fortran implementations (F77, F90+)
-	f77       - Enable Fortran 77 support
-	fc        - Enable Fortran 90 and 2008 support
 	no|none   - No Fortran support
 ],,[enable_fortran=all])
-
-AC_ARG_ENABLE(f77,
-	AS_HELP_STRING([--enable-f77],
-		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_f77=yes])
-
-AC_ARG_ENABLE(fc,
-	AS_HELP_STRING([--enable-fc],
-		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_fc=yes])
 
 AC_ARG_ENABLE(cxx,
 	AS_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
@@ -711,42 +700,24 @@ AC_PROG_CXX
 : ${FCFLAGS=""}
 AC_PROG_FC
 
-save_IFS="$IFS"
-IFS=","
 enable_f77=no
 enable_fc=no
-for option in $enable_fortran ; do
-    case "$option" in
-        yes|all)
-		enable_f77=yes
-		enable_fc=yes
-		;;
-        no|none)
-		;;
-        f77)
-		enable_f77=yes
-		;;
-        fc)
-		enable_fc=yes
-		;;
-        *)
-		IFS="$save_IFS"
-		AC_MSG_WARN([Unknown value $option for --enable-fortran])
-		IFS=","
-		;;
-    esac
-done
-IFS="$save_IFS"
+case "$enable_fortran" in
+    yes|all)
+            enable_f77=yes
+            enable_fc=yes
+            ;;
+    no|none)
+            ;;
+    *)
+            AC_MSG_WARN([Unknown value $option for --enable-fortran])
+            ;;
+esac
 
-if test "$enable_f77" = "no" ; then
-   if test "$enable_fc" = "yes" ; then
-      AC_MSG_ERROR([Fortran 90 support requires enabling Fortran 77])
-   fi
-fi
-
-if test ! -z "$FC" -a -z "$F77" ; then
-   F77=$FC
-   if test ! -z "$FCFLAGS" -a -z "$FFLAGS" ; then
+# HACK, use $FC as F77. We should remove all the F77 usages.
+if test "$enable_fc" = "yes" ; then
+    F77=$FC
+   if test ! -z "$FCFLAGS" ; then
       FFLAGS=$FCFLAGS
    fi
 fi
@@ -1804,21 +1775,13 @@ fi
 #
 # First, determine whether we are/can support the language bindings
 #
-# Since F90/F90FLAGS are replaced by FC/FCFLAGS, rather than silently
-# substituting them, i.e. FC=$F90 and FCFLAGS=$F90FLAGS, we choose to emit
-# an error message and abort to avoid any ambiguous/hidden bug in choosing
-# Fortran90 compilers.
-if test -n "$F90" -o -n "$F90FLAGS" ; then
-    AC_MSG_ERROR([F90 and F90FLAGS are replaced by FC and FCFLAGS respectively in this configure, please unset F90/F90FLAGS and set FC/FCFLAGS instead and rerun configure again.])
-fi
-# ----------------------------------------------------------------------------
 # Handle default choices for the Fortran compilers
 # Note that these have already been set above
 
-if test "$enable_f77" = "yes"; then
-    if test "$F77" = "" -o "$F77" = "no"; then
-        # No Fortran 77 compiler found; abort
-        AC_MSG_ERROR([No Fortran 77 compiler found. If you don't need to
+if test "$enable_fc" = "yes"; then
+    if test "$FC" = "" -o "$FC" = "no"; then
+        # No Fortran compiler found; abort
+        AC_MSG_ERROR([No Fortran compiler found. If you don't need to
         build any Fortran programs, you can disable Fortran support using
         --disable-fortran. If you do want to build Fortran
         programs, you need to install a Fortran compiler such as gfortran
@@ -4966,10 +4929,8 @@ dnl steps because it does not depend on them.
 # that the correct decisions are made since this configure happens before the
 # MPICH library is built.
 MPICH_ENABLE_CXX=$enable_cxx
-MPICH_ENABLE_F77=$enable_f77
 MPICH_ENABLE_FC=$enable_fc
 export MPICH_ENABLE_CXX
-export MPICH_ENABLE_F77
 export MPICH_ENABLE_FC
 AM_CONDITIONAL([BUILD_CXX_BINDING],[test "$enable_cxx" = "yes"])
 AM_CONDITIONAL([BUILD_F77_BINDING],[test "$enable_f77" = "yes"])
@@ -5124,7 +5085,7 @@ if test "X$enable_shared" = "Xyes" ; then
             PAC_POP_FLAG([LDFLAGS])
 
             # Technically we may not be able to use the same form of the argument
-            # for all four compilers (CC/CXX/F77/FC).  But we only think this is
+            # for all three compilers (CC/CXX/FC).  But we only think this is
             # necessary for Darwin for now, so this unconditional, single-var
             # approximation will work for now.
             if test "X$pac_cv_wl_flat_namespace_works" = "Xyes" ; then
