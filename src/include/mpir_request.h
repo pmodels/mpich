@@ -220,6 +220,7 @@ struct MPIR_Request {
             struct MPIR_Request *real_request;
             enum MPIR_sched_type sched_type;
             void *sched;
+            MPII_Coll_req_t coll;
         } persist_coll;         /* kind : MPIR_REQUEST_KIND__PREQUEST_COLL */
         struct {
             int partitions;     /* Needed for parameter error check */
@@ -427,6 +428,10 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
                 req->u.nbc.coll.host_recvbuf = NULL;
                 req->u.nbc.coll.datatype = MPI_DATATYPE_NULL;
                 break;
+            case MPIR_REQUEST_KIND__PREQUEST_COLL:
+                req->u.persist_coll.coll.host_sendbuf = NULL;
+                req->u.persist_coll.coll.host_recvbuf = NULL;
+                req->u.persist_coll.coll.datatype = MPI_DATATYPE_NULL;
             default:
                 break;
         }

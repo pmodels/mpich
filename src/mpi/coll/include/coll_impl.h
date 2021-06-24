@@ -100,5 +100,8 @@ void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_A
 void MPIR_Coll_host_buffer_free(void *host_sendbuf, void *host_recvbuf);
 void MPIR_Coll_host_buffer_swap_back(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
                                      MPI_Aint count, MPI_Datatype datatype, MPIR_Request * request);
+void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
+                                       MPI_Aint count, MPI_Datatype datatype,
+                                       MPIR_Request * request);
 
 #endif /* COLL_IMPL_H_INCLUDED */

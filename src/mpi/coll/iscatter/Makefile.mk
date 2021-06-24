@@ -8,7 +8,6 @@
 # mpi_sources
 
 mpi_core_sources +=                             \
-    src/mpi/coll/iscatter/iscatter.c \
     src/mpi/coll/iscatter/iscatter_intra_sched_binomial.c   \
     src/mpi/coll/iscatter/iscatter_inter_sched_linear.c \
     src/mpi/coll/iscatter/iscatter_inter_sched_remote_send_local_scatter.c \

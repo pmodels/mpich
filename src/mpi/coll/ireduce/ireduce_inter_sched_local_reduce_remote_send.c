@@ -56,8 +56,8 @@ int MPIR_Ireduce_inter_sched_local_reduce_remote_send(const void *sendbuf, void 
         }
 
         mpi_errno =
-            MPIR_Ireduce_sched_auto(sendbuf, tmp_buf, count, datatype, op, 0, comm_ptr->local_comm,
-                                    s);
+            MPIR_Ireduce_intra_sched_auto(sendbuf, tmp_buf, count, datatype, op, 0,
+                                          comm_ptr->local_comm, s);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Sched_barrier(s);
         MPIR_ERR_CHECK(mpi_errno);

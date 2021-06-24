@@ -129,8 +129,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
 /* Routine to schedule a recursive exchange based reduce_scatter with distance halving in each phase */
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recvbuf,
                                                  const MPI_Aint * recvcounts, MPI_Datatype datatype,
-                                                 MPI_Op op, MPIR_Comm * comm, int k,
-                                                 int is_dist_halving, MPIR_TSP_sched_t * sched)
+                                                 MPI_Op op, MPIR_Comm * comm, int is_dist_halving,
+                                                 int k, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace;
@@ -282,8 +282,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
 /* Non-blocking recursive exchange based Reduce_scatter */
 int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
                                            const MPI_Aint * recvcounts, MPI_Datatype datatype,
-                                           MPI_Op op, MPIR_Comm * comm, MPIR_Request ** req, int k,
-                                           int rs_type)
+                                           MPI_Op op, MPIR_Comm * comm, int rs_type, int k,
+                                           MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -300,7 +300,7 @@ int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
 
     mpi_errno =
         MPIR_TSP_Ireduce_scatter_sched_intra_recexch(sendbuf, recvbuf, recvcounts, datatype,
-                                                     op, comm, k, rs_type, sched);
+                                                     op, comm, rs_type, k, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */

@@ -8,7 +8,6 @@
 # mpi_sources
 
 mpi_core_sources +=                          \
-    src/mpi/coll/ireduce_scatter/ireduce_scatter.c \
     src/mpi/coll/ireduce_scatter/ireduce_scatter_intra_sched_recursive_halving.c  \
     src/mpi/coll/ireduce_scatter/ireduce_scatter_intra_sched_pairwise.c \
     src/mpi/coll/ireduce_scatter/ireduce_scatter_intra_sched_recursive_doubling.c \

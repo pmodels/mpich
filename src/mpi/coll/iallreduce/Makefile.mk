@@ -8,7 +8,6 @@
 # mpi_sources
 
 mpi_core_sources +=                                         \
-    src/mpi/coll/iallreduce/iallreduce.c \
     src/mpi/coll/iallreduce/iallreduce_intra_sched_naive.c              \
     src/mpi/coll/iallreduce/iallreduce_intra_sched_reduce_scatter_allgather.c  \
     src/mpi/coll/iallreduce/iallreduce_intra_sched_recursive_doubling.c \

@@ -14,7 +14,7 @@ int
 MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
                                        MPI_Aint recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm * comm, MPIR_TSP_sched_t * sched, int k)
+                                       MPIR_Comm * comm, int k, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;
@@ -153,7 +153,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 /* Non-blocking brucks based Allgather */
 int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                     MPIR_Comm * comm_ptr, MPIR_Request ** req, int k)
+                                     MPIR_Comm * comm_ptr, int k, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -169,7 +169,7 @@ int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MP
     MPIR_TSP_sched_create(sched, false);
 
     mpi_errno = MPIR_TSP_Iallgather_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
-                                                       recvcount, recvtype, comm_ptr, sched, k);
+                                                       recvcount, recvtype, comm_ptr, k, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
