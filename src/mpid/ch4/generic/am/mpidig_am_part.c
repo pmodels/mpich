@@ -56,6 +56,39 @@ static void part_req_am_init(MPIR_Request * part_req)
     MPIDIG_PART_REQUEST(part_req, recv_epoch) = 0;
 }
 
+void MPIDIG_precv_matched(MPIR_Request * part_req)
+{
+    MPI_Aint sdata_size = MPIDIG_PART_REQUEST(part_req, u.recv).sdata_size;
+
+    /* Set status for partitioned req */
+    MPIR_STATUS_SET_COUNT(part_req->status, sdata_size);
+    part_req->status.MPI_SOURCE = MPIDI_PART_REQUEST(part_req, rank);
+    part_req->status.MPI_TAG = MPIDI_PART_REQUEST(part_req, tag);
+    part_req->status.MPI_ERROR = MPI_SUCCESS;
+
+    /* Additional check for partitioned pt2pt: require identical buffer size */
+    if (part_req->status.MPI_ERROR == MPI_SUCCESS) {
+        MPI_Aint rdata_size;
+        MPIR_Datatype_get_size_macro(MPIDI_PART_REQUEST(part_req, datatype), rdata_size);
+        rdata_size *= MPIDI_PART_REQUEST(part_req, count) * part_req->u.part.partitions;
+        if (sdata_size != rdata_size) {
+            part_req->status.MPI_ERROR =
+                MPIR_Err_create_code(part_req->status.MPI_ERROR, MPIR_ERR_RECOVERABLE, __FUNCTION__,
+                                     __LINE__, MPI_ERR_OTHER, "**ch4|partmismatchsize",
+                                     "**ch4|partmismatchsize %d %d",
+                                     (int) rdata_size, (int) sdata_size);
+        }
+    }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_REQUEST(part_req, is_local))
+        MPIDI_SHM_precv_matched_hook(part_req);
+    else
+#endif
+    {
+        MPIDI_NM_precv_matched_hook(part_req);
+    }
+}
+
 int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
                           MPI_Datatype datatype, int dest, int tag,
                           MPIR_Comm * comm, MPIR_Info * info, int is_local, MPIR_Request ** request)
@@ -136,7 +169,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
         MPIDIG_PART_REQUEST(*request, peer_req_ptr) = MPIDIG_PART_REQUEST(unexp_req, peer_req_ptr);
         MPIDI_CH4_REQUEST_FREE(unexp_req);
 
-        MPIDIG_part_match_rreq(*request);
+        MPIDIG_precv_matched(*request);
     } else {
         MPIDIG_enqueue_request(*request, &MPIDI_global.part_posted_list, MPIDIG_PART);
     }
