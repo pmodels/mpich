@@ -54,6 +54,9 @@ static void part_req_am_init(MPIR_Request * part_req)
     MPIDIG_PART_REQUEST(part_req, peer_req_ptr) = NULL;
     MPIDIG_PART_REQUEST(part_req, send_epoch) = 0;
     MPIDIG_PART_REQUEST(part_req, recv_epoch) = 0;
+    if (part_req->kind == MPIR_REQUEST_KIND__PART_SEND) {
+        MPIR_cc_set(&MPIDIG_PART_REQUEST(part_req, u.send).ready_cntr, 0);
+    }
 }
 
 void MPIDIG_precv_matched(MPIR_Request * part_req)
@@ -106,7 +109,6 @@ int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
 
     /* Initialize am components for send */
     part_req_am_init(*request);
-    MPIR_cc_set(&MPIDIG_PART_REQUEST(*request, u.send).ready_cntr, 0);
 
     /* Initiate handshake with receiver for message matching */
     MPIDIG_part_send_init_msg_t am_hdr;
