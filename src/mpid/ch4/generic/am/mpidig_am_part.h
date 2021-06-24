@@ -26,20 +26,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request, int is_lo
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
-    int status = MPIDIG_PART_REQ_INC_FETCH_STATUS(request);
-
     /* Indicate data transfer starts.
      * Decrease when am request completes on sender (via completion_notification),
      * or received data transfer AM on receiver. */
     MPIR_cc_set(request->cc_ptr, 1);
     if (request->kind == MPIR_REQUEST_KIND__PART_SEND) {
         MPIR_cc_set(&MPIDIG_PART_REQUEST(request, u.send).ready_cntr, 0);
+        MPIDIG_PART_REQUEST(request, send_epoch)++;
     }
 
     /* No need to increase refcnt for comm and datatype objects,
      * because it is erroneous to free an active partitioned req if it is not complete.*/
 
-    if (request->kind == MPIR_REQUEST_KIND__PART_RECV && status == MPIDIG_PART_REQ_CTS) {
+    if (request->kind == MPIR_REQUEST_KIND__PART_RECV && MPIDIG_PART_REQUEST(request, peer_req_ptr)) {
         mpi_errno = MPIDIG_part_issue_cts(request);
     }
 
@@ -62,7 +61,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq, int is
     /* Send data when all partitions are ready */
     if (MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) ==
         part_sreq->u.part.partitions &&
-        MPL_atomic_load_int(&MPIDIG_PART_REQUEST(part_sreq, status)) == MPIDIG_PART_REQ_CTS) {
+        MPIDIG_PART_REQUEST(part_sreq, send_epoch) == MPIDIG_PART_REQUEST(part_sreq, recv_epoch)) {
         mpi_errno = MPIDIG_part_issue_data(part_sreq, is_local);
         MPIR_ERR_CHECK(mpi_errno);
     }

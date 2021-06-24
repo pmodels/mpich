@@ -233,7 +233,8 @@ typedef struct MPIDIG_part_rreq {
 } MPIDIG_part_rreq_t;
 
 typedef struct MPIDIG_part_request {
-    MPL_atomic_int_t status;    /* see MPIDIG_PART_REQ_INC_FETCH_STATUS */
+    uint8_t send_epoch;
+    uint8_t recv_epoch;
     MPIR_Request *peer_req_ptr;
     union {
         MPIDIG_part_sreq_t send;
