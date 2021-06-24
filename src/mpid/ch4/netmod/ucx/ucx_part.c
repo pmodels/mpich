@@ -5,6 +5,7 @@
 
 #include "mpidimpl.h"
 #include "ucx_impl.h"
+#include "ucx_noinline.h"
 
 int MPIDI_UCX_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
                              MPI_Datatype datatype, int dest, int tag,
@@ -22,4 +23,9 @@ int MPIDI_UCX_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
 {
     return MPIDIG_mpi_precv_init(buf, partitions, count, datatype, source, tag, comm,
                                  info, 0 /*is_local */ , request);
+}
+
+int MPIDI_UCX_precv_matched_hook(MPIR_Request * part_req)
+{
+    return MPI_SUCCESS;
 }

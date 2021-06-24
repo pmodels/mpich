@@ -68,7 +68,7 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
                                      &MPIDI_global.part_posted_list, MPIDIG_PART);
     if (posted_req) {
         part_rreq_update_sinfo(posted_req, msg_hdr);
-        MPIDIG_part_match_rreq(posted_req);
+        MPIDIG_precv_matched(posted_req);
 
         /* If rreq matches and local start has been called, notify sender CTS */
         if (MPIR_Part_request_is_active(posted_req)) {

@@ -8,31 +8,6 @@
 
 #include "ch4_impl.h"
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_part_match_rreq(MPIR_Request * part_req)
-{
-    MPI_Aint sdata_size = MPIDIG_PART_REQUEST(part_req, u.recv).sdata_size;
-
-    /* Set status for partitioned req */
-    MPIR_STATUS_SET_COUNT(part_req->status, sdata_size);
-    part_req->status.MPI_SOURCE = MPIDI_PART_REQUEST(part_req, rank);
-    part_req->status.MPI_TAG = MPIDI_PART_REQUEST(part_req, tag);
-    part_req->status.MPI_ERROR = MPI_SUCCESS;
-
-    /* Additional check for partitioned pt2pt: require identical buffer size */
-    if (part_req->status.MPI_ERROR == MPI_SUCCESS) {
-        MPI_Aint rdata_size;
-        MPIR_Datatype_get_size_macro(MPIDI_PART_REQUEST(part_req, datatype), rdata_size);
-        rdata_size *= MPIDI_PART_REQUEST(part_req, count) * part_req->u.part.partitions;
-        if (sdata_size != rdata_size) {
-            part_req->status.MPI_ERROR =
-                MPIR_Err_create_code(part_req->status.MPI_ERROR, MPIR_ERR_RECOVERABLE, __FUNCTION__,
-                                     __LINE__, MPI_ERR_OTHER, "**ch4|partmismatchsize",
-                                     "**ch4|partmismatchsize %d %d",
-                                     (int) rdata_size, (int) sdata_size);
-        }
-    }
-}
-
 /* Receiver issues a CTS to sender once reach MPIDIG_PART_REQ_CTS */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
 {
