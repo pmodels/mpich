@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
 }
 
 /* Sender issues data after all partitions are ready and CTS; called by pready functions. */
-MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq, int is_local)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -66,7 +66,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq, in
                 MPIR_AINT_MAX);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (is_local) {
+    if (MPIDI_REQUEST(part_sreq, is_local)) {
         mpi_errno = MPIDI_SHM_am_isend(MPIDI_PART_REQUEST(part_sreq, rank),
                                        part_sreq->comm, MPIDIG_PART_SEND_DATA,
                                        &am_hdr, sizeof(am_hdr),
