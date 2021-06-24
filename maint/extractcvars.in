@@ -728,6 +728,8 @@ sub ExpandDir {
             next;
         } elsif (-d "$dir/$filename") {
             $subdirs[$#subdirs + 1] = "$dir/$filename";
+        } elsif ($filename =~ /^cvars.txt$/) {
+            $cfiles[$#cfiles + 1] = "$dir/$filename";
         } elsif ($filename =~ /(.*\.[Cchi])(pp){0,1}$/) {
             if (!defined($skipfiles{"$dir/$filename"}))
             {

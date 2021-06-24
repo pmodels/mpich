@@ -8,8 +8,6 @@
 # mpi_sources
 
 mpi_core_sources +=									\
-    src/mpi/coll/scatter/scatter.c \
-    src/mpi/coll/scatter/scatter_init.c \
     src/mpi/coll/scatter/scatter_allcomm_nb.c			\
     src/mpi/coll/scatter/scatter_intra_binomial.c			\
     src/mpi/coll/scatter/scatter_inter_linear.c \
