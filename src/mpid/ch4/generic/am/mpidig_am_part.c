@@ -36,6 +36,11 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
     req->u.part.partitions = partitions;
     MPIR_Part_request_inactivate(req);
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, rank);
+    MPIDI_REQUEST(req, is_local) = MPIDI_av_is_local(av);
+#endif
+
     /* Inactive partitioned comm request can be freed by request_free.
      * Completion cntr increases when request becomes active at start. */
     MPIR_cc_set(req->cc_ptr, 0);
@@ -94,7 +99,7 @@ void MPIDIG_precv_matched(MPIR_Request * part_req)
 
 int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
                           MPI_Datatype datatype, int dest, int tag,
-                          MPIR_Comm * comm, MPIR_Info * info, int is_local, MPIR_Request ** request)
+                          MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PSEND_INIT);
@@ -122,8 +127,7 @@ int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
     am_hdr.data_sz = dtype_size * count * partitions;   /* count is per partition */
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_REQUEST(*request, is_local) = is_local;       /* use at start, pready, parrived */
-    if (is_local)
+    if (MPIDI_REQUEST(*request, is_local))
         mpi_errno = MPIDI_SHM_am_send_hdr(dest, comm, MPIDIG_PART_SEND_INIT,
                                           &am_hdr, sizeof(am_hdr));
     else
@@ -143,7 +147,7 @@ int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
 
 int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
                           MPI_Datatype datatype, int source, int tag,
-                          MPIR_Comm * comm, MPIR_Info * info, int is_local, MPIR_Request ** request)
+                          MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PRECV_INIT);
@@ -175,10 +179,6 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
     } else {
         MPIDIG_enqueue_request(*request, &MPIDI_global.part_posted_list, MPIDIG_PART);
     }
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_REQUEST(*request, is_local) = is_local;       /* use at start, pready, parrived */
-#endif
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);

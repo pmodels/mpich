@@ -12,14 +12,12 @@
 void MPIDIG_precv_matched(MPIR_Request * part_req);
 int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
                           MPI_Datatype datatype, int dest, int tag,
-                          MPIR_Comm * comm, MPIR_Info * info, int is_local,
-                          MPIR_Request ** request);
+                          MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request);
 int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
                           MPI_Datatype datatype, int source, int tag,
-                          MPIR_Comm * comm, MPIR_Info * info, int is_local,
-                          MPIR_Request ** request);
+                          MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request);
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request, int is_local)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PART_START);
@@ -51,7 +49,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request, int is_lo
 /* Checks whether all partitions are ready and MPIDIG_PART_REQ_CTS has been received,
  * If so, then issues data. Otherwise a no-op.
  */
-MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq, int is_local)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_POST_PREADY);
@@ -63,7 +61,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq, int is
     if (MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) ==
         part_sreq->u.part.partitions &&
         MPIDIG_PART_REQUEST(part_sreq, send_epoch) == MPIDIG_PART_REQUEST(part_sreq, recv_epoch)) {
-        mpi_errno = MPIDIG_part_issue_data(part_sreq, is_local);
+        mpi_errno = MPIDIG_part_issue_data(part_sreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -75,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq, int is
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int partition_low, int partition_high,
-                                                     MPIR_Request * part_sreq, int is_local)
+                                                     MPIR_Request * part_sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PREADY_RANGE);
@@ -87,14 +85,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int partition_low, int part
     MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) <=
                 part_sreq->u.part.partitions);
 
-    mpi_errno = MPIDIG_post_pready(part_sreq, is_local);
+    mpi_errno = MPIDIG_post_pready(part_sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PREADY_RANGE);
     return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, int array_of_partitions[],
-                                                    MPIR_Request * part_sreq, int is_local)
+                                                    MPIR_Request * part_sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PREADY_LIST);
@@ -106,7 +104,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, int array_of_par
     MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) <=
                 part_sreq->u.part.partitions);
 
-    mpi_errno = MPIDIG_post_pready(part_sreq, is_local);
+    mpi_errno = MPIDIG_post_pready(part_sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PREADY_LIST);
     return mpi_errno;

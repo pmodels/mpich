@@ -17,12 +17,11 @@ int MPID_Psend_init(void *buf, int partitions, MPI_Aint count,
     MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, dest);
 
     mpi_errno =
-        MPIDIG_mpi_psend_init(buf, partitions, count, datatype, dest, tag, comm, info,
-                              MPIDI_av_is_local(av), request);
+        MPIDIG_mpi_psend_init(buf, partitions, count, datatype, dest, tag, comm, info, request);
     MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_av_is_local(av)) {
+    if (MPIDI_REQUEST(*request, is_local)) {
         mpi_errno = MPIDI_SHM_mpi_psend_init_hook(buf, partitions, count, datatype, dest, tag,
                                                   comm, info, av, request);
     } else
@@ -52,12 +51,11 @@ int MPID_Precv_init(void *buf, int partitions, MPI_Aint count,
     MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, source);
 
     mpi_errno =
-        MPIDIG_mpi_precv_init(buf, partitions, count, datatype, dest, tag, comm, info,
-                              MPIDI_av_is_local(av), request);
+        MPIDIG_mpi_precv_init(buf, partitions, count, datatype, source, tag, comm, info, request);
     MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_av_is_local(av)) {
+    if (MPIDI_REQUEST(*request, is_local)) {
         mpi_errno = MPIDI_SHM_mpi_precv_init_hook(buf, partitions, count, datatype,
                                                   source, tag, comm, info, av, request);
     } else
