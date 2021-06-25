@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 #include "algo_common.h"
+#include "recexchalgo.h"        /* for MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2 */
 #include "iallreduce_tsp_recursive_exchange_common.h"
 
 /* Routine to schedule a recursive exchange based allreduce */

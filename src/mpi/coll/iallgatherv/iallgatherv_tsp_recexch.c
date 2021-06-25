@@ -6,14 +6,15 @@
 #include "mpiimpl.h"
 #include "recexchalgo.h"
 
-int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int nranks, int k, int p_of_k,
-                                                           int log_pofk, int T, void *recvbuf,
-                                                           MPI_Datatype recvtype,
-                                                           size_t recv_extent,
-                                                           const MPI_Aint * recvcounts,
-                                                           const MPI_Aint * displs, int tag,
-                                                           MPIR_Comm * comm,
-                                                           MPIR_TSP_sched_t * sched)
+static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int nranks, int k,
+                                                                  int p_of_k, int log_pofk, int T,
+                                                                  void *recvbuf,
+                                                                  MPI_Datatype recvtype,
+                                                                  size_t recv_extent,
+                                                                  const MPI_Aint * recvcounts,
+                                                                  const MPI_Aint * displs, int tag,
+                                                                  MPIR_Comm * comm,
+                                                                  MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int partner, offset, count, send_offset, recv_offset;
@@ -60,13 +61,15 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int nranks,
 }
 
 
-int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int *step1_recvfrom,
-                                                   int step1_nrecvs, int is_inplace, int rank,
-                                                   int tag, const void *sendbuf, void *recvbuf,
-                                                   size_t recv_extent, const MPI_Aint * recvcounts,
-                                                   const MPI_Aint * displs, MPI_Datatype recvtype,
-                                                   int n_invtcs, int *invtx, MPIR_Comm * comm,
-                                                   MPIR_TSP_sched_t * sched)
+static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int *step1_recvfrom,
+                                                          int step1_nrecvs, int is_inplace,
+                                                          int rank, int tag, const void *sendbuf,
+                                                          void *recvbuf, size_t recv_extent,
+                                                          const MPI_Aint * recvcounts,
+                                                          const MPI_Aint * displs,
+                                                          MPI_Datatype recvtype, int n_invtcs,
+                                                          int *invtx, MPIR_Comm * comm,
+                                                          MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int send_offset, recv_offset, i;
@@ -178,12 +181,13 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
 }
 
 
-int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int *step1_recvfrom,
-                                                   int step1_nrecvs, int step2_nphases,
-                                                   void *recvbuf, const MPI_Aint * recvcounts,
-                                                   int nranks, int k, int nrecvs, int *recv_id,
-                                                   int tag, MPI_Datatype recvtype, MPIR_Comm * comm,
-                                                   MPIR_TSP_sched_t * sched)
+static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int *step1_recvfrom,
+                                                          int step1_nrecvs, int step2_nphases,
+                                                          void *recvbuf,
+                                                          const MPI_Aint * recvcounts, int nranks,
+                                                          int k, int nrecvs, int *recv_id, int tag,
+                                                          MPI_Datatype recvtype, MPIR_Comm * comm,
+                                                          MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int total_count = 0, i;
