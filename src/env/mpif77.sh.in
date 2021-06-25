@@ -64,7 +64,7 @@ Show=eval
 # End of initialization of variables
 #---------------------------------------------------------------------
 
-# Check recursive situaltions
+# Check recursive situations
 # User mistakes, e.g. setting MPICH_CC=mpicc, may end up recursively running
 # this script. A simple check to bail if that's the case.
 if [ -n "$MPICH_RECURSION_CHECK" ] ; then
@@ -335,9 +335,9 @@ if [ "$linking" = yes ] ; then
         rc=$?
     else
         if [ "$static_mpi" = no ] ; then
-          $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @F77_OTHER_LIBS@
+          $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} $allargs -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @F77_OTHER_LIBS@
         else
-          $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @F77_OTHER_LIBS@
+          $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} $allargs -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @F77_OTHER_LIBS@
         fi
         rc=$?
     fi
