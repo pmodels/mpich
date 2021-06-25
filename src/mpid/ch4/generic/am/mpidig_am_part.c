@@ -32,7 +32,7 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
     MPIDI_PART_REQUEST(req, buffer) = buf;
     MPIDI_PART_REQUEST(req, count) = count;
     MPIDI_PART_REQUEST(req, context_id) = comm->context_id;
-    MPIDI_PART_REQUEST(req, peer_req_ptr) = NULL;
+    MPIDI_PART_REQUEST(req, peer_req) = MPI_REQUEST_NULL;
 
     req->u.part.partitions = partitions;
     MPIR_Part_request_inactivate(req);
@@ -120,7 +120,7 @@ int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
     am_hdr.src_rank = comm->rank;
     am_hdr.tag = tag;
     am_hdr.context_id = comm->context_id;
-    am_hdr.sreq_ptr = *request;
+    am_hdr.sreq = (*request)->handle;
 
     MPI_Aint dtype_size = 0;
     MPIR_Datatype_get_size_macro(datatype, dtype_size);
@@ -172,7 +172,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
         /* Copy sender info from unexp_req to local part_rreq */
         MPIDIG_PART_REQUEST(*request, u.recv).sdata_size =
             MPIDIG_PART_REQUEST(unexp_req, u.recv).sdata_size;
-        MPIDI_PART_REQUEST(*request, peer_req_ptr) = MPIDI_PART_REQUEST(unexp_req, peer_req_ptr);
+        MPIDI_PART_REQUEST(*request, peer_req) = MPIDI_PART_REQUEST(unexp_req, peer_req);
         MPIDI_CH4_REQUEST_FREE(unexp_req);
 
         MPIDIG_precv_matched(*request);

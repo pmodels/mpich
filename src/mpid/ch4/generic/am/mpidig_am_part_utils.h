@@ -16,8 +16,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PART_ISSUE_CTS);
 
     MPIDIG_part_cts_msg_t am_hdr;
-    am_hdr.sreq_ptr = MPIDI_PART_REQUEST(rreq_ptr, peer_req_ptr);
-    am_hdr.rreq_ptr = rreq_ptr;
+    am_hdr.sreq = MPIDI_PART_REQUEST(rreq_ptr, peer_req);
+    am_hdr.rreq = rreq_ptr->handle;
 
     int source = MPIDI_PART_REQUEST(rreq_ptr, rank);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -51,7 +51,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq)
     MPIR_Comm_add_ref(sreq->comm);
 
     MPIDIG_part_send_data_msg_t am_hdr;
-    am_hdr.rreq_ptr = MPIDI_PART_REQUEST(part_sreq, peer_req_ptr);
+    am_hdr.rreq = MPIDI_PART_REQUEST(part_sreq, peer_req);
 
     /* Complete partitioned req at am request completes */
     sreq->completion_notification = &part_sreq->cc;

@@ -90,17 +90,17 @@ typedef struct MPIDIG_part_send_init_msg_t {
     int src_rank;
     int tag;
     MPIR_Context_id_t context_id;
-    MPIR_Request *sreq_ptr;
+    MPI_Request sreq;
     MPI_Aint data_sz;           /* size of entire send data */
 } MPIDIG_part_send_init_msg_t;
 
 typedef struct MPIDIG_part_cts_msg_t {
-    MPIR_Request *sreq_ptr;
-    MPIR_Request *rreq_ptr;
+    MPI_Request sreq;
+    MPI_Request rreq;
 } MPIDIG_part_cts_msg_t;
 
 typedef struct MPIDIG_part_send_data_msg_t {
-    MPIR_Request *rreq_ptr;
+    MPI_Request rreq;
 } MPIDIG_part_send_data_msg_t;
 
 typedef struct MPIDIG_win_cntrl_msg_t {

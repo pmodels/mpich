@@ -37,7 +37,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
     /* No need to increase refcnt for comm and datatype objects,
      * because it is erroneous to free an active partitioned req if it is not complete.*/
 
-    if (request->kind == MPIR_REQUEST_KIND__PART_RECV && MPIDI_PART_REQUEST(request, peer_req_ptr)) {
+    if (request->kind == MPIR_REQUEST_KIND__PART_RECV &&
+        MPIDI_PART_REQUEST(request, peer_req) != MPI_REQUEST_NULL) {
         mpi_errno = MPIDIG_part_issue_cts(request);
     }
 

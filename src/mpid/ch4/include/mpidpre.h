@@ -253,7 +253,7 @@ typedef struct MPIDI_part_request {
                                          * Valid also in posted_rreq so that single dequeue
                                          * routine can be used. */
     MPI_Datatype datatype;
-    MPIR_Request *peer_req_ptr;
+    MPI_Request peer_req;
     union {
     MPIDI_NM_PART_DECL} netmod;
 } MPIDI_part_request_t;
