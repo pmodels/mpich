@@ -22,9 +22,20 @@
                 __FILE__, __LINE__, __func__, ##__VA_ARGS__);           \
     } while (0)
 
+#if defined(DAOS_API_VERSION_MAJOR) && defined(DAOS_API_VERSION_MINOR)
+#define CHECK_DAOS_API_VERSION(major, minor)                                            \
+        ((DAOS_API_VERSION_MAJOR > (major))                                             \
+        || (DAOS_API_VERSION_MAJOR == (major) && DAOS_API_VERSION_MINOR >= (minor)))
+#else
+#define CHECK_DAOS_API_VERSION(major, minor) 0
+#endif
+
+extern bool adio_daos_bypass_duns;
+extern const char *adio_daos_path_prefix;
+
 struct adio_daos_hdl {
     d_list_t entry;
-    uuid_t uuid;
+    char value[DAOS_PROP_LABEL_MAX_LEN + 1];
     daos_handle_t open_hdl;
     dfs_t *dfs;
     int ref;
@@ -76,13 +87,14 @@ void ADIOI_DAOS_Init(int *error_code);
 /** Container/Pool Handle Hash functions */
 int adio_daos_hash_init(void);
 void adio_daos_hash_finalize(void);
-struct adio_daos_hdl *adio_daos_poh_lookup(const uuid_t uuid);
-int adio_daos_poh_insert(uuid_t uuid, daos_handle_t poh, struct adio_daos_hdl **hdl);
-int adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl);
+struct adio_daos_hdl *adio_daos_poh_lookup(struct duns_attr_t *attr);
+int adio_daos_poh_insert(struct duns_attr_t *attr, daos_handle_t poh, struct adio_daos_hdl **hdl);
+int adio_daos_poh_lookup_connect(struct duns_attr_t *attr, struct adio_daos_hdl **hdl);
 void adio_daos_poh_release(struct adio_daos_hdl *hdl);
-struct adio_daos_hdl *adio_daos_coh_lookup(const uuid_t uuid);
-int adio_daos_coh_insert(uuid_t uuid, daos_handle_t coh, struct adio_daos_hdl **hdl);
-int adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, int amode,
+struct adio_daos_hdl *adio_daos_coh_lookup(struct duns_attr_t *attr);
+int adio_daos_coh_insert(struct duns_attr_t *attr, daos_handle_t coh, dfs_t * dfs,
+                         struct adio_daos_hdl **hdl);
+int adio_daos_coh_lookup_create(daos_handle_t poh, struct duns_attr_t *attr, int amode,
                                 bool create, struct adio_daos_hdl **hdl);
 void adio_daos_coh_release(struct adio_daos_hdl *hdl);
 
