@@ -40,8 +40,8 @@ our (%generic_msgs, %generic_loc, %specific_msgs, %specific_loc);
 foreach my $k ("envvarparse", "cvar_val"){
     $generic_msgs{"**$k"}=1;
     $specific_msgs{"**$k"}=1;
-    $generic_loc{"**$k"}=":src/util/cvar/mpir_cvars.c";
-    $specific_loc{"**$k"}=":src/util/cvar/mpir_cvars.c";
+    $generic_loc{"**$k"}=":src/util/mpir_cvars.c";
+    $specific_loc{"**$k"}=":src/util/mpir_cvars.c";
 }
 
 # Check for special args
