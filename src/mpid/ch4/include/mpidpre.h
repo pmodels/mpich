@@ -235,7 +235,6 @@ typedef struct MPIDIG_part_rreq {
 typedef struct MPIDIG_part_request {
     uint8_t send_epoch;
     uint8_t recv_epoch;
-    MPIR_Request *peer_req_ptr;
     union {
         MPIDIG_part_sreq_t send;
         MPIDIG_part_rreq_t recv;
@@ -254,6 +253,7 @@ typedef struct MPIDI_part_request {
                                          * Valid also in posted_rreq so that single dequeue
                                          * routine can be used. */
     MPI_Datatype datatype;
+    MPIR_Request *peer_req_ptr;
     union {
     MPIDI_NM_PART_DECL} netmod;
 } MPIDI_part_request_t;

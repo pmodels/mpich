@@ -11,7 +11,7 @@
 static void part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_msg_t * msg_hdr)
 {
     MPIDIG_PART_REQUEST(rreq, u.recv).sdata_size = msg_hdr->data_sz;
-    MPIDIG_PART_REQUEST(rreq, peer_req_ptr) = msg_hdr->sreq_ptr;
+    MPIDI_PART_REQUEST(rreq, peer_req_ptr) = msg_hdr->sreq_ptr;
 }
 
 /* Called when data transfer completes on receiver */
@@ -116,7 +116,7 @@ int MPIDIG_part_cts_target_msg_cb(int handler_id, void *am_hdr, void *data,
     MPIR_Request *part_sreq = msg_hdr->sreq_ptr;
     MPIR_Assert(part_sreq);
 
-    MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr) = msg_hdr->rreq_ptr;
+    MPIDI_PART_REQUEST(part_sreq, peer_req_ptr) = msg_hdr->rreq_ptr;
     MPIDIG_PART_REQUEST(part_sreq, recv_epoch)++;
     mpi_errno = MPIDIG_post_pready(part_sreq);
 
