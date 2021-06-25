@@ -36,5 +36,5 @@ Note the first entry in the enum is 0.
 
 `autogen.sh` runs perl script `maint/extractcvars`, which looks through all .c and .h files in directories listed in `maint/cvardirs`. Both these files need be processed by configure only to replace `@abs_srcdir@`. If we assume it will always be run by `autogen.sh` or it will always run from top src dir, then probably can simplify the process quite a bit.
 
-`maint/extractcvars` generates `src/include/mpir_cvars.h` and `src/util/cvar/mpir_cvars.c`. The former is included by `mpiimpl.h`, thus every file, declares `MPIR_CVAR_...` extern variables. The latter defines MPIR_T_cvar_init/finalize functions that are called by MPI_Init/Finalize. The `MPIR_T_cvar_init` function checks environment variable for each CVAR variable and sets values according to the CVAR data type.
+`maint/extractcvars` generates `src/include/mpir_cvars.h` and `src/util/mpir_cvars.c`. The former is included by `mpiimpl.h`, thus every file, declares `MPIR_CVAR_...` extern variables. The latter defines MPIR_T_cvar_init/finalize functions that are called by MPI_Init/Finalize. The `MPIR_T_cvar_init` function checks environment variable for each CVAR variable and sets values according to the CVAR data type.
 
