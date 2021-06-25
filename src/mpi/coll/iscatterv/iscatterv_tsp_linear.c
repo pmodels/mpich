@@ -74,38 +74,3 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
   fn_fail:
     goto fn_exit;
 }
-
-
-/* Non-blocking linear algorithm for scatterv */
-int MPIR_TSP_Iscatterv_allcomm_linear(const void *sendbuf, const MPI_Aint sendcounts[],
-                                      const MPI_Aint displs[], MPI_Datatype sendtype, void *recvbuf,
-                                      MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                                      MPIR_Comm * comm, MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-    *req = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_ISCATTERV_ALLCOMM_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_ISCATTERV_ALLCOMM_LINEAR);
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* schedule linear algo */
-    mpi_errno =
-        MPIR_TSP_Iscatterv_sched_allcomm_linear(sendbuf, sendcounts, displs, sendtype, recvbuf,
-                                                recvcount, recvtype, root, comm, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_ISCATTERV_ALLCOMM_LINEAR);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}

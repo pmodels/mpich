@@ -57,38 +57,3 @@ int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, MPI_A
   fn_fail:
     goto fn_exit;
 }
-
-
-/* Non-blocking linear algo based neighbor_allgather */
-int MPIR_TSP_Ineighbor_allgather_allcomm_linear(const void *sendbuf, MPI_Aint sendcount,
-                                                MPI_Datatype sendtype, void *recvbuf,
-                                                MPI_Aint recvcount, MPI_Datatype recvtype,
-                                                MPIR_Comm * comm_ptr, MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-    *req = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHER_ALLCOMM_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHER_ALLCOMM_LINEAR);
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* schedule pipelined tree algo */
-    mpi_errno = MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(sendbuf, sendcount, sendtype,
-                                                                  recvbuf, recvcount, recvtype,
-                                                                  comm_ptr, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHER_ALLCOMM_LINEAR);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}

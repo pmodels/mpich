@@ -140,38 +140,3 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
   fn_fail:
     goto fn_exit;
 }
-
-
-/* Non-blocking ring based Allgatherv */
-int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                                    void *recvbuf, const MPI_Aint * recvcounts,
-                                    const MPI_Aint * displs, MPI_Datatype recvtype,
-                                    MPIR_Comm * comm, MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RING);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RING);
-
-    *req = NULL;
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno =
-        MPIR_TSP_Iallgatherv_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                              displs, recvtype, comm, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RING);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}

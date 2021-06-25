@@ -273,38 +273,3 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
   fn_fail:
     goto fn_exit;
 }
-
-
-/* Non-blocking recursive exchange based Reduce_scatter */
-int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
-                                           const MPI_Aint * recvcounts, MPI_Datatype datatype,
-                                           MPI_Op op, MPIR_Comm * comm, int rs_type, int k,
-                                           MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_INTRA_RECEXCH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_INTRA_RECEXCH);
-
-    *req = NULL;
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno =
-        MPIR_TSP_Ireduce_scatter_sched_intra_recexch(sendbuf, recvbuf, recvcounts, datatype,
-                                                     op, comm, rs_type, k, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_INTRA_RECEXCH);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}

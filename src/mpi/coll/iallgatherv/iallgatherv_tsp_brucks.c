@@ -267,37 +267,3 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
   fn_fail:
     goto fn_exit;
 }
-
-/* Non-blocking brucks based Allgatherv */
-int MPIR_TSP_Iallgatherv_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
-                                      MPI_Datatype sendtype, void *recvbuf,
-                                      const MPI_Aint recvcounts[], const MPI_Aint displs[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                      int k, MPIR_Request ** req)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_BRUCKS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_BRUCKS);
-
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-    *req = NULL;
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_TSP_Iallgatherv_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
-                                                        recvcounts, displs, recvtype, comm_ptr,
-                                                        k, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_BRUCKS);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}

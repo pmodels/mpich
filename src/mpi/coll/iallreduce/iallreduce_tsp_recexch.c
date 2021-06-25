@@ -256,37 +256,3 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 
     return mpi_errno;
 }
-
-
-/* Non-blocking recexch based ALLREDUCE */
-int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                      MPIR_Request ** req, int recexch_type, int k)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_RECEXCH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_RECEXCH);
-
-    *req = NULL;
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno =
-        MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count, datatype, op, comm,
-                                                recexch_type, k, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_RECEXCH);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}

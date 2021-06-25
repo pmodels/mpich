@@ -330,37 +330,3 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
   fn_fail:
     goto fn_exit;
 }
-
-/* Non-blocking brucks based Alltoall */
-int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                    MPIR_Comm * comm_ptr, int k, int buffer_per_phase,
-                                    MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-    *req = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_BRUCKS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_BRUCKS);
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* schedule pipelined tree algo */
-    mpi_errno = MPIR_TSP_Ialltoall_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
-                                                      recvcount, recvtype, comm_ptr,
-                                                      k, buffer_per_phase, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_BRUCKS);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}

@@ -186,38 +186,3 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
   fn_fail:
     goto fn_exit;
 }
-
-
-/* Non-blocking scatter followed by recursive exchange allgather  based broadcast */
-int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, MPI_Aint count, MPI_Datatype datatype,
-                                              int root, MPIR_Comm * comm, int scatterv_k,
-                                              int allgatherv_k, MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTERV_ALLGATHERV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTERV_ALLGATHERV);
-
-    *req = NULL;
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* schedule scatter followed by recursive exchange allgather algo */
-    mpi_errno =
-        MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(buffer, count, datatype, root, comm,
-                                                        scatterv_k, allgatherv_k, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTERV_ALLGATHERV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
