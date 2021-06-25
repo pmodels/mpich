@@ -6,6 +6,10 @@
 #ifndef UCX_IMPL_H_INCLUDED
 #define UCX_IMPL_H_INCLUDED
 
+#if UCP_VERSION(UCP_API_MAJOR, UCP_API_MINOR) >= UCP_VERSION(1, 10)
+#define HAVE_UCP_AM_NBX 1
+#endif
+
 #include <mpidimpl.h>
 #include "ucx_types.h"
 #include "mpidch4r.h"
@@ -134,5 +138,16 @@ ucs_status_t MPIDI_UCX_am_handler(void *arg, void *data, size_t length, ucp_ep_h
 void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status);
 /* callback for ucp_am_send_nb, used in MPIDI_NM_am_send_hdr */
 void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status);
+
+#ifdef HAVE_UCP_AM_NBX
+/* am handler for message sent by ucp_am_send_nbx */
+ucs_status_t MPIDI_UCX_am_nbx_handler(void *arg, const void *header, size_t header_length,
+                                      void *data, size_t length, const ucp_am_recv_param_t * param);
+/* callback for ucp_am_send_nbx */
+void MPIDI_UCX_am_isend_callback_nbx(void *request, ucs_status_t status, void *user_data);
+/* callback for ucp_am_recv_data_nbx */
+void MPIDI_UCX_am_recv_callback_nbx(void *request, ucs_status_t status, size_t length,
+                                    void *user_data);
+#endif
 
 #endif /* UCX_IMPL_H_INCLUDED */
