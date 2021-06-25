@@ -198,8 +198,6 @@ def dump_allcomm_sched_auto(name):
 
     def dump_cnt_algo_sched(algo, commkind):
         G.out.append("MPII_SCHED_CREATE_SCHED_P();")
-        if "allcomm" in algo:
-            commkind = "allcomm"
         add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo['name'], sched_params))
         dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s, *sched_p);" % (Name, commkind, algo['name'], args))
 
@@ -208,18 +206,19 @@ def dump_allcomm_sched_auto(name):
         if commkind == "inter" and re.match(r'(scan|exscan|neighbor_)', name):
             continue
         for algo in G.algos[func_name + "-" + commkind]:
+            use_commkind = commkind
             if "allcomm" in algo:
                 if commkind == "intra":
-                    commkind = "allcomm"
+                    use_commkind = "allcomm"
                 else:
                     # skip inter since it is covered already
                     continue
-            G.out.append("case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_%s_%s_%s:" % (Name, commkind, algo['name']))
+            G.out.append("case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_%s_%s_%s:" % (Name, use_commkind, algo['name']))
             G.out.append("INDENT")
             if RE.match(r'(gentran|tsp)_(.+)', algo['name']):
-                dump_cnt_algo_tsp(algo, commkind, RE.m.group(2))
+                dump_cnt_algo_tsp(algo, use_commkind, RE.m.group(2))
             else:
-                dump_cnt_algo_sched(algo, commkind)
+                dump_cnt_algo_sched(algo, use_commkind)
             G.out.append("break;");
             G.out.append("DEDENT")
             G.out.append("")
