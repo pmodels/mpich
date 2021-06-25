@@ -123,6 +123,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 
 #define MPIDI_OFI_NUM_CQ_ENTRIES 8
+/* MPICH requires at least 32 bits of space in the completion queue data field. */
+#define MPIDI_OFI_MIN_CQ_DATA_SIZE 4
 
 /* Typedefs */
 enum {
