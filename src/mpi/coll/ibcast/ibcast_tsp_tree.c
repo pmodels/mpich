@@ -80,37 +80,3 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
   fn_fail:
     goto fn_exit;
 }
-
-
-/* Non-blocking tree based broadcast */
-int MPIR_TSP_Ibcast_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                               MPIR_Comm * comm, MPIR_Request ** req, int tree_type, int k,
-                               int chunk_size)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_INTRA_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_INTRA_TREE);
-
-    *req = NULL;
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* schedule pipelined tree algo */
-    mpi_errno = MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm,
-                                                 tree_type, k, chunk_size, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_INTRA_TREE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}

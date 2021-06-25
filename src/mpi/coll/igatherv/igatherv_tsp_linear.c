@@ -87,37 +87,3 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
   fn_fail:
     goto fn_exit;
 }
-
-/* Non-blocking linear algorithm for gatherv */
-int MPIR_TSP_Igatherv_allcomm_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                                     void *recvbuf, const MPI_Aint recvcounts[],
-                                     const MPI_Aint displs[], MPI_Datatype recvtype, int root,
-                                     MPIR_Comm * comm, MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-    *req = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IGATHERV_ALLCOMM_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IGATHERV_ALLCOMM_LINEAR);
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* schedule linear algo */
-    mpi_errno =
-        MPIR_TSP_Igatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf,
-                                               recvcounts, displs, recvtype, root, comm, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IGATHERV_ALLCOMM_LINEAR);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}

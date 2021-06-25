@@ -74,39 +74,3 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
   fn_fail:
     goto fn_exit;
 }
-
-
-/* Non-blocking inplace based ALLTOALLV */
-int MPIR_TSP_Ialltoallv_intra_inplace(const void *sendbuf, const MPI_Aint sendcounts[],
-                                      const MPI_Aint sdispls[], MPI_Datatype sendtype,
-                                      void *recvbuf, const MPI_Aint recvcounts[],
-                                      const MPI_Aint rdispls[], MPI_Datatype recvtype,
-                                      MPIR_Comm * comm, MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-    *req = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_INPLACE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_INPLACE);
-
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno =
-        MPIR_TSP_Ialltoallv_sched_intra_inplace(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
-                                                recvcounts, rdispls, recvtype, comm, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_INPLACE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}

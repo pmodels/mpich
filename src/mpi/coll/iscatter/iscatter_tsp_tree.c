@@ -175,39 +175,3 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
   fn_fail:
     goto fn_exit;
 }
-
-
-/* Non-blocking tree based scatter */
-int MPIR_TSP_Iscatter_intra_tree(const void *sendbuf, MPI_Aint sendcount,
-                                 MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                 MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                 MPIR_Request ** req, int k)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_ISCATTER_INTRA_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_ISCATTER_INTRA_TREE);
-
-    *req = NULL;
-
-    /* generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* schedule tree algo */
-    mpi_errno = MPIR_TSP_Iscatter_sched_intra_tree(sendbuf, sendcount, sendtype,
-                                                   recvbuf, recvcount, recvtype,
-                                                   root, comm, k, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_ISCATTER_INTRA_TREE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}

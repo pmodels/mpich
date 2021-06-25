@@ -148,38 +148,3 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, MPI_Aint sendc
   fn_fail:
     goto fn_exit;
 }
-
-/* Scattered sliding window based Alltoall */
-int MPIR_TSP_Ialltoall_intra_scattered(const void *sendbuf, MPI_Aint sendcount,
-                                       MPI_Datatype sendtype, void *recvbuf,
-                                       MPI_Aint recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm * comm, int batch_size, int bblock,
-                                       MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_TSP_sched_t sched;
-    *req = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_SCATTERED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_SCATTERED);
-
-    /* Generate the schedule */
-    mpi_errno = MPIR_TSP_sched_create(&sched, false);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno =
-        MPIR_TSP_Ialltoall_sched_intra_scattered(sendbuf, sendcount, sendtype,
-                                                 recvbuf, recvcount, recvtype, comm, batch_size,
-                                                 bblock, sched);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_SCATTERED);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
