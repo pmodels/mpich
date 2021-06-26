@@ -6,6 +6,9 @@
 #include "mpidimpl.h"
 #include "ucx_impl.h"
 
+/* Registered with ucp_worker_set_am_handler, handles message sent from
+ * ucp_am_send_np.
+ */
 ucs_status_t MPIDI_UCX_am_handler(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
                                   unsigned flags)
 {
