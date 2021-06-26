@@ -127,6 +127,12 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_target(int rank, MPIR_Win *
 
 #define MPIDI_UCX_WIN_AV_TO_EP(av, vci, vci_target) MPIDI_UCX_AV((av)).dest[vci][vci_target]
 
+/* am handler for message sent by ucp_am_send_nb */
 ucs_status_t MPIDI_UCX_am_handler(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
                                   unsigned flags);
+/* callback for ucp_am_send_nb, used in MPIDI_NM_am_isend */
+void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status);
+/* callback for ucp_am_send_nb, used in MPIDI_NM_am_send_hdr */
+void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status);
+
 #endif /* UCX_IMPL_H_INCLUDED */
