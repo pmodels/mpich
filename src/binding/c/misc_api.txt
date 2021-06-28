@@ -203,3 +203,17 @@ MPIX_Query_cuda_support:
 
     return is_supported;
 }
+
+MPIX_Query_ze_support:
+    .desc: Returns whether ZE (Intel GPU) is supported
+    .impl: direct
+    .skip: global_cs, Errors
+{
+    int is_supported = 0;
+    int mpi_errno;
+
+    mpi_errno = PMPIX_GPU_query_support(MPIX_GPU_SUPPORT_ZE, &is_supported);
+    assert(mpi_errno);
+
+    return is_supported;
+}
