@@ -9,7 +9,7 @@
       Commit message is of the form: `module: short description` 
       Commit message explains what's in the commit.
 * [ ] **Passes All Tests**
-      Whitespace checker. Warnings test. Additional tests via comments.
+      Whitespace checker. Warnings test. Additional tests via comments ([Testing Pull Requests via Jenkins](https://github.com/intel-innersource/libraries.runtimes.hpc.mpi.mpich-aurora/wiki/Testing-Pull-Requests-via-Jenkins)).
 * [ ] **Contribution Agreement**
       For non-Argonne authors, check [contribution agreement](http://www.mpich.org/documentation/contributor-docs/). 
       If necessary, request an explicit comment from your companies PR approval manager.
