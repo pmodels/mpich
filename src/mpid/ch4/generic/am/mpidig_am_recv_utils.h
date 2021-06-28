@@ -43,6 +43,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Re
     if (in_data_sz > max_data_size) {
         rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(max_data_size, in_data_sz);
     }
+
+    if (MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb) {
+        MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
+    }
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_sz,
@@ -61,6 +65,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_s
     }
 
     MPIDIG_recv_set_buffer_attr(rreq);
+
+    if (MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb) {
+        MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
+    }
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_finish(MPIR_Request * rreq)
@@ -272,6 +280,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
             return 0;
         }
     }
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_recv_initialized(MPIR_Request * rreq)
+{
+    return MPIDIG_REQUEST(rreq, req->recv_async).recv_type != MPIDIG_RECV_NONE;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_set_data_copy_cb(MPIR_Request * rreq,
+                                                           MPIDIG_recv_data_copy_cb cb)
+{
+    MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb = cb;
 }
 
 /* internal routines */

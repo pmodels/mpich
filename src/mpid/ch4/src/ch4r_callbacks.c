@@ -140,7 +140,7 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(match_req, datatype));
     MPIR_Object_release_ref(rreq, &in_use);
-    MPID_Request_complete(rreq);
+    /* MPID_Request_complete(rreq); */
     MPID_Request_complete(match_req);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_HANDLE_UNEXP_CMPL);
@@ -268,20 +268,17 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
          * set to the recv side datatype and count when it is matched */
         MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
         MPIDIG_REQUEST(rreq, count) = hdr->data_sz;
-        if (hdr->data_sz) {
-            if (in_data_sz) {
-                /* If there is inline data, we allocate unexpected buffer */
-                MPIR_Assert(in_data_sz <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE);
-                mpi_errno =
-                    MPIDU_genq_private_pool_alloc_cell(MPIDI_global.unexp_pack_buf_pool, &pack_buf);
-                MPIR_Assert(pack_buf);
-                MPIDIG_REQUEST(rreq, buffer) = pack_buf;
-            } else {
-                /* if the SEND expect to contain data, but there is no inline data, mark the recv
-                 * request as not ready. */
-                MPIDIG_REQUEST(rreq, buffer) = NULL;
-                MPIDIG_REQUEST(rreq, recv_ready) = false;
-            }
+        /* Note the hdr->data_sz means how much data the incoming AM message has, the in_data_sz is
+         * how much data there is along with the incoming header. The sender may have decided to
+         * send the header and the data separately (for example in RNDV protocol) which would result
+         * in in_data_sz == 0 and hdr->data_sz != 0. */
+        if (in_data_sz) {
+            /* If there is inline data, we allocate unexpected buffer */
+            MPIR_Assert(in_data_sz <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE);
+            mpi_errno =
+                MPIDU_genq_private_pool_alloc_cell(MPIDI_global.unexp_pack_buf_pool, &pack_buf);
+            MPIR_Assert(pack_buf);
+            MPIDIG_REQUEST(rreq, buffer) = pack_buf;
         } else {
             /* The SEND is a zero byte messeage */
             MPIDIG_REQUEST(rreq, buffer) = NULL;
@@ -298,8 +295,38 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
             MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
         } else {
-            if (MPIDIG_REQUEST(rreq, recv_ready)) {
+            /* this is unexpected EAGER */
+            if (MPIDIG_REQUEST(rreq, buffer) || hdr->data_sz == 0) {
+                /* if we allocated unexp buffer (which mean we have inline data), or if the message
+                 * is a 0 byte message. Go ahead init recv */
+
+                /* marking the request busy to prevent another thread touching it before transport
+                 * finishes and calls the recv_target_cmpl_cb, or transport setup the data_copy_cb.
+                 * */
                 MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_BUSY;
+                MPIDIG_REQUEST(rreq, req->seq_no) =
+                    MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                                (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
+                                 MPIDIG_REQUEST(rreq, req->seq_no),
+                                 MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
+                MPIDIG_recv_type_init(hdr->data_sz, rreq);
+            } else {
+                /* We did not allocate unexp buffer because there is no inline data for a non-zero
+                 * SEND message. The data copy will be triggered when matching recv is posted, we
+                 * only need to set the data_copy_cb provided by the netmod. */
+                MPIDIG_recv_data_copy_cb data_copy_cb = NULL;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+                if (is_local) {
+                    data_copy_cb = MPIDI_SHM_am_get_data_copy_cb();
+                } else {
+#endif
+                    data_copy_cb = MPIDI_NM_am_get_data_copy_cb();
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+                }
+#endif
+                MPIDIG_recv_set_data_copy_cb(rreq, data_copy_cb);
+
             }
         }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -308,18 +335,6 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
         MPIDIG_enqueue_request(rreq, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
         MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-
-        /* at this point, we have created and enqueued the unexpected request. If the request is
-         * ready for recv, we increase the seq_no and init the recv */
-        if (MPIDIG_REQUEST(rreq, recv_ready)) {
-            MPIDIG_REQUEST(rreq, req->seq_no) =
-                MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
-                             MPIDIG_REQUEST(rreq, req->seq_no),
-                             MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
-            MPIDIG_recv_type_init(hdr->data_sz, rreq);
-        }
     } else {
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "posted req %p handle=0x%x", rreq, rreq->handle));
@@ -337,7 +352,6 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
             MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
-            MPIDIG_recv_type_init(hdr->data_sz, rreq);
             do_cts = true;
         } else {
             MPIDIG_REQUEST(rreq, req->seq_no) =
@@ -346,8 +360,8 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
                             (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
                              MPIDIG_REQUEST(rreq, req->seq_no),
                              MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
-            MPIDIG_recv_type_init(hdr->data_sz, rreq);
         }
+        MPIDIG_recv_type_init(hdr->data_sz, rreq);
     }
 
     if (hdr->flags & MPIDIG_AM_SEND_FLAGS_SYNC) {
