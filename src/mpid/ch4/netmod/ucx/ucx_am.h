@@ -250,4 +250,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * rreq)
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX MPIDIG_recv_data_copy_cb MPIDI_NM_am_get_data_copy_cb(void)
+{
+    return NULL;
+}
+
 #endif /* UCX_AM_H_INCLUDED */

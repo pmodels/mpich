@@ -46,6 +46,9 @@ Non Native API:
   am_isend_reply : int
       NM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
      SHM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
+  am_get_data_copy_cb : MPIDIG_recv_data_copy_cb
+      NM*: void
+     SHM*: void
   am_recv: int
       NM*: rreq
      SHM*: rreq

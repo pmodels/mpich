@@ -134,4 +134,9 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_am_check_eager(MPI_Aint am_hdr_sz, MPI_A
     return (am_hdr_sz + data_sz) <= MPIDI_POSIX_am_eager_limit();
 }
 
+MPL_STATIC_INLINE_PREFIX MPIDIG_recv_data_copy_cb MPIDI_SHM_am_get_data_copy_cb(void)
+{
+    return NULL;
+}
+
 #endif /* SHM_AM_H_INCLUDED */
