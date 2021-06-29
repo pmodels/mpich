@@ -4,9 +4,7 @@
  */
 
 #include "mpiimpl.h"
-
-#include "tsp_gentran.h"
-#include "gentran_utils.h"
+#include "tsp_impl.h"
 
 int MPIR_Sched_cb_free_buf(MPIR_Comm * comm, int tag, void *state)
 {
@@ -73,7 +71,7 @@ void MPIR_Persist_coll_free_cb(MPIR_Request * request)
     if (request->u.persist_coll.sched_type == MPIR_SCHED_NORMAL) {
         MPIR_Sched_free(request->u.persist_coll.sched);
     } else if (request->u.persist_coll.sched_type == MPIR_SCHED_GENTRAN) {
-        MPII_Genutil_sched_free(request->u.persist_coll.sched);
+        MPIR_TSP_sched_free(request->u.persist_coll.sched);
     } else {
         /* TODO: proper error return */
         MPIR_Assert(0);

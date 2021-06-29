@@ -230,9 +230,9 @@ cvars:
         sched_smp                                  - Force smp algorithm
         sched_scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
         sched_scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
-        gentran_tree                               - Force Generic Transport Tree algorithm
-        gentran_scatterv_recexch_allgatherv        - Force Generic Transport Scatterv followed by Recursive Exchange Allgatherv algorithm
-        gentran_ring                               - Force Generic Transport Ring algorithm
+        tsp_tree                               - Force Generic Transport Tree algorithm
+        tsp_scatterv_recexch_allgatherv        - Force Generic Transport Scatterv followed by Recursive Exchange Allgatherv algorithm
+        tsp_ring                               - Force Generic Transport Ring algorithm
 
     - name        : MPIR_CVAR_IBCAST_SCATTERV_KVAL
       category    : COLLECTIVE
@@ -318,7 +318,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_binomial     - Force binomial algorithm
-        gentran_tree       - Force genetric transport based tree algorithm
+        tsp_tree       - Force genetric transport based tree algorithm
 
     - name        : MPIR_CVAR_IGATHER_TREE_KVAL
       category    : COLLECTIVE
@@ -382,7 +382,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear         - Force linear algorithm
-        gentran_linear       - Force generic transport based linear algorithm
+        tsp_linear       - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_IGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -396,7 +396,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear - Force linear algorithm
-        gentran_linear - Force generic transport based linear algorithm
+        tsp_linear - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE
       category    : COLLECTIVE
@@ -448,7 +448,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_binomial     - Force binomial algorithm
-        gentran_tree       - Force genetric transport based tree algorithm
+        tsp_tree       - Force genetric transport based tree algorithm
 
     - name        : MPIR_CVAR_ISCATTER_TREE_KVAL
       category    : COLLECTIVE
@@ -512,7 +512,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear    - Force linear algorithm
-        gentran_linear  - Force generic transport based linear algorithm
+        tsp_linear  - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_ISCATTERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -526,7 +526,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear - Force linear algorithm
-        gentran_linear - Force generic transport based linear algorithm
+        tsp_linear - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE
       category    : COLLECTIVE
@@ -614,10 +614,10 @@ cvars:
         sched_ring               - Force ring algorithm
         sched_brucks             - Force brucks algorithm
         sched_recursive_doubling - Force recursive doubling algorithm
-        gentran_ring       - Force generic transport ring algorithm
-        gentran_brucks     - Force generic transport based brucks algorithm
-        gentran_recexch_doubling - Force generic transport recursive exchange with neighbours doubling in distance in each phase
-        gentran_recexch_halving  - Force generic transport recursive exchange with neighbours halving in distance in each phase
+        tsp_ring       - Force generic transport ring algorithm
+        tsp_brucks     - Force generic transport based brucks algorithm
+        tsp_recexch_doubling - Force generic transport recursive exchange with neighbours doubling in distance in each phase
+        tsp_recexch_halving  - Force generic transport recursive exchange with neighbours halving in distance in each phase
 
     - name        : MPIR_CVAR_IALLGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -705,10 +705,10 @@ cvars:
         sched_brucks             - Force brucks algorithm
         sched_recursive_doubling - Force recursive doubling algorithm
         sched_ring               - Force ring algorithm
-        gentran_recexch_doubling - Force generic transport recursive exchange with neighbours doubling in distance in each phase
-        gentran_recexch_halving  - Force generic transport recursive exchange with neighbours halving in distance in each phase
-        gentran_ring             - Force generic transport ring algorithm
-        gentran_brucks           - Force generic transport based brucks algorithm
+        tsp_recexch_doubling - Force generic transport recursive exchange with neighbours doubling in distance in each phase
+        tsp_recexch_halving  - Force generic transport recursive exchange with neighbours halving in distance in each phase
+        tsp_ring             - Force generic transport ring algorithm
+        tsp_brucks           - Force generic transport based brucks algorithm
 
     - name        : MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -804,9 +804,9 @@ cvars:
         sched_inplace           - Force inplace algorithm
         sched_pairwise          - Force pairwise algorithm
         sched_permuted_sendrecv - Force permuted sendrecv algorithm
-        gentran_ring            - Force generic transport based ring algorithm
-        gentran_brucks          - Force generic transport based brucks algorithm
-        gentran_scattered       - Force generic transport based scattered algorithm
+        tsp_ring            - Force generic transport based ring algorithm
+        tsp_brucks          - Force generic transport based brucks algorithm
+        tsp_scattered       - Force generic transport based scattered algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -861,9 +861,9 @@ cvars:
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_blocked           - Force blocked algorithm
         sched_inplace           - Force inplace algorithm
-        gentran_scattered       - Force generic transport based scattered algorithm
-        gentran_blocked         - Force generic transport blocked algorithm
-        gentran_inplace         - Force generic transport inplace algorithm
+        tsp_scattered       - Force generic transport based scattered algorithm
+        tsp_blocked         - Force generic transport blocked algorithm
+        tsp_inplace         - Force generic transport inplace algorithm
 
     - name        : MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -939,8 +939,8 @@ cvars:
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_blocked           - Force blocked algorithm
         sched_inplace           - Force inplace algorithm
-        gentran_blocked   - Force generic transport based blocked algorithm
-        gentran_inplace   - Force generic transport based inplace algorithm
+        tsp_blocked   - Force generic transport based blocked algorithm
+        tsp_inplace   - Force generic transport based inplace algorithm
 
     - name        : MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1079,8 +1079,8 @@ cvars:
         sched_smp                   - Force smp algorithm
         sched_binomial              - Force binomial algorithm
         sched_reduce_scatter_gather - Force reduce scatter gather algorithm
-        gentran_tree                - Force Generic Transport Tree
-        gentran_ring                - Force Generic Transport Ring
+        tsp_tree                - Force Generic Transport Tree
+        tsp_ring                - Force Generic Transport Ring
 
     - name        : MPIR_CVAR_IREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1219,11 +1219,11 @@ cvars:
         sched_smp                        - Force smp algorithm
         sched_recursive_doubling         - Force recursive doubling algorithm
         sched_reduce_scatter_allgather   - Force reduce scatter allgather algorithm
-        gentran_recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
-        gentran_recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
-        gentran_tree                     - Force generic transport tree algorithm
-        gentran_ring                     - Force generic transport ring algorithm
-        gentran_recexch_reduce_scatter_recexch_allgatherv  - Force generic transport recursive exchange with reduce scatter and allgatherv
+        tsp_recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
+        tsp_recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
+        tsp_tree                     - Force generic transport tree algorithm
+        tsp_ring                     - Force generic transport ring algorithm
+        tsp_recexch_reduce_scatter_recexch_allgatherv  - Force generic transport recursive exchange with reduce scatter and allgatherv
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1303,7 +1303,7 @@ cvars:
         sched_recursive_doubling - Force recursive doubling algorithm
         sched_pairwise           - Force pairwise algorithm
         sched_recursive_halving  - Force recursive halving algorithm
-        gentran_recexch          - Force generic transport recursive exchange algorithm
+        tsp_recexch          - Force generic transport recursive exchange algorithm
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1372,7 +1372,7 @@ cvars:
         sched_recursive_doubling - Force recursive doubling algorithm
         sched_pairwise           - Force pairwise algorithm
         sched_recursive_halving  - Force recursive halving algorithm
-        gentran_recexch          - Force generic transport recursive exchange algorithm
+        tsp_recexch          - Force generic transport recursive exchange algorithm
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1414,7 +1414,7 @@ cvars:
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_smp                  - Force smp algorithm
         sched_recursive_doubling   - Force recursive doubling algorithm
-        gentran_recursive_doubling - Force generic transport recursive doubling algorithm
+        tsp_recursive_doubling - Force generic transport recursive doubling algorithm
 
     - name        : MPIR_CVAR_EXSCAN_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -1478,7 +1478,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear    - Force linear algorithm
-        gentran_linear  - Force generic transport based linear algorithm
+        tsp_linear  - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1492,7 +1492,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear    - Force linear algorithm
-        gentran_linear  - Force generic transport based linear algorithm
+        tsp_linear  - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLGATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -1530,7 +1530,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
-        gentran_linear        - Force generic transport based linear algorithm
+        tsp_linear        - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1544,7 +1544,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
-        gentran_linear        - Force generic transport based linear algorithm
+        tsp_linear        - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALL_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -1582,7 +1582,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
-        gentran_linear        - Force generic transport based linear algorithm
+        tsp_linear        - Force generic transport based linear algorithm
 
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALL_INTER_ALGORITHM
@@ -1597,7 +1597,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
-        gentran_linear        - Force generic transport based linear algorithm
+        tsp_linear        - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLV_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -1635,7 +1635,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
-        gentran_linear  - Force generic transport based linear algorithm
+        tsp_linear  - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1649,7 +1649,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
-        gentran_linear  - Force generic transport based linear algorithm
+        tsp_linear  - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -1687,7 +1687,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
-        gentran_linear        - Force generic transport based linear algorithm
+        tsp_linear        - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1701,7 +1701,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
-        gentran_linear        - Force generic transport based linear algorithm
+        tsp_linear        - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE
       category    : COLLECTIVE

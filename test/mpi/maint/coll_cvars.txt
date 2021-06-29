@@ -150,12 +150,12 @@ algorithms:
             sched_ring
             sched_brucks
             sched_recursive_doubling
-            gentran_ring
-            gentran_brucks
+            tsp_ring
+            tsp_brucks
                 .MPIR_CVAR_IALLGATHER_BRUCKS_KVAL=2,3,4
-            gentran_recexch_doubling
+            tsp_recexch_doubling
                 .MPIR_CVAR_IALLGATHER_RECEXCH_KVAL=2,3,4
-            gentran_recexch_halving
+            tsp_recexch_halving
                 .MPIR_CVAR_IALLGATHER_RECEXCH_KVAL=2,3,4
     allgatherv:
         inter-blocking:
@@ -170,12 +170,12 @@ algorithms:
             sched_brucks
             sched_recursive_doubling
             sched_ring
-            gentran_recexch_doubling
+            tsp_recexch_doubling
                 .MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL=2,3,4
-            gentran_recexch_halving
+            tsp_recexch_halving
                 .MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL=2,3,4
-            gentran_ring
-            gentran_brucks
+            tsp_ring
+            tsp_brucks
                 .MPIR_CVAR_IALLGATHERV_BRUCKS_KVAL=2,3,4
     allreduce:
         inter-blocking:
@@ -195,14 +195,14 @@ algorithms:
             sched_smp
             sched_recursive_doubling
             sched_reduce_scatter_allgather
-            gentran_recexch_single_buffer
-            gentran_recexch_multiple_buffer
-            gentran_tree
+            tsp_recexch_single_buffer
+            tsp_recexch_multiple_buffer
+            tsp_tree
                 .MPIR_CVAR_IALLREDUCE_TREE_TYPE=kary,knomial_1,knomial_2
                 .MPIR_CVAR_IALLREDUCE_TREE_KVAL=2,3,4
                 .MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096
-            gentran_ring
-            gentran_recexch_reduce_scatter_recexch_allgatherv
+            tsp_ring
+            tsp_recexch_reduce_scatter_recexch_allgatherv
                 .MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=2,3,4
     alltoall:
         inter-blocking:
@@ -219,11 +219,11 @@ algorithms:
             sched_inplace
             sched_pairwise
             sched_permuted_sendrecv
-            gentran_ring
-            gentran_brucks
+            tsp_ring
+            tsp_brucks
                 .MPIR_CVAR_IALLTOALL_BRUCKS_KVAL=2,3,4
                 .MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=0,1
-            gentran_scattered
+            tsp_scattered
                 .MPIR_CVAR_IALLTOALL_SCATTERED_BATCH_SIZE=1,2,4
                 .MPIR_CVAR_IALLTOALL_SCATTERED_OUTSTANDING_TASKS=4,8
     alltoallv:
@@ -237,11 +237,11 @@ algorithms:
         intra-nonblocking:
             sched_blocked
             sched_inplace
-            gentran_scattered
+            tsp_scattered
                 .MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE=1,2,4
                 .MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS=4,8
-            gentran_blocked
-            gentran_inplace
+            tsp_blocked
+            tsp_inplace
     alltoallw:
         inter-blocking:
             pairwise_exchange
@@ -253,8 +253,8 @@ algorithms:
         intra-nonblocking:
             sched_blocked
             sched_inplace
-            gentran_blocked
-            gentran_inplace
+            tsp_blocked
+            tsp_inplace
     barrier:
         inter-blocking:
             bcast
@@ -264,7 +264,7 @@ algorithms:
             dissemination
         intra-nonblocking:
             sched_recursive_doubling
-            gentran_recexch
+            tsp_recexch
     bcast:
         inter-blocking:
             remote_send_local_bcast
@@ -286,14 +286,14 @@ algorithms:
             sched_smp
             sched_scatter_recursive_doubling_allgather
             sched_scatter_ring_allgather
-            gentran_tree
+            tsp_tree
                 .MPIR_CVAR_IBCAST_TREE_TYPE=kary,knomial_1,knomial_2
                 .MPIR_CVAR_IBCAST_TREE_KVAL=3
                 .MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE=4096
-            gentran_scatterv_recexch_allgatherv
+            tsp_scatterv_recexch_allgatherv
                 .MPIR_CVAR_IBCAST_SCATTERV_KVAL=3
                 .MPIR_CVAR_IBCAST_ALLGATHER_RECEXCH=3
-            gentran_ring
+            tsp_ring
                 .MPIR_CVAR_IBCAST_RING_CHUNK_SIZE=4096
     exscan:
         intra-blocking:
@@ -311,7 +311,7 @@ algorithms:
             binomial
         intra-nonblocking:
             sched_binomial
-            gentran_tree
+            tsp_tree
                 .MPIR_CVAR_IGATHER_TREE_KVAL=2,3,4
     gatherv:
         inter-blocking:
@@ -322,42 +322,42 @@ algorithms:
             linear
         intra-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear
     neighbor_allgather:
         inter-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear
         intra-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear
     neighbor_allgatherv:
         inter-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear
         intra-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear
     neighbor_alltoall:
         inter-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear
         intra-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear
     neighbor_alltoallv:
         inter-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear
         intra-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear
     neighbor_alltoallw:
         inter-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear
         intra-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear
     reduce:
         inter-blocking:
             local_reduce_remote_send
@@ -377,11 +377,11 @@ algorithms:
             sched_smp
             sched_binomial
             sched_reduce_scatter_gather
-            gentran_tree
+            tsp_tree
                 .MPIR_CVAR_IREDUCE_TREE_TYPE=kary,knomial_1,knomial_2
                 .MPIR_CVAR_IREDUCE_TREE_KVAL=3
                 .MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096
-            gentran_ring
+            tsp_ring
                 .MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE=4096
     reduce_scatter:
         inter-blocking:
@@ -397,7 +397,7 @@ algorithms:
             sched_pairwise
             sched_recursive_halving
             sched_recursive_doubling
-            gentran_recexch
+            tsp_recexch
                 .MPIR_CVAR_IREDUCE_SCATTER_RECEXCH_KVAL=2,3,4
     reduce_scatter_block:
         inter-blocking:
@@ -414,7 +414,7 @@ algorithms:
             sched_pairwise
             sched_recursive_halving
             sched_recursive_doubling
-            gentran_recexch
+            tsp_recexch
                 .MPIR_CVAR_IREDUCE_SCATTER_BLOCK_RECEXCH_KVAL=2,3,4
     scan:
         intra-blocking:
@@ -423,7 +423,7 @@ algorithms:
         intra-nonblocking:
             sched_smp
             sched_recursive_doubling
-            gentran_recursive_doubling
+            tsp_recursive_doubling
     scatter:
         inter-blocking:
             linear
@@ -435,7 +435,7 @@ algorithms:
             binomial
         intra-nonblocking:
             sched_binomial
-            gentran_tree
+            tsp_tree
                 .MPIR_CVAR_ISCATTER_TREE_KVAL=2,3,4
     scatterv:
         inter-blocking:
@@ -446,4 +446,4 @@ algorithms:
             linear
         intra-nonblocking:
             sched_linear
-            gentran_linear
+            tsp_linear

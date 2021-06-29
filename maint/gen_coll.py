@@ -20,7 +20,6 @@ def main():
     G.prototypes_hash = {}
     G.prototypes = []
     G.out.append("#include \"mpiimpl.h\"")
-    G.out.append("#include \"tsp_prototypes.h\"")
     G.out.append("#include \"iallgatherv/iallgatherv.h\"")
     for a in coll_names:
         dump_coll(a, "blocking")
@@ -193,13 +192,11 @@ def dump_allcomm_sched_auto(name):
         if 'extra_params' in algo:
             algo_args += ", " + get_algo_extra_args(algo, "csel")
             algo_params += ", " + get_algo_extra_params(algo)
-        add_prototype("int MPIR_TSP_%s_sched_%s_%s(%s, void *sched)" % (Name, commkind, algo_name, algo_params))
+        add_prototype("int MPIR_TSP_%s_sched_%s_%s(%s, MPIR_TSP_sched_t sched)" % (Name, commkind, algo_name, algo_params))
         dump_split(3, "mpi_errno = MPIR_TSP_%s_sched_%s_%s(%s, *sched_p);" % (Name, commkind, algo_name, algo_args))
 
     def dump_cnt_algo_sched(algo, commkind):
         G.out.append("MPII_SCHED_CREATE_SCHED_P();")
-        if "allcomm" in algo:
-            commkind = "allcomm"
         add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo['name'], sched_params))
         dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s, *sched_p);" % (Name, commkind, algo['name'], args))
 
@@ -208,18 +205,19 @@ def dump_allcomm_sched_auto(name):
         if commkind == "inter" and re.match(r'(scan|exscan|neighbor_)', name):
             continue
         for algo in G.algos[func_name + "-" + commkind]:
+            use_commkind = commkind
             if "allcomm" in algo:
                 if commkind == "intra":
-                    commkind = "allcomm"
+                    use_commkind = "allcomm"
                 else:
                     # skip inter since it is covered already
                     continue
-            G.out.append("case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_%s_%s_%s:" % (Name, commkind, algo['name']))
+            G.out.append("case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_%s_%s_%s:" % (Name, use_commkind, algo['name']))
             G.out.append("INDENT")
-            if RE.match(r'(gentran|tsp)_(.+)', algo['name']):
-                dump_cnt_algo_tsp(algo, commkind, RE.m.group(2))
+            if RE.match(r'(tsp)_(.+)', algo['name']):
+                dump_cnt_algo_tsp(algo, use_commkind, RE.m.group(2))
             else:
-                dump_cnt_algo_sched(algo, commkind)
+                dump_cnt_algo_sched(algo, use_commkind)
             G.out.append("break;");
             G.out.append("DEDENT")
             G.out.append("")
@@ -345,7 +343,7 @@ def dump_sched_impl(name):
                 if 'restrictions' in algo:
                     dump_fallback(algo)
                     need_fallback = True
-                if RE.match(r'(gentran|auto)_(.+)', algo['name']):
+                if RE.match(r'(tsp)_(.+)', algo['name']):
                     dump_algo_tsp(algo, commkind, RE.m.group(2))
                 else:
                     dump_algo_sched(algo, commkind)
@@ -660,6 +658,7 @@ def dump_prototypes(f, prototypes):
             print(l, file=Out)
         print("#ifndef COLL_ALGOS_H_INCLUDED", file=Out)
         print("#define COLL_ALGOS_H_INCLUDED", file=Out)
+        print("", file=Out)
         for l in prototypes:
             lines = split_line_with_break(l + ';', '', 80)
             for l2 in lines:

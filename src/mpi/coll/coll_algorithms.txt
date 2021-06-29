@@ -63,14 +63,14 @@ ibcast-intra:
     sched_scatter_recursive_doubling_allgather
         restrictions: power-of-two
     sched_scatter_ring_allgather
-    gentran_tree
+    tsp_tree
         extra_params: tree_type, k, chunk_size
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE
-    gentran_scatterv_recexch_allgatherv
+    tsp_scatterv_recexch_allgatherv
         func_name: scatterv_allgatherv
         extra_params: scatterv_k, allgatherv_k
         cvar_params: SCATTERV_KVAL, ALLGATHERV_RECEXCH_KVAL
-    gentran_ring
+    tsp_ring
         func_name: tree
         extra_const_params: tree_type=MPIR_TREE_TYPE_KARY, k=1
         extra_params: chunk_size
@@ -87,7 +87,7 @@ gather-inter:
     local_gather_remote_send
 igather-intra:
     sched_binomial
-    gentran_tree
+    tsp_tree
         extra_params: k
         cvar_params: TREE_KVAL
 igather-inter:
@@ -103,12 +103,12 @@ gatherv-inter:
 igatherv-intra:
     sched_linear
         allcomm: 1
-    gentran_linear
+    tsp_linear
         allcomm: 1
 igatherv-inter:
     sched_linear
         allcomm: 1
-    gentran_linear
+    tsp_linear
         allcomm: 1
 
 scatter-intra:
@@ -118,7 +118,7 @@ scatter-inter:
     remote_send_local_scatter
 iscatter-intra:
     sched_binomial
-    gentran_tree
+    tsp_tree
         extra_params: k
         cvar_params: TREE_KVAL
 iscatter-inter:
@@ -134,12 +134,12 @@ scatterv-inter:
 iscatterv-intra:
     sched_linear
         allcomm: 1
-    gentran_linear
+    tsp_linear
         allcomm: 1
 iscatterv-inter:
     sched_linear
         allcomm: 1
-    gentran_linear
+    tsp_linear
         allcomm: 1
 
 allgather-intra:
@@ -154,16 +154,16 @@ iallgather-intra:
     sched_brucks
     sched_recursive_doubling
         restrictions: power-of-two
-    gentran_ring
-    gentran_brucks
+    tsp_ring
+    tsp_brucks
         extra_params: k
         cvar_params: BRUCKS_KVAL
-    gentran_recexch_doubling
+    tsp_recexch_doubling
         func_name: recexch
         extra_const_params: recexch_type=MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING
         extra_params: k
         cvar_params: RECEXCH_KVAL
-    gentran_recexch_halving
+    tsp_recexch_halving
         func_name: recexch
         extra_const_params: recexch_type=MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING
         extra_params: k
@@ -183,20 +183,20 @@ iallgatherv-intra:
     sched_recursive_doubling
         restrictions: power-of-two
     sched_ring
-    gentran_recexch_doubling
+    tsp_recexch_doubling
         restrictions: displs-ordered
         func_name: recexch
         extra_const_params: recexch_type=MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_DOUBLING
         extra_params: k
         cvar_params: RECEXCH_KVAL
-    gentran_recexch_halving
+    tsp_recexch_halving
         restrictions: displs-ordered
         func_name: recexch
         extra_const_params: recexch_type=MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_HALVING
         extra_params: k
         cvar_params: RECEXCH_KVAL
-    gentran_ring
-    gentran_brucks
+    tsp_ring
+    tsp_brucks
         extra_params: k
         cvar_params: BRUCKS_KVAL
 iallgatherv-inter:
@@ -222,11 +222,11 @@ ialltoall-intra:
         restrictions: noinplace
     sched_permuted_sendrecv
         restrictions: noinplace
-    gentran_ring
-    gentran_brucks
+    tsp_ring
+    tsp_brucks
         extra_params: k, buffer_per_phase
         cvar_params: BRUCKS_KVAL, BRUCKS_BUFFER_PER_NBR
-    gentran_scattered
+    tsp_scattered
         extra_params: batch_size, bblock
         cvar_params: SCATTERED_BATCH_SIZE, SCATTERED_OUTSTANDING_TASKS
 ialltoall-inter:
@@ -244,15 +244,15 @@ ialltoallv-intra:
         restrictions: noinplace
     sched_inplace
         restrictions: inplace
-    gentran_scattered
+    tsp_scattered
         restrictions: noinplace
         extra_params: batch_size, bblock
         cvar_params: SCATTERED_BATCH_SIZE, SCATTERED_OUTSTANDING_TASKS
-    gentran_blocked
+    tsp_blocked
         restrictions: noinplace
         extra_params: bblock
         cvar_params: THROTTLE
-    gentran_inplace
+    tsp_inplace
         restrictions: inplace
 ialltoallv-inter:
     sched_pairwise_exchange
@@ -269,11 +269,11 @@ ialltoallw-intra:
         restrictions: noinplace
     sched_inplace
         restrictions: inplace
-    gentran_blocked
+    tsp_blocked
         restrictions: noinplace
         extra_params: bblock
         cvar_params: THROTTLE
-    gentran_inplace
+    tsp_inplace
         restrictions: inplace
 ialltoallw-inter:
     sched_pairwise_exchange
@@ -292,11 +292,11 @@ ireduce-intra:
     sched_binomial
     sched_reduce_scatter_gather
         restrictions: size-ge-pof2, builtin-op
-    gentran_tree
+    tsp_tree
         restrictions: commutative
         extra_params: tree_type, k, chunk_size, buffer_per_child
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
-    gentran_ring
+    tsp_ring
         func_name: tree
         extra_const_params: tree_type=MPIR_TREE_TYPE_KARY, k=1
         extra_params: chunk_size, buffer_per_child
@@ -319,22 +319,22 @@ iallreduce-intra:
     sched_recursive_doubling
     sched_reduce_scatter_allgather
         restrictions: size-ge-pof2, builtin-op
-    gentran_recexch_single_buffer
+    tsp_recexch_single_buffer
         func_name: recexch
         extra_const_params: recexch_type=MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER
         extra_params: k
         cvar_params: RECEXCH_KVAL
-    gentran_recexch_multiple_buffer
+    tsp_recexch_multiple_buffer
         func_name: recexch
         extra_const_params: recexch_type=MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER
         extra_params: k
         cvar_params: RECEXCH_KVAL
-    gentran_tree
+    tsp_tree
         extra_params: tree_type, k, chunk_size, buffer_per_child
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
-    gentran_ring
+    tsp_ring
         restrictions: commutative
-    gentran_recexch_reduce_scatter_recexch_allgatherv
+    tsp_recexch_reduce_scatter_recexch_allgatherv
         restrictions: commutative
         extra_params: k
         cvar_params: RECEXCH_KVAL
@@ -358,7 +358,7 @@ ireduce_scatter-intra:
         restrictions: commutative
     sched_recursive_halving
         restrictions: commutative
-    gentran_recexch
+    tsp_recexch
         restrictions: commutative
         extra_const_params: recexch_type=IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_DOUBLING
         extra_params: k
@@ -384,7 +384,7 @@ ireduce_scatter_block-intra:
         restrictions: commutative
     sched_recursive_halving
         restrictions: commutative
-    gentran_recexch
+    tsp_recexch
         restrictions: commutative
         extra_params: k
         cvar_params: RECEXCH_KVAL
@@ -399,7 +399,7 @@ iscan-intra:
     sched_smp
         restrictions: commutative, node-consecutive
     sched_recursive_doubling
-    gentran_recursive_doubling
+    tsp_recursive_doubling
 
 exscan-intra:
     recursive_doubling
@@ -410,29 +410,29 @@ neighbor_allgather-intra:
 ineighbor_allgather-intra:
     sched_linear
         allcomm: 1
-    gentran_linear
+    tsp_linear
         allcomm: 1
 neighbor_allgatherv-intra:
 ineighbor_allgatherv-intra:
     sched_linear
         allcomm: 1
-    gentran_linear
+    tsp_linear
         allcomm: 1
 neighbor_alltoall-intra:
 ineighbor_alltoall-intra:
     sched_linear
         allcomm: 1
-    gentran_linear
+    tsp_linear
         allcomm: 1
 neighbor_alltoallv-intra:
 ineighbor_alltoallv-intra:
     sched_linear
         allcomm: 1
-    gentran_linear
+    tsp_linear
         allcomm: 1
 neighbor_alltoallw-intra:
 ineighbor_alltoallw-intra:
     sched_linear
         allcomm: 1
-    gentran_linear
+    tsp_linear
         allcomm: 1

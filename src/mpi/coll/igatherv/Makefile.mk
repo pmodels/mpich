@@ -9,4 +9,4 @@
 
 mpi_core_sources +=                          \
     src/mpi/coll/igatherv/igatherv_allcomm_sched_linear.c			\
-    src/mpi/coll/igatherv/igatherv_gentran_algos.c
+    src/mpi/coll/igatherv/igatherv_tsp_linear.c
