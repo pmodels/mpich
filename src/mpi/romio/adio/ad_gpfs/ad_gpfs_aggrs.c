@@ -524,6 +524,8 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
                 ADIOI_Malloc(count_my_req_per_proc[i] * 2 * sizeof(ADIO_Offset));
             my_req[i].lens = my_req[i].offsets + count_my_req_per_proc[i];
             count_my_req_procs++;
+        } else {
+            my_req[i].offsets = NULL;
         }
         my_req[i].count = 0;    /* will be incremented where needed
                                  * later */
