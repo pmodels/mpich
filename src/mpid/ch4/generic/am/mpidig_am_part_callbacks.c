@@ -27,7 +27,7 @@ static int part_send_data_target_cmpl_cb(MPIR_Request * rreq)
 
     MPIDIG_recv_finish(rreq);
 
-    /* Internally set partitioned rreq complete via completion_notification. */
+    /* Completes both the internal request and user request via cc_ptr */
     MPID_Request_complete(rreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PUT_DT_TARGET_CMPL_CB);
@@ -45,7 +45,7 @@ int MPIDIG_part_send_data_origin_cb(MPIR_Request * sreq)
     MPIR_Request *part_sreq = MPIDIG_REQUEST(sreq, req->part_am_req.part_req_ptr);
     MPIR_Assert(part_sreq);
 
-    /* Internally set partitioned sreq complete via completion_notification. */
+    /* Completes both the internal request and user request via cc_ptr */
     MPID_Request_complete(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_SEND_DATA_ORIGIN_CB);
@@ -152,7 +152,7 @@ int MPIDIG_part_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = part_send_data_target_cmpl_cb;
 
     /* Set part_rreq complete when am request completes but not decrease part_rreq refcnt */
-    rreq->completion_notification = &part_rreq->cc;
+    rreq->cc_ptr = &part_rreq->cc;
     /* Will update part_sreq status when the AM request completes.
      * TODO: can we get rid of the pointer? */
     MPIDIG_REQUEST(rreq, req->part_am_req.part_req_ptr) = part_rreq;

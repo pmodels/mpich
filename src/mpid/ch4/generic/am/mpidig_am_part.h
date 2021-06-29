@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     /* Indicate data transfer starts.
-     * Decrease when am request completes on sender (via completion_notification),
+     * Decrease when am request completes on sender (via cc_ptr),
      * or received data transfer AM on receiver. */
     MPIR_cc_set(request->cc_ptr, 1);
     if (request->kind == MPIR_REQUEST_KIND__PART_SEND) {
