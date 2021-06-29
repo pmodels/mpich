@@ -121,11 +121,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* Decrement the reference counter for the request object (for the reference held by the sending
-     * process). */
-    MPID_Request_complete(rreq);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_HANDLE_UNEXPECTED);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXP_MRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_HANDLE_UNEXP_MRECV);
+
+    mpi_errno = MPIDIG_handle_unexpected(MPIDIG_REQUEST(rreq, req->rreq.mrcv_buffer),
+                                         MPIDIG_REQUEST(rreq, req->rreq.mrcv_count),
+                                         MPIDIG_REQUEST(rreq, req->rreq.mrcv_datatype), rreq);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, req->rreq.mrcv_datatype));
+    MPID_Request_complete(rreq);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_HANDLE_UNEXP_MRECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -197,6 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
                  * copy them to complete */
                 mpi_errno = MPIDIG_handle_unexpected(buf, count, datatype, unexp_req);
                 MPIR_ERR_CHECK(mpi_errno);
+                MPID_Request_complete(unexp_req);
                 if (*request == NULL) {
                     /* Regular (non-enqueuing) path: MPIDIG is responsbile for allocating
                      * a request. Here we simply return `unexp_req`, which is already completed. */

@@ -39,39 +39,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_reply_ssend(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-
-MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    void *buf;
-    MPI_Aint count;
-    MPI_Datatype datatype;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXP_MRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_HANDLE_UNEXP_MRECV);
-
-    rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
-    rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
-
-    buf = MPIDIG_REQUEST(rreq, req->rreq.mrcv_buffer);
-    count = MPIDIG_REQUEST(rreq, req->rreq.mrcv_count);
-    datatype = MPIDIG_REQUEST(rreq, req->rreq.mrcv_datatype);
-
-    MPIDIG_copy_from_unexp_req(rreq, buf, datatype, count);
-
-    rreq->kind = MPIR_REQUEST_KIND__RECV;
-
-    if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_PEER_SSEND) {
-        mpi_errno = MPIDIG_reply_ssend(rreq);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-    MPIR_Datatype_release_if_not_builtin(datatype);
-    MPID_Request_complete(rreq);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_HANDLE_UNEXP_MRECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
 #endif /* CH4R_RECV_H_INCLUDED */

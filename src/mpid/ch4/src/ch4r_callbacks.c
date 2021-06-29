@@ -142,21 +142,11 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
         goto fn_exit;
     }
 
-    match_req->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
-    match_req->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
+    mpi_errno = MPIDIG_handle_unexpected(MPIDIG_REQUEST(match_req, buffer),
+                                         MPIDIG_REQUEST(match_req, count),
+                                         MPIDIG_REQUEST(match_req, datatype), rreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDIG_copy_from_unexp_req(rreq, MPIDIG_REQUEST(match_req, buffer),
-                               MPIDIG_REQUEST(match_req, count),
-                               MPIDIG_REQUEST(match_req, datatype));
-
-    /* Now that the unexpected message has been completed, unset the status bit. */
-    MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
-
-    /* If this is a synchronous send, send the reply back to the sender to unlock them. */
-    if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_PEER_SSEND) {
-        mpi_errno = MPIDIG_reply_ssend(rreq);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_anysrc_free_partner(match_req);
 #endif
