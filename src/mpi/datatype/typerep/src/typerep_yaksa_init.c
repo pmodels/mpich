@@ -33,11 +33,11 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
     switch (type) {
         case MPI_CHAR:
         case MPI_SIGNED_CHAR:
-            yaksa_type = YAKSA_TYPE__CHAR;
+            yaksa_type = YAKSA_TYPE__INT8_T;
             break;
 
         case MPI_UNSIGNED_CHAR:
-            yaksa_type = YAKSA_TYPE__UNSIGNED_CHAR;
+            yaksa_type = YAKSA_TYPE__UINT8_T;
             break;
 
         case MPI_PACKED:
@@ -355,6 +355,56 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_TYPEREP_GET_YAKSA_TYPE);
     return yaksa_type;
+}
+
+yaksa_op_t MPII_Typerep_get_yaksa_op(MPI_Op op)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_TYPEREP_GET_YAKSA_OP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_TYPEREP_GET_YAKSA_OP);
+
+    yaksa_op_t yaksa_op = YAKSA_OP__LAST;
+
+    switch (op) {
+        case MPI_SUM:
+            yaksa_op = YAKSA_OP__SUM;
+            break;
+        case MPI_PROD:
+            yaksa_op = YAKSA_OP__PROD;
+            break;
+        case MPI_MAX:
+            yaksa_op = YAKSA_OP__MAX;
+            break;
+        case MPI_MIN:
+            yaksa_op = YAKSA_OP__MIN;
+            break;
+        case MPI_LOR:
+            yaksa_op = YAKSA_OP__LOR;
+            break;
+        case MPI_LAND:
+            yaksa_op = YAKSA_OP__LAND;
+            break;
+        case MPI_LXOR:
+            yaksa_op = YAKSA_OP__LXOR;
+            break;
+        case MPI_BOR:
+            yaksa_op = YAKSA_OP__BOR;
+            break;
+        case MPI_BAND:
+            yaksa_op = YAKSA_OP__BAND;
+            break;
+        case MPI_BXOR:
+            yaksa_op = YAKSA_OP__BXOR;
+            break;
+        case MPI_REPLACE:
+            yaksa_op = YAKSA_OP__REPLACE;
+            break;
+        default:
+            yaksa_op = YAKSA_OP__LAST;
+            break;
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_TYPEREP_GET_YAKSA_OP);
+    return yaksa_op;
 }
 
 void MPIR_Typerep_init(void)

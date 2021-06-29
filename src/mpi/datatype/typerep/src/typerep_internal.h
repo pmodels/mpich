@@ -16,6 +16,7 @@
 extern yaksa_info_t MPII_yaksa_info_nogpu;
 
 yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type);
+yaksa_type_t MPII_Typerep_get_yaksa_op(MPI_Op op);
 
 static inline yaksa_info_t MPII_yaksa_get_info(MPL_pointer_attr_t * inattr,
                                                MPL_pointer_attr_t * outattr)

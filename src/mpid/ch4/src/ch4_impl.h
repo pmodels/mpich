@@ -968,151 +968,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
                                                    MPI_Op acc_op, int src_kind)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_op_function *uop = NULL;
-    MPI_Aint source_dtp_size = 0, source_dtp_extent = 0;
-    int is_empty_source = FALSE;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMPUTE_ACC_OP);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_COMPUTE_ACC_OP);
 
-    /* first Judge if source buffer is empty */
-    if (acc_op == MPI_NO_OP)
-        is_empty_source = TRUE;
+    mpi_errno = MPIR_Typerep_op(source_buf, source_count, source_dtp,
+                                target_buf, target_count, target_dtp,
+                                acc_op, src_kind == MPIDIG_ACC_SRCBUF_PACKED);
 
-    if (is_empty_source == FALSE) {
-        MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(source_dtp));
-        MPIR_Datatype_get_size_macro(source_dtp, source_dtp_size);
-        MPIR_Datatype_get_extent_macro(source_dtp, source_dtp_extent);
-    }
-
-    if ((HANDLE_IS_BUILTIN(acc_op))
-        && ((*MPIR_OP_HDL_TO_DTYPE_FN(acc_op)) (source_dtp) == MPI_SUCCESS)) {
-        /* get the function by indexing into the op table */
-        uop = MPIR_OP_HDL_TO_FN(acc_op);
-    } else {
-        /* --BEGIN ERROR HANDLING-- */
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         __func__, __LINE__, MPI_ERR_OP,
-                                         "**opnotpredefined", "**opnotpredefined %d", acc_op);
-        return mpi_errno;
-        /* --END ERROR HANDLING-- */
-    }
-
-    void *save_targetbuf = NULL;
-    void *host_targetbuf = NULL;
-
-    host_targetbuf = MPIR_gpu_host_swap(target_buf, target_count, target_dtp);
-    if (host_targetbuf) {
-        save_targetbuf = target_buf;
-        target_buf = host_targetbuf;
-    }
-
-    if (is_empty_source == TRUE || HANDLE_IS_BUILTIN(target_dtp)) {
-        /* directly apply op if target dtp is predefined dtp OR source buffer is empty */
-        MPI_Aint tmp_count = source_count;
-        (*uop) (source_buf, target_buf, &tmp_count, &source_dtp);
-    } else {
-        /* derived datatype */
-        struct iovec *typerep_vec;
-        int i;
-        MPI_Aint vec_len, type_extent, type_size, src_type_stride;
-        MPI_Datatype type;
-        MPIR_Datatype *dtp;
-        MPI_Aint curr_len;
-        void *curr_loc;
-        int accumulated_count;
-
-        MPIR_Datatype_get_ptr(target_dtp, dtp);
-        MPIR_Assert(dtp != NULL);
-        vec_len = dtp->typerep.num_contig_blocks * target_count + 1;
-        /* +1 needed because Rob says so */
-        typerep_vec = (struct iovec *)
-            MPL_malloc(vec_len * sizeof(struct iovec), MPL_MEM_RMA);
-        /* --BEGIN ERROR HANDLING-- */
-        if (!typerep_vec) {
-            mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                     MPI_ERR_OTHER, "**nomem", 0);
-            goto fn_exit;
-        }
-        /* --END ERROR HANDLING-- */
-
-        MPI_Aint actual_iov_len, actual_iov_bytes;
-        MPIR_Typerep_to_iov(NULL, target_count, target_dtp, 0, typerep_vec, vec_len,
-                            source_count * source_dtp_size, &actual_iov_len, &actual_iov_bytes);
-        vec_len = actual_iov_len;
-
-        type = dtp->basic_type;
-        MPIR_Assert(type != MPI_DATATYPE_NULL);
-
-        MPIR_Assert(type == source_dtp);
-        type_size = source_dtp_size;
-        type_extent = source_dtp_extent;
-        /* If the source buffer has been packed by the caller, the distance between
-         * two elements can be smaller than extent. E.g., predefined pairtype may
-         * have larger extent than size.*/
-        /* when predefined pairtype have larger extent than size, we'll end up
-         * missaligned access. Memcpy the source to workaround the alignment issue.
-         */
-        char *src_ptr = NULL;
-        if (src_kind == MPIDIG_ACC_SRCBUF_PACKED) {
-            src_type_stride = source_dtp_size;
-            if (source_dtp_size < source_dtp_extent) {
-                src_ptr = MPL_malloc(source_dtp_extent, MPL_MEM_OTHER);
-            }
-        } else {
-            src_type_stride = source_dtp_extent;
-        }
-
-        i = 0;
-        curr_loc = typerep_vec[0].iov_base;
-        curr_len = typerep_vec[0].iov_len;
-        accumulated_count = 0;
-        while (i != vec_len) {
-            if (curr_len < type_size) {
-                MPIR_Assert(i != vec_len);
-                i++;
-                curr_len += typerep_vec[i].iov_len;
-                continue;
-            }
-
-            MPI_Aint count;
-            MPIR_Assign_trunc(count, curr_len / type_size, MPI_Aint);
-
-            if (src_ptr) {
-                MPI_Aint unpacked_size;
-                MPIR_Typerep_unpack((char *) source_buf + src_type_stride * accumulated_count,
-                                    source_dtp_size, src_ptr, 1, source_dtp, 0, &unpacked_size);
-                (*uop) (src_ptr, (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
-            } else {
-                (*uop) ((char *) source_buf + src_type_stride * accumulated_count,
-                        (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
-            }
-
-            if (curr_len % type_size == 0) {
-                i++;
-                if (i != vec_len) {
-                    curr_loc = typerep_vec[i].iov_base;
-                    curr_len = typerep_vec[i].iov_len;
-                }
-            } else {
-                curr_loc = (void *) ((char *) curr_loc + type_extent * count);
-                curr_len -= type_size * count;
-            }
-
-            accumulated_count += count;
-        }
-
-        MPL_free(src_ptr);
-        MPL_free(typerep_vec);
-    }
-
-    if (save_targetbuf) {
-        MPIR_gpu_swap_back(target_buf, save_targetbuf, target_count, target_dtp);
-        target_buf = save_targetbuf;
-    }
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMPUTE_ACC_OP);
     return mpi_errno;
 }
