@@ -5,7 +5,7 @@
 
 # these CPPFLAGS are only used when building C/C++ source files, not for actual
 # F08 code itself
-AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include @cuda_CPPFLAGS@ @ze_CPPFLAGS@
+AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include @cuda_CPPFLAGS@ @ze_CPPFLAGS@ @hip_CPPFLAGS@
 
 LDADD = $(top_builddir)/util/mtest_f08.$(OBJEXT)
 mtest_c_objects = $(top_builddir)/util/mtest.$(OBJEXT) $(top_builddir)/util/mtest_single.$(OBJEXT) $(top_builddir)/util/mtest_common.$(OBJEXT)

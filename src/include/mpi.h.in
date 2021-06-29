@@ -982,6 +982,7 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 /* GPU extensions */
 #define MPIX_GPU_SUPPORT_CUDA  (0)
 #define MPIX_GPU_SUPPORT_ZE    (1)
+#define MPIX_GPU_SUPPORT_HIP   (2)
 
 /* feature advertisement */
 #define MPIIMPL_ADVERTISES_FEATURES 1
