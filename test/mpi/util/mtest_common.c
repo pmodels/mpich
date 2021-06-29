@@ -314,10 +314,13 @@ void MTestFreeStringList(char **strlist, int num)
 
 /* ------------------------------------------------------------------------ */
 /* Utilities to support device memory allocation */
-#if defined(HAVE_CUDA) || defined(HAVE_ZE)
+#if defined(HAVE_CUDA) || defined(HAVE_ZE) || defined(HAVE_HIP)
 #include <assert.h>
 #ifdef HAVE_CUDA
 #include <cuda_runtime_api.h>
+#endif
+#ifdef HAVE_HIP
+#include <hip/hip_runtime_api.h>
 #endif
 int ndevices = -1;
 #ifdef HAVE_ZE
@@ -335,9 +338,17 @@ ze_event_pool_handle_t *event_pools = NULL;
 void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devicebuf,
                 bool is_calloc, int device_id)
 {
+
 #ifdef HAVE_CUDA
     if (ndevices == -1) {
         cudaGetDeviceCount(&ndevices);
+        assert(ndevices != -1);
+    }
+#endif
+
+#ifdef HAVE_HIP
+    if (ndevices == -1) {
+        hipGetDeviceCount(&ndevices);
         assert(ndevices != -1);
     }
 #endif
@@ -477,6 +488,28 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
             *hostbuf = *devicebuf;
 #endif
 
+#ifdef HAVE_HIP
+    } else if (type == MTEST_MEM_TYPE__REGISTERED_HOST) {
+        hipHostMalloc(devicebuf, size, hipHostMallocDefault);
+        if (is_calloc)
+            memset(*devicebuf, 0, size);
+        if (hostbuf)
+            *hostbuf = *devicebuf;
+    } else if (type == MTEST_MEM_TYPE__DEVICE) {
+        hipSetDevice(device_id % ndevices);
+        hipMalloc(devicebuf, size);
+        if (hostbuf) {
+            hipHostMalloc(hostbuf, size, hipHostMallocDefault);
+            if (is_calloc)
+                memset(*hostbuf, 0, size);
+        }
+    } else if (type == MTEST_MEM_TYPE__SHARED) {
+        hipSetDevice(device_id % ndevices);
+        hipMallocManaged(devicebuf, size, hipMemAttachGlobal);
+        if (hostbuf)
+            *hostbuf = *devicebuf;
+#endif
+
 #ifdef HAVE_ZE
     } else if (type == MTEST_MEM_TYPE__REGISTERED_HOST) {
         size_t mem_alignment;
@@ -561,6 +594,17 @@ void MTestFree(mtest_mem_type_e type, void *hostbuf, void *devicebuf)
     } else if (type == MTEST_MEM_TYPE__SHARED) {
         cudaFree(devicebuf);
 #endif
+#ifdef HAVE_HIP
+    } else if (type == MTEST_MEM_TYPE__REGISTERED_HOST) {
+        hipHostFree(devicebuf);
+    } else if (type == MTEST_MEM_TYPE__DEVICE) {
+        hipFree(devicebuf);
+        if (hostbuf) {
+            hipHostFree(hostbuf);
+        }
+    } else if (type == MTEST_MEM_TYPE__SHARED) {
+        hipFree(devicebuf);
+#endif
 #ifdef HAVE_ZE
     } else if (type == MTEST_MEM_TYPE__REGISTERED_HOST) {
         zerr = zeMemFree(context, devicebuf);
@@ -584,6 +628,9 @@ void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_
     if (type == MTEST_MEM_TYPE__DEVICE) {
 #ifdef HAVE_CUDA
         cudaMemcpy(dbuf, sbuf, size, cudaMemcpyDefault);
+#endif
+#ifdef HAVE_HIP
+        hipMemcpy(dbuf, sbuf, size, hipMemcpyDefault);
 #endif
 #ifdef HAVE_ZE
         int dev_id = -1, s_dev_id = -1, d_dev_id = -1;
