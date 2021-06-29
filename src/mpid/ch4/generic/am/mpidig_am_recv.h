@@ -28,70 +28,91 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_prepare_recv_req(int rank, int tag,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
-                                                      MPI_Datatype datatype, MPIR_Request * rreq)
+/* utility function for copying data from the unexp buffer into user buffer. This avoid the dup code
+ * for handling unexp message in am_do_irecv, am_do_imrecv, and completion. Specifically involves
+ * the following cases:
+ * 1. am_do_irecv: unexp req matched when posting Irecv
+ * 2. am_do_imrecv: unexp req matched when posting Imrecv
+ * 3. completion: unexp req matched with Irecv/Imrecv enqueued by someone else (WorkQ model)
+ * */
+MPL_STATIC_INLINE_PREFIX int MPIDIG_copy_from_unexp_req(MPIR_Request * req, void *user_buf,
+                                                        MPI_Datatype user_datatype,
+                                                        MPI_Aint user_count)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
-    size_t in_data_sz, dt_sz, nbytes;
+    MPI_Aint nbytes;
+    size_t unexp_data_sz, dt_sz;
+
+    /* unexp req stores data in MPIDIG_REQUEST(rreq, buffer) as MPI_BYTE.
+     * MPIDIG_REQUEST(rreq, count) is the data size */
+    unexp_data_sz = MPIDIG_REQUEST(req, count);
+
+    MPIR_Datatype_get_size_macro(user_datatype, dt_sz);
+
+    if (unexp_data_sz > dt_sz * user_count) {
+        req->status.MPI_ERROR = MPIR_Err_create_code(req->status.MPI_ERROR,
+                                                     MPIR_ERR_RECOVERABLE, __FUNCTION__, __LINE__,
+                                                     MPI_ERR_TRUNCATE, "**truncate",
+                                                     "**truncate %d %d %d %d",
+                                                     req->status.MPI_SOURCE, req->status.MPI_TAG,
+                                                     dt_sz * user_count, unexp_data_sz);
+        nbytes = dt_sz * user_count;
+    } else {
+        nbytes = unexp_data_sz;
+    }
+
+    MPIR_STATUS_SET_COUNT(req->status, nbytes);
+    MPIDIG_REQUEST(req, datatype) = user_datatype;
+    MPIDIG_REQUEST(req, count) = dt_sz ? nbytes / dt_sz : 0;
+
+    /* Copy the data from the message. */
+    if (nbytes > 0) {
+        MPIDI_Datatype_get_info(user_count, user_datatype, dt_contig, dt_sz, dt_ptr, dt_true_lb);
+        if (!dt_contig) {
+            MPI_Aint actual_unpack_bytes;
+            MPIR_Typerep_unpack(MPIDIG_REQUEST(req, buffer), nbytes, user_buf, user_count,
+                                user_datatype, 0, &actual_unpack_bytes);
+            if (actual_unpack_bytes != nbytes) {
+                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                                 __FUNCTION__, __LINE__,
+                                                 MPI_ERR_TYPE, "**dtypemismatch", 0);
+                req->status.MPI_ERROR = mpi_errno;
+            }
+        } else {
+            /* Note: buf could be NULL.  In one case it is a zero size message such as
+             * the one used in MPI_Barrier.  In another case, the datatype can specify
+             * the absolute address of the buffer (e.g. buf == MPI_BOTTOM).
+             */
+            char *addr = (char *) user_buf + dt_true_lb;
+            assert(addr);       /* to suppress gcc-8 warning: -Wnonnull */
+            MPIR_Typerep_copy(addr, MPIDIG_REQUEST(req, buffer), nbytes);
+        }
+    }
+
+    MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
+                                      MPIDIG_REQUEST(req, buffer));
+
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
+                                                      MPI_Datatype datatype, MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXPECTED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_HANDLE_UNEXPECTED);
 
-    /* Calculate the size of the data from the active message information and update the request
-     * object. */
-    in_data_sz = MPIDIG_REQUEST(rreq, count);
-    MPIR_Datatype_get_size_macro(datatype, dt_sz);
-
-    if (in_data_sz > dt_sz * count) {
-        rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
-                                                      MPIR_ERR_RECOVERABLE, __FUNCTION__, __LINE__,
-                                                      MPI_ERR_TRUNCATE, "**truncate",
-                                                      "**truncate %d %d %d %d",
-                                                      rreq->status.MPI_SOURCE, rreq->status.MPI_TAG,
-                                                      dt_sz * count, in_data_sz);
-        nbytes = dt_sz * count;
-    } else {
-        nbytes = in_data_sz;
-    }
-    MPIR_STATUS_SET_COUNT(rreq->status, nbytes);
-    MPIDIG_REQUEST(rreq, datatype) = datatype;
-    MPIDIG_REQUEST(rreq, count) = nbytes;
-
-    MPIDI_Datatype_get_info(count, datatype, dt_contig, dt_sz, dt_ptr, dt_true_lb);
-
-    /* Copy the data from the message. */
-
-    if (!dt_contig) {
-        MPI_Aint actual_unpack_bytes;
-        MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes, buf, count, datatype, 0,
-                            &actual_unpack_bytes);
-        if (actual_unpack_bytes != (MPI_Aint) (nbytes)) {
-            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                             __FUNCTION__, __LINE__,
-                                             MPI_ERR_TYPE, "**dtypemismatch", 0);
-            rreq->status.MPI_ERROR = mpi_errno;
-        }
-    } else {
-        /* Note: buf could be NULL.  In one case it is a zero size message such as
-         * the one used in MPI_Barrier.  In another case, the datatype can specify
-         * the absolute address of the buffer (e.g. buf == MPI_BOTTOM).
-         */
-        if (nbytes > 0) {
-            char *addr = (char *) buf + dt_true_lb;
-            assert(addr);       /* to suppress gcc-8 warning: -Wnonnull */
-            MPIR_Typerep_copy(addr, MPIDIG_REQUEST(rreq, buffer), nbytes);
-        }
-    }
-
-    MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
-    MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
-                                      MPIDIG_REQUEST(rreq, buffer));
-
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
+
+    mpi_errno = MPIDIG_copy_from_unexp_req(rreq, buf, datatype, count);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
 
     /* If this is a synchronous send, send back the reply indicating that the message has been
      * matched. */
