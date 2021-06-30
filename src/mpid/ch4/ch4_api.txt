@@ -49,9 +49,6 @@ Non Native API:
   am_get_data_copy_cb : MPIDIG_recv_data_copy_cb
       NM*: void
      SHM*: void
-  am_recv: int
-      NM*: rreq
-     SHM*: rreq
   am_hdr_max_sz : MPI_Aint
       NM*: void
      SHM*: void
