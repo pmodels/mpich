@@ -233,6 +233,8 @@ algorithms:
             sched_reduce_scatter_allgather
             tsp_recexch_single_buffer
             tsp_recexch_multiple_buffer
+            tsp_recexch_single_buffer_without_dtcopy
+            tsp_recexch_multiple_buffer_without_dtcopy
             tsp_tree
                 .MPIR_CVAR_IALLREDUCE_TREE_TYPE=kary,knomial_1,knomial_2
                 .MPIR_CVAR_IALLREDUCE_TREE_KVAL=2,3,4
