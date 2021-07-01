@@ -18,6 +18,7 @@ void ADIO_Close(ADIO_File fd, int *error_code)
     if (fd->is_agg){
         ADIOI_Free(fd->local_aggregator_domain[0]);
         ADIOI_Free(fd->local_aggregator_domain);
+        ADIOI_Free(fd->local_aggregator_domain_size);
         ADIOI_Free(fd->global_recv_size);
     }
     if (fd->is_local_aggregator) {
