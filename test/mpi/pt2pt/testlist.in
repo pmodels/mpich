@@ -1,6 +1,7 @@
 sendself 1 test/mpi/pt2pt/sendself arg=-type=MPI_C_DOUBLE_COMPLEX arg=-sendcnt=8192 arg=-recvcnt=8192 arg=-seed=47 arg=-testsize=100
 sendself 2 test/mpi/pt2pt/sendself arg=-type=MPI_C_DOUBLE_COMPLEX arg=-sendcnt=8192 arg=-recvcnt=8192 arg=-seed=47 arg=-testsize=100
 sendrecv2 2
+sendrecv2 2 env=MPIR_CVAR_ASYNC_PROGRESS=1 env=MPIR_CVAR_CH4_PROGRESS_THREAD_AFFINITY=1,2
 sendrecv3 2
 sendrecv3 2 arg=-isendrecv
 sendflood 8
