@@ -79,7 +79,9 @@ typedef struct {
 } MPIDI_UCX_op_t;
 
 typedef struct {
-    int dummy;
+    ucp_ep_h ep;                /* send/recv endpoint */
+    ucp_datatype_t ucp_datatype;
+    MPIR_cc_t parts_left;
 } MPIDI_UCX_part_t;
 
 #endif /* UCX_PRE_H_INCLUDED */

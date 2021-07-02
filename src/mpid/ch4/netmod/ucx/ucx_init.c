@@ -257,11 +257,14 @@ int MPIDI_UCX_init_local(int *tag_bits)
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
 
-    if (MPIDI_UCX_TAG_BITS > MPIR_TAG_BITS_DEFAULT) {
+    if (MPIDI_UCX_TAG_BITS - 1 > MPIR_TAG_BITS_DEFAULT) {
         *tag_bits = MPIR_TAG_BITS_DEFAULT;
     } else {
-        *tag_bits = MPIDI_UCX_TAG_BITS;
+        *tag_bits = MPIDI_UCX_TAG_BITS - 1;
     }
+
+    /* initialize UCX specific AM functionality */
+    MPIDI_UCX_am_init();
 
     if (MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG && MPIR_Process.rank == 0) {
         printf("==== UCX netmod Capability ====\n");
