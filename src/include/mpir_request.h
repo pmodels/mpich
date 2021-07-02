@@ -400,12 +400,9 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
             MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
         }
 #endif
-        /* FIXME: This makes request creation expensive.  We need to
-         * trim this to the basics, with additional setup for
+        /* Initialize the basics, with additional setup for
          * special-purpose requests (think base class and
-         * inheritance).  For example, do we really* want to set the
-         * kind to UNDEFINED? And should the RMA values be set only
-         * for RMA requests? */
+         * inheritance). */
         MPIR_Object_set_ref(req, ref_count);
         req->kind = kind;
         MPIR_cc_set(&req->cc, 1);
