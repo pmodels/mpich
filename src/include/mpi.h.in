@@ -732,6 +732,8 @@ typedef void (MPI_T_event_dropped_cb_function)(MPI_Count count, MPI_T_event_regi
 #define MPI_Win_f2c(win)   (MPI_Win)(win)
 #define MPI_Message_c2f(msg) ((MPI_Fint)(msg))
 #define MPI_Message_f2c(msg) ((MPI_Message)(msg))
+#define MPI_Session_c2f(session) (MPI_Fint)(session)
+#define MPI_Session_f2c(session) (MPI_Session)(session)
 
 /* PMPI versions of the handle transfer functions.  See section 4.17 */
 #define PMPI_Comm_c2f(comm) (MPI_Fint)(comm)
@@ -752,6 +754,8 @@ typedef void (MPI_T_event_dropped_cb_function)(MPI_Count count, MPI_T_event_regi
 #define PMPI_Win_f2c(win)   (MPI_Win)(win)
 #define PMPI_Message_c2f(msg) ((MPI_Fint)(msg))
 #define PMPI_Message_f2c(msg) ((MPI_Message)(msg))
+#define PMPI_Session_c2f(session) (MPI_Fint)(session)
+#define PMPI_Session_f2c(session) (MPI_Session)(session)
 
 #define MPI_STATUS_IGNORE (MPI_Status *)1
 #define MPI_STATUSES_IGNORE (MPI_Status *)1
