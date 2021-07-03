@@ -218,7 +218,9 @@ void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_A
         *host_sendbuf = NULL;
     }
 
-    if (sendbuf == MPI_IN_PLACE) {
+    if (recvbuf == NULL) {
+        *host_recvbuf = NULL;
+    } else if (sendbuf == MPI_IN_PLACE) {
         tmp = MPIR_gpu_host_swap(recvbuf, count, datatype);
         *host_recvbuf = tmp;
     } else {

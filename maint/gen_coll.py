@@ -484,7 +484,12 @@ def dump_mpir(name, blocking_type):
         elif name == "reduce_scatter_block":
             G.out.append("int count = MPIR_Comm_size(comm_ptr) * recvcount;")
 
-        G.out.append("MPIR_Coll_host_buffer_alloc(sendbuf, recvbuf, count, datatype, &host_sendbuf, &host_recvbuf);")
+        if name == "reduce":
+            use_recvbuf = "(comm_ptr->rank == root || root == MPI_ROOT) ? recvbuf : NULL"
+        else:
+            use_recvbuf = "recvbuf"
+
+        G.out.append("MPIR_Coll_host_buffer_alloc(sendbuf, %s, count, datatype, &host_sendbuf, &host_recvbuf);" % use_recvbuf)
         for buf in ("sendbuf", "recvbuf"):
             G.out.append("if (host_%s) {" % buf);
             G.out.append("    %s = host_%s;" % (buf, buf));
@@ -499,8 +504,9 @@ def dump_mpir(name, blocking_type):
             count = "recvcount"
 
         if blocking_type == "blocking":
-            G.out.append("if (host_recvbuf) {");
-            G.out.append("    recvbuf = in_recvbuf;");
+            G.out.append("if (host_recvbuf) {")
+            G.out.append("    recvbuf = in_recvbuf;")
+            G.out.append("    MPIR_Localcopy(host_recvbuf, count, datatype, recvbuf, count, datatype);")
             G.out.append("}")
             G.out.append("MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);")
         elif blocking_type == "nonblocking":
