@@ -356,6 +356,8 @@ static const MPI_Datatype mpich_mpi_datatype_null MPICH_ATTR_TYPE_TAG_MUST_BE_NU
 #define MPI_MAX_ERROR_STRING   @MPI_MAX_ERROR_STRING@
 #define MPI_MAX_PORT_NAME      256
 #define MPI_MAX_OBJECT_NAME    128
+#define MPI_MAX_STRINGTAG_LEN  256
+#define MPI_MAX_PSET_NAME_LEN  256
 
 /* Pre-defined constants */
 #define MPI_UNDEFINED      (-32766)
