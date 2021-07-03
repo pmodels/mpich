@@ -460,9 +460,9 @@ typedef int MPIX_Grequest_class;
 typedef int (MPI_Copy_function) ( MPI_Comm, int, void *, void *, void *, int * );
 typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
 
-#define MPI_VERSION    3
-#define MPI_SUBVERSION 1
-#define MPICH_NAME     3
+#define MPI_VERSION    4
+#define MPI_SUBVERSION 0
+#define MPICH_NAME     4
 #define MPICH         1
 #define MPICH_HAS_C2F  1
 
