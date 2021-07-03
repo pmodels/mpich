@@ -421,6 +421,7 @@ typedef MPI_Session_errhandler_function MPI_Session_errhandler_fn;
    in 22-25), index in the low bits */
 #define MPI_ERRORS_ARE_FATAL ((MPI_Errhandler)0x54000000)
 #define MPI_ERRORS_RETURN    ((MPI_Errhandler)0x54000001)
+#define MPI_ERRORS_ABORT     ((MPI_Errhandler)0x54000003)
 /* MPIR_ERRORS_THROW_EXCEPTIONS is not part of the MPI standard, it is here to
    facilitate the c++ binding which has MPI::ERRORS_THROW_EXCEPTIONS. 
    Using the MPIR prefix preserved the MPI_ names for objects defined by
