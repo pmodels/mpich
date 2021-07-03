@@ -259,7 +259,8 @@ static int call_errhandler(MPIR_Errhandler * errhandler, int errorcode, int hand
     int cxx_kind = 0;
 
     /* Check for predefined error handlers */
-    if (!errhandler || errhandler->handle == MPI_ERRORS_ARE_FATAL) {
+    if (!errhandler || errhandler->handle == MPI_ERRORS_ARE_FATAL ||
+        errhandler->handle == MPI_ERRORS_ABORT) {
         const char *fcname = NULL;
         if (kind == MPIR_COMM) {
             fcname = "MPI_Comm_call_errhandler";
@@ -392,7 +393,7 @@ int MPIR_File_call_errhandler_impl(MPI_File fh, int errorcode)
         goto fn_exit;
     }
 
-    if (e->handle == MPI_ERRORS_ARE_FATAL) {
+    if (e->handle == MPI_ERRORS_ARE_FATAL || e->handle == MPI_ERRORS_ABORT) {
         MPIR_Handle_fatal_error(NULL, "MPI_File_call_errhandler", errorcode);
     }
 
@@ -459,7 +460,7 @@ void MPIR_Get_file_error_routine(MPI_Errhandler e, void (**c) (MPI_File *, int *
         if (e_ptr->handle == MPI_ERRORS_RETURN) {
             *c = 0;
             *kind = 1;
-        } else if (e_ptr->handle == MPI_ERRORS_ARE_FATAL) {
+        } else if (e_ptr->handle == MPI_ERRORS_ARE_FATAL || e_ptr->handle == MPI_ERRORS_ABORT) {
             *c = 0;
             *kind = 0;
         } else {
