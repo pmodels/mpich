@@ -16,13 +16,13 @@ int main(int argc, char *argv[])
     int nerrs = 0;
     MPI_Info info1, info2;
 
-    MPI_Info_create_env(&argc, &argv, &info1);
-    MPI_Info_create_env(&argc, &argv, &info2);
+    MPI_Info_create_env(argc, argv, &info1);
+    MPI_Info_create_env(argc, argv, &info2);
     nerrs += test_info(info1, info2);
 
     /* Free info1 and create it again */
     MPI_Info_free(&info1);
-    MPI_Info_create_env(&argc, &argv, &info1);
+    MPI_Info_create_env(argc, argv, &info1);
     nerrs += test_info(info1, info2);
 
     MPI_Init(&argc, &argv);
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
     /* Free info1 and create it again */
     MPI_Info_free(&info1);
-    MPI_Info_create_env(&argc, &argv, &info1);
+    MPI_Info_create_env(argc, argv, &info1);
     nerrs += test_info(info1, info2);
 
     MPI_Finalize();
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     /* Free info1 and create it again */
     MPI_Info_free(&info1);
-    MPI_Info_create_env(&argc, &argv, &info1);
+    MPI_Info_create_env(argc, argv, &info1);
     nerrs += test_info(info1, info2);
 
     MPI_Info_free(&info1);
