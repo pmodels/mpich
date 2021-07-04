@@ -293,6 +293,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
          MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) ? MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS - 1 : 0;
     uint64_t min_gather, child_gather_flag;
     UT_array *children;
+    void *temp_recvbuf = NULL;
 
     release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
     children = release_gather_info_ptr->bcast_tree.children;
@@ -306,6 +307,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE ||
         operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE) {
         if (rank == 0 && operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
+            /* non-root need a temporary recv buf */
+            if (rank != root) {
+                temp_recvbuf = MPIR_alloc_buffer(count, datatype);
+                outbuf = temp_recvbuf;
+            }
             /* Rank 0 reduces the data directly in its outbuf. Copy the data from inbuf to outbuf
              * if needed */
             if (inbuf != outbuf) {
@@ -412,6 +418,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     }
 
   fn_exit:
+    if (temp_recvbuf) {
+        MPL_free(temp_recvbuf);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_RELEASE_GATHER_GATHER);
     return mpi_errno_ret;
   fn_fail:
