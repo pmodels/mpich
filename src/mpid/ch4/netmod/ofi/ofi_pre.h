@@ -15,6 +15,7 @@
 #include <rdma/fi_atomic.h>
 #include <rdma/fi_cm.h>
 #include <rdma/fi_errno.h>
+#include <rdma/fi_trigger.h>
 #include "ofi_capability_sets.h"
 
 /* Defines */
