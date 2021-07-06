@@ -29,8 +29,9 @@
  */
 
 /* Initializes hint structure based MPIDI_OFI_global.settings (or config macros) */
-void MPIDI_OFI_init_hints(struct fi_info *hints)
+int MPIDI_OFI_init_hints(struct fi_info *hints)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Assert(hints != NULL);
 
     /* ------------------------------------------------------------------------ */
@@ -189,6 +190,23 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
         if (MPIDI_OFI_ENABLE_ATOMICS)
             hints->tx_attr->msg_order |= MPIDI_OFI_ATOMIC_ORDER_FLAGS;
     }
+
+    if (MPIDI_OFI_ENABLE_TRIGGERED) {
+        if (MPIDI_OFI_ENABLE_ATOMICS && MPIDI_OFI_ENABLE_TAGGED) {
+            /* needs FI_TAGGED FI_DIRECTED_RECV ... */
+            hints->caps |=
+                FI_TRIGGER | FI_DIRECTED_RECV | FI_RMA_EVENT | FI_READ | FI_WRITE | FI_RECV |
+                FI_SEND | FI_REMOTE_READ | FI_REMOTE_WRITE | FI_ATOMICS | FI_RMA;
+            hints->domain_attr->mr_mode |= FI_MR_RMA_EVENT;
+            hints->domain_attr->data_progress = FI_PROGRESS_AUTO;
+        } else {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST,
+                             "Triggered ops cannot be enabled if atomics or tagged is disabled"));
+            MPIR_ERR_CHKANDJUMP(1, mpi_errno, MPI_ERR_OTHER, "**ofid_enable_trigger");
+        }
+    }
+
     hints->tx_attr->comp_order = FI_ORDER_NONE;
     hints->rx_attr->op_flags = FI_COMPLETION;
     hints->rx_attr->total_buffered_recv = 0;    /* FI_RM_ENABLED ensures buffering of unexpected messages */
@@ -197,6 +215,8 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
         /*     PROTOCOL         |  CONTEXT  |        SOURCE         |       TAG          */
         MPIDI_OFI_PROTOCOL_MASK | 0 | MPIDI_OFI_SOURCE_MASK | 0 /* With source bits */ :
         MPIDI_OFI_PROTOCOL_MASK | 0 | 0 | MPIDI_OFI_TAG_MASK /* No source bits */ ;
+  fn_fail:
+    return mpi_errno;
 }
 
 void MPIDI_OFI_set_auto_progress(struct fi_info *hints)
@@ -256,12 +276,16 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
     UPDATE_SETTING_BY_CAP(major_version, MPIR_CVAR_CH4_OFI_MAJOR_VERSION);
     UPDATE_SETTING_BY_CAP(minor_version, MPIR_CVAR_CH4_OFI_MINOR_VERSION);
     UPDATE_SETTING_BY_CAP(num_am_buffers, MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS);
+    if (!strcmp(prov_name, "sockets")) {
+        UPDATE_SETTING_BY_CAP(enable_triggered, MPIR_CVAR_CH4_OFI_ENABLE_TRIGGERED);
+    }
     if (p_settings->num_am_buffers < 0) {
         p_settings->num_am_buffers = 0;
     }
     if (p_settings->num_am_buffers > MPIDI_OFI_MAX_NUM_AM_BUFFERS) {
         p_settings->num_am_buffers = MPIDI_OFI_MAX_NUM_AM_BUFFERS;
     }
+
 
     /* Always required settings */
     MPIDI_OFI_global.settings.require_rdm = 1;
@@ -309,8 +333,12 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
     CHECK_CAP(enable_control_auto_progress,
               !(prov->domain_attr->control_progress & FI_PROGRESS_AUTO));
 
-    CHECK_CAP(enable_data_auto_progress, !(prov->domain_attr->data_progress & FI_PROGRESS_AUTO));
+    CHECK_CAP(enable_triggered,
+              !(prov->caps & (FI_ATOMICS | FI_RMA | FI_TRIGGER | FI_DIRECTED_RECV | FI_RMA_EVENT |
+                              FI_READ | FI_WRITE | FI_RECV | FI_SEND | FI_REMOTE_READ |
+                              FI_REMOTE_WRITE)));
 
+    CHECK_CAP(enable_data_auto_progress, !(prov->domain_attr->data_progress & FI_PROGRESS_AUTO));
     CHECK_CAP(require_rdm, prov->ep_attr->type != FI_EP_RDM);
 
     return score;
@@ -370,4 +398,15 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
             MPIDI_OFI_global.settings.tag_bits = 20;
         }
     }
+
+    if (!strcmp(prov->fabric_attr->prov_name, "sockets")) {
+        MPIDI_OFI_global.settings.enable_triggered = MPIDI_OFI_global.settings.enable_triggered &&
+            (prov->caps & (FI_ATOMICS | FI_RMA | FI_TRIGGER | FI_DIRECTED_RECV | FI_RMA_EVENT |
+                           FI_READ | FI_WRITE | FI_RECV | FI_SEND | FI_REMOTE_READ |
+                           FI_REMOTE_WRITE));
+    }
+
+    if (MPIDI_OFI_global.settings.enable_triggered)
+        MPIDI_OFI_global.settings.enable_data_auto_progress = 1;
+
 }

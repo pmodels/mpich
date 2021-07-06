@@ -429,6 +429,16 @@ cvars:
         If true and all nodes do not have the same number of NICs, MPICH will fall back
         to using the fewest number of NICs instead of returning an error.
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_TRIGGERED
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, enable OFI triggered ops for MPI collectives.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -1438,6 +1448,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS: %d\n",
             MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_PT2PT_NOPACK: %d\n", MPIDI_OFI_ENABLE_PT2PT_NOPACK);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_TRIGGERED: %d\n", MPIDI_OFI_ENABLE_TRIGGERED);
     fprintf(stdout, "MPIDI_OFI_ENABLE_HMEM: %d\n", MPIDI_OFI_ENABLE_HMEM);
     fprintf(stdout, "MPIDI_OFI_NUM_AM_BUFFERS: %d\n", MPIDI_OFI_NUM_AM_BUFFERS);
     fprintf(stdout, "MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS: %d\n",
