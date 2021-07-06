@@ -1404,12 +1404,12 @@ MPI_Isend:
     request: REQUEST, direction=out
 MPI_Isendrecv:
     sendbuf: BUFFER, constant=True, asynchronous=True, [initial address of send buffer]
-    sendcount: XFER_NUM_ELEM_NNI_SMALL, [number of elements in send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
     sendtype: DATATYPE, [datatype of each send buffer element]
     dest: RANK, [rank of destination]
     sendtag: TAG, [send tag]
     recvbuf: BUFFER, direction=out, asynchronous=True, suppress=f08_intent, [initial address of receive buffer]
-    recvcount: XFER_NUM_ELEM_NNI_SMALL, [number of elements in receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
     recvtype: DATATYPE, [datatype of each receive buffer element]
     source: RANK, [rank of source or MPI_ANY_SOURCE]
     recvtag: TAG, [receive tag or MPI_ANY_TAG]
@@ -1417,7 +1417,7 @@ MPI_Isendrecv:
     request: REQUEST, direction=out
 MPI_Isendrecv_replace:
     buf: BUFFER, direction=inout, asynchronous=True, [initial address of send and receive buffer]
-    count: XFER_NUM_ELEM_NNI_SMALL, [number of elements in send and receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send and receive buffer]
     datatype: DATATYPE, [type of elements in send and receive buffer]
     dest: RANK, [rank of destination]
     sendtag: TAG, [send message tag]
@@ -1903,12 +1903,12 @@ MPI_Send_init:
     request: REQUEST, direction=out
 MPI_Sendrecv:
     sendbuf: BUFFER, constant=True, [initial address of send buffer]
-    sendcount: XFER_NUM_ELEM_NNI_SMALL, [number of elements in send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
     sendtype: DATATYPE, [type of elements in send buffer]
     dest: RANK, [rank of destination]
     sendtag: TAG, [send tag]
     recvbuf: BUFFER, direction=out, [initial address of receive buffer]
-    recvcount: XFER_NUM_ELEM_NNI_SMALL, [number of elements in receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
     recvtype: DATATYPE, [type of elements receive buffer element]
     source: RANK, [rank of source or MPI_ANY_SOURCE]
     recvtag: TAG, [receive tag or MPI_ANY_TAG]
@@ -1916,7 +1916,7 @@ MPI_Sendrecv:
     status: STATUS, direction=out
 MPI_Sendrecv_replace:
     buf: BUFFER, direction=inout, [initial address of send and receive buffer]
-    count: XFER_NUM_ELEM_NNI_SMALL, [number of elements in send and receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send and receive buffer]
     datatype: DATATYPE, [type of elements in send and receive buffer]
     dest: RANK, [rank of destination]
     sendtag: TAG, [send message tag]
