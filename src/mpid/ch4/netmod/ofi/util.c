@@ -331,10 +331,12 @@ static bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
     return valid_flag;
 }
 
-static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
+int MPIDI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
 {
     *fi_dt = FI_DATATYPE_LAST;
-    *fi_op = FI_ATOMIC_OP_LAST;
+
+    if (fi_op != NULL)
+        *fi_op = FI_ATOMIC_OP_LAST;
 
     if (isS_INT(dt))
         *fi_dt = FI_INT32;
@@ -375,6 +377,9 @@ static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum 
 
     if (*fi_dt == FI_DATATYPE_LAST)
         goto fn_fail;
+
+    if (fi_op == NULL)
+        goto fn_exit;
 
     *fi_op = FI_ATOMIC_OP_LAST;
 
@@ -501,7 +506,7 @@ static void create_dt_map(struct fid_ep *ep)
             enum fi_datatype fi_dt = (enum fi_datatype) -1;
             enum fi_op fi_op = (enum fi_op) -1;
 
-            mpi_to_ofi(dt, &fi_dt, op, &fi_op);
+            MPIDI_mpi_to_ofi(dt, &fi_dt, op, &fi_op);
             MPIR_Assert(fi_dt != (enum fi_datatype) -1);
             MPIR_Assert(fi_op != (enum fi_op) -1);
             _TBL.dt = fi_dt;
