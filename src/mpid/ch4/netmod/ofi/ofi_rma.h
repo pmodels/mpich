@@ -238,7 +238,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
                                              (char *) origin_addr + origin_true_lb, target_bytes,
                                              MPIDI_OFI_av_to_phys(addr, nic, vni, vni),
                                              target_mr.addr + target_true_lb,
-                                             target_mr.mr_key), 0, rdma_inject_write, FALSE);
+                                             target_mr.mr_key), vni, rdma_inject_write, FALSE);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
         goto null_op_exit;
     }
@@ -273,7 +273,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         riov.len = target_bytes;
         riov.key = target_mr.mr_key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write, FALSE);
+        MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vni, rdma_write,
+                             FALSE);
         /* Complete signal request to inform completion to user. */
         MPIDI_OFI_sigreq_complete(sigreq);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
@@ -449,7 +450,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         riov.len = target_bytes;
         riov.key = target_mr.mr_key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write, FALSE);
+        MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vni, rdma_write,
+                             FALSE);
         /* Complete signal request to inform completion to user. */
         MPIDI_OFI_sigreq_complete(sigreq);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
@@ -672,7 +674,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
     MPIDI_OFI_win_cntr_incr(win);
     MPIDI_OFI_CALL_RETRY(fi_compare_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg,
-                                              &comparev, NULL, 1, &resultv, NULL, 1, 0), 0,
+                                              &comparev, NULL, 1, &resultv, NULL, 1, 0), vni,
                          atomicto, FALSE);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
   fn_exit:
@@ -798,7 +800,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
         msg.context = NULL;
         msg.data = 0;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0 /*vci */ ,
+        MPIDI_OFI_CALL_RETRY(fi_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vni,
                              rdma_atomicto, FALSE);
         /* Complete signal request to inform completion to user. */
         MPIDI_OFI_sigreq_complete(sigreq);
@@ -946,7 +948,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
         msg.data = 0;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         MPIDI_OFI_CALL_RETRY(fi_fetch_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, &resultv,
-                                                NULL, 1, flags), 0 /*vci */ , rdma_readfrom, FALSE);
+                                                NULL, 1, flags), vni, rdma_readfrom, FALSE);
         /* Complete signal request to inform completion to user. */
         MPIDI_OFI_sigreq_complete(sigreq);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
@@ -1178,7 +1180,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
     MPIDI_OFI_win_cntr_incr(win);
     MPIDI_OFI_CALL_RETRY(fi_fetch_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, &resultv,
-                                            NULL, 1, 0), 0, rdma_readfrom, FALSE);
+                                            NULL, 1, 0), vni, rdma_readfrom, FALSE);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
 
   fn_exit:
