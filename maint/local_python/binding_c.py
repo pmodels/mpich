@@ -1841,6 +1841,8 @@ def dump_validation(func, t):
         p = name.split(',')
         if kind == "USERBUFFER-simple":
             dump_validate_userbuffer_simple(func, p[0], p[1], p[2])
+        elif kind == "USERBUFFER-partition":
+            dump_validate_userbuffer_partition(func, p[0], p[1], p[2], p[3])
         elif kind == "USERBUFFER-reduce":
             G.err_codes['MPI_ERR_OP'] = 1
             dump_validate_userbuffer_reduce(func, p[0], p[1], p[2], p[3], p[4])
@@ -1982,6 +1984,12 @@ def dump_validate_userbuffer_simple(func, buf, ct, dt):
         dump_if_close()
     if check_no_op:
         dump_if_close()
+
+def dump_validate_userbuffer_partition(func, buf, partitions, ct, dt):
+    dump_validate_userbuffer_simple(func, buf, ct, dt)
+    dump_if_open("%s > 0" % ct)
+    G.out.append("MPIR_ERRTEST_ARGNONPOS(%s, \"%s\", mpi_errno, MPI_ERR_ARG);" % (partitions, partitions))
+    dump_if_close()
 
 def dump_validate_userbuffer_neighbor_vw(func, kind, buf, ct, dt, disp):
     dump_validate_get_topo_size(func)
