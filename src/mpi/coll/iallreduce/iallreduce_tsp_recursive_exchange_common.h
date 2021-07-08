@@ -17,5 +17,4 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                                                   int *step1_recvfrom, int per_nbr_buffer,
                                                   void ***step1_recvbuf_, MPIR_Comm * comm,
                                                   MPIR_TSP_sched_t sched);
-
 #endif /* IALLREDUCE_TSP_RECURSIVE_EXCHANGE_COMMON_H_INCLUDED */
