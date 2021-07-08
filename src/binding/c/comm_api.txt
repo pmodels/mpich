@@ -202,6 +202,9 @@ MPI_Comm_test_inter:
     *flag = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 }
 
+MPI_Intercomm_create_from_groups:
+    .desc: Create an intercommuncator from local and remote groups
+
 MPI_Intercomm_create:
     .desc: Creates an intercommuncator from two intracommunicators
     .skip: validate-RANK
