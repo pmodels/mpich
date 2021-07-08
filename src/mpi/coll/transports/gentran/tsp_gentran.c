@@ -140,16 +140,16 @@ int MPIR_TSP_sched_isend(const void *buf,
                          MPI_Datatype dt,
                          int dest,
                          int tag,
-                         MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
+                         MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
+                         int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
-    int vtx_id;
-
+    int mpi_errno = MPI_SUCCESS;
     /* assign a new vertex */
-    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__ISEND;
-    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
 
     /* store the arguments */
     vtxp->u.isend.buf = buf;
@@ -160,9 +160,9 @@ int MPIR_TSP_sched_isend(const void *buf,
     vtxp->u.isend.comm = comm_ptr;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] isend", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] isend", *vtx_id));
 
-    return vtx_id;
+    return mpi_errno;
 }
 
 
@@ -171,17 +171,17 @@ int MPIR_TSP_sched_irecv(void *buf,
                          MPI_Datatype dt,
                          int source,
                          int tag,
-                         MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
+                         MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
+                         int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
-    int vtx_id;
-
+    int mpi_errno = MPI_SUCCESS;
     /* assign a new vertex */
-    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
 
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__IRECV;
-    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
 
     /* record the arguments */
     vtxp->u.irecv.buf = buf;
@@ -192,9 +192,9 @@ int MPIR_TSP_sched_irecv(void *buf,
     vtxp->u.irecv.comm = comm_ptr;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv", *vtx_id));
 
-    return vtx_id;
+    return mpi_errno;
 }
 
 
@@ -204,16 +204,16 @@ int MPIR_TSP_sched_imcast(const void *buf,
                           UT_array * dests,
                           int num_dests,
                           int tag,
-                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
+                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
+                          int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
-    int vtx_id;
-
+    int mpi_errno = MPI_SUCCESS;
     /* assign a new vertex */
-    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__IMCAST;
-    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
 
     /* store the arguments */
     vtxp->u.imcast.buf = (void *) buf;
@@ -230,8 +230,8 @@ int MPIR_TSP_sched_imcast(const void *buf,
     vtxp->u.imcast.last_complete = -1;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] imcast", vtx_id));
-    return vtx_id;
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] imcast", *vtx_id));
+    return mpi_errno;
 }
 
 int MPIR_TSP_sched_issend(const void *buf,
@@ -239,16 +239,16 @@ int MPIR_TSP_sched_issend(const void *buf,
                           MPI_Datatype dt,
                           int dest,
                           int tag,
-                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
+                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
+                          int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
-    int vtx_id;
-
+    int mpi_errno = MPI_SUCCESS;
     /* assign a new vertex */
-    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__ISSEND;
-    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
 
     /* store the arguments */
     vtxp->u.issend.buf = buf;
@@ -259,24 +259,23 @@ int MPIR_TSP_sched_issend(const void *buf,
     vtxp->u.issend.comm = comm_ptr;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] issend", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] issend", *vtx_id));
 
-    return vtx_id;
+    return mpi_errno;
 }
 
 int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, int count,
                                 MPI_Datatype datatype, MPI_Op op, MPIR_TSP_sched_t s,
-                                int n_in_vtcs, int *in_vtcs)
+                                int n_in_vtcs, int *in_vtcs, int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
-    int vtx_id;
-
+    int mpi_errno = MPI_SUCCESS;
     /* assign a new vertex */
-    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
 
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL;
-    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
 
     /* record the arguments */
     vtxp->u.reduce_local.inbuf = inbuf;
@@ -286,25 +285,24 @@ int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, int count,
     vtxp->u.reduce_local.op = op;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] reduce_local", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] reduce_local", *vtx_id));
 
-    return vtx_id;
+    return mpi_errno;
 }
 
 
 int MPIR_TSP_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                              void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                             MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
+                             MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs, int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
-    int vtx_id;
-
+    int mpi_errno = MPI_SUCCESS;
     /* assign a new vertex */
-    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
 
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__LOCALCOPY;
-    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
 
     /* record the arguments */
     vtxp->u.localcopy.sendbuf = sendbuf;
@@ -315,9 +313,9 @@ int MPIR_TSP_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
     vtxp->u.localcopy.recvtype = recvtype;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] localcopy", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] localcopy", *vtx_id));
 
-    return vtx_id;
+    return mpi_errno;
 }
 
 
@@ -390,23 +388,21 @@ void MPIR_TSP_sched_fence(MPIR_TSP_sched_t s)
     MPIR_Assert(MPI_SUCCESS == mpi_errno);
 }
 
-int MPIR_TSP_sched_selective_sink(MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
+int MPIR_TSP_sched_selective_sink(MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs, int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
-    int vtx_id;
-
+    int mpi_errno = MPI_SUCCESS;
     /* assign a new vertex */
-    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
 
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__SELECTIVE_SINK;
-    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] selective_sink task", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] selective_sink task", *vtx_id));
 
-    return vtx_id;
-
+    return mpi_errno;
 }
 
 void *MPIR_TSP_sched_malloc(size_t size, MPIR_TSP_sched_t s)
