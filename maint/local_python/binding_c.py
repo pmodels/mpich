@@ -551,7 +551,11 @@ def process_func_parameters(func):
         elif RE.match(r'(COUNT|TAG)$', kind):
             validation_list.append({'kind': RE.m.group(1), 'name': name})
         elif RE.match(r'RANK(_NNI)?$', kind):
-            validation_list.append({'kind': 'RANK', 'name': name})
+            if RE.match(r'mpi_intercomm_create_from_groups', func_name, re.IGNORECASE):
+                # TODO: add validation
+                pass
+            else:
+                validation_list.append({'kind': 'RANK', 'name': name})
         elif RE.match(r'(POLY)?(XFER_NUM_ELEM|DTYPE_NUM_ELEM_NNI|DTYPE_PACK_SIZE)', kind):
             validation_list.append({'kind': "COUNT", 'name': name})
         elif RE.match(r'(POLY)?DTYPE_NUM_ELEM', kind):
