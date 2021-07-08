@@ -24,11 +24,13 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
                                            MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
+    int mpi_errno_ret = MPI_SUCCESS;
+    int i, vtx_id;
     int comm_size, rank;
     MPI_Aint extent;
     int min_procs;
     int tag;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     rank = comm_ptr->rank;
 
@@ -49,14 +51,18 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
             if (recvcounts[i]) {
                 if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
                     if (sendbuf != MPI_IN_PLACE) {
-                        MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype,
-                                                 ((char *) recvbuf + displs[rank] * extent),
-                                                 recvcounts[rank], recvtype, sched, 0, NULL);
+                        mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype,
+                                                             ((char *) recvbuf +
+                                                              displs[rank] * extent),
+                                                             recvcounts[rank], recvtype, sched, 0,
+                                                             NULL, &vtx_id);
                     }
                 } else {
-                    MPIR_TSP_sched_irecv(((char *) recvbuf + displs[i] * extent),
-                                         recvcounts[i], recvtype, i, tag, comm_ptr, sched, 0, NULL);
+                    mpi_errno = MPIR_TSP_sched_irecv(((char *) recvbuf + displs[i] * extent),
+                                                     recvcounts[i], recvtype, i, tag, comm_ptr,
+                                                     sched, 0, NULL, &vtx_id);
                 }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
             }
         }
     } else if (root != MPI_PROC_NULL) {
@@ -74,11 +80,14 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
                 MPIR_CVAR_GET_DEFAULT_INT(GATHERV_INTER_SSEND_MIN_PROCS, &min_procs);
 
             if (comm_size >= min_procs)
-                MPIR_TSP_sched_issend(sendbuf, sendcount, sendtype, root, tag, comm_ptr, sched, 0,
-                                      NULL);
+                mpi_errno =
+                    MPIR_TSP_sched_issend(sendbuf, sendcount, sendtype, root, tag, comm_ptr, sched,
+                                          0, NULL, &vtx_id);
             else
-                MPIR_TSP_sched_isend(sendbuf, sendcount, sendtype, root, tag, comm_ptr, sched, 0,
-                                     NULL);
+                mpi_errno =
+                    MPIR_TSP_sched_isend(sendbuf, sendcount, sendtype, root, tag, comm_ptr, sched,
+                                         0, NULL, &vtx_id);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
     }
 
