@@ -265,7 +265,13 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer, MPI_Aint count, MPI_Da
                                             MPIR_Errflag_t * errflag);
 int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                          MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
-
+int MPIR_Bcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
+                          MPIR_Comm * comm_ptr, int tree_type, int branching_factor,
+                          int is_nb, MPIR_Errflag_t * errflag);
+int MPIR_Bcast_intra_pipelined_tree(void *buffer, int count, MPI_Datatype datatype, int root,
+                                    MPIR_Comm * comm_ptr, int tree_type, int branching_factor,
+                                    int is_nb, int chunk_size, int recv_pre_posted,
+                                    MPIR_Errflag_t * errflag);
 /* intercomm-only functions */
 int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer, MPI_Aint count, MPI_Datatype datatype,
                                              int root, MPIR_Comm * comm_ptr,

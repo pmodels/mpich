@@ -48,6 +48,8 @@ typedef enum {
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_scatter_recursive_doubling_allgather,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_scatter_ring_allgather,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_smp,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_tree,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_pipelined_tree,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_inter_remote_send_local_bcast,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_allcomm_nb,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Exscan_intra_recursive_doubling,
@@ -320,6 +322,20 @@ typedef struct {
                 int allgatherv_k;
             } intra_gentran_scatterv_recexch_allgatherv;
         } ibcast;
+        struct {
+            struct {
+                int tree_type;
+                int k;
+                int is_non_blocking;
+            } intra_tree;
+            struct {
+                int tree_type;
+                int k;
+                int is_non_blocking;
+                int chunk_size;
+                int recv_pre_posted;
+            } intra_pipelined_tree;
+        } bcast;
         struct {
             struct {
                 int k;
