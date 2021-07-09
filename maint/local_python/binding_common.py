@@ -207,6 +207,9 @@ def get_userbuffer_group(func_name, parameters, i):
     elif RE.match(r'mpi_i?(allreduce|reduce|scan|exscan)', func_name, re.IGNORECASE):
         group_kind = "USERBUFFER-reduce"
         group_count = 5
+    elif RE.match(r'mpi_p(send|recv)_init', func_name, re.IGNORECASE):
+        group_kind = "USERBUFFER-partition"
+        group_count = 4
     elif RE.search(r'XFER_NUM_ELEM', p2['kind']) and RE.search(r'DATATYPE', p3['kind']):
         group_kind = "USERBUFFER-simple"
         group_count = 3
