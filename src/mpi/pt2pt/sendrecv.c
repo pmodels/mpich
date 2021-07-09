@@ -5,9 +5,9 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Sendrecv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Sendrecv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                        int dest, int sendtag,
-                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                       void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                        int source, int recvtag, MPIR_Comm * comm_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -89,8 +89,9 @@ int MPIR_Sendrecv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     goto fn_exit;
 }
 
-int MPIR_Sendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag,
-                               int source, int recvtag, MPIR_Comm * comm_ptr, MPI_Status * status)
+int MPIR_Sendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+                               int sendtag, int source, int recvtag, MPIR_Comm * comm_ptr,
+                               MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -174,9 +175,9 @@ int MPIR_Sendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int 
     goto fn_exit;
 }
 
-int MPIR_Isendrecv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Isendrecv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                         int dest, int sendtag,
-                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                        void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                         int source, int recvtag, MPIR_Comm * comm_ptr, MPIR_Request ** p_req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -221,8 +222,8 @@ static int release_temp_buffer(MPIR_Comm * comm_ptr, int tag, void *state)
     return MPI_SUCCESS;
 }
 
-int MPIR_Isendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag,
-                                int source, int recvtag, MPIR_Comm * comm_ptr,
+int MPIR_Isendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+                                int sendtag, int source, int recvtag, MPIR_Comm * comm_ptr,
                                 MPIR_Request ** p_req)
 {
     int mpi_errno = MPI_SUCCESS;
