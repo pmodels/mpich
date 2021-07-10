@@ -45,8 +45,7 @@ int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
     ADIO_File adio_fh;
 
     if (mpi_fh == MPI_FILE_NULL) {
-        if (ADIOI_DFLT_ERR_HANDLER == MPI_ERRORS_ARE_FATAL ||
-            ADIOI_DFLT_ERR_HANDLER != MPI_ERRORS_RETURN) {
+        if (ADIOI_DFLT_ERR_HANDLER != MPI_ERRORS_RETURN) {
             MPI_Abort(MPI_COMM_WORLD, 1);
         } else {
             return error_code;
@@ -55,7 +54,7 @@ int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
 
     adio_fh = MPIO_File_resolve(mpi_fh);
 
-    if (adio_fh->err_handler == MPI_ERRORS_ARE_FATAL || adio_fh->err_handler != MPI_ERRORS_RETURN) {
+    if (adio_fh->err_handler != MPI_ERRORS_RETURN) {
         MPI_Abort(MPI_COMM_WORLD, 1);
     } else {
         return error_code;
@@ -68,7 +67,7 @@ int MPIO_Err_return_comm(MPI_Comm mpi_comm, int error_code)
 
     MPI_Errhandler_get(mpi_comm, &errh);
 
-    if (errh == MPI_ERRORS_ARE_FATAL || errh != MPI_ERRORS_RETURN) {
+    if (errh != MPI_ERRORS_RETURN) {
         MPI_Abort(mpi_comm, 1);
     }
 
