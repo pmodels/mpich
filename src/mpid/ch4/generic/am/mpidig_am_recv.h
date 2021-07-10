@@ -86,7 +86,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_copy_from_unexp_req(MPIR_Request * req, void
              * the absolute address of the buffer (e.g. buf == MPI_BOTTOM).
              */
             char *addr = (char *) user_buf + dt_true_lb;
-            assert(addr);       /* to suppress gcc-8 warning: -Wnonnull */
             MPIR_Typerep_copy(addr, MPIDIG_REQUEST(req, buffer), nbytes);
         }
     }
