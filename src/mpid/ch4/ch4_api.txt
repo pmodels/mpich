@@ -321,8 +321,6 @@ Native API:
      MPIDIG: assert, win
   rank_is_local : int
       NM*: target, comm
-  av_is_local : int
-      NM*: av
   mpi_barrier : int
       NM*: comm, errflag
      SHM*: comm, errflag
