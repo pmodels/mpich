@@ -356,6 +356,8 @@ static const MPI_Datatype mpich_mpi_datatype_null MPICH_ATTR_TYPE_TAG_MUST_BE_NU
 #define MPI_MAX_ERROR_STRING   @MPI_MAX_ERROR_STRING@
 #define MPI_MAX_PORT_NAME      256
 #define MPI_MAX_OBJECT_NAME    128
+#define MPI_MAX_STRINGTAG_LEN  256
+#define MPI_MAX_PSET_NAME_LEN  256
 
 /* Pre-defined constants */
 #define MPI_UNDEFINED      (-32766)
@@ -419,6 +421,7 @@ typedef MPI_Session_errhandler_function MPI_Session_errhandler_fn;
    in 22-25), index in the low bits */
 #define MPI_ERRORS_ARE_FATAL ((MPI_Errhandler)0x54000000)
 #define MPI_ERRORS_RETURN    ((MPI_Errhandler)0x54000001)
+#define MPI_ERRORS_ABORT     ((MPI_Errhandler)0x54000003)
 /* MPIR_ERRORS_THROW_EXCEPTIONS is not part of the MPI standard, it is here to
    facilitate the c++ binding which has MPI::ERRORS_THROW_EXCEPTIONS. 
    Using the MPIR prefix preserved the MPI_ names for objects defined by
@@ -457,9 +460,9 @@ typedef int MPIX_Grequest_class;
 typedef int (MPI_Copy_function) ( MPI_Comm, int, void *, void *, void *, int * );
 typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
 
-#define MPI_VERSION    3
-#define MPI_SUBVERSION 1
-#define MPICH_NAME     3
+#define MPI_VERSION    4
+#define MPI_SUBVERSION 0
+#define MPICH_NAME     4
 #define MPICH         1
 #define MPICH_HAS_C2F  1
 
@@ -729,6 +732,8 @@ typedef void (MPI_T_event_dropped_cb_function)(MPI_Count count, MPI_T_event_regi
 #define MPI_Win_f2c(win)   (MPI_Win)(win)
 #define MPI_Message_c2f(msg) ((MPI_Fint)(msg))
 #define MPI_Message_f2c(msg) ((MPI_Message)(msg))
+#define MPI_Session_c2f(session) (MPI_Fint)(session)
+#define MPI_Session_f2c(session) (MPI_Session)(session)
 
 /* PMPI versions of the handle transfer functions.  See section 4.17 */
 #define PMPI_Comm_c2f(comm) (MPI_Fint)(comm)
@@ -749,6 +754,8 @@ typedef void (MPI_T_event_dropped_cb_function)(MPI_Count count, MPI_T_event_regi
 #define PMPI_Win_f2c(win)   (MPI_Win)(win)
 #define PMPI_Message_c2f(msg) ((MPI_Fint)(msg))
 #define PMPI_Message_f2c(msg) ((MPI_Message)(msg))
+#define PMPI_Session_c2f(session) (MPI_Fint)(session)
+#define PMPI_Session_f2c(session) (MPI_Session)(session)
 
 #define MPI_STATUS_IGNORE (MPI_Status *)1
 #define MPI_STATUSES_IGNORE (MPI_Status *)1
@@ -911,12 +918,13 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 
 #define MPI_ERR_SESSION            75  /* Invalid session handle */
 #define MPI_ERR_PROC_ABORTED       76  /* Trying to communicate with aborted processes */
+#define MPI_ERR_VALUE_TOO_LARGE    77  /* Value is too large to store */
 
-#define MPI_T_ERR_NOT_SUPPORTED    77  /* Requested functionality not supported */
+#define MPI_T_ERR_NOT_SUPPORTED    78  /* Requested functionality not supported */
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
-#define MPICH_ERR_LAST_CLASS 77     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 78     /* It is also helpful to know the
 				       last valid class */
 
 #define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
