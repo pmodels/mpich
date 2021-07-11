@@ -29,9 +29,7 @@ int DTP_pool_create(const char *base_type_str, MPI_Aint base_type_count, int see
     DTPI_ERR_CHK_RC(rc);
 
     /* setup the random number generation parameters */
-    dtpi->seed = seed;
-    dtpi->rand_count = 0;
-    dtpi->rand_idx = DTPI_RAND_LIST_SIZE;
+    DTPI_rand_init(dtpi, seed, 0);
 
     dtpi->base_type_count = base_type_count;
 
@@ -178,6 +176,25 @@ int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize)
             }
         }
     }
+
+  fn_exit:
+    DTPI_FUNC_EXIT();
+    return rc;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+int DTP_pool_set_rand_idx(DTP_pool_s dtp, int rand_idx)
+{
+    int rc = DTP_SUCCESS;
+    DTPI_FUNC_ENTER();
+
+    DTPI_pool_s *dtpi = dtp.priv;
+
+    DTPI_ERR_ARG_CHECK(!dtpi, rc);
+
+    dtpi->rand_idx = rand_idx % DTPI_RAND_LIST_SIZE;
 
   fn_exit:
     DTPI_FUNC_EXIT();
