@@ -74,16 +74,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     MPI_Aint am_hdr_sz = (MPI_Aint) sizeof(am_hdr);
     if (MPIDIG_check_eager(is_local, am_hdr_sz, data_sz, buf, count, datatype, sreq)) {
         /* EAGER send */
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (is_local) {
-            mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz, buf,
-                                           count, datatype, sreq);
-        } else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz, buf,
-                                          count, datatype, sreq);
-        }
+        CH4_CALL(am_isend(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz, buf, count, datatype, sreq),
+                 is_local, mpi_errno);
     } else {
         /* RNDV send */
         MPIDIG_REQUEST(sreq, req->sreq).src_buf = buf;
@@ -95,14 +87,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         am_hdr.flags |= MPIDIG_AM_SEND_FLAGS_RTS;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (is_local) {
-            mpi_errno = MPIDI_SHM_am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz);
-        } else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz);
-        }
+        CH4_CALL(am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz), is_local, mpi_errno);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
