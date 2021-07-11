@@ -34,6 +34,7 @@ typedef struct {
 int DTP_pool_create(const char *basic_type_str, MPI_Aint basic_type_count, int seed,
                     DTP_pool_s * dtp);
 int DTP_pool_free(DTP_pool_s dtp);
+int DTP_pool_set_rand_idx(DTP_pool_s dtp, int rand_idx);
 
 int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize);
 int DTP_obj_free(DTP_obj_s obj);
