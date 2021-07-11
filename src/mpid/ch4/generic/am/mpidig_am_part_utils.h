@@ -20,18 +20,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
     am_hdr.rreq_ptr = rreq_ptr;
 
     int source = MPIDI_PART_REQUEST(rreq_ptr, rank);
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(rreq_ptr, is_local))
-        mpi_errno =
-            MPIDI_SHM_am_send_hdr_reply(rreq_ptr->comm, source, MPIDIG_PART_CTS, &am_hdr,
-                                        sizeof(am_hdr));
-    else
-#endif
-    {
-        mpi_errno =
-            MPIDI_NM_am_send_hdr_reply(rreq_ptr->comm, source, MPIDIG_PART_CTS, &am_hdr,
-                                       sizeof(am_hdr));
-    }
+    CH4_CALL(am_send_hdr_reply(rreq_ptr->comm, source, MPIDIG_PART_CTS, &am_hdr, sizeof(am_hdr)),
+             MPIDI_REQUEST(rreq_ptr, is_local), mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_ISSUE_CTS);
     return mpi_errno;
@@ -65,22 +55,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq)
     MPIR_Assert(MPIDI_PART_REQUEST(part_sreq, count) * part_sreq->u.part.partitions <
                 MPIR_AINT_MAX);
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(part_sreq, is_local)) {
-        mpi_errno = MPIDI_SHM_am_isend(MPIDI_PART_REQUEST(part_sreq, rank),
-                                       part_sreq->comm, MPIDIG_PART_SEND_DATA,
-                                       &am_hdr, sizeof(am_hdr),
-                                       MPIDI_PART_REQUEST(part_sreq, buffer), count,
-                                       MPIDI_PART_REQUEST(part_sreq, datatype), sreq);
-    } else
-#endif
-    {
-        mpi_errno = MPIDI_NM_am_isend(MPIDI_PART_REQUEST(part_sreq, rank),
-                                      part_sreq->comm, MPIDIG_PART_SEND_DATA,
-                                      &am_hdr, sizeof(am_hdr),
-                                      MPIDI_PART_REQUEST(part_sreq, buffer), count,
-                                      MPIDI_PART_REQUEST(part_sreq, datatype), sreq);
-    }
+    CH4_CALL(am_isend(MPIDI_PART_REQUEST(part_sreq, rank), part_sreq->comm, MPIDIG_PART_SEND_DATA,
+                      &am_hdr, sizeof(am_hdr),
+                      MPIDI_PART_REQUEST(part_sreq, buffer), count,
+                      MPIDI_PART_REQUEST(part_sreq, datatype), sreq),
+             MPIDI_REQUEST(part_sreq, is_local), mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_ISSUE_DATA);
