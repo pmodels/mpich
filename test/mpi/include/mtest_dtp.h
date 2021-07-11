@@ -420,7 +420,7 @@ static inline int MTest_dtp_init(struct mtest_obj *obj, int start, int stride, i
 }
 
 static inline int MTest_dtp_check(struct mtest_obj *obj, int start, int stride, int count,
-                                  int verbose)
+                                  struct mtest_obj *obj2, int verbose)
 {
     int err;
     MTestCopyContent(obj->buf, obj->buf_h, obj->dtp_obj.DTP_bufsize, obj->memtype);
@@ -429,6 +429,9 @@ static inline int MTest_dtp_check(struct mtest_obj *obj, int start, int stride, 
         if (verbose) {
             printf("DTP_obj_buf_check failed.\n");
             MTest_dtp_print_desc(obj);
+            if (obj2) {
+                MTest_dtp_print_desc(obj2);
+            }
         }
         return 1;
     }

@@ -46,7 +46,7 @@ static inline int test(MPI_Comm comm, int rank, int orig_rank, int target_rank,
         MPI_Win_fence(0, win);
 
 #if defined(USE_PUT)
-        errs += MTest_dtp_check(&target, 0, 1, count, errs < 10);
+        errs += MTest_dtp_check(&target, 0, 1, count, &orig, errs < 10);
 #endif
     } else if (rank == orig_rank) {
 #if defined(USE_GET)
@@ -94,7 +94,7 @@ static inline int test(MPI_Comm comm, int rank, int orig_rank, int target_rank,
             }
         }
 #if defined(USE_GET)
-        errs += MTest_dtp_check(&orig, 0, 1, count, errs < 10);
+        errs += MTest_dtp_check(&orig, 0, 1, count, &target, errs < 10);
 #endif
     } else {
         MPI_Win_fence(0, win);
