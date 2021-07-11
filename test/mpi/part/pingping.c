@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 
                     errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, source, 0,
                                              errs < 10);
-                    errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
+                    errs += MTest_dtp_check(&recv, 0, 1, sendcnt, &send, errs < 10);
                 }
             }
             MTest_dtp_destroy(&send);

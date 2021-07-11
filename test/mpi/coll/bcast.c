@@ -90,7 +90,7 @@ static int bcast_dtp(int seed, int testsize, int count, const char *basic_type,
                     MTestPrintError(err);
                 }
 
-                errs += MTest_dtp_check(&coll, 0, 1, count, errs < 10);
+                errs += MTest_dtp_check(&coll, 0, 1, count, NULL, errs < 10);
 
                 MTest_dtp_destroy(&coll);
             }
