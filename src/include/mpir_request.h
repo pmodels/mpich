@@ -382,67 +382,68 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
 #endif
     req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool],
                                        REQUEST_NUM_BLOCKS, REQUEST_NUM_INDICES);
-    if (req != NULL) {
-        /* Patch the handle for pool index. */
-        req->handle |= (pool << REQUEST_POOL_SHIFT);
-    }
+    if (req == NULL)
+        goto fn_fail;
 
-    if (req != NULL) {
-        MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "allocated request, handle=0x%08x", req->handle);
+    /* Patch the handle for pool index. */
+    req->handle |= (pool << REQUEST_POOL_SHIFT);
+
+    MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "allocated request, handle=0x%08x", req->handle);
 #ifdef MPICH_DBG_OUTPUT
-        /*MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST); */
-        if (HANDLE_GET_MPI_KIND(req->handle) != MPIR_REQUEST) {
-            int mpi_errno;
-            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                             __func__, __LINE__, MPI_ERR_OTHER,
-                                             "**invalid_handle", "**invalid_handle %d",
-                                             req->handle);
-            MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
-        }
+    /*MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST); */
+    if (HANDLE_GET_MPI_KIND(req->handle) != MPIR_REQUEST) {
+        int mpi_errno;
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+                                         __func__, __LINE__, MPI_ERR_OTHER,
+                                         "**invalid_handle", "**invalid_handle %d", req->handle);
+        MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
+    }
 #endif
-        /* FIXME: This makes request creation expensive.  We need to
-         * trim this to the basics, with additional setup for
-         * special-purpose requests (think base class and
-         * inheritance).  For example, do we really* want to set the
-         * kind to UNDEFINED? And should the RMA values be set only
-         * for RMA requests? */
-        MPIR_Object_set_ref(req, ref_count);
-        req->kind = kind;
-        MPIR_cc_set(&req->cc, 1);
-        req->cc_ptr = &req->cc;
+    /* FIXME: This makes request creation expensive.  We need to
+     * trim this to the basics, with additional setup for
+     * special-purpose requests (think base class and
+     * inheritance).  For example, do we really* want to set the
+     * kind to UNDEFINED? And should the RMA values be set only
+     * for RMA requests? */
+    MPIR_Object_set_ref(req, ref_count);
+    req->kind = kind;
+    MPIR_cc_set(&req->cc, 1);
+    req->cc_ptr = &req->cc;
 
-        req->completion_notification = NULL;
+    req->completion_notification = NULL;
 
-        req->status.MPI_ERROR = MPI_SUCCESS;
-        MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
+    req->status.MPI_ERROR = MPI_SUCCESS;
+    MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
 
-        req->comm = NULL;
+    req->comm = NULL;
 
-        switch (kind) {
-            case MPIR_REQUEST_KIND__SEND:
-                MPII_REQUEST_CLEAR_DBG(req);
-                break;
-            case MPIR_REQUEST_KIND__COLL:
-                req->u.nbc.errflag = MPIR_ERR_NONE;
-                req->u.nbc.coll.host_sendbuf = NULL;
-                req->u.nbc.coll.host_recvbuf = NULL;
-                req->u.nbc.coll.datatype = MPI_DATATYPE_NULL;
-                break;
-            case MPIR_REQUEST_KIND__PREQUEST_COLL:
-                req->u.persist_coll.coll.host_sendbuf = NULL;
-                req->u.persist_coll.coll.host_recvbuf = NULL;
-                req->u.persist_coll.coll.datatype = MPI_DATATYPE_NULL;
-            default:
-                break;
-        }
-
-        MPID_Request_create_hook(req);
-    } else {
-        /* FIXME: This fails to fail if debugging is turned off */
-        MPL_DBG_MSG(MPIR_DBG_REQUEST, TYPICAL, "unable to allocate a request");
+    switch (kind) {
+        case MPIR_REQUEST_KIND__SEND:
+            MPII_REQUEST_CLEAR_DBG(req);
+            break;
+        case MPIR_REQUEST_KIND__COLL:
+            req->u.nbc.errflag = MPIR_ERR_NONE;
+            req->u.nbc.coll.host_sendbuf = NULL;
+            req->u.nbc.coll.host_recvbuf = NULL;
+            req->u.nbc.coll.datatype = MPI_DATATYPE_NULL;
+            break;
+        case MPIR_REQUEST_KIND__PREQUEST_COLL:
+            req->u.persist_coll.coll.host_sendbuf = NULL;
+            req->u.persist_coll.coll.host_recvbuf = NULL;
+            req->u.persist_coll.coll.datatype = MPI_DATATYPE_NULL;
+        default:
+            break;
     }
 
+    MPID_Request_create_hook(req);
+
+  fn_exit:
     return req;
+  fn_fail:
+    MPIR_Assert(req != NULL);
+    /* TODO - Obviously this is a bad solution, but no one had the stomach to make the larger change
+     * in the entire codebase to do a better job. */
+    goto fn_exit;
 }
 
 /* Useful for lockless MT model */
