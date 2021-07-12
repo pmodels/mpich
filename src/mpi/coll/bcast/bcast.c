@@ -95,8 +95,6 @@ cvars:
         smp                                     - Force smp algorithm
         scatter_recursive_doubling_allgather    - Force Scatter Recursive-Doubling Allgather
         scatter_ring_allgather                  - Force Scatter Ring
-        pipelined_tree                          - Force tree-based pipelined algorithm
-        tree                                    - Force tree-based algorithm	
 
     - name        : MPIR_CVAR_BCAST_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -125,61 +123,6 @@ cvars:
         algorithms.  The device might still call the MPIR-level
         algorithms manually.  If set to false, the device-override
         will be disabled.
-
-    - name        : MPIR_CVAR_BCAST_TREE_KVAL
-      category    : COLLECTIVE
-      type        : int
-      default     : 2
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        k value for tree (kary, knomial, etc.) based bcast
-
-    - name        : MPIR_CVAR_BCAST_TREE_TYPE
-      category    : COLLECTIVE
-      type        : string
-      default     : kary
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Tree type for tree based ibcast
-        kary      - kary tree type
-        knomial_1 - knomial_1 tree type
-        knomial_2 - knomial_2 tree type
-
-    - name        : MPIR_CVAR_BCAST_NON_BLOCKING
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        If set to true, MPI_Bcast will use non-blocking send.
-
-    - name        : MPIR_CVAR_BCAST_CHUNK_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 8192
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Indicates the chunk size for pipelined bcast.
-
-    - name        : MPIR_CVAR_BCAST_RECV_PRE_POST
-      category    : COLLECTIVE
-      type        : boolean
-      default     : false
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        If set to true, MPI_Bcast will pre-post all the receieves.
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -224,23 +167,6 @@ int MPIR_Bcast_allcomm_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype,
             mpi_errno = MPIR_Bcast_intra_smp(buffer, count, datatype, root, comm_ptr, errflag);
             break;
 
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_tree:
-            mpi_errno =
-                MPIR_Bcast_intra_tree(buffer, count, datatype, root, comm_ptr,
-                                      cnt->u.bcast.intra_tree.tree_type, cnt->u.bcast.intra_tree.k,
-                                      cnt->u.bcast.intra_tree.is_non_blocking, errflag);
-            break;
-
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_pipelined_tree:
-            mpi_errno =
-                MPIR_Bcast_intra_pipelined_tree(buffer, count, datatype, root, comm_ptr,
-                                                cnt->u.bcast.intra_pipelined_tree.tree_type,
-                                                cnt->u.bcast.intra_pipelined_tree.k,
-                                                cnt->u.bcast.intra_pipelined_tree.is_non_blocking,
-                                                cnt->u.bcast.intra_pipelined_tree.chunk_size,
-                                                cnt->u.bcast.intra_pipelined_tree.recv_pre_posted,
-                                                errflag);
-            break;
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_inter_remote_send_local_bcast:
             mpi_errno =
                 MPIR_Bcast_inter_remote_send_local_bcast(buffer, count, datatype, root, comm_ptr,
@@ -289,20 +215,6 @@ int MPIR_Bcast_impl(void *buffer, MPI_Aint count, MPI_Datatype datatype, int roo
             case MPIR_CVAR_BCAST_INTRA_ALGORITHM_auto:
                 mpi_errno =
                     MPIR_Bcast_allcomm_auto(buffer, count, datatype, root, comm_ptr, errflag);
-                break;
-            case MPIR_CVAR_BCAST_INTRA_ALGORITHM_pipelined_tree:
-                mpi_errno =
-                    MPIR_Bcast_intra_pipelined_tree(buffer, count, datatype, root, comm_ptr,
-                                                    MPIR_Bcast_tree_type, MPIR_CVAR_BCAST_TREE_KVAL,
-                                                    MPIR_CVAR_BCAST_NON_BLOCKING,
-                                                    MPIR_CVAR_BCAST_CHUNK_SIZE,
-                                                    MPIR_CVAR_BCAST_RECV_PRE_POST, errflag);
-                break;
-            case MPIR_CVAR_BCAST_INTRA_ALGORITHM_tree:
-                mpi_errno =
-                    MPIR_Bcast_intra_tree(buffer, count, datatype, root, comm_ptr,
-                                          MPIR_Bcast_tree_type, MPIR_CVAR_BCAST_TREE_KVAL,
-                                          MPIR_CVAR_BCAST_NON_BLOCKING, errflag);
                 break;
             default:
                 MPIR_Assert(0);

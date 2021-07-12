@@ -645,39 +645,6 @@ for algo_name in ${algo_names}; do
     env=""
 done
 
-
-############## Add tests for tree-based blocking Bcast ###############
-
-testing_env="env=MPIR_CVAR_BCAST_NON_BLOCKING=1 "
-testing_env+="env=MPIR_CVAR_BCAST_DEVICE_COLLECTIVE=0 "
-testing_env+="env=MPIR_CVAR_BCAST_INTRA_ALGORITHM=tree "
-tree_types="kary knomial_1 knomial_2"
-
-for tree_type in ${tree_types}; do
-        env="${testing_env} env=MPIR_CVAR_BCAST_TREE_TYPE=${tree_type} "
-
-        echo "bcasttest 4 ${env}" >> ${testlist_cvar}
-        echo "bcasttest 10 ${env}" >> ${testlist_cvar}
-        echo "bcastzerotype 10 ${env}" >> ${testlist_cvar}
-done
-
-testing_env="env=MPIR_CVAR_BCAST_NON_BLOCKING=1 "
-testing_env+="env=MPIR_CVAR_BCAST_DEVICE_COLLECTIVE=0 "
-testing_env+="env=MPIR_CVAR_BCAST_INTRA_ALGORITHM=pipelined_tree "
-tree_types="kary knomial_1 knomial_2"
-chunk_sizes="4096 8192"
-
-for tree_type in ${tree_types}; do
-    for csz in ${chunk_sizes}; do
-        env="${testing_env} env=MPIR_CVAR_BCAST_TREE_TYPE=${tree_type} "
-        env+="env=MPIR_CVAR_BCAST_CHUNK_SIZE=${csz} "
-
-        echo "bcasttest 4 ${env}" >> ${testlist_cvar}
-        echo "bcasttest 10 ${env}" >> ${testlist_cvar}
-        echo "bcastzerotype 10 ${env}$" >> ${testlist_cvar}
-    done
-done
-
 ########## Add tests for intra-node bcast algorithms ############
 
 #use release gather based intra-node bcast
