@@ -218,7 +218,9 @@ void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_A
         *host_sendbuf = NULL;
     }
 
-    if (sendbuf == MPI_IN_PLACE) {
+    if (recvbuf == NULL) {
+        *host_recvbuf = NULL;
+    } else if (sendbuf == MPI_IN_PLACE) {
         tmp = MPIR_gpu_host_swap(recvbuf, count, datatype);
         *host_recvbuf = tmp;
     } else {
@@ -257,10 +259,10 @@ void MPIR_Coll_host_buffer_swap_back(void *host_sendbuf, void *host_recvbuf, voi
     request->u.nbc.coll.host_recvbuf = host_recvbuf;
     if (host_recvbuf) {
         request->u.nbc.coll.user_recvbuf = in_recvbuf;
-        request->u.nbc.coll.count = count;
-        request->u.nbc.coll.datatype = datatype;
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
     }
+    request->u.nbc.coll.count = count;
+    request->u.nbc.coll.datatype = datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
 }
 
 void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
