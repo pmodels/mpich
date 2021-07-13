@@ -49,7 +49,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
 /* Checks whether all partitions are ready and MPIDIG_PART_REQ_CTS has been received,
  * If so, then issues data. Otherwise a no-op.
  */
-MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq,
+                                                enum MPIDIG_part_issue_mode mode)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_POST_PREADY);
@@ -61,7 +62,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_post_pready(MPIR_Request * part_sreq)
     if (MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) ==
         part_sreq->u.part.partitions &&
         MPIDIG_PART_REQUEST(part_sreq, send_epoch) == MPIDIG_PART_REQUEST(part_sreq, recv_epoch)) {
-        mpi_errno = MPIDIG_part_issue_data(part_sreq);
+        mpi_errno = MPIDIG_part_issue_data(part_sreq, mode);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -85,7 +86,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int partition_low, int part
     MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) <=
                 part_sreq->u.part.partitions);
 
-    mpi_errno = MPIDIG_post_pready(part_sreq);
+    mpi_errno = MPIDIG_post_pready(part_sreq, MPIDIG_PART_REGULAR);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PREADY_RANGE);
     return mpi_errno;
@@ -104,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, int array_of_par
     MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) <=
                 part_sreq->u.part.partitions);
 
-    mpi_errno = MPIDIG_post_pready(part_sreq);
+    mpi_errno = MPIDIG_post_pready(part_sreq, MPIDIG_PART_REGULAR);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PREADY_LIST);
     return mpi_errno;
