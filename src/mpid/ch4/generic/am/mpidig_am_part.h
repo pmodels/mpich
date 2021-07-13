@@ -86,7 +86,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int partition_low, int part
     MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) <=
                 part_sreq->u.part.partitions);
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     mpi_errno = MPIDIG_post_pready(part_sreq, MPIDIG_PART_REGULAR);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PREADY_RANGE);
     return mpi_errno;
@@ -105,7 +107,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, int array_of_par
     MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) <=
                 part_sreq->u.part.partitions);
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     mpi_errno = MPIDIG_post_pready(part_sreq, MPIDIG_PART_REGULAR);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PREADY_LIST);
     return mpi_errno;
