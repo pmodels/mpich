@@ -19,6 +19,16 @@ static int tree_add_child(MPIR_Treealgo_tree_t * t, int rank)
     return mpi_errno;
 }
 
+/* Routine to calculate log_k of an integer. Specific to tree based calculations */
+static int tree_ilog(int k, int number)
+{
+    int i = 1, p = k - 1;
+
+    for (; p - 1 < number; i++)
+        p *= k;
+
+    return i;
+}
 
 int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPIR_Treealgo_tree_t * ct)
 {
@@ -188,7 +198,7 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
     if (lrank <= 0)
         ct->parent = -1;
     else {
-        depth = MPL_ilog(k, nranks - 1);
+        depth = tree_ilog(k, nranks - 1);
 
         for (i = 0; i < depth; i++) {
             if (MPL_getdigit(k, lrank, i)) {
@@ -199,7 +209,7 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
     }
 
     /* Children calculation */
-    depth = MPL_ilog(k, nranks - 1);
+    depth = tree_ilog(k, nranks - 1);
     flip_bit = (int *) MPL_calloc(depth, sizeof(int), MPL_MEM_COLL);
 
     for (j = 0; j < depth; j++) {
