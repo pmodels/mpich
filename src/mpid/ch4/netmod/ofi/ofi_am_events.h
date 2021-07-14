@@ -189,7 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
         int vni_local = 0;
         int vni_remote = 0;
         int nic = 0;
-        MPIDI_OFI_cntr_incr(vni_local, nic);
+        MPIDI_OFI_cntr_incr(comm, vni_local, nic);
 
         struct iovec iov = {
             .iov_base = (char *) dst + done,
@@ -211,7 +211,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
             .data = 0
         };
 
-        int ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, nic);
         MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_OFI_global.ctx[ctx_idx].tx, &msg, FI_COMPLETION),
                                 rdma_readfrom);
 

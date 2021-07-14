@@ -78,8 +78,13 @@ def split_line_with_break(s, tail, N=100):
                 tlist.append(',')
                 out_list.append(''.join(tlist))
                 # start new line with leading spaces
-                tlist = [' ' * n_lead, a]
-                n = n_lead + len(a)
+                # if lead is too much, it won't look good
+                if n_lead > N - 40:
+                    tlist = [' ' * 20, a]
+                    n = 20 + len(a)
+                else:
+                    tlist = [' ' * n_lead, a]
+                    n = n_lead + len(a)
         # leave last segment with tail
     else:
         # only break long function declaration or call for now
@@ -202,6 +207,9 @@ def get_userbuffer_group(func_name, parameters, i):
     elif RE.match(r'mpi_i?(allreduce|reduce|scan|exscan)', func_name, re.IGNORECASE):
         group_kind = "USERBUFFER-reduce"
         group_count = 5
+    elif RE.match(r'mpi_p(send|recv)_init', func_name, re.IGNORECASE):
+        group_kind = "USERBUFFER-partition"
+        group_count = 4
     elif RE.search(r'XFER_NUM_ELEM', p2['kind']) and RE.search(r'DATATYPE', p3['kind']):
         group_kind = "USERBUFFER-simple"
         group_count = 3

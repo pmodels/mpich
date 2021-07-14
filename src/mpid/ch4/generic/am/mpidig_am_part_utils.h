@@ -8,74 +8,6 @@
 
 #include "ch4_impl.h"
 
-/* Request status used for partitioned comm.
- * Updated as atomic cntr because AM callback and local operation may be
- * concurrently performed by threads. */
-#define MPIDIG_PART_REQ_UNSET 0 /* Initial status set at psend|precv_init */
-#define MPIDIG_PART_REQ_PARTIAL_ACTIVATED 1     /* Intermediate status (unused).
-                                                 * On receiver means either (1) request matched at initial round
-                                                 * or (2) locally started;
-                                                 * On sender means either (1) receiver started
-                                                 * or (2) locally started. */
-#define MPIDIG_PART_REQ_CTS 2   /* Indicating receiver is ready to receive data
-                                 * (requests matched and start called) */
-
-#define MPIDIG_PART_SEND_NUM_CONDS_TO_SUBTRACT 2        /* the number of conditions to subtract
-                                                         * from status on send completion.
-                                                         * One for send start, and one for receiving
-                                                         * CTS from receiver */
-#define MPIDIG_PART_RECV_NUM_CONDS_TO_SUBTRACT 1        /* the number of conditions to subtract
-                                                         * from status on recv completion.
-                                                         * Only one for recv start.
-                                                         */
-
-/* Atomically increase partitioned rreq status and fetch state after increase.
- * Called when receiver matches request, sender receives CTS, or either side calls start. */
-MPL_STATIC_INLINE_PREFIX int MPIDIG_PART_REQ_INC_FETCH_STATUS(MPIR_Request * part_req)
-{
-    int prev_stat = MPL_atomic_fetch_add_int(&MPIDIG_PART_REQUEST(part_req, status), 1);
-    return prev_stat + 1;
-}
-
-#ifdef HAVE_ERROR_CHECKING
-#define MPIDIG_PART_CHECK_RREQ_CTS(req)                                                 \
-    do {                                                                                \
-        MPID_BEGIN_ERROR_CHECKS;                                                        \
-        if (MPL_atomic_load_int(&MPIDIG_PART_REQUEST(req, status))                      \
-                   != MPIDIG_PART_REQ_CTS) {                                            \
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_OTHER, goto fn_fail, "**ch4|partitionsync"); \
-        }                                                                               \
-        MPID_END_ERROR_CHECKS;                                                          \
-    } while (0);
-#else
-#define MPIDIG_PART_CHECK_RREQ_CTS(rreq)
-#endif
-
-MPL_STATIC_INLINE_PREFIX void MPIDIG_part_match_rreq(MPIR_Request * part_req)
-{
-    MPI_Aint sdata_size = MPIDIG_PART_REQUEST(part_req, u.recv).sdata_size;
-
-    /* Set status for partitioned req */
-    MPIR_STATUS_SET_COUNT(part_req->status, sdata_size);
-    part_req->status.MPI_SOURCE = MPIDI_PART_REQUEST(part_req, rank);
-    part_req->status.MPI_TAG = MPIDI_PART_REQUEST(part_req, tag);
-    part_req->status.MPI_ERROR = MPI_SUCCESS;
-
-    /* Additional check for partitioned pt2pt: require identical buffer size */
-    if (part_req->status.MPI_ERROR == MPI_SUCCESS) {
-        MPI_Aint rdata_size;
-        MPIR_Datatype_get_size_macro(MPIDI_PART_REQUEST(part_req, datatype), rdata_size);
-        rdata_size *= MPIDI_PART_REQUEST(part_req, count) * part_req->u.part.partitions;
-        if (sdata_size != rdata_size) {
-            part_req->status.MPI_ERROR =
-                MPIR_Err_create_code(part_req->status.MPI_ERROR, MPIR_ERR_RECOVERABLE, __FUNCTION__,
-                                     __LINE__, MPI_ERR_OTHER, "**ch4|partmismatchsize",
-                                     "**ch4|partmismatchsize %d %d",
-                                     (int) rdata_size, (int) sdata_size);
-        }
-    }
-}
-
 /* Receiver issues a CTS to sender once reach MPIDIG_PART_REQ_CTS */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
 {
@@ -106,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
 }
 
 /* Sender issues data after all partitions are ready and CTS; called by pready functions. */
-MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq, int is_local)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -134,7 +66,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq, in
                 MPIR_AINT_MAX);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (is_local) {
+    if (MPIDI_REQUEST(part_sreq, is_local)) {
         mpi_errno = MPIDI_SHM_am_isend(MPIDI_PART_REQUEST(part_sreq, rank),
                                        part_sreq->comm, MPIDIG_PART_SEND_DATA,
                                        &am_hdr, sizeof(am_hdr),

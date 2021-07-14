@@ -89,7 +89,7 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
     if (MPIDI_OFI_ENABLE_TAGGED) {
         hints->caps |= FI_TAGGED;       /* Tag matching interface  */
         hints->caps |= FI_DIRECTED_RECV;        /* Match source address    */
-        hints->domain_attr->cq_data_size = 4;   /* Minimum size for completion data entry */
+        hints->domain_attr->cq_data_size = MPIDI_OFI_MIN_CQ_DATA_SIZE;  /* Minimum size for completion data entry */
     }
 
     if (MPIDI_OFI_ENABLE_AM) {
@@ -280,7 +280,8 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
      * queue object (at least 32 bits). Previously, this was a separate capability set,
      * but as more and more providers supported this feature, the decision was made to
      * require it. */
-    CHECK_CAP(enable_tagged, !(prov->caps & FI_TAGGED) || prov->domain_attr->cq_data_size < 4);
+    CHECK_CAP(enable_tagged, !(prov->caps & FI_TAGGED) ||
+              prov->domain_attr->cq_data_size < MPIDI_OFI_MIN_CQ_DATA_SIZE);
 
     CHECK_CAP(enable_am, (prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV));
 
@@ -327,7 +328,7 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
     UPDATE_SETTING_BY_INFO(enable_tagged,
                            (prov->caps & FI_TAGGED) &&
                            (prov->caps & FI_DIRECTED_RECV) &&
-                           (prov->domain_attr->cq_data_size >= 4));
+                           (prov->domain_attr->cq_data_size >= MPIDI_OFI_MIN_CQ_DATA_SIZE));
     UPDATE_SETTING_BY_INFO(enable_am,
                            (prov->caps & (FI_MSG | FI_MULTI_RECV | FI_READ)) ==
                            (FI_MSG | FI_MULTI_RECV | FI_READ));

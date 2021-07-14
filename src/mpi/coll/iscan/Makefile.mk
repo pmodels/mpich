@@ -8,7 +8,6 @@
 # mpi_sources
 
 mpi_core_sources +=                             \
-    src/mpi/coll/iscan/iscan.c \
     src/mpi/coll/iscan/iscan_intra_sched_recursive_doubling.c \
     src/mpi/coll/iscan/iscan_intra_sched_smp.c  \
-    src/mpi/coll/iscan/iscan_gentran_algos.c
+    src/mpi/coll/iscan/iscan_tsp_recursive_doubling.c

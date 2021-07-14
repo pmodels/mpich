@@ -96,11 +96,6 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, in_use;
     MPIR_Request *match_req = NULL;
-    size_t nbytes;
-    int dt_contig;
-    MPI_Aint dt_true_lb;
-    MPIR_Datatype *dt_ptr;
-    size_t dt_sz;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_HANDLE_UNEXP_CMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_HANDLE_UNEXP_CMPL);
@@ -147,66 +142,16 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
         goto fn_exit;
     }
 
-    match_req->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
-    match_req->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
+    mpi_errno = MPIDIG_handle_unexpected(MPIDIG_REQUEST(match_req, buffer),
+                                         MPIDIG_REQUEST(match_req, count),
+                                         MPIDIG_REQUEST(match_req, datatype), rreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    /* Figure out how much data needs to be moved. */
-    MPIDI_Datatype_get_info(MPIDIG_REQUEST(match_req, count),
-                            MPIDIG_REQUEST(match_req, datatype),
-                            dt_contig, dt_sz, dt_ptr, dt_true_lb);
-    MPIR_Datatype_get_size_macro(MPIDIG_REQUEST(match_req, datatype), dt_sz);
-
-    /* Make sure this request has the right amount of data in it. */
-    if (MPIDIG_REQUEST(rreq, count) > dt_sz * MPIDIG_REQUEST(match_req, count)) {
-        rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        nbytes = dt_sz * MPIDIG_REQUEST(match_req, count);
-    } else {
-        rreq->status.MPI_ERROR = MPI_SUCCESS;
-        nbytes = MPIDIG_REQUEST(rreq, count);   /* incoming message is always count of bytes. */
-    }
-
-    MPIR_STATUS_SET_COUNT(match_req->status, nbytes);
-    MPIDIG_REQUEST(rreq, count) = dt_sz > 0 ? nbytes / dt_sz : 0;
-
-    /* Perform the data copy (using the datatype engine if necessary for non-contig transfers) */
-    if (!dt_contig) {
-        MPI_Aint actual_unpack_bytes;
-        mpi_errno = MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes,
-                                        MPIDIG_REQUEST(match_req, buffer),
-                                        MPIDIG_REQUEST(match_req, count),
-                                        MPIDIG_REQUEST(match_req, datatype), 0,
-                                        &actual_unpack_bytes);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        if (actual_unpack_bytes != (MPI_Aint) nbytes) {
-            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                             __FUNCTION__, __LINE__,
-                                             MPI_ERR_TYPE, "**dtypemismatch", 0);
-            match_req->status.MPI_ERROR = mpi_errno;
-        }
-    } else {
-        MPIR_Typerep_copy((char *) MPIDIG_REQUEST(match_req, buffer) + dt_true_lb,
-                          MPIDIG_REQUEST(rreq, buffer), nbytes);
-    }
-
-    /* Now that the unexpected message has been completed, unset the status bit. */
-    MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
-
-    /* If this is a synchronous send, send the reply back to the sender to unlock them. */
-    if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_PEER_SSEND) {
-        mpi_errno = MPIDIG_reply_ssend(rreq);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_anysrc_free_partner(match_req);
 #endif
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(match_req, datatype));
-    if (MPIDIG_REQUEST(rreq, buffer)) {
-        /* unexp pack buf is MPI_BYTE type, count == data size */
-        MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
-                                          MPIDIG_REQUEST(rreq, buffer));
-    }
     MPIR_Object_release_ref(rreq, &in_use);
     MPID_Request_complete(rreq);
     MPID_Request_complete(match_req);

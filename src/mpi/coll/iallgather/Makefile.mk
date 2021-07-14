@@ -8,9 +8,10 @@
 # mpi_sources
 
 mpi_core_sources +=                                         \
-    src/mpi/coll/iallgather/iallgather.c \
     src/mpi/coll/iallgather/iallgather_intra_sched_recursive_doubling.c \
     src/mpi/coll/iallgather/iallgather_intra_sched_brucks.c             \
     src/mpi/coll/iallgather/iallgather_intra_sched_ring.c               \
     src/mpi/coll/iallgather/iallgather_inter_sched_local_gather_remote_bcast.c \
-    src/mpi/coll/iallgather/iallgather_gentran_algos.c
+    src/mpi/coll/iallgather/iallgather_tsp_brucks.c \
+    src/mpi/coll/iallgather/iallgather_tsp_recexch.c \
+    src/mpi/coll/iallgather/iallgather_tsp_ring.c

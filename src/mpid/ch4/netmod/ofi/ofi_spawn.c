@@ -229,7 +229,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
     MPL_time_t time_sta, time_now;
     double time_gap;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm_ptr, 0, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DYNPROC_HANDSHAKE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DYNPROC_HANDSHAKE);
@@ -350,7 +350,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
     char *local_upids = NULL;
     int *local_node_ids = NULL;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm_ptr, 0, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DYNPROC_EXCHANGE_MAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DYNPROC_EXCHANGE_MAP);
@@ -515,7 +515,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     int rank = comm_ptr->rank;
     fi_addr_t conn;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm_ptr, 0, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_CONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_CONNECT);
@@ -709,7 +709,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     int rank = comm_ptr->rank;
     int port_id;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm_ptr, 0, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
@@ -827,7 +827,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
     int max_n_avts;
     char *curr_upid;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
 
     MPIR_CHKLMEM_DECL(2);
 
@@ -902,7 +902,7 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char 
     int i, total_size = 0;
     char *temp_buf = NULL, *curr_ptr = NULL;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, 0, nic);
 
     MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(1);

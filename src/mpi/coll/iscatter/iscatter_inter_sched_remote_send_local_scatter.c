@@ -57,7 +57,7 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         } else {
-            /* silience -Wmaybe-uninitialized due to MPIR_Iscatter_sched_auto by non-zero ranks */
+            /* silience -Wmaybe-uninitialized due to MPIR_Iscatter_intra_sched_auto by non-zero ranks */
             recvtype_sz = 0;
         }
 
@@ -69,8 +69,8 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
 
         /* now do the usual scatter on this intracommunicator */
         mpi_errno =
-            MPIR_Iscatter_sched_auto(tmp_buf, recvcount * recvtype_sz, MPI_BYTE,
-                                     recvbuf, recvcount, recvtype, 0, newcomm_ptr, s);
+            MPIR_Iscatter_intra_sched_auto(tmp_buf, recvcount * recvtype_sz, MPI_BYTE,
+                                           recvbuf, recvcount, recvtype, 0, newcomm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }

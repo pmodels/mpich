@@ -16,8 +16,8 @@ def main():
 
     binding_dir = G.get_srcdir_path("src/binding")
     f08_dir = "src/binding/fortran/use_mpi_f08"
-    G.check_write_path("%s/wrappers_f" % f08_dir)
-    G.check_write_path("%s/wrappers_c" % f08_dir)
+    G.check_write_path("%s/wrappers_f/" % f08_dir)
+    G.check_write_path("%s/wrappers_c/" % f08_dir)
     func_list = load_C_func_list(binding_dir, True) # suppress noise
     if "no-mpiio" in G.opts:
         # a few MPI_File_xxx functions are already in (MPI_File_xxx_errhandler)

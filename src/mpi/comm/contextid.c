@@ -676,8 +676,9 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
             MPIR_SCHED_BARRIER(st->s);
         }
 
-        mpi_errno = MPIR_Ibcast_sched_auto(st->ctx1, 1,
-                                           MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr, st->s);
+        mpi_errno = MPIR_Ibcast_intra_sched_auto(st->ctx1, 1,
+                                                 MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr,
+                                                 st->s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(st->s);
     }
@@ -858,9 +859,9 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
         }
     }
 
-    mpi_errno = MPIR_Iallreduce_sched_auto(MPI_IN_PLACE, st->local_mask,
-                                           MPIR_MAX_CONTEXT_MASK + 1, MPI_UINT32_T, MPI_BAND,
-                                           st->comm_ptr, st->s);
+    mpi_errno = MPIR_Iallreduce_intra_sched_auto(MPI_IN_PLACE, st->local_mask,
+                                                 MPIR_MAX_CONTEXT_MASK + 1, MPI_UINT32_T, MPI_BAND,
+                                                 st->comm_ptr, st->s);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(st->s);
 

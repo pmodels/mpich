@@ -1016,6 +1016,23 @@ if test "$have_gpu" = "no" ; then
     fi
 fi
 AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
+
+
+# Check HIP availability
+if test "$have_gpu" = "no" ; then
+    PAC_PUSH_FLAG(CPPFLAGS)
+    PAC_APPEND_FLAG([-D__HIP_PLATFORM_AMD__], [CPPFLAGS])
+    PAC_CHECK_HEADER_LIB_OPTIONAL([hip],[hip/hip_runtime_api.h],[amdhip64],[hipStreamSynchronize])
+    PAC_POP_FLAG(CPPFLAGS)
+fi
+
+if test "X${pac_have_hip}" = "Xyes" ; then
+    have_gpu="yes"
+    AC_DEFINE([HAVE_HIP],[1],[Define if HIP is available])
+    AC_DEFINE([__HIP_PLATFORM_AMD__],[1],[AMD GPU HIP available])
+fi
+AM_CONDITIONAL([MPL_HAVE_HIP],[test "X${pac_have_hip}" = "Xyes"])
+
 #######################################################################
 ## END OF GPU CODE
 #######################################################################
