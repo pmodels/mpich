@@ -115,6 +115,19 @@ int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
     /* Initialize am components for send */
     part_req_am_init(*request);
 
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, dest);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_REQUEST(*request, is_local)) {
+        mpi_errno = MPIDI_SHM_mpi_psend_init_hook(buf, partitions, count, datatype, dest, tag,
+                                                  comm, info, av, request);
+    } else
+#endif
+    {
+        mpi_errno = MPIDI_NM_mpi_psend_init_hook(buf, partitions, count, datatype, dest, tag,
+                                                 comm, info, av, request);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* Initiate handshake with receiver for message matching */
     MPIDIG_part_send_init_msg_t am_hdr;
     am_hdr.src_rank = comm->rank;
@@ -162,6 +175,19 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
 
     /* Initialize am components for receive */
     part_req_am_init(*request);
+
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, source);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_REQUEST(*request, is_local)) {
+        mpi_errno = MPIDI_SHM_mpi_precv_init_hook(buf, partitions, count, datatype,
+                                                  source, tag, comm, info, av, request);
+    } else
+#endif
+    {
+        mpi_errno = MPIDI_NM_mpi_precv_init_hook(buf, partitions, count, datatype,
+                                                 source, tag, comm, info, av, request);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Try matching a request or post a new one */
     MPIR_Request *unexp_req = NULL;
