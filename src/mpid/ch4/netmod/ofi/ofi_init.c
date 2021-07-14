@@ -8,6 +8,7 @@
 #include "ofi_am_impl.h"
 #include "ofi_noinline.h"
 #include "mpir_hwtopo.h"
+#include "ofi_csel_container.h"
 #include "ofi_init.h"
 
 /*
