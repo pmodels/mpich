@@ -30,41 +30,7 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                 }
             }
             break;
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_tree:
-            {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.bcast.intra_tree.tree_type = atoi(ckey + strlen("tree_type="));
-                    else if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.bcast.intra_tree.k = atoi(ckey + strlen("k="));
-                    else if (!strncmp(ckey, "is_non_blocking=", strlen("is_non_blocking=")))
-                        cnt->u.bcast.intra_tree.k = atoi(ckey + strlen("k="));
-                    MPL_free(ckey);
-                }
-            }
-            break;
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_pipelined_tree:
-            {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.bcast.intra_pipelined_tree.tree_type =
-                            atoi(ckey + strlen("tree_type="));
-                    else if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.bcast.intra_pipelined_tree.k = atoi(ckey + strlen("k="));
-                    else if (!strncmp(ckey, "is_non_blocking=", strlen("is_non_blocking=")))
-                        cnt->u.bcast.intra_pipelined_tree.k = atoi(ckey + strlen("k="));
-                    else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
-                        cnt->u.bcast.intra_pipelined_tree.chunk_size =
-                            atoi(ckey + strlen("chunk_size="));
-                    else if (!strncmp(ckey, "recv_pre_posted=", strlen("recv_pre_posted=")))
-                        cnt->u.bcast.intra_pipelined_tree.recv_pre_posted =
-                            atoi(ckey + strlen("recv_pre_posted="));
-                    MPL_free(ckey);
-                }
-            }
-            break;
+
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_gentran_ring:
             {
                 json_object_object_foreach(obj, key, val) {
@@ -279,10 +245,6 @@ void *MPII_Create_container(struct json_object *obj)
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_scatter_ring_allgather;
         else if (!strcmp(ckey, "algorithm=MPIR_Bcast_intra_smp"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_smp;
-        else if (!strcmp(ckey, "algorithm=BCAST_INTRA_tree"))
-            cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_tree;
-        else if (!strcmp(ckey, "algorithm=BCAST_INTRA_pipelined_tree"))
-            cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_pipelined_tree;
         else if (!strcmp(ckey, "algorithm=MPIR_Bcast_inter_remote_send_local_bcast"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_inter_remote_send_local_bcast;
         else if (!strcmp(ckey, "algorithm=MPIR_Bcast_allcomm_nb"))
