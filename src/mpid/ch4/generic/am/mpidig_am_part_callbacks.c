@@ -118,7 +118,9 @@ int MPIDIG_part_cts_target_msg_cb(int handler_id, void *am_hdr, void *data,
 
     MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr) = msg_hdr->rreq_ptr;
     MPIDIG_PART_REQUEST(part_sreq, recv_epoch)++;
-    mpi_errno = MPIDIG_post_pready(part_sreq, MPIDIG_PART_REPLY);
+    if (MPIDIG_part_can_issue_data(part_sreq)) {
+        mpi_errno = MPIDIG_part_issue_data(part_sreq, MPIDIG_PART_REPLY);
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_CTS_TARGET_MSG_CB);
     return mpi_errno;
