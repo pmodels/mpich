@@ -22,21 +22,8 @@ int MPIDIG_do_cts(MPIR_Request * rreq)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "do cts req %p handle=0x%x", rreq, rreq->handle));
 
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_am_send_hdr_reply(rreq->comm,
-                                           MPIDIG_REQUEST(rreq, rank), MPIDIG_SEND_CTS, &am_hdr,
-                                           (MPI_Aint) sizeof(am_hdr));
-#else
-    if (MPIDI_REQUEST(rreq, is_local)) {
-        mpi_errno = MPIDI_SHM_am_send_hdr_reply(rreq->comm,
-                                                MPIDIG_REQUEST(rreq, rank),
-                                                MPIDIG_SEND_CTS, &am_hdr, sizeof(am_hdr));
-    } else {
-        mpi_errno = MPIDI_NM_am_send_hdr_reply(rreq->comm,
-                                               MPIDIG_REQUEST(rreq, rank),
-                                               MPIDIG_SEND_CTS, &am_hdr, (MPI_Aint) sizeof(am_hdr));
-    }
-#endif
+    CH4_CALL(am_send_hdr_reply(rreq->comm, MPIDIG_REQUEST(rreq, rank), MPIDIG_SEND_CTS,
+                               &am_hdr, sizeof(am_hdr)), MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -463,27 +450,13 @@ int MPIDIG_send_cts_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_
 
     /* Start the main data transfer */
     send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(sreq, is_local))
-        mpi_errno =
-            MPIDI_SHM_am_isend_reply(sreq->comm,
-                                     MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_DATA,
-                                     &send_hdr, (MPI_Aint) sizeof(send_hdr),
-                                     MPIDIG_REQUEST(sreq, req->sreq).src_buf,
-                                     MPIDIG_REQUEST(sreq, req->sreq).count,
-                                     MPIDIG_REQUEST(sreq, req->sreq).datatype, sreq);
-    else
-#endif
-    {
-        mpi_errno =
-            MPIDI_NM_am_isend_reply(sreq->comm,
-                                    MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_DATA,
-                                    &send_hdr, (MPI_Aint) sizeof(send_hdr),
-                                    MPIDIG_REQUEST(sreq, req->sreq).src_buf,
-                                    MPIDIG_REQUEST(sreq, req->sreq).count,
-                                    MPIDIG_REQUEST(sreq, req->sreq).datatype, sreq);
-    }
-
+    CH4_CALL(am_isend_reply(sreq->comm,
+                            MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_DATA,
+                            &send_hdr, sizeof(send_hdr),
+                            MPIDIG_REQUEST(sreq, req->sreq).src_buf,
+                            MPIDIG_REQUEST(sreq, req->sreq).count,
+                            MPIDIG_REQUEST(sreq, req->sreq).datatype, sreq),
+             MPIDI_REQUEST(sreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_CTS_TARGET_MSG_CB);
