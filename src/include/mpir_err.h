@@ -262,18 +262,6 @@ cvars:
         goto fn_fail;                                           \
     }
 
-#define MPIR_ERRTEST_PARTITIONS(partitions,err)                 \
-    if ((partitions) < 0) {                                     \
-        err = MPIR_Err_create_code(MPI_SUCCESS,                 \
-                                   MPIR_ERR_RECOVERABLE,        \
-                                   __func__, __LINE__,          \
-                                   MPI_ERR_OTHER,               \
-                                   "**partitionsneg",           \
-                                   "**partitionsneg %d",        \
-                                   partitions);                 \
-        goto fn_fail;                                           \
-    }
-
 #define MPIR_ERRTEST_DISP(disp,err)                             \
     if ((disp) < 0) {                                           \
         err = MPIR_Err_create_code(MPI_SUCCESS,                 \
