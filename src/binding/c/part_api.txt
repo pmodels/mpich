@@ -1,13 +1,8 @@
 MPI_Psend_init:
     .desc: Creates a partitioned communication send request
     .seealso: MPI_Pready, MPI_Pready_range, MPI_Pready_list, MPI_Start, MPI_Startall, MPI_Request_free
-{ -- error_check -- partitions
-    MPIR_ERRTEST_PARTITIONS(partitions, mpi_errno);
-}
 {
     MPIR_Request *request_ptr = NULL;
-
-    MPIR_ERRTEST_PARTITIONS(partitions, mpi_errno);
 
     mpi_errno = MPID_Psend_init(buf, partitions, count, datatype, dest, tag, comm_ptr,
                                 info_ptr, &request_ptr);
@@ -21,9 +16,6 @@ MPI_Psend_init:
 MPI_Precv_init:
     .desc: Creates a partitioned communication receive request
     .seealso: MPI_Parrived, MPI_Request_free
-{ -- error_check -- partitions
-    MPIR_ERRTEST_PARTITIONS(partitions, mpi_errno);
-}
 {
     MPIR_Request *request_ptr = NULL;
 

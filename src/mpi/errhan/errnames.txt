@@ -233,8 +233,6 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **invalidmembind %d: cannot bind memory to object (%d). \
 A memory object id was expected but a non-memory object id was passed instead
 
-**partitionsneg: Negative partitions
-**partitionsneg %d: Negative partitions, value is %d
 **partitioninvalid: Invalid partition
 **partitioninvalid %d: Invalid partition, value is %d 
 **partitioninvalid %d %d: Invalid partition range, values are %d %d
