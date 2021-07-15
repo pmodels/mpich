@@ -104,21 +104,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_reply_ssend(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REPLY_SSEND);
     ack_msg.sreq_ptr = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(rreq, is_local))
-        mpi_errno =
-            MPIDI_SHM_am_send_hdr_reply(rreq->comm,
-                                        MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &ack_msg,
-                                        (MPI_Aint) sizeof(ack_msg));
-    else
-#endif
-    {
-        mpi_errno =
-            MPIDI_NM_am_send_hdr_reply(rreq->comm,
-                                       MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &ack_msg,
-                                       (MPI_Aint) sizeof(ack_msg));
-    }
-
+    CH4_CALL(am_send_hdr_reply(rreq->comm, MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK,
+                               &ack_msg, (MPI_Aint) sizeof(ack_msg)),
+             MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REPLY_SSEND);
