@@ -2255,7 +2255,7 @@ def get_declare_function(func, is_large, kind=""):
 def get_C_params(func, mapping):
     param_list = []
     for p in func['c_parameters']:
-        param_list.append(get_C_param(p, mapping))
+        param_list.append(get_C_param(p, func, mapping))
     if not len(param_list):
         return ["void"]
     else:
@@ -2264,7 +2264,7 @@ def get_C_params(func, mapping):
 def get_impl_param(func, param):
     mapping = get_kind_map('C', func['_is_large'])
 
-    s = get_C_param(param, mapping)
+    s = get_C_param(param, func, mapping)
     if RE.match(r'POLY', param['kind']):
         if func['_is_large']:
             # internally we always use MPI_Aint for poly type

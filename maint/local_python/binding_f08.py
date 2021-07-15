@@ -74,7 +74,7 @@ def dump_f08_wrappers_c(func, is_large):
         end_list.append("if (%s_i != %s) PMPI_Type_free(&%s_i);" % (dt, dt, dt))
 
     def dump_p(p):
-        c_param_list.append(get_C_param(p, c_mapping))
+        c_param_list.append(get_C_param(p, func, c_mapping))
         c_arg_list.append(p['name'])
 
     n = len(func['parameters'])

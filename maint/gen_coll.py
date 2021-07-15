@@ -592,7 +592,7 @@ def get_func_params(func):
             params.append("MPIR_Comm * comm_ptr")
             args.append("comm_ptr")
         else:
-            s = get_C_param(p, mapping)
+            s = get_C_param(p, func, mapping)
             if p['kind'].startswith('POLY'):
                 s = re.sub(r'\bint ', 'MPI_Aint ', s)
             params.append(s)

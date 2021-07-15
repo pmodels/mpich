@@ -104,7 +104,7 @@ def split_line_with_break(s, tail, N=100):
 
     return out_list
 
-def get_C_param(param, mapping):
+def get_C_param(param, func, mapping):
     kind = param['kind']
     if kind == "VARARGS":
         return "..."
@@ -122,7 +122,24 @@ def get_C_param(param, mapping):
 
     if not param_type:
         raise Exception("Type mapping [%s] %s not found!" % (mapping, kind))
-    if not want_star:
+
+    # We special treat a few cases to simplify the general rules
+    if kind == "ARGUMENT_COUNT":
+        if re.match(r'mpi_info_create_env', func['name'], re.IGNORECASE):
+            # -> int argc
+            pass
+        else:
+            # MPI_Init, MPI_Init_thread -> int *argc
+            want_star = 1
+    elif kind == "ARGUMENT_LIST":
+        if re.match(r'mpi_info_create_env', func['name'], re.IGNORECASE):
+            # -> char *argv[]
+            want_star = 1
+            want_bracket = 1
+        else:
+            # MPI_Init, MPI_Init_thread -> char ***argv
+            want_star = 3
+    elif not want_star:
         if is_pointer_type(param):
             if kind == "STRING_ARRAY":
                 want_star = 1
@@ -130,8 +147,6 @@ def get_C_param(param, mapping):
             elif kind == "STRING_2DARRAY":
                 want_star = 2
                 want_bracket = 1
-            elif kind == "ARGUMENT_LIST":
-                want_star = 3
             elif param['pointer'] is not None and not param['pointer']:
                 want_bracket = 1
             elif param['length'] is not None and kind != "STRING":
