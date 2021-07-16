@@ -64,8 +64,9 @@ static void part_req_am_init(MPIR_Request * part_req)
     }
 }
 
-void MPIDIG_precv_matched(MPIR_Request * part_req)
+int MPIDIG_precv_matched(MPIR_Request * part_req)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPI_Aint sdata_size = MPIDIG_PART_REQUEST(part_req, u.recv).sdata_size;
 
     /* Set status for partitioned req */
@@ -89,12 +90,14 @@ void MPIDIG_precv_matched(MPIR_Request * part_req)
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(part_req, is_local))
-        MPIDI_SHM_precv_matched_hook(part_req);
+        mpi_errno = MPIDI_SHM_precv_matched_hook(part_req);
     else
 #endif
     {
-        MPIDI_NM_precv_matched_hook(part_req);
+        mpi_errno = MPIDI_NM_precv_matched_hook(part_req);
     }
+
+    return mpi_errno;
 }
 
 int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
@@ -175,7 +178,8 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
         MPIDIG_PART_REQUEST(*request, peer_req_ptr) = MPIDIG_PART_REQUEST(unexp_req, peer_req_ptr);
         MPIDI_CH4_REQUEST_FREE(unexp_req);
 
-        MPIDIG_precv_matched(*request);
+        mpi_errno = MPIDIG_precv_matched(*request);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         MPIDIG_enqueue_request(*request, &MPIDI_global.part_posted_list, MPIDIG_PART);
     }
