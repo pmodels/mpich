@@ -123,20 +123,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     ucp_tag = MPIDI_UCX_recv_tag(tag, rank, comm->recvcontext_id + context_offset);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
+    void *recv_buf;
+    size_t recv_count;
+    ucp_datatype_t ucp_dt;
     if (dt_contig) {
-        ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.ctx[vni_dst].worker,
-                                                        (char *) buf + dt_true_lb, data_sz,
-                                                        ucp_dt_make_contig(1),
-                                                        ucp_tag, tag_mask, &MPIDI_UCX_recv_cmpl_cb);
+        recv_buf = (char *) buf + dt_true_lb;
+        recv_count = data_sz;
+        ucp_dt = ucp_dt_make_contig(1);
     } else {
+        recv_buf = buf;
+        recv_count = count;
+        ucp_dt = dt_ptr->dev.netmod.ucx.ucp_datatype;
         MPIR_Datatype_ptr_add_ref(dt_ptr);
-        ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.ctx[vni_dst].worker,
-                                                        buf, count,
-                                                        dt_ptr->dev.netmod.ucx.ucp_datatype,
-                                                        ucp_tag, tag_mask, &MPIDI_UCX_recv_cmpl_cb);
     }
+
+    ucp_request =
+        (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.ctx[vni_dst].worker,
+                                                    recv_buf, recv_count,
+                                                    ucp_dt,
+                                                    ucp_tag, tag_mask, &MPIDI_UCX_recv_cmpl_cb);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request->req) {
@@ -185,23 +190,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     int vci = MPIDI_Request_get_vci(message);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+
+    void *recv_buf;
+    size_t recv_count;
+    ucp_datatype_t ucp_dt;
     if (dt_contig) {
-        ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.ctx[vci].worker,
-                                                            (char *) buf + dt_true_lb,
-                                                            data_sz,
-                                                            ucp_dt_make_contig(1),
-                                                            MPIDI_UCX_REQ(message).message_handler,
-                                                            &MPIDI_UCX_mrecv_cmpl_cb);
+        recv_buf = (char *) buf + dt_true_lb;
+        recv_count = data_sz;
+        ucp_dt = ucp_dt_make_contig(1);
     } else {
+        recv_buf = buf;
+        recv_count = count;
+        ucp_dt = dt_ptr->dev.netmod.ucx.ucp_datatype;
         MPIR_Datatype_ptr_add_ref(dt_ptr);
-        ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.ctx[vci].worker,
-                                                            buf, count,
-                                                            dt_ptr->dev.netmod.ucx.ucp_datatype,
-                                                            MPIDI_UCX_REQ(message).message_handler,
-                                                            &MPIDI_UCX_mrecv_cmpl_cb);
     }
+
+    ucp_request =
+        (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.ctx[vci].worker,
+                                                        recv_buf, recv_count,
+                                                        ucp_dt,
+                                                        MPIDI_UCX_REQ(message).message_handler,
+                                                        &MPIDI_UCX_mrecv_cmpl_cb);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
 

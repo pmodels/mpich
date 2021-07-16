@@ -54,33 +54,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     ucx_tag = MPIDI_UCX_init_tag(comm->context_id + context_offset, comm->rank, tag);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
-    if (is_sync) {
-        if (dt_contig) {
-            ucp_request =
-                (MPIDI_UCX_ucp_request_t *) ucp_tag_send_sync_nb(ep, (char *) buf + dt_true_lb,
-                                                                 data_sz, ucp_dt_make_contig(1),
-                                                                 ucx_tag, &MPIDI_UCX_send_cmpl_cb);
-        } else {
-            MPIR_Datatype_ptr_add_ref(dt_ptr);
-            ucp_request =
-                (MPIDI_UCX_ucp_request_t *) ucp_tag_send_sync_nb(ep, buf, count,
-                                                                 dt_ptr->dev.netmod.
-                                                                 ucx.ucp_datatype, ucx_tag,
-                                                                 &MPIDI_UCX_send_cmpl_cb);
-        }
+    const void *send_buf;
+    size_t send_count;
+    ucp_datatype_t ucp_dt;
+    if (dt_contig) {
+        send_buf = (char *) buf + dt_true_lb;
+        send_count = data_sz;
+        ucp_dt = ucp_dt_make_contig(1);
     } else {
-        if (dt_contig) {
-            ucp_request =
-                (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, (char *) buf + dt_true_lb, data_sz,
-                                                            ucp_dt_make_contig(1), ucx_tag,
-                                                            &MPIDI_UCX_send_cmpl_cb);
-        } else {
-            MPIR_Datatype_ptr_add_ref(dt_ptr);
-            ucp_request =
-                (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, buf, count,
-                                                            dt_ptr->dev.netmod.ucx.ucp_datatype,
-                                                            ucx_tag, &MPIDI_UCX_send_cmpl_cb);
-        }
+        send_buf = buf;
+        send_count = count;
+        ucp_dt = dt_ptr->dev.netmod.ucx.ucp_datatype;
+        MPIR_Datatype_ptr_add_ref(dt_ptr);
+    }
+
+    if (is_sync) {
+        ucp_request =
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_send_sync_nb(ep, send_buf, send_count,
+                                                             ucp_dt, ucx_tag,
+                                                             &MPIDI_UCX_send_cmpl_cb);
+    } else {
+        ucp_request =
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf, send_count,
+                                                        ucp_dt, ucx_tag, &MPIDI_UCX_send_cmpl_cb);
     }
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
