@@ -8,6 +8,5 @@
 # mpi_sources
 
 mpi_core_sources += \
-    src/mpi/coll/ineighbor_alltoall/ineighbor_alltoall.c \
     src/mpi/coll/ineighbor_alltoall/ineighbor_alltoall_allcomm_sched_linear.c			\
-    src/mpi/coll/ineighbor_alltoall/ineighbor_alltoall_gentran_algos.c
+    src/mpi/coll/ineighbor_alltoall/ineighbor_alltoall_tsp_linear.c

@@ -63,6 +63,8 @@ include $(top_srcdir)/src/mpi/coll/algorithms/Makefile.mk
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/include/
 
 mpi_core_sources += \
+    src/mpi/coll/mpir_coll_sched_auto.c \
+    src/mpi/coll/mpir_coll.c      \
     src/mpi/coll/helper_fns.c     \
     src/mpi/coll/nbcutil.c
 

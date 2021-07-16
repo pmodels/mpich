@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     int vni_local = vni_dst;
     int vni_remote = vni_src;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_dst, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IPROBE);

@@ -184,6 +184,11 @@ static void dloop_copy(void *dest, void *src, MPI_Aint size)
     return;
 }
 
+int MPIR_Typerep_reduce_is_supported(MPI_Op op, MPI_Datatype datatype)
+{
+    /* This function is supposed to return 1 only for yaksa */
+    return 0;
+}
 
 /*@
   MPII_Dataloop_update - update pointers after a copy operation

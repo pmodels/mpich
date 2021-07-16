@@ -78,4 +78,8 @@ typedef struct {
     int dummy;
 } MPIDI_UCX_op_t;
 
+typedef struct {
+    int dummy;
+} MPIDI_UCX_part_t;
+
 #endif /* UCX_PRE_H_INCLUDED */

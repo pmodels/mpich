@@ -192,6 +192,7 @@ static struct hwloc_obj_info_table hwloc_obj_info[] = {
     {"socket", HWLOC_OBJ_PACKAGE},
     {"package", HWLOC_OBJ_PACKAGE},
     {"numa", HWLOC_OBJ_NUMANODE},
+    {"numanode", HWLOC_OBJ_NUMANODE},
     {"core", HWLOC_OBJ_CORE},
     {"hwthread", HWLOC_OBJ_PU},
     {"l1dcache", HWLOC_OBJ_L1CACHE},

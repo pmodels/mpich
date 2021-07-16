@@ -270,9 +270,11 @@ AC_ARG_WITH(dtpools-datatypes,
 # parse args for typegen.sh script
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
 
+PAC_CHECK_PYTHON
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
 #Test collectives algorithms with CVARs
-AC_CONFIG_COMMANDS([collcvartests],[$srcdir/maint/test_coll_algos.sh])
+cmd="$PYTHON $srcdir/maint/gen_coll_cvar.py"
+AC_CONFIG_COMMANDS([collcvartests],[$cmd_gen_coll],[cmd_gen_coll="$cmd"])
 
 AC_ARG_WITH(mpi,
 	[AS_HELP_STRING([--with-mpi=dir],
@@ -461,17 +463,14 @@ MPILIBLOC=""
 AC_SUBST(MPILIBLOC)
 
 # more variables that must be marked precious for proper re-configure operation
-AC_ARG_VAR([MPICH_ENABLE_F77],["yes" if the enclosing MPICH build supports Fortran 77])
 AC_ARG_VAR([MPICH_ENABLE_FC],["yes" if the enclosing MPICH build supports modern Fortran])
 AC_ARG_VAR([MPICH_ENABLE_CXX],["yes" if the enclosing MPICH build supports C++])
 
 # If we're building from MPICH, check the MPICH_ENABLE_xxx environment
 # variables for enable defaults
 if test "$FROM_MPICH" = yes ; then
-    if test -n "$MPICH_ENABLE_F77" ; then
-        enable_f77=$MPICH_ENABLE_F77
-    fi
     if test -n "$MPICH_ENABLE_FC" ; then
+        enable_f77=$MPICH_ENABLE_FC
         enable_fc=$MPICH_ENABLE_FC
     fi
     if test -n "$MPICH_ENABLE_CXX" ; then
@@ -799,6 +798,32 @@ if test "$have_gpu" = "no" ; then
     AC_SUBST([ze_LIBS])
 fi
 AM_CONDITIONAL([HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
+
+# Check HIP availability
+if test "$have_gpu" = "no" ; then
+    AC_DEFINE([__HIP_PLATFORM_AMD__],[1],[AMD GPU HIP available])
+    PAC_CHECK_HEADER_LIB_OPTIONAL([hip],[hip/hip_runtime_api.h],[amdhip64],[hipStreamSynchronize])
+    hip_CPPFLAGS=""
+    hip_LDFLAGS=""
+    hip_LIBS=""
+    if test "X$pac_have_hip" = "Xyes" ; then
+       AC_DEFINE([HAVE_HIP],[1],[Define if HIP is available])
+       have_gpu="yes"
+       if test -n "${with_hip}" -a "$with_hip" != "no" ; then
+          hip_CPPFLAGS="-I${with_hip}/include"
+          if test -d ${with_hip}/lib64 ; then
+              hip_LDFLAGS="-L${with_hip}/lib64 -L${with_hip}/lib"
+          else
+              hip_LDFLAGS="-L${with_hip}/lib"
+          fi
+       fi
+       hip_LIBS="-lamdhip64"
+    fi
+    AC_SUBST([hip_CPPFLAGS])
+    AC_SUBST([hip_LDFLAGS])
+    AC_SUBST([hip_LIBS])
+fi
+AM_CONDITIONAL([HAVE_HIP],[test "X${pac_have_hip}" = "Xyes"])
 
 PAC_POP_FLAG([CPPFLAGS])
 PAC_POP_FLAG([LDFLAGS])

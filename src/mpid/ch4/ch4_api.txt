@@ -40,9 +40,6 @@ Non Native API:
   am_isend : int
       NM*: rank, comm, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
      SHM*: rank, comm, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
-  am_isendv : int
-      NM*: rank, comm, handler_id, am_hdrs, iov_len, data, count, datatype, sreq
-     SHM*: rank, comm, handler_id, am_hdrs, iov_len, data, count, datatype, sreq
   am_send_hdr_reply : int
       NM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz
      SHM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz
@@ -147,12 +144,15 @@ Native API:
   mpi_cancel_recv : int
       NM*: rreq
      SHM*: rreq
-  mpi_psend_init : int
+  mpi_psend_init_hook : int
       NM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
      SHM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
-  mpi_precv_init : int
+  mpi_precv_init_hook : int
       NM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
      SHM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
+  precv_matched_hook : int
+      NM: req
+     SHM: req
   part_start : int
       NM*: req
       SHM*: req

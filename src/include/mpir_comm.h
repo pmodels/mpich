@@ -90,6 +90,7 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
     MPIR_COMM_HINT_EAGAIN,      /* ch4:ofi */
     MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING,   /* ch4:ofi */
     MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING,    /* ch4:ofi */
+    MPIR_COMM_HINT_MULTI_NIC_PREF_NIC,  /* ch4:ofi */
     /* dynamic hints starts here */
     MPIR_COMM_HINT_PREDEFINED_COUNT
 };

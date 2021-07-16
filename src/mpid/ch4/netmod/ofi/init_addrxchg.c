@@ -216,7 +216,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
         for (int vni = 0; vni < num_vnis; vni++) {
             size_t actual_name_len = name_len;
             char *vni_addrname = my_names + (vni * num_nics + nic) * name_len;
-            int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+            int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
             MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[ctx_idx].ep, vni_addrname,
                                       &actual_name_len), getname);
             MPIR_Assert(actual_name_len == name_len);
@@ -229,7 +229,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
                                         all_names, my_len, MPI_BYTE, comm, &errflag);
 
     /* Step 2: insert and store non-root nic/vni on the root context */
-    int root_ctx_idx = MPIDI_OFI_get_ctx_index(0, 0);
+    int root_ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, 0);
     for (int r = 0; r < size; r++) {
         GET_AV_AND_ADDRNAMES(r);
         for (int nic = 0; nic < num_nics; nic++) {
@@ -245,7 +245,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
     for (int nic_local = 0; nic_local < num_nics; nic_local++) {
         for (int vni_local = 0; vni_local < num_vnis; vni_local++) {
             SKIP_ROOT(nic_local, vni_local);
-            int ctx_idx = MPIDI_OFI_get_ctx_index(vni_local, nic_local);
+            int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni_local, nic_local);
 
             /* -- same order as step 1 -- */
             if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {

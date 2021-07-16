@@ -1841,6 +1841,8 @@ def dump_validation(func, t):
         p = name.split(',')
         if kind == "USERBUFFER-simple":
             dump_validate_userbuffer_simple(func, p[0], p[1], p[2])
+        elif kind == "USERBUFFER-partition":
+            dump_validate_userbuffer_partition(func, p[0], p[1], p[2], p[3])
         elif kind == "USERBUFFER-reduce":
             G.err_codes['MPI_ERR_OP'] = 1
             dump_validate_userbuffer_reduce(func, p[0], p[1], p[2], p[3], p[4])
@@ -1983,6 +1985,12 @@ def dump_validate_userbuffer_simple(func, buf, ct, dt):
     if check_no_op:
         dump_if_close()
 
+def dump_validate_userbuffer_partition(func, buf, partitions, ct, dt):
+    dump_validate_userbuffer_simple(func, buf, ct, dt)
+    dump_if_open("%s > 0" % ct)
+    G.out.append("MPIR_ERRTEST_ARGNONPOS(%s, \"%s\", mpi_errno, MPI_ERR_ARG);" % (partitions, partitions))
+    dump_if_close()
+
 def dump_validate_userbuffer_neighbor_vw(func, kind, buf, ct, dt, disp):
     dump_validate_get_topo_size(func)
     size = "outdegree"
@@ -2012,7 +2020,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         G.out.append("}")
         G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", %s, mpi_errno);" % (sbuf, sbuf, ct))
         G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", %s, mpi_errno);" % (rbuf, rbuf, ct))
-    elif RE.match(r'mpi_i?reduce$', func['name'], re.IGNORECASE):
+    elif RE.match(r'mpi_i?reduce(_init)?$', func['name'], re.IGNORECASE):
         G.out.append("if (" + cond_intra + ") {")
         G.out.append("    MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);")
         G.out.append("} else {")
@@ -2243,8 +2251,6 @@ def get_declare_function(func, is_large, kind=""):
                 s += " MPICH_ATTR_POINTER_WITH_TYPE_TAG(%s)" % t
         s += " MPICH_API_PUBLIC"
     return s
-
-    G.out.append(s)
 
 def get_C_params(func, mapping):
     param_list = []

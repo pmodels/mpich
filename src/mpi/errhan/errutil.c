@@ -279,7 +279,8 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
     errhandler = comm_ptr->errhandler;
 
     /* --BEGIN ERROR HANDLING-- */
-    if (errhandler == NULL || errhandler->handle == MPI_ERRORS_ARE_FATAL) {
+    if (errhandler == NULL || errhandler->handle == MPI_ERRORS_ARE_FATAL ||
+        errhandler->handle == MPI_ERRORS_ABORT) {
         MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
         MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
         /* Calls MPID_Abort */
@@ -355,7 +356,8 @@ int MPIR_Err_return_win(MPIR_Win * win_ptr, const char fcname[], int errcode)
     /* --BEGIN ERROR HANDLING-- */
     if (MPIR_Err_is_fatal(errcode) ||
         win_ptr == NULL || win_ptr->errhandler == NULL ||
-        win_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL) {
+        win_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL ||
+        win_ptr->errhandler->handle == MPI_ERRORS_ABORT) {
         /* Calls MPID_Abort */
         MPIR_Handle_fatal_error(NULL, fcname, errcode);
     }

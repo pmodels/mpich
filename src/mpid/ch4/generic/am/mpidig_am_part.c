@@ -36,6 +36,11 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
     req->u.part.partitions = partitions;
     MPIR_Part_request_inactivate(req);
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, rank);
+    MPIDI_REQUEST(req, is_local) = MPIDI_av_is_local(av);
+#endif
+
     /* Inactive partitioned comm request can be freed by request_free.
      * Completion cntr increases when request becomes active at start. */
     MPIR_cc_set(req->cc_ptr, 0);
@@ -52,12 +57,49 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
 static void part_req_am_init(MPIR_Request * part_req)
 {
     MPIDIG_PART_REQUEST(part_req, peer_req_ptr) = NULL;
-    MPL_atomic_store_int(&MPIDIG_PART_REQUEST(part_req, status), MPIDIG_PART_REQ_UNSET);
+    MPIDIG_PART_REQUEST(part_req, send_epoch) = 0;
+    MPIDIG_PART_REQUEST(part_req, recv_epoch) = 0;
+    if (part_req->kind == MPIR_REQUEST_KIND__PART_SEND) {
+        MPIR_cc_set(&MPIDIG_PART_REQUEST(part_req, u.send).ready_cntr, 0);
+    }
+}
+
+void MPIDIG_precv_matched(MPIR_Request * part_req)
+{
+    MPI_Aint sdata_size = MPIDIG_PART_REQUEST(part_req, u.recv).sdata_size;
+
+    /* Set status for partitioned req */
+    MPIR_STATUS_SET_COUNT(part_req->status, sdata_size);
+    part_req->status.MPI_SOURCE = MPIDI_PART_REQUEST(part_req, rank);
+    part_req->status.MPI_TAG = MPIDI_PART_REQUEST(part_req, tag);
+    part_req->status.MPI_ERROR = MPI_SUCCESS;
+
+    /* Additional check for partitioned pt2pt: require identical buffer size */
+    if (part_req->status.MPI_ERROR == MPI_SUCCESS) {
+        MPI_Aint rdata_size;
+        MPIR_Datatype_get_size_macro(MPIDI_PART_REQUEST(part_req, datatype), rdata_size);
+        rdata_size *= MPIDI_PART_REQUEST(part_req, count) * part_req->u.part.partitions;
+        if (sdata_size != rdata_size) {
+            part_req->status.MPI_ERROR =
+                MPIR_Err_create_code(part_req->status.MPI_ERROR, MPIR_ERR_RECOVERABLE, __FUNCTION__,
+                                     __LINE__, MPI_ERR_OTHER, "**ch4|partmismatchsize",
+                                     "**ch4|partmismatchsize %d %d",
+                                     (int) rdata_size, (int) sdata_size);
+        }
+    }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_REQUEST(part_req, is_local))
+        MPIDI_SHM_precv_matched_hook(part_req);
+    else
+#endif
+    {
+        MPIDI_NM_precv_matched_hook(part_req);
+    }
 }
 
 int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
                           MPI_Datatype datatype, int dest, int tag,
-                          MPIR_Comm * comm, MPIR_Info * info, int is_local, MPIR_Request ** request)
+                          MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PSEND_INIT);
@@ -66,13 +108,12 @@ int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     /* Create and initialize device-layer partitioned request */
-    mpi_errno = part_req_create((void *) buf, partitions, count, datatype, dest, tag, comm,
+    mpi_errno = part_req_create(buf, partitions, count, datatype, dest, tag, comm,
                                 MPIR_REQUEST_KIND__PART_SEND, request);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize am components for send */
     part_req_am_init(*request);
-    MPIR_cc_set(&MPIDIG_PART_REQUEST(*request, u.send).ready_cntr, 0);
 
     /* Initiate handshake with receiver for message matching */
     MPIDIG_part_send_init_msg_t am_hdr;
@@ -86,8 +127,7 @@ int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
     am_hdr.data_sz = dtype_size * count * partitions;   /* count is per partition */
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_REQUEST(*request, is_local) = is_local;       /* use at start, pready, parrived */
-    if (is_local)
+    if (MPIDI_REQUEST(*request, is_local))
         mpi_errno = MPIDI_SHM_am_send_hdr(dest, comm, MPIDIG_PART_SEND_INIT,
                                           &am_hdr, sizeof(am_hdr));
     else
@@ -107,7 +147,7 @@ int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
 
 int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
                           MPI_Datatype datatype, int source, int tag,
-                          MPIR_Comm * comm, MPIR_Info * info, int is_local, MPIR_Request ** request)
+                          MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PRECV_INIT);
@@ -135,15 +175,10 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
         MPIDIG_PART_REQUEST(*request, peer_req_ptr) = MPIDIG_PART_REQUEST(unexp_req, peer_req_ptr);
         MPIDI_CH4_REQUEST_FREE(unexp_req);
 
-        MPIDIG_part_match_rreq(*request);
-        MPIDIG_PART_REQ_INC_FETCH_STATUS(*request);
+        MPIDIG_precv_matched(*request);
     } else {
         MPIDIG_enqueue_request(*request, &MPIDI_global.part_posted_list, MPIDIG_PART);
     }
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_REQUEST(*request, is_local) = is_local;       /* use at start, pready, parrived */
-#endif
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);

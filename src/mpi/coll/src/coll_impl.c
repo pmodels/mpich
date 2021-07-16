@@ -9,6 +9,10 @@
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
+categories :
+   - name : COLLECTIVE
+     description : A category for collective communication variables.
+
 cvars:
     - name        : MPIR_CVAR_DEVICE_COLLECTIVES
       category    : COLLECTIVE
@@ -97,9 +101,7 @@ int MPII_Coll_init(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize transports */
-    mpi_errno = MPII_Stubtran_init();
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPII_Gentran_init();
+    mpi_errno = MPII_TSP_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize algorithms */
@@ -133,9 +135,7 @@ int MPII_Coll_finalize(void)
     /* deregister non blocking collectives progress hook */
     MPIR_Progress_hook_deregister(MPIR_Nbc_progress_hook_id);
 
-    mpi_errno = MPII_Gentran_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPII_Stubtran_finalize();
+    mpi_errno = MPII_TSP_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Csel_free(MPIR_Csel_root);
@@ -151,7 +151,7 @@ int MPII_Coll_finalize(void)
  * block for a recv operation */
 int MPIR_Coll_safe_to_block(void)
 {
-    return MPII_Gentran_scheds_are_pending() == false;
+    return MPII_TSP_scheds_are_pending() == false;
 }
 
 /* Function to initialize communicators for collectives */
@@ -169,9 +169,7 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize any transport data structures */
-    mpi_errno = MPII_Stubtran_comm_init(comm);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPII_Gentran_comm_init(comm);
+    mpi_errno = MPII_TSP_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Csel_prune(MPIR_Csel_root, comm, &comm->csel_comm);
@@ -198,9 +196,7 @@ int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* cleanup transport data */
-    mpi_errno = MPII_Stubtran_comm_cleanup(comm);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPII_Gentran_comm_cleanup(comm);
+    mpi_errno = MPII_TSP_comm_cleanup(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -222,7 +218,9 @@ void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_A
         *host_sendbuf = NULL;
     }
 
-    if (sendbuf == MPI_IN_PLACE) {
+    if (recvbuf == NULL) {
+        *host_recvbuf = NULL;
+    } else if (sendbuf == MPI_IN_PLACE) {
         tmp = MPIR_gpu_host_swap(recvbuf, count, datatype);
         *host_recvbuf = tmp;
     } else {
@@ -261,8 +259,28 @@ void MPIR_Coll_host_buffer_swap_back(void *host_sendbuf, void *host_recvbuf, voi
     request->u.nbc.coll.host_recvbuf = host_recvbuf;
     if (host_recvbuf) {
         request->u.nbc.coll.user_recvbuf = in_recvbuf;
-        request->u.nbc.coll.count = count;
-        request->u.nbc.coll.datatype = datatype;
+    }
+    request->u.nbc.coll.count = count;
+    request->u.nbc.coll.datatype = datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+}
+
+void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
+                                       MPI_Aint count, MPI_Datatype datatype,
+                                       MPIR_Request * request)
+{
+    if (!host_sendbuf && !host_recvbuf) {
+        /* no copy (or free) at completion necessary, just return */
+        return;
+    }
+
+    /* data will be copied later during request completion */
+    request->u.persist_coll.coll.host_sendbuf = host_sendbuf;
+    request->u.persist_coll.coll.host_recvbuf = host_recvbuf;
+    if (host_recvbuf) {
+        request->u.persist_coll.coll.user_recvbuf = in_recvbuf;
+        request->u.persist_coll.coll.count = count;
+        request->u.persist_coll.coll.datatype = datatype;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
     }
 }

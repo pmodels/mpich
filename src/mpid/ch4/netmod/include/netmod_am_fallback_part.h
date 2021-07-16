@@ -8,19 +8,19 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_part_start(MPIR_Request * request)
 {
-    return MPIDIG_part_start(request, 0 /*is_local */);
+    return MPIDIG_part_start(request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_pready_range(int partition_low,
                                                        int partition_high, MPIR_Request * request)
 {
-    return MPIDIG_mpi_pready_range(partition_low, partition_high, request, 0 /*is_local */);
+    return MPIDIG_mpi_pready_range(partition_low, partition_high, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_pready_list(int length, int array_of_partitions[],
                                                       MPIR_Request * request)
 {
-    return MPIDIG_mpi_pready_list(length, array_of_partitions, request, 0 /*is_local */);
+    return MPIDIG_mpi_pready_list(length, array_of_partitions, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_parrived(MPIR_Request * request, int partition, int *flag)

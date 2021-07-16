@@ -61,7 +61,7 @@ Show=eval
 # End of initialization of variables
 #---------------------------------------------------------------------
 
-# Check recursive situaltions
+# Check recursive situations
 # User mistakes, e.g. setting MPICH_CC=mpicc, may end up recursively running
 # this script. A simple check to bail if that's the case.
 if [ -n "$MPICH_RECURSION_CHECK" ] ; then
@@ -109,6 +109,7 @@ linking=yes
 allargs=""
 interlib_deps=yes
 static_mpi=no
+showinfo=""
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
@@ -142,6 +143,16 @@ for arg in "$@" ; do
     -show)
     addarg=no
     Show=echo
+    ;;
+    -show-compile-info)
+    addarg=no
+    Show=echo
+    show_info=compile
+    ;;
+    -show-link-info)
+    addarg=no
+    Show=echo
+    show_info=link
     ;;
     -config=*)
     addarg=no
@@ -200,11 +211,8 @@ for arg in "$@" ; do
 	# Other arguments.  We are careful to handle arguments with 
 	# quotes (we try to quote all arguments in case they include 
 	# any spaces)
-    *\"*) 
-    qarg="'"$arg"'"
-    ;;
     *\'*) 
-    qarg='\"'"$arg"'\"'
+    qarg="'"`echo $arg | sed -e "s/'/'\"'\"'/g"`"'"
     ;;
     *)
     qarg="'$arg'"
@@ -266,15 +274,27 @@ fi
 # accept any argument; we don't need to know if we've seen a source
 # file or an object file.  Instead, we just check for an option that
 # suppressing linking, such as -c or -M.
-if [ "$linking" = yes ] ; then
+if [ "$show_info" = compile ] ; then
+    echo ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} -I$includedir
+elif [ "$show_info" = link ] ; then
+    if [ "$nativelinking" = yes ] ; then
+        echo ${final_ldflags}
+    else
+        if [ "$static_mpi" = no ] ; then
+            echo ${final_ldflags} -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
+        else
+            echo ${final_ldflags} -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
+        fi
+    fi
+elif [ "$linking" = yes ] ; then
     if [ "$nativelinking" = yes ] ; then
         $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} $allargs -I$includedir
         rc=$?
     else
         if [ "$static_mpi" = no ] ; then
-          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
+          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} $allargs -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
         else
-          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
+          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} $allargs -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
         fi
         rc=$?
     fi
