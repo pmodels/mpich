@@ -18,7 +18,8 @@ enum {
     MPIDIG_SSEND_ACK,
 
     MPIDIG_PART_SEND_INIT,
-    MPIDIG_PART_CTS,    /* issued by receiver once start is called and rreq matches */
+    MPIDIG_PART_RECV_MATCHED,   /* issued by receiver once rreq is matched */
+    MPIDIG_PART_CTS,    /* issued by receiver once start is called (and rreq is matched) */
     MPIDIG_PART_SEND_DATA,      /* data issued by sender after received CTS */
 
     MPIDIG_PUT_REQ,

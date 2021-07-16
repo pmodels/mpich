@@ -96,8 +96,12 @@ typedef struct MPIDIG_part_send_init_msg_t {
 
 typedef struct MPIDIG_part_cts_msg_t {
     MPIR_Request *sreq_ptr;
-    MPIR_Request *rreq_ptr;
 } MPIDIG_part_cts_msg_t;
+
+typedef struct MPIDIG_part_recv_matched_msg_t {
+    MPIR_Request *sreq_ptr;
+    MPIR_Request *rreq_ptr;
+} MPIDIG_part_recv_matched_msg_t;
 
 typedef struct MPIDIG_part_send_data_msg_t {
     MPIR_Request *rreq_ptr;

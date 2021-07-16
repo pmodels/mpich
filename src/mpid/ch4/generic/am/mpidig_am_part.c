@@ -89,8 +89,19 @@ int MPIDIG_precv_matched(MPIR_Request * part_req)
         }
     }
 
+    /* send matched request info to sender */
+    MPIDIG_part_recv_matched_msg_t hdr = {
+        .sreq_ptr = MPIDIG_PART_REQUEST(part_req, peer_req_ptr),
+        .rreq_ptr = part_req,
+    };
+    CH4_CALL(am_send_hdr_reply
+             (part_req->comm, MPIDI_PART_REQUEST(part_req, rank), MPIDIG_PART_RECV_MATCHED, &hdr,
+              sizeof(hdr)), MPIDI_REQUEST(part_req, is_local), mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
+
     CH4_CALL(precv_matched_hook(part_req), MPIDI_REQUEST(part_req, is_local), mpi_errno);
 
+  fn_fail:
     return mpi_errno;
 }
 

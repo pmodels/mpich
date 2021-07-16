@@ -11,6 +11,9 @@ int MPIDIG_part_send_data_origin_cb(MPIR_Request * req);
 int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                         MPI_Aint in_data_sz, int is_local, int is_async,
                                         MPIR_Request ** req);
+int MPIDIG_part_recv_matched_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                           MPI_Aint in_data_sz, int is_local, int is_async,
+                                           MPIR_Request ** req);
 int MPIDIG_part_cts_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
                                   int is_local, int is_async, MPIR_Request ** req);
 int MPIDIG_part_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data,
