@@ -88,14 +88,8 @@ int MPIDIG_precv_matched(MPIR_Request * part_req)
                                      (int) rdata_size, (int) sdata_size);
         }
     }
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(part_req, is_local))
-        mpi_errno = MPIDI_SHM_precv_matched_hook(part_req);
-    else
-#endif
-    {
-        mpi_errno = MPIDI_NM_precv_matched_hook(part_req);
-    }
+
+    CH4_CALL(precv_matched_hook(part_req), MPIDI_REQUEST(part_req, is_local), mpi_errno);
 
     return mpi_errno;
 }
@@ -129,16 +123,8 @@ int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
     MPIR_Datatype_get_size_macro(datatype, dtype_size);
     am_hdr.data_sz = dtype_size * count * partitions;   /* count is per partition */
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(*request, is_local))
-        mpi_errno = MPIDI_SHM_am_send_hdr(dest, comm, MPIDIG_PART_SEND_INIT,
-                                          &am_hdr, sizeof(am_hdr));
-    else
-#endif
-    {
-        mpi_errno = MPIDI_NM_am_send_hdr(dest, comm, MPIDIG_PART_SEND_INIT,
-                                         &am_hdr, sizeof(am_hdr));
-    }
+    CH4_CALL(am_send_hdr(dest, comm, MPIDIG_PART_SEND_INIT, &am_hdr, sizeof(am_hdr)),
+             MPIDI_REQUEST(*request, is_local), mpi_errno);
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
