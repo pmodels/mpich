@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_trigger_rma_progress(MPIR_Win * win, 
 
     if (!MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS && MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL != -1) {
         MPIDI_OFI_WIN(win).progress_counter++;
-        if (MPIDI_OFI_WIN(win).progress_counter % MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL == 0) {
+        if (MPIDI_OFI_WIN(win).progress_counter >= MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL) {
             MPIDI_OFI_win_do_progress(win, vni);
             MPIDI_OFI_WIN(win).progress_counter = 0;
         }
