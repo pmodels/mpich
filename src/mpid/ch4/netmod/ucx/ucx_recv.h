@@ -8,29 +8,15 @@
 
 #include "ucx_impl.h"
 
-/* when the recv is immediately completed, we need get a request to fill the status,
- * but we need to get request from the correct pool or race condition arises. And we
- * don't know the correct vni!
- * The new ucx API should help: https://github.com/openucx/ucx/pull/5060
- * For now, we malloc a temporary request.
- * FIXME: update with new ucx api
- */
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
-                                                     ucp_tag_recv_info_t * info)
+                                                     const ucp_tag_recv_info_t * info,
+                                                     void *user_data)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPIR_Request *rreq = NULL;
+    MPIR_Request *rreq = user_data;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
-
-    if (ucp_request->req) {
-        rreq = ucp_request->req;
-    } else {
-        rreq = MPL_malloc(sizeof(MPIR_Request), MPL_MEM_OTHER);
-        rreq->status.MPI_ERROR = MPI_SUCCESS;
-        MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);
-    }
 
     if (unlikely(status == UCS_ERR_CANCELED)) {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
@@ -46,55 +32,38 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
         MPIR_STATUS_SET_COUNT(rreq->status, count);
     }
 
-    if (ucp_request->req) {
-        MPIDIU_request_complete(rreq);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
-    } else {
-        MPIR_cc_set(&rreq->cc, 0);
-        ucp_request->req = rreq;
-    }
-
+    MPIDIU_request_complete(rreq);
+    ucp_request->req = NULL;
+    ucp_request_release(ucp_request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
-                                                      ucp_tag_recv_info_t * info)
+                                                      const ucp_tag_recv_info_t * info,
+                                                      void *user_data)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPI_Status *mrecv_status;
+    MPIR_Request *rreq = user_data;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 
-    /* complete the request if we have it, or allocate a status object */
-    int has_request = (ucp_request->req != NULL);
-    if (has_request) {
-        MPIR_Request *rreq = ucp_request->req;
-        mrecv_status = &rreq->status;
-    } else {
-        mrecv_status = MPL_malloc(sizeof(MPI_Status), MPL_MEM_BUFFER);
-        ucp_request->status = mrecv_status;
-    }
-
     /* populate status fields */
     if (unlikely(status == UCS_ERR_MESSAGE_TRUNCATED)) {
-        mrecv_status->MPI_ERROR = MPI_ERR_TRUNCATE;
+        rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
     } else {
-        mrecv_status->MPI_ERROR = MPI_SUCCESS;
-        MPIR_STATUS_SET_COUNT(*mrecv_status, info->length);
+        rreq->status.MPI_ERROR = MPI_SUCCESS;
+        MPIR_STATUS_SET_COUNT(rreq->status, info->length);
     }
-    mrecv_status->MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
-    mrecv_status->MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
+    rreq->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
+    rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
 
     /* complete the request */
-    if (has_request) {
-        MPIR_Request *rreq = ucp_request->req;
-        MPIDIU_request_complete(rreq);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
-    }
+    MPIDIU_request_complete(rreq);
+    ucp_request->req = NULL;
+    ucp_request_release(ucp_request);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 }
 
@@ -119,54 +88,44 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_RECV);
 
+    if (req == NULL) {
+        req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst, 2);
+        MPIR_ERR_CHKANDSTMT(req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    } else {
+        MPIR_Request_add_ref(req);
+    }
+
+    ucp_request_param_t param = {
+        .op_attr_mask =
+            UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL,
+        .cb.recv = MPIDI_UCX_recv_cmpl_cb,
+        .user_data = req,
+    };
+
     tag_mask = MPIDI_UCX_tag_mask(tag, rank);
     ucp_tag = MPIDI_UCX_recv_tag(tag, rank, comm->recvcontext_id + context_offset);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     void *recv_buf;
     size_t recv_count;
-    ucp_datatype_t ucp_dt;
     if (dt_contig) {
         recv_buf = (char *) buf + dt_true_lb;
         recv_count = data_sz;
-        ucp_dt = ucp_dt_make_contig(1);
     } else {
         recv_buf = buf;
         recv_count = count;
-        ucp_dt = dt_ptr->dev.netmod.ucx.ucp_datatype;
+        param.op_attr_mask |= UCP_OP_ATTR_FIELD_DATATYPE;
+        param.datatype = dt_ptr->dev.netmod.ucx.ucp_datatype;
         MPIR_Datatype_ptr_add_ref(dt_ptr);
     }
 
     ucp_request =
-        (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.ctx[vni_dst].worker,
-                                                    recv_buf, recv_count,
-                                                    ucp_dt,
-                                                    ucp_tag, tag_mask, &MPIDI_UCX_recv_cmpl_cb);
+        (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nbx(MPIDI_UCX_global.ctx[vni_dst].worker,
+                                                     recv_buf, recv_count,
+                                                     ucp_tag, tag_mask, &param);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
-    if (ucp_request->req) {
-        if (req == NULL) {
-            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst, 1);
-            memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
-            MPIR_cc_set(&req->cc, 0);
-            MPL_free(ucp_request->req);
-        } else {
-            memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
-            MPIR_cc_set(&req->cc, 0);
-            MPIR_Request_free_unsafe((MPIR_Request *) ucp_request->req);
-        }
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
-    } else {
-        if (req == NULL) {
-            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst, 2);
-            MPIR_ERR_CHKANDSTMT(req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        } else {
-            MPIR_Request_add_ref(req);
-        }
-        MPIDI_UCX_REQ(req).ucp_request = ucp_request;
-        ucp_request->req = req;
-    }
+    MPIDI_UCX_REQ(req).ucp_request = ucp_request;
     *request = req;
 
   fn_exit:
@@ -191,39 +150,34 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
+    ucp_request_param_t param = {
+        .op_attr_mask =
+            UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL,
+        .cb.recv = MPIDI_UCX_mrecv_cmpl_cb,
+        .user_data = message,
+    };
+
     void *recv_buf;
     size_t recv_count;
-    ucp_datatype_t ucp_dt;
     if (dt_contig) {
         recv_buf = (char *) buf + dt_true_lb;
         recv_count = data_sz;
-        ucp_dt = ucp_dt_make_contig(1);
     } else {
         recv_buf = buf;
         recv_count = count;
-        ucp_dt = dt_ptr->dev.netmod.ucx.ucp_datatype;
+        param.op_attr_mask |= UCP_OP_ATTR_FIELD_DATATYPE;
+        param.datatype = dt_ptr->dev.netmod.ucx.ucp_datatype;
         MPIR_Datatype_ptr_add_ref(dt_ptr);
     }
 
     ucp_request =
-        (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.ctx[vci].worker,
-                                                        recv_buf, recv_count,
-                                                        ucp_dt,
-                                                        MPIDI_UCX_REQ(message).message_handler,
-                                                        &MPIDI_UCX_mrecv_cmpl_cb);
+        (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nbx(MPIDI_UCX_global.ctx[vci].worker,
+                                                         recv_buf, recv_count,
+                                                         MPIDI_UCX_REQ(message).message_handler,
+                                                         &param);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
-
-    if (ucp_request->status) {
-        message->status = *(ucp_request->status);
-        MPL_free(ucp_request->status);
-        MPIDIU_request_complete(message);
-        ucp_request->status = NULL;
-        ucp_request_release(ucp_request);
-    } else {
-        MPIDI_UCX_REQ(message).ucp_request = ucp_request;
-        ucp_request->req = message;
-    }
+    MPIDI_UCX_REQ(message).ucp_request = ucp_request;
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
