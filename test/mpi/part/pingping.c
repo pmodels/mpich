@@ -150,12 +150,10 @@ int main(int argc, char *argv[])
                 dtype = send.dtp_obj.DTP_datatype;
                 set_partitions_count(send.dtp_obj.DTP_type_count, &partitions, &partition_count);
 
-                char *desc;
-                DTP_obj_get_description(send.dtp_obj, &desc);
                 MTestPrintfMsg(1,
                                "Sending partitions = %d, count = %ld (total size %d bytes) of datatype %s",
-                               partitions, partition_count, nbytes * sendcnt, desc);
-                free(desc);
+                               partitions, partition_count, nbytes * sendcnt,
+                               DTP_obj_get_description(send.dtp_obj));
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++)
                     send_test((char *) send.buf + send.dtp_obj.DTP_buf_offset, partitions,
@@ -164,11 +162,8 @@ int main(int argc, char *argv[])
                 dtype = recv.dtp_obj.DTP_datatype;
                 set_partitions_count(recv.dtp_obj.DTP_type_count, &partitions, &partition_count);
 
-                char *desc;
-                DTP_obj_get_description(recv.dtp_obj, &desc);
                 MTestPrintfMsg(1, "Receiving partitions = %d, count = %d of datatype %s\n",
-                               partitions, partition_count, desc);
-                free(desc);
+                               partitions, partition_count, DTP_obj_get_description(recv.dtp_obj));
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
                     MTest_dtp_init(&recv, -1, -1, recvcnt);
@@ -179,7 +174,7 @@ int main(int argc, char *argv[])
 
                     errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, source, 0,
                                              errs < 10);
-                    errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
+                    errs += MTest_dtp_check(&recv, 0, 1, sendcnt, &send, errs < 10);
                 }
             }
             MTest_dtp_destroy(&send);
