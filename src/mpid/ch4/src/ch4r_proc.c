@@ -219,6 +219,22 @@ int MPIDIU_avt_init(void)
     get_next_avtid(&first_avtid);
     MPIR_Assert(first_avtid == 0);
 
+    int size = MPIR_Process.size;
+    int rank = MPIR_Process.rank;
+    size_t table_size = sizeof(MPIDI_av_table_t) + size * sizeof(MPIDI_av_entry_t);
+    MPIDI_av_table0 = (MPIDI_av_table_t *) MPL_malloc(table_size, MPL_MEM_ADDRESS);
+    MPIDI_av_table0->size = size;
+    MPIR_Object_set_ref(MPIDI_av_table0, 1);
+
+#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
+    for (i = 0; i < size; i++) {
+        MPIDI_av_table0->table[i].is_local =
+            (MPIR_Process.node_map[i] == MPIR_Process.node_map[rank]) ? 1 : 0;
+    }
+#endif
+
+    MPIDI_av_table[0] = MPIDI_av_table0;
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_INIT);
     return mpi_errno;
@@ -230,6 +246,14 @@ int MPIDIU_avt_destroy(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_DESTROY);
+
+    int max_n_avts = MPIDIU_get_max_n_avts();
+    for (int i = 0; i < max_n_avts; i++) {
+        if (MPIDI_av_table[i] != NULL) {
+            MPIDIU_avt_release_ref(i);
+            /*TODO: Check all references is cleared and the entry is set to NULL */
+        }
+    }
 
     MPL_free(MPIDI_av_table);
     MPL_free(MPIDI_global.avt_mgr.free_avtid);
