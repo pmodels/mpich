@@ -785,7 +785,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
     int *new_avt_procs;
     char **new_upids;
     int n_new_procs = 0;
-    int max_n_avts;
+    int n_avts;
     char *curr_upid;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
@@ -797,7 +797,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
     MPIR_CHKLMEM_MALLOC(new_upids, char **, sizeof(char *) * size, mpi_errno, "new_upids",
                         MPL_MEM_ADDRESS);
 
-    max_n_avts = MPIDIU_get_max_n_avts();
+    n_avts = MPIDIU_get_n_avts();
 
     curr_upid = remote_upids;
     for (i = 0; i < size; i++) {
@@ -806,7 +806,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
         int found = 0;
         size_t sz = 0;
 
-        for (k = 0; k < max_n_avts; k++) {
+        for (k = 0; k < n_avts; k++) {
             if (MPIDIU_get_av_table(k) == NULL) {
                 continue;
             }

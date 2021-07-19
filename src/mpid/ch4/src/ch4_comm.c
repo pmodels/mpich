@@ -127,7 +127,7 @@ int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MP
 
 static void mlut_update_avt_reference(int size, MPIDI_gpid_t * gpid, bool is_release)
 {
-    int n_avts = MPIDIU_get_max_n_avts();
+    int n_avts = MPIDIU_get_n_avts();
     int *uniq_avtids = (int *) MPL_calloc(n_avts, sizeof(int), MPL_MEM_ADDRESS);
     for (int i = 0; i < size; i++) {
         if (uniq_avtids[gpid[i].avtid] == 0) {
