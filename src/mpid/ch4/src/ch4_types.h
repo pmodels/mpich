@@ -191,11 +191,24 @@ typedef struct MPIDIG_acc_ack_msg_t {
 typedef MPIDIG_acc_ack_msg_t MPIDIG_get_acc_ack_msg_t;
 
 typedef struct {
+    MPIR_OBJECT_HEADER;
+    int size;
+    MPIDI_av_entry_t table[];
+} MPIDI_av_table_t;
+
+/* TODO: Do we really need separate pointer for MPIDI_av_table0? */
+extern MPIDI_av_table_t *MPIDI_av_table0;
+
+typedef struct {
     int max_n_avts;
     int n_avts;
     int next_avtid;
     int *free_avtid;
+    MPIDI_av_table_t **av_tables;
 } MPIDIU_avt_manager;
+
+#define MPIDIU_get_av_table(avtid) (MPIDI_global.avt_mgr.av_tables[(avtid)])
+#define MPIDIU_get_av(avtid, lpid) (MPIDI_global.avt_mgr.av_tables[(avtid)]->table[(lpid)])
 
 typedef struct {
     uint64_t key;

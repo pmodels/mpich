@@ -635,18 +635,6 @@ typedef struct MPIDI_av_entry {
 #endif
 } MPIDI_av_entry_t;
 
-typedef struct {
-    MPIR_OBJECT_HEADER;
-    int size;
-    MPIDI_av_entry_t table[];
-} MPIDI_av_table_t;
-
-extern MPIDI_av_table_t **MPIDI_av_table;
-extern MPIDI_av_table_t *MPIDI_av_table0;
-
-#define MPIDIU_get_av_table(avtid) (MPIDI_av_table[(avtid)])
-#define MPIDIU_get_av(avtid, lpid) (MPIDI_av_table[(avtid)]->table[(lpid)])
-
 #define HAVE_DEV_COMM_HOOK
 
 /*
