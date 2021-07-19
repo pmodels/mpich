@@ -9,7 +9,6 @@
 #include "ch4_types.h"
 
 int MPIDIU_get_n_avts(void);
-int MPIDIU_get_max_n_avts(void);
 int MPIDIU_get_avt_size(int avtid);
 int MPIDIU_new_avt(int size, int *avtid);
 int MPIDIU_free_avt(int avtid);

@@ -199,8 +199,7 @@ typedef struct {
 typedef struct {
     int max_n_avts;
     int n_avts;
-    int next_avtid;
-    int *free_avtid;
+    int n_free;
     MPIDI_av_table_t *av_table0;
     MPIDI_av_table_t **av_tables;
 } MPIDIU_avt_manager;
