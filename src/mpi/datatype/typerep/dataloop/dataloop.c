@@ -190,6 +190,17 @@ int MPIR_Typerep_reduce_is_supported(MPI_Op op, MPI_Datatype datatype)
     return 0;
 }
 
+int MPIR_Typerep_reduce(const void *in_buf, void *out_buf, MPI_Aint count, MPI_Datatype datatype,
+                        MPI_Op op)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* This function is supposed to return non-zero only for yaksa */
+    MPIR_Assert(0);
+
+    return mpi_errno;
+}
+
 /*@
   MPII_Dataloop_update - update pointers after a copy operation
 
