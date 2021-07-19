@@ -19,8 +19,6 @@ int MPIDIU_avt_init(void);
 int MPIDIU_avt_destroy(void);
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p);
 int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p);
-int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out);
-int MPIDIU_build_nodemap_avtid(int myrank, MPIR_Comm * comm, int sz, int avtid);
 
 int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
                            int **remote_lupids, int *remote_node_ids);
