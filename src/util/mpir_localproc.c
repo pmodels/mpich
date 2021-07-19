@@ -141,7 +141,7 @@ int MPIR_Find_external(MPIR_Comm * comm, int *external_size_p, int *external_ran
     int *nodes;
     int i, external_size, external_rank;
     int *external_ranks, *internode_table;
-    int max_node_id, node_id;
+    int node_id;
 
     MPIR_CHKLMEM_DECL(1);
     MPIR_CHKPMEM_DECL(2);
@@ -164,7 +164,7 @@ int MPIR_Find_external(MPIR_Comm * comm, int *external_size_p, int *external_ran
     MPIR_CHKLMEM_MALLOC(nodes, int *, sizeof(int) * num_nodes, mpi_errno, "nodes", MPL_MEM_COMM);
 
     /* nodes maps node_id to rank in external_ranks of leader for that node */
-    for (i = 0; i < (max_node_id + 1); ++i)
+    for (i = 0; i < num_nodes; ++i)
         nodes[i] = -1;
 
     external_size = 0;
@@ -207,7 +207,7 @@ int MPIR_Find_external(MPIR_Comm * comm, int *external_size_p, int *external_ran
     for (i = 0; i < comm->remote_size; ++i)
         printf("[%d]  internode_table[%d] = %d\n", comm->rank, i, internode_table[i]);
     printf("[%d]nodes = %p\n", comm->rank, nodes);
-    for (i = 0; i < (max_node_id + 1); ++i)
+    for (i = 0; i < num_nodes; ++i)
         printf("[%d]  nodes[%d] = %d\n", comm->rank, i, nodes[i]);
 #endif
 
