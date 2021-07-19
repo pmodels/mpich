@@ -647,8 +647,6 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPIDIU_get_av_table(avtid) (MPIDI_av_table[(avtid)])
 #define MPIDIU_get_av(avtid, lpid) (MPIDI_av_table[(avtid)]->table[(lpid)])
 
-#define MPIDIU_get_node_map(avtid)   (MPIDI_global.node_map[(avtid)])
-
 #define HAVE_DEV_COMM_HOOK
 
 /*

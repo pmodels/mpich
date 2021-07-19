@@ -6,8 +6,6 @@
 #include "mpidimpl.h"
 #include "ch4r_proc.h"
 
-static int alloc_globals_for_avtid(int avtid);
-static int free_globals_for_avtid(int avtid);
 static int get_next_avtid(int *avtid);
 static int free_avtid(int avtid);
 
@@ -27,19 +25,6 @@ int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_NODE_ID);
-    return mpi_errno;
-}
-
-int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_MAX_NODE_ID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_MAX_NODE_ID);
-
-    *max_id_p = MPIDI_global.max_node_id;
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_MAX_NODE_ID);
     return mpi_errno;
 }
 
@@ -80,36 +65,6 @@ int MPIDIU_get_avt_size(int avtid)
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_AVT_SIZE);
     return ret;
-}
-
-static int alloc_globals_for_avtid(int avtid)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int *new_node_map = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ALLOC_GLOBALS_FOR_AVTID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALLOC_GLOBALS_FOR_AVTID);
-
-    new_node_map = (int *) MPL_malloc(MPIDI_av_table[avtid]->size * sizeof(int), MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDJUMP(new_node_map == NULL, mpi_errno, MPI_ERR_NO_MEM, "**nomem");
-    MPIDI_global.node_map[avtid] = new_node_map;
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ALLOC_GLOBALS_FOR_AVTID);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int free_globals_for_avtid(int avtid)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
-    if (avtid > 0) {
-        MPL_free(MPIDI_global.node_map[avtid]);
-    }
-    MPIDI_global.node_map[avtid] = NULL;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
-    return MPI_SUCCESS;
 }
 
 static int get_next_avtid(int *avtid)
@@ -183,8 +138,6 @@ int MPIDIU_new_avt(int size, int *avtid)
 
     MPIR_Object_set_ref(MPIDI_av_table[*avtid], 0);
 
-    alloc_globals_for_avtid(*avtid);
-
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_NEW_AVT);
     return mpi_errno;
 }
@@ -197,7 +150,6 @@ int MPIDIU_free_avt(int avtid)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_AVT);
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
 
-    free_globals_for_avtid(avtid);
     MPL_free(MPIDI_av_table[avtid]);
     MPIDI_av_table[avtid] = NULL;
     free_avtid(avtid);
@@ -253,11 +205,6 @@ int MPIDIU_avt_init(void)
         MPL_malloc(AVT_SIZE, MPL_MEM_ADDRESS);
     MPIR_ERR_CHKANDSTMT(MPIDI_av_table == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
-    MPIDI_global.node_map = (int **)
-        MPL_malloc(AVT_SIZE, MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDSTMT(MPIDI_global.node_map == NULL, mpi_errno,
-                        MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
-
     MPIDI_global.avt_mgr.free_avtid =
         (int *) MPL_malloc(MPIDI_global.avt_mgr.max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
     MPIR_ERR_CHKANDSTMT(MPIDI_global.avt_mgr.free_avtid == NULL, mpi_errno,
@@ -284,7 +231,6 @@ int MPIDIU_avt_destroy(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_DESTROY);
 
-    MPL_free(MPIDI_global.node_map);
     MPL_free(MPIDI_av_table);
     MPL_free(MPIDI_global.avt_mgr.free_avtid);
 
@@ -303,23 +249,15 @@ int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upi
     mpi_errno = MPIDI_NM_upids_to_lupids(size, remote_upid_size, remote_upids, remote_lupids);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* update node_map */
+    /* update locality */
     for (i = 0; i < size; i++) {
         int _avtid = 0, _lpid = 0;
-        /* if this is a new process, update node_map and locality */
+        /* if this is a new process, update locality */
         if (MPIDIU_LUPID_IS_NEW_AVT((*remote_lupids)[i])) {
             MPIDIU_LUPID_CLEAR_NEW_AVT_MARK((*remote_lupids)[i]);
             _avtid = MPIDIU_LUPID_GET_AVTID((*remote_lupids)[i]);
             _lpid = MPIDIU_LUPID_GET_LPID((*remote_lupids)[i]);
             if (_avtid != 0) {
-                /*
-                 * new process groups are always assumed to be remote,
-                 * so CH4 don't care what node they are on
-                 */
-                MPIDI_global.node_map[_avtid][_lpid] = remote_node_ids[i];
-                if (remote_node_ids[i] > MPIDI_global.max_node_id) {
-                    MPIDI_global.max_node_id = remote_node_ids[i];
-                }
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
                 MPIDI_av_table[_avtid]->table[_lpid].is_local = 0;
 #endif

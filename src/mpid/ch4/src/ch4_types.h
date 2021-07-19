@@ -261,7 +261,6 @@ typedef struct MPIDI_CH4_Global_t {
     int is_initialized;
     MPIDIU_avt_manager avt_mgr;
     int is_ch4u_initialized;
-    int **node_map, max_node_id;
     MPIR_Commops MPIR_Comm_fns_store;
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;

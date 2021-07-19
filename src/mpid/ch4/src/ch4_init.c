@@ -308,11 +308,6 @@ static void init_av_table(void)
     MPIDI_av_table0 = MPIDI_av_table[0];
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
-    MPIDI_global.max_node_id = MPIR_Process.num_nodes - 1;
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_global.max_node_id = %d", MPIDI_global.max_node_id));
-
     for (i = 0; i < size; i++) {
         MPIDI_av_table0->table[i].is_local =
             (MPIR_Process.node_map[i] == MPIR_Process.node_map[rank]) ? 1 : 0;
@@ -865,7 +860,7 @@ int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_MAX_NODE_ID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_MAX_NODE_ID);
 
-    MPIDIU_get_max_node_id(comm, max_id_p);
+    return MPIR_Process.num_nodes - 1;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GET_MAX_NODE_ID);
     return mpi_errno;
