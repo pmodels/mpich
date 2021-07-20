@@ -344,7 +344,6 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int pure_intracomm = 1;
     int local_size = 0;
-    int *local_node_ids = NULL, *remote_node_ids = NULL;
     int *local_lupids = NULL;
     size_t *local_upid_size = NULL, *remote_upid_size = NULL;
     int upid_send_size = 0, upid_recv_size = 0;
@@ -444,24 +443,8 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                       peer_comm, MPI_STATUS_IGNORE, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
 
-            MPIR_CHKLMEM_MALLOC(local_node_ids, int *,
-                                local_size * sizeof(int), mpi_errno, "local_node_ids",
-                                MPL_MEM_ADDRESS);
-            MPIR_CHKLMEM_MALLOC(remote_node_ids, int *, (*remote_size) * sizeof(int), mpi_errno,
-                                "remote_node_ids", MPL_MEM_ADDRESS);
-            for (i = 0; i < local_size; i++) {
-                MPIDIU_get_node_id(local_comm, i, &local_node_ids[i]);
-            }
-            mpi_errno = MPIC_Sendrecv(local_node_ids, local_size * sizeof(int), MPI_BYTE,
-                                      remote_leader, cts_tag,
-                                      remote_node_ids, (*remote_size) * sizeof(int),
-                                      MPI_BYTE, remote_leader, cts_tag, peer_comm,
-                                      MPI_STATUS_IGNORE, &errflag);
-            MPIR_ERR_CHECK(mpi_errno);
-
             /* Stage 1.2 convert remote UPID to LUPID and get LUPID for local group */
-            MPIDIU_upids_to_lupids(*remote_size, remote_upid_size, remote_upids,
-                                   remote_lupids, remote_node_ids);
+            MPIDIU_upids_to_lupids(*remote_size, remote_upid_size, remote_upids, remote_lupids);
         } else {
             /* Stage 1.1f only exchange LUPIDS if no dynamic process involved */
             mpi_errno = MPIC_Sendrecv(local_lupids, local_size, MPI_INT,
@@ -533,8 +516,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                     (MPL_DBG_FDEST, "Intercomm map exchange stage 2: intra-group"));
     mpi_errno = MPIDIU_Intercomm_map_bcast_intra(local_comm, local_leader,
                                                  remote_size, is_low_group, pure_intracomm,
-                                                 remote_upid_size, remote_upids,
-                                                 remote_lupids, remote_node_ids);
+                                                 remote_upid_size, remote_upids, remote_lupids);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_CHKPMEM_COMMIT();
@@ -552,7 +534,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
 int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
                                      int *is_low_group, int pure_intracomm,
                                      size_t * remote_upid_size, char *remote_upids,
-                                     int **remote_lupids, int *remote_node_ids)
+                                     int **remote_lupids)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -561,7 +543,6 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     size_t *_remote_upid_size = NULL;
     char *_remote_upids = NULL;
-    int *_remote_node_ids = NULL;
 
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(3);
@@ -590,10 +571,6 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
             mpi_errno = MPIR_Bcast_allcomm_auto(remote_upids, upid_recv_size, MPI_BYTE,
                                                 local_leader, local_comm, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno =
-                MPIR_Bcast_allcomm_auto(remote_node_ids, (*remote_size) * sizeof(int), MPI_BYTE,
-                                        local_leader, local_comm, &errflag);
-            MPIR_ERR_CHECK(mpi_errno);
         } else {
             mpi_errno = MPIR_Bcast_allcomm_auto(*remote_lupids, *remote_size, MPI_INT,
                                                 local_leader, local_comm, &errflag);
@@ -620,16 +597,8 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
             mpi_errno = MPIR_Bcast_allcomm_auto(_remote_upids, upid_recv_size, MPI_BYTE,
                                                 local_leader, local_comm, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
-            MPIR_CHKLMEM_MALLOC(_remote_node_ids, int *,
-                                (*remote_size) * sizeof(int),
-                                mpi_errno, "_remote_node_ids", MPL_MEM_COMM);
-            mpi_errno =
-                MPIR_Bcast_allcomm_auto(_remote_node_ids, (*remote_size) * sizeof(int), MPI_BYTE,
-                                        local_leader, local_comm, &errflag);
-            MPIR_ERR_CHECK(mpi_errno);
 
-            MPIDIU_upids_to_lupids(*remote_size, _remote_upid_size, _remote_upids,
-                                   remote_lupids, _remote_node_ids);
+            MPIDIU_upids_to_lupids(*remote_size, _remote_upid_size, _remote_upids, remote_lupids);
         } else {
             mpi_errno = MPIR_Bcast_allcomm_auto(*remote_lupids, *remote_size, MPI_INT,
                                                 local_leader, local_comm, &errflag);
