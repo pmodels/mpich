@@ -33,7 +33,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
         MPIDIU_comm_rank_to_pid_local(comm_ptr, idx, &lpid, &avtid);
     }
 
-    *lpid_ptr = MPIDIU_LUPID_CREATE(avtid, lpid);
+    *lpid_ptr = MPIDIU_GPID_CREATE(avtid, lpid);
     return MPI_SUCCESS;
 }
 

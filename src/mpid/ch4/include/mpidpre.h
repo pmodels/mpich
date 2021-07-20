@@ -638,17 +638,15 @@ typedef struct MPIDI_av_entry {
 #define HAVE_DEV_COMM_HOOK
 
 /*
- * operation for (avtid, lpid) to/from "lupid"
- * 1 bit is reserved for "new_avt_mark". It will be cleared before accessing
- * the avtid and lpid. Therefore, the avtid mask does have that bit set to 0
+ * operation for (avtid, lpid) to/from gpid
  */
 #define MPIDIU_AVTID_BITS                    (7)
 #define MPIDIU_LPID_BITS                     (8 * sizeof(int) - (MPIDIU_AVTID_BITS + 1))
 #define MPIDIU_LPID_MASK                     (0xFFFFFFFFU >> (MPIDIU_AVTID_BITS + 1))
 #define MPIDIU_AVTID_MASK                    (~MPIDIU_LPID_MASK)
-#define MPIDIU_LUPID_CREATE(avtid, lpid)      (((avtid) << MPIDIU_LPID_BITS) | (lpid))
-#define MPIDIU_LUPID_GET_AVTID(lupid)          ((((lupid) & MPIDIU_AVTID_MASK) >> MPIDIU_LPID_BITS))
-#define MPIDIU_LUPID_GET_LPID(lupid)           (((lupid) & MPIDIU_LPID_MASK))
+#define MPIDIU_GPID_CREATE(avtid, lpid)      (((avtid) << MPIDIU_LPID_BITS) | (lpid))
+#define MPIDIU_GPID_GET_AVTID(gpid)          ((((gpid) & MPIDIU_AVTID_MASK) >> MPIDIU_LPID_BITS))
+#define MPIDIU_GPID_GET_LPID(gpid)           (((gpid) & MPIDIU_LPID_MASK))
 
 #define MPIDI_DYNPROC_MASK                 (0x80000000U)
 

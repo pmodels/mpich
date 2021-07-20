@@ -530,7 +530,7 @@ PARAM:
     recvcounts: const MPI_Aint *
     recvtype: MPI_Datatype
     recvtypes: const MPI_Datatype[]
-    remote_lupids: int **
+    remote_gpids: int **
     remote_upid_size: size_t *
     remote_upids: char *
     req: MPIR_Request *
