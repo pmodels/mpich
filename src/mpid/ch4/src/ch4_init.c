@@ -873,37 +873,6 @@ int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     return mpi_errno;
 }
 
-int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[])
-{
-    int mpi_errno = MPI_SUCCESS, i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CREATE_INTERCOMM_FROM_LPIDS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CREATE_INTERCOMM_FROM_LPIDS);
-
-    MPIDI_rank_map_mlut_t *mlut = NULL;
-    MPIDI_COMM(newcomm_ptr, map).mode = MPIDI_RANK_MAP_MLUT;
-    MPIDI_COMM(newcomm_ptr, map).avtid = -1;
-    mpi_errno = MPIDIU_alloc_mlut(&mlut, size);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIDI_COMM(newcomm_ptr, map).size = size;
-    MPIDI_COMM(newcomm_ptr, map).irreg.mlut.t = mlut;
-    MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid = mlut->gpid;
-
-    for (i = 0; i < size; i++) {
-        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid = MPIDIU_LUPID_GET_AVTID(lpids[i]);
-        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid = MPIDIU_LUPID_GET_LPID(lpids[i]);
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                        (MPL_DBG_FDEST, " remote rank=%d, avtid=%d, lpid=%d", i,
-                         MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid,
-                         MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid));
-    }
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CREATE_INTERCOMM_FROM_LPIDS);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
 {
     MPI_Aint result;
