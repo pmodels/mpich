@@ -861,6 +861,9 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
                     break;
                 }
             }
+            if (found) {
+                break;
+            }
         }
 
         if (!found) {
