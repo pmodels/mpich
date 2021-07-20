@@ -97,7 +97,8 @@ int MPIDIU_new_avt(int size, int *avtid)
 
     *avtid = get_next_avtid();
 
-    new_av_table = (MPIDI_av_table_t *) MPL_malloc(size * sizeof(MPIDI_av_entry_t)
+    /* note: zeroed so is_local default to 0, which is true for *avtid > 0 */
+    new_av_table = (MPIDI_av_table_t *) MPL_calloc(1, size * sizeof(MPIDI_av_entry_t)
                                                    + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
     new_av_table->size = size;
     MPIDI_global.avt_mgr.av_tables[*avtid] = new_av_table;
@@ -207,30 +208,12 @@ int MPIDIU_avt_destroy(void)
 int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
                            int **remote_lupids)
 {
-    int mpi_errno = MPI_SUCCESS, i;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     mpi_errno = MPIDI_NM_upids_to_lupids(size, remote_upid_size, remote_upids, remote_lupids);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* update locality */
-    for (i = 0; i < size; i++) {
-        int _avtid = 0, _lpid = 0;
-        /* if this is a new process, update locality */
-        if (MPIDIU_LUPID_IS_NEW_AVT((*remote_lupids)[i])) {
-            MPIDIU_LUPID_CLEAR_NEW_AVT_MARK((*remote_lupids)[i]);
-            _avtid = MPIDIU_LUPID_GET_AVTID((*remote_lupids)[i]);
-            _lpid = MPIDIU_LUPID_GET_LPID((*remote_lupids)[i]);
-            if (_avtid != 0) {
-#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
-                MPIDI_global.avt_mgr.av_tables[_avtid]->table[_lpid].is_local = 0;
-#endif
-            }
-        }
-    }
-
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
