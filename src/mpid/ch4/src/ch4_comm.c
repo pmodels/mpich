@@ -125,11 +125,26 @@ int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MP
     /* --END ERROR HANDLING-- */
 }
 
+static void mlut_update_avt_reference(int size, MPIDI_gpid_t * gpid, bool is_release)
+{
+    int n_avts = MPIDIU_get_max_n_avts();
+    int *uniq_avtids = (int *) MPL_calloc(n_avts, sizeof(int), MPL_MEM_ADDRESS);
+    for (int i = 0; i < size; i++) {
+        if (uniq_avtids[gpid[i].avtid] == 0) {
+            uniq_avtids[gpid[i].avtid] = 1;
+            if (is_release) {
+                MPIDIU_avt_release_ref(gpid[i].avtid);
+            } else {
+                MPIDIU_avt_add_ref(gpid[i].avtid);
+            }
+        }
+    }
+    MPL_free(uniq_avtids);
+}
+
 int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
-    int i, *uniq_avtids;
-    int max_n_avts;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_COMMIT_PRE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_COMMIT_PRE_HOOK);
 
@@ -163,16 +178,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
             case MPIDI_RANK_MAP_NONE:
                 break;
             case MPIDI_RANK_MAP_MLUT:
-                max_n_avts = MPIDIU_get_max_n_avts();
-                uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
-                memset(uniq_avtids, 0, max_n_avts * sizeof(int));
-                for (i = 0; i < MPIDI_COMM(comm, map).size; i++) {
-                    if (uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] == 0) {
-                        uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] = 1;
-                        MPIDIU_avt_add_ref(MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid);
-                    }
-                }
-                MPL_free(uniq_avtids);
+                mlut_update_avt_reference(MPIDI_COMM(comm, map).size,
+                                          MPIDI_COMM(comm, map).irreg.mlut.gpid, false);
                 break;
             default:
                 MPIDIU_avt_add_ref(MPIDI_COMM(comm, map).avtid);
@@ -182,16 +189,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
             case MPIDI_RANK_MAP_NONE:
                 break;
             case MPIDI_RANK_MAP_MLUT:
-                max_n_avts = MPIDIU_get_max_n_avts();
-                uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
-                memset(uniq_avtids, 0, max_n_avts * sizeof(int));
-                for (i = 0; i < MPIDI_COMM(comm, local_map).size; i++) {
-                    if (uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] == 0) {
-                        uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] = 1;
-                        MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid);
-                    }
-                }
-                MPL_free(uniq_avtids);
+                mlut_update_avt_reference(MPIDI_COMM(comm, local_map).size,
+                                          MPIDI_COMM(comm, local_map).irreg.mlut.gpid, false);
                 break;
             default:
                 MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).avtid);
@@ -253,8 +252,6 @@ int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
 int MPID_Comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
-    int i, *uniq_avtids;
-    int max_n_avts;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_FREE_HOOK);
     /* release ref to avts */
@@ -262,16 +259,8 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
         case MPIDI_RANK_MAP_NONE:
             break;
         case MPIDI_RANK_MAP_MLUT:
-            max_n_avts = MPIDIU_get_max_n_avts();
-            uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
-            memset(uniq_avtids, 0, max_n_avts * sizeof(int));
-            for (i = 0; i < MPIDI_COMM(comm, map).size; i++) {
-                if (uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] == 0) {
-                    uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] = 1;
-                    MPIDIU_avt_release_ref(MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid);
-                }
-            }
-            MPL_free(uniq_avtids);
+            mlut_update_avt_reference(MPIDI_COMM(comm, map).size,
+                                      MPIDI_COMM(comm, map).irreg.mlut.gpid, true);
             break;
         default:
             MPIDIU_avt_release_ref(MPIDI_COMM(comm, map).avtid);
@@ -281,16 +270,8 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
         case MPIDI_RANK_MAP_NONE:
             break;
         case MPIDI_RANK_MAP_MLUT:
-            max_n_avts = MPIDIU_get_max_n_avts();
-            uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
-            memset(uniq_avtids, 0, max_n_avts * sizeof(int));
-            for (i = 0; i < MPIDI_COMM(comm, local_map).size; i++) {
-                if (uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] == 0) {
-                    uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] = 1;
-                    MPIDIU_avt_release_ref(MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid);
-                }
-            }
-            MPL_free(uniq_avtids);
+            mlut_update_avt_reference(MPIDI_COMM(comm, local_map).size,
+                                      MPIDI_COMM(comm, local_map).irreg.mlut.gpid, true);
             break;
         default:
             MPIDIU_avt_release_ref(MPIDI_COMM(comm, local_map).avtid);
