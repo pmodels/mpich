@@ -239,7 +239,7 @@ int MPIDIU_avt_destroy(void)
 }
 
 int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
-                           int **remote_lupids, int *remote_node_ids)
+                           int **remote_lupids)
 {
     int mpi_errno = MPI_SUCCESS, i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
