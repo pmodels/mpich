@@ -789,7 +789,7 @@ int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr, int idx, int *lpid_ptr, bool is_rem
         MPIDIU_comm_rank_to_pid_local(comm_ptr, idx, &lpid, &avtid);
     }
 
-    *lpid_ptr = MPIDIU_LUPID_CREATE(avtid, lpid);
+    *lpid_ptr = MPIDIU_GPID_CREATE(avtid, lpid);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_GET_LPID);
     return mpi_errno;

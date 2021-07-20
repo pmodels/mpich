@@ -332,7 +332,7 @@ int MPID_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 }
 
 int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_Comm * peer_comm,
-                                int remote_leader, int *remote_size, int **remote_lupids,
+                                int remote_leader, int *remote_size, int **remote_gpids,
                                 int *is_low_group)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -344,13 +344,13 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int pure_intracomm = 1;
     int local_size = 0;
-    int *local_lupids = NULL;
+    int *local_gpids = NULL;
     size_t *local_upid_size = NULL, *remote_upid_size = NULL;
     int upid_send_size = 0, upid_recv_size = 0;
     char *local_upids = NULL, *remote_upids = NULL;
 
     /*
-     * CH4 only cares about LUPID. GUPID extraction and exchange should be done
+     * CH4 only cares about GPID. UPID extraction and exchange should be done
      * by netmod
      */
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INTERCOMM_EXCHANGE_MAP);
@@ -363,7 +363,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
     local_size = local_comm->local_size;
 
     /*
-     * Stage 1: UPID exchange and LUPID conversion in leaders
+     * Stage 1: UPID exchange and GPID conversion in leaders
      */
     if (local_comm->rank == local_leader) {
         /* We need to check all processes in local group to decide there
@@ -404,13 +404,13 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                         (MPL_DBG_FDEST, "local size = %d, remote size = %d, pure_intracomm = %d",
                          local_size, *remote_size, pure_intracomm));
 
-        MPIR_CHKPMEM_MALLOC((*remote_lupids), int *, (*remote_size) * sizeof(int),
-                            mpi_errno, "remote_lupids", MPL_MEM_ADDRESS);
-        MPIR_CHKLMEM_MALLOC(local_lupids, int *, local_size * sizeof(int),
-                            mpi_errno, "local_lupids", MPL_MEM_ADDRESS);
+        MPIR_CHKPMEM_MALLOC((*remote_gpids), int *, (*remote_size) * sizeof(int),
+                            mpi_errno, "remote_gpids", MPL_MEM_ADDRESS);
+        MPIR_CHKLMEM_MALLOC(local_gpids, int *, local_size * sizeof(int),
+                            mpi_errno, "local_gpids", MPL_MEM_ADDRESS);
         for (i = 0; i < local_size; i++) {
             MPIDIU_comm_rank_to_pid(local_comm, i, &lpid, &avtid);
-            local_lupids[i] = MPIDIU_LUPID_CREATE(avtid, lpid);
+            local_gpids[i] = MPIDIU_GPID_CREATE(avtid, lpid);
         }
 
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
@@ -443,13 +443,13 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                       peer_comm, MPI_STATUS_IGNORE, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
 
-            /* Stage 1.2 convert remote UPID to LUPID and get LUPID for local group */
-            MPIDIU_upids_to_lupids(*remote_size, remote_upid_size, remote_upids, remote_lupids);
+            /* Stage 1.2 convert remote UPID to GPID and get GPID for local group */
+            MPIDIU_upids_to_gpids(*remote_size, remote_upid_size, remote_upids, remote_gpids);
         } else {
-            /* Stage 1.1f only exchange LUPIDS if no dynamic process involved */
-            mpi_errno = MPIC_Sendrecv(local_lupids, local_size, MPI_INT,
+            /* Stage 1.1f only exchange GPIDS if no dynamic process involved */
+            mpi_errno = MPIC_Sendrecv(local_gpids, local_size, MPI_INT,
                                       remote_leader, cts_tag,
-                                      *remote_lupids, *remote_size, MPI_INT,
+                                      *remote_gpids, *remote_size, MPI_INT,
                                       remote_leader, cts_tag,
                                       peer_comm, MPI_STATUS_IGNORE, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
@@ -474,8 +474,8 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
             {
                 /* Now that we have both the local and remote processes,
                  * check for any overlap */
-                mpi_errno = MPIDI_check_disjoint_lupids(local_lupids, local_size,
-                                                        *remote_lupids, *remote_size);
+                mpi_errno = MPIDI_check_disjoint_gpids(local_gpids, local_size,
+                                                       *remote_gpids, *remote_size);
                 MPIR_ERR_CHECK(mpi_errno);
             }
             MPID_END_ERROR_CHECKS;
@@ -486,11 +486,11 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
          * Make an arbitrary decision about which group of process is
          * the low group.  The LEADERS do this by comparing the
          * local process ids of the 0th member of the two groups
-         * LUPID itself is not enough for determine is_low_group because both
+         * GPID itself is not enough for determine is_low_group because both
          * local group is always smaller than remote
          */
         if (pure_intracomm) {
-            *is_low_group = local_lupids[0] < (*remote_lupids)[0];
+            *is_low_group = local_gpids[0] < (*remote_gpids)[0];
         } else {
             if (local_upid_size[0] == remote_upid_size[0]) {
                 *is_low_group = memcmp(local_upids, remote_upids, local_upid_size[0]);
@@ -506,7 +506,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
 
         /* At this point, we're done with the local lpids; they'll
          * be freed with the other local memory on exit */
-        local_lupids = NULL;
+        local_gpids = NULL;
     }
 
     /*
@@ -516,7 +516,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                     (MPL_DBG_FDEST, "Intercomm map exchange stage 2: intra-group"));
     mpi_errno = MPIDIU_Intercomm_map_bcast_intra(local_comm, local_leader,
                                                  remote_size, is_low_group, pure_intracomm,
-                                                 remote_upid_size, remote_upids, remote_lupids);
+                                                 remote_upid_size, remote_upids, remote_gpids);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_CHKPMEM_COMMIT();
@@ -534,7 +534,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
 int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
                                      int *is_low_group, int pure_intracomm,
                                      size_t * remote_upid_size, char *remote_upids,
-                                     int **remote_lupids)
+                                     int **remote_gpids)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -572,7 +572,7 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
                                                 local_leader, local_comm, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            mpi_errno = MPIR_Bcast_allcomm_auto(*remote_lupids, *remote_size, MPI_INT,
+            mpi_errno = MPIR_Bcast_allcomm_auto(*remote_gpids, *remote_size, MPI_INT,
                                                 local_leader, local_comm, &errflag);
         }
     } else {
@@ -584,8 +584,8 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
         *is_low_group = map_info[2];
         pure_intracomm = map_info[3];
 
-        MPIR_CHKPMEM_MALLOC((*remote_lupids), int *, (*remote_size) * sizeof(int),
-                            mpi_errno, "remote_lupids", MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC((*remote_gpids), int *, (*remote_size) * sizeof(int),
+                            mpi_errno, "remote_gpids", MPL_MEM_COMM);
         if (!pure_intracomm) {
             MPIR_CHKLMEM_MALLOC(_remote_upid_size, size_t *, (*remote_size) * sizeof(size_t),
                                 mpi_errno, "_remote_upid_size", MPL_MEM_COMM);
@@ -598,9 +598,9 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
                                                 local_leader, local_comm, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
 
-            MPIDIU_upids_to_lupids(*remote_size, _remote_upid_size, _remote_upids, remote_lupids);
+            MPIDIU_upids_to_gpids(*remote_size, _remote_upid_size, _remote_upids, remote_gpids);
         } else {
-            mpi_errno = MPIR_Bcast_allcomm_auto(*remote_lupids, *remote_size, MPI_INT,
+            mpi_errno = MPIR_Bcast_allcomm_auto(*remote_gpids, *remote_size, MPI_INT,
                                                 local_leader, local_comm, &errflag);
         }
     }
@@ -631,8 +631,8 @@ int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const in
     MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid = mlut->gpid;
 
     for (i = 0; i < size; i++) {
-        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid = MPIDIU_LUPID_GET_AVTID(lpids[i]);
-        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid = MPIDIU_LUPID_GET_LPID(lpids[i]);
+        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid = MPIDIU_GPID_GET_AVTID(lpids[i]);
+        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid = MPIDIU_GPID_GET_LPID(lpids[i]);
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                         (MPL_DBG_FDEST, " remote rank=%d, avtid=%d, lpid=%d", i,
                          MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid,

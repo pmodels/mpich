@@ -6,6 +6,10 @@
 #include "mpidimpl.h"
 #include "ch4r_proc.h"
 
+/* There are 3 terms referencing processes -- upid, lpid, gpid.
+ * Refer to comment in ch4r_proc.h
+ */
+
 static int get_next_avtid(void);
 
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
@@ -205,20 +209,23 @@ int MPIDIU_avt_destroy(void)
     return MPI_SUCCESS;
 }
 
-int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
-                           int **remote_lupids)
+/* convert upid to gpid by netmod.
+ * For ofi netmod, it inserts the address and fills an av entry.
+ */
+int MPIDIU_upids_to_gpids(int size, size_t * remote_upid_size, char *remote_upids,
+                          int **remote_gpids)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_UPIDS_TO_GPIDS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_UPIDS_TO_GPIDS);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
-    mpi_errno = MPIDI_NM_upids_to_lupids(size, remote_upid_size, remote_upids, remote_lupids);
+    mpi_errno = MPIDI_NM_upids_to_gpids(size, remote_upid_size, remote_upids, remote_gpids);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_UPIDS_TO_GPIDS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
