@@ -849,7 +849,6 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[nic][0] = addr;
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
-            MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[new_avt_procs[i]]);
         }
     }
 
