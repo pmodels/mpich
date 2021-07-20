@@ -12,6 +12,10 @@
 #include "ch4r_proc.h"
 #include "ch4_self.h"
 
+int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
+                                     int *is_low_group, int pure_intracomm,
+                                     size_t * remote_upid_size, char *remote_upids,
+                                     int **remote_lupids, int *remote_node_ids);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
