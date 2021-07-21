@@ -61,8 +61,8 @@ Non Native API:
   am_check_eager: bool
       NM*: am_hdr_sz, data_sz, data, count, datatype, sreq
      SHM*: am_hdr_sz, data_sz, data, count, datatype, sreq
-  comm_get_lpid : int
-      NM*: comm_ptr, idx, lpid_ptr, is_remote
+  comm_get_gpid : int
+      NM*: comm_ptr, idx, gpid_ptr, is_remote
   get_local_upids : int
       NM : comm, local_upid_size, local_upids
   upids_to_gpids : int
@@ -507,7 +507,7 @@ PARAM:
     local_upid_size: size_t **
     local_upids: char **
     lock_type: int
-    lpid_ptr: int *
+    gpid_ptr: int *
     lpids: const int[]
     message: MPIR_Request *
     message_p: MPIR_Request **

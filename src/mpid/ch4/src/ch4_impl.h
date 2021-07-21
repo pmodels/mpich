@@ -418,7 +418,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 /* We assume this routine is never called with rank=MPI_PROC_NULL. */
 MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
 {
-    int lpid;
+    int gpid;
     int size = grp->size;
     int z;
     int ret;
@@ -426,9 +426,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
 
-    MPIDI_NM_comm_get_lpid(comm, rank, &lpid, FALSE);
+    MPIDI_NM_comm_get_gpid(comm, rank, &gpid, FALSE);
 
-    for (z = 0; z < size && lpid != grp->lrank_to_lpid[z].lpid; ++z) {
+    for (z = 0; z < size && gpid != grp->lrank_to_lpid[z].lpid; ++z) {
     }
 
     ret = (z < size);
