@@ -70,11 +70,6 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
         part_rreq_update_sinfo(posted_req, msg_hdr);
         mpi_errno = MPIDIG_precv_matched(posted_req);
         MPIR_ERR_CHECK(mpi_errno);
-
-        /* If rreq matches and local start has been called, notify sender CTS */
-        if (MPIR_Part_request_is_active(posted_req)) {
-            mpi_errno = MPIDIG_part_issue_cts(posted_req);
-        }
     } else {
         MPIR_Request *unexp_req = NULL;
 
