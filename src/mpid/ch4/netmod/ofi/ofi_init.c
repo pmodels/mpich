@@ -591,6 +591,10 @@ static void parse_container_params(struct json_object *obj, MPIDI_OFI_csel_conta
                     container->u.bcast.triggered_pipelined.k =
                         k;
                     break;
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_small_blocking:
+                    container->u.bcast.triggered_small_blocking.k =
+                        k;
+                    break;
                 default:
                     MPIR_Assert(0);
                     break;
@@ -627,6 +631,10 @@ static void *create_container(struct json_object *obj)
             container->u.bcast.triggered_pipelined.k = 2;
             container->u.bcast.triggered_pipelined.tree_type = 0;
             container->u.bcast.triggered_pipelined.chunk_size = 0;
+        } else if (!strcmp(ckey, "algorithm=BCAST_INTRA_triggered_small_blocking")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_small_blocking;
+            container->u.bcast.triggered_small_blocking.k = 2;
         }
 
         MPL_free(ckey);

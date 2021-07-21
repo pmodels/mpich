@@ -10,6 +10,7 @@
 #include "coll/ofi_bcast_tree_tagged.h"
 #include "coll/ofi_bcast_tree_rma.h"
 #include "coll/ofi_bcast_tree_pipelined.h"
+#include "coll/ofi_bcast_tree_small_msg.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -28,6 +29,7 @@ cvars:
         trigger_tree_tagged         - Force triggered ops based Tagged Tree
         trigger_tree_rma            - Force triggered ops based RMA Tree
         trigger_tree_pipelined      - Force triggered ops based Pipelined Tree
+        trigger_tree_small_blocking - Force triggered ops based blocking small message algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -116,6 +118,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, MPI_Aint count, MP
                 MPIDI_OFI_Bcast_intra_triggered_pipelined(buffer, count, datatype,
                                                           root, comm, MPIR_CVAR_BCAST_TREE_KVAL,
                                                           chunk_size);
+            break;
+        case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_trigger_tree_small_blocking:
+            /* root can not change once blk_sml_bcast is setup */
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
+                                           count * type_size <= 1024 &&
+                                           MPIR_ThreadInfo.thread_provided != MPI_THREAD_MULTIPLE &&
+                                           (MPIDI_OFI_COMM(comm).blk_sml_bcast == NULL ||
+                                            MPIDI_OFI_COMM(comm).blk_sml_bcast->root == root),
+                                           mpi_errno,
+                                           "Bcast triggered_small_msg cannot be applied.\n");
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_triggered_small_msg(buffer, count, datatype, root, comm,
+                                                          MPIR_CVAR_BCAST_TREE_KVAL);
             break;
         case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_mpir:
             goto fallback;
