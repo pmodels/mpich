@@ -40,10 +40,13 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Specifies affinity for all progress threads of local processes.
-        Format - comma-separated list of logical processors. In case of
-        N progress threads per process, the first N logical processors
-        from list will be assigned to threads of first local process.
-        The next N logical processors from list - to second local process
+        Can be set to auto or comma-separated list of logical processors.
+        When set to auto - MPICH will automatically select logical CPU
+        cores to decide affinity of the progress threads.
+        When set to comma-separated list of logical processors - In case
+        of N progress threads per process, the first N logical processors
+        from list will be assigned to threads of first local process,
+        the next N logical processors from list - to second local process
         and so on. For example, thread affinity is "0,1,2,3", 2 progress
         threads per process and 2 processes per node. Progress threads
         of first local process will be pinned on logical processors "0,1",
@@ -95,24 +98,38 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_parse_progress_thread_affinity(int *thread_af
     MPIR_Assert(affinity_copy);
     tmp = affinity_copy;
 
-    for (th_idx = 0; th_idx < async_threads_per_node; th_idx++) {
-        proc_id_str = MPL_strsep(&tmp, ",");
-        if (proc_id_str != NULL) {
-            if (strlen(proc_id_str) == 0 || (strlen(proc_id_str) > 0 && !isdigit(proc_id_str[0])) ||
-                atoi(proc_id_str) < 0) {
+    /* apply auto affinity */
+    if (strcmp(affinity_copy, "auto") == 0) {
+        /* generate default affinity */
+        proc_count = MPL_get_nprocs();
+        for (th_idx = 0; th_idx < async_threads_per_node; th_idx++) {
+            if (th_idx < proc_count)
+                thread_affinity[th_idx] = proc_count - (th_idx % proc_count) - 1;
+            else
+                thread_affinity[th_idx] = thread_affinity[th_idx % proc_count];
+        }
+    } else {
+        /* apply explicit affinity to the provided logical cpu */
+        for (th_idx = 0; th_idx < async_threads_per_node; th_idx++) {
+            proc_id_str = MPL_strsep(&tmp, ",");
+            if (proc_id_str != NULL) {
+                if (strlen(proc_id_str) == 0 ||
+                    (strlen(proc_id_str) > 0 && !isdigit(proc_id_str[0])) ||
+                    atoi(proc_id_str) < 0) {
+                    MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**parse_thread_affinity",
+                                         "**parse_thread_affinity %s", affinity_to_parse);
+                }
+                thread_affinity[th_idx] = atoi(proc_id_str);
+                read_count++;
+            } else {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**parse_thread_affinity",
                                      "**parse_thread_affinity %s", affinity_to_parse);
             }
-            thread_affinity[th_idx] = atoi(proc_id_str);
-            read_count++;
-        } else {
+        }
+        if (read_count < async_threads_per_node) {
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**parse_thread_affinity",
                                  "**parse_thread_affinity %s", affinity_to_parse);
         }
-    }
-    if (read_count < async_threads_per_node) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**parse_thread_affinity",
-                             "**parse_thread_affinity %s", affinity_to_parse);
     }
 
   fn_exit:
