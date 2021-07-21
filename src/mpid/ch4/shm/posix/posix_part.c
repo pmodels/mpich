@@ -8,16 +8,14 @@
 
 int MPIDI_POSIX_mpi_psend_init_hook(void *buf, int partitions, MPI_Aint count,
                                     MPI_Datatype datatype, int dest, int tag,
-                                    MPIR_Comm * comm, MPIR_Info * info,
-                                    MPIDI_av_entry_t * av, MPIR_Request ** request)
+                                    MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request)
 {
     return MPI_SUCCESS;
 }
 
 int MPIDI_POSIX_mpi_precv_init_hook(void *buf, int partitions, MPI_Aint count,
                                     MPI_Datatype datatype, int source, int tag,
-                                    MPIR_Comm * comm, MPIR_Info * info,
-                                    MPIDI_av_entry_t * av, MPIR_Request ** request)
+                                    MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request)
 {
     return MPI_SUCCESS;
 }
