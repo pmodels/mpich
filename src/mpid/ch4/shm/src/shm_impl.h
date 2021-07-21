@@ -24,7 +24,6 @@
 
 #include "shm_am.h"
 #include "shm_progress.h"
-#include "shm_misc.h"
 #include "shm_types.h"
 #include "shm_control.h"
 #include "shm_hooks_internal.h"
