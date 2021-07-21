@@ -289,6 +289,10 @@ algorithms:
                 .MPIR_CVAR_CH4_OFI_ENABLE_TRIGGERED=1
                 .MPIR_CVAR_BCAST_TREE_TYPE=kary,knomial_1,knomial_2
                 .MPIR_CVAR_BCAST_TREE_KVAL=2,3,4,8
+            ofi:trigger_tree_pipelined
+                .MPIR_CVAR_CH4_OFI_ENABLE_TRIGGERED=1
+                .MPIR_CVAR_BCAST_TREE_KVAL=2,3,4,8
+                .MPIR_CVAR_BCAST_TREE_PIPELINE_CHUNK_SIZE=4096,8192
         intra-nonblocking:
             sched_binomial
             sched_smp
