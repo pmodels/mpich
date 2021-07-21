@@ -1105,7 +1105,7 @@ if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
 
     # if an old hwloc was specified by the user, throw an error
     if test "$pac_have_hwloc" = "no" -a -n "$with_hwloc" -a "$with_hwloc" != "yes" ; then
-        AC_MSG_ERROR([hwloc installation does not meet minimum version requirement])
+        AC_MSG_ERROR([hwloc installation does not meet minimum version requirement (2.0). Please update your hwloc installation or use --with-hwloc=embedded.])
     fi
 fi
 
