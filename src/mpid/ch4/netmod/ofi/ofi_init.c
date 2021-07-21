@@ -537,7 +537,21 @@ static void parse_container_params(struct json_object *obj, MPIDI_OFI_csel_conta
         (void) val;
         char *ckey = MPL_strdup_no_spaces(key);
         /* process algorithm parameters */
-        if (!strncmp(ckey, "tree_type=", strlen("tree_type="))) {
+        if (!strncmp(ckey, "chunk_size=", strlen("chunk_size="))) {
+            if (container->id == MPIDI_OFI_Algorithm_count) {
+                fprintf(stderr, "parameter specified without algorithm %s\n", key);
+                MPIR_Assert(0);
+            }
+            int chunk_size = atoi(ckey + strlen("chunk_size="));
+            switch (container->id) {
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_pipelined:
+                    container->u.bcast.triggered_pipelined.chunk_size =
+                        chunk_size;
+                    break;
+                default:
+                    MPIR_Assert(0);
+            }
+        } else if (!strncmp(ckey, "tree_type=", strlen("tree_type="))) {
             if (container->id == MPIDI_OFI_Algorithm_count) {
                 fprintf(stderr, "parameter specified without algorithm %s\n", key);
                 MPIR_Assert(0);
@@ -550,6 +564,10 @@ static void parse_container_params(struct json_object *obj, MPIDI_OFI_csel_conta
                     break;
                 case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma:
                     container->u.bcast.triggered_rma.tree_type = tree_type;
+                    break;
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_pipelined:
+                    container->u.bcast.triggered_pipelined.tree_type =
+                        tree_type;
                     break;
                 default:
                     MPIR_Assert(0);
@@ -568,6 +586,10 @@ static void parse_container_params(struct json_object *obj, MPIDI_OFI_csel_conta
                     break;
                 case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma:
                     container->u.bcast.triggered_rma.k = k;
+                    break;
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_pipelined:
+                    container->u.bcast.triggered_pipelined.k =
+                        k;
                     break;
                 default:
                     MPIR_Assert(0);
@@ -599,6 +621,12 @@ static void *create_container(struct json_object *obj)
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma;
             container->u.bcast.triggered_rma.k = 2;
             container->u.bcast.triggered_rma.tree_type = 0;
+        } else if (!strcmp(ckey, "algorithm=BCAST_INTRA_triggered_pipelined")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_pipelined;
+            container->u.bcast.triggered_pipelined.k = 2;
+            container->u.bcast.triggered_pipelined.tree_type = 0;
+            container->u.bcast.triggered_pipelined.chunk_size = 0;
         }
 
         MPL_free(ckey);
