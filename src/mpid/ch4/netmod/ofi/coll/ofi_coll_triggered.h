@@ -6,3 +6,4 @@
  */
 #include "ofi_bcast_tree_tagged.h"
 #include "ofi_bcast_tree_rma.h"
+#include "ofi_bcast_tree_pipelined.h"
