@@ -929,7 +929,7 @@ int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-int MPIDI_check_disjoint_gpids(int gpids1[], int n1, int gpids2[], int n2)
+int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int n2)
 {
     int i, mask_size, idx, bit, maxgpid = -1;
     int mpi_errno = MPI_SUCCESS;

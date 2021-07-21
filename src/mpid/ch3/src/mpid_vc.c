@@ -245,7 +245,7 @@ int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr)
 /*@
   MPID_Comm_get_lpid - Get the local process ID for a given VC reference
   @*/
-int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, bool is_remote)
+int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, uint64_t *lpid_ptr, bool is_remote)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_VCR_GET_LPID);
 
@@ -327,7 +327,7 @@ int MPIDI_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIDI_Gpid *in_gpid )
  * the GPIDs.  Note that this code requires that all processes
  * have information on the process groups.
  */
-int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid in_gpid[], int lpid[] )
+int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid in_gpid[], uint64_t lpid[] )
 {
     int i, mpi_errno = MPI_SUCCESS;
     int pgid;
@@ -383,13 +383,15 @@ int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid in_gpid[], int lpid[] )
 }
 
 static inline int MPIDI_LPID_GetAllInComm(MPIR_Comm *comm_ptr, int local_size,
-                                          int local_lpids[])
+                                          uint64_t local_lpids[])
 {
     int i;
     int mpi_errno = MPI_SUCCESS;
     MPIR_Assert( comm_ptr->local_size == local_size );
     for (i=0; i<comm_ptr->local_size; i++) {
-	mpi_errno |= MPID_Comm_get_lpid( comm_ptr, i, &local_lpids[i], FALSE );
+        uint64_t tmp_lpid;
+	mpi_errno |= MPID_Comm_get_lpid( comm_ptr, i, &tmp_lpid, FALSE );
+        local_lpids[i] = tmp_lpid;
     }
     return mpi_errno;
 }
@@ -399,9 +401,10 @@ static inline int MPIDI_LPID_GetAllInComm(MPIR_Comm *comm_ptr, int local_size,
 /*@
   check_disjoint_lpids - Exchange address mapping for intercomm creation.
  @*/
-static int check_disjoint_lpids(int lpids1[], int n1, int lpids2[], int n2)
+static int check_disjoint_lpids(uint64_t lpids1[], int n1, uint64_t lpids2[], int n2)
 {
-    int i, mask_size, idx, bit, maxlpid = -1;
+    int i, mask_size, idx, bit;
+    uint64_t maxlpid = 0;
     int mpi_errno = MPI_SUCCESS;
     uint32_t lpidmaskPrealloc[N_STATIC_LPID32];
     uint32_t *lpidmask;
@@ -412,8 +415,10 @@ static int check_disjoint_lpids(int lpids1[], int n1, int lpids2[], int n2)
         if (lpids1[i] > maxlpid) maxlpid = lpids1[i];
     }
     for (i=0; i<n2; i++) {
+        MPIR_Assert(lpids2[i] <= INT_MAX);
         if (lpids2[i] > maxlpid) maxlpid = lpids2[i];
     }
+    MPIR_Assert(maxlpid <= INT_MAX);
 
     mask_size = (maxlpid / 32) + 1;
 
@@ -462,12 +467,13 @@ static int check_disjoint_lpids(int lpids1[], int n1, int lpids2[], int n2)
  @*/
 int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
                                 MPIR_Comm *peer_comm_ptr, int remote_leader,
-                                int *remote_size, int **remote_lpids,
+                                int *remote_size, uint64_t **remote_lpids,
                                 int *is_low_group)
 {
     int mpi_errno = MPI_SUCCESS;
     int singlePG;
-    int local_size,*local_lpids=0;
+    int local_size;
+    uint64_t *local_lpids=0;
     MPIDI_Gpid *local_gpids=NULL, *remote_gpids=NULL;
     int comm_info[2];
     int cts_tag;
@@ -501,9 +507,9 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         /* With this information, we can now send and receive the
            global process ids from the peer. */
         MPIR_CHKLMEM_MALLOC(remote_gpids,MPIDI_Gpid*,(*remote_size)*sizeof(MPIDI_Gpid), mpi_errno,"remote_gpids", MPL_MEM_DYNAMIC);
-        *remote_lpids = (int*) MPL_malloc((*remote_size)*sizeof(int), MPL_MEM_ADDRESS);
+        *remote_lpids = (uint64_t*) MPL_malloc((*remote_size)*sizeof(uint64_t), MPL_MEM_ADDRESS);
         MPIR_CHKLMEM_MALLOC(local_gpids,MPIDI_Gpid*,local_size*sizeof(MPIDI_Gpid), mpi_errno,"local_gpids", MPL_MEM_DYNAMIC);
-        MPIR_CHKLMEM_MALLOC(local_lpids,int*,local_size*sizeof(int), mpi_errno,"local_lpids", MPL_MEM_DYNAMIC);
+        MPIR_CHKLMEM_MALLOC(local_lpids,uint64_t*,local_size*sizeof(uint64_t), mpi_errno,"local_lpids", MPL_MEM_DYNAMIC);
 
         mpi_errno = MPIDI_GPID_GetAllInComm( local_comm_ptr, local_size, local_gpids, &singlePG );
         MPIR_ERR_CHECK(mpi_errno);
@@ -574,7 +580,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         *remote_size = comm_info[0];
         MPIR_CHKLMEM_MALLOC(remote_gpids,MPIDI_Gpid*,(*remote_size)*sizeof(MPIDI_Gpid), mpi_errno,"remote_gpids", MPL_MEM_DYNAMIC);
-        *remote_lpids = (int*) MPL_malloc((*remote_size)*sizeof(int), MPL_MEM_ADDRESS);
+        *remote_lpids = (uint64_t*) MPL_malloc((*remote_size)*sizeof(uint64_t), MPL_MEM_ADDRESS);
         mpi_errno = MPIR_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
         MPIR_ERR_CHECK(mpi_errno);
@@ -626,7 +632,7 @@ fn_fail:
   'MPI_Comm_connect/MPI_Comm_accept'.  Thus, it is only used for intercommunicators.
  @*/
 int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
-			    int size, const int lpids[] )
+			    int size, const uint64_t lpids[] )
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *commworld_ptr;
