@@ -640,13 +640,11 @@ typedef struct MPIDI_av_entry {
 /*
  * operation for (avtid, lpid) to/from gpid
  */
-#define MPIDIU_AVTID_BITS                    (7)
-#define MPIDIU_LPID_BITS                     (8 * sizeof(int) - (MPIDIU_AVTID_BITS + 1))
-#define MPIDIU_LPID_MASK                     (0xFFFFFFFFU >> (MPIDIU_AVTID_BITS + 1))
-#define MPIDIU_AVTID_MASK                    (~MPIDIU_LPID_MASK)
-#define MPIDIU_GPID_CREATE(avtid, lpid)      (((avtid) << MPIDIU_LPID_BITS) | (lpid))
-#define MPIDIU_GPID_GET_AVTID(gpid)          ((((gpid) & MPIDIU_AVTID_MASK) >> MPIDIU_LPID_BITS))
-#define MPIDIU_GPID_GET_LPID(gpid)           (((gpid) & MPIDIU_LPID_MASK))
+#define MPIDIU_LPID_BITS                     32
+#define MPIDIU_LPID_MASK                     0xFFFFFFFFU
+#define MPIDIU_GPID_CREATE(avtid, lpid)      (((uint64_t) (avtid) << MPIDIU_LPID_BITS) | (lpid))
+#define MPIDIU_GPID_GET_AVTID(gpid)          ((gpid) >> MPIDIU_LPID_BITS)
+#define MPIDIU_GPID_GET_LPID(gpid)           ((gpid) & MPIDIU_LPID_MASK)
 
 #define MPIDI_DYNPROC_MASK                 (0x80000000U)
 

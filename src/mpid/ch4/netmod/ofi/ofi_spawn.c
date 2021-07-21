@@ -21,7 +21,7 @@ static void free_port_name_tag(int tag);
 static int get_port_name_tag(int *port_name_tag);
 static int get_tag_from_port(const char *port_name, int *port_name_tag);
 static int get_conn_name_from_port(const char *port_name, char *connname);
-static int dynproc_create_intercomm(const char *port_name, int remote_size, int *remote_gpids,
+static int dynproc_create_intercomm(const char *port_name, int remote_size, uint64_t * remote_gpids,
                                     MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm, int is_low_group,
                                     int get_tag, char *api);
 static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_addr_t * conn,
@@ -120,7 +120,7 @@ static int get_conn_name_from_port(const char *port_name, char *connname)
     return mpi_errno;
 }
 
-static int dynproc_create_intercomm(const char *port_name, int remote_size, int *remote_gpids,
+static int dynproc_create_intercomm(const char *port_name, int remote_size, uint64_t * remote_gpids,
                                     MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm, int is_low_group,
                                     int context_id_offset, char *api)
 {
@@ -481,7 +481,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     int remote_size = 0;
     size_t *remote_upid_size = NULL;
     char *remote_upids = NULL;
-    int *remote_gpids = NULL;
+    uint64_t *remote_gpids = NULL;
     int is_low_group = -1;
     int parent_root = -1;
     int rank = comm_ptr->rank;
@@ -531,9 +531,9 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
         if (mpi_errno)
             goto bcast_errno_and_port_id;
 
-        remote_gpids = MPL_malloc(remote_size * sizeof(int), MPL_MEM_ADDRESS);
+        remote_gpids = MPL_malloc(remote_size * sizeof(uint64_t), MPL_MEM_ADDRESS);
         if (!remote_gpids) {
-            MPIR_CHKMEM_SETERR(mpi_errno, remote_size * sizeof(int), "remote_gpids");
+            MPIR_CHKMEM_SETERR(mpi_errno, remote_size * sizeof(uint64_t), "remote_gpids");
             goto bcast_errno_and_port_id;
         }
 
@@ -668,7 +668,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     int remote_size = 0;
     size_t *remote_upid_size = 0;
     char *remote_upids = NULL;
-    int *remote_gpids = NULL;
+    uint64_t *remote_gpids = NULL;
     int child_root = -1;
     int is_low_group = -1;
     fi_addr_t conn = 0;
@@ -713,9 +713,9 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
         if (mpi_errno)
             goto bcast_errno;
 
-        remote_gpids = MPL_malloc(remote_size * sizeof(int), MPL_MEM_ADDRESS);
+        remote_gpids = MPL_malloc(remote_size * sizeof(uint64_t), MPL_MEM_ADDRESS);
         if (!remote_gpids) {
-            MPIR_CHKMEM_SETERR(mpi_errno, remote_size * sizeof(int), "remote_gpids");
+            MPIR_CHKMEM_SETERR(mpi_errno, remote_size * sizeof(uint64_t), "remote_gpids");
             goto bcast_errno;
         }
         MPIDIU_upids_to_gpids(remote_size, remote_upid_size, remote_upids, &remote_gpids);
@@ -779,7 +779,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
  * process spawning, having them here provides better context */
 
 int MPIDI_OFI_upids_to_gpids(int size, size_t * remote_upid_size, char *remote_upids,
-                             int **remote_gpids)
+                             uint64_t ** remote_gpids)
 {
     int i, mpi_errno = MPI_SUCCESS;
     int *new_avt_procs;
