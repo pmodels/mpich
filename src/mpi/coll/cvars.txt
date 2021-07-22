@@ -156,6 +156,61 @@ cvars:
         smp                                     - Force smp algorithm
         scatter_recursive_doubling_allgather    - Force Scatter Recursive-Doubling Allgather
         scatter_ring_allgather                  - Force Scatter Ring
+        pipelined_tree                          - Force tree-based pipelined algorithm
+        tree                                    - Force tree-based algorithm
+	
+    - name        : MPIR_CVAR_BCAST_TREE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for tree (kary, knomial, etc.) based bcast
+
+    - name        : MPIR_CVAR_BCAST_TREE_TYPE
+      category    : COLLECTIVE
+      type        : string
+      default     : kary
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Tree type for tree based ibcast
+        kary      - kary tree type
+        knomial_1 - knomial_1 tree type
+        knomial_2 - knomial_2 tree type
+
+    - name        : MPIR_CVAR_BCAST_IS_NON_BLOCKING
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Bcast will use non-blocking send.
+
+    - name        : MPIR_CVAR_BCAST_TREE_PIPELINE_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 8192
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Indicates the chunk size for pipelined bcast.
+
+    - name        : MPIR_CVAR_BCAST_RECV_PRE_POST
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Bcast will pre-post all the receieves.
 
     - name        : MPIR_CVAR_BCAST_INTER_ALGORITHM
       category    : COLLECTIVE
