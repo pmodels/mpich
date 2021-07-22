@@ -207,18 +207,9 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Ai
     }
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX MPIDIG_recv_data_copy_cb MPIDI_NM_am_get_data_copy_cb(void)
 {
-    int ret = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RECV);
-
-    do_long_am_recv(MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).reg_sz, rreq,
-                    &MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info));
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_RECV);
-    return ret;
+    return MPIDI_OFI_am_rdma_read_recv_cb;
 }
 
 #endif /* OFI_AM_H_INCLUDED */
