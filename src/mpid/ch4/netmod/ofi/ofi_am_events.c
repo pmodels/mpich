@@ -43,3 +43,9 @@ int MPIDI_OFI_am_rdma_read_ack_handler(int handler_id, void *am_hdr, void *data,
   fn_fail:
     goto fn_exit;
 }
+
+int MPIDI_OFI_am_rdma_read_recv_cb(MPIR_Request * rreq)
+{
+    return do_long_am_recv(MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).reg_sz, rreq,
+                           &MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info));
+}

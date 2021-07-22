@@ -31,9 +31,8 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t
                                        (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
-    /* init the request as ready for data as this is the common case, CH4 will should set them to
-     * false when needed */
-    MPIDIG_REQUEST(req, recv_ready) = true;
+    MPIDIG_REQUEST(req, req->recv_async).data_copy_cb = NULL;
+    MPIDIG_REQUEST(req, req->recv_async).recv_type = MPIDIG_RECV_NONE;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_CREATE);
@@ -62,9 +61,8 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
                                        (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
-    /* init the request as ready for data as this is the common case, CH4 will should set them to
-     * false when needed */
-    MPIDIG_REQUEST(req, recv_ready) = true;
+    MPIDIG_REQUEST(req, req->recv_async).data_copy_cb = NULL;
+    MPIDIG_REQUEST(req, req->recv_async).recv_type = MPIDIG_RECV_NONE;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_INIT);
     return req;

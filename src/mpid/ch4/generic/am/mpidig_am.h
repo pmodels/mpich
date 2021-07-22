@@ -7,7 +7,6 @@
 #define MPIDIG_AM_H_INCLUDED
 
 #define MPIDI_AM_HANDLERS_MAX (64)
-#define MPIDIG_IS_REQUEST_READY_FOR_RECV(_req) (MPIDIG_REQUEST((_req), recv_ready))
 
 enum {
     MPIDIG_SEND = 0,

@@ -150,10 +150,13 @@ typedef int (*MPIDIG_req_cmpl_cb) (MPIR_Request * req);
 
 /* structure used for supporting asynchronous payload transfer */
 typedef enum {
+    MPIDIG_RECV_NONE,
     MPIDIG_RECV_DATATYPE,       /* use the datatype info in MPIDIG_req_t */
     MPIDIG_RECV_CONTIG,         /* set and use the contig recv-buffer info */
     MPIDIG_RECV_IOV             /* set and use the iov recv-buffer info */
 } MPIDIG_recv_type;
+
+typedef int (*MPIDIG_recv_data_copy_cb) (MPIR_Request * req);
 
 typedef struct MPIDIG_req_async {
     MPIDIG_recv_type recv_type;
@@ -163,6 +166,8 @@ typedef struct MPIDIG_req_async {
     struct iovec *iov_ptr;      /* used with MPIDIG_RECV_IOV */
     int iov_num;                /* used with MPIDIG_RECV_IOV */
     struct iovec iov_one;       /* used with MPIDIG_RECV_CONTIG */
+    MPIDIG_recv_data_copy_cb data_copy_cb;      /* called in recv_init/recv_type_init for async
+                                                 * data copying */
 } MPIDIG_rreq_async_t;
 
 typedef struct MPIDIG_sreq_async {
@@ -209,7 +214,6 @@ typedef struct MPIDIG_req_t {
     int tag;
     MPIR_Context_id_t context_id;
     MPI_Datatype datatype;
-    bool recv_ready;            /* indicating if the request is ready for data */
 } MPIDIG_req_t;
 
 /* Structure to capture arguments for pt2pt persistent communications */
