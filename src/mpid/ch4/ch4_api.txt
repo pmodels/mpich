@@ -150,9 +150,6 @@ Native API:
   mpi_precv_init : int
       NM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
      SHM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
-  precv_matched_hook : int
-      NM: req
-     SHM: req
   part_start : int
       NM*: req
       SHM*: req
