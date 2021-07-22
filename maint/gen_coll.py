@@ -72,10 +72,9 @@ def dump_allcomm_auto_blocking(name):
     """ MPIR_Xxx_allcomm_auto - use Csel selections """
     blocking_type = "blocking"
     func = G.FUNCS["mpi_" + name]
-    params, args = get_func_params(func)
-    if not re.match(r'neighbor_', name):
-        params += ", MPIR_Errflag_t * errflag"
-        args += ", errflag"
+    params, args = get_params_and_args(func)
+    func_params = get_func_params(params, name, "blocking")
+    func_args = get_func_args(args, name, "blocking")
 
     # e.g. ibcast, Ibcast, IBCAST
     func_name = get_func_name(name, blocking_type)
@@ -85,8 +84,8 @@ def dump_allcomm_auto_blocking(name):
     G.out.append("")
     G.out.append("/* ---- %s ---- */" % func_name)
     G.out.append("")
-    add_prototype("int MPIR_%s_allcomm_auto(%s)" % (Name, params))
-    dump_split(0, "int MPIR_%s_allcomm_auto(%s)" % (Name, params))
+    add_prototype("int MPIR_%s_allcomm_auto(%s)" % (Name, func_params))
+    dump_split(0, "int MPIR_%s_allcomm_auto(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     G.out.append("")
@@ -108,8 +107,11 @@ def dump_allcomm_auto_blocking(name):
     def dump_cnt_algo_blocking(algo, commkind):
         if "allcomm" in algo:
             commkind = "allcomm"
-        add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo['name'], params))
-        dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo['name'], args))
+        algo_name = get_algo_name(algo)
+        algo_args = get_algo_args(args, algo, "csel")
+        algo_params = get_algo_params(params, algo)
+        add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo_name, algo_params))
+        dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     dump_open("switch (cnt->id) {")
     for commkind in ("intra", "inter"):
@@ -129,8 +131,8 @@ def dump_allcomm_auto_blocking(name):
             G.out.append("DEDENT")
             G.out.append("")
     G.out.append("case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_%s_allcomm_nb:" % Name)
-    add_prototype("int MPIR_%s_allcomm_nb(%s);" % (Name, params))
-    dump_split(2, "   mpi_errno = MPIR_%s_allcomm_nb(%s);" % (Name, args))
+    add_prototype("int MPIR_%s_allcomm_nb(%s);" % (Name, func_params))
+    dump_split(2, "   mpi_errno = MPIR_%s_allcomm_nb(%s);" % (Name, func_args))
     G.out.append("   break;");
     G.out.append("")
     G.out.append("default:")
@@ -146,9 +148,8 @@ def dump_allcomm_sched_auto(name):
     """ MPIR_Xxx_allcomm_sched_auto - use Csel selections """
     blocking_type = "nonblocking"
     func = G.FUNCS["mpi_" + name]
-    params, args = get_func_params(func)
-    func_params = params + ", bool is_persistent, void **sched_p, enum MPIR_sched_type *sched_type_p"
-    sched_params = params + ", MPIR_Sched_t s"
+    params, args = get_params_and_args(func)
+    func_params = get_func_params(params, name, "allcomm_sched_auto")
 
     # e.g. ibcast, Ibcast, IBCAST
     func_name = get_func_name(name, blocking_type)
@@ -178,27 +179,27 @@ def dump_allcomm_sched_auto(name):
     G.out.append("")
 
     # -- add shced_auto prototypes
-    add_prototype("int MPIR_%s_intra_sched_auto(%s)" % (Name, sched_params))
+    sched_auto_params = get_func_params(params, name, "sched_auto")
+    add_prototype("int MPIR_%s_intra_sched_auto(%s)" % (Name, sched_auto_params))
     if not re.match(r'(scan|exscan|neighbor_)', name):
-        add_prototype("int MPIR_%s_inter_sched_auto(%s)" % (Name, sched_params))
+        add_prototype("int MPIR_%s_inter_sched_auto(%s)" % (Name, sched_auto_params))
 
     # -- switch
-    def dump_cnt_algo_tsp(algo, commkind, algo_name):
+    def dump_cnt_algo_tsp(algo, commkind):
         G.out.append("MPII_GENTRAN_CREATE_SCHED_P();")
-        if "func_name" in algo:
-            algo_name = algo['func_name']
-        algo_args = args
-        algo_params = params
-        if 'extra_params' in algo:
-            algo_args += ", " + get_algo_extra_args(algo, "csel")
-            algo_params += ", " + get_algo_extra_params(algo)
-        add_prototype("int MPIR_TSP_%s_sched_%s_%s(%s, MPIR_TSP_sched_t sched)" % (Name, commkind, algo_name, algo_params))
-        dump_split(3, "mpi_errno = MPIR_TSP_%s_sched_%s_%s(%s, *sched_p);" % (Name, commkind, algo_name, algo_args))
+        algo_name = get_algo_name(algo)
+        algo_args = get_algo_args(args, algo, "csel")
+        algo_params = get_algo_params(params, algo)
+        add_prototype("int MPIR_TSP_%s_sched_%s_%s(%s)" % (Name, commkind, algo_name, algo_params))
+        dump_split(3, "mpi_errno = MPIR_TSP_%s_sched_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     def dump_cnt_algo_sched(algo, commkind):
         G.out.append("MPII_SCHED_CREATE_SCHED_P();")
-        add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo['name'], sched_params))
-        dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s, *sched_p);" % (Name, commkind, algo['name'], args))
+        algo_name = get_algo_name(algo)
+        algo_args = get_algo_args(args, algo, "csel")
+        algo_params = get_algo_params(params, algo)
+        add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo_name, algo_params))
+        dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     dump_open("switch (cnt->id) {")
     for commkind in ("intra", "inter"):
@@ -214,8 +215,8 @@ def dump_allcomm_sched_auto(name):
                     continue
             G.out.append("case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_%s_%s_%s:" % (Name, use_commkind, algo['name']))
             G.out.append("INDENT")
-            if RE.match(r'(tsp)_(.+)', algo['name']):
-                dump_cnt_algo_tsp(algo, use_commkind, RE.m.group(2))
+            if algo['name'].startswith('tsp_'):
+                dump_cnt_algo_tsp(algo, use_commkind)
             else:
                 dump_cnt_algo_sched(algo, use_commkind)
             G.out.append("break;");
@@ -234,10 +235,9 @@ def dump_mpir_impl_blocking(name):
     """ MPIR_Xxx_impl - """
     blocking_type = "blocking"
     func = G.FUNCS["mpi_" + name]
-    params, args = get_func_params(func)
-    if not re.match(r'neighbor_', name):
-        params += ", MPIR_Errflag_t * errflag"
-        args += ", errflag"
+    params, args = get_params_and_args(func)
+    func_params = get_func_params(params, name, "blocking")
+    func_args = get_func_args(args, name, "blocking")
 
     func_name = get_func_name(name, blocking_type)
     Name = func_name.capitalize()
@@ -248,7 +248,9 @@ def dump_mpir_impl_blocking(name):
     def dump_algo(algo, commkind):
         if "allcomm" in algo:
             commkind = "allcomm"
-        dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo['name'], args))
+        algo_name = get_algo_name(algo)
+        algo_args = get_algo_args(args, algo, "cvar")
+        dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     def dump_cases(commkind):
         nonlocal need_fallback
@@ -264,18 +266,18 @@ def dump_mpir_impl_blocking(name):
                 G.out.append("break;");
                 G.out.append("DEDENT")
         G.out.append("case %s_nb:" % CVAR_PREFIX)
-        dump_split(3, "    mpi_errno = MPIR_%s_allcomm_nb(%s);" % (Name, args))
+        dump_split(3, "    mpi_errno = MPIR_%s_allcomm_nb(%s);" % (Name, func_args))
         G.out.append("     break;");
         G.out.append("case %s_auto:" % CVAR_PREFIX)
-        dump_split(3, "    mpi_errno = MPIR_%s_allcomm_auto(%s);" % (Name, args))
+        dump_split(3, "    mpi_errno = MPIR_%s_allcomm_auto(%s);" % (Name, func_args))
         G.out.append("    break;");
         G.out.append("default:")
         G.out.append("    MPIR_Assert(0);")
 
     # ----------------            
     G.out.append("")
-    add_prototype("int MPIR_%s_impl(%s)" % (Name, params))
-    dump_split(0, "int MPIR_%s_impl(%s)" % (Name, params))
+    add_prototype("int MPIR_%s_impl(%s)" % (Name, func_params))
+    dump_split(0, "int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     G.out.append("")
@@ -298,7 +300,7 @@ def dump_mpir_impl_blocking(name):
         G.out.append("goto fn_exit;")
         G.out.append("")
         G.out.append("fallback:")
-        dump_split(1, "mpi_errno = MPIR_%s_allcomm_auto(%s);" % (Name, args))
+        dump_split(1, "mpi_errno = MPIR_%s_allcomm_auto(%s);" % (Name, func_args))
     G.out.append("")
     dump_fn_exit()
     dump_close("}")
@@ -307,8 +309,8 @@ def dump_sched_impl(name):
     """ MPIR_Xxx_impl - """
     blocking_type = "nonblocking"
     func = G.FUNCS["mpi_" + name]
-    params, args = get_func_params(func)
-    params += ", bool is_persistent, void **sched_p, enum MPIR_sched_type *sched_type_p"
+    params, args = get_params_and_args(func)
+    func_params = get_func_params(params, name, "sched_impl")
 
     func_name = get_func_name(name, blocking_type)
     Name = func_name.capitalize()
@@ -316,22 +318,21 @@ def dump_sched_impl(name):
 
     need_fallback = False
 
-    def dump_algo_tsp(algo, commkind, algo_name):
+    def dump_algo_tsp(algo, commkind):
         G.out.append("MPII_GENTRAN_CREATE_SCHED_P();")
-        if "func_name" in algo:
-            algo_name = algo['func_name']
-        algo_args = args
-        if 'extra_params' in algo:
-            algo_args += ', ' + get_algo_extra_args(algo, "cvar")
+        algo_name = get_algo_name(algo)
+        algo_args = get_algo_args(args, algo, "cvar")
         if "allcomm" in algo:
             commkind = "allcomm"
-        dump_split(3, "mpi_errno = MPIR_TSP_%s_sched_%s_%s(%s, *sched_p);" % (Name, commkind, algo_name, algo_args))
+        dump_split(3, "mpi_errno = MPIR_TSP_%s_sched_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     def dump_algo_sched(algo, commkind):
         G.out.append("MPII_SCHED_CREATE_SCHED_P();")
+        algo_name = get_algo_name(algo)
+        algo_args = get_algo_args(args, algo, "cvar")
         if "allcomm" in algo:
             commkind = "allcomm"
-        dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s, *sched_p);" % (Name, commkind, algo['name'], args))
+        dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     def dump_cases(commkind):
         nonlocal need_fallback
@@ -343,22 +344,23 @@ def dump_sched_impl(name):
                 if 'restrictions' in algo:
                     dump_fallback(algo)
                     need_fallback = True
-                if RE.match(r'(tsp)_(.+)', algo['name']):
-                    dump_algo_tsp(algo, commkind, RE.m.group(2))
+                if algo['name'].startswith('tsp_'):
+                    dump_algo_tsp(algo, commkind)
                 else:
                     dump_algo_sched(algo, commkind)
                 G.out.append("break;");
                 G.out.append("DEDENT")
         G.out.append("case %s_auto:" % CVAR_PREFIX)
-        dump_split(3, "    mpi_errno = MPIR_%s_allcomm_sched_auto(%s, is_persistent, sched_p, sched_type_p);" % (Name, args))
+        func_args = get_func_args(args, name, "allcomm_sched_auto")
+        dump_split(3, "    mpi_errno = MPIR_%s_allcomm_sched_auto(%s);" % (Name, func_args))
         G.out.append("    break;");
         G.out.append("default:")
         G.out.append("    MPIR_Assert(0);")
 
     # ----------------            
     G.out.append("")
-    add_prototype("int MPIR_%s_sched_impl(%s)" % (Name, params))
-    dump_split(0, "int MPIR_%s_sched_impl(%s)" % (Name, params))
+    add_prototype("int MPIR_%s_sched_impl(%s)" % (Name, func_params))
+    dump_split(0, "int MPIR_%s_sched_impl(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     G.out.append("")
@@ -381,7 +383,8 @@ def dump_sched_impl(name):
         G.out.append("goto fn_exit;")
         G.out.append("")
         G.out.append("fallback:")
-        dump_split(1, "mpi_errno = MPIR_%s_allcomm_sched_auto(%s, is_persistent, sched_p, sched_type_p);" % (Name, args))
+        func_args = get_func_args(args, name, "allcomm_sched_auto")
+        dump_split(1, "mpi_errno = MPIR_%s_allcomm_sched_auto(%s);" % (Name, func_args))
     G.out.append("")
     dump_fn_exit()
     dump_close("}")
@@ -389,24 +392,24 @@ def dump_sched_impl(name):
 def dump_mpir_impl_nonblocking(name):
     blocking_type = "nonblocking"
     func = G.FUNCS["mpi_" + name]
-    params, args = get_func_params(func)
-    params += ", MPIR_Request ** request"
-    args += ", false, &sched, &sched_type"
+    params, args = get_params_and_args(func)
+    func_params = get_func_params(params, name, "nonblocking")
 
     func_name = get_func_name(name, blocking_type)
     Name = func_name.capitalize()
     NAME = func_name.upper()
 
     G.out.append("")
-    add_prototype("int MPIR_%s_impl(%s)" % (Name, params))
-    dump_split(0, "int MPIR_%s_impl(%s)" % (Name, params))
+    add_prototype("int MPIR_%s_impl(%s)" % (Name, func_params))
+    dump_split(0, "int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     G.out.append("enum MPIR_sched_type sched_type;")
     G.out.append("void *sched;")
     G.out.append("")
     G.out.append("*request = NULL;")
-    dump_split(1, "mpi_errno = MPIR_%s_sched_impl(%s);" % (Name, args))
+    func_args = get_func_args(args, name, "mpir_impl_nonblocking")
+    dump_split(1, "mpi_errno = MPIR_%s_sched_impl(%s);" % (Name, func_args))
     G.out.append("MPIR_ERR_CHECK(mpi_errno);")
     G.out.append("MPII_SCHED_START(sched_type, sched, comm_ptr, request);")
     G.out.append("")
@@ -419,16 +422,16 @@ def dump_mpir_impl_nonblocking(name):
 def dump_mpir_impl_persistent(name):
     blocking_type = "persistent"
     func = G.FUNCS["mpi_" + name]
-    params, args = get_func_params(func)
-    params += ", MPIR_Info * info_ptr, MPIR_Request ** request"
+    params, args = get_params_and_args(func)
+    func_params = get_func_params(params, name, "persistent")
 
     func_name = get_func_name(name, blocking_type)
     Name = func_name.capitalize()
     NAME = func_name.upper()
 
     G.out.append("")
-    add_prototype("int MPIR_%s_impl(%s)" % (Name, params))
-    dump_split(0, "int MPIR_%s_impl(%s)" % (Name, params))
+    add_prototype("int MPIR_%s_impl(%s)" % (Name, func_params))
+    dump_split(0, "int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     G.out.append("")
@@ -439,8 +442,8 @@ def dump_mpir_impl_persistent(name):
     G.out.append("req->u.persist_coll.sched_type = MPIR_SCHED_INVALID;")
     G.out.append("req->u.persist_coll.real_request = NULL;")
 
-    args += ", true, &req->u.persist_coll.sched, &req->u.persist_coll.sched_type"
-    dump_split(1, "mpi_errno = MPIR_I%s_sched_impl(%s);" % (name, args))
+    func_args = get_func_args(args, name, "mpir_impl_persistent")
+    dump_split(1, "mpi_errno = MPIR_I%s_sched_impl(%s);" % (name, func_args))
     G.out.append("MPIR_ERR_CHECK(mpi_errno);")
     G.out.append("")
     G.out.append("*request = req;")
@@ -454,17 +457,9 @@ def dump_mpir_impl_persistent(name):
 def dump_mpir(name, blocking_type):
     """ MPIR_Xxx - """
     func = G.FUNCS["mpi_" + name]
-    params, args = get_func_params(func)
-    if blocking_type == "blocking":
-        if not re.match(r'neighbor_', name):
-            params += ", MPIR_Errflag_t * errflag"
-            args += ", errflag"
-    elif blocking_type == "nonblocking":
-        params += ", MPIR_Request **request"
-        args += ", request"
-    elif blocking_type == "persistent":
-        params += ", MPIR_Info * info_ptr, MPIR_Request **request"
-        args += ", info_ptr, request"
+    params, args = get_params_and_args(func)
+    func_params = get_func_params(params, name, blocking_type)
+    func_args = get_func_args(args, name, blocking_type)
 
     func_name = get_func_name(name, blocking_type)
     Name = func_name.capitalize()
@@ -515,8 +510,8 @@ def dump_mpir(name, blocking_type):
             G.out.append("MPIR_Coll_host_buffer_persist_set(host_sendbuf, host_recvbuf, in_recvbuf, %s, datatype, *request);" % count)
 
     G.out.append("")
-    add_prototype("int MPIR_%s(%s)" % (Name, params))
-    dump_split(0, "int MPIR_%s(%s)" % (Name, params))
+    add_prototype("int MPIR_%s(%s)" % (Name, func_params))
+    dump_split(0, "int MPIR_%s(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     G.out.append("")
@@ -534,9 +529,9 @@ def dump_mpir(name, blocking_type):
     G.out.append("    ((%s) &&" % cond2)
     G.out.append("     %s)) {" % cond3)
     G.out.append("INDENT")
-    dump_split(2, "mpi_errno = MPID_%s(%s);" % (Name, args))
+    dump_split(2, "mpi_errno = MPID_%s(%s);" % (Name, func_args))
     dump_else()
-    dump_split(2, "mpi_errno = MPIR_%s_impl(%s);" % (Name, args))
+    dump_split(2, "mpi_errno = MPIR_%s_impl(%s);" % (Name, func_args))
     dump_close("}")
     if need_buffer_swap:
         dump_buffer_swap_post()
@@ -582,7 +577,7 @@ def get_func_name(name, blocking_type):
     elif blocking_type == "persistent":
         return name + "_init"
 
-def get_func_params(func):
+def get_params_and_args(func):
     mapping = G.MAPS['SMALL_C_KIND_MAP']
 
     params = []
@@ -633,6 +628,85 @@ def get_algo_extra_params(algo):
     for a in extra_args:
         extra_params.append("int " + a)
     return ', '.join(extra_params)
+
+# additional wrappers
+def get_algo_args(args, algo, kind):
+    algo_args = args
+    if 'extra_params' in algo:
+        algo_args += ", " + get_algo_extra_args(algo, kind)
+
+    if algo['name'].startswith('tsp_'):
+        algo_args += ", *sched_p"
+    elif algo['func-commkind'].startswith('i'):
+        algo_args += ", *sched_p"
+    elif not algo['func-commkind'].startswith('neighbor_'):
+        algo_args += ", errflag"
+
+    return algo_args
+
+def get_algo_params(params, algo):
+    algo_params = params
+    if 'extra_params' in algo:
+        algo_params += ", " + get_algo_extra_params(algo)
+
+    if algo['name'].startswith('tsp_'):
+        algo_params += ", MPIR_TSP_sched_t sched"
+    elif algo['func-commkind'].startswith('i'):
+        algo_params += ", MPIR_Sched_t s"
+    elif not algo['func-commkind'].startswith('neighbor_'):
+        algo_params += ", MPIR_Errflag_t *errflag"
+
+    return algo_params
+
+def get_algo_name(algo):
+    # the name used in algo function name
+    if "func_name" in algo:
+        return algo['func_name']
+    elif algo['name'].startswith('tsp_'):
+        return algo['name'][4:]
+    else:
+        return algo['name']
+
+def get_func_params(params, name, kind):
+    func_params = params
+    if kind == "blocking":
+        if not name.startswith('neighbor_'):
+            func_params += ", MPIR_Errflag_t * errflag"
+    elif kind == "nonblocking":
+        func_params += ", MPIR_Request ** request"
+    elif kind == "persistent":
+        func_params += ", MPIR_Info * info_ptr, MPIR_Request ** request"
+    elif kind == "sched_auto":
+        func_params += ", MPIR_Sched_t s"
+    elif kind == "allcomm_sched_auto":
+        func_params += ", bool is_persistent, void **sched_p, enum MPIR_sched_type *sched_type_p"
+    elif kind == "sched_impl":
+        func_params += ", bool is_persistent, void **sched_p, enum MPIR_sched_type *sched_type_p"
+    else:
+        raise Exception("get_func_params - unexpected kind = %s" % kind)
+
+    return func_params
+
+def get_func_args(args, name, kind):
+    func_args = args
+    if kind == "blocking":
+        if not name.startswith('neighbor_'):
+            func_args += ", errflag"
+    elif kind == "nonblocking":
+        func_args += ", request"
+    elif kind == "persistent":
+        func_args += ", info_ptr, request"
+    elif kind == "allcomm_sched_auto":
+        func_args += ", is_persistent, sched_p, sched_type_p"
+    elif kind == "mpir_impl_nonblocking":
+        func_args += ", false, &sched, &sched_type"
+    elif kind == "mpir_impl_persistent":
+        func_args += ", true, &req->u.persist_coll.sched, &req->u.persist_coll.sched_type"
+    else:
+        raise Exception("get_func_args - unexpected kind = %s" % kind)
+
+    return func_args
+
 # ----------------------
 def dump_c_file(f, lines):
     print("  --> [%s]" % f)
