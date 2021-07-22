@@ -5,6 +5,27 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories:
+    - name        : COMMUNICATOR
+      description : cvars that control communicator construction and operation
+
+cvars:
+    - name        : MPIR_CVAR_COMM_SPLIT_USE_QSORT
+      category    : COMMUNICATOR
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* used in MPIR_Comm_group_impl and MPIR_Comm_create_group_impl */
 static int comm_create_local_group(MPIR_Comm * comm_ptr)
 {
@@ -1052,27 +1073,6 @@ int MPIR_Comm_shrink_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
     MPIR_Object_set_ref(new_group_ptr, 0);
     goto fn_exit;
 }
-
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-categories:
-    - name        : COMMUNICATOR
-      description : cvars that control communicator construction and operation
-
-cvars:
-    - name        : MPIR_CVAR_COMM_SPLIT_USE_QSORT
-      category    : COMMUNICATOR
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
 
 int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
                                MPIR_Comm * peer_comm_ptr, int remote_leader, int tag,
