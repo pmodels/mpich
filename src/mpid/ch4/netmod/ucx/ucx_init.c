@@ -252,11 +252,15 @@ int MPIDI_UCX_init_local(int *tag_bits)
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
 
-    if (MPIDI_UCX_TAG_BITS > MPIR_TAG_BITS_DEFAULT) {
+    /* one bit is reserved to distinguish partitioned communication */
+    if (MPIDI_UCX_TAG_BITS - 1 > MPIR_TAG_BITS_DEFAULT) {
         *tag_bits = MPIR_TAG_BITS_DEFAULT;
     } else {
-        *tag_bits = MPIDI_UCX_TAG_BITS;
+        *tag_bits = MPIDI_UCX_TAG_BITS - 1;
     }
+
+    /* setup UCX active message handlers */
+    MPIDI_UCX_part_am_init();
 
     if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
         printf("==== UCX netmod Capability ====\n");

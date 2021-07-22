@@ -15,6 +15,7 @@
 
 #define MPIDI_UCX_COMM(comm)     ((comm)->dev.ch4.netmod.ucx)
 #define MPIDI_UCX_REQ(req)       ((req)->dev.ch4.netmod.ucx)
+#define MPIDI_UCX_PART_REQ(req)  ((req)->dev.ch4.part_req.netmod.ucx)
 #define COMM_TO_INDEX(comm,rank) MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
 #define MPIDI_UCX_COMM_TO_EP(comm,rank,vni_src,vni_dst) \
     MPIDI_UCX_AV(MPIDIU_comm_rank_to_av(comm, rank)).dest[vni_src][vni_dst]
@@ -141,4 +142,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_win_vni(MPIR_Win * win)
 
 ucs_status_t MPIDI_UCX_am_handler(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
                                   unsigned flags);
+void MPIDI_UCX_part_am_init(void);
+void MPIDI_UCX_precv_matched(MPIR_Request * request);
+int MPIDI_UCX_part_send_init_hdr(MPIR_Request * request, int tag);
+int MPIDI_UCX_part_recv_init_hdr(MPIR_Request * request);
+int MPIDI_UCX_part_send_init_target_msg_cb(void *am_hdr, void *data,
+                                           MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
+int MPIDI_UCX_part_recv_init_target_msg_cb(void *am_hdr, void *data,
+                                           MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
 #endif /* UCX_IMPL_H_INCLUDED */

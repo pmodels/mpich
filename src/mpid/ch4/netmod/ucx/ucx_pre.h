@@ -81,7 +81,11 @@ typedef struct {
 } MPIDI_UCX_op_t;
 
 typedef struct {
-    int dummy;
+    MPI_Request peer_req;
+    MPI_Aint data_sz;           /* only used for error checking at match time */
+    ucp_ep_h ep;
+    ucp_datatype_t ucp_dt;
+    MPIR_cc_t ready_cntr;
 } MPIDI_UCX_part_t;
 
 #endif /* UCX_PRE_H_INCLUDED */

@@ -14,6 +14,7 @@ mpi_core_sources   += src/mpid/ch4/netmod/ucx/func_table.c\
                       src/mpid/ch4/netmod/ucx/ucx_spawn.c \
                       src/mpid/ch4/netmod/ucx/ucx_win.c \
                       src/mpid/ch4/netmod/ucx/ucx_part.c \
+                      src/mpid/ch4/netmod/ucx/ucx_part_utils.c \
                       src/mpid/ch4/netmod/ucx/ucx_progress.c \
                       src/mpid/ch4/netmod/ucx/globals.c
 
