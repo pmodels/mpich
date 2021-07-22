@@ -58,6 +58,10 @@ cvars:
 
 #if defined(MPICH_IS_THREADED) && MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE
 
+#if defined(MPL_HAVE_MISC_GETNPROCS) && defined(MPL_HAVE_CPU_SET_MACROS)
+#define DO_ASYNC_THREAD_AFFINITY
+#endif
+
 static int MPIR_async_thread_initialized = 0;
 static MPID_Thread_id_t progress_thread_id;
 static MPL_atomic_int_t async_done = MPL_ATOMIC_INT_T_INITIALIZER(0);
@@ -80,6 +84,7 @@ static void progress_fn(void *data)
     return;
 }
 
+#ifdef DO_ASYNC_THREAD_AFFINITY
 MPL_STATIC_INLINE_PREFIX int MPIDI_parse_progress_thread_affinity(int *thread_affinity,
                                                                   int async_threads_per_node)
 {
@@ -208,6 +213,7 @@ static int get_thread_affinity(bool * apply_affinity, int **p_thread_affinity, i
   fn_fail:
     goto fn_exit;
 }
+#endif /* DO_ASYNC_THREAD_AFFINITY */
 
 /* called inside MPID_Init_async_thread to provide device override */
 int MPIR_Init_async_thread(void)
@@ -219,18 +225,22 @@ int MPIR_Init_async_thread(void)
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
+#ifdef DO_ASYNC_THREAD_AFFINITY
     mpi_errno = get_thread_affinity(&apply_affinity, &thread_affinity, &affinity_idx);
     MPIR_ERR_CHECK(mpi_errno);
+#endif
 
     int err = 0;
     MPID_Thread_create((MPID_Thread_func_t) progress_fn, NULL, &progress_thread_id, &err);
     MPIR_ERR_CHECK(mpi_errno);
 
+#ifdef DO_ASYNC_THREAD_AFFINITY
     if (apply_affinity) {
         MPL_thread_set_affinity(progress_thread_id, &(thread_affinity[affinity_idx]), 1, &thr_err);
         MPIR_ERR_CHKANDJUMP1(thr_err, mpi_errno, MPI_ERR_OTHER, "**set_thread_affinity",
                              "**set_thread_affinity %d", thread_affinity[affinity_idx]);
     }
+#endif
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
