@@ -795,6 +795,41 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
     goto fn_exit;
 }
 
+/* a restricted implementation of MPI_Intercomm_create_from_groups.
+ * Require comm_world, and remote_group part of comm_world.
+ * TODO: remote_group from different comm_world
+ */
+int MPIR_Intercomm_create_from_groups_impl(MPIR_Group * local_group_ptr, int local_leader,
+                                           MPIR_Group * remote_group_ptr, int remote_leader,
+                                           const char *stringtag,
+                                           MPIR_Info * info_ptr, MPIR_Errhandler * errhan_ptr,
+                                           MPIR_Comm ** p_newintercom_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(MPIR_Process.comm_world);
+
+    MPIR_Comm *local_comm;
+    mpi_errno = MPIR_Comm_create_from_group_impl(local_group_ptr, stringtag, info_ptr, errhan_ptr,
+                                                 &local_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    int tag = get_tag_from_stringtag(stringtag);
+    /* FIXME: ensure lpid is from comm_world */
+    int remote_lpid = remote_group_ptr->lrank_to_lpid[remote_leader].lpid;
+    mpi_errno = MPIR_Intercomm_create_impl(local_comm, local_leader,
+                                           MPIR_Process.comm_world, remote_lpid,
+                                           tag, p_newintercom_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Comm_release(local_comm);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr)
 {
     return MPIR_Comm_release(comm_ptr);

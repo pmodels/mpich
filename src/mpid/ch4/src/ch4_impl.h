@@ -15,6 +15,23 @@
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
+/* define CH4_CALL to call netmod or shm API based on is_local */
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+#define CH4_CALL(FUNC, is_local_, err_) \
+    do { \
+        err_ = MPIDI_NM_ ## FUNC; \
+    } while (0)
+#else
+#define CH4_CALL(FUNC, is_local_, err_) \
+    do { \
+        if (is_local_) { \
+            err_ = MPIDI_SHM_ ## FUNC; \
+        } else { \
+            err_ = MPIDI_NM_ ## FUNC; \
+        } \
+    } while (0)
+#endif
+
 /* Request creation with locking for LOCKLESS MT model */
 #define MPIDI_CH4_REQUEST_CREATE(req, kind, pool, ref_count)            \
     do {                                                                \

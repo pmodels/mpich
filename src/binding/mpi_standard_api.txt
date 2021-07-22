@@ -1305,9 +1305,9 @@ MPI_Intercomm_create:
     newintercomm: COMMUNICATOR, direction=out, [new inter-communicator]
 MPI_Intercomm_create_from_groups:
     local_group: GROUP, [local group]
-    local_leader: RANK, [rank of local group leader in local\_group]
-    remote_group: GROUP, [remote group, significant only at local\_leader]
-    remote_leader: RANK, [rank of remote group leader in remote\_group, significant only at local\_leader]
+    local_leader: RANK, [rank of local group leader in local_group]
+    remote_group: GROUP, [remote group, significant only at local_leader]
+    remote_leader: RANK, [rank of remote group leader in remote_group, significant only at local_leader]
     stringtag: STRING, constant=True, [unique idenitifier for this operation]
     info: INFO, [info object]
     errhandler: ERRHANDLER, [error handler to be attached to new inter-communicator]

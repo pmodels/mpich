@@ -403,6 +403,22 @@ for hydra_topolib in ${hydra_topolibs}; do
 	hwloc)
                 m4_define([hwloc_embedded_dir],[tools/topo/hwloc/hwloc])
                 PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
+
+                if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
+                    AC_MSG_CHECKING([if hwloc meets minimum version requirement])
+                    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <hwloc.h>], [
+                                       #if HWLOC_API_VERSION < 0x00020000
+                                       #error
+                                       #endif
+                                       return 0;])],[],[pac_have_hwloc=no])
+                    AC_MSG_RESULT([$pac_have_hwloc])
+
+                    # if an old hwloc was specified by the user, throw an error
+                    if test "$pac_have_hwloc" = "no" -a -n "$with_hwloc" -a "$with_hwloc" != "yes" ; then
+                        AC_MSG_ERROR([hwloc installation does not meet minimum version requirement])
+                    fi
+                fi
+
                 if test "$pac_have_hwloc" = "no" -a "$with_hwloc" != "no"; then
                     with_hwloc=embedded
                     pac_have_hwloc=yes

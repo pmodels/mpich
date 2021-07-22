@@ -20,7 +20,11 @@ int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_NODE_ID);
 
     MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
-    *id_p = MPIDI_global.node_map[avtid][lpid];
+    if (avtid != 0) {
+        *id_p = -1;
+    } else {
+        *id_p = MPIDI_global.node_map[avtid][lpid];
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_NODE_ID);
     return mpi_errno;

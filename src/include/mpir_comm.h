@@ -111,7 +111,8 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
   receiving.  In the case of an Intracommunicator, they are the same
   context id.  They differ in the case of intercommunicators, where
   they may come from processes in different comm worlds (in the
-  case of MPI-2 dynamic process intercomms).
+  case of MPI-2 dynamic process intercomms). With intercomms, we are
+  sending with context_id, which is the same as peer's recvcontext_id.
 
   The virtual connection table is an explicit member of this structure.
   This contains the information used to contact a particular process,
@@ -154,7 +155,7 @@ struct MPIR_Comm {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     MPID_Thread_mutex_t mutex;
     MPIR_Context_id_t context_id;       /* Send context id.  See notes */
-    MPIR_Context_id_t recvcontext_id;   /* Send context id.  See notes */
+    MPIR_Context_id_t recvcontext_id;   /* Recv context id (locally allocated).  See notes */
     int remote_size;            /* Value of MPI_Comm_(remote)_size */
     int rank;                   /* Value of MPI_Comm_rank */
     MPIR_Attribute *attributes; /* List of attributes */

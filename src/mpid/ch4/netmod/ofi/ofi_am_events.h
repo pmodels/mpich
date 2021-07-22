@@ -9,6 +9,8 @@
 #include "ofi_am_impl.h"
 #include "mpidu_genq.h"
 
+int MPIDI_OFI_am_rdma_read_recv_cb(MPIR_Request * rreq);
+
 MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_get_next_recv_seqno(fi_addr_t addr)
 {
     uint64_t id = addr;
@@ -252,8 +254,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
 
     MPIR_cc_inc(rreq->cc_ptr);
 
-    /* FIXME: explicit check of data_sz in CH4 region of the request, will fix when adding
-     * MPIDIG_am_recv */
     if (!lmt_msg->reg_sz) {
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
         MPID_Request_complete(rreq);
@@ -264,10 +264,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info) = *lmt_msg;
     MPIDI_OFI_AMREQUEST_HDR(rreq, rreq_ptr) = (void *) rreq;
 
-    if (MPIDIG_IS_REQUEST_READY_FOR_RECV(rreq)) {
+    /* only proceed with RDMA read recv when the request is initialized for recv. Otherwise, the
+     * CH4 will trigger the data copy at a later time through the MPIDI_OFI_am_rdma_read_recv_cb.
+     * */
+    if (MPIDIG_recv_initialized(rreq)) {
         mpi_errno = do_long_am_recv(lmt_msg->reg_sz, rreq, lmt_msg);
         MPIR_ERR_CHECK(mpi_errno);
-
         /* completion in lmt event functions */
     }
 

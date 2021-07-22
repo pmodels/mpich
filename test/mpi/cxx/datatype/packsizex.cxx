@@ -75,18 +75,12 @@ int main(int argc, char *argv[])
         size2 = type.Pack_size(2, comm);
         if (size1 <= 0 || size2 <= 0) {
             errs++;
-            char *desc;
-            DTP_obj_get_description(msobj, &desc);
-            cerr << "Pack size of datatype " << desc << " is not positive\n";
-            free(desc);
+            cerr << "Pack size of datatype " << DTP_obj_get_description(msobj) << " is not positive\n";
         }
         if (size1 >= size2) {
             errs++;
-            char *desc;
-            DTP_obj_get_description(msobj, &desc);
-            cerr << "Pack size of 2 of " << desc <<
+            cerr << "Pack size of 2 of " << DTP_obj_get_description(msobj) <<
                 " is smaller or the same as the pack size of 1 instance\n";
-            free(desc);
         }
 
         if (mrobj.DTP_datatype != msobj.DTP_datatype) {
@@ -99,18 +93,12 @@ int main(int argc, char *argv[])
             size2 = type.Pack_size(2, comm);
             if (size1 <= 0 || size2 <= 0) {
                 errs++;
-                char *desc;
-                DTP_obj_get_description(mrobj, &desc);
-                cerr << "Pack size of datatype " << desc << " is not positive\n";
-                free(desc);
+                cerr << "Pack size of datatype " << DTP_obj_get_description(mrobj) << " is not positive\n";
             }
             if (size1 >= size2) {
                 errs++;
-                char *desc;
-                DTP_obj_get_description(mrobj, &desc);
-                cerr << "Pack size of 2 of " << desc <<
+                cerr << "Pack size of 2 of " << DTP_obj_get_description(mrobj) <<
                     " is smaller or the same as the pack size of 1 instance\n";
-                free(desc);
             }
         }
         DTP_obj_free(mrobj);

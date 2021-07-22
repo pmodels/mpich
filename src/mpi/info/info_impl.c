@@ -253,7 +253,7 @@ int MPIR_Info_get_string_impl(MPIR_Info * info_ptr, const char *key, int *buflen
     return MPI_SUCCESS;
 }
 
-int MPIR_Info_create_env_impl(int *argc, char ***argv, MPIR_Info ** new_info_ptr)
+int MPIR_Info_create_env_impl(int argc, char **argv, MPIR_Info ** new_info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
