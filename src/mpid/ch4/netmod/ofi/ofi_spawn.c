@@ -21,13 +21,14 @@ static void free_port_name_tag(int tag);
 static int get_port_name_tag(int *port_name_tag);
 static int get_tag_from_port(const char *port_name, int *port_name_tag);
 static int get_conn_name_from_port(const char *port_name, char *connname);
-static int peer_intercomm_create(char *remote_addrname, int len, int tag, bool is_sender,
-                                 MPIR_Comm ** newcomm);
+static int peer_intercomm_create(char *remote_addrname, int len, int tag, int timeout,
+                                 bool is_sender, MPIR_Comm ** newcomm);
 static int get_my_addrname(char *addrname_buf, int *len);
-static int dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size);
-static int dynamic_recv(int tag, void *buf, int size);
+static int dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size, int timeout);
+static int dynamic_recv(int tag, void *buf, int size, int timeout);
 static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int root,
-                                    MPIR_Comm * comm_ptr, bool is_sender, MPIR_Comm ** newcomm);
+                                    MPIR_Comm * comm_ptr, int timeout, bool is_sender,
+                                    MPIR_Comm ** newcomm);
 
 /* NOTE: port_name_tag, context_id_offset, and port_id all refer to the same context_id used during
  * establishing dynamic connections */
@@ -126,7 +127,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_CONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_CONNECT);
 
-    mpi_errno = dynamic_intercomm_create(port_name, info, root, comm_ptr, true, newcomm);
+    mpi_errno = dynamic_intercomm_create(port_name, info, root, comm_ptr, timeout, true, newcomm);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_CONNECT);
     return mpi_errno;
@@ -199,7 +200,7 @@ int MPIDI_OFI_mpi_close_port(const char *port_name)
     return mpi_errno;
 }
 
-static int dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size)
+static int dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -212,11 +213,26 @@ static int dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size
     req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
     uint64_t match_bits;
     match_bits = MPIDI_OFI_init_sendtag(0, tag, MPIDI_OFI_DYNPROC_SEND);
+
+    MPL_time_t time_start, time_now;
+    double time_gap;
+    MPL_wtime(&time_start);
     MPIDI_OFI_VCI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
                                           buf, size, NULL /* desc */ , 0,
                                           remote_addr, match_bits, (void *) &req.context),
                              0, tsenddata, FALSE /* eagain */);
-    MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req.done);
+    do {
+        mpi_errno = MPID_Progress_test(NULL);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPL_wtime(&time_now);
+        MPL_wtime_diff(&time_start, &time_now, &time_gap);
+    } while (!req.done && (timeout == 0 || time_gap < (double) timeout));
+
+    if (!req.done) {
+        /* FIXME: better error message */
+        mpi_errno = MPI_ERR_PORT;
+    }
 
   fn_exit:
     return mpi_errno;
@@ -224,7 +240,7 @@ static int dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size
     goto fn_exit;
 }
 
-static int dynamic_recv(int tag, void *buf, int size)
+static int dynamic_recv(int tag, void *buf, int size, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -235,11 +251,26 @@ static int dynamic_recv(int tag, void *buf, int size)
     uint64_t mask_bits = 0;
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, 0, tag);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
+
+    MPL_time_t time_start, time_now;
+    double time_gap;
+    MPL_wtime(&time_start);
     MPIDI_OFI_VCI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx,
                                       buf, size, NULL,
                                       FI_ADDR_UNSPEC, match_bits, mask_bits, &req.context),
                              0, trecv, FALSE);
-    MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req.done);
+    do {
+        mpi_errno = MPID_Progress_test(NULL);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPL_wtime(&time_now);
+        MPL_wtime_diff(&time_start, &time_now, &time_gap);
+    } while (!req.done && (timeout == 0 || time_gap < (double) timeout));
+
+    if (!req.done) {
+        /* FIXME: better error message */
+        mpi_errno = MPI_ERR_PORT;
+    }
 
   fn_exit:
     return mpi_errno;
@@ -262,8 +293,8 @@ struct dynproc_conn_hdr {
     char addrname[MPIDI_DYNPROC_NAME_MAX];
 };
 
-static int peer_intercomm_create(char *remote_addrname, int len, int tag, bool is_sender,
-                                 MPIR_Comm ** newcomm)
+static int peer_intercomm_create(char *remote_addrname, int len, int tag,
+                                 int timeout, bool is_sender, MPIR_Comm ** newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Context_id_t context_id, recvcontext_id;
@@ -287,15 +318,15 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag, bool i
         MPIR_ERR_CHECK(mpi_errno);
 
         int hdr_sz = sizeof(hdr) - MPIDI_DYNPROC_NAME_MAX + hdr.addrname_len;
-        mpi_errno = dynamic_send(remote_gpid, tag, &hdr, hdr_sz);
+        mpi_errno = dynamic_send(remote_gpid, tag, &hdr, hdr_sz, timeout);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = dynamic_recv(tag, &hdr, sizeof(hdr));
+        mpi_errno = dynamic_recv(tag, &hdr, sizeof(hdr), timeout);
         MPIR_ERR_CHECK(mpi_errno);
         context_id = hdr.context_id;
     } else {
         /* recv remote address */
-        mpi_errno = dynamic_recv(tag, &hdr, sizeof(hdr));
+        mpi_errno = dynamic_recv(tag, &hdr, sizeof(hdr), timeout);
         MPIR_ERR_CHECK(mpi_errno);
         context_id = hdr.context_id;
 
@@ -307,7 +338,7 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag, bool i
 
         /* send remote context_id */
         hdr.context_id = recvcontext_id;
-        mpi_errno = dynamic_send(remote_gpid, tag, &hdr, sizeof(hdr.context_id));
+        mpi_errno = dynamic_send(remote_gpid, tag, &hdr, sizeof(hdr.context_id), timeout);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -326,7 +357,8 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag, bool i
 }
 
 static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int root,
-                                    MPIR_Comm * comm_ptr, bool is_sender, MPIR_Comm ** newcomm)
+                                    MPIR_Comm * comm_ptr, int timeout, bool is_sender,
+                                    MPIR_Comm ** newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -360,7 +392,7 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
             addrname = NULL;
             len = 0;
         }
-        mpi_errno = peer_intercomm_create(addrname, len, tag, is_sender, &peer_intercomm);
+        mpi_errno = peer_intercomm_create(addrname, len, tag, timeout, is_sender, &peer_intercomm);
 
       bcast_tag_and_errno:
         bcast_ints[0] = tag;
@@ -400,7 +432,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
 
-    mpi_errno = dynamic_intercomm_create(port_name, info, root, comm_ptr, false, newcomm);
+    mpi_errno = dynamic_intercomm_create(port_name, info, root, comm_ptr, 0, false, newcomm);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
     return mpi_errno;
