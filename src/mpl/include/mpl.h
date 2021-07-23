@@ -32,5 +32,6 @@
 #include "mpl_gavl.h"
 #include "mpl_initlock.h"
 #include "mpl_misc.h"
+#include "mpl_sort.h"
 
 #endif /* MPL_H_INCLUDED */
