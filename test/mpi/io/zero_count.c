@@ -18,14 +18,14 @@ int main(int argc, char **argv)
     int errs = 0;
     int len, rank, get_size;
     char buf[10];
-    const char *filename = __FILE__;
+    const char *filename = argv[0];
     MPI_File fh;
     MPI_Status status;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
 
     if (rank == 0)
         len = 10;
