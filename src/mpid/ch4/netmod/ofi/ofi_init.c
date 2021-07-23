@@ -572,9 +572,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* Initialize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
 
-    mpi_errno = MPIDI_OFI_dynproc_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
     MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGAIN, "eagain", NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
     MPIDI_OFI_global.num_comms_enabled_striping = 0;
     MPIDI_OFI_global.num_comms_enabled_hashing = 0;
@@ -743,7 +740,6 @@ int MPIDI_OFI_post_init(void)
 
 /* static functions needed by finalize */
 
-/* NOTE: exactly the same as used in dynproc_send_disconnect (TODO: refactor) */
 #define MPIDI_OFI_FLUSH_CONTEXT_ID 0xF000
 #define MPIDI_OFI_FLUSH_TAG        1
 
@@ -847,10 +843,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
-
-    /* clean dynamic process connections */
-    mpi_errno = MPIDI_OFI_dynproc_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight RMA send long buffers */
     /* NOTE: am currently only use vni 0. Need update once that changes */
