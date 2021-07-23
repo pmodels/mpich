@@ -1122,6 +1122,19 @@ static int destroy_vni_context(int vni, int nic)
     int mpi_errno = MPI_SUCCESS;
     int ctx_num = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
+    /* Close RMA scalable EP. */
+    if (MPIDI_OFI_global.ctx[ctx_num].rma_sep) {
+        /* All transmit contexts on RMA must be closed. */
+        MPIR_Assert(utarray_len(MPIDI_OFI_global.ctx[ctx_num].rma_sep_idx_array) ==
+                    MPIDI_OFI_global.max_rma_sep_tx_cnt);
+        utarray_free(MPIDI_OFI_global.ctx[ctx_num].rma_sep_idx_array);
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].rma_sep->fid), epclose);
+    }
+
+    /* Close RMA shared context */
+    if (MPIDI_OFI_global.ctx[ctx_num].rma_stx_ctx != NULL) {
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].rma_stx_ctx->fid), stx_ctx_close);
+    }
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].tx->fid), epclose);
@@ -1160,19 +1173,6 @@ static int destroy_vni_context(int vni, int nic)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].domain->fid), domainclose);
     }
 #endif
-    /* Close RMA scalable EP. */
-    if (MPIDI_OFI_global.ctx[ctx_num].rma_sep) {
-        /* All transmit contexts on RMA must be closed. */
-        MPIR_Assert(utarray_len(MPIDI_OFI_global.ctx[ctx_num].rma_sep_idx_array) ==
-                    MPIDI_OFI_global.max_rma_sep_tx_cnt);
-        utarray_free(MPIDI_OFI_global.ctx[ctx_num].rma_sep_idx_array);
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].rma_sep->fid), epclose);
-    }
-
-    /* Close RMA shared context */
-    if (MPIDI_OFI_global.ctx[ctx_num].rma_stx_ctx != NULL) {
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].rma_stx_ctx->fid), stx_ctx_close);
-    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DESTROY_VNI_CONTEXT);
