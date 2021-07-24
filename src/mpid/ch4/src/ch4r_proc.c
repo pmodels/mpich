@@ -23,7 +23,7 @@ int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
     if (avtid != 0) {
         *id_p = -1;
     } else {
-        *id_p = MPIDI_global.node_map[avtid][lpid];
+        *id_p = MPIR_Process.node_map[lpid];
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_NODE_ID);
