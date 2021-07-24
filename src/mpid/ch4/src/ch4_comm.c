@@ -345,7 +345,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
     int pure_intracomm = 1;
     int local_size = 0;
     uint64_t *local_gpids = NULL;
-    size_t *local_upid_size = NULL, *remote_upid_size = NULL;
+    int *local_upid_size = NULL, *remote_upid_size = NULL;
     int upid_send_size = 0, upid_recv_size = 0;
     char *local_upids = NULL, *remote_upids = NULL;
 
@@ -417,14 +417,14 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                         (MPL_DBG_FDEST, "Intercomm map exchange stage 1: leaders"));
         if (!pure_intracomm) {
             /* Stage 1.1 UPID exchange between leaders */
-            MPIR_CHKLMEM_MALLOC(remote_upid_size, size_t *, (*remote_size) * sizeof(size_t),
+            MPIR_CHKLMEM_MALLOC(remote_upid_size, int *, (*remote_size) * sizeof(int),
                                 mpi_errno, "remote_upid_size", MPL_MEM_ADDRESS);
 
             mpi_errno = MPIDI_NM_get_local_upids(local_comm, &local_upid_size, &local_upids);
             MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno = MPIC_Sendrecv(local_upid_size, local_size, MPI_UNSIGNED_LONG,
+            mpi_errno = MPIC_Sendrecv(local_upid_size, local_size, MPI_INT,
                                       remote_leader, cts_tag,
-                                      remote_upid_size, *remote_size, MPI_UNSIGNED_LONG,
+                                      remote_upid_size, *remote_size, MPI_INT,
                                       remote_leader, cts_tag,
                                       peer_comm, MPI_STATUS_IGNORE, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
@@ -534,7 +534,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
 
 int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
                                      int *is_low_group, int pure_intracomm,
-                                     size_t * remote_upid_size, char *remote_upids,
+                                     int *remote_upid_size, char *remote_upids,
                                      uint64_t ** remote_gpids)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -542,7 +542,7 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
     int upid_recv_size = 0;
     int map_info[4];
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    size_t *_remote_upid_size = NULL;
+    int *_remote_upid_size = NULL;
     char *_remote_upids = NULL;
 
     MPIR_CHKPMEM_DECL(1);
@@ -566,7 +566,7 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
         MPIR_ERR_CHECK(mpi_errno);
 
         if (!pure_intracomm) {
-            mpi_errno = MPIR_Bcast_allcomm_auto(remote_upid_size, *remote_size, MPI_UNSIGNED_LONG,
+            mpi_errno = MPIR_Bcast_allcomm_auto(remote_upid_size, *remote_size, MPI_INT,
                                                 local_leader, local_comm, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIR_Bcast_allcomm_auto(remote_upids, upid_recv_size, MPI_BYTE,
@@ -588,9 +588,9 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
         MPIR_CHKPMEM_MALLOC((*remote_gpids), uint64_t *, (*remote_size) * sizeof(uint64_t),
                             mpi_errno, "remote_gpids", MPL_MEM_COMM);
         if (!pure_intracomm) {
-            MPIR_CHKLMEM_MALLOC(_remote_upid_size, size_t *, (*remote_size) * sizeof(size_t),
+            MPIR_CHKLMEM_MALLOC(_remote_upid_size, int *, (*remote_size) * sizeof(int),
                                 mpi_errno, "_remote_upid_size", MPL_MEM_COMM);
-            mpi_errno = MPIR_Bcast_allcomm_auto(_remote_upid_size, *remote_size, MPI_UNSIGNED_LONG,
+            mpi_errno = MPIR_Bcast_allcomm_auto(_remote_upid_size, *remote_size, MPI_INT,
                                                 local_leader, local_comm, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_CHKLMEM_MALLOC(_remote_upids, char *, upid_recv_size * sizeof(char),
