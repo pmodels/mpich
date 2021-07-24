@@ -120,6 +120,52 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
     goto fn_exit;
 }
 
+int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
+{
+    int mpi_errno;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIDI_NM_mpi_open_port(info_ptr, port_name);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_Close_port(const char *port_name)
+{
+    int mpi_errno;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIDI_NM_mpi_close_port(port_name);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_Comm_accept(const char *port_name, MPIR_Info * info, int root, MPIR_Comm * comm,
+                     MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIDI_NM_mpi_comm_accept(port_name, info, root, comm, newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPID_Comm_connect(const char *port_name, MPIR_Info * info, int root, MPIR_Comm * comm,
                       MPIR_Comm ** newcomm_ptr)
 {
@@ -136,7 +182,6 @@ int MPID_Comm_connect(const char *port_name, MPIR_Info * info, int root, MPIR_Co
         }
     }
     mpi_errno = MPIDI_NM_mpi_comm_connect(port_name, info, root, timeout, comm, newcomm_ptr);
-
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -150,54 +195,8 @@ int MPID_Comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
+
     mpi_errno = MPIDI_NM_mpi_comm_disconnect(comm_ptr);
-
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
-{
-    int mpi_errno;
-    MPIR_FUNC_ENTER;
-    mpi_errno = MPIDI_NM_mpi_open_port(info_ptr, port_name);
-
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPID_Close_port(const char *port_name)
-{
-    int mpi_errno;
-    MPIR_FUNC_ENTER;
-    mpi_errno = MPIDI_NM_mpi_close_port(port_name);
-
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPID_Comm_accept(const char *port_name, MPIR_Info * info, int root, MPIR_Comm * comm,
-                     MPIR_Comm ** newcomm_ptr)
-{
-    int mpi_errno;
-    MPIR_FUNC_ENTER;
-    mpi_errno = MPIDI_NM_mpi_comm_accept(port_name, info, root, comm, newcomm_ptr);
-
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
