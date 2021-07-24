@@ -24,7 +24,6 @@ noinst_HEADERS += src/mpid/ch4/shm/src/shm_impl.h    \
 
 mpi_core_sources   += src/mpid/ch4/shm/src/shm_init.c \
                       src/mpid/ch4/shm/src/shm_hooks.c \
-                      src/mpid/ch4/shm/src/shm_dpm.c \
                       src/mpid/ch4/shm/src/shm_mem.c \
                       src/mpid/ch4/shm/src/shm_rma.c \
                       src/mpid/ch4/shm/src/shm_part.c
