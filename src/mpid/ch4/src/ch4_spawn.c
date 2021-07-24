@@ -130,6 +130,7 @@ static int get_port_name_tag(int *port_name_tag);
 static int get_tag_from_port(const char *port_name, int *port_name_tag);
 static int get_conn_name_from_port(const char *port_name, char *connname, int *len);
 
+#define PORT_MASK_BIT(j) (1u << ((8 * sizeof(int)) - j - 1))
 static int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
 
 static void free_port_name_tag(int tag)
@@ -142,7 +143,7 @@ static void free_port_name_tag(int tag)
     idx = tag / (sizeof(int) * 8);
     rem_tag = tag - (idx * sizeof(int) * 8);
 
-    port_name_tag_mask[idx] &= ~(1u << ((8 * sizeof(int)) - 1 - rem_tag));
+    port_name_tag_mask[idx] &= ~PORT_MASK_BIT(rem_tag);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     MPIR_FUNC_EXIT;
@@ -160,16 +161,17 @@ static int get_port_name_tag(int *port_name_tag)
         if (port_name_tag_mask[i] != ~0)
             break;
 
-    if (i < MPIR_MAX_CONTEXT_MASK)
+    if (i < MPIR_MAX_CONTEXT_MASK) {
         for (j = 0; j < (8 * sizeof(int)); j++) {
-            if ((port_name_tag_mask[i] | (1u << ((8 * sizeof(int)) - j - 1))) !=
-                port_name_tag_mask[i]) {
-                port_name_tag_mask[i] |= (1u << ((8 * sizeof(int)) - j - 1));
+            if ((port_name_tag_mask[i] | PORT_MASK_BIT(j)) != port_name_tag_mask[i]) {
+                port_name_tag_mask[i] |= PORT_MASK_BIT(j);
                 *port_name_tag = ((i * 8 * sizeof(int)) + j);
                 goto fn_exit;
             }
-    } else
+        }
+    } else {
         goto fn_fail;
+    }
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
