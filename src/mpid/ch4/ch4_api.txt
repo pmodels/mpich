@@ -64,6 +64,10 @@ Non Native API:
       NM : comm, local_upid_size, local_upids
   upids_to_gpids : int
       NM : size, remote_upid_size, remote_upids, remote_gpids
+  dynamic_send : int
+      NM : remote_gpid, tag, buf, size, timeout
+  dynamic_recv : int
+      NM : tag, buf-2, size, timeout
   mpi_comm_commit_pre_hook : int
       NM : comm
      SHM : comm
@@ -472,6 +476,7 @@ PARAM:
     recvcounts: const MPI_Aint *
     recvtype: MPI_Datatype
     recvtypes: const MPI_Datatype[]
+    remote_gpid: uint64_t
     remote_gpids: uint64_t *
     remote_upid_size: int *
     remote_upids: char *
