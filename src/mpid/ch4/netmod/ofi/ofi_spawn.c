@@ -23,7 +23,6 @@ static int get_tag_from_port(const char *port_name, int *port_name_tag);
 static int get_conn_name_from_port(const char *port_name, char *connname);
 static int peer_intercomm_create(char *remote_addrname, int len, int tag, int timeout,
                                  bool is_sender, MPIR_Comm ** newcomm);
-static int get_my_addrname(char *addrname_buf, int *len);
 static int dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size, int timeout);
 static int dynamic_recv(int tag, void *buf, int size, int timeout);
 static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int root,
@@ -270,14 +269,6 @@ static int dynamic_recv(int tag, void *buf, int size, int timeout)
     goto fn_exit;
 }
 
-static int get_my_addrname(char *addrname_buf, int *len)
-{
-    MPIR_Assert(*len >= MPIDI_OFI_global.addrnamelen);
-    *len = MPIDI_OFI_global.addrnamelen;
-    memcpy(addrname_buf, MPIDI_OFI_global.addrname[0], MPIDI_OFI_global.addrnamelen);
-    return MPI_SUCCESS;
-}
-
 #define MPIDI_DYNPROC_NAME_MAX FI_NAME_MAX
 struct dynproc_conn_hdr {
     MPIR_Context_id_t context_id;
@@ -303,14 +294,23 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
         mpi_errno = MPIDIU_upids_to_gpids(1, &addrname_len, remote_addrname, remote_gpids);
         MPIR_ERR_CHECK(mpi_errno);
 
-        /* send remote context_id + addrname */
+        /* fill hdr with context_id and addrname */
         hdr.context_id = recvcontext_id;
-        hdr.addrname_len = MPIDI_DYNPROC_NAME_MAX;
-        mpi_errno = get_my_addrname(hdr.addrname, &hdr.addrname_len);
+
+        char *addrname;
+        int *addrname_size;
+        mpi_errno = MPIDI_OFI_get_local_upids(MPIR_Process.comm_self, &addrname_size, &addrname);
         MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(addrname_size[0] <= MPIDI_DYNPROC_NAME_MAX);
+        memcpy(hdr.addrname, addrname, addrname_size[0]);
+        hdr.addrname_len = addrname_size[0];
+
+        /* send remote context_id + addrname */
 
         int hdr_sz = sizeof(hdr) - MPIDI_DYNPROC_NAME_MAX + hdr.addrname_len;
         mpi_errno = dynamic_send(remote_gpid, tag, &hdr, hdr_sz, timeout);
+        MPL_free(addrname);
+        MPL_free(addrname_size);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = dynamic_recv(tag, &hdr, sizeof(hdr), timeout);
