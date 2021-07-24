@@ -23,3 +23,16 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
 
     return mpi_errno;
 }
+
+int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **local_upids)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
+int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
+                             uint64_t * remote_gpids)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
