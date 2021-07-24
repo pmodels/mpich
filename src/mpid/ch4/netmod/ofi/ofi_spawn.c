@@ -193,6 +193,8 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
 {
     int mpi_errno = MPI_SUCCESS;
 
+    MPIR_Assert(MPIDI_OFI_ENABLE_TAGGED);
+
     int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
     int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
     fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), 0, 0, 0);
@@ -232,6 +234,8 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
 int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(MPIDI_OFI_ENABLE_TAGGED);
 
     MPIDI_OFI_dynamic_process_request_t req;
     req.done = 0;
