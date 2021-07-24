@@ -816,9 +816,10 @@ int MPIR_Intercomm_create_from_groups_impl(MPIR_Group * local_group_ptr, int loc
 
     int tag = get_tag_from_stringtag(stringtag);
     /* FIXME: ensure lpid is from comm_world */
-    int remote_lpid = remote_group_ptr->lrank_to_lpid[remote_leader].lpid;
+    uint64_t remote_lpid = remote_group_ptr->lrank_to_lpid[remote_leader].lpid;
+    MPIR_Assert(remote_lpid < MPIR_Process.size);
     mpi_errno = MPIR_Intercomm_create_impl(local_comm, local_leader,
-                                           MPIR_Process.comm_world, remote_lpid,
+                                           MPIR_Process.comm_world, (int) remote_lpid,
                                            tag, p_newintercom_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
