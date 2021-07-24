@@ -528,6 +528,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
+    *remote_gpids = NULL;
     goto fn_exit;
 }
 
@@ -612,6 +613,7 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
+    *remote_gpids = NULL;
     goto fn_exit;
 }
 
