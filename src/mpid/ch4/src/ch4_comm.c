@@ -413,6 +413,10 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
             local_gpids[i] = MPIDIU_GPID_CREATE(avtid, lpid);
         }
 
+        /* TODO: optimizations --
+         *       if local_size is 1, we can skip send and local bcast;
+         *       if remote_size is 1, we can skip recv.
+         */
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
                         (MPL_DBG_FDEST, "Intercomm map exchange stage 1: leaders"));
         if (!pure_intracomm) {
