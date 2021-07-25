@@ -213,7 +213,7 @@ int MPIDIU_avt_destroy(void)
  * For ofi netmod, it inserts the address and fills an av entry.
  */
 int MPIDIU_upids_to_gpids(int size, size_t * remote_upid_size, char *remote_upids,
-                          uint64_t ** remote_gpids)
+                          uint64_t * remote_gpids)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_UPIDS_TO_GPIDS);
