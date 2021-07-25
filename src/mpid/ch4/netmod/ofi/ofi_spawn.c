@@ -847,7 +847,6 @@ int MPIDI_OFI_upids_to_gpids(int size, size_t * remote_upid_size, char *remote_u
                                             1, &addr, 0ULL, NULL), 0, avmap);
             MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[nic][0] = addr;
-            /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_gpids)[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
         }
     }
