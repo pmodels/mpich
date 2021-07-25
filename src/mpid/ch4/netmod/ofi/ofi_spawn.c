@@ -537,7 +537,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
             goto bcast_errno_and_port_id;
         }
 
-        MPIDIU_upids_to_gpids(remote_size, remote_upid_size, remote_upids, &remote_gpids);
+        MPIDIU_upids_to_gpids(remote_size, remote_upid_size, remote_upids, remote_gpids);
         /* the child comm group is alawys the low group */
         is_low_group = 0;
 
@@ -718,7 +718,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
             MPIR_CHKMEM_SETERR(mpi_errno, remote_size * sizeof(uint64_t), "remote_gpids");
             goto bcast_errno;
         }
-        MPIDIU_upids_to_gpids(remote_size, remote_upid_size, remote_upids, &remote_gpids);
+        MPIDIU_upids_to_gpids(remote_size, remote_upid_size, remote_upids, remote_gpids);
         /* the parent comm group is alawys the low group */
         is_low_group = 1;
 
@@ -779,7 +779,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
  * process spawning, having them here provides better context */
 
 int MPIDI_OFI_upids_to_gpids(int size, size_t * remote_upid_size, char *remote_upids,
-                             uint64_t ** remote_gpids)
+                             uint64_t * remote_gpids)
 {
     int i, mpi_errno = MPI_SUCCESS;
     int *new_avt_procs;
@@ -817,7 +817,7 @@ int MPIDI_OFI_upids_to_gpids(int size, size_t * remote_upid_size, char *remote_u
                                    avlookup);
                 if (sz == remote_upid_size[i]
                     && !memcmp(tbladdr, curr_upid, remote_upid_size[i])) {
-                    (*remote_gpids)[i] = MPIDIU_GPID_CREATE(k, j);
+                    remote_gpids[i] = MPIDIU_GPID_CREATE(k, j);
                     found = 1;
                     break;
                 }
@@ -847,7 +847,7 @@ int MPIDI_OFI_upids_to_gpids(int size, size_t * remote_upid_size, char *remote_u
                                             1, &addr, 0ULL, NULL), 0, avmap);
             MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[nic][0] = addr;
-            (*remote_gpids)[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
+            remote_gpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
         }
     }
 

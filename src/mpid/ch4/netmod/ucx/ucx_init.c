@@ -440,7 +440,7 @@ int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char 
 }
 
 int MPIDI_UCX_upids_to_gpids(int size, size_t * remote_upid_size, char *remote_upids,
-                             uint64_t ** remote_gpids)
+                             uint64_t * remote_gpids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

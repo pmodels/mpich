@@ -444,7 +444,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
             MPIR_ERR_CHECK(mpi_errno);
 
             /* Stage 1.2 convert remote UPID to GPID and get GPID for local group */
-            MPIDIU_upids_to_gpids(*remote_size, remote_upid_size, remote_upids, remote_gpids);
+            MPIDIU_upids_to_gpids(*remote_size, remote_upid_size, remote_upids, *remote_gpids);
         } else {
             /* Stage 1.1f only exchange GPIDS if no dynamic process involved */
             mpi_errno = MPIC_Sendrecv(local_gpids, local_size, MPI_UINT64_T,
@@ -599,7 +599,7 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
                                                 local_leader, local_comm, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
 
-            MPIDIU_upids_to_gpids(*remote_size, _remote_upid_size, _remote_upids, remote_gpids);
+            MPIDIU_upids_to_gpids(*remote_size, _remote_upid_size, _remote_upids, *remote_gpids);
         } else {
             mpi_errno = MPIR_Bcast_allcomm_auto(*remote_gpids, *remote_size, MPI_UINT64_T,
                                                 local_leader, local_comm, &errflag);
