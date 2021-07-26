@@ -5,13 +5,66 @@
 
 #include "mpidimpl.h"
 #include "ucx_impl.h"
+#include "mpidu_bc.h"
+
+static void dynamic_send_cb(void *request, ucs_status_t status, void *user_data)
+{
+    bool *done = user_data;
+    *done = true;
+}
+
+static void dynamic_recv_cb(void *request, ucs_status_t status,
+                            const ucp_tag_recv_info_t * info, void *user_data)
+{
+    bool *done = user_data;
+    *done = true;
+}
 
 int MPIDI_UCX_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**ucx_nm_notsupported");
+    uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
 
+    int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
+    int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(&MPIDIU_get_av(avtid, lpid), 0, 0);
+
+    bool done = false;
+    ucp_request_param_t param = {
+        .op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA,
+        .cb.send = dynamic_send_cb,
+        .user_data = &done,
+    };
+
+    ucs_status_ptr_t status;
+    status = ucp_tag_send_nbx(ep, buf, size, ucx_tag, &param);
+
+    if (status == UCS_OK) {
+        done = true;
+    } else if (UCS_PTR_IS_ERR(status)) {
+        mpi_errno = MPI_ERR_PORT;
+        goto fn_exit;
+    }
+
+    MPL_time_t time_start, time_now;
+    double time_gap;
+    MPL_wtime(&time_start);
+    while (!done) {
+        MPL_wtime(&time_now);
+        MPL_wtime_diff(&time_start, &time_now, &time_gap);
+        if (timeout > 0 && time_gap > (double) timeout) {
+            mpi_errno = MPI_ERR_PORT;
+            goto fn_exit;
+        }
+        ucp_worker_progress(MPIDI_UCX_global.ctx[0].worker);
+    }
+
+    if (status != UCS_OK) {
+        ucp_request_release(status);
+    }
+
+  fn_exit:
     return mpi_errno;
 }
 
@@ -19,8 +72,43 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**ucx_nm_notsupported");
+    uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
+    uint64_t tag_mask = 0xffffffffffffffff;
 
+    bool done = false;
+    ucp_request_param_t param = {
+        .op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA,
+        .cb.recv = dynamic_recv_cb,
+        .user_data = &done,
+    };
+
+    ucs_status_ptr_t status;
+    status = ucp_tag_recv_nbx(MPIDI_UCX_global.ctx[0].worker, buf, size, ucx_tag, tag_mask, &param);
+    if (status == UCS_OK) {
+        done = true;
+    } else if (UCS_PTR_IS_ERR(status)) {
+        mpi_errno = MPI_ERR_PORT;
+        goto fn_exit;
+    }
+
+    MPL_time_t time_start, time_now;
+    double time_gap;
+    MPL_wtime(&time_start);
+    while (!done) {
+        MPL_wtime(&time_now);
+        MPL_wtime_diff(&time_start, &time_now, &time_gap);
+        if (timeout > 0 && time_gap > (double) timeout) {
+            mpi_errno = MPI_ERR_PORT;
+            goto fn_exit;
+        }
+        ucp_worker_progress(MPIDI_UCX_global.ctx[0].worker);
+    }
+
+    if (status != UCS_OK) {
+        ucp_request_release(status);
+    }
+
+  fn_exit:
     return mpi_errno;
 }
 

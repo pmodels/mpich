@@ -58,4 +58,6 @@ extern ucp_generic_dt_ops_t MPIDI_UCX_datatype_ops;
 #define MPIDI_UCX_CONTEXT_ID_MASK \
     ((uint64_t) (((1ULL << MPIDI_UCX_CONTEXT_ID_BITS) - 1) << MPIDI_UCX_CONTEXT_ID_SHIFT))
 
+#define MPIDI_UCX_DYNPROC_MASK (~MPIDI_UCX_TAG_MASK)
+
 #endif /* UCX_TYPES_H_INCLUDED */
