@@ -670,11 +670,24 @@ typedef struct {
 #define MPID_DEV_OP_DECL         MPIDI_Devop_t   dev;
 #define MPID_DEV_STREAM_DECL     MPIDI_Devstream_t dev;
 
+#ifdef MPIDI_BUILD_CH4_UPID_HASH
+typedef struct {
+    void *upid;
+    int upid_len;
+    int avtid;
+    int lpid;
+    UT_hash_handle hh;
+} MPIDI_upid_hash;
+#endif
+
 typedef struct MPIDI_av_entry {
     union {
     MPIDI_NM_ADDR_DECL} netmod;
     MPIDI_locality_t is_local;
     int node_id;
+#ifdef MPIDI_BUILD_CH4_UPID_HASH
+    MPIDI_upid_hash *hash;
+#endif
 } MPIDI_av_entry_t;
 
 #define HAVE_DEV_COMM_HOOK
