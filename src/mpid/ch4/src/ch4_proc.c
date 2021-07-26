@@ -5,6 +5,7 @@
 
 #include "mpidimpl.h"
 #include "ch4_proc.h"
+#include "uthash.h"
 
 /* There are 3 terms referencing processes -- upid, lpid, gpid.
  * Refer to comment in ch4_proc.h
@@ -196,6 +197,45 @@ int MPIDIU_avt_destroy(void)
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
+
+#ifdef MPIDI_BUILD_CH4_UPID_HASH
+/* Store the upid, avtid, lpid in a hash to support get_local_upids and upids_to_lupids */
+static MPIDI_upid_hash *upid_hash = NULL;
+
+void MPIDIU_upidhash_add(const void *upid, int upid_len, int avtid, int lpid)
+{
+    MPIDI_upid_hash *t;
+    t = MPL_malloc(sizeof(MPIDI_upid_hash), MPL_MEM_OTHER);
+    t->avtid = avtid;
+    t->lpid = lpid;
+    t->upid = MPL_malloc(upid_len, MPL_MEM_OTHER);
+    memcpy(t->upid, upid, upid_len);
+    t->upid_len = upid_len;
+    HASH_ADD_KEYPTR(hh, upid_hash, t->upid, upid_len, t, MPL_MEM_OTHER);
+
+    MPIDIU_get_av(avtid, lpid).hash = t;
+    /* Do not free avt while we use upidhash - FIXME: improve it */
+    MPIDIU_avt_add_ref(avtid);
+}
+
+MPIDI_upid_hash *MPIDIU_upidhash_find(const void *upid, int upid_len)
+{
+    MPIDI_upid_hash *t;
+    HASH_FIND(hh, upid_hash, upid, upid_len, t);
+    return t;
+}
+
+void MPIDIU_upidhash_free(void)
+{
+    MPIDI_upid_hash *cur, *tmp;
+    HASH_ITER(hh, upid_hash, cur, tmp) {
+        HASH_DEL(upid_hash, cur);
+        MPIDIU_avt_release_ref(cur->avtid);
+        MPL_free(cur->upid);
+        MPL_free(cur);
+    }
+}
+#endif
 
 /* convert upid to gpid by netmod.
  * For ofi netmod, it inserts the address and fills an av entry.
