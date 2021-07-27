@@ -335,6 +335,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     num_ranks = MPIR_Comm_size(comm_ptr);
     rank = MPIR_Comm_rank(comm_ptr);
 
+    /* FIXME: explain the magic number 5? */
     shm_size = sizeof(int) * MAX_TOPO_DEPTH * num_ranks + sizeof(int) * 5 * num_ranks;
 
     /* STEP 1. Create shared memory region for exchanging topology information (root only) */
