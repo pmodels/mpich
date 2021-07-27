@@ -111,7 +111,7 @@ static void copy_tree(int *shared_region, int num_ranks, int rank,
 int topotree_get_package_level(int topo_depth, int *max_entries_per_level, int num_ranks,
                                int **bind_map)
 {
-    int lvl, i, socket_level;
+    int lvl, i, package_level;
 
     for (lvl = 0; lvl < topo_depth; ++lvl) {
         max_entries_per_level[lvl] = -1;
@@ -120,17 +120,17 @@ int topotree_get_package_level(int topo_depth, int *max_entries_per_level, int n
         }
     }
     /* STEP 3.3. Determine the package level based on first level (top-down) with #nodes >1 */
-    socket_level = 0;   /* if all ranks are in the same index at all levels, just use level 0 */
+    package_level = 0;  /* if all ranks are in the same index at all levels, just use level 0 */
     {
         for (i = topo_depth - 1; i >= 0; --i) {
             if (max_entries_per_level[i] > 1) {
-                socket_level = i;
+                package_level = i;
                 break;
             }
         }
 
     }
-    return (MPIDI_SHM_TOPOTREE_CUTOFF == -1) ? socket_level : MPIDI_SHM_TOPOTREE_CUTOFF;
+    return (MPIDI_SHM_TOPOTREE_CUTOFF == -1) ? package_level : MPIDI_SHM_TOPOTREE_CUTOFF;
 }
 
 /* This function generates a package level tree using the package leaders and k_val.
