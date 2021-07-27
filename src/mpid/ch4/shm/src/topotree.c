@@ -17,7 +17,7 @@ static int create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_val,
 static void copy_tree(int *shared_region, int num_ranks, int rank,
                       MPIR_Treealgo_tree_t * my_tree, int *topotree_fail);
 
-static int topotree_get_package_level(int topo_depth, int *max_entries_per_level, int num_ranks,
+static int topotree_get_package_level(int topo_depth, int *num_packages, int num_ranks,
                                       int **bind_map);
 
 static void gen_package_tree(int num_packages, int k_val, MPIDI_SHM_topotree_t * package_tree,
@@ -28,7 +28,7 @@ static void gen_tree_sharedmemory(int *shared_region, MPIDI_SHM_topotree_t * tre
                                   int num_packages, int num_ranks, int k_val,
                                   bool package_leaders_first);
 
-static int gen_tree(int k_val, int *shared_region, int *max_entries_per_level,
+static int gen_tree(int k_val, int *shared_region, int num_packages,
                     int **ranks_per_package, int max_ranks_per_package, int *package_ctr,
                     int package_level, int num_ranks, bool package_leaders_first,
                     bool right_skewed, MPIR_Errflag_t * eflag);
@@ -104,19 +104,20 @@ static void copy_tree(int *shared_region, int num_ranks, int rank,
 
 /* This function returns the topology level where we will break the tree into a package_leaders
  * and a per_package tree. If needed MPIDI_SHM_TOPOTREE_CUTOFF can be modified to the level where this cutoff
- * should happen. Note, this function also fills out max_entries_per_level, which is needed in other
+ * should happen. Note, this function also output num_packages at the package_level
  * functions.
  * */
-int topotree_get_package_level(int topo_depth, int *max_entries_per_level, int num_ranks,
-                               int **bind_map)
+int topotree_get_package_level(int topo_depth, int *num_packages, int num_ranks, int **bind_map)
 {
     int package_level;
+    int *max_entries_per_level = MPL_malloc(topo_depth * sizeof(int), MPL_MEM_OTHER);
 
     for (int lvl = 0; lvl < topo_depth; ++lvl) {
-        max_entries_per_level[lvl] = -1;
+        int max = -1;
         for (int i = 0; i < num_ranks; ++i) {
-            max_entries_per_level[lvl] = MPL_MAX(max_entries_per_level[lvl], bind_map[i][lvl] + 1);
+            max = MPL_MAX(max, bind_map[i][lvl] + 1);
         }
+        max_entries_per_level[lvl] = max;
     }
     /* STEP 3.3. Determine the package level based on first level (top-down) with #nodes >1 */
     package_level = 0;  /* if all ranks are in the same index at all levels, just use level 0 */
@@ -129,7 +130,12 @@ int topotree_get_package_level(int topo_depth, int *max_entries_per_level, int n
         }
 
     }
-    return (MPIDI_SHM_TOPOTREE_CUTOFF == -1) ? package_level : MPIDI_SHM_TOPOTREE_CUTOFF;
+    if (MPIDI_SHM_TOPOTREE_CUTOFF >= 0) {
+        package_level = MPIDI_SHM_TOPOTREE_CUTOFF;
+    }
+    *num_packages = max_entries_per_level[package_level];
+    MPL_free(max_entries_per_level);
+    return package_level;
 }
 
 /* This function generates a package level tree using the package leaders and k_val.
@@ -228,21 +234,20 @@ static void gen_tree_sharedmemory(int *shared_region, MPIDI_SHM_topotree_t * tre
  * over the different data-structures:
  * k_val : the tree K-value
  * shared_region : the shared memory region where the tree will be generated
- * max_entries_per_level : the maximum number of ranks per level
+ * num_packages : the maximum number of packages at package_level
  * ranks_per_package : the different ranks at each level
  * max_ranks_per_package : the maximum ranks in any package
  * package_ctr : number of ranks in each package
  * package_level : the topology level where we cutoff the tree
  * num_ranks : the number of ranks
  * */
-static int gen_tree(int k_val, int *shared_region, int *max_entries_per_level,
+static int gen_tree(int k_val, int *shared_region, int num_packages,
                     int **ranks_per_package, int max_ranks_per_package, int *package_ctr,
                     int package_level, int num_ranks, bool package_leaders_first,
                     bool right_skewed, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     int rank, idx;
-    int num_packages = max_entries_per_level[package_level];
     int package_count = 0;
     MPIDI_SHM_topotree_t package_tree, tree, template_tree;
     const int package_tree_sz = num_packages > num_ranks ? num_packages : num_ranks;
@@ -260,7 +265,7 @@ static int gen_tree(int k_val, int *shared_region, int *max_entries_per_level,
                         "intra_node_package_leaders", MPL_MEM_OTHER);
 
     /* We pick package leaders as the first rank in each package */
-    for (int p = 0; p < max_entries_per_level[package_level]; ++p) {
+    for (int p = 0; p < num_packages; ++p) {
         package_leaders[p] = -1;
         if (package_ctr[p] > 0) {
             package_leaders[package_count++] = ranks_per_package[p][0];
@@ -276,7 +281,7 @@ static int gen_tree(int k_val, int *shared_region, int *max_entries_per_level,
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
 
     /* use the template tree to generate the tree for each rank */
-    for (int p = 0; p < max_entries_per_level[package_level]; ++p) {
+    for (int p = 0; p < num_packages; ++p) {
         for (int r = 0; r < package_ctr[p]; ++r) {
             rank = ranks_per_package[p][r];
             if (MPIDI_SHM_TOPOTREE_PARENT(&template_tree, r) == -1) {
@@ -324,7 +329,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     size_t shm_size;
     int **bind_map = NULL;
-    int *max_entries_per_level = NULL;
     int **ranks_per_package = NULL;
     int *package_ctr = NULL;
     size_t topo_depth = 0;
@@ -358,6 +362,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
     /* STEP 3. Root has all the bind_map information, now build tree */
+    int num_packages = 0;       /* init to avoid -Wmaybe-uninitialized */
     if (rank == root) {
         bind_map = (int **) MPL_malloc(num_ranks * sizeof(int *), MPL_MEM_OTHER);
         MPIR_ERR_CHKANDJUMP(!bind_map, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -370,20 +375,14 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
 
         /* STEP 3.1. Count the maximum entries at each level - used for breaking the tree into
          * intra/inter socket */
-        max_entries_per_level = (int *) MPL_calloc(topo_depth, sizeof(size_t), MPL_MEM_OTHER);
-        MPIR_ERR_CHKANDJUMP(!max_entries_per_level, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        package_level =
-            topotree_get_package_level(topo_depth, max_entries_per_level, num_ranks, bind_map);
+        package_level = topotree_get_package_level(topo_depth, &num_packages, num_ranks, bind_map);
 
         /* STEP 3.2. allocate space for the entries that go in each package based on topology info */
-        ranks_per_package =
-            (int
-             **) MPL_malloc(max_entries_per_level[package_level] * sizeof(int *), MPL_MEM_OTHER);
+        ranks_per_package = (int **) MPL_malloc(num_packages * sizeof(int *), MPL_MEM_OTHER);
         MPIR_ERR_CHKANDJUMP(!ranks_per_package, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        package_ctr =
-            (int *) MPL_calloc(max_entries_per_level[package_level], sizeof(int), MPL_MEM_OTHER);
+        package_ctr = (int *) MPL_calloc(num_packages, sizeof(int), MPL_MEM_OTHER);
         MPIR_ERR_CHKANDJUMP(!package_ctr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        for (int i = 0; i < max_entries_per_level[package_level]; ++i) {
+        for (int i = 0; i < num_packages; ++i) {
             package_ctr[i] = 0;
             ranks_per_package[i] = (int *) MPL_calloc(num_ranks, sizeof(int), MPL_MEM_OTHER);
             MPIR_ERR_CHKANDJUMP(!ranks_per_package[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -394,7 +393,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
             ranks_per_package[package][package_ctr[package]++] = i;
         }
         max_ranks_per_package = 0;
-        for (int i = 0; i < max_entries_per_level[package_level]; ++i) {
+        for (int i = 0; i < num_packages; ++i) {
             max_ranks_per_package = MPL_MAX(max_ranks_per_package, package_ctr[i]);
         }
         /* At this point we have done the common work in extracting topology information
@@ -402,7 +401,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
 
         /* For Bcast, package leaders are added before the package local ranks, and the per_package
          * tree is left_skewed */
-        mpi_errno = gen_tree(bcast_k, shared_region, max_entries_per_level,
+        mpi_errno = gen_tree(bcast_k, shared_region, num_packages,
                              ranks_per_package, max_ranks_per_package, package_ctr,
                              package_level, num_ranks, 1 /*package_leaders_first */ ,
                              0 /*left_skewed */ , errflag);
@@ -422,7 +421,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
      * tree is right_skewed (children are added in the reverse order */
     if (rank == root) {
         memset(shared_region, 0, shm_size);
-        mpi_errno = gen_tree(reduce_k, shared_region, max_entries_per_level,
+        mpi_errno = gen_tree(reduce_k, shared_region, num_packages,
                              ranks_per_package, max_ranks_per_package, package_ctr,
                              package_level, num_ranks, 0 /*package_leaders_last */ ,
                              1 /*right_skewed */ , errflag);
@@ -439,7 +438,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
     /* Cleanup */
     if (rank == root) {
-        for (int i = 0; i < max_entries_per_level[package_level]; ++i) {
+        for (int i = 0; i < num_packages; ++i) {
             MPL_free(ranks_per_package[i]);
         }
         MPL_free(ranks_per_package);
@@ -447,7 +446,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
         for (int i = 0; i < num_ranks; ++i) {
             MPL_free(bind_map[i]);
         }
-        MPL_free(max_entries_per_level);
         MPL_free(bind_map);
     }
     MPIDU_shm_free(shared_region);
