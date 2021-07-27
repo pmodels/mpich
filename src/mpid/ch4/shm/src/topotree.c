@@ -11,11 +11,33 @@
 
 #include <math.h>
 
+static int create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_val,
+                                bool right_skewed, int max_ranks, MPIR_Errflag_t * eflag);
+
+static void copy_tree(int *shared_region, int num_ranks, int rank,
+                      MPIR_Treealgo_tree_t * my_tree, int *topotree_fail);
+
+static int topotree_get_package_level(int topo_depth, int *max_entries_per_level, int num_ranks,
+                                      int **bind_map);
+
+static void gen_package_tree(int num_packages, int k_val, MPIDI_SHM_topotree_t * package_tree,
+                             int *package_leaders);
+
+static void gen_tree_sharedmemory(int *shared_region, MPIDI_SHM_topotree_t * tree,
+                                  MPIDI_SHM_topotree_t * package_tree, int *package_leaders,
+                                  int num_packages, int num_ranks, int k_val,
+                                  bool package_leaders_first);
+
+static int gen_tree(int k_val, int *shared_region, int *max_entries_per_level,
+                    int **ranks_per_package, int max_ranks_per_package, int *package_ctr,
+                    int package_level, int num_ranks, bool package_leaders_first,
+                    bool right_skewed, MPIR_Errflag_t * eflag);
+
 /* This function allocates and generates a template_tree based on k_val and right_skewed for
  * max_ranks.
  * */
-int MPIDI_SHM_create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_val,
-                                   bool right_skewed, int max_ranks, MPIR_Errflag_t * errflag)
+static int create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_val,
+                                bool right_skewed, int max_ranks, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     int i, j, child_id, child_idx;
@@ -61,8 +83,8 @@ int MPIDI_SHM_create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_v
  * Doesn't perform any direct allocation, but utarray_new is called to allocate space for children
  * in my_tree.
  * */
-void MPIDI_SHM_copy_tree(int *shared_region, int num_ranks, int rank,
-                         MPIR_Treealgo_tree_t * my_tree, int *topotree_fail)
+static void copy_tree(int *shared_region, int num_ranks, int rank,
+                      MPIR_Treealgo_tree_t * my_tree, int *topotree_fail)
 {
     int c;
     int *parent_ptr = shared_region;
@@ -93,8 +115,8 @@ void MPIDI_SHM_copy_tree(int *shared_region, int num_ranks, int rank,
  * should happen. Note, this function also fills out max_entries_per_level, which is needed in other
  * functions.
  * */
-int MPIDI_SHM_topotree_get_package_level(int topo_depth, int *max_entries_per_level, int num_ranks,
-                                         int **bind_map)
+int topotree_get_package_level(int topo_depth, int *max_entries_per_level, int num_ranks,
+                               int **bind_map)
 {
     int lvl, i, socket_level;
 
@@ -122,8 +144,8 @@ int MPIDI_SHM_topotree_get_package_level(int topo_depth, int *max_entries_per_le
 
 /* This function generates a package level tree using the package leaders and k_val.
  * */
-void MPIDI_SHM_gen_package_tree(int num_packages, int k_val, MPIDI_SHM_topotree_t * package_tree,
-                                int *package_leaders)
+void gen_package_tree(int num_packages, int k_val, MPIDI_SHM_topotree_t * package_tree,
+                      int *package_leaders)
 {
     int i, j, parent_idx, child_id, idx;
     /* Generate a package (top-level) tree */
@@ -148,10 +170,10 @@ void MPIDI_SHM_gen_package_tree(int num_packages, int k_val, MPIDI_SHM_topotree_
 /* This function assembles the package leaders tree and per package tree into a single tree in
  * shared memory.
  * */
-void MPIDI_SHM_gen_tree_sharedmemory(int *shared_region, MPIDI_SHM_topotree_t * tree,
-                                     MPIDI_SHM_topotree_t * package_tree, int *package_leaders,
-                                     int num_packages, int num_ranks, int k_val,
-                                     bool package_leaders_first)
+static void gen_tree_sharedmemory(int *shared_region, MPIDI_SHM_topotree_t * tree,
+                                  MPIDI_SHM_topotree_t * package_tree, int *package_leaders,
+                                  int num_packages, int num_ranks, int k_val,
+                                  bool package_leaders_first)
 {
     int i, pm, j, is_package_leader;
     int *parent_ptr = shared_region;
@@ -221,10 +243,10 @@ void MPIDI_SHM_gen_tree_sharedmemory(int *shared_region, MPIDI_SHM_topotree_t * 
  * package_level : the topology level where we cutoff the tree
  * num_ranks : the number of ranks
  * */
-int MPIDI_SHM_gen_tree(int k_val, int *shared_region, int *max_entries_per_level,
-                       int **ranks_per_package, int max_ranks_per_package, int *package_ctr,
-                       int package_level, int num_ranks, bool package_leaders_first,
-                       bool right_skewed, MPIR_Errflag_t * errflag)
+static int gen_tree(int k_val, int *shared_region, int *max_entries_per_level,
+                    int **ranks_per_package, int max_ranks_per_package, int *package_ctr,
+                    int package_level, int num_ranks, bool package_leaders_first,
+                    bool right_skewed, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     int i, j, p, r, rank, idx;
@@ -269,11 +291,10 @@ int MPIDI_SHM_gen_tree(int k_val, int *shared_region, int *max_entries_per_level
     num_packages = package_count;
 
     /* STEP 4. Now use the template tree to generate the top level tree */
-    MPIDI_SHM_gen_package_tree(num_packages, k_val, &package_tree, package_leaders);
+    gen_package_tree(num_packages, k_val, &package_tree, package_leaders);
     /* STEP 5. Create a template tree for the ranks */
-    mpi_errno =
-        MPIDI_SHM_create_template_tree(&template_tree, k_val, right_skewed,
-                                       max_ranks_per_package, errflag);
+    mpi_errno = create_template_tree(&template_tree, k_val, right_skewed,
+                                     max_ranks_per_package, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag =
@@ -304,8 +325,8 @@ int MPIDI_SHM_gen_tree(int k_val, int *shared_region, int *max_entries_per_level
         }
     }
     /* Assemble the per package tree package leaders tree and copy it to shared memory region */
-    MPIDI_SHM_gen_tree_sharedmemory(shared_region, &tree, &package_tree, package_leaders,
-                                    num_packages, num_ranks, k_val, package_leaders_first);
+    gen_tree_sharedmemory(shared_region, &tree, &package_tree, package_leaders,
+                          num_packages, num_ranks, k_val, package_leaders_first);
     MPL_free(tree.base);
     MPL_free(package_tree.base);
     MPL_free(template_tree.base);
@@ -392,8 +413,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
         max_entries_per_level = (int *) MPL_calloc(topo_depth, sizeof(size_t), MPL_MEM_OTHER);
         MPIR_ERR_CHKANDJUMP(!max_entries_per_level, mpi_errno, MPI_ERR_OTHER, "**nomem");
         package_level =
-            MPIDI_SHM_topotree_get_package_level(topo_depth, max_entries_per_level, num_ranks,
-                                                 bind_map);
+            topotree_get_package_level(topo_depth, max_entries_per_level, num_ranks, bind_map);
 
         /* STEP 3.2. allocate space for the entries that go in each package based on topology info */
         ranks_per_package =
@@ -422,10 +442,10 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
 
         /* For Bcast, package leaders are added before the package local ranks, and the per_package
          * tree is left_skewed */
-        mpi_errno = MPIDI_SHM_gen_tree(bcast_k, shared_region, max_entries_per_level,
-                                       ranks_per_package, max_ranks_per_package, package_ctr,
-                                       package_level, num_ranks, 1 /*package_leaders_first */ ,
-                                       0 /*left_skewed */ , errflag);
+        mpi_errno = gen_tree(bcast_k, shared_region, max_entries_per_level,
+                             ranks_per_package, max_ranks_per_package, package_ctr,
+                             package_level, num_ranks, 1 /*package_leaders_first */ ,
+                             0 /*left_skewed */ , errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
@@ -446,7 +466,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     }
 
     /* Every rank copies their tree out from shared memory */
-    MPIDI_SHM_copy_tree(shared_region, num_ranks, rank, bcast_tree, bcast_topotree_fail);
+    copy_tree(shared_region, num_ranks, rank, bcast_tree, bcast_topotree_fail);
 
     /* Wait until shared memory is available */
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
@@ -463,10 +483,10 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
      * tree is right_skewed (children are added in the reverse order */
     if (rank == root) {
         memset(shared_region, 0, shm_size);
-        mpi_errno = MPIDI_SHM_gen_tree(reduce_k, shared_region, max_entries_per_level,
-                                       ranks_per_package, max_ranks_per_package, package_ctr,
-                                       package_level, num_ranks, 0 /*package_leaders_last */ ,
-                                       1 /*right_skewed */ , errflag);
+        mpi_errno = gen_tree(reduce_k, shared_region, max_entries_per_level,
+                             ranks_per_package, max_ranks_per_package, package_ctr,
+                             package_level, num_ranks, 0 /*package_leaders_last */ ,
+                             1 /*right_skewed */ , errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
@@ -487,7 +507,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
     /* each rank copy the reduce tree out */
-    MPIDI_SHM_copy_tree(shared_region, num_ranks, rank, reduce_tree, reduce_topotree_fail);
+    copy_tree(shared_region, num_ranks, rank, reduce_tree, reduce_topotree_fail);
 
     /* Wait for all ranks to copy out the tree */
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
