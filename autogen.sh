@@ -756,6 +756,7 @@ else
     error "README.vin file not present, unable to update README version number (perhaps we are running in a release tarball source tree?)"
 fi
 
+set -e
 
 ########################################################################
 ## Building subsys_include.m4
@@ -1004,7 +1005,7 @@ if [ "$do_build_configure" = "yes" ] ; then
             # Patching ltmain.sh
             if [ -f $amdir/confdb/ltmain.sh ] ; then
                 echo_n "Patching ltmain.sh for compatibility with Intel compiler options... "
-                patch -N -s -l $amdir/confdb/ltmain.sh maint/patches/optional/confdb/intel-compiler.patch
+                patch -N -s -l $amdir/confdb/ltmain.sh maint/patches/optional/confdb/intel-compiler.patch && :
                 if [ $? -eq 0 ] ; then
                     # Remove possible leftovers, which don't imply a failure
                     rm -f $amdir/confdb/ltmain.sh.orig
@@ -1031,7 +1032,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                 sys_lib_dlsearch_path_patch_requires_rebuild=no
                 macos_patch_requires_rebuild=no
                 echo_n "Patching libtool.m4 for system dynamic library search path..."
-                patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/sys_lib_dlsearch_path_spec.patch
+                patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/sys_lib_dlsearch_path_spec.patch && :
                 if [ $? -eq 0 ] ; then
                     sys_lib_dlsearch_path_patch_requires_rebuild=yes
                     # Remove possible leftovers, which don't imply a failure
@@ -1041,7 +1042,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                     echo "failed"
                 fi
                 echo_n "Patching libtool.m4 for compatibility macOS BigSur..."
-                patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/big-sur.patch
+                patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/big-sur.patch && :
                 if [ $? -eq 0 ] ; then
                     macos_patch_requires_rebuild=yes
                     # Remove possible leftovers, which don't imply a failure
@@ -1052,7 +1053,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                 fi
                 if [ $do_bindings = "yes" ] ; then
                     echo_n "Patching libtool.m4 for compatibility with ifort on OSX... "
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/darwin-ifort.patch
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/darwin-ifort.patch && :
                     if [ $? -eq 0 ] ; then
                         ifort_patch_requires_rebuild=yes
                         # Remove possible leftovers, which don't imply a failure
@@ -1062,7 +1063,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                         echo "failed"
                     fi
                     echo_n "Patching libtool.m4 for fort compatibility with Oracle Dev Studio 12.6..."
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/oracle-fort.patch
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/oracle-fort.patch && :
                     if [ $? -eq 0 ] ; then
                         oracle_patch_requires_rebuild=yes
                         # Remove possible leftovers, which don't imply a failure
@@ -1072,7 +1073,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                         echo "failed"
                     fi
                     echo_n "Patching libtool.m4 for compatibility with Flang..."
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/flang.patch
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/flang.patch && :
                     if [ $? -eq 0 ] ; then
                         flang_patch_requires_rebuild=yes
                         # Remove possible leftovers, which don't imply a failure
@@ -1082,7 +1083,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                         echo "failed"
                     fi
                     echo_n "Patching libtool.m4 for compatibility with Arm LLVM compilers..."
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/arm-compiler.patch
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/arm-compiler.patch && :
                     if [ $? -eq 0 ] ; then
                         arm_patch_requires_rebuild=yes
                         # Remove possible leftovers, which don't imply a failure
@@ -1092,7 +1093,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                         echo "failed"
                     fi
                     echo_n "Patching libtool.m4 for compatibility with IBM XL Fortran compilers..."
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/ibm-xlf.patch
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/ibm-xlf.patch && :
                     if [ $? -eq 0 ] ; then
                         ibm_patch_requires_rebuild=yes
                         # Remove possible leftovers, which don't imply a failure
