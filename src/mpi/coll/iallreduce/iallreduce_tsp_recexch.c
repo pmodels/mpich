@@ -77,7 +77,9 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                                                   step1_recvfrom, per_nbr_buffer, &step1_recvbuf,
                                                   comm, sched);
 
-    step1_id = MPIR_TSP_sched_sink(sched);      /* sink for all the tasks up to end of Step 1 */
+    mpi_errno = MPIR_TSP_sched_sink(sched, &step1_id);  /* sink for all the tasks up to end of Step 1 */
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* Step 2 */
     /* allocate memory for receive buffers */
