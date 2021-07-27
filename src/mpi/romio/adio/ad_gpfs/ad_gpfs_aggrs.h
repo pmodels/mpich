@@ -56,28 +56,18 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
                             int **count_my_req_per_proc_ptr,
                             ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
 
-    /*
-     * ADIOI_Calc_others_req
-     *
-     * param[in]  count_my_req_procs        Number of processes whose file domain my
-     *                                        request touches.
-     * param[in]  count_my_req_per_proc     count_my_req_per_proc[i] gives the no. of
-     *                                        contig. requests of this process in
-     *                                        process i's file domain.
-     * param[in]  my_req                    A structure defining my request
-     * param[in]  nprocs                    Number of nodes in the block
-     * param[in]  myrank                    Rank of this node
-     * param[out] count_others_req_proc_ptr Number of processes whose requests lie in
-     *                                        my process's file domain (including my
-     *                                        process itself)
-     * param[out] others_req_ptr            Array of other process' requests that lie
-     *                                        in my process's file domain
-     */
+void ADIOI_GPFS_Free_my_req(int nprocs, int *count_my_req_per_proc,
+                            ADIOI_Access * my_req, MPI_Aint * buf_idx);
+
 void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
                                 int *count_my_req_per_proc,
                                 ADIOI_Access * my_req,
                                 int nprocs, int myrank,
-                                int *count_others_req_procs_ptr, ADIOI_Access ** others_req_ptr);
+                                int *count_others_req_procs_ptr,
+                                int **count_others_req_per_proc_ptr,
+                                ADIOI_Access ** others_req_ptr);
 
+void ADIOI_GPFS_Free_others_req(int nprocs, int *count_others_req_per_proc,
+                                ADIOI_Access * others_req);
 
 #endif /* AD_GPFS_AGGRS_H_INCLUDED */

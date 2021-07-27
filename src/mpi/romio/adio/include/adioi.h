@@ -480,11 +480,15 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
                        int *count_my_req_procs_ptr,
                        int **count_my_req_per_proc_ptr,
                        ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
+void ADIOI_Free_my_req(int nprocs, int *count_my_req_per_proc,
+                       ADIOI_Access * my_req, MPI_Aint * buf_idx);
 void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
                            int *count_my_req_per_proc,
                            ADIOI_Access * my_req,
                            int nprocs, int myrank,
-                           int *count_others_req_procs_ptr, ADIOI_Access ** others_req_ptr);
+                           int *count_others_req_procs_ptr,
+                           int **count_others_req_per_proc_ptr, ADIOI_Access ** others_req_ptr);
+void ADIOI_Free_others_req(int nprocs, int *count_others_req_per_proc, ADIOI_Access * others_req);
 
 
 /* Nonblocking Collective I/O internals */
