@@ -61,6 +61,7 @@ int MPIR_Nbc_progress_hook_id = 0;
 MPIR_Tree_type_t MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KARY;
+MPIR_Tree_type_t MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 void *MPIR_Csel_root = NULL;
 
@@ -75,6 +76,14 @@ int MPII_Coll_init(void)
         MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
     else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_TREE_TYPE, "knomial_2"))
         MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+
+    /* Allreduce */
+    if (0 == strcmp(MPIR_CVAR_ALLREDUCE_TREE_TYPE, "knomial_1"))
+        MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
+    else if (0 == strcmp(MPIR_CVAR_ALLREDUCE_TREE_TYPE, "knomial_2"))
+        MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    else
+        MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_KARY;
 
     /* Ibcast */
     if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "kary"))
