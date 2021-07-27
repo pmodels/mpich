@@ -86,8 +86,9 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
         if (num_children) {
             /* Multicast data to the children */
             mpi_errno = MPIR_TSP_sched_imcast((char *) buffer + offset * extent, msgsize, datatype,
-                                              my_tree.children, num_children, tag, comm, sched,
-                                              (my_tree.parent != -1) ? 1 : 0, &recv_id, &vtx_id);
+                                              ut_int_array(my_tree.children), num_children, tag,
+                                              comm, sched, (my_tree.parent != -1) ? 1 : 0, &recv_id,
+                                              &vtx_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
         offset += msgsize;
