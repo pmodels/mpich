@@ -116,9 +116,7 @@ int topotree_get_package_level(int topo_depth, int *max_entries_per_level, int n
     for (lvl = 0; lvl < topo_depth; ++lvl) {
         max_entries_per_level[lvl] = -1;
         for (i = 0; i < num_ranks; ++i) {
-            max_entries_per_level[lvl] =
-                (max_entries_per_level[lvl] >
-                 bind_map[i][lvl] + 1) ? max_entries_per_level[lvl] : bind_map[i][lvl] + 1;
+            max_entries_per_level[lvl] = MPL_MAX(max_entries_per_level[lvl], bind_map[i][lvl] + 1);
         }
     }
     /* STEP 3.3. Determine the package level based on first level (top-down) with #nodes >1 */
