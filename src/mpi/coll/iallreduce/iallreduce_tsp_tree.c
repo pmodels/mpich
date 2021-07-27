@@ -99,10 +99,12 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     /* initialize arrays to store graph vertex indices */
     MPIR_CHKLMEM_MALLOC(vtcs, int *, sizeof(int) * (num_children + 1),
                         mpi_errno, "vtcs buffer", MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(reduce_id, int *, sizeof(int) * num_children,
-                        mpi_errno, "reduce_id buffer", MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * num_children,
-                        mpi_errno, "recv_id buffer", MPL_MEM_COLL);
+    if (num_children > 0) {
+        MPIR_CHKLMEM_MALLOC(reduce_id, int *, sizeof(int) * num_children,
+                            mpi_errno, "reduce_id buffer", MPL_MEM_COLL);
+        MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * num_children,
+                            mpi_errno, "recv_id buffer", MPL_MEM_COLL);
+    }
 
     /* do pipelined allreduce */
     /* NOTE: Make sure you are handling non-contiguous datatypes
@@ -206,8 +208,8 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
             nvtcs = 1;
             vtcs[0] = bcast_recv_id;
             mpi_errno = MPIR_TSP_sched_imcast(reduce_address, msgsize, datatype,
-                                              my_tree.children, num_children, tag, comm, sched,
-                                              nvtcs, vtcs, &vtx_id);
+                                              ut_int_array(my_tree.children), num_children, tag,
+                                              comm, sched, nvtcs, vtcs, &vtx_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
 
