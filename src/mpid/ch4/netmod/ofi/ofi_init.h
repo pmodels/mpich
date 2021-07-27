@@ -13,7 +13,7 @@ void MPIDI_OFI_find_provider_cleanup(void);
 int MPIDI_OFI_init_multi_nic(struct fi_info *prov);
 
 /* set hints based on MPIDI_OFI_global.settings */
-void MPIDI_OFI_init_hints(struct fi_info *hints);
+int MPIDI_OFI_init_hints(struct fi_info *hints);
 
 /* set auto progress hints based on CVARs */
 void MPIDI_OFI_set_auto_progress(struct fi_info *hints);

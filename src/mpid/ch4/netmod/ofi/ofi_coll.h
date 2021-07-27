@@ -7,7 +7,32 @@
 #define OFI_COLL_H_INCLUDED
 
 #include "ofi_impl.h"
-#include "ch4_csel_container.h"
+#include "coll/ofi_bcast_tree_tagged.h"
+#include "coll/ofi_bcast_tree_rma.h"
+#include "coll/ofi_bcast_tree_pipelined.h"
+#include "coll/ofi_bcast_tree_small_msg.h"
+
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      default     : auto
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select algorithm for intra-node bcast
+        mpir                        - Fallback to MPIR collectives
+        trigger_tree_tagged         - Force triggered ops based Tagged Tree
+        trigger_tree_rma            - Force triggered ops based RMA Tree
+        trigger_tree_pipelined      - Force triggered ops based Pipelined Tree
+        trigger_tree_small_blocking - Force triggered ops based blocking small message algorithm
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
@@ -28,17 +53,99 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag
     goto fn_exit;
 }
 
+static inline int MPIDI_OFI_bcast_json(void *buffer, int count, MPI_Datatype datatype,
+                                       int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+  fallback:
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, MPI_Aint count, MPI_Datatype datatype,
                                                 int root, MPIR_Comm * comm,
                                                 MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    enum fi_datatype fi_dt;
+    int chunk_size;
+    MPI_Aint type_size = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BCAST);
 
-    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
+    switch (MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM) {
+        case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_trigger_tree_tagged:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
+                                           MPIDI_mpi_to_ofi(datatype, &fi_dt, MPI_OP_NULL,
+                                                            NULL) != -1, mpi_errno,
+                                           "Bcast triggered_tagged cannot be applied.\n");
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_triggered_tagged(buffer, count, datatype, root, comm,
+                                                       MPIR_Bcast_tree_type,
+                                                       MPIR_CVAR_BCAST_TREE_KVAL);
+            break;
+        case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_trigger_tree_rma:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
+                                           MPIDI_mpi_to_ofi(datatype, &fi_dt, MPI_OP_NULL,
+                                                            NULL) != -1, mpi_errno,
+                                           "Bcast triggered_rma cannot be applied.\n");
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_triggered_rma(buffer, count, datatype, root, comm,
+                                                    MPIR_Bcast_tree_type,
+                                                    MPIR_CVAR_BCAST_TREE_KVAL);
+            break;
+        case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_trigger_tree_pipelined:
+            chunk_size = MPIR_CVAR_BCAST_TREE_PIPELINE_CHUNK_SIZE;
+            /* sockets provider cannot open more than 512 counters */
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
+                                           MPIDI_mpi_to_ofi(datatype, &fi_dt, MPI_OP_NULL,
+                                                            NULL) != -1 && chunk_size > 0 &&
+                                           type_size <= chunk_size &&
+                                           (type_size * count) > chunk_size &&
+                                           (type_size * count / chunk_size) < 512, mpi_errno,
+                                           "Bcast trigger_tree_pipelined cannot be applied.\n");
+
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_triggered_pipelined(buffer, count, datatype,
+                                                          root, comm, MPIR_CVAR_BCAST_TREE_KVAL,
+                                                          chunk_size);
+            break;
+        case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_trigger_tree_small_blocking:
+            /* root can not change once blk_sml_bcast is setup */
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
+                                           count * type_size <= 1024 &&
+                                           MPIR_ThreadInfo.thread_provided != MPI_THREAD_MULTIPLE &&
+                                           (MPIDI_OFI_COMM(comm).blk_sml_bcast == NULL ||
+                                            MPIDI_OFI_COMM(comm).blk_sml_bcast->root == root),
+                                           mpi_errno,
+                                           "Bcast triggered_small_msg cannot be applied.\n");
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_triggered_small_msg(buffer, count, datatype, root, comm,
+                                                          MPIR_CVAR_BCAST_TREE_KVAL);
+            break;
+        case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_mpir:
+            goto fallback;
+            break;
+        case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_auto:
+            mpi_errno = MPIDI_OFI_bcast_json(buffer, count, datatype, root, comm, errflag);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BCAST);

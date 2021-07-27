@@ -16,6 +16,7 @@
 #include "netmod_am_fallback.h"
 #else
 #include "ofi_coll.h"
+#include "coll/ofi_coll_triggered.h"
 #include "ofi_probe.h"
 #include "ofi_recv.h"
 #include "ofi_send.h"

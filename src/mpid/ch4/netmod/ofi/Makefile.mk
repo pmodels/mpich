@@ -4,6 +4,7 @@
 ##
 
 if BUILD_CH4_NETMOD_OFI
+AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/netmod/ofi
 
 noinst_HEADERS     +=
 mpi_core_sources   += src/mpid/ch4/netmod/ofi/func_table.c \

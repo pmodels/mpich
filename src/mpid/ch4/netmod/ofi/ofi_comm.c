@@ -7,6 +7,7 @@
 #include "ofi_impl.h"
 #include "mpidu_bc.h"
 #include "ofi_noinline.h"
+#include "coll/ofi_triggered.h"
 
 static int update_multi_nic_hints(MPIR_Comm * comm)
 {
@@ -124,6 +125,9 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     /* no connection for non-dynamic or non-root-rank of intercomm */
     MPIDI_OFI_COMM(comm).conn_id = -1;
 
+    /* for triggered op with blocking small message */
+    MPIDI_OFI_COMM(comm).blk_sml_bcast = NULL;
+
     /* Initialize the multi-nic optimization values */
     MPIDI_OFI_global.num_comms_enabled_striping = 0;
     MPIDI_OFI_global.num_comms_enabled_hashing = 0;
@@ -176,12 +180,46 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
     return mpi_errno;
 }
 
+/* For blocking small message collectives, resources are allocated per communicator
+ * while schedule for the next iteration is pre-posted in an overlapped manner as the
+ * collective is being executed. This function frees these resources when the communicators is freed. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_trig_blocking_small_msg_destroy(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    MPIDI_OFI_trig_bcast_blocking_small_msg *blk_sml_bcast;
+
+    blk_sml_bcast = MPIDI_OFI_COMM(comm).blk_sml_bcast;
+    if (blk_sml_bcast) {
+        MPIDI_OFI_free_deferred_works(blk_sml_bcast->works, blk_sml_bcast->num_works, true);
+        MPL_free(blk_sml_bcast->works);
+
+        if (blk_sml_bcast->size > 0) {
+            for (i = 0; i < blk_sml_bcast->size; i++) {
+                fi_close(&blk_sml_bcast->recv_cntr[i]->fid);
+                fi_close(&blk_sml_bcast->rcv_mr[i]->fid);
+                MPL_free(blk_sml_bcast->recv_buf[i]);
+            }
+            MPL_free(blk_sml_bcast->recv_buf);
+            MPL_free(blk_sml_bcast->recv_cntr);
+            MPL_free(blk_sml_bcast->rcv_mr);
+        }
+
+        fi_close(&blk_sml_bcast->send_cntr->fid);
+        MPL_free(blk_sml_bcast);
+        MPIDI_OFI_COMM(comm).blk_sml_bcast = NULL;
+    }
+
+    return mpi_errno;
+}
+
 int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
 
+    MPIDI_OFI_trig_blocking_small_msg_destroy(comm);
     /* If we enabled striping or hashing, decrement the counter. */
     MPIDI_OFI_global.num_comms_enabled_striping -=
         (MPIDI_OFI_COMM(comm).enable_striping != 0 ? 1 : 0);

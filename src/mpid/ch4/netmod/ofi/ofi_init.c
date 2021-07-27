@@ -7,6 +7,7 @@
 #include "ofi_impl.h"
 #include "ofi_noinline.h"
 #include "mpir_hwtopo.h"
+#include "ofi_csel_container.h"
 #include "ofi_init.h"
 
 /*
@@ -417,6 +418,16 @@ cvars:
         If true and all nodes do not have the same number of NICs, MPICH will fall back
         to using the fewest number of NICs instead of returning an error.
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_TRIGGERED
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, enable OFI triggered ops for MPI collectives.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -516,6 +527,123 @@ static void host_free_registered(void *ptr)
 {
     MPIR_gpu_unregister_host(ptr);
     MPL_free(ptr);
+}
+
+static void parse_container_params(struct json_object *obj, MPIDI_OFI_csel_container_s * container)
+{
+    MPIR_Assert(obj != NULL);
+
+    json_object_object_foreach(obj, key, val) {
+        (void) val;
+        char *ckey = MPL_strdup_no_spaces(key);
+        /* process algorithm parameters */
+        if (!strncmp(ckey, "chunk_size=", strlen("chunk_size="))) {
+            if (container->id == MPIDI_OFI_Algorithm_count) {
+                fprintf(stderr, "parameter specified without algorithm %s\n", key);
+                MPIR_Assert(0);
+            }
+            int chunk_size = atoi(ckey + strlen("chunk_size="));
+            switch (container->id) {
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_pipelined:
+                    container->u.bcast.triggered_pipelined.chunk_size =
+                        chunk_size;
+                    break;
+                default:
+                    MPIR_Assert(0);
+            }
+        } else if (!strncmp(ckey, "tree_type=", strlen("tree_type="))) {
+            if (container->id == MPIDI_OFI_Algorithm_count) {
+                fprintf(stderr, "parameter specified without algorithm %s\n", key);
+                MPIR_Assert(0);
+            }
+            int tree_type = atoi(ckey + strlen("tree_type="));
+            switch (container->id) {
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_tagged:
+                    container->u.bcast.triggered_tagged.tree_type =
+                        tree_type;
+                    break;
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma:
+                    container->u.bcast.triggered_rma.tree_type = tree_type;
+                    break;
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_pipelined:
+                    container->u.bcast.triggered_pipelined.tree_type =
+                        tree_type;
+                    break;
+                default:
+                    MPIR_Assert(0);
+                    break;
+            }
+        } else if (!strncmp(ckey, "k=", strlen("k="))) {
+            if (container->id == MPIDI_OFI_Algorithm_count) {
+                fprintf(stderr, "parameter specified without algorithm %s\n", key);
+                MPIR_Assert(0);
+            }
+            int k = atoi(ckey + strlen("k="));
+            switch (container->id) {
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_tagged:
+                    container->u.bcast.triggered_tagged.k =
+                        k;
+                    break;
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma:
+                    container->u.bcast.triggered_rma.k = k;
+                    break;
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_pipelined:
+                    container->u.bcast.triggered_pipelined.k =
+                        k;
+                    break;
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_small_blocking:
+                    container->u.bcast.triggered_small_blocking.k =
+                        k;
+                    break;
+                default:
+                    MPIR_Assert(0);
+                    break;
+            }
+        }
+
+        MPL_free(ckey);
+    }
+}
+
+static void *create_container(struct json_object *obj)
+{
+    MPIDI_OFI_csel_container_s *container =
+        MPL_malloc(sizeof(MPIDI_OFI_csel_container_s), MPL_MEM_COLL);
+    MPIR_Assert(container != NULL);
+
+    json_object_object_foreach(obj, key, val) {
+        (void) val;
+        char *ckey = MPL_strdup_no_spaces(key);
+
+        if (!strcmp(ckey, "algorithm=BCAST_INTRA_triggered_tagged")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_tagged;
+            container->u.bcast.triggered_tagged.k = 2;
+            container->u.bcast.triggered_tagged.tree_type = 0;
+        } else if (!strcmp(ckey, "algorithm=BCAST_INTRA_triggered_rma")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma;
+            container->u.bcast.triggered_rma.k = 2;
+            container->u.bcast.triggered_rma.tree_type = 0;
+        } else if (!strcmp(ckey, "algorithm=BCAST_INTRA_triggered_pipelined")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_pipelined;
+            container->u.bcast.triggered_pipelined.k = 2;
+            container->u.bcast.triggered_pipelined.tree_type = 0;
+            container->u.bcast.triggered_pipelined.chunk_size = 0;
+        } else if (!strcmp(ckey, "algorithm=BCAST_INTRA_triggered_small_blocking")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_small_blocking;
+            container->u.bcast.triggered_small_blocking.k = 2;
+        }
+
+        MPL_free(ckey);
+    }
+
+    /* process algorithm parameters */
+    parse_container_params(json_object_object_get(obj, key), container);
+
+    return (void *) container;
 }
 
 int MPIDI_OFI_init_local(int *tag_bits)
@@ -1439,6 +1567,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS: %d\n",
             MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_PT2PT_NOPACK: %d\n", MPIDI_OFI_ENABLE_PT2PT_NOPACK);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_TRIGGERED: %d\n", MPIDI_OFI_ENABLE_TRIGGERED);
     fprintf(stdout, "MPIDI_OFI_ENABLE_HMEM: %d\n", MPIDI_OFI_ENABLE_HMEM);
     fprintf(stdout, "MPIDI_OFI_NUM_AM_BUFFERS: %d\n", MPIDI_OFI_NUM_AM_BUFFERS);
     fprintf(stdout, "MPIDI_OFI_CONTEXT_BITS: %d\n", MPIDI_OFI_CONTEXT_BITS);

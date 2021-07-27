@@ -267,6 +267,39 @@ cvars:
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_flat - Force flat algorithm
 
+    - name        : MPIR_CVAR_BCAST_TREE_TYPE
+      category    : COLLECTIVE
+      type        : string
+      default     : kary
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Tree type for tree based bcast
+        kary      - kary tree type
+        knomial_1 - knomial_1 tree type (tree grows starting from the left of the root)
+        knomial_2 - knomial_2 tree type (tree grows starting from the right of the root)
+
+    - name        : MPIR_CVAR_BCAST_TREE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 3
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Indicates the branching factor for kary or knomial trees.
+
+    - name        : MPIR_CVAR_BCAST_TREE_PIPELINE_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 4096
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Indicates the chunk size for pipelined bcast.
+
     - name        : MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE
       category    : COLLECTIVE
       type        : int
