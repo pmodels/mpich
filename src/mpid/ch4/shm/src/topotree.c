@@ -19,8 +19,7 @@ static int create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_val,
 static void copy_tree(int *shared_region, int num_ranks, int rank,
                       MPIR_Treealgo_tree_t * my_tree, int *topotree_fail);
 
-static int topotree_get_package_level(int topo_depth, int *num_packages, int num_ranks,
-                                      int *bind_map);
+static int topotree_get_package_level(int *num_packages, int num_ranks, int *bind_map);
 
 static void gen_package_tree(int num_packages, int k_val, MPIDI_SHM_topotree_t * package_tree,
                              int *package_leaders);
@@ -109,28 +108,25 @@ static void copy_tree(int *shared_region, int num_ranks, int rank,
  * should happen. Note, this function also output num_packages at the package_level
  * functions.
  * */
-int topotree_get_package_level(int topo_depth, int *num_packages, int num_ranks, int *bind_map)
+int topotree_get_package_level(int *num_packages, int num_ranks, int *bind_map)
 {
     int package_level;
     int max_entries_per_level[MAX_TOPO_DEPTH];
 
-    for (int lvl = 0; lvl < topo_depth; ++lvl) {
+    for (int lvl = 0; lvl < MAX_TOPO_DEPTH; ++lvl) {
         int max = -1;
         for (int i = 0; i < num_ranks; ++i) {
             max = MPL_MAX(max, bind_map[i * MAX_TOPO_DEPTH + lvl] + 1);
         }
         max_entries_per_level[lvl] = max;
     }
-    /* STEP 3.3. Determine the package level based on first level (top-down) with #nodes >1 */
-    package_level = 0;  /* if all ranks are in the same index at all levels, just use level 0 */
-    {
-        for (int i = topo_depth - 1; i >= 0; --i) {
-            if (max_entries_per_level[i] > 1) {
-                package_level = i;
-                break;
-            }
+    /* set package_level to first level that is more than one entries, or leave at level 0 */
+    package_level = 0;
+    for (int i = 0; i < MAX_TOPO_DEPTH; i++) {
+        if (max_entries_per_level[i] > 1) {
+            package_level = i;
+            break;
         }
-
     }
     if (MPIDI_SHM_TOPOTREE_CUTOFF >= 0) {
         package_level = MPIDI_SHM_TOPOTREE_CUTOFF;
@@ -331,7 +327,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     size_t shm_size;
     int **ranks_per_package = NULL;
     int *package_ctr = NULL;
-    size_t topo_depth = 0;
     int package_level = 0, max_ranks_per_package = 0;
     bool mapfail_flag = false;
 
@@ -340,9 +335,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     num_ranks = MPIR_Comm_size(comm_ptr);
     rank = MPIR_Comm_rank(comm_ptr);
 
-    /* Calculate the size of shared memory that would be needed */
-    MPIR_hwtopo_gid_t gid = MPIR_hwtopo_get_leaf();
-    topo_depth = MPIR_hwtopo_get_depth(gid) + 1;
     shm_size = sizeof(int) * MAX_TOPO_DEPTH * num_ranks + sizeof(int) * 5 * num_ranks;
 
     /* STEP 1. Create shared memory region for exchanging topology information (root only) */
@@ -353,11 +345,15 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
 
     /* STEP 2. Every process fills affinity information in shared_region */
-    int depth = 0;
-    while (depth < topo_depth) {
-        shared_region[rank * MAX_TOPO_DEPTH + depth] = MPIR_hwtopo_get_lid(gid);
-        depth++;
-        gid = MPIR_hwtopo_get_ancestor(gid, topo_depth - depth - 1);
+    MPIR_hwtopo_gid_t gid = MPIR_hwtopo_get_leaf();
+    int topo_depth = MPIR_hwtopo_get_depth(gid) + 1;
+    for (int depth = 0; depth < MAX_TOPO_DEPTH; depth++) {
+        if (depth < topo_depth) {
+            gid = MPIR_hwtopo_get_ancestor(gid, depth);
+            shared_region[rank * MAX_TOPO_DEPTH + depth] = MPIR_hwtopo_get_lid(gid);
+        } else {
+            shared_region[rank * MAX_TOPO_DEPTH + depth] = 0;
+        }
     }
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
@@ -369,7 +365,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
 
         /* STEP 3.1. Count the maximum entries at each level - used for breaking the tree into
          * intra/inter socket */
-        package_level = topotree_get_package_level(topo_depth, &num_packages, num_ranks, bind_map);
+        package_level = topotree_get_package_level(&num_packages, num_ranks, bind_map);
 
         /* STEP 3.2. allocate space for the entries that go in each package based on topology info */
         ranks_per_package = (int **) MPL_malloc(num_packages * sizeof(int *), MPL_MEM_OTHER);
