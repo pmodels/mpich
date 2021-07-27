@@ -11,6 +11,8 @@
 
 #include <math.h>
 
+#define MAX_TOPO_DEPTH 7
+
 static int create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_val,
                                 bool right_skewed, int max_ranks, MPIR_Errflag_t * eflag);
 
@@ -18,7 +20,7 @@ static void copy_tree(int *shared_region, int num_ranks, int rank,
                       MPIR_Treealgo_tree_t * my_tree, int *topotree_fail);
 
 static int topotree_get_package_level(int topo_depth, int *num_packages, int num_ranks,
-                                      int **bind_map);
+                                      int *bind_map);
 
 static void gen_package_tree(int num_packages, int k_val, MPIDI_SHM_topotree_t * package_tree,
                              int *package_leaders);
@@ -107,15 +109,15 @@ static void copy_tree(int *shared_region, int num_ranks, int rank,
  * should happen. Note, this function also output num_packages at the package_level
  * functions.
  * */
-int topotree_get_package_level(int topo_depth, int *num_packages, int num_ranks, int **bind_map)
+int topotree_get_package_level(int topo_depth, int *num_packages, int num_ranks, int *bind_map)
 {
     int package_level;
-    int *max_entries_per_level = MPL_malloc(topo_depth * sizeof(int), MPL_MEM_OTHER);
+    int max_entries_per_level[MAX_TOPO_DEPTH];
 
     for (int lvl = 0; lvl < topo_depth; ++lvl) {
         int max = -1;
         for (int i = 0; i < num_ranks; ++i) {
-            max = MPL_MAX(max, bind_map[i][lvl] + 1);
+            max = MPL_MAX(max, bind_map[i * MAX_TOPO_DEPTH + lvl] + 1);
         }
         max_entries_per_level[lvl] = max;
     }
@@ -134,7 +136,6 @@ int topotree_get_package_level(int topo_depth, int *num_packages, int num_ranks,
         package_level = MPIDI_SHM_TOPOTREE_CUTOFF;
     }
     *num_packages = max_entries_per_level[package_level];
-    MPL_free(max_entries_per_level);
     return package_level;
 }
 
@@ -328,7 +329,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     int num_ranks, rank;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     size_t shm_size;
-    int **bind_map = NULL;
     int **ranks_per_package = NULL;
     int *package_ctr = NULL;
     size_t topo_depth = 0;
@@ -343,7 +343,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     /* Calculate the size of shared memory that would be needed */
     MPIR_hwtopo_gid_t gid = MPIR_hwtopo_get_leaf();
     topo_depth = MPIR_hwtopo_get_depth(gid) + 1;
-    shm_size = sizeof(int) * topo_depth * num_ranks + sizeof(int) * 5 * num_ranks;
+    shm_size = sizeof(int) * MAX_TOPO_DEPTH * num_ranks + sizeof(int) * 5 * num_ranks;
 
     /* STEP 1. Create shared memory region for exchanging topology information (root only) */
     mpi_errno = MPIDU_shm_alloc(comm_ptr, shm_size, (void **) &shared_region, &mapfail_flag);
@@ -353,10 +353,10 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
 
     /* STEP 2. Every process fills affinity information in shared_region */
-    int (*shared_region_ptr)[topo_depth] = (int (*)[topo_depth]) shared_region;
     int depth = 0;
     while (depth < topo_depth) {
-        shared_region_ptr[rank][depth++] = MPIR_hwtopo_get_lid(gid);
+        shared_region[rank * MAX_TOPO_DEPTH + depth] = MPIR_hwtopo_get_lid(gid);
+        depth++;
         gid = MPIR_hwtopo_get_ancestor(gid, topo_depth - depth - 1);
     }
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
@@ -364,13 +364,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     /* STEP 3. Root has all the bind_map information, now build tree */
     int num_packages = 0;       /* init to avoid -Wmaybe-uninitialized */
     if (rank == root) {
-        bind_map = (int **) MPL_malloc(num_ranks * sizeof(int *), MPL_MEM_OTHER);
-        MPIR_ERR_CHKANDJUMP(!bind_map, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        for (int i = 0; i < num_ranks; ++i) {
-            bind_map[i] = (int *) MPL_calloc(topo_depth, sizeof(int), MPL_MEM_OTHER);
-            MPIR_ERR_CHKANDJUMP(!bind_map[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
-            MPIR_Memcpy(bind_map[i], shared_region_ptr[i], topo_depth * sizeof(int));
-        }
+        int *bind_map = shared_region;
         /* Done building the topology information */
 
         /* STEP 3.1. Count the maximum entries at each level - used for breaking the tree into
@@ -389,7 +383,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
         }
         /* sort the ranks into packages based on the binding information */
         for (int i = 0; i < num_ranks; ++i) {
-            int package = bind_map[i][package_level];
+            int package = bind_map[i * MAX_TOPO_DEPTH + package_level];
             ranks_per_package[package][package_ctr[package]++] = i;
         }
         max_ranks_per_package = 0;
@@ -443,10 +437,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
         }
         MPL_free(ranks_per_package);
         MPL_free(package_ctr);
-        for (int i = 0; i < num_ranks; ++i) {
-            MPL_free(bind_map[i]);
-        }
-        MPL_free(bind_map);
     }
     MPIDU_shm_free(shared_region);
 
