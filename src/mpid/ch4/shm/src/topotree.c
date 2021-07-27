@@ -53,19 +53,6 @@ int MPIDI_SHM_create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_v
     }
     MPIDI_SHM_TOPOTREE_PARENT(template_tree, 0) = -1;
 
-    if (MPIDI_SHM_TOPOTREE_DEBUG) {
-        fprintf(stderr, "TemplateTree, %d\n", max_ranks);
-        MPIDI_SHM_print_topotree("TemplateTree", template_tree);
-        for (i = 0; i < max_ranks; ++i) {
-            fprintf(stderr, "TemplateR, %d, P=%d, C=%d, [", i,
-                    MPIDI_SHM_TOPOTREE_PARENT(template_tree, i),
-                    MPIDI_SHM_TOPOTREE_NUM_CHILD(template_tree, i));
-            for (j = 0; j < MPIDI_SHM_TOPOTREE_NUM_CHILD(template_tree, i); ++j) {
-                fprintf(stderr, "%d, ", MPIDI_SHM_TOPOTREE_CHILD(template_tree, i, j));
-            }
-            fprintf(stderr, "]\n");
-        }
-    }
     /* template tree is ready here */
     return mpi_errno;
 }
@@ -92,19 +79,13 @@ void MPIDI_SHM_copy_tree(int *shared_region, int num_ranks, int rank,
     my_tree->nranks = num_ranks;
     utarray_new(my_tree->children, &ut_int_icd, MPL_MEM_COLL);
     utarray_reserve(my_tree->children, num_children, MPL_MEM_COLL);
-    char str[1024], tmp[128];
-    sprintf(str, "----**Rank %d, Parent, %d, Child(%d)[", rank, parent, num_children);
     for (c = 0; c < num_children; ++c) {
         utarray_push_back(my_tree->children, &my_children[c], MPL_MEM_COLL);
         if (my_children[c] == 0) {
             *topotree_fail = 1;
         }
-        sprintf(tmp, "%d, ", my_children[c]);
-        strcat(str, tmp);
         my_tree->num_children++;
     }
-    if (MPIDI_SHM_TOPOTREE_DEBUG)
-        fprintf(stderr, "%s]\n", str);
 }
 
 /* This function returns the topology level where we will break the tree into a package_leaders
@@ -136,10 +117,6 @@ int MPIDI_SHM_topotree_get_package_level(int topo_depth, int *max_entries_per_le
         }
 
     }
-    /* indicates the package level in topology */
-    if (MPIDI_SHM_TOPOTREE_DEBUG)
-        fprintf(stderr, "Max entries per level :: %d\n", max_entries_per_level[socket_level]);
-
     return (MPIDI_SHM_TOPOTREE_CUTOFF == -1) ? socket_level : MPIDI_SHM_TOPOTREE_CUTOFF;
 }
 
@@ -149,13 +126,6 @@ void MPIDI_SHM_gen_package_tree(int num_packages, int k_val, MPIDI_SHM_topotree_
                                 int *package_leaders)
 {
     int i, j, parent_idx, child_id, idx;
-    if (MPIDI_SHM_TOPOTREE_DEBUG) {
-        fprintf(stderr, "Package_leaders:[");
-        for (i = 0; i < num_packages; ++i) {
-            fprintf(stderr, "%d, ", package_leaders[i]);
-        }
-        fprintf(stderr, "]\n");
-    }
     /* Generate a package (top-level) tree */
     for (i = 0; i < num_packages; ++i) {
         if (i == 0) {
@@ -172,10 +142,6 @@ void MPIDI_SHM_gen_package_tree(int num_packages, int k_val, MPIDI_SHM_topotree_
                 MPIDI_SHM_TOPOTREE_CHILD(package_tree, i, idx) = package_leaders[child_id];
             }
         }
-    }
-    if (MPIDI_SHM_TOPOTREE_DEBUG) {
-        fprintf(stderr, "PackageTree for %d packages\n", num_packages);
-        MPIDI_SHM_print_topotree("Package", package_tree);
     }
 }
 
@@ -240,17 +206,6 @@ void MPIDI_SHM_gen_tree_sharedmemory(int *shared_region, MPIDI_SHM_topotree_t * 
                 }
                 parent_ptr[i] = MPIDI_SHM_TOPOTREE_PARENT(package_tree, is_package_leader);
             }
-        }
-    }
-
-    if (MPIDI_SHM_TOPOTREE_DEBUG) {
-        for (i = 0; i < num_ranks; ++i) {
-            fprintf(stderr, "SRank, %d, Parent, %d, Children(%d)[", i, parent_ptr[i],
-                    child_ctr[i + 1] - child_ctr[i]);
-            for (j = child_ctr[i]; j < child_ctr[i + 1]; ++j) {
-                fprintf(stderr, "%d, ", children[j]);
-            }
-            fprintf(stderr, "]\n");
         }
     }
 }
@@ -327,25 +282,11 @@ int MPIDI_SHM_gen_tree(int k_val, int *shared_region, int *max_entries_per_level
         MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
-    if (MPIDI_SHM_TOPOTREE_DEBUG) {
-        for (i = 0; i < max_entries_per_level[package_level]; ++i) {
-            fprintf(stderr, "pre-Rank %d, parent %d, children=%d [", i,
-                    MPIDI_SHM_TOPOTREE_PARENT(&tree, i), MPIDI_SHM_TOPOTREE_NUM_CHILD(&tree, i));
-            for (j = 0; j < MPIDI_SHM_TOPOTREE_NUM_CHILD(&tree, i); ++j) {
-                fprintf(stderr, "%d, ", MPIDI_SHM_TOPOTREE_CHILD(&tree, i, j));
-            }
-            fprintf(stderr, "]\n");
-        }
-    }
 
     /* use the template tree to generate the tree for each rank */
     for (p = 0; p < max_entries_per_level[package_level]; ++p) {
         for (r = 0; r < package_ctr[p]; ++r) {
             rank = ranks_per_package[p][r];
-            if (MPIDI_SHM_TOPOTREE_DEBUG)
-                fprintf(stderr, "Rank=%d, p=%d, r=%d, opt1=%d, opt2=%d\n", rank, p, r,
-                        MPIDI_SHM_TOPOTREE_PARENT(&template_tree, r),
-                        ranks_per_package[p][MPIDI_SHM_TOPOTREE_PARENT(&template_tree, r)]);
             if (MPIDI_SHM_TOPOTREE_PARENT(&template_tree, r) == -1) {
                 MPIDI_SHM_TOPOTREE_PARENT(&tree, rank) = -1;
             } else {
@@ -360,18 +301,6 @@ int MPIDI_SHM_gen_tree(int k_val, int *shared_region, int *max_entries_per_level
                         ranks_per_package[p][MPIDI_SHM_TOPOTREE_CHILD(&template_tree, r, j)];
                 }
             }
-        }
-    }
-    if (MPIDI_SHM_TOPOTREE_DEBUG) {
-        char str[1024], tmp[128];
-        for (i = 0; i < num_ranks; ++i) {
-            sprintf(str, "*BaseTreeRank %d, parent %d, children=%d [", i,
-                    MPIDI_SHM_TOPOTREE_PARENT(&tree, i), MPIDI_SHM_TOPOTREE_NUM_CHILD(&tree, i));
-            for (j = 0; j < MPIDI_SHM_TOPOTREE_NUM_CHILD(&tree, i); ++j) {
-                sprintf(tmp, "%d, ", MPIDI_SHM_TOPOTREE_CHILD(&tree, i, j));
-                strcat(str, tmp);
-            }
-            fprintf(stderr, "%s]\n", str);
         }
     }
     /* Assemble the per package tree package leaders tree and copy it to shared memory region */
@@ -465,9 +394,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
         package_level =
             MPIDI_SHM_topotree_get_package_level(topo_depth, max_entries_per_level, num_ranks,
                                                  bind_map);
-        if (MPIDI_SHM_TOPOTREE_DEBUG)
-            fprintf(stderr, "Breaking topology at :: %d (default= %d)\n", package_level,
-                    MPIDI_SHM_TOPOTREE_CUTOFF);
 
         /* STEP 3.2. allocate space for the entries that go in each package based on topology info */
         ranks_per_package =
@@ -521,8 +447,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
 
     /* Every rank copies their tree out from shared memory */
     MPIDI_SHM_copy_tree(shared_region, num_ranks, rank, bcast_tree, bcast_topotree_fail);
-    if (MPIDI_SHM_TOPOTREE_DEBUG)
-        MPIDI_SHM_print_topotree_file("BCAST", comm_ptr->context_id, rank, bcast_tree);
 
     /* Wait until shared memory is available */
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
@@ -565,8 +489,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     /* each rank copy the reduce tree out */
     MPIDI_SHM_copy_tree(shared_region, num_ranks, rank, reduce_tree, reduce_topotree_fail);
 
-    if (MPIDI_SHM_TOPOTREE_DEBUG)
-        MPIDI_SHM_print_topotree_file("REDUCE", comm_ptr->context_id, rank, reduce_tree);
     /* Wait for all ranks to copy out the tree */
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
     if (mpi_errno) {
@@ -584,10 +506,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
         }
         MPL_free(ranks_per_package);
         MPL_free(package_ctr);
-        if (MPIDI_SHM_TOPOTREE_DEBUG)
-            for (i = 0; i < topo_depth; ++i) {
-                fprintf(stderr, "Level :: %d, Max :: %d\n", i, max_entries_per_level[i]);
-            }
         for (i = 0; i < num_ranks; ++i) {
             MPL_free(bind_map[i]);
         }
@@ -597,8 +515,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     MPIDU_shm_free(shared_region);
 
   fn_exit:
-    if (rank == root && MPIDI_SHM_TOPOTREE_DEBUG)
-        fprintf(stderr, "Done creating tree for %d\n", num_ranks);
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
