@@ -275,6 +275,13 @@ algorithms:
             smp
             scatter_recursive_doubling_allgather
             scatter_ring_allgather
+	    tree
+		.MPIR_CVAR_BCAST_TREE_TYPE=kary,knomial_1,knomial_2
+		.MPIR_CVAR_BCAST_IS_NON_BLOCKING=1
+	    pipelined_tree
+		.MPIR_CVAR_BCAST_TREE_TYPE=kary,knomial_1,knomial_2
+                .MPIR_CVAR_BCAST_IS_NON_BLOCKING=1	
+		.MPIR_CVAR_BCAST_TREE_PIPELINE_CHUNK_SIZE=4096,8192
             posix:release_gather
                 .MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072
                 .MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE=16384,32768
