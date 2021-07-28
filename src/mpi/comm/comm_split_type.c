@@ -161,12 +161,13 @@ int MPIR_Comm_split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * in
     /* only proceed when we have a proper gid, i.e. bindset belongs to a
      * single instance of given resource_type */
     MPIR_hwtopo_gid_t gid = MPIR_hwtopo_get_obj_by_name(resource_type);
-    if (gid != MPIR_HWTOPO_GID_ROOT) {
-        mpi_errno = MPIR_Comm_split_impl(node_comm, gid, key, newcomm_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
+    mpi_errno = MPIR_Comm_split_impl(node_comm, gid, key, newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if ((*newcomm_ptr)->remote_size == node_comm->remote_size) {
+        /* failed to result in a proper split */
+        MPIR_Comm_free_impl(*newcomm_ptr);
         *newcomm_ptr = NULL;
-        goto fn_exit;
     }
 
   fn_exit:
