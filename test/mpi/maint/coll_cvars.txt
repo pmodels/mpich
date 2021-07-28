@@ -238,6 +238,10 @@ algorithms:
                 .MPIR_CVAR_CH4_OFI_ENABLE_TRIGGERED=1
                 .MPIR_CVAR_ALLREDUCE_TREE_KVAL=2,3,4,8
                 .MPIR_CVAR_ALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=1024, 2048, 4096
+            ofi:trigger_tree_small_message
+                .MPIR_CVAR_CH4_OFI_ENABLE_TRIGGERED=1
+		.MPIR_CVAR_ASYNC_PROGRESS=1
+                .MPIR_CVAR_ALLREDUCE_TREE_KVAL=2,3,4,8
         intra-nonblocking:
             sched_naive
             sched_smp
