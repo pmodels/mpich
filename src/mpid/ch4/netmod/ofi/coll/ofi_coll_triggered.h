@@ -11,3 +11,4 @@
 #include "ofi_allreduce_tree_tagged.h"
 #include "ofi_allreduce_tree_rma.h"
 #include "ofi_allreduce_tree_pipelined.h"
+#include "ofi_allreduce_tree_small_msg.h"

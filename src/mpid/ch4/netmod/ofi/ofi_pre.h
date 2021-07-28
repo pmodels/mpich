@@ -62,6 +62,21 @@ typedef struct {
 } MPIDI_OFI_trig_bcast_blocking_small_msg;
 
 typedef struct {
+    struct fi_deferred_work *works;
+    struct fid_cntr **recv_cntr;
+    struct fid_cntr *send_cntr;
+    struct fid_cntr *atomic_cntr;
+    struct fid_mr **rcv_mr;
+    void **recv_buf;
+    int num_works;
+    int size;
+    int iter;
+    int mult;
+    int indx;
+    int rtr_tag;                /* tag for rtr */
+} MPIDI_OFI_trig_allred_blocking_small_msg;
+
+typedef struct {
     /* support for connection */
     int conn_id;
     int enable_striping;        /* Flag to enable striping per communicator. */
@@ -69,6 +84,7 @@ typedef struct {
     int *pref_nic;              /* Array to specify the preferred NIC for each rank (if needed) */
     void *csel_comm;            /* collective selection handle */
     MPIDI_OFI_trig_bcast_blocking_small_msg *blk_sml_bcast;     /* struct per communicator for triggered ops based blocking Bcast */
+    MPIDI_OFI_trig_allred_blocking_small_msg *blk_sml_allred;   /* struct per communicator for triggered ops based blocking Allreduce */
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_NONE = 0,

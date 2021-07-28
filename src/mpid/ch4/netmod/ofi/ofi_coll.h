@@ -15,6 +15,7 @@
 #include "coll/ofi_allreduce_tree_tagged.h"
 #include "coll/ofi_allreduce_tree_rma.h"
 #include "coll/ofi_allreduce_tree_pipelined.h"
+#include "coll/ofi_allreduce_tree_small_msg.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -49,6 +50,7 @@ cvars:
         trigger_tree_tagged         - Force triggered ops based Tagged Tree
         trigger_tree_rma            - Force triggered ops based RMA Tree
         trigger_tree_pipelined      - Force triggered ops based Pipelined Tree
+        trigger_tree_small_message  - Force triggered ops based blocking small message algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
@@ -222,6 +224,14 @@ static inline int MPIDI_OFI_Allreduce_json(const void *sendbuf, void *recvbuf, i
                                                               cnt->u.allreduce.triggered_pipelined.
                                                               chunk_size, errflag);
             break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_triggered_tree_small_message:
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_small_msg_triggered(sendbuf, recvbuf, count, datatype, op,
+                                                              comm,
+                                                              cnt->u.
+                                                              allreduce.triggered_tree_small_message.
+                                                              k, errflag);
+            break;
         case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_impl:
             goto fallback;
         default:
@@ -301,7 +311,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *r
                                                               comm, MPIR_CVAR_ALLREDUCE_TREE_KVAL,
                                                               chunk_size, errflag);
             break;
-
+        case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_trigger_tree_small_message:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED && op == MPI_SUM
+                                           && datatype != MPI_C_DOUBLE_COMPLEX &&
+                                           datatype != MPI_C_FLOAT_COMPLEX &&
+                                           MPIDI_mpi_to_ofi(datatype, &fi_dt, op, &fi_op) != -1 &&
+                                           count * type_size <= 1024 &&
+                                           MPIR_ThreadInfo.thread_provided != MPI_THREAD_MULTIPLE,
+                                           mpi_errno,
+                                           "Allreduce trigger_tree_small_message cannot be applied.\n");
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_small_msg_triggered(sendbuf, recvbuf, count, datatype, op,
+                                                              comm, MPIR_CVAR_ALLREDUCE_TREE_KVAL,
+                                                              errflag);
+            break;
         case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_mpir:
             goto fallback;
         case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_auto:
