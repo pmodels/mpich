@@ -12,6 +12,10 @@
 #include "ch4r_proc.h"
 #include "ch4_self.h"
 
+int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
+                                     int *is_low_group, int pure_intracomm,
+                                     size_t * remote_upid_size, char *remote_upids,
+                                     int **remote_gpids);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
@@ -414,7 +418,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 /* We assume this routine is never called with rank=MPI_PROC_NULL. */
 MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
 {
-    int lpid;
+    int gpid;
     int size = grp->size;
     int z;
     int ret;
@@ -422,9 +426,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
 
-    MPIDI_NM_comm_get_lpid(comm, rank, &lpid, FALSE);
+    MPIDI_NM_comm_get_gpid(comm, rank, &gpid, FALSE);
 
-    for (z = 0; z < size && lpid != grp->lrank_to_lpid[z].lpid; ++z) {
+    for (z = 0; z < size && gpid != grp->lrank_to_lpid[z].lpid; ++z) {
     }
 
     ret = (z < size);
@@ -921,7 +925,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_win_rank_to_av(MPIR_Win * win,
     MPIDI_av_entry_t *av = NULL;
 
     if (winattr & MPIDI_WINATTR_DIRECT_INTRA_COMM) {
-        av = &MPIDI_av_table0->table[rank];
+        av = &MPIDI_global.avt_mgr.av_table0->table[rank];
     } else
         av = MPIDIU_comm_rank_to_av(win->comm_ptr, rank);
     return av;

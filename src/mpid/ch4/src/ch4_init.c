@@ -186,8 +186,6 @@ static void *create_container(struct json_object *obj)
 }
 
 static int choose_netmod(void);
-static void init_av_table(void);
-static void finalize_av_table(void);
 
 static int choose_netmod(void)
 {
@@ -288,44 +286,6 @@ static int set_runtime_configurations(void)
   fn_fail:
 #endif
     return mpi_errno;
-}
-
-static void init_av_table(void)
-{
-    int i;
-    int size = MPIR_Process.size;
-    int rank = MPIR_Process.rank;
-
-    MPIDIU_avt_init();
-
-    MPIDI_av_table[0] = (MPIDI_av_table_t *)
-        MPL_malloc(size * sizeof(MPIDI_av_entry_t)
-                   + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
-
-    MPIDI_av_table[0]->size = size;
-    MPIR_Object_set_ref(MPIDI_av_table[0], 1);
-
-    MPIDI_global.node_map[0] = MPIR_Process.node_map;
-
-    MPIDI_av_table0 = MPIDI_av_table[0];
-
-#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
-    MPIDI_global.max_node_id = MPIR_Process.num_nodes - 1;
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_global.max_node_id = %d", MPIDI_global.max_node_id));
-
-    for (i = 0; i < size; i++) {
-        MPIDI_av_table0->table[i].is_local =
-            (MPIDI_global.node_map[0][i] == MPIDI_global.node_map[0][rank]) ? 1 : 0;
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, "WORLD RANK %d %s local", i,
-                         MPIDI_av_table0->table[i].is_local ? "is" : "is not"));
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, "Node id (i) (me) %d %d", MPIDI_global.node_map[0][i],
-                         MPIDI_global.node_map[0][rank]));
-    }
-#endif
 }
 
 /* This local function is temporary until we decide where the
@@ -431,7 +391,7 @@ int MPID_Init(int requested, int *provided)
         }
     }
 
-    init_av_table();
+    MPIDIU_avt_init();
 
     mpi_errno = generic_init();
     MPIR_ERR_CHECK(mpi_errno);
@@ -535,20 +495,6 @@ int MPID_InitCompleted(void)
     goto fn_exit;
 }
 
-static void finalize_av_table(void)
-{
-    int i;
-    int max_n_avts;
-    max_n_avts = MPIDIU_get_max_n_avts();
-    for (i = 0; i < max_n_avts; i++) {
-        if (MPIDI_av_table[i] != NULL) {
-            MPIDIU_avt_release_ref(i);
-        }
-    }
-
-    MPIDIU_avt_destroy();
-}
-
 /* This local function is temporary until we decide where the
  * following finalize code belongs */
 static void generic_finalize(void)
@@ -577,7 +523,7 @@ int MPID_Finalize(void)
 
     generic_finalize();
 
-    finalize_av_table();
+    MPIDIU_avt_destroy();
 
     mpi_errno = MPIDU_Init_shm_finalize();
     MPIR_ERR_CHECK(mpi_errno);
@@ -843,7 +789,7 @@ int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr, int idx, int *lpid_ptr, bool is_rem
         MPIDIU_comm_rank_to_pid_local(comm_ptr, idx, &lpid, &avtid);
     }
 
-    *lpid_ptr = MPIDIU_LUPID_CREATE(avtid, lpid);
+    *lpid_ptr = MPIDIU_GPID_CREATE(avtid, lpid);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_GET_LPID);
     return mpi_errno;
@@ -867,41 +813,10 @@ int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_MAX_NODE_ID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_MAX_NODE_ID);
 
-    MPIDIU_get_max_node_id(comm, max_id_p);
+    return MPIR_Process.num_nodes - 1;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GET_MAX_NODE_ID);
     return mpi_errno;
-}
-
-int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[])
-{
-    int mpi_errno = MPI_SUCCESS, i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CREATE_INTERCOMM_FROM_LPIDS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CREATE_INTERCOMM_FROM_LPIDS);
-
-    MPIDI_rank_map_mlut_t *mlut = NULL;
-    MPIDI_COMM(newcomm_ptr, map).mode = MPIDI_RANK_MAP_MLUT;
-    MPIDI_COMM(newcomm_ptr, map).avtid = -1;
-    mpi_errno = MPIDIU_alloc_mlut(&mlut, size);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIDI_COMM(newcomm_ptr, map).size = size;
-    MPIDI_COMM(newcomm_ptr, map).irreg.mlut.t = mlut;
-    MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid = mlut->gpid;
-
-    for (i = 0; i < size; i++) {
-        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid = MPIDIU_LUPID_GET_AVTID(lpids[i]);
-        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid = MPIDIU_LUPID_GET_LPID(lpids[i]);
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                        (MPL_DBG_FDEST, " remote rank=%d, avtid=%d, lpid=%d", i,
-                         MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid,
-                         MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid));
-    }
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CREATE_INTERCOMM_FROM_LPIDS);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
