@@ -20,8 +20,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rank_is_local(int rank, MPIR_Comm * comm)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
-                                                    int idx, int *lpid_ptr, bool is_remote)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_gpid(MPIR_Comm * comm_ptr,
+                                                    int idx, int *gpid_ptr, bool is_remote)
 {
     int avtid = 0, lpid = 0;
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
@@ -32,7 +32,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
         MPIDIU_comm_rank_to_pid_local(comm_ptr, idx, &lpid, &avtid);
     }
 
-    *lpid_ptr = MPIDIU_LUPID_CREATE(avtid, lpid);
+    *gpid_ptr = MPIDIU_GPID_CREATE(avtid, lpid);
     return MPI_SUCCESS;
 
 }

@@ -635,38 +635,18 @@ typedef struct MPIDI_av_entry {
 #endif
 } MPIDI_av_entry_t;
 
-typedef struct {
-    MPIR_OBJECT_HEADER;
-    int size;
-    MPIDI_av_entry_t table[];
-} MPIDI_av_table_t;
-
-extern MPIDI_av_table_t **MPIDI_av_table;
-extern MPIDI_av_table_t *MPIDI_av_table0;
-
-#define MPIDIU_get_av_table(avtid) (MPIDI_av_table[(avtid)])
-#define MPIDIU_get_av(avtid, lpid) (MPIDI_av_table[(avtid)]->table[(lpid)])
-
-#define MPIDIU_get_node_map(avtid)   (MPIDI_global.node_map[(avtid)])
-
 #define HAVE_DEV_COMM_HOOK
 
 /*
- * operation for (avtid, lpid) to/from "lupid"
- * 1 bit is reserved for "new_avt_mark". It will be cleared before accessing
- * the avtid and lpid. Therefore, the avtid mask does have that bit set to 0
+ * operation for (avtid, lpid) to/from gpid
  */
 #define MPIDIU_AVTID_BITS                    (7)
 #define MPIDIU_LPID_BITS                     (8 * sizeof(int) - (MPIDIU_AVTID_BITS + 1))
 #define MPIDIU_LPID_MASK                     (0xFFFFFFFFU >> (MPIDIU_AVTID_BITS + 1))
 #define MPIDIU_AVTID_MASK                    (~MPIDIU_LPID_MASK)
-#define MPIDIU_NEW_AVT_MARK                  (0x80000000U)
-#define MPIDIU_LUPID_CREATE(avtid, lpid)      (((avtid) << MPIDIU_LPID_BITS) | (lpid))
-#define MPIDIU_LUPID_GET_AVTID(lupid)          ((((lupid) & MPIDIU_AVTID_MASK) >> MPIDIU_LPID_BITS))
-#define MPIDIU_LUPID_GET_LPID(lupid)           (((lupid) & MPIDIU_LPID_MASK))
-#define MPIDIU_LUPID_SET_NEW_AVT_MARK(lupid)   ((lupid) |= MPIDIU_NEW_AVT_MARK)
-#define MPIDIU_LUPID_CLEAR_NEW_AVT_MARK(lupid) ((lupid) &= (~MPIDIU_NEW_AVT_MARK))
-#define MPIDIU_LUPID_IS_NEW_AVT(lupid)         ((lupid) & MPIDIU_NEW_AVT_MARK)
+#define MPIDIU_GPID_CREATE(avtid, lpid)      (((avtid) << MPIDIU_LPID_BITS) | (lpid))
+#define MPIDIU_GPID_GET_AVTID(gpid)          ((((gpid) & MPIDIU_AVTID_MASK) >> MPIDIU_LPID_BITS))
+#define MPIDIU_GPID_GET_LPID(gpid)           (((gpid) & MPIDIU_LPID_MASK))
 
 #define MPIDI_DYNPROC_MASK                 (0x80000000U)
 

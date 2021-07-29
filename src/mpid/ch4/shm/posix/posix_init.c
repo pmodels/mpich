@@ -307,16 +307,3 @@ int MPIDI_POSIX_mpi_free_mem(void *ptr)
 {
     return MPIDIG_mpi_free_mem(ptr);
 }
-
-int MPIDI_POSIX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-int MPIDI_POSIX_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
-                                int **remote_lupids)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}

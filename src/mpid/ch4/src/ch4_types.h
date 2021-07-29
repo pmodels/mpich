@@ -191,11 +191,21 @@ typedef struct MPIDIG_acc_ack_msg_t {
 typedef MPIDIG_acc_ack_msg_t MPIDIG_get_acc_ack_msg_t;
 
 typedef struct {
+    MPIR_OBJECT_HEADER;
+    int size;
+    MPIDI_av_entry_t table[];
+} MPIDI_av_table_t;
+
+typedef struct {
     int max_n_avts;
     int n_avts;
-    int next_avtid;
-    int *free_avtid;
+    int n_free;
+    MPIDI_av_table_t *av_table0;
+    MPIDI_av_table_t **av_tables;
 } MPIDIU_avt_manager;
+
+#define MPIDIU_get_av_table(avtid) (MPIDI_global.avt_mgr.av_tables[(avtid)])
+#define MPIDIU_get_av(avtid, lpid) (MPIDI_global.avt_mgr.av_tables[(avtid)]->table[(lpid)])
 
 typedef struct {
     uint64_t key;
@@ -261,7 +271,6 @@ typedef struct MPIDI_CH4_Global_t {
     int is_initialized;
     MPIDIU_avt_manager avt_mgr;
     int is_ch4u_initialized;
-    int **node_map, max_node_id;
     MPIR_Commops MPIR_Comm_fns_store;
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
