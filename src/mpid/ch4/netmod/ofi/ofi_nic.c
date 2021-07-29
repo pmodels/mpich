@@ -98,6 +98,9 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
         if (MPIR_CVAR_OFI_SKIP_IPV6 && p->addr_format == FI_SOCKADDR_IN6) {
             continue;
         }
+        if (!MPIDI_OFI_nic_is_up(p)) {
+            continue;
+        }
         if (!first_prov) {
             first_prov = p;
         }
@@ -262,4 +265,15 @@ static int setup_multi_nic(int nic_count)
     MPIR_Info_set_impl(info_ptr, "num_close_nics", nics_str);
 
     return mpi_errno;
+}
+
+bool MPIDI_OFI_nic_is_up(struct fi_info * prov)
+{
+    /* Make sure the NIC returned by OFI is not down. Some providers don't include NIC
+     * information so we need to skip those. */
+    if (prov->nic != NULL && prov->nic->link_attr->state != FI_LINK_UP) {
+        return false;
+    }
+
+    return true;
 }
