@@ -4416,16 +4416,6 @@ AC_CHECK_FUNCS([qsort])
 
 PAC_C_MACRO_VA_ARGS
 
-# Check for alloca function.  May set HAVE_ALLOCA_H and HAVE_ALLOCA
-AC_FUNC_ALLOCA
-# We don't use alloca unless USE_ALLOCA is also set.
-AC_ARG_ENABLE(alloca,
-	AS_HELP_STRING([--enable-alloca],
-		[Use alloca to allocate temporary memory if available]),,enable_alloca=no)
-if test "$enable_alloca" = yes ; then
-    AC_DEFINE(USE_ALLOCA,1,[Define if alloca should be used if available])
-fi
-
 if test "$enable_g_mem" != "yes" ; then
     # Strdup is needed only if memory tracing is not enabled.
     AC_CHECK_FUNCS(strdup)
