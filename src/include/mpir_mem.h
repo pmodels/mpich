@@ -99,26 +99,6 @@ extern "C" {
 
     /* CHKPMEM_REGISTER is used for memory allocated within another routine */
 
-/* Memory used and freed within the current scope (alloca if feasible) */
-/* Configure with --enable-alloca to set USE_ALLOCA */
-#if defined(HAVE_ALLOCA) && defined(USE_ALLOCA)
-#ifdef HAVE_ALLOCA_H
-#include <alloca.h>
-#endif                          /* HAVE_ALLOCA_H */
-/* Define decl with a dummy definition to allow us to put a semi-colon
-   after the macro without causing the declaration block to end (restriction
-   imposed by C) */
-#define MPIR_CHKLMEM_DECL(n_) int dummy_ ATTRIBUTE((unused))
-#define MPIR_CHKLMEM_FREEALL()
-#define MPIR_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,stmt_) \
-    {                                                                   \
-        pointer_ = (type_)alloca(nbytes_);                              \
-        if (!(pointer_) && (nbytes_ > 0)) {                             \
-            MPIR_CHKMEM_SETERR(rc_,nbytes_,name_);                      \
-            stmt_;                                                      \
-        }                                                               \
-    }
-#else                           /* defined(HAVE_ALLOCA) && defined(USE_ALLOCA) */
 #define MPIR_CHKLMEM_DECL(n_)                                   \
     void *(mpiu_chklmem_stk_[n_]) = { NULL };                   \
     int mpiu_chklmem_stk_sp_=0;                                 \
@@ -141,7 +121,7 @@ extern "C" {
             MPL_free(mpiu_chklmem_stk_[--mpiu_chklmem_stk_sp_]);        \
         }                                                               \
     } while (0)
-#endif                          /* defined(HAVE_ALLOCA) && defined(USE_ALLOCA) */
+
 #define MPIR_CHKLMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_,class_)    \
     MPIR_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_)
 #define MPIR_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_) \
