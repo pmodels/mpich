@@ -467,8 +467,8 @@ def dump_mpir(name, blocking_type):
 
     def dump_buffer_swap_pre():
         G.out.append("void *in_recvbuf = recvbuf;")
-        G.out.append("void *host_sendbuf;")
-        G.out.append("void *host_recvbuf;")
+        G.out.append("void *host_sendbuf = NULL;")
+        G.out.append("void *host_recvbuf = NULL;")
         G.out.append("")
         if name == "reduce_scatter":
             G.out.append("int count = 0;")
@@ -484,7 +484,10 @@ def dump_mpir(name, blocking_type):
         else:
             use_recvbuf = "recvbuf"
 
-        G.out.append("MPIR_Coll_host_buffer_alloc(sendbuf, %s, count, datatype, &host_sendbuf, &host_recvbuf);" % use_recvbuf)
+        G.out.append("if(!MPIR_Typerep_reduce_is_supported(op, datatype))") 
+        G.out.append("  MPIR_Coll_host_buffer_alloc(sendbuf, %s, count, datatype, &host_sendbuf, &host_recvbuf);" % use_recvbuf)
+        G.out.append("")
+
         for buf in ("sendbuf", "recvbuf"):
             G.out.append("if (host_%s) {" % buf);
             G.out.append("    %s = host_%s;" % (buf, buf));
