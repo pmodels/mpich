@@ -218,8 +218,7 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
     return mpi_errno;
 }
 
-int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle,
-                             MPL_gpu_device_handle_t dev_handle,
+int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int local_dev_id,
                              MPI_Datatype datatype, void **vaddr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -243,8 +242,6 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle,
         }
     }
 
-    int local_dev_id;
-    MPL_gpu_get_dev_id(dev_handle, &local_dev_id);
     mpi_errno = get_map_device(handle.global_dev_id, local_dev_id, datatype, &dev_id);
     MPIR_ERR_CHECK(mpi_errno);
 
