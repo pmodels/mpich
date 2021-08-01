@@ -341,9 +341,10 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(struct MPIR_Request *req);
 MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(struct MPIR_Request *req);
 
 typedef struct MPIDIG_win_shared_info {
-    uint32_t disp_unit;
     size_t size;
     void *shm_base_addr;
+    uint32_t disp_unit;
+    int ipc_mapped_device;
 } MPIDIG_win_shared_info_t;
 
 #define MPIDIG_ACCU_ORDER_RAR (1)

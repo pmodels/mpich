@@ -150,6 +150,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         shared_table[i].size = ipc_shared_table[i].size;
         shared_table[i].disp_unit = ipc_shared_table[i].disp_unit;
         shared_table[i].shm_base_addr = NULL;
+        shared_table[i].ipc_mapped_device = -1;
 
         if (i == shm_comm_ptr->rank) {
             shared_table[i].shm_base_addr = win->base;
@@ -174,6 +175,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                                                              map_dev_id,
                                                              &shared_table[i].shm_base_addr);
                         MPIR_ERR_CHECK(mpi_errno);
+                        shared_table[i].ipc_mapped_device = map_dev_id;
                     }
                     break;
                 case MPIDI_IPCI_TYPE__NONE:
