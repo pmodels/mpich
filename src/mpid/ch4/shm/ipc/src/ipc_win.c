@@ -166,9 +166,12 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                     /* FIXME: remote win buffer should be mapped to each of their corresponding
                      * local GPU device. */
                     {
+                        MPIDI_GPU_ipc_handle_t handle = ipc_shared_table[i].ipc_handle.gpu;
                         int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.gpu_attr);
+                        int map_dev_id = MPIDI_GPU_ipc_get_map_dev(handle.global_dev_id, dev_id,
+                                                                   MPI_BYTE);
                         mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,
-                                                             dev_id, MPI_BYTE,
+                                                             map_dev_id,
                                                              &shared_table[i].shm_base_addr);
                         MPIR_ERR_CHECK(mpi_errno);
                     }
