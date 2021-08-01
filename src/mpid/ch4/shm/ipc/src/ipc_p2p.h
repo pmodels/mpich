@@ -134,8 +134,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
                 MPL_pointer_attr_t attr;
                 MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
                 int dev_id = MPL_gpu_get_dev_id_from_attr(&attr);
-                mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_handle.gpu, dev_id,
-                                                     MPIDIG_REQUEST(rreq, datatype), &src_buf);
+                int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_handle.gpu.global_dev_id, dev_id,
+                                                        MPIDIG_REQUEST(rreq, datatype));
+                mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_handle.gpu, map_dev, &src_buf);
             }
             break;
         case MPIDI_IPCI_TYPE__NONE:
