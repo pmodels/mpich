@@ -317,16 +317,16 @@ int MPL_gpu_unregister_host(const void *ptr)
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_get_dev_id(MPL_gpu_device_handle_t dev_handle, int *dev_id)
+int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr)
 {
-    *dev_id = dev_handle;
-    return MPL_SUCCESS;
-}
-
-int MPL_gpu_get_dev_handle(int dev_id, MPL_gpu_device_handle_t * dev_handle)
-{
-    *dev_handle = global_ze_devices_handle[dev_id];
-    return MPL_SUCCESS;
+    int dev_id = -1;
+    for (int i = 0; i < global_ze_device_count; i++) {
+        if (global_ze_devices_handle[i] == attr->device) {
+            dev_id = i;
+            break;
+        }
+    }
+    return dev_id;
 }
 
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)

@@ -124,9 +124,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
         case MPIDI_IPCI_TYPE__GPU:
             {
                 MPL_pointer_attr_t attr;
-                int dev_id;
                 MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
-                MPL_gpu_get_dev_id(attr.device, &dev_id);
+                int dev_id = MPL_gpu_get_dev_id_from_attr(&attr);
                 mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_handle.gpu, dev_id,
                                                      MPIDIG_REQUEST(rreq, datatype), &src_buf);
             }
