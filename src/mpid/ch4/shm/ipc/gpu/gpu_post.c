@@ -232,12 +232,11 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int local_dev_id,
     int dev_id;
     MPIDI_GPUI_handle_obj_s *handle_obj = NULL;
 
+#define MAPPED_TREE(i) MPIDI_GPUI_global.ipc_handle_mapped_trees[handle.node_rank][handle.global_dev_id][i]
     if (handle.handle_status == MPIDI_GPU_IPC_HANDLE_REMAP_REQUIRED) {
         for (int i = 0; i < MPIDI_GPUI_global.local_device_count; ++i) {
-            mpi_errno =
-                ipc_handle_cache_delete(MPIDI_GPUI_global.ipc_handle_mapped_trees[handle.node_rank]
-                                        [handle.global_dev_id][i], (void *) handle.remote_base_addr,
-                                        handle.len);
+            mpi_errno = ipc_handle_cache_delete(MAPPED_TREE(i),
+                                                (void *) handle.remote_base_addr, handle.len);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -245,35 +244,35 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int local_dev_id,
     mpi_errno = get_map_device(handle.global_dev_id, local_dev_id, datatype, &dev_id);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = ipc_handle_cache_search(MPIDI_GPUI_global.ipc_handle_mapped_trees[handle.node_rank]
-                                        [handle.global_dev_id][dev_id],
+    mpi_errno = ipc_handle_cache_search(MAPPED_TREE(dev_id),
                                         (void *) handle.remote_base_addr, handle.len,
                                         (void **) &handle_obj);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (handle_obj == NULL) {
-        bool insert_successful = false;
+    if (handle_obj) {
+        /* found in cache */
+        *vaddr = (void *) (handle_obj->mapped_base_addr + handle.offset);
+    } else {
         mpl_err = MPL_gpu_ipc_handle_map(handle.ipc_handle, dev_id, &pbase);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_map");
 
         *vaddr = (void *) ((uintptr_t) pbase + handle.offset);
 
-        handle_obj =
-            (MPIDI_GPUI_handle_obj_s *) MPL_malloc(sizeof(MPIDI_GPUI_handle_obj_s), MPL_MEM_OTHER);
+        /* insert to cache */
+        bool insert_successful = false;
+        handle_obj = MPL_malloc(sizeof(MPIDI_GPUI_handle_obj_s), MPL_MEM_OTHER);
         MPIR_Assert(handle_obj != NULL);
         handle_obj->mapped_base_addr = (uintptr_t) pbase;
-        mpi_errno =
-            ipc_handle_cache_insert(MPIDI_GPUI_global.ipc_handle_mapped_trees[handle.node_rank]
-                                    [handle.global_dev_id][dev_id],
-                                    (void *) handle.remote_base_addr, handle.len, handle_obj,
-                                    &insert_successful);
+        mpi_errno = ipc_handle_cache_insert(MAPPED_TREE(dev_id),
+                                            (void *) handle.remote_base_addr, handle.len,
+                                            handle_obj, &insert_successful);
         MPIR_ERR_CHECK(mpi_errno);
-        if (insert_successful == false)
+        if (!insert_successful) {
             MPL_free(handle_obj);
-    } else {
-        *vaddr = (void *) (handle_obj->mapped_base_addr + handle.offset);
+        }
     }
+#undef MAPPED_TREE
   fn_fail:
 #endif
 
