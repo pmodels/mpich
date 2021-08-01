@@ -81,11 +81,11 @@ static int get_map_device(int remote_global_dev_id,
 
     int recv_dev_id;
     int recv_dt_contig;
-    MPIDI_GPUI_dev_id_t *avail_id = NULL;
 
     MPIDI_Datatype_check_contig(recv_type, recv_dt_contig);
 
-    HASH_FIND_INT(MPIDI_GPUI_global.global_to_local_map, &remote_global_dev_id, avail_id);
+    int remote_local_dev_id = MPL_gpu_global_to_local_dev_id(remote_global_dev_id);
+
     MPL_gpu_get_dev_id(local_dev_handle, &recv_dev_id);
     if (recv_dev_id < 0) {
         /* when receiver's buffer is on host memory, recv_dev_id will be less than 0.
@@ -95,13 +95,13 @@ static int get_map_device(int remote_global_dev_id,
         recv_dev_id = 0;
     }
 
-    if (avail_id == NULL) {
+    if (remote_local_dev_id == -1) {
         *dev_id = recv_dev_id;
     } else {
         if (!recv_dt_contig)
             *dev_id = recv_dev_id;
         else
-            *dev_id = avail_id->local_dev_id;
+            *dev_id = remote_local_dev_id;
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_GET_MAP_DEVICE);
@@ -174,7 +174,6 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     int local_dev_id;
-    MPIDI_GPUI_dev_id_t *tmp;
     void *pbase;
     uintptr_t len;
     int mpl_err = MPL_SUCCESS;
@@ -185,13 +184,14 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__GPU;
 
     MPL_gpu_get_dev_id(ipc_attr->gpu_attr.device, &local_dev_id);
-    HASH_FIND_INT(MPIDI_GPUI_global.local_to_global_map, &local_dev_id, tmp);
+    int global_dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
 
     mpl_err = MPL_gpu_get_buffer_bounds(vaddr, &pbase, &len);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_get_buffer_info");
 
-    mpi_errno = ipc_handle_cache_search(MPIDI_GPUI_global.ipc_handle_track_trees[recv_lrank]
-                                        [tmp->global_dev_id], pbase, len, (void **) &handle_obj);
+    MPL_gavl_tree_t track_tree =
+        MPIDI_GPUI_global.ipc_handle_track_trees[recv_lrank][global_dev_id];
+    mpi_errno = ipc_handle_cache_search(track_tree, pbase, len, (void **) &handle_obj);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (handle_obj == NULL) {
@@ -213,7 +213,7 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
     ipc_attr->ipc_handle.gpu.node_rank = MPIR_Process.local_rank;
     ipc_attr->ipc_handle.gpu.offset = (uintptr_t) vaddr - (uintptr_t) pbase;
 
-    ipc_attr->ipc_handle.gpu.global_dev_id = tmp->global_dev_id;
+    ipc_attr->ipc_handle.gpu.global_dev_id = global_dev_id;
     ipc_attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD;
   fn_fail:
 #else

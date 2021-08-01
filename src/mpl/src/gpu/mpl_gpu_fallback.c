@@ -84,9 +84,14 @@ int MPL_gpu_get_dev_handle(int dev_id, MPL_gpu_device_handle_t * dev_handle)
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_get_global_dev_ids(int *global_ids, int count)
+int MPL_gpu_global_to_local_dev_id(int global_dev_id)
 {
-    return MPL_SUCCESS;
+    return -1;
+}
+
+int MPL_gpu_local_to_global_dev_id(int local_dev_id)
+{
+    return -1;
 }
 
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
