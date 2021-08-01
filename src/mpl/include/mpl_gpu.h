@@ -73,9 +73,11 @@ int MPL_gpu_free(void *ptr);
 int MPL_gpu_init(void);
 int MPL_gpu_finalize(void);
 
+int MPL_gpu_global_to_local_dev_id(int global_dev_id);
+int MPL_gpu_local_to_global_dev_id(int local_dev_id);
+
 int MPL_gpu_get_dev_id(MPL_gpu_device_handle_t dev_handle, int *dev_id);
 int MPL_gpu_get_dev_handle(int dev_id, MPL_gpu_device_handle_t * dev_handle);
-int MPL_gpu_get_global_dev_ids(int *global_ids, int count);
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len);
 
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr));
