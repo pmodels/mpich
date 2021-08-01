@@ -175,7 +175,7 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
     recv_lrank = MPIDI_GPUI_global.local_ranks[MPIDIU_rank_to_lpid(rank, comm)];
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__GPU;
 
-    MPL_gpu_get_dev_id(ipc_attr->gpu_attr.device, &local_dev_id);
+    local_dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr->gpu_attr);
     int global_dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
 
     mpl_err = MPL_gpu_get_buffer_bounds(vaddr, &pbase, &len);

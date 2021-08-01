@@ -73,14 +73,9 @@ int MPL_gpu_finalize(void)
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_get_dev_id(MPL_gpu_device_handle_t dev_handle, int *dev_id)
+int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr)
 {
-    return MPL_SUCCESS;
-}
-
-int MPL_gpu_get_dev_handle(int dev_id, MPL_gpu_device_handle_t * dev_handle)
-{
-    return MPL_SUCCESS;
+    return -1;
 }
 
 int MPL_gpu_global_to_local_dev_id(int global_dev_id)
