@@ -170,6 +170,10 @@ tests:
             scatterv 4
         persistent:
             p_scatterv 4
+    barrier:
+        intra-blocking:
+            gather_big 8
+            allgatherv4 4
 
 --------------------------------------------------
 algorithms:
@@ -314,6 +318,10 @@ algorithms:
             sched_bcast
         intra-blocking:
             dissemination
+	    ofi:trigger_tree_tagged
+                .MPIR_CVAR_CH4_OFI_ENABLE_TRIGGERED=1
+                .MPIR_CVAR_BARRIER_TREE_TYPE=kary,knomial_1,knomial_2
+                .MPIR_CVAR_BARRIER_TREE_KVAL=2,3,4,8 
         intra-nonblocking:
             sched_recursive_doubling
             tsp_recexch
