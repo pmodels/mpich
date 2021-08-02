@@ -31,8 +31,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
     MPI_Aint sendtype_lb, sendtype_extent;
     MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
+    MPIR_FUNC_ENTER;
 
     /* Alltoall: each process need send #size msgs and recv #size msgs
      * This algorithm does #bblock send/recv first
@@ -96,7 +95,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
+    MPIR_FUNC_ENTER;
     return mpi_errno;
 
   fn_fail:

@@ -339,8 +339,7 @@ MPL_STATIC_INLINE_PREFIX uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int 
 {
     uint32_t ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_OFI_ENABLE_MR_PROV_KEY || MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
         /* Always use winfo[rank].disp_unit if any of PROV_KEY and VIRT_ADDRESS is on.
@@ -352,7 +351,7 @@ MPL_STATIC_INLINE_PREFIX uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int 
         ret = win->disp_unit;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -550,8 +549,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
     ssize_t rem_size = total_bytes;
     MPI_Aint num_iov, total_iov = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_COUNT_IOV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_COUNT_IOV);
+    MPIR_FUNC_ENTER;
 
     if (dt_datatype == MPI_DATATYPE_NULL)
         goto fn_exit;
@@ -566,7 +564,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
     } while (rem_size);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_COUNT_IOV);
+    MPIR_FUNC_EXIT;
     return total_iov;
 }
 

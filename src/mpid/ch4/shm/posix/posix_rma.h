@@ -23,8 +23,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
     MPI_Aint origin_dtp_size = 0;
     MPIR_Datatype *origin_dtp_ptr = NULL;
     void *packed_buf = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COMPUTE_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COMPUTE_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     /* Handle contig origin datatype */
     if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
@@ -74,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
 
   fn_exit:
     MPL_free(packed_buf);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COMPUTE_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -92,8 +91,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
     size_t origin_data_sz = 0, target_data_sz = 0;
     int disp_unit = 0;
     void *base = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_PUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_PUT);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
@@ -129,7 +127,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_PUT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -147,8 +145,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
     size_t origin_data_sz = 0, target_data_sz = 0;
     int disp_unit = 0;
     void *base = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_GET);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
@@ -183,7 +180,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_GET);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -206,8 +203,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
     size_t origin_data_sz = 0, target_data_sz = 0, result_data_sz = 0;
     int disp_unit = 0;
     void *base = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_GET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_GET_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
@@ -250,7 +246,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_GET_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -270,8 +266,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
     size_t origin_data_sz = 0, target_data_sz = 0;
     int disp_unit = 0;
     void *base = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
@@ -306,7 +301,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -321,8 +316,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_put(const void *origin_addr,
                                                  MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_PUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_PUT);
+    MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
@@ -337,7 +331,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_put(const void *origin_addr,
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_PUT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -350,8 +344,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get(void *origin_addr,
                                                  MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_GET);
+    MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
@@ -366,7 +359,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get(void *origin_addr,
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_GET);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -382,8 +375,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RPUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RPUT);
+    MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
@@ -410,7 +402,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_RPUT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -428,8 +420,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
     int disp_unit = 0;
     void *base = NULL, *target_addr = NULL;
     MPI_Aint dtype_sz = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_COMPARE_AND_SWAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_COMPARE_AND_SWAP);
+    MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
@@ -477,7 +468,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_COMPARE_AND_SWAP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -496,8 +487,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
@@ -524,7 +514,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
     *request = sreq;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_RACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -546,8 +536,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RGET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RGET_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
@@ -576,7 +565,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
     *request = sreq;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_RGET_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -595,8 +584,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
     int disp_unit = 0;
     void *base = NULL, *target_addr = NULL;
     MPI_Aint dtype_sz = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_FETCH_AND_OP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_FETCH_AND_OP);
+    MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
@@ -652,7 +640,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_FETCH_AND_OP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -670,8 +658,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RGET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RGET);
+    MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
@@ -698,7 +685,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_RGET);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -715,8 +702,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get_accumulate(const void *origin_a
                                                             MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_GET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_GET_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
@@ -733,7 +719,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get_accumulate(const void *origin_a
                                                   target_datatype, op, win, winattr);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_GET_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -747,8 +733,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_accumulate(const void *origin_addr,
                                                         MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
@@ -763,7 +748,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_accumulate(const void *origin_addr,
                                               target_datatype, op, win, winattr);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 

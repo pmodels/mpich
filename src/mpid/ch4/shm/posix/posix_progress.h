@@ -22,8 +22,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
     uint8_t *payload;
     size_t payload_left;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PROGRESS_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PROGRESS_RECV);
+    MPIR_FUNC_ENTER;
 
     /* Check to see if any new messages are ready for processing from the eager submodule. */
     result = MPIDI_POSIX_eager_recv_begin(&transaction);
@@ -96,7 +95,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
     MPIDI_POSIX_eager_recv_commit(&transaction);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PROGRESS_RECV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -106,8 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int blocking)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PROGRESS_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PROGRESS_SEND);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_POSIX_global.postponed_queue) {
         /* Drain postponed queue */
@@ -138,14 +136,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int blocking)
 
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PROGRESS_SEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int vci, int blocking)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_PROGRESS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_PROGRESS);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -160,7 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int vci, int blocking)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_PROGRESS);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

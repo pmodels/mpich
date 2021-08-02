@@ -38,8 +38,7 @@ int MPIDIG_check_cmpl_order(MPIR_Request * req)
 {
     int ret = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_CHECK_CMPL_ORDER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_CHECK_CMPL_ORDER);
+    MPIR_FUNC_ENTER;
 
     if (MPIDIG_REQUEST(req, req->seq_no) == MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)) {
         MPL_atomic_fetch_add_uint64(&MPIDI_global.exp_seq_no, 1);
@@ -53,7 +52,7 @@ int MPIDIG_check_cmpl_order(MPIR_Request * req)
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_CHECK_CMPL_ORDER);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -62,8 +61,7 @@ void MPIDIG_progress_compl_list(void)
     MPIR_Request *req;
     MPIDIG_req_ext_t *curr, *tmp;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PROGRESS_COMPL_LIST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PROGRESS_COMPL_LIST);
+    MPIR_FUNC_ENTER;
 
     /* MPIDI_CS_ENTER(); */
   do_check_again:
@@ -76,7 +74,7 @@ void MPIDIG_progress_compl_list(void)
         }
     }
     /* MPIDI_CS_EXIT(); */
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PROGRESS_COMPL_LIST);
+    MPIR_FUNC_EXIT;
 }
 
 static int handle_unexp_cmpl(MPIR_Request * rreq)
@@ -84,8 +82,7 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS, in_use;
     MPIR_Request *match_req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_HANDLE_UNEXP_CMPL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_HANDLE_UNEXP_CMPL);
+    MPIR_FUNC_ENTER;
 
     /* Check if this message has already been claimed by mprobe. */
     /* MPIDI_CS_ENTER(); */
@@ -143,7 +140,7 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     /* MPID_Request_complete(rreq); */
     MPID_Request_complete(match_req);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_HANDLE_UNEXP_CMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -155,8 +152,7 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RECV_TARGET_CMPL_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RECV_TARGET_CMPL_CB);
+    MPIR_FUNC_ENTER;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "req %p handle=0x%x", rreq, rreq->handle));
@@ -201,7 +197,7 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
     MPID_Request_complete(rreq);
   fn_exit:
     MPIDIG_progress_compl_list();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_RECV_TARGET_CMPL_CB);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -210,21 +206,19 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
 int MPIDIG_send_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_ORIGIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_ORIGIN_CB);
+    MPIR_FUNC_ENTER;
     MPID_Request_complete(sreq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_ORIGIN_CB);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIDIG_send_data_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_DATA_ORIGIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_DATA_ORIGIN_CB);
+    MPIR_FUNC_ENTER;
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->sreq).datatype);
     MPID_Request_complete(sreq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_DATA_ORIGIN_CB);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -237,8 +231,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
     void *pack_buf = NULL;
     bool do_cts = false;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
+    MPIR_FUNC_ENTER;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "HDR: data_sz=%ld, flags=0x%X", hdr->data_sz, hdr->flags));
     /* MPIDI_CS_ENTER(); */
@@ -391,7 +384,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -404,8 +397,7 @@ int MPIDIG_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
     MPIR_Request *rreq;
     MPIDIG_send_data_msg_t *seg_hdr = (MPIDIG_send_data_msg_t *) am_hdr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_DATA_TARGET_MSG_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_DATA_TARGET_MSG_CB);
+    MPIR_FUNC_ENTER;
 
     rreq = (MPIR_Request *) seg_hdr->rreq_ptr;
     MPIR_Assert(rreq);
@@ -423,7 +415,7 @@ int MPIDIG_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_DATA_TARGET_MSG_CB);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -433,8 +425,7 @@ int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
     MPIDIG_ssend_ack_msg_t *msg_hdr = (MPIDIG_ssend_ack_msg_t *) am_hdr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SSEND_ACK_TARGET_MSG_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SSEND_ACK_TARGET_MSG_CB);
+    MPIR_FUNC_ENTER;
 
     sreq = (MPIR_Request *) msg_hdr->sreq_ptr;
     MPID_Request_complete(sreq);
@@ -442,7 +433,7 @@ int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
     if (is_async)
         *req = NULL;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SSEND_ACK_TARGET_MSG_CB);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -453,8 +444,7 @@ int MPIDIG_send_cts_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_
     MPIR_Request *sreq;
     MPIDIG_send_cts_msg_t *msg_hdr = (MPIDIG_send_cts_msg_t *) am_hdr;
     MPIDIG_send_data_msg_t send_hdr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_CTS_TARGET_MSG_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_CTS_TARGET_MSG_CB);
+    MPIR_FUNC_ENTER;
 
     sreq = (MPIR_Request *) msg_hdr->sreq_ptr;
     MPIR_Assert(sreq != NULL);
@@ -473,7 +463,7 @@ int MPIDIG_send_cts_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_
              MPIDI_REQUEST(sreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_CTS_TARGET_MSG_CB);
+    MPIR_FUNC_EXIT;
 
   fn_exit:
     return mpi_errno;

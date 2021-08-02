@@ -841,8 +841,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     int mpi_errno = MPI_SUCCESS;
     int i = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_ENTER;
 
     /* Progress until we drain all inflight RMA send long buffers */
     /* NOTE: am currently only use vni 0. Need update once that changes */
@@ -927,7 +926,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIR_Assert(err == 0);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -972,8 +971,7 @@ static int create_vni_context(int vni, int nic)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CREATE_VNI_CONTEXT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CREATE_VNI_CONTEXT);
+    MPIR_FUNC_ENTER;
 
     struct fi_info *prov_use = MPIDI_OFI_global.prov_use[nic];
     int ctx_idx;
@@ -1103,7 +1101,7 @@ static int create_vni_context(int vni, int nic)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CREATE_VNI_CONTEXT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1167,7 +1165,7 @@ static int destroy_vni_context(int vni, int nic)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DESTROY_VNI_CONTEXT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

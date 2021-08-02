@@ -12,12 +12,11 @@
 int MPIDI_OFI_handle_cq_error_util(int ctx_idx, ssize_t ret)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_OFI_handle_cq_error(ctx_idx, ret);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -168,8 +167,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 {
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_HUGE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_HUGE);
+    MPIR_FUNC_ENTER;
 
     bool ready_to_get = false;
 
@@ -236,7 +234,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
         MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_GET_HUGE);
+    MPIR_FUNC_EXIT;
 
   fn_exit:
     return mpi_errno;

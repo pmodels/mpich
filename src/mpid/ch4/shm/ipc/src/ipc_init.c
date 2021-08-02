@@ -60,8 +60,7 @@ int MPIDI_IPC_init_world(void)
 int MPIDI_IPC_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_MPI_FINALIZE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_XPMEM_mpi_finalize_hook();
     MPIR_ERR_CHECK(mpi_errno);
@@ -75,7 +74,7 @@ int MPIDI_IPC_mpi_finalize_hook(void)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

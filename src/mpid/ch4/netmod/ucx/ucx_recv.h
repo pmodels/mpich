@@ -15,8 +15,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *rreq = user_data;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
+    MPIR_FUNC_ENTER;
 
     if (unlikely(status == UCS_ERR_CANCELED)) {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
@@ -36,7 +35,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
     ucp_request->req = NULL;
     ucp_request_release(ucp_request);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
+    MPIR_FUNC_EXIT;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
@@ -46,8 +45,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *rreq = user_data;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
+    MPIR_FUNC_ENTER;
 
     /* populate status fields */
     if (unlikely(status == UCS_ERR_MESSAGE_TRUNCATED)) {
@@ -64,7 +62,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
     ucp_request->req = NULL;
     ucp_request_release(ucp_request);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
+    MPIR_FUNC_EXIT;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
@@ -85,8 +83,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     MPIR_Request *req = *request;
     MPIDI_UCX_ucp_request_t *ucp_request;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_RECV);
+    MPIR_FUNC_ENTER;
 
     if (req == NULL) {
         req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst, 2);
@@ -129,7 +126,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     *request = req;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_RECV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -148,8 +145,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 
     int vci = MPIDI_Request_get_vci(message);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IMRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IMRECV);
+    MPIR_FUNC_ENTER;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
@@ -185,7 +181,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMRECV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -204,8 +200,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
 
     int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IRECV);
+    MPIR_FUNC_ENTER;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
     mpi_errno =
@@ -214,21 +209,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_dst).lock);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IRECV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
+    MPIR_FUNC_ENTER;
 
     if (!MPIR_Request_is_complete(rreq)) {
         int vci = MPIDI_Request_get_vci(rreq);
         ucp_request_cancel(MPIDI_UCX_global.ctx[vci].worker, MPIDI_UCX_REQ(rreq).ucp_request);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
+    MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
 

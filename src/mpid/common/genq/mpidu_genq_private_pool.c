@@ -50,8 +50,7 @@ int MPIDU_genq_private_pool_create_unsafe(uintptr_t cell_size, uintptr_t num_cel
     int rc = MPI_SUCCESS;
     private_pool_s *pool_obj;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_CREATE_UNSAFE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_CREATE_UNSAFE);
+    MPIR_FUNC_ENTER;
 
     pool_obj = MPL_malloc(sizeof(private_pool_s), MPL_MEM_OTHER);
 
@@ -72,7 +71,7 @@ int MPIDU_genq_private_pool_create_unsafe(uintptr_t cell_size, uintptr_t num_cel
 
     *pool = (MPIDU_genq_private_pool_t) pool_obj;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_CREATE_UNSAFE);
+    MPIR_FUNC_EXIT;
     return rc;
 }
 
@@ -81,8 +80,7 @@ int MPIDU_genq_private_pool_destroy_unsafe(MPIDU_genq_private_pool_t pool)
     int rc = MPI_SUCCESS;
     private_pool_s *pool_obj = (private_pool_s *) pool;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_DESTROY_UNSAFE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_DESTROY_UNSAFE);
+    MPIR_FUNC_ENTER;
 
     for (cell_block_s * block = pool_obj->cell_blocks_head; block;) {
         cell_block_s *next = block->next;
@@ -96,7 +94,7 @@ int MPIDU_genq_private_pool_destroy_unsafe(MPIDU_genq_private_pool_t pool)
     /* free self */
     MPL_free(pool_obj);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_DESTROY_UNSAFE);
+    MPIR_FUNC_EXIT;
     return rc;
 }
 
@@ -150,8 +148,7 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
     private_pool_s *pool_obj = (private_pool_s *) pool;
     cell_header_s *cell_h = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_CELL_ALLOC);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_CELL_ALLOC);
+    MPIR_FUNC_ENTER;
 
     if (pool_obj->free_list_head) {
         cell_h = pool_obj->free_list_head;
@@ -187,7 +184,7 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
     *cell = cell_h->cell;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_CELL_ALLOC);
+    MPIR_FUNC_EXIT;
     return rc;
   fn_fail:
     *cell = NULL;
@@ -213,8 +210,7 @@ int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell
     private_pool_s *pool_obj = (private_pool_s *) pool;
     cell_header_s *cell_h = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_CELL_FREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_CELL_FREE);
+    MPIR_FUNC_ENTER;
 
     if (cell == NULL) {
         goto fn_exit;
@@ -226,6 +222,6 @@ int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell
     pool_obj->free_list_head = cell_h;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_GENQ_PRIVATE_POOL_CELL_FREE);
+    MPIR_FUNC_EXIT;
     return rc;
 }

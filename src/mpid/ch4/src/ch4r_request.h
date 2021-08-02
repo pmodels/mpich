@@ -14,8 +14,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t
 {
     MPIR_Request *req;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_CREATE);
+    MPIR_FUNC_ENTER;
 
     MPIDI_CH4_REQUEST_CREATE(req, kind, 0, ref_count);
     if (req == NULL)
@@ -35,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t
     MPIDIG_REQUEST(req, req->recv_async).recv_type = MPIDIG_RECV_NONE;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_CREATE);
+    MPIR_FUNC_EXIT;
     return req;
   fn_fail:
     goto fn_exit;
@@ -44,8 +43,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
                                                            MPIR_Request_kind_t kind)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_INIT);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(req != NULL);
     /* Increment the refcount by one to account for the MPIDIG layer */
@@ -64,7 +62,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
     MPIDIG_REQUEST(req, req->recv_async).data_copy_cb = NULL;
     MPIDIG_REQUEST(req, req->recv_async).recv_type = MPIDIG_RECV_NONE;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_INIT);
+    MPIR_FUNC_EXIT;
     return req;
 }
 

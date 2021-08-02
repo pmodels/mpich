@@ -13,33 +13,30 @@
 int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
+    MPIR_FUNC_ENTER;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
+    MPIR_FUNC_ENTER;
     
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 static int nem_coll_finalize(void *param ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NEM_COLL_FINALIZE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NEM_COLL_FINALIZE);
+    MPIR_FUNC_ENTER;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NEM_COLL_FINALIZE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -47,12 +44,11 @@ static int nem_coll_finalize(void *param ATTRIBUTE((unused)))
 int MPID_nem_coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_COLL_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_COLL_INIT);
+    MPIR_FUNC_ENTER;
 
     MPIR_Add_finalize(nem_coll_finalize, NULL, MPIR_FINALIZE_CALLBACK_PRIO-1);
     
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_COLL_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }

@@ -93,14 +93,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * m
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
+    MPIR_FUNC_ENTER;
 
     /* note: setting is_local, is_async, req to 0, 0, NULL */
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
                                                        p_data, msg_hdr->payload_sz, 0, 0, NULL);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -113,8 +112,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
     MPIR_Request *rreq = NULL;
     MPIR_Request *cache_rreq = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_PIPELINE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_PIPELINE);
+    MPIR_FUNC_ENTER;
 
     cache_rreq = MPIDIG_req_cache_lookup(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -138,7 +136,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
         MPIDIG_req_cache_remove(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_PIPELINE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -147,13 +145,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
                                                        NULL, 0, 0, 0, NULL);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -166,8 +163,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
     size_t done = 0, curr_len, rem = 0;
     MPIDI_OFI_am_request_t *am_req;
     MPIR_Comm *comm;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_RDMA_READ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_RDMA_READ);
+    MPIR_FUNC_ENTER;
 
     rem = data_sz;
 
@@ -222,7 +218,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_RDMA_READ);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -237,8 +233,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_RDMA_READ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_RDMA_READ);
+    MPIR_FUNC_ENTER;
 
     /* note: setting is_local, is_async to 0, 1 */
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
@@ -274,7 +269,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_RDMA_READ);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 
   fn_fail:
@@ -287,8 +282,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_rdma_read_ack(int rank, MPIR_Comm *
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_rdma_read_ack_msg_t ack_msg;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_RDMA_READ_ACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_RDMA_READ_ACK);
+    MPIR_FUNC_ENTER;
 
     ack_msg.sreq_ptr = sreq_ptr;
     mpi_errno =
@@ -297,7 +291,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_rdma_read_ack(int rank, MPIR_Comm *
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_RDMA_READ_ACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

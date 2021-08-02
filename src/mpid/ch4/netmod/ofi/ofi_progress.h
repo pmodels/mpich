@@ -44,8 +44,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_deferred_ops(void)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_deferred_am_isend_req_t *dreq = MPIDI_OFI_global.deferred_am_isend_q;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_DEFERRED_OPS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_DEFERRED_OPS);
+    MPIR_FUNC_ENTER;
 
     if (dreq) {
         switch (dreq->op) {
@@ -73,7 +72,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_deferred_ops(void)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_DEFERRED_OPS);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -83,8 +82,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_ent
 {
     int i, mpi_errno = MPI_SUCCESS;
     MPIR_Request *req;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ENTRIES);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ENTRIES);
+    MPIR_FUNC_ENTER;
 
     for (i = 0; i < num; i++) {
         req = MPIDI_OFI_context_to_request(wc[i].op_context);
@@ -93,7 +91,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_ent
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ENTRIES);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -104,8 +102,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
     int mpi_errno = MPI_SUCCESS;
     struct fi_cq_tagged_entry wc[MPIDI_OFI_NUM_CQ_ENTRIES];
     ssize_t ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS);
+    MPIR_FUNC_ENTER;
 
     int vni = MPIDI_OFI_vci_to_vni(vci);
     if (vni >= MPIDI_OFI_global.num_vnis) {
@@ -139,7 +136,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
         }
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
 }

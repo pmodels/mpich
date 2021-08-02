@@ -29,8 +29,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
     int tag;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_BLOCK_SCHED_INTRA_RECEXCH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_BLOCK_SCHED_INTRA_RECEXCH);
+    MPIR_FUNC_ENTER;
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -161,7 +160,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     MPL_free(step2_nbrs);
     MPL_free(step1_recvfrom);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_BLOCK_SCHED_INTRA_RECEXCH);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
   fn_fail:

@@ -24,9 +24,8 @@ int MPIDI_CH3U_Handle_unordered_recv_pkt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t * pkt,
 					 MPIR_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_HANDLE_UNORDERED_RECV_PKT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_HANDLE_UNORDERED_RECV_PKT);
+    MPIR_FUNC_ENTER;
 
     /* FIXME: This should probably be *rreqp = NULL? */
     rreqp = NULL;
@@ -152,7 +151,7 @@ int MPIDI_CH3U_Handle_unordered_recv_pkt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t * pkt,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_HANDLE_UNORDERED_RECV_PKT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 #endif /* defined(MPIDI_CH3_MSGS_UNORDERED) */

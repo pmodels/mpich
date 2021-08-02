@@ -11,8 +11,7 @@ int MPID_Psend_init(void *buf, int partitions, MPI_Aint count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PSEND_INIT);
+    MPIR_FUNC_ENTER;
 
     MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, dest);
 
@@ -21,7 +20,7 @@ int MPID_Psend_init(void *buf, int partitions, MPI_Aint count,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PSEND_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -33,8 +32,7 @@ int MPID_Precv_init(void *buf, int partitions, MPI_Aint count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PRECV_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PRECV_INIT);
+    MPIR_FUNC_ENTER;
 
     MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, source);
 
@@ -44,7 +42,7 @@ int MPID_Precv_init(void *buf, int partitions, MPI_Aint count,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PRECV_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
