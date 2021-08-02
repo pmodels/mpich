@@ -118,8 +118,7 @@ static int update_nic_preferences(MPIR_Comm * comm)
 int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_PRE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_PRE_HOOK);
+    MPIR_FUNC_ENTER;
 
     /* no connection for non-dynamic or non-root-rank of intercomm */
     MPIDI_OFI_COMM(comm).conn_id = -1;
@@ -157,7 +156,7 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_PRE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -167,20 +166,18 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
+    MPIR_FUNC_ENTER;
 
     MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
+    MPIR_FUNC_ENTER;
 
     /* If we enabled striping or hashing, decrement the counter. */
     MPIDI_OFI_global.num_comms_enabled_striping -=
@@ -188,7 +185,7 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIDI_OFI_global.num_comms_enabled_hashing -=
         (MPIDI_OFI_COMM(comm).enable_hashing != 0 ? 1 : 0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 

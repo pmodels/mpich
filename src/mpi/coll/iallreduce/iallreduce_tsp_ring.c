@@ -25,8 +25,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     void *tmpbuf;
     int tag;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RING);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RING);
+    MPIR_FUNC_ENTER;
     MPIR_CHKLMEM_DECL(4);
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
@@ -106,7 +105,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     MPIR_CHKLMEM_FREEALL();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RING);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 
   fn_fail:

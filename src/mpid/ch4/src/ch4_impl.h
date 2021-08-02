@@ -62,15 +62,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_get_context_offset(MPIR_Request * pr
 {
     int context_offset;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(preq->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||
                 preq->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
 
     context_offset = MPIDI_PREQUEST(preq, context_id) - preq->comm->context_id;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
+    MPIR_FUNC_EXIT;
 
     return context_offset;
 }
@@ -79,13 +78,12 @@ MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_id_to_context(uint64_t win
 {
     MPIR_Context_id_t ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_ID_TO_CONTEXT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_ID_TO_CONTEXT);
+    MPIR_FUNC_ENTER;
 
     /* pick the lower 32-bit to extract context id */
     ret = (win_id - 1) & 0xffffffff;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_ID_TO_CONTEXT);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -93,12 +91,11 @@ MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_to_context(const MPIR_Win 
 {
     MPIR_Context_id_t ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_TO_CONTEXT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_TO_CONTEXT);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDIG_win_id_to_context(MPIDIG_WIN(win, win_id));
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_TO_CONTEXT);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -106,21 +103,19 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_request_complete(MPIR_Request * req)
 {
     int incomplete;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_REQUEST_COMPLETE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_REQUEST_COMPLETE);
+    MPIR_FUNC_ENTER;
 
     MPIR_cc_decr(req->cc_ptr, &incomplete);
     if (!incomplete) {
         MPIDI_CH4_REQUEST_FREE(req);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_REQUEST_COMPLETE);
+    MPIR_FUNC_EXIT;
 }
 
 MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_add(MPIR_Win * win, int rank)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_TARGET_ADD);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_TARGET_ADD);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_win_target_t *target_ptr = NULL;
     target_ptr = (MPIDIG_win_target_t *) MPL_malloc(sizeof(MPIDIG_win_target_t), MPL_MEM_RMA);
@@ -135,19 +130,18 @@ MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_add(MPIR_Win * w
 
     HASH_ADD(hash_handle, MPIDIG_WIN(win, targets), rank, sizeof(int), target_ptr, MPL_MEM_RMA);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_TARGET_ADD);
+    MPIR_FUNC_EXIT;
     return target_ptr;
 }
 
 MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_find(MPIR_Win * win, int rank)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_TARGET_FIND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_TARGET_FIND);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_win_target_t *target_ptr = NULL;
     HASH_FIND(hash_handle, MPIDIG_WIN(win, targets), &rank, sizeof(int), target_ptr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_TARGET_FIND);
+    MPIR_FUNC_EXIT;
     return target_ptr;
 }
 
@@ -162,19 +156,17 @@ MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_get(MPIR_Win * w
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_target_delete(MPIR_Win * win,
                                                        MPIDIG_win_target_t * target_ptr)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_TARGET_DELETE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_TARGET_DELETE);
+    MPIR_FUNC_ENTER;
 
     HASH_DELETE(hash_handle, MPIDIG_WIN(win, targets), target_ptr);
     MPL_free(target_ptr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_TARGET_DELETE);
+    MPIR_FUNC_EXIT;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_target_cleanall(MPIR_Win * win)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_TARGET_CLEANALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_TARGET_CLEANALL);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_win_target_t *target_ptr, *tmp;
     HASH_ITER(hash_handle, MPIDIG_WIN(win, targets), target_ptr, tmp) {
@@ -182,17 +174,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_target_cleanall(MPIR_Win * win)
         MPL_free(target_ptr);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_TARGET_CLEANALL);
+    MPIR_FUNC_EXIT;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_HASH_CLEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_HASH_CLEAR);
+    MPIR_FUNC_ENTER;
 
     HASH_CLEAR(hash_handle, MPIDIG_WIN(win, targets));
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_HASH_CLEAR);
+    MPIR_FUNC_EXIT;
 }
 
 #define MPIDI_Datatype_get_info(count_, datatype_,              \
@@ -424,8 +415,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank,
     int z;
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
+    MPIR_FUNC_ENTER;
 
     MPIDI_NM_comm_get_gpid(comm, rank, &gpid, FALSE);
 
@@ -434,7 +424,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank,
 
     ret = (z < size);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -637,10 +627,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci);
 */
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDIG_win_base_at_origin(const MPIR_Win * win, int target_rank)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_BASE_AT_ORIGIN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_BASE_AT_ORIGIN);
+    MPIR_FUNC_ENTER;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_BASE_AT_ORIGIN);
+    MPIR_FUNC_EXIT;
 
     /* TODO: In future we may want to calculate the full virtual address
      * in the target at the origin side. It can be done by looking at
@@ -657,12 +646,11 @@ MPL_STATIC_INLINE_PREFIX uintptr_t MPIDIG_win_base_at_target(const MPIR_Win * wi
 {
     uintptr_t ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_BASE_AT_TARGET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_BASE_AT_TARGET);
+    MPIR_FUNC_ENTER;
 
     ret = (uintptr_t) win->base;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_BASE_AT_TARGET);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -991,15 +979,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMPUTE_ACC_OP);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_COMPUTE_ACC_OP);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIR_Typerep_op(source_buf, source_count, source_dtp,
                                 target_buf, target_count, target_dtp,
                                 acc_op, src_kind == MPIDIG_ACC_SRCBUF_PACKED);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMPUTE_ACC_OP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 

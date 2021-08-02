@@ -69,8 +69,7 @@ static int update_yaksa_type(MPIR_Datatype * newtype, MPI_Datatype oldtype, MPI_
 int MPIR_Typerep_create_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
                                MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_VECTOR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_VECTOR);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -84,7 +83,7 @@ int MPIR_Typerep_create_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint st
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_VECTOR);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -93,8 +92,7 @@ int MPIR_Typerep_create_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint st
 int MPIR_Typerep_create_hvector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
                                 MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_HVECTOR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_HVECTOR);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -108,7 +106,7 @@ int MPIR_Typerep_create_hvector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint s
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_HVECTOR);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -116,8 +114,7 @@ int MPIR_Typerep_create_hvector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint s
 
 int MPIR_Typerep_create_contig(MPI_Aint count, MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_CONTIG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_CONTIG);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -131,7 +128,7 @@ int MPIR_Typerep_create_contig(MPI_Aint count, MPI_Datatype oldtype, MPIR_Dataty
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_CONTIG);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -139,8 +136,7 @@ int MPIR_Typerep_create_contig(MPI_Aint count, MPI_Datatype oldtype, MPIR_Dataty
 
 int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_DUP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_DUP);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -153,7 +149,7 @@ int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_DUP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -163,8 +159,7 @@ int MPIR_Typerep_create_indexed_block(MPI_Aint count, MPI_Aint blocklength,
                                       const MPI_Aint * array_of_displacements,
                                       MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_INDEXED_BLOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_INDEXED_BLOCK);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -180,7 +175,7 @@ int MPIR_Typerep_create_indexed_block(MPI_Aint count, MPI_Aint blocklength,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_INDEXED_BLOCK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -190,8 +185,7 @@ int MPIR_Typerep_create_hindexed_block(MPI_Aint count, MPI_Aint blocklength,
                                        const MPI_Aint * array_of_displacements,
                                        MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_HINDEXED_BLOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_HINDEXED_BLOCK);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -206,7 +200,7 @@ int MPIR_Typerep_create_hindexed_block(MPI_Aint count, MPI_Aint blocklength,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_HINDEXED_BLOCK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -216,8 +210,7 @@ int MPIR_Typerep_create_indexed(MPI_Aint count, const MPI_Aint * array_of_blockl
                                 const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
                                 MPIR_Datatype * newtype)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_INDEXED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_INDEXED);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -236,7 +229,7 @@ int MPIR_Typerep_create_indexed(MPI_Aint count, const MPI_Aint * array_of_blockl
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_INDEXED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -246,8 +239,7 @@ int MPIR_Typerep_create_hindexed(MPI_Aint count, const MPI_Aint * array_of_block
                                  const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
                                  MPIR_Datatype * newtype)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_HINDEXED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_HINDEXED);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -266,7 +258,7 @@ int MPIR_Typerep_create_hindexed(MPI_Aint count, const MPI_Aint * array_of_block
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_HINDEXED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -275,8 +267,7 @@ int MPIR_Typerep_create_hindexed(MPI_Aint count, const MPI_Aint * array_of_block
 int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
                                 MPIR_Datatype * newtype)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_RESIZED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_RESIZED);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -290,7 +281,7 @@ int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint exte
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_RESIZED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -300,8 +291,7 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
                                const MPI_Aint * array_of_displacements,
                                const MPI_Datatype * array_of_types, MPIR_Datatype * newtype)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_STRUCT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_STRUCT);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
     yaksa_type_t *array_of_yaksa_types = (yaksa_type_t *) MPL_malloc(count * sizeof(yaksa_type_t),
@@ -359,7 +349,7 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
     MPL_free(array_of_yaksa_types);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_STRUCT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -367,9 +357,8 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
 
 int MPIR_Typerep_create_pairtype(MPI_Datatype type, MPIR_Datatype * newtype)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_PAIRTYPE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_PAIRTYPE);
+    MPIR_FUNC_ENTER;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_CREATE_PAIRTYPE);
+    MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }

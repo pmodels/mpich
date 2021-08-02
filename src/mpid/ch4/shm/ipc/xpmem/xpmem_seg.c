@@ -15,14 +15,13 @@
 int MPIDI_XPMEMI_segtree_init(MPL_gavl_tree_t * tree)
 {
     int mpi_errno = MPI_SUCCESS, ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEMI_SEGTREE_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEMI_SEGTREE_INIT);
+    MPIR_FUNC_ENTER;
 
     ret = MPL_gavl_tree_create(MPIDI_XPMEM_seg_free, tree);
     MPIR_ERR_CHKANDJUMP(ret != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**xpmem_segtree_init");
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEMI_SEGTREE_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -53,8 +52,7 @@ int MPIDI_XPMEMI_seg_regist(int node_rank, uintptr_t size,
     MPIDI_XPMEMI_seg_t *seg = NULL;
     uintptr_t seg_low;
     uintptr_t seg_size;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEMI_SEG_REGIST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEMI_SEG_REGIST);
+    MPIR_FUNC_ENTER;
     /* Get apid if it is the first time registered on the local process. */
     if (segmap->apid == -1) {
         segmap->apid = xpmem_get(segmap->remote_segid, XPMEM_RDWR, XPMEM_PERMIT_MODE,
@@ -98,7 +96,7 @@ int MPIDI_XPMEMI_seg_regist(int node_rank, uintptr_t size,
                 node_rank, (uint64_t) segmap->apid, size, seg_size,
                 remote_vaddr, seg_low, (void *) seg->att_vaddr, *vaddr);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEMI_SEG_REGIST);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -107,12 +105,11 @@ int MPIDI_XPMEMI_seg_regist(int node_rank, uintptr_t size,
 void MPIDI_XPMEM_seg_free(void *seg)
 {
     MPIDI_XPMEMI_seg_t *seg_ptr = (MPIDI_XPMEMI_seg_t *) seg;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_FREE_SEG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_FREE_SEG);
+    MPIR_FUNC_ENTER;
 
     xpmem_detach((void *) seg_ptr->att_vaddr);
     MPL_free(seg);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_FREE_SEG);
+    MPIR_FUNC_EXIT;
     return;
 }

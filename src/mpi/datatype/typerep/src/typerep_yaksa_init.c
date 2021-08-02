@@ -15,8 +15,7 @@ yaksa_info_t MPII_yaksa_info_nogpu;
 
 yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_TYPEREP_GET_YAKSA_TYPE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_TYPEREP_GET_YAKSA_TYPE);
+    MPIR_FUNC_ENTER;
 
     yaksa_type_t yaksa_type;
 
@@ -354,14 +353,13 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_TYPEREP_GET_YAKSA_TYPE);
+    MPIR_FUNC_EXIT;
     return yaksa_type;
 }
 
 yaksa_op_t MPII_Typerep_get_yaksa_op(MPI_Op op)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_TYPEREP_GET_YAKSA_OP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_TYPEREP_GET_YAKSA_OP);
+    MPIR_FUNC_ENTER;
 
     yaksa_op_t yaksa_op = YAKSA_OP__LAST;
 
@@ -404,14 +402,13 @@ yaksa_op_t MPII_Typerep_get_yaksa_op(MPI_Op op)
             break;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_TYPEREP_GET_YAKSA_OP);
+    MPIR_FUNC_EXIT;
     return yaksa_op;
 }
 
 void MPIR_Typerep_init(void)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_INIT);
+    MPIR_FUNC_ENTER;
 
     MPI_Aint size;
 
@@ -439,13 +436,12 @@ void MPIR_Typerep_init(void)
     MPIR_Datatype_get_size_macro(MPI_INTEGER16, size);
     yaksa_type_create_contig(size, YAKSA_TYPE__BYTE, NULL, &TYPEREP_YAKSA_TYPE__INTEGER16);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_INIT);
+    MPIR_FUNC_EXIT;
 }
 
 void MPIR_Typerep_finalize(void)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_FINALIZE);
+    MPIR_FUNC_ENTER;
 
     yaksa_type_free(TYPEREP_YAKSA_TYPE__REAL16);
     yaksa_type_free(TYPEREP_YAKSA_TYPE__COMPLEX32);
@@ -455,5 +451,5 @@ void MPIR_Typerep_finalize(void)
 
     yaksa_finalize();
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_FINALIZE);
+    MPIR_FUNC_EXIT;
 }

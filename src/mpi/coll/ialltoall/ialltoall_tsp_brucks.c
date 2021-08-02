@@ -52,8 +52,7 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     int counter;
     int sink_id;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_BRUCKS_SCHED_PUP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_BRUCKS_SCHED_PUP);
+    MPIR_FUNC_ENTER;
 
     MPIR_Datatype_get_extent_macro(rtype, type_extent);
     MPIR_Type_get_true_extent_impl(rtype, &type_lb, &type_true_extent);
@@ -98,7 +97,7 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     sink_id = MPIR_TSP_sched_selective_sink(sched, counter, dtcopy_id);
     MPL_free(dtcopy_id);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_BRUCKS_SCHED_PUP);
+    MPIR_FUNC_EXIT;
 
     return sink_id;
 }
@@ -130,8 +129,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     MPIR_CHKLMEM_DECL(6);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_BRUCKS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_BRUCKS);
+    MPIR_FUNC_ENTER;
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -324,7 +322,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     }
     MPIR_CHKLMEM_FREEALL();
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_BRUCKS);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
   fn_fail:
