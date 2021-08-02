@@ -5,6 +5,27 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories:
+    - name        : COMMUNICATOR
+      description : cvars that control communicator construction and operation
+
+cvars:
+    - name        : MPIR_CVAR_COMM_SPLIT_USE_QSORT
+      category    : COMMUNICATOR
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* used in MPIR_Comm_group_impl and MPIR_Comm_create_group_impl */
 static int comm_create_local_group(MPIR_Comm * comm_ptr)
 {
@@ -1053,27 +1074,6 @@ int MPIR_Comm_shrink_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
     goto fn_exit;
 }
 
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-categories:
-    - name        : COMMUNICATOR
-      description : cvars that control communicator construction and operation
-
-cvars:
-    - name        : MPIR_CVAR_COMM_SPLIT_USE_QSORT
-      category    : COMMUNICATOR
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
-
 int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
                                MPIR_Comm * peer_comm_ptr, int remote_leader, int tag,
                                MPIR_Comm ** new_intercomm_ptr)
@@ -1190,6 +1190,52 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     MPL_free(remote_lpids);
     remote_lpids = NULL;
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* Peer intercomm is a 1-to-1 intercomm, internally created by device layer
+ * to facilitate connecting dynamic processes */
+
+int MPIR_peer_intercomm_create(MPIR_Context_id_t context_id, MPIR_Context_id_t recvcontext_id,
+                               uint64_t remote_lpid, int is_low_group, MPIR_Comm ** newcomm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Comm_create(newcomm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    (*newcomm)->context_id = context_id;
+    (*newcomm)->recvcontext_id = recvcontext_id;
+    (*newcomm)->remote_size = 1;
+    (*newcomm)->local_size = 1;
+    (*newcomm)->rank = 0;
+    (*newcomm)->comm_kind = MPIR_COMM_KIND__INTERCOMM;
+    (*newcomm)->local_comm = 0;
+    (*newcomm)->is_low_group = is_low_group;
+
+    mpi_errno = MPID_Create_intercomm_from_lpids(*newcomm, 1, &remote_lpid);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Comm *comm_self = MPIR_Process.comm_self;
+    MPIR_Comm_map_dup(*newcomm, comm_self, MPIR_COMM_MAP_DIR__L2L);
+
+    /* Inherit the error handler  */
+    MPID_THREAD_CS_ENTER(POBJ, comm_self->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_self->mutex);
+    (*newcomm)->errhandler = comm_self->errhandler;
+    if (comm_self->errhandler) {
+        MPIR_Errhandler_add_ref(comm_self->errhandler);
+    }
+    MPID_THREAD_CS_EXIT(POBJ, comm_self->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_self->mutex);
+
+    (*newcomm)->tainted = 1;
+    mpi_errno = MPIR_Comm_commit(*newcomm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
