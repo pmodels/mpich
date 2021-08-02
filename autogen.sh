@@ -97,7 +97,6 @@ do_geterrmsgs=yes
 do_getcvars=yes
 do_f77=yes
 do_build_configure=yes
-do_genstates=no
 do_atdir_check=no
 do_atver_check=yes
 do_subcfg_m4=yes
@@ -124,7 +123,7 @@ export autoreconf_args
 
 # List of steps that we will consider (We do not include depend
 # because the values for depend are not just yes/no)
-AllSteps="geterrmsgs bindings f77 build_configure genstates getparms"
+AllSteps="geterrmsgs bindings f77 build_configure getparms"
 stepsCleared=no
 
 for arg in "$@" ; do
@@ -181,14 +180,6 @@ for arg in "$@" ; do
             export autoreconf_args
             ;;
 
-	-with-genstates|--with-genstates)
-	    do_genstates=yes
-	    ;;
-
-	-without-genstates|--without-genstates)
-	    do_genstates=no
-	    ;;
- 
 	-with-errmsgs|--with-errmsgs)
 	    do_geterrmsgs=yes
 	    ;;
@@ -923,7 +914,7 @@ fi  # do_geterrmsgs
 echo
 echo "------------------------------------"
 echo "Initiating building required scripts"
-# Build scripts such as genstates if necessary
+# Build scripts such as checkbuilds if necessary
 ran_maint_configure=no
 run_configure=no
 # The information that autoconf uses is saved in the autom4te*.cache
@@ -934,13 +925,13 @@ elif find maint -name 'configure.ac' -newer 'maint/configure' >/dev/null 2>&1 ; 
     # The above relies on the Unix find command
     (cd maint && $autoconf && rm -rf autom4te*.cache)
 fi
-if [ ! -x maint/genstates ] ; then
+if [ ! -x maint/checkbuilds ] ; then
     run_configure=yes
 fi
 
 # The following relies on the Unix find command
-if [ -s maint/genstates ] ; then 
-    if find maint -name 'genstates.in' -newer 'maint/genstates' >/dev/null 2>&1 ; then
+if [ -s maint/checkbuilds ] ; then 
+    if find maint -name 'checkbuilds.in' -newer 'maint/checkbuilds' >/dev/null 2>&1 ; then
         run_configure=yes
     fi
 else
@@ -954,14 +945,6 @@ fi
 echo "Done building required scripts"
 echo "------------------------------------"
 echo
-
-# Run some of the simple codes
-echo_n "Creating the enumeration of logging states into src/include/mpiallstates.h... "
-touch src/include/mpiallstates.h # silience build errors when do_genstates is disabled
-if [ -x maint/extractstates -a $do_genstates = "yes" ] ; then
-    ./maint/extractstates
-fi
-echo "done"
 
 # new parameter code
 echo_n "Extracting control variables (cvar) ... "
