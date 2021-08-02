@@ -984,7 +984,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
 
     mpi_errno = MPIR_Typerep_op(source_buf, source_count, source_dtp,
                                 target_buf, target_count, target_dtp,
-                                acc_op, src_kind == MPIDIG_ACC_SRCBUF_PACKED);
+                                acc_op, src_kind == MPIDIG_ACC_SRCBUF_PACKED, -1);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
