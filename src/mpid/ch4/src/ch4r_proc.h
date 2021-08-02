@@ -28,8 +28,8 @@ int MPIDIU_avt_init(void);
 int MPIDIU_avt_destroy(void);
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p);
 
-int MPIDIU_upids_to_gpids(int size, size_t * remote_upid_size, char *remote_upids,
-                          int **remote_gpids);
+int MPIDIU_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
+                          uint64_t * remote_gpids);
 int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size);
 int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut);
 int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size);

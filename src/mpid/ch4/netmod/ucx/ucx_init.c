@@ -433,14 +433,14 @@ int MPIDI_UCX_get_vci_attr(int vci)
     return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
-int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
+int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **local_upids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-int MPIDI_UCX_upids_to_gpids(int size, size_t * remote_upid_size, char *remote_upids,
-                             int **remote_gpids)
+int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
+                             uint64_t * remote_gpids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
