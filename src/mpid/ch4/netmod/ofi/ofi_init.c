@@ -605,6 +605,10 @@ static void parse_container_params(struct json_object *obj, MPIDI_OFI_csel_conta
                     container->u.allreduce.triggered_rma.tree_type =
                         tree_type;
                     break;
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Barrier_intra_triggered_tagged:
+                    container->u.barrier.triggered_tagged.tree_type =
+                        tree_type;
+                    break;
                 default:
                     MPIR_Assert(0);
                     break;
@@ -645,6 +649,10 @@ static void parse_container_params(struct json_object *obj, MPIDI_OFI_csel_conta
                     break;
                 case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_triggered_tree_small_message:
                     container->u.allreduce.triggered_tree_small_message.k =
+                        k;
+                    break;
+                case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Barrier_intra_triggered_tagged:
+                    container->u.barrier.triggered_tagged.k =
                         k;
                     break;
                 default:
@@ -706,6 +714,11 @@ static void *create_container(struct json_object *obj)
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_triggered_tree_small_message;
             container->u.allreduce.triggered_tree_small_message.k = 2;
+        } else if (!strcmp(ckey, "algorithm=BARRIER_INTRA_triggered_tagged")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Barrier_intra_triggered_tagged;
+            container->u.barrier.triggered_tagged.k = 2;
+            container->u.barrier.triggered_tagged.tree_type = 0;
         }
 
         MPL_free(ckey);

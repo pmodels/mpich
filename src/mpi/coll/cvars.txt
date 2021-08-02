@@ -1327,6 +1327,31 @@ cvars:
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_reduce_local_bcast - Force remote-reduce-local-bcast algorithm
 
+    - name        : MPIR_CVAR_BARRIER_TREE_TYPE
+      category    : COLLECTIVE
+      type        : string
+      default     : kary
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Tree type for tree based allreduce
+        kary      - kary tree type
+        knomial_1 - knomial_1 tree type (tree grows starting from the left of the root)
+        knomial_2 - knomial_2 tree type (tree grows starting from the right of the root)
+        topology_aware - topology_aware tree type
+        topology_wave - topology_wave tree type
+
+    - name        : MPIR_CVAR_BARRIER_TREE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 3
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Indicates the branching factor for kary or knomial trees.
+
     - name        : MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE
       category    : COLLECTIVE
       type        : int

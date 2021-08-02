@@ -41,6 +41,7 @@ extern MPIR_Tree_type_t MPIR_Ireduce_tree_type;
 extern MPIR_Tree_type_t MPIR_Ibcast_tree_type;
 extern MPIR_Tree_type_t MPIR_Bcast_tree_type;
 extern MPIR_Tree_type_t MPIR_Allreduce_tree_type;
+extern MPIR_Tree_type_t MPIR_Barrier_tree_type;
 extern void *MPIR_Csel_root;
 extern char MPII_coll_generic_json[];
 

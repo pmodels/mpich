@@ -53,17 +53,111 @@ cvars:
         trigger_tree_small_message  - Force triggered ops based blocking small message algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 
+    - name        : MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      default     : auto
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select barrier algorithm
+        mpir                        - Fallback to MPIR collectives
+        trigger_tree_tagged         - Force triggered ops based Tagged Tree
+        switch_offload              - Force switch-based barrier
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
+
+static inline int MPIDI_OFI_Barrier_json(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    const MPIDI_OFI_csel_container_s *cnt = NULL;
+    int *recvbuf, count = 1, i;
+
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__BARRIER,
+        .comm_ptr = comm,
+    };
+
+    cnt = MPIR_Csel_search(MPIDI_OFI_COMM(comm).csel_comm, coll_sig);
+    if (cnt == NULL)
+        goto fallback;
+
+    switch (cnt->id) {
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Barrier_intra_triggered_tagged:
+            recvbuf = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_BUFFER);
+            MPIR_ERR_CHKANDJUMP(!recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            for (i = 0; i < count; i++)
+                recvbuf[i] = i;
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_triggered_tagged(MPI_IN_PLACE, recvbuf, 1, MPI_INT,
+                                                           MPI_SUM, comm,
+                                                           cnt->u.barrier.
+                                                           triggered_tagged.tree_type,
+                                                           cnt->u.barrier.triggered_tagged.k,
+                                                           errflag);
+            break;
+
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Barrier_impl:
+            goto fallback;
+
+        default:
+            MPIR_Assert(0);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Barrier_impl(comm, errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    int *recvbuf, count = 1, i;
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIR_Barrier_impl(comm, errflag);
+    switch (MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM) {
+        case MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM_trigger_tree_tagged:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
+                                           MPIR_ThreadInfo.thread_provided != MPI_THREAD_MULTIPLE,
+                                           mpi_errno,
+                                           "Barrier triggered_tagged cannot be applied.\n");
+            recvbuf = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_BUFFER);
+            MPIR_ERR_CHKANDJUMP(recvbuf == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            for (i = 0; i < count; i++)
+                recvbuf[i] = i;
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_triggered_tagged(MPI_IN_PLACE, recvbuf, 1, MPI_INT,
+                                                           MPI_SUM, comm,
+                                                           MPIR_Barrier_tree_type,
+                                                           MPIR_CVAR_BARRIER_TREE_KVAL, errflag);
+            MPL_free(recvbuf);
+            break;
+        case MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM_mpir:
+            goto fallback;
 
+        case MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM_auto:
+            mpi_errno = MPIDI_OFI_Barrier_json(comm, errflag);
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Barrier_impl(comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_EXIT;

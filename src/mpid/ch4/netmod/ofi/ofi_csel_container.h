@@ -2,6 +2,8 @@
 #define OFI_CSEL_CONTAINER_H_INCLUDED
 
 typedef enum {
+    MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Barrier_intra_triggered_tagged,
+    MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Barrier_impl,
     MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_tagged,
     MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma,
     MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_pipelined,
@@ -19,6 +21,12 @@ typedef struct {
     MPIDI_OFI_Csel_container_type_e id;
 
     union {
+        struct {
+            struct {
+                int k;
+                int tree_type;
+            } triggered_tagged;
+        } barrier;
         struct {
             struct {
                 int k;
@@ -54,6 +62,7 @@ typedef struct {
                 int k;
             } triggered_tree_small_message;
         } allreduce;
+
     } u;
 } MPIDI_OFI_csel_container_s;
 
