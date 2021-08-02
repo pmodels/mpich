@@ -429,6 +429,25 @@ static int typerep_op_unpack(void *source_buf, void *target_buf, MPI_Aint count,
 static int typerep_op_pack(void *source_buf, void *target_buf, MPI_Aint count,
                            MPI_Datatype datatype, MPI_Op op);
 
+int MPIR_Typerep_reduce(const void *in_buf, void *out_buf, MPI_Aint count, MPI_Datatype datatype,
+                        MPI_Op op)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_REDUCE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_REDUCE);
+
+    mpi_errno = typerep_op_pack((void *) in_buf, out_buf, count, datatype, op);
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_REDUCE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source_dtp,
                     void *target_buf, MPI_Aint target_count, MPI_Datatype target_dtp, MPI_Op op,
                     bool source_is_packed)

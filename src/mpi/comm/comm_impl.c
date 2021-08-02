@@ -19,7 +19,7 @@ static int comm_create_local_group(MPIR_Comm * comm_ptr)
 
     int comm_world_size = MPIR_Process.size;
     for (int i = 0; i < n; i++) {
-        int lpid;
+        uint64_t lpid;
         (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, FALSE);
         group_ptr->lrank_to_lpid[i].lpid = lpid;
         if (lpid > comm_world_size || (i > 0 && group_ptr->lrank_to_lpid[i - 1].lpid != (lpid - 1))) {
@@ -239,7 +239,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
         subsetOfWorld = 1;
         wsize = MPIR_Process.size;
         for (i = 0; i < n; i++) {
-            int g_lpid = group_ptr->lrank_to_lpid[i].lpid;
+            uint64_t g_lpid = group_ptr->lrank_to_lpid[i].lpid;
 
             /* This mapping is relative to comm world */
             MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
@@ -274,7 +274,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
             /* FIXME : BUBBLE SORT */
             mapping[i] = -1;
             for (j = 0; j < comm_ptr->local_size; j++) {
-                int comm_lpid;
+                uint64_t comm_lpid;
                 MPID_Comm_get_lpid(comm_ptr, j, &comm_lpid, FALSE);
                 if (comm_lpid == group_ptr->lrank_to_lpid[i].lpid) {
                     mapping[i] = j;
@@ -816,9 +816,10 @@ int MPIR_Intercomm_create_from_groups_impl(MPIR_Group * local_group_ptr, int loc
 
     int tag = get_tag_from_stringtag(stringtag);
     /* FIXME: ensure lpid is from comm_world */
-    int remote_lpid = remote_group_ptr->lrank_to_lpid[remote_leader].lpid;
+    uint64_t remote_lpid = remote_group_ptr->lrank_to_lpid[remote_leader].lpid;
+    MPIR_Assert(remote_lpid < MPIR_Process.size);
     mpi_errno = MPIR_Intercomm_create_impl(local_comm, local_leader,
-                                           MPIR_Process.comm_world, remote_lpid,
+                                           MPIR_Process.comm_world, (int) remote_lpid,
                                            tag, p_newintercom_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -929,7 +930,7 @@ int MPIR_Comm_idup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info,
 int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, lpid, n;
+    int i, n;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
@@ -940,6 +941,7 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
         MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < n; i++) {
+            uint64_t lpid;
             (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, TRUE);
             (*group_ptr)->lrank_to_lpid[i].lpid = lpid;
             /* TODO calculate is_local_dense_monotonic */
@@ -1078,7 +1080,8 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Context_id_t final_context_id, recvcontext_id;
-    int remote_size = 0, *remote_lpids = NULL;
+    int remote_size = 0;
+    uint64_t *remote_lpids = NULL;
     int comm_info[3];
     int is_low_group = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;

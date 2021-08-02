@@ -242,6 +242,11 @@ static struct fi_info *pick_provider_from_list(struct fi_info *list)
     int best_pref_score = 0;
     struct fi_info *best_prov = NULL;
     for (struct fi_info * prov = list; prov; prov = prov->next) {
+        /* Confirm the NIC backed by the provider is actually up. */
+        if (!MPIDI_OFI_nic_is_up(prov)) {
+            continue;
+        }
+
         int score = MPIDI_OFI_match_provider(prov, &optimal_settings, &minimal_settings);
         int pref_score = provider_preference(prov->fabric_attr->prov_name);
         if (best_score < score || (best_score == score && best_pref_score < pref_score)) {

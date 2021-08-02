@@ -101,7 +101,7 @@ static int initial_address_exchange(void)
     int recv_bc_len;
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
-    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
+    mpi_errno = MPIDU_bc_table_create(rank, size, MPIR_Process.node_map,
                                       MPIDI_UCX_global.ctx[0].if_address,
                                       (int) MPIDI_UCX_global.ctx[0].addrname_len, FALSE,
                                       MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &recv_bc_len);
@@ -433,14 +433,14 @@ int MPIDI_UCX_get_vci_attr(int vci)
     return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
-int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
+int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **local_upids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-int MPIDI_UCX_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
-                              int **remote_lupids)
+int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
+                             uint64_t * remote_gpids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

@@ -13,8 +13,10 @@
  *---------------------------------------------------------------------------*/
 /* This structure is used to implement the group operations such as
    MPI_Group_translate_ranks */
+/* note: next_lpid (with idx_of_first_lpid in MPIR_Group) gives a linked list
+ * in a sorted lpid ascending order */
 typedef struct MPII_Group_pmap_t {
-    int lpid;                   /* local process id, from VCONN */
+    uint64_t lpid;              /* local process id, from VCONN */
     int next_lpid;              /* Index of next lpid (in lpid order) */
 } MPII_Group_pmap_t;
 

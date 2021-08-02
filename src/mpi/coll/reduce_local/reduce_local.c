@@ -61,9 +61,15 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         if (mpi_errno != MPI_SUCCESS)
             goto fn_exit;
         /* --END ERROR HANDLING-- */
-        /* get the function by indexing into the op table */
-        uop = MPIR_OP_HDL_TO_FN(op);
-        (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
+        if (MPIR_Typerep_reduce_is_supported(op, datatype)) {
+            mpi_errno = MPIR_Typerep_reduce(inbuf, inoutbuf, count, datatype, op);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_exit;
+        } else {
+            /* get the function by indexing into the op table */
+            uop = MPIR_OP_HDL_TO_FN(op);
+            (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
+        }
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
 

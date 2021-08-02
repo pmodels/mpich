@@ -85,4 +85,6 @@ int MPIR_Typerep_reduce_is_supported(MPI_Op op, MPI_Datatype datatype);
 int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source_dtp,
                     void *target_buf, MPI_Aint target_count, MPI_Datatype target_dtp, MPI_Op op,
                     bool source_is_packed);
+int MPIR_Typerep_reduce(const void *in_buf, void *out_buf, MPI_Aint count, MPI_Datatype datatype,
+                        MPI_Op op);
 #endif /* MPIR_TYPEREP_H_INCLUDED */

@@ -1,3 +1,38 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
+# This config file is used by maint/gen_coll_cvar.py to generate
+# coll/testlist.cvar, which include tests that test specific collective
+# algorithms controlled by using CVARs.
+
+# The basic format are indentation-based hierarchy. There are 2 top level
+# groups -- "tests" and "algorithms".
+#
+# "tests" lists tests grouped by collective operation then by intra-blocking,
+# intra-nonblocking, inter-blocking, inter-nonblocking, and persistent. The
+# leaf-node specifies tests in the same format used in testlist.
+#
+# "algorithms" lists algorithm names grouped by hierarchy manner. Each
+# algorithm name, e.g. binomial under bcast intra-blocking, refers to
+#     MPIR_CVAR_BCAST_INTRA_ALGORITHM=binomial
+# Device layer algorithm are prefixed, e.g. posix:release_gather, refers to
+#     MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM=release_gather
+# Each algorithm can also have a list of additional cvar variables with a list
+# of values separated by comma. For example,
+#        .MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS=2,4
+#        .MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL=8,64
+# will generate 4 tests setting each CVAR respectively. Note the leading dot
+# part of the format, not part of the CVAR name.
+#
+# Each algorithm with each additional cvar choice will generate a test against
+# each test listed in the corresponding group. Additionally, each nonblocking
+# algorithm will be tested against each blocking test using the nb algorithm.
+# Each nonblocking algorithm will be tested against each persistent test as
+# well.
+
+-------------------------------------------------
 tests:
     allgather:
         intra-blocking:
@@ -136,6 +171,7 @@ tests:
         persistent:
             p_scatterv 4
 
+--------------------------------------------------
 algorithms:
     allgather:
         inter-blocking:

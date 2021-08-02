@@ -185,6 +185,59 @@ int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize)
     goto fn_exit;
 }
 
+int DTP_obj_create_custom(DTP_pool_s dtp, DTP_obj_s * obj, const char *desc)
+{
+    int rc = DTP_SUCCESS;
+    DTPI_FUNC_ENTER();
+
+    DTPI_pool_s *dtpi = dtp.priv;
+    DTPI_ERR_ARG_CHECK(!dtpi, rc);
+
+    DTPI_ALLOC_OR_FAIL(obj->priv, sizeof(DTPI_obj_s), rc);
+    DTPI_obj_s *obj_priv = obj->priv;
+    obj_priv->dtp = dtp;
+    if (desc == NULL) {
+        obj_priv->attr_tree = NULL;
+        obj->DTP_datatype = dtp.DTP_base_type;
+        obj->DTP_type_count = dtpi->base_type_count;
+    } else {
+        const char *desc_parts[10];
+        int num_parts;
+        rc = DTPI_parse_desc(desc, desc_parts, &num_parts, 10);
+        DTPI_ERR_CHK_RC(rc);
+        rc = DTPI_custom_datatype(dtp, &obj_priv->attr_tree, &obj->DTP_datatype,
+                                  &obj->DTP_type_count, desc_parts, num_parts);
+        DTPI_ERR_CHK_RC(rc);
+        rc = MPI_Type_commit(&obj->DTP_datatype);
+        DTPI_ERR_CHK_MPI_RC(rc);
+    }
+
+    MPI_Aint true_lb;
+    MPI_Aint true_extent;
+    MPI_Aint lb;
+    MPI_Aint extent;
+
+    rc = MPI_Type_get_true_extent(obj->DTP_datatype, &true_lb, &true_extent);
+    DTPI_ERR_CHK_MPI_RC(rc);
+    rc = MPI_Type_get_extent(obj->DTP_datatype, &lb, &extent);
+    DTPI_ERR_CHK_MPI_RC(rc);
+
+    obj->DTP_bufsize = (extent * obj->DTP_type_count) + true_extent - extent;
+    if (true_lb > 0) {
+        obj->DTP_bufsize += true_lb;
+        obj->DTP_buf_offset = 0;
+    } else {
+        obj->DTP_buf_offset = -true_lb;
+    }
+
+  fn_exit:
+    DTPI_FUNC_EXIT();
+    return rc;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 int DTP_pool_set_rand_idx(DTP_pool_s dtp, int rand_idx)
 {
     int rc = DTP_SUCCESS;

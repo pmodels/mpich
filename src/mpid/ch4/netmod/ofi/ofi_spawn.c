@@ -21,15 +21,14 @@ static void free_port_name_tag(int tag);
 static int get_port_name_tag(int *port_name_tag);
 static int get_tag_from_port(const char *port_name, int *port_name_tag);
 static int get_conn_name_from_port(const char *port_name, char *connname);
-static int dynproc_create_intercomm(const char *port_name, int remote_size, int *remote_lupids,
+static int dynproc_create_intercomm(const char *port_name, int remote_size, uint64_t * remote_gpids,
                                     MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm, int is_low_group,
                                     int get_tag, char *api);
 static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_addr_t * conn,
                              MPIR_Comm * comm_ptr);
 static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * conn, char *conname,
                                 MPIR_Comm * comm_ptr, int *out_root, int *remote_size,
-                                size_t ** remote_upid_size, char **remote_upids,
-                                int **remote_node_ids);
+                                int **remote_upid_size, char **remote_upids);
 
 /* NOTE: port_name_tag, context_id_offset, and port_id all refer to the same context_id used during
  * establishing dynamic connections */
@@ -121,7 +120,7 @@ static int get_conn_name_from_port(const char *port_name, char *connname)
     return mpi_errno;
 }
 
-static int dynproc_create_intercomm(const char *port_name, int remote_size, int *remote_lupids,
+static int dynproc_create_intercomm(const char *port_name, int remote_size, uint64_t * remote_gpids,
                                     MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm, int is_low_group,
                                     int context_id_offset, char *api)
 {
@@ -197,9 +196,9 @@ static int dynproc_create_intercomm(const char *port_name, int remote_size, int 
     MPIDI_COMM(tmp_comm_ptr, map).irreg.mlut.gpid = mlut->gpid;
     for (i = 0; i < remote_size; ++i) {
         MPIDI_COMM(tmp_comm_ptr, map).irreg.mlut.gpid[i].avtid =
-            MPIDIU_LUPID_GET_AVTID(remote_lupids[i]);
+            MPIDIU_GPID_GET_AVTID(remote_gpids[i]);
         MPIDI_COMM(tmp_comm_ptr, map).irreg.mlut.gpid[i].lpid =
-            MPIDIU_LUPID_GET_LPID(remote_lupids[i]);
+            MPIDIU_GPID_GET_LPID(remote_gpids[i]);
     }
 
     MPIR_Comm_commit(tmp_comm_ptr);
@@ -337,8 +336,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
 
 static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * conn, char *conname,
                                 MPIR_Comm * comm_ptr, int *out_root, int *remote_size,
-                                size_t ** remote_upid_size, char **remote_upids,
-                                int **remote_node_ids)
+                                int **remote_upid_size, char **remote_upids)
 {
     int i, mpi_errno = MPI_SUCCESS;
 
@@ -346,9 +344,8 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
     uint64_t match_bits = 0;
     uint64_t mask_bits = 0;
     struct fi_msg_tagged msg;
-    size_t *local_upid_size = NULL;
+    int *local_upid_size = NULL;
     char *local_upids = NULL;
-    int *local_node_ids = NULL;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(comm_ptr, 0, nic);
 
@@ -363,7 +360,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     if (phase == 0) {
-        size_t remote_upid_recvsize = 0;
+        int remote_upid_recvsize = 0;
 
         /* Receive the addresses                           */
         /* We don't know the size, so probe for table size */
@@ -386,24 +383,19 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
             MPIDI_OFI_VCI_PROGRESS_WHILE(0, req[0].done == MPIDI_OFI_PEEK_START);
         }
 
-        *remote_size = req[0].msglen / sizeof(size_t);
+        *remote_size = req[0].msglen / sizeof(int);
         *out_root = req[0].tag;
-        MPIR_CHKPMEM_MALLOC((*remote_upid_size), size_t *,
-                            (*remote_size) * sizeof(size_t), mpi_errno, "remote_upid_size",
+        MPIR_CHKPMEM_MALLOC((*remote_upid_size), int *,
+                            (*remote_size) * sizeof(int), mpi_errno, "remote_upid_size",
                             MPL_MEM_ADDRESS);
-        MPIR_CHKPMEM_MALLOC((*remote_node_ids), int *, (*remote_size) * sizeof(int), mpi_errno,
-                            "remote_node_ids", MPL_MEM_ADDRESS);
-
         req[0].done = 0;
         req[0].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
         req[1].done = 0;
         req[1].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-        req[2].done = 0;
-        req[2].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
         MPIDI_OFI_VCI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                           *remote_upid_size,
-                                          (*remote_size) * sizeof(size_t),
+                                          (*remote_size) * sizeof(int),
                                           NULL,
                                           FI_ADDR_UNSPEC,
                                           match_bits, mask_bits, &req[0].context), 0, trecv, FALSE);
@@ -421,15 +413,8 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                           FI_ADDR_UNSPEC,
                                           match_bits, mask_bits, &req[1].context), 0, trecv, FALSE);
 
-        MPIDI_OFI_VCI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
-                                          *remote_node_ids,
-                                          (*remote_size) * sizeof(int),
-                                          NULL,
-                                          FI_ADDR_UNSPEC,
-                                          match_bits, mask_bits, &req[2].context), 0, trecv, FALSE);
-
-        MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req[1].done || !req[2].done);
-        size_t disp = 0;
+        MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req[1].done);
+        int disp = 0;
         for (i = 0; i < req[0].source; i++)
             disp += (*remote_upid_size)[i];
         memcpy(conname, *remote_upids + disp, (*remote_upid_size)[req[0].source]);
@@ -441,15 +426,12 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
         /* Send phase maps the entry   */
         int tag = root;
         int local_size = comm_ptr->local_size;
-        size_t local_upid_sendsize = 0;
+        int local_upid_sendsize = 0;
 
         /* Step 1: get local upids (with size) and node ids for sending */
         MPIDI_NM_get_local_upids(comm_ptr, &local_upid_size, &local_upids);
         for (i = 0; i < local_size; i++)
             local_upid_sendsize += local_upid_size[i];
-        local_node_ids = (int *) MPL_malloc(local_size * sizeof(int), MPL_MEM_ADDRESS);
-        for (i = 0; i < comm_ptr->local_size; i++)
-            MPIDIU_get_node_id(comm_ptr, i, &local_node_ids[i]);
 
         match_bits = MPIDI_OFI_init_sendtag(port_id, tag, MPIDI_OFI_DYNPROC_SEND);
 
@@ -463,7 +445,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
         req[2].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
         MPIDI_OFI_VCI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                               local_upid_size,
-                                              local_size * sizeof(size_t), NULL /* desc */ ,
+                                              local_size * sizeof(int), NULL /* desc */ ,
                                               comm_ptr->rank,
                                               *conn,
                                               match_bits,
@@ -476,23 +458,14 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                               match_bits,
                                               (void *) &req[1].context),
                                  0, tsenddata, FALSE /* eagain */);
-        MPIDI_OFI_VCI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                              local_node_ids,
-                                              local_size * sizeof(int), NULL /* desc */ ,
-                                              comm_ptr->rank,
-                                              *conn,
-                                              match_bits,
-                                              (void *) &req[2].context),
-                                 0, tsenddata, FALSE /* eagain */);
 
-        MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req[0].done || !req[1].done || !req[2].done);
+        MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req[0].done || !req[1].done);
 
     }
 
   fn_exit:
     MPL_free(local_upid_size);
     MPL_free(local_upids);
-    MPL_free(local_node_ids);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DYNPROC_EXCHANGE_MAP);
     return mpi_errno;
   fn_fail:
@@ -506,10 +479,9 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int remote_size = 0;
-    size_t *remote_upid_size = NULL;
+    int *remote_upid_size = NULL;
     char *remote_upids = NULL;
-    int *remote_lupids = NULL;
-    int *remote_node_ids = NULL;
+    uint64_t *remote_gpids = NULL;
     int is_low_group = -1;
     int parent_root = -1;
     int rank = comm_ptr->rank;
@@ -544,8 +516,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
         MPIR_Assert(conn != FI_ADDR_NOTAVAIL);
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_SENDER, port_id, &conn, conname, comm_ptr,
-                                 &parent_root, &remote_size, &remote_upid_size, &remote_upids,
-                                 &remote_node_ids);
+                                 &parent_root, &remote_size, &remote_upid_size, &remote_upids);
         if (mpi_errno)
             goto bcast_errno_and_port_id;
 
@@ -556,19 +527,17 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
 
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_RECEIVER, port_id, &conn, conname, comm_ptr,
-                                 &parent_root, &remote_size, &remote_upid_size, &remote_upids,
-                                 &remote_node_ids);
+                                 &parent_root, &remote_size, &remote_upid_size, &remote_upids);
         if (mpi_errno)
             goto bcast_errno_and_port_id;
 
-        remote_lupids = MPL_malloc(remote_size * sizeof(int), MPL_MEM_ADDRESS);
-        if (!remote_lupids) {
-            MPIR_CHKMEM_SETERR(mpi_errno, remote_size * sizeof(int), "remote_lupids");
+        remote_gpids = MPL_malloc(remote_size * sizeof(uint64_t), MPL_MEM_ADDRESS);
+        if (!remote_gpids) {
+            MPIR_CHKMEM_SETERR(mpi_errno, remote_size * sizeof(uint64_t), "remote_gpids");
             goto bcast_errno_and_port_id;
         }
 
-        MPIDIU_upids_to_lupids(remote_size, remote_upid_size, remote_upids, &remote_lupids,
-                               remote_node_ids);
+        MPIDIU_upids_to_gpids(remote_size, remote_upid_size, remote_upids, remote_gpids);
         /* the child comm group is alawys the low group */
         is_low_group = 0;
 
@@ -593,18 +562,16 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     /* broadcast the upids to local groups */
     mpi_errno =
         MPIDIU_Intercomm_map_bcast_intra(comm_ptr, root, &remote_size, &is_low_group, 0,
-                                         remote_upid_size, remote_upids, &remote_lupids,
-                                         remote_node_ids);
+                                         remote_upid_size, remote_upids, &remote_gpids);
     MPIR_ERR_CHECK(mpi_errno);
     if (rank == root) {
         MPL_free(remote_upid_size);
         MPL_free(remote_upids);
-        MPL_free(remote_node_ids);
     }
 
     /* Now Create the New Intercomm */
     mpi_errno =
-        dynproc_create_intercomm(port_name, remote_size, remote_lupids, comm_ptr, newcomm,
+        dynproc_create_intercomm(port_name, remote_size, remote_gpids, comm_ptr, newcomm,
                                  is_low_group, port_id, (char *) "Connect");
     MPIR_ERR_CHECK(mpi_errno);
     if (rank == root) {
@@ -616,8 +583,8 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    /* Note: remote_lupids on children process is allocated in MPIDIU_Intercomm_map_bcast_intra */
-    MPL_free(remote_lupids);
+    /* Note: remote_gpids on children process is allocated in MPIDIU_Intercomm_map_bcast_intra */
+    MPL_free(remote_gpids);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_CONNECT);
     return mpi_errno;
@@ -699,10 +666,9 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     int root_errno;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int remote_size = 0;
-    size_t *remote_upid_size = 0;
+    int *remote_upid_size = 0;
     char *remote_upids = NULL;
-    int *remote_lupids = NULL;
-    int *remote_node_ids = NULL;
+    uint64_t *remote_gpids = NULL;
     int child_root = -1;
     int is_low_group = -1;
     fi_addr_t conn = 0;
@@ -729,8 +695,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
         /* note: conn is a dummy for DYNPROC_RECEIVER (phase 0). */
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_RECEIVER, port_id, &conn, conname, comm_ptr,
-                                 &child_root, &remote_size, &remote_upid_size, &remote_upids,
-                                 &remote_node_ids);
+                                 &child_root, &remote_size, &remote_upid_size, &remote_upids);
         if (mpi_errno)
             goto bcast_errno;
 
@@ -744,18 +709,16 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
 
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_SENDER, port_id, &conn, conname, comm_ptr,
-                                 &child_root, &remote_size, &remote_upid_size, &remote_upids,
-                                 &remote_node_ids);
+                                 &child_root, &remote_size, &remote_upid_size, &remote_upids);
         if (mpi_errno)
             goto bcast_errno;
 
-        remote_lupids = MPL_malloc(remote_size * sizeof(int), MPL_MEM_ADDRESS);
-        if (!remote_lupids) {
-            MPIR_CHKMEM_SETERR(mpi_errno, remote_size * sizeof(int), "remote_lupids");
+        remote_gpids = MPL_malloc(remote_size * sizeof(uint64_t), MPL_MEM_ADDRESS);
+        if (!remote_gpids) {
+            MPIR_CHKMEM_SETERR(mpi_errno, remote_size * sizeof(uint64_t), "remote_gpids");
             goto bcast_errno;
         }
-        MPIDIU_upids_to_lupids(remote_size, remote_upid_size, remote_upids, &remote_lupids,
-                               remote_node_ids);
+        MPIDIU_upids_to_gpids(remote_size, remote_upid_size, remote_upids, remote_gpids);
         /* the parent comm group is alawys the low group */
         is_low_group = 1;
 
@@ -778,13 +741,11 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     /* broadcast the upids to local groups */
     mpi_errno =
         MPIDIU_Intercomm_map_bcast_intra(comm_ptr, root, &remote_size, &is_low_group, 0,
-                                         remote_upid_size, remote_upids, &remote_lupids,
-                                         remote_node_ids);
+                                         remote_upid_size, remote_upids, &remote_gpids);
     MPIR_ERR_CHECK(mpi_errno);
     if (rank == root) {
         MPL_free(remote_upid_size);
         MPL_free(remote_upids);
-        MPL_free(remote_node_ids);
     }
 
     mpi_errno = MPIR_Bcast_impl(&port_id, 1, MPI_INT, root, comm_ptr, &errflag);
@@ -792,7 +753,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
 
     /* Now Create the New Intercomm */
     mpi_errno =
-        dynproc_create_intercomm(port_name, remote_size, remote_lupids, comm_ptr, newcomm,
+        dynproc_create_intercomm(port_name, remote_size, remote_gpids, comm_ptr, newcomm,
                                  is_low_group, port_id, (char *) "Accept");
     MPIR_ERR_CHECK(mpi_errno);
     if (rank == root) {
@@ -804,8 +765,8 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    /* Note: remote_lupids on children process is allocated in MPIDIU_Intercomm_map_bcast_intra */
-    MPL_free(remote_lupids);
+    /* Note: remote_gpids on children process is allocated in MPIDIU_Intercomm_map_bcast_intra */
+    MPL_free(remote_gpids);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
     return mpi_errno;
@@ -817,14 +778,14 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
 /* the following functions are "proc" functions, but because they are only used during dynamic
  * process spawning, having them here provides better context */
 
-int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
-                              int **remote_lupids)
+int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
+                             uint64_t * remote_gpids)
 {
     int i, mpi_errno = MPI_SUCCESS;
     int *new_avt_procs;
     char **new_upids;
     int n_new_procs = 0;
-    int max_n_avts;
+    int n_avts;
     char *curr_upid;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
@@ -836,7 +797,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
     MPIR_CHKLMEM_MALLOC(new_upids, char **, sizeof(char *) * size, mpi_errno, "new_upids",
                         MPL_MEM_ADDRESS);
 
-    max_n_avts = MPIDIU_get_max_n_avts();
+    n_avts = MPIDIU_get_n_avts();
 
     curr_upid = remote_upids;
     for (i = 0; i < size; i++) {
@@ -845,7 +806,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
         int found = 0;
         size_t sz = 0;
 
-        for (k = 0; k < max_n_avts; k++) {
+        for (k = 0; k < n_avts; k++) {
             if (MPIDIU_get_av_table(k) == NULL) {
                 continue;
             }
@@ -856,10 +817,13 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
                                    avlookup);
                 if (sz == remote_upid_size[i]
                     && !memcmp(tbladdr, curr_upid, remote_upid_size[i])) {
-                    (*remote_lupids)[i] = MPIDIU_LUPID_CREATE(k, j);
+                    remote_gpids[i] = MPIDIU_GPID_CREATE(k, j);
                     found = 1;
                     break;
                 }
+            }
+            if (found) {
+                break;
             }
         }
 
@@ -883,9 +847,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
                                             1, &addr, 0ULL, NULL), 0, avmap);
             MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[nic][0] = addr;
-            /* highest bit is marked as 1 to indicate this is a new process */
-            (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
-            MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[new_avt_procs[i]]);
+            remote_gpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
         }
     }
 
@@ -896,7 +858,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
     goto fn_exit;
 }
 
-int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
+int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **local_upids)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, total_size = 0;
@@ -907,17 +869,18 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char 
     MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_CHKPMEM_MALLOC((*local_upid_size), size_t *, comm->local_size * sizeof(size_t),
+    MPIR_CHKPMEM_MALLOC((*local_upid_size), int *, comm->local_size * sizeof(int),
                         mpi_errno, "local_upid_size", MPL_MEM_ADDRESS);
     MPIR_CHKLMEM_MALLOC(temp_buf, char *, comm->local_size * MPIDI_OFI_global.addrnamelen,
                         mpi_errno, "temp_buf", MPL_MEM_BUFFER);
 
     for (i = 0; i < comm->local_size; i++) {
-        (*local_upid_size)[i] = MPIDI_OFI_global.addrnamelen;
+        size_t sz = MPIDI_OFI_global.addrnamelen;;
         MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, i));
         MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av, av->dest[nic][0],
                                         &temp_buf[i * MPIDI_OFI_global.addrnamelen],
-                                        &(*local_upid_size)[i]), 0, avlookup);
+                                        &sz), 0, avlookup);
+        (*local_upid_size)[i] = (int) sz;
         total_size += (*local_upid_size)[i];
     }
 
