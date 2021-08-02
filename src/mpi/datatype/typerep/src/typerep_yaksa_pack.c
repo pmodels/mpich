@@ -456,15 +456,22 @@ int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source
     MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(source_dtp));
 
     bool use_yaksa = MPIR_Typerep_reduce_is_supported(op, source_dtp);
-    int source_is_contig, target_is_contig;
-    MPIR_Datatype_is_contig(source_dtp, &source_is_contig);
-    MPIR_Datatype_is_contig(target_dtp, &target_is_contig);
-
     if (use_yaksa) {
-        if (source_is_packed || source_is_contig) {
+        int source_is_contig, target_is_contig;
+        MPIR_Datatype_is_contig(source_dtp, &source_is_contig);
+        MPIR_Datatype_is_contig(target_dtp, &target_is_contig);
+
+        MPI_Aint true_extent, true_lb;
+        if (source_is_packed) {
             mpi_errno = typerep_op_unpack(source_buf, target_buf, target_count, target_dtp, op);
+        } else if (source_is_contig) {
+            MPIR_Type_get_true_extent_impl(source_dtp, &true_lb, &true_extent);
+            void *addr = (char *) source_buf + true_lb;
+            mpi_errno = typerep_op_unpack(addr, target_buf, target_count, target_dtp, op);
         } else if (target_is_contig) {
-            mpi_errno = typerep_op_pack(source_buf, target_buf, source_count, source_dtp, op);
+            MPIR_Type_get_true_extent_impl(target_dtp, &true_lb, &true_extent);
+            void *addr = (char *) target_buf + true_lb;
+            mpi_errno = typerep_op_pack(source_buf, addr, source_count, source_dtp, op);
         } else {
             MPI_Aint data_sz;
             MPIR_Pack_size(source_count, source_dtp, &data_sz);
