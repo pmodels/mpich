@@ -504,10 +504,10 @@ PARAM:
     is_remote: bool
     length: MPI_Aint
     length-2: int
-    local_upid_size: size_t **
+    local_upid_size: int **
     local_upids: char **
     lock_type: int
-    gpid_ptr: int *
+    gpid_ptr: uint64_t *
     lpids: const int[]
     message: MPIR_Request *
     message_p: MPIR_Request **
@@ -530,8 +530,8 @@ PARAM:
     recvcounts: const MPI_Aint *
     recvtype: MPI_Datatype
     recvtypes: const MPI_Datatype[]
-    remote_gpids: int **
-    remote_upid_size: size_t *
+    remote_gpids: uint64_t *
+    remote_upid_size: int *
     remote_upids: char *
     req: MPIR_Request *
     req_p: MPIR_Request **

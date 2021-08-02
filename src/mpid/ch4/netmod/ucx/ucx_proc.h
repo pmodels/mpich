@@ -21,7 +21,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rank_is_local(int rank, MPIR_Comm * comm)
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_gpid(MPIR_Comm * comm_ptr,
-                                                    int idx, int *gpid_ptr, bool is_remote)
+                                                    int idx, uint64_t * gpid_ptr, bool is_remote)
 {
     int avtid = 0, lpid = 0;
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
