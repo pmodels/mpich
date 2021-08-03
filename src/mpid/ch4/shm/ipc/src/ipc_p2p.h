@@ -138,7 +138,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
         /* copy */
         MPI_Aint actual_unpack_bytes;
         mpi_errno = MPIR_Typerep_unpack((const void *) src_buf, src_data_sz,
-                                        (char *) MPIDIG_REQUEST(rreq, buffer), recv_data_sz,
+                                        (char *) MPIDIG_REQUEST(rreq, buffer),
+                                        MPIDIG_REQUEST(rreq, count),
                                         MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
         MPIR_ERR_CHECK(mpi_errno);
         /* skip unmap */
@@ -155,7 +156,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
         /* TODO: get sender datatype and call MPIR_Typerep_op with mapped_device set to dev_id */
         MPI_Aint actual_unpack_bytes;
         mpi_errno = MPIR_Typerep_unpack((const void *) src_buf, src_data_sz,
-                                        (char *) MPIDIG_REQUEST(rreq, buffer), recv_data_sz,
+                                        (char *) MPIDIG_REQUEST(rreq, buffer),
+                                        MPIDIG_REQUEST(rreq, count),
                                         MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
         MPIR_ERR_CHECK(mpi_errno);
         /* unmap */
