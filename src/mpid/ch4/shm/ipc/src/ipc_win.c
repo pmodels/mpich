@@ -6,7 +6,8 @@
 #include "mpidimpl.h"
 #include "ipc_noinline.h"
 #include "ipc_types.h"
-#include "ipc_mem.h"
+#include "../xpmem/xpmem_post.h"
+#include "../gpu/gpu_post.h"
 
 /* Return global node rank of each process in the shared communicator.
  * I.e., rank in MPIR_Process.comm_world->node_comm. The caller routine
