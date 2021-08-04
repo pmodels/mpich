@@ -308,9 +308,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_set(int ctx_idx, int val)
 #define MPIDI_OFI_INVALID_MR_KEY 0xFFFFFFFFFFFFFFFFULL
 int MPIDI_OFI_handle_cq_error_util(int ctx_idx, ssize_t ret);
 int MPIDI_OFI_retry_progress(void);
-int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint data_sz,
+int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
                               uint32_t attr, MPIR_Request ** req);
-int MPIDI_OFI_am_rdma_read_ack_handler(int handler_id, void *am_hdr, void *data,
+int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(struct fid_ep *ep);

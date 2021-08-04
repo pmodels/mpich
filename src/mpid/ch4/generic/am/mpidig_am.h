@@ -98,8 +98,7 @@ typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
         attr |= ((src_vci) << MPIDIG_AM_ATTR_SRC_VCI_SHIFT) | ((dst_vci) << MPIDIG_AM_ATTR_DST_VCI_SHIFT); \
     } while (0)
 
-typedef int (*MPIDIG_am_target_msg_cb) (int handler_id, void *am_hdr,
-                                        void *data, MPI_Aint data_sz,
+typedef int (*MPIDIG_am_target_msg_cb) (void *am_hdr, void *data, MPI_Aint data_sz,
                                         uint32_t attr, MPIR_Request ** req);
 
 typedef struct MPIDIG_global_t {

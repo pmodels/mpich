@@ -6,7 +6,7 @@
 #include "mpidimpl.h"
 #include "ofi_am_events.h"
 
-int MPIDI_OFI_am_rdma_read_ack_handler(int handler_id, void *am_hdr, void *data,
+int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -7,7 +7,7 @@
 #include "mpidch4r.h"
 
 static int comm_abort_origin_cb(MPIR_Request * sreq);
-static int comm_abort_target_msg_cb(int handler_id, void *am_hdr,
+static int comm_abort_target_msg_cb(void *am_hdr,
                                     void *data, MPI_Aint data_sz, uint32_t attr,
                                     MPIR_Request ** req);
 
@@ -72,7 +72,7 @@ static int comm_abort_origin_cb(MPIR_Request * sreq)
     return MPID_Request_complete(sreq);
 }
 
-static int comm_abort_target_msg_cb(int handler_id, void *am_hdr,
+static int comm_abort_target_msg_cb(void *am_hdr,
                                     void *data, MPI_Aint data_sz, uint32_t attr,
                                     MPIR_Request ** req)
 {

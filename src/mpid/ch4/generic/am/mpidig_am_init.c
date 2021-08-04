@@ -182,7 +182,7 @@ int MPIDIG_am_init(void)
     MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK, NULL, &MPIDIG_win_unlock_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK_ACK, NULL, &MPIDIG_win_unlock_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL, NULL, &MPIDIG_win_lockall_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL_ACK, NULL, &MPIDIG_win_localall_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL_ACK, NULL, &MPIDIG_win_lockall_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL, NULL, &MPIDIG_win_unlockall_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL_ACK, NULL, &MPIDIG_win_unlockall_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_DT_REQ, &MPIDIG_put_dt_origin_cb, &MPIDIG_put_dt_target_msg_cb);
