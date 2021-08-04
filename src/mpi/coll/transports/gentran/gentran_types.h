@@ -35,8 +35,7 @@ typedef struct MPII_Genutil_vtx_t {
     int vtx_state;
     int vtx_id;
 
-    UT_array *in_vtcs;
-    UT_array *out_vtcs;
+    UT_array out_vtcs;
 
     int pending_dependencies;
     int num_dependencies;
@@ -109,13 +108,13 @@ typedef struct MPII_Genutil_vtx_t {
 } MPII_Genutil_vtx_t;
 
 typedef struct MPII_Genutil_sched_t {
-    UT_array *vtcs;
+    UT_array vtcs;
     int total_vtcs;
     int completed_vtcs;
     int last_fence;
 
     /* array of buffers allocated for schedule execution */
-    UT_array *buffers;
+    UT_array buffers;
 
     /* issued vertices linked list */
     struct MPII_Genutil_vtx_t *issued_head;

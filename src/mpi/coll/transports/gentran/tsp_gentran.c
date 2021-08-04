@@ -33,9 +33,9 @@ int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
     sched->last_fence = -1;
 
     /* initialize array for storing vertices */
-    utarray_new(sched->vtcs, &vtx_t_icd, MPL_MEM_COLL);
+    utarray_init(&sched->vtcs, &vtx_t_icd);
 
-    utarray_new(sched->buffers, &ut_ptr_icd, MPL_MEM_COLL);
+    utarray_init(&sched->buffers, &ut_ptr_icd);
     utarray_init(&sched->generic_types, &vtx_type_t_icd);
 
     sched->issued_head = NULL;
@@ -55,7 +55,7 @@ void MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
     void **p;
 
     /* free up the sched resources */
-    vtx = ut_type_array(sched->vtcs, vtx_t *);
+    vtx = ut_type_array(&sched->vtcs, vtx_t *);
     MPII_Genutil_vtx_type_t *vtype =
         ut_type_array(&sched->generic_types, MPII_Genutil_vtx_type_t *);
     for (i = 0; i < sched->total_vtcs; i++, vtx++) {
@@ -82,11 +82,11 @@ void MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
 
     /* free up the allocated buffers */
     p = NULL;
-    while ((p = (void **) utarray_next(sched->buffers, p)))
+    while ((p = (void **) utarray_next(&sched->buffers, p)))
         MPL_free(*p);
 
-    utarray_free(sched->vtcs);
-    utarray_free(sched->buffers);
+    utarray_done(&sched->vtcs);
+    utarray_done(&sched->buffers);
     utarray_done(&sched->generic_types);
     MPL_free(sched);
 }
@@ -323,45 +323,49 @@ int MPIR_TSP_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
 
 /* Transport function that adds a no op vertex in the graph that has
  * all the vertices posted before it as incoming vertices */
-int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s)
+int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: sched [sink] total=%d", sched->total_vtcs));
 
     vtx_t *vtxp;
-    int i, n_in_vtcs = 0, vtx_id;
+    vtx_t *sched_fence;
+    int i, n_in_vtcs = 0;
     int *in_vtcs;
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_CHKLMEM_DECL(1);
 
     /* assign a new vertex */
-    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
 
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__SINK;
 
-    MPIR_CHKLMEM_MALLOC(in_vtcs, int *, sizeof(int) * vtx_id,
+    MPIR_CHKLMEM_MALLOC(in_vtcs, int *, sizeof(int) * (*vtx_id),
                         mpi_errno, "in_vtcs buffer", MPL_MEM_COLL);
     /* record incoming vertices */
-    for (i = vtx_id - 1; i >= 0; i--) {
-        vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, i);
-        MPIR_Assert(sched_fence != NULL);
+    sched_fence = ut_type_array(&sched->vtcs, vtx_t *) + *vtx_id - 1;
+    MPIR_Assert(sched_fence != NULL);
+    for (i = *vtx_id - 1; i >= 0; i--) {
         if (sched_fence->vtx_kind == MPII_GENUTIL_VTX_KIND__FENCE)
             /* no need to record this and any vertex before fence.
              * Dependency on the last fence call will be added by
              * the subsequent call to MPIC_Genutil_vtx_add_dependencies function */
             break;
         else {
-            in_vtcs[vtx_id - 1 - i] = i;
-            n_in_vtcs++;
+            /* this vertex only depends on the sink when it has no
+             * outgoing dependence     */
+            if (utarray_len(&sched_fence->out_vtcs) == 0)
+                in_vtcs[n_in_vtcs++] = i;
         }
+        sched_fence--;
     }
 
-    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
-  fn_exit:
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
     MPIR_CHKLMEM_FREEALL();
-    return vtx_id;
+  fn_exit:
+    return mpi_errno;
   fn_fail:
     /* TODO - Replace this with real error handling */
     MPIR_Assert(MPI_SUCCESS == mpi_errno);
@@ -372,15 +376,18 @@ void MPIR_TSP_sched_fence(MPIR_TSP_sched_t s)
 {
     MPII_Genutil_sched_t *sched = s;
     int fence_id;
+    int mpi_errno = MPI_SUCCESS;
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Gentran: scheduling a fence"));
 
     /* fence operation is an extension to fence, so we can reuse the fence call */
-    fence_id = MPIR_TSP_sched_sink(sched);
+    mpi_errno = MPIR_TSP_sched_sink(sched, &fence_id);
     /* change the vertex kind from SINK to FENCE */
-    vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, fence_id);
+    vtx_t *sched_fence = (vtx_t *) utarray_eltptr(&sched->vtcs, fence_id);
     MPIR_Assert(sched_fence != NULL);
     sched_fence->vtx_kind = MPII_GENUTIL_VTX_KIND__FENCE;
     sched->last_fence = fence_id;
+    /* TODO - Replace this with real error handling */
+    MPIR_Assert(MPI_SUCCESS == mpi_errno);
 }
 
 int MPIR_TSP_sched_selective_sink(MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs)
@@ -406,7 +413,7 @@ void *MPIR_TSP_sched_malloc(size_t size, MPIR_TSP_sched_t s)
 {
     MPII_Genutil_sched_t *sched = s;
     void *addr = MPL_malloc(size, MPL_MEM_COLL);
-    utarray_push_back(sched->buffers, &addr, MPL_MEM_COLL);
+    utarray_push_back(&sched->buffers, &addr, MPL_MEM_COLL);
     return addr;
 }
 
@@ -470,8 +477,8 @@ int MPIR_TSP_sched_reset(MPIR_TSP_sched_t s)
     sched->completed_vtcs = 0;
     sched->issued_head = sched->issued_tail = NULL;
     for (i = 0; i < sched->total_vtcs; i++) {
-        MPIR_ERR_CHKANDJUMP(!(utarray_eltptr(sched->vtcs, i)), mpi_errno, MPI_ERR_OTHER, "**nomem");
-        MPII_Genutil_vtx_t *vtx = (MPII_Genutil_vtx_t *) utarray_eltptr(sched->vtcs, i);
+        MPII_Genutil_vtx_t *vtx = (MPII_Genutil_vtx_t *) utarray_eltptr(&sched->vtcs, i);
+        MPIR_ERR_CHKANDJUMP(!vtx, mpi_errno, MPI_ERR_OTHER, "**nomem");
         vtx->pending_dependencies = vtx->num_dependencies;
         vtx->vtx_state = MPII_GENUTIL_VTX_STATE__INIT;
         if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
