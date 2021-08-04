@@ -52,7 +52,7 @@ int MPIDIG_part_send_data_origin_cb(MPIR_Request * sreq)
 
 /* Callback used on receiver, triggered when received the send_init AM.
  * It tries to match with a local posted part_rreq or store as unexpected. */
-int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data,
+int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
                                         MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -101,7 +101,7 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
  * It stores rreq pointer, updates local status, and optionally initiates
  * data transfer if all partitions have been marked as ready.
  */
-int MPIDIG_part_cts_target_msg_cb(int handler_id, void *am_hdr, void *data,
+int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
                                   MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -123,7 +123,7 @@ int MPIDIG_part_cts_target_msg_cb(int handler_id, void *am_hdr, void *data,
 
 /* Callback on receiver, triggered when received actual data from sender.
  * It copies data into recvbuf and set local part_rreq complete. */
-int MPIDIG_part_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data,
+int MPIDIG_part_send_data_target_msg_cb(void *am_hdr, void *data,
                                         MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

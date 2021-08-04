@@ -930,7 +930,7 @@ static int cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
     return mpi_errno;
 }
 
-int MPIDIG_put_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_put_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                  uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -960,7 +960,7 @@ int MPIDIG_put_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_A
     return mpi_errno;
 }
 
-int MPIDIG_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_acc_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                  uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -990,7 +990,7 @@ int MPIDIG_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_A
     return mpi_errno;
 }
 
-int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_get_acc_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                      uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1028,7 +1028,7 @@ int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, M
     return mpi_errno;
 }
 
-int MPIDIG_cswap_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_cswap_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                    uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1119,67 +1119,67 @@ static int win_ctrl_handler(int handler_id, void *am_hdr, void *data, MPI_Aint i
     return mpi_errno;
 }
 
-int MPIDIG_win_lock_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_win_lock_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                   uint32_t attr, MPIR_Request ** req)
 {
     return win_ctrl_handler(MPIDIG_WIN_LOCK, am_hdr, data, in_data_sz, attr, req);
 }
 
-int MPIDIG_win_lockall_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_win_lockall_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                      uint32_t attr, MPIR_Request ** req)
 {
     return win_ctrl_handler(MPIDIG_WIN_LOCKALL, am_hdr, data, in_data_sz, attr, req);
 }
 
-int MPIDIG_win_unlock_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_win_unlock_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                     uint32_t attr, MPIR_Request ** req)
 {
     return win_ctrl_handler(MPIDIG_WIN_UNLOCK, am_hdr, data, in_data_sz, attr, req);
 }
 
-int MPIDIG_win_unlockall_target_msg_cb(int handler_id, void *am_hdr, void *data,
+int MPIDIG_win_unlockall_target_msg_cb(void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     return win_ctrl_handler(MPIDIG_WIN_UNLOCKALL, am_hdr, data, in_data_sz, attr, req);
 }
 
-int MPIDIG_win_lock_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_win_lock_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                       uint32_t attr, MPIR_Request ** req)
 {
     return win_ctrl_handler(MPIDIG_WIN_LOCK_ACK, am_hdr, data, in_data_sz, attr, req);
 }
 
-int MPIDIG_win_unlock_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
+int MPIDIG_win_unlock_ack_target_msg_cb(void *am_hdr, void *data,
                                         MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     return win_ctrl_handler(MPIDIG_WIN_UNLOCK_ACK, am_hdr, data, in_data_sz, attr, req);
 }
 
-int MPIDIG_win_lockall_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
+int MPIDIG_win_lockall_ack_target_msg_cb(void *am_hdr, void *data,
                                          MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     return win_ctrl_handler(MPIDIG_WIN_LOCKALL_ACK, am_hdr, data, in_data_sz, attr, req);
 }
 
-int MPIDIG_win_unlockall_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
+int MPIDIG_win_unlockall_ack_target_msg_cb(void *am_hdr, void *data,
                                            MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     return win_ctrl_handler(MPIDIG_WIN_UNLOCKALL_ACK, am_hdr, data, in_data_sz, attr, req);
 }
 
-int MPIDIG_win_post_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_win_post_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                   uint32_t attr, MPIR_Request ** req)
 {
     return win_ctrl_handler(MPIDIG_WIN_POST, am_hdr, data, in_data_sz, attr, req);
 }
 
-int MPIDIG_win_complete_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_win_complete_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                       uint32_t attr, MPIR_Request ** req)
 {
     return win_ctrl_handler(MPIDIG_WIN_COMPLETE, am_hdr, data, in_data_sz, attr, req);
 }
 
-int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_put_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                              uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1253,7 +1253,7 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
     goto fn_exit;
 }
 
-int MPIDIG_put_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_put_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1308,7 +1308,7 @@ int MPIDIG_put_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Ai
     goto fn_exit;
 }
 
-int MPIDIG_put_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_put_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                     uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1349,7 +1349,7 @@ int MPIDIG_put_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
     goto fn_exit;
 }
 
-int MPIDIG_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_acc_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                     uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1390,7 +1390,7 @@ int MPIDIG_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
     goto fn_exit;
 }
 
-int MPIDIG_get_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
+int MPIDIG_get_acc_dt_ack_target_msg_cb(void *am_hdr, void *data,
                                         MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1432,7 +1432,7 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data
     goto fn_exit;
 }
 
-int MPIDIG_put_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_put_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                   uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1476,7 +1476,7 @@ int MPIDIG_put_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_
     goto fn_exit;
 }
 
-int MPIDIG_acc_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_acc_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                   uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1505,7 +1505,7 @@ int MPIDIG_acc_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_
     return mpi_errno;
 }
 
-int MPIDIG_get_acc_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_get_acc_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                       uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1533,7 +1533,7 @@ int MPIDIG_get_acc_data_target_msg_cb(int handler_id, void *am_hdr, void *data, 
     return mpi_errno;
 }
 
-int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_cswap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1595,7 +1595,7 @@ int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Ain
     goto fn_exit;
 }
 
-int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_acc_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                              uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1675,7 +1675,7 @@ int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
 }
 
 
-int MPIDIG_get_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_get_acc_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                  uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1686,7 +1686,7 @@ int MPIDIG_get_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_A
     /* the same handling processing as ACC except the completion handler function. */
     /* set is_async to 1 so we can get rreq back */
     MPIR_Request *rreq;
-    mpi_errno = MPIDIG_acc_target_msg_cb(handler_id, am_hdr, data, in_data_sz,
+    mpi_errno = MPIDIG_acc_target_msg_cb(am_hdr, data, in_data_sz,
                                          attr | MPIDIG_AM_ATTR__IS_ASYNC, &rreq);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = get_acc_target_cmpl_cb;
@@ -1704,7 +1704,7 @@ int MPIDIG_get_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_A
     return mpi_errno;
 }
 
-int MPIDIG_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_acc_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1764,7 +1764,7 @@ int MPIDIG_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Ai
     goto fn_exit;
 }
 
-int MPIDIG_get_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_get_acc_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                     uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1775,7 +1775,7 @@ int MPIDIG_get_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
     /* the same handling processing as ACC except the completion handler function. */
     /* set is_async to 1 so we can get rreq back */
     MPIR_Request *rreq;
-    mpi_errno = MPIDIG_acc_dt_target_msg_cb(handler_id, am_hdr, data, in_data_sz,
+    mpi_errno = MPIDIG_acc_dt_target_msg_cb(am_hdr, data, in_data_sz,
                                             attr | MPIDIG_AM_ATTR__IS_ASYNC, &rreq);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = get_acc_dt_target_cmpl_cb;
@@ -1793,7 +1793,7 @@ int MPIDIG_get_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
     return mpi_errno;
 }
 
-int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_get_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                              uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1853,7 +1853,7 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
     goto fn_exit;
 }
 
-int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+int MPIDIG_get_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                  uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

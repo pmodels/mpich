@@ -96,7 +96,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * m
     MPIR_FUNC_ENTER;
 
     int attr = 0;               /* is_local = 0, is_async = 0 */
-    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
+    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr,
                                                        p_data, msg_hdr->payload_sz, attr, NULL);
 
     MPIR_FUNC_EXIT;
@@ -123,8 +123,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
 
     if (!rreq) {
         int attr = MPIDIG_AM_ATTR__IS_ASYNC;
-        MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr, p_data,
-                                                           msg_hdr->payload_sz, attr, &rreq);
+        MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, p_data, msg_hdr->payload_sz,
+                                                           attr, &rreq);
         MPIDIG_recv_setup(rreq);
         MPIDIG_req_cache_add(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr, rreq);
     }
@@ -147,8 +147,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t
     MPIR_FUNC_ENTER;
 
     int attr = 0;
-    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                                       NULL, 0, attr, NULL);
+    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, 0, attr, NULL);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -235,9 +234,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
 
     MPIR_FUNC_ENTER;
 
-    int attr = MPIDIG_AM_ATTR__IS_ASYNC;
-    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                                       NULL, msg_hdr->payload_sz, attr, &rreq);
+    int attr = MPIDIG_AM_ATTR__IS_ASYNC | MPIDIG_AM_ATTR__IS_RNDV;
+    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, 0, attr, &rreq);
 
     if (!rreq)
         goto fn_exit;
