@@ -73,11 +73,34 @@ typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
  * object is returned, the caller is expected to transfer the payload to the request,
  * and call target_cmpl_cb upon complete.
  *
- * If is_async is false/0, a request object will never be returned.
+ * Transport sets attr with a bit mask of flags. We use uint32_t for attr.
+ * Bits are reserved as following:
+ *     0-7    ch4-layer defined flags (defined below)
+ *     8-15   source vci
+ *     16-23  destination vci
+ *     24-31  reserved for transport (e.g. transport internal rndv id)
+ *
+ * The vci bits are needed once we enable multiple vcis for active messages.
  */
+
+#define MPIDIG_AM_ATTR__IS_LOCAL  0x1   /* from shm transport */
+#define MPIDIG_AM_ATTR__IS_ASYNC  0x2   /* need request and will asynchronously finish the data copy */
+#define MPIDIG_AM_ATTR__IS_RNDV   0x4   /* rndv mode, call MPIDI_{NM,SHM}_am_get_data_copy_cb to setup callback */
+
+#define MPIDIG_AM_ATTR_SRC_VCI_SHIFT 8
+#define MPIDIG_AM_ATTR_DST_VCI_SHIFT 16
+#define MPIDIG_AM_ATTR_TRANSPORT_SHIFT 24
+
+#define MPIDIG_AM_ATTR_SRC_VCI(attr) ((attr >> MPIDIG_AM_ATTR_SRC_VCI_SHIFT) & 0xff)
+#define MPIDIG_AM_ATTR_DST_VCI(attr) ((attr >> MPIDIG_AM_ATTR_DST_VCI_SHIFT) & 0xff)
+#define MPIDIG_AM_ATTR_SET_VCIS(attr, src_vci, dst_vci) \
+    do { \
+        attr |= ((src_vci) << MPIDIG_AM_ATTR_SRC_VCI_SHIFT) | ((dst_vci) << MPIDIG_AM_ATTR_DST_VCI_SHIFT); \
+    } while (0)
+
 typedef int (*MPIDIG_am_target_msg_cb) (int handler_id, void *am_hdr,
                                         void *data, MPI_Aint data_sz,
-                                        int is_local, int is_async, MPIR_Request ** req);
+                                        uint32_t attr, MPIR_Request ** req);
 
 typedef struct MPIDIG_global_t {
     MPIDIG_am_target_msg_cb target_msg_cbs[MPIDI_AM_HANDLERS_MAX];

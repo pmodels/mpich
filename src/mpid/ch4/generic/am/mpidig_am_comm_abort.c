@@ -8,8 +8,8 @@
 
 static int comm_abort_origin_cb(MPIR_Request * sreq);
 static int comm_abort_target_msg_cb(int handler_id, void *am_hdr,
-                                    void *data, MPI_Aint data_sz,
-                                    int is_local, int is_async, MPIR_Request ** req);
+                                    void *data, MPI_Aint data_sz, uint32_t attr,
+                                    MPIR_Request ** req);
 
 void MPIDIG_am_comm_abort_init(void)
 {
@@ -73,8 +73,8 @@ static int comm_abort_origin_cb(MPIR_Request * sreq)
 }
 
 static int comm_abort_target_msg_cb(int handler_id, void *am_hdr,
-                                    void *data, MPI_Aint data_sz,
-                                    int is_local, int is_async, MPIR_Request ** req)
+                                    void *data, MPI_Aint data_sz, uint32_t attr,
+                                    MPIR_Request ** req)
 {
     MPIR_FUNC_ENTER;
 

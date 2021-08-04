@@ -53,8 +53,7 @@ int MPIDIG_part_send_data_origin_cb(MPIR_Request * sreq)
 /* Callback used on receiver, triggered when received the send_init AM.
  * It tries to match with a local posted part_rreq or store as unexpected. */
 int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data,
-                                        MPI_Aint in_data_sz, int is_local, int is_async,
-                                        MPIR_Request ** req)
+                                        MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
@@ -87,8 +86,9 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
         MPIDIG_enqueue_request(unexp_req, &MPIDI_global.part_unexp_list, MPIDIG_PART);
     }
 
-    if (is_async)
+    if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -102,8 +102,7 @@ int MPIDIG_part_send_init_target_msg_cb(int handler_id, void *am_hdr, void *data
  * data transfer if all partitions have been marked as ready.
  */
 int MPIDIG_part_cts_target_msg_cb(int handler_id, void *am_hdr, void *data,
-                                  MPI_Aint in_data_sz, int is_local, int is_async,
-                                  MPIR_Request ** req)
+                                  MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
@@ -125,8 +124,7 @@ int MPIDIG_part_cts_target_msg_cb(int handler_id, void *am_hdr, void *data,
 /* Callback on receiver, triggered when received actual data from sender.
  * It copies data into recvbuf and set local part_rreq complete. */
 int MPIDIG_part_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data,
-                                        MPI_Aint in_data_sz, int is_local, int is_async,
-                                        MPIR_Request ** req)
+                                        MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
@@ -157,7 +155,7 @@ int MPIDIG_part_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data
     /* Data may be segmented in pipeline AM type; initialize with total send size */
     MPIDIG_recv_type_init(MPIDIG_PART_REQUEST(part_rreq, u.recv).sdata_size, rreq);
 
-    if (is_async) {
+    if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
