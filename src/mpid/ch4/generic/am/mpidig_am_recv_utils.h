@@ -28,6 +28,28 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_set_buffer_attr(MPIR_Request * rreq)
     p->is_device_buffer = (attr.type == MPL_GPU_POINTER_DEV);
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_check_rndv_cb(MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb) {
+        mpi_errno = MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* the data_copy_cb may complete rreq (e.g. ucx am_send_hdr may invoke
+         * progress recursively and finish several callbacks before it return.
+         * Thus we need check MPIDIG_REQUEST(rreq, req) still there. */
+        if (MPIDIG_REQUEST(rreq, req)) {
+            MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb = NULL;
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* caching recv buffer information */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Request * rreq)
 {
@@ -46,11 +68,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Req
         rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(max_data_size, in_data_sz);
     }
 
-    if (MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb) {
-        mpi_errno = MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb = NULL;
-    }
+    mpi_errno = MPIDIG_recv_check_rndv_cb(rreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -77,11 +96,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_init(int is_contig, MPI_Aint in_data_sz
 
     MPIDIG_recv_set_buffer_attr(rreq);
 
-    if (MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb) {
-        mpi_errno = MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb = NULL;
-    }
+    mpi_errno = MPIDIG_recv_check_rndv_cb(rreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
