@@ -328,14 +328,16 @@ static void set_rreq_data_copy_cb(MPIR_Request * rreq, int attr)
     MPIR_FUNC_EXIT;
 }
 
-static void set_rndv_cb(MPIR_Request * rreq)
+static void set_rndv_cb(MPIR_Request * rreq, int flags)
 {
-    MPIDIG_recv_set_data_copy_cb(rreq, MPIDIG_do_cts);
+    int rndv_id = MPIDIG_AM_SEND_GET_RNDV_ID(flags);
+    MPIDIG_recv_set_data_copy_cb(rreq, MPIDIG_global.rndv_cbs[rndv_id]);
 }
 
-static void call_rndv_cb(MPIR_Request * rreq)
+static void call_rndv_cb(MPIR_Request * rreq, int flags)
 {
-    MPIDIG_do_cts(rreq);
+    int rndv_id = MPIDIG_AM_SEND_GET_RNDV_ID(flags);
+    MPIDIG_global.rndv_cbs[rndv_id] (rreq);
 }
 
 static void set_matched_rreq_fields(MPIR_Request * rreq, int rank, int tag,
@@ -410,7 +412,7 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         } else if (msg_mode == MSG_MODE_RNDV_RTS) {
             MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
-            set_rndv_cb(rreq);
+            set_rndv_cb(rreq, hdr->flags);
         } else {        /* MSG_MODE_TRANSPORT_RNDV */
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
             set_rreq_data_copy_cb(rreq, attr);
@@ -430,7 +432,7 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
             /* either we or transport will finish recv_copy depending on ASYNC attr */
         } else if (msg_mode == MSG_MODE_RNDV_RTS) {
             MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
-            call_rndv_cb(rreq);
+            call_rndv_cb(rreq, hdr->flags);
         } else {        /* MSG_MODE_TRANSPORT_RNDV */
             /* transport will finish the rndv */
         }

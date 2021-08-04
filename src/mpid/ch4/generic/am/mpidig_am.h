@@ -7,6 +7,7 @@
 #define MPIDIG_AM_H_INCLUDED
 
 #define MPIDI_AM_HANDLERS_MAX (64)
+#define MPIDI_AM_RNDV_CB_MAX  (10)
 
 enum {
     MPIDIG_SEND = 0,
@@ -64,6 +65,12 @@ enum {
     MPIDIG_HANDLER_STATIC_MAX
 };
 
+enum {
+    MPIDIG_RNDV_GENERIC = 0,
+
+    MPIDIG_RNDV_STATIC_MAX
+};
+
 typedef int (*MPIDIG_am_target_cmpl_cb) (MPIR_Request * req);
 typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
 
@@ -100,10 +107,12 @@ typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
 
 typedef int (*MPIDIG_am_target_msg_cb) (void *am_hdr, void *data, MPI_Aint data_sz,
                                         uint32_t attr, MPIR_Request ** req);
+typedef int (*MPIDIG_am_rndv_cb) (MPIR_Request * rreq);
 
 typedef struct MPIDIG_global_t {
     MPIDIG_am_target_msg_cb target_msg_cbs[MPIDI_AM_HANDLERS_MAX];
     MPIDIG_am_origin_cb origin_cbs[MPIDI_AM_HANDLERS_MAX];
+    MPIDIG_am_rndv_cb rndv_cbs[MPIDI_AM_RNDV_CB_MAX];
     /* Control parameters for global progress of RMA target-side active messages.
      * TODO: performance loss need be studied since we add atomic operations
      * in RMA sync and callback routines.*/
@@ -117,6 +126,7 @@ extern MPIDIG_global_t MPIDIG_global;
 void MPIDIG_am_reg_cb(int handler_id,
                       MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
 int MPIDIG_am_reg_cb_dynamic(MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
+void MPIDIG_am_rndv_reg_cb(int rndv_id, MPIDIG_am_rndv_cb rndv_cb);
 
 int MPIDIG_am_init(void);
 void MPIDIG_am_finalize(void);

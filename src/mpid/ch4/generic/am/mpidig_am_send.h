@@ -8,9 +8,23 @@
 
 #include "ch4_impl.h"
 
+/* MPIDIG_AM_SEND message uses flags in MPIDIG_hdr_t to mark different mode.
+ * The bits are masked as following:
+ *     0-7  individual flags as defined below
+ *     8-15 RNDV ID if MPIDIG_AM_SEND_FLAGS_RTS is set
+ *     16-  reserved, always zero.
+ */
+
 #define MPIDIG_AM_SEND_FLAGS_NONE (0)
 #define MPIDIG_AM_SEND_FLAGS_SYNC (1)
 #define MPIDIG_AM_SEND_FLAGS_RTS (1 << 1)
+
+#define MPIDIG_AM_SEND_SET_RNDV(flags, id) \
+    do { \
+        flags = (flags & 0xff) | MPIDIG_AM_SEND_FLAGS_RTS | (id << 8); \
+    } while (0)
+
+#define MPIDIG_AM_SEND_GET_RNDV_ID(flags) (flags >> 8)
 
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_check_eager(int is_local, MPI_Aint am_hdr_sz, MPI_Aint data_sz,
                                                  const void *buf, MPI_Aint count,
@@ -85,6 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
         MPIDIG_REQUEST(sreq, rank) = rank;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         am_hdr.flags |= MPIDIG_AM_SEND_FLAGS_RTS;
+        MPIDIG_AM_SEND_SET_RNDV(am_hdr.flags, MPIDIG_RNDV_GENERIC);
 
         CH4_CALL(am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz), is_local, mpi_errno);
     }

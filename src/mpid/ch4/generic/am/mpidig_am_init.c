@@ -117,6 +117,17 @@ void MPIDIG_am_reg_cb(int handler_id,
     MPIR_FUNC_EXIT;
 }
 
+void MPIDIG_am_rndv_reg_cb(int rndv_id, MPIDIG_am_rndv_cb rndv_cb)
+{
+    MPIR_FUNC_ENTER;
+
+    MPIR_Assert(rndv_id < MPIDIG_RNDV_STATIC_MAX);
+    MPIDIG_global.rndv_cbs[rndv_id] = rndv_cb;
+
+    MPIR_FUNC_EXIT;
+}
+
+
 int MPIDIG_am_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -198,6 +209,8 @@ int MPIDIG_am_init(void)
                      &MPIDIG_acc_data_origin_cb, &MPIDIG_acc_data_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DAT_REQ,
                      &MPIDIG_get_acc_data_origin_cb, &MPIDIG_get_acc_data_target_msg_cb);
+
+    MPIDIG_am_rndv_reg_cb(MPIDIG_RNDV_GENERIC, &MPIDIG_do_cts);
 
     MPIDIG_am_comm_abort_init();
 
