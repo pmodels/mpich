@@ -29,8 +29,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_set_buffer_attr(MPIR_Request * rreq)
 }
 
 /* caching recv buffer information */
-MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Request * rreq)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     p->recv_type = MPIDIG_RECV_DATATYPE;
     p->in_data_sz = in_data_sz;
@@ -45,13 +47,22 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Re
     }
 
     if (MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb) {
-        MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb = NULL;
     }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_sz,
-                                               void *data, MPI_Aint data_sz, MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_init(int is_contig, MPI_Aint in_data_sz,
+                                              void *data, MPI_Aint data_sz, MPIR_Request * rreq)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     p->in_data_sz = in_data_sz;
     if (is_contig) {
@@ -67,8 +78,15 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_s
     MPIDIG_recv_set_buffer_attr(rreq);
 
     if (MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb) {
-        MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb = NULL;
     }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_finish(MPIR_Request * rreq)

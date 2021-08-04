@@ -233,9 +233,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
                 MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
             }
             MPIDIG_REQUEST(unexp_req, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
-            MPIDIG_recv_type_init(data_sz, unexp_req);
-            mpi_errno = MPIDIG_do_cts(unexp_req);
-            MPIR_ERR_CHECK(mpi_errno);
+            /* MPIDIG_recv_type_init will call the callback to finish the rndv protocol */
+            mpi_errno = MPIDIG_recv_type_init(data_sz, unexp_req);
             goto fn_exit;
         } else {
             mpi_errno = MPIDIG_handle_unexpected(buf, count, datatype, unexp_req);
@@ -319,7 +318,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
         MPIDIG_REQUEST(message, count) = count;
         MPIDIG_REQUEST(message, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
         MPIDIG_recv_type_init(data_sz, message);
-        MPIDIG_do_cts(message);
     } else {
         mpi_errno = MPIDIG_handle_unexp_mrecv(message);
         MPIR_ERR_CHECK(mpi_errno);
