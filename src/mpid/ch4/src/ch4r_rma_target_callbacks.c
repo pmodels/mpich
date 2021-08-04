@@ -355,7 +355,7 @@ static int win_lock_advance(MPIR_Win * win)
     goto fn_exit;
 }
 
-static void win_lock_req_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win)
+static void win_lock_req_proc(int mtype, const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win)
 {
     MPIR_FUNC_ENTER;
 
@@ -363,7 +363,7 @@ static void win_lock_req_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * inf
     struct MPIDIG_win_lock *lock = (struct MPIDIG_win_lock *)
         MPL_calloc(1, sizeof(struct MPIDIG_win_lock), MPL_MEM_RMA);
 
-    lock->mtype = handler_id;
+    lock->mtype = mtype;        /* MPIDIG_WIN_LOCK or MPIDIG_WIN_LOCKALL */
     lock->rank = info->origin_rank;
     lock->type = info->lock_type;
     MPIDIG_win_lock_recvd_t *lock_recvd_q = &MPIDIG_WIN(win, sync).lock_recvd;
@@ -1060,9 +1060,8 @@ int MPIDIG_cswap_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
     return mpi_errno;
 }
 
-
-int MPIDIG_win_ctrl_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                  uint32_t attr, MPIR_Request ** req)
+static int win_ctrl_handler(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+                            uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_win_cntrl_msg_t *msg_hdr = (MPIDIG_win_cntrl_msg_t *) am_hdr;
@@ -1118,6 +1117,66 @@ int MPIDIG_win_ctrl_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_win_ctrl);
     MPIR_FUNC_EXIT;
     return mpi_errno;
+}
+
+int MPIDIG_win_lock_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                  uint32_t attr, MPIR_Request ** req)
+{
+    return win_ctrl_handler(MPIDIG_WIN_LOCK, am_hdr, data, in_data_sz, attr, req);
+}
+
+int MPIDIG_win_lockall_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                     uint32_t attr, MPIR_Request ** req)
+{
+    return win_ctrl_handler(MPIDIG_WIN_LOCKALL, am_hdr, data, in_data_sz, attr, req);
+}
+
+int MPIDIG_win_unlock_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                    uint32_t attr, MPIR_Request ** req)
+{
+    return win_ctrl_handler(MPIDIG_WIN_UNLOCK, am_hdr, data, in_data_sz, attr, req);
+}
+
+int MPIDIG_win_unlockall_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                       MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
+{
+    return win_ctrl_handler(MPIDIG_WIN_UNLOCKALL, am_hdr, data, in_data_sz, attr, req);
+}
+
+int MPIDIG_win_lock_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                      uint32_t attr, MPIR_Request ** req)
+{
+    return win_ctrl_handler(MPIDIG_WIN_LOCK_ACK, am_hdr, data, in_data_sz, attr, req);
+}
+
+int MPIDIG_win_unlock_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                        MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
+{
+    return win_ctrl_handler(MPIDIG_WIN_UNLOCK_ACK, am_hdr, data, in_data_sz, attr, req);
+}
+
+int MPIDIG_win_lockall_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                         MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
+{
+    return win_ctrl_handler(MPIDIG_WIN_LOCKALL_ACK, am_hdr, data, in_data_sz, attr, req);
+}
+
+int MPIDIG_win_unlockall_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                           MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
+{
+    return win_ctrl_handler(MPIDIG_WIN_UNLOCKALL_ACK, am_hdr, data, in_data_sz, attr, req);
+}
+
+int MPIDIG_win_post_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                  uint32_t attr, MPIR_Request ** req)
+{
+    return win_ctrl_handler(MPIDIG_WIN_POST, am_hdr, data, in_data_sz, attr, req);
+}
+
+int MPIDIG_win_complete_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                      uint32_t attr, MPIR_Request ** req)
+{
+    return win_ctrl_handler(MPIDIG_WIN_COMPLETE, am_hdr, data, in_data_sz, attr, req);
 }
 
 int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
