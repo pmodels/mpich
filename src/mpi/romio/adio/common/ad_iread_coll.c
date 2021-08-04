@@ -453,14 +453,6 @@ static void ADIOI_GEN_IreadStridedColl_read(ADIOI_NBC_Request * nbc_req, int *er
 {
     ADIOI_GEN_IreadStridedColl_vars *vars = nbc_req->data.rd.rsc_vars;
     ADIOI_Iread_and_exch_vars *rae_vars = NULL;
-    ADIOI_Access *my_req = vars->my_req;
-
-    /* my_req[] and count_my_req_per_proc aren't needed at this point, so
-     * let's free the memory
-     */
-    ADIOI_Free(vars->count_my_req_per_proc);
-    ADIOI_Free(my_req[0].offsets);
-    ADIOI_Free(my_req);
 
     /* read data in sizes of no more than ADIOI_Coll_bufsize,
      * communicate, and fill user buf.
@@ -492,13 +484,13 @@ static void ADIOI_GEN_IreadStridedColl_free(ADIOI_NBC_Request * nbc_req, int *er
     ADIO_File fd = vars->fd;
     ADIOI_Access *others_req = vars->others_req;
 
-
     /* free all memory allocated for collective I/O */
+    ADIOI_Free_my_req(vars->nprocs, vars->count_my_req_per_proc, vars->my_req, vars->buf_idx);
+
     ADIOI_Free(others_req[0].offsets);
     ADIOI_Free(others_req[0].mem_ptrs);
     ADIOI_Free(others_req);
 
-    ADIOI_Free(vars->buf_idx);
     ADIOI_Free(vars->offset_list);
     ADIOI_Free(vars->st_offsets);
     ADIOI_Free(vars->fd_start);
