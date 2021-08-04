@@ -47,8 +47,8 @@ Non Native API:
       NM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
      SHM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
   am_get_data_copy_cb : MPIDIG_recv_data_copy_cb
-      NM*: void
-     SHM*: void
+      NM*: attr
+     SHM*: attr
   am_hdr_max_sz : MPI_Aint
       NM*: void
      SHM*: void
@@ -471,6 +471,7 @@ PARAM:
     am_hdrs: struct iovec *
     appnum: int
     assert: int
+    attr: int
     av: MPIDI_av_entry_t *
     base: void *
     base-2: const void *

@@ -311,18 +311,18 @@ static int allocate_unexp_req_pack_buf(MPIR_Request * rreq, MPI_Aint data_sz)
     return mpi_errno;
 }
 
-static void set_rreq_data_copy_cb(MPIR_Request * rreq, int is_local)
+static void set_rreq_data_copy_cb(MPIR_Request * rreq, int attr)
 {
     MPIR_FUNC_ENTER;
     MPIDIG_recv_data_copy_cb data_copy_cb = NULL;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (is_local) {
-        data_copy_cb = MPIDI_SHM_am_get_data_copy_cb();
+    if (attr & MPIDIG_AM_ATTR__IS_LOCAL) {
+        data_copy_cb = MPIDI_SHM_am_get_data_copy_cb(attr);
     } else {
-        data_copy_cb = MPIDI_NM_am_get_data_copy_cb();
+        data_copy_cb = MPIDI_NM_am_get_data_copy_cb(attr);
     }
 #else
-    data_copy_cb = MPIDI_NM_am_get_data_copy_cb();
+    data_copy_cb = MPIDI_NM_am_get_data_copy_cb(attr);
 #endif
     MPIDIG_recv_set_data_copy_cb(rreq, data_copy_cb);
     MPIR_FUNC_EXIT;
@@ -413,7 +413,7 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
             set_rndv_cb(rreq);
         } else {        /* MSG_MODE_TRANSPORT_RNDV */
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
-            set_rreq_data_copy_cb(rreq, is_local);
+            set_rreq_data_copy_cb(rreq, attr);
         }
 
         MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
