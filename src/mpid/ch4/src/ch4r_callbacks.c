@@ -284,19 +284,14 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
             MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
         } else {
             /* this is unexpected EAGER */
-            if (MPIDIG_REQUEST(rreq, buffer) || hdr->data_sz == 0) {
-                /* if we allocated unexp buffer (which mean we have inline data), or if the message
-                 * is a 0 byte message. Go ahead init recv */
-
+            if (!(attr & MPIDIG_AM_ATTR__IS_RNDV)) {
                 /* marking the request busy to prevent another thread touching it before transport
                  * finishes and calls the recv_target_cmpl_cb, or transport setup the data_copy_cb.
                  * */
                 MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_BUSY;
                 MPIDIG_recv_type_init(hdr->data_sz, rreq);
             } else {
-                /* We did not allocate unexp buffer because there is no inline data for a non-zero
-                 * SEND message. The data copy will be triggered when matching recv is posted, we
-                 * only need to set the data_copy_cb provided by the netmod. */
+                /* transport rndv, set up data_copy_cb */
                 MPIDIG_recv_data_copy_cb data_copy_cb = NULL;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
                 if (attr & MPIDIG_AM_ATTR__IS_LOCAL) {
