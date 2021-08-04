@@ -29,10 +29,12 @@
 /* Comments copied from common:
  * This file contains four functions:
  *
- * ADIOI_Calc_aggregator()
- * ADIOI_Calc_file_domains()
- * ADIOI_Calc_my_req()
- * ADIOI_Calc_others_req()
+ * ADIOI_GPFS_Calc_aggregator()
+ * ADIOI_GPFS_Calc_file_domains()
+ * ADIOI_GPFS_Calc_my_req()
+ * ADIOI_GPFS_Free_my_req()
+ * ADIOI_GPFS_Calc_others_req()
+ * ADIOI_GPFS_Free_others_req()
  *
  * The last three of these were originally in ad_read_coll.c, but they are
  * also shared with ad_write_coll.c.  I felt that they were better kept with
@@ -605,6 +607,19 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
     TRACE_ERR("Leaving ADIOI_GPFS_Calc_my_req\n");
 }
 
+void ADIOI_GPFS_Free_my_req(int nprocs, int *count_my_req_per_proc,
+                            ADIOI_Access * my_req, MPI_Aint * buf_idx)
+{
+    for (int i = 0; i < nprocs; i++) {
+        if (count_my_req_per_proc[i]) {
+            ADIOI_Free(my_req[i].offsets);
+        }
+    }
+    ADIOI_Free(my_req);
+    ADIOI_Free(count_my_req_per_proc);
+    ADIOI_Free(buf_idx);
+}
+
 /*
  * ADIOI_Calc_others_req (copied to bg and switched to all to all for performance)
  *
@@ -626,7 +641,8 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
                                 int *count_my_req_per_proc,
                                 ADIOI_Access * my_req,
                                 int nprocs, int myrank,
-                                int *count_others_req_procs_ptr, ADIOI_Access ** others_req_ptr)
+                                int *count_others_req_procs_ptr,
+                                int **count_others_req_per_proc_ptr, ADIOI_Access ** others_req_ptr)
 {
     TRACE_ERR("Entering ADIOI_GPFS_Calc_others_req\n");
 /* determine what requests of other processes lie in this process's
@@ -757,15 +773,28 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
                   recvBuf, rcounts, rdispls, ADIO_OFFSET, fd->comm);
 
     /* Clean up */
-    ADIOI_Free(count_others_req_per_proc);
     ADIOI_Free(scounts);
     ADIOI_Free(sdispls);
     ADIOI_Free(rcounts);
     ADIOI_Free(rdispls);
 
     *count_others_req_procs_ptr = count_others_req_procs;
+    *count_others_req_per_proc_ptr = count_others_req_per_proc;
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event(5027, 0, NULL);
 #endif
     TRACE_ERR("Leaving ADIOI_GPFS_Calc_others_req\n");
+}
+
+void ADIOI_GPFS_Free_others_req(int nprocs, int *count_others_req_per_proc,
+                                ADIOI_Access * others_req)
+{
+    for (int i = 0; i < nprocs; i++) {
+        if (count_others_req_per_proc[i]) {
+            ADIOI_Free(others_req[i].offsets);
+            ADIOI_Free(others_req[i].mem_ptrs);
+        }
+    }
+    ADIOI_Free(others_req);
+    ADIOI_Free(count_others_req_per_proc);
 }
