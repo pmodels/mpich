@@ -218,7 +218,7 @@ int MPIDIG_send_data_origin_cb(MPIR_Request * sreq)
 }
 
 int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                              int is_local, int is_async, MPIR_Request ** req)
+                              uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
@@ -299,7 +299,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
                  * only need to set the data_copy_cb provided by the netmod. */
                 MPIDIG_recv_data_copy_cb data_copy_cb = NULL;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-                if (is_local) {
+                if (attr & MPIDIG_AM_ATTR__IS_LOCAL) {
                     data_copy_cb = MPIDI_SHM_am_get_data_copy_cb();
                 } else {
 #endif
@@ -312,7 +312,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             }
         }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        MPIDI_REQUEST(rreq, is_local) = is_local;
+        MPIDI_REQUEST(rreq, is_local) = (attr & MPIDIG_AM_ATTR__IS_LOCAL) ? 1 : 0;
 #endif
         MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
         MPIDIG_enqueue_request(rreq, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
@@ -325,7 +325,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        MPIDI_REQUEST(rreq, is_local) = is_local;
+        MPIDI_REQUEST(rreq, is_local) = (attr & MPIDIG_AM_ATTR__IS_LOCAL) ? 1 : 0;
 #endif
 
         rreq->status.MPI_ERROR = hdr->error_bits;
@@ -348,7 +348,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
 
-    if (is_async) {
+    if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         if (hdr->flags & MPIDIG_AM_SEND_FLAGS_RTS) {
             *req = NULL;
         } else {
@@ -373,7 +373,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
 }
 
 int MPIDIG_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                   int is_local, int is_async, MPIR_Request ** req)
+                                   uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
@@ -384,7 +384,7 @@ int MPIDIG_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
     rreq = (MPIR_Request *) seg_hdr->rreq_ptr;
     MPIR_Assert(rreq);
 
-    if (is_async) {
+    if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -396,7 +396,7 @@ int MPIDIG_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
 }
 
 int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                   int is_local, int is_async, MPIR_Request ** req)
+                                   uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
@@ -406,15 +406,16 @@ int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
     sreq = (MPIR_Request *) msg_hdr->sreq_ptr;
     MPID_Request_complete(sreq);
 
-    if (is_async)
+    if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
+    }
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIDIG_send_cts_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                  int is_local, int is_async, MPIR_Request ** req)
+                                  uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;

@@ -95,9 +95,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * m
 
     MPIR_FUNC_ENTER;
 
-    /* note: setting is_local, is_async, req to 0, 0, NULL */
+    int attr = 0;               /* is_local = 0, is_async = 0 */
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                                       p_data, msg_hdr->payload_sz, 0, 0, NULL);
+                                                       p_data, msg_hdr->payload_sz, attr, NULL);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -122,10 +122,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
     rreq = cache_rreq;
 
     if (!rreq) {
-        /* no cached request, this must be the first segment */
-        /* note: setting is_local, is_async, req to 0, 1, rreq */
+        int attr = MPIDIG_AM_ATTR__IS_ASYNC;
         MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr, p_data,
-                                                           msg_hdr->payload_sz, 0, 1, &rreq);
+                                                           msg_hdr->payload_sz, attr, &rreq);
         MPIDIG_recv_setup(rreq);
         MPIDIG_req_cache_add(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr, rreq);
     }
@@ -147,8 +146,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t
 
     MPIR_FUNC_ENTER;
 
+    int attr = 0;
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                                       NULL, 0, 0, 0, NULL);
+                                                       NULL, 0, attr, NULL);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -235,9 +235,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
 
     MPIR_FUNC_ENTER;
 
-    /* note: setting is_local, is_async to 0, 1 */
+    int attr = MPIDIG_AM_ATTR__IS_ASYNC;
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                                       NULL, msg_hdr->payload_sz, 0, 1, &rreq);
+                                                       NULL, msg_hdr->payload_sz, attr, &rreq);
 
     if (!rreq)
         goto fn_exit;
