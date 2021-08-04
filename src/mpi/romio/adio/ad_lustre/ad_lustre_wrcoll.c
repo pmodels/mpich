@@ -105,7 +105,8 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     int i, filetype_is_contig, nprocs, myrank, do_collect = 0;
     int contig_access_count = 0, buftype_is_contig, interleave_count = 0;
-    int *count_my_req_per_proc, count_my_req_procs, count_others_req_procs;
+    int *count_my_req_per_proc, count_my_req_procs;
+    int *count_others_req_per_proc, count_others_req_procs;
     ADIO_Offset orig_fp, start_offset, end_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *end_offsets = NULL;
     ADIO_Offset *len_list = NULL;
@@ -295,8 +296,8 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
      */
 
     ADIOI_Calc_others_req(fd, count_my_req_procs, count_my_req_per_proc,
-                          my_req, nprocs, myrank, &count_others_req_procs, &others_req);
-    ADIOI_Free(count_my_req_per_proc);
+                          my_req, nprocs, myrank, &count_others_req_procs,
+                          &count_others_req_per_proc, &others_req);
 
     /* exchange data and write in sizes of no more than stripe_size. */
     ADIOI_LUSTRE_Exch_and_write(fd, buf, datatype, nprocs, myrank,
@@ -338,12 +339,8 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     /* free all memory allocated for collective I/O */
     /* free others_req */
-    ADIOI_Free(others_req[0].offsets);
-    ADIOI_Free(others_req[0].mem_ptrs);
-    ADIOI_Free(others_req);
-    ADIOI_Free(buf_idx[0]);     /* also my_req[*].offsets and my_req[*].lens */
-    ADIOI_Free(buf_idx);
-    ADIOI_Free(my_req);
+    ADIOI_LUSTRE_Free_my_req(nprocs, count_my_req_per_proc, my_req, buf_idx);
+    ADIOI_Free_others_req(nprocs, count_others_req_per_proc, others_req);
     ADIOI_Free(offset_list);
     ADIOI_Free(st_offsets);
 
