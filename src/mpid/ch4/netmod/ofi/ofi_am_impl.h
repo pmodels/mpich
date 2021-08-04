@@ -9,6 +9,8 @@
 #include "ofi_impl.h"
 #include "mpidu_genq.h"
 
+#define MPIDI_OFI_AM_ATTR__RDMA 0x100
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
 
 /* Acquire a sequence number to send, and record the next number */
