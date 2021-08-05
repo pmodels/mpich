@@ -41,7 +41,10 @@ struct MPIR_Request;
 
 typedef struct {
     int dummy;
+    void *csel_root;
 } MPIDI_OFI_Global_t;
+
+extern char MPIDI_OFI_coll_generic_json[];
 
 typedef struct {
     struct fi_deferred_work *works;
@@ -64,6 +67,7 @@ typedef struct {
     int enable_striping;        /* Flag to enable striping per communicator. */
     int enable_hashing;         /* Flag to enable hashing per communicator. */
     int *pref_nic;              /* Array to specify the preferred NIC for each rank (if needed) */
+    void *csel_comm;            /* collective selection handle */
     MPIDI_OFI_trig_bcast_blocking_small_msg *blk_sml_bcast;     /* struct per communicator for triggered ops based blocking Bcast */
 } MPIDI_OFI_comm_t;
 enum {

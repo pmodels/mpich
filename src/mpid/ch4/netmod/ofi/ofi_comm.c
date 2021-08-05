@@ -175,9 +175,16 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
 
     MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
+    mpi_errno =
+        MPIR_Csel_prune(MPIDI_global.nm.ofi.csel_root, comm, &MPIDI_OFI_COMM(comm).csel_comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* For blocking small message collectives, resources are allocated per communicator
@@ -219,6 +226,13 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
 
+    if (MPIDI_OFI_COMM(comm).csel_comm) {
+        mpi_errno = MPIR_Csel_free(MPIDI_OFI_COMM(comm).csel_comm);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        MPIDI_OFI_COMM(comm).csel_comm = NULL;
+    }
+
     MPIDI_OFI_trig_blocking_small_msg_destroy(comm);
     /* If we enabled striping or hashing, decrement the counter. */
     MPIDI_OFI_global.num_comms_enabled_striping -=
@@ -226,8 +240,11 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIDI_OFI_global.num_comms_enabled_hashing -=
         (MPIDI_OFI_COMM(comm).enable_hashing != 0 ? 1 : 0);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_OFI_comm_set_hints(MPIR_Comm * comm, MPIR_Info * info)
