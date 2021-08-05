@@ -70,6 +70,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__IMPLICIT
 
+static bool is_vci_restricted_to_zero()
+{
+    bool vci_restricted = false;
+#ifdef  MPIDI_OFI_VNI_USE_DOMAIN
+    if (!MPIDI_global.is_initialized) {
+        vci_restricted |= true;
+    }
+#endif /* ifdef  MPIDI_OFI_VNI_USE_DOMAIN */
+    return vci_restricted;
+}
+
+
 /* Return VCI index of a send transmit context.
  * Used for two purposes:
  *   1. For the sender side to determine which VCI index of a transmit context
@@ -93,6 +105,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_sender_vci(MPIR_Comm * comm,
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     MPIR_Assert(comm);
     /* TODO: implement implicit hashing using other parameters */
+    if (is_vci_restricted_to_zero())
+        return 0;
+    else
+        return comm->seq;
     return comm->seq;
 #else
     return 0;
@@ -120,7 +136,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_receiver_vci(MPIR_Comm * comm,
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     MPIR_Assert(comm);
     /* TODO: implement implicit hashing using other parameters */
-    return comm->seq;
+    if (is_vci_restricted_to_zero())
+        return 0;
+    else
+        return comm->seq;
 #else
     return 0;
 #endif
