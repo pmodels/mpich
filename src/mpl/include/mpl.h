@@ -31,5 +31,6 @@
 #include "mpl_gpu.h"
 #include "mpl_gavl.h"
 #include "mpl_initlock.h"
+#include "mpl_misc.h"
 
 #endif /* MPL_H_INCLUDED */
