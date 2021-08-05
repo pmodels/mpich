@@ -16,19 +16,11 @@ typedef enum MPIDI_IPCI_type {
 } MPIDI_IPCI_type_t;
 
 /* request extension */
-typedef struct MPIDI_IPC_am_unexp_rreq {
-    MPIDI_IPCI_ipc_handle_t ipc_handle;
-    uint64_t data_sz;
-    MPIR_Request *sreq_ptr;
-    int src_lrank;
-} MPIDI_IPC_am_unexp_rreq_t;
-
 typedef struct MPIDI_IPC_am_request {
     MPIDI_IPCI_type_t ipc_type;
     union {
         MPIDI_XPMEM_am_request_t xpmem;
     } u;
-    MPIDI_IPC_am_unexp_rreq_t unexp_rreq;
 } MPIDI_IPC_am_request_t;
 
 #endif /* IPC_PRE_H_INCLUDED */

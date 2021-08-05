@@ -84,7 +84,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDI_IPC_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+    mpi_errno =
+        MPIDI_POSIX_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -101,7 +102,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDI_IPC_mpi_imrecv(buf, count, datatype, message);
+    mpi_errno = MPIDI_POSIX_mpi_imrecv(buf, count, datatype, message);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

@@ -31,17 +31,15 @@ typedef struct MPIDI_IPCI_ipc_attr {
 } MPIDI_IPCI_ipc_attr_t;
 
 /* ctrl packet header types */
-typedef struct MPIDI_IPC_ctrl_send_contig_lmt_rts {
+typedef struct MPIDI_IPC_rndv_hdr {
     MPIDI_IPCI_type_t ipc_type;
     MPIDI_IPCI_ipc_handle_t ipc_handle;
-    uint64_t data_sz;           /* data size in bytes */
-    MPIR_Request *sreq_ptr;     /* send request pointer */
     int src_lrank;              /* sender rank on local node */
+} MPIDI_IPC_hdr;
 
-    /* matching info */
-    int src_rank;
-    int tag;
-    MPIR_Context_id_t context_id;
+typedef struct MPIDI_IPC_ctrl_send_contig_lmt_rts {
+    MPIDIG_hdr_t hdr;
+    MPIDI_IPC_hdr ipc_hdr;
 } MPIDI_IPC_ctrl_send_contig_lmt_rts_t;
 
 typedef struct MPIDI_IPC_ctrl_send_contig_lmt_fin {
