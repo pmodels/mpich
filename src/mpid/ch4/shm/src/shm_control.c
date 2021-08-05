@@ -6,11 +6,13 @@
 #include "mpidimpl.h"
 #include "shm_control.h"
 
+static MPIDI_SHMI_ctrl_cb ctrl_cbs[MPIDI_SHMI_CTRL_IDS_MAX];
+
 void MPIDI_SHMI_ctrl_reg_cb(int ctrl_id, MPIDI_SHMI_ctrl_cb cb)
 {
     MPIR_FUNC_ENTER;
 
-    MPIDI_global.shm.ctrl_cbs[ctrl_id] = cb;
+    ctrl_cbs[ctrl_id] = cb;
 
     MPIR_FUNC_EXIT;
 }
@@ -23,7 +25,7 @@ int MPIDI_SHMI_ctrl_dispatch(int ctrl_id, void *ctrl_hdr)
 
     MPIR_Assert(ctrl_id >= 0 && ctrl_id < MPIDI_SHMI_CTRL_IDS_MAX);
 
-    mpi_errno = MPIDI_global.shm.ctrl_cbs[ctrl_id] ((MPIDI_SHMI_ctrl_hdr_t *) ctrl_hdr);
+    mpi_errno = ctrl_cbs[ctrl_id] ((MPIDI_SHMI_ctrl_hdr_t *) ctrl_hdr);
 
     MPIR_FUNC_EXIT;
 
