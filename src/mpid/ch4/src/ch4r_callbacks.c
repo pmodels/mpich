@@ -363,6 +363,7 @@ static void set_rreq_common(MPIR_Request * rreq, MPIDIG_hdr_t * hdr)
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_PEER_SSEND;
     }
 
+    MPIDIG_REQUEST(rreq, rndv_hdr) = NULL;
     MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
     MPIR_FUNC_EXIT;
@@ -380,8 +381,6 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 
     MPIR_Request *rreq = NULL;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
-    void *pack_buf = NULL;
-    bool is_unexp = false;
     int is_local = (attr & MPIDIG_AM_ATTR__IS_LOCAL) ? 1 : 0;
 
     int msg_mode;
@@ -412,6 +411,13 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         } else if (msg_mode == MSG_MODE_RNDV_RTS) {
             MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
+            if (hdr->rndv_hdr_sz > 0) {
+                /* free after we call rndv_cb  */
+                void *rndv_hdr = MPL_malloc(hdr->rndv_hdr_sz, MPL_MEM_OTHER);
+                MPIR_Assert(rndv_hdr);
+                memcpy(rndv_hdr, hdr + 1, hdr->rndv_hdr_sz);
+                MPIDIG_REQUEST(rreq, rndv_hdr) = rndv_hdr;
+            }
             set_rndv_cb(rreq, hdr->flags);
         } else {        /* MSG_MODE_TRANSPORT_RNDV */
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
@@ -432,7 +438,9 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
             /* either we or transport will finish recv_copy depending on ASYNC attr */
         } else if (msg_mode == MSG_MODE_RNDV_RTS) {
             MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
+            MPIDIG_REQUEST(rreq, rndv_hdr) = hdr + 1;
             call_rndv_cb(rreq, hdr->flags);
+            MPIDIG_REQUEST(rreq, rndv_hdr) = NULL;
         } else {        /* MSG_MODE_TRANSPORT_RNDV */
             /* transport will finish the rndv */
         }

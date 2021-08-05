@@ -209,6 +209,7 @@ typedef struct MPIDIG_req_t {
 #endif
     MPIDIG_req_ext_t *req;
     void *buffer;
+    void *rndv_hdr;
     MPI_Aint count;
     int rank;
     int tag;

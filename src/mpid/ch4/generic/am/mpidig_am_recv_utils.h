@@ -36,6 +36,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_check_rndv_cb(MPIR_Request * rreq)
         mpi_errno = MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
         MPIR_ERR_CHECK(mpi_errno);
 
+        if (MPIDIG_REQUEST(rreq, rndv_hdr)) {
+            MPL_free(MPIDIG_REQUEST(rreq, rndv_hdr));
+            MPIDIG_REQUEST(rreq, rndv_hdr) = NULL;
+        }
         /* the data_copy_cb may complete rreq (e.g. ucx am_send_hdr may invoke
          * progress recursively and finish several callbacks before it return.
          * Thus we need check MPIDIG_REQUEST(rreq, req) still there. */
@@ -319,6 +323,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_recv_initialized(MPIR_Request * rreq)
 {
     return MPIDIG_REQUEST(rreq, req->recv_async).recv_type != MPIDIG_RECV_NONE;
+}
+
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDIG_recv_in_data_sz(MPIR_Request * rreq)
+{
+    return MPIDIG_REQUEST(rreq, req->recv_async).in_data_sz;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_set_data_copy_cb(MPIR_Request * rreq,

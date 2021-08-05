@@ -70,7 +70,8 @@ typedef struct MPIDIG_hdr_t {
     int error_bits;
     int flags;
     MPIR_Request *sreq_ptr;
-    size_t data_sz;
+    MPI_Aint data_sz;
+    MPI_Aint rndv_hdr_sz;
 } MPIDIG_hdr_t;
 
 typedef struct MPIDIG_send_cts_msg_t {
