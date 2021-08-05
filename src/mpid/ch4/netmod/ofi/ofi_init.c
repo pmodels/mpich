@@ -300,6 +300,19 @@ cvars:
       description : >-
         Specifies the number of buffers for receiving active messages.
 
+    - name        : MPIR_CVAR_CH4_OFI_NUM_OPTIMIZED_MEMORY_REGIONS
+      category    : CH4_OFI
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of optimized memory regions supported by the provider. An optimized
+        memory region is used for lower-overhead, unordered RMA operations. It uses a low-overhead
+        RX path and additionally, a low-overhead packet format may be used to target an optimized
+        memory region.
+
     - name        : MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL
       category    : CH4_OFI
       type        : int
@@ -1570,6 +1583,8 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_ENABLE_TRIGGERED: %d\n", MPIDI_OFI_ENABLE_TRIGGERED);
     fprintf(stdout, "MPIDI_OFI_ENABLE_HMEM: %d\n", MPIDI_OFI_ENABLE_HMEM);
     fprintf(stdout, "MPIDI_OFI_NUM_AM_BUFFERS: %d\n", MPIDI_OFI_NUM_AM_BUFFERS);
+    fprintf(stdout, "MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS: %d\n",
+            MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS);
     fprintf(stdout, "MPIDI_OFI_CONTEXT_BITS: %d\n", MPIDI_OFI_CONTEXT_BITS);
     fprintf(stdout, "MPIDI_OFI_SOURCE_BITS: %d\n", MPIDI_OFI_SOURCE_BITS);
     fprintf(stdout, "MPIDI_OFI_TAG_BITS: %d\n", MPIDI_OFI_TAG_BITS);
