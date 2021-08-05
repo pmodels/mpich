@@ -90,6 +90,14 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         *(same_) = (*(idp1_) == *(idp2_)) ? TRUE : FALSE;                     \
     } while (0)
 
+/* See mpl_thread_posix.h for interface description. */
+void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affinity_size, int *err)
+{
+    /* stub implementation */
+    if (err)
+        *err = MPL_THREAD_ERROR;
+}
+
 /* ======================================================================
  *    Scheduling
  * ======================================================================*/
