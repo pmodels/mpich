@@ -76,6 +76,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     MPI_Aint data_sz;
     MPIDI_Datatype_check_size(datatype, count, data_sz);
     am_hdr.data_sz = data_sz;
+    am_hdr.rndv_hdr_sz = 0;
 
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIDIG_REQUEST(sreq, datatype) = datatype;
@@ -98,7 +99,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
         MPIDIG_REQUEST(sreq, req->sreq).context_id = am_hdr.context_id;
         MPIDIG_REQUEST(sreq, rank) = rank;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        am_hdr.flags |= MPIDIG_AM_SEND_FLAGS_RTS;
         MPIDIG_AM_SEND_SET_RNDV(am_hdr.flags, MPIDIG_RNDV_GENERIC);
 
         CH4_CALL(am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz), is_local, mpi_errno);
