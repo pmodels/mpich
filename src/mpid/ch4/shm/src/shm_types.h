@@ -6,7 +6,7 @@
 #ifndef SHM_TYPES_H_INCLUDED
 #define SHM_TYPES_H_INCLUDED
 
-#include "../ipc/src/ipc_pre.h"
+#include "../ipc/src/ipc_types.h"
 
 typedef enum {
     MPIDI_IPC_SEND_CONTIG_LMT_RTS,      /* issued by sender to initialize IPC with contig sbuf */
