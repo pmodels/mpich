@@ -71,6 +71,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__IMPLICIT
 
+/* Map comm to vci_idx */
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_to_vci(MPIR_Context_id_t context_id)
+{
+    return (MPIR_CONTEXT_READ_FIELD(PREFIX, context_id)) % MPIDI_global.n_vcis;
+}
+
+/* Map comm and rank to vci_idx */
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_rank_to_vci(MPIR_Context_id_t context_id, int rank)
+{
+    return (MPIR_CONTEXT_READ_FIELD(PREFIX, context_id) + rank) % MPIDI_global.n_vcis;
+}
+
+/* Map comm and tag to vci_idx */
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_tag_to_vci(MPIR_Context_id_t context_id, int tag)
+{
+    return (MPIR_CONTEXT_READ_FIELD(PREFIX, context_id) + tag) % MPIDI_global.n_vcis;;
+}
+
+/* Map comm, rank, and tag to vci_idx */
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_rank_tag_to_vci(MPIR_Context_id_t context_id,
+                                                                 int rank, int tag)
+{
+    return (MPIR_CONTEXT_READ_FIELD(PREFIX, context_id) + rank + tag) % MPIDI_global.n_vcis;;
+}
+
 static bool is_vci_restricted_to_zero(MPIR_Comm * comm)
 {
     bool vci_restricted = false;
@@ -106,13 +131,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_sender_vci(MPIR_Comm * comm,
     MPIR_Assert(comm);
     int vci_idx = MPIDI_VCI_INVALID;
     bool use_user_defined_vci = (comm->hints[MPIR_COMM_HINT_SENDER_VCI] != MPIDI_VCI_INVALID);
+    bool use_tag = comm->hints[MPIR_COMM_HINT_NO_ANY_TAG];
+
     if (is_vci_restricted_to_zero(comm)) {
         vci_idx = 0;
     } else if (use_user_defined_vci) {
         vci_idx = comm->hints[MPIR_COMM_HINT_SENDER_VCI];
     } else {
-        /* TODO: implement implicit hashing using other parameters */
-        vci_idx = comm->seq;
+        if (use_tag) {
+            vci_idx = MPIDI_map_contextid_rank_tag_to_vci(ctxid_in_effect, receiver_rank, tag);
+        } else {
+            /* General unoptimized case */
+            vci_idx = MPIDI_map_contextid_rank_to_vci(ctxid_in_effect, receiver_rank);
+        }
     }
     return vci_idx;
 #else
@@ -142,13 +173,33 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_receiver_vci(MPIR_Comm * comm,
     MPIR_Assert(comm);
     int vci_idx = MPIDI_VCI_INVALID;
     bool use_user_defined_vci = (comm->hints[MPIR_COMM_HINT_RECEIVER_VCI] != MPIDI_VCI_INVALID);
+    bool use_tag = comm->hints[MPIR_COMM_HINT_NO_ANY_TAG];
+    bool use_source = comm->hints[MPIR_COMM_HINT_NO_ANY_SOURCE];
+
     if (is_vci_restricted_to_zero(comm)) {
         vci_idx = 0;
     } else if (use_user_defined_vci) {
         vci_idx = comm->hints[MPIR_COMM_HINT_RECEIVER_VCI];
     } else {
-        /* TODO: implement implicit hashing using other parameters */
-        vci_idx = comm->seq;
+        /* If mpi_any_tag and mpi_any_source can be used for recv, all messages
+         * should be received on a single vci. Otherwise, messages sent from a
+         * rank can concurrently match at different vcis. This can allow a
+         * mesasge to be received in different order than it was sent. We
+         * should avoid this.
+         * However, if we know mpi_any_source and MPI_any_tag are absent, we
+         * don't have this risk and hence we can utilize multiple vcis on the
+         * receive side.
+         */
+        if (use_tag && use_source) {
+            vci_idx = MPIDI_map_contextid_rank_tag_to_vci(ctxid_in_effect, sender_rank, tag);
+        } else if (use_source) {
+            vci_idx = MPIDI_map_contextid_rank_to_vci(ctxid_in_effect, sender_rank);
+        } else if (use_tag) {
+            vci_idx = MPIDI_map_contextid_tag_to_vci(ctxid_in_effect, tag);
+        } else {
+            /* General unoptimized case */
+            vci_idx = MPIDI_map_contextid_to_vci(ctxid_in_effect);
+        }
     }
     return vci_idx;
 #else
