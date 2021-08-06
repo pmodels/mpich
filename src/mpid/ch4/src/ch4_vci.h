@@ -93,8 +93,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_sender_vci(MPIR_Comm * comm,
 {
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     MPIR_Assert(comm);
-    /* TODO: implement implicit hashing using other parameters */
-    return comm->seq;
+    int vci_idx = MPIDI_VCI_INVALID;
+    bool use_user_defined_vci = (comm->hints[MPIR_COMM_HINT_SENDER_VCI] != MPIDI_VCI_INVALID);
+    if (use_user_defined_vci) {
+        vci_idx = comm->hints[MPIR_COMM_HINT_SENDER_VCI];
+    } else {
+        /* TODO: implement implicit hashing using other parameters */
+        vci_idx = comm->seq;
+    }
+    return vci_idx;
 #else
     return 0;
 #endif
@@ -120,8 +127,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_receiver_vci(MPIR_Comm * comm,
 {
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     MPIR_Assert(comm);
-    /* TODO: implement implicit hashing using other parameters */
-    return comm->seq;
+    int vci_idx = MPIDI_VCI_INVALID;
+    bool use_user_defined_vci = (comm->hints[MPIR_COMM_HINT_RECEIVER_VCI] != MPIDI_VCI_INVALID);
+    if (use_user_defined_vci) {
+        vci_idx = comm->hints[MPIR_COMM_HINT_RECEIVER_VCI];
+    } else {
+        /* TODO: implement implicit hashing using other parameters */
+        vci_idx = comm->seq;
+    }
+    return vci_idx;
 #else
     return 0;
 #endif
