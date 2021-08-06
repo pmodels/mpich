@@ -157,10 +157,6 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "req %p handle=0x%x", rreq, rreq->handle));
 
-    /* Check if this request is supposed to complete next or if it should be delayed. */
-    if (!MPIDIG_check_cmpl_order(rreq))
-        return mpi_errno;
-
     MPIDIG_recv_finish(rreq);
 
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_UNEXPECTED) {
@@ -196,7 +192,6 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
     }
     MPID_Request_complete(rreq);
   fn_exit:
-    MPIDIG_progress_compl_list();
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
@@ -297,12 +292,6 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
                  * finishes and calls the recv_target_cmpl_cb, or transport setup the data_copy_cb.
                  * */
                 MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_BUSY;
-                MPIDIG_REQUEST(rreq, req->seq_no) =
-                    MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
-                                 MPIDIG_REQUEST(rreq, req->seq_no),
-                                 MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
                 MPIDIG_recv_type_init(hdr->data_sz, rreq);
             } else {
                 /* We did not allocate unexp buffer because there is no inline data for a non-zero
@@ -346,13 +335,6 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
             MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
             do_cts = true;
-        } else {
-            MPIDIG_REQUEST(rreq, req->seq_no) =
-                MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
-                             MPIDIG_REQUEST(rreq, req->seq_no),
-                             MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
         }
         MPIDIG_recv_type_init(hdr->data_sz, rreq);
     }
@@ -401,12 +383,6 @@ int MPIDIG_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
 
     rreq = (MPIR_Request *) seg_hdr->rreq_ptr;
     MPIR_Assert(rreq);
-
-    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
-                     MPIDIG_REQUEST(rreq, req->seq_no),
-                     MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
 
     if (is_async) {
         *req = rreq;
