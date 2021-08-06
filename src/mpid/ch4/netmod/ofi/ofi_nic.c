@@ -271,7 +271,7 @@ bool MPIDI_OFI_nic_is_up(struct fi_info * prov)
 {
     /* Make sure the NIC returned by OFI is not down. Some providers don't include NIC
      * information so we need to skip those. */
-    if (prov->nic != NULL && prov->nic->link_attr->state != FI_LINK_UP) {
+    if (prov->nic != NULL && prov->nic->link_attr->state == FI_LINK_DOWN) {
         return false;
     }
 
