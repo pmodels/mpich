@@ -62,7 +62,7 @@ For netmod, why do we need to create the #define in `*_noinline.h`?
   NETMOD_INLINE is enabled, the function name does not match the defined
   interface name anymore, hence the #define solution.
 
-Why the MPIDI_NM_comm_get_lpid function is moved to ofi_proc.h?
+Why the MPIDI_NM_comm_get_gpid function is moved to ofi_proc.h?
 
   This function is used in MPIDIG RMA code and need to be inlined.
   Because it was the only function in ofi_init.h that should be inlined
@@ -70,7 +70,7 @@ Why the MPIDI_NM_comm_get_lpid function is moved to ofi_proc.h?
 
   It cannot be put in ofi_impl.h because ofi_impl.h is included in many
   .c file which in turn will create their own copy of
-  MPIDI_NM_comm_get_lpid and conflict with each other. Therefore, I put
+  MPIDI_NM_comm_get_gpid and conflict with each other. Therefore, I put
   it in ofi_proc.h.
 
 Tips for resolving conflict when rebasing.

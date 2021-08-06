@@ -929,65 +929,107 @@ int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-int MPIDI_check_disjoint_lupids(int lupids1[], int n1, int lupids2[], int n2)
+/* number of leading zeros, from Hacker's Delight */
+static int nlz(uint32_t x)
 {
-    int i, mask_size, idx, bit, maxlupid = -1;
+    uint32_t y;
+    int n = 32;
+/* *INDENT-OFF* */
+    y = x >> 16; if (y != 0) { n = n - 16; x = y; }
+    y = x >> 8; if (y != 0) { n = n - 8; x = y; }
+    y = x >> 4; if (y != 0) { n = n - 4; x = y; }
+    y = x >> 2; if (y != 0) { n = n - 2; x = y; }
+    y = x >> 1; if (y != 0) { return n - 2; }
+/* *INDENT-ON* */
+    return n - x;
+}
+
+/* 0xab00000cde -> 0xabcde if num_low_bits is 12 */
+static uint64_t shrink(uint64_t x, int num_low_bits)
+{
+    return ((x >> 32) << num_low_bits) + (x & 0xffffffff);
+}
+
+int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int n2)
+{
     int mpi_errno = MPI_SUCCESS;
-    uint32_t lupidmaskPrealloc[128];
-    uint32_t *lupidmask;
+    uint32_t gpidmaskPrealloc[128];
+    uint32_t *gpidmask;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_DISJOINT_LUPIDS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_DISJOINT_LUPIDS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_DISJOINT_GPIDS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_DISJOINT_GPIDS);
 
-    /* Find the max lupid */
-    for (i = 0; i < n1; i++) {
-        if (lupids1[i] > maxlupid)
-            maxlupid = lupids1[i];
+    /* Taking the knowledge that gpid are two 32-bit avtid + lpid, both are
+     * often in small range. If we shrink the middle gaps between avtid and
+     * lpid, the number shouldn't be too large. */
+
+    /* Find the max low-32-bit gpid */
+    uint64_t max_lpid = 0;
+    for (int i = 0; i < n1; i++) {
+        uint64_t n = gpids1[i] & 0xffffffff;
+        if (n > max_lpid)
+            max_lpid = n;
     }
-    for (i = 0; i < n2; i++) {
-        if (lupids2[i] > maxlupid)
-            maxlupid = lupids2[i];
+    for (int i = 0; i < n2; i++) {
+        uint64_t n = gpids2[i] & 0xffffffff;
+        if (n > max_lpid)
+            max_lpid = n;
     }
 
-    mask_size = (maxlupid / 32) + 1;
+    int num_low_bits = 32 - nlz((uint32_t) max_lpid);
 
+    uint64_t max_gpid = 0;
+    for (int i = 0; i < n1; i++) {
+        uint64_t n = shrink(gpids1[i], num_low_bits);
+        if (n > max_gpid)
+            max_gpid = n;
+    }
+    for (int i = 0; i < n2; i++) {
+        uint64_t n = shrink(gpids2[i], num_low_bits);
+        if (n > max_gpid)
+            max_gpid = n;
+    }
+
+    uint64_t mask_size = (max_gpid / 32) + 1;
     if (mask_size > 128) {
-        MPIR_CHKLMEM_MALLOC(lupidmask, uint32_t *, mask_size * sizeof(uint32_t),
-                            mpi_errno, "lupidmask", MPL_MEM_COMM);
+        MPIR_CHKLMEM_MALLOC(gpidmask, uint32_t *, mask_size * sizeof(uint32_t),
+                            mpi_errno, "gpidmask", MPL_MEM_COMM);
     } else {
-        lupidmask = lupidmaskPrealloc;
+        gpidmask = gpidmaskPrealloc;
     }
 
     /* zero the bitvector array */
-    memset(lupidmask, 0x00, mask_size * sizeof(*lupidmask));
+    memset(gpidmask, 0x00, mask_size * sizeof(*gpidmask));
 
     /* Set the bits for the first array */
-    for (i = 0; i < n1; i++) {
-        idx = lupids1[i] / 32;
-        bit = lupids1[i] % 32;
-        lupidmask[idx] = lupidmask[idx] | (1 << bit);
+    for (int i = 0; i < n1; i++) {
+        uint64_t n = shrink(gpids1[i], num_low_bits);
+        int idx = n / 32;
+        int bit = n % 32;
+        gpidmask[idx] = gpidmask[idx] | (1 << bit);
         MPIR_Assert(idx < mask_size);
     }
 
     /* Look for any duplicates in the second array */
-    for (i = 0; i < n2; i++) {
-        idx = lupids2[i] / 32;
-        bit = lupids2[i] % 32;
-        if (lupidmask[idx] & (1 << bit)) {
+    for (int i = 0; i < n2; i++) {
+        uint64_t n = shrink(gpids2[i], num_low_bits);
+        int idx = n / 32;
+        int bit = n % 32;
+        if (gpidmask[idx] & (1 << bit)) {
             MPIR_ERR_SET1(mpi_errno, MPI_ERR_COMM,
-                          "**dupprocesses", "**dupprocesses %d", lupids2[i]);
+                          "**dupprocesses", "**dupprocesses %d", gpids2[i]);
             goto fn_fail;
         }
         /* Add a check on duplicates *within* group 2 */
-        lupidmask[idx] = lupidmask[idx] | (1 << bit);
+        gpidmask[idx] = gpidmask[idx] | (1 << bit);
         MPIR_Assert(idx < mask_size);
     }
 
     /* Also fall through for normal return */
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_DISJOINT_LUPIDS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_DISJOINT_GPIDS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

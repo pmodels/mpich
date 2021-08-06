@@ -35,4 +35,6 @@ bool MPIDI_OFI_nic_already_used(const struct fi_info *prov, struct fi_info **oth
 int MPIDI_OFI_addr_exchange_root_ctx(void);
 int MPIDI_OFI_addr_exchange_all_ctx(void);
 
+bool MPIDI_OFI_nic_is_up(struct fi_info *prov);
+
 #endif /* OFI_INIT_H_INCLUDED */

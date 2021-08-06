@@ -115,23 +115,6 @@ extern int PMI2_pmiverbose;     /* Set this to true to print PMI debugging info 
 #endif
 
 
-#if defined(HAVE_ALLOCA) && defined(USE_ALLOCA)
-#ifdef HAVE_ALLOCA_H
-#include <alloca.h>
-#endif
-/* Define decl with a dummy definition to allow us to put a semi-colon
-   after the macro without causing the declaration block to end (restriction
-   imposed by C) */
-#define PMI2U_CHKLMEM_DECL(n_) int dummy_ ATTRIBUTE((unused))
-#define PMI2U_CHKLMEM_FREEALL()
-#define PMI2U_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) do {        \
-        pointer_ = (type_)alloca(nbytes_);                                              \
-        if (!(pointer_)) {                                                              \
-            PMI2U_CHKMEM_SETERR(rc_,nbytes_,name_);                                     \
-            stmt_;                                                                      \
-        }                                                                               \
-    } while (0)
-#else
 #define PMI2U_CHKLMEM_DECL(n_)                                  \
     void *(pmi2u_chklmem_stk_[n_]) = {0};                       \
     int pmi2u_chklmem_stk_sp_=0;                                \
@@ -150,39 +133,11 @@ extern int PMI2_pmiverbose;     /* Set this to true to print PMI debugging info 
 #define PMI2U_CHKLMEM_FREEALL()                                         \
     while (pmi2u_chklmem_stk_sp_ > 0) {                                 \
         PMI2U_Free(pmi2u_chklmem_stk_[--pmi2u_chklmem_stk_sp_]); }
-#endif /* HAVE_ALLOCA */
+
 #define PMI2U_CHKLMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
     PMI2U_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
 #define PMI2U_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_) \
     PMI2U_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
-
-/* In some cases, we need to allocate large amounts of memory. This can
-   be a problem if alloca is used, as the available stack space may be small.
-   This is the same approach for the temporary memory as is used when alloca
-   is not available. */
-#define PMI2U_CHKLBIGMEM_DECL(n_)                                       \
-    void *(pmi2u_chklbigmem_stk_[n_]);                                  \
-    int pmi2u_chklbigmem_stk_sp_ = 0;                                   \
-    PMI2U_AssertDeclValue(const int pmi2u_chklbigmem_stk_sz_,n_)
-
-#define PMI2U_CHKLBIGMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) do {     \
-        pointer_ = (type_)PMI2U_Malloc(nbytes_);                                        \
-        if (pointer_) {                                                                 \
-            PMI2U_Assert(pmi2u_chklbigmem_stk_sp_<pmi2u_chklbigmem_stk_sz_);            \
-            pmi2u_chklbigmem_stk_[pmi2u_chklbigmem_stk_sp_++] = pointer_;               \
-        } else {                                                                        \
-            PMI2U_CHKMEM_SETERR(rc_,nbytes_,name_);                                     \
-            stmt_;                                                                      \
-        }                                                                               \
-    } while (0)
-#define PMI2U_CHKLBIGMEM_FREEALL()                                              \
-    while (pmi2u_chklbigmem_stk_sp_ > 0) {                                      \
-        PMI2U_Free(pmi2u_chklbigmem_stk_[--pmi2u_chklbigmem_stk_sp_]); }
-
-#define PMI2U_CHKLBIGMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_)       \
-    PMI2U_CHKLBIGMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
-#define PMI2U_CHKLBIGMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)                \
-    PMI2U_CHKLBIGMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
 
 /* Persistent memory that we may want to recover if something goes wrong */
 #define PMI2U_CHKPMEM_DECL(n_)                                  \

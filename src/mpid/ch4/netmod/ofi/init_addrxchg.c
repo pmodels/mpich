@@ -85,7 +85,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
     /* If MPIR_CVAR_CH4_ROOTS_ONLY_PMI is true, we only collect a table of node-roots.
      * Otherwise, we collect a table of everyone. */
     void *table = NULL;
-    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
+    mpi_errno = MPIDU_bc_table_create(rank, size, MPIR_Process.node_map,
                                       &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
                                       TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
     MPIR_ERR_CHECK(mpi_errno);
