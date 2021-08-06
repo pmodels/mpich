@@ -78,6 +78,10 @@ static bool is_vci_restricted_to_zero()
         vci_restricted |= true;
     }
 #endif /* ifdef  MPIDI_OFI_VNI_USE_DOMAIN */
+
+    if (!(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !comm->tainted)) {
+        vci_restricted |= true;
+    }
     return vci_restricted;
 }
 
