@@ -61,7 +61,7 @@
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        1.g032b3aeb2%{?dist}
+Release:        2.g032b3aeb2%{?dist}
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
@@ -226,7 +226,6 @@ echo without HPC
     --disable-rpath \
     --disable-silent-rules \
     --enable-fc \
-   --with-device=ch3:nemesis \
     --prefix=%{p_prefix} \
     --exec-prefix=%{p_prefix} \
     --libexecdir=%{p_libexecdir} \
@@ -239,10 +238,10 @@ echo without HPC
     --mandir=%{p_mandir} \
     --docdir=%{_datadir}/doc/%{name} \
     --with-hwloc=embedded \
+    --with-device=ch3:nemesis \
     --enable-romio \
     --with-file-system=ufs+daos \
     --with-daos=/usr \
-    --with-cart=/usr \
     --disable-checkerrors \
     --disable-perftest \
     --disable-large-tests \
@@ -461,6 +460,9 @@ fi
 %endif # !testsuite
 
 %changelog
+* Fri Aug 6 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 4.0~a1-2
+- remove --with-cart
+
 * Thu Jun 03 2021 Brian J. Murrell <brian.murrell@intel.com> - 4.0~a1-1
 - Build with DAOS
 - Update to 4.0a1 git hash 032b3aeb2
