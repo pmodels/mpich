@@ -5,7 +5,7 @@
 Summary:        A high-performance implementation of MPI
 Name:           mpich
 Version:        4.0~a1
-Release:        1.g032b3aeb2%{?dist}
+Release:        2.g032b3aeb2%{?dist}
 License:        MIT
 URL:            http://www.mpich.org/
 
@@ -131,7 +131,6 @@ CONFIGURE_OPTS=(
         --enable-romio
         --with-file-system=ufs+daos
         --with-daos=/usr
-        --with-cart=/usr
         --disable-checkerrors
         --disable-perftest
         --disable-large-tests
@@ -244,6 +243,9 @@ make check VERBOSE=1 \
 %{python3_sitearch}/%{name}.pth
 
 %changelog
+* Fri Aug 6 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 4.0~a1-2
+- remove --with-cart
+
 * Thu Jun 03 2021 Brian J. Murrell <brian.murrell@intel.com> - 4.0~a1-1
 - Build with DAOS
 - Update to 4.0a1 git hash 032b3aeb2
