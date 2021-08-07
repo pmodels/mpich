@@ -86,7 +86,7 @@ AC_DEFUN([PAC_CHECK_HEADER_LIB],[
     dnl Skip lib check if cannot find header
     if test "$failure" = "no" ; then
         PAC_PUSH_FLAG(LIBS)
-        AC_CHECK_LIB($2,$3,,failure=yes)
+        AC_CHECK_LIB($2,$3,,failure=yes,$6)
         PAC_POP_FLAG(LIBS)
     fi
     if test "$failure" = "no" ; then
@@ -113,7 +113,7 @@ AC_DEFUN([PAC_CHECK_HEADER_LIB_OPTIONAL],[
         pac_have_$1=no
     else
         dnl Other than "embedded" or "no", we check ...
-        PAC_CHECK_HEADER_LIB($2,$3,$4,pac_have_$1=yes,pac_have_$1=no)
+        PAC_CHECK_HEADER_LIB($2,$3,$4,pac_have_$1=yes,pac_have_$1=no,$5)
         if test "${pac_have_$1}" = "no" -a -n "${with_$1}" ; then
             dnl user asks for it, so missing is an error
             AC_MSG_ERROR([--with-$1 is given but not found])
@@ -138,7 +138,7 @@ AC_DEFUN([PAC_PROBE_HEADER_LIB],[
         pac_have_$1=no
     else
         dnl Other than "embedded" or "no", we check ...
-        PAC_CHECK_HEADER_LIB($2,$3,$4,pac_have_$1=yes,pac_have_$1=no)
+        PAC_CHECK_HEADER_LIB($2,$3,$4,pac_have_$1=yes,pac_have_$1=no,$5)
         if test "${pac_have_$1}" = "no" -a -n "${with_$1}" ; then
             dnl user asks for it, so missing is an error
             AC_MSG_ERROR([--with-$1 is given but not found])

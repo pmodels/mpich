@@ -17,7 +17,7 @@ AC_MSG_NOTICE([RUNNING PREREQ FOR CH4 DEVICE])
 m4_define([libfabric_embedded_dir],[modules/libfabric])
 m4_define([ucx_embedded_dir],[modules/ucx])
 PAC_PROBE_HEADER_LIB(libfabric,[rdma/fabric.h], [fabric], [fi_getinfo])
-PAC_PROBE_HEADER_LIB(ucx,[ucp/api/ucp.h], [ucp], [ucp_config_read])
+PAC_PROBE_HEADER_LIB(ucx,[ucp/api/ucp.h], [ucp], [ucp_config_read], [-lucs -lucm -luct])
 
 # the CH4 device depends on the common NBC scheduler code
 build_mpid_common_sched=yes
