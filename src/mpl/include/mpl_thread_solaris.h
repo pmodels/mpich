@@ -54,12 +54,8 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
 #define MPL_thread_yield thr_yield
 
 /* See mpl_thread_posix.h for interface description. */
-void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affinity_size, int *err)
-{
-    /* stub implementation */
-    if (err)
-        *err = MPL_ERR_THREAD;
-}
+void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affinity_size,
+                             int *err);
 
 /*
  *    Mutexes
