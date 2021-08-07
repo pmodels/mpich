@@ -668,7 +668,7 @@ AC_CHECK_HEADERS(sys/sysinfo.h unistd.h)
 AC_CHECK_FUNCS(get_nprocs)
 AC_CHECK_DECLS([_SC_NPROCESSORS_ONLN],[],[],[[#include <unistd.h>]])
 
-if test "$ac_cv_func_get_nprocs" = "yes" -a "$ac_cv_have_decl__SC_NPROCESSORS_ONLN" = "yes"; then
+if test "$ac_cv_func_get_nprocs" = "yes" -o "$ac_cv_have_decl__SC_NPROCESSORS_ONLN" = "yes"; then
     AC_DEFINE(HAVE_MISC_GETNPROCS,1, [Define if get_nprocs or _SC_NPROCESSORS_ONLN is Vilable.])
 fi
 
