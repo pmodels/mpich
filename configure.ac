@@ -5321,11 +5321,15 @@ if test ${device_name} = "ch4" ; then
     elif test "$ch4_netmods" = "ucx" -a "$with_ucx" = "embedded"; then
         t_netmod="ucx (embedded)"
     fi
+    t_xpmem=""
+    if test "$pac_have_xpmem" = "yes" ; then
+        t_xpmem="xpmem"
+    fi
 cat <<EOF
 ***
 *** device: ch4
 *** netmods: ${t_netmod}
-*** shm: ${ch4_shm}
+*** shm: ${ch4_shm} $t_xpmem
 *** gpu: ${GPU_SUPPORT}
 ***
 EOF
