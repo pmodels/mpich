@@ -11,7 +11,7 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_IPC_ctrl_send_contig_lmt_fin_t *hdr = am_hdr;
+    MPIDI_IPC_ack_t *hdr = am_hdr;
     MPIR_Request *sreq = hdr->req_ptr;
 
     MPIR_FUNC_ENTER;

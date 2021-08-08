@@ -36,15 +36,15 @@ typedef struct MPIDI_IPC_rndv_hdr {
     MPIDI_IPCI_ipc_handle_t ipc_handle;
 } MPIDI_IPC_hdr;
 
-typedef struct MPIDI_IPC_ctrl_send_contig_lmt_rts {
+typedef struct MPIDI_IPC_rts {
     MPIDIG_hdr_t hdr;
     MPIDI_IPC_hdr ipc_hdr;
-} MPIDI_IPC_ctrl_send_contig_lmt_rts_t;
+} MPIDI_IPC_rts_t;
 
-typedef struct MPIDI_IPC_ctrl_send_contig_lmt_fin {
+typedef struct MPIDI_IPC_ack {
     MPIDI_IPCI_type_t ipc_type;
     MPIR_Request *req_ptr;
-} MPIDI_IPC_ctrl_send_contig_lmt_fin_t;
+} MPIDI_IPC_ack_t;
 
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;
