@@ -29,14 +29,13 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq);
 int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req);
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Aint count,
-                                                        MPI_Datatype datatype, uintptr_t data_sz,
-                                                        int is_contig,
-                                                        int rank, int tag, MPIR_Comm * comm,
-                                                        int context_offset, MPIDI_av_entry_t * addr,
-                                                        MPIDI_IPCI_ipc_attr_t ipc_attr,
-                                                        int vsi_src, int vsi_dst,
-                                                        MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count,
+                                                 MPI_Datatype datatype, uintptr_t data_sz,
+                                                 int is_contig,
+                                                 int rank, int tag, MPIR_Comm * comm,
+                                                 int context_offset, MPIDI_av_entry_t * addr,
+                                                 MPIDI_IPCI_ipc_attr_t ipc_attr,
+                                                 int vsi_src, int vsi_dst, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
