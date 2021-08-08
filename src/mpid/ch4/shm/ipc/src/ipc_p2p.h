@@ -62,7 +62,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
 
     slmt_req_hdr.ipc_hdr.ipc_type = ipc_attr.ipc_type;
     slmt_req_hdr.ipc_hdr.ipc_handle = ipc_attr.ipc_handle;
-    slmt_req_hdr.ipc_hdr.src_lrank = MPIR_Process.local_rank;
 
     /* message matching info */
     slmt_req_hdr.hdr.src_rank = comm->rank;

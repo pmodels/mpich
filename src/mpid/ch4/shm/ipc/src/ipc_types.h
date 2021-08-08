@@ -34,7 +34,6 @@ typedef struct MPIDI_IPCI_ipc_attr {
 typedef struct MPIDI_IPC_rndv_hdr {
     MPIDI_IPCI_type_t ipc_type;
     MPIDI_IPCI_ipc_handle_t ipc_handle;
-    int src_lrank;              /* sender rank on local node */
 } MPIDI_IPC_hdr;
 
 typedef struct MPIDI_IPC_ctrl_send_contig_lmt_rts {
