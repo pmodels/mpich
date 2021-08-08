@@ -82,10 +82,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
         }
     }
     if (do_ipc) {
-        mpi_errno = MPIDI_IPCI_send_contig_lmt(buf, count, datatype, data_sz, dt_contig,
-                                               rank, tag, comm,
-                                               context_offset, addr, ipc_attr,
-                                               vsi_src, vsi_dst, request);
+        mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype, data_sz, dt_contig,
+                                        rank, tag, comm, context_offset, addr, ipc_attr,
+                                        vsi_src, vsi_dst, request);
         MPIR_ERR_CHECK(mpi_errno);
         *done = true;
         /* TODO: add flattening datatype protocol for noncontig send. Different
