@@ -5,8 +5,6 @@
 
 #include "mpidimpl.h"
 #include "ipc_noinline.h"
-#include "ipc_control.h"
-#include "shm_control.h"
 #include "ipc_types.h"
 
 int MPIDI_IPC_init_local(void)

@@ -73,7 +73,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
                                                   MPIR_Comm * comm,
-                                                  MPIDI_POSIX_am_header_kind_t kind,
                                                   int handler_id,
                                                   const void *am_hdr,
                                                   MPI_Aint am_hdr_sz,
@@ -87,7 +86,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
 
     MPIR_FUNC_ENTER;
 
-    msg_hdr.kind = kind;
     msg_hdr.handler_id = handler_id;
     msg_hdr.am_hdr_sz = am_hdr_sz;
 
@@ -99,7 +97,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Comm * comm, int src_rank,
-                                                        MPIDI_POSIX_am_header_kind_t kind,
                                                         int handler_id,
                                                         const void *am_hdr,
                                                         MPI_Aint am_hdr_sz,
@@ -111,7 +108,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Comm * comm, int sr
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDI_POSIX_am_isend(src_rank, comm, kind,
+    mpi_errno = MPIDI_POSIX_am_isend(src_rank, comm,
                                      handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq);
 
     MPIR_FUNC_EXIT;
@@ -167,10 +164,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, 
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
-                                                     MPIR_Comm * comm,
-                                                     MPIDI_POSIX_am_header_kind_t kind,
-                                                     int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                      const void *am_hdr, MPI_Aint am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -179,7 +173,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
 
     MPIR_FUNC_ENTER;
 
-    msg_hdr.kind = kind;
     msg_hdr.handler_id = handler_id;
     msg_hdr.am_hdr_sz = am_hdr_sz;
     msg_hdr.am_type = MPIDI_POSIX_AM_TYPE__HDR;
@@ -231,9 +224,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_send_hdr(int grank,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Comm * comm,
-                                                           int src_rank,
-                                                           MPIDI_POSIX_am_header_kind_t kind,
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Comm * comm, int src_rank,
                                                            int handler_id, const void *am_hdr,
                                                            MPI_Aint am_hdr_sz)
 {
@@ -241,7 +232,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Comm * comm,
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDI_POSIX_am_send_hdr(src_rank, comm, kind, handler_id, am_hdr, am_hdr_sz);
+    mpi_errno = MPIDI_POSIX_am_send_hdr(src_rank, comm, handler_id, am_hdr, am_hdr_sz);
 
     MPIR_FUNC_EXIT;
 
