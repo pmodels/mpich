@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
-    MPIDI_IPC_ctrl_send_contig_lmt_rts_t slmt_req_hdr;
+    MPIDI_IPC_rts_t am_hdr;
 
     /* FIXME: handle all send types */
     int flags = 0;
@@ -60,19 +60,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
     MPIDIG_REQUEST(sreq, count) = count;
     MPIDIG_REQUEST(sreq, context_id) = comm->context_id + context_offset;
 
-    slmt_req_hdr.ipc_hdr.ipc_type = ipc_attr.ipc_type;
-    slmt_req_hdr.ipc_hdr.ipc_handle = ipc_attr.ipc_handle;
+    am_hdr.ipc_hdr.ipc_type = ipc_attr.ipc_type;
+    am_hdr.ipc_hdr.ipc_handle = ipc_attr.ipc_handle;
 
     /* message matching info */
-    slmt_req_hdr.hdr.src_rank = comm->rank;
-    slmt_req_hdr.hdr.tag = tag;
-    slmt_req_hdr.hdr.context_id = comm->context_id + context_offset;
-    slmt_req_hdr.hdr.data_sz = data_sz;
-    slmt_req_hdr.hdr.rndv_hdr_sz = sizeof(MPIDI_IPC_hdr);
-    slmt_req_hdr.hdr.sreq_ptr = sreq;
-    slmt_req_hdr.hdr.error_bits = error_bits;
-    slmt_req_hdr.hdr.flags = flags;
-    MPIDIG_AM_SEND_SET_RNDV(slmt_req_hdr.hdr.flags, MPIDIG_RNDV_IPC);
+    am_hdr.hdr.src_rank = comm->rank;
+    am_hdr.hdr.tag = tag;
+    am_hdr.hdr.context_id = comm->context_id + context_offset;
+    am_hdr.hdr.data_sz = data_sz;
+    am_hdr.hdr.rndv_hdr_sz = sizeof(MPIDI_IPC_hdr);
+    am_hdr.hdr.sreq_ptr = sreq;
+    am_hdr.hdr.error_bits = error_bits;
+    am_hdr.hdr.flags = flags;
+    MPIDIG_AM_SEND_SET_RNDV(am_hdr.hdr.flags, MPIDIG_RNDV_IPC);
 
     if (flags & MPIDIG_AM_SEND_FLAGS_SYNC) {
         MPIR_cc_inc(sreq->cc_ptr);      /* expecting SSEND_ACK */
@@ -84,8 +84,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
     }
 
     int is_local = 1;
-    MPI_Aint hdr_sz = sizeof(slmt_req_hdr);
-    CH4_CALL(am_send_hdr(rank, comm, MPIDIG_SEND, &slmt_req_hdr, hdr_sz, vsi_src, vsi_dst),
+    MPI_Aint hdr_sz = sizeof(am_hdr);
+    CH4_CALL(am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, hdr_sz, vsi_src, vsi_dst),
              is_local, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -170,7 +170,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
         MPIR_Assert(0);
     }
 
-    MPIDI_IPC_ctrl_send_contig_lmt_fin_t am_hdr;
+    MPIDI_IPC_ack_t am_hdr;
     am_hdr.ipc_type = ipc_type;
     am_hdr.req_ptr = sreq_ptr;
 
