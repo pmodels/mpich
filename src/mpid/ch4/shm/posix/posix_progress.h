@@ -8,7 +8,7 @@
 
 #include "posix_impl.h"
 #include "posix_eager.h"
-#include "shm_control.h"
+#include "posix_am.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
 {
@@ -45,18 +45,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
     } else {
         /* First segment */
         am_hdr = payload;
-
-        /* This is a SHM internal control header */
-        /* TODO: internal control can use the generic am interface,
-         *       just need register callbacks */
-        if (msg_hdr->kind == MPIDI_POSIX_AM_HDR_SHM) {
-            mpi_errno = MPIDI_SHMI_ctrl_dispatch(msg_hdr->handler_id, am_hdr);
-
-            /* TODO: discard payload for now as we only handle header in
-             * current internal control protocols. */
-            MPIDI_POSIX_eager_recv_commit(&transaction);
-            goto fn_exit;
-        }
 
         payload += msg_hdr->am_hdr_sz;
         payload_left -= msg_hdr->am_hdr_sz;

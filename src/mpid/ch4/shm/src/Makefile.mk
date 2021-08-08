@@ -14,8 +14,6 @@ noinst_HEADERS += src/mpid/ch4/shm/src/shm_impl.h    \
         src/mpid/ch4/shm/src/shm_am_fallback_send.h  \
         src/mpid/ch4/shm/src/shm_am_fallback_part.h  \
         src/mpid/ch4/shm/src/shm_am.h      \
-        src/mpid/ch4/shm/src/shm_control.h \
-        src/mpid/ch4/shm/src/shm_types.h   \
         src/mpid/ch4/shm/src/shm_coll.h    \
         src/mpid/ch4/shm/src/shm_hooks.h   \
         src/mpid/ch4/shm/src/shm_progress.h \
@@ -29,8 +27,7 @@ mpi_core_sources   += src/mpid/ch4/shm/src/shm_init.c \
                       src/mpid/ch4/shm/src/shm_dpm.c \
                       src/mpid/ch4/shm/src/shm_mem.c \
                       src/mpid/ch4/shm/src/shm_rma.c \
-                      src/mpid/ch4/shm/src/shm_part.c \
-                      src/mpid/ch4/shm/src/shm_control.c
+                      src/mpid/ch4/shm/src/shm_part.c
 
 noinst_HEADERS += src/mpid/ch4/shm/src/topotree_util.h \
                   src/mpid/ch4/shm/src/topotree_types.h\
