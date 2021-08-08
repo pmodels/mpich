@@ -28,32 +28,66 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vsi_src).lock);
 
+    if (rank == comm->rank) {
+        goto fn_exit;
+    }
+
+    MPIR_Datatype *dt_ptr;
     bool dt_contig;
     MPI_Aint true_lb;
     uintptr_t data_sz;
-    MPIDI_Datatype_check_contig_size_lb(datatype, count, dt_contig, data_sz, true_lb);
+    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, true_lb);
 
-    void *vaddr = (char *) buf + true_lb;
+    if (!dt_contig && (dt_ptr->true_lb < 0 || dt_ptr->extent < 0)) {
+        /* TODO: handle offset */
+        goto fn_exit;
+    }
+
+    MPI_Aint mem_size;
+    void *mem_addr;
+    if (dt_contig) {
+        mem_addr = (char *) buf + true_lb;
+        mem_size = data_sz;
+    } else {
+        mem_addr = (char *) buf;
+        mem_size = dt_ptr->true_ub + (count - 1) * dt_ptr->extent;
+    }
     MPIDI_IPCI_ipc_attr_t ipc_attr;
-    MPIR_GPU_query_pointer_attr(vaddr, &ipc_attr.gpu_attr);
+    MPIR_GPU_query_pointer_attr(mem_addr, &ipc_attr.gpu_attr);
 
     if (ipc_attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
-        mpi_errno = MPIDI_GPU_get_ipc_attr(vaddr, rank, comm, &ipc_attr);
+        mpi_errno = MPIDI_GPU_get_ipc_attr(mem_addr, rank, comm, &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        mpi_errno = MPIDI_XPMEM_get_ipc_attr(vaddr, data_sz, &ipc_attr);
+        mpi_errno = MPIDI_XPMEM_get_ipc_attr(mem_addr, mem_size, &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (rank != comm->rank && ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE &&
-        data_sz >= ipc_attr.threshold.send_lmt_sz) {
-        if (dt_contig) {
-            mpi_errno = MPIDI_IPCI_send_contig_lmt(buf, count, datatype, data_sz, rank, tag, comm,
-                                                   context_offset, addr, ipc_attr, vsi_src, vsi_dst,
-                                                   request);
-            MPIR_ERR_CHECK(mpi_errno);
-            *done = true;
+    if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__NONE) {
+        goto fn_exit;
+    }
+    if (data_sz < ipc_attr.threshold.send_lmt_sz) {
+        goto fn_exit;
+    }
+
+    bool do_ipc = false;
+    if (dt_contig) {
+        do_ipc = true;
+    } else if (!dt_contig) {
+        int flattened_sz;
+        void *flattened_dt;
+        MPIR_Datatype_get_flattened(datatype, &flattened_dt, &flattened_sz);
+        if (sizeof(MPIDI_IPC_rts_t) + flattened_sz < MPIDI_POSIX_am_hdr_max_sz()) {
+            do_ipc = true;
         }
+    }
+    if (do_ipc) {
+        mpi_errno = MPIDI_IPCI_send_contig_lmt(buf, count, datatype, data_sz, dt_contig,
+                                               rank, tag, comm,
+                                               context_offset, addr, ipc_attr,
+                                               vsi_src, vsi_dst, request);
+        MPIR_ERR_CHECK(mpi_errno);
+        *done = true;
         /* TODO: add flattening datatype protocol for noncontig send. Different
          * threshold may be required to tradeoff the flattening overhead.*/
     }

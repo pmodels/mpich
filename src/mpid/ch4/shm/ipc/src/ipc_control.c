@@ -32,11 +32,10 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIDI_IPC_hdr *hdr = MPIDIG_REQUEST(rreq, rndv_hdr);
     MPI_Aint in_data_sz = MPIDIG_recv_in_data_sz(rreq);
     MPIR_Request *sreq_ptr = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
 
-    mpi_errno = MPIDI_IPCI_handle_lmt_recv(hdr->ipc_type, hdr->ipc_handle,
+    mpi_errno = MPIDI_IPCI_handle_lmt_recv(MPIDIG_REQUEST(rreq, rndv_hdr),
                                            in_data_sz, sreq_ptr, rreq);
 
     MPIR_FUNC_EXIT;
