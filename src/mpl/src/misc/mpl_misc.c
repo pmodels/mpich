@@ -1,11 +1,11 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/* vim: set ft=c.mpich : */
 /*
- *  (C) 2018 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpl.h"
+#include <assert.h>
+
 
 #if defined (MPL_HAVE_SYS_SYSINFO_H)
 #include <sys/sysinfo.h>
@@ -19,12 +19,13 @@ int MPL_get_nprocs(void)
 {
 #if defined (MPL_HAVE_GET_NPROCS)
     return get_nprocs();
-#elif defined (MPL_HAVE_DECL__SC_NPROCESSORS_ONLN)
+#elif defined (MPL_HAVE_DECL__SC_NPROCESSORS_ONLN) && MPL_HAVE_DECL__SC_NPROCESSORS_ONLN
     int count = sysconf(_SC_NPROCESSORS_ONLN);
-    return (count > 0) ? count : 0;
+    return (count > 0) ? count : 1;
 #else
     /* Neither MPL_HAVE_GET_NPROCS nor MPL_HAVE_DECL__SC_NPROCESSORS_ONLN are defined.
      * Should not reach here. */
-    MPIR_Assert(0);
+    assert(0);
+    return 1;
 #endif
 }

@@ -44,12 +44,8 @@ void MPL_thread_same(MPL_thread_id_t * id1, MPL_thread_id_t * id2, int *same);
 void MPL_thread_yield();
 
 /* See mpl_thread_posix.h for interface description. */
-void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affinity_size, int *err)
-{
-    /* stub implementation */
-    if (err)
-        *err = MPL_THREAD_ERROR;
-}
+void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affinity_size,
+                             int *err);
 
 void MPL_thread_mutex_create(MPL_thread_mutex_t * mutex, int *err);
 void MPL_thread_mutex_destroy(MPL_thread_mutex_t * mutex, int *err);

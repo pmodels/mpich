@@ -49,7 +49,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         thread_info->data = data;
 
         err = thr_create(NULL, 0, MPLI_thread_start, thread_info, THR_DETACHED, idp);
-        /* FIXME: convert error to an MPL_THREAD_ERR value */
+        /* FIXME: convert error to an MPL_ERR_THREAD value */
     } else {
         err = 1000000000;
     }
@@ -77,6 +77,14 @@ void *MPLI_thread_start(void *arg)
     func(data);
 
     return NULL;
+}
+
+/* See mpl_thread_posix.h for interface description. */
+void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affinity_size, int *err)
+{
+    /* stub implementation */
+    if (err)
+        *err = MPL_ERR_THREAD;
 }
 
 #endif
