@@ -172,6 +172,55 @@ static inline int MPIDI_OFI_bcast_json(void *buffer, int count, MPI_Datatype dat
                                        int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    const MPIDI_OFI_csel_container_s *cnt = NULL;
+
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__BCAST,
+        .comm_ptr = comm,
+        .u.bcast.buffer = buffer,
+        .u.bcast.datatype = datatype,
+        .u.bcast.root = root,
+        .u.bcast.count = count,
+    };
+
+    cnt = MPIR_Csel_search(MPIDI_OFI_COMM(comm).csel_comm, coll_sig);
+    if (cnt == NULL)
+        goto fallback;
+
+    switch (cnt->id) {
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_tagged:
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_triggered_tagged(buffer, count, datatype, root, comm,
+                                                       cnt->u.bcast.triggered_tagged.tree_type,
+                                                       cnt->u.bcast.triggered_tagged.k);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma:
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_triggered_rma(buffer, count, datatype, root, comm,
+                                                    cnt->u.bcast.triggered_rma.tree_type,
+                                                    cnt->u.bcast.triggered_rma.k);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_pipelined:
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_triggered_pipelined(buffer, count, datatype, root, comm,
+                                                          cnt->u.bcast.triggered_pipelined.k,
+                                                          cnt->u.bcast.
+                                                          triggered_pipelined.chunk_size);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_small_blocking:
+            mpi_errno = MPIDI_OFI_Bcast_intra_triggered_small_msg(buffer, count, datatype,
+                                                                  root, comm,
+                                                                  cnt->u.
+                                                                  bcast.triggered_small_blocking.k);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_impl:
+            goto fallback;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
 
   fallback:
     mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
