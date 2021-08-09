@@ -36,3 +36,4 @@ EOF
 create_json_buf maint/tuning/coll/mpir/generic.json MPII_coll_generic_json
 create_json_buf maint/tuning/coll/ch4/generic.json MPIDI_coll_generic_json
 create_json_buf maint/tuning/coll/ch4/posix_generic.json MPIDI_POSIX_coll_generic_json
+create_json_buf maint/tuning/coll/ch4/ofi_generic.json MPIDI_OFI_coll_generic_json

@@ -441,6 +441,16 @@ cvars:
       description : >-
         If true, enable OFI triggered ops for MPI collectives.
 
+    - name        : MPIR_CVAR_COLL_OFI_SELECTION_TUNING_JSON_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of tuning file.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -715,6 +725,16 @@ int MPIDI_OFI_init_local(int *tag_bits)
 
     mpi_errno = MPIDI_OFI_dynproc_init();
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* Initialize collective selection */
+    if (!strcmp(MPIR_CVAR_COLL_OFI_SELECTION_TUNING_JSON_FILE, ""))
+        mpi_errno = MPIR_Csel_create_from_buf(MPIDI_OFI_coll_generic_json,
+                                              create_container, &MPIDI_global.nm.ofi.csel_root);
+    else {
+        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_COLL_OFI_SELECTION_TUNING_JSON_FILE,
+                                               create_container, &MPIDI_global.nm.ofi.csel_root);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGAIN, "eagain", NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
     MPIDI_OFI_global.num_comms_enabled_striping = 0;
@@ -1074,6 +1094,12 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_SPAWN_MUTEX, &err);
     MPIR_Assert(err == 0);
+
+    if (MPIDI_global.nm.ofi.csel_root) {
+        mpi_errno = MPIR_Csel_free(MPIDI_global.nm.ofi.csel_root);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
