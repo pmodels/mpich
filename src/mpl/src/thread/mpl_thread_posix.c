@@ -51,7 +51,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         thread_info->data = data;
 
         err = pthread_create(idp, NULL, MPLI_thread_start, thread_info);
-        /* FIXME: convert error to an MPL_THREAD_ERR value */
+        /* FIXME: convert error to an MPL_ERR_THREAD value */
     } else {
         err = 1000000000;
     }

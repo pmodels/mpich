@@ -31,8 +31,8 @@ cvars:
         highly system dependent but may be substantial in some cases,
         hence this recommendation.
 
-    - name        : MPIR_CVAR_CH4_PROGRESS_THREAD_AFFINITY
-      category    : CH4
+    - name        : MPIR_CVAR_PROGRESS_THREAD_AFFINITY
+      category    : THREADS
       type        : string
       default     : ""
       class       : device
@@ -90,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_parse_progress_thread_affinity(int *thread_af
 {
     int th_idx, read_count = 0, mpi_errno = MPI_SUCCESS;
     char *affinity_copy = NULL;
-    const char *affinity_to_parse = MPIR_CVAR_CH4_PROGRESS_THREAD_AFFINITY;
+    const char *affinity_to_parse = MPIR_CVAR_PROGRESS_THREAD_AFFINITY;
     char *proc_id_str, *tmp;
     size_t proc_count;
 
@@ -153,8 +153,8 @@ static int get_thread_affinity(bool * apply_affinity, int **p_thread_affinity, i
     int *thread_affinity = NULL;
     int have_cliques;
 
-    *apply_affinity = MPIR_CVAR_CH4_PROGRESS_THREAD_AFFINITY &&
-        strlen(MPIR_CVAR_CH4_PROGRESS_THREAD_AFFINITY) > 0;
+    *apply_affinity = MPIR_CVAR_PROGRESS_THREAD_AFFINITY &&
+        strlen(MPIR_CVAR_PROGRESS_THREAD_AFFINITY) > 0;
     have_cliques = MPIR_pmi_has_local_cliques();
 
 
@@ -182,7 +182,7 @@ static int get_thread_affinity(bool * apply_affinity, int **p_thread_affinity, i
         async_threads_per_node = local_size;
         thread_affinity = (int *) MPL_malloc(async_threads_per_node * sizeof(int), MPL_MEM_OTHER);
 
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+        MPL_DBG_MSG_FMT(MPIR_DBG_INIT, VERBOSE,
                         (MPL_DBG_FDEST,
                          " global_rank %d, local_rank %d, local_size %d, async_threads_per_node %d",
                          global_rank, local_rank, local_size, async_threads_per_node));
@@ -193,7 +193,7 @@ static int get_thread_affinity(bool * apply_affinity, int **p_thread_affinity, i
         if (MPIR_Process.rank == 0) {
             int th_idx;
             for (th_idx = 0; th_idx < async_threads_per_node; th_idx++) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                MPL_DBG_MSG_FMT(MPIR_DBG_INIT, VERBOSE,
                                 (MPL_DBG_FDEST, "affinity: thread %d, processor %d",
                                  th_idx, thread_affinity[th_idx]));
             }
