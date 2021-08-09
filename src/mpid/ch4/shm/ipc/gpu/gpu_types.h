@@ -15,8 +15,6 @@ typedef struct MPIDI_GPUI_dev_id {
 } MPIDI_GPUI_dev_id_t;
 
 typedef struct {
-    MPIDI_GPUI_dev_id_t *local_to_global_map;
-    MPIDI_GPUI_dev_id_t *global_to_local_map;
     int **visible_dev_global_id;
     int *local_ranks;
     int *local_procs;
