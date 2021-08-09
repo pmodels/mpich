@@ -69,6 +69,7 @@ $rootSrcDir = "";
               "ld: warning: directory not found for option '-L\\S*src/mpl'",
               "ld: warning: directory not found for option '-L\\S*src/openpa/src'",
 	      "copying selected object files to avoid basename conflicts...",
+          "libtool", "Entering directory", "touch", "cd", "config.status:", "\\(CDPATH=.*",
 );
 
 # OtherNoise is an array of patterns that describe blocks of
