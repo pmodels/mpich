@@ -66,7 +66,7 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
                                    __LINE__,                            \
                                    __func__,                              \
                                    fi_strerror(-_ret));                 \
-            mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vni_idx */);    \
+            mpi_errno = MPIDI_NM_progress(0, 0); \
             if (mpi_errno != MPI_SUCCESS)                                \
                 MPIR_ERR_CHECK(mpi_errno);                               \
         } while (_ret == -FI_EAGAIN);                                   \
