@@ -54,7 +54,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
     MPIR_FUNC_ENTER;
 
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
+    int src_vni = src_vci % MPIDI_UCX_global.num_vnis;
+    int dst_vni = dst_vci % MPIDI_UCX_global.num_vnis;
+    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, src_vni, dst_vni);
 
     int dt_contig;
     size_t data_sz;
@@ -182,7 +184,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
 
     MPIR_FUNC_ENTER;
 
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
+    int src_vni = src_vci % MPIDI_UCX_global.num_vnis;
+    int dst_vni = dst_vci % MPIDI_UCX_global.num_vnis;
+    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, src_vni, dst_vni);
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
