@@ -723,7 +723,7 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     goto fn_exit;
 }
 
-int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
+int MPIDI_OFI_dispatch_function(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -825,7 +825,7 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
     return mpi_errno;
 }
 
-int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret)
+int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_cq_err_entry e;
@@ -834,6 +834,7 @@ int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret)
     ssize_t ret_cqerr;
     MPIR_FUNC_ENTER;
 
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
     switch (ret) {
         case -FI_EAVAIL:
             /* Provide separate error buffer for each thread. This makes the
@@ -854,12 +855,13 @@ int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret)
 
                     switch (req->kind) {
                         case MPIR_REQUEST_KIND__SEND:
-                            mpi_errno = MPIDI_OFI_dispatch_function(NULL, req);
+                            mpi_errno = MPIDI_OFI_dispatch_function(vni, NULL, req);
                             break;
 
                         case MPIR_REQUEST_KIND__RECV:
                             mpi_errno =
-                                MPIDI_OFI_dispatch_function((struct fi_cq_tagged_entry *) &e, req);
+                                MPIDI_OFI_dispatch_function(vni, (struct fi_cq_tagged_entry *) &e,
+                                                            req);
                             req->status.MPI_ERROR = MPI_ERR_TRUNCATE;
                             break;
 

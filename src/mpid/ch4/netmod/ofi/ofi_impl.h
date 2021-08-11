@@ -40,7 +40,7 @@ ATTRIBUTE((unused));
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
 int MPIDI_OFI_progress_uninlined(int vni);
-int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret);
+int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
 
 /* vni mapping */
 /* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
@@ -654,7 +654,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
             goto fn_exit;
 
         if (ret < 0) {
-            mpi_errno = MPIDI_OFI_handle_cq_error(ctx_idx, ret);
+            mpi_errno = MPIDI_OFI_handle_cq_error(vni, nic, ret);
             goto fn_fail;
         }
 
