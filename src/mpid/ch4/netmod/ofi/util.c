@@ -243,7 +243,8 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
 
     switch (ctrlsend->type) {
         case MPIDI_OFI_CTRL_HUGEACK:{
-                mpi_errno = MPIDI_OFI_dispatch_function(NULL, ctrlsend->ackreq);
+                /* FIXME: need vni from the callback parameters */
+                mpi_errno = MPIDI_OFI_dispatch_function(0, NULL, ctrlsend->ackreq);
                 goto fn_exit;
             }
             break;
