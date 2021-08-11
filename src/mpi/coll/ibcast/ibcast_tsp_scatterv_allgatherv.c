@@ -170,7 +170,9 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
     if (!is_contig) {
         if (rank != root) {
-            sink_id = MPIR_TSP_sched_sink(sched);       /* wait for allgather to complete */
+            mpi_errno = MPIR_TSP_sched_sink(sched, &sink_id);   /* wait for allgather to complete */
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
 
             mpi_errno =
                 MPIR_TSP_sched_localcopy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype, sched,

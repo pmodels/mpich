@@ -61,6 +61,20 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
 
 #define MPL_thread_yield MPL_sched_yield
 
+/*+C
+    MPL_thread_set_affinity - Set thread affinity
+
+    Input Parameters:
+    .   thread        - handle of thread which should be pinned
+    .   affinity_arr  - array containing logical processors for pinning
+    .   affinity_size - number of elements in affinity_arr
+
+    Output Parameters:
+    .   err - error code (MPL_SUCCESS on successful pinning, MPL_ERR_THREAD otherwise)
+ +*/
+void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affinity_size,
+                             int *err);
+
 /*
  * Thread Local Storage
  */

@@ -113,7 +113,7 @@ typedef struct {
 #define utarray_reserve(a,by,class) do {                                      \
   if (((a)->i+by) > ((a)->n)) {                                               \
     void * d_;                                                                \
-    while (((a)->i+by) > ((a)->n)) { (a)->n = ((a)->n ? (2*(a)->n) : 8); }     \
+    while (((a)->i+by) > ((a)->n)) { (a)->n = ((a)->n ? (2*(a)->n) : 16); }     \
     d_=(char*)utarray_realloc_((a)->d, (a)->n*(a)->icd->sz, class);           \
     if (d_ == NULL) utarray_oom();                                            \
     (a)->d = d_;                                                              \
@@ -124,6 +124,11 @@ typedef struct {
   utarray_reserve(a,1,class);                                                 \
   if ((a)->icd->copy) { (a)->icd->copy(_utarray_eltptr(a,(a)->i++), p); }    \
   else { memcpy(_utarray_eltptr(a,(a)->i++), p, (a)->icd->sz); };             \
+} while (0)
+
+#define utarray_push_back_int(a,p,class) do {                                \
+  utarray_reserve(a,1,class);                                                \
+  ut_int_array(a)[(a)->i++] = *p;                                            \
 } while (0)
 
 #define utarray_pop_back(a) do {                                              \

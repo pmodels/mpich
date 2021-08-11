@@ -177,7 +177,9 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
                                  sched, nvtcs, vtcs);
 
         /* Broadcast start here */
-        sink_id = MPIR_TSP_sched_sink(sched);
+        mpi_errno = MPIR_TSP_sched_sink(sched, &sink_id);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         /* Receive message from parent */
         int bcast_recv_id = sink_id;

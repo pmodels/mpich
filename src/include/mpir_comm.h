@@ -285,6 +285,10 @@ int MPIR_Comm_commit(MPIR_Comm *);
 
 int MPIR_Comm_is_parent_comm(MPIR_Comm *);
 
+/* peer intercomm is an internal 1-to-1 intercomm used for connecting dynamic processes */
+int MPIR_peer_intercomm_create(MPIR_Context_id_t context_id, MPIR_Context_id_t recvcontext_id,
+                               uint64_t remote_lpid, int is_low_group, MPIR_Comm ** newcomm);
+
 #if defined(HAVE_ROMIO)
 int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm);
 #endif

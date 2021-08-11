@@ -224,7 +224,9 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
         }
     }
 
-    sink_id = MPIR_TSP_sched_sink(sched);       /* sink for all the tasks up to end of Step 1 */
+    mpi_errno = MPIR_TSP_sched_sink(sched, &sink_id);   /* sink for all the tasks up to end of Step 1 */
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* Step 2 */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Start Step2"));
