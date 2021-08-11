@@ -23,7 +23,8 @@ int MPIDIG_do_cts(MPIR_Request * rreq)
                     (MPL_DBG_FDEST, "do cts req %p handle=0x%x", rreq, rreq->handle));
 
     CH4_CALL(am_send_hdr_reply(rreq->comm, MPIDIG_REQUEST(rreq, rank), MPIDIG_SEND_CTS,
-                               &am_hdr, sizeof(am_hdr)), MPIDI_REQUEST(rreq, is_local), mpi_errno);
+                               &am_hdr, sizeof(am_hdr), 0, 0),
+             MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -517,7 +518,7 @@ int MPIDIG_send_cts_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                             &send_hdr, sizeof(send_hdr),
                             MPIDIG_REQUEST(sreq, req->sreq).src_buf,
                             MPIDIG_REQUEST(sreq, req->sreq).count,
-                            MPIDIG_REQUEST(sreq, req->sreq).datatype, sreq),
+                            MPIDIG_REQUEST(sreq, req->sreq).datatype, 0, 0, sreq),
              MPIDI_REQUEST(sreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 

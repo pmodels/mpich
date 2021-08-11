@@ -228,7 +228,7 @@ static int ack_put(MPIR_Request * rreq)
 
     ack_msg.preq_ptr = MPIDIG_REQUEST(rreq, req->preq.preq_ptr);
     CH4_CALL(am_send_hdr_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
-                               MPIDIG_PUT_ACK, &ack_msg, sizeof(ack_msg)),
+                               MPIDIG_PUT_ACK, &ack_msg, sizeof(ack_msg), 0, 0),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -255,7 +255,7 @@ static int ack_cswap(MPIR_Request * rreq)
 
     CH4_CALL(am_isend_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
                             MPIDIG_CSWAP_ACK, &ack_msg, sizeof(ack_msg), result_addr, 1,
-                            MPIDIG_REQUEST(rreq, req->creq.datatype), rreq),
+                            MPIDIG_REQUEST(rreq, req->creq.datatype), 0, 0, rreq),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -274,7 +274,7 @@ static int ack_acc(MPIR_Request * rreq)
 
     ack_msg.req_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
     CH4_CALL(am_send_hdr_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
-                               MPIDIG_ACC_ACK, &ack_msg, sizeof(ack_msg)),
+                               MPIDIG_ACC_ACK, &ack_msg, sizeof(ack_msg), 0, 0),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -297,7 +297,7 @@ static int ack_get_acc(MPIR_Request * rreq)
     CH4_CALL(am_isend_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
                             MPIDIG_GET_ACC_ACK, &ack_msg, sizeof(ack_msg),
                             MPIDIG_REQUEST(rreq, req->areq.data),
-                            MPIDIG_REQUEST(rreq, req->areq.result_data_sz), MPI_BYTE, rreq),
+                            MPIDIG_REQUEST(rreq, req->areq.result_data_sz), MPI_BYTE, 0, 0, rreq),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -339,7 +339,7 @@ static int win_lock_advance(MPIR_Win * win)
         else
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rmasync");
 
-        CH4_CALL(am_send_hdr_reply(win->comm_ptr, lock->rank, handler_id, &msg, sizeof(msg)),
+        CH4_CALL(am_send_hdr_reply(win->comm_ptr, lock->rank, handler_id, &msg, sizeof(msg), 0, 0),
                  MPIDI_rank_is_local(lock->rank, win->comm_ptr), mpi_errno);
         MPIR_ERR_CHECK(mpi_errno);
         MPL_free(lock);
@@ -418,7 +418,7 @@ static void win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, int is_local, M
     msg.origin_rank = win->comm_ptr->rank;
 
     CH4_CALL(am_send_hdr_reply(win->comm_ptr, info->origin_rank, MPIDIG_WIN_UNLOCK_ACK,
-                               &msg, sizeof(msg)), is_local, mpi_errno);
+                               &msg, sizeof(msg), 0, 0), is_local, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -649,7 +649,7 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
                                 MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
                                 (void *) MPIDIG_REQUEST(rreq, req->greq.addr),
                                 MPIDIG_REQUEST(rreq, req->greq.count),
-                                MPIDIG_REQUEST(rreq, req->greq.datatype), rreq),
+                                MPIDIG_REQUEST(rreq, req->greq.datatype), 0, 0, rreq),
                  MPIDI_REQUEST(rreq, is_local), mpi_errno);
         MPID_Request_complete(rreq);
         MPIR_ERR_CHECK(mpi_errno);
@@ -672,7 +672,7 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
     CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
                             MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
                             MPIDIG_REQUEST(rreq, req->greq.addr),
-                            MPIDIG_REQUEST(rreq, req->greq.count), dt->handle, rreq),
+                            MPIDIG_REQUEST(rreq, req->greq.count), dt->handle, 0, 0, rreq),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPID_Request_complete(rreq);
     MPIR_ERR_CHECK(mpi_errno);
@@ -718,7 +718,7 @@ static int put_dt_target_cmpl_cb(MPIR_Request * rreq)
     ack_msg.target_preq_ptr = rreq;
 
     CH4_CALL(am_send_hdr_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
-                               MPIDIG_PUT_DT_ACK, &ack_msg, sizeof(ack_msg)),
+                               MPIDIG_PUT_DT_ACK, &ack_msg, sizeof(ack_msg), 0, 0),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -740,7 +740,7 @@ static int acc_dt_target_cmpl_cb(MPIR_Request * rreq)
     ack_msg.target_preq_ptr = rreq;
 
     CH4_CALL(am_send_hdr_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
-                               MPIDIG_ACC_DT_ACK, &ack_msg, sizeof(ack_msg)),
+                               MPIDIG_ACC_DT_ACK, &ack_msg, sizeof(ack_msg), 0, 0),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -762,7 +762,7 @@ static int get_acc_dt_target_cmpl_cb(MPIR_Request * rreq)
     ack_msg.target_preq_ptr = rreq;
 
     CH4_CALL(am_send_hdr_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
-                               MPIDIG_GET_ACC_DT_ACK, &ack_msg, sizeof(ack_msg)),
+                               MPIDIG_GET_ACC_DT_ACK, &ack_msg, sizeof(ack_msg), 0, 0),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -1324,7 +1324,7 @@ int MPIDIG_put_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
                             MPIDIG_PUT_DAT_REQ, &dat_msg, sizeof(dat_msg),
                             MPIDIG_REQUEST(origin_req, req->preq.origin_addr),
                             MPIDIG_REQUEST(origin_req, req->preq.origin_count),
-                            MPIDIG_REQUEST(origin_req, req->preq.origin_datatype), rreq),
+                            MPIDIG_REQUEST(origin_req, req->preq.origin_datatype), 0, 0, rreq),
              (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->preq.origin_datatype));
@@ -1365,7 +1365,7 @@ int MPIDIG_acc_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
                             MPIDIG_ACC_DAT_REQ, &dat_msg, sizeof(dat_msg),
                             MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                             MPIDIG_REQUEST(origin_req, req->areq.origin_count),
-                            MPIDIG_REQUEST(origin_req, req->areq.origin_datatype), rreq),
+                            MPIDIG_REQUEST(origin_req, req->areq.origin_datatype), 0, 0, rreq),
              (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->areq.origin_datatype));
@@ -1406,7 +1406,7 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(void *am_hdr, void *data,
                             MPIDIG_GET_ACC_DAT_REQ, &dat_msg, sizeof(dat_msg),
                             MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                             MPIDIG_REQUEST(origin_req, req->areq.origin_count),
-                            MPIDIG_REQUEST(origin_req, req->areq.origin_datatype), rreq),
+                            MPIDIG_REQUEST(origin_req, req->areq.origin_datatype), 0, 0, rreq),
              (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->areq.origin_datatype));
