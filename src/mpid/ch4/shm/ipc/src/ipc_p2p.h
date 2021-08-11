@@ -84,7 +84,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
 
     int is_local = 1;
     MPI_Aint hdr_sz = sizeof(slmt_req_hdr);
-    CH4_CALL(am_send_hdr(rank, comm, MPIDIG_SEND, &slmt_req_hdr, hdr_sz), is_local, mpi_errno);
+    CH4_CALL(am_send_hdr(rank, comm, MPIDIG_SEND, &slmt_req_hdr, hdr_sz, 0, 0),
+             is_local, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -168,7 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
     am_hdr.req_ptr = sreq_ptr;
 
     CH4_CALL(am_send_hdr(MPIDIG_REQUEST(rreq, rank), rreq->comm, MPIDI_IPC_ACK,
-                         &am_hdr, sizeof(am_hdr)), 1, mpi_errno);
+                         &am_hdr, sizeof(am_hdr), 0, 0), 1, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
