@@ -11,6 +11,7 @@
 /* vci is embedded in the request's pool index */
 
 #define MPIDI_Request_get_vci(req) MPIR_REQUEST_POOL(req)
+#define MPIDI_VCI_INVALID (-1)
 
 /* VCI hashing function (fast path)
  * NOTE: The returned vci should always MOD NUMVCIS, where NUMVCIS is
@@ -70,6 +71,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__IMPLICIT
 
+static bool is_vci_restricted_to_zero(MPIR_Comm * comm)
+{
+    bool vci_restricted = false;
+    if (!(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !comm->tainted)) {
+        vci_restricted |= true;
+    }
+
+    return vci_restricted;
+}
+
+
 /* Return VCI index of a send transmit context.
  * Used for two purposes:
  *   1. For the sender side to determine which VCI index of a transmit context
@@ -92,8 +104,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_sender_vci(MPIR_Comm * comm,
 {
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     MPIR_Assert(comm);
-    /* TODO: implement implicit hashing using other parameters */
-    return comm->seq;
+    int vci_idx = MPIDI_VCI_INVALID;
+    bool use_user_defined_vci = (comm->hints[MPIR_COMM_HINT_SENDER_VCI] != MPIDI_VCI_INVALID);
+    if (is_vci_restricted_to_zero(comm)) {
+        vci_idx = 0;
+    } else if (use_user_defined_vci) {
+        vci_idx = comm->hints[MPIR_COMM_HINT_SENDER_VCI];
+    } else {
+        /* TODO: implement implicit hashing using other parameters */
+        vci_idx = comm->seq;
+    }
+    return vci_idx;
 #else
     return 0;
 #endif
@@ -119,8 +140,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_receiver_vci(MPIR_Comm * comm,
 {
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     MPIR_Assert(comm);
-    /* TODO: implement implicit hashing using other parameters */
-    return comm->seq;
+    int vci_idx = MPIDI_VCI_INVALID;
+    bool use_user_defined_vci = (comm->hints[MPIR_COMM_HINT_RECEIVER_VCI] != MPIDI_VCI_INVALID);
+    if (is_vci_restricted_to_zero(comm)) {
+        vci_idx = 0;
+    } else if (use_user_defined_vci) {
+        vci_idx = comm->hints[MPIR_COMM_HINT_RECEIVER_VCI];
+    } else {
+        /* TODO: implement implicit hashing using other parameters */
+        vci_idx = comm->seq;
+    }
+    return vci_idx;
 #else
     return 0;
 #endif

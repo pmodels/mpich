@@ -11,6 +11,7 @@
 #include "mpidu_shm.h"
 #include "ch4r_proc.h"
 #include "ch4_self.h"
+#include "ch4_vci.h"
 
 int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
                                      int *is_low_group, int pure_intracomm,
@@ -1054,6 +1055,54 @@ MPL_STATIC_INLINE_PREFIX bool MPIDIG_rma_need_poll_am(void)
 MPL_STATIC_INLINE_PREFIX void MPIDIG_rma_set_am_flag(void)
 {
     MPL_atomic_store_int(&MPIDIG_global.rma_am_flag, 1);
+}
+
+static void update_sender_vci(MPIR_Comm * comm, int value)
+{
+    comm->hints[MPIR_COMM_HINT_SENDER_VCI] = value % MPIDI_global.n_vcis;
+}
+
+static void update_receiver_vci(MPIR_Comm * comm, int value)
+{
+    comm->hints[MPIR_COMM_HINT_RECEIVER_VCI] = value % MPIDI_global.n_vcis;
+}
+
+static void update_comm_vci(MPIR_Comm * comm, int value)
+{
+    /* update the comm hints vci, sender_vci, and receiver_vci */
+    comm->hints[MPIR_COMM_HINT_VCI] = value % MPIDI_global.n_vcis;
+    update_sender_vci(comm, value);
+    update_receiver_vci(comm, value);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_sender_vci(MPIR_Comm * comm, int type, int value)
+{
+    /* if the generic hint "vci" is set, update all of "vci", "sender_vci", and "receiver_vci"
+     * for consistency */
+    if (comm->hints[MPIR_COMM_HINT_VCI] != MPIDI_VCI_INVALID) {
+        update_comm_vci(comm, value);
+    } else {
+        update_sender_vci(comm, value);
+    }
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_receiver_vci(MPIR_Comm * comm, int type, int value)
+{
+    /* if the generic hint "vci" is set, update all of "vci", "sender_vci", and "receiver_vci"
+     * for consistency */
+    if (comm->hints[MPIR_COMM_HINT_VCI] != MPIDI_VCI_INVALID) {
+        update_comm_vci(comm, value);
+    } else {
+        update_receiver_vci(comm, value);
+    }
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_vci(MPIR_Comm * comm, int type, int value)
+{
+    update_comm_vci(comm, value);
+    return MPI_SUCCESS;
 }
 
 #endif /* CH4_IMPL_H_INCLUDED */
