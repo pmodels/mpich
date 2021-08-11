@@ -50,7 +50,7 @@ int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code)
 
         /* FIXME: only NM? */
         mpi_errno = MPIDI_NM_am_isend(dest, comm, MPIDIG_COMM_ABORT, &am_hdr,
-                                      sizeof(am_hdr), NULL, 0, MPI_INT, sreq);
+                                      sizeof(am_hdr), NULL, 0, MPI_INT, 0, 0, sreq);
         if (mpi_errno)
             continue;
         else
