@@ -11,6 +11,7 @@
 
 #define MPIDI_OFI_AM_ATTR__RDMA (1 << MPIDIG_AM_ATTR_TRANSPORT_SHIFT)
 
+int MPIDI_OFI_am_repost_buffer(int am_idx);
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
 
 /* Acquire a sequence number to send, and record the next number */
@@ -118,24 +119,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_request(const void *am_hdr,
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_am_repost_request_t *am = (MPIDI_OFI_am_repost_request_t *) req;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(req->comm, 0, nic);
-
-    MPIR_FUNC_ENTER;
-    MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx,
-                                       &MPIDI_OFI_global.am_msg[am->index],
-                                       FI_MULTI_RECV | FI_COMPLETION), prepost);
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx)

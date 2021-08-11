@@ -27,7 +27,6 @@ static int am_isend_rdma_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sre
 static int am_isend_pipeline_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
 static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
-static int am_repost_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 
 static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
@@ -724,17 +723,6 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     goto fn_exit;
 }
 
-static int am_repost_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    mpi_errno = MPIDI_OFI_repost_buffer(wc->op_context, rreq);
-
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}
-
 int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -762,8 +750,10 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
         if (wc->flags & FI_RECV)
             mpi_errno = am_recv_event(wc, req);
 
-        if (unlikely(wc->flags & FI_MULTI_RECV))
-            mpi_errno = am_repost_event(wc, req);
+        if (unlikely(wc->flags & FI_MULTI_RECV)) {
+            MPIDI_OFI_am_repost_request_t *am = (MPIDI_OFI_am_repost_request_t *) req;
+            mpi_errno = MPIDI_OFI_am_repost_buffer(am->index);
+        }
 
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_READ)) {
