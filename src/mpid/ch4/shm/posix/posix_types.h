@@ -27,15 +27,13 @@ enum {
 
 typedef struct {
     MPIDU_genq_private_pool_t am_hdr_buf_pool;
-
-    /* Postponed queue */
     MPIDI_POSIX_am_request_header_t *postponed_queue;
-
-    /* Active recv requests array */
     MPIR_Request **active_rreq;
+} MPIDI_POSIX_per_vsi_t;
 
+typedef struct {
+    MPIDI_POSIX_per_vsi_t per_vsi[MPIDI_CH4_MAX_VCIS];
     void *shm_ptr;
-
     /* Keep track of all of the local processes in MPI_COMM_WORLD and what their original rank was
      * in that communicator. */
     int num_local;
