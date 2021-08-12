@@ -984,6 +984,11 @@ static int get_option_num_cliques(void)
     }
 }
 
+int MPIR_pmi_has_local_cliques(void)
+{
+    return (get_option_num_cliques() > 1);
+}
+
 /* one process per node */
 int build_nodemap_nolocal(int *nodemap, int sz, int *p_max_node_id)
 {

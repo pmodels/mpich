@@ -101,7 +101,7 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t sched, MPIR_Comm * comm, MPIR_Request 
 int MPIR_TSP_sched_reset(MPIR_TSP_sched_t sched);
 
 /* Transport function to schedule a sink */
-int MPIR_TSP_sched_sink(MPIR_TSP_sched_t sched);
+int MPIR_TSP_sched_sink(MPIR_TSP_sched_t sched, int *vtx_id);
 
 /* Transport function to schedule a fence */
 void MPIR_TSP_sched_fence(MPIR_TSP_sched_t sched);

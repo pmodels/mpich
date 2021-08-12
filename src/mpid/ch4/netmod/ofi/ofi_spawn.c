@@ -21,14 +21,14 @@ static void free_port_name_tag(int tag);
 static int get_port_name_tag(int *port_name_tag);
 static int get_tag_from_port(const char *port_name, int *port_name_tag);
 static int get_conn_name_from_port(const char *port_name, char *connname);
-static int dynproc_create_intercomm(const char *port_name, int remote_size, uint64_t * remote_gpids,
-                                    MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm, int is_low_group,
-                                    int get_tag, char *api);
-static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_addr_t * conn,
-                             MPIR_Comm * comm_ptr);
-static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * conn, char *conname,
-                                MPIR_Comm * comm_ptr, int *out_root, int *remote_size,
-                                int **remote_upid_size, char **remote_upids);
+static int peer_intercomm_create(char *remote_addrname, int len, int tag, int timeout,
+                                 bool is_sender, MPIR_Comm ** newcomm);
+static int get_my_addrname(char *addrname_buf, int *len);
+static int dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size, int timeout);
+static int dynamic_recv(int tag, void *buf, int size, int timeout);
+static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int root,
+                                    MPIR_Comm * comm_ptr, int timeout, bool is_sender,
+                                    MPIR_Comm ** newcomm);
 
 /* NOTE: port_name_tag, context_id_offset, and port_id all refer to the same context_id used during
  * establishing dynamic connections */
@@ -120,476 +120,17 @@ static int get_conn_name_from_port(const char *port_name, char *connname)
     return mpi_errno;
 }
 
-static int dynproc_create_intercomm(const char *port_name, int remote_size, uint64_t * remote_gpids,
-                                    MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm, int is_low_group,
-                                    int context_id_offset, char *api)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Comm *tmp_comm_ptr = NULL;
-    int i = 0;
-    MPIDI_rank_map_mlut_t *mlut = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DYNPROC_CREATE_INTERCOMM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DYNPROC_CREATE_INTERCOMM);
-
-    mpi_errno = MPIR_Comm_create(&tmp_comm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    tmp_comm_ptr->context_id = MPIR_CONTEXT_SET_FIELD(DYNAMIC_PROC, context_id_offset, 1);
-    tmp_comm_ptr->recvcontext_id = tmp_comm_ptr->context_id;
-    tmp_comm_ptr->remote_size = remote_size;
-    tmp_comm_ptr->local_size = comm_ptr->local_size;
-    tmp_comm_ptr->rank = comm_ptr->rank;
-    tmp_comm_ptr->comm_kind = MPIR_COMM_KIND__INTERCOMM;
-    tmp_comm_ptr->local_comm = comm_ptr;
-    tmp_comm_ptr->is_low_group = is_low_group;
-
-    /* handle local group */
-    /* No ref changes to LUT/MLUT in this step because the localcomm will not
-     * be released in the normal way */
-    MPIDI_COMM(tmp_comm_ptr, local_map).mode = MPIDI_COMM(comm_ptr, map).mode;
-    MPIDI_COMM(tmp_comm_ptr, local_map).size = MPIDI_COMM(comm_ptr, map).size;
-    MPIDI_COMM(tmp_comm_ptr, local_map).avtid = MPIDI_COMM(comm_ptr, map).avtid;
-    switch (MPIDI_COMM(comm_ptr, map).mode) {
-        case MPIDI_RANK_MAP_DIRECT:
-        case MPIDI_RANK_MAP_DIRECT_INTRA:
-            break;
-        case MPIDI_RANK_MAP_OFFSET:
-        case MPIDI_RANK_MAP_OFFSET_INTRA:
-            MPIDI_COMM(tmp_comm_ptr, local_map).reg.offset = MPIDI_COMM(comm_ptr, map).reg.offset;
-            break;
-        case MPIDI_RANK_MAP_STRIDE:
-        case MPIDI_RANK_MAP_STRIDE_INTRA:
-        case MPIDI_RANK_MAP_STRIDE_BLOCK:
-        case MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA:
-            MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.stride =
-                MPIDI_COMM(comm_ptr, map).reg.stride.stride;
-            MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.blocksize =
-                MPIDI_COMM(comm_ptr, map).reg.stride.blocksize;
-            MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.offset =
-                MPIDI_COMM(comm_ptr, map).reg.stride.offset;
-            break;
-        case MPIDI_RANK_MAP_LUT:
-        case MPIDI_RANK_MAP_LUT_INTRA:
-            MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.t = MPIDI_COMM(comm_ptr, map).irreg.lut.t;
-            MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.lpid =
-                MPIDI_COMM(comm_ptr, map).irreg.lut.lpid;
-            break;
-        case MPIDI_RANK_MAP_MLUT:
-            MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.t =
-                MPIDI_COMM(comm_ptr, map).irreg.mlut.t;
-            MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.gpid =
-                MPIDI_COMM(comm_ptr, map).irreg.mlut.gpid;
-            break;
-        case MPIDI_RANK_MAP_NONE:
-            MPIR_Assert(0);
-            break;
-    }
-
-    /* set mapping for remote group */
-    mpi_errno = MPIDIU_alloc_mlut(&mlut, remote_size);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIDI_COMM(tmp_comm_ptr, map).mode = MPIDI_RANK_MAP_MLUT;
-    MPIDI_COMM(tmp_comm_ptr, map).size = remote_size;
-    MPIDI_COMM(tmp_comm_ptr, map).avtid = -1;
-    MPIDI_COMM(tmp_comm_ptr, map).irreg.mlut.t = mlut;
-    MPIDI_COMM(tmp_comm_ptr, map).irreg.mlut.gpid = mlut->gpid;
-    for (i = 0; i < remote_size; ++i) {
-        MPIDI_COMM(tmp_comm_ptr, map).irreg.mlut.gpid[i].avtid =
-            MPIDIU_GPID_GET_AVTID(remote_gpids[i]);
-        MPIDI_COMM(tmp_comm_ptr, map).irreg.mlut.gpid[i].lpid =
-            MPIDIU_GPID_GET_LPID(remote_gpids[i]);
-    }
-
-    MPIR_Comm_commit(tmp_comm_ptr);
-
-    mpi_errno = MPIR_Comm_dup_impl(tmp_comm_ptr, newcomm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    tmp_comm_ptr->local_comm = NULL;    /* avoid freeing local comm with comm_release */
-    MPIR_Comm_release(tmp_comm_ptr);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DYNPROC_CREATE_INTERCOMM);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_addr_t * conn,
-                             MPIR_Comm * comm_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_dynamic_process_request_t req;
-    uint64_t match_bits = 0;
-    uint64_t mask_bits = 0;
-    struct fi_msg_tagged msg;
-    int buf = 0;
-    MPL_time_t time_sta, time_now;
-    double time_gap;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(comm_ptr, 0, nic);
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DYNPROC_HANDSHAKE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DYNPROC_HANDSHAKE);
-
-    /* connector */
-    if (phase == 0) {
-        req.done = MPIDI_OFI_PEEK_START;
-        req.event_id = MPIDI_OFI_EVENT_ACCEPT_PROBE;
-        match_bits = MPIDI_OFI_init_recvtag(&mask_bits, port_id, MPI_ANY_TAG);
-        match_bits |= MPIDI_OFI_DYNPROC_SEND;
-
-        msg.msg_iov = NULL;
-        msg.desc = NULL;
-        msg.iov_count = 0;
-        msg.addr = FI_ADDR_UNSPEC;
-        msg.tag = match_bits;
-        msg.ignore = mask_bits;
-        msg.context = (void *) &req.context;
-        msg.data = 0;
-
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST,
-                         "connecting port_id %d, conn %" PRIu64
-                         ", waiting for dynproc_handshake", port_id, *conn));
-        time_gap = 0.0;
-        MPL_wtime(&time_sta);
-        while (req.done != MPIDI_OFI_PEEK_FOUND) {
-            req.done = MPIDI_OFI_PEEK_START;
-            MPIDI_OFI_VCI_CALL(fi_trecvmsg
-                               (MPIDI_OFI_global.ctx[ctx_idx].rx, &msg,
-                                FI_PEEK | FI_COMPLETION | FI_REMOTE_CQ_DATA), 0, trecv);
-            do {
-                mpi_errno = MPID_Progress_test(NULL);
-                MPIR_ERR_CHECK(mpi_errno);
-
-                MPL_wtime(&time_now);
-                MPL_wtime_diff(&time_sta, &time_now, &time_gap);
-            } while (req.done == MPIDI_OFI_PEEK_START && (int) time_gap < timeout);
-            if ((int) time_gap >= timeout) {
-                /* connection is timed out */
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST,
-                                 "connection to port_id %d, conn %" PRIu64 " ack timed out",
-                                 port_id, *conn));
-                mpi_errno = MPI_ERR_PORT;
-                goto fn_fail;
-            }
-        }
-
-        req.done = 0;
-        req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-
-        MPIDI_OFI_VCI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
-                                          &buf,
-                                          sizeof(int),
-                                          NULL,
-                                          *conn, match_bits, mask_bits, &req.context), 0, trecv,
-                                 FALSE);
-        time_gap = 0.0;
-        MPL_wtime(&time_sta);
-        do {
-            mpi_errno = MPID_Progress_test(NULL);
-            MPIR_ERR_CHECK(mpi_errno);
-
-            MPL_wtime(&time_now);
-            MPL_wtime_diff(&time_sta, &time_now, &time_gap);
-        } while (!req.done && (int) time_gap < timeout);
-        if ((int) time_gap >= timeout) {
-            /* connection is mismatched */
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST,
-                             "connection to port_id %d, conn %" PRIu64 " ack mismatched", port_id,
-                             *conn));
-            mpi_errno = MPI_ERR_PORT;
-            goto fn_fail;
-        }
-    }
-
-    /* acceptor */
-    if (phase == 1) {
-        int tag = root;
-
-        match_bits = MPIDI_OFI_init_sendtag(port_id, tag, MPIDI_OFI_DYNPROC_SEND);
-
-        req.done = 0;
-        req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-        MPIDI_OFI_VCI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                              &buf, sizeof(int), NULL /* desc */ ,
-                                              comm_ptr->rank,
-                                              *conn,
-                                              match_bits,
-                                              (void *) &req.context), 0, tsenddata,
-                                 FALSE /* eagain */);
-
-        MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req.done);
-    }
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DYNPROC_HANDSHAKE);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * conn, char *conname,
-                                MPIR_Comm * comm_ptr, int *out_root, int *remote_size,
-                                int **remote_upid_size, char **remote_upids)
-{
-    int i, mpi_errno = MPI_SUCCESS;
-
-    MPIDI_OFI_dynamic_process_request_t req[3];
-    uint64_t match_bits = 0;
-    uint64_t mask_bits = 0;
-    struct fi_msg_tagged msg;
-    int *local_upid_size = NULL;
-    char *local_upids = NULL;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(comm_ptr, 0, nic);
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DYNPROC_EXCHANGE_MAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DYNPROC_EXCHANGE_MAP);
-
-    MPIR_CHKPMEM_DECL(3);
-
-    req[0].done = MPIDI_OFI_PEEK_START;
-    req[0].event_id = MPIDI_OFI_EVENT_ACCEPT_PROBE;
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, port_id, MPI_ANY_TAG);
-    match_bits |= MPIDI_OFI_DYNPROC_SEND;
-
-    if (phase == 0) {
-        int remote_upid_recvsize = 0;
-
-        /* Receive the addresses                           */
-        /* We don't know the size, so probe for table size */
-        /* Receive phase updates the connection            */
-        /* With the probed address                         */
-        msg.msg_iov = NULL;
-        msg.desc = NULL;
-        msg.iov_count = 0;
-        msg.addr = FI_ADDR_UNSPEC;
-        msg.tag = match_bits;
-        msg.ignore = mask_bits;
-        msg.context = (void *) &req[0].context;
-        msg.data = 0;
-
-        while (req[0].done != MPIDI_OFI_PEEK_FOUND) {
-            req[0].done = MPIDI_OFI_PEEK_START;
-            MPIDI_OFI_VCI_CALL(fi_trecvmsg
-                               (MPIDI_OFI_global.ctx[ctx_idx].rx, &msg,
-                                FI_PEEK | FI_COMPLETION | FI_REMOTE_CQ_DATA), 0, trecv);
-            MPIDI_OFI_VCI_PROGRESS_WHILE(0, req[0].done == MPIDI_OFI_PEEK_START);
-        }
-
-        *remote_size = req[0].msglen / sizeof(int);
-        *out_root = req[0].tag;
-        MPIR_CHKPMEM_MALLOC((*remote_upid_size), int *,
-                            (*remote_size) * sizeof(int), mpi_errno, "remote_upid_size",
-                            MPL_MEM_ADDRESS);
-        req[0].done = 0;
-        req[0].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-        req[1].done = 0;
-        req[1].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-
-        MPIDI_OFI_VCI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
-                                          *remote_upid_size,
-                                          (*remote_size) * sizeof(int),
-                                          NULL,
-                                          FI_ADDR_UNSPEC,
-                                          match_bits, mask_bits, &req[0].context), 0, trecv, FALSE);
-        MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req[0].done);
-
-        for (i = 0; i < (*remote_size); i++)
-            remote_upid_recvsize += (*remote_upid_size)[i];
-        MPIR_CHKPMEM_MALLOC((*remote_upids), char *, remote_upid_recvsize,
-                            mpi_errno, "remote_upids", MPL_MEM_ADDRESS);
-
-        MPIDI_OFI_VCI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
-                                          *remote_upids,
-                                          remote_upid_recvsize,
-                                          NULL,
-                                          FI_ADDR_UNSPEC,
-                                          match_bits, mask_bits, &req[1].context), 0, trecv, FALSE);
-
-        MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req[1].done);
-        int disp = 0;
-        for (i = 0; i < req[0].source; i++)
-            disp += (*remote_upid_size)[i];
-        memcpy(conname, *remote_upids + disp, (*remote_upid_size)[req[0].source]);
-        MPIR_CHKPMEM_COMMIT();
-    }
-
-    if (phase == 1) {
-        /* Send our table to the child */
-        /* Send phase maps the entry   */
-        int tag = root;
-        int local_size = comm_ptr->local_size;
-        int local_upid_sendsize = 0;
-
-        /* Step 1: get local upids (with size) and node ids for sending */
-        MPIDI_NM_get_local_upids(comm_ptr, &local_upid_size, &local_upids);
-        for (i = 0; i < local_size; i++)
-            local_upid_sendsize += local_upid_size[i];
-
-        match_bits = MPIDI_OFI_init_sendtag(port_id, tag, MPIDI_OFI_DYNPROC_SEND);
-
-        /* fi_av_map here is not quite right for some providers */
-        /* we need to get this connection from the sockname     */
-        req[0].done = 0;
-        req[0].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-        req[1].done = 0;
-        req[1].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-        req[2].done = 0;
-        req[2].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-        MPIDI_OFI_VCI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                              local_upid_size,
-                                              local_size * sizeof(int), NULL /* desc */ ,
-                                              comm_ptr->rank,
-                                              *conn,
-                                              match_bits,
-                                              (void *) &req[0].context),
-                                 0, tsenddata, FALSE /* eagain */);
-        MPIDI_OFI_VCI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                              local_upids, local_upid_sendsize, NULL /* desc */ ,
-                                              comm_ptr->rank,
-                                              *conn,
-                                              match_bits,
-                                              (void *) &req[1].context),
-                                 0, tsenddata, FALSE /* eagain */);
-
-        MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req[0].done || !req[1].done);
-
-    }
-
-  fn_exit:
-    MPL_free(local_upid_size);
-    MPL_free(local_upids);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DYNPROC_EXCHANGE_MAP);
-    return mpi_errno;
-  fn_fail:
-    MPIR_CHKPMEM_REAP();
-    goto fn_exit;
-}
-
 int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                                MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    int remote_size = 0;
-    int *remote_upid_size = NULL;
-    char *remote_upids = NULL;
-    uint64_t *remote_gpids = NULL;
-    int is_low_group = -1;
-    int parent_root = -1;
-    int rank = comm_ptr->rank;
-    fi_addr_t conn;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(comm_ptr, 0, nic);
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_CONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_CONNECT);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
-        MPIR_Assert(0);
-        goto fn_exit;
-    }
-
-    int port_id;
-    int bcast_ints[2];          /* used to bcast port_id and errno */
-    if (rank == root) {
-        /* NOTE: do not goto fn_fail on error, or it will leave children hanging */
-        mpi_errno = get_tag_from_port(port_name, &port_id);
-        if (mpi_errno)
-            goto bcast_errno_and_port_id;
-
-        char conname[FI_NAME_MAX];
-        mpi_errno = get_conn_name_from_port(port_name, conname);
-        if (mpi_errno)
-            goto bcast_errno_and_port_id;
-
-        MPIDI_OFI_VCI_CALL(fi_av_insert
-                           (MPIDI_OFI_global.ctx[ctx_idx].av, conname, 1, &conn, 0ULL, NULL), 0,
-                           avmap);
-        MPIR_Assert(conn != FI_ADDR_NOTAVAIL);
-        mpi_errno =
-            dynproc_exchange_map(root, DYNPROC_SENDER, port_id, &conn, conname, comm_ptr,
-                                 &parent_root, &remote_size, &remote_upid_size, &remote_upids);
-        if (mpi_errno)
-            goto bcast_errno_and_port_id;
-
-        mpi_errno = dynproc_handshake(root, DYNPROC_RECEIVER, timeout, port_id, &conn, comm_ptr);
-        if (mpi_errno)
-            goto bcast_errno_and_port_id;
-
-
-        mpi_errno =
-            dynproc_exchange_map(root, DYNPROC_RECEIVER, port_id, &conn, conname, comm_ptr,
-                                 &parent_root, &remote_size, &remote_upid_size, &remote_upids);
-        if (mpi_errno)
-            goto bcast_errno_and_port_id;
-
-        remote_gpids = MPL_malloc(remote_size * sizeof(uint64_t), MPL_MEM_ADDRESS);
-        if (!remote_gpids) {
-            MPIR_CHKMEM_SETERR(mpi_errno, remote_size * sizeof(uint64_t), "remote_gpids");
-            goto bcast_errno_and_port_id;
-        }
-
-        MPIDIU_upids_to_gpids(remote_size, remote_upid_size, remote_upids, remote_gpids);
-        /* the child comm group is alawys the low group */
-        is_low_group = 0;
-
-      bcast_errno_and_port_id:
-        bcast_ints[0] = port_id;
-        bcast_ints[1] = mpi_errno;
-        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, &errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = bcast_ints[1];
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, &errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        port_id = bcast_ints[0];
-        if (bcast_ints[1]) {
-            /* errno from root cannot be directly returned */
-            MPIR_ERR_SET(mpi_errno, MPI_ERR_PORT, "**comm_connect_fail");
-            goto fn_fail;
-        }
-    }
-
-    /* broadcast the upids to local groups */
-    mpi_errno =
-        MPIDIU_Intercomm_map_bcast_intra(comm_ptr, root, &remote_size, &is_low_group, 0,
-                                         remote_upid_size, remote_upids, &remote_gpids);
-    MPIR_ERR_CHECK(mpi_errno);
-    if (rank == root) {
-        MPL_free(remote_upid_size);
-        MPL_free(remote_upids);
-    }
-
-    /* Now Create the New Intercomm */
-    mpi_errno =
-        dynproc_create_intercomm(port_name, remote_size, remote_gpids, comm_ptr, newcomm,
-                                 is_low_group, port_id, (char *) "Connect");
-    MPIR_ERR_CHECK(mpi_errno);
-    if (rank == root) {
-        mpi_errno = MPIDI_OFI_dynproc_insert_conn(conn, (*newcomm)->rank,
-                                                  MPIDI_OFI_DYNPROC_CONNECTED_CHILD,
-                                                  &MPIDI_OFI_COMM(*newcomm).conn_id);
-        MPIR_Assert(mpi_errno == MPI_SUCCESS);
-    }
-    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
-    MPIR_ERR_CHECK(mpi_errno);
-  fn_exit:
-    /* Note: remote_gpids on children process is allocated in MPIDIU_Intercomm_map_bcast_intra */
-    MPL_free(remote_gpids);
+    mpi_errno = dynamic_intercomm_create(port_name, info, root, comm_ptr, timeout, true, newcomm);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_CONNECT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_OFI_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
@@ -659,120 +200,242 @@ int MPIDI_OFI_mpi_close_port(const char *port_name)
     return mpi_errno;
 }
 
-int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
-                              MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
+static int dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
-    int root_errno;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    int remote_size = 0;
-    int *remote_upid_size = 0;
-    char *remote_upids = NULL;
-    uint64_t *remote_gpids = NULL;
-    int child_root = -1;
-    int is_low_group = -1;
-    fi_addr_t conn = 0;
-    int rank = comm_ptr->rank;
-    int port_id;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(comm_ptr, 0, nic);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
+    int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
+    int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
+    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), 0, 0, 0);
+
+    MPIDI_OFI_dynamic_process_request_t req;
+    req.done = 0;
+    req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+    uint64_t match_bits;
+    match_bits = MPIDI_OFI_init_sendtag(0, tag, MPIDI_OFI_DYNPROC_SEND);
+
+    MPL_time_t time_start, time_now;
+    double time_gap;
+    MPL_wtime(&time_start);
+    MPIDI_OFI_VCI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
+                                          buf, size, NULL /* desc */ , 0,
+                                          remote_addr, match_bits, (void *) &req.context),
+                             0, tsenddata, FALSE /* eagain */);
+    do {
+        mpi_errno = MPID_Progress_test(NULL);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPL_wtime(&time_now);
+        MPL_wtime_diff(&time_start, &time_now, &time_gap);
+    } while (!req.done && (timeout == 0 || time_gap < (double) timeout));
+
+    if (!req.done) {
+        /* FIXME: better error message */
+        mpi_errno = MPI_ERR_PORT;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int dynamic_recv(int tag, void *buf, int size, int timeout)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_OFI_dynamic_process_request_t req;
+    req.done = 0;
+    req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+    uint64_t match_bits = 0;
+    uint64_t mask_bits = 0;
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, 0, tag);
+    match_bits |= MPIDI_OFI_DYNPROC_SEND;
+
+    MPL_time_t time_start, time_now;
+    double time_gap;
+    MPL_wtime(&time_start);
+    MPIDI_OFI_VCI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx,
+                                      buf, size, NULL,
+                                      FI_ADDR_UNSPEC, match_bits, mask_bits, &req.context),
+                             0, trecv, FALSE);
+    do {
+        mpi_errno = MPID_Progress_test(NULL);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPL_wtime(&time_now);
+        MPL_wtime_diff(&time_start, &time_now, &time_gap);
+    } while (!req.done && (timeout == 0 || time_gap < (double) timeout));
+
+    if (!req.done) {
+        /* FIXME: better error message */
+        mpi_errno = MPI_ERR_PORT;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int get_my_addrname(char *addrname_buf, int *len)
+{
+    MPIR_Assert(*len >= MPIDI_OFI_global.addrnamelen);
+    *len = MPIDI_OFI_global.addrnamelen;
+    memcpy(addrname_buf, MPIDI_OFI_global.addrname[0], MPIDI_OFI_global.addrnamelen);
+    return MPI_SUCCESS;
+}
+
+#define MPIDI_DYNPROC_NAME_MAX FI_NAME_MAX
+struct dynproc_conn_hdr {
+    MPIR_Context_id_t context_id;
+    int addrname_len;
+    char addrname[MPIDI_DYNPROC_NAME_MAX];
+};
+
+static int peer_intercomm_create(char *remote_addrname, int len, int tag,
+                                 int timeout, bool is_sender, MPIR_Comm ** newcomm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Context_id_t context_id, recvcontext_id;
+    uint64_t remote_gpid;
+
+    mpi_errno = MPIR_Get_contextid_sparse(MPIR_Process.comm_self, &recvcontext_id, FALSE);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    struct dynproc_conn_hdr hdr;
+    if (is_sender) {
+        /* insert remote address */
+        int addrname_len = len;
+        uint64_t *remote_gpids = &remote_gpid;
+        mpi_errno = MPIDIU_upids_to_gpids(1, &addrname_len, remote_addrname, remote_gpids);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* send remote context_id + addrname */
+        hdr.context_id = recvcontext_id;
+        hdr.addrname_len = MPIDI_DYNPROC_NAME_MAX;
+        mpi_errno = get_my_addrname(hdr.addrname, &hdr.addrname_len);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        int hdr_sz = sizeof(hdr) - MPIDI_DYNPROC_NAME_MAX + hdr.addrname_len;
+        mpi_errno = dynamic_send(remote_gpid, tag, &hdr, hdr_sz, timeout);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = dynamic_recv(tag, &hdr, sizeof(hdr), timeout);
+        MPIR_ERR_CHECK(mpi_errno);
+        context_id = hdr.context_id;
+    } else {
+        /* recv remote address */
+        mpi_errno = dynamic_recv(tag, &hdr, sizeof(hdr), timeout);
+        MPIR_ERR_CHECK(mpi_errno);
+        context_id = hdr.context_id;
+
+        /* insert remote address */
+        int addrname_len = hdr.addrname_len;
+        uint64_t *remote_gpids = &remote_gpid;
+        mpi_errno = MPIDIU_upids_to_gpids(1, &addrname_len, hdr.addrname, remote_gpids);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* send remote context_id */
+        hdr.context_id = recvcontext_id;
+        mpi_errno = dynamic_send(remote_gpid, tag, &hdr, sizeof(hdr.context_id), timeout);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    /* create peer intercomm */
+    mpi_errno = MPIR_peer_intercomm_create(context_id, recvcontext_id,
+                                           remote_gpid, is_sender, newcomm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    if (recvcontext_id) {
+        MPIR_Free_contextid(recvcontext_id);
+    }
+    goto fn_exit;
+}
+
+static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int root,
+                                    MPIR_Comm * comm_ptr, int timeout, bool is_sender,
+                                    MPIR_Comm ** newcomm)
+{
+    int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         MPIR_Assert(0);
         goto fn_exit;
     }
 
-    if (rank == root) {
-        char conname[FI_NAME_MAX];
-
-        mpi_errno = get_tag_from_port(port_name, &port_id);
+    MPIR_Comm *peer_intercomm = NULL;
+    int tag;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    int bcast_ints[2];          /* used to bcast tag and errno */
+    if (comm_ptr->rank == root) {
+        /* NOTE: do not goto fn_fail on error, or it will leave children hanging */
+        mpi_errno = get_tag_from_port(port_name, &tag);
         if (mpi_errno)
-            goto bcast_errno;
+            goto bcast_tag_and_errno;
 
-        /* note: conn is a dummy for DYNPROC_RECEIVER (phase 0). */
-        mpi_errno =
-            dynproc_exchange_map(root, DYNPROC_RECEIVER, port_id, &conn, conname, comm_ptr,
-                                 &child_root, &remote_size, &remote_upid_size, &remote_upids);
-        if (mpi_errno)
-            goto bcast_errno;
-
-        MPIDI_OFI_VCI_CALL(fi_av_insert
-                           (MPIDI_OFI_global.ctx[ctx_idx].av, conname, 1, &conn, 0ULL, NULL), 0,
-                           avmap);
-        MPIR_Assert(conn != FI_ADDR_NOTAVAIL);
-        mpi_errno = dynproc_handshake(root, DYNPROC_SENDER, 0, port_id, &conn, comm_ptr);
-        if (mpi_errno)
-            goto bcast_errno;
-
-        mpi_errno =
-            dynproc_exchange_map(root, DYNPROC_SENDER, port_id, &conn, conname, comm_ptr,
-                                 &child_root, &remote_size, &remote_upid_size, &remote_upids);
-        if (mpi_errno)
-            goto bcast_errno;
-
-        remote_gpids = MPL_malloc(remote_size * sizeof(uint64_t), MPL_MEM_ADDRESS);
-        if (!remote_gpids) {
-            MPIR_CHKMEM_SETERR(mpi_errno, remote_size * sizeof(uint64_t), "remote_gpids");
-            goto bcast_errno;
-        }
-        MPIDIU_upids_to_gpids(remote_size, remote_upid_size, remote_upids, remote_gpids);
-        /* the parent comm group is alawys the low group */
-        is_low_group = 1;
-
-      bcast_errno:
-        root_errno = mpi_errno;
-    }
-
-    mpi_errno = MPIR_Bcast_allcomm_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
-    MPIR_ERR_CHECK(mpi_errno);
-    if (root_errno) {
-        if (rank == root) {
-            mpi_errno = root_errno;
+        char remote_addrname[FI_NAME_MAX];
+        char *addrname;
+        int len;
+        if (is_sender) {
+            mpi_errno = get_conn_name_from_port(port_name, remote_addrname);
+            if (mpi_errno)
+                goto bcast_tag_and_errno;
+            addrname = remote_addrname;
+            len = MPIDI_OFI_global.addrnamelen;
         } else {
-            /* errno from root cannot be directly returned */
-            MPIR_ERR_SET(mpi_errno, MPI_ERR_PORT, "**comm_accept_fail");
+            /* TODO: check port_name matches MPIDI_OFI_global.addrname[0] */
+            /* Use NULL for better error behavior */
+            addrname = NULL;
+            len = 0;
         }
-        goto fn_fail;
+        mpi_errno = peer_intercomm_create(addrname, len, tag, timeout, is_sender, &peer_intercomm);
+
+      bcast_tag_and_errno:
+        bcast_ints[0] = tag;
+        bcast_ints[1] = mpi_errno;
+        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, &errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = bcast_ints[1];
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, &errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+        if (bcast_ints[1]) {
+            /* errno from root cannot be directly returned */
+            MPIR_ERR_SET(mpi_errno, MPI_ERR_PORT, "**comm_connect_fail");
+            goto fn_fail;
+        }
+        tag = bcast_ints[0];
     }
 
-    /* broadcast the upids to local groups */
-    mpi_errno =
-        MPIDIU_Intercomm_map_bcast_intra(comm_ptr, root, &remote_size, &is_low_group, 0,
-                                         remote_upid_size, remote_upids, &remote_gpids);
-    MPIR_ERR_CHECK(mpi_errno);
-    if (rank == root) {
-        MPL_free(remote_upid_size);
-        MPL_free(remote_upids);
-    }
-
-    mpi_errno = MPIR_Bcast_impl(&port_id, 1, MPI_INT, root, comm_ptr, &errflag);
+    mpi_errno = MPIR_Intercomm_create_impl(comm_ptr, root, peer_intercomm, 0, tag, newcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Now Create the New Intercomm */
-    mpi_errno =
-        dynproc_create_intercomm(port_name, remote_size, remote_gpids, comm_ptr, newcomm,
-                                 is_low_group, port_id, (char *) "Accept");
-    MPIR_ERR_CHECK(mpi_errno);
-    if (rank == root) {
-        mpi_errno = MPIDI_OFI_dynproc_insert_conn(conn, (*newcomm)->rank,
-                                                  MPIDI_OFI_DYNPROC_CONNECTED_PARENT,
-                                                  &MPIDI_OFI_COMM(*newcomm).conn_id);
-        MPIR_Assert(mpi_errno == MPI_SUCCESS);
-    }
-    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
-    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    /* Note: remote_gpids on children process is allocated in MPIDIU_Intercomm_map_bcast_intra */
-    MPL_free(remote_gpids);
+    if (peer_intercomm) {
+        MPIR_Comm_free_impl(peer_intercomm);
+    }
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
+                              MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
+
+    mpi_errno = dynamic_intercomm_create(port_name, info, root, comm_ptr, 0, false, newcomm);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_ACCEPT);
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 /* the following functions are "proc" functions, but because they are only used during dynamic

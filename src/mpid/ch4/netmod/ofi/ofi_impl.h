@@ -7,7 +7,6 @@
 #define OFI_IMPL_H_INCLUDED
 
 #include <mpidimpl.h>
-#include "ofi_dynproc.h"
 /* NOTE: headers with global struct need be included before ofi_types.h */
 #include "ofi_types.h"
 #include "mpidch4r.h"

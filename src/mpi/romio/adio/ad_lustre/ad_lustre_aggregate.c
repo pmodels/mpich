@@ -311,3 +311,12 @@ int ADIOI_LUSTRE_Docollect(ADIO_File fd, int contig_access_count,
 
     return docollect;
 }
+
+void ADIOI_LUSTRE_Free_my_req(int nprocs, int *count_my_req_per_proc,
+                              ADIOI_Access * my_req, ADIO_Offset ** buf_idx)
+{
+    ADIOI_Free(count_my_req_per_proc);
+    ADIOI_Free(buf_idx[0]);
+    ADIOI_Free(buf_idx);
+    ADIOI_Free(my_req);
+}

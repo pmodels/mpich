@@ -116,18 +116,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
 
-    MPL_pointer_attr_t attr;
-    MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
-
     /* attach remote buffer */
     switch (ipc_type) {
         case MPIDI_IPCI_TYPE__XPMEM:
             mpi_errno = MPIDI_XPMEM_ipc_handle_map(ipc_handle.xpmem, &src_buf);
             break;
         case MPIDI_IPCI_TYPE__GPU:
-            mpi_errno =
-                MPIDI_GPU_ipc_handle_map(ipc_handle.gpu, attr.device,
-                                         MPIDIG_REQUEST(rreq, datatype), &src_buf);
+            {
+                MPL_pointer_attr_t attr;
+                MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
+                int dev_id = MPL_gpu_get_dev_id_from_attr(&attr);
+                mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_handle.gpu, dev_id,
+                                                     MPIDIG_REQUEST(rreq, datatype), &src_buf);
+            }
             break;
         case MPIDI_IPCI_TYPE__NONE:
             /* no-op */

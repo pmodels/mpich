@@ -19,6 +19,9 @@ static int gpu_initialized = 0;
 static int device_count = -1;
 static int max_dev_id = -1;
 
+static int *local_to_global_map;        /* [device_count] */
+static int *global_to_local_map;        /* [max_dev_id + 1]   */
+
 static gpu_free_hook_s *free_hook_chain = NULL;
 
 static CUresult CUDAAPI(*sys_cuMemFree) (CUdeviceptr dptr);
@@ -87,14 +90,13 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, MPL_gpu_device_handle_t dev_handle,
-                           void **ptr)
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void **ptr)
 {
     cudaError_t ret;
     int prev_devid;
 
     cudaGetDevice(&prev_devid);
-    cudaSetDevice(dev_handle);
+    cudaSetDevice(dev_id);
     ret = cudaIpcOpenMemHandle(ptr, ipc_handle, cudaIpcMemLazyEnablePeerAccess);
     CUDA_ERR_CHECK(ret);
 
@@ -197,26 +199,51 @@ int MPL_gpu_free(void *ptr)
 
 int MPL_gpu_init()
 {
+    if (gpu_initialized) {
+        goto fn_exit;
+    }
+
     cudaError_t ret = cudaGetDeviceCount(&device_count);
     CUDA_ERR_CHECK(ret);
 
+    if (device_count <= 0) {
+        gpu_initialized = 1;
+        goto fn_exit;
+    }
+
     char *visible_devices = getenv("CUDA_VISIBLE_DEVICES");
     if (visible_devices) {
+        local_to_global_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
+
         uintptr_t len = strlen(visible_devices);
         char *devices = MPL_malloc(len + 1, MPL_MEM_OTHER);
         char *free_ptr = devices;
         memcpy(devices, visible_devices, len + 1);
         for (int i = 0; i < device_count; i++) {
-            int global_dev_id;
             char *tmp = strtok(devices, ",");
             assert(tmp);
-            global_dev_id = atoi(tmp);
-            if (global_dev_id > max_dev_id)
-                max_dev_id = global_dev_id;
+            local_to_global_map[i] = atoi(tmp);
+            if (max_dev_id < local_to_global_map[i]) {
+                max_dev_id = local_to_global_map[i];
+            }
             devices = NULL;
         }
         MPL_free(free_ptr);
+
+        global_to_local_map = MPL_malloc((max_dev_id + 1) * sizeof(int), MPL_MEM_OTHER);
+        for (int i = 0; i < max_dev_id + 1; i++) {
+            global_to_local_map[i] = -1;
+        }
+        for (int i = 0; i < device_count; i++) {
+            global_to_local_map[local_to_global_map[i]] = i;
+        }
     } else {
+        local_to_global_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
+        global_to_local_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
+        for (int i = 0; i < device_count; i++) {
+            local_to_global_map[i] = i;
+            global_to_local_map[i] = i;
+        }
         max_dev_id = device_count - 1;
     }
 
@@ -236,53 +263,39 @@ int MPL_gpu_init()
 
 int MPL_gpu_finalize()
 {
+    if (device_count <= 0) {
+        goto fn_exit;
+    }
+
+    MPL_free(local_to_global_map);
+    MPL_free(global_to_local_map);
+
     gpu_free_hook_s *prev;
     while (free_hook_chain) {
         prev = free_hook_chain;
         free_hook_chain = free_hook_chain->next;
         MPL_free(prev);
     }
-    return MPL_SUCCESS;
-}
-
-int MPL_gpu_get_dev_id(MPL_gpu_device_handle_t dev_handle, int *dev_id)
-{
-    *dev_id = dev_handle;
-    return MPL_SUCCESS;
-}
-
-int MPL_gpu_get_dev_handle(int dev_id, MPL_gpu_device_handle_t * dev_handle)
-{
-    *dev_handle = dev_id;
-    return MPL_SUCCESS;
-}
-
-int MPL_gpu_get_global_dev_ids(int *global_ids, int count)
-{
-    char *visible_devices = getenv("CUDA_VISIBLE_DEVICES");
-
-    if (visible_devices) {
-        uintptr_t len = strlen(visible_devices);
-        char *devices = MPL_malloc(len + 1, MPL_MEM_OTHER);
-        char *free_ptr = devices;
-        memcpy(devices, visible_devices, len + 1);
-        for (int i = 0; i < count; i++) {
-            char *tmp = strtok(devices, ",");
-            assert(tmp);
-            global_ids[i] = atoi(tmp);
-            devices = NULL;
-        }
-        MPL_free(free_ptr);
-    } else {
-        for (int i = 0; i < count; i++) {
-            global_ids[i] = i;
-        }
-    }
 
   fn_exit:
     return MPL_SUCCESS;
-  fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_global_to_local_dev_id(int global_dev_id)
+{
+    assert(global_dev_id <= max_dev_id);
+    return global_to_local_map[global_dev_id];
+}
+
+int MPL_gpu_local_to_global_dev_id(int local_dev_id)
+{
+    assert(local_dev_id < device_count);
+    return local_to_global_map[local_dev_id];
+}
+
+int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr)
+{
+    return attr->device;
 }
 
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
