@@ -619,4 +619,93 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm
     return nic_idx;
 }
 
+/* cq bufferring routines --
+ * in particular, when we encounter EAGAIN error during progress, such as during
+ * active message handling, recursively calling progress may result in unpredictable
+ * behaviors (e.g. stack overflow). Thus we need use the cq buffering to avoid
+ * process further cq entries during (am-related) calls.
+ */
+
+#define COND_HAS_CQ_BUFFERED ((MPIDI_OFI_global.cq_buffered_static_head != MPIDI_OFI_global.cq_buffered_static_tail) || (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head))
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_has_cq_buffered(int vni)
+{
+    return (MPIDI_OFI_global.cq_buffered_static_head != MPIDI_OFI_global.cq_buffered_static_tail) ||
+        (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
+{
+    int mpi_errno = MPI_SUCCESS, ret = 0;
+    struct fi_cq_tagged_entry cq_entry;
+    MPIR_FUNC_ENTER;
+
+    /* Caller must hold MPIDI_OFI_THREAD_FI_MUTEX */
+
+    for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
+        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
+        ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, &cq_entry, 1);
+
+        if (unlikely(ret == -FI_EAGAIN))
+            goto fn_exit;
+
+        if (ret < 0) {
+            mpi_errno = MPIDI_OFI_handle_cq_error_util(ctx_idx, ret);
+            goto fn_fail;
+        }
+
+        /* If the statically allocated buffered list is full or we've already
+         * started using the dynamic list, continue using it. */
+        if (((MPIDI_OFI_global.cq_buffered_static_head + 1) %
+             MPIDI_OFI_NUM_CQ_BUFFERED == MPIDI_OFI_global.cq_buffered_static_tail) ||
+            (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head)) {
+            MPIDI_OFI_cq_list_t *list_entry =
+                (MPIDI_OFI_cq_list_t *) MPL_malloc(sizeof(MPIDI_OFI_cq_list_t), MPL_MEM_BUFFER);
+            MPIR_Assert(list_entry);
+            list_entry->cq_entry = cq_entry;
+            LL_APPEND(MPIDI_OFI_global.cq_buffered_dynamic_head,
+                      MPIDI_OFI_global.cq_buffered_dynamic_tail, list_entry);
+        } else {
+            MPIDI_OFI_global.cq_buffered_static_list[MPIDI_OFI_global.
+                                                     cq_buffered_static_head].cq_entry = cq_entry;
+            MPIDI_OFI_global.cq_buffered_static_head =
+                (MPIDI_OFI_global.cq_buffered_static_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+        }
+    }
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged_entry *wc)
+{
+    int rc = 0;
+
+    if (1) {
+        /* If the static list isn't empty, do so first */
+        if (MPIDI_OFI_global.cq_buffered_static_head != MPIDI_OFI_global.cq_buffered_static_tail) {
+            wc[0] =
+                MPIDI_OFI_global.cq_buffered_static_list[MPIDI_OFI_global.
+                                                         cq_buffered_static_tail].cq_entry;
+            MPIDI_OFI_global.cq_buffered_static_tail =
+                (MPIDI_OFI_global.cq_buffered_static_tail + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+        }
+        /* If there's anything in the dynamic list, it goes second. */
+        else if (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head) {
+            MPIDI_OFI_cq_list_t *cq_list_entry = MPIDI_OFI_global.cq_buffered_dynamic_head;
+            LL_DELETE(MPIDI_OFI_global.cq_buffered_dynamic_head,
+                      MPIDI_OFI_global.cq_buffered_dynamic_tail, cq_list_entry);
+            wc[0] = cq_list_entry->cq_entry;
+            MPL_free(cq_list_entry);
+        }
+
+        rc = 1;
+    }
+
+    return rc;
+}
+
 #endif /* OFI_IMPL_H_INCLUDED */
