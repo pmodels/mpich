@@ -626,12 +626,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm
  * process further cq entries during (am-related) calls.
  */
 
-#define COND_HAS_CQ_BUFFERED ((MPIDI_OFI_global.cq_buffered_static_head != MPIDI_OFI_global.cq_buffered_static_tail) || (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head))
+/* local macros to make the code cleaner */
+#define CQ_S_LIST MPIDI_OFI_global.cq_buffered_static_list
+#define CQ_S_HEAD MPIDI_OFI_global.cq_buffered_static_head
+#define CQ_S_TAIL MPIDI_OFI_global.cq_buffered_static_tail
+#define CQ_D_HEAD MPIDI_OFI_global.cq_buffered_dynamic_head
+#define CQ_D_TAIL MPIDI_OFI_global.cq_buffered_dynamic_tail
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_has_cq_buffered(int vni)
 {
-    return (MPIDI_OFI_global.cq_buffered_static_head != MPIDI_OFI_global.cq_buffered_static_tail) ||
-        (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head);
+    return (CQ_S_HEAD != CQ_S_TAIL) || (CQ_D_HEAD != NULL);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
@@ -656,20 +660,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
 
         /* If the statically allocated buffered list is full or we've already
          * started using the dynamic list, continue using it. */
-        if (((MPIDI_OFI_global.cq_buffered_static_head + 1) %
-             MPIDI_OFI_NUM_CQ_BUFFERED == MPIDI_OFI_global.cq_buffered_static_tail) ||
-            (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head)) {
+        if (((CQ_S_HEAD + 1) % MPIDI_OFI_NUM_CQ_BUFFERED == CQ_S_TAIL) || (CQ_D_HEAD != NULL)) {
             MPIDI_OFI_cq_list_t *list_entry =
                 (MPIDI_OFI_cq_list_t *) MPL_malloc(sizeof(MPIDI_OFI_cq_list_t), MPL_MEM_BUFFER);
             MPIR_Assert(list_entry);
             list_entry->cq_entry = cq_entry;
-            LL_APPEND(MPIDI_OFI_global.cq_buffered_dynamic_head,
-                      MPIDI_OFI_global.cq_buffered_dynamic_tail, list_entry);
+            LL_APPEND(CQ_D_HEAD, CQ_D_TAIL, list_entry);
         } else {
-            MPIDI_OFI_global.cq_buffered_static_list[MPIDI_OFI_global.
-                                                     cq_buffered_static_head].cq_entry = cq_entry;
-            MPIDI_OFI_global.cq_buffered_static_head =
-                (MPIDI_OFI_global.cq_buffered_static_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+            CQ_S_LIST[CQ_S_HEAD].cq_entry = cq_entry;
+            CQ_S_HEAD = (CQ_S_HEAD + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
         }
     }
 
@@ -686,18 +685,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged
 
     if (1) {
         /* If the static list isn't empty, do so first */
-        if (MPIDI_OFI_global.cq_buffered_static_head != MPIDI_OFI_global.cq_buffered_static_tail) {
-            wc[0] =
-                MPIDI_OFI_global.cq_buffered_static_list[MPIDI_OFI_global.
-                                                         cq_buffered_static_tail].cq_entry;
-            MPIDI_OFI_global.cq_buffered_static_tail =
-                (MPIDI_OFI_global.cq_buffered_static_tail + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+        if (CQ_S_HEAD != CQ_S_TAIL) {
+            wc[0] = CQ_S_LIST[CQ_S_TAIL].cq_entry;
+            CQ_S_TAIL = (CQ_S_TAIL + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
         }
         /* If there's anything in the dynamic list, it goes second. */
-        else if (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head) {
-            MPIDI_OFI_cq_list_t *cq_list_entry = MPIDI_OFI_global.cq_buffered_dynamic_head;
-            LL_DELETE(MPIDI_OFI_global.cq_buffered_dynamic_head,
-                      MPIDI_OFI_global.cq_buffered_dynamic_tail, cq_list_entry);
+        else if (CQ_D_HEAD != NULL) {
+            MPIDI_OFI_cq_list_t *cq_list_entry = CQ_D_HEAD;
+            LL_DELETE(CQ_D_HEAD, CQ_D_TAIL, cq_list_entry);
             wc[0] = cq_list_entry->cq_entry;
             MPL_free(cq_list_entry);
         }
@@ -707,5 +702,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged
 
     return rc;
 }
+
+#undef CQ_S_LIST
+#undef CQ_S_HEAD
+#undef CQ_S_TAIL
+#undef CQ_D_HEAD
+#undef CQ_D_TAIL
 
 #endif /* OFI_IMPL_H_INCLUDED */
