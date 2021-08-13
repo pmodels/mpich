@@ -393,6 +393,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     goto fn_exit;
 }
 
+#define DEFER_AM_SEND(am_op) \
+    do { \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req) = (MPIDI_OFI_deferred_am_isend_req_t *) MPL_malloc(sizeof(MPIDI_OFI_deferred_am_isend_req_t), MPL_MEM_OTHER); \
+        MPIR_Assert(MPIDI_OFI_AMREQUEST(sreq, deferred_req)); \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->op = am_op; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->rank = rank; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->comm = comm; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->handler_id = handler_id; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->buf = buf; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->count = count; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->datatype = datatype; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->sreq = sreq; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz = data_sz; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing = need_packing; \
+        DL_APPEND(MPIDI_OFI_global.deferred_am_isend_q, MPIDI_OFI_AMREQUEST(sreq, deferred_req)); \
+    } while (0)
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * comm,
                                                          int handler_id, const void *am_hdr,
                                                          size_t am_hdr_sz, const void *buf,
@@ -478,21 +495,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
   fn_fail:
     goto fn_exit;
   fn_deferred:
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req) =
-        (MPIDI_OFI_deferred_am_isend_req_t *) MPL_malloc(sizeof(MPIDI_OFI_deferred_am_isend_req_t),
-                                                         MPL_MEM_OTHER);
-    MPIR_Assert(MPIDI_OFI_AMREQUEST(sreq, deferred_req));
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->op = MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->rank = rank;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->comm = comm;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->handler_id = handler_id;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->buf = buf;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->count = count;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->datatype = datatype;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->sreq = sreq;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz = data_sz;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing = need_packing;
-    DL_APPEND(MPIDI_OFI_global.deferred_am_isend_q, MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+    DEFER_AM_SEND(MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER);
     goto fn_exit;
 }
 
@@ -694,21 +697,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
   fn_fail:
     goto fn_exit;
   fn_deferred:
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req) =
-        (MPIDI_OFI_deferred_am_isend_req_t *) MPL_malloc(sizeof(MPIDI_OFI_deferred_am_isend_req_t),
-                                                         MPL_MEM_OTHER);
-    MPIR_Assert(MPIDI_OFI_AMREQUEST(sreq, deferred_req));
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->op = MPIDI_OFI_DEFERRED_AM_OP__ISEND_PIPELINE;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->rank = rank;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->comm = comm;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->handler_id = handler_id;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->buf = buf;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->count = count;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->datatype = datatype;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->sreq = sreq;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz = data_sz;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing = need_packing;
-    DL_APPEND(MPIDI_OFI_global.deferred_am_isend_q, MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+    DEFER_AM_SEND(MPIDI_OFI_DEFERRED_AM_OP__ISEND_PIPELINE);
     goto fn_exit;
 }
 
@@ -793,22 +782,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
   fn_fail:
     goto fn_exit;
   fn_deferred:
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req) =
-        (MPIDI_OFI_deferred_am_isend_req_t *) MPL_malloc(sizeof(MPIDI_OFI_deferred_am_isend_req_t),
-                                                         MPL_MEM_OTHER);
-    MPIR_Assert(MPIDI_OFI_AMREQUEST(sreq, deferred_req));
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->op = MPIDI_OFI_DEFERRED_AM_OP__ISEND_RDMA_READ;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->rank = rank;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->comm = comm;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->handler_id = handler_id;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->buf = buf;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->count = count;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->datatype = datatype;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->sreq = sreq;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz = data_sz;
-    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing = need_packing;
-    DL_APPEND(MPIDI_OFI_global.deferred_am_isend_q, MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+    DEFER_AM_SEND(MPIDI_OFI_DEFERRED_AM_OP__ISEND_RDMA_READ);
     goto fn_exit;
 }
+
+#undef DEFER_AM_SEND
 
 #endif /* OFI_AM_IMPL_H_INCLUDED */
