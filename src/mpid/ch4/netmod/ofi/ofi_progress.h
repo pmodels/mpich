@@ -12,7 +12,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_deferred_ops(void)
 {
 
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_deferred_am_isend_req_t *dreq = MPIDI_OFI_global.deferred_am_isend_q;
+    MPIDI_OFI_deferred_am_isend_req_t *dreq = MPIDI_OFI_global.per_vni[0].deferred_am_isend_q;
 
     MPIR_FUNC_ENTER;
 
@@ -101,7 +101,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
                 mpi_errno = MPIDI_OFI_handle_cq_error(ctx_idx, ret);
         }
 
-        if (unlikely(mpi_errno == MPI_SUCCESS && MPIDI_OFI_global.deferred_am_isend_q)) {
+        if (unlikely(mpi_errno == MPI_SUCCESS && MPIDI_OFI_global.per_vni[vni].deferred_am_isend_q)) {
             mpi_errno = MPIDI_OFI_handle_deferred_ops();
         }
     }
