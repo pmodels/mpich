@@ -14,7 +14,18 @@
 int MPIDI_OFI_am_repost_buffer(int am_idx);
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
 
-/* Acquire a sequence number to send, and record the next number */
+/* active message ordering --
+ * FI_MULTI_RECV doesn't guarantee the ordering of messages. Thus we have to
+ * set and check the seqno and potentially enqueue the unordered messages.
+ * This is necessary because CH4 message queue relies on transport observing the * message order.
+ *
+ * Each time we send an active message, we increment and embed a send_seqno in
+ * the msg_hdr. At the receiver end we maintain a recv_seqno and match against
+ * the send_seqno. If they are out-of-order, we postpone the message by
+ * enqueuing to MPIDI_OFI_global.am_unordered_msgs. The matching seqno is
+ * similar to how TCP protocol works.
+ */
+
 MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm * comm,
                                                                      int dest_rank)
 {
@@ -42,6 +53,83 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
                      MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, 0, 0), addr));
 
     return old_seq;
+}
+
+MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_get_next_recv_seqno(fi_addr_t addr)
+{
+    uint64_t id = addr;
+    void *r;
+
+    r = MPIDIU_map_lookup(MPIDI_OFI_global.am_recv_seq_tracker, id);
+    if (r == MPIDIU_MAP_NOT_FOUND) {
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        (MPL_DBG_FDEST, "First time adding recv seqno addr=%" PRIx64 "\n", addr));
+        MPIDIU_map_set(MPIDI_OFI_global.am_recv_seq_tracker, id, 0, MPL_MEM_OTHER);
+        return 0;
+    } else {
+        return (uint16_t) (uintptr_t) r;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_am_set_next_recv_seqno(fi_addr_t addr, uint16_t seqno)
+{
+    uint64_t id = addr;
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, "Next recv seqno=%d addr=%" PRIx64 "\n", seqno, addr));
+
+    MPIDIU_map_update(MPIDI_OFI_global.am_recv_seq_tracker, id, (void *) (uintptr_t) seqno,
+                      MPL_MEM_OTHER);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(const MPIDI_OFI_am_header_t *
+                                                                am_hdr)
+{
+    MPIDI_OFI_am_unordered_msg_t *uo_msg;
+    size_t uo_msg_len, packet_len;
+    /* Essentially, uo_msg_len == packet_len + sizeof(next,prev pointers) */
+
+    uo_msg_len = sizeof(*uo_msg) + am_hdr->am_hdr_sz + am_hdr->payload_sz;
+
+    /* Allocate a new memory region to store this unordered message.
+     * We are doing this because the original am_hdr comes from FI_MULTI_RECV
+     * buffer, which may be reused soon by OFI. */
+    uo_msg = MPL_malloc(uo_msg_len, MPL_MEM_BUFFER);
+    if (uo_msg == NULL)
+        return MPI_ERR_NO_MEM;
+
+    packet_len = sizeof(*am_hdr) + am_hdr->am_hdr_sz + am_hdr->payload_sz;
+    MPIR_Memcpy(&uo_msg->am_hdr, am_hdr, packet_len);
+
+    DL_APPEND(MPIDI_OFI_global.am_unordered_msgs, uo_msg);
+
+    return MPI_SUCCESS;
+}
+
+/* Find and dequeue a message that matches (comm, src_rank, seqno), then return it.
+ * Caller must free the returned pointer. */
+MPL_STATIC_INLINE_PREFIX MPIDI_OFI_am_unordered_msg_t
+    * MPIDI_OFI_am_claim_unordered_msg(fi_addr_t addr, uint16_t seqno)
+{
+    MPIDI_OFI_am_unordered_msg_t *uo_msg;
+
+    /* Future optimization note:
+     * Currently we are doing linear search every time, assuming that the number of items
+     * in the queue is extremely small.
+     * If it's not the case, we should consider using better data structure and algorithm
+     * to look up. */
+    DL_FOREACH(MPIDI_OFI_global.am_unordered_msgs, uo_msg) {
+        if (uo_msg->am_hdr.fi_src_addr == addr && uo_msg->am_hdr.seqno == seqno) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, TERSE,
+                            (MPL_DBG_FDEST,
+                             "Found unordered message in the queue: addr=%" PRIx64 ", seqno=%d\n",
+                             addr, seqno));
+            DL_DELETE(MPIDI_OFI_global.am_unordered_msgs, uo_msg);
+            return uo_msg;
+        }
+    }
+
+    return NULL;
 }
 
 /*
