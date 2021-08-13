@@ -214,6 +214,41 @@ typedef struct {
     bool mpi_acc_valid;
 } MPIDI_OFI_atomic_valid_t;
 
+typedef struct MPIDI_OFI_cq_list_t {
+    struct fi_cq_tagged_entry cq_entry;
+    fi_addr_t source;
+    struct MPIDI_OFI_cq_list_t *next;
+} MPIDI_OFI_cq_list_t;
+
+/* global per-vni am related fields */
+typedef struct {
+    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+
+    MPIDU_genq_private_pool_t am_hdr_buf_pool;
+    MPIDU_genq_private_pool_t pack_buf_pool;
+
+    /* Queue to store defferend am send */
+    MPIDI_OFI_deferred_am_isend_req_t *deferred_am_isend_q;
+
+    /* Sequence number trackers for active messages */
+    void *am_send_seq_tracker;
+    void *am_recv_seq_tracker;
+
+    /* Queue (utlist) to store early-arrival active messages */
+    MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
+
+    /* Completion queue buffering */
+    struct fi_cq_tagged_entry cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
+    int cq_buffered_static_head;
+    int cq_buffered_static_tail;
+    MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
+
+    char pad[] MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
+} MPIDI_OFI_per_vni_t;
+
 typedef struct {
     struct fid_domain *domain;
     struct fid_av *av;
@@ -239,16 +274,6 @@ typedef union {
     MPID_Thread_mutex_t m;
     char cacheline[MPIDI_OFI_CACHELINE_SIZE];
 } MPIDI_OFI_cacheline_mutex_t MPL_ATTR_ALIGNED(MPIDI_OFI_CACHELINE_SIZE);
-
-typedef struct MPIDI_OFI_cq_list_t {
-    struct fi_cq_tagged_entry cq_entry;
-    fi_addr_t source;
-    struct MPIDI_OFI_cq_list_t *next;
-} MPIDI_OFI_cq_list_t;
-
-typedef struct {
-    struct fi_cq_tagged_entry cq_entry;
-} MPIDI_OFI_cq_buff_entry_t;
 
 typedef struct {
     unsigned enable_av_table:1;
@@ -324,6 +349,7 @@ typedef struct {
     /* Mutexes and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[MAX_OFI_MUTEXES];
     MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_VNIS * MPIDI_OFI_MAX_NICS];
+    MPIDI_OFI_per_vni_t per_vni[MPIDI_OFI_MAX_VNIS];
     int num_vnis;
     int num_nics;
     int num_close_nics;
@@ -341,27 +367,8 @@ typedef struct {
     void *huge_recv_counters;
 
     /* Active Message Globals */
-    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    MPIDU_genq_private_pool_t am_hdr_buf_pool;
     MPL_atomic_int_t am_inflight_inject_emus;
     MPL_atomic_int_t am_inflight_rma_send_mrs;
-    /* Sequence number trackers for active messages */
-    void *am_send_seq_tracker;
-    void *am_recv_seq_tracker;
-    /* Queue (utlist) to store early-arrival active messages */
-    MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
-
-    /* Pack buffers for various communication */
-    MPIDU_genq_private_pool_t pack_buf_pool;
-
-    /* Completion queue buffering */
-    MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
-    int cq_buffered_static_head;
-    int cq_buffered_static_tail;
-    MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
 
     /* Process management and PMI globals */
     int pname_set;
@@ -372,7 +379,6 @@ typedef struct {
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
 
     void *req_map;
-    MPIDI_OFI_deferred_am_isend_req_t *deferred_am_isend_q;
 
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
