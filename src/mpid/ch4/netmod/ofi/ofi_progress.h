@@ -8,11 +8,11 @@
 
 #include "ofi_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_deferred_ops(void)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_deferred_ops(int vni)
 {
 
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_deferred_am_isend_req_t *dreq = MPIDI_OFI_global.per_vni[0].deferred_am_isend_q;
+    MPIDI_OFI_deferred_am_isend_req_t *dreq = MPIDI_OFI_global.per_vni[vni].deferred_am_isend_q;
 
     MPIR_FUNC_ENTER;
 
@@ -21,19 +21,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_deferred_ops(void)
             case MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER:
                 mpi_errno = MPIDI_OFI_do_am_isend_eager(dreq->rank, dreq->comm, dreq->handler_id,
                                                         NULL, 0, dreq->buf, dreq->count,
-                                                        dreq->datatype, dreq->sreq, true);
+                                                        dreq->datatype, dreq->sreq, true, vni,
+                                                        dreq->vni_dst);
                 break;
             case MPIDI_OFI_DEFERRED_AM_OP__ISEND_PIPELINE:
                 mpi_errno = MPIDI_OFI_do_am_isend_pipeline(dreq->rank, dreq->comm, dreq->handler_id,
                                                            NULL, 0, dreq->buf, dreq->count,
                                                            dreq->datatype, dreq->sreq,
-                                                           dreq->data_sz, true);
+                                                           dreq->data_sz, true, vni, dreq->vni_dst);
                 break;
             case MPIDI_OFI_DEFERRED_AM_OP__ISEND_RDMA_READ:
                 mpi_errno = MPIDI_OFI_do_am_isend_rdma_read(dreq->rank, dreq->comm,
                                                             dreq->handler_id, NULL, 0, dreq->buf,
                                                             dreq->count, dreq->datatype, dreq->sreq,
-                                                            true);
+                                                            true, vni, dreq->vni_dst);
                 break;
             default:
                 MPIR_Assert(0);
@@ -103,7 +104,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
         }
 
         if (unlikely(mpi_errno == MPI_SUCCESS && MPIDI_OFI_global.per_vni[vni].deferred_am_isend_q)) {
-            mpi_errno = MPIDI_OFI_handle_deferred_ops();
+            mpi_errno = MPIDI_OFI_handle_deferred_ops(vni);
         }
     }
 
