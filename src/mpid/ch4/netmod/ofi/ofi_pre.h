@@ -150,8 +150,9 @@ typedef struct MPIDI_OFI_deferred_am_isend_req {
     MPI_Datatype datatype;
     MPIR_Request *sreq;
     bool need_packing;
-
     MPI_Aint data_sz;
+    int vni_src;
+    int vni_dst;
 
     struct MPIDI_OFI_deferred_am_isend_req *prev;
     struct MPIDI_OFI_deferred_am_isend_req *next;

@@ -89,11 +89,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
 
     rem = data_sz;
 
+    int vni_local = MPIDIG_REQUEST(rreq, req->local_vci);
+    int vni_remote = MPIDIG_REQUEST(rreq, req->remote_vci);
     while (done != data_sz) {
         curr_len = MPL_MIN(rem, MPIDI_OFI_global.max_msg_size);
 
         MPIR_Assert(sizeof(MPIDI_OFI_am_request_t) <= MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vni[0].am_hdr_buf_pool,
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vni[vni_local].am_hdr_buf_pool,
                                            (void **) &am_req);
         MPIR_Assert(am_req);
 
@@ -106,9 +108,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
         }
         MPIR_Assert(comm);
 
-        /* am uses vni 0 */
-        int vni_local = 0;
-        int vni_remote = 0;
+        /* am uses nic 0 */
         int nic = 0;
         MPIDI_OFI_cntr_incr(comm, vni_local, nic);
 
