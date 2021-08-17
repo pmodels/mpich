@@ -22,7 +22,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
                           int root, MPIR_Comm * comm_ptr, int tree_type,
                           int branching_factor, int is_nb, MPIR_Errflag_t * errflag)
 {
-    int rank, comm_size, src, dst, *p, j, k, lrank, is_contig;
+    int rank, comm_size, src, dst, *p, j, k, lrank = 0, is_contig;
     int parent = -1, num_children = 0, num_req = 0, saved_count = count, is_root = 0;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
