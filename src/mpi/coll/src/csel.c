@@ -320,7 +320,7 @@ static void validate_tree(csel_node_s * node)
 static csel_node_s *parse_json_tree(struct json_object *obj,
                                     void *(*create_container) (struct json_object *))
 {
-    enum json_type type;
+    enum json_type type ATTRIBUTE((unused));
     csel_node_s *prevnode = NULL, *tmp, *node = NULL;
 
     json_object_object_foreach(obj, key, val) {
