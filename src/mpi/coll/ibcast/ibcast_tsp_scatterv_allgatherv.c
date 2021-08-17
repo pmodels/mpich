@@ -13,7 +13,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                                                     int allgatherv_k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     size_t extent, type_size;
     MPI_Aint true_lb, true_extent;
     int size, rank, tag;
@@ -26,7 +26,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     int current_child, next_child, lrank, total_count, sink_id;
     int num_children, *child_subtree_size = NULL;
     int recv_size, num_send_dependencies;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
 
     /* For correctness, transport based collectives need to get the

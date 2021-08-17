@@ -14,7 +14,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                                       int buffer_per_child, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, j, t;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
@@ -38,7 +38,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     int dtcopy_id = -1;
     int nvtcs;
     int tag;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
 
     MPIR_FUNC_ENTER;

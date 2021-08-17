@@ -15,13 +15,13 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
                                               MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int src, dst;
     int i, j, ww;
     int invtcs;
     int tag;
     int *vtcs, *recv_id, *send_id;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
 
     MPIR_Assert(!(sendbuf == MPI_IN_PLACE));

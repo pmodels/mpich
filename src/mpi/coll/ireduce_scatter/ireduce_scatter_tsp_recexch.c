@@ -48,12 +48,12 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
                                                        MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int x, i, j, phase;
     int current_cnt, offset, rank_for_offset, dst;
     int send_cnt, recv_cnt, send_offset, recv_offset, nvtcs, vtcs[2];
     int send_id, recv_id, reduce_id = -1;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 
@@ -134,7 +134,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
                                                  int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int is_inplace;
     size_t extent;
     MPI_Aint lb, true_extent;
@@ -149,7 +149,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
     MPI_Aint *displs;
     int tag, vtx_id;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_ENTER;
