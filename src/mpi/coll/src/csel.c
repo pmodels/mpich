@@ -451,8 +451,9 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
                 tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__SCATTER;
             else if (!strcmp(str, "scatterv"))
                 tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__SCATTERV;
-            else
+            else {
                 MPIR_Assert(0);
+            }
         } else if (!strcmp(ckey, "comm_size=pow2")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_POW2;
         } else if (!strcmp(ckey, "comm_size=node_comm_size")) {
