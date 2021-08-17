@@ -191,7 +191,7 @@ int MPL_gpu_free(void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_init()
+int MPL_gpu_init(void)
 {
     hipError_t ret = hipGetDeviceCount(&device_count);
     HIP_ERR_CHECK(ret);
@@ -247,7 +247,7 @@ int MPL_gpu_init()
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_finalize()
+int MPL_gpu_finalize(void)
 {
     if (device_count <= 0) {
         goto fn_exit;
