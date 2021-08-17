@@ -158,7 +158,8 @@ int MPIDIU_avt_init(void)
 
     MPIR_FUNC_ENTER;
 
-    int first_avtid = get_next_avtid();
+    int first_avtid ATTRIBUTE((unused));
+    first_avtid = get_next_avtid();
     MPIR_Assert(first_avtid == 0);
 
     int size = MPIR_Process.size;
