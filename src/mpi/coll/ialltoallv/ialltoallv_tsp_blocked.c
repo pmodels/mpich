@@ -14,8 +14,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                                             MPIR_Comm * comm, int bblock, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-    int is_inplace;
+    int is_inplace ATTRIBUTE((unused));
     size_t recv_extent, send_extent, sendtype_size, recvtype_size;
     MPI_Aint recv_lb, send_lb, true_extent;
     int nranks, rank;
