@@ -1413,7 +1413,7 @@ def dump_body_impl(func, prefix='mpir'):
         for p in func['_has_handle_out']:
             (name, kind) = (p['name'], p['kind'])
             mpir_type = G.handle_mpir_types[kind]
-            G.out.append("%s *%s_ptr = NULL;" % (mpir_type, name))
+            G.out.append("%s *%s_ptr ATTRIBUTE((unused)) = NULL;" % (mpir_type, name))
             if kind in G.handle_NULLs:
                 G.out.append("*%s = %s;" % (name, G.handle_NULLs[kind]))
     elif RE.match(r'mpi_type_', func['name'], re.IGNORECASE):
@@ -1608,7 +1608,7 @@ def dump_handle_ptr_var(func, p):
             G.out.append("MPIR_Request **request_ptrs = request_ptr_array;")
     else:
         mpir = G.handle_mpir_types[kind]
-        G.out.append("%s *%s_ptr = NULL;" % (mpir, name))
+        G.out.append("%s *%s_ptr ATTRIBUTE((unused)) = NULL;" % (mpir, name))
 
 def dump_validate_handle(func, p):
     func_name = func['name']
@@ -2183,7 +2183,7 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
 def dump_validate_datatype(func, dt):
     G.out.append("MPIR_ERRTEST_DATATYPE(%s, \"datatype\", mpi_errno);" % dt)
     G.out.append("if (!HANDLE_IS_BUILTIN(%s)) {" % dt)
-    G.out.append("    MPIR_Datatype *datatype_ptr = NULL;")
+    G.out.append("    MPIR_Datatype *datatype_ptr ATTRIBUTE((unused)) = NULL;")
     G.out.append("    MPIR_Datatype_get_ptr(%s, datatype_ptr);" % dt)
     G.out.append("    MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);")
     dump_error_check("    ")
