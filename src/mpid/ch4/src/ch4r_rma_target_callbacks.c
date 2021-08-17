@@ -1541,7 +1541,7 @@ int MPIDIG_cswap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPI_Aint data_sz;
     MPIR_Win *win;
 
-    int dt_contig;
+    int dt_contig ATTRIBUTE((unused));
     void *p_data;
 
     MPIDIG_cswap_req_msg_t *msg_hdr = (MPIDIG_cswap_req_msg_t *) am_hdr;
