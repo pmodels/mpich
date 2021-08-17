@@ -23,7 +23,7 @@ static int *global_to_local_map;        /* [max_dev_id + 1]   */
 ze_driver_handle_t global_ze_driver_handle;
 ze_device_handle_t *global_ze_devices_handle = NULL;
 ze_context_handle_t global_ze_context;
-int global_ze_device_count;
+uint32_t global_ze_device_count;
 static int gpu_ze_init_driver(void);
 
 #define ZE_ERR_CHECK(ret) \
