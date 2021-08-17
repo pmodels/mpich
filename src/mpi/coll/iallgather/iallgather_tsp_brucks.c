@@ -13,14 +13,14 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                        MPIR_Comm * comm, int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, j;
     int nphases = 0;
     int n_invtcs;
     int tag;
     int count, left_count;
     int src, dst, p_of_k = 0;   /* Largest power of k that is (strictly) smaller than 'size' */
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     int rank = MPIR_Comm_rank(comm);
     int size = MPIR_Comm_size(comm);

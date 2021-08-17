@@ -6,6 +6,7 @@
 #include "mpiimpl.h"
 #include "ibcast.h"
 
+#ifdef HAVE_ERROR_CHECKING
 static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -21,6 +22,7 @@ static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
     }
     return mpi_errno;
 }
+#endif
 
 /* This routine purely handles the hierarchical version of bcast, and does not
  * currently make any decision about which particular algorithm to use for any
