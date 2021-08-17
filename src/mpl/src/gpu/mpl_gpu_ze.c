@@ -44,7 +44,7 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
     return ret;
 }
 
-int MPL_gpu_init()
+int MPL_gpu_init(void)
 {
     int ret_error;
     ret_error = gpu_ze_init_driver();
@@ -70,7 +70,7 @@ int MPL_gpu_init()
 }
 
 /* Loads a global ze driver */
-static int gpu_ze_init_driver()
+static int gpu_ze_init_driver(void)
 {
     uint32_t driver_count = 0;
     ze_result_t ret;
@@ -148,7 +148,7 @@ static int gpu_ze_init_driver()
     goto fn_exit;
 }
 
-int MPL_gpu_finalize()
+int MPL_gpu_finalize(void)
 {
     MPL_free(local_to_global_map);
     MPL_free(global_to_local_map);
