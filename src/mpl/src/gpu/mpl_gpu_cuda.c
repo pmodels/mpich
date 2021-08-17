@@ -197,7 +197,7 @@ int MPL_gpu_free(void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_init()
+int MPL_gpu_init(void)
 {
     if (gpu_initialized) {
         goto fn_exit;
@@ -261,7 +261,7 @@ int MPL_gpu_init()
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_finalize()
+int MPL_gpu_finalize(void)
 {
     if (device_count <= 0) {
         goto fn_exit;
