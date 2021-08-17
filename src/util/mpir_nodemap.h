@@ -19,7 +19,7 @@ static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
     int key_max_sz;
     char *kvs_name;
     char hostname[MAX_HOSTNAME_LEN];
-    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
     MPIR_CHKLMEM_DECL(2);
 
     /* set hostname */
@@ -292,7 +292,7 @@ static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *o
     char *key = MPL_malloc(key_max_sz, MPL_MEM_OTHER);
     char **node_names = MPL_malloc(sz * sizeof(char *), MPL_MEM_OTHER);
     char *node_name_buf = MPL_malloc(sz * key_max_sz, MPL_MEM_OTHER);
-    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
 
     for (int i = 0; i < sz; ++i) {
         node_names[i] = &node_name_buf[i * key_max_sz];
