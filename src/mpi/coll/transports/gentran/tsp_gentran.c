@@ -50,7 +50,7 @@ int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
 int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
 {
     MPII_Genutil_sched_t *sched = s;
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i;
     vtx_t *vtx;
     void **p;
