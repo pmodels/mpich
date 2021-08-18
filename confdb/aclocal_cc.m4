@@ -428,9 +428,6 @@ if test "$enable_strict_done" != "yes" ; then
     #       warning at 256k.
     #
     # These were added to reduce warnings:
-    #   -Wno-missing-field-initializers  -- We want to allow a struct to be 
-    #       initialized to zero using "struct x y = {0};" and not require 
-    #       each field to be initialized individually.
     #   -Wno-unused-parameter -- For portability, some parameters go unused
     #	    when we have different implementations of functions for 
     #	    different platforms
@@ -500,6 +497,7 @@ if test "$enable_strict_done" != "yes" ; then
         -Wbad-function-cast
         -Wwrite-strings
         -Wno-sign-compare
+        -Wno-unused-label
         -Wold-style-definition
         -Wnested-externs
         -Winvalid-pch
