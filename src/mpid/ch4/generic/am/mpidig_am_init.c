@@ -117,6 +117,17 @@ void MPIDIG_am_reg_cb(int handler_id,
     MPIR_FUNC_EXIT;
 }
 
+void MPIDIG_am_rndv_reg_cb(int rndv_id, MPIDIG_am_rndv_cb rndv_cb)
+{
+    MPIR_FUNC_ENTER;
+
+    MPIR_Assert(rndv_id < MPIDIG_RNDV_STATIC_MAX);
+    MPIDIG_global.rndv_cbs[rndv_id] = rndv_cb;
+
+    MPIR_FUNC_EXIT;
+}
+
+
 int MPIDIG_am_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -175,16 +186,16 @@ int MPIDIG_am_init(void)
     MPIDIG_am_reg_cb(MPIDIG_ACC_ACK, NULL, &MPIDIG_acc_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_GET_ACC_ACK,
                      &MPIDIG_get_acc_ack_origin_cb, &MPIDIG_get_acc_ack_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_COMPLETE, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_POST, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCK_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_COMPLETE, NULL, &MPIDIG_win_complete_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_POST, NULL, &MPIDIG_win_post_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCK, NULL, &MPIDIG_win_lock_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCK_ACK, NULL, &MPIDIG_win_lock_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK, NULL, &MPIDIG_win_unlock_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK_ACK, NULL, &MPIDIG_win_unlock_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL, NULL, &MPIDIG_win_lockall_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL_ACK, NULL, &MPIDIG_win_lockall_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL, NULL, &MPIDIG_win_unlockall_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL_ACK, NULL, &MPIDIG_win_unlockall_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_DT_REQ, &MPIDIG_put_dt_origin_cb, &MPIDIG_put_dt_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_DT_ACK, NULL, &MPIDIG_put_dt_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_DAT_REQ,
@@ -198,6 +209,8 @@ int MPIDIG_am_init(void)
                      &MPIDIG_acc_data_origin_cb, &MPIDIG_acc_data_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DAT_REQ,
                      &MPIDIG_get_acc_data_origin_cb, &MPIDIG_get_acc_data_target_msg_cb);
+
+    MPIDIG_am_rndv_reg_cb(MPIDIG_RNDV_GENERIC, &MPIDIG_do_cts);
 
     MPIDIG_am_comm_abort_init();
 

@@ -209,6 +209,7 @@ typedef struct MPIDIG_req_t {
 #endif
     MPIDIG_req_ext_t *req;
     void *buffer;
+    void *rndv_hdr;
     MPI_Aint count;
     int rank;
     int tag;
@@ -398,8 +399,8 @@ typedef struct MPIDIG_win_info_args_t {
 struct MPIDIG_win_lock {
     struct MPIDIG_win_lock *next;
     int rank;
-    uint16_t mtype;
-    uint16_t type;
+    uint16_t mtype;             /* MPIDIG_WIN_LOCK or MPIDIG_WIN_LOCKALL */
+    uint16_t type;              /* MPI_LOCK_EXCLUSIVE or MPI_LOCK_SHARED */
 };
 
 typedef struct MPIDIG_win_lock_recvd {
