@@ -21,8 +21,7 @@ int MPIDI_XPMEM_init_world(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_MPI_INIT_HOOK);
+    MPIR_FUNC_ENTER;
     MPIR_CHKPMEM_DECL(3);
 
 #ifdef MPL_USE_DBG_LOGGING
@@ -72,7 +71,7 @@ int MPIDI_XPMEM_init_world(void)
     xpmem_initialized = 1;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_MPI_INIT_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     if (MPIDI_XPMEMI_global.segid != -1) {
@@ -93,8 +92,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, ret = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_MPI_FINALIZE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_XPMEMI_global.segid == -1 || !xpmem_initialized) {
         /* if XPMEM was disabled at runtime, return */
@@ -124,7 +122,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     xpmem_initialized = 0;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

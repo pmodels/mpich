@@ -425,8 +425,7 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
     int made_progress;
     MPIR_Request *reqp;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_GENUTIL_SCHED_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_GENUTIL_SCHED_START);
+    MPIR_FUNC_ENTER;
 
     /* Create a request */
     reqp = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
@@ -459,7 +458,7 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
     MPIR_Progress_hook_activate(MPII_Genutil_progress_hook_id);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_START);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -471,8 +470,7 @@ int MPIR_TSP_sched_reset(MPIR_TSP_sched_t s)
     int mpi_errno = MPI_SUCCESS;
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_GENUTIL_SCHED_RESET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_GENUTIL_SCHED_RESET);
+    MPIR_FUNC_ENTER;
 
     sched->completed_vtcs = 0;
     sched->issued_head = sched->issued_tail = NULL;
@@ -486,7 +484,7 @@ int MPIR_TSP_sched_reset(MPIR_TSP_sched_t s)
         }
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_RESET);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

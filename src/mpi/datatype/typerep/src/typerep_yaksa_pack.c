@@ -58,8 +58,7 @@ cvars:
 static int typerep_do_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
                            MPIR_Typerep_req * typerep_req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_TYPEREP_DO_COPY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_TYPEREP_DO_COPY);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
     int rc;
@@ -101,7 +100,7 @@ static int typerep_do_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_TYPEREP_DO_COPY);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -113,8 +112,7 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
                            MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
                            MPI_Aint * actual_pack_bytes, MPIR_Typerep_req * typerep_req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_TYPEREP_DO_PACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_TYPEREP_DO_PACK);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
     int rc;
@@ -179,7 +177,7 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
     *actual_pack_bytes = (MPI_Aint) real_pack_bytes;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_TYPEREP_DO_PACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -237,8 +235,7 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
                              MPI_Datatype datatype, MPI_Aint outoffset,
                              MPI_Aint * actual_unpack_bytes, MPIR_Typerep_req * typerep_req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_TYPEREP_DO_UNPACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_TYPEREP_DO_UNPACK);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
     int rc;
@@ -305,7 +302,7 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
     *actual_unpack_bytes = (MPI_Aint) real_unpack_bytes;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_TYPEREP_DO_UNPACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -314,25 +311,23 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
 int MPIR_Typerep_icopy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
                        MPIR_Typerep_req * typerep_req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_ICOPY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_ICOPY);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
     mpi_errno = typerep_do_copy(outbuf, inbuf, num_bytes, typerep_req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_ICOPY);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_COPY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_COPY);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
     mpi_errno = typerep_do_copy(outbuf, inbuf, num_bytes, NULL);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_COPY);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -340,14 +335,13 @@ int MPIR_Typerep_ipack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatyp
                        MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
                        MPI_Aint * actual_pack_bytes, MPIR_Typerep_req * typerep_req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_IPACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_IPACK);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
     mpi_errno = typerep_do_pack(inbuf, incount, datatype, inoffset, outbuf, max_pack_bytes,
                                 actual_pack_bytes, typerep_req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_IPACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -355,14 +349,13 @@ int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype
                       MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
                       MPI_Aint * actual_pack_bytes)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_PACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_PACK);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
     mpi_errno = typerep_do_pack(inbuf, incount, datatype, inoffset, outbuf, max_pack_bytes,
                                 actual_pack_bytes, NULL);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_PACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -370,35 +363,32 @@ int MPIR_Typerep_iunpack(const void *inbuf, MPI_Aint insize, void *outbuf, MPI_A
                          MPI_Datatype datatype, MPI_Aint outoffset, MPI_Aint * actual_unpack_bytes,
                          MPIR_Typerep_req * typerep_req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_IUNPACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_IUNPACK);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
     mpi_errno = typerep_do_unpack(inbuf, insize, outbuf, outcount, datatype, outoffset,
                                   actual_unpack_bytes, typerep_req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_IUNPACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, MPI_Aint outcount,
                         MPI_Datatype datatype, MPI_Aint outoffset, MPI_Aint * actual_unpack_bytes)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_UNPACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_UNPACK);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
     mpi_errno = typerep_do_unpack(inbuf, insize, outbuf, outcount, datatype, outoffset,
                                   actual_unpack_bytes, NULL);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_UNPACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIR_Typerep_wait(MPIR_Typerep_req typerep_req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_WAIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_WAIT);
+    MPIR_FUNC_ENTER;
     int mpi_errno = MPI_SUCCESS;
     int rc;
 
@@ -409,7 +399,7 @@ int MPIR_Typerep_wait(MPIR_Typerep_req typerep_req)
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_WAIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -434,15 +424,14 @@ int MPIR_Typerep_reduce(const void *in_buf, void *out_buf, MPI_Aint count, MPI_D
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_REDUCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_REDUCE);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = typerep_op_pack((void *) in_buf, out_buf, count, datatype, op);
 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_REDUCE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -455,8 +444,7 @@ int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source
 
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_OP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_OP);
+    MPIR_FUNC_ENTER;
 
     /* trivial cases */
     if (op == MPI_NO_OP) {
@@ -531,7 +519,7 @@ int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_OP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

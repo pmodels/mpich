@@ -16,8 +16,7 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
     MPIDI_POSIX_eager_iqueue_cell_t *cell = NULL;
     int ret = MPIDI_POSIX_NOK;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_RECV_BEGIN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_RECV_BEGIN);
+    MPIR_FUNC_ENTER;
 
     /* Get the transport with the global variables */
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
@@ -41,7 +40,7 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
         ret = MPIDI_POSIX_OK;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_RECV_BEGIN);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -58,14 +57,13 @@ MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
     MPIDI_POSIX_eager_iqueue_transport_t *transport;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
+    MPIR_FUNC_ENTER;
 
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
     cell = (MPIDI_POSIX_eager_iqueue_cell_t *) transaction->transport.iqueue.pointer_to_cell;
     MPIDU_genq_shmem_pool_cell_free(transport->cell_pool, cell);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
+    MPIR_FUNC_EXIT;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)

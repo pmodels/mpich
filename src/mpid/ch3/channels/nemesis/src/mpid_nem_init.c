@@ -431,9 +431,8 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_VC_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_VC_INIT);
+    MPIR_FUNC_ENTER;
     
     vc_ch->pkt_handler = NULL;
     vc_ch->num_pkt_handlers = 0;
@@ -599,7 +598,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 
     MPIR_CHKPMEM_COMMIT();
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_VC_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -611,9 +610,8 @@ MPID_nem_vc_destroy(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_VC_DESTROY);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_VC_DESTROY);
+    MPIR_FUNC_ENTER;
 
     MPL_free(vc_ch->pending_pkt);
 
@@ -621,7 +619,7 @@ MPID_nem_vc_destroy(MPIDI_VC_t *vc)
     MPIR_ERR_CHECK(mpi_errno);
 
     fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_VC_DESTROY);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:
     goto fn_exit;

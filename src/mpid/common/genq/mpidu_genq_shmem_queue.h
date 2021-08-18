@@ -220,8 +220,7 @@ static inline int MPIDU_genq_shmem_queue_dequeue(MPIDU_genq_shmem_pool_t pool,
                                                  MPIDU_genq_shmem_queue_t queue, void **cell)
 {
     int rc = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_GENQ_SHMEM_QUEUE_DEQUEUE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_SHMEM_QUEUE_DEQUEUE);
+    MPIR_FUNC_ENTER;
 
     MPIDU_genqi_shmem_pool_s *pool_obj = (MPIDU_genqi_shmem_pool_s *) pool;
     MPIDU_genq_shmem_queue_u *queue_obj = (MPIDU_genq_shmem_queue_u *) queue;
@@ -236,7 +235,7 @@ static inline int MPIDU_genq_shmem_queue_dequeue(MPIDU_genq_shmem_pool_t pool,
         MPIR_Assert(0 && "Invalid GenQ flag");
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_GENQ_SHMEM_QUEUE_DEQUEUE);
+    MPIR_FUNC_EXIT;
     return rc;
 }
 
@@ -244,8 +243,7 @@ static inline int MPIDU_genq_shmem_queue_enqueue(MPIDU_genq_shmem_pool_t pool,
                                                  MPIDU_genq_shmem_queue_t queue, void *cell)
 {
     int rc = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_GENQ_SHMEM_QUEUE_ENQUEUE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_SHMEM_QUEUE_ENQUEUE);
+    MPIR_FUNC_ENTER;
 
     MPIDU_genqi_shmem_pool_s *pool_obj = (MPIDU_genqi_shmem_pool_s *) pool;
     MPIDU_genq_shmem_queue_u *queue_obj = (MPIDU_genq_shmem_queue_u *) queue;
@@ -260,7 +258,7 @@ static inline int MPIDU_genq_shmem_queue_enqueue(MPIDU_genq_shmem_pool_t pool,
         MPIR_Assert(0 && "Invalid GenQ flag");
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_GENQ_SHMEM_QUEUE_ENQUEUE);
+    MPIR_FUNC_EXIT;
     return rc;
 }
 

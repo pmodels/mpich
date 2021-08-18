@@ -28,9 +28,8 @@ MPID_nem_mpich_init(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPIR_CHKPMEM_DECL (2);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_INIT);
+    MPIR_FUNC_ENTER;
 
     MPID_nem_prefetched_cell = NULL;
 
@@ -61,7 +60,7 @@ MPID_nem_mpich_init(void)
 
     MPIR_CHKPMEM_COMMIT();
 fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_MPICH_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -80,9 +79,8 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, struct iovec *iov
     struct iovec *data_iov = &iov[1]; /* iov of just the data, not the header */
     int data_n_iov = n_iov - 1;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_SEND_IOV);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_SEND_IOV);
+    MPIR_FUNC_ENTER;
 
     if (*sreq_ptr == NULL)
     {
@@ -140,7 +138,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, struct iovec *iov
     *sreq_ptr = sreq;
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_SEND_IOV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:
     goto fn_exit;

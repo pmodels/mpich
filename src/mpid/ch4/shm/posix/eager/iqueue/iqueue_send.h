@@ -47,8 +47,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
     int ret = MPIDI_POSIX_OK;
     MPI_Aint packed_size = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
+    MPIR_FUNC_ENTER;
 
     /* Get the transport object that holds all of the global variables. */
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
@@ -111,7 +110,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
