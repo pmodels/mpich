@@ -527,6 +527,24 @@ static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+/* Copy relevant hints to a given subcomm */
+static void propagate_hints_to_subcomm(MPIR_Comm * comm, MPIR_Comm * subcomm)
+{
+    /* Copy vci hints */
+    subcomm->hints[MPIR_COMM_HINT_SENDER_VCI] = comm->hints[MPIR_COMM_HINT_SENDER_VCI];
+    subcomm->hints[MPIR_COMM_HINT_RECEIVER_VCI] = comm->hints[MPIR_COMM_HINT_RECEIVER_VCI];
+    subcomm->hints[MPIR_COMM_HINT_VCI] = comm->hints[MPIR_COMM_HINT_VCI];
+}
+
+static void propagate_tainted_to_subcomms(MPIR_Comm * comm)
+{
+    if (comm->node_comm != NULL)
+        comm->node_comm->tainted = comm->tainted;
+
+    if (comm->node_roots_comm != NULL)
+        comm->node_roots_comm->tainted = comm->tainted;
+}
+
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -602,6 +620,9 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         comm->node_comm->local_size = num_local;
         comm->node_comm->remote_size = num_local;
 
+        /* Copy relevant hints to node_comm */
+        propagate_hints_to_subcomm(comm, comm->node_comm);
+
         MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs, num_local,
                                 MPIR_COMM_MAP_DIR__L2L, NULL);
         mpi_errno = MPIR_Comm_commit_internal(comm->node_comm);
@@ -624,11 +645,16 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         comm->node_roots_comm->local_size = num_external;
         comm->node_roots_comm->remote_size = num_external;
 
+        /* Copy relevant hints to node_roots_comm */
+        propagate_hints_to_subcomm(comm, comm->node_roots_comm);
+
         MPIR_Comm_map_irregular(comm->node_roots_comm, comm, external_procs, num_external,
                                 MPIR_COMM_MAP_DIR__L2L, NULL);
         mpi_errno = MPIR_Comm_commit_internal(comm->node_roots_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
+
+    propagate_tainted_to_subcomms(comm);
 
     comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
 
@@ -968,6 +994,7 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** out
 
     /* inherit tainted flag */
     newcomm_ptr->tainted = comm_ptr->tainted;
+    propagate_tainted_to_subcomms(newcomm_ptr);
 
   fn_fail:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COPY_DATA);

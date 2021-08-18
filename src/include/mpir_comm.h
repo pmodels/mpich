@@ -91,6 +91,9 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
     MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING,   /* ch4:ofi */
     MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING,    /* ch4:ofi */
     MPIR_COMM_HINT_MULTI_NIC_PREF_NIC,  /* ch4:ofi */
+    MPIR_COMM_HINT_SENDER_VCI,  /* ch4 */
+    MPIR_COMM_HINT_RECEIVER_VCI,        /* ch4 */
+    MPIR_COMM_HINT_VCI, /* ch4. Generic hint, useful to select vci_idx, progress thread etc. */
     /* dynamic hints starts here */
     MPIR_COMM_HINT_PREDEFINED_COUNT
 };
