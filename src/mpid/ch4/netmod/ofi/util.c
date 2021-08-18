@@ -242,14 +242,15 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     goto fn_exit;
 }
 
-int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint data_sz,
-                              int is_local, int is_async, MPIR_Request ** req)
+int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
+                              uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) am_hdr;
 
-    if (is_async)
+    if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
+    }
 
     switch (ctrlsend->type) {
         case MPIDI_OFI_CTRL_HUGEACK:{

@@ -34,47 +34,63 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_data ATTRIBUTE((unused));
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_data ATTRIBUTE((unused));
 
 int MPIDIG_RMA_Init_targetcb_pvars(void);
-int MPIDIG_put_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                 int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
-                                 MPI_Aint in_data_sz, int is_local, int is_async,
-                                 MPIR_Request ** req);
-int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                     int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_cswap_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                   int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_win_ctrl_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                  int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                             int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_put_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_put_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                    int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                    int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_get_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
-                                        MPI_Aint in_data_sz, int is_local, int is_async,
-                                        MPIR_Request ** req);
-int MPIDIG_put_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                  int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_acc_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                  int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_get_acc_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                      int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                               int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                             int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_get_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                 int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_get_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                    int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                             int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                 int is_local, int is_async, MPIR_Request ** req);
+int MPIDIG_put_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                 uint32_t attr, MPIR_Request ** req);
+int MPIDIG_acc_ack_target_msg_cb(void *am_hdr, void *data,
+                                 MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
+int MPIDIG_get_acc_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                     uint32_t attr, MPIR_Request ** req);
+int MPIDIG_cswap_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                   uint32_t attr, MPIR_Request ** req);
+int MPIDIG_win_complete_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                      uint32_t attr, MPIR_Request ** req);
+int MPIDIG_win_post_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                  uint32_t attr, MPIR_Request ** req);
+int MPIDIG_win_lock_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                  uint32_t attr, MPIR_Request ** req);
+int MPIDIG_win_lockall_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                     uint32_t attr, MPIR_Request ** req);
+int MPIDIG_win_unlock_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                    uint32_t attr, MPIR_Request ** req);
+int MPIDIG_win_unlockall_target_msg_cb(void *am_hdr, void *data,
+                                       MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
+int MPIDIG_win_lock_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                      uint32_t attr, MPIR_Request ** req);
+int MPIDIG_win_lockall_ack_target_msg_cb(void *am_hdr, void *data,
+                                         MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
+int MPIDIG_win_unlock_ack_target_msg_cb(void *am_hdr, void *data,
+                                        MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
+int MPIDIG_win_unlockall_ack_target_msg_cb(void *am_hdr, void *data,
+                                           MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
+int MPIDIG_put_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                             uint32_t attr, MPIR_Request ** req);
+int MPIDIG_put_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                uint32_t attr, MPIR_Request ** req);
+int MPIDIG_put_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                    uint32_t attr, MPIR_Request ** req);
+int MPIDIG_acc_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                    uint32_t attr, MPIR_Request ** req);
+int MPIDIG_get_acc_dt_ack_target_msg_cb(void *am_hdr, void *data,
+                                        MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
+int MPIDIG_put_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                  uint32_t attr, MPIR_Request ** req);
+int MPIDIG_acc_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                  uint32_t attr, MPIR_Request ** req);
+int MPIDIG_get_acc_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                      uint32_t attr, MPIR_Request ** req);
+int MPIDIG_cswap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                               uint32_t attr, MPIR_Request ** req);
+int MPIDIG_acc_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                             uint32_t attr, MPIR_Request ** req);
+int MPIDIG_get_acc_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                 uint32_t attr, MPIR_Request ** req);
+int MPIDIG_acc_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                uint32_t attr, MPIR_Request ** req);
+int MPIDIG_get_acc_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                    uint32_t attr, MPIR_Request ** req);
+int MPIDIG_get_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                             uint32_t attr, MPIR_Request ** req);
+int MPIDIG_get_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                 uint32_t attr, MPIR_Request ** req);
 
 #endif /* CH4R_RMA_TARGET_CALLBACKS_H_INCLUDED */
