@@ -18,8 +18,7 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int n
     int mpi_errno = MPI_SUCCESS;
     int partner, offset, count, send_offset, recv_offset;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_DATA_EXCHANGE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_DATA_EXCHANGE);
+    MPIR_FUNC_ENTER;
 
     /* get the partner with whom I should exchange data */
     partner = MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k);
@@ -45,7 +44,7 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int n
                              partner, tag, comm, sched, 0, NULL);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_DATA_EXCHANGE);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
 }
@@ -62,8 +61,7 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *
     int mpi_errno = MPI_SUCCESS;
     int send_offset, recv_offset, i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_STEP1);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_STEP1);
+    MPIR_FUNC_ENTER;
 
     if (step1_sendto != -1) {   /* non-participating rank sends the data to a partcipating rank */
         void *buf_to_send;
@@ -83,7 +81,7 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *
         }
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_STEP1);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
 }
@@ -103,8 +101,7 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int s
     int *recv_id = *recv_id_;
     int nrecvs = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_STEP2);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_STEP2);
+    MPIR_FUNC_ENTER;
 
     if (is_dist_halving == 1) {
         phase = step2_nphases - 1;
@@ -156,7 +153,7 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int s
 
     *nrecvs_ = nrecvs;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_STEP2);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
 }
@@ -173,8 +170,7 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *
     int mpi_errno = MPI_SUCCESS;
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_STEP3);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_STEP3);
+    MPIR_FUNC_ENTER;
 
     if (step1_sendto != -1) {
         MPIR_TSP_sched_irecv(recvbuf, recvcount * nranks, recvtype, step1_sendto, tag, comm, sched,
@@ -186,7 +182,7 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *
                              tag, comm, sched, nrecvs, recv_id);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH_STEP3);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
 }
@@ -221,8 +217,7 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, MPI_Aint sendco
     int tag;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH);
+    MPIR_FUNC_ENTER;
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -296,7 +291,7 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, MPI_Aint sendco
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
   fn_fail:

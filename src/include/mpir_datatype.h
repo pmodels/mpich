@@ -300,7 +300,7 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
      if (datatype_ptr->free_fn) {                                           \
          mpi_errno = (datatype_ptr->free_fn)(datatype_ptr);               \
           if (mpi_errno) {                                                  \
-           MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_FREE);                  \
+           MPIR_FUNC_EXIT;                  \
            return MPIR_Err_return_comm(0, __func__, mpi_errno);             \
           }                                                                 \
      } */                                                                   \

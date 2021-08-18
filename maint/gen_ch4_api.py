@@ -195,8 +195,7 @@ def dump_netmod_impl_h(h_file):
                 print("    %s ret;" % a['ret'], file=Out)
                 print("", file=Out)
             NAME = a['name'].upper()
-            print("    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
-            print("    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("    MPIR_FUNC_ENTER;", file=Out)
             print("", file=Out)
             s = "    "
             if use_ret:
@@ -208,7 +207,7 @@ def dump_netmod_impl_h(h_file):
             dump_s_param_tail(Out, s, a['nm_params'], ");", 1)
             print("", file=Out)
 
-            print("    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("    MPIR_FUNC_EXIT;", file=Out)
             if use_ret:
                 print("    return ret;", file=Out)
             print("}", file=Out)
@@ -256,8 +255,7 @@ def dump_netmod_impl_c(c_file):
                 print("    %s ret;" % a['ret'], file=Out)
                 print("", file=Out)
             NAME = a['name'].upper()
-            print("    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
-            print("    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("    MPIR_FUNC_ENTER;", file=Out)
             print("", file=Out)
             s = "    "
             if use_ret:
@@ -269,7 +267,7 @@ def dump_netmod_impl_c(c_file):
             dump_s_param_tail(Out, s, a['nm_params'], ");", 1)
             print("", file=Out)
 
-            print("    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("    MPIR_FUNC_EXIT;", file=Out)
             if use_ret:
                 print("    return ret;", file=Out)
             print("}", file=Out)

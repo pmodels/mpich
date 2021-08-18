@@ -60,8 +60,7 @@ int MPIDU_genq_shmem_pool_create_unsafe(uintptr_t cell_size, uintptr_t cells_per
     uintptr_t slab_size = 0;
     uintptr_t aligned_cell_size = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_GENQ_SHMEM_POOL_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_SHMEM_POOL_CREATE);
+    MPIR_FUNC_ENTER;
 
     pool_obj = MPL_malloc(sizeof(MPIDU_genqi_shmem_pool_s), MPL_MEM_OTHER);
 
@@ -100,7 +99,7 @@ int MPIDU_genq_shmem_pool_create_unsafe(uintptr_t cell_size, uintptr_t cells_per
     *pool = (MPIDU_genq_shmem_pool_t) pool_obj;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_GENQ_SHMEM_POOL_CREATE);
+    MPIR_FUNC_EXIT;
     return rc;
   fn_fail:
     MPIDU_Init_shm_free(pool_obj->slab);
@@ -113,8 +112,7 @@ int MPIDU_genq_shmem_pool_destroy_unsafe(MPIDU_genq_shmem_pool_t pool)
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_pool_s *pool_obj = (MPIDU_genqi_shmem_pool_s *) pool;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_GENQ_SHMEM_POOL_DESTROY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_SHMEM_POOL_DESTROY);
+    MPIR_FUNC_ENTER;
 
     MPL_free(pool_obj->cell_headers);
 
@@ -123,6 +121,6 @@ int MPIDU_genq_shmem_pool_destroy_unsafe(MPIDU_genq_shmem_pool_t pool)
     /* free self */
     MPL_free(pool_obj);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_GENQ_SHMEM_POOL_DESTROY);
+    MPIR_FUNC_EXIT;
     return rc;
 }

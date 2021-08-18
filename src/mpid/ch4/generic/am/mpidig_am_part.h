@@ -20,8 +20,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
 MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PART_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PART_START);
+    MPIR_FUNC_ENTER;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
@@ -42,7 +41,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
     }
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_START);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -61,8 +60,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int partition_low, int part
                                                      MPIR_Request * part_sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PREADY_RANGE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_PREADY_RANGE);
+    MPIR_FUNC_ENTER;
 
     int c = 0, i;
     for (i = partition_low; i <= partition_high; i++)
@@ -76,7 +74,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int partition_low, int part
     }
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PREADY_RANGE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -84,8 +82,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, int array_of_par
                                                     MPIR_Request * part_sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PREADY_LIST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_PREADY_LIST);
+    MPIR_FUNC_ENTER;
 
     int i, c = 0;
     for (i = 0; i < length; i++)
@@ -99,15 +96,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, int array_of_par
     }
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PREADY_LIST);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int partition, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PARRIVED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_PARRIVED);
+    MPIR_FUNC_ENTER;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
@@ -125,7 +121,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int par
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PARRIVED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -23,8 +23,7 @@ int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf,
     int *srcs, *dsts;
     int tag;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALLW_SCHED_ALLCOMM_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALLW_SCHED_ALLCOMM_LINEAR);
+    MPIR_FUNC_ENTER;
 
     MPIR_CHKLMEM_DECL(2);
 
@@ -60,7 +59,7 @@ int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALLW_SCHED_ALLCOMM_LINEAR);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

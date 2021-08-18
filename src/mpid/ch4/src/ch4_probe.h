@@ -14,8 +14,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe(int source,
                                           MPIDI_av_entry_t * av, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPROBE);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
@@ -40,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe(int source,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPROBE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 
   fn_fail:
@@ -54,8 +53,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe(int source,
                                            int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMPROBE);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
@@ -95,7 +93,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe(int source,
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMPROBE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 
   fn_fail:
@@ -107,8 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
                                         MPI_Status * status)
 {
     int mpi_errno, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROBE);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_is_self_comm(comm)) {
         /* There better be another thread sending the self message */
@@ -130,7 +127,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
         }
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROBE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -145,8 +142,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
                                          MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_MPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_MPROBE);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_is_self_comm(comm)) {
         /* There better be another thread sending the self message */
@@ -170,7 +166,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
         }
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_MPROBE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -183,8 +179,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
                                           int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IMPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IMPROBE);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_improbe(source, tag, comm, context_offset, flag, message, status);
@@ -204,7 +199,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IMPROBE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -217,8 +212,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
 {
 
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IPROBE);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_iprobe(source, tag, comm, context_offset, flag, status);
@@ -238,7 +232,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IPROBE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

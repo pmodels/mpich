@@ -19,8 +19,7 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
     int i;
     int tag;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_ISCATTERV_SCHED_ALLCOMM_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_ISCATTERV_SCHED_ALLCOMM_LINEAR);
+    MPIR_FUNC_ENTER;
 
     rank = comm_ptr->rank;
 
@@ -69,7 +68,7 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_ISCATTERV_SCHED_ALLCOMM_LINEAR);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

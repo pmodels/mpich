@@ -22,8 +22,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     void *tmp_buf = NULL;
     int tag = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_ISCAN_SCHED_INTRA_RECURSIVE_DOUBLING);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_ISCAN_SCHED_INTRA_RECURSIVE_DOUBLING);
+    MPIR_FUNC_ENTER;
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -108,7 +107,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_ISCAN_SCHED_INTRA_RECURSIVE_DOUBLING);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

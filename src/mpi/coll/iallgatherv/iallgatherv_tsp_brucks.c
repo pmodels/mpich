@@ -58,8 +58,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int prev_delta = 0;
     int count_length, top_count, bottom_count, left_count;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_BRUCKS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_BRUCKS);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
     /* For correctness, transport based collectives need to get the
@@ -262,7 +261,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_BRUCKS);
+    MPIR_FUNC_ENTER;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
