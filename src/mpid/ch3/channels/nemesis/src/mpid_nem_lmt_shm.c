@@ -176,7 +176,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec 
         for (i = 0; i < NUM_BUFS; ++i)
             vc_ch->lmt_copy_buf->len[i].val = 0;
 
-        MPL_atomic_relaxed_store_int(&vc_ch->lmt_copy_buf->owner_info.val.rank, NO_OWNER);
+        MPL_atomic_release_store_int(&vc_ch->lmt_copy_buf->owner_info.val.rank, NO_OWNER);
         vc_ch->lmt_copy_buf->owner_info.val.remote_req_id = MPI_REQUEST_NULL;
         DBG_LMT(vc_ch->lmt_copy_buf->owner_info.val.ctr = 0);
     }
@@ -386,7 +386,7 @@ static int get_next_req(MPIDI_VC_t *vc)
         /* found request, clear remote_req_id field to prevent this buffer from matching future reqs */
         copy_buf->owner_info.val.remote_req_id = MPI_REQUEST_NULL;
 
-        MPL_atomic_relaxed_store_int(&vc_ch->lmt_copy_buf->owner_info.val.rank, IN_USE);
+        MPL_atomic_release_store_int(&vc_ch->lmt_copy_buf->owner_info.val.rank, IN_USE);
     }
 
     vc_ch->lmt_buf_num = 0;
@@ -615,7 +615,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
 
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "completed request local_req=%d", req->handle);
     MPL_atomic_write_barrier();
-    MPL_atomic_relaxed_store_int(&copy_buf->owner_info.val.rank, NO_OWNER);
+    MPL_atomic_release_store_int(&copy_buf->owner_info.val.rank, NO_OWNER);
 
     *done = TRUE;
     mpi_errno = MPID_Request_complete(req);
