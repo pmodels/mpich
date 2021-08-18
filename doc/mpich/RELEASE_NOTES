@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------
-MPICH DROP 41 - Release Notes
+MPICH DROP 42 - Release Notes
 ----------------------------------------------------------------------
 
 CONTENTS:
@@ -19,24 +19,29 @@ This is an evaluation release of mpich provided by Intel Corporation.
 2. NEW FEATURES
 ----------------------------------------------------------------------
 
-* None
+* Added support for GPU-to-GPU Interprocess Communication (IPC) for builtin datatypes.
+
+* MPICH now checks to ensure a NIC is up before attempting to use it.
 
 ----------------------------------------------------------------------
 2.1 DETAILS
 ----------------------------------------------------------------------
 
-* Bug fixes
+*
 
 ----------------------------------------------------------------------
 2.2 KNOWN ISSUES
 ----------------------------------------------------------------------
 
+* In some cases with collective algorithms executing on the same node, a crash
+  occurs. This bug still exists in Drop 42 but has been fixed for the next Drop.
+
 * With the ATS build, we observed data corruption for a test that sends
-1 MB data with derived datatypes, where the data is GPU-allocated. The
-issue is due to a known bug in the graphics layer that affects unaligned
-device memory copying. We expect this problem to occur with other
-relatively large data sizes as well. The fix for this bug is under
-progress.
+  1 MB data with derived datatypes, where the data is GPU-allocated. The
+  issue is due to a known bug in the graphics layer that affects unaligned
+  device memory copying. We expect this problem to occur with other
+  relatively large data sizes as well. The fix for this bug is under
+  progress.
 
 -------------------------------------------------------------------------------
 3. RPM PACKAGE DETAILS
@@ -61,7 +66,7 @@ compiler: icc or gnu
   either.
 - Note: currently icc represents icx compiler.
 
-provider: sockets
+provider: sockets, psm2
 
 build_type: default, debug, or deterministic.
 - default build is an optimized version. For installation, it will not append
@@ -73,8 +78,7 @@ build_type: default, debug, or deterministic.
   collectives and uses the debug build of MPICH. It uses the debug build and
   additional runtime configuration variables.
 
-flavor: gen9, or ats (represents the target gpu type)
-- gen9: no XPMEM, no DAOS, libfabric embedded, level-zero linked
+flavor: ats (represents the target gpu type)
 - ats: no XPMEM, no DAOS, libfabric embedded, level-zero linked, ATS-specific
   kernels generated
 
@@ -83,7 +87,7 @@ version and release: represent the drop release numbers
 extension: each module file can have one of two extensions: .lua and .tcl.
 
 Example of a module file:
-/usr/mpi/modulefiles/mpich/gnu-sockets-debug-gen9/41.1.lua
+/usr/mpi/modulefiles/mpich/gnu-sockets-debug-ats/42.1.lua
 
 -------------------------------------------------------------------------------
 3.2 DOCUMENTATION
