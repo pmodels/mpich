@@ -186,8 +186,7 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
     ze_result_t ret;
     MPL_gpu_device_handle_t dev_handle = global_ze_devices_handle[dev_id];
 
-    ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ipc_handle,
-                             ZE_IPC_MEMORY_FLAG_TBD, ptr);
+    ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ipc_handle, 0, ptr);
     if (ret != ZE_RESULT_SUCCESS) {
         mpl_err = MPL_ERR_GPU_INTERNAL;
         goto fn_fail;
