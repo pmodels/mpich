@@ -42,6 +42,7 @@
  * The following routines ensures we can do that. It is static now, but we can
  * easily export to global when we need to.
  */
+ATTRIBUTE((unused))
 static int get_av_table_index(int rank, int nic, int vni)
 {
     if (nic == 0 && vni == 0) {
@@ -156,7 +157,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
 /* Macros to reduce clutter, so we can focus on the ordering logics.
  * Note: they are not perfectly-wraaped, but tolearable since only used here. */
 #define GET_AV_AND_ADDRNAMES(rank) \
-    MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)); \
+    MPIDI_OFI_addr_t *av ATTRIBUTE((unused)) = &MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)); \
     char *r_names = all_names + rank * num_vnis * num_nics * name_len;
 
 #define DO_AV_INSERT(ctx_idx, nic, vni) \
@@ -291,7 +292,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
   fn_check:
     if (MPIDI_OFI_ENABLE_AV_TABLE) {
         for (int r = 0; r < size; r++) {
-            MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
+            MPIDI_OFI_addr_t *av ATTRIBUTE((unused)) = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
             for (int nic = 0; nic < num_nics; nic++) {
                 for (int vni = 0; vni < num_vnis; vni++) {
                     MPIR_Assert(av->dest[nic][vni] == get_av_table_index(r, nic, vni));

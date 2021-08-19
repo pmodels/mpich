@@ -647,7 +647,7 @@ static void dwin_close_mr(void *obj)
     /* Close local MR */
     struct fid_mr *mr = (struct fid_mr *) obj;
     if (mr) {
-        int ret;
+        int ret ATTRIBUTE((unused));
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             uint64_t requested_key = fi_mr_key(mr);
             MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, requested_key);
