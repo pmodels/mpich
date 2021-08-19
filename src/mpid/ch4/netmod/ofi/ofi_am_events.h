@@ -19,6 +19,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * m
     MPIR_FUNC_ENTER;
 
     int attr = 0;               /* is_local = 0, is_async = 0 */
+    MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vni_src, msg_hdr->vni_dst);
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr,
                                                        p_data, msg_hdr->payload_sz, attr, NULL);
 
@@ -46,6 +47,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
 
     if (!rreq) {
         int attr = MPIDIG_AM_ATTR__IS_ASYNC;
+        MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vni_src, msg_hdr->vni_dst);
         MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, p_data, msg_hdr->payload_sz,
                                                            attr, &rreq);
         MPIDIG_recv_setup(rreq);
@@ -70,6 +72,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t
     MPIR_FUNC_ENTER;
 
     int attr = 0;
+    MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vni_src, msg_hdr->vni_dst);
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, 0, attr, NULL);
 
     MPIR_FUNC_EXIT;
@@ -159,6 +162,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
     MPIR_FUNC_ENTER;
 
     int attr = MPIDIG_AM_ATTR__IS_ASYNC | MPIDIG_AM_ATTR__IS_RNDV | MPIDI_OFI_AM_ATTR__RDMA;
+    MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vni_src, msg_hdr->vni_dst);
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, 0, attr, &rreq);
 
     if (!rreq)

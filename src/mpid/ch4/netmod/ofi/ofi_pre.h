@@ -87,6 +87,13 @@ typedef struct MPIDI_OFI_am_header_t {
     uint64_t payload_sz:MPIDI_OFI_AM_PAYLOAD_SZ_BITS;   /* data size on this OFI message. This
                                                          * could be the size of a pipeline segment
                                                          * */
+    /* vnis are needed for callbacks and to reply.
+     * Note: technically the vni_dst don't need be transported since the receiver
+     * always know which vni it receives the message. However, having both of them
+     * in the header makes the design symmetric and thus easier to maintain.
+     */
+    uint8_t vni_src;
+    uint8_t vni_dst;
     uint16_t seqno:MPIDI_OFI_AM_SEQ_NO_BITS;    /* Sequence number of this message.
                                                  * Number is unique to (fi_src_addr,
                                                  * fi_dest_addr) pair. */
