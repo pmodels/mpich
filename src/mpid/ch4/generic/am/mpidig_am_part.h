@@ -29,7 +29,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
      * or received data transfer AM on receiver. */
     MPIR_cc_set(request->cc_ptr, 1);
     if (request->kind == MPIR_REQUEST_KIND__PART_SEND) {
-        MPIR_cc_set(&MPIDIG_PART_REQUEST(request, u.send).ready_cntr, 0);
+        MPIR_cc_set(&MPIDIG_PART_REQUEST(request, u.send).ready_cntr, request->u.part.partitions);
         MPIDIG_PART_REQUEST(request, send_epoch)++;
     }
 
@@ -52,7 +52,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDIG_part_can_issue_data(MPIR_Request * part_sre
 {
     /* note: already in critical section */
     return MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) ==
-        part_sreq->u.part.partitions &&
+        0 &&
         MPIDIG_PART_REQUEST(part_sreq, send_epoch) == MPIDIG_PART_REQUEST(part_sreq, recv_epoch);
 }
 
@@ -64,9 +64,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int partition_low, int part
 
     int c = 0, i;
     for (i = partition_low; i <= partition_high; i++)
-        MPIR_cc_incr(&MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr, &c);
-    MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) <=
-                part_sreq->u.part.partitions);
+        MPIR_cc_decr(&MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr, &c);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     if (MPIDIG_part_can_issue_data(part_sreq)) {
@@ -86,9 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, int array_of_par
 
     int i, c = 0;
     for (i = 0; i < length; i++)
-        MPIR_cc_incr(&MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr, &c);
-    MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr) <=
-                part_sreq->u.part.partitions);
+        MPIR_cc_decr(&MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr, &c);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     if (MPIDIG_part_can_issue_data(part_sreq)) {
