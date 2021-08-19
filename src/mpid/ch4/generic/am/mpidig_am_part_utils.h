@@ -75,6 +75,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq,
                  mpi_errno);
     }
 
+    /* reset ready counter */
+    MPIR_cc_set(&MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr,
+                part_sreq->u.part.partitions + 1);
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;

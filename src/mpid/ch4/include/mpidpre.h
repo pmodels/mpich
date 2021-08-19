@@ -238,8 +238,6 @@ typedef struct MPIDIG_part_rreq {
 } MPIDIG_part_rreq_t;
 
 typedef struct MPIDIG_part_request {
-    uint8_t send_epoch;
-    uint8_t recv_epoch;
     MPIR_Request *peer_req_ptr;
     union {
         MPIDIG_part_sreq_t send;
