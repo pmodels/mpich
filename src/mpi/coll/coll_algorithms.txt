@@ -52,7 +52,6 @@ ibarrier-inter:
 bcast-intra:
     binomial
     scatter_recursive_doubling_allgather
-        restrictions: power-of-two
     scatter_ring_allgather
     smp
         restrictions: parent-comm
