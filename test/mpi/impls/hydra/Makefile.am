@@ -4,8 +4,6 @@
 ##
 
 testing: dummy
-	$(builddir)/proc_binding.sh
+	perl test_hydra.pl
 
 noinst_PROGRAMS = dummy
-
-CLEANFILES = actual.*
