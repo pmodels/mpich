@@ -140,14 +140,14 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
                                        MPI_UNSIGNED, MPI_MAX, comm_ptr, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
 
-            if (local_key + 1 < MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS) {
+            if ((int64_t) local_key + 1 < MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS) {
                 MPIDI_OFI_global.global_max_optimized_mr_key = local_key + 1;
                 MPIDI_OFI_WIN(win).mr_key = local_key;
             }
         }
         /* Assign regular memory registration key if the optimized one is
          * not requested or exhausted */
-        if (local_key + 1 >= MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS ||
+        if ((int64_t) local_key + 1 >= MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS ||
             !MPIDIG_WIN(win, info_args).optimized_mr) {
             /* Makes sure that regular mr key does not fall within optimized mr key range */
             MPIDI_OFI_WIN(win).mr_key =
