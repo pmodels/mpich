@@ -49,18 +49,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vsi, int blocking)
         payload += msg_hdr->am_hdr_sz;
         payload_left -= msg_hdr->am_hdr_sz;
 
+        uint32_t attr = MPIDIG_AM_ATTR__IS_LOCAL;
+        MPIDIG_AM_ATTR_SET_VCIS(attr, transaction.src_vsi, transaction.dst_vsi);
         switch (msg_hdr->am_type) {
             case MPIDI_POSIX_AM_TYPE__HDR:
             case MPIDI_POSIX_AM_TYPE__SHORT:
                 MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, payload, payload_left,
-                                                                   MPIDIG_AM_ATTR__IS_LOCAL, NULL);
+                                                                   attr, NULL);
                 MPIDI_POSIX_eager_recv_commit(&transaction);
                 goto fn_exit;
                 break;
             case MPIDI_POSIX_AM_TYPE__PIPELINE:
                 MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, payload_left,
-                                                                   MPIDIG_AM_ATTR__IS_LOCAL |
-                                                                   MPIDIG_AM_ATTR__IS_ASYNC, &rreq);
+                                                                   attr | MPIDIG_AM_ATTR__IS_ASYNC,
+                                                                   &rreq);
                 /* prepare for asynchronous transfer */
                 MPIDIG_recv_setup(rreq);
 
