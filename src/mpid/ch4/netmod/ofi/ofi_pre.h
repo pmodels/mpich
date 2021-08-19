@@ -87,6 +87,8 @@ typedef struct MPIDI_OFI_am_header_t {
     uint64_t payload_sz:MPIDI_OFI_AM_PAYLOAD_SZ_BITS;   /* data size on this OFI message. This
                                                          * could be the size of a pipeline segment
                                                          * */
+    uint8_t vni_src;
+    uint8_t vni_dst;
     uint16_t seqno:MPIDI_OFI_AM_SEQ_NO_BITS;    /* Sequence number of this message.
                                                  * Number is unique to (fi_src_addr,
                                                  * fi_dest_addr) pair. */
