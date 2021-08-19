@@ -112,8 +112,9 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
     MPIR_Assert(part_sreq);
 
     MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr) = msg_hdr->rreq_ptr;
-    MPIDIG_PART_REQUEST(part_sreq, recv_epoch)++;
-    if (MPIDIG_part_can_issue_data(part_sreq)) {
+    int incomplete;
+    MPIR_cc_decr(&MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr, &incomplete);
+    if (!incomplete) {
         mpi_errno = MPIDIG_part_issue_data(part_sreq, MPIDIG_PART_REPLY);
     }
 
