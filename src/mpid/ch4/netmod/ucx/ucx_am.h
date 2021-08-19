@@ -66,6 +66,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
+    ucx_hdr.src_vci = src_vni;
+    ucx_hdr.dst_vci = dst_vni;
     ucx_hdr.data_sz = data_sz;
 
     MPL_pointer_attr_t attr;
@@ -190,6 +192,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
+    ucx_hdr.src_vci = src_vni;
+    ucx_hdr.dst_vci = dst_vni;
     ucx_hdr.data_sz = 0;
 
     /* just pack and send for now */
