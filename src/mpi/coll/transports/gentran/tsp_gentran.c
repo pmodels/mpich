@@ -504,7 +504,7 @@ int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
 int MPIR_TSP_sched_fence(MPIR_TSP_sched_t s)
 {
     MPII_Genutil_sched_t *sched = s;
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
     int fence_id;
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Gentran: scheduling a fence"));
 

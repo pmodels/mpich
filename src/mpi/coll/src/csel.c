@@ -694,8 +694,9 @@ int MPIR_Csel_prune(void *root_csel, MPIR_Comm * comm_ptr, void **comm_csel_)
 
     /* if the tree is not NULL, we should be at a collective branch at
      * this point */
-    if (node)
+    if (node) {
         MPIR_Assert(node->type == CSEL_NODE_TYPE__OPERATOR__COLLECTIVE);
+    }
 
     while (node) {
         /* see if any additional pruning is possible once the
