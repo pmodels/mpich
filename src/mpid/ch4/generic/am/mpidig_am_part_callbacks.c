@@ -133,7 +133,7 @@ int MPIDIG_part_send_data_target_msg_cb(void *am_hdr, void *data,
     MPIR_Assert(part_rreq);
 
     /* Setup an AM rreq to receive data */
-    MPIR_Request *rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__PART, 1);
+    MPIR_Request *rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__PART, 1, 0, 0);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     rreq->comm = part_rreq->comm;
     MPIR_Comm_add_ref(rreq->comm);
