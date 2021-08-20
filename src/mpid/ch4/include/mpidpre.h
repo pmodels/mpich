@@ -191,6 +191,8 @@ typedef struct MPIDIG_req_ext_t {
 
     MPIDIG_rreq_async_t recv_async;
     MPIDIG_sreq_async_t send_async;
+    uint8_t local_vci;
+    uint8_t remote_vci;
     struct iovec *iov;
     MPIDIG_req_cmpl_cb target_cmpl_cb;
     uint64_t seq_no;

@@ -53,7 +53,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     MPIR_FUNC_ENTER;
 
     if (sreq == NULL) {
-        sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
+        sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2, 0, 0);
         MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         *request = sreq;
     } else {
