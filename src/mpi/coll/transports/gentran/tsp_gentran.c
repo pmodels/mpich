@@ -103,6 +103,9 @@ int MPIR_TSP_sched_new_type(MPIR_TSP_sched_t s, MPIR_TSP_sched_issue_fn issue_fn
     MPII_Genutil_vtx_type_t *vtype, *newtype;
     int type_id, i;
 
+    /* only free_fn can be NULL */
+    MPIR_Assert(issue_fn && complete_fn);
+
     /* search if the new type already exists in the table */
     vtype = ut_type_array(&sched->generic_types, MPII_Genutil_vtx_type_t *);
     for (i = 0; i < utarray_len(&sched->generic_types); i++) {
