@@ -226,9 +226,11 @@ static int ack_put(MPIR_Request * rreq)
 
     MPIR_FUNC_ENTER;
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     ack_msg.preq_ptr = MPIDIG_REQUEST(rreq, req->preq.preq_ptr);
     CH4_CALL(am_send_hdr_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
-                               MPIDIG_PUT_ACK, &ack_msg, sizeof(ack_msg), 0, 0),
+                               MPIDIG_PUT_ACK, &ack_msg, sizeof(ack_msg), local_vci, remote_vci),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -253,9 +255,11 @@ static int ack_cswap(MPIR_Request * rreq)
     MPIR_cc_inc(rreq->cc_ptr);
     ack_msg.req_ptr = MPIDIG_REQUEST(rreq, req->creq.creq_ptr);
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     CH4_CALL(am_isend_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
                             MPIDIG_CSWAP_ACK, &ack_msg, sizeof(ack_msg), result_addr, 1,
-                            MPIDIG_REQUEST(rreq, req->creq.datatype), 0, 0, rreq),
+                            MPIDIG_REQUEST(rreq, req->creq.datatype), local_vci, remote_vci, rreq),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -272,9 +276,11 @@ static int ack_acc(MPIR_Request * rreq)
 
     MPIR_FUNC_ENTER;
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     ack_msg.req_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
     CH4_CALL(am_send_hdr_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
-                               MPIDIG_ACC_ACK, &ack_msg, sizeof(ack_msg), 0, 0),
+                               MPIDIG_ACC_ACK, &ack_msg, sizeof(ack_msg), local_vci, remote_vci),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -294,11 +300,13 @@ static int ack_get_acc(MPIR_Request * rreq)
     MPIR_cc_inc(rreq->cc_ptr);
     ack_msg.req_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     CH4_CALL(am_isend_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
                             MPIDIG_GET_ACC_ACK, &ack_msg, sizeof(ack_msg),
                             MPIDIG_REQUEST(rreq, req->areq.data),
-                            MPIDIG_REQUEST(rreq, req->areq.result_data_sz), MPI_BYTE, 0, 0, rreq),
-             MPIDI_REQUEST(rreq, is_local), mpi_errno);
+                            MPIDIG_REQUEST(rreq, req->areq.result_data_sz), MPI_BYTE, local_vci,
+                            remote_vci, rreq), MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -642,6 +650,8 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
     get_ack.greq_ptr = MPIDIG_REQUEST(rreq, req->greq.greq_ptr);
     win = rreq->u.rma.win;
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     if (MPIDIG_REQUEST(rreq, req->greq.flattened_dt) == NULL) {
         MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, req->greq.datatype),
                                   MPIDIG_REQUEST(rreq, req->greq.count), get_ack.target_data_sz);
@@ -649,8 +659,8 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
                                 MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
                                 (void *) MPIDIG_REQUEST(rreq, req->greq.addr),
                                 MPIDIG_REQUEST(rreq, req->greq.count),
-                                MPIDIG_REQUEST(rreq, req->greq.datatype), 0, 0, rreq),
-                 MPIDI_REQUEST(rreq, is_local), mpi_errno);
+                                MPIDIG_REQUEST(rreq, req->greq.datatype), local_vci, remote_vci,
+                                rreq), MPIDI_REQUEST(rreq, is_local), mpi_errno);
         MPID_Request_complete(rreq);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
@@ -672,8 +682,8 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
     CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
                             MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
                             MPIDIG_REQUEST(rreq, req->greq.addr),
-                            MPIDIG_REQUEST(rreq, req->greq.count), dt->handle, 0, 0, rreq),
-             MPIDI_REQUEST(rreq, is_local), mpi_errno);
+                            MPIDIG_REQUEST(rreq, req->greq.count), dt->handle, local_vci,
+                            remote_vci, rreq), MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPID_Request_complete(rreq);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -717,8 +727,10 @@ static int put_dt_target_cmpl_cb(MPIR_Request * rreq)
     ack_msg.origin_preq_ptr = MPIDIG_REQUEST(rreq, req->preq.preq_ptr);
     ack_msg.target_preq_ptr = rreq;
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     CH4_CALL(am_send_hdr_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
-                               MPIDIG_PUT_DT_ACK, &ack_msg, sizeof(ack_msg), 0, 0),
+                               MPIDIG_PUT_DT_ACK, &ack_msg, sizeof(ack_msg), local_vci, remote_vci),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -739,8 +751,10 @@ static int acc_dt_target_cmpl_cb(MPIR_Request * rreq)
     ack_msg.origin_preq_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
     ack_msg.target_preq_ptr = rreq;
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     CH4_CALL(am_send_hdr_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
-                               MPIDIG_ACC_DT_ACK, &ack_msg, sizeof(ack_msg), 0, 0),
+                               MPIDIG_ACC_DT_ACK, &ack_msg, sizeof(ack_msg), local_vci, remote_vci),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -761,9 +775,11 @@ static int get_acc_dt_target_cmpl_cb(MPIR_Request * rreq)
     ack_msg.origin_preq_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
     ack_msg.target_preq_ptr = rreq;
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     CH4_CALL(am_send_hdr_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, rank),
-                               MPIDIG_GET_ACC_DT_ACK, &ack_msg, sizeof(ack_msg), 0, 0),
-             MPIDI_REQUEST(rreq, is_local), mpi_errno);
+                               MPIDIG_GET_ACC_DT_ACK, &ack_msg, sizeof(ack_msg), local_vci,
+                               remote_vci), MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -1185,7 +1201,9 @@ int MPIDIG_put_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
+    int remote_vci = MPIDIG_AM_ATTR_SRC_VCI(attr);
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, local_vci, remote_vci);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(rreq, req->preq.preq_ptr) = msg_hdr->preq_ptr;
@@ -1259,7 +1277,9 @@ int MPIDIG_put_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put_dt);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
+    int remote_vci = MPIDIG_AM_ATTR_SRC_VCI(attr);
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, local_vci, remote_vci);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(rreq, req->preq.preq_ptr) = msg_hdr->preq_ptr;
@@ -1313,7 +1333,9 @@ int MPIDIG_put_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put_dt_ack);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
+    int remote_vci = MPIDIG_AM_ATTR_SRC_VCI(attr);
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, local_vci, remote_vci);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
@@ -1324,7 +1346,8 @@ int MPIDIG_put_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
                             MPIDIG_PUT_DAT_REQ, &dat_msg, sizeof(dat_msg),
                             MPIDIG_REQUEST(origin_req, req->preq.origin_addr),
                             MPIDIG_REQUEST(origin_req, req->preq.origin_count),
-                            MPIDIG_REQUEST(origin_req, req->preq.origin_datatype), 0, 0, rreq),
+                            MPIDIG_REQUEST(origin_req, req->preq.origin_datatype),
+                            remote_vci, local_vci, rreq),
              (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->preq.origin_datatype));
@@ -1354,7 +1377,9 @@ int MPIDIG_acc_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc_dt_ack);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
+    int remote_vci = MPIDIG_AM_ATTR_SRC_VCI(attr);
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, local_vci, remote_vci);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
@@ -1365,7 +1390,8 @@ int MPIDIG_acc_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
                             MPIDIG_ACC_DAT_REQ, &dat_msg, sizeof(dat_msg),
                             MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                             MPIDIG_REQUEST(origin_req, req->areq.origin_count),
-                            MPIDIG_REQUEST(origin_req, req->areq.origin_datatype), 0, 0, rreq),
+                            MPIDIG_REQUEST(origin_req, req->areq.origin_datatype),
+                            local_vci, remote_vci, rreq),
              (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->areq.origin_datatype));
@@ -1395,7 +1421,9 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(void *am_hdr, void *data,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_acc_dt_ack);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
+    int remote_vci = MPIDIG_AM_ATTR_SRC_VCI(attr);
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, local_vci, remote_vci);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
@@ -1406,8 +1434,8 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(void *am_hdr, void *data,
                             MPIDIG_GET_ACC_DAT_REQ, &dat_msg, sizeof(dat_msg),
                             MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                             MPIDIG_REQUEST(origin_req, req->areq.origin_count),
-                            MPIDIG_REQUEST(origin_req, req->areq.origin_datatype), 0, 0, rreq),
-             (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
+                            MPIDIG_REQUEST(origin_req, req->areq.origin_datatype), local_vci,
+                            remote_vci, rreq), (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->areq.origin_datatype));
 
@@ -1541,7 +1569,9 @@ int MPIDIG_cswap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_cas);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
+    int remote_vci = MPIDIG_AM_ATTR_SRC_VCI(attr);
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, local_vci, remote_vci);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = cswap_target_cmpl_cb;
@@ -1601,7 +1631,9 @@ int MPIDIG_acc_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
+    int remote_vci = MPIDIG_AM_ATTR_SRC_VCI(attr);
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, local_vci, remote_vci);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDI_Datatype_check_size(msg_hdr->origin_datatype, msg_hdr->origin_count, origin_data_sz);
@@ -1710,7 +1742,9 @@ int MPIDIG_acc_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc_dt);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
+    int remote_vci = MPIDIG_AM_ATTR_SRC_VCI(attr);
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, local_vci, remote_vci);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
@@ -1797,7 +1831,9 @@ int MPIDIG_get_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
+    int remote_vci = MPIDIG_AM_ATTR_SRC_VCI(attr);
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, local_vci, remote_vci);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = get_target_cmpl_cb;
