@@ -22,8 +22,10 @@ int MPIDIG_do_cts(MPIR_Request * rreq)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "do cts req %p handle=0x%x", rreq, rreq->handle));
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     CH4_CALL(am_send_hdr_reply(rreq->comm, MPIDIG_REQUEST(rreq, rank), MPIDIG_SEND_CTS,
-                               &am_hdr, sizeof(am_hdr), 0, 0),
+                               &am_hdr, sizeof(am_hdr), local_vci, remote_vci),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -264,12 +266,13 @@ static int match_posted_rreq(int rank, int tag, MPIR_Context_id_t context_id, MP
 }
 
 static int create_unexp_rreq(int rank, int tag, MPIR_Context_id_t context_id,
-                             MPI_Aint data_sz, int error_bits, int is_local, MPIR_Request ** req)
+                             MPI_Aint data_sz, int error_bits, int is_local,
+                             int local_vci, int remote_vci, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIR_Request *rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2, 0, 0);
+    MPIR_Request *rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2, local_vci, remote_vci);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *req = rreq;
@@ -383,6 +386,8 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_Request *rreq = NULL;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
     int is_local = (attr & MPIDIG_AM_ATTR__IS_LOCAL) ? 1 : 0;
+    int remote_vci = MPIDIG_AM_ATTR_SRC_VCI(attr);
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
 
     int msg_mode;
     if (hdr->flags & MPIDIG_AM_SEND_FLAGS_RTS) {
@@ -399,7 +404,8 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     if (rreq == NULL) {
         /* unexpected path */
         mpi_errno = create_unexp_rreq(hdr->src_rank, hdr->tag, hdr->context_id,
-                                      hdr->data_sz, hdr->error_bits, is_local, &rreq);
+                                      hdr->data_sz, hdr->error_bits, is_local,
+                                      local_vci, remote_vci, &rreq);
         MPIR_ERR_CHECK(mpi_errno);
         set_rreq_common(rreq, hdr);
 
@@ -518,6 +524,8 @@ int MPIDIG_send_cts_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "got cts req handle=0x%x", sreq->handle));
 
+    int local_vci = MPIDIG_REQUEST(sreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(sreq, req->remote_vci);
     /* Start the main data transfer */
     send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
     CH4_CALL(am_isend_reply(sreq->comm,
@@ -525,7 +533,7 @@ int MPIDIG_send_cts_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                             &send_hdr, sizeof(send_hdr),
                             MPIDIG_REQUEST(sreq, req->sreq).src_buf,
                             MPIDIG_REQUEST(sreq, req->sreq).count,
-                            MPIDIG_REQUEST(sreq, req->sreq).datatype, 0, 0, sreq),
+                            MPIDIG_REQUEST(sreq, req->sreq).datatype, local_vci, remote_vci, sreq),
              MPIDI_REQUEST(sreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
