@@ -1192,7 +1192,7 @@ int MPIDIG_put_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(rreq, req->preq.preq_ptr) = msg_hdr->preq_ptr;
@@ -1266,7 +1266,7 @@ int MPIDIG_put_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put_dt);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(rreq, req->preq.preq_ptr) = msg_hdr->preq_ptr;
@@ -1320,7 +1320,7 @@ int MPIDIG_put_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put_dt_ack);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
@@ -1361,7 +1361,7 @@ int MPIDIG_acc_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc_dt_ack);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
@@ -1402,7 +1402,7 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(void *am_hdr, void *data,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_acc_dt_ack);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
@@ -1548,7 +1548,7 @@ int MPIDIG_cswap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_cas);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = cswap_target_cmpl_cb;
@@ -1608,7 +1608,7 @@ int MPIDIG_acc_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDI_Datatype_check_size(msg_hdr->origin_datatype, msg_hdr->origin_count, origin_data_sz);
@@ -1717,7 +1717,7 @@ int MPIDIG_acc_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc_dt);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
@@ -1804,7 +1804,7 @@ int MPIDIG_get_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_FUNC_ENTER;
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get);
 
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1, 0, 0);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = get_target_cmpl_cb;

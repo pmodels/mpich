@@ -10,13 +10,14 @@
 #include "mpidu_genq.h"
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind,
-                                                             int ref_count)
+                                                             int ref_count,
+                                                             int local_vci, int remote_vci)
 {
     MPIR_Request *req;
 
     MPIR_FUNC_ENTER;
 
-    MPIDI_CH4_REQUEST_CREATE(req, kind, 0, ref_count);
+    MPIDI_CH4_REQUEST_CREATE(req, kind, local_vci, ref_count);
     if (req == NULL)
         goto fn_fail;
 
@@ -29,6 +30,8 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t
     MPIDU_genq_private_pool_alloc_cell(MPIDI_global.request_pool,
                                        (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
+    MPIDIG_REQUEST(req, req->local_vci) = local_vci;
+    MPIDIG_REQUEST(req, req->remote_vci) = remote_vci;
     MPIDIG_REQUEST(req, req->status) = 0;
     MPIDIG_REQUEST(req, req->recv_async).data_copy_cb = NULL;
     MPIDIG_REQUEST(req, req->recv_async).recv_type = MPIDIG_RECV_NONE;
