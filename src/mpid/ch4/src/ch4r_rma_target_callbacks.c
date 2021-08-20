@@ -7,6 +7,79 @@
 #include "mpidch4r.h"
 #include "ch4r_rma_target_callbacks.h"
 
+/* ** RMA PROTOCOLS ** */
+/* Put (contig or small flattened_dt)
+ *     -> MPIDIG_PUT_REQ                - send hdr [+ flattened_dt]
+ *     MPIDIG_PUT_ACK <-                - ack
+ */
+
+/* Put (large flattened_dt)
+ *     -> MPIDIG_PUT_DT_REQ             - send flattended_dt
+ *     MPIDIG_PUT_DT_ACK <-             - ack
+ *     -> MPIDIG_PUT_DAT_REQ            - send data
+ *     MPIDIG_PUT_ACK <-                - ack
+ */
+
+/* Get
+ *     -> MPIDIG_GET_REQ                - send hdr [+ flattened_dt]
+ *     MPIDIG_GET_ACK <-                - ack + data
+ */
+
+/* Accumulate (contig or small flattened_dt)
+ *    -> MPIDIG_ACC_REQ                 - send hdr [+ flattened_dt]
+ *    MPIDIG_ACC_ACK <-                 - ack
+ */
+
+/* Accumulate (large flattened_dt)
+ *    -> MPIDIG_ACC_DT_REQ              - send hdr [+ flattened_dt]
+ *    MPIDIG_ACC_DT_ACK <-              - ack
+ *     -> MPIDIG_ACC_DAT_REQ            - send data
+ *     MPIDIG_ACC_ACK <-                - ack
+ */
+
+/* Get_accumulate (contig or small flattened_dt)
+ *    -> MPIDIG_GET_ACC_REQ             - send hdr [+ flattened_dt]
+ *    MPIDIG_GET_ACC_ACK <-             - ack + data
+ */
+
+/* Get_accumulate (large flattened_dt)
+ *    -> MPIDIG_GET_ACC_DT_REQ          - send hdr [+ flattened_dt]
+ *    MPIDIG_GET_ACC_DT_ACK <-          - ack
+ *     -> MPIDIG_GET_ACC_DAT_RE         - send data
+ *     MPIDIG_GET_ACC_ACK <-            - ack + data
+ */
+
+/* Compare_and_swap (data always fit in header)
+ *     -> MPIDIG_CSWAP_REQ              - send hdr
+ *     MPIDIG_CSWAP_ACK <-              - ack
+ */
+
+/* Fetch_and_op (use Get_accumulate) */
+
+/* ** synchronizations ** */
+/* Win_fence - just progress wait for cmpl counters
+ *
+ * [PSCW target side]
+ * Win_post     - send out MPIDIG_WIN_POST, 1 for each origin
+ * Win_wait     - progress wait for complete messages
+ * [PSCW origin side]
+ * Win_start    - progress wait for post messages
+ * Win_complete - send out MPIDIG_WIN_COMPLETE, 1 for each target
+ *
+ * [Passive synchronization]
+ *     -> MPIDIG_WIN_LOCK
+ *     MPIDIG_WIN_LOCK_ACK <-
+ *
+ *     -> MPIDIG_WIN_UNLOCK
+ *     MPIDIG_WIN_UNLOCK_ACK <-
+ *
+ *     -> MPIDIG_WIN_LOCKALL            - for each process
+ *     MPIDIG_WIN_LOCKALL_ACK <-
+ *
+ *     -> MPIDIG_WIN_UNLOCKALL          - for each process
+ *     MPIDIG_WIN_UNLOCKALL_ACK <-
+ */
+
 static int ack_put(MPIR_Request * rreq);
 static int ack_cswap(MPIR_Request * rreq);
 static int ack_acc(MPIR_Request * rreq);
