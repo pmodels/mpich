@@ -9,7 +9,7 @@
 #include "ofi_impl.h"
 #include "mpidu_genq.h"
 
-#define MPIDI_OFI_AM_ATTR__RDMA 0x100
+#define MPIDI_OFI_AM_ATTR__RDMA (1 << MPIDIG_AM_ATTR_TRANSPORT_SHIFT)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
 

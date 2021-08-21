@@ -454,7 +454,7 @@ PARAM:
     am_hdrs: struct iovec *
     appnum: int
     assert: int
-    attr: int
+    attr: uint32_t
     av: MPIDI_av_entry_t *
     base: void *
     base-2: const void *
