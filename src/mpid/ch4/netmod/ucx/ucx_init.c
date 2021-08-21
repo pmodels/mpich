@@ -427,12 +427,6 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
 }
 
-int MPIDI_UCX_get_vci_attr(int vci)
-{
-    MPIR_Assert(0 <= vci && vci < 1);
-    return MPIDI_VCI_TX | MPIDI_VCI_RX;
-}
-
 int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **local_upids)
 {
     MPIR_Assert(0);

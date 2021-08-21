@@ -10,9 +10,6 @@ Non Native API:
      SHM : void
   post_init : int
       NM : void
-  get_vci_attr : int
-      NM : vci
-     SHM : vci
   progress : int
       NM*: vci, blocking
      SHM*: vci, blocking

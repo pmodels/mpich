@@ -15,12 +15,6 @@
 /* Macros and inlines */
 #define MPIDIU_MAP_NOT_FOUND      ((void*)(-1UL))
 
-/* VCI attributes */
-enum {
-    MPIDI_VCI_TX = 0x1,         /* Can send */
-    MPIDI_VCI_RX = 0x2, /* Can receive */
-};
-
 #define MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK (1024)
 #define MPIDIU_REQUEST_POOL_MAX_NUM_CELLS (257 * 1024)
 #define MPIDIU_REQUEST_POOL_CELL_SIZE (256)
