@@ -153,6 +153,7 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
 
     MPIDI_POSIX_global.local_rank_0 = local_rank_0;
 
+    MPIDI_POSIX_global.num_vsis = MPIDI_global.n_vcis;
     /* This is used to track messages that the eager submodule was not ready to send. */
     MPIDI_POSIX_global.postponed_queue = NULL;
 
