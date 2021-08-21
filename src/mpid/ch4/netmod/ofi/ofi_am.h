@@ -203,7 +203,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Ai
     }
 }
 
-MPL_STATIC_INLINE_PREFIX MPIDIG_recv_data_copy_cb MPIDI_NM_am_get_data_copy_cb(int attr)
+MPL_STATIC_INLINE_PREFIX MPIDIG_recv_data_copy_cb MPIDI_NM_am_get_data_copy_cb(uint32_t attr)
 {
     MPIR_Assert(attr & MPIDI_OFI_AM_ATTR__RDMA);
     return MPIDI_OFI_am_rdma_read_recv_cb;
