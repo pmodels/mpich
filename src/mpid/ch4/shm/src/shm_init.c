@@ -61,15 +61,3 @@ int MPIDI_SHM_mpi_finalize_hook(void)
   fn_fail:
     goto fn_exit;
 }
-
-int MPIDI_SHM_get_vci_attr(int vci)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_get_vci_attr(vci);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
