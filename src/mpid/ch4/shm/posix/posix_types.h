@@ -43,6 +43,7 @@ typedef struct {
     int *local_ranks;
     int *local_procs;
     int local_rank_0;
+    int num_vsis;
 } MPIDI_POSIX_global_t;
 
 extern MPIDI_POSIX_global_t MPIDI_POSIX_global;
