@@ -340,6 +340,19 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         AC_DEFINE(MPIDI_OFI_VNI_USE_DOMAIN, 1, [CH4/OFI should use domain for vni contexts])
     fi
 
+    AC_MSG_CHECKING([if fi_info struct has nic field])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "rdma/fabric.h"],
+                       [struct fi_info info;
+                       if (info.nic) {
+                         return 0;
+                       } else {
+                         return 1;
+                       }])],[have_libfabric_nic=yes],[have_libfabric_nic=no])
+    AC_MSG_RESULT([$have_libfabric_nic])
+    if test "$have_libfabric_nic" = "yes" ; then
+        AC_DEFINE(HAVE_LIBFABRIC_NIC,1,[Define if libfabric library has nic field in fi_info struct])
+    fi
+
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
 ])dnl end _BODY
 
