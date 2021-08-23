@@ -279,9 +279,9 @@ void *MPII_Create_container(struct json_object *obj)
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_scatter_ring_allgather;
         else if (!strcmp(ckey, "algorithm=MPIR_Bcast_intra_smp"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_smp;
-        else if (!strcmp(ckey, "algorithm=BCAST_INTRA_tree"))
+        else if (!strcmp(ckey, "algorithm=MPIR_Bcast_intra_tree"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_tree;
-        else if (!strcmp(ckey, "algorithm=BCAST_INTRA_pipelined_tree"))
+        else if (!strcmp(ckey, "algorithm=MPIR_Bcast_intra_pipelined_tree"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_pipelined_tree;
         else if (!strcmp(ckey, "algorithm=MPIR_Bcast_inter_remote_send_local_bcast"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_inter_remote_send_local_bcast;
