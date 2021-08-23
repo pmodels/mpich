@@ -18,8 +18,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_POSIX_am_send_hdr(rank, comm, MPIDI_POSIX_AM_HDR_CH4,
-                                  handler_id, am_hdr, am_hdr_sz);
+    ret = MPIDI_POSIX_am_send_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz);
 
     MPIR_FUNC_EXIT;
     return ret;
@@ -34,7 +33,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int 
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_POSIX_am_isend(rank, comm, MPIDI_POSIX_AM_HDR_CH4, handler_id, am_hdr,
+    ret = MPIDI_POSIX_am_isend(rank, comm, handler_id, am_hdr,
                                am_hdr_sz, data, count, datatype, sreq);
 
     MPIR_FUNC_EXIT;
@@ -49,8 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr_reply(MPIR_Comm * comm,
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_POSIX_am_send_hdr_reply(comm, src_rank, MPIDI_POSIX_AM_HDR_CH4,
-                                        handler_id, am_hdr, am_hdr_sz);
+    ret = MPIDI_POSIX_am_send_hdr_reply(comm, src_rank, handler_id, am_hdr, am_hdr_sz);
 
     MPIR_FUNC_EXIT;
     return ret;
@@ -66,8 +64,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Comm * comm,
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_POSIX_am_isend_reply(comm, src_rank, MPIDI_POSIX_AM_HDR_CH4,
-                                     handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq);
+    ret = MPIDI_POSIX_am_isend_reply(comm, src_rank, handler_id,
+                                     am_hdr, am_hdr_sz, data, count, datatype, sreq);
 
     MPIR_FUNC_EXIT;
     return ret;

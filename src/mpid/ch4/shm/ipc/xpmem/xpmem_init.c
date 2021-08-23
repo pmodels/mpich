@@ -7,7 +7,6 @@
 #include "xpmem_post.h"
 #include "mpidu_init_shm.h"
 #include "xpmem_seg.h"
-#include "shm_control.h"
 
 static int xpmem_initialized = 0;
 

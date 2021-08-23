@@ -8,7 +8,6 @@
 
 #include "ch4_impl.h"
 #include "mpidimpl.h"
-#include "shm_control.h"
 #include "ipc_types.h"
 #include "ipc_mem.h"
 #include "ipc_p2p.h"
