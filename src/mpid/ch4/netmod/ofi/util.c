@@ -9,17 +9,6 @@
 
 #define MPIDI_OFI_MR_KEY_PREFIX_SHIFT 63
 
-int MPIDI_OFI_handle_cq_error_util(int ctx_idx, ssize_t ret)
-{
-    int mpi_errno;
-    MPIR_FUNC_ENTER;
-
-    mpi_errno = MPIDI_OFI_handle_cq_error(ctx_idx, ret);
-
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}
-
 int MPIDI_OFI_retry_progress(void)
 {
     /* We do not call progress on hooks form netmod level
