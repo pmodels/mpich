@@ -9,20 +9,6 @@
 #include <shm.h>
 #include "../posix/shm_inline.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_shared_query(MPIR_Win * win, int rank,
-                                                            MPI_Aint * size, int *disp_unit,
-                                                            void *baseptr)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_put(const void *origin_addr, int origin_count,
                                                MPI_Datatype origin_datatype, int target_rank,
                                                MPI_Aint target_disp, int target_count,
@@ -40,91 +26,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_put(const void *origin_addr, int orig
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_start(group, assert, win);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_complete(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_complete(win);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_post(group, assert, win);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_wait(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_wait(win);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_test(MPIR_Win * win, int *flag)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_test(win, flag);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_lock(int lock_type, int rank, int assert,
-                                                    MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_lock(lock_type, rank, assert, win);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_unlock(int rank, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_unlock(rank, win);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get(void *origin_addr, int origin_count,
                                                MPI_Datatype origin_datatype, int target_rank,
                                                MPI_Aint target_disp, int target_count,
@@ -137,18 +38,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get(void *origin_addr, int origin_cou
 
     ret = MPIDI_POSIX_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
                               target_disp, target_count, target_datatype, win, winattr);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_fence(int assert, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_fence(assert, win);
 
     MPIR_FUNC_EXIT;
     return ret;
@@ -184,18 +73,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rput(const void *origin_addr, int ori
 
     ret = MPIDI_POSIX_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
                                target_disp, target_count, target_datatype, win, winattr, request);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush_local(int rank, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_flush_local(rank, win);
 
     MPIR_FUNC_EXIT;
     return ret;
@@ -280,42 +157,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_fetch_and_op(const void *origin_addr,
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush(int rank, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_flush(rank, win);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush_local_all(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_flush_local_all(win);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_unlock_all(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_unlock_all(win);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget(void *origin_addr, int origin_count,
                                                 MPI_Datatype origin_datatype, int target_rank,
                                                 MPI_Aint target_disp, int target_count,
@@ -328,30 +169,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget(void *origin_addr, int origin_co
 
     ret = MPIDI_POSIX_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
                                target_disp, target_count, target_datatype, win, winattr, request);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_sync(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_sync(win);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush_all(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_flush_all(win);
 
     MPIR_FUNC_EXIT;
     return ret;
@@ -375,18 +192,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get_accumulate(const void *origin_add
                                          result_addr, result_count, result_datatype,
                                          target_rank, target_disp, target_count,
                                          target_datatype, op, win, winattr);
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_lock_all(int assert, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_POSIX_mpi_win_lock_all(assert, win);
 
     MPIR_FUNC_EXIT;
     return ret;
