@@ -5,6 +5,7 @@
 
 #include "mpidimpl.h"
 #include "ofi_impl.h"
+#include "ofi_am_impl.h"
 #include "ofi_noinline.h"
 #include "mpir_hwtopo.h"
 #include "ofi_init.h"
@@ -1538,6 +1539,21 @@ int ofi_am_post_recv(int vni, int nic)
                                             FI_MULTI_RECV | FI_COMPLETION), 0, prepost, FALSE);
         }
     }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* called in MPIDI_OFI_dispatch_function when FI_MULTI_RECV is flagged */
+int MPIDI_OFI_am_repost_buffer(int am_idx)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, 0);
+    MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx,
+                                       &MPIDI_OFI_global.am_msg[am_idx],
+                                       FI_MULTI_RECV | FI_COMPLETION), prepost);
 
   fn_exit:
     return mpi_errno;
