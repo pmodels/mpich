@@ -952,7 +952,9 @@ cvars:
 
 #define MPIR_ERR_COLL_CHECKANDCONT(err_, errflag_) \
     do { \
-        errflag_ = (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(err_)) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER; \
+        if (err_) { \
+            errflag_ = (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(err_)) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER; \
+        } \
     } while (0)
 
 #endif
