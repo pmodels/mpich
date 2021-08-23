@@ -56,10 +56,10 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
 static void part_req_am_init(MPIR_Request * part_req)
 {
     MPIDIG_PART_REQUEST(part_req, peer_req_ptr) = NULL;
-    MPIDIG_PART_REQUEST(part_req, send_epoch) = 0;
-    MPIDIG_PART_REQUEST(part_req, recv_epoch) = 0;
     if (part_req->kind == MPIR_REQUEST_KIND__PART_SEND) {
-        MPIR_cc_set(&MPIDIG_PART_REQUEST(part_req, u.send).ready_cntr, 0);
+        /* partitions + 1: once all partitions are ready and CTS is received, data can be issued */
+        MPIR_cc_set(&MPIDIG_PART_REQUEST(part_req, u.send).ready_cntr,
+                    part_req->u.part.partitions + 1);
     }
 }
 
