@@ -391,8 +391,8 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
     /* now complete the outstaning requests! Important: call progress in between, otherwise we
      * deadlock! */
-    int completed = p;
-    while (completed != 0) {
+    int completed;
+    do {
         for (int i = 0; i < MPIDI_UCX_global.num_vnis; i++) {
             ucp_worker_progress(MPIDI_UCX_global.ctx[i].worker);
         }
@@ -401,7 +401,7 @@ int MPIDI_UCX_mpi_finalize_hook(void)
             if (ucp_request_is_completed(pending[i]) != 0)
                 completed -= 1;
         }
-    }
+    } while (completed != 0);
 
     for (int i = 0; i < p; i++) {
         ucp_request_release(pending[i]);
