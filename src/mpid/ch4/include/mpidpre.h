@@ -526,8 +526,8 @@ typedef unsigned MPIDI_locality_t;
 typedef struct MPIDIG_comm_t {
     uint32_t window_instance;
 #ifdef HAVE_DEBUGGER_SUPPORT
-    MPIDIG_rreq_t **posted_head_ptr;
-    MPIDIG_rreq_t **unexp_head_ptr;
+    MPIDI_Devreq_t **posted_head_ptr;
+    MPIDI_Devreq_t **unexp_head_ptr;
 #endif
 } MPIDIG_comm_t;
 
