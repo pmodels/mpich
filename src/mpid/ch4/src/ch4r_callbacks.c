@@ -47,9 +47,7 @@ int MPIDIG_check_cmpl_order(MPIR_Request * req)
     }
 
     MPIDIG_REQUEST(req, req->request) = req;
-    /* MPIDI_CS_ENTER(); */
     DL_APPEND(MPIDI_global.cmpl_list, req->dev.ch4.am.req);
-    /* MPIDI_CS_EXIT(); */
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -63,7 +61,6 @@ void MPIDIG_progress_compl_list(void)
 
     MPIR_FUNC_ENTER;
 
-    /* MPIDI_CS_ENTER(); */
   do_check_again:
     DL_FOREACH_SAFE(MPIDI_global.cmpl_list, curr, tmp) {
         if (curr->seq_no == MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)) {
@@ -73,7 +70,6 @@ void MPIDIG_progress_compl_list(void)
             goto do_check_again;
         }
     }
-    /* MPIDI_CS_EXIT(); */
     MPIR_FUNC_EXIT;
 }
 
@@ -85,7 +81,6 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_ENTER;
 
     /* Check if this message has already been claimed by mprobe. */
-    /* MPIDI_CS_ENTER(); */
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_UNEXP_DQUED) {
         /* This request has been claimed by mprobe */
         if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_UNEXP_CLAIMED) {
@@ -96,10 +91,8 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
              * mrecv in future knows this request is ready */
             MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_BUSY;
         }
-        /* MPIDI_CS_EXIT(); */
         goto fn_exit;
     }
-    /* MPIDI_CS_EXIT(); */
 
     /* If this request was previously matched, but not handled */
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_MATCHED) {
@@ -424,9 +417,7 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
             set_rreq_data_copy_cb(rreq, attr);
         }
 
-        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
         MPIDIG_enqueue_request(rreq, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
-        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
     } else {
         /* matched path */
         set_matched_rreq_fields(rreq, hdr->src_rank, hdr->tag, hdr->context_id,

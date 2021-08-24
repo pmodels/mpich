@@ -474,7 +474,6 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
 
     MPIR_FUNC_ENTER;
 
-    /* MPIDI_CS_ENTER(); */
 
     if (MPIDIG_REQUEST(rreq, req->areq.op) == MPI_NO_OP) {
         MPIDIG_REQUEST(rreq, req->areq.origin_count) = MPIDIG_REQUEST(rreq, req->areq.target_count);
@@ -506,7 +505,6 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
     }
 #endif
 
-    /* MPIDI_CS_EXIT(); */
     MPL_free(MPIDIG_REQUEST(rreq, req->areq.data));
 
     MPIDIG_REQUEST(rreq, req->areq.data) = NULL;
@@ -537,8 +535,6 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_ENTER;
 
     result_data_sz = MPIDIG_REQUEST(rreq, req->areq.result_data_sz);
-
-    /* MPIDI_CS_ENTER(); */
 
     original = (char *) MPL_malloc(result_data_sz, MPL_MEM_RMA);
     MPIR_Assert(original);
@@ -579,7 +575,6 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
     }
 #endif
 
-    /* MPIDI_CS_EXIT(); */
     MPL_free(MPIDIG_REQUEST(rreq, req->areq.data));
 
     MPIDIG_REQUEST(rreq, req->areq.data) = original;
@@ -795,7 +790,6 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
     origin_addr = MPIDIG_REQUEST(rreq, req->creq.data);
     compare_addr = ((char *) MPIDIG_REQUEST(rreq, req->creq.data)) + data_sz;
 
-    /* MPIDI_CS_ENTER(); */
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     win = rreq->u.rma.win;
     if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
@@ -818,7 +812,6 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
         MPIR_ERR_CHECK(mpi_errno);
     }
 #endif
-    /* MPIDI_CS_EXIT(); */
 
     mpi_errno = ack_cswap(rreq);
     MPIR_ERR_CHECK(mpi_errno);

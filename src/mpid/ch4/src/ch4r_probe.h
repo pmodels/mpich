@@ -18,7 +18,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
 
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
 
-    /* MPIDI_CS_ENTER(); */
     unexp_req =
         MPIDIG_rreq_find(source, tag, context_id, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
 
@@ -33,7 +32,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
     } else {
         *flag = 0;
     }
-    /* MPIDI_CS_EXIT(); */
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_EXIT;
@@ -52,7 +50,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
 
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
 
-    /* MPIDI_CS_ENTER(); */
     unexp_req =
         MPIDIG_rreq_dequeue(source, tag, context_id, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
 
@@ -74,7 +71,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
     } else {
         *flag = 0;
     }
-    /* MPIDI_CS_EXIT(); */
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_EXIT;
