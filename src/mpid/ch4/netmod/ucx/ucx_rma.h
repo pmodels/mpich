@@ -232,8 +232,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
                                             reqptr, vni);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
     } else {
+        int vni = MPIDI_UCX_get_win_vni(win);
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
-                                   target_disp, target_count, target_datatype, win, 0);
+                                   target_disp, target_count, target_datatype, win, vni);
     }
 
   fn_exit:
@@ -286,8 +287,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
                                          reqptr, vni);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
     } else {
+        int vni = MPIDI_UCX_get_win_vni(win);
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
-                                   target_disp, target_count, target_datatype, win, 0);
+                                   target_disp, target_count, target_datatype, win, vni);
     }
 
   fn_exit:
@@ -311,8 +313,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
 
     if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr) ||
         MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+        int vni = MPIDI_UCX_get_win_vni(win);
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
-                                   target_disp, target_count, target_datatype, win, 0);
+                                   target_disp, target_count, target_datatype, win, vni);
     } else {
         mpi_errno = MPIDI_UCX_do_put(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype,
@@ -337,8 +340,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
 
     if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr) ||
         MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+        int vni = MPIDI_UCX_get_win_vni(win);
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
-                                   target_disp, target_count, target_datatype, win, 0);
+                                   target_disp, target_count, target_datatype, win, vni);
     } else {
         mpi_errno = MPIDI_UCX_do_get(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype,
@@ -365,8 +369,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
 
     if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr) ||
         MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+        int vni = MPIDI_UCX_get_win_vni(win);
         mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
-                                    target_disp, target_count, target_datatype, win, 0, request);
+                                    target_disp, target_count, target_datatype, win, vni, request);
     } else {
         MPIR_Request *sreq = NULL;
 
@@ -400,8 +405,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
                                                            MPIR_Win * win, MPIDI_av_entry_t * addr,
                                                            MPIDI_winattr_t winattr)
 {
+    int vni = MPIDI_UCX_get_win_vni(win);
     return MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
-                                       target_rank, target_disp, win, 0);
+                                       target_rank, target_disp, win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
@@ -416,8 +422,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                                       MPIDI_winattr_t winattr,
                                                       MPIR_Request ** request)
 {
+    int vni = MPIDI_UCX_get_win_vni(win);
     return MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype, target_rank,
-                                  target_disp, target_count, target_datatype, op, win, 0, request);
+                                  target_disp, target_count, target_datatype, op, win, vni,
+                                  request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
@@ -435,9 +443,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_add
                                                           MPIDI_winattr_t winattr,
                                                           MPIR_Request ** request)
 {
+    int vni = MPIDI_UCX_get_win_vni(win);
     return MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                       result_count, result_datatype, target_rank, target_disp,
-                                      target_count, target_datatype, op, win, 0, request);
+                                      target_count, target_datatype, op, win, vni, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
@@ -448,8 +457,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                                        MPIR_Win * win, MPIDI_av_entry_t * addr,
                                                        MPIDI_winattr_t winattr)
 {
+    int vni = MPIDI_UCX_get_win_vni(win);
     return MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank, target_disp, op,
-                                   win, 0);
+                                   win, vni);
 }
 
 
@@ -469,8 +479,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
 
     if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr) ||
         MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+        int vni = MPIDI_UCX_get_win_vni(win);
         mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
-                                    target_disp, target_count, target_datatype, win, 0, request);
+                                    target_disp, target_count, target_datatype, win, vni, request);
     } else {
         MPIR_Request *sreq = NULL;
 
@@ -509,9 +520,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr
                                                          MPIR_Win * win, MPIDI_av_entry_t * addr,
                                                          MPIDI_winattr_t winattr)
 {
+    int vni = MPIDI_UCX_get_win_vni(win);
     return MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                      result_count, result_datatype, target_rank, target_disp,
-                                     target_count, target_datatype, op, win, 0);
+                                     target_count, target_datatype, op, win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr,
@@ -524,8 +536,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr,
                                                      MPIR_Win * win, MPIDI_av_entry_t * addr,
                                                      MPIDI_winattr_t winattr)
 {
+    int vni = MPIDI_UCX_get_win_vni(win);
     return MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
-                                 target_disp, target_count, target_datatype, op, win, 0);
+                                 target_disp, target_count, target_datatype, op, win, vni);
 }
 
 #endif /* UCX_RMA_H_INCLUDED */

@@ -38,45 +38,53 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_win_unset_sync(MPIR_Win * win)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_start(group, assert, win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_start(group, assert, win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_complete(win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_complete(win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_post(group, assert, win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_post(group, assert, win, vni);
 }
 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_wait(MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_wait(win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_wait(win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
 {
-    return MPIDIG_mpi_win_test(win, flag, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_test(win, flag, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert,
                                                    MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
-    return MPIDIG_mpi_win_lock(lock_type, rank, assert, win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_lock(lock_type, rank, assert, win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win,
                                                      MPIDI_av_entry_t * addr)
 {
-    return MPIDIG_mpi_win_unlock(rank, win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_unlock(rank, win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_fence(assert, win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_fence(assert, win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win,
@@ -90,23 +98,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win,
                                                     MPIDI_av_entry_t * addr)
 {
-    return MPIDIG_mpi_win_flush(rank, win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_flush(rank, win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_flush_local_all(win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_flush_local_all(win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_unlock_all(win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_unlock_all(win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win,
                                                           MPIDI_av_entry_t * addr)
 {
-    return MPIDIG_mpi_win_flush_local(rank, win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_flush_local(rank, win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
@@ -116,12 +128,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_flush_all(win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_flush_all(win, vni);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_lock_all(assert, win, 0);
+    int vni = MPIDI_UCX_get_win_vni(win);
+    return MPIDIG_mpi_win_lock_all(assert, win, vni);
 }
 
 /* replacing deprecated ucp_worker_flush */
