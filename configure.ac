@@ -5301,8 +5301,6 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpicc.bash \
           src/env/mpicxx.sh \
 	  src/env/mpicxx.bash \
-	  src/env/mpif77.sh \
-	  src/env/mpif77.bash \
 	  src/env/mpifort.sh \
 	  src/env/mpifort.bash \
           src/env/parkill \
