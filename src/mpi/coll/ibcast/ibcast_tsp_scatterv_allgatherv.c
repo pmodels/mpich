@@ -83,7 +83,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                 MPIR_TSP_sched_localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, sched,
                                          0, NULL, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
-            MPIR_TSP_sched_fence(sched);
+            mpi_errno = MPIR_TSP_sched_fence(sched);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
     }
 
@@ -164,7 +165,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
 
     MPIR_Treealgo_tree_free(&my_tree);
-    MPIR_TSP_sched_fence(sched);        /* wait for scatter to complete */
+    mpi_errno = MPIR_TSP_sched_fence(sched);    /* wait for scatter to complete */
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     /* Schedule Allgatherv */
     mpi_errno =

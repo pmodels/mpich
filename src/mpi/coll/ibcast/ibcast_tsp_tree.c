@@ -6,6 +6,7 @@
 #include "mpiimpl.h"
 #include "algo_common.h"
 #include "treealgo.h"
+#include "ibcast.h"
 
 /* Routine to schedule a pipelined tree based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
@@ -51,6 +52,14 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
      * if being calculated correctly */
     for (i = 0; i < num_chunks; i++) {
         int msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
+#ifdef HAVE_ERROR_CHECKING
+        struct MPII_Ibcast_state *ibcast_state = NULL;
+
+        ibcast_state = MPIR_TSP_sched_malloc(sizeof(struct MPII_Ibcast_state), sched);
+        if (ibcast_state == NULL)
+            MPIR_ERR_POP(mpi_errno);
+        ibcast_state->n_bytes = msgsize * type_size;
+#endif
 
         /* For correctness, transport based collectives need to get the
          * tag from the same pool as schedule based collectives */
@@ -59,17 +68,27 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
 
         /* Receive message from parent */
         if (my_tree.parent != -1) {
+#ifdef HAVE_ERROR_CHECKING
+            mpi_errno =
+                MPIR_TSP_sched_irecv_status((char *) buffer + offset * extent, msgsize,
+                                            datatype, my_tree.parent, tag, comm,
+                                            &ibcast_state->status, sched, 0, NULL, &recv_id);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+            MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id);
+#else
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) buffer + offset * extent, msgsize, datatype,
                                      my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+#endif
         }
 
         if (num_children) {
             /* Multicast data to the children */
             mpi_errno = MPIR_TSP_sched_imcast((char *) buffer + offset * extent, msgsize, datatype,
-                                              my_tree.children, num_children, tag, comm, sched,
-                                              (my_tree.parent != -1) ? 1 : 0, &recv_id, &vtx_id);
+                                              ut_int_array(my_tree.children), num_children, tag,
+                                              comm, sched, (my_tree.parent != -1) ? 1 : 0, &recv_id,
+                                              &vtx_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
         offset += msgsize;

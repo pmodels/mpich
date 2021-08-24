@@ -217,7 +217,8 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                          rank * recvcount, recvtype, sched, n_invtcs, invtcs,
                                          &vtx_id);
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-    MPIR_TSP_sched_fence(sched);
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     /* Step 2: Allocate buffer space for packing/receiving data for every phase */
     delta = 1;
