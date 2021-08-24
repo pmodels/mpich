@@ -50,12 +50,10 @@ enum { TYPE_UNKNOWN = 0,
     TYPE_MPIR_REQUEST = 5,
     TYPE_MPIR_SENDQ = 6,
     TYPE_MPIDI_MESSAGE_MATCH_PARTS = 7,
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
     TYPE_MPIDIG_RREQ_T = 8,
     TYPE_MPIDI_DEVREQ_T = 9,
     TYPE_MPIDIG_REQ_T = 10,
     TYPE_MPIDIG_COMM_T = 11,
-#endif
 } KnownTypes;
 
 /* The dll_mpich.c has a few places where it doesn't always use the most
@@ -67,12 +65,10 @@ static int knownTypesArray[] = { TYPE_UNKNOWN, TYPE_MPIR_COMM,
     TYPE_MPIDI_MESSAGE_MATCH, TYPE_MPIR_REQUEST,
     TYPE_MPIR_SENDQ,
     TYPE_MPIDI_MESSAGE_MATCH_PARTS,
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
     TYPE_MPIDIG_RREQ_T,
     TYPE_MPIDI_DEVREQ_T,
     TYPE_MPIDIG_REQ_T,
     TYPE_MPIDIG_COMM_T,
-#endif
 };
 
 mqs_type *dbgrI_find_type(mqs_image * image, char *name, mqs_lang_code lang)
@@ -93,7 +89,6 @@ mqs_type *dbgrI_find_type(mqs_image * image, char *name, mqs_lang_code lang)
         curType = TYPE_MPIR_REQUEST;
     } else if (strcmp(name, "MPIR_Sendq") == 0) {
         curType = TYPE_MPIR_SENDQ;
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
     } else if (strcmp(name, "MPIDIG_rreq_t") == 0) {
         curType = TYPE_MPIDIG_RREQ_T;
     } else if (strcmp(name, "MPIDI_Devreq_t") == 0) {
@@ -102,7 +97,6 @@ mqs_type *dbgrI_find_type(mqs_image * image, char *name, mqs_lang_code lang)
         curType = TYPE_MPIDIG_REQ_T;
     } else if (strcmp(name, "MPIDIG_comm_t") == 0) {
         curType = TYPE_MPIDIG_COMM_T;
-#endif
     } else {
         curType = TYPE_UNKNOWN;
     }
@@ -133,10 +127,8 @@ int dbgrI_field_offset(mqs_type * type, char *name)
                     off = ((char *) &c.context_id - (char *) &c.handle);
                 } else if (strcmp(name, "recvcontext_id") == 0) {
                     off = ((char *) &c.recvcontext_id - (char *) &c.handle);
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
                 } else if (strcmp(name, "dev") == 0) {
                     off = ((char *) &c.dev - (char *) &c.handle);
-#endif
                 } else {
                     printf("Panic! Unrecognized COMM field %s\n", name);
                 }
