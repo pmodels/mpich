@@ -14,8 +14,6 @@
 #include "mpidig_am.h"
 
 int MPIDIG_do_cts(MPIR_Request * rreq);
-int MPIDIG_check_cmpl_order(MPIR_Request * req);
-void MPIDIG_progress_compl_list(void);
 int MPIDIG_send_origin_cb(MPIR_Request * sreq);
 int MPIDIG_send_data_origin_cb(MPIR_Request * sreq);
 int MPIDIG_ssend_ack_origin_cb(MPIR_Request * req);
