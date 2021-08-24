@@ -157,12 +157,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
             MPIDIG_REQUEST(rreq, datatype) = datatype;
             MPIDIG_REQUEST(rreq, buffer) = (char *) buf;
             MPIDIG_REQUEST(rreq, count) = count;
-            MPIDIG_REQUEST(rreq, req->seq_no) =
-                MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
-                             MPIDIG_REQUEST(rreq, req->seq_no),
-                             MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
             MPIDIG_recv_type_init(unexp_data_sz, rreq);
         }
     }

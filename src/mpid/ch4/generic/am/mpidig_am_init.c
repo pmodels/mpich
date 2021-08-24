@@ -152,14 +152,14 @@ int MPIDIG_am_init(void)
                                                           &MPIDI_global.
                                                           per_vci[vci].unexp_pack_buf_pool);
         MPIR_ERR_CHECK(mpi_errno);
+
+        MPIDI_global.per_vci[vci].cmpl_list = NULL;
+        MPL_atomic_store_uint64(&MPIDI_global.per_vci[vci].exp_seq_no, 0);
+        MPL_atomic_store_uint64(&MPIDI_global.per_vci[vci].nxt_seq_no, 0);
     }
 
     MPIDI_global.part_posted_list = NULL;
     MPIDI_global.part_unexp_list = NULL;
-
-    MPIDI_global.cmpl_list = NULL;
-    MPL_atomic_store_uint64(&MPIDI_global.exp_seq_no, 0);
-    MPL_atomic_store_uint64(&MPIDI_global.nxt_seq_no, 0);
 
     MPL_atomic_store_int(&MPIDIG_global.rma_am_flag, 0);
     MPIR_cc_set(&MPIDIG_global.rma_am_poll_cntr, 0);
