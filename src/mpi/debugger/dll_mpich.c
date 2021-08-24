@@ -841,7 +841,7 @@ static int fetch_send(mqs_process * proc, mpich_process_info * p_info, mqs_pendi
 #ifdef DEBUG_LIST_ITER
     if (base) {
         initLogFile();
-        fprintf(debugf, "comm ptr = %p, comm context = %d\n", comm, comm->context_id);
+        fprintf(debugfp, "comm ptr = %p, comm context = %d\n", comm, comm->context_id);
     }
 #endif
     /* Say what operation it is. We can only see non blocking send operations
@@ -869,7 +869,7 @@ static int fetch_send(mqs_process * proc, mpich_process_info * p_info, mqs_pendi
 
 #ifdef DEBUG_LIST_ITER
             initLogFile();
-            fprintf(debugpf, "sendq entry = %p, rank off = %d, tag off = %d, context = %d\n",
+            fprintf(debugfp, "sendq entry = %p, rank off = %d, tag off = %d, context = %d\n",
                     base, i_info->sendq_rank_offs, i_info->sendq_tag_offs, actual_context);
 #endif
 
