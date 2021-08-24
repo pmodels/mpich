@@ -341,17 +341,17 @@ int MPII_Genutil_progress_hook(int *made_progress)
     in_genutil_progress = 1;
 
     if (made_progress)
-        *made_progress = FALSE;
+        *made_progress = false;
 
     /* Go over up to MPIR_COLL_PROGRESS_MAX_COLLS collecives in the
      * queue and make progress on them */
     DL_FOREACH_SAFE(MPII_coll_queue.head, coll_req, coll_req_tmp) {
         /* make progress on the collective operation */
-        int done;
+        int done, progress = false;
         MPII_Genutil_sched_t *sched = (MPII_Genutil_sched_t *) (coll_req->sched);
 
         /* make progress on the collective */
-        mpi_errno = MPII_Genutil_sched_poke(sched, &done, made_progress);
+        mpi_errno = MPII_Genutil_sched_poke(sched, &done, &progress);
 
         if (done) {
             MPIR_Request *req;
@@ -362,9 +362,15 @@ int MPII_Genutil_progress_hook(int *made_progress)
             DL_DELETE(MPII_coll_queue.head, coll_req);
             MPIR_Request_complete(req);
         }
-        if (++count >= MPIR_CVAR_PROGRESS_MAX_COLLS)
+        if (progress) {
+            count++;
+        }
+        if (MPIR_CVAR_PROGRESS_MAX_COLLS > 0 && count >= MPIR_CVAR_PROGRESS_MAX_COLLS)
             break;
     }
+
+    if (made_progress && count)
+        *made_progress = true;
 
     if (MPII_coll_queue.head == NULL)
         MPIR_Progress_hook_deactivate(MPII_Genutil_progress_hook_id);
