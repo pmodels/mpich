@@ -245,6 +245,11 @@ typedef struct MPIDI_per_vci {
      * section. */
     MPL_atomic_int_t progress_count;
 
+    MPIDI_Devreq_t *posted_list;
+    MPIDI_Devreq_t *unexp_list;
+    MPIDU_genq_private_pool_t request_pool;
+    MPIDU_genq_private_pool_t unexp_pack_buf_pool;
+
     char pad[] MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
 } MPIDI_per_vci_t;
 
@@ -262,15 +267,13 @@ typedef struct MPIDI_CH4_Global_t {
     MPIR_Commops MPIR_Comm_fns_store;
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
-    MPIDI_Devreq_t *posted_list;
-    MPIDI_Devreq_t *unexp_list;
+
     MPIDI_Devreq_t *part_posted_list;
     MPIDI_Devreq_t *part_unexp_list;
     MPIDIG_req_ext_t *cmpl_list;
     MPL_atomic_uint64_t exp_seq_no;
     MPL_atomic_uint64_t nxt_seq_no;
-    MPIDU_genq_private_pool_t request_pool;
-    MPIDU_genq_private_pool_t unexp_pack_buf_pool;
+
 #ifdef HAVE_SIGNAL
     void (*prev_sighandler) (int);
     volatile int sigusr1_count;
