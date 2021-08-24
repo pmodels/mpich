@@ -6,6 +6,7 @@
 #include "mpidimpl.h"
 #include "mpidch4r.h"
 #include "ch4r_rma_target_callbacks.h"
+#include "ch4r_util.h"  /* for completion order check */
 
 /* ** RMA PROTOCOLS ** */
 /* Put (contig or small flattened_dt)
@@ -872,7 +873,8 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
 
     MPIR_FUNC_ENTER;
 
-    if (!MPIDIG_check_cmpl_order(rreq))
+    int vci = MPIDI_Request_get_vci(rreq);
+    if (!MPIDIG_check_cmpl_order(rreq, vci))
         return mpi_errno;
 
     MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, req->creq.datatype), 1, data_sz);
@@ -905,7 +907,7 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
     mpi_errno = ack_cswap(rreq);
     MPIR_ERR_CHECK(mpi_errno);
     MPID_Request_complete(rreq);
-    MPIDIG_progress_compl_list();
+    MPIDIG_progress_compl_list(vci);
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -920,13 +922,14 @@ static int acc_target_cmpl_cb(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (!MPIDIG_check_cmpl_order(rreq))
+    int vci = MPIDI_Request_get_vci(rreq);
+    if (!MPIDIG_check_cmpl_order(rreq, vci))
         return mpi_errno;
 
     mpi_errno = handle_acc_cmpl(rreq);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDIG_progress_compl_list();
+    MPIDIG_progress_compl_list(vci);
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -939,13 +942,14 @@ static int get_acc_target_cmpl_cb(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (!MPIDIG_check_cmpl_order(rreq))
+    int vci = MPIDI_Request_get_vci(rreq);
+    if (!MPIDIG_check_cmpl_order(rreq, vci))
         return mpi_errno;
 
     mpi_errno = handle_get_acc_cmpl(rreq);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDIG_progress_compl_list();
+    MPIDIG_progress_compl_list(vci);
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -1648,7 +1652,8 @@ int MPIDIG_cswap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = cswap_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+    MPIDIG_REQUEST(rreq, req->seq_no) =
+        MPL_atomic_fetch_add_uint64(&MPIDI_global.per_vci[local_vci].nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = (attr & MPIDIG_AM_ATTR__IS_LOCAL) ? 1 : 0;
 #endif
@@ -1716,7 +1721,8 @@ int MPIDIG_acc_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     }
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = acc_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+    MPIDIG_REQUEST(rreq, req->seq_no) =
+        MPL_atomic_fetch_add_uint64(&MPIDI_global.per_vci[local_vci].nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = (attr & MPIDIG_AM_ATTR__IS_LOCAL) ? 1 : 0;
 #endif
@@ -1843,7 +1849,8 @@ int MPIDIG_acc_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIDIG_recv_init(1, msg_hdr->flattened_sz, flattened_dt, msg_hdr->flattened_sz, rreq);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = acc_dt_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+    MPIDIG_REQUEST(rreq, req->seq_no) =
+        MPL_atomic_fetch_add_uint64(&MPIDI_global.per_vci[local_vci].nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = (attr & MPIDIG_AM_ATTR__IS_LOCAL) ? 1 : 0;
 #endif

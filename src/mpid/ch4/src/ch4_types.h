@@ -251,6 +251,10 @@ typedef struct MPIDI_per_vci {
     MPIDU_genq_private_pool_t request_pool;
     MPIDU_genq_private_pool_t unexp_pack_buf_pool;
 
+    MPIDIG_req_ext_t *cmpl_list;
+    MPL_atomic_uint64_t exp_seq_no;
+    MPL_atomic_uint64_t nxt_seq_no;
+
     char pad[] MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
 } MPIDI_per_vci_t;
 
@@ -271,9 +275,6 @@ typedef struct MPIDI_CH4_Global_t {
 
     MPIDI_Devreq_t *part_posted_list;
     MPIDI_Devreq_t *part_unexp_list;
-    MPIDIG_req_ext_t *cmpl_list;
-    MPL_atomic_uint64_t exp_seq_no;
-    MPL_atomic_uint64_t nxt_seq_no;
 
 #ifdef HAVE_SIGNAL
     void (*prev_sighandler) (int);
