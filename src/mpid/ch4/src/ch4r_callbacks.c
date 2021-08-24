@@ -225,7 +225,7 @@ static int match_posted_rreq(int rank, int tag, MPIR_Context_id_t context_id, MP
 {
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     *req = MPIDIG_rreq_dequeue(rank, tag, context_id,
-                               &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
+                               &MPIDI_global.per_vci[0].posted_list, MPIDIG_PT2PT_POSTED);
     return MPI_SUCCESS;
 #else
     int mpi_errno = MPI_SUCCESS;
@@ -234,7 +234,7 @@ static int match_posted_rreq(int rank, int tag, MPIR_Context_id_t context_id, MP
     *req = NULL;
     while (TRUE) {
         *req = MPIDIG_rreq_dequeue(rank, tag, context_id,
-                                   &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
+                                   &MPIDI_global.per_vci[0].posted_list, MPIDIG_PT2PT_POSTED);
         if (*req) {
             int is_cancelled;
             mpi_errno = MPIDI_anysrc_try_cancel_partner(*req, &is_cancelled);
@@ -296,7 +296,9 @@ static int allocate_unexp_req_pack_buf(MPIR_Request * rreq, MPI_Aint data_sz)
     if (data_sz > 0) {
         void *pack_buf;
         MPIR_Assert(data_sz <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE);
-        mpi_errno = MPIDU_genq_private_pool_alloc_cell(MPIDI_global.unexp_pack_buf_pool, &pack_buf);
+        mpi_errno =
+            MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[0].unexp_pack_buf_pool,
+                                               &pack_buf);
         MPIR_Assert(pack_buf);
         MPIDIG_REQUEST(rreq, buffer) = pack_buf;
     }
@@ -417,7 +419,7 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
             set_rreq_data_copy_cb(rreq, attr);
         }
 
-        MPIDIG_enqueue_request(rreq, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
+        MPIDIG_enqueue_request(rreq, &MPIDI_global.per_vci[0].unexp_list, MPIDIG_PT2PT_UNEXP);
     } else {
         /* matched path */
         set_matched_rreq_fields(rreq, hdr->src_rank, hdr->tag, hdr->context_id,

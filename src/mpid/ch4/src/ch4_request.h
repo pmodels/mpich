@@ -86,7 +86,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
             MPIR_cc_dec(req->completion_notification);
 
         if (MPIDIG_REQUEST(req, req)) {
-            MPIDU_genq_private_pool_free_cell(MPIDI_global.request_pool, MPIDIG_REQUEST(req, req));
+            /* FIXME: refactor mpidig code into ch4r_request.h */
+            int vci = MPIDI_Request_get_vci(req);
+            MPIDU_genq_private_pool_free_cell(MPIDI_global.per_vci[vci].request_pool,
+                                              MPIDIG_REQUEST(req, req));
             MPIDIG_REQUEST(req, req) = NULL;
             MPIDI_NM_am_request_finalize(req);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
