@@ -69,7 +69,8 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
         }
 
         /* force our block of sends/recvs to complete before starting the next block */
-        MPIR_TSP_sched_fence(sched);
+        mpi_errno = MPIR_TSP_sched_fence(sched);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
     }
 
   fn_exit:

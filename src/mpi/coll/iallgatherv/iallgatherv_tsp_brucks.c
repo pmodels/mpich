@@ -201,9 +201,10 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
         mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype, tmp_recvbuf,
                                              recvcounts[rank], recvtype, sched, 0, NULL, &vtx_id);
 
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
-    MPIR_TSP_sched_fence(sched);
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     idx = 0;
     delta = 1;
@@ -234,7 +235,8 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
         n_invtcs += (k - 1);
         delta *= k;
     }
-    MPIR_TSP_sched_fence(sched);
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     /* No shift required for rank 0 */
     if (rank != 0) {

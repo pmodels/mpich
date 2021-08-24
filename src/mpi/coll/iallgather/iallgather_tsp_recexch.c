@@ -288,7 +288,8 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, MPI_Aint sendco
                                                   is_inplace, rank, tag, sendbuf, recvbuf,
                                                   recv_extent, recvcount, recvtype, n_invtcs,
                                                   &invtx, comm, sched);
-    MPIR_TSP_sched_fence(sched);
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     /* For distance halving algorithm, exchange the data with digit reversed partner
      * so that finally the data is in the correct order. */
@@ -297,7 +298,8 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, MPI_Aint sendco
             MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(rank, nranks, k, p_of_k, log_pofk,
                                                                   T, recvbuf, recvtype, recv_extent,
                                                                   recvcount, tag, comm, sched);
-            MPIR_TSP_sched_fence(sched);
+            mpi_errno = MPIR_TSP_sched_fence(sched);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
     }
 

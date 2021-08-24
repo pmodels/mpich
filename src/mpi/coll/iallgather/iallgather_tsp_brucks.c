@@ -88,7 +88,8 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
     /* All following sends/recvs and copies depend on this dtcopy */
-    MPIR_TSP_sched_fence(sched);
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     n_invtcs = 0;
     for (i = 0; i < nphases; i++) {
@@ -133,7 +134,8 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
         n_invtcs += (k - 1);
         delta *= k;
     }
-    MPIR_TSP_sched_fence(sched);
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     if (rank != 0) {    /* No shift required for rank 0 */
         mpi_errno =
