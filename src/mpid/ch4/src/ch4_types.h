@@ -221,9 +221,6 @@ typedef struct {
 #define MPIDIU_THREAD_PROGRESS_MUTEX      MPIDI_global.m[0]
 #define MPIDIU_THREAD_UTIL_MUTEX          MPIDI_global.m[1]
 
-/* Protects MPIDIG global structures (e.g. global unexpected message queue) */
-#define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX MPIDI_global.m[2]
-
 #define MPIDIU_THREAD_SCHED_LIST_MUTEX    MPIDI_global.m[3]
 #define MPIDIU_THREAD_TSP_QUEUE_MUTEX     MPIDI_global.m[4]
 #ifdef HAVE_LIBHCOLL
