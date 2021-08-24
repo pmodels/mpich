@@ -118,6 +118,7 @@ Native API:
   mpi_irecv : int
       NM*: buf-2, count, datatype, rank, tag, comm, context_offset, addr, req_p, partner
      SHM*: buf-2, count, datatype, rank, tag, comm, context_offset, req_p
+     MPIDIG: buf-2, count, datatype, rank, tag, comm, context_offset, vci, req_p
   mpi_imrecv : int
       NM*: buf-2, count, datatype, message
      SHM*: buf-2, count, datatype, message
