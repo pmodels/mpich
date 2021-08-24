@@ -403,10 +403,13 @@ def dump_stub_file(stub_file, mod, is_inline, is_nm):
             print("{", file=Out)
             if a['ret'] == 'int':
                 print("    int mpi_errno = MPI_SUCCESS;", file=Out)
+                print("    MPIR_Assert(0);", file=Out)
                 print("    return mpi_errno;", file=Out)
             elif a['ret'] == 'void':
+                print("    MPIR_Assert(0);", file=Out)
                 print("    return;", file=Out)
             else:
+                print("    MPIR_Assert(0);", file=Out)
                 print("    return 0;", file=Out)
             print("}", file=Out)
         if is_inline:
