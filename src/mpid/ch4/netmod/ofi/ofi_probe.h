@@ -128,7 +128,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
     MPIR_FUNC_ENTER;
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno = MPIDIG_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
+        mpi_errno = MPIDIG_mpi_improbe(source, tag, comm, context_offset, 0, flag, message, status);
         goto fn_exit;
     }
 
@@ -158,7 +158,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
     MPIR_FUNC_ENTER;
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, flag, status);
+        mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, 0, flag, status);
     } else {
         int vni_src, vni_dst;
         MPIDI_OFI_PROBE_VNIS(vni_src, vni_dst);
