@@ -276,9 +276,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
 
     if (!unexp_req) {
-        /* MPIDI_CS_ENTER(); */
         MPIDIG_enqueue_request(rreq, &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
-        /* MPIDI_CS_EXIT(); */
     } else {
         MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = rreq;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
@@ -306,7 +304,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     MPIDIG_REQUEST(message, req->rreq.mrcv_datatype) = datatype;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
-    /* MPIDI_CS_ENTER(); */
     if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_BUSY) {
         MPIDIG_REQUEST(message, req->status) |= MPIDIG_REQ_UNEXP_CLAIMED;
     } else if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_RTS) {
@@ -322,7 +319,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
         mpi_errno = MPIDIG_handle_unexp_mrecv(message);
         MPIR_ERR_CHECK(mpi_errno);
     }
-    /* MPIDI_CS_EXIT(); */
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
@@ -368,9 +364,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
     if (!MPIR_Request_is_complete(rreq) &&
         !MPIR_STATUS_GET_CANCEL_BIT(rreq->status) && !MPIDIG_REQUEST_IN_PROGRESS(rreq)) {
 
-        /* MPIDI_CS_ENTER(); */
         found = MPIDIG_delete_posted(rreq, &MPIDI_global.posted_list);
-        /* MPIDI_CS_EXIT(); */
 
         if (found) {
             MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
