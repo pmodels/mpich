@@ -237,20 +237,18 @@ typedef struct {
 extern MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[REQUEST_POOL_MAX];
 
 /* per-VCI structure -- using union to force minimum size */
-typedef union MPIDI_vci {
-    struct {
-        int attr;
-        MPID_Thread_mutex_t lock;
-        /* The progress counts are mostly accessed in a VCI critical section and thus updated in a
-         * relaxed manner.  MPL_atomic_int_t is used here only for MPIDI_set_progress_vci() and
-         * MPIDI_set_progress_vci_n(), which access these progress counts outside a VCI critical
-         * section. */
-        MPL_atomic_int_t progress_count;
-    } vci;
-    char pad[MPL_CACHELINE_SIZE];
-} MPIDI_vci_t;
+typedef struct MPIDI_per_vci {
+    MPID_Thread_mutex_t lock;
+    /* The progress counts are mostly accessed in a VCI critical section and thus updated in a
+     * relaxed manner.  MPL_atomic_int_t is used here only for MPIDI_set_progress_vci() and
+     * MPIDI_set_progress_vci_n(), which access these progress counts outside a VCI critical
+     * section. */
+    MPL_atomic_int_t progress_count;
 
-#define MPIDI_VCI(i) MPIDI_global.vci[i].vci
+    char pad[] MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
+} MPIDI_per_vci_t;
+
+#define MPIDI_VCI(i) MPIDI_global.per_vci[i]
 
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
@@ -281,7 +279,7 @@ typedef struct MPIDI_CH4_Global_t {
 #endif
 
     int n_vcis;
-    MPIDI_vci_t vci[MPIDI_CH4_MAX_VCIS];
+    MPIDI_per_vci_t per_vci[MPIDI_CH4_MAX_VCIS];
 
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     /* TODO: move into MPIDI_vci to have per-vci workqueue */
