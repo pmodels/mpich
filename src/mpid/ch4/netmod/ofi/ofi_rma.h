@@ -308,11 +308,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
     if (sigreq)
         mpi_errno =
             MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
-                            target_count, target_datatype, win, sigreq);
+                            target_count, target_datatype, win, 0, sigreq);
     else
         mpi_errno =
             MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
-                           target_count, target_datatype, win);
+                           target_count, target_datatype, win, 0);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -342,7 +342,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
         MPIR_GPU_query_pointer_is_dev(origin_addr)) {
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
-                                   target_disp, target_count, target_datatype, win);
+                                   target_disp, target_count, target_datatype, win, 0);
         goto fn_exit;
     }
 
@@ -483,11 +483,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
     if (sigreq)
         mpi_errno =
             MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
-                            target_count, target_datatype, win, sigreq);
+                            target_count, target_datatype, win, 0, sigreq);
     else
         mpi_errno =
             MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
-                           target_count, target_datatype, win);
+                           target_count, target_datatype, win, 0);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -517,7 +517,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
     if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
         MPIR_GPU_query_pointer_is_dev(origin_addr)) {
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
-                                   target_disp, target_count, target_datatype, win);
+                                   target_disp, target_count, target_datatype, win, 0);
         goto fn_exit;
     }
 
@@ -549,7 +549,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
         MPIR_GPU_query_pointer_is_dev(origin_addr)) {
         mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
-                                    target_disp, target_count, target_datatype, win, request);
+                                    target_disp, target_count, target_datatype, win, 0, request);
         goto fn_exit;
     }
 
@@ -605,7 +605,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
            MPIR_GPU_query_pointer_is_dev(result_addr)) {
         mpi_errno =
             MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
-                                        target_rank, target_disp, win);
+                                        target_rank, target_disp, win, 0);
         goto fn_exit;
     }
 
@@ -681,7 +681,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
     MPIDI_OFI_win_do_progress(win, vni);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
     return MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
-                                       target_rank, target_disp, win);
+                                       target_rank, target_disp, win, 0);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
@@ -807,11 +807,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
     if (sigreq)
         mpi_errno = MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype, target_rank,
-                                           target_disp, target_count, target_datatype, op, win,
+                                           target_disp, target_count, target_datatype, op, win, 0,
                                            sigreq);
     else
         mpi_errno = MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
-                                          target_disp, target_count, target_datatype, op, win);
+                                          target_disp, target_count, target_datatype, op, win, 0);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -955,12 +955,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
         mpi_errno =
             MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                        result_count, result_datatype, target_rank, target_disp,
-                                       target_count, target_datatype, op, win, sigreq);
+                                       target_count, target_datatype, op, win, 0, sigreq);
     else
         mpi_errno =
             MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                       result_count, result_datatype, target_rank, target_disp,
-                                      target_count, target_datatype, op, win);
+                                      target_count, target_datatype, op, win, 0);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1007,7 +1007,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
            !(winattr & MPIDI_WINATTR_NM_REACHABLE) || MPIR_GPU_query_pointer_is_dev(origin_addr)) {
         mpi_errno =
             MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype, target_rank,
-                                   target_disp, target_count, target_datatype, op, win, request);
+                                   target_disp, target_count, target_datatype, op, win, 0, request);
         goto fn_exit;
     }
 
@@ -1058,7 +1058,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_add
         mpi_errno =
             MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                        result_count, result_datatype, target_rank, target_disp,
-                                       target_count, target_datatype, op, win, request);
+                                       target_count, target_datatype, op, win, 0, request);
         goto fn_exit;
     }
 
@@ -1110,7 +1110,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
            MPIR_GPU_query_pointer_is_dev(result_addr)) {
         mpi_errno =
             MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank, target_disp,
-                                    op, win);
+                                    op, win, 0);
         goto fn_exit;
     }
 
@@ -1182,7 +1182,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     MPIDI_OFI_win_do_progress(win, vni);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
     return MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank, target_disp, op,
-                                   win);
+                                   win, 0);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
@@ -1201,7 +1201,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
     if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
         MPIR_GPU_query_pointer_is_dev(origin_addr)) {
         mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
-                                    target_disp, target_count, target_datatype, win, request);
+                                    target_disp, target_count, target_datatype, win, 0, request);
         goto fn_exit;
     }
 
@@ -1249,7 +1249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr
         mpi_errno =
             MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                       result_count, result_datatype, target_rank, target_disp,
-                                      target_count, target_datatype, op, win);
+                                      target_count, target_datatype, op, win, 0);
         goto fn_exit;
     }
 
@@ -1289,7 +1289,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr,
            !(winattr & MPIDI_WINATTR_NM_REACHABLE) || MPIR_GPU_query_pointer_is_dev(origin_addr)) {
         mpi_errno =
             MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
-                                  target_disp, target_count, target_datatype, op, win);
+                                  target_disp, target_count, target_datatype, op, win, 0);
         goto fn_exit;
     }
 

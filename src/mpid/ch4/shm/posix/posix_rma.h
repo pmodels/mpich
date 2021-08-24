@@ -323,7 +323,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_put(const void *origin_addr,
     if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
         target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype,
-                                   target_rank, target_disp, target_count, target_datatype, win);
+                                   target_rank, target_disp, target_count, target_datatype, win, 0);
     } else {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno = MPIDI_POSIX_do_put(origin_addr, origin_count, origin_datatype, target_rank,
@@ -351,7 +351,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get(void *origin_addr,
     if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
         target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype,
-                                   target_rank, target_disp, target_count, target_datatype, win);
+                                   target_rank, target_disp, target_count, target_datatype, win, 0);
     } else {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno = MPIDI_POSIX_do_get(origin_addr, origin_count, origin_datatype, target_rank,
@@ -383,7 +383,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
         target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype,
                                     target_rank, target_disp, target_count,
-                                    target_datatype, win, request);
+                                    target_datatype, win, 0, request);
         goto fn_exit;
     }
 
@@ -427,7 +427,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
     if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
         target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
-                                                datatype, target_rank, target_disp, win);
+                                                datatype, target_rank, target_disp, win, 0);
         goto fn_exit;
     }
 
@@ -495,7 +495,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
         target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                            target_rank, target_disp, target_count,
-                                           target_datatype, op, win, request);
+                                           target_datatype, op, win, 0, request);
         goto fn_exit;
     }
 
@@ -545,7 +545,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
         mpi_errno = MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                result_addr, result_count, result_datatype,
                                                target_rank, target_disp, target_count,
-                                               target_datatype, op, win, request);
+                                               target_datatype, op, win, 0, request);
         goto fn_exit;
     }
 
@@ -591,7 +591,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
     if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
         target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype,
-                                            target_rank, target_disp, op, win);
+                                            target_rank, target_disp, op, win, 0);
         goto fn_exit;
     }
 
@@ -666,7 +666,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
         target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype,
                                     target_rank, target_disp, target_count,
-                                    target_datatype, win, request);
+                                    target_datatype, win, 0, request);
         goto fn_exit;
     }
 
@@ -711,7 +711,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get_accumulate(const void *origin_a
         mpi_errno = MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                               result_addr, result_count, result_datatype,
                                               target_rank, target_disp, target_count,
-                                              target_datatype, op, win);
+                                              target_datatype, op, win, 0);
     } else {
         mpi_errno = MPIDI_POSIX_do_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                   result_addr, result_count, result_datatype,
@@ -741,7 +741,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_accumulate(const void *origin_addr,
         target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                           target_rank, target_disp, target_count,
-                                          target_datatype, op, win);
+                                          target_datatype, op, win, 0);
     } else {
         mpi_errno = MPIDI_POSIX_do_accumulate(origin_addr, origin_count, origin_datatype,
                                               target_rank, target_disp, target_count,

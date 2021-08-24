@@ -114,7 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_start(MPIR_Group * group, int asse
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_start(group, assert, win);
+    mpi_errno = MPIDIG_mpi_win_start(group, assert, win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -126,7 +126,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_complete(win);
+    mpi_errno = MPIDIG_mpi_win_complete(win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -138,7 +138,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_post(MPIR_Group * group, int asser
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_post(group, assert, win);
+    mpi_errno = MPIDIG_mpi_win_post(group, assert, win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -150,7 +150,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_wait(MPIR_Win * win)
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_wait(win);
+    mpi_errno = MPIDIG_mpi_win_wait(win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -162,7 +162,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_test(win, flag);
+    mpi_errno = MPIDIG_mpi_win_test(win, flag, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -175,7 +175,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int 
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_lock(lock_type, rank, assert, win);
+    mpi_errno = MPIDIG_mpi_win_lock(lock_type, rank, assert, win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -187,7 +187,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_unlock(rank, win);
+    mpi_errno = MPIDIG_mpi_win_unlock(rank, win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -199,7 +199,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_fence(int massert, MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_fence(massert, win);
+    mpi_errno = MPIDIG_mpi_win_fence(massert, win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -226,7 +226,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_flush(rank, win);
+    mpi_errno = MPIDIG_mpi_win_flush(rank, win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -237,7 +237,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_flush_local_all(win);
+    mpi_errno = MPIDIG_mpi_win_flush_local_all(win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -248,7 +248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_unlock_all(win);
+    mpi_errno = MPIDIG_mpi_win_unlock_all(win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -260,7 +260,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * w
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_flush_local(rank, win);
+    mpi_errno = MPIDIG_mpi_win_flush_local(rank, win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -282,7 +282,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_flush_all(win);
+    mpi_errno = MPIDIG_mpi_win_flush_all(win, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -298,7 +298,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * wi
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_mpi_win_lock_all(assert, win);
+    mpi_errno = MPIDIG_mpi_win_lock_all(assert, win, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

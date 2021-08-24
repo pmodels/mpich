@@ -6,47 +6,49 @@
 #ifndef NETMOD_AM_FALLBACK_RMA_H_INCLUDED
 #define NETMOD_AM_FALLBACK_RMA_H_INCLUDED
 
+#define DEFAULT_VCI 0
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_start(group, assert, win);
+    return MPIDIG_mpi_win_start(group, assert, win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_complete(win);
+    return MPIDIG_mpi_win_complete(win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_post(group, assert, win);
+    return MPIDIG_mpi_win_post(group, assert, win, DEFAULT_VCI);
 }
 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_wait(MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_wait(win);
+    return MPIDIG_mpi_win_wait(win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
 {
-    return MPIDIG_mpi_win_test(win, flag);
+    return MPIDIG_mpi_win_test(win, flag, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert,
                                                    MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
-    return MPIDIG_mpi_win_lock(lock_type, rank, assert, win);
+    return MPIDIG_mpi_win_lock(lock_type, rank, assert, win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win,
                                                      MPIDI_av_entry_t * addr)
 {
-    return MPIDIG_mpi_win_unlock(rank, win);
+    return MPIDIG_mpi_win_unlock(rank, win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_fence(assert, win);
+    return MPIDIG_mpi_win_fence(assert, win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win,
@@ -60,23 +62,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win,
                                                     MPIDI_av_entry_t * addr)
 {
-    return MPIDIG_mpi_win_flush(rank, win);
+    return MPIDIG_mpi_win_flush(rank, win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_flush_local_all(win);
+    return MPIDIG_mpi_win_flush_local_all(win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_unlock_all(win);
+    return MPIDIG_mpi_win_unlock_all(win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win,
                                                           MPIDI_av_entry_t * addr)
 {
-    return MPIDIG_mpi_win_flush_local(rank, win);
+    return MPIDIG_mpi_win_flush_local(rank, win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
@@ -86,12 +88,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_flush_all(win);
+    return MPIDIG_mpi_win_flush_all(win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
-    return MPIDIG_mpi_win_lock_all(assert, win);
+    return MPIDIG_mpi_win_lock_all(assert, win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
@@ -124,7 +126,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
                                               MPIDI_winattr_t winattr)
 {
     return MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
-                          target_count, target_datatype, win);
+                          target_count, target_datatype, win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
@@ -137,7 +139,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
                                               MPIDI_winattr_t winattr)
 {
     return MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
-                          target_count, target_datatype, win);
+                          target_count, target_datatype, win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
@@ -152,7 +154,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
                                                MPIR_Request ** request)
 {
     return MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
-                           target_disp, target_count, target_datatype, win, request);
+                           target_disp, target_count, target_datatype, win, DEFAULT_VCI, request);
 }
 
 
@@ -165,7 +167,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
                                                            MPIDI_winattr_t winattr)
 {
     return MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
-                                       target_rank, target_disp, win);
+                                       target_rank, target_disp, win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
@@ -181,7 +183,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                                       MPIR_Request ** request)
 {
     return MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype, target_rank,
-                                  target_disp, target_count, target_datatype, op, win, request);
+                                  target_disp, target_count, target_datatype, op, win, DEFAULT_VCI,
+                                  request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
@@ -201,7 +204,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_add
 {
     return MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                       result_count, result_datatype, target_rank, target_disp,
-                                      target_count, target_datatype, op, win, request);
+                                      target_count, target_datatype, op, win, DEFAULT_VCI, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
@@ -213,7 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                                        MPIDI_winattr_t winattr)
 {
     return MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank, target_disp, op,
-                                   win);
+                                   win, DEFAULT_VCI);
 }
 
 
@@ -229,7 +232,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
                                                MPIR_Request ** request)
 {
     return MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
-                           target_disp, target_count, target_datatype, win, request);
+                           target_disp, target_count, target_datatype, win, DEFAULT_VCI, request);
 }
 
 
@@ -248,7 +251,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr
 {
     return MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                      result_count, result_datatype, target_rank, target_disp,
-                                     target_count, target_datatype, op, win);
+                                     target_count, target_datatype, op, win, DEFAULT_VCI);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr,
@@ -262,7 +265,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr,
                                                      MPIDI_winattr_t winattr)
 {
     return MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
-                                 target_disp, target_count, target_datatype, op, win);
+                                 target_disp, target_count, target_datatype, op, win, DEFAULT_VCI);
 }
 
+#undef DEFAULT_VCI
 #endif /* NETMOD_AM_FALLBACK_RMA_H_INCLUDED */
