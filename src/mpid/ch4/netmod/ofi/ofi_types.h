@@ -30,7 +30,6 @@
 #define MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE  (16 * 1024)
 #define MPIDI_OFI_MAX_NUM_AM_BUFFERS       (8)
 #define MPIDI_OFI_AM_BUFF_SZ               (1 * 1024 * 1024)
-#define MPIDI_OFI_CACHELINE_SIZE           (MPL_CACHELINE_SIZE)
 #define MPIDI_OFI_IOV_MAX                  (32)
 #define MPIDI_OFI_AM_HDR_POOL_CELL_SIZE            (1024)
 #define MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
@@ -272,8 +271,8 @@ typedef struct {
 
 typedef union {
     MPID_Thread_mutex_t m;
-    char cacheline[MPIDI_OFI_CACHELINE_SIZE];
-} MPIDI_OFI_cacheline_mutex_t MPL_ATTR_ALIGNED(MPIDI_OFI_CACHELINE_SIZE);
+    char cacheline[MPL_CACHELINE_SIZE];
+} MPIDI_OFI_cacheline_mutex_t;
 
 typedef struct {
     unsigned enable_av_table:1;
