@@ -370,7 +370,6 @@ Makefile.am-stamp
 /examples/windows/skeleton/skeleton.suo
 
 # /maint/
-/maint/genstates
 /maint/simplemake
 /maint/checkbuilds
 /maint/findfixme
@@ -383,7 +382,6 @@ Makefile.am-stamp
 /maint/clmake
 /maint/conftimestamp
 /maint/extractstrings
-/maint/extractstates
 /maint/extractfixme
 /maint/structalign
 /maint/createhtmlindex
@@ -496,7 +494,6 @@ Makefile.am-stamp
 /src/include/mpio.h
 /src/include/mpicxx.h
 /src/include/mpimcxx.h
-/src/include/mpiallstates.h
 /src/include/lwnames.h
 /src/include/mpitest.h
 /src/include/win32

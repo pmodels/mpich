@@ -14,6 +14,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
                                             MPIR_Comm * comm, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     size_t recv_extent;
     MPI_Aint recv_lb, true_extent;
     int nranks, rank, nvtcs;
@@ -21,9 +22,9 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
     int max_count;
     void *tmp_buf = NULL;
     int tag = 0;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_INPLACE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_INPLACE);
+    MPIR_FUNC_ENTER;
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -50,26 +51,29 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
             nvtcs = (dtcopy_id == -1) ? 0 : 1;
             vtcs[0] = dtcopy_id;
 
-            send_id = MPIR_TSP_sched_isend((char *) recvbuf + rdispls[dst] * recv_extent,
-                                           recvcounts[dst], recvtype, dst, tag, comm,
-                                           sched, nvtcs, vtcs);
+            mpi_errno = MPIR_TSP_sched_isend((char *) recvbuf + rdispls[dst] * recv_extent,
+                                             recvcounts[dst], recvtype, dst, tag, comm,
+                                             sched, nvtcs, vtcs, &send_id);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
-            recv_id =
+            mpi_errno =
                 MPIR_TSP_sched_irecv(tmp_buf, recvcounts[dst], recvtype, dst, tag, comm,
-                                     sched, nvtcs, vtcs);
+                                     sched, nvtcs, vtcs, &recv_id);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
             nvtcs = 2;
             vtcs[0] = send_id;
             vtcs[1] = recv_id;
-            dtcopy_id = MPIR_TSP_sched_localcopy(tmp_buf, recvcounts[dst], recvtype,
+            mpi_errno = MPIR_TSP_sched_localcopy(tmp_buf, recvcounts[dst], recvtype,
                                                  ((char *) recvbuf +
                                                   rdispls[dst] * recv_extent), recvcounts[dst],
-                                                 recvtype, sched, nvtcs, vtcs);
+                                                 recvtype, sched, nvtcs, vtcs, &dtcopy_id);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_INPLACE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

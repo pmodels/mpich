@@ -6,17 +6,15 @@
 #include "mpidimpl.h"
 #include "ofi_am_events.h"
 
-int MPIDI_OFI_am_rdma_read_ack_handler(int handler_id, void *am_hdr, void *data,
-                                       MPI_Aint in_data_sz, int is_local, int is_async,
-                                       MPIR_Request ** req)
+int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
+                                       MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
     MPIDI_OFI_am_rdma_read_ack_msg_t *ack_msg;
     int src_handler_id;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_RDMA_READ_ACK_HANDLER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_RDMA_READ_ACK_HANDLER);
+    MPIR_FUNC_ENTER;
 
     ack_msg = (MPIDI_OFI_am_rdma_read_ack_msg_t *) am_hdr;
     sreq = ack_msg->sreq_ptr;
@@ -38,7 +36,7 @@ int MPIDI_OFI_am_rdma_read_ack_handler(int handler_id, void *am_hdr, void *data,
     MPID_Request_complete(sreq);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_RDMA_READ_ACK_HANDLER);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

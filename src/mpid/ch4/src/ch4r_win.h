@@ -102,8 +102,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr,
     int i, *ranks_in_grp = NULL;
     MPIR_Group *win_grp_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_FILL_RANKS_IN_WIN_GRP);
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDIG_FILL_RANKS_IN_WIN_GRP);
+    MPIR_FUNC_ENTER;
 
     ranks_in_grp = (int *) MPL_malloc(group_ptr->size * sizeof(int), MPL_MEM_RMA);
     MPIR_Assert(ranks_in_grp);
@@ -123,7 +122,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr,
   fn_exit:
     MPL_free(ranks_in_grp);
 
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDIG_FILL_RANKS_IN_WIN_GRP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -133,8 +132,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_start(MPIR_Group * group, int assert
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_START);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, goto fn_fail);
@@ -155,7 +153,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_start(MPIR_Group * group, int assert
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_START);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -170,8 +168,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_complete(MPIR_Win * win)
     int *ranks_in_win_grp = NULL;
     int need_unlock = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_ACCESS_EPOCH_CHECK(win, MPIDIG_EPOTYPE_START, mpi_errno, return mpi_errno);
 
@@ -226,7 +223,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_complete(MPIR_Win * win)
     if (need_unlock) {
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -239,8 +236,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_post(MPIR_Group * group, int assert,
     int win_grp_idx, peer;
     int *ranks_in_win_grp = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_POST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_POST);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_EXPOSURE_EPOCH_CHECK_NONE(win, mpi_errno, goto fn_fail);
@@ -279,7 +275,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_post(MPIR_Group * group, int assert,
     MPL_free(ranks_in_win_grp);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_POST);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -290,8 +286,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_wait(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_WAIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_WAIT);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_EXPOSURE_EPOCH_CHECK(win, MPIDIG_EPOTYPE_POST, mpi_errno, goto fn_fail);
@@ -305,7 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_wait(MPIR_Win * win)
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_WAIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -315,8 +310,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_TEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_TEST);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_EXPOSURE_EPOCH_CHECK(win, MPIDIG_EPOTYPE_POST, mpi_errno, goto fn_fail);
@@ -339,7 +333,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_TEST);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -351,8 +345,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock(int lock_type, int rank, int as
     int mpi_errno = MPI_SUCCESS;
     unsigned locked;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_LOCK_EPOCH_CHECK_NONE(win, rank, mpi_errno, goto fn_fail);
@@ -388,7 +381,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock(int lock_type, int rank, int as
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -401,8 +394,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
     MPIDIG_win_cntrl_msg_t msg;
     int need_unlock = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
+    MPIR_FUNC_ENTER;
 
     /* Check window lock epoch. */
     MPIDIG_ACCESS_EPOCH_CHECK(win, MPIDIG_EPOTYPE_LOCK, mpi_errno, return mpi_errno);
@@ -465,7 +457,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
     if (need_unlock) {
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -477,8 +469,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int need_unlock = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FENCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FENCE);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_FENCE_EPOCH_CHECK(win, mpi_errno, goto fn_fail);
 
@@ -522,7 +513,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
     if (need_unlock) {
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FENCE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -535,8 +526,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int ran
     int offset = rank;
     MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_SHARED_QUERY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_SHARED_QUERY);
+    MPIR_FUNC_ENTER;
 
     /* When only single process exists on the node or shared memory allocation fails,
      * should only query MPI_PROC_NULL or local process. Thus, return local window's info. */
@@ -570,7 +560,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int ran
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_SHARED_QUERY);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -578,8 +568,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int need_unlock = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
+    MPIR_FUNC_ENTER;
 
     /* Check window lock epoch. */
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, return mpi_errno);
@@ -615,7 +604,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
     if (need_unlock) {
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -625,8 +614,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int need_unlock = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, goto fn_fail);
 
@@ -655,7 +643,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
     if (need_unlock) {
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -665,8 +653,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int need_unlock = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
+    MPIR_FUNC_ENTER;
     int i;
 
     MPIDIG_ACCESS_EPOCH_CHECK(win, MPIDIG_EPOTYPE_LOCK_ALL, mpi_errno, return mpi_errno);
@@ -718,7 +705,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
     if (need_unlock) {
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -728,8 +715,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win
 {
     int mpi_errno = MPI_SUCCESS;
     int need_unlock = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
+    MPIR_FUNC_ENTER;
 
     /* Check window lock epoch. */
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, return mpi_errno);
@@ -763,7 +749,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win
     if (need_unlock) {
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -772,14 +758,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_sync(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_SYNC);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_SYNC);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, goto fn_fail);
     MPL_atomic_read_write_barrier();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_SYNC);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -789,8 +774,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int need_unlock = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, goto fn_fail);
 
@@ -819,7 +803,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
     if (need_unlock) {
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -829,8 +813,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_LOCK_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_LOCK_ALL);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIDIG_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, goto fn_fail);
@@ -864,7 +847,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_LOCK_ALL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

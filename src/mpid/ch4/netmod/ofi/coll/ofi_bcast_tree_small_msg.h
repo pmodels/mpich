@@ -45,8 +45,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_small_msg(void *buf
     int context_offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_BCAST_INTRA_SMALL_MSG_TRIGGERED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_BCAST_INTRA_SMALL_MSG_TRIGGERED);
+    MPIR_FUNC_ENTER;
 
     nranks = MPIR_Comm_size(comm_ptr);
     myrank = MPIR_Comm_rank(comm_ptr);
@@ -335,7 +334,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_small_msg(void *buf
     blk_sml_bcast->iter++;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_BCAST_INTRA_SMALL_MSG_TRIGGERED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

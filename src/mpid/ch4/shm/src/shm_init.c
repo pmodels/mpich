@@ -47,8 +47,7 @@ int MPIDI_SHM_mpi_finalize_hook(void)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_FINALIZE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_IPC_mpi_finalize_hook();
     MPIR_ERR_CHECK(ret);
@@ -57,21 +56,8 @@ int MPIDI_SHM_mpi_finalize_hook(void)
     MPIR_ERR_CHECK(ret);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_EXIT;
     return ret;
   fn_fail:
     goto fn_exit;
-}
-
-int MPIDI_SHM_get_vci_attr(int vci)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_GET_VCI_ATTR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_GET_VCI_ATTR);
-
-    ret = MPIDI_POSIX_get_vci_attr(vci);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_GET_VCI_ATTR);
-    return ret;
 }

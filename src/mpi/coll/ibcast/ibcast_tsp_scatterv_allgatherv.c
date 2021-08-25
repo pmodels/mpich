@@ -13,6 +13,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                                                     int allgatherv_k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     size_t extent, type_size;
     MPI_Aint true_lb, true_extent;
     int size, rank, tag;
@@ -20,11 +21,12 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     void *tmp_buf = NULL;
     MPI_Aint *cnts, *displs;
     size_t nbytes;
-    int tree_type;
+    int tree_type, vtx_id, recv_id;
     MPIR_Treealgo_tree_t my_tree, parents_tree;
-    int current_child, next_child, lrank, total_count, recv_id, sink_id;
+    int current_child, next_child, lrank, total_count, sink_id;
     int num_children, *child_subtree_size = NULL;
     int recv_size, num_send_dependencies;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
 
     /* For correctness, transport based collectives need to get the
@@ -32,8 +34,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTERV_ALLGATHERV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTERV_ALLGATHERV);
+    MPIR_FUNC_ENTER;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST,
@@ -80,9 +81,10 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
         if (rank == root) {
             mpi_errno =
                 MPIR_TSP_sched_localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, sched,
-                                         0, NULL);
+                                         0, NULL, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
-            MPIR_TSP_sched_fence(sched);
+            mpi_errno = MPIR_TSP_sched_fence(sched);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
     }
 
@@ -138,10 +140,12 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
     /* receive data from the parent */
     if (my_tree.parent != -1) {
-        recv_id =
+        mpi_errno =
             MPIR_TSP_sched_irecv((char *) tmp_buf + displs[rank], recv_size, MPI_BYTE,
-                                 my_tree.parent, tag, comm, sched, 0, NULL);
+                                 my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv", rank));
+
     }
 
     /* send data to children */
@@ -152,14 +156,17 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
         else
             num_send_dependencies = 0;
 
-        MPIR_TSP_sched_isend((char *) tmp_buf + displs[child],
-                             child_subtree_size[i], MPI_BYTE,
-                             child, tag, comm, sched, num_send_dependencies, &recv_id);
+        mpi_errno = MPIR_TSP_sched_isend((char *) tmp_buf + displs[child],
+                                         child_subtree_size[i], MPI_BYTE,
+                                         child, tag, comm, sched, num_send_dependencies, &recv_id,
+                                         &vtx_id);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
     }
 
 
     MPIR_Treealgo_tree_free(&my_tree);
-    MPIR_TSP_sched_fence(sched);        /* wait for scatter to complete */
+    mpi_errno = MPIR_TSP_sched_fence(sched);    /* wait for scatter to complete */
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     /* Schedule Allgatherv */
     mpi_errno =
@@ -176,14 +183,14 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
             mpi_errno =
                 MPIR_TSP_sched_localcopy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype, sched,
-                                         1, &sink_id);
+                                         1, &sink_id, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTERV_ALLGATHERV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

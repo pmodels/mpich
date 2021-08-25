@@ -50,10 +50,12 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     int pow_k_phase, offset, nconsecutive_occurrences, delta;
     int *dtcopy_id;
     int counter;
-    int sink_id;
+    int sink_id, vtx_id;
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_BRUCKS_SCHED_PUP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_BRUCKS_SCHED_PUP);
+    MPIR_FUNC_ENTER;
 
     MPIR_Datatype_get_extent_macro(rtype, type_extent);
     MPIR_Type_get_true_extent_impl(rtype, &type_lb, &type_true_extent);
@@ -73,15 +75,19 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     *pupsize = 0;       /* points to the first empty location in pupbuf */
     while (offset < comm_size) {
         if (pack) {
-            dtcopy_id[counter++] =
+            mpi_errno =
                 MPIR_TSP_sched_localcopy((char *) rbuf + offset * count * type_extent, count, rtype,
                                          (char *) pupbuf + *pupsize, count, rtype, sched, ninvtcs,
-                                         invtcs);
+                                         invtcs, &vtx_id);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+            dtcopy_id[counter++] = vtx_id;
         } else {
-            dtcopy_id[counter++] =
+            mpi_errno =
                 MPIR_TSP_sched_localcopy((char *) pupbuf + *pupsize, count, rtype,
                                          (char *) rbuf + offset * count * type_extent, count, rtype,
-                                         sched, ninvtcs, invtcs);
+                                         sched, ninvtcs, invtcs, &vtx_id);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+            dtcopy_id[counter++] = vtx_id;
         }
 
         offset += 1;
@@ -95,10 +101,12 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
         *pupsize += count * type_extent;        /* NOTE: This may not be extent, it might be type_size - CHECK THIS */
     }
 
-    sink_id = MPIR_TSP_sched_selective_sink(sched, counter, dtcopy_id);
+    mpi_errno = MPIR_TSP_sched_selective_sink(sched, counter, dtcopy_id, &sink_id);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+
     MPL_free(dtcopy_id);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_BRUCKS_SCHED_PUP);
+    MPIR_FUNC_EXIT;
 
     return sink_id;
 }
@@ -110,6 +118,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                       int k, int buffer_per_phase, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int i, j;
     int pack_ninvtcs, recv_ninvtcs, unpack_ninvtcs;
     int *pack_invtcs, *recv_invtcs, *unpack_invtcs;
@@ -120,18 +129,18 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int is_inplace;
     MPI_Aint s_extent, s_lb, r_extent, r_lb;
     MPI_Aint s_true_extent, r_true_extent;
-    int delta, src, dst;
+    int delta, src, dst, vtx_id;
     void ***tmp_sbuf = NULL, ***tmp_rbuf = NULL;
     int *packids, *sendids = NULL, *recvids = NULL, *unpackids = NULL;
     int packsize, num_unpacks_in_last_phase;
     void *tmp_buf = NULL;
     const void *senddata;
     int tag;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     MPIR_CHKLMEM_DECL(6);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_BRUCKS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_BRUCKS);
+    MPIR_FUNC_ENTER;
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -185,8 +194,10 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPIR_Assert(tmp_buf != NULL);
 
     if (is_inplace) {
-        invtcs[0] = MPIR_TSP_sched_localcopy(recvbuf, size * recvcount, recvtype,
-                                             tmp_buf, size * recvcount, recvtype, sched, 0, NULL);
+        mpi_errno = MPIR_TSP_sched_localcopy(recvbuf, size * recvcount, recvtype,
+                                             tmp_buf, size * recvcount, recvtype, sched, 0, NULL,
+                                             &invtcs[0]);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         n_invtcs = 1;
         senddata = tmp_buf;
     } else {
@@ -195,14 +206,19 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     }
 
     /* Step 1: rotate the data locally */
-    MPIR_TSP_sched_localcopy((void *) ((char *) senddata + rank * sendcount * s_extent),
-                             (size - rank) * sendcount, sendtype,
-                             recvbuf, (size - rank) * recvcount, recvtype, sched, n_invtcs, invtcs);
-    MPIR_TSP_sched_localcopy(senddata, rank * sendcount, sendtype,
-                             (void *) ((char *) recvbuf + (size - rank) * recvcount * r_extent),
-                             rank * recvcount, recvtype, sched, n_invtcs, invtcs);
-
-    MPIR_TSP_sched_fence(sched);
+    mpi_errno = MPIR_TSP_sched_localcopy((void *) ((char *) senddata + rank * sendcount * s_extent),
+                                         (size - rank) * sendcount, sendtype,
+                                         recvbuf, (size - rank) * recvcount, recvtype, sched,
+                                         n_invtcs, invtcs, &vtx_id);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+    mpi_errno = MPIR_TSP_sched_localcopy(senddata, rank * sendcount, sendtype,
+                                         (void *) ((char *) recvbuf +
+                                                   (size - rank) * recvcount * r_extent),
+                                         rank * recvcount, recvtype, sched, n_invtcs, invtcs,
+                                         &vtx_id);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     /* Step 2: Allocate buffer space for packing/receiving data for every phase */
     delta = 1;
@@ -266,17 +282,20 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             *unpack_invtcs = packids[j - 1];
             unpack_ninvtcs = 1;
 
-            sendids[j - 1] =
+            mpi_errno =
                 MPIR_TSP_sched_isend(tmp_sbuf[i][j - 1], packsize, MPI_BYTE, dst, tag,
-                                     comm, sched, 1, &packids[j - 1]);
+                                     comm, sched, 1, &packids[j - 1], &sendids[j - 1]);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
             if (i != 0 && buffer_per_phase == 0) {      /* this dependency holds only when we don't have dedicated recv buffer per phase */
                 *recv_invtcs = unpackids[j - 1];
                 recv_ninvtcs = 1;
             }
-            recvids[j - 1] =
+            mpi_errno =
                 MPIR_TSP_sched_irecv(tmp_rbuf[i][j - 1], packsize, MPI_BYTE,
-                                     src, tag, comm, sched, recv_ninvtcs, recv_invtcs);
+                                     src, tag, comm, sched, recv_ninvtcs, recv_invtcs,
+                                     &recvids[j - 1]);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
             *(unpack_invtcs + 1) = recvids[j - 1];
             unpack_ninvtcs = 2;
@@ -298,24 +317,31 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
      * here for derived datatypes, I am skipping that for now,
      * will come back to it later on - will require adding API
      * for getting true_lb */
-    invtcs[0] =
+    mpi_errno =
         MPIR_TSP_sched_localcopy((void *) ((char *) recvbuf + (rank + 1) * recvcount * r_extent),
                                  (size - rank - 1) * recvcount, recvtype, tmp_buf,
                                  (size - rank - 1) * recvcount, recvtype, sched,
-                                 num_unpacks_in_last_phase, unpackids);
-    invtcs[1] =
+                                 num_unpacks_in_last_phase, unpackids, &invtcs[0]);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+
+    mpi_errno =
         MPIR_TSP_sched_localcopy(recvbuf, (rank + 1) * recvcount, recvtype,
                                  (void *) ((char *) tmp_buf +
                                            (size - rank - 1) * recvcount * r_extent),
                                  (rank + 1) * recvcount, recvtype, sched, num_unpacks_in_last_phase,
-                                 unpackids);
+                                 unpackids, &invtcs[1]);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     /* invert the buffer now to get the result in desired order */
-    for (i = 0; i < size; i++)
-        MPIR_TSP_sched_localcopy((char *) tmp_buf + i * recvcount * r_extent, recvcount, recvtype,
-                                 (void *) ((char *) recvbuf +
-                                           (size - i - 1) * recvcount * r_extent), recvcount,
-                                 recvtype, sched, 2, invtcs);
+    for (i = 0; i < size; i++) {
+        mpi_errno =
+            MPIR_TSP_sched_localcopy((char *) tmp_buf + i * recvcount * r_extent, recvcount,
+                                     recvtype,
+                                     (void *) ((char *) recvbuf +
+                                               (size - i - 1) * recvcount * r_extent), recvcount,
+                                     recvtype, sched, 2, invtcs, &vtx_id);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+    }
 
   fn_exit:
     for (i = 0; i < nphases; i++) {
@@ -324,7 +350,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     }
     MPIR_CHKLMEM_FREEALL();
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_BRUCKS);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
   fn_fail:

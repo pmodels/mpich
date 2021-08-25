@@ -25,9 +25,8 @@ int MPID_Rsend(const void * buf, int count, MPI_Datatype datatype, int rank, int
     MPID_Seqnum_t seqnum;
 #endif    
     int mpi_errno = MPI_SUCCESS;    
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND);
+    MPIR_FUNC_ENTER;
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 					"rank=%d, tag=%d, context=%d", 
@@ -147,6 +146,6 @@ int MPID_Rsend(const void * buf, int count, MPI_Datatype datatype, int rank, int
 		  );
     
   fn_fail:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RSEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }

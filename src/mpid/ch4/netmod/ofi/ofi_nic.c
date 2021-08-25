@@ -8,6 +8,7 @@
 #include "ofi_init.h"
 #include "mpir_hwtopo.h"
 
+#ifdef HAVE_LIBFABRIC_NIC
 /* Return the parent object (typically socket) of the NIC */
 static MPIR_hwtopo_gid_t get_nic_parent(struct fi_info *info)
 {
@@ -75,6 +76,7 @@ bool MPIDI_OFI_nic_already_used(const struct fi_info * prov, struct fi_info ** o
     }
     return false;
 }
+#endif
 
 /* Setup the multi-NIC data structures to use the fi_info structure given in prov */
 static int setup_single_nic(void);
@@ -104,6 +106,7 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
         if (!first_prov) {
             first_prov = p;
         }
+#ifdef HAVE_LIBFABRIC_NIC
         /* check the nic */
         struct fid_nic *nic = p->nic;
         if (nic && nic->bus_attr->bus_type == FI_BUS_PCI &&
@@ -115,6 +118,7 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
                 break;
             }
         }
+#endif
     }
 
     if (nic_count == 0) {
@@ -123,11 +127,15 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
         MPIR_Assert(MPIDI_OFI_global.prov_use[0]);
         mpi_errno = setup_single_nic();
         MPIR_ERR_CHECK(mpi_errno);
-    } else if (nic_count == 1) {
-        mpi_errno = setup_single_nic();
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
+    }
+#ifdef HAVE_LIBFABRIC_NIC
+    else if (nic_count >= 1) {
         mpi_errno = setup_multi_nic(nic_count);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+#endif
+    else {
+        mpi_errno = setup_single_nic();
         MPIR_ERR_CHECK(mpi_errno);
     }
     MPIR_Assert(MPIDI_OFI_global.num_nics > 0);
@@ -160,6 +168,7 @@ static int setup_single_nic(void)
     return MPI_SUCCESS;
 }
 
+#ifdef HAVE_LIBFABRIC_NIC
 /* TODO: Now that multiple NICs are detected, sort them based on preferred-ness,
  * closeness and count of other processes using the NIC. */
 static int setup_multi_nic(int nic_count)
@@ -266,14 +275,17 @@ static int setup_multi_nic(int nic_count)
 
     return mpi_errno;
 }
+#endif
 
 bool MPIDI_OFI_nic_is_up(struct fi_info * prov)
 {
+#ifdef HAVE_LIBFABRIC_NIC
     /* Make sure the NIC returned by OFI is not down. Some providers don't include NIC
      * information so we need to skip those. */
     if (prov->nic != NULL && prov->nic->link_attr->state == FI_LINK_DOWN) {
         return false;
     }
+#endif
 
     return true;
 }

@@ -40,6 +40,7 @@ ATTRIBUTE((unused));
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
 int MPIDI_OFI_progress_uninlined(int vni);
+int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret);
 
 /* vni mapping */
 /* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
@@ -306,13 +307,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_set(int ctx_idx, int val)
 #define MPIDI_OFI_LOCAL_MR_KEY 0
 #define MPIDI_OFI_COLL_MR_KEY 1
 #define MPIDI_OFI_INVALID_MR_KEY 0xFFFFFFFFFFFFFFFFULL
-int MPIDI_OFI_handle_cq_error_util(int ctx_idx, ssize_t ret);
 int MPIDI_OFI_retry_progress(void);
-int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint data_sz,
-                              int is_local, int is_async, MPIR_Request ** req);
-int MPIDI_OFI_am_rdma_read_ack_handler(int handler_id, void *am_hdr, void *data,
-                                       MPI_Aint in_data_sz, int is_local, int is_async,
-                                       MPIR_Request ** req);
+int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
+                              uint32_t attr, MPIR_Request ** req);
+int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
+                                       MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(struct fid_ep *ep);
 int MPIDI_OFI_mr_key_allocator_init(void);
@@ -340,8 +339,7 @@ MPL_STATIC_INLINE_PREFIX uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int 
 {
     uint32_t ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_OFI_ENABLE_MR_PROV_KEY || MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
         /* Always use winfo[rank].disp_unit if any of PROV_KEY and VIRT_ADDRESS is on.
@@ -353,7 +351,7 @@ MPL_STATIC_INLINE_PREFIX uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int 
         ret = win->disp_unit;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -551,8 +549,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
     ssize_t rem_size = total_bytes;
     MPI_Aint num_iov, total_iov = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_COUNT_IOV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_COUNT_IOV);
+    MPIR_FUNC_ENTER;
 
     if (dt_datatype == MPI_DATATYPE_NULL)
         goto fn_exit;
@@ -567,7 +564,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
     } while (rem_size);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_COUNT_IOV);
+    MPIR_FUNC_EXIT;
     return total_iov;
 }
 
@@ -622,5 +619,95 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm
 
     return nic_idx;
 }
+
+/* cq bufferring routines --
+ * in particular, when we encounter EAGAIN error during progress, such as during
+ * active message handling, recursively calling progress may result in unpredictable
+ * behaviors (e.g. stack overflow). Thus we need use the cq buffering to avoid
+ * process further cq entries during (am-related) calls.
+ */
+
+/* local macros to make the code cleaner */
+#define CQ_S_LIST MPIDI_OFI_global.cq_buffered_static_list
+#define CQ_S_HEAD MPIDI_OFI_global.cq_buffered_static_head
+#define CQ_S_TAIL MPIDI_OFI_global.cq_buffered_static_tail
+#define CQ_D_HEAD MPIDI_OFI_global.cq_buffered_dynamic_head
+#define CQ_D_TAIL MPIDI_OFI_global.cq_buffered_dynamic_tail
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_has_cq_buffered(int vni)
+{
+    return (CQ_S_HEAD != CQ_S_TAIL) || (CQ_D_HEAD != NULL);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
+{
+    int mpi_errno = MPI_SUCCESS, ret = 0;
+    struct fi_cq_tagged_entry cq_entry;
+    MPIR_FUNC_ENTER;
+
+    /* Caller must hold MPIDI_OFI_THREAD_FI_MUTEX */
+
+    for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
+        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
+        ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, &cq_entry, 1);
+
+        if (unlikely(ret == -FI_EAGAIN))
+            goto fn_exit;
+
+        if (ret < 0) {
+            mpi_errno = MPIDI_OFI_handle_cq_error(ctx_idx, ret);
+            goto fn_fail;
+        }
+
+        /* If the statically allocated buffered list is full or we've already
+         * started using the dynamic list, continue using it. */
+        if (((CQ_S_HEAD + 1) % MPIDI_OFI_NUM_CQ_BUFFERED == CQ_S_TAIL) || (CQ_D_HEAD != NULL)) {
+            MPIDI_OFI_cq_list_t *list_entry =
+                (MPIDI_OFI_cq_list_t *) MPL_malloc(sizeof(MPIDI_OFI_cq_list_t), MPL_MEM_BUFFER);
+            MPIR_Assert(list_entry);
+            list_entry->cq_entry = cq_entry;
+            LL_APPEND(CQ_D_HEAD, CQ_D_TAIL, list_entry);
+        } else {
+            CQ_S_LIST[CQ_S_HEAD].cq_entry = cq_entry;
+            CQ_S_HEAD = (CQ_S_HEAD + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+        }
+    }
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged_entry *wc)
+{
+    int rc = 0;
+
+    if (1) {
+        /* If the static list isn't empty, do so first */
+        if (CQ_S_HEAD != CQ_S_TAIL) {
+            wc[0] = CQ_S_LIST[CQ_S_TAIL].cq_entry;
+            CQ_S_TAIL = (CQ_S_TAIL + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+        }
+        /* If there's anything in the dynamic list, it goes second. */
+        else if (CQ_D_HEAD != NULL) {
+            MPIDI_OFI_cq_list_t *cq_list_entry = CQ_D_HEAD;
+            LL_DELETE(CQ_D_HEAD, CQ_D_TAIL, cq_list_entry);
+            wc[0] = cq_list_entry->cq_entry;
+            MPL_free(cq_list_entry);
+        }
+
+        rc = 1;
+    }
+
+    return rc;
+}
+
+#undef CQ_S_LIST
+#undef CQ_S_HEAD
+#undef CQ_S_TAIL
+#undef CQ_D_HEAD
+#undef CQ_D_TAIL
 
 #endif /* OFI_IMPL_H_INCLUDED */

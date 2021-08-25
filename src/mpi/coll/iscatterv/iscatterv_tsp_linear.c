@@ -14,13 +14,14 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
                                             MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int rank, comm_size;
     MPI_Aint extent;
     int i;
-    int tag;
+    int tag, vtx_id;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_ISCATTERV_SCHED_ALLCOMM_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_ISCATTERV_SCHED_ALLCOMM_LINEAR);
+    MPIR_FUNC_ENTER;
 
     rank = comm_ptr->rank;
 
@@ -49,27 +50,33 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
             if (sendcounts[i]) {
                 if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
                     if (recvbuf != MPI_IN_PLACE) {
-                        MPIR_TSP_sched_localcopy(((char *) sendbuf + displs[rank] * extent),
-                                                 sendcounts[rank], sendtype,
-                                                 recvbuf, recvcount, recvtype, sched, 0, NULL);
+                        mpi_errno =
+                            MPIR_TSP_sched_localcopy(((char *) sendbuf + displs[rank] * extent),
+                                                     sendcounts[rank], sendtype, recvbuf, recvcount,
+                                                     recvtype, sched, 0, NULL, &vtx_id);
                     }
                 } else {
-                    MPIR_TSP_sched_isend(((char *) sendbuf + displs[i] * extent),
-                                         sendcounts[i], sendtype, i, tag, comm_ptr, sched, 0, NULL);
+                    mpi_errno = MPIR_TSP_sched_isend(((char *) sendbuf + displs[i] * extent),
+                                                     sendcounts[i], sendtype, i, tag, comm_ptr,
+                                                     sched, 0, NULL, &vtx_id);
                 }
             }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
     }
 
     else if (root != MPI_PROC_NULL) {
         /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (recvcount) {
-            MPIR_TSP_sched_irecv(recvbuf, recvcount, recvtype, root, tag, comm_ptr, sched, 0, NULL);
+            mpi_errno =
+                MPIR_TSP_sched_irecv(recvbuf, recvcount, recvtype, root, tag, comm_ptr, sched, 0,
+                                     NULL, &vtx_id);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_ISCATTERV_SCHED_ALLCOMM_LINEAR);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

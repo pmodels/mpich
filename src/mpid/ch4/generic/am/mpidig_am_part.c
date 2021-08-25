@@ -14,8 +14,7 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PART_REQ_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PART_REQ_CREATE);
+    MPIR_FUNC_ENTER;
 
     /* Set refcnt=1 for user-defined partitioned pattern; decrease at request_free. */
     MPIDI_CH4_REQUEST_CREATE(req, kind, 0, 1);
@@ -48,7 +47,7 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
     *req_ptr = req;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_REQ_CREATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -57,10 +56,10 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
 static void part_req_am_init(MPIR_Request * part_req)
 {
     MPIDIG_PART_REQUEST(part_req, peer_req_ptr) = NULL;
-    MPIDIG_PART_REQUEST(part_req, send_epoch) = 0;
-    MPIDIG_PART_REQUEST(part_req, recv_epoch) = 0;
     if (part_req->kind == MPIR_REQUEST_KIND__PART_SEND) {
-        MPIR_cc_set(&MPIDIG_PART_REQUEST(part_req, u.send).ready_cntr, 0);
+        /* partitions + 1: once all partitions are ready and CTS is received, data can be issued */
+        MPIR_cc_set(&MPIDIG_PART_REQUEST(part_req, u.send).ready_cntr,
+                    part_req->u.part.partitions + 1);
     }
 }
 
@@ -94,8 +93,7 @@ int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
                           MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_PSEND_INIT);
+    MPIR_FUNC_ENTER;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
@@ -131,7 +129,7 @@ int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PSEND_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -142,8 +140,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
                           MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_PRECV_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_PRECV_INIT);
+    MPIR_FUNC_ENTER;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
@@ -174,7 +171,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_PRECV_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -119,8 +119,7 @@ static int update_nic_preferences(MPIR_Comm * comm)
 int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_PRE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_PRE_HOOK);
+    MPIR_FUNC_ENTER;
 
     /* no connection for non-dynamic or non-root-rank of intercomm */
     MPIDI_OFI_COMM(comm).conn_id = -1;
@@ -161,7 +160,7 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_PRE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -171,8 +170,7 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
+    MPIR_FUNC_ENTER;
 
     MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
     mpi_errno =
@@ -181,7 +179,7 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_COMMIT_POST_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -223,8 +221,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_trig_blocking_small_msg_destroy(MPIR_Comm
 int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_OFI_COMM(comm).csel_comm) {
         mpi_errno = MPIR_Csel_free(MPIDI_OFI_COMM(comm).csel_comm);
@@ -241,7 +238,7 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
         (MPIDI_OFI_COMM(comm).enable_hashing != 0 ? 1 : 0);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

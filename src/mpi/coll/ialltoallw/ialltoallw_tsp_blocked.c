@@ -15,13 +15,14 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                                             int bblock, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
+    int mpi_errno_ret = MPI_SUCCESS;
+    int tag, vtx_id;
     size_t sendtype_size, recvtype_size;
     int nranks, rank;
     int i, j, comm_block, dst;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLW_SCHED_INTRA_BLOCKED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLW_SCHED_INTRA_BLOCKED);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(sendbuf != MPI_IN_PLACE);
 
@@ -46,9 +47,10 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
             if (recvcounts[dst]) {
                 MPIR_Datatype_get_size_macro(recvtypes[dst], recvtype_size);
                 if (recvtype_size) {
-                    MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[dst],
-                                         recvcounts[dst], recvtypes[dst], dst, tag, comm, sched,
-                                         0, NULL);
+                    mpi_errno = MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[dst],
+                                                     recvcounts[dst], recvtypes[dst], dst, tag,
+                                                     comm, sched, 0, NULL, &vtx_id);
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
                 }
             }
         }
@@ -58,19 +60,21 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
             if (sendcounts[dst]) {
                 MPIR_Datatype_get_size_macro(sendtypes[dst], sendtype_size);
                 if (sendtype_size) {
-                    MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst],
-                                         sendcounts[dst], sendtypes[dst], dst, tag, comm, sched,
-                                         0, NULL);
+                    mpi_errno = MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst],
+                                                     sendcounts[dst], sendtypes[dst], dst, tag,
+                                                     comm, sched, 0, NULL, &vtx_id);
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
                 }
             }
         }
 
         /* force our block of sends/recvs to complete before starting the next block */
-        MPIR_TSP_sched_fence(sched);
+        mpi_errno = MPIR_TSP_sched_fence(sched);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLW_SCHED_INTRA_BLOCKED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

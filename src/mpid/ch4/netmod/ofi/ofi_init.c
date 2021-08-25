@@ -5,6 +5,7 @@
 
 #include "mpidimpl.h"
 #include "ofi_impl.h"
+#include "ofi_am_impl.h"
 #include "ofi_noinline.h"
 #include "mpir_hwtopo.h"
 #include "ofi_csel_container.h"
@@ -1002,8 +1003,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     int mpi_errno = MPI_SUCCESS;
     int i = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_ENTER;
 
     /* Progress until we drain all inflight RMA send long buffers */
     /* NOTE: am currently only use vni 0. Need update once that changes */
@@ -1094,16 +1094,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPIDI_OFI_get_vci_attr(int vci)
-{
-    MPIR_Assert(0 <= vci && vci < 1);
-    return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
 void *MPIDI_OFI_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
@@ -1139,8 +1133,7 @@ static int create_vni_context(int vni, int nic)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CREATE_VNI_CONTEXT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CREATE_VNI_CONTEXT);
+    MPIR_FUNC_ENTER;
 
     struct fi_info *prov_use = MPIDI_OFI_global.prov_use[nic];
     int ctx_idx;
@@ -1270,7 +1263,7 @@ static int create_vni_context(int vni, int nic)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CREATE_VNI_CONTEXT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1334,7 +1327,7 @@ static int destroy_vni_context(int vni, int nic)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DESTROY_VNI_CONTEXT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1716,6 +1709,21 @@ int ofi_am_post_recv(int vni, int nic)
                                             FI_MULTI_RECV | FI_COMPLETION), 0, prepost, FALSE);
         }
     }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* called in MPIDI_OFI_dispatch_function when FI_MULTI_RECV is flagged */
+int MPIDI_OFI_am_repost_buffer(int am_idx)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, 0);
+    MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx,
+                                       &MPIDI_OFI_global.am_msg[am_idx],
+                                       FI_MULTI_RECV | FI_COMPLETION), prepost);
 
   fn_exit:
     return mpi_errno;
