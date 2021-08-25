@@ -287,19 +287,6 @@ static int set_runtime_configurations(void)
     return mpi_errno;
 }
 
-/* This local function is temporary until we decide where the
- * following init code belongs */
-static int generic_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_global.is_ch4u_initialized = 0;
-    MPIDIG_am_init();
-    MPIDIU_map_create((void **) &(MPIDI_global.win_map), MPL_MEM_RMA);
-    MPIDI_global.csel_root = NULL;
-    MPIDI_global.is_ch4u_initialized = 1;
-    return mpi_errno;
-}
-
 #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
@@ -391,8 +378,8 @@ int MPID_Init(int requested, int *provided)
 
     MPIDIU_avt_init();
 
-    mpi_errno = generic_init();
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIDIU_map_create((void **) &(MPIDI_global.win_map), MPL_MEM_RMA);
+    MPIDI_global.csel_root = NULL;
 
     /* Initialize multiple VCIs */
     /* TODO: add checks to ensure MPIDI_vci_t is padded or aligned to MPL_CACHELINE_SIZE */
@@ -419,24 +406,29 @@ int MPID_Init(int requested, int *provided)
 
         /* TODO: workq */
     }
-    {
-        int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_init_local(&shm_tag_bits);
 
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POPFATAL(mpi_errno);
-        }
+    /* internally does per-vci am initialization */
+    MPIDIG_am_init();
+
+    /* **** Call NM/SHM init_local **** */
+    int shm_tag_bits, nm_tag_bits;
+    shm_tag_bits = MPIR_TAG_BITS_DEFAULT;
+    nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_init_local(&shm_tag_bits);
+
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POPFATAL(mpi_errno);
+    }
 #endif
 
-        mpi_errno = MPIDI_NM_init_local(&nm_tag_bits);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POPFATAL(mpi_errno);
-        }
-
-        /* Use the minimum tag_bits from the netmod and shmod */
-        MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
+    mpi_errno = MPIDI_NM_init_local(&nm_tag_bits);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POPFATAL(mpi_errno);
     }
+
+    /* Use the minimum tag_bits from the netmod and shmod */
+    MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
 
     /* setup receive queue statistics */
     mpi_errno = MPIDIG_recvq_init();
@@ -492,14 +484,6 @@ int MPID_InitCompleted(void)
     goto fn_exit;
 }
 
-/* This local function is temporary until we decide where the
- * following finalize code belongs */
-static void generic_finalize(void)
-{
-    MPIDIG_am_finalize();
-    MPIDI_global.is_ch4u_initialized = 0;
-}
-
 int MPID_Finalize(void)
 {
     int mpi_errno;
@@ -517,7 +501,7 @@ int MPID_Finalize(void)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    generic_finalize();
+    MPIDIG_am_finalize();
 
     MPIDIU_avt_destroy();
 

@@ -12,8 +12,6 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(MPIDI_global.is_ch4u_initialized);
-
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
 
