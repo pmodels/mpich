@@ -14,13 +14,14 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                                             MPIR_Comm * comm, int bblock, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int is_inplace ATTRIBUTE((unused));
     size_t recv_extent, send_extent, sendtype_size, recvtype_size;
     MPI_Aint recv_lb, send_lb, true_extent;
     int nranks, rank;
     int i, j, comm_block, dst;
     int tag = 0, vtx_id;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 
