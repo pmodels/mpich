@@ -210,7 +210,7 @@ void MPL_set_listen_attr(int use_loopback, int max_conn)
 int MPL_listen(int sock_fd, unsigned short port)
 {
     MPL_sockaddr_t addr;
-    int ret;
+    int ret = 0;
 
     if (_use_loopback) {
         MPL_get_sockaddr_direct(MPL_SOCKADDR_LOOPBACK, &addr);
@@ -235,7 +235,7 @@ int MPL_listen(int sock_fd, unsigned short port)
 int MPL_listen_anyport(int sock_fd, unsigned short *p_port)
 {
     MPL_sockaddr_t addr;
-    int ret;
+    int ret = 0;
 
     if (_use_loopback) {
         MPL_get_sockaddr_direct(MPL_SOCKADDR_LOOPBACK, &addr);
