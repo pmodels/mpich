@@ -615,6 +615,16 @@ unexpected messages queued.
 **shmw_deserbufbig: Size of buffer to deserialize shared memory handle  \
 is too big (> MPIU_SHMW_GHND_SZ) 
 
+**sendmsg:sendmsg failed
+**sendmsg %s:sendmsg failed - %s
+**sendmsg %s %d:sendmsg failed, %s (errno %d)
+**recvmsg:recvmsg failed
+**recvmsg %s:recvmsg failed - %s
+**recvmsg %s %d:recvmsg failed, %s (errno %d)
+**recv:recv failed
+**recv %s:recv failed - %s
+**recv %s %d:recv failed, %s (errno %d)
+
 #
 # CH3:ssm
 #
