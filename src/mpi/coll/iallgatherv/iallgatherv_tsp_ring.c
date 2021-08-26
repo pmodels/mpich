@@ -16,15 +16,16 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
     size_t extent;
     MPI_Aint lb, true_extent;
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int i, src, dst;
     int nranks, is_inplace, rank;
     int send_rank, recv_rank;
     void *data_buf, *buf1, *buf2, *sbuf, *rbuf;
     int max_count;
-    int tag;
+    int tag, vtx_id;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RING);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RING);
+    MPIR_FUNC_ENTER;
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     nranks = MPIR_Comm_size(comm);
@@ -55,19 +56,22 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
     /* Phase 1: copy data to buf1 from sendbuf or recvbuf(in case of inplace) */
     int dtcopy_id[3];
     if (is_inplace) {
-        dtcopy_id[0] =
+        mpi_errno =
             MPIR_TSP_sched_localcopy((char *) data_buf + displs[rank] * extent, sendcount, sendtype,
-                                     buf1, recvcounts[rank], recvtype, sched, 0, NULL);
+                                     buf1, recvcounts[rank], recvtype, sched, 0, NULL,
+                                     &dtcopy_id[0]);
     } else {
         /* copy your data into your recvbuf from your sendbuf */
-        MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype,
-                                 (char *) recvbuf + displs[rank] * extent, recvcounts[rank],
-                                 recvtype, sched, 0, NULL);
+        mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype,
+                                             (char *) recvbuf + displs[rank] * extent,
+                                             recvcounts[rank], recvtype, sched, 0, NULL, &vtx_id);
         /* copy data from sendbuf to tmp_sendbuf to send the data */
-        dtcopy_id[0] =
+        mpi_errno =
             MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype, buf1, recvcounts[rank], recvtype,
-                                     sched, 0, NULL);
+                                     sched, 0, NULL, &dtcopy_id[0]);
     }
+
+    MPIR_ERR_CHECK(mpi_errno);
 
     src = (nranks + rank - 1) % nranks;
     dst = (rank + 1) % nranks;
@@ -90,19 +94,20 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
             nvtcs = 1;
             vtcs[0] = dtcopy_id[0];
 
-            send_id[i % 3] =
+            mpi_errno =
                 MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm, sched,
-                                     nvtcs, vtcs);
-
+                                     nvtcs, vtcs, &send_id[i % 3]);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
             nvtcs = 0;
         } else {
             nvtcs = 2;
             vtcs[0] = recv_id[(i - 1) % 3];
             vtcs[1] = send_id[(i - 1) % 3];
 
-            send_id[i % 3] =
+            mpi_errno =
                 MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm, sched,
-                                     nvtcs, vtcs);
+                                     nvtcs, vtcs, &send_id[i % 3]);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
             if (i == 1) {
                 nvtcs = 2;
@@ -116,15 +121,17 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
             }
         }
 
-        recv_id[i % 3] =
+        mpi_errno =
             MPIR_TSP_sched_irecv(rbuf, recvcounts[recv_rank], recvtype, src, tag, comm, sched,
-                                 nvtcs, vtcs);
-
+                                 nvtcs, vtcs, &recv_id[i % 3]);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         /* Copy to correct position in recvbuf */
-        dtcopy_id[i % 3] =
+        mpi_errno =
             MPIR_TSP_sched_localcopy(rbuf, recvcounts[recv_rank], recvtype,
                                      (char *) recvbuf + displs[recv_rank] * extent,
-                                     recvcounts[recv_rank], recvtype, sched, 1, &recv_id[i % 3]);
+                                     recvcounts[recv_rank], recvtype, sched, 1, &recv_id[i % 3],
+                                     &dtcopy_id[i % 3]);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
         data_buf = sbuf;
         sbuf = rbuf;
@@ -132,10 +139,11 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
 
     }
 
-    MPIR_TSP_sched_fence(sched);
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RING);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

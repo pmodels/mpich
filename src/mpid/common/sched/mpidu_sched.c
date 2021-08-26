@@ -159,8 +159,7 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     int end = MPI_UNDEFINED;
     struct MPIDU_Sched *elt = NULL;
 #endif
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_NEXT_TAG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_NEXT_TAG);
+    MPIR_FUNC_ENTER;
 
     *tag = comm_ptr->next_sched_tag;
     ++comm_ptr->next_sched_tag;
@@ -195,7 +194,7 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
 #if defined(HAVE_ERROR_CHECKING)
   fn_fail:
 #endif
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SCHED_NEXT_TAG);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -213,8 +212,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
     MPIR_Request *r = s->req;
     MPIR_Comm *comm;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_START_ENTRY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_START_ENTRY);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(e->status == MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED);
 
@@ -374,7 +372,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SCHED_START_ENTRY);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
@@ -391,8 +389,7 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
     int mpi_errno = MPI_SUCCESS;
     size_t i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_CONTINUE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_CONTINUE);
+    MPIR_FUNC_ENTER;
 
     for (i = s->idx; i < s->num_entries; ++i) {
         struct MPIDU_Sched_entry *e = &s->entries[i];
@@ -418,7 +415,7 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
         }
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SCHED_CONTINUE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -431,8 +428,7 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind)
     struct MPIDU_Sched *s;
     MPIR_CHKPMEM_DECL(2);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_CREATE);
+    MPIR_FUNC_ENTER;
 
     *sp = NULL;
 
@@ -462,7 +458,7 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind)
     MPIR_CHKPMEM_COMMIT();
     *sp = s;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SCHED_CREATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -552,8 +548,7 @@ int MPIDU_Sched_start(struct MPIDU_Sched *s, MPIR_Comm * comm, MPIR_Request ** r
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *r;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_START);
+    MPIR_FUNC_ENTER;
 
     *req = NULL;
 
@@ -600,7 +595,7 @@ int MPIDU_Sched_start(struct MPIDU_Sched *s, MPIR_Comm * comm, MPIR_Request ** r
         sched_dump(s, stderr);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SCHED_START);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     if (*req)

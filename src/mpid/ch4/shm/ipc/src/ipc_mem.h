@@ -16,8 +16,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_unmap(MPIDI_IPCI_type_t ipc_type,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_HANDLE_UNMAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_HANDLE_UNMAP);
+    MPIR_FUNC_ENTER;
 
     switch (ipc_type) {
         case MPIDI_IPCI_TYPE__XPMEM:
@@ -34,7 +33,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_unmap(MPIDI_IPCI_type_t ipc_type,
             break;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_HANDLE_UNMAP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 

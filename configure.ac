@@ -5301,8 +5301,6 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpicc.bash \
           src/env/mpicxx.sh \
 	  src/env/mpicxx.bash \
-	  src/env/mpif77.sh \
-	  src/env/mpif77.bash \
 	  src/env/mpifort.sh \
 	  src/env/mpifort.bash \
           src/env/parkill \
@@ -5321,11 +5319,15 @@ if test ${device_name} = "ch4" ; then
     elif test "$ch4_netmods" = "ucx" -a "$with_ucx" = "embedded"; then
         t_netmod="ucx (embedded)"
     fi
+    t_xpmem=""
+    if test "$pac_have_xpmem" = "yes" ; then
+        t_xpmem="xpmem"
+    fi
 cat <<EOF
 ***
 *** device: ch4
 *** netmods: ${t_netmod}
-*** shm: ${ch4_shm}
+*** shm: ${ch4_shm} $t_xpmem
 *** gpu: ${GPU_SUPPORT}
 ***
 EOF

@@ -26,9 +26,8 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
     int mpi_errno = MPI_SUCCESS;
     int iov_n, iovcnt = 0;
     struct iovec iov[MPL_IOV_LIMIT];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
+    MPIR_FUNC_ENTER;
 
     iov[iovcnt].iov_base = header;
     iov[iovcnt].iov_len = hdr_sz;
@@ -78,7 +77,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
 
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:
     goto fn_exit;

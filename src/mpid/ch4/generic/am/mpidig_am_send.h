@@ -8,9 +8,23 @@
 
 #include "ch4_impl.h"
 
+/* MPIDIG_AM_SEND message uses flags in MPIDIG_hdr_t to mark different mode.
+ * The bits are masked as following:
+ *     0-7  individual flags as defined below
+ *     8-15 RNDV ID if MPIDIG_AM_SEND_FLAGS_RTS is set
+ *     16-  reserved, always zero.
+ */
+
 #define MPIDIG_AM_SEND_FLAGS_NONE (0)
 #define MPIDIG_AM_SEND_FLAGS_SYNC (1)
 #define MPIDIG_AM_SEND_FLAGS_RTS (1 << 1)
+
+#define MPIDIG_AM_SEND_SET_RNDV(flags, id) \
+    do { \
+        flags = (flags & 0xff) | MPIDIG_AM_SEND_FLAGS_RTS | (id << 8); \
+    } while (0)
+
+#define MPIDIG_AM_SEND_GET_RNDV_ID(flags) (flags >> 8)
 
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_check_eager(int is_local, MPI_Aint am_hdr_sz, MPI_Aint data_sz,
                                                  const void *buf, MPI_Aint count,
@@ -36,8 +50,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = *request;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ISEND_IMPL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ISEND_IMPL);
+    MPIR_FUNC_ENTER;
 
     if (sreq == NULL) {
         sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
@@ -63,6 +76,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     MPI_Aint data_sz;
     MPIDI_Datatype_check_size(datatype, count, data_sz);
     am_hdr.data_sz = data_sz;
+    am_hdr.rndv_hdr_sz = 0;
 
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIDIG_REQUEST(sreq, datatype) = datatype;
@@ -85,14 +99,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
         MPIDIG_REQUEST(sreq, req->sreq).context_id = am_hdr.context_id;
         MPIDIG_REQUEST(sreq, rank) = rank;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        am_hdr.flags |= MPIDIG_AM_SEND_FLAGS_RTS;
+        MPIDIG_AM_SEND_SET_RNDV(am_hdr.flags, MPIDIG_RNDV_GENERIC);
 
         CH4_CALL(am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz), is_local, mpi_errno);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ISEND_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -106,8 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
                                               MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_ISEND);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     mpi_errno =
@@ -115,7 +128,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
                           MPIDIG_AM_SEND_FLAGS_NONE, request, MPIR_ERR_NONE);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_ISEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -127,8 +140,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_coll(const void *buf, MPI_Aint count,
                                                MPIR_Request ** request, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ISEND_COLL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ISEND_COLL);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     mpi_errno =
@@ -136,7 +148,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_coll(const void *buf, MPI_Aint count,
                           MPIDIG_AM_SEND_FLAGS_NONE, request, *errflag);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ISEND_COLL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -149,8 +161,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rsend(const void *buf,
                                               MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_RSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_RSEND);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     mpi_errno =
@@ -158,7 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rsend(const void *buf,
                           MPIDIG_AM_SEND_FLAGS_NONE, request, MPIR_ERR_NONE);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_RSEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -171,8 +182,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irsend(const void *buf,
                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IRSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IRSEND);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     mpi_errno =
@@ -180,7 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irsend(const void *buf,
                           MPIDIG_AM_SEND_FLAGS_NONE, request, MPIR_ERR_NONE);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IRSEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -192,8 +202,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_issend(const void *buf,
                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_ISSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_ISSEND);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     mpi_errno =
@@ -201,7 +210,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_issend(const void *buf,
                           MPIDIG_AM_SEND_FLAGS_SYNC, request, MPIR_ERR_NONE);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_ISSEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -209,12 +218,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_send(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_CANCEL_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_CANCEL_SEND);
+    MPIR_FUNC_ENTER;
 
     /* cannot cancel send */
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_CANCEL_SEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 

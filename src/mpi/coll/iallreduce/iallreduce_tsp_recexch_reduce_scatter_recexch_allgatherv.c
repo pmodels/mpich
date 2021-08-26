@@ -20,6 +20,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
                                                                               sched)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int is_inplace, i;
     int dtcopy_id = -1;
     size_t extent;
@@ -36,15 +37,13 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     bool in_step2 = false;
     void *tmp_recvbuf;
     void **step1_recvbuf = NULL;
-    int tag;
+    int tag, vtx_id;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int allgather_algo_type = MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING;
     int redscat_algo_type = IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_HALVING;
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL
-        (MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RECEXCH_REDUCE_SCATTER_RECEXCH_ALLGATHERV);
-    MPIR_FUNC_VERBOSE_ENTER
-        (MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RECEXCH_REDUCE_SCATTER_RECEXCH_ALLGATHERV);
+    MPIR_FUNC_ENTER;
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     nranks = MPIR_Comm_size(comm);
@@ -75,8 +74,9 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Beforeinitial dt copy\n"));
     if (in_step2 && !is_inplace && count > 0) { /* copy the data to tmp_recvbuf but only if you are a rank participating in Step 2 */
-        dtcopy_id = MPIR_TSP_sched_localcopy(sendbuf, count, datatype,
-                                             recvbuf, count, datatype, sched, 0, NULL);
+        mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, count, datatype,
+                                             recvbuf, count, datatype, sched, 0, NULL, &dtcopy_id);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
     }
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "After initial dt copy\n"));
 
@@ -138,11 +138,16 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     /* Step 3: This is reverse of Step 1. Ranks that participated in Step 2
      * send the data to non-partcipating ranks */
     if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
-        MPIR_TSP_sched_irecv(recvbuf, count, datatype, step1_sendto, tag, comm, sched, 1, &sink_id);
+        mpi_errno =
+            MPIR_TSP_sched_irecv(recvbuf, count, datatype, step1_sendto, tag, comm, sched, 1,
+                                 &sink_id, &vtx_id);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
     } else {
         for (i = 0; i < step1_nrecvs; i++) {
-            MPIR_TSP_sched_isend(recvbuf, count, datatype, step1_recvfrom[i], tag, comm, sched,
-                                 nvtcs, recv_id);
+            mpi_errno =
+                MPIR_TSP_sched_isend(recvbuf, count, datatype, step1_recvfrom[i], tag, comm, sched,
+                                     nvtcs, recv_id, &vtx_id);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
     }
 
@@ -162,8 +167,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     if (in_step2)
         MPL_free(step1_recvbuf);
 
-    MPIR_FUNC_VERBOSE_EXIT
-        (MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RECEXCH_REDUCE_SCATTER_RECEXCH_ALLGATHERV);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
   fn_fail:

@@ -15,11 +15,13 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
                                               MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int src, dst;
     int i, j, ww;
     int invtcs;
     int tag;
     int *vtcs, *recv_id, *send_id;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
 
     MPIR_Assert(!(sendbuf == MPI_IN_PLACE));
@@ -31,8 +33,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
     MPI_Aint sendtype_lb, sendtype_extent;
     MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
+    MPIR_FUNC_ENTER;
 
     /* Alltoall: each process need send #size msgs and recv #size msgs
      * This algorithm does #bblock send/recv first
@@ -61,13 +62,18 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
     /* First, post bblock number of sends/recvs */
     for (i = 0; i < bblock; i++) {
         src = (rank + i) % size;
-        recv_id[i] =
+        mpi_errno =
             MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[src] * recvtype_extent,
-                                 recvcounts[src], recvtype, src, tag, comm, sched, 0, NULL);
+                                 recvcounts[src], recvtype, src, tag, comm, sched, 0, NULL,
+                                 &recv_id[i]);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+
         dst = (rank - i + size) % size;
-        send_id[i] =
+        mpi_errno =
             MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst] * sendtype_extent,
-                                 sendcounts[dst], sendtype, dst, tag, comm, sched, 0, NULL);
+                                 sendcounts[dst], sendtype, dst, tag, comm, sched, 0, NULL,
+                                 &send_id[i]);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
     }
 
     /* Post more send/recv pairs as the previous ones finish */
@@ -81,22 +87,29 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
             vtcs[i_vtcs++] = recv_id[(i + j) % bblock];
             vtcs[i_vtcs++] = send_id[(i + j) % bblock];
         }
-        invtcs = MPIR_TSP_sched_selective_sink(sched, 2 * ww, vtcs);
+        mpi_errno = MPIR_TSP_sched_selective_sink(sched, 2 * ww, vtcs, &invtcs);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+
         for (j = 0; j < ww; j++) {
             src = (rank + i + j) % size;
-            recv_id[(i + j) % bblock] =
+            mpi_errno =
                 MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[src] * recvtype_extent,
-                                     recvcounts[src], recvtype, src, tag, comm, sched, 1, &invtcs);
+                                     recvcounts[src], recvtype, src, tag, comm, sched, 1, &invtcs,
+                                     &recv_id[(i + j) % bblock]);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+
             dst = (rank - i - j + size) % size;
-            send_id[(i + j) % bblock] =
+            mpi_errno =
                 MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst] * sendtype_extent,
-                                     sendcounts[dst], sendtype, dst, tag, comm, sched, 1, &invtcs);
+                                     sendcounts[dst], sendtype, dst, tag, comm, sched, 1, &invtcs,
+                                     &send_id[(i + j) % bblock]);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
     }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
+    MPIR_FUNC_ENTER;
     return mpi_errno;
 
   fn_fail:

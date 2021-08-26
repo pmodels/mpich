@@ -110,8 +110,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state, in
     int mpi_errno = MPI_SUCCESS;
     int made_progress = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PROGRESS_TEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PROGRESS_TEST);
+    MPIR_FUNC_ENTER;
 
 #ifdef HAVE_SIGNAL
     if (MPIDI_global.sigusr1_count > MPIDI_global.my_sigusr1_count) {
@@ -167,7 +166,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state, in
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PROGRESS_TEST);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -245,23 +244,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci)
 
 MPL_STATIC_INLINE_PREFIX void MPID_Progress_start(MPID_Progress_state * state)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START);
+    MPIR_FUNC_ENTER;
 
     MPIDI_progress_state_init(state);
     /* need set count to check for progress_made */
     MPIDI_progress_state_init_count(state);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_START);
+    MPIR_FUNC_EXIT;
     return;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPID_Progress_end(MPID_Progress_state * state)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_END);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_END);
+    MPIR_FUNC_ENTER;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_END);
+    MPIR_FUNC_EXIT;
     return;
 }
 
@@ -281,12 +278,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_poke(void)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_POKE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_POKE);
+    MPIR_FUNC_ENTER;
 
     ret = MPID_Progress_test(NULL);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_POKE);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -300,8 +296,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_WAIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = MPID_Progress_test(state);
@@ -320,7 +315,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
     }
 
 #endif
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);
+    MPIR_FUNC_EXIT;
 
   fn_exit:
     return mpi_errno;

@@ -9,21 +9,6 @@
 #include <shm.h>
 #include "../posix/shm_inline.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_shared_query(MPIR_Win * win, int rank,
-                                                            MPI_Aint * size, int *disp_unit,
-                                                            void *baseptr)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_SHARED_QUERY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_SHARED_QUERY);
-
-    ret = MPIDI_POSIX_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_SHARED_QUERY);
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_put(const void *origin_addr, int origin_count,
                                                MPI_Datatype origin_datatype, int target_rank,
                                                MPI_Aint target_disp, int target_count,
@@ -32,105 +17,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_put(const void *origin_addr, int orig
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_PUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_PUT);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
                               target_disp, target_count, target_datatype, win, winattr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_PUT);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_START);
-
-    ret = MPIDI_POSIX_mpi_win_start(group, assert, win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_START);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_complete(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_COMPLETE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_COMPLETE);
-
-    ret = MPIDI_POSIX_mpi_win_complete(win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_COMPLETE);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_POST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_POST);
-
-    ret = MPIDI_POSIX_mpi_win_post(group, assert, win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_POST);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_wait(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_WAIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_WAIT);
-
-    ret = MPIDI_POSIX_mpi_win_wait(win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_WAIT);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_test(MPIR_Win * win, int *flag)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_TEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_TEST);
-
-    ret = MPIDI_POSIX_mpi_win_test(win, flag);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_TEST);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_lock(int lock_type, int rank, int assert,
-                                                    MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_LOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_LOCK);
-
-    ret = MPIDI_POSIX_mpi_win_lock(lock_type, rank, assert, win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_LOCK);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_unlock(int rank, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_UNLOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_UNLOCK);
-
-    ret = MPIDI_POSIX_mpi_win_unlock(rank, win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_UNLOCK);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -142,26 +34,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get(void *origin_addr, int origin_cou
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_GET);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
                               target_disp, target_count, target_datatype, win, winattr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_GET);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_fence(int assert, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_FENCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_FENCE);
-
-    ret = MPIDI_POSIX_mpi_win_fence(assert, win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_FENCE);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -173,14 +51,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_accumulate(const void *origin_addr, i
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count,
                                      target_datatype, op, win, winattr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -192,26 +69,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rput(const void *origin_addr, int ori
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RPUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RPUT);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
                                target_disp, target_count, target_datatype, win, winattr, request);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RPUT);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush_local(int rank, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH_LOCAL);
-
-    ret = MPIDI_POSIX_mpi_win_flush_local(rank, win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH_LOCAL);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -224,13 +87,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_compare_and_swap(const void *origin_a
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_COMPARE_AND_SWAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_COMPARE_AND_SWAP);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                            datatype, target_rank, target_disp, win, winattr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_COMPARE_AND_SWAP);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -244,14 +106,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_raccumulate(const void *origin_addr, 
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count,
                                       target_datatype, op, win, winattr, request);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RACCUMULATE);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -268,15 +129,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget_accumulate(const void *origin_ad
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RGET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RGET_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                           result_addr, result_count, result_datatype,
                                           target_rank, target_disp, target_count,
                                           target_datatype, op, win, winattr, request);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RGET_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -288,52 +148,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_fetch_and_op(const void *origin_addr,
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_FETCH_AND_OP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_FETCH_AND_OP);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank,
                                        target_disp, op, win, winattr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_FETCH_AND_OP);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush(int rank, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH);
-
-    ret = MPIDI_POSIX_mpi_win_flush(rank, win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush_local_all(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH_LOCAL_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH_LOCAL_ALL);
-
-    ret = MPIDI_POSIX_mpi_win_flush_local_all(win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH_LOCAL_ALL);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_unlock_all(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_UNLOCK_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_UNLOCK_ALL);
-
-    ret = MPIDI_POSIX_mpi_win_unlock_all(win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_UNLOCK_ALL);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -345,39 +165,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget(void *origin_addr, int origin_co
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RGET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RGET);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
                                target_disp, target_count, target_datatype, win, winattr, request);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RGET);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_sync(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_SYNC);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_SYNC);
-
-    ret = MPIDI_POSIX_mpi_win_sync(win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_SYNC);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush_all(MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH_ALL);
-
-    ret = MPIDI_POSIX_mpi_win_flush_all(win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_FLUSH_ALL);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -393,28 +186,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get_accumulate(const void *origin_add
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_GET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_GET_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                          result_addr, result_count, result_datatype,
                                          target_rank, target_disp, target_count,
                                          target_datatype, op, win, winattr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_GET_ACCUMULATE);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_lock_all(int assert, MPIR_Win * win)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_LOCK_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_LOCK_ALL);
-
-    ret = MPIDI_POSIX_mpi_win_lock_all(assert, win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_LOCK_ALL);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 

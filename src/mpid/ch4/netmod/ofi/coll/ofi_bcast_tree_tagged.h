@@ -39,8 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_tagged(void *buffer
     MPIR_Treealgo_tree_t my_tree;
     int num_children = 0, leaf = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_BCAST_INTRA_TRIGGERED_TAGGED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_BCAST_INTRA_TRIGGERED_TAGGED);
+    MPIR_FUNC_ENTER;
 
     nranks = MPIR_Comm_size(comm_ptr);
     myrank = MPIR_Comm_rank(comm_ptr);
@@ -125,7 +124,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_tagged(void *buffer
     MPL_free(works);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_BCAST_INTRA_TRIGGERED_TAGGED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

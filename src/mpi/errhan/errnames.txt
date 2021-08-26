@@ -904,6 +904,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpir_wingetattr:MPII_Win_get_attr failed
 **mpir_wingetattr %W %d %p %p:MPII_Win_get_attr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
 
+## Gentran related error messages
+**nofence: invalid Gentran fence
+**nullvertex:  Gentran vertex is NULL
 
 # Datarep conversion function not supported by ROMIO (Temporary until implemented)
 **drconvnotsupported:Read and Write datarep conversions are currently not supported by MPI-IO

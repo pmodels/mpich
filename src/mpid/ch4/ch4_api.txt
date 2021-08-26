@@ -10,9 +10,6 @@ Non Native API:
      SHM : void
   post_init : int
       NM : void
-  get_vci_attr : int
-      NM : vci
-     SHM : vci
   progress : int
       NM*: vci, blocking
      SHM*: vci, blocking
@@ -47,8 +44,8 @@ Non Native API:
       NM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
      SHM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
   am_get_data_copy_cb : MPIDIG_recv_data_copy_cb
-      NM*: void
-     SHM*: void
+      NM*: attr
+     SHM*: attr
   am_hdr_max_sz : MPI_Aint
       NM*: void
      SHM*: void
@@ -181,7 +178,6 @@ Native API:
      MPIDIG: win, info
   mpi_win_shared_query : int
       NM*: win, rank, size_p, disp_unit_p, baseptr
-     SHM*: win, rank, size_p, disp_unit_p, baseptr
      MPIDIG: win, rank, size_p, disp_unit_p, baseptr
   mpi_put : int
       NM*: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, addr, winattr
@@ -189,31 +185,24 @@ Native API:
      MPIDIG: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win
   mpi_win_start : int
       NM*: group, assert, win
-     SHM*: group, assert, win
      MPIDIG: group, assert, win
   mpi_win_complete : int
       NM*: win
-     SHM*: win
      MPIDIG: win
   mpi_win_post : int
       NM*: group, assert, win
-     SHM*: group, assert, win
      MPIDIG: group, assert, win
   mpi_win_wait : int
       NM*: win
-     SHM*: win
      MPIDIG: win
   mpi_win_test : int
       NM*: win, flag
-     SHM*: win, flag
      MPIDIG: win, flag
   mpi_win_lock : int
       NM*: lock_type, rank, assert, win, addr
-     SHM*: lock_type, rank, assert, win
      MPIDIG: lock_type, rank, assert, win
   mpi_win_unlock : int
       NM*: rank, win, addr
-     SHM*: rank, win
      MPIDIG: rank, win
   mpi_win_get_info : int
       NM : win, info_p
@@ -229,7 +218,6 @@ Native API:
      MPIDIG: win_p
   mpi_win_fence : int
       NM*: assert, win
-     SHM*: assert, win
      MPIDIG: assert, win
   mpi_win_create : int
       NM : base, length, disp_unit, info, comm_ptr, win_p
@@ -253,7 +241,6 @@ Native API:
      MPIDIG: origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, req_p
   mpi_win_flush_local : int
       NM*: rank, win, addr
-     SHM*: rank, win
      MPIDIG: rank, win
   mpi_win_detach : int
       NM : win, base-2
@@ -281,14 +268,13 @@ Native API:
      MPIDIG : size-2, disp_unit, info, comm, baseptr, win_p
   mpi_win_flush : int
       NM*: rank, win, addr
-     SHM*: rank, win
+      MPIDIG: rank, win
   mpi_win_flush_local_all : int
       NM*: win
-     SHM*: win
      MPIDIG: win
   mpi_win_unlock_all : int
       NM*: win
-     SHM*: win
+      MPIDIG: win
   mpi_win_create_dynamic : int
       NM : info, comm, win_p
      SHM : info, comm, win_p
@@ -299,11 +285,9 @@ Native API:
      MPIDIG: origin_addr-2, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, req_p
   mpi_win_sync : int
       NM*: win
-     SHM*: win
      MPIDIG: win
   mpi_win_flush_all : int
       NM*: win
-     SHM*: win
      MPIDIG: win
   mpi_get_accumulate : int
       NM*: origin_addr, origin_count, origin_datatype, result_addr, result_count, result_datatype, target_rank, target_disp, target_count, target_datatype, op, win, addr, winattr
@@ -311,7 +295,6 @@ Native API:
      MPIDIG: origin_addr, origin_count, origin_datatype, result_addr, result_count, result_datatype, target_rank, target_disp, target_count, target_datatype, op, win
   mpi_win_lock_all : int
       NM*: assert, win
-     SHM*: assert, win
      MPIDIG: assert, win
   rank_is_local : int
       NM*: target, comm
@@ -471,6 +454,7 @@ PARAM:
     am_hdrs: struct iovec *
     appnum: int
     assert: int
+    attr: uint32_t
     av: MPIDI_av_entry_t *
     base: void *
     base-2: const void *

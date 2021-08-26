@@ -11,26 +11,24 @@ static void ipc_handle_cache_free(void *handle_obj)
 {
     int mpl_err;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_IPC_HANDLE_FREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IPC_HANDLE_FREE);
+    MPIR_FUNC_ENTER;
 
     MPIDI_GPUI_handle_obj_s *handle_obj_ptr = (MPIDI_GPUI_handle_obj_s *) handle_obj;
     mpl_err = MPL_gpu_ipc_handle_unmap((void *) handle_obj_ptr->mapped_base_addr);
     MPIR_Assert(mpl_err == MPL_SUCCESS);
     MPL_free(handle_obj);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IPC_HANDLE_FREE);
+    MPIR_FUNC_EXIT;
     return;
 }
 
 static void ipc_handle_status_free(void *handle_obj)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_IPC_HANDLE_STATUS_FREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IPC_HANDLE_STATUS_FREE);
+    MPIR_FUNC_ENTER;
 
     MPL_free(handle_obj);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IPC_HANDLE_STATUS_FREE);
+    MPIR_FUNC_EXIT;
     return;
 }
 
@@ -41,8 +39,7 @@ static void ipc_handle_free_hook(void *dptr)
     int mpl_err, local_dev_id, global_dev_id;
     MPL_pointer_attr_t gpu_attr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_IPC_HANDLE_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IPC_HANDLE_FREE_HOOK);
+    MPIR_FUNC_ENTER;
 
     if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
         mpl_err = MPL_gpu_get_buffer_bounds(dptr, &pbase, &len);
@@ -59,7 +56,7 @@ static void ipc_handle_free_hook(void *dptr)
         }
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IPC_HANDLE_FREE_HOOK);
+    MPIR_FUNC_EXIT;
     return;
 }
 
@@ -208,8 +205,7 @@ int MPIDI_GPU_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GPU_MPI_FINALIZE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GPU_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_GPUI_global.initialized) {
         MPL_free(MPIDI_GPUI_global.local_ranks);
@@ -251,6 +247,6 @@ int MPIDI_GPU_mpi_finalize_hook(void)
     }
     MPL_free(MPIDI_GPUI_global.ipc_handle_track_trees);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_MPI_FINALIZE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }

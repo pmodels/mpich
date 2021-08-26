@@ -72,8 +72,7 @@ int MPIR_Comm_agree_impl(MPIR_Comm * comm_ptr, int *flag)
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int values[2];
 
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_AGREE);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_AGREE);
+    MPIR_FUNC_ENTER;
 
     MPIR_Comm_group_impl(comm_ptr, &comm_grp);
 
@@ -134,7 +133,7 @@ int MPIR_Comm_agree_impl(MPIR_Comm * comm_ptr, int *flag)
     }
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_AGREE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -228,9 +227,8 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
     int n;
     int *mapping = 0;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
+    MPIR_FUNC_ENTER;
 
     *mapping_out = NULL;
     *mapping_comm = comm_ptr;
@@ -265,7 +263,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
             /* This mapping is relative to comm world */
             MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "comm-create - mapping into world[%d] = %d", i, g_lpid));
+                             "comm-create - mapping into world[%d] = %ld", i, g_lpid));
             if (g_lpid < wsize) {
                 mapping[i] = g_lpid;
             } else {
@@ -313,7 +311,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
 
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -352,9 +350,8 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
     MPIR_Context_id_t new_context_id = 0;
     int *mapping = NULL;
     int n;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTRA);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_INTRA);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
@@ -415,7 +412,7 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
   fn_exit:
     MPL_free(mapping);
 
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTRA);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -443,9 +440,8 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
     int rinfo[2];
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(1);
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTER);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_INTER);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
@@ -588,7 +584,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
     MPIR_CHKLMEM_FREEALL();
     MPL_free(mapping);
 
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTER);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -622,8 +618,7 @@ int MPIR_Comm_create_group_impl(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, in
     int *mapping = NULL;
     int n;
 
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_GROUP);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_GROUP);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
@@ -684,7 +679,7 @@ int MPIR_Comm_create_group_impl(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, in
   fn_exit:
     MPL_free(mapping);
 
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_GROUP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -885,9 +880,8 @@ int MPIR_Comm_get_name_impl(MPIR_Comm * comm_ptr, char *comm_name, int *resultle
 int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_GROUP_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_GROUP_IMPL);
+    MPIR_FUNC_ENTER;
     /* Create a local group if necessary */
     if (!comm_ptr->local_group) {
         mpi_errno = comm_create_local_group(comm_ptr);
@@ -898,7 +892,7 @@ int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
     MPIR_Group_add_ref(*group_ptr);
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_GROUP_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
 
@@ -952,9 +946,8 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, n;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
+    MPIR_FUNC_ENTER;
     /* Create a group and populate it with the local process ids */
     if (!comm_ptr->remote_group) {
         n = comm_ptr->remote_size;
@@ -978,7 +971,7 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
     MPIR_Group_add_ref(comm_ptr->remote_group);
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
 
@@ -988,16 +981,15 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
 int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPII_Comm_set_hints(comm_ptr, info_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1012,8 +1004,7 @@ int MPIR_Comm_shrink_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
     int attempts = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_SHRINK);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_SHRINK);
+    MPIR_FUNC_ENTER;
 
     /* TODO - Implement this function for intercommunicators */
     MPIR_Comm_group_impl(comm_ptr, &comm_grp);
@@ -1064,7 +1055,7 @@ int MPIR_Comm_shrink_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 
   fn_exit:
     MPIR_Group_release(comm_grp);
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_SHRINK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     if (*newcomm_ptr)
@@ -1085,9 +1076,8 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     int comm_info[3];
     int is_low_group = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
+    MPIR_FUNC_ENTER;
 
     /* Shift tag into the tagged coll space */
     tag |= MPIR_TAG_COLL_BIT;
@@ -1189,7 +1179,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
   fn_exit:
     MPL_free(remote_lpids);
     remote_lpids = NULL;
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1279,9 +1269,8 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
     int local_high, remote_high, new_size;
     MPIR_Context_id_t new_context_id;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
+    MPIR_FUNC_ENTER;
     /* Make sure that we have a local intercommunicator */
     if (!comm_ptr->local_comm) {
         /* Manufacture the local communicator */
@@ -1393,7 +1382,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -41,8 +41,7 @@ cvars:
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *vaddr, uintptr_t data_sz,
                                                       MPIDI_IPCI_ipc_attr_t * ipc_attr)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_GET_IPC_ATTR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_GET_IPC_ATTR);
+    MPIR_FUNC_ENTER;
 
     memset(&ipc_attr->ipc_handle, 0, sizeof(MPIDI_IPCI_ipc_handle_t));
 
@@ -63,7 +62,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *vaddr, uintptr
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
   fn_exit:
 #endif
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_GET_IPC_ATTR);
+    MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
 

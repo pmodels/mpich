@@ -20,9 +20,8 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
     int rank;
     char msg[MPI_MAX_ERROR_STRING] = "";
     char error_str[MPI_MAX_ERROR_STRING + 100];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ABORT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ABORT);
+    MPIR_FUNC_ENTER;
 
     if (error_msg == NULL) {
 	/* Create a default error message */
@@ -84,7 +83,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
 
     /* pmi_abort should not return but if it does, exit here.  If it does,
        add the function exit code before calling the final exit.  */
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ABORT);
+    MPIR_FUNC_EXIT;
     MPL_exit(exit_code);
 
     return MPI_ERR_INTERN;

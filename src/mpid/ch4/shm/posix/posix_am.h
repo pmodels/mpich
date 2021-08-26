@@ -38,8 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = MPIDI_POSIX_AMREQUEST(sreq, req_hdr);
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQUEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQUEST);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(msg_hdr_p);
 
@@ -66,7 +65,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
     DL_APPEND(MPIDI_POSIX_global.postponed_queue, curr_sreq_hdr);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQUEST);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -74,7 +73,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
                                                   MPIR_Comm * comm,
-                                                  MPIDI_POSIX_am_header_kind_t kind,
                                                   int handler_id,
                                                   const void *am_hdr,
                                                   MPI_Aint am_hdr_sz,
@@ -86,22 +84,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     MPIDI_POSIX_am_header_t msg_hdr;
     const int grank = MPIDIU_rank_to_lpid(rank, comm);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND);
+    MPIR_FUNC_ENTER;
 
-    msg_hdr.kind = kind;
     msg_hdr.handler_id = handler_id;
     msg_hdr.am_hdr_sz = am_hdr_sz;
 
     mpi_errno = MPIDI_POSIX_do_am_isend(grank, &msg_hdr, am_hdr, am_hdr_sz, data, count,
                                         datatype, sreq, false);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Comm * comm, int src_rank,
-                                                        MPIDI_POSIX_am_header_kind_t kind,
                                                         int handler_id,
                                                         const void *am_hdr,
                                                         MPI_Aint am_hdr_sz,
@@ -111,13 +106,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Comm * comm, int sr
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
+    MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDI_POSIX_am_isend(src_rank, comm, kind,
+    mpi_errno = MPIDI_POSIX_am_isend(src_rank, comm,
                                      handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
 }
@@ -146,8 +140,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, 
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQ_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQ_HDR);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(msg_hdr);
 
@@ -165,33 +158,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, 
     DL_APPEND(MPIDI_POSIX_global.postponed_queue, curr_sreq_hdr);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQ_HDR);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
-                                                     MPIR_Comm * comm,
-                                                     MPIDI_POSIX_am_header_kind_t kind,
-                                                     int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                      const void *am_hdr, MPI_Aint am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_am_header_t msg_hdr;
     const int grank = MPIDIU_rank_to_lpid(rank, comm);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
+    MPIR_FUNC_ENTER;
 
-    msg_hdr.kind = kind;
     msg_hdr.handler_id = handler_id;
     msg_hdr.am_hdr_sz = am_hdr_sz;
     msg_hdr.am_type = MPIDI_POSIX_AM_TYPE__HDR;
 
     mpi_errno = MPIDI_POSIX_do_am_send_hdr(grank, &msg_hdr, am_hdr, false);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -202,8 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_send_hdr(int grank,
     int mpi_errno = MPI_SUCCESS;
     int rc = MPIDI_POSIX_OK;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_AM_SEND_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_AM_SEND_HDR);
+    MPIR_FUNC_ENTER;
 
     if (!issue_deferred && MPIDI_POSIX_global.postponed_queue) {
         goto fn_deferred;
@@ -230,27 +217,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_send_hdr(int grank,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_AM_SEND_HDR);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_deferred:
     mpi_errno = MPIDI_POSIX_am_enqueue_req_hdr(am_hdr, msg_hdr->am_hdr_sz, grank, msg_hdr);
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Comm * comm,
-                                                           int src_rank,
-                                                           MPIDI_POSIX_am_header_kind_t kind,
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Comm * comm, int src_rank,
                                                            int handler_id, const void *am_hdr,
                                                            MPI_Aint am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
+    MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDI_POSIX_am_send_hdr(src_rank, comm, kind, handler_id, am_hdr, am_hdr_sz);
+    mpi_errno = MPIDI_POSIX_am_send_hdr(src_rank, comm, handler_id, am_hdr, am_hdr_sz);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
 }
@@ -270,8 +254,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
     MPI_Aint data_sz, send_size, offset = 0;
     MPIDI_POSIX_am_header_t *msg_hdr_p;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_AM_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_AM_ISEND);
+    MPIR_FUNC_ENTER;
 
     /* NOTE: issue_deferred is set to true when progress use this function for deferred operations.
      * we need to skip some code path in the scenario. Also am_hdr, am_hdr_sz and data_sz are
@@ -346,7 +329,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_AM_ISEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

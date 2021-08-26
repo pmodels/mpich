@@ -102,8 +102,7 @@ int MPIR_Sendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     MPI_Aint actual_pack_bytes = 0;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SENDRECV_REPLACE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SENDRECV_REPLACE);
+    MPIR_FUNC_ENTER;
 
     if (count > 0 && dest != MPI_PROC_NULL) {
         MPIR_Pack_size(count, datatype, &tmpbuf_size);
@@ -169,7 +168,7 @@ int MPIR_Sendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SENDRECV_REPLACE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

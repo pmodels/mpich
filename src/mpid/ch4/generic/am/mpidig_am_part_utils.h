@@ -12,8 +12,7 @@
 MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PART_ISSUE_CTS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PART_ISSUE_CTS);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_part_cts_msg_t am_hdr;
     am_hdr.sreq_ptr = MPIDIG_PART_REQUEST(rreq_ptr, peer_req_ptr);
@@ -23,7 +22,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
     CH4_CALL(am_send_hdr_reply(rreq_ptr->comm, source, MPIDIG_PART_CTS, &am_hdr, sizeof(am_hdr)),
              MPIDI_REQUEST(rreq_ptr, is_local), mpi_errno);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_ISSUE_CTS);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -38,8 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PART_ISSUE_DATA);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PART_ISSUE_DATA);
+    MPIR_FUNC_ENTER;
 
     MPIR_Request *sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__PART, 1);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
@@ -77,8 +75,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq,
                  mpi_errno);
     }
 
+    /* reset ready counter */
+    MPIR_cc_set(&MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr,
+                part_sreq->u.part.partitions + 1);
+
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PART_ISSUE_DATA);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

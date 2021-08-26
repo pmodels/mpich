@@ -15,14 +15,12 @@ dist_noinst_SCRIPTS +=                \
     maint/decode_handle               \
     maint/extracterrmsgs              \
     maint/extractfixme.in             \
-    maint/extractstates.in            \
     maint/extractstrings.in           \
     maint/findunusederrtxt            \
     maint/gcovmerge.in                \
     maint/getcoverage.in              \
     maint/gen_subcfg_m4               \
     maint/extractcvars                   \
-    maint/genstates.in                \
     maint/getcoverage.in              \
     maint/local_perl/lib/YAML/Tiny.pm \
     maint/parse.sub                   \

@@ -15,12 +15,6 @@
 /* Macros and inlines */
 #define MPIDIU_MAP_NOT_FOUND      ((void*)(-1UL))
 
-/* VCI attributes */
-enum {
-    MPIDI_VCI_TX = 0x1,         /* Can send */
-    MPIDI_VCI_RX = 0x2, /* Can receive */
-};
-
 #define MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK (1024)
 #define MPIDIU_REQUEST_POOL_MAX_NUM_CELLS (257 * 1024)
 #define MPIDIU_REQUEST_POOL_CELL_SIZE (256)
@@ -68,9 +62,10 @@ typedef struct MPIDIG_hdr_t {
     int tag;
     MPIR_Context_id_t context_id;
     int error_bits;
-    uint8_t flags;
+    int flags;
     MPIR_Request *sreq_ptr;
-    size_t data_sz;
+    MPI_Aint data_sz;
+    MPI_Aint rndv_hdr_sz;
 } MPIDIG_hdr_t;
 
 typedef struct MPIDIG_send_cts_msg_t {

@@ -215,6 +215,7 @@ struct MPIR_Request {
 #endif                          /* HAVE_DEBUGGER_SUPPORT */
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
+            MPIR_TSP_sched_t sched;
         } persist;              /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV */
         struct {
             struct MPIR_Request *real_request;
