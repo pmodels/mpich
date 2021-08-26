@@ -17,4 +17,7 @@ int MPIDI_IPC_mpi_finalize_hook(void);
 int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win);
 int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win);
 
+int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len);
+int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payload_len, int flags);
+
 #endif /* IPC_NOINLINE_H_INCLUDED */
