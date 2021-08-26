@@ -594,6 +594,9 @@ unexpected messages queued.
 **select %s %d: select of socket fds failed, %s (errno %d)
 **ioctlsocket: ioctl on socket failed
 **ioctlsocket %s %d: ioctl on socket failed, %s (errno %d)
+**sock_unlink:unlinking socket fd failed
+**sock_unlink %s:unlinking socket fd failed - %s
+**sock_unlink %s %d:unlink failed, %s (errno %d)
 
 **gethostbyname:gethostbyname failed
 **gethostbyname %s %d:gethostbyname failed, %s (errno %d)
@@ -614,6 +617,16 @@ unexpected messages queued.
 **shmw_sethnd: Unable to set shared memory handle
 **shmw_deserbufbig: Size of buffer to deserialize shared memory handle  \
 is too big (> MPIU_SHMW_GHND_SZ) 
+
+**sendmsg:sendmsg failed
+**sendmsg %s:sendmsg failed - %s
+**sendmsg %s %d:sendmsg failed, %s (errno %d)
+**recvmsg:recvmsg failed
+**recvmsg %s:recvmsg failed - %s
+**recvmsg %s %d:recvmsg failed, %s (errno %d)
+**recv:recv failed
+**recv %s:recv failed - %s
+**recv %s %d:recv failed, %s (errno %d)
 
 #
 # CH3:ssm
@@ -940,6 +953,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **gpu_get_global_dev_ids: gpu_get_global_dev_ids failed
 **gpu_get_buffer_info: gpu_get_buffer_info failed
 **gpu_get_dev_count: gpu_get_dev_count failed
+**mpl_ze_init_device_fds: mpl_ze_init_device_fds failed
 
 ## GAVL tree related error messages
 **mpl_gavl_search: mpl_gavl_search failed

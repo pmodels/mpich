@@ -29,6 +29,11 @@ typedef enum {
     MPL_GPU_POINTER_MANAGED
 } MPL_pointer_type_t;
 
+typedef enum {
+    MPL_GPU_IPC_HANDLE_SHAREABLE = 0,
+    MPL_GPU_IPC_HANDLE_SHAREABLE_FD
+} MPL_gpu_ipc_handle_type_t;
+
 typedef struct {
     MPL_pointer_type_t type;
     MPL_gpu_device_handle_t device;
@@ -47,6 +52,7 @@ typedef struct {
     int debug_summary;
     /* Output */
     bool enable_ipc;
+    MPL_gpu_ipc_handle_type_t ipc_handle_type;
 } MPL_gpu_info_t;
 
 extern MPL_gpu_info_t MPL_gpu_info;
