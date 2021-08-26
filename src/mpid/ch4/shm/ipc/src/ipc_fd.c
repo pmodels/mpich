@@ -7,7 +7,188 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+/* This is defined as the max socket name length sun_path in sockaddr_un */
+#define SOCK_MAX_STR_LEN 108
+
 static int *MPIDI_IPCI_global_fd_socks;
+static pid_t *MPIDI_IPCI_global_fd_pids;
+
+static int MPIDI_IPC_mpi_fd_cleanup(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int sock_err;
+    char sock_name[SOCK_MAX_STR_LEN];
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
+    int i;
+
+    /* Close sockets */
+    for (i = 0; i < MPIR_Process.local_size; ++i) {
+        if (MPIDI_IPCI_global_fd_socks[i] != -1) {
+            sock_err = close(MPIDI_IPCI_global_fd_socks[i]);
+            MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**sock_close",
+                                 "**sock_close %s %d",
+                                 MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+        }
+
+        if (MPIDI_IPCI_global_fd_pids[MPIR_Process.local_rank] != 0 && MPIR_Process.local_rank != i) {
+            MPL_snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d",
+                         MPIDI_IPCI_global_fd_pids[MPIR_Process.local_rank],
+                         MPIR_Process.local_rank, i);
+            sock_err = unlink(sock_name);
+            MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**sock_unlink",
+                                 "**sock_unlink %s %d",
+                                 MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+        }
+    }
+
+    MPL_free(MPIDI_IPCI_global_fd_pids);
+    MPL_free(MPIDI_IPCI_global_fd_socks);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_IPC_mpi_fd_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int sock_err;
+    int i, fd_count;
+    unsigned int len;
+    struct sockaddr_un sockaddr;
+    char sock_name[SOCK_MAX_STR_LEN];
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
+    pid_t pid;
+    int enable = 1;
+
+    memset(&sockaddr, 0, sizeof(sockaddr));
+
+    fd_count = MPIR_Process.local_size;
+    MPIDI_IPCI_global_fd_socks = (int *) MPL_calloc(fd_count, sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!MPIDI_IPCI_global_fd_socks, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    MPIDI_IPCI_global_fd_pids = (pid_t *) MPL_calloc(fd_count, sizeof(pid_t), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!MPIDI_IPCI_global_fd_pids, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    for (i = 0; i < fd_count; i++) {
+        MPIDI_IPCI_global_fd_socks[i] = -1;
+    }
+
+    pid = getpid();
+    len = sizeof(sockaddr);
+
+    /* Send PID in order to locally generate named-socket locations */
+    mpi_errno = MPIDU_Init_shm_put(&pid, sizeof(pid_t));
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDU_Init_shm_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIR_Process.local_rank == 0) {
+        for (i = 0; i < MPIR_Process.local_size; ++i) {
+            mpi_errno = MPIDU_Init_shm_get(i, sizeof(pid_t), &MPIDI_IPCI_global_fd_pids[i]);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    } else {
+        mpi_errno = MPIDU_Init_shm_get(0, sizeof(pid_t), &MPIDI_IPCI_global_fd_pids[0]);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    /* Create a named socket between local_rank 0 and all other local processes */
+    if (MPIR_Process.local_rank == 0) {
+        mpi_errno = MPIDU_Init_shm_barrier();
+        MPIR_ERR_CHECK(mpi_errno);
+        for (i = 1; i < MPIR_Process.local_size; ++i) {
+            char remote_sock_name[SOCK_MAX_STR_LEN];
+            struct sockaddr_un remote_sockaddr;
+
+            /* Create the remote socket name */
+            MPL_snprintf(remote_sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d",
+                         MPIDI_IPCI_global_fd_pids[i], i, MPIR_Process.local_rank);
+
+            /* Create the local socket name */
+            MPL_snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d", pid,
+                         MPIR_Process.local_rank, i);
+
+            /* Create a socket for local rank j */
+            MPIDI_IPCI_global_fd_socks[i] = socket(AF_UNIX, SOCK_STREAM, 0);
+            MPIR_ERR_CHKANDJUMP2(MPIDI_IPCI_global_fd_socks[i] == -1, mpi_errno, MPI_ERR_OTHER,
+                                 "**sock_create", "**sock_create %s %d",
+                                 MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+
+            setsockopt(MPIDI_IPCI_global_fd_socks[i], SOL_SOCKET, SO_REUSEADDR, &enable,
+                       sizeof(int));
+            sockaddr.sun_family = AF_UNIX;
+            strcpy(sockaddr.sun_path, sock_name);
+
+            sock_err = bind(MPIDI_IPCI_global_fd_socks[i], (struct sockaddr *) &sockaddr, len);
+            MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**bind", "**bind %s %d",
+                                 MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+
+            /* Connect to remote socket for local rank j */
+            remote_sockaddr.sun_family = AF_UNIX;
+            strcpy(remote_sockaddr.sun_path, remote_sock_name);
+
+            sock_err =
+                connect(MPIDI_IPCI_global_fd_socks[i], (struct sockaddr *) &remote_sockaddr, len);
+            MPIR_ERR_CHKANDJUMP2(sock_err < 0, mpi_errno, MPI_ERR_OTHER, "**sock_connect",
+                                 "sock_connect %d %s", errno,
+                                 MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
+        }
+    } else {
+        int sock;
+
+        /* Create the local socket name */
+        MPL_snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d", pid,
+                     MPIR_Process.local_rank, 0);
+
+        /* Create a socket for local rank i */
+        sock = socket(AF_UNIX, SOCK_STREAM, 0);
+        MPIR_ERR_CHKANDJUMP2(sock == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create",
+                             "**sock_create %s %d",
+                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+
+        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
+        sockaddr.sun_family = AF_UNIX;
+        strcpy(sockaddr.sun_path, sock_name);
+
+        sock_err = bind(sock, (struct sockaddr *) &sockaddr, len);
+        MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**bind", "**bind %s %d",
+                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+
+        /* Listen to the socket to accept a connection to the other process */
+        sock_err = listen(sock, 3);
+        MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d",
+                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+
+        /* Notify the other process that the socket is created and being listened to */
+        mpi_errno = MPIDU_Init_shm_barrier();
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPIDI_IPCI_global_fd_socks[0] = accept(sock, (struct sockaddr *) &sockaddr, &len);
+        MPIR_ERR_CHKANDJUMP2(MPIDI_IPCI_global_fd_socks[0] == -1, mpi_errno, MPI_ERR_OTHER,
+                             "**sock_accept", "**sock_accept %s %d",
+                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+        setsockopt(MPIDI_IPCI_global_fd_socks[0], SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
+        close(sock);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    MPIDI_IPC_mpi_fd_cleanup();
+    goto fn_exit;
+}
+
+int MPIDI_IPC_mpi_fd_finalize(void)
+{
+    int mpi_errno;
+
+    mpi_errno = MPIDI_IPC_mpi_fd_cleanup();
+
+    return mpi_errno;
+}
 
 int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len)
 {
@@ -100,11 +281,6 @@ int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payload_len, 
     trunc_check = ((flags & MSG_PEEK) == 0) && ((msg.msg_flags & MSG_TRUNC) ||
                                                 (msg.msg_flags & MSG_CTRUNC));
     MPIR_ERR_CHKANDJUMP(trunc_check, mpi_errno, MPI_ERR_OTHER, "**truncate");
-
-    if ((flags & MSG_PEEK) == 0 && ((msg.msg_flags & MSG_TRUNC) || (msg.msg_flags & MSG_CTRUNC))) {
-        mpi_errno = MPI_ERR_OTHER;
-        goto fn_fail;
-    }
 
     if ((flags & MSG_PEEK) == 0) {
         for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL; cmsg = CMSG_NXTHDR(&msg, cmsg)) {

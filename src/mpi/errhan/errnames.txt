@@ -594,6 +594,9 @@ unexpected messages queued.
 **select %s %d: select of socket fds failed, %s (errno %d)
 **ioctlsocket: ioctl on socket failed
 **ioctlsocket %s %d: ioctl on socket failed, %s (errno %d)
+**sock_unlink:unlinking socket fd failed
+**sock_unlink %s:unlinking socket fd failed - %s
+**sock_unlink %s %d:unlink failed, %s (errno %d)
 
 **gethostbyname:gethostbyname failed
 **gethostbyname %s %d:gethostbyname failed, %s (errno %d)
