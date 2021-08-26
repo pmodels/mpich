@@ -221,9 +221,8 @@ int MPIR_Init_async_thread(void)
     int mpi_errno = MPI_SUCCESS, thr_err;
     int *thread_affinity = NULL, affinity_idx;
     bool apply_affinity;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
+    MPIR_FUNC_ENTER;
 
 #ifdef DO_ASYNC_THREAD_AFFINITY
     mpi_errno = get_thread_affinity(&apply_affinity, &thread_affinity, &affinity_idx);
@@ -242,7 +241,7 @@ int MPIR_Init_async_thread(void)
     }
 #endif
 
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
+    MPIR_FUNC_EXIT;
 
   fn_exit:
     MPL_free(thread_affinity);
@@ -255,14 +254,13 @@ int MPIR_Init_async_thread(void)
 int MPIR_Finalize_async_thread(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
+    MPIR_FUNC_ENTER;
 
     MPL_atomic_store_int(&async_done, 1);
     MPID_Thread_join(progress_thread_id);
 
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
+    MPIR_FUNC_EXIT;
 
     return mpi_errno;
 }

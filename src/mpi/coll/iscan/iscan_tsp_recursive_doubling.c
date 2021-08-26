@@ -12,6 +12,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
                                                   MPIR_Comm * comm, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint extent, true_extent;
     MPI_Aint lb;
     int nranks, rank;
@@ -20,10 +21,10 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     int dst, loop_count;
     void *partial_scan = NULL;
     void *tmp_buf = NULL;
-    int tag = 0;
+    int tag = 0, vtx_id;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_ISCAN_SCHED_INTRA_RECURSIVE_DOUBLING);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_ISCAN_SCHED_INTRA_RECURSIVE_DOUBLING);
+    MPIR_FUNC_ENTER;
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -45,15 +46,19 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     if (sendbuf != MPI_IN_PLACE) {
         /* Since this is an inclusive scan, copy local contribution into
          * recvbuf. */
-        MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype, sched, 0,
-                                 NULL);
-        dtcopy_id =
+        mpi_errno =
+            MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype, sched, 0,
+                                     NULL, &vtx_id);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+        mpi_errno =
             MPIR_TSP_sched_localcopy(sendbuf, count, datatype, partial_scan, count, datatype, sched,
-                                     0, NULL);
+                                     0, NULL, &dtcopy_id);
     } else
-        dtcopy_id =
+        mpi_errno =
             MPIR_TSP_sched_localcopy(recvbuf, count, datatype, partial_scan, count, datatype, sched,
-                                     0, NULL);
+                                     0, NULL, &dtcopy_id);
+
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     tmp_buf = MPIR_TSP_sched_malloc(count * extent, sched);
     mask = 0x1;
@@ -69,36 +74,54 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
             /* Send partial_scan to dst. Recv into tmp_buf */
             nvtcs = 1;
             vtcs[0] = (loop_count == 0) ? dtcopy_id : reduce_id;
-            send_id =
+            mpi_errno =
                 MPIR_TSP_sched_isend(partial_scan, count, datatype, dst, tag, comm, sched, nvtcs,
-                                     vtcs);
+                                     vtcs, &send_id);
+
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
             if (recv_reduce != -1) {
                 nvtcs++;
                 vtcs[1] = recv_reduce;
             }
-            recv_id =
-                MPIR_TSP_sched_irecv(tmp_buf, count, datatype, dst, tag, comm, sched, nvtcs, vtcs);
+            mpi_errno =
+                MPIR_TSP_sched_irecv(tmp_buf, count, datatype, dst, tag, comm, sched, nvtcs, vtcs,
+                                     &recv_id);
+
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
             nvtcs = 2;
             vtcs[0] = send_id;
             vtcs[1] = recv_id;
             if (rank > dst) {
-                reduce_id = MPIR_TSP_sched_reduce_local(tmp_buf, partial_scan, count,
-                                                        datatype, op, sched, nvtcs, vtcs);
-                recv_reduce = MPIR_TSP_sched_reduce_local(tmp_buf, recvbuf, count,
-                                                          datatype, op, sched, nvtcs, vtcs);
+                mpi_errno = MPIR_TSP_sched_reduce_local(tmp_buf, partial_scan, count,
+                                                        datatype, op, sched, nvtcs, vtcs,
+                                                        &reduce_id);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+
+                mpi_errno = MPIR_TSP_sched_reduce_local(tmp_buf, recvbuf, count,
+                                                        datatype, op, sched, nvtcs, vtcs,
+                                                        &recv_reduce);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
             } else {
                 if (is_commutative) {
-                    reduce_id = MPIR_TSP_sched_reduce_local(tmp_buf, partial_scan, count,
-                                                            datatype, op, sched, nvtcs, vtcs);
+                    mpi_errno = MPIR_TSP_sched_reduce_local(tmp_buf, partial_scan, count,
+                                                            datatype, op, sched, nvtcs, vtcs,
+                                                            &reduce_id);
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
                 } else {
-                    reduce_id = MPIR_TSP_sched_reduce_local(partial_scan, tmp_buf, count,
-                                                            datatype, op, sched, nvtcs, vtcs);
+                    mpi_errno = MPIR_TSP_sched_reduce_local(partial_scan, tmp_buf, count,
+                                                            datatype, op, sched, nvtcs, vtcs,
+                                                            &reduce_id);
 
-                    reduce_id = MPIR_TSP_sched_localcopy(tmp_buf, count, datatype,
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+
+                    mpi_errno = MPIR_TSP_sched_localcopy(tmp_buf, count, datatype,
                                                          partial_scan, count, datatype, sched, 1,
-                                                         &reduce_id);
+                                                         &reduce_id, &vtx_id);
+                    reduce_id = vtx_id;
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+
                 }
                 recv_reduce = -1;
             }
@@ -108,7 +131,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_ISCAN_SCHED_INTRA_RECURSIVE_DOUBLING);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

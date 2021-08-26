@@ -9,18 +9,6 @@
 
 #define MPIDI_OFI_MR_KEY_PREFIX_SHIFT 63
 
-int MPIDI_OFI_handle_cq_error_util(int ctx_idx, ssize_t ret)
-{
-    int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
-
-    mpi_errno = MPIDI_OFI_handle_cq_error(ctx_idx, ret);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
-    return mpi_errno;
-}
-
 int MPIDI_OFI_retry_progress(void)
 {
     /* We do not call progress on hooks form netmod level
@@ -168,8 +156,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 {
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_HUGE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_HUGE);
+    MPIR_FUNC_ENTER;
 
     bool ready_to_get = false;
 
@@ -236,7 +223,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
         MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_GET_HUGE);
+    MPIR_FUNC_EXIT;
 
   fn_exit:
     return mpi_errno;
@@ -244,14 +231,15 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     goto fn_exit;
 }
 
-int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint data_sz,
-                              int is_local, int is_async, MPIR_Request ** req)
+int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
+                              uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) am_hdr;
 
-    if (is_async)
+    if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
+    }
 
     switch (ctrlsend->type) {
         case MPIDI_OFI_CTRL_HUGEACK:{

@@ -872,7 +872,6 @@ def get_function_internal_prototype(func_decl):
 def dump_function_internal(func, kind):
     """Appends to G.out array the MPI function implementation."""
     func_name = get_function_name(func, func['_is_large']);
-    state_name = "MPID_STATE_" + func_name.upper()
 
     s = get_declare_function(func, func['_is_large'])
     if kind == "polymorph":
@@ -893,21 +892,21 @@ def dump_function_internal(func, kind):
 
     if "impl" in func and func['impl'] == "direct":
         # e.g. MPI_Aint_add
-        dump_function_direct(func, state_name)
+        dump_function_direct(func)
     elif kind == 'call-polymorph':
         (extra_param, extra_arg) = get_polymorph_param_and_arg(func['polymorph'])
         repl_name = re.sub(r'MPI(X?)_', r'MPI\1I_', func_name, 1)
         repl_args = get_function_args(func) + ', ' + extra_arg
         repl_call = "mpi_errno = %s(%s);" % (repl_name, repl_args)
-        dump_function_replace(func, state_name, repl_call)
+        dump_function_replace(func, repl_call)
     elif kind == 'call-replace':
         RE.search(r'with\s+(\w+)', func['replace'])
         repl_name = "P" + RE.m.group(1)
         repl_args = get_function_args(func)
         repl_call = "mpi_errno = %s(%s);" % (repl_name, repl_args)
-        dump_function_replace(func, state_name, repl_call)
+        dump_function_replace(func, repl_call)
     else:
-        dump_function_normal(func, state_name)
+        dump_function_normal(func)
 
     G.out.append("DEDENT")
     G.out.append("}")
@@ -966,7 +965,7 @@ def check_large_parameters(func):
             else:
                 func['_poly_in_list'].append(p)
 
-def dump_function_normal(func, state_name):
+def dump_function_normal(func):
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     if '_handle_ptr_list' in func:
         for p in func['_handle_ptr_list']:
@@ -976,8 +975,6 @@ def dump_function_normal(func, state_name):
     if 'code-declare' in func:
         for l in func['code-declare']:
             G.out.append(l)
-
-    G.out.append("MPIR_FUNC_TERSE_STATE_DECL(%s);" % state_name)
 
     if not '_skip_initcheck' in func:
         G.out.append("")
@@ -993,7 +990,7 @@ def dump_function_normal(func, state_name):
             G.out.append("MPIR_T_THREAD_CS_ENTER();")
         else:
             G.out.append("MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
-    G.out.append("MPIR_FUNC_TERSE_ENTER(%s);" % state_name)
+    G.out.append("MPIR_FUNC_TERSE_ENTER;")
     if '_handle_ptr_list' in func:
         G.out.append("")
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
@@ -1109,7 +1106,7 @@ def dump_function_normal(func, state_name):
     G.out.append("fn_exit:")
     for l in func['code-clean_up']:
         G.out.append(l)
-    G.out.append("MPIR_FUNC_TERSE_EXIT(%s);" % state_name)
+    G.out.append("MPIR_FUNC_TERSE_EXIT;")
 
     if not '_skip_global_cs' in func:
         if func['dir'] == 'mpit':
@@ -1458,18 +1455,17 @@ def dump_body_impl(func, prefix='mpir'):
         else:
             print("Not sure how to handle inout %s" % p['name'], file=sys.stderr)
 
-def dump_function_replace(func, state_name, repl_call):
+def dump_function_replace(func, repl_call):
     G.out.append("int mpi_errno = MPI_SUCCESS;")
 
-    G.out.append("MPIR_FUNC_TERSE_STATE_DECL(%s);" % state_name)
-    G.out.append("MPIR_FUNC_TERSE_ENTER(%s);" % state_name)
+    G.out.append("MPIR_FUNC_TERSE_ENTER;")
     G.out.append("")
     G.out.append(repl_call)
     G.out.append("")
-    G.out.append("MPIR_FUNC_TERSE_EXIT(%s);" % state_name)
+    G.out.append("MPIR_FUNC_TERSE_EXIT;")
     G.out.append("return mpi_errno;")
 
-def dump_function_direct(func, state_name):
+def dump_function_direct(func):
     for l in func['body']:
         G.out.append(l)
 

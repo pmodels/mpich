@@ -8,7 +8,7 @@
 
 #include "posix_impl.h"
 #include "posix_eager.h"
-#include "shm_control.h"
+#include "posix_am.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
 {
@@ -22,8 +22,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
     uint8_t *payload;
     size_t payload_left;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PROGRESS_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PROGRESS_RECV);
+    MPIR_FUNC_ENTER;
 
     /* Check to see if any new messages are ready for processing from the eager submodule. */
     result = MPIDI_POSIX_eager_recv_begin(&transaction);
@@ -47,35 +46,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
         /* First segment */
         am_hdr = payload;
 
-        /* This is a SHM internal control header */
-        /* TODO: internal control can use the generic am interface,
-         *       just need register callbacks */
-        if (msg_hdr->kind == MPIDI_POSIX_AM_HDR_SHM) {
-            mpi_errno = MPIDI_SHMI_ctrl_dispatch(msg_hdr->handler_id, am_hdr);
-
-            /* TODO: discard payload for now as we only handle header in
-             * current internal control protocols. */
-            MPIDI_POSIX_eager_recv_commit(&transaction);
-            goto fn_exit;
-        }
-
         payload += msg_hdr->am_hdr_sz;
         payload_left -= msg_hdr->am_hdr_sz;
 
         switch (msg_hdr->am_type) {
             case MPIDI_POSIX_AM_TYPE__HDR:
             case MPIDI_POSIX_AM_TYPE__SHORT:
-                /* note: setting is_local, is_async to 1, 0 */
-                MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                                                   payload, payload_left, 1, 0,
-                                                                   NULL);
+                MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, payload, payload_left,
+                                                                   MPIDIG_AM_ATTR__IS_LOCAL, NULL);
                 MPIDI_POSIX_eager_recv_commit(&transaction);
                 goto fn_exit;
                 break;
             case MPIDI_POSIX_AM_TYPE__PIPELINE:
-                /* note: setting is_local, is_async to 1, 1 */
-                MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                                                   NULL, payload_left, 1, 1, &rreq);
+                MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, payload_left,
+                                                                   MPIDIG_AM_ATTR__IS_LOCAL |
+                                                                   MPIDIG_AM_ATTR__IS_ASYNC, &rreq);
                 /* prepare for asynchronous transfer */
                 MPIDIG_recv_setup(rreq);
 
@@ -96,7 +81,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
     MPIDI_POSIX_eager_recv_commit(&transaction);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PROGRESS_RECV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -106,8 +91,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int blocking)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PROGRESS_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PROGRESS_SEND);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_POSIX_global.postponed_queue) {
         /* Drain postponed queue */
@@ -138,14 +122,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int blocking)
 
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PROGRESS_SEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int vci, int blocking)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_PROGRESS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_PROGRESS);
+    MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -160,7 +143,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int vci, int blocking)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_PROGRESS);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -8,7 +8,6 @@
 
 #include "ch4_impl.h"
 #include "mpidimpl.h"
-#include "shm_control.h"
 #include "ipc_types.h"
 #include "ipc_mem.h"
 #include "ipc_p2p.h"
@@ -20,8 +19,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
                                                       MPIR_Request ** request, bool * done)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_TRY_LMT_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_TRY_LMT_ISEND);
+    MPIR_FUNC_ENTER;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
@@ -55,7 +53,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     }
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_TRY_LMT_ISEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -67,8 +65,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_isend(const void *buf, MPI_Aint count
                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_MPI_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_MPI_ISEND);
+    MPIR_FUNC_ENTER;
 
     bool done = false;
     mpi_errno = MPIDI_IPCI_try_lmt_isend(buf, count, datatype, rank, tag, comm,
@@ -82,7 +79,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_isend(const void *buf, MPI_Aint count
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MPI_ISEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

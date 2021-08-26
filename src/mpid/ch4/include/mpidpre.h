@@ -209,6 +209,7 @@ typedef struct MPIDIG_req_t {
 #endif
     MPIDIG_req_ext_t *req;
     void *buffer;
+    void *rndv_hdr;
     MPI_Aint count;
     int rank;
     int tag;
@@ -237,8 +238,6 @@ typedef struct MPIDIG_part_rreq {
 } MPIDIG_part_rreq_t;
 
 typedef struct MPIDIG_part_request {
-    uint8_t send_epoch;
-    uint8_t recv_epoch;
     MPIR_Request *peer_req_ptr;
     union {
         MPIDIG_part_sreq_t send;
@@ -399,8 +398,8 @@ typedef struct MPIDIG_win_info_args_t {
 struct MPIDIG_win_lock {
     struct MPIDIG_win_lock *next;
     int rank;
-    uint16_t mtype;
-    uint16_t type;
+    uint16_t mtype;             /* MPIDIG_WIN_LOCK or MPIDIG_WIN_LOCKALL */
+    uint16_t type;              /* MPI_LOCK_EXCLUSIVE or MPI_LOCK_SHARED */
 };
 
 typedef struct MPIDIG_win_lock_recvd {
@@ -528,8 +527,8 @@ typedef unsigned MPIDI_locality_t;
 typedef struct MPIDIG_comm_t {
     uint32_t window_instance;
 #ifdef HAVE_DEBUGGER_SUPPORT
-    MPIDIG_rreq_t **posted_head_ptr;
-    MPIDIG_rreq_t **unexp_head_ptr;
+    MPIDI_Devreq_t **posted_head_ptr;
+    MPIDI_Devreq_t **unexp_head_ptr;
 #endif
 } MPIDIG_comm_t;
 

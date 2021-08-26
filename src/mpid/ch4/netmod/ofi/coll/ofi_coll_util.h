@@ -58,8 +58,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
     int context_offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_IBCAST_KNOMIAL_TRIGGERED_TAGGED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_IBCAST_KNOMIAL_TRIGGERED_TAGGED);
+    MPIR_FUNC_ENTER;
 
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
 
@@ -167,7 +166,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
     *num_works = index + k;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_IBCAST_KNOMIAL_TRIGGERED_TAGGED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -217,8 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_tagged(void *buffer
     int context_offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_IBCAST_KARY_TRIGGERED_TAGGED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_IBCAST_KARY_TRIGGERED_TAGGED);
+    MPIR_FUNC_ENTER;
 
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
 
@@ -320,7 +318,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_tagged(void *buffer
     *children = num_children;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_IBCAST_KARY_TRIGGERED_TAGGED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -376,8 +374,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
     int i = 0, j = 0, k = 0;
     int parent = -1, *p;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_IBCAST_KNOMIAL_TRIGGERED_RMA);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_IBCAST_KNOMIAL_TRIGGERED_RMA);
+    MPIR_FUNC_ENTER;
 
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
 
@@ -479,7 +476,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
     *num_works = i + k;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_IBCAST_KNOMIAL_TRIGGERED_RMA);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -533,8 +530,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_rma(void *buffer, i
     int intermediate = 0, first_child, parent = -1, leaf = 0;
     int num_children = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_IBCAST_KARY_TRIGGERED_RMA);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_IBCAST_KARY_TRIGGERED_RMA);
+    MPIR_FUNC_ENTER;
 
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
 
@@ -626,7 +622,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_rma(void *buffer, i
     *children = num_children;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_IBCAST_KARY_TRIGGERED_RMA);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -684,8 +680,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_pipelined(void *buf
     int context_offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_IBCAST_KARY_TRIGGERED_PIPELINED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_IBCAST_KARY_TRIGGERED_PIPELINED);
+    MPIR_FUNC_ENTER;
 
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
 
@@ -875,7 +870,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_pipelined(void *buf
     *children = num_children;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_IBCAST_KARY_TRIGGERED_PIPELINED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

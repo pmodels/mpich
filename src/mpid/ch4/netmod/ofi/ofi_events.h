@@ -15,7 +15,6 @@
 int MPIDI_OFI_rma_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
 int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
-int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
 {
@@ -29,8 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc 
                                                   MPIR_Request * sreq, int event_id)
 {
     int c;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_EVENT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_EVENT);
+    MPIR_FUNC_ENTER;
 
     MPIR_cc_decr(sreq->cc_ptr, &c);
 
@@ -45,7 +43,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc 
         MPIDI_CH4_REQUEST_FREE(sreq);
     }
     /* c != 0, ssend */
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_EVENT);
+    MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
 
@@ -54,8 +52,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
 {
     int mpi_errno = MPI_SUCCESS;
     size_t count;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_EVENT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_EVENT);
+    MPIR_FUNC_ENTER;
 
     rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
     rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
@@ -134,7 +131,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
 
     /* Polling loop will check for truncation */
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_RECV_EVENT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     rreq->status.MPI_ERROR = mpi_errno;

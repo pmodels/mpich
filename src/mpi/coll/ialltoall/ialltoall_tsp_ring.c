@@ -39,11 +39,13 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
                                         MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int i, src, dst, copy_dst;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     /* Temporary buffers to execute the ring algorithm */
     void *buf1, *buf2, *data_buf, *sbuf, *rbuf;
-    int tag;
+    int tag, vtx_id;
 
     int size = MPIR_Comm_size(comm);
     int rank = MPIR_Comm_rank(comm);
@@ -53,8 +55,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
     MPI_Aint sendtype_lb, sendtype_extent;
     MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_RING);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_RING);
+    MPIR_FUNC_ENTER;
 
     /* find out the buffer which has the send data and point data_buf to it */
     if (is_inplace) {
@@ -81,9 +82,10 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
      * TODO: We could avoid this copy but that would make the implementation more
      * complicated */
     int dtcopy_id[3];
-    dtcopy_id[0] = MPIR_TSP_sched_localcopy((char *) data_buf, size * recvcount, recvtype,
-                                            (char *) buf1, size * recvcount, recvtype, sched, 0,
-                                            NULL);
+    mpi_errno = MPIR_TSP_sched_localcopy((char *) data_buf, size * recvcount, recvtype,
+                                         (char *) buf1, size * recvcount, recvtype, sched, 0,
+                                         NULL, &dtcopy_id[0]);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST,
@@ -97,10 +99,11 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
                          (char *) sendbuf + rank * sendcount * sendtype_extent,
                          (char *) recvbuf + rank * recvcount * recvtype_extent));
 
-        MPIR_TSP_sched_localcopy((char *) sendbuf + rank * sendcount * sendtype_extent,
-                                 sendcount, sendtype,
-                                 (char *) recvbuf + rank * recvcount * recvtype_extent,
-                                 recvcount, recvtype, sched, 0, NULL);
+        mpi_errno = MPIR_TSP_sched_localcopy((char *) sendbuf + rank * sendcount * sendtype_extent,
+                                             sendcount, sendtype,
+                                             (char *) recvbuf + rank * recvcount * recvtype_extent,
+                                             recvcount, recvtype, sched, 0, NULL, &vtx_id);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
     }
 
     /* in ring algorithm, source and destination of messages are fixed */
@@ -128,10 +131,10 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
             vtcs[1] = send_id[(i - 1) % 3];
         }
 
-        send_id[i % 3] =
+        mpi_errno =
             MPIR_TSP_sched_isend((char *) sbuf, size * recvcount, recvtype, dst, tag, comm, sched,
-                                 nvtcs, vtcs);
-
+                                 nvtcs, vtcs, &send_id[i % 3]);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         /* schedule recv */
         if (i == 0)
             nvtcs = 0;
@@ -146,9 +149,10 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
             vtcs[2] = recv_id[(i - 1) % 3];
         }
 
-        recv_id[i % 3] =
+        mpi_errno =
             MPIR_TSP_sched_irecv((char *) rbuf, size * recvcount, recvtype, src, tag, comm, sched,
-                                 nvtcs, vtcs);
+                                 nvtcs, vtcs, &recv_id[i % 3]);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
         /* destination offset of the copy */
         copy_dst = (size + rank - i - 1) % size;
@@ -157,12 +161,14 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
                          (char *) rbuf + rank * recvcount * recvtype_extent,
                          (char *) recvbuf + copy_dst * recvcount * recvtype_extent));
         /* schedule data copy */
-        dtcopy_id[i % 3] =
+        mpi_errno =
             MPIR_TSP_sched_localcopy((char *) rbuf + rank * recvcount * recvtype_extent, recvcount,
                                      recvtype,
                                      (char *) recvbuf + copy_dst * recvcount * recvtype_extent,
-                                     recvcount, recvtype, sched, 1, &recv_id[i % 3]);
+                                     recvcount, recvtype, sched, 1, &recv_id[i % 3],
+                                     &dtcopy_id[i % 3]);
 
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         /* swap sbuf and rbuf - using data_buf as intermediate buffer */
         data_buf = sbuf;
         sbuf = rbuf;
@@ -170,7 +176,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_RING);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

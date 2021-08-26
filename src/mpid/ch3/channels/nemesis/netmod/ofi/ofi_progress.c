@@ -36,8 +36,7 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
     MPIDI_VC_t *vc;
     MPIR_Request *req;
     req_fn reqFn;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_POLL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_POLL);
+    MPIR_FUNC_ENTER;
     do {
         /* ----------------------------------------------------- */
         /* Poll the completion queue                             */
@@ -109,7 +108,7 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
         }
     } while (in_blocking_poll && (ret > 0));
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_POLL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

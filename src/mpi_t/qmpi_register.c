@@ -260,8 +260,7 @@ int QMPI_Register_tool_name(const char *tool_name, void (*init_function_ptr) (in
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_QMPIX_REGISTER);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_QMPIX_REGISTER);
+    MPIR_FUNC_ENTER;
 
     /* If the QMPI globals have not yet been set up, do so now. This does not need to be protected
      * by a mutex because it will be called before the application has even reached its main
@@ -286,7 +285,7 @@ int QMPI_Register_tool_name(const char *tool_name, void (*init_function_ptr) (in
         }
     }
 
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_QMPIX_REGISTER);
+    MPIR_FUNC_EXIT;
 
   fn_exit:
     return mpi_errno;

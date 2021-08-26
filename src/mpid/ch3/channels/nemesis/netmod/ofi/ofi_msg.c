@@ -116,8 +116,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPIR_Request * sre
     MPIDI_VC_t *vc;
     req_fn reqFn;
     uint64_t tag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_DATA_CALLBACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_DATA_CALLBACK);
+    MPIR_FUNC_ENTER;
     switch (REQ_OFI(sreq)->tag & MPIDI_OFI_PROTOCOL_MASK) {
         case MPIDI_OFI_MSG_CTS | MPIDI_OFI_MSG_RTS | MPIDI_OFI_MSG_DATA:
             /* Verify request is complete prior to freeing buffers.
@@ -147,7 +146,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPIR_Request * sre
             break;
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_DATA_CALLBACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -164,8 +163,7 @@ static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPIR_Request *
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *preq;
     MPIDI_VC_t *vc;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_CTS_RECV_CALLBACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_CTS_RECV_CALLBACK);
+    MPIR_FUNC_ENTER;
     preq = REQ_OFI(rreq)->parent;
     switch (wc->tag & MPIDI_OFI_PROTOCOL_MASK) {
         case MPIDI_OFI_MSG_CTS | MPIDI_OFI_MSG_RTS:
@@ -198,7 +196,7 @@ static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPIR_Request *
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_CTS_RECV_CALLBACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -218,8 +216,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
     MPIR_Request *cts_req;
     intptr_t buf_offset = 0;
     size_t pkt_len;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ISENDCONTIG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ISENDCONTIG);
+    MPIR_FUNC_ENTER;
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
     MPID_nem_ofi_init_req(sreq);
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;
@@ -243,7 +240,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
     }
     START_COMM();
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_ISENDCONTIG);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -259,8 +256,7 @@ int MPID_nem_ofi_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     intptr_t buf_offset = 0;
     size_t pkt_len;
     int i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ISENDIOV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ISENDIOV);
+    MPIR_FUNC_ENTER;
 
     MPID_nem_ofi_init_req(sreq);
 
@@ -284,7 +280,7 @@ int MPID_nem_ofi_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     START_COMM();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_ISENDIOV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -301,8 +297,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     intptr_t buf_offset = 0;
     void *data = NULL;
     size_t pkt_len;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_SENDNONCONTIG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_SENDNONCONTIG);
+    MPIR_FUNC_ENTER;
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
 
     MPID_nem_ofi_init_req(sreq);
@@ -337,7 +332,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     START_COMM();
     MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_SENDNONCONTIG);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -354,8 +349,7 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
     char *pack_buffer = NULL;
     uint64_t match_bits;
     size_t pkt_len;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ISTARTCONTIGMSG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ISTARTCONTIGMSG);
+    MPIR_FUNC_ENTER;
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
 
     MPID_nem_ofi_create_req(&sreq, 2);
@@ -382,7 +376,7 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
     START_COMM();
     *sreq_ptr = sreq;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_ISTARTCONTIGMSG);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

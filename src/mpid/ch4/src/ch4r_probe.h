@@ -13,8 +13,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *unexp_req;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IPROBE);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
@@ -37,7 +36,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
     /* MPIDI_CS_EXIT(); */
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IPROBE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -48,8 +47,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *unexp_req;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IMPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IMPROBE);
+    MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
@@ -79,7 +77,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
     /* MPIDI_CS_EXIT(); */
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IMPROBE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
