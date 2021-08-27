@@ -430,24 +430,24 @@ int MPIR_TSP_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
 
 /* Transport function that adds a callback type vertex in the graph */
 int MPIR_TSP_sched_cb(MPIR_TSP_cb_t cb_p, void *cb_data, MPIR_TSP_sched_t sched,
-                      int n_in_vtcs, int *in_vtcs)
+                      int n_in_vtcs, int *in_vtcs, int *vtx_id)
 {
     vtx_t *vtxp;
-    int vtx_id;
+    int mpi_errno = MPI_SUCCESS;
 
     /* assign a new vertex */
-    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
 
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__CB;
-    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
 
     /* record the arguments */
     vtxp->u.cb.cb_p = cb_p;
     vtxp->u.cb.cb_data = cb_data;
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Gentran: schedule [%d] cb", vtx_id));
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Gentran: schedule [%d] cb", *vtx_id));
 
-    return vtx_id;
+    return mpi_errno;
 }
 
 /* Transport function that adds a no op vertex in the graph that has
