@@ -74,7 +74,8 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
                                             datatype, my_tree.parent, tag, comm,
                                             &ibcast_state->status, sched, 0, NULL, &recv_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-            MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id);
+            MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
+                              &vtx_id);
 #else
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) buffer + offset * extent, msgsize, datatype,
