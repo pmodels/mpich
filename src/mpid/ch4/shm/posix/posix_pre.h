@@ -139,6 +139,7 @@ typedef struct MPIDI_POSIX_rma_req {
 
 typedef struct {
     MPL_proc_mutex_t *shm_mutex_ptr;    /* interprocess mutex for shm atomic RMA */
+    int vsi;
 
     /* Linked list to keep track of outstanding RMA issued via shm.
      * Host-only copy is always blocking, thus this list should contain only
