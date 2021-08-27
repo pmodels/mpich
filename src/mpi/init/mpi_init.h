@@ -25,7 +25,7 @@ cvars:
         If true, list any memory that was allocated by MPICH and that
         remains allocated when MPI_Finalize completes.
 
-    - name        : MPIR_CVAR_MEM_CATEGORY_INFORMATION
+    - name        : MPIR_CVAR_DEBUG_SUMMARY
       category    : DEVELOPER
       type        : boolean
       default     : false
@@ -33,8 +33,9 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If true, print a summary of memory allocation by category. The category
-        definitions are found in mpl_trmem.h.
+        If true, print internal summary of various debug information, such as memory allocation by category.
+        Each layer may print their own summary information. For example, ch4-ofi may print its provider
+        capability settings.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -60,6 +61,7 @@ int MPII_init_async(void);
 int MPII_finalize_async(void);
 
 void MPII_Call_finalize_callbacks(int min_prio, int max_prio);
+void MPII_dump_debug_summary(void);
 
 /* MPI_Init[_thread]/MPI_Finalize only can be used in "world" model where it only
  * can be initialized and finalized once, while we can have multiple sessions.
@@ -133,7 +135,7 @@ static inline void MPII_finalize_memory_tracing(void)
              * ignore, if desired, memory leaks in the MPID_Init call */
             MPL_trdump((void *) 0, -1);
         }
-        if (MPIR_CVAR_MEM_CATEGORY_INFORMATION)
+        if (MPIR_CVAR_DEBUG_SUMMARY)
             MPL_trcategorydump(stderr);
     }
 #endif
