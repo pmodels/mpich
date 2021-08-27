@@ -126,6 +126,7 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 
     /* for triggered op with blocking small message */
     MPIDI_OFI_COMM(comm).blk_sml_bcast = NULL;
+    MPIDI_OFI_COMM(comm).blk_sml_allred = NULL;
 
     /* Initialize the multi-nic optimization values */
     MPIDI_OFI_global.num_comms_enabled_striping = 0;
@@ -193,6 +194,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_trig_blocking_small_msg_destroy(MPIR_Comm
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPIDI_OFI_trig_bcast_blocking_small_msg *blk_sml_bcast;
+    MPIDI_OFI_trig_allred_blocking_small_msg *blk_sml_allred;
 
     blk_sml_bcast = MPIDI_OFI_COMM(comm).blk_sml_bcast;
     if (blk_sml_bcast) {
@@ -213,6 +215,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_trig_blocking_small_msg_destroy(MPIR_Comm
         fi_close(&blk_sml_bcast->send_cntr->fid);
         MPL_free(blk_sml_bcast);
         MPIDI_OFI_COMM(comm).blk_sml_bcast = NULL;
+    }
+
+    blk_sml_allred = MPIDI_OFI_COMM(comm).blk_sml_allred;
+    if (blk_sml_allred) {
+        MPIDI_OFI_free_deferred_works(blk_sml_allred->works, blk_sml_allred->num_works, true);
+        MPL_free(blk_sml_allred->works);
+
+        if (blk_sml_allred->size > 0) {
+            for (i = 0; i < blk_sml_allred->size; i++) {
+                MPL_free(blk_sml_allred->recv_buf[i]);
+                fi_close(&blk_sml_allred->recv_cntr[i]->fid);
+                fi_close(&blk_sml_allred->rcv_mr[i]->fid);
+            }
+            MPL_free(blk_sml_allred->recv_buf);
+            MPL_free(blk_sml_allred->recv_cntr);
+            MPL_free(blk_sml_allred->rcv_mr);
+        }
+        fi_close(&blk_sml_allred->send_cntr->fid);
+        fi_close(&blk_sml_allred->atomic_cntr->fid);
+        MPL_free(blk_sml_allred);
+        MPIDI_OFI_COMM(comm).blk_sml_allred = NULL;
     }
 
     return mpi_errno;

@@ -1187,6 +1187,40 @@ cvars:
         recursive_doubling       - Force recursive doubling algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
 
+    - name        : MPIR_CVAR_ALLREDUCE_TREE_TYPE
+      category    : COLLECTIVE
+      type        : string
+      default     : kary
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Tree type for tree based allreduce
+        kary      - kary tree type
+        knomial_1 - knomial_1 tree type (tree grows starting from the left of the root)
+        knomial_2 - knomial_2 tree type (tree grows starting from the right of the root)
+
+    - name        : MPIR_CVAR_ALLREDUCE_TREE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Indicates the branching factor for kary or knomial trees.
+
+    - name        : MPIR_CVAR_ALLREDUCE_TREE_PIPELINE_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum chunk size (in bytes) for pipelining in tree based
+        allreduce. Default value is 0, that is, no pipelining by default
+
     - name        : MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -1292,6 +1326,31 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_reduce_local_bcast - Force remote-reduce-local-bcast algorithm
+
+    - name        : MPIR_CVAR_BARRIER_TREE_TYPE
+      category    : COLLECTIVE
+      type        : string
+      default     : kary
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Tree type for tree based allreduce
+        kary      - kary tree type
+        knomial_1 - knomial_1 tree type (tree grows starting from the left of the root)
+        knomial_2 - knomial_2 tree type (tree grows starting from the right of the root)
+        topology_aware - topology_aware tree type
+        topology_wave - topology_wave tree type
+
+    - name        : MPIR_CVAR_BARRIER_TREE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 3
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Indicates the branching factor for kary or knomial trees.
 
     - name        : MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE
       category    : COLLECTIVE

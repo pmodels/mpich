@@ -7,10 +7,15 @@
 #define OFI_COLL_H_INCLUDED
 
 #include "ofi_impl.h"
+#include "ofi_csel_container.h"
 #include "coll/ofi_bcast_tree_tagged.h"
 #include "coll/ofi_bcast_tree_rma.h"
 #include "coll/ofi_bcast_tree_pipelined.h"
 #include "coll/ofi_bcast_tree_small_msg.h"
+#include "coll/ofi_allreduce_tree_tagged.h"
+#include "coll/ofi_allreduce_tree_rma.h"
+#include "coll/ofi_allreduce_tree_pipelined.h"
+#include "coll/ofi_allreduce_tree_small_msg.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -31,17 +36,128 @@ cvars:
         trigger_tree_pipelined      - Force triggered ops based Pipelined Tree
         trigger_tree_small_blocking - Force triggered ops based blocking small message algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
+
+    - name        : MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      default     : auto
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select allreduce algorithm
+        mpir                        - Fallback to MPIR collectives
+        trigger_tree_tagged         - Force triggered ops based Tagged Tree
+        trigger_tree_rma            - Force triggered ops based RMA Tree
+        trigger_tree_pipelined      - Force triggered ops based Pipelined Tree
+        trigger_tree_small_message  - Force triggered ops based blocking small message algorithm
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
+
+    - name        : MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      default     : auto
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select barrier algorithm
+        mpir                        - Fallback to MPIR collectives
+        trigger_tree_tagged         - Force triggered ops based Tagged Tree
+        switch_offload              - Force switch-based barrier
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
+
+static inline int MPIDI_OFI_Barrier_json(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    const MPIDI_OFI_csel_container_s *cnt = NULL;
+    int *recvbuf, count = 1, i;
+
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__BARRIER,
+        .comm_ptr = comm,
+    };
+
+    cnt = MPIR_Csel_search(MPIDI_OFI_COMM(comm).csel_comm, coll_sig);
+    if (cnt == NULL)
+        goto fallback;
+
+    switch (cnt->id) {
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Barrier_intra_triggered_tagged:
+            recvbuf = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_BUFFER);
+            MPIR_ERR_CHKANDJUMP(!recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            for (i = 0; i < count; i++)
+                recvbuf[i] = i;
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_triggered_tagged(MPI_IN_PLACE, recvbuf, 1, MPI_INT,
+                                                           MPI_SUM, comm,
+                                                           cnt->u.barrier.
+                                                           triggered_tagged.tree_type,
+                                                           cnt->u.barrier.triggered_tagged.k,
+                                                           errflag);
+            break;
+
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Barrier_impl:
+            goto fallback;
+
+        default:
+            MPIR_Assert(0);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Barrier_impl(comm, errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    int *recvbuf, count = 1, i;
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIR_Barrier_impl(comm, errflag);
+    switch (MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM) {
+        case MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM_trigger_tree_tagged:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
+                                           MPIR_ThreadInfo.thread_provided != MPI_THREAD_MULTIPLE,
+                                           mpi_errno,
+                                           "Barrier triggered_tagged cannot be applied.\n");
+            recvbuf = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_BUFFER);
+            MPIR_ERR_CHKANDJUMP(recvbuf == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            for (i = 0; i < count; i++)
+                recvbuf[i] = i;
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_triggered_tagged(MPI_IN_PLACE, recvbuf, 1, MPI_INT,
+                                                           MPI_SUM, comm,
+                                                           MPIR_Barrier_tree_type,
+                                                           MPIR_CVAR_BARRIER_TREE_KVAL, errflag);
+            MPL_free(recvbuf);
+            break;
+        case MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM_mpir:
+            goto fallback;
 
+        case MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM_auto:
+            mpi_errno = MPIDI_OFI_Barrier_json(comm, errflag);
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Barrier_impl(comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_EXIT;
@@ -56,6 +172,55 @@ static inline int MPIDI_OFI_bcast_json(void *buffer, int count, MPI_Datatype dat
                                        int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    const MPIDI_OFI_csel_container_s *cnt = NULL;
+
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__BCAST,
+        .comm_ptr = comm,
+        .u.bcast.buffer = buffer,
+        .u.bcast.datatype = datatype,
+        .u.bcast.root = root,
+        .u.bcast.count = count,
+    };
+
+    cnt = MPIR_Csel_search(MPIDI_OFI_COMM(comm).csel_comm, coll_sig);
+    if (cnt == NULL)
+        goto fallback;
+
+    switch (cnt->id) {
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_tagged:
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_triggered_tagged(buffer, count, datatype, root, comm,
+                                                       cnt->u.bcast.triggered_tagged.tree_type,
+                                                       cnt->u.bcast.triggered_tagged.k);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma:
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_triggered_rma(buffer, count, datatype, root, comm,
+                                                    cnt->u.bcast.triggered_rma.tree_type,
+                                                    cnt->u.bcast.triggered_rma.k);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_pipelined:
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_triggered_pipelined(buffer, count, datatype, root, comm,
+                                                          cnt->u.bcast.triggered_pipelined.k,
+                                                          cnt->u.bcast.
+                                                          triggered_pipelined.chunk_size);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_small_blocking:
+            mpi_errno = MPIDI_OFI_Bcast_intra_triggered_small_msg(buffer, count, datatype,
+                                                                  root, comm,
+                                                                  cnt->u.
+                                                                  bcast.triggered_small_blocking.k);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_impl:
+            goto fallback;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
 
   fallback:
     mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
@@ -154,22 +319,174 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, MPI_Aint count, MP
     goto fn_exit;
 }
 
+static inline int MPIDI_OFI_Allreduce_json(const void *sendbuf, void *recvbuf, int count,
+                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                           MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    const MPIDI_OFI_csel_container_s *cnt = NULL;
+
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__ALLREDUCE,
+        .comm_ptr = comm,
+        .u.allreduce.sendbuf = sendbuf,
+        .u.allreduce.recvbuf = recvbuf,
+        .u.allreduce.count = count,
+        .u.allreduce.datatype = datatype,
+        .u.allreduce.op = op,
+    };
+
+    cnt = MPIR_Csel_search(MPIDI_OFI_COMM(comm).csel_comm, coll_sig);
+
+    if (cnt == NULL)
+        goto fallback;
+
+    switch (cnt->id) {
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_triggered_tagged:
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_triggered_tagged(sendbuf, recvbuf, count, datatype,
+                                                           op, comm,
+                                                           cnt->u.allreduce.
+                                                           triggered_tagged.tree_type,
+                                                           cnt->u.allreduce.triggered_tagged.k,
+                                                           errflag);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_triggered_rma:
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_triggered_rma(sendbuf, recvbuf, count, datatype, op,
+                                                        comm,
+                                                        cnt->u.allreduce.triggered_rma.tree_type,
+                                                        cnt->u.allreduce.triggered_rma.k, errflag);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_triggered_pipelined:
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_triggered_pipelined(sendbuf, recvbuf, count, datatype, op,
+                                                              comm,
+                                                              cnt->u.allreduce.
+                                                              triggered_pipelined.k,
+                                                              cnt->u.allreduce.triggered_pipelined.
+                                                              chunk_size, errflag);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_triggered_tree_small_message:
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_small_msg_triggered(sendbuf, recvbuf, count, datatype, op,
+                                                              comm,
+                                                              cnt->u.
+                                                              allreduce.triggered_tree_small_message.
+                                                              k, errflag);
+            break;
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_impl:
+            goto fallback;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf,
                                                     MPI_Aint count, MPI_Datatype datatype,
                                                     MPI_Op op, MPIR_Comm * comm,
                                                     MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    enum fi_datatype fi_dt;
+    enum fi_op fi_op;
+    MPI_Aint type_size = 0;
+    int chunk_size;
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+
+    switch (MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM) {
+        case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_trigger_tree_tagged:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED && datatype != MPI_C_DOUBLE_COMPLEX && datatype != MPI_C_FLOAT_COMPLEX &&     /* Atomic opeartions not supported for complex datatypes */
+                                           MPIDI_mpi_to_ofi(datatype, &fi_dt, op, &fi_op) != -1 && count * type_size < 8192 &&  /* Atomic operations in sockets provider do not work beyond this size */
+                                           MPIR_ThreadInfo.thread_provided != MPI_THREAD_MULTIPLE,
+                                           mpi_errno,
+                                           "Allreduce triggered_tagged cannot be applied.\n");
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_triggered_tagged(sendbuf, recvbuf, count, datatype,
+                                                           op, comm, MPIR_Allreduce_tree_type,
+                                                           MPIR_CVAR_ALLREDUCE_TREE_KVAL, errflag);
+            break;
+        case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_trigger_tree_rma:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
+                                           datatype != MPI_C_DOUBLE_COMPLEX &&
+                                           datatype != MPI_C_FLOAT_COMPLEX &&
+                                           MPIDI_mpi_to_ofi(datatype, &fi_dt, op, &fi_op) != -1 &&
+                                           count * type_size < 8192 &&
+                                           MPIR_ThreadInfo.thread_provided != MPI_THREAD_MULTIPLE,
+                                           mpi_errno,
+                                           "Allreduce triggered_rma cannot be applied.\n");
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_triggered_rma(sendbuf, recvbuf, count, datatype, op, comm,
+                                                        MPIR_Allreduce_tree_type,
+                                                        MPIR_CVAR_ALLREDUCE_TREE_KVAL, errflag);
+            break;
+        case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_trigger_tree_pipelined:
+            chunk_size = MPIR_CVAR_ALLREDUCE_TREE_PIPELINE_CHUNK_SIZE;
+
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
+                                           datatype != MPI_C_DOUBLE_COMPLEX &&
+                                           datatype != MPI_C_FLOAT_COMPLEX &&
+                                           MPIDI_mpi_to_ofi(datatype, &fi_dt, op, &fi_op) != -1 &&
+                                           chunk_size < 8192 && chunk_size > 0 &&
+                                           type_size <= chunk_size &&
+                                           (type_size * count / chunk_size) < 512 &&
+                                           MPIR_ThreadInfo.thread_provided != MPI_THREAD_MULTIPLE,
+                                           mpi_errno,
+                                           "Allreduce triggered_pipelined cannot be applied.\n");
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_triggered_pipelined(sendbuf, recvbuf, count, datatype, op,
+                                                              comm, MPIR_CVAR_ALLREDUCE_TREE_KVAL,
+                                                              chunk_size, errflag);
+            break;
+        case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_trigger_tree_small_message:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED && op == MPI_SUM
+                                           && datatype != MPI_C_DOUBLE_COMPLEX &&
+                                           datatype != MPI_C_FLOAT_COMPLEX &&
+                                           MPIDI_mpi_to_ofi(datatype, &fi_dt, op, &fi_op) != -1 &&
+                                           count * type_size <= 1024 &&
+                                           MPIR_ThreadInfo.thread_provided != MPI_THREAD_MULTIPLE,
+                                           mpi_errno,
+                                           "Allreduce trigger_tree_small_message cannot be applied.\n");
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_small_msg_triggered(sendbuf, recvbuf, count, datatype, op,
+                                                              comm, MPIR_CVAR_ALLREDUCE_TREE_KVAL,
+                                                              errflag);
+            break;
+        case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_mpir:
+            goto fallback;
+        case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_auto:
+            mpi_errno =
+                MPIDI_OFI_Allreduce_json(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
 
-    MPIR_FUNC_EXIT;
+  fallback:
+    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
