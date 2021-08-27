@@ -981,7 +981,7 @@ int MPIR_Type_create_resized_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint ex
                                   MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Datatype new_handle;
+    MPI_Datatype new_handle = MPI_DATATYPE_NULL;
     MPIR_Datatype *new_dtp;
     MPI_Aint aints[2];
 
@@ -1008,7 +1008,7 @@ int MPIR_Type_create_resized_large_impl(MPI_Datatype oldtype, MPI_Aint lb, MPI_A
                                         MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Datatype new_handle;
+    MPI_Datatype new_handle = MPI_DATATYPE_NULL;
     MPIR_Datatype *new_dtp;
     MPI_Aint counts[2];
 
