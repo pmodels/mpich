@@ -562,6 +562,7 @@ if test "$enable_strict_done" != "yes" ; then
         -Wtype-limits
         -Werror-implicit-function-declaration
         -Wstack-usage=262144
+        -fno-var-tracking
     "
 
     case "$pac_cv_cc_vendor" in
