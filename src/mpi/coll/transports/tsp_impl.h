@@ -102,7 +102,7 @@ int MPIR_TSP_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
 
 /* Transport function that adds a callback type vertex in the graph */
 int MPIR_TSP_sched_cb(MPIR_TSP_cb_t cb_p, void *cb_data, MPIR_TSP_sched_t sched,
-                      int n_in_vtcs, int *in_vtcs);
+                      int n_in_vtcs, int *in_vtcs, int *vtx_id);
 
 /* Transport function to schedule a vertex that completes when all the incoming vertices have
  * completed */
