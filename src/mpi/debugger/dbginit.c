@@ -414,7 +414,7 @@ void MPII_Sendq_remember(MPIR_Request * req, int rank, int tag, int context_id)
 void MPII_Sendq_forget(MPIR_Request * req)
 {
 #if defined HAVE_DEBUGGER_SUPPORT
-    MPIR_Sendq *p, *prev;
+    MPIR_Sendq *p = NULL, *prev = NULL;
 
     MPID_THREAD_CS_ENTER(VCI, lock);
     MPID_THREAD_CS_ENTER(POBJ, lock);
