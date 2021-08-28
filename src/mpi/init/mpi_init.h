@@ -86,7 +86,9 @@ static inline void MPII_world_set_finalized(void)
 
 static inline bool MPII_world_is_initialized(void)
 {
-    return (MPL_atomic_load_int(&MPIR_world_model_state) == MPICH_WORLD_MODEL_INITIALIZED);
+    /* Note: the standards says that whether MPI_FINALIZE has been called does
+     * not affect the behavior of MPI_INITIALIZED. */
+    return (MPL_atomic_load_int(&MPIR_world_model_state) != MPICH_WORLD_MODEL_UNINITIALIZED);
 }
 
 static inline bool MPII_world_is_finalized(void)
