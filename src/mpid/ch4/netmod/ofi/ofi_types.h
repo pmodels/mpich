@@ -31,8 +31,6 @@
 #define MPIDI_OFI_MAX_NUM_AM_BUFFERS       (8)
 #define MPIDI_OFI_AM_BUFF_SZ               (1 * 1024 * 1024)
 #define MPIDI_OFI_IOV_MAX                  (32)
-#define MPIDI_OFI_AM_HDR_POOL_CELL_SIZE            (1024)
-#define MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
 #define MPIDI_OFI_NUM_CQ_BUFFERED          (1024)
 #define MPIDI_OFI_STRIPE_CHUNK_SIZE        (2048)       /* First chunk sent through the preferred NIC during striping */
 
