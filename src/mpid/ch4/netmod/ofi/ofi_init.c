@@ -1474,6 +1474,15 @@ static void dump_global_settings(void)
     fprintf(stdout, "rx_iov_limit: " MPI_AINT_FMT_DEC_SPEC "\n", MPIDI_OFI_global.rx_iov_limit);
     fprintf(stdout, "rma_iov_limit: " MPI_AINT_FMT_DEC_SPEC "\n", MPIDI_OFI_global.rma_iov_limit);
     fprintf(stdout, "max_mr_key_size: %" PRIu64 "\n", MPIDI_OFI_global.max_mr_key_size);
+    /* Print various size limits */
+    fprintf(stdout, "==== Various sizes and limits ====\n");
+    fprintf(stdout, "MPIDI_OFI_AM_MSG_HEADER_SIZE: %d\n", (int) MPIDI_OFI_AM_MSG_HEADER_SIZE);
+    fprintf(stdout, "MPIDI_OFI_MAX_AM_HDR_SIZE: %d\n", (int) MPIDI_OFI_MAX_AM_HDR_SIZE);
+    fprintf(stdout, "sizeof(MPIDI_OFI_am_request_header_t): %d\n",
+            (int) sizeof(MPIDI_OFI_am_request_header_t));
+    fprintf(stdout, "MPIDI_OFI_AM_HDR_POOL_CELL_SIZE: %d\n", (int) MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
+    fprintf(stdout, "MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE: %d\n",
+            (int) MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
 }
 
 static void dump_dynamic_settings(void)
