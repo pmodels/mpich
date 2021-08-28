@@ -531,7 +531,7 @@ static int am_isend_pipeline_event(int vni, struct fi_cq_tagged_entry *wc,
     MPIR_FUNC_ENTER;
 
     ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_send_pipeline_request_t, context);
-    msg_hdr = &ofi_req->msg_hdr;
+    msg_hdr = ofi_req->msg_hdr;
     sreq = ofi_req->sreq;
     MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
 
