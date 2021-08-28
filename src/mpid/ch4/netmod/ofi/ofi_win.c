@@ -134,7 +134,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     }
 
     /* we need register mr on the correct domain for the vni */
-    int vni = MPIDI_OFI_get_win_vni(win);
+    int vni = MPIDI_OFI_WIN(win).vni;
     int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
     /* Register the allocated win buffer or MPI_BOTTOM (NULL) for dynamic win.
@@ -577,12 +577,6 @@ static int win_init(MPIR_Win * win)
     MPIDI_OFI_WIN(win).sep_tx_idx = -1; /* By default, -1 means not using scalable EP. */
     MPIDI_OFI_WIN(win).progress_counter = 1;
 
-    /* Assign vni to window.
-     * NOTE: we could assign vni per epoch, then we need run `win_init_{sep,stx,global}`
-     * at start of every epoch.
-     */
-    MPIDI_OFI_WIN(win).vni = MPIDI_OFI_get_win_vni(win);
-
     /* First, try to enable scalable EP. */
     if (MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS && MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX > 0) {
         /* Create tx based on scalable EP. */
@@ -742,11 +736,19 @@ int MPIDI_OFI_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Wi
     return mpi_errno;
 }
 
+/* common routine for various win_create_hook */
+static void ofi_win_create_common(MPIR_Win * win)
+{
+    /* Assign vni to window. */
+    MPIDI_OFI_WIN(win).vni = MPIDI_OFI_get_win_vni(win);
+}
+
 int MPIDI_OFI_mpi_win_create_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-
     MPIR_FUNC_ENTER;
+
+    ofi_win_create_common(win);
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
@@ -769,8 +771,9 @@ int MPIDI_OFI_mpi_win_create_hook(MPIR_Win * win)
 int MPIDI_OFI_mpi_win_allocate_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-
     MPIR_FUNC_ENTER;
+
+    ofi_win_create_common(win);
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
@@ -791,8 +794,9 @@ int MPIDI_OFI_mpi_win_allocate_hook(MPIR_Win * win)
 int MPIDI_OFI_mpi_win_allocate_shared_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-
     MPIR_FUNC_ENTER;
+
+    ofi_win_create_common(win);
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
@@ -813,10 +817,10 @@ int MPIDI_OFI_mpi_win_allocate_shared_hook(MPIR_Win * win)
 int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-
     MPIR_FUNC_ENTER;
-
     MPIR_CHKPMEM_DECL(1);
+
+    ofi_win_create_common(win);
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
