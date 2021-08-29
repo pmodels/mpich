@@ -227,7 +227,7 @@ int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell
     pool_obj->free_list_head = cell_h;
 
     cell_h->block->num_used_cells--;
-    if (cell_h->block->num_used_cells == 0) {
+    if (cell_h->block->num_used_cells == 0 && cell_h->block != pool_obj->cell_blocks_head) {
         pool_obj->free_fn(cell_h->block->slab);
         cell_h->block->slab = NULL;
     }
