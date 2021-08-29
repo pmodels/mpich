@@ -20,14 +20,13 @@ typedef struct cell_block cell_block_s;
 struct cell_block {
     cell_header_s *cell_headers;
     void *slab;
-    void *last_cell;
     cell_block_s *next;
 };
 
 typedef struct MPIDU_genq_private_pool {
     intptr_t cell_size;
+    intptr_t slab_size;
     intptr_t num_cells_in_block;
-    intptr_t max_num_cells;
 
     MPIDU_genq_malloc_fn malloc_fn;
     MPIDU_genq_free_fn free_fn;
@@ -55,8 +54,8 @@ int MPIDU_genq_private_pool_create_unsafe(intptr_t cell_size, intptr_t num_cells
     pool_obj = MPL_malloc(sizeof(private_pool_s), MPL_MEM_OTHER);
 
     pool_obj->cell_size = cell_size;
+    pool_obj->slab_size = cell_size * num_cells_in_block;
     pool_obj->num_cells_in_block = num_cells_in_block;
-    pool_obj->max_num_cells = max_num_cells;
 
     pool_obj->malloc_fn = malloc_fn;
     pool_obj->free_fn = free_fn;
@@ -107,7 +106,7 @@ static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block)
 
     MPIR_ERR_CHKANDJUMP(!new_block, rc, MPI_ERR_OTHER, "**nomem");
 
-    new_block->slab = pool->malloc_fn(pool->num_cells_in_block * pool->cell_size);
+    new_block->slab = pool->malloc_fn(pool->slab_size);
     MPIR_ERR_CHKANDJUMP(!new_block->slab, rc, MPI_ERR_OTHER, "**nomem");
 
     new_block->cell_headers =
@@ -118,7 +117,6 @@ static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block)
     /* init cell headers */
     for (int i = 0; i < pool->num_cells_in_block; i++) {
         new_block->cell_headers[i].cell = (char *) new_block->slab + i * pool->cell_size;
-        new_block->last_cell = new_block->cell_headers[i].cell;
         /* push to free list */
         new_block->cell_headers[i].next = pool->free_list_head;
         pool->free_list_head = &(new_block->cell_headers[i]);
@@ -189,9 +187,9 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
 static cell_header_s *cell_to_header(private_pool_s * pool, void *cell)
 {
     for (cell_block_s * curr = pool->cell_blocks_head; curr; curr = curr->next) {
-        if (cell <= curr->last_cell && cell >= curr->slab) {
-            return &curr->cell_headers[(int) ((char *) cell - (char *) curr->slab)
-                                       / pool->cell_size];
+        if (cell >= curr->slab && cell < (void *) ((char *) curr->slab + pool->slab_size)) {
+            intptr_t index = ((char *) cell - (char *) curr->slab) / pool->cell_size;
+            return &curr->cell_headers[index];
         }
     }
     /* Only reach here if the cell is not from this pool, which is a erroneous anyway */
