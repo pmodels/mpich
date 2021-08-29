@@ -5,6 +5,7 @@
 
 #include "mpidimpl.h"
 #include "mpidu_genq_private_pool.h"
+#include "utlist.h"
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -27,6 +28,7 @@ struct cell_header {
 struct cell_block {
     void *slab;
     intptr_t num_used_cells;
+    cell_block_s *prev;
     cell_block_s *next;
 };
 
@@ -40,8 +42,7 @@ typedef struct MPIDU_genq_private_pool {
 
     intptr_t num_blocks;
     intptr_t max_num_blocks;
-    cell_block_s *cell_blocks_head;
-    cell_block_s *cell_blocks_tail;
+    cell_block_s *cell_blocks;
     cell_header_s *free_list_head;
 } private_pool_s;
 
@@ -70,8 +71,7 @@ int MPIDU_genq_private_pool_create_unsafe(intptr_t cell_size, intptr_t num_cells
     pool_obj->num_blocks = 0;
     pool_obj->max_num_blocks = max_num_cells / num_cells_in_block;
 
-    pool_obj->cell_blocks_head = NULL;
-    pool_obj->cell_blocks_tail = NULL;
+    pool_obj->cell_blocks = NULL;
 
     pool_obj->free_list_head = NULL;
 
@@ -88,12 +88,11 @@ int MPIDU_genq_private_pool_destroy_unsafe(MPIDU_genq_private_pool_t pool)
 
     MPIR_FUNC_ENTER;
 
-    for (cell_block_s * block = pool_obj->cell_blocks_head; block;) {
-        cell_block_s *next = block->next;
-
-        pool_obj->free_fn(block->slab);
-        MPL_free(block);
-        block = next;
+    cell_block_s *curr, *tmp;
+    DL_FOREACH_SAFE(pool_obj->cell_blocks, curr, tmp) {
+        DL_DELETE(pool_obj->cell_blocks, curr);
+        pool_obj->free_fn(curr->slab);
+        MPL_free(curr);
     }
 
     /* free self */
@@ -161,14 +160,7 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
         MPIR_ERR_CHECK(rc);
 
         pool_obj->num_blocks++;
-
-        if (pool_obj->cell_blocks_head == NULL) {
-            pool_obj->cell_blocks_head = new_block;
-            pool_obj->cell_blocks_tail = new_block;
-        } else {
-            pool_obj->cell_blocks_tail->next = new_block;
-            pool_obj->cell_blocks_tail = new_block;
-        }
+        DL_APPEND(pool_obj->cell_blocks, new_block);
     }
 
     MPIR_Assert(pool_obj->free_list_head != NULL);
