@@ -87,7 +87,9 @@ int MPIDU_genq_private_pool_destroy_unsafe(MPIDU_genq_private_pool_t pool)
     for (cell_block_s * block = pool_obj->cell_blocks_head; block;) {
         cell_block_s *next = block->next;
 
-        pool_obj->free_fn(block->slab);
+        if (block->slab) {
+            pool_obj->free_fn(block->slab);
+        }
         MPL_free(block->cell_headers);
         MPL_free(block);
         block = next;
@@ -109,9 +111,7 @@ static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block)
 
     MPIR_ERR_CHKANDJUMP(!new_block, rc, MPI_ERR_OTHER, "**nomem");
 
-    new_block->slab = pool->malloc_fn(pool->slab_size);
-    MPIR_ERR_CHKANDJUMP(!new_block->slab, rc, MPI_ERR_OTHER, "**nomem");
-
+    new_block->slab = NULL;
     new_block->cell_headers =
         (cell_header_s *) MPL_malloc(pool->num_cells_in_block * sizeof(cell_header_s),
                                      MPL_MEM_OTHER);
@@ -178,6 +178,12 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
     MPIR_Assert(pool_obj->free_list_head != NULL);
     cell_h = pool_obj->free_list_head;
     pool_obj->free_list_head = cell_h->next;
+
+    if (!cell_h->block->slab) {
+        cell_h->block->slab =
+            pool_obj->malloc_fn(pool_obj->num_cells_in_block * pool_obj->cell_size);
+        MPIR_ERR_CHKANDJUMP(!cell_h->block->slab, rc, MPI_ERR_OTHER, "**nomem");
+    }
     *cell = (char *) cell_h->block->slab + cell_h->cell_idx * pool_obj->cell_size;
     cell_h->block->num_used_cells++;
 
@@ -192,7 +198,8 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
 static cell_header_s *cell_to_header(private_pool_s * pool, void *cell)
 {
     for (cell_block_s * curr = pool->cell_blocks_head; curr; curr = curr->next) {
-        if (cell >= curr->slab && cell < (void *) ((char *) curr->slab + pool->slab_size)) {
+        if (curr->slab && cell >= curr->slab &&
+            cell < (void *) ((char *) curr->slab + pool->slab_size)) {
             intptr_t index = ((char *) cell - (char *) curr->slab) / pool->cell_size;
             return &curr->cell_headers[index];
         }
@@ -218,7 +225,12 @@ int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell
 
     cell_h->next = pool_obj->free_list_head;
     pool_obj->free_list_head = cell_h;
+
     cell_h->block->num_used_cells--;
+    if (cell_h->block->num_used_cells == 0) {
+        pool_obj->free_fn(cell_h->block->slab);
+        cell_h->block->slab = NULL;
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
