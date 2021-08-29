@@ -10,17 +10,22 @@
 #include <stdint.h>
 #include <string.h>
 
+/* We reserve the front of each cell as cell header. It must be size of maximum alignment */
+#define CELL_HEADER_SIZE 16
+
+#define CELL_HEADER_TO_CELL(p) (void *) ((char *) (p) + CELL_HEADER_SIZE)
+#define CELL_TO_CELL_HEADER(p) (cell_header_s *) ((char *) (p) - CELL_HEADER_SIZE)
+
 typedef struct cell_header cell_header_s;
+typedef struct cell_block cell_block_s;
+
 struct cell_header {
-    void *cell;
+    cell_block_s *block;
     cell_header_s *next;
 };
 
-typedef struct cell_block cell_block_s;
 struct cell_block {
-    cell_header_s *cell_headers;
     void *slab;
-    void *last_cell;
     cell_block_s *next;
 };
 
@@ -40,7 +45,6 @@ typedef struct MPIDU_genq_private_pool {
 } private_pool_s;
 
 static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block);
-static cell_header_s *cell_to_header(private_pool_s * pool, void *cell);
 
 int MPIDU_genq_private_pool_create_unsafe(intptr_t cell_size, intptr_t num_cells_in_block,
                                           intptr_t max_num_cells, MPIDU_genq_malloc_fn malloc_fn,
@@ -86,7 +90,6 @@ int MPIDU_genq_private_pool_destroy_unsafe(MPIDU_genq_private_pool_t pool)
         cell_block_s *next = block->next;
 
         pool_obj->free_fn(block->slab);
-        MPL_free(block->cell_headers);
         MPL_free(block);
         block = next;
     }
@@ -110,18 +113,13 @@ static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block)
     new_block->slab = pool->malloc_fn(pool->num_cells_in_block * pool->cell_size);
     MPIR_ERR_CHKANDJUMP(!new_block->slab, rc, MPI_ERR_OTHER, "**nomem");
 
-    new_block->cell_headers =
-        (cell_header_s *) MPL_malloc(pool->num_cells_in_block * sizeof(cell_header_s),
-                                     MPL_MEM_OTHER);
-    MPIR_ERR_CHKANDJUMP(!new_block->cell_headers, rc, MPI_ERR_OTHER, "**nomem");
-
     /* init cell headers */
     for (int i = 0; i < pool->num_cells_in_block; i++) {
-        new_block->cell_headers[i].cell = (char *) new_block->slab + i * pool->cell_size;
-        new_block->last_cell = new_block->cell_headers[i].cell;
+        cell_header_s *p = (void *) ((char *) new_block->slab + i * pool->cell_size);
+        p->block = new_block;
         /* push to free list */
-        new_block->cell_headers[i].next = pool->free_list_head;
-        pool->free_list_head = &(new_block->cell_headers[i]);
+        p->next = pool->free_list_head;
+        pool->free_list_head = p;
     }
 
     new_block->next = NULL;
@@ -131,9 +129,6 @@ static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block)
   fn_exit:
     return rc;
   fn_fail:
-    if (new_block) {
-        MPL_free(new_block->cell_headers);
-    }
     if (new_block) {
         pool->free_fn(new_block->slab);
     }
@@ -176,7 +171,7 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
     MPIR_Assert(pool_obj->free_list_head != NULL);
     cell_h = pool_obj->free_list_head;
     pool_obj->free_list_head = cell_h->next;
-    *cell = cell_h->cell;
+    *cell = CELL_HEADER_TO_CELL(cell_h);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -184,19 +179,6 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
   fn_fail:
     *cell = NULL;
     goto fn_exit;
-}
-
-static cell_header_s *cell_to_header(private_pool_s * pool, void *cell)
-{
-    for (cell_block_s * curr = pool->cell_blocks_head; curr; curr = curr->next) {
-        if (cell <= curr->last_cell && cell >= curr->slab) {
-            return &curr->cell_headers[(int) ((char *) cell - (char *) curr->slab)
-                                       / pool->cell_size];
-        }
-    }
-    /* Only reach here if the cell is not from this pool, which is a erroneous anyway */
-    MPIR_Assert(NULL);
-    return NULL;
 }
 
 int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell)
@@ -211,7 +193,7 @@ int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell
         goto fn_exit;
     }
 
-    cell_h = cell_to_header(pool_obj, cell);
+    cell_h = CELL_TO_CELL_HEADER(cell);
 
     cell_h->next = pool_obj->free_list_head;
     pool_obj->free_list_head = cell_h;
