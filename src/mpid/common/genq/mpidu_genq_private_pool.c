@@ -150,32 +150,27 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
 
     MPIR_FUNC_ENTER;
 
-    if (pool_obj->free_list_head) {
-        cell_h = pool_obj->free_list_head;
-        pool_obj->free_list_head = cell_h->next;
-        *cell = cell_h->cell;
-        goto fn_exit;
-    }
+    if (!pool_obj->free_list_head) {
+        /* try allocate more blocks if no free cell found */
+        MPIR_Assert(pool_obj->num_blocks <= pool_obj->max_num_blocks);
+        if (pool_obj->num_blocks == pool_obj->max_num_blocks) {
+            *cell = NULL;
+            MPIR_ERR_SETANDJUMP(rc, MPI_ERR_OTHER, "**nomem");
+        }
 
-    /* try allocate more blocks if no free cell found */
-    MPIR_Assert(pool_obj->num_blocks <= pool_obj->max_num_blocks);
-    if (pool_obj->num_blocks == pool_obj->max_num_blocks) {
-        *cell = NULL;
-        MPIR_ERR_SETANDJUMP(rc, MPI_ERR_OTHER, "**nomem");
-    }
+        cell_block_s *new_block;
+        rc = cell_block_alloc(pool_obj, &new_block);
+        MPIR_ERR_CHECK(rc);
 
-    cell_block_s *new_block;
-    rc = cell_block_alloc(pool_obj, &new_block);
-    MPIR_ERR_CHECK(rc);
+        pool_obj->num_blocks++;
 
-    pool_obj->num_blocks++;
-
-    if (pool_obj->cell_blocks_head == NULL) {
-        pool_obj->cell_blocks_head = new_block;
-        pool_obj->cell_blocks_tail = new_block;
-    } else {
-        pool_obj->cell_blocks_tail->next = new_block;
-        pool_obj->cell_blocks_tail = new_block;
+        if (pool_obj->cell_blocks_head == NULL) {
+            pool_obj->cell_blocks_head = new_block;
+            pool_obj->cell_blocks_tail = new_block;
+        } else {
+            pool_obj->cell_blocks_tail->next = new_block;
+            pool_obj->cell_blocks_tail = new_block;
+        }
     }
 
     MPIR_Assert(pool_obj->free_list_head != NULL);
