@@ -26,6 +26,7 @@ struct cell_header {
 
 struct cell_block {
     void *slab;
+    intptr_t num_used_cells;
     cell_block_s *next;
 };
 
@@ -58,7 +59,8 @@ int MPIDU_genq_private_pool_create_unsafe(intptr_t cell_size, intptr_t num_cells
 
     pool_obj = MPL_malloc(sizeof(private_pool_s), MPL_MEM_OTHER);
 
-    pool_obj->cell_size = cell_size;
+    /* internally enlarge the cell_size to accommodate cell header */
+    pool_obj->cell_size = cell_size + CELL_HEADER_SIZE;
     pool_obj->num_cells_in_block = num_cells_in_block;
     pool_obj->max_num_cells = max_num_cells;
 
@@ -122,6 +124,7 @@ static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block)
         pool->free_list_head = p;
     }
 
+    new_block->num_used_cells = 0;
     new_block->next = NULL;
 
     *block = new_block;
@@ -172,6 +175,7 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
     cell_h = pool_obj->free_list_head;
     pool_obj->free_list_head = cell_h->next;
     *cell = CELL_HEADER_TO_CELL(cell_h);
+    cell_h->block->num_used_cells++;
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -197,6 +201,7 @@ int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell
 
     cell_h->next = pool_obj->free_list_head;
     pool_obj->free_list_head = cell_h;
+    cell_h->block->num_used_cells--;
 
   fn_exit:
     MPIR_FUNC_EXIT;
