@@ -66,13 +66,18 @@ int MPIDU_genq_private_pool_create_unsafe(intptr_t cell_size, intptr_t num_cells
     /* internally enlarge the cell_size to accommodate cell header */
     pool_obj->cell_size = cell_size + CELL_HEADER_SIZE;
     pool_obj->num_cells_in_block = num_cells_in_block;
-    pool_obj->max_num_cells = max_num_cells;
+    MPIR_Assert(max_num_cells >= 0);
+    if (max_num_cells == 0) {
+        /* 0 means unlimited */
+        pool_obj->max_num_blocks = 0;
+    } else {
+        pool_obj->max_num_blocks = max_num_cells / num_cells_in_block;
+    }
 
     pool_obj->malloc_fn = malloc_fn;
     pool_obj->free_fn = free_fn;
 
     pool_obj->num_blocks = 0;
-    pool_obj->max_num_blocks = max_num_cells / num_cells_in_block;
 
     pool_obj->cell_blocks = NULL;
     pool_obj->free_blocks_head = NULL;
@@ -195,9 +200,7 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
 
     if (!pool_obj->free_blocks_head) {
         /* try allocate more blocks if no free cell found */
-        MPIR_Assert(pool_obj->num_blocks <= pool_obj->max_num_blocks);
-        if (pool_obj->num_blocks == pool_obj->max_num_blocks) {
-            *cell = NULL;
+        if (pool_obj->max_num_blocks > 0 && pool_obj->num_blocks >= pool_obj->max_num_blocks) {
             MPIR_ERR_SETANDJUMP(rc, MPI_ERR_OTHER, "**nomem");
         }
 
