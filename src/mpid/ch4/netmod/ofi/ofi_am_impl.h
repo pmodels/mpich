@@ -318,12 +318,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm, int handler_id,
-                                                      const void *data, MPI_Aint data_sz,
-                                                      MPIR_Request * sreq, int vni_src, int vni_dst)
+                                                      const void *buf, MPI_Aint count,
+                                                      MPI_Datatype datatype, MPI_Aint data_sz,
+                                                      bool need_packing, MPIR_Request * sreq,
+                                                      int vni_src, int vni_dst)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_am_header_t *msg_hdr;
-    struct iovec *iov;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_src, nic);
 
@@ -333,7 +333,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     MPIR_Assert(data_sz < (1ULL << MPIDI_OFI_AM_PAYLOAD_SZ_BITS));
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
-    msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
+    MPI_Aint am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
+
+    MPIDI_OFI_am_header_t *msg_hdr;
+    if (MPIDI_OFI_ENABLE_SENDV || !MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer)) {
+        msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
+    } else {
+        msg_hdr = MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer);
+        /* The completion callback need the handler_id in the same place
+         * FIXME: maybe we should have a separate msg_hdr pointer just like isend_pipeline? */
+        MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr).handler_id = handler_id;
+    }
+
     msg_hdr->handler_id = handler_id;
     msg_hdr->am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
     msg_hdr->payload_sz = data_sz;
@@ -343,22 +354,53 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank, vni_src);
     msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vni_src, vni_src);
 
-    iov = MPIDI_OFI_AM_SREQ_HDR(sreq, iov);
-
-    iov[0].iov_base = msg_hdr;
-    iov[0].iov_len = sizeof(*msg_hdr);
-
-    iov[1].iov_base = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr);
-    iov[1].iov_len = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
-
-    iov[2].iov_base = (void *) data;
-    iov[2].iov_len = data_sz;
-
     MPIR_cc_inc(sreq->cc_ptr);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
-    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[ctx_idx].tx, iov, NULL, 3,
-                                     MPIDI_OFI_comm_to_phys(comm, rank, nic, vni_src, vni_dst),
-                                     &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
+
+    if (MPIDI_OFI_ENABLE_SENDV) {
+        iov = MPIDI_OFI_AM_SREQ_HDR(sreq, iov);
+        iov[0].iov_base = msg_hdr;
+        iov[0].iov_len = sizeof(*msg_hdr);
+        iov[1].iov_base = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr);
+        iov[1].iov_len = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
+        if (!need_packing) {
+            /* assume contig */
+            MPI_Aint dt_true_lb;
+            MPIDI_Datatype_check_lb(datatype, dt_true_lb);
+            iov[2].iov_base = (char *) buf + dt_true_lb;
+            iov[2].iov_len = data_sz;
+        } else {
+            MPI_Aint packed_size;
+            mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0,
+                                          send_req->pack_buffer, data_sz, &packed_size);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_Assert(packed_size == data_sz);
+        }
+
+        MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[ctx_idx].tx, iov, NULL, 3,
+                                         MPIDI_OFI_comm_to_phys(comm, rank, nic, 0, 0),
+                                         &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
+    } else {
+        /* Can't use fi_sendv */
+        void *p_am_hdr, *p_am_data;
+        p_am_hdr = (char *) msg_hdr + sizeof(MPIDI_OFI_am_header_t);
+        p_am_data = (char *) p_am_hdr + am_hdr_sz;
+
+        if (p_am_hdr != MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr)) {
+            MPIR_Memcpy(p_am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
+        }
+
+        MPI_Aint packed_size;
+        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, p_am_data, data_sz, &packed_size);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(packed_size == data_sz);
+
+        MPI_Aint total_msg_sz = sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz + data_sz;
+        MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[ctx_idx].tx, msg_hdr, total_msg_sz,
+                                        NULL,
+                                        MPIDI_OFI_comm_to_phys(comm, rank, nic, vni_src, vni_dst),
+                                        &MPIDI_OFI_AMREQUEST(sreq, context)), send);
+    }
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -434,7 +476,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     } else {
         /* Can't use fi_sendv */
         MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + seg_sz;
-        memcpy(send_req->am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
+        MPIR_Memcpy(send_req->am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
         MPI_Aint packed_size;
         mpi_errno = MPIR_Typerep_pack(buf, count, datatype, offset,
                                       send_req->am_data, seg_sz, &packed_size);
@@ -495,10 +537,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
                                                          MPIR_Request * sreq, bool issue_deferred,
                                                          int vni_src, int vni_dst)
 {
-    int dt_contig, mpi_errno = MPI_SUCCESS;
-    char *send_buf;
+    int mpi_errno = MPI_SUCCESS;
     MPI_Aint data_sz;
-    MPI_Aint dt_true_lb, last;
     bool need_packing = false;
 
     MPIR_FUNC_ENTER;
@@ -511,6 +551,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
         mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
         MPIR_ERR_CHECK(mpi_errno);
 
+        int dt_contig;
         MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
 
         need_packing = dt_contig ? false : true;
@@ -531,38 +572,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
         goto fn_deferred;
     }
 
-    if (need_packing) {
-        /* FIXME: currently we always do packing, also for high density types. However,
-         * we should not do packing unless needed. Also, for large low-density types
-         * we should not allocate the entire buffer and do the packing at once. */
-        /* TODO: (1) Skip packing for high-density datatypes; */
-        MPIR_Assert(data_sz <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vni[vni_src].pack_buf_pool,
-                                           (void **) &send_buf);
-        if (send_buf == NULL) {
-            if (!issue_deferred) {
-                goto fn_deferred;
-            } else {
-                goto fn_exit;
-            }
-        }
-        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Assert(data_sz == last);
+    MPIR_Assert(data_sz <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
 
-        MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer) = send_buf;
-    } else {
-        MPIDI_Datatype_check_lb(datatype, dt_true_lb);
-        send_buf = (char *) buf + dt_true_lb;
+    MPI_Aint total_msg_sz = sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz + data_sz;
+    if (total_msg_sz > MPIDI_OFI_AM_MAX_MSG_SIZE) {
+        ALLOCATE_PACK_BUFFER_OR_DEFER(MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer));
     }
 
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST,
-                     "issue eager seg for req handle=0x%x send_size %ld", sreq->handle, data_sz));
-
-    mpi_errno =
-        MPIDI_OFI_am_isend_short(rank, comm, handler_id, send_buf, data_sz, sreq, vni_src, vni_dst);
+    mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, buf, count, datatype,
+                                         need_packing, sreq, vni_src, vni_dst);
     MPIR_ERR_CHECK(mpi_errno);
+
     if (issue_deferred) {
         DL_DELETE(MPIDI_OFI_global.per_vni[vni_src].deferred_am_isend_q,
                   MPIDI_OFI_AMREQUEST(sreq, deferred_req));
