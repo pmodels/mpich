@@ -25,15 +25,15 @@ struct cell_block {
 };
 
 typedef struct MPIDU_genq_private_pool {
-    uintptr_t cell_size;
-    uintptr_t num_cells_in_block;
-    uintptr_t max_num_cells;
+    intptr_t cell_size;
+    intptr_t num_cells_in_block;
+    intptr_t max_num_cells;
 
     MPIDU_genq_malloc_fn malloc_fn;
     MPIDU_genq_free_fn free_fn;
 
-    uintptr_t num_blocks;
-    uintptr_t max_num_blocks;
+    intptr_t num_blocks;
+    intptr_t max_num_blocks;
     cell_block_s *cell_blocks_head;
     cell_block_s *cell_blocks_tail;
     cell_header_s *free_list_head;
@@ -42,8 +42,8 @@ typedef struct MPIDU_genq_private_pool {
 static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block);
 static cell_header_s *cell_to_header(private_pool_s * pool, void *cell);
 
-int MPIDU_genq_private_pool_create_unsafe(uintptr_t cell_size, uintptr_t num_cells_in_block,
-                                          uintptr_t max_num_cells, MPIDU_genq_malloc_fn malloc_fn,
+int MPIDU_genq_private_pool_create_unsafe(intptr_t cell_size, intptr_t num_cells_in_block,
+                                          intptr_t max_num_cells, MPIDU_genq_malloc_fn malloc_fn,
                                           MPIDU_genq_free_fn free_fn,
                                           MPIDU_genq_private_pool_t * pool)
 {
