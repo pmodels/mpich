@@ -11,12 +11,14 @@
 #include <string.h>
 
 typedef struct cell_header cell_header_s;
+typedef struct cell_block cell_block_s;
+
 struct cell_header {
-    void *cell;
+    cell_block_s *block;
+    uintptr_t cell_idx;
     cell_header_s *next;
 };
 
-typedef struct cell_block cell_block_s;
 struct cell_block {
     cell_header_s *cell_headers;
     void *slab;
@@ -116,7 +118,8 @@ static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block)
 
     /* init cell headers */
     for (int i = 0; i < pool->num_cells_in_block; i++) {
-        new_block->cell_headers[i].cell = (char *) new_block->slab + i * pool->cell_size;
+        new_block->cell_headers[i].block = new_block;
+        new_block->cell_headers[i].cell_idx = i;
         /* push to free list */
         new_block->cell_headers[i].next = pool->free_list_head;
         pool->free_list_head = &(new_block->cell_headers[i]);
@@ -152,7 +155,6 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
         /* try allocate more blocks if no free cell found */
         MPIR_Assert(pool_obj->num_blocks <= pool_obj->max_num_blocks);
         if (pool_obj->num_blocks == pool_obj->max_num_blocks) {
-            *cell = NULL;
             MPIR_ERR_SETANDJUMP(rc, MPI_ERR_OTHER, "**nomem");
         }
 
@@ -174,7 +176,7 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
     MPIR_Assert(pool_obj->free_list_head != NULL);
     cell_h = pool_obj->free_list_head;
     pool_obj->free_list_head = cell_h->next;
-    *cell = cell_h->cell;
+    *cell = (char *) cell_h->block->slab + cell_h->cell_idx * pool_obj->cell_size;
 
   fn_exit:
     MPIR_FUNC_EXIT;
