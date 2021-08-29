@@ -337,13 +337,13 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_MAX_NUM_PACK_BUFFERS
       category    : CH4_OFI
       type        : int
-      default     : 256
+      default     : 0
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Specifies the max number of buffers for packing/unpacking messages
-        in the pool.
+        in the pool. Use 0 for unlimited.
 
     - name        : MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE
       category    : CH4_OFI
@@ -1482,7 +1482,7 @@ int ofi_am_init(void)
         mpi_errno =
             MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
                                                   MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
-                                                  MPIDI_OFI_AM_HDR_POOL_MAX_NUM_CELLS,
+                                                  0,
                                                   host_alloc, host_free,
                                                   &MPIDI_OFI_global.am_hdr_buf_pool);
         MPIR_ERR_CHECK(mpi_errno);

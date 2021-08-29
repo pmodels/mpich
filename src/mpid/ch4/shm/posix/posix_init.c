@@ -131,7 +131,7 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
                             < MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE);
     mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE,
                                                       MPIDI_POSIX_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
-                                                      MPIDI_POSIX_AM_HDR_POOL_MAX_NUM_CELLS,
+                                                      0,
                                                       host_alloc, host_free,
                                                       &MPIDI_POSIX_global.am_hdr_buf_pool);
     MPIR_ERR_CHECK(mpi_errno);
