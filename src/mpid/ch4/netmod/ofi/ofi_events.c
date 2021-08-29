@@ -711,8 +711,8 @@ static int am_read_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * 
     } else {
         comm = rreq->comm;
     }
-    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_info).src_rank,
-                                              comm, MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_info).sreq_ptr);
+    MPIDI_OFI_lmt_msg_payload_t *lmt_info = (void *) MPIDI_OFI_AM_RREQ_HDR(rreq, am_hdr_buf);
+    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(lmt_info->src_rank, comm, lmt_info->sreq_ptr);
 
     MPIR_ERR_CHECK(mpi_errno);
 

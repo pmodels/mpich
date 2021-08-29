@@ -116,6 +116,7 @@ typedef struct {
 } MPIDI_OFI_lmt_msg_t;
 
 typedef struct {
+    uint64_t rma_key;
     void *unpack_buffer;
     MPI_Aint pack_size;
     uint64_t src_offset;
@@ -129,7 +130,6 @@ typedef enum {
 } MPIDI_OFI_lmt_type_t;
 
 typedef struct {
-    MPIDI_OFI_lmt_msg_payload_t lmt_info;
     struct fid_mr *lmt_mr;
     MPIDI_OFI_lmt_type_t lmt_type;
     union {

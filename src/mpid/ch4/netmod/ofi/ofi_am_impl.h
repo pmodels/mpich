@@ -244,18 +244,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *msg_hdr;
     MPIDI_OFI_lmt_msg_payload_t *lmt_info;
-    struct iovec *iov;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_src, nic);
 
     MPIR_FUNC_ENTER;
 
+    MPI_Aint am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
+    MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + sizeof(*lmt_info);
+
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
+    MPIR_Assert(total_msg_sz <= MPIDI_OFI_AM_MAX_MSG_SIZE);
 
     msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
     msg_hdr->handler_id = handler_id;
-    msg_hdr->am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
+    msg_hdr->am_hdr_sz = am_hdr_sz;
     msg_hdr->payload_sz = 0;    /* LMT info sent as header */
     msg_hdr->am_type = MPIDI_AMTYPE_RDMA_READ;
     msg_hdr->vni_src = vni_src;
@@ -263,7 +266,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank, vni_src);
     msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vni_src, vni_src);
 
-    lmt_info = &MPIDI_OFI_AM_SREQ_HDR(sreq, lmt_info);
+    lmt_info = (void *) ((char *) msg_hdr + sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz);
     lmt_info->context_id = comm->context_id;
     lmt_info->src_rank = comm->rank;
     lmt_info->src_offset =
@@ -280,8 +283,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
 
     MPIR_cc_inc(sreq->cc_ptr);  /* send completion */
     MPIR_cc_inc(sreq->cc_ptr);  /* lmt ack handler */
-    MPIR_Assert((sizeof(*msg_hdr) + sizeof(*lmt_info) + MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz)) <=
-                MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
     MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[ctx_idx].domain,
                              data,
                              data_sz,
@@ -296,20 +297,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
         lmt_info->rma_key = fi_mr_key(MPIDI_OFI_AM_SREQ_HDR(sreq, lmt_mr));
     }
 
-    iov = MPIDI_OFI_AM_SREQ_HDR(sreq, iov);
-
-    iov[0].iov_base = msg_hdr;
-    iov[0].iov_len = sizeof(*msg_hdr);
-
-    iov[1].iov_base = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr);
-    iov[1].iov_len = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
-
-    iov[2].iov_base = lmt_info;
-    iov[2].iov_len = sizeof(*lmt_info);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND_RDMA;
-    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[ctx_idx].tx, iov, NULL, 3,
-                                     MPIDI_OFI_comm_to_phys(comm, rank, nic, vni_src, vni_dst),
-                                     &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
+    MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[ctx_idx].tx, msg_hdr, total_msg_sz, NULL,
+                                    MPIDI_OFI_comm_to_phys(comm, rank, nic, vni_src, vni_dst),
+                                    &MPIDI_OFI_AMREQUEST(sreq, context)), send);
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -372,9 +363,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
         } else {
             MPI_Aint packed_size;
             mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0,
-                                          send_req->pack_buffer, data_sz, &packed_size);
+                                          MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer), data_sz,
+                                          &packed_size);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_Assert(packed_size == data_sz);
+            iov[2].iov_base = MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer);
+            iov[2].iov_len = data_sz;
         }
 
         MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[ctx_idx].tx, iov, NULL, 3,
@@ -580,7 +574,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
     }
 
     mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, buf, count, datatype,
-                                         need_packing, sreq, vni_src, vni_dst);
+                                         data_sz, need_packing, sreq, vni_src, vni_dst);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (issue_deferred) {
