@@ -22,6 +22,7 @@ struct cell_header {
 struct cell_block {
     cell_header_s *cell_headers;
     void *slab;
+    intptr_t num_used_cells;
     cell_block_s *next;
 };
 
@@ -125,6 +126,7 @@ static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block)
         pool->free_list_head = &(new_block->cell_headers[i]);
     }
 
+    new_block->num_used_cells = 0;
     new_block->next = NULL;
 
     *block = new_block;
@@ -177,6 +179,7 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
     cell_h = pool_obj->free_list_head;
     pool_obj->free_list_head = cell_h->next;
     *cell = (char *) cell_h->block->slab + cell_h->cell_idx * pool_obj->cell_size;
+    cell_h->block->num_used_cells++;
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -215,6 +218,7 @@ int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell
 
     cell_h->next = pool_obj->free_list_head;
     pool_obj->free_list_head = cell_h;
+    cell_h->block->num_used_cells--;
 
   fn_exit:
     MPIR_FUNC_EXIT;
