@@ -27,6 +27,7 @@ cvars:
 
     - name        : MPIR_CVAR_DEBUG_SUMMARY
       category    : DEVELOPER
+      alt-env     : MPIR_CVAR_MEM_CATEGORY_INFORMATION, MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG, MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG
       type        : boolean
       default     : false
       class       : none
