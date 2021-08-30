@@ -6,7 +6,8 @@
 #include "mpidimpl.h"
 #include "ipc_noinline.h"
 #include "ipc_types.h"
-#include "ipc_mem.h"
+#include "../xpmem/xpmem_post.h"
+#include "../gpu/gpu_post.h"
 
 /* Return global node rank of each process in the shared communicator.
  * I.e., rank in MPIR_Process.comm_world->node_comm. The caller routine
@@ -150,6 +151,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         shared_table[i].size = ipc_shared_table[i].size;
         shared_table[i].disp_unit = ipc_shared_table[i].disp_unit;
         shared_table[i].shm_base_addr = NULL;
+        shared_table[i].ipc_mapped_device = -1;
 
         if (i == shm_comm_ptr->rank) {
             shared_table[i].shm_base_addr = win->base;
@@ -166,11 +168,15 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                     /* FIXME: remote win buffer should be mapped to each of their corresponding
                      * local GPU device. */
                     {
+                        MPIDI_GPU_ipc_handle_t handle = ipc_shared_table[i].ipc_handle.gpu;
                         int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.gpu_attr);
+                        int map_dev_id = MPIDI_GPU_ipc_get_map_dev(handle.global_dev_id, dev_id,
+                                                                   MPI_BYTE);
                         mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,
-                                                             dev_id, MPI_BYTE,
+                                                             map_dev_id,
                                                              &shared_table[i].shm_base_addr);
                         MPIR_ERR_CHECK(mpi_errno);
+                        shared_table[i].ipc_mapped_device = map_dev_id;
                     }
                     break;
                 case MPIDI_IPCI_TYPE__NONE:
