@@ -67,7 +67,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_rma_outstanding_req_flushall(MPIDI_POS
     MPIDI_POSIX_rma_req_t *req, *req_tmp;
     /* No dependency between requests, thus can safely wait one by one. */
     LL_FOREACH_SAFE(posix_win->outstanding_reqs_head, req, req_tmp) {
-        int mpi_errno;
+        int mpi_errno ATTRIBUTE((unused));
         mpi_errno = MPIR_Typerep_wait(req->typerep_req);
         MPIR_Assert(mpi_errno == MPI_SUCCESS);
 

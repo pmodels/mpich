@@ -40,7 +40,7 @@ static int gen_tree(int k_val, int *shared_region, int num_packages,
 static int create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_val,
                                 bool right_skewed, int max_ranks, MPIR_Errflag_t * errflag)
 {
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int child_id, child_idx;
 
     mpi_errno = MPIDI_SHM_topotree_allocate(template_tree, max_ranks, k_val);
@@ -243,7 +243,7 @@ static int gen_tree(int k_val, int *shared_region, int num_packages,
                     int package_level, int num_ranks, bool package_leaders_first,
                     bool right_skewed, MPIR_Errflag_t * errflag)
 {
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int rank, idx;
     int package_count = 0;
     MPIDI_SHM_topotree_t package_tree, tree, template_tree;

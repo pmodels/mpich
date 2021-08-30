@@ -8,7 +8,7 @@
 
 int MPIDIG_init_comm(MPIR_Comm * comm)
 {
-    int mpi_errno = MPI_SUCCESS, subcomm_type, is_localcomm;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
@@ -17,11 +17,8 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
 
-    subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id);
-    is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id);
-
-    MPIR_Assert(subcomm_type <= 3);
-    MPIR_Assert(is_localcomm <= 1);
+    MPIR_Assert(MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id) <= 3);
+    MPIR_Assert(MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id) <= 1);
 
     MPIDIG_COMM(comm, window_instance) = 0;
   fn_exit:
@@ -31,16 +28,14 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
 
 int MPIDIG_destroy_comm(MPIR_Comm * comm)
 {
-    int mpi_errno = MPI_SUCCESS, subcomm_type, is_localcomm;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
-    subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id);
-    is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id);
 
-    MPIR_Assert(subcomm_type <= 3);
-    MPIR_Assert(is_localcomm <= 1);
+    MPIR_Assert(MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id) <= 3);
+    MPIR_Assert(MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id) <= 1);
 
   fn_exit:
     MPIR_FUNC_EXIT;

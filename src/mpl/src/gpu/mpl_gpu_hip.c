@@ -42,6 +42,7 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
+    int mpl_err = MPL_SUCCESS;
     hipError_t ret;
     ret = hipPointerGetAttributes(&attr->device_attr, ptr);
     if (ret == hipSuccess) {
@@ -66,26 +67,30 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     }
 
   fn_exit:
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
+    int mpl_err = MPL_SUCCESS;
     hipError_t ret;
 
     ret = hipIpcGetMemHandle(ipc_handle, (void *) ptr);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void **ptr)
 {
+    int mpl_err = MPL_SUCCESS;
     hipError_t ret;
     int prev_devid;
 
@@ -96,74 +101,85 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
 
   fn_exit:
     hipSetDevice(prev_devid);
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 int MPL_gpu_ipc_handle_unmap(void *ptr)
 {
+    int mpl_err = MPL_SUCCESS;
     hipError_t ret;
     ret = hipIpcCloseMemHandle(ptr);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 int MPL_gpu_malloc_host(void **ptr, size_t size)
 {
+    int mpl_err = MPL_SUCCESS;
     hipError_t ret;
     ret = hipHostMalloc(ptr, size, hipHostMallocDefault);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 int MPL_gpu_free_host(void *ptr)
 {
+    int mpl_err = MPL_SUCCESS;
     hipError_t ret;
     ret = hipHostFree(ptr);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 int MPL_gpu_register_host(const void *ptr, size_t size)
 {
+    int mpl_err = MPL_SUCCESS;
     hipError_t ret;
     ret = hipHostRegister((void *) ptr, size, hipHostRegisterDefault);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 int MPL_gpu_unregister_host(const void *ptr)
 {
+    int mpl_err = MPL_SUCCESS;
     hipError_t ret;
     ret = hipHostUnregister((void *) ptr);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device)
 {
-    int mpl_errno = MPL_SUCCESS;
+    int mpl_err = MPL_SUCCESS;
     int prev_devid;
     hipError_t ret;
     hipGetDevice(&prev_devid);
@@ -173,26 +189,29 @@ int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device)
 
   fn_exit:
     hipSetDevice(prev_devid);
-    return mpl_errno;
+    return mpl_err;
   fn_fail:
-    mpl_errno = MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
     goto fn_exit;
 }
 
 int MPL_gpu_free(void *ptr)
 {
+    int mpl_err = MPL_SUCCESS;
     hipError_t ret;
     ret = hipFree(ptr);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
-int MPL_gpu_init()
+int MPL_gpu_init(void)
 {
+    int mpl_err = MPL_SUCCESS;
     hipError_t ret = hipGetDeviceCount(&device_count);
     HIP_ERR_CHECK(ret);
 
@@ -242,12 +261,13 @@ int MPL_gpu_init()
     gpu_initialized = 1;
 
   fn_exit:
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
-int MPL_gpu_finalize()
+int MPL_gpu_finalize(void)
 {
     if (device_count <= 0) {
         goto fn_exit;
@@ -286,15 +306,17 @@ int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr)
 
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
 {
+    int mpl_err = MPL_SUCCESS;
     hipError_t hiret;
 
     hiret = hipMemGetAddressRange((hipDeviceptr_t *) pbase, (size_t *) len, (hipDeviceptr_t) ptr);
     HI_ERR_CHECK(hiret);
 
   fn_exit:
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 static void gpu_free_hooks_cb(void *dptr)

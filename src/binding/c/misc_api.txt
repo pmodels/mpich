@@ -193,7 +193,7 @@ MPIX_Query_cuda_support:
     .skip: global_cs, Errors
 {
     int is_supported = 0;
-    int mpi_errno;
+    int mpi_errno ATTRIBUTE((unused));
 
     mpi_errno = PMPIX_GPU_query_support(MPIX_GPU_SUPPORT_CUDA, &is_supported);
     assert(mpi_errno);
@@ -207,7 +207,7 @@ MPIX_Query_ze_support:
     .skip: global_cs, Errors
 {
     int is_supported = 0;
-    int mpi_errno;
+    int mpi_errno ATTRIBUTE((unused));
 
     mpi_errno = PMPIX_GPU_query_support(MPIX_GPU_SUPPORT_ZE, &is_supported);
     assert(mpi_errno);

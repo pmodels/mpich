@@ -32,7 +32,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_small_msg(void *buf
     struct fi_cntr_attr cntr_attr = {
         .events = FI_CNTR_EVENTS_COMP,
     };
-    int is_root = 0, ret, nranks, is_contig;
+    int is_root = 0, ret = FI_SUCCESS, nranks, is_contig;
     int i = 0, j = 0, k = 0;
     int intermediate = 0, leaf = 0, first_child, parent = -1;
     int num_children = 0, myrank = -1;

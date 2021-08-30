@@ -9,7 +9,7 @@
 
 static void ipc_handle_cache_free(void *handle_obj)
 {
-    int mpl_err;
+    int mpl_err ATTRIBUTE((unused));
 
     MPIR_FUNC_ENTER;
 
@@ -36,7 +36,8 @@ static void ipc_handle_free_hook(void *dptr)
 {
     void *pbase;
     uintptr_t len;
-    int mpl_err, local_dev_id, global_dev_id;
+    int mpl_err ATTRIBUTE((unused));
+    int local_dev_id, global_dev_id;
     MPL_pointer_attr_t gpu_attr;
 
     MPIR_FUNC_ENTER;

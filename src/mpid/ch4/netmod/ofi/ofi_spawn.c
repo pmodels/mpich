@@ -353,16 +353,16 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
                                     MPIR_Comm ** newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Comm *peer_intercomm = NULL;
+    int tag;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    int bcast_ints[2];          /* used to bcast tag and errno */
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         MPIR_Assert(0);
         goto fn_exit;
     }
 
-    MPIR_Comm *peer_intercomm = NULL;
-    int tag;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    int bcast_ints[2];          /* used to bcast tag and errno */
     if (comm_ptr->rank == root) {
         /* NOTE: do not goto fn_fail on error, or it will leave children hanging */
         mpi_errno = get_tag_from_port(port_name, &tag);

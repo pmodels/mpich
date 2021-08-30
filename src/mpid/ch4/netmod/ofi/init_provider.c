@@ -76,7 +76,7 @@ static int find_provider(struct fi_info **prov_out)
     int mpi_errno = MPI_SUCCESS;
     int ret;                    /* return from fi_getinfo() */
 
-    const char *provname;
+    const char *provname = NULL;
     if (MPIR_CVAR_OFI_USE_PROVIDER != NULL) {
         fprintf(stderr, "MPIR_CVAR_OFI_USE_PROVIDER is no longer supported in CH4. Use FI_PROVIDER"
                 "instead\n");

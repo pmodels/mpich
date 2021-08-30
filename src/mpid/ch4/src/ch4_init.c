@@ -315,7 +315,7 @@ static int generic_init(void)
 int MPID_Init(int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
-    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
 
     MPIR_FUNC_ENTER;
 
