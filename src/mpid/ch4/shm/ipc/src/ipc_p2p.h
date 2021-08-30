@@ -10,7 +10,8 @@
 #include "mpidimpl.h"
 #include "ipc_pre.h"
 #include "ipc_types.h"
-#include "ipc_mem.h"
+#include "../xpmem/xpmem_post.h"
+#include "../gpu/gpu_post.h"
 
 /* Generic IPC protocols for P2P. */
 
@@ -124,44 +125,49 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
 
-    /* attach remote buffer */
-    switch (ipc_type) {
-        case MPIDI_IPCI_TYPE__XPMEM:
-            mpi_errno = MPIDI_XPMEM_ipc_handle_map(ipc_handle.xpmem, &src_buf);
-            break;
-        case MPIDI_IPCI_TYPE__GPU:
-            {
-                MPL_pointer_attr_t attr;
-                MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
-                int dev_id = MPL_gpu_get_dev_id_from_attr(&attr);
-                mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_handle.gpu, dev_id,
-                                                     MPIDIG_REQUEST(rreq, datatype), &src_buf);
-            }
-            break;
-        case MPIDI_IPCI_TYPE__NONE:
-            /* no-op */
-            break;
-        default:
-            /* Unknown IPC type */
-            MPIR_Assert(0);
-            break;
-    }
-
     IPC_TRACE("handle_lmt_recv: handle matched rreq %p [source %d, tag %d, "
               " context_id 0x%x], copy dst %p, bytes %ld\n", rreq,
               MPIDIG_REQUEST(rreq, rank), MPIDIG_REQUEST(rreq, tag),
               MPIDIG_REQUEST(rreq, context_id), (char *) MPIDIG_REQUEST(rreq, buffer),
               recv_data_sz);
 
-    /* Copy data to receive buffer */
-    MPI_Aint actual_unpack_bytes;
-    mpi_errno = MPIR_Typerep_unpack((const void *) src_buf, src_data_sz,
-                                    (char *) MPIDIG_REQUEST(rreq, buffer), recv_data_sz,
-                                    MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIDI_IPCI_handle_unmap(ipc_type, src_buf, ipc_handle);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (ipc_type == MPIDI_IPCI_TYPE__XPMEM) {
+        /* map */
+        mpi_errno = MPIDI_XPMEM_ipc_handle_map(ipc_handle.xpmem, &src_buf);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* copy */
+        MPI_Aint actual_unpack_bytes;
+        mpi_errno = MPIR_Typerep_unpack((const void *) src_buf, src_data_sz,
+                                        (char *) MPIDIG_REQUEST(rreq, buffer),
+                                        MPIDIG_REQUEST(rreq, count),
+                                        MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* skip unmap */
+    } else if (ipc_type == MPIDI_IPCI_TYPE__GPU) {
+        /* map */
+        MPL_pointer_attr_t attr;
+        MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
+        int dev_id = MPL_gpu_get_dev_id_from_attr(&attr);
+        int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_handle.gpu.global_dev_id, dev_id,
+                                                MPIDIG_REQUEST(rreq, datatype));
+        mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_handle.gpu, map_dev, &src_buf);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* copy */
+        /* TODO: get sender datatype and call MPIR_Typerep_op with mapped_device set to dev_id */
+        MPI_Aint actual_unpack_bytes;
+        mpi_errno = MPIR_Typerep_unpack((const void *) src_buf, src_data_sz,
+                                        (char *) MPIDIG_REQUEST(rreq, buffer),
+                                        MPIDIG_REQUEST(rreq, count),
+                                        MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* unmap */
+        mpi_errno = MPIDI_GPU_ipc_handle_unmap(src_buf, ipc_handle.gpu);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else if (ipc_type == MPIDI_IPCI_TYPE__NONE) {
+        /* no-op */
+    } else {
+        MPIR_Assert(0);
+    }
 
     MPIDI_IPC_ctrl_send_contig_lmt_fin_t am_hdr;
     am_hdr.ipc_type = ipc_type;

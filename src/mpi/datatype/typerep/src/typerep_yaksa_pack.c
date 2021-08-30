@@ -415,9 +415,9 @@ static int typerep_op_fallback(void *source_buf, MPI_Aint source_count, MPI_Data
                                void *target_buf, MPI_Aint target_count, MPI_Datatype target_dtp,
                                MPI_Op op);
 static int typerep_op_unpack(void *source_buf, void *target_buf, MPI_Aint count,
-                             MPI_Datatype datatype, MPI_Op op);
+                             MPI_Datatype datatype, MPI_Op op, int mapped_device);
 static int typerep_op_pack(void *source_buf, void *target_buf, MPI_Aint count,
-                           MPI_Datatype datatype, MPI_Op op);
+                           MPI_Datatype datatype, MPI_Op op, int mapped_device);
 
 int MPIR_Typerep_reduce(const void *in_buf, void *out_buf, MPI_Aint count, MPI_Datatype datatype,
                         MPI_Op op)
@@ -426,7 +426,7 @@ int MPIR_Typerep_reduce(const void *in_buf, void *out_buf, MPI_Aint count, MPI_D
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = typerep_op_pack((void *) in_buf, out_buf, count, datatype, op);
+    mpi_errno = typerep_op_pack((void *) in_buf, out_buf, count, datatype, op, -1);
 
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -439,7 +439,7 @@ int MPIR_Typerep_reduce(const void *in_buf, void *out_buf, MPI_Aint count, MPI_D
 
 int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source_dtp,
                     void *target_buf, MPI_Aint target_count, MPI_Datatype target_dtp, MPI_Op op,
-                    bool source_is_packed)
+                    bool source_is_packed, int mapped_device)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -456,15 +456,25 @@ int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source
     MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(source_dtp));
 
     bool use_yaksa = MPIR_Typerep_reduce_is_supported(op, source_dtp);
-    int source_is_contig, target_is_contig;
-    MPIR_Datatype_is_contig(source_dtp, &source_is_contig);
-    MPIR_Datatype_is_contig(target_dtp, &target_is_contig);
-
     if (use_yaksa) {
-        if (source_is_packed || source_is_contig) {
-            mpi_errno = typerep_op_unpack(source_buf, target_buf, target_count, target_dtp, op);
+        int source_is_contig, target_is_contig;
+        MPIR_Datatype_is_contig(source_dtp, &source_is_contig);
+        MPIR_Datatype_is_contig(target_dtp, &target_is_contig);
+
+        MPI_Aint true_extent, true_lb;
+        if (source_is_packed) {
+            mpi_errno = typerep_op_unpack(source_buf, target_buf, target_count, target_dtp,
+                                          op, mapped_device);
+        } else if (source_is_contig) {
+            MPIR_Type_get_true_extent_impl(source_dtp, &true_lb, &true_extent);
+            void *addr = (char *) source_buf + true_lb;
+            mpi_errno = typerep_op_unpack(addr, target_buf, target_count, target_dtp,
+                                          op, mapped_device);
         } else if (target_is_contig) {
-            mpi_errno = typerep_op_pack(source_buf, target_buf, source_count, source_dtp, op);
+            MPIR_Type_get_true_extent_impl(target_dtp, &true_lb, &true_extent);
+            void *addr = (char *) target_buf + true_lb;
+            mpi_errno = typerep_op_pack(source_buf, addr, source_count, source_dtp,
+                                        op, mapped_device);
         } else {
             MPI_Aint data_sz;
             MPIR_Pack_size(source_count, source_dtp, &data_sz);
@@ -473,7 +483,8 @@ int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source
             MPIR_Typerep_pack(source_buf, source_count, source_dtp, 0, src_ptr, data_sz,
                               &pack_size);
             MPIR_Assert(pack_size == data_sz);
-            mpi_errno = typerep_op_unpack(src_ptr, target_buf, target_count, target_dtp, op);
+            mpi_errno = typerep_op_unpack(src_ptr, target_buf, target_count, target_dtp,
+                                          op, mapped_device);
             MPL_free(src_ptr);
         }
     } else {
@@ -526,9 +537,10 @@ int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source
 }
 
 static int typerep_op_unpack(void *source_buf, void *target_buf, MPI_Aint count,
-                             MPI_Datatype datatype, MPI_Op op)
+                             MPI_Datatype datatype, MPI_Op op, int mapped_device)
 {
     int mpi_errno = MPI_SUCCESS;
+    int rc;
 
     yaksa_type_t yaksa_type = MPII_Typerep_get_yaksa_type(datatype);
     yaksa_op_t yaksa_op = MPII_Typerep_get_yaksa_op(op);
@@ -536,11 +548,17 @@ static int typerep_op_unpack(void *source_buf, void *target_buf, MPI_Aint count,
     MPI_Aint data_sz;
     MPIR_Pack_size(count, datatype, &data_sz);
 
+    yaksa_info_t info = NULL;
+    if (mapped_device >= 0) {
+        yaksa_info_create(&info);
+        rc = yaksa_info_keyval_append(info, "yaksa_mapped_device", &mapped_device, sizeof(int));
+        MPIR_Assert(rc == 0);
+    }
+
     uintptr_t actual_bytes;
     yaksa_request_t request;
-    int rc;
     rc = yaksa_iunpack(source_buf, data_sz, target_buf, count, yaksa_type, 0, &actual_bytes,
-                       NULL, yaksa_op, &request);
+                       info, yaksa_op, &request);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
     rc = yaksa_request_wait(request);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
@@ -553,9 +571,10 @@ static int typerep_op_unpack(void *source_buf, void *target_buf, MPI_Aint count,
 }
 
 static int typerep_op_pack(void *source_buf, void *target_buf, MPI_Aint count,
-                           MPI_Datatype datatype, MPI_Op op)
+                           MPI_Datatype datatype, MPI_Op op, int mapped_device)
 {
     int mpi_errno = MPI_SUCCESS;
+    int rc;
 
     yaksa_type_t yaksa_type = MPII_Typerep_get_yaksa_type(datatype);
     yaksa_op_t yaksa_op = MPII_Typerep_get_yaksa_op(op);
@@ -563,11 +582,17 @@ static int typerep_op_pack(void *source_buf, void *target_buf, MPI_Aint count,
     MPI_Aint data_sz;
     MPIR_Pack_size(count, datatype, &data_sz);
 
+    yaksa_info_t info = NULL;
+    if (mapped_device >= 0) {
+        yaksa_info_create(&info);
+        rc = yaksa_info_keyval_append(info, "yaksa_mapped_device", &mapped_device, sizeof(int));
+        MPIR_Assert(rc == 0);
+    }
+
     uintptr_t actual_pack_bytes;
     yaksa_request_t request;
-    int rc;
     rc = yaksa_ipack(source_buf, count, yaksa_type, 0, target_buf, data_sz, &actual_pack_bytes,
-                     NULL, yaksa_op, &request);
+                     info, yaksa_op, &request);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
     rc = yaksa_request_wait(request);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
