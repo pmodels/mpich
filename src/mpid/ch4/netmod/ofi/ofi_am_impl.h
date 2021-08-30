@@ -205,6 +205,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
 
         sreq_hdr->am_hdr = (void *) &sreq_hdr->am_hdr_buf[0];
         sreq_hdr->am_hdr_sz = am_hdr_sz;
+        sreq_hdr->pack_buffer = NULL;
     } else {
         sreq_hdr = MPIDI_OFI_AMREQUEST(sreq, sreq_hdr);
     }
@@ -229,6 +230,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_rreq(MPIR_Request * rreq)
                                            (void **) &rreq_hdr);
         MPIR_Assert(rreq_hdr);
         MPIDI_OFI_AMREQUEST(rreq, rreq_hdr) = rreq_hdr;
+        rreq_hdr->pack_buffer = NULL;
     }
 
     MPIR_FUNC_EXIT;
@@ -510,7 +512,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
     } else {
         MPIDI_Datatype_check_lb(datatype, dt_true_lb);
         send_buf = (char *) buf + dt_true_lb;
-        MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer) = NULL;
     }
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -710,7 +711,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
                                            (void **) &send_req);
         MPIR_Assert(send_req);
         send_req->sreq = sreq;
-        send_req->pack_buffer = NULL;
     }
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -807,7 +807,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
     } else {
         MPIDI_Datatype_check_lb(datatype, dt_true_lb);
         send_buf = (char *) buf + dt_true_lb;
-        MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer) = NULL;
     }
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
