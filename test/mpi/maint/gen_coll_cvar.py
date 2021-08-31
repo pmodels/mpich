@@ -49,8 +49,12 @@ def dump_tests(Out, key, testlist, algos, algo_params, special=None):
                 if special == "nb":
                     segs.append("env=MPIR_CVAR_%s_DEVICE_COLLECTIVE=0" % NAME)
                     segs.append("env=MPIR_CVAR_%s_%s_ALGORITHM=nb" % (NAME, INTRA))
-                    segs.append("env=MPIR_CVAR_I%s_DEVICE_COLLECTIVE=0" % NAME)
-                    segs.append("env=MPIR_CVAR_I%s_%s_ALGORITHM=%s" % (NAME, INTRA, algo))
+                    if RE.match(r'(\w+):(\w+)', algo):
+                        DEVICE = RE.m.group(1).upper()
+                        segs.append("env=MPIR_CVAR_I%s_%s_%s_ALGORITHM=%s" % (NAME, DEVICE, INTRA, RE.m.group(2)))
+                    else:
+                        segs.append("env=MPIR_CVAR_I%s_DEVICE_COLLECTIVE=0" % NAME)
+                        segs.append("env=MPIR_CVAR_I%s_%s_ALGORITHM=%s" % (NAME, INTRA, algo))
                 elif RE.match(r'(\w+):(\w+)', algo):
                     DEVICE = RE.m.group(1).upper()
                     segs.append("env=MPIR_CVAR_%s_%s_%s_ALGORITHM=%s" % (NAME, DEVICE, INTRA, RE.m.group(2)))
