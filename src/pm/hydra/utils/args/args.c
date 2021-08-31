@@ -19,7 +19,7 @@ static int exists(char *filename)
 static HYD_status get_abs_wd(const char *wd, char **abs_wd)
 {
     int ret;
-    char *cwd;
+    char *cwd = NULL;
     HYD_status status = HYD_SUCCESS;
 
     if (wd == NULL) {
@@ -49,6 +49,9 @@ static HYD_status get_abs_wd(const char *wd, char **abs_wd)
         HYDU_ERR_POP(status, "error calling chdir\n");
 
   fn_exit:
+    if (cwd != NULL)
+        MPL_free(cwd);
+
     return status;
 
   fn_fail:

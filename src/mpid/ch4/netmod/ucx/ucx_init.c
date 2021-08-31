@@ -427,19 +427,6 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
 }
 
-int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **local_upids)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
-                             uint64_t * remote_gpids)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
 int MPIDI_UCX_mpi_free_mem(void *ptr)
 {
     return MPIDIG_mpi_free_mem(ptr);

@@ -10,7 +10,7 @@ cvars:
     - name        : MPIR_CVAR_PROGRESS_MAX_COLLS
       category    : COLLECTIVE
       type        : int
-      default     : 8
+      default     : 0
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
