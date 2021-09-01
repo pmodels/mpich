@@ -134,6 +134,7 @@ foreach $_ (@ARGV) {
 # commandline.
 #
 $cmdline = "";
+$inside_module = 0;
 T:
 while ($line = <>) {
     if (eof()) { next; }
@@ -173,15 +174,18 @@ while ($line = <>) {
 
     # Is the line a command (including a directory change?)
     # Check first for a directory change
-    if ($line =~ /^\s*make.* Entering directory \`([^\']*)\'/) {
+    if ($line =~ /^\s*make.* Entering directory \'([^\']*)\'/) {
         my $dirname = $1;
         $dirstack[$#dirstack+1] = $dirname;
         $dirprinted[$#dirprinted+1] = 0;
         print ">>entering $dirname\n" if $debugDir;
+        if ($dirname =~ /modules/) {
+            $inside_module++;
+        }
         $cmdline = "";
         next;
     }
-    elsif ($line =~ /^\s*make.* Leaving directory \`([^\']*)\'/) {
+    elsif ($line =~ /^\s*make.* Leaving directory \'([^\']*)\'/) {
         # We should check that the directory names match
         my $dirname = $1;
         print ">>leaving $dirname\n" if $debugDir;
@@ -190,7 +194,14 @@ while ($line = <>) {
         }
         $#dirstack--;
         $#dirprinted--;
+        if ($dirname =~ /modules/) {
+            $inside_module--;
+        }
         $cmdline = "";
+        next;
+    }
+    elsif ($inside_module > 0) {
+        # Ignore warnings coming from inside other modules. These are outside of MPICH's control
         next;
     }
     else {
