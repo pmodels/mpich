@@ -70,6 +70,8 @@ $rootSrcDir = "";
               "ld: warning: directory not found for option '-L\\S*src/openpa/src'",
 	      "copying selected object files to avoid basename conflicts...",
           "libtool", "Entering directory", "touch", "cd", "config.status:", "\\(CDPATH=.*",
+          "OCLOC", # This comes from yaksa, but shows up when compiling an embedded build
+          ".*label ‘fn_fail’ defined but not used", ".*label ‘fn_exit’ defined but not used", # Strict flag ignored in yaksa
 );
 
 # OtherNoise is an array of patterns that describe blocks of
