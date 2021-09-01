@@ -15,8 +15,8 @@ typedef enum {
     MPIDU_GENQ_PRIVATE_POOL_WARN_POOL_SIZE = 1
 } MPIDU_genq_private_pool_status_e;
 
-int MPIDU_genq_private_pool_create_unsafe(uintptr_t cell_size, uintptr_t num_cells_in_block,
-                                          uintptr_t max_num_cells, MPIDU_genq_malloc_fn malloc_fn,
+int MPIDU_genq_private_pool_create_unsafe(intptr_t cell_size, intptr_t num_cells_in_block,
+                                          intptr_t max_num_cells, MPIDU_genq_malloc_fn malloc_fn,
                                           MPIDU_genq_free_fn free_fn,
                                           MPIDU_genq_private_pool_t * pool);
 int MPIDU_genq_private_pool_destroy_unsafe(MPIDU_genq_private_pool_t pool);
