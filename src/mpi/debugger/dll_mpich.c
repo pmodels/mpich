@@ -3,15 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-/* Fixme: include the mpichconf.h file? */
-
 /* Allow fprintf in debug statements */
 /* style: allow:fprintf:5 sig:0 */
 
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include "mpi.h"
+#include "mpiimpl.h"
 
 /* #define DEBUG_MPIDBG_DLL 1 */
 
@@ -87,10 +85,6 @@ typedef struct communicator_t {
                                  * matchine */
     int present;
     mqs_communicator comm_info; /* Info needed at the higher level */
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
-    mqs_taddr_t posted_base;    /* CH4 has the option for per-communicator queue */
-    mqs_taddr_t unexp_base;
-#endif
 } communicator_t;
 
 /* Internal functions used only by routines in this package */
@@ -290,14 +284,6 @@ int mqs_image_has_queues(mqs_image * image, const char **message)
             i_info->comm_context_id_offs = dbgr_field_offset(co_type, (char *) "context_id");
             i_info->comm_recvcontext_id_offs =
                 dbgr_field_offset(co_type, (char *) "recvcontext_id");
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
-            int comm_dev_offs = dbgr_field_offset(co_type, (char *) "dev");
-            mqs_type *ch4_comm_type = dbgr_find_type(image, (char *) "MPIDIG_comm_t", mqs_lang_c);
-            int ch4_comm_posted_offs = dbgr_field_offset(ch4_comm_type, (char *) "posted_head_ptr");
-            int ch4_comm_unexp_offs = dbgr_field_offset(ch4_comm_type, (char *) "unexp_head_ptr");
-            i_info->comm_posted_offs = comm_dev_offs + ch4_comm_posted_offs;
-            i_info->comm_unexp_offs = comm_dev_offs + ch4_comm_unexp_offs;
-#endif
         }
     }
 
@@ -317,33 +303,22 @@ int mqs_image_has_queues(mqs_image * image, const char **message)
                 i_info->req_dev_offs = dev_offs;
 #ifdef HAVE_CH4_DEBUGGER_SUPPORT
                 /* Only support CH4 active message */
-                /* CH4 AM receive request (rreq) definition */
-                mqs_type *am_rreq_type =
-                    dbgr_find_type(image, (char *) "MPIDIG_rreq_t", mqs_lang_c);
-                if (am_rreq_type) {
-                    i_info->am_rreq_next_offs = dbgr_field_offset(am_rreq_type, (char *) "next");
-                    /* request ptr is stored in MPIDIG_rreq_t */
-                    i_info->req_offs = dbgr_field_offset(am_rreq_type, (char *) "request");
-                    /* buffer, count, rank, tag, context_id and datatype are stored in AM request */
-                    mqs_type *dreq_type =
-                        dbgr_find_type(image, (char *) "MPIDI_Devreq_t", mqs_lang_c);
-                    i_info->req_am_offs = dev_offs + dbgr_field_offset(dreq_type, (char *) "am");
+                /* buffer, count, rank, tag, context_id and datatype are stored in AM request */
+                mqs_type *dreq_type = dbgr_find_type(image, (char *) "MPIDI_Devreq_t", mqs_lang_c);
+                i_info->req_next_offs = dev_offs + dbgr_field_offset(dreq_type, (char *) "next");
 
-                    mqs_type *am_req_type =
-                        dbgr_find_type(image, (char *) "MPIDIG_req_t", mqs_lang_c);
-                    i_info->req_user_buf_offs =
-                        i_info->req_am_offs + dbgr_field_offset(am_req_type, (char *) "buffer");
-                    i_info->req_user_count_offs =
-                        i_info->req_am_offs + dbgr_field_offset(am_req_type, (char *) "count");
-                    i_info->req_rank_offs =
-                        i_info->req_am_offs + dbgr_field_offset(am_req_type, (char *) "rank");
-                    i_info->req_tag_offs =
-                        i_info->req_am_offs + dbgr_field_offset(am_req_type, (char *) "tag");
-                    i_info->req_context_id_offs =
-                        i_info->req_am_offs + dbgr_field_offset(am_req_type, (char *) "context_id");
-                    i_info->req_datatype_offs =
-                        i_info->req_am_offs + dbgr_field_offset(am_req_type, (char *) "datatype");
-                }
+                int am_offs = dev_offs + dbgr_field_offset(dreq_type, (char *) "am");
+                mqs_type *am_req_type = dbgr_find_type(image, (char *) "MPIDIG_req_t", mqs_lang_c);
+                i_info->req_user_buf_offs =
+                    am_offs + dbgr_field_offset(am_req_type, (char *) "buffer");
+                i_info->req_user_count_offs =
+                    am_offs + dbgr_field_offset(am_req_type, (char *) "count");
+                i_info->req_rank_offs = am_offs + dbgr_field_offset(am_req_type, (char *) "rank");
+                i_info->req_tag_offs = am_offs + dbgr_field_offset(am_req_type, (char *) "tag");
+                i_info->req_context_id_offs =
+                    am_offs + dbgr_field_offset(am_req_type, (char *) "context_id");
+                i_info->req_datatype_offs =
+                    am_offs + dbgr_field_offset(am_req_type, (char *) "datatype");
 #else
                 /* CH3 specific request definition */
                 mqs_type *dreq_type = dbgr_find_type(image, (char *) "MPIDI_Request",
@@ -443,9 +418,7 @@ int mqs_process_has_queues(mqs_process * proc, char **msg)
     mpich_process_info *p_info = (mpich_process_info *) dbgr_get_process_info(proc);
     mqs_image *image = dbgr_get_image(proc);
     mpich_image_info *i_info = (mpich_image_info *) dbgr_get_image_info(image);
-#ifndef HAVE_CH4_DEBUGGER_SUPPORT
     mqs_taddr_t head_ptr;
-#endif
 
     /* Don't bother with a pop up here, it's unlikely to be helpful */
     *msg = 0;
@@ -456,7 +429,6 @@ int mqs_process_has_queues(mqs_process * proc, char **msg)
         return err_all_communicators;
 
     /* Check for the receive and send queues */
-#ifndef HAVE_CH4_DEBUGGER_SUPPORT
     if (dbgr_find_symbol(image, (char *) "MPID_Recvq_posted_head_ptr", &head_ptr) != mqs_ok)
         return err_posted;
     p_info->posted_base = fetch_pointer(proc, head_ptr, p_info);
@@ -464,7 +436,6 @@ int mqs_process_has_queues(mqs_process * proc, char **msg)
     if (dbgr_find_symbol(image, (char *) "MPID_Recvq_unexpected_head_ptr", &head_ptr) != mqs_ok)
         return err_unexpected;
     p_info->unexpected_base = fetch_pointer(proc, head_ptr, p_info);
-#endif
 
     /* Send queues are optional */
     if (dbgr_find_symbol(image, (char *) "MPIR_Sendq_head", &p_info->sendq_base) == mqs_ok) {
@@ -588,25 +559,11 @@ int mqs_setup_operation_iterator(mqs_process * proc, int op)
             /* The address on the receive queues is the address of a pointer to
              * the head of the list.  */
         case mqs_pending_receives:
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
-            /* CH4 defines message queue head in every communicator. */
-            p_info->next_msg = p_info->current_communicator->posted_base;
-            if (fetch_pointer(proc, p_info->next_msg, p_info) == 0)
-                return mqs_end_of_list;
-#else
             p_info->next_msg = p_info->posted_base;
-#endif
             return mqs_ok;
 
         case mqs_unexpected_messages:
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
-            /* CH4 defines message queue head in every communicator. */
-            p_info->next_msg = p_info->current_communicator->unexp_base;
-            if (fetch_pointer(proc, p_info->next_msg, p_info) == 0)
-                return mqs_end_of_list;
-#else
             p_info->next_msg = p_info->unexpected_base;
-#endif
             return mqs_ok;
 
         default:
@@ -681,13 +638,7 @@ static int fetch_receive(mqs_process * proc, mpich_process_info * p_info,
 #endif
     while (base != 0) {
         /* Check this entry to see if the context matches */
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
-        mqs_taddr_t request_base = fetch_pointer(proc, base + i_info->req_offs, p_info);
-        int16_t actual_context =
-            fetch_int16(proc, request_base + i_info->req_context_id_offs, p_info);
-#else
         int16_t actual_context = fetch_int16(proc, base + i_info->req_context_id_offs, p_info);
-#endif
 
 #ifdef DEBUG_LIST_ITER
         initLogFile();
@@ -695,20 +646,11 @@ static int fetch_receive(mqs_process * proc, mpich_process_info * p_info,
 #endif
         if (actual_context == wanted_context) {
             /* Found a request for this communicator */
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
-            int is_complete = fetch_int(proc, base + i_info->req_cc_offs, p_info);
-            int tag = fetch_int(proc, request_base + i_info->req_tag_offs, p_info);
-            int rank = fetch_int16(proc, request_base + i_info->req_rank_offs, p_info);
-            mqs_tword_t user_buffer =
-                fetch_pointer(proc, request_base + i_info->req_user_buf_offs, p_info);
-            int user_count = fetch_int(proc, request_base + i_info->req_user_count_offs, p_info);
-#else
             int tag = fetch_int(proc, base + i_info->req_tag_offs, p_info);
             int rank = fetch_int16(proc, base + i_info->req_rank_offs, p_info);
             int is_complete = fetch_int(proc, base + i_info->req_cc_offs, p_info);
             mqs_tword_t user_buffer = fetch_pointer(proc, base + i_info->req_user_buf_offs, p_info);
             int user_count = fetch_int(proc, base + i_info->req_user_count_offs, p_info);
-#endif
 
             /* Return -1 for ANY_TAG or ANY_SOURCE */
             res->desired_tag = (tag >= 0) ? tag : -1;
@@ -731,19 +673,11 @@ static int fetch_receive(mqs_process * proc, mpich_process_info * p_info,
             res->status = (is_complete != 0) ? mqs_st_pending : mqs_st_complete;
 
             /* Don't forget to step the queue ! */
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
-            p_info->next_msg = base + i_info->am_rreq_next_offs;
-#else
             p_info->next_msg = base + i_info->req_next_offs;
-#endif
             return mqs_ok;
         } else {
             /* Try the next one */
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
-            base = fetch_pointer(proc, base + i_info->am_rreq_next_offs, p_info);
-#else
             base = fetch_pointer(proc, base + i_info->req_next_offs, p_info);
-#endif
         }
     }
 #if 0
@@ -1033,10 +967,6 @@ static int rebuild_communicator_list(mqs_process * proc)
             nc->group = g;
             nc->context_id = send_ctx;
             nc->recvcontext_id = recv_ctx;
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
-            nc->posted_base = fetch_pointer(proc, comm_base + i_info->comm_posted_offs, p_info);
-            nc->unexp_base = fetch_pointer(proc, comm_base + i_info->comm_unexp_offs, p_info);
-#endif
 
             strncpy(nc->comm_info.name, name, sizeof(nc->comm_info.name));
             nc->comm_info.unique_id = comm_base;
