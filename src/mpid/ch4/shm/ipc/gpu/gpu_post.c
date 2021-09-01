@@ -68,34 +68,6 @@ static int ipc_handle_cache_insert(MPL_gavl_tree_t gavl_tree, const void *addr, 
     goto fn_exit;
 }
 
-int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype)
-{
-    int map_to_dev_id = -1;
-
-    MPIR_FUNC_ENTER;
-
-    int dt_contig;
-    MPIDI_Datatype_check_contig(datatype, dt_contig);
-
-    int remote_local_dev_id = MPL_gpu_global_to_local_dev_id(remote_global_dev_id);
-
-    /* TODO: more analyses on the non-contig cases */
-    if (remote_local_dev_id == -1 || !dt_contig) {
-        map_to_dev_id = local_dev_id;
-    } else {
-        map_to_dev_id = remote_local_dev_id;
-    }
-
-    if (map_to_dev_id < 0) {
-        /* This is the case for local host memory. We need a valid device id
-         * to map on. Assume at least device 0 is always available. */
-        map_to_dev_id = 0;
-    }
-
-    MPIR_FUNC_EXIT;
-    return map_to_dev_id;
-}
-
 static int ipc_handle_cache_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -209,6 +181,36 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
+}
+
+int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype)
+{
+    int map_to_dev_id = -1;
+
+    MPIR_FUNC_ENTER;
+
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    int dt_contig;
+    MPIDI_Datatype_check_contig(datatype, dt_contig);
+
+    int remote_local_dev_id = MPL_gpu_global_to_local_dev_id(remote_global_dev_id);
+
+    /* TODO: more analyses on the non-contig cases */
+    if (remote_local_dev_id == -1 || !dt_contig) {
+        map_to_dev_id = local_dev_id;
+    } else {
+        map_to_dev_id = remote_local_dev_id;
+    }
+
+    if (map_to_dev_id < 0) {
+        /* This is the case for local host memory. We need a valid device id
+         * to map on. Assume at least device 0 is always available. */
+        map_to_dev_id = 0;
+    }
+#endif
+
+    MPIR_FUNC_EXIT;
+    return map_to_dev_id;
 }
 
 int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **vaddr)
