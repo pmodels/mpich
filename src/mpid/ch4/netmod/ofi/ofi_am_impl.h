@@ -175,6 +175,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_am_clear_request(MPIR_Request * req)
 {
     MPIR_FUNC_ENTER;
 
+    MPIR_Assert(MPIDI_OFI_AMREQUEST(req, sreq_hdr) == NULL);
     MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(req, sreq_hdr));
     MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(req, rreq_hdr));
 
@@ -193,6 +194,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
 
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
 
+    MPIR_Assert(MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) == NULL);
     if (MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) == NULL) {
         MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_hdr_buf_pool, (void **) &sreq_hdr);
         MPIR_Assert(sreq_hdr);

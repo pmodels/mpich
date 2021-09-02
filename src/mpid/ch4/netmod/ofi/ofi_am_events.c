@@ -31,6 +31,10 @@ int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
     /* retrieve the handler_id of the original send request for origin cb. Note the handler_id
      * parameter is MPIDI_OFI_AM_RDMA_READ_ACK and should never be called with origin_cbs */
     src_handler_id = MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr).handler_id;
+
+    /* cleanup in case origin_cb call am send again */
+    MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(sreq, sreq_hdr));
+
     mpi_errno = MPIDIG_global.origin_cbs[src_handler_id] (sreq);
     MPIR_ERR_CHECK(mpi_errno);
     MPID_Request_complete(sreq);
