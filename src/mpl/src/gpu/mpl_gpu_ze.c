@@ -9,6 +9,7 @@
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef MPL_HAVE_ZE
+#include <dirent.h>
 
 static int gpu_initialized = 0;
 static int device_count;
@@ -19,6 +20,9 @@ static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
 
 static int *local_to_global_map;        /* [device_count] */
 static int *global_to_local_map;        /* [max_dev_id + 1]   */
+
+static int shared_device_fd_count = 0;
+static int *shared_device_fds = NULL;
 
 /* Level-zero API v1.0:
  * http://spec.oneapi.com/level-zero/latest/index.html
@@ -279,6 +283,7 @@ int MPL_gpu_finalize(void)
     MPL_free(local_to_global_map);
     MPL_free(global_to_local_map);
     MPL_free(global_ze_devices_handle);
+    MPL_free(shared_device_fds);
     return MPL_SUCCESS;
 }
 
@@ -524,6 +529,59 @@ void MPL_gpu_event_complete(MPL_gpu_event_t * var)
 bool MPL_gpu_event_is_complete(MPL_gpu_event_t * var)
 {
     return (*var) <= 0;
+}
+
+/* ZE-Specific Functions */
+
+int MPL_ze_init_device_fds(int *num_fds, int *device_fds)
+{
+    const char *device_directory = "/dev/dri/by-path";
+    const char *device_suffix = "-render";
+    struct dirent *ent = NULL;
+    int n = 0;
+
+    DIR *dir = opendir(device_directory);
+    if (dir == NULL) {
+        goto fn_fail;
+    }
+
+    /* Search for all devices in the device directory */
+    while ((ent = readdir(dir)) != NULL) {
+        char dev_name[128];
+
+        if (ent->d_name[0] == '.') {
+            continue;
+        }
+
+        /* They must contain the device suffix */
+        if (strstr(ent->d_name, device_suffix) == NULL) {
+            continue;
+        }
+
+        strcpy(dev_name, device_directory);
+        strcat(dev_name, "/");
+        strcat(dev_name, ent->d_name);
+
+        /* Open the device */
+        if (device_fds) {
+            device_fds[n] = open(dev_name, O_RDWR);
+        }
+
+        n++;
+    }
+
+    *num_fds = n;
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+void MPL_ze_set_fds(int num_fds, int *fds)
+{
+    shared_device_fds = fds;
+    shared_device_fd_count = num_fds;
 }
 
 #endif /* MPL_HAVE_ZE */
