@@ -18,16 +18,6 @@ categories :
       description : A category for CH4 OFI netmod variables
 
 cvars:
-    - name        : MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG
-      category    : CH4_OFI
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Prints out the configuration of each capability selected via the capability sets interface.
-
     - name        : MPIR_CVAR_OFI_SKIP_IPV6
       category    : DEVELOPER
       type        : boolean
@@ -602,7 +592,7 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
         dump_global_settings();
     }
 
@@ -671,7 +661,7 @@ int MPIDI_OFI_init_world(void)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
         dump_dynamic_settings();
     }
   fn_exit:

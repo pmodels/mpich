@@ -68,3 +68,12 @@ void MPII_Call_finalize_callbacks(int min_prio, int max_prio)
         }
     }
 }
+
+void MPII_dump_debug_summary(void)
+{
+    printf("==== data structure summary ====\n");
+    printf("sizeof(MPIR_Comm): %ld\n", sizeof(MPIR_Comm));
+    printf("sizeof(MPIR_Request): %ld\n", sizeof(MPIR_Request));
+    printf("sizeof(MPIR_Datatype): %ld\n", sizeof(MPIR_Datatype));
+    printf("================================\n");
+}
