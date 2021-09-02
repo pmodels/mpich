@@ -50,6 +50,50 @@ static int MPIDI_IPC_mpi_fd_cleanup(void)
     goto fn_exit;
 }
 
+static int MPIDI_IPC_mpi_ze_fd_setup(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#if defined(MPL_HAVE_ZE)
+    int num_fds, i, r, mpl_err = MPL_SUCCESS;
+    int *fds;
+
+    /* Get the number of ze devices */
+    mpl_err = MPL_ze_init_device_fds(&num_fds, NULL);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                        "**mpl_ze_init_device_fds");
+
+    fds = (int *) MPL_malloc(num_fds * sizeof(int), MPL_MEM_OTHER);
+
+    if (MPIR_Process.local_rank == 0) {
+        /* Setup the device fds */
+        mpl_err = MPL_ze_init_device_fds(&num_fds, fds);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**mpl_ze_init_device_fds");
+
+        /* Send the fds to all other local processes */
+        for (r = 1; r < MPIR_Process.local_size; r++) {
+            for (i = 0; i < num_fds; i++) {
+                MPIDI_IPC_mpi_fd_send(r, fds[i], NULL, 0);
+            }
+        }
+    } else {
+        /* Receive the fds from local process 0 */
+        for (i = 0; i < num_fds; i++) {
+            MPIDI_IPC_mpi_fd_recv(0, fds + i, NULL, 0, 0);
+        }
+    }
+
+    /* Save the fds in MPL */
+    MPL_ze_set_fds(num_fds, fds);
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_IPC_mpi_fd_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -164,20 +208,21 @@ int MPIDI_IPC_mpi_fd_init(void)
                              MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
     }
 
+    mpi_errno = MPIDI_IPC_mpi_ze_fd_setup();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Cleanup the sockets upon completion of init - they are no longer needed */
+    MPIDI_IPC_mpi_fd_cleanup();
+
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIDI_IPC_mpi_fd_cleanup();
     goto fn_exit;
 }
 
 int MPIDI_IPC_mpi_fd_finalize(void)
 {
-    int mpi_errno;
-
-    mpi_errno = MPIDI_IPC_mpi_fd_cleanup();
-
-    return mpi_errno;
+    return MPI_SUCCESS;
 }
 
 int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len)

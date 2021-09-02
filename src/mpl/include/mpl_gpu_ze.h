@@ -18,4 +18,8 @@ typedef ze_device_handle_t MPL_gpu_device_handle_t;
 typedef ze_alloc_attr_t MPL_gpu_device_attr;
 #define MPL_GPU_DEVICE_INVALID NULL
 
+/* ZE specific function */
+int MPL_ze_init_device_fds(int *num_fds, int *device_fds);
+void MPL_ze_set_fds(int num_fds, int *fds);
+
 #endif /* ifndef MPL_GPU_ZE_H_INCLUDED */
