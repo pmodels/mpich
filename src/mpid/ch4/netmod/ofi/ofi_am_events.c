@@ -46,7 +46,8 @@ int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
     goto fn_exit;
 }
 
-static int do_rdma_read(void *dst, uint64_t src, size_t data_sz, int src_rank, MPIR_Request * rreq)
+static int do_rdma_read(void *dst, uint64_t src, size_t data_sz, int src_rank,
+                        bool is_last_read, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t done = 0, curr_len, rem = 0;
@@ -54,7 +55,6 @@ static int do_rdma_read(void *dst, uint64_t src, size_t data_sz, int src_rank, M
     MPIR_FUNC_ENTER;
 
     rem = data_sz;
-    int lmt_cntr = MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_u.lmt_cntr);
 
     while (done != data_sz) {
         curr_len = MPL_MIN(rem, MPIDI_OFI_global.max_msg_size);
@@ -65,9 +65,7 @@ static int do_rdma_read(void *dst, uint64_t src, size_t data_sz, int src_rank, M
 
         read_req->rreq_ptr = rreq;
         read_req->event_id = MPIDI_OFI_EVENT_AM_READ;
-        /* lmt_cntr as a reverse index of the read message */
-        lmt_cntr--;
-        read_req->lmt_cntr = lmt_cntr;
+        read_req->is_last = is_last_read ? (curr_len == rem) : false;
 
         if (rreq->kind == MPIR_REQUEST_KIND__RMA) {
             comm = rreq->u.rma.win->comm_ptr;
@@ -132,9 +130,7 @@ static int do_long_am_recv_contig(void *p_data, MPI_Aint data_sz, MPIR_Request *
     }
     data_sz = MPL_MIN(data_sz, in_data_sz);
 
-    MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_u.lmt_cntr) =
-        ((data_sz - 1) / MPIDI_OFI_global.max_msg_size) + 1;
-    mpi_errno = do_rdma_read(p_data, src_offset, data_sz, src_rank, rreq);
+    mpi_errno = do_rdma_read(p_data, src_offset, data_sz, src_rank, true, rreq);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
 
@@ -156,25 +152,13 @@ static int do_long_am_recv_iov(struct iovec *iov, MPI_Aint iov_len, MPIR_Request
 
     MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_type) = MPIDI_OFI_AM_LMT_IOV;
     MPI_Aint rem, curr_len;
-    int num_reads;
 
-    /* First, count number of rdma reads and set lmt counter */
-    MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_u.lmt_cntr) = 0;
-
-    rem = in_data_sz;
-    for (int i = 0; i < iov_len && rem > 0; i++) {
-        curr_len = MPL_MIN(rem, iov[i].iov_len);
-        num_reads = ((curr_len - 1) / MPIDI_OFI_global.max_msg_size) + 1;
-        MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_u.lmt_cntr) += num_reads;
-        rem -= curr_len;
-    }
-
-    /* Now, issue each rdma read */
     int done = 0;
     rem = in_data_sz;
     for (int i = 0; i < iov_len && rem > 0; i++) {
         curr_len = MPL_MIN(rem, iov[i].iov_len);
-        mpi_errno = do_rdma_read(iov[i].iov_base, src_offset + done, curr_len, src_rank, rreq);
+        mpi_errno = do_rdma_read(iov[i].iov_base, src_offset + done, curr_len, src_rank,
+                                 (curr_len == rem), rreq);
         MPIR_ERR_CHECK(mpi_errno);
         rem -= curr_len;
         done += curr_len;
@@ -221,7 +205,8 @@ static int do_long_am_recv_unpack(MPIR_Request * rreq)
     MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_u.unpack).unpack_buffer = unpack_buffer;
     MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_u.unpack).pack_size = pack_size;
 
-    mpi_errno = do_rdma_read(unpack_buffer, src_offset, pack_size, src_rank, rreq);
+    mpi_errno = do_rdma_read(unpack_buffer, src_offset, pack_size, src_rank,
+                             (pack_size == remain), rreq);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -248,7 +233,8 @@ int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq)
             pack_size = remain;
         }
         MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_u.unpack).pack_size = pack_size;
-        int rc = do_rdma_read(unpack_buffer, src_offset + offset, pack_size, src_rank, rreq);
+        int rc = do_rdma_read(unpack_buffer, src_offset + offset, pack_size, src_rank,
+                              (pack_size == remain), rreq);
         MPIR_Assert(rc == MPI_SUCCESS);
         return FALSE;
     } else {

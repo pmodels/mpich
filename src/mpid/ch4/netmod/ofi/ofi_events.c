@@ -695,7 +695,7 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
 
 
     if (MPIDI_OFI_AMREQUEST(rreq, rdma_read_hdr)->lmt_type == MPIDI_OFI_AM_LMT_IOV) {
-        if (read_req->lmt_cntr > 0) {
+        if (!read_req->is_last) {
             goto fn_exit;
         }
     } else if (MPIDI_OFI_AMREQUEST(rreq, rdma_read_hdr)->lmt_type == MPIDI_OFI_AM_LMT_UNPACK) {

@@ -108,7 +108,6 @@ typedef struct {
 
     MPIDI_OFI_lmt_type_t lmt_type;
     union {
-        uint64_t lmt_cntr;
         struct {
             void *unpack_buffer;
             MPI_Aint pack_size;
@@ -153,9 +152,7 @@ typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     void *rreq_ptr;
-    /* lmt_cntr as the reverse index of the read message,
-     * 0 marks the last message */
-    int lmt_cntr;
+    int is_last;                /* whether this is the last read message */
 } MPIDI_OFI_am_read_req_t;
 
 typedef struct {
