@@ -566,21 +566,6 @@ if test "$enable_strict_done" != "yes" ; then
         -fno-var-tracking
     "
 
-    case "$pac_cv_cc_vendor" in
-        gnu)
-            pac_common_strict_flags="${pac_common_strict_flags}
-                -Wno-unused-label
-            "
-            ;;
-        icx)
-            pac_common_strict_flags="${pac_common_strict_flags}
-                -Wno-unused-label
-            "
-            ;;
-        *)
-            ;;
-    esac
-
     if test -z "$1"; then
         flags=no
     else
@@ -591,6 +576,23 @@ if test "$enable_strict_done" != "yes" ; then
     posix_std=2001
     enable_opt=yes
     pac_cc_strict_werror=no
+
+    case "$pac_cv_cc_vendor" in
+        gnu)
+            pac_common_strict_flags="${pac_common_strict_flags}
+                -Wno-unused-label
+            "
+            ;;
+        icx)
+            pac_common_strict_flags="${pac_common_strict_flags}
+                -Wno-unused-label
+            "
+            c_std=c11
+            ;;
+        *)
+            ;;
+    esac
+
     for flag in ${flags}; do
         case "$flag" in
              error)
@@ -606,6 +608,12 @@ if test "$enable_strict_done" != "yes" ; then
 		;;
 	     stdgnu99)
 	        c_std=gnu99
+		;;
+	     stdc11)
+	        c_std=c11
+		;;
+	     stdgnu11)
+	        c_std=gnu11
 		;;
 	     nostdc)
 		c_std=none
@@ -670,6 +678,12 @@ if test "$enable_strict_done" != "yes" ; then
 		;;
 	    gnu99)
 		PAC_APPEND_FLAG([-std=gnu99],[pac_cc_strict_flags])
+		;;
+	    c11)
+		PAC_APPEND_FLAG([-std=c11],[pac_cc_strict_flags])
+		;;
+	    gnu11)
+		PAC_APPEND_FLAG([-std=gnu11],[pac_cc_strict_flags])
 		;;
 	    *)
 		AC_MSG_ERROR([internal error, unexpected C std version: '$c_std'])
