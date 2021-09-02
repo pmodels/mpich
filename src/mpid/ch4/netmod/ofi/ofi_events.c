@@ -685,44 +685,47 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq;
-    MPIDI_OFI_am_request_t *ofi_req;
-
     MPIR_FUNC_ENTER;
 
-    ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_request_t, context);
-    rreq = (MPIR_Request *) ofi_req->rreq_hdr->rreq_ptr;
+    MPIDI_OFI_am_read_req_t *read_req;
+    read_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_read_req_t, context);
 
-    if (ofi_req->rreq_hdr->lmt_type == MPIDI_OFI_AM_LMT_IOV) {
-        ofi_req->rreq_hdr->lmt_u.lmt_cntr--;
-        if (ofi_req->rreq_hdr->lmt_u.lmt_cntr) {
+    MPIR_Request *rreq;
+    rreq = (MPIR_Request *) read_req->rreq_ptr;
+
+
+    if (MPIDI_OFI_AMREQUEST(rreq, rdma_read_hdr)->lmt_type == MPIDI_OFI_AM_LMT_IOV) {
+        if (read_req->lmt_cntr > 0) {
             goto fn_exit;
         }
-    } else if (ofi_req->rreq_hdr->lmt_type == MPIDI_OFI_AM_LMT_UNPACK) {
+    } else if (MPIDI_OFI_AMREQUEST(rreq, rdma_read_hdr)->lmt_type == MPIDI_OFI_AM_LMT_UNPACK) {
         int done = MPIDI_OFI_am_lmt_unpack_event(rreq);
         if (!done) {
             goto fn_exit;
         }
     }
 
-    /* All data read, we can clean the rreq_req now */
-    MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(rreq, rreq_hdr));
-
+    /* All data read */
     MPIR_Comm *comm;
     if (rreq->kind == MPIR_REQUEST_KIND__RMA) {
         comm = rreq->u.rma.win->comm_ptr;
     } else {
         comm = rreq->comm;
     }
-    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_info).src_rank,
-                                              comm, MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_info).sreq_ptr);
 
+    int src_rank = MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_info).src_rank;
+    void *sreq_ptr = MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_info).sreq_ptr;
+
+    /* rdma_read_hdr can be freed now */
+    MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(rreq, rdma_read_hdr));
+
+    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(src_rank, comm, sreq_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     MPID_Request_complete(rreq);
   fn_exit:
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, ofi_req);
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, read_req);
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:

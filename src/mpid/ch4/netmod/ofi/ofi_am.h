@@ -33,14 +33,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
 {
     MPIDI_OFI_AMREQUEST(req, sreq_hdr) = NULL;
-    MPIDI_OFI_AMREQUEST(req, rreq_hdr) = NULL;
+    MPIDI_OFI_AMREQUEST(req, rdma_read_hdr) = NULL;
     MPIDI_OFI_AMREQUEST(req, am_type_choice) = MPIDI_AMTYPE_NONE;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)
 {
     MPIR_Assert(MPIDI_OFI_AMREQUEST(req, sreq_hdr) == NULL);
-    MPIR_Assert(MPIDI_OFI_AMREQUEST(req, rreq_hdr) == NULL);
+    MPIR_Assert(MPIDI_OFI_AMREQUEST(req, rdma_read_hdr) == NULL);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
