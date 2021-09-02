@@ -13,6 +13,37 @@
 static int *MPIDI_IPCI_global_fd_socks;
 static pid_t *MPIDI_IPCI_global_fd_pids;
 
+int MPIDI_FD_mpi_init_hook(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIDI_IPCI_global.ipc_handle_type == MPL_GPU_IPC_HANDLE_SHAREABLE_FD) {
+        mpi_errno = MPIDI_IPC_mpi_fd_init();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    MPIDI_FD_mpi_finalize_hook();
+    goto fn_exit;
+}
+
+int MPIDI_FD_mpi_finalize_hook(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIDI_IPCI_global.ipc_handle_type == MPL_GPU_IPC_HANDLE_SHAREABLE_FD) {
+        mpi_errno = MPIDI_IPC_mpi_fd_finalize();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static int MPIDI_IPC_mpi_fd_cleanup(void)
 {
     int mpi_errno = MPI_SUCCESS;
