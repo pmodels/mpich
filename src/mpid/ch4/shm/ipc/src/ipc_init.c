@@ -38,6 +38,9 @@ int MPIDI_IPC_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    mpi_errno = MPL_gpu_ipc_get_handle_type(&MPIDI_IPCI_global.ipc_handle_type);
+    MPIR_ERR_CHECK(mpi_errno);
+
     mpi_errno = MPIDI_XPMEM_init_world();
     MPIR_ERR_CHECK(mpi_errno);
 
