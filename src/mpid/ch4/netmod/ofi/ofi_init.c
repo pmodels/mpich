@@ -6,6 +6,7 @@
 #include "mpidimpl.h"
 #include "ofi_impl.h"
 #include "ofi_am_impl.h"
+#include "ofi_am_events.h"
 #include "ofi_noinline.h"
 #include "mpir_hwtopo.h"
 #include "ofi_init.h"
