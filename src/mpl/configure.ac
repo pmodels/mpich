@@ -1128,6 +1128,8 @@ if test "X${pac_have_ze}" = "Xyes" ; then
     AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
     have_gpu="yes"
     GPU_SUPPORT="ZE"
+    AC_CHECK_HEADERS([drm/i915_drm.h])
+    AC_CHECK_HEADERS([libdrm/i915_drm.h])
 fi
 AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
 
