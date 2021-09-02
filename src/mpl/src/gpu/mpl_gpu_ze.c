@@ -10,6 +10,14 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef MPL_HAVE_ZE
 #include <dirent.h>
+#if defined(MPL_HAVE_DRM_I915_DRM_H)
+#include "drm/i915_drm.h"
+#define MPL_ENABLE_DRMFD
+#elif defined(MPL_HAVE_LIBDRM_I915_DRM_H)
+#include "libdrm/i915_drm.h"
+#define MPL_ENABLE_DRMFD
+#endif
+#include <sys/ioctl.h>
 
 static int gpu_initialized = 0;
 static int device_count;
@@ -32,6 +40,9 @@ ze_device_handle_t *global_ze_devices_handle = NULL;
 ze_context_handle_t global_ze_context;
 uint32_t global_ze_device_count;
 static int gpu_ze_init_driver(void);
+static int fd_to_handle(int dev_fd, int fd, int *handle);
+static int handle_to_fd(int dev_fd, int handle, int *fd);
+static int close_handle(int dev_fd, int handle);
 
 #define ZE_ERR_CHECK(ret) \
     do { \
@@ -198,6 +209,52 @@ int MPL_gpu_init(int debug_summary)
     goto fn_exit;
 }
 
+/* Functions for managing shareable IPC handles */
+static int fd_to_handle(int dev_fd, int fd, int *handle)
+{
+#ifdef MPL_ENABLE_DRMFD
+    struct drm_prime_handle open_fd = { 0, 0, 0 };
+    open_fd.fd = fd;
+
+    int ret = ioctl(dev_fd, DRM_IOCTL_PRIME_FD_TO_HANDLE, &open_fd);
+    assert(ret != -1);
+    *handle = open_fd.handle;
+    return ret;
+#else
+    return -1;
+#endif
+}
+
+static int handle_to_fd(int dev_fd, int handle, int *fd)
+{
+#ifdef MPL_ENABLE_DRMFD
+    struct drm_prime_handle open_fd = { 0, 0, 0 };
+    open_fd.flags = DRM_CLOEXEC | DRM_RDWR;
+    open_fd.handle = handle;
+
+    int ret = ioctl(dev_fd, DRM_IOCTL_PRIME_HANDLE_TO_FD, &open_fd);
+    assert(ret != -1);
+    *fd = open_fd.fd;
+    return ret;
+#else
+    return -1;
+#endif
+}
+
+static int close_handle(int dev_fd, int handle)
+{
+#ifdef MPL_ENABLE_DRMFD
+    struct drm_gem_close close = { 0, 0 };
+    close.handle = handle;
+
+    int ret = ioctl(dev_fd, DRM_IOCTL_GEM_CLOSE, &close);
+    assert(ret != -1);
+    return ret;
+#else
+    return -1;
+#endif
+}
+
 /* Loads a global ze driver */
 static int gpu_ze_init_driver(void)
 {
@@ -304,8 +361,46 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
-    ret = zeMemGetIpcHandle(global_ze_context, ptr, ipc_handle);
+    unsigned long shared_handle;
+    int i, fd, handle, status, dev_id = -1;
+    ze_device_handle_t device;
+    ze_ipc_mem_handle_t ze_ipc_handle;
+
+    ze_memory_allocation_properties_t ptr_attr = {
+        .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
+        .pNext = NULL,
+        .type = 0,
+        .id = 0,
+        .pageSize = 0,
+    };
+
+    ret = zeMemGetIpcHandle(global_ze_context, ptr, &ze_ipc_handle);
     ZE_ERR_CHECK(ret);
+
+    ret = zeMemGetAllocProperties(global_ze_context, ptr, &ptr_attr, &device);
+    ZE_ERR_CHECK(ret);
+
+    for (i = 0; i < device_count; i++) {
+        if (device == global_ze_devices_handle[i]) {
+            dev_id = i;
+            break;
+        }
+    }
+
+    if (dev_id == -1) {
+        goto fn_fail;
+    }
+
+    /* convert dma_buf fd to GEM handle */
+    memcpy(&fd, &ze_ipc_handle, sizeof(fd));
+    status = fd_to_handle(shared_device_fds[dev_id], fd, &handle);
+    if (status) {
+        goto fn_fail;
+    }
+
+    shared_handle = dev_id;
+    shared_handle = shared_handle << 32 | handle;
+    memcpy(ipc_handle, &shared_handle, sizeof(shared_handle));
 
   fn_exit:
     return mpl_err;
@@ -318,11 +413,37 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
-    MPL_gpu_device_handle_t dev_handle = global_ze_devices_handle[dev_id];
+    unsigned long shared_handle;
+    int fd, src_dev_id, handle, status;
+    MPL_gpu_device_handle_t dev_handle;
+    ze_ipc_mem_handle_t ze_ipc_handle;
 
-    ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ipc_handle, 0, ptr);
-    if (ret != ZE_RESULT_SUCCESS) {
-        mpl_err = MPL_ERR_GPU_INTERNAL;
+    /* convert GEM handle to fd */
+    memset(&ze_ipc_handle, 0, sizeof(ze_ipc_mem_handle_t));
+    memcpy(&shared_handle, &ipc_handle, sizeof(shared_handle));
+    src_dev_id = shared_handle >> 32;
+    handle = shared_handle << 32 >> 32;
+
+    status = handle_to_fd(shared_device_fds[src_dev_id], handle, &fd);
+    if (status) {
+        goto fn_fail;
+    }
+
+    if (p2p_supported) {
+        dev_handle = global_ze_devices_handle[dev_id];
+    } else {
+        /* When p2p is not supported, open on the source device so that yaksa treats it as
+         * cross-device copying */
+        dev_handle = global_ze_devices_handle[src_dev_id];
+    }
+    memcpy(&ze_ipc_handle, &fd, sizeof(fd));
+
+    ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ze_ipc_handle, 0, ptr);
+    ZE_ERR_CHECK(ret);
+
+    /* close GEM handle */
+    status = close_handle(shared_device_fds[dev_id], handle);
+    if (status) {
         goto fn_fail;
     }
 
@@ -540,6 +661,11 @@ int MPL_ze_init_device_fds(int *num_fds, int *device_fds)
     const char *device_suffix = "-render";
     struct dirent *ent = NULL;
     int n = 0;
+
+#ifndef MPL_ENABLE_DRMFD
+    printf("Error> drmfd is not supported!");
+    goto fn_fail;
+#endif
 
     DIR *dir = opendir(device_directory);
     if (dir == NULL) {
