@@ -39,7 +39,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)
 {
-    MPIDI_OFI_am_clear_request(req);
+    MPIR_Assert(MPIDI_OFI_AMREQUEST(req, sreq_hdr) == NULL);
+    MPIR_Assert(MPIDI_OFI_AMREQUEST(req, rreq_hdr) == NULL);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,

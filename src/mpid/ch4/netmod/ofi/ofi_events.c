@@ -705,6 +705,9 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
         }
     }
 
+    /* All data read, we can clean the rreq_req now */
+    MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(rreq, rreq_hdr));
+
     MPIR_Comm *comm;
     if (rreq->kind == MPIR_REQUEST_KIND__RMA) {
         comm = rreq->u.rma.win->comm_ptr;

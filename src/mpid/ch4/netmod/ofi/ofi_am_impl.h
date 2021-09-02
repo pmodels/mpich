@@ -171,17 +171,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_am_unordered_msg_t
         } \
     } while (0)
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_am_clear_request(MPIR_Request * req)
-{
-    MPIR_FUNC_ENTER;
-
-    MPIR_Assert(MPIDI_OFI_AMREQUEST(req, sreq_hdr) == NULL);
-    MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(req, sreq_hdr));
-    MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(req, rreq_hdr));
-
-    MPIR_FUNC_EXIT;
-}
-
 /* We call this at the point of sending am message, e.g.
  *     MPIDI_OFI_do_am_isend_{eager,pipeline,rdma_read}
  */
@@ -214,11 +203,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
     return mpi_errno;
 }
 
+/* we only need rreq_hdr for rdma_read, maybe we should call it rdma_rreq_hdr */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_rreq(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    MPIR_Assert(MPIDI_OFI_AMREQUEST(rreq, rreq_hdr) == NULL);
     if (MPIDI_OFI_AMREQUEST(rreq, rreq_hdr) == NULL) {
         MPIDI_OFI_am_request_header_t *rreq_hdr;
         MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_hdr_buf_pool, (void **) &rreq_hdr);
