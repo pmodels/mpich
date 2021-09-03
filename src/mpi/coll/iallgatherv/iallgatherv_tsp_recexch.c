@@ -17,10 +17,10 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
                                                                   MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int partner, offset, count, send_offset, recv_offset;
     int i, send_count, recv_count, vtx_id;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 
@@ -76,9 +76,9 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int 
                                                           MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int send_offset, recv_offset, i, vtx_id;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
 
     MPIR_FUNC_ENTER;
@@ -121,12 +121,12 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
                                                    MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int phase, i, j, count, nbr, send_offset, recv_offset, offset, rank_for_offset;
     int x, send_count, recv_count, vtx_id;
     int *recv_id = *recv_id_;
     int nrecvs = 0;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 
@@ -205,9 +205,9 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int 
                                                           MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int total_count = 0, i, vtx_id;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 

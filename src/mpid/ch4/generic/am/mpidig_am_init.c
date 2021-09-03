@@ -85,7 +85,7 @@ static void host_free_buffer_registered(void *ptr)
 int MPIDIG_am_check_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t buf_size_limit = 0;
+    size_t buf_size_limit ATTRIBUTE((unused)) = 0;
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     buf_size_limit = MPIDI_NM_am_eager_buf_limit();
 #else

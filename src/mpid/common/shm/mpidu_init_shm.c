@@ -112,17 +112,13 @@ static int Init_shm_barrier(void)
 int MPIDU_Init_shm_init(void)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
-    int local_leader;
-    int rank;
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_ENTER;
 
-    rank = MPIR_Process.rank;
     local_size = MPIR_Process.local_size;
     my_local_rank = MPIR_Process.local_rank;
-    local_leader = MPIR_Process.node_local_map[0];
 
     size_t segment_len = MPIDU_SHM_CACHE_LINE_LEN + sizeof(MPIDU_Init_shm_block_t) * local_size;
 
@@ -155,7 +151,7 @@ int MPIDU_Init_shm_init(void)
                                                     (void **) &(memory.base_addr), 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
-            MPIR_Assert(local_leader == rank);
+            MPIR_Assert(MPIR_Process.node_local_map[0] == MPIR_Process.rank);
 
             mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory.hnd, &serialized_hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");

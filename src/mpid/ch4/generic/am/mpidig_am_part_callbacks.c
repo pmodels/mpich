@@ -21,8 +21,7 @@ static int part_send_data_target_cmpl_cb(MPIR_Request * rreq)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Request *part_rreq = MPIDIG_REQUEST(rreq, req->part_am_req.part_req_ptr);
-    MPIR_Assert(part_rreq);
+    MPIR_Assert(MPIDIG_REQUEST(rreq, req->part_am_req.part_req_ptr));
 
     MPIDIG_recv_finish(rreq);
 
@@ -40,8 +39,7 @@ int MPIDIG_part_send_data_origin_cb(MPIR_Request * sreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIR_Request *part_sreq = MPIDIG_REQUEST(sreq, req->part_am_req.part_req_ptr);
-    MPIR_Assert(part_sreq);
+    MPIR_Assert(MPIDIG_REQUEST(sreq, req->part_am_req.part_req_ptr));
 
     /* Internally set partitioned sreq complete via completion_notification. */
     MPID_Request_complete(sreq);

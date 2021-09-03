@@ -226,14 +226,14 @@ static int get_conn_name_from_port(const char *port_name, char *connname, int *l
 int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
 {
     int mpi_errno;
+    char *addrname = NULL;
+    int *addrname_size = NULL;
     MPIR_FUNC_ENTER;
 
     int tag = -1;
     mpi_errno = get_port_name_tag(&tag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    char *addrname = NULL;
-    int *addrname_size = NULL;
     mpi_errno = MPIDI_NM_get_local_upids(MPIR_Process.comm_self, &addrname_size, &addrname);
     MPIR_ERR_CHECK(mpi_errno);
 

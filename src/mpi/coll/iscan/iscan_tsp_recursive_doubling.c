@@ -12,7 +12,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
                                                   MPIR_Comm * comm, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     MPI_Aint extent, true_extent;
     MPI_Aint lb;
     int nranks, rank;
@@ -22,7 +22,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     void *partial_scan = NULL;
     void *tmp_buf = NULL;
     int tag = 0, vtx_id;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 

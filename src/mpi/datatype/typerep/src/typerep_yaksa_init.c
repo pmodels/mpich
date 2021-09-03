@@ -17,7 +17,7 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
 {
     MPIR_FUNC_ENTER;
 
-    yaksa_type_t yaksa_type;
+    yaksa_type_t yaksa_type = YAKSA_TYPE__NULL;
 
     if (type == MPI_DATATYPE_NULL) {
         yaksa_type = YAKSA_TYPE__NULL;
