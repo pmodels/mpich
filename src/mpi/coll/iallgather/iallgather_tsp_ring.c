@@ -12,7 +12,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
                                          MPIR_Comm * comm, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, src, dst, copy_dst;
     /* Temporary buffers to execute the ring algorithm */
     void *buf1, *buf2, *data_buf, *rbuf, *sbuf;
@@ -22,7 +22,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
     int is_inplace = (sendbuf == MPI_IN_PLACE);
     int tag;
     int vtx_id;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPI_Aint recvtype_lb, recvtype_extent;
     MPI_Aint sendtype_lb, sendtype_extent;

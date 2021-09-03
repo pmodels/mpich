@@ -52,7 +52,7 @@ static inline int MPIR_cc_is_complete(MPIR_cc_t * cc_ptr)
 
 #define MPIR_cc_dec(cc_ptr_) \
     do { \
-        int ctr_;                                               \
+        int ctr_ ATTRIBUTE((unused));                \
         ctr_ = MPL_atomic_fetch_sub_int(cc_ptr_, 1); \
         MPIR_Assert(ctr_ >= 1); \
     } while (0)

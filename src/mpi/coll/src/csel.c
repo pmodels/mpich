@@ -320,7 +320,7 @@ static void validate_tree(csel_node_s * node)
 static csel_node_s *parse_json_tree(struct json_object *obj,
                                     void *(*create_container) (struct json_object *))
 {
-    enum json_type type;
+    enum json_type type ATTRIBUTE((unused));
     csel_node_s *prevnode = NULL, *tmp, *node = NULL;
 
     json_object_object_foreach(obj, key, val) {
@@ -451,8 +451,9 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
                 tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__SCATTER;
             else if (!strcmp(str, "scatterv"))
                 tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__SCATTERV;
-            else
+            else {
                 MPIR_Assert(0);
+            }
         } else if (!strcmp(ckey, "comm_size=pow2")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_POW2;
         } else if (!strcmp(ckey, "comm_size=node_comm_size")) {
@@ -693,8 +694,9 @@ int MPIR_Csel_prune(void *root_csel, MPIR_Comm * comm_ptr, void **comm_csel_)
 
     /* if the tree is not NULL, we should be at a collective branch at
      * this point */
-    if (node)
+    if (node) {
         MPIR_Assert(node->type == CSEL_NODE_TYPE__OPERATOR__COLLECTIVE);
+    }
 
     while (node) {
         /* see if any additional pruning is possible once the
