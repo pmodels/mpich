@@ -439,13 +439,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
+    int vni_src, vni_dst;
+    MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);      /* defined just above */
     if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno =
-            MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr, 0, 0,
-                             request);
+        mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                                     vni_src, vni_dst, request);
     } else {
-        int vni_src, vni_dst;
-        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
         MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_src);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, vni_src, vni_dst,
@@ -481,14 +480,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-    /* NOTE: collective use vci 0 and critical section taken at ch4-layer */
+    int vni_src, vni_dst;
+    MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);      /* defined just above */
     if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno =
-            MPIDIG_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                              0, 0, request, errflag);
+        mpi_errno = MPIDIG_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                                      vni_src, vni_dst, request, errflag);
     } else {
-        int vni_src, vni_dst;
-        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
         MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_src);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, vni_src, vni_dst, request, 0, 0ULL,
@@ -508,13 +505,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
+    int vni_src, vni_dst;
+    MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);      /* defined just above */
     if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno =
-            MPIDIG_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, addr, 0, 0,
-                              request);
+        mpi_errno = MPIDIG_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                                      vni_src, vni_dst, request);
     } else {
-        int vni_src, vni_dst;
-        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
         MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_src);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, vni_src, vni_dst, request, 0,
