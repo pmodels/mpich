@@ -181,8 +181,24 @@ def get_qmpi_typedef_from_func_decl(func_decl):
     return func_decl
 
 def need_skip_qmpi(func_name):
-    if func_name.lower() in G.FUNCS:
-        func = G.FUNCS[func_name.lower()];
+    # If this is a large count function, it needs to have the suffix removed since we add that
+    # later, but it's not in the G.FUNCS list below
+    if func_name.lower()[-2:] == "_c":
+        func_name = func_name[:-2]
+
+    # Some of the MPIX_ functions are not in the list because they are functions to be added in a
+    # future MPI standard. Internally, we treat them as MPI_ functions and add the X later, but they
+    # will be in G.FUNCS without the X.
+    no_x_func_name = func_name
+    if no_x_func_name.lower()[:4] == "mpix":
+        no_x_func_name = "mpi" + no_x_func_name[4:]
+
+    if func_name.lower() in G.FUNCS or no_x_func_name.lower() in G.FUNCS:
+        if func_name.lower() in G.FUNCS:
+            func = G.FUNCS[func_name.lower()];
+        elif no_x_func_name.lower() in G.FUNCS:
+            func = G.FUNCS[no_x_func_name.lower()];
+
         if 'dir' not in func or 'not_implemented' in func:
             return True
         elif re.match(r'MPI_DUP_FN', func['name']):
