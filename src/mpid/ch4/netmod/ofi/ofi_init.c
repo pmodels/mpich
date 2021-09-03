@@ -720,6 +720,18 @@ static void *create_container(struct json_object *obj)
     return (void *) container;
 }
 
+static void set_sep_counters(int nic)
+{
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        int num_ctx_per_nic = MPIDI_OFI_global.num_vnis;
+        int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[nic]->domain_attr->tx_ctx_cnt,
+                                  MPIDI_OFI_global.prov_use[nic]->domain_attr->rx_ctx_cnt);
+        num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
+        MPIDI_OFI_global.prov_use[nic]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
+        MPIDI_OFI_global.prov_use[nic]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
+    }
+}
+
 int MPIDI_OFI_init_local(int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -855,6 +867,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
 
     MPIDI_OFI_global.num_vnis = num_vnis;
 
+    /* set rx_ctx_cnt and tx_ctx_cnt for nic 0 */
+    set_sep_counters(0);
+
     /* Creating the context for vni 0 and nic 0.
      * This code maybe moved to a later stage */
     mpi_errno = create_vni_context(0, 0);
@@ -930,6 +945,11 @@ int MPIDI_OFI_post_init(void)
     /* FIXME: It would also be helpful to check that all of the NICs can communicate so we can fall
      * back to other options if that is not the case (e.g., verbs are often configured with a
      * different subnet for each "set" of nics). It's unknown how to write a good check for that. */
+
+    /* set rx_ctx_cnt and tx_ctx_cnt for the remaining (non-0) nics */
+    for (int nic = 1; nic < MPIDI_OFI_global.num_nics; nic++) {
+        set_sep_counters(nic);
+    }
 
     for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
         for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
