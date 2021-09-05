@@ -1420,7 +1420,7 @@ int MPIDIG_put_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
                             MPIDIG_REQUEST(origin_req, req->preq.origin_addr),
                             MPIDIG_REQUEST(origin_req, req->preq.origin_count),
                             MPIDIG_REQUEST(origin_req, req->preq.origin_datatype),
-                            remote_vci, local_vci, rreq),
+                            local_vci, remote_vci, rreq),
              (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->preq.origin_datatype));
