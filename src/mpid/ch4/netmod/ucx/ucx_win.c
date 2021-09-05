@@ -176,8 +176,7 @@ static int win_init(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    /* TODO: MPIDI_WIN(win, am_vci) %= MPIDI_UCX_global.num_vnis; */
-    MPIDI_WIN(win, am_vci) = 0;
+    MPIDI_WIN(win, am_vci) %= MPIDI_UCX_global.num_vnis;
 
     memset(&MPIDI_UCX_WIN(win), 0, sizeof(MPIDI_UCX_win_t));
 
