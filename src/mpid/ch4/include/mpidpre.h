@@ -512,6 +512,8 @@ typedef unsigned MPIDI_winattr_t;       /* bit-vector of zero or multiple intege
 typedef struct {
     MPIDI_winattr_t winattr;    /* attributes for performance optimization at fast path. */
     MPIDIG_win_t am;
+    int am_vci;                 /* both netmod and shm have to use the same vci for am operations or
+                                 * we won't be able to effectively progress at synchronization */
     union {
     MPIDI_NM_WIN_DECL} netmod;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
