@@ -88,7 +88,6 @@ typedef struct MPIDIG_rreq_t {
     uint64_t mrcv_count;
     MPI_Datatype mrcv_datatype;
 
-    uint64_t ignore;
     MPIR_Request *peer_req_ptr;
     MPIR_Request *match_req;
 } MPIDIG_rreq_t;
