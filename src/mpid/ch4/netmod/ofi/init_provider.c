@@ -56,6 +56,12 @@ int MPIDI_OFI_find_provider(struct fi_info **prov_out)
         MPIDI_OFI_update_global_settings(*prov_out);
     }
 
+    if (strcmp("cxi", (*prov_out)->fabric_attr->prov_name) == 0) {
+        MPIDI_OFI_global.using_cxi = 1;
+    } else {
+        MPIDI_OFI_global.using_cxi = 0;
+    }
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -90,6 +96,8 @@ static int find_provider(struct fi_info **prov_out)
 
     struct fi_info *hints = fi_allocinfo();
     MPIR_Assert(hints != NULL);
+
+    hints->domain_attr->mr_mode |= FI_MR_ENDPOINT;
 
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         /* NOTE: prov_list should not be freed until we initialize multi-nic */

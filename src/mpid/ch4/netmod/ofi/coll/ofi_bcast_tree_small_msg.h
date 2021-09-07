@@ -234,7 +234,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_small_msg(void *buf
     /* wait for the counters to reach desired values */
     /* still call progress engine periodically */
     if (leaf) {
-        if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+        if (MPIDI_OFI_global.using_cxi) {
             do {
                 ret =
                     fi_cntr_wait(blk_sml_bcast->recv_cntr[blk_sml_bcast->indx],
@@ -259,7 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_small_msg(void *buf
         memcpy(sendbuf, blk_sml_bcast->recv_buf[blk_sml_bcast->indx], data_sz * count);
 
     } else {
-        if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+        if (MPIDI_OFI_global.using_cxi) {
             do {
                 ret =
                     fi_cntr_wait(blk_sml_bcast->send_cntr, (blk_sml_bcast->iter + 1) * num_children,

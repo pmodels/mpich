@@ -264,7 +264,7 @@ static inline int MPIDI_OFI_Allreduce_intra_small_msg_triggered(const void *send
 
     /* blocking */
     if (!leaf) {
-        if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+        if (MPIDI_OFI_global.using_cxi) {
             do {
                 ret =
                     fi_cntr_wait(blk_sml_allred->send_cntr,
@@ -283,7 +283,7 @@ static inline int MPIDI_OFI_Allreduce_intra_small_msg_triggered(const void *send
             }
         }
     } else {    /* leaf */
-        if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+        if (MPIDI_OFI_global.using_cxi) {
             do {
                 /* rtr + result */
                 ret =
