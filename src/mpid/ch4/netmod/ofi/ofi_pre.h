@@ -197,7 +197,8 @@ typedef struct MPIDI_OFI_deferred_am_isend_req {
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    MPIDI_OFI_am_request_header_t *req_hdr;
+    MPIDI_OFI_am_request_header_t *sreq_hdr;
+    MPIDI_OFI_am_request_header_t *rreq_hdr;
     MPIDI_OFI_deferred_am_isend_req_t *deferred_req;    /* saving information when an AM isend is
                                                          * deferred */
     uint8_t am_type_choice;     /* save amtype to avoid double checking */

@@ -9,7 +9,8 @@
 #include "ch4_impl.h"
 #include "mpidimpl.h"
 #include "ipc_types.h"
-#include "ipc_mem.h"
+#include "../xpmem/xpmem_post.h"
+#include "../gpu/gpu_post.h"
 #include "ipc_p2p.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint count,

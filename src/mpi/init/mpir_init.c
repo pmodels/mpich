@@ -247,6 +247,9 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPII_init_dbg_logging();
     MPII_Wait_for_debugger();
 
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
+        MPII_dump_debug_summary();
+    }
 
     /**********************************************************************/
     /* Section 6: simply lets the device know that we are done with
