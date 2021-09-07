@@ -8,6 +8,19 @@
 
 int unexp_message_indices[2];
 
+/* Export the location of the queue heads if debugger support is enabled.
+ * This allows the queue code to rely on the local variables for the
+ * queue heads while also exporting those variables to the debugger.
+ * See src/mpi/debugger/dll_mpich.c for how this is used to
+ * access the message queues.
+ *
+ * FIXME: "self" message queues are not exposed
+ */
+#ifdef HAVE_DEBUGGER_SUPPORT
+MPICH_API_PUBLIC MPIR_Request **const MPID_Recvq_posted_head_ptr = &MPIDI_global.posted_list;
+MPICH_API_PUBLIC MPIR_Request **const MPID_Recvq_unexpected_head_ptr = &MPIDI_global.unexp_list;
+#endif
+
 int MPIDIG_recvq_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
