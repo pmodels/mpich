@@ -17,9 +17,6 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
 
-    MPIR_Assert(MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id) <= 3);
-    MPIR_Assert(MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id) <= 1);
-
     MPIDIG_COMM(comm, window_instance) = 0;
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -33,9 +30,6 @@ int MPIDIG_destroy_comm(MPIR_Comm * comm)
 
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
-
-    MPIR_Assert(MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id) <= 3);
-    MPIR_Assert(MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id) <= 1);
 
   fn_exit:
     MPIR_FUNC_EXIT;

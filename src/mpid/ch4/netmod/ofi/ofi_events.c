@@ -488,12 +488,12 @@ static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 
     MPIR_FUNC_ENTER;
 
-    msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
+    msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
     MPID_Request_complete(sreq);
 
     MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool,
-                                      MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
-    MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+                                      MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer));
+    MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer) = NULL;
     mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -687,14 +687,14 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     MPIR_FUNC_ENTER;
 
     ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_request_t, context);
-    rreq = (MPIR_Request *) ofi_req->req_hdr->rreq_ptr;
+    rreq = (MPIR_Request *) ofi_req->rreq_hdr->rreq_ptr;
 
-    if (ofi_req->req_hdr->lmt_type == MPIDI_OFI_AM_LMT_IOV) {
-        ofi_req->req_hdr->lmt_u.lmt_cntr--;
-        if (ofi_req->req_hdr->lmt_u.lmt_cntr) {
+    if (ofi_req->rreq_hdr->lmt_type == MPIDI_OFI_AM_LMT_IOV) {
+        ofi_req->rreq_hdr->lmt_u.lmt_cntr--;
+        if (ofi_req->rreq_hdr->lmt_u.lmt_cntr) {
             goto fn_exit;
         }
-    } else if (ofi_req->req_hdr->lmt_type == MPIDI_OFI_AM_LMT_UNPACK) {
+    } else if (ofi_req->rreq_hdr->lmt_type == MPIDI_OFI_AM_LMT_UNPACK) {
         int done = MPIDI_OFI_am_lmt_unpack_event(rreq);
         if (!done) {
             goto fn_exit;
@@ -707,9 +707,8 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     } else {
         comm = rreq->comm;
     }
-    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).src_rank,
-                                              comm,
-                                              MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).sreq_ptr);
+    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_info).src_rank,
+                                              comm, MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_info).sreq_ptr);
 
     MPIR_ERR_CHECK(mpi_errno);
 

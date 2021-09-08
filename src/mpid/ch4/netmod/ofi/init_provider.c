@@ -83,7 +83,7 @@ static int find_provider(struct fi_info **prov_out)
     }
 
     int required_version = MPIDI_OFI_get_required_version();
-    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
         printf("Required minimum FI_VERSION: %x, current version: %x\n", required_version,
                fi_version());
     }
@@ -112,7 +112,7 @@ static int find_provider(struct fi_info **prov_out)
         MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings, provname);
         /* The presets may have non-default minimum version requirement */
         required_version = MPIDI_OFI_get_required_version();
-        if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+        if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
             printf("Required minimum FI_VERSION: %x, current version: %x\n", required_version,
                    fi_version());
         }
@@ -264,7 +264,7 @@ static struct fi_info *pick_provider_from_list(struct fi_info *list)
             best_pref_score = pref_score;
             best_prov = prov;
         }
-        if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+        if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
             printf("provider: %s, score = %d, pref = %d, %s\n", prov->fabric_attr->prov_name,
                    score, pref_score, get_prov_addr(prov));
         }

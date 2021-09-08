@@ -15,7 +15,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
-    int is_inplace ATTRIBUTE((unused));
     size_t recv_extent, send_extent, sendtype_size, recvtype_size;
     MPI_Aint recv_lb, send_lb, true_extent;
     int nranks, rank;
@@ -25,8 +24,8 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
 
     MPIR_FUNC_ENTER;
 
-    is_inplace = (sendbuf == MPI_IN_PLACE);
-    MPIR_Assert(!is_inplace);
+    MPIR_Assert(sendbuf != MPI_IN_PLACE);
+
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);

@@ -26,7 +26,7 @@ static inline void vtx_record_issue(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sche
 
 static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
     MPIR_Request *r = sched->req;
     int i;
 

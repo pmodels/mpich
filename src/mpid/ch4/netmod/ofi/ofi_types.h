@@ -34,7 +34,6 @@
 #define MPIDI_OFI_IOV_MAX                  (32)
 #define MPIDI_OFI_AM_HDR_POOL_CELL_SIZE            (1024)
 #define MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
-#define MPIDI_OFI_AM_HDR_POOL_MAX_NUM_CELLS         (257 * 1024)
 #define MPIDI_OFI_NUM_CQ_BUFFERED          (1024)
 #define MPIDI_OFI_STRIPE_CHUNK_SIZE        (2048)       /* First chunk sent through the preferred NIC during striping */
 
@@ -115,8 +114,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 
 /* Field accessor macros */
 #define MPIDI_OFI_AMREQUEST(req,field)     ((req)->dev.ch4.am.netmod_am.ofi.field)
-#define MPIDI_OFI_AMREQUEST_HDR(req,field) ((req)->dev.ch4.am.netmod_am.ofi.req_hdr->field)
-#define MPIDI_OFI_AMREQUEST_HDR_PTR(req)   ((req)->dev.ch4.am.netmod_am.ofi.req_hdr)
+#define MPIDI_OFI_AM_SREQ_HDR(req,field) ((req)->dev.ch4.am.netmod_am.ofi.sreq_hdr->field)
+#define MPIDI_OFI_AM_RREQ_HDR(req,field) ((req)->dev.ch4.am.netmod_am.ofi.rreq_hdr->field)
 #define MPIDI_OFI_REQUEST(req,field)       ((req)->dev.ch4.netmod.ofi.field)
 #define MPIDI_OFI_AV(av)                   ((av)->netmod.ofi)
 

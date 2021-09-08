@@ -68,35 +68,6 @@ static int ipc_handle_cache_insert(MPL_gavl_tree_t gavl_tree, const void *addr, 
     goto fn_exit;
 }
 
-static int get_map_device(int remote_global_dev_id,
-                          int local_dev_id, MPI_Datatype datatype, int *dev_id)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_ENTER;
-
-    int dt_contig;
-    MPIDI_Datatype_check_contig(datatype, dt_contig);
-
-    int remote_local_dev_id = MPL_gpu_global_to_local_dev_id(remote_global_dev_id);
-
-    /* TODO: more analyses on the non-contig cases */
-    if (remote_local_dev_id == -1 || !dt_contig) {
-        *dev_id = local_dev_id;
-    } else {
-        *dev_id = remote_local_dev_id;
-    }
-
-    if (*dev_id < 0) {
-        /* This is the case for local host memory. We need a valid device id
-         * to map on. Assume at least device 0 is always available. */
-        *dev_id = 0;
-    }
-
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}
-
 static int ipc_handle_cache_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -212,8 +183,37 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
     return mpi_errno;
 }
 
-int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int local_dev_id,
-                             MPI_Datatype datatype, void **vaddr)
+int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype)
+{
+    int map_to_dev_id = -1;
+
+    MPIR_FUNC_ENTER;
+
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    int dt_contig;
+    MPIDI_Datatype_check_contig(datatype, dt_contig);
+
+    int remote_local_dev_id = MPL_gpu_global_to_local_dev_id(remote_global_dev_id);
+
+    /* TODO: more analyses on the non-contig cases */
+    if (remote_local_dev_id == -1 || !dt_contig) {
+        map_to_dev_id = local_dev_id;
+    } else {
+        map_to_dev_id = remote_local_dev_id;
+    }
+
+    if (map_to_dev_id < 0) {
+        /* This is the case for local host memory. We need a valid device id
+         * to map on. Assume at least device 0 is always available. */
+        map_to_dev_id = 0;
+    }
+#endif
+
+    MPIR_FUNC_EXIT;
+    return map_to_dev_id;
+}
+
+int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **vaddr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -222,7 +222,6 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int local_dev_id,
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     void *pbase;
     int mpl_err = MPL_SUCCESS;
-    int dev_id;
     MPIDI_GPUI_handle_obj_s *handle_obj = NULL;
 
 #define MAPPED_TREE(i) MPIDI_GPUI_global.ipc_handle_mapped_trees[handle.node_rank][handle.global_dev_id][i]
@@ -234,10 +233,7 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int local_dev_id,
         }
     }
 
-    mpi_errno = get_map_device(handle.global_dev_id, local_dev_id, datatype, &dev_id);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = ipc_handle_cache_search(MAPPED_TREE(dev_id),
+    mpi_errno = ipc_handle_cache_search(MAPPED_TREE(map_dev_id),
                                         (void *) handle.remote_base_addr, handle.len,
                                         (void **) &handle_obj);
     MPIR_ERR_CHECK(mpi_errno);
@@ -246,7 +242,7 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int local_dev_id,
         /* found in cache */
         *vaddr = (void *) (handle_obj->mapped_base_addr + handle.offset);
     } else {
-        mpl_err = MPL_gpu_ipc_handle_map(handle.ipc_handle, dev_id, &pbase);
+        mpl_err = MPL_gpu_ipc_handle_map(handle.ipc_handle, map_dev_id, &pbase);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_map");
 
@@ -257,7 +253,7 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int local_dev_id,
         handle_obj = MPL_malloc(sizeof(MPIDI_GPUI_handle_obj_s), MPL_MEM_OTHER);
         MPIR_Assert(handle_obj != NULL);
         handle_obj->mapped_base_addr = (uintptr_t) pbase;
-        mpi_errno = ipc_handle_cache_insert(MAPPED_TREE(dev_id),
+        mpi_errno = ipc_handle_cache_insert(MAPPED_TREE(map_dev_id),
                                             (void *) handle.remote_base_addr, handle.len,
                                             handle_obj, &insert_successful);
         MPIR_ERR_CHECK(mpi_errno);

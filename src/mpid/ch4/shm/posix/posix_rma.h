@@ -14,7 +14,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
                                                             MPI_Datatype origin_datatype,
                                                             void *target_addr,
                                                             int target_count,
-                                                            MPI_Datatype target_datatype, MPI_Op op)
+                                                            MPI_Datatype target_datatype, MPI_Op op,
+                                                            int mapped_device)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype basic_type = MPI_DATATYPE_NULL;
@@ -22,16 +23,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
     MPI_Aint total_len = 0;
     MPI_Aint origin_dtp_size = 0;
     MPIR_Datatype *origin_dtp_ptr = NULL;
+    bool is_packed;
     void *packed_buf = NULL;
     MPIR_FUNC_ENTER;
 
     /* Handle contig origin datatype */
     if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
-        mpi_errno = MPIDIG_compute_acc_op(origin_addr, origin_count, origin_datatype, target_addr,
-                                          target_count, target_datatype, op,
-                                          MPIDIG_ACC_SRCBUF_DEFAULT);
-        MPIR_ERR_CHECK(mpi_errno);
-
+        is_packed = false;
+        mpi_errno = MPIR_Typerep_op(origin_addr, origin_count, origin_datatype,
+                                    target_addr, target_count, target_datatype,
+                                    op, is_packed, mapped_device);
         goto fn_exit;
     }
 
@@ -67,9 +68,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(actual_pack_bytes == total_len);
 
-    mpi_errno = MPIDIG_compute_acc_op((void *) packed_buf, (int) predefined_dtp_count, basic_type,
-                                      target_addr, target_count, target_datatype, op,
-                                      MPIDIG_ACC_SRCBUF_PACKED);
+    is_packed = true;
+    mpi_errno = MPIR_Typerep_op((void *) packed_buf, (int) predefined_dtp_count, basic_type,
+                                target_addr, target_count, target_datatype,
+                                op, is_packed, mapped_device);
 
   fn_exit:
     MPL_free(packed_buf);
@@ -203,6 +205,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
     size_t origin_data_sz = 0, target_data_sz = 0, result_data_sz = 0;
     int disp_unit = 0;
     void *base = NULL;
+    int mapped_device = -1;
     MPIR_FUNC_ENTER;
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
@@ -221,6 +224,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
         int local_target_rank = MPIDIU_win_rank_to_intra_rank(win, target_rank, winattr);
         disp_unit = shared_table[local_target_rank].disp_unit;
         base = shared_table[local_target_rank].shm_base_addr;
+        mapped_device = shared_table[local_target_rank].ipc_mapped_device;
     }
 
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
@@ -236,7 +240,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
         mpi_errno = MPIDI_POSIX_compute_accumulate((void *) origin_addr, origin_count,
                                                    origin_datatype,
                                                    (char *) base + disp_unit * target_disp,
-                                                   target_count, target_datatype, op);
+                                                   target_count, target_datatype, op,
+                                                   mapped_device);
     }
 
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
@@ -266,6 +271,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
     size_t origin_data_sz = 0, target_data_sz = 0;
     int disp_unit = 0;
     void *base = NULL;
+    int mapped_device = -1;
     MPIR_FUNC_ENTER;
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
@@ -283,6 +289,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
         int local_target_rank = MPIDIU_win_rank_to_intra_rank(win, target_rank, winattr);
         disp_unit = shared_table[local_target_rank].disp_unit;
         base = shared_table[local_target_rank].shm_base_addr;
+        mapped_device = shared_table[local_target_rank].ipc_mapped_device;
     }
 
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
@@ -293,7 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
 
     mpi_errno = MPIDI_POSIX_compute_accumulate((void *) origin_addr, origin_count, origin_datatype,
                                                (char *) base + disp_unit * target_disp,
-                                               target_count, target_datatype, op);
+                                               target_count, target_datatype, op, mapped_device);
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_RMA_MUTEX_UNLOCK(posix_win->shm_mutex_ptr);
     } else {

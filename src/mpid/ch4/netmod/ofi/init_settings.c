@@ -369,8 +369,7 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
                            (prov->caps & FI_DIRECTED_RECV) &&
                            (prov->domain_attr->cq_data_size >= MPIDI_OFI_MIN_CQ_DATA_SIZE));
     UPDATE_SETTING_BY_INFO(enable_am,
-                           (prov->caps & (FI_MSG | FI_MULTI_RECV | FI_READ)) ==
-                           (FI_MSG | FI_MULTI_RECV | FI_READ));
+                           (prov->caps & (FI_MSG | FI_MULTI_RECV)) == (FI_MSG | FI_MULTI_RECV));
     UPDATE_SETTING_BY_INFO(enable_rma, prov->caps & FI_RMA);
     UPDATE_SETTING_BY_INFO(enable_atomics, prov->caps & FI_ATOMICS);
 #ifdef FI_HMEM

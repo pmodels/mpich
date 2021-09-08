@@ -17,7 +17,6 @@ enum {
 #define MPIDI_POSIX_AM_BUFF_SZ               (1 * 1024 * 1024)
 #define MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE            (1024)
 #define MPIDI_POSIX_AM_HDR_POOL_NUM_CELLS_PER_CHUNK     (1024)
-#define MPIDI_POSIX_AM_HDR_POOL_MAX_NUM_CELLS           (257 * 1024)
 
 #define MPIDI_POSIX_AMREQUEST(req,field)      ((req)->dev.ch4.am.shm_am.posix.field)
 #define MPIDI_POSIX_AMREQUEST_HDR(req, field) ((req)->dev.ch4.am.shm_am.posix.req_hdr->field)
