@@ -18,8 +18,10 @@ int MPIDI_FD_mpi_init_hook(void)
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIDI_IPCI_global.ipc_handle_type == MPL_GPU_IPC_HANDLE_SHAREABLE_FD) {
-        mpi_errno = MPIDI_IPC_mpi_fd_init();
-        MPIR_ERR_CHECK(mpi_errno);
+        if (MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE == MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE_drmfd) {
+            mpi_errno = MPIDI_IPC_mpi_fd_init();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
   fn_exit:
@@ -34,8 +36,10 @@ int MPIDI_FD_mpi_finalize_hook(void)
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIDI_IPCI_global.ipc_handle_type == MPL_GPU_IPC_HANDLE_SHAREABLE_FD) {
-        mpi_errno = MPIDI_IPC_mpi_fd_finalize();
-        MPIR_ERR_CHECK(mpi_errno);
+        if (MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE == MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE_drmfd) {
+            mpi_errno = MPIDI_IPC_mpi_fd_finalize();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
   fn_exit:

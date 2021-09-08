@@ -18,6 +18,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #define MPL_ENABLE_DRMFD
 #endif
 #include <sys/ioctl.h>
+#include <sys/syscall.h>        /* Definition of SYS_* constants */
 
 static int gpu_initialized = 0;
 static int device_count;
@@ -31,6 +32,22 @@ static int *global_to_local_map;        /* [max_dev_id + 1]   */
 
 static int shared_device_fd_count = 0;
 static int *shared_device_fds = NULL;
+
+/* pidfd */
+#ifndef __NR_pidfd_open
+#define __NR_pidfd_open 434     /* System call # on most architectures */
+#endif
+#ifndef __NR_pidfd_getfd
+#define __NR_pidfd_getfd 438    /* System call # on most architectures */
+#endif
+
+typedef struct {
+    int fd;
+    pid_t pid;
+    int dev_id;
+} fd_pid_t;
+
+pid_t mypid;
 
 /* Level-zero API v1.0:
  * http://spec.oneapi.com/level-zero/latest/index.html
@@ -202,6 +219,8 @@ int MPL_gpu_init(MPL_gpu_info_t * info)
         local_to_global_map[i] = i;
         global_to_local_map[i] = i;
     }
+
+    mypid = getpid();
 
     gpu_initialized = 1;
 
@@ -405,16 +424,24 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
         goto fn_fail;
     }
 
-    /* convert dma_buf fd to GEM handle */
-    memcpy(&fd, &ze_ipc_handle, sizeof(fd));
-    status = fd_to_handle(shared_device_fds[dev_id], fd, &handle);
-    if (status) {
-        goto fn_fail;
-    }
+    if (shared_device_fds != NULL) {
+        /* convert dma_buf fd to GEM handle */
+        memcpy(&fd, &ze_ipc_handle, sizeof(fd));
+        status = fd_to_handle(shared_device_fds[dev_id], fd, &handle);
+        if (status) {
+            goto fn_fail;
+        }
 
-    shared_handle = dev_id;
-    shared_handle = shared_handle << 32 | handle;
-    memcpy(ipc_handle, &shared_handle, sizeof(shared_handle));
+        shared_handle = dev_id;
+        shared_handle = shared_handle << 32 | handle;
+        memcpy(ipc_handle, &shared_handle, sizeof(shared_handle));
+    } else {
+        fd_pid_t h;
+        memcpy(&h.fd, &ze_ipc_handle, sizeof(fd));
+        h.pid = mypid;
+        h.dev_id = dev_id;
+        memcpy(ipc_handle, &h, sizeof(fd_pid_t));
+    }
 
   fn_exit:
     return mpl_err;
@@ -428,19 +455,42 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
     unsigned long shared_handle;
-    int fd, src_dev_id, handle, status;
+    int fd, handle = 0, status;
     MPL_gpu_device_handle_t dev_handle;
     ze_ipc_mem_handle_t ze_ipc_handle;
 
-    /* convert GEM handle to fd */
     memset(&ze_ipc_handle, 0, sizeof(ze_ipc_mem_handle_t));
-    memcpy(&shared_handle, &ipc_handle, sizeof(shared_handle));
-    src_dev_id = shared_handle >> 32;
-    handle = shared_handle << 32 >> 32;
 
-    status = handle_to_fd(shared_device_fds[src_dev_id], handle, &fd);
-    if (status) {
-        goto fn_fail;
+    if (shared_device_fds != NULL) {
+        /* convert GEM handle to fd */
+        memcpy(&shared_handle, &ipc_handle, sizeof(shared_handle));
+        src_dev_id = shared_handle >> 32;
+        handle = shared_handle << 32 >> 32;
+
+        status = handle_to_fd(shared_device_fds[src_dev_id], handle, &fd);
+        if (status) {
+            goto fn_fail;
+        }
+    } else {
+        /* pidfd_getfd */
+        fd_pid_t h;
+        memcpy(&h, &ipc_handle, sizeof(fd_pid_t));
+        if (h.pid != mypid) {
+            int pid_fd = syscall(__NR_pidfd_open, h.pid, 0);
+            if (pid_fd == -1) {
+                printf("pidfd_open error: %s (%d %d %d)\n", strerror(errno), h.pid, h.fd, h.dev_id);
+            }
+            assert(pid_fd != -1);
+            fd = syscall(__NR_pidfd_getfd, pid_fd, h.fd, 0);
+            if (fd == -1) {
+                printf("Error> pidfd_getfd is not implemented!");
+                mpl_err = MPL_ERR_GPU_INTERNAL;
+                goto fn_fail;
+            }
+            close(pid_fd);
+        } else {
+            fd = h.fd;
+        }
     }
 
     dev_handle = global_ze_devices_handle[dev_id];
@@ -449,10 +499,12 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
     ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ze_ipc_handle, 0, ptr);
     ZE_ERR_CHECK(ret);
 
-    /* close GEM handle */
-    status = close_handle(shared_device_fds[dev_id], handle);
-    if (status) {
-        goto fn_fail;
+    if (shared_device_fds != NULL) {
+        /* close GEM handle */
+        status = close_handle(shared_device_fds[dev_id], handle);
+        if (status) {
+            goto fn_fail;
+        }
     }
 
   fn_exit:
