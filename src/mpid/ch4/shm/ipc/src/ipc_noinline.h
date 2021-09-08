@@ -21,8 +21,8 @@ int MPIDI_FD_mpi_init_hook(void);
 int MPIDI_FD_mpi_finalize_hook(void);
 
 int MPIDI_IPC_mpi_socks_init(void);
-int MPIDI_IPC_mpi_fd_init(void);
-int MPIDI_IPC_mpi_fd_finalize(void);
+int MPIDI_IPC_mpi_fd_init(bool use_drmfd);
+int MPIDI_IPC_mpi_fd_finalize(bool use_drmfd);
 int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len);
 int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payload_len, int flags);
 

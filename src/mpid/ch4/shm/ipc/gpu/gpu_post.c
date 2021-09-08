@@ -28,6 +28,18 @@ cvars:
         If a send message size is greater than or equal to MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD (in
         bytes), then enable GPU-based single copy protocol for intranode communication. The
         environment variable is valid only when then GPU IPC shmmod is enabled.
+
+    - name        : MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE
+      category    : CH4
+      type        : enum
+      default     : drmfd
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select implementation for ZE shareable IPC handle
+        pidfd - use pidfd_getfd syscall to implement shareable IPC handle
+        drmfd - force to use device fd-based shareable IPC handle
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
