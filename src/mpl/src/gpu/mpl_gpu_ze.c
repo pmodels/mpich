@@ -9,6 +9,7 @@
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef MPL_HAVE_ZE
+#include <sys/syscall.h>        /* Definition of syscall constants */
 
 static int gpu_initialized = 0;
 static int device_count;
@@ -16,6 +17,22 @@ static int max_dev_id;
 
 static int *local_to_global_map;        /* [device_count] */
 static int *global_to_local_map;        /* [max_dev_id + 1]   */
+
+/* pidfd */
+#ifndef __NR_pidfd_open
+#define __NR_pidfd_open 434     /* Syscall id for most architectures */
+#endif
+#ifndef __NR_pidfd_getfd
+#define __NR_pidfd_getfd 438    /* Syscall id for most architectures */
+#endif
+
+typedef struct {
+    int fd;
+    pid_t pid;
+    int dev_id;
+} fd_pid_t;
+
+pid_t mypid;
 
 /* Level-zero API v1.0:
  * http://spec.oneapi.com/level-zero/latest/index.html
@@ -58,6 +75,8 @@ int MPL_gpu_init(MPL_gpu_info_t * info)
         local_to_global_map[i] = i;
         global_to_local_map[i] = i;
     }
+
+    mypid = getpid();
 
     gpu_initialized = 1;
 
@@ -178,8 +197,40 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
-    ret = zeMemGetIpcHandle(global_ze_context, ptr, ipc_handle);
+    int i, dev_id = -1;
+    ze_device_handle_t device;
+    ze_ipc_mem_handle_t ze_ipc_handle;
+
+    ze_memory_allocation_properties_t ptr_attr = {
+        .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
+        .pNext = NULL,
+        .type = 0,
+        .id = 0,
+        .pageSize = 0,
+    };
+
+    ret = zeMemGetIpcHandle(global_ze_context, ptr, &ze_ipc_handle);
     ZE_ERR_CHECK(ret);
+
+    ret = zeMemGetAllocProperties(global_ze_context, ptr, &ptr_attr, &device);
+    ZE_ERR_CHECK(ret);
+
+    for (i = 0; i < device_count; i++) {
+        if (device == global_ze_devices_handle[i]) {
+            dev_id = i;
+            break;
+        }
+    }
+
+    if (dev_id == -1) {
+        goto fn_fail;
+    }
+
+    fd_pid_t h;
+    memcpy(&h.fd, &ze_ipc_handle, sizeof(int));
+    h.pid = mypid;
+    h.dev_id = dev_id;
+    memcpy(ipc_handle, &h, sizeof(fd_pid_t));
 
   fn_exit:
     return mpl_err;
@@ -192,13 +243,33 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
-    MPL_gpu_device_handle_t dev_handle = global_ze_devices_handle[dev_id];
+    int fd;
+    MPL_gpu_device_handle_t dev_handle;
+    ze_ipc_mem_handle_t ze_ipc_handle;
 
-    ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ipc_handle, 0, ptr);
-    if (ret != ZE_RESULT_SUCCESS) {
-        mpl_err = MPL_ERR_GPU_INTERNAL;
-        goto fn_fail;
+    memset(&ze_ipc_handle, 0, sizeof(ze_ipc_mem_handle_t));
+
+    /* pidfd_getfd */
+    fd_pid_t h;
+    memcpy(&h, &ipc_handle, sizeof(fd_pid_t));
+    if (h.pid != mypid) {
+        int pid_fd = syscall(__NR_pidfd_open, h.pid, 0);
+        assert(pid_fd != -1);
+        fd = syscall(__NR_pidfd_getfd, pid_fd, h.fd, 0);
+        if (fd == -1) {
+            mpl_err = MPL_ERR_GPU_INTERNAL;
+            goto fn_fail;
+        }
+        close(pid_fd);
+    } else {
+        fd = h.fd;
     }
+
+    dev_handle = global_ze_devices_handle[dev_id];
+    memcpy(&ze_ipc_handle, &fd, sizeof(fd));
+
+    ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ze_ipc_handle, 0, ptr);
+    ZE_ERR_CHECK(ret);
 
   fn_exit:
     return mpl_err;
