@@ -402,44 +402,7 @@ for hydra_topolib in ${hydra_topolibs}; do
     case "$hydra_topolib" in
 	hwloc)
                 m4_define([hwloc_embedded_dir],[tools/topo/hwloc/hwloc])
-                PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
-
-                if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
-                    AC_MSG_CHECKING([if hwloc meets minimum version requirement])
-                    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <hwloc.h>], [
-                                       #if HWLOC_API_VERSION < 0x00020000
-                                       #error
-                                       #endif
-                                       return 0;])],[],[pac_have_hwloc=no])
-                    AC_MSG_RESULT([$pac_have_hwloc])
-
-                    # if an old hwloc was specified by the user, throw an error
-                    if test "$pac_have_hwloc" = "no" -a -n "$with_hwloc" -a "$with_hwloc" != "yes" ; then
-                        AC_MSG_ERROR([hwloc installation does not meet minimum version requirement (2.0). Please update your hwloc installation or use --with-hwloc=embedded.])
-                    fi
-                fi
-
-                if test "$pac_have_hwloc" = "no" -a "$with_hwloc" != "no"; then
-                    with_hwloc=embedded
-                    pac_have_hwloc=yes
-                fi
-		if test "$with_hwloc" = "embedded" ; then
-                    hydra_use_embedded_hwloc=yes
-                    PAC_PUSH_FLAG([CFLAGS])
-                    CFLAGS=""
-                    hwloc_config_args="--enable-embedded-mode --disable-visibility"
-                    hwloc_config_args="$hwloc_config_args --disable-libxml2"
-                    hwloc_config_args="$hwloc_config_args --disable-nvml"
-                    hwloc_config_args="$hwloc_config_args --disable-cuda"
-                    hwloc_config_args="$hwloc_config_args --disable-opencl"
-                    hwloc_config_args="$hwloc_config_args --disable-rsmi"
-                    PAC_CONFIG_SUBDIR_ARGS([tools/topo/hwloc/hwloc], [$hwloc_config_args],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
-                    PAC_POP_FLAG([CFLAGS])
-                    dnl Note that single quote is intentional to pass the variable as is
-                    hwloc_srcdir="tools/topo/hwloc/hwloc"
-                    hwloc_includedir='-I${srcdir}/${hwloc_srcdir}/include -I${builddir}/${hwloc_srcdir}/include'
-                    hwloc_lib='${builddir}/${hwloc_srcdir}/hwloc/libhwloc_embedded.la'
-                fi
+                PAC_CONFIG_HWLOC
 
 		if test "$pac_have_hwloc" = "yes" ; then
 		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
