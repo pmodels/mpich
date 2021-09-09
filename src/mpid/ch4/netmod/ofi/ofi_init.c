@@ -1091,8 +1091,12 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             mpi_errno = flush_send_queue();
             MPIR_ERR_CHECK(mpi_errno);
         }
-    } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
+    } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0 ||
+               strcmp("psm2", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
         /* verbs;ofi_rxm provider need barrier to prevent message loss */
+        /* psm2 provider also needs it, otherwise a pending recv on a rank may try to connect to an
+         * ep on a remote rank that may be closed during finalize. */
+        /* FIXME: would other providers need this barrier as well? */
         mpi_errno = MPIR_pmi_barrier();
         MPIR_ERR_CHECK(mpi_errno);
     }
