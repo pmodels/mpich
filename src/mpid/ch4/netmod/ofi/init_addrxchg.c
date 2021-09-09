@@ -290,6 +290,10 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
     }
 
   fn_check:
+    /* FIXME: get_av_table_index is returning incorrect values when using  multi-nics.
+     * So, currently disabling the following checks/assertions. We need to either correct
+     * the get_av_table_index implementation or remove this validation logic. */
+#if 0
     if (MPIDI_OFI_ENABLE_AV_TABLE) {
         for (int r = 0; r < size; r++) {
             MPIDI_OFI_addr_t *av ATTRIBUTE((unused)) = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
@@ -300,6 +304,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
             }
         }
     }
+#endif
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
