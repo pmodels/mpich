@@ -380,6 +380,8 @@ typedef struct {
     void *req_map;
     MPIDI_OFI_deferred_am_isend_req_t *deferred_am_isend_q;
 
+    int using_cxi;
+
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     MPIDI_OFI_capabilities_t settings;

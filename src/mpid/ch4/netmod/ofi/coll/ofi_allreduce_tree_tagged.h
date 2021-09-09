@@ -59,7 +59,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Allreduce_intra_triggered_tagged(const vo
 
         /* Wait till the coompletion counters reach their desired values */
         if (num_children) {
-            if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+            if (MPIDI_OFI_global.using_cxi) {
                 do {
                     ret = fi_cntr_wait(snd_cntr, num_children, 1);
                     MPIDI_OFI_ERR(ret < 0 &&
@@ -79,7 +79,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Allreduce_intra_triggered_tagged(const vo
                 }
             }
         } else {
-            if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+            if (MPIDI_OFI_global.using_cxi) {
                 do {
                     ret = fi_cntr_wait(rcv_cntr, 2, 1);
                     MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,

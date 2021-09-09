@@ -57,7 +57,7 @@ static inline int MPIDI_OFI_Allreduce_intra_triggered_rma(const void *sendbuf,
     if (nranks > 1) {
         if (num_children) {
             /* FIXME: workaround for cassini to avoid using counter wait objects */
-            if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+            if (MPIDI_OFI_global.using_cxi) {
                 do {
                     ret = fi_cntr_wait(snd_cntr, num_children, 1);
                     MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,
@@ -79,7 +79,7 @@ static inline int MPIDI_OFI_Allreduce_intra_triggered_rma(const void *sendbuf,
                 }
             }
             if (myrank != 0) {
-                if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+                if (MPIDI_OFI_global.using_cxi) {
                     do {
                         ret = fi_cntr_wait(atomic_cntr, 1, 1);
                         MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,
@@ -102,7 +102,7 @@ static inline int MPIDI_OFI_Allreduce_intra_triggered_rma(const void *sendbuf,
                 }
             }
         } else {
-            if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+            if (MPIDI_OFI_global.using_cxi) {
                 do {
                     ret = fi_cntr_wait(rcv_cntr, 2, 1);
                     MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,
@@ -123,7 +123,7 @@ static inline int MPIDI_OFI_Allreduce_intra_triggered_rma(const void *sendbuf,
                     MPID_Progress_test(NULL);
                 }
             }
-            if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+            if (MPIDI_OFI_global.using_cxi) {
                 do {
                     ret = fi_cntr_wait(atomic_cntr, 1, 1);
                     MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,

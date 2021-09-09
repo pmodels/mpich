@@ -55,7 +55,7 @@ static inline int MPIDI_OFI_Allreduce_intra_triggered_pipelined(const void *send
 
     if (nranks > 1) {
         if (num_children) {
-            if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+            if (MPIDI_OFI_global.using_cxi) {
                 do {
                     ret = fi_cntr_wait(snd_cntr, num_chunks * num_children, 1);
                     MPIDI_OFI_ERR(ret < 0 &&
@@ -77,7 +77,7 @@ static inline int MPIDI_OFI_Allreduce_intra_triggered_pipelined(const void *send
 
         } else {
             for (i = 0; i < num_chunks; i++) {
-                if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
+                if (MPIDI_OFI_global.using_cxi) {
                     do {
                         ret = fi_cntr_wait(rcv_cntr[i], 2, 1);
                         MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,

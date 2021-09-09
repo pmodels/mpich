@@ -174,6 +174,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .enable_pt2pt_nopack = MPIDI_OFI_ENABLE_PT2PT_NOPACK_CXI,
      .enable_triggered = MPIDI_OFI_ENABLE_TRIGGERED_CXI,
      .num_am_buffers = MPIDI_OFI_NUM_AM_BUFFERS_CXI,
+     .num_optimized_memory_regions = MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_CXI,
      .max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_CXI,
      .max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_CXI,
      .fetch_atomic_iovecs = MPIDI_OFI_FETCH_ATOMIC_IOVECS_CXI,
