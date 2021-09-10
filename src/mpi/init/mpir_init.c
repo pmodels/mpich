@@ -219,6 +219,12 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
         if (MPIR_CVAR_DEBUG_SUMMARY) {
             debug_summary = (MPIR_Process.rank == 0);
         }
+
+        bool specialized_cache =
+            (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_specialized);
+
+        MPL_gpu_info.specialized_cache = specialized_cache;
+
         int mpl_errno = MPL_gpu_init(debug_summary);
         MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
 
@@ -232,6 +238,10 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
             /* If the MPL backend doesn't support IPC, disable it for the upper layer */
             if (!MPL_gpu_info.enable_ipc) {
                 MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD = -1;
+            }
+            /* If the MPL gpu backend doesn't support specialized cache, fallback to generic. */
+            if (specialized_cache && !MPL_gpu_info.specialized_cache) {
+                MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE = MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic;
             }
         }
     }
