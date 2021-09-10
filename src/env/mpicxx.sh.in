@@ -197,7 +197,7 @@ for arg in "$@" ; do
     nativelinking=yes
     addarg=no
     ;;
-    -lcuda|-lcudart)
+    -lcuda|-lcudart|-lze_loader)
     delay_libs="$delay_libs $arg"
     addarg=no
     ;;
