@@ -713,7 +713,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_malloc_pack_buffer(void **ptr, size_t pack_size)
 {
     if (MPIDI_OFI_ENABLE_HMEM) {
-        return MPL_gpu_malloc_host(ptr, pack_size);
+        return MPIR_gpu_malloc_host(ptr, pack_size);
     } else {
         *ptr = MPL_malloc(pack_size, MPL_MEM_BUFFER);
         return 0;
@@ -723,7 +723,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_malloc_pack_buffer(void **ptr, size_t
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_free_pack_buffer(void *ptr)
 {
     if (MPIDI_OFI_ENABLE_HMEM) {
-        return MPL_gpu_free_host(ptr);
+        return MPIR_gpu_free_host(ptr);
     } else {
         MPL_free(ptr);
         return 0;
