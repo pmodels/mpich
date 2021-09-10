@@ -1019,6 +1019,9 @@ if [ "$do_build_configure" = "yes" ] ; then
            echo "------------------------------------------------------------------------"
            echo "running third-party initialization in $external"
            (cd $external && ./autogen.sh) || exit 1
+       else
+           error "external directory $external missing"
+           exit 1
        fi
     done
 
