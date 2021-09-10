@@ -1130,6 +1130,7 @@ if test "X${pac_have_ze}" = "Xyes" ; then
     GPU_SUPPORT="ZE"
     AC_CHECK_HEADERS([drm/i915_drm.h])
     AC_CHECK_HEADERS([libdrm/i915_drm.h])
+    AC_CHECK_LIB(dl, dlopen, [], AC_MSG_ERROR([dlopen not found.  MPL ZE support requires libdl.]))
 fi
 AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
 

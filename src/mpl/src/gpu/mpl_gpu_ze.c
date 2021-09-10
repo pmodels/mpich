@@ -5,6 +5,7 @@
 
 #include "mpl.h"
 #include <assert.h>
+#include <dlfcn.h>
 
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
@@ -47,6 +48,11 @@ typedef struct {
     int dev_id;
 } fd_pid_t;
 
+typedef struct gpu_free_hook {
+    void (*free_hook) (void *dptr);
+    struct gpu_free_hook *next;
+} gpu_free_hook_s;
+
 pid_t mypid;
 
 /* Level-zero API v1.0:
@@ -60,6 +66,12 @@ static int gpu_ze_init_driver(void);
 static int fd_to_handle(int dev_fd, int fd, int *handle);
 static int handle_to_fd(int dev_fd, int handle, int *fd);
 static int close_handle(int dev_fd, int handle);
+
+static gpu_free_hook_s *free_hook_chain = NULL;
+
+static ze_result_t ZE_APICALL(*sys_zeMemFree) (ze_context_handle_t hContext, void *dptr) = NULL;
+
+static int gpu_mem_hook_init(void);
 
 #define ZE_ERR_CHECK(ret) \
     do { \
@@ -222,6 +234,7 @@ int MPL_gpu_init(MPL_gpu_info_t * info)
 
     mypid = getpid();
 
+    gpu_mem_hook_init();
     gpu_initialized = 1;
 
     if (info->debug_summary) {
@@ -369,6 +382,14 @@ int MPL_gpu_finalize(void)
     MPL_free(global_to_local_map);
     MPL_free(global_ze_devices_handle);
     MPL_free(shared_device_fds);
+
+    gpu_free_hook_s *prev;
+    while (free_hook_chain) {
+        prev = free_hook_chain;
+        free_hook_chain = free_hook_chain->next;
+        MPL_free(prev);
+    }
+
     return MPL_SUCCESS;
 }
 
@@ -673,8 +694,46 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
     goto fn_exit;
 }
 
+static void gpu_free_hooks_cb(void *dptr)
+{
+    gpu_free_hook_s *current = free_hook_chain;
+    if (dptr != NULL) {
+        /* we call gpu hook only when dptr != NULL */
+        while (current) {
+            current->free_hook(dptr);
+            current = current->next;
+        }
+    }
+    return;
+}
+
+MPL_STATIC_INLINE_PREFIX int gpu_mem_hook_init(void)
+{
+    if (sys_zeMemFree)
+        return MPL_SUCCESS;
+
+    void *libze_handle = dlopen("libze_loader.so", RTLD_LAZY | RTLD_GLOBAL);
+    assert(libze_handle);
+
+    sys_zeMemFree = (void *) dlsym(libze_handle, "zeMemFree");
+    assert(sys_zeMemFree);
+
+    return MPL_SUCCESS;
+}
+
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
 {
+    gpu_free_hook_s *hook_obj = MPL_malloc(sizeof(gpu_free_hook_s), MPL_MEM_OTHER);
+    assert(hook_obj);
+    hook_obj->free_hook = free_hook;
+    hook_obj->next = NULL;
+    if (!free_hook_chain)
+        free_hook_chain = hook_obj;
+    else {
+        hook_obj->next = free_hook_chain;
+        free_hook_chain = hook_obj;
+    }
+
     return MPL_SUCCESS;
 }
 
@@ -711,6 +770,16 @@ void MPL_gpu_event_complete(MPL_gpu_event_t * var)
 bool MPL_gpu_event_is_complete(MPL_gpu_event_t * var)
 {
     return (*var) <= 0;
+}
+
+ze_result_t ZE_APICALL zeMemFree(ze_context_handle_t hContext, void *dptr)
+{
+    ze_result_t result;
+    /* in case when MPI_Init was skipped */
+    gpu_mem_hook_init();
+    gpu_free_hooks_cb(dptr);
+    result = sys_zeMemFree(hContext, dptr);
+    return (result);
 }
 
 /* ZE-Specific Functions */
