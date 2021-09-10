@@ -1119,14 +1119,15 @@ if test "X${pac_have_cuda}" = "Xyes" ; then
 fi
 AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
 
+# Check Level-Zero availability
 if test "$have_gpu" = "no" ; then
-    # Check Level Zero availability when no other GPU library is available
     PAC_CHECK_HEADER_LIB_OPTIONAL([ze],[level_zero/ze_api.h],[ze_loader],[zeInit])
-    if test "X${pac_have_ze}" = "Xyes" ; then
-        AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
-        have_gpu="yes"
-        GPU_SUPPORT="ZE"
-    fi
+fi
+if test "X${pac_have_ze}" = "Xyes" ; then
+    PAC_LIBS_ADD(-lze_loader)
+    AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
+    have_gpu="yes"
+    GPU_SUPPORT="ZE"
 fi
 AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
 
