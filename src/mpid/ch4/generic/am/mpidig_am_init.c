@@ -133,31 +133,36 @@ int MPIDIG_am_init(void)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIDI_global.posted_list = NULL;
-    MPIDI_global.unexp_list = NULL;
+    for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
+        MPIDI_global.per_vci[vci].posted_list = NULL;
+        MPIDI_global.per_vci[vci].unexp_list = NULL;
+
+        mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIDIU_REQUEST_POOL_CELL_SIZE,
+                                                          MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK,
+                                                          0 /* unlimited */ ,
+                                                          host_alloc, host_free,
+                                                          &MPIDI_global.per_vci[vci].request_pool);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* The cell size need to match the send side (ofi short msg size) */
+        mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE,
+                                                          MPIR_CVAR_CH4_NUM_AM_PACK_BUFFERS_PER_CHUNK,
+                                                          0 /* unlimited */ ,
+                                                          host_alloc_buffer_registered,
+                                                          host_free_buffer_registered,
+                                                          &MPIDI_global.
+                                                          per_vci[vci].unexp_pack_buf_pool);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPIDI_global.per_vci[vci].cmpl_list = NULL;
+        MPL_atomic_store_uint64(&MPIDI_global.per_vci[vci].exp_seq_no, 0);
+        MPL_atomic_store_uint64(&MPIDI_global.per_vci[vci].nxt_seq_no, 0);
+    }
+
     MPIDI_global.part_posted_list = NULL;
     MPIDI_global.part_unexp_list = NULL;
 
-    MPIDI_global.cmpl_list = NULL;
-    MPL_atomic_store_uint64(&MPIDI_global.exp_seq_no, 0);
-    MPL_atomic_store_uint64(&MPIDI_global.nxt_seq_no, 0);
-
     MPL_atomic_store_int(&MPIDIG_global.rma_am_flag, 0);
     MPIR_cc_set(&MPIDIG_global.rma_am_poll_cntr, 0);
-
-    mpi_errno =
-        MPIDU_genq_private_pool_create_unsafe(MPIDIU_REQUEST_POOL_CELL_SIZE,
-                                              MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK,
-                                              0, host_alloc, host_free, &MPIDI_global.request_pool);
-    MPIR_ERR_CHECK(mpi_errno);
-    /* The cell size need to match the send side (ofi short msg size) */
-    mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE,
-                                                      MPIR_CVAR_CH4_NUM_AM_PACK_BUFFERS_PER_CHUNK,
-                                                      0,
-                                                      host_alloc_buffer_registered,
-                                                      host_free_buffer_registered,
-                                                      &MPIDI_global.unexp_pack_buf_pool);
-    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(MPIDIG_HANDLER_STATIC_MAX <= MPIDI_AM_HANDLERS_MAX);
 
@@ -232,8 +237,10 @@ void MPIDIG_am_finalize(void)
     MPIR_FUNC_ENTER;
 
     MPIDIU_map_destroy(MPIDI_global.win_map);
-    MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.request_pool);
-    MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.unexp_pack_buf_pool);
+    for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
+        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.per_vci[vci].request_pool);
+        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.per_vci[vci].unexp_pack_buf_pool);
+    }
 
     MPIR_FUNC_EXIT;
 }

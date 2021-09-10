@@ -208,8 +208,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
 #endif
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-    MPIDIG_COMM(comm, posted_head_ptr) = &(MPIDI_global.posted_list);
-    MPIDIG_COMM(comm, unexp_head_ptr) = &(MPIDI_global.unexp_list);
+    MPIDIG_COMM(comm, posted_head_ptr) = &(MPIDI_global.per_vci[0].posted_list);
+    MPIDIG_COMM(comm, unexp_head_ptr) = &(MPIDI_global.per_vci[0].unexp_list);
 #endif
   fn_exit:
     MPIR_FUNC_EXIT;

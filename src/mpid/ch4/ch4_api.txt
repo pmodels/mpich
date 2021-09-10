@@ -17,17 +17,17 @@ Non Native API:
       NM : comm_ptr, info
      SHM : comm_ptr, info
   am_send_hdr : int
-      NM*: rank, comm, handler_id, am_hdr, am_hdr_sz
-     SHM*: rank, comm, handler_id, am_hdr, am_hdr_sz
+      NM*: rank, comm, handler_id, am_hdr, am_hdr_sz, src_vci, dst_vci
+     SHM*: rank, comm, handler_id, am_hdr, am_hdr_sz, src_vci, dst_vci
   am_isend : int
-      NM*: rank, comm, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
-     SHM*: rank, comm, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
+      NM*: rank, comm, handler_id, am_hdr, am_hdr_sz, data, count, datatype, src_vci, dst_vci, sreq
+     SHM*: rank, comm, handler_id, am_hdr, am_hdr_sz, data, count, datatype, src_vci, dst_vci, sreq
   am_send_hdr_reply : int
-      NM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz
-     SHM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz
+      NM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, src_vci, dst_vci
+     SHM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, src_vci, dst_vci
   am_isend_reply : int
-      NM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
-     SHM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
+      NM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, src_vci, dst_vci, sreq
+     SHM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, src_vci, dst_vci, sreq
   am_get_data_copy_cb : MPIDIG_recv_data_copy_cb
       NM*: attr
      SHM*: attr
@@ -118,6 +118,7 @@ Native API:
   mpi_irecv : int
       NM*: buf-2, count, datatype, rank, tag, comm, context_offset, addr, req_p, partner
      SHM*: buf-2, count, datatype, rank, tag, comm, context_offset, req_p
+     MPIDIG: buf-2, count, datatype, rank, tag, comm, context_offset, vci, req_p
   mpi_imrecv : int
       NM*: buf-2, count, datatype, message
      SHM*: buf-2, count, datatype, message
@@ -424,6 +425,7 @@ PARAM:
     disp_unit: int
     disp_unit_p: int *
     displs: const MPI_Aint *
+    dst_vci: int
     errflag: MPIR_Errflag_t *
     flag: int *
     group: MPIR_Group *
@@ -484,6 +486,7 @@ PARAM:
     size-2: MPI_Aint
     source: int
     src_rank: int
+    src_vci: int
     sreq: MPIR_Request *
     status: MPI_Status *
     tag: int

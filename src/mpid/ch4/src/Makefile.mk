@@ -28,6 +28,7 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4r_callbacks.h     \
                   src/mpid/ch4/src/ch4r_rma_origin_callbacks.h     \
                   src/mpid/ch4/src/ch4r_rma_target_callbacks.h     \
+                  src/mpid/ch4/src/ch4r_util.h   \
                   src/mpid/ch4/src/ch4r_request.h
 
 mpi_core_sources += src/mpid/ch4/src/ch4_globals.c        \
