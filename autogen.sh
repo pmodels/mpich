@@ -424,61 +424,64 @@ _EOF
     fi
 fi
 
-########################################################################
-## Verify autoconf version
-########################################################################
+if test $do_quick = "yes" ; then
+    : # skip autotool versions check in quick mode (since it is too slow)
+else
+    ########################################################################
+    ## Verify autoconf version
+    ########################################################################
 
-echo_n "Checking for autoconf version... "
-recreate_tmp
-ver=2.67
-# petsc.mcs.anl.gov's /usr/bin/autoreconf is version 2.65 which returns OK
-# if configure.ac has AC_PREREQ() withOUT AC_INIT.
-#
-# ~/> hostname
-# petsc
-# ~> /usr/bin/autoconf --version
-# autoconf (GNU Autoconf) 2.65
-# ....
-# ~/> cat configure.ac
-# AC_PREREQ(2.68)
-# ~/> /usr/bin/autoconf ; echo "rc=$?"
-# configure.ac:1: error: Autoconf version 2.68 or higher is required
-# configure.ac:1: the top level
-# autom4te: /usr/bin/m4 failed with exit status: 63
-# rc=63
-# ~/> /usr/bin/autoreconf ; echo "rc=$?"
-# rc=0
-cat > .tmp/configure.ac<<EOF
+    echo_n "Checking for autoconf version... "
+    recreate_tmp
+    ver=2.67
+    # petsc.mcs.anl.gov's /usr/bin/autoreconf is version 2.65 which returns OK
+    # if configure.ac has AC_PREREQ() withOUT AC_INIT.
+    #
+    # ~/> hostname
+    # petsc
+    # ~> /usr/bin/autoconf --version
+    # autoconf (GNU Autoconf) 2.65
+    # ....
+    # ~/> cat configure.ac
+    # AC_PREREQ(2.68)
+    # ~/> /usr/bin/autoconf ; echo "rc=$?"
+    # configure.ac:1: error: Autoconf version 2.68 or higher is required
+    # configure.ac:1: the top level
+    # autom4te: /usr/bin/m4 failed with exit status: 63
+    # rc=63
+    # ~/> /usr/bin/autoreconf ; echo "rc=$?"
+    # rc=0
+    cat > .tmp/configure.ac<<EOF
 AC_INIT
 AC_PREREQ($ver)
 AC_OUTPUT
 EOF
-if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
-    echo ">= $ver"
-else
-    echo "bad autoconf installation"
-    cat <<EOF
+    if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
+        echo ">= $ver"
+    else
+        echo "bad autoconf installation"
+        cat <<EOF
 You either do not have autoconf in your path or it is too old (version
 $ver or higher required). You may be able to use
 
-     autoconf --version
+    autoconf --version
 
 Unfortunately, there is no standard format for the version output and
 it changes between autotools versions.  In addition, some versions of
 autoconf choose among many versions and provide incorrect output).
 EOF
-    exit 1
-fi
+        exit 1
+    fi
 
 
-########################################################################
-## Verify automake version
-########################################################################
+    ########################################################################
+    ## Verify automake version
+    ########################################################################
 
-echo_n "Checking for automake version... "
-recreate_tmp
-ver=1.15
-cat > .tmp/configure.ac<<EOF
+    echo_n "Checking for automake version... "
+    recreate_tmp
+    ver=1.15
+    cat > .tmp/configure.ac<<EOF
 AC_INIT(testver,1.0)
 AC_CONFIG_AUX_DIR([m4])
 AC_CONFIG_MACRO_DIR([m4])
@@ -490,33 +493,33 @@ EOF
 cat <<EOF >.tmp/Makefile.am
 ACLOCAL_AMFLAGS = -I m4
 EOF
-if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
-if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
-    echo ">= $ver"
-else
-    echo "bad automake installation"
-    cat <<EOF
+    if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
+    if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
+        echo ">= $ver"
+    else
+        echo "bad automake installation"
+        cat <<EOF
 You either do not have automake in your path or it is too old (version
 $ver or higher required). You may be able to use
 
-     automake --version
+    automake --version
 
 Unfortunately, there is no standard format for the version output and
 it changes between autotools versions.  In addition, some versions of
 autoconf choose among many versions and provide incorrect output).
 EOF
-    exit 1
-fi
+        exit 1
+    fi
 
 
-########################################################################
-## Verify libtool version
-########################################################################
+    ########################################################################
+    ## Verify libtool version
+    ########################################################################
 
-echo_n "Checking for libtool version... "
-recreate_tmp
-ver=2.4.4
-cat <<EOF >.tmp/configure.ac
+    echo_n "Checking for libtool version... "
+    recreate_tmp
+    ver=2.4.4
+    cat <<EOF >.tmp/configure.ac
 AC_INIT(testver,1.0)
 AC_CONFIG_AUX_DIR([m4])
 AC_CONFIG_MACRO_DIR([m4])
@@ -525,27 +528,27 @@ LT_PREREQ($ver)
 LT_INIT()
 AC_MSG_RESULT([A message])
 EOF
-cat <<EOF >.tmp/Makefile.am
+    cat <<EOF >.tmp/Makefile.am
 ACLOCAL_AMFLAGS = -I m4
 EOF
-if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
-if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
-    echo ">= $ver"
-else
-    echo "bad libtool installation"
-    cat <<EOF
+    if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
+    if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
+        echo ">= $ver"
+    else
+        echo "bad libtool installation"
+        cat <<EOF
 You either do not have libtool in your path or it is too old
 (version $ver or higher required). You may be able to use
 
-     libtool --version
+    libtool --version
 
 Unfortunately, there is no standard format for the version output and
 it changes between autotools versions.  In addition, some versions of
 autoconf choose among many versions and provide incorrect output).
 EOF
-    exit 1
+        exit 1
+    fi
 fi
-
 
 ########################################################################
 ## Checking for bash
