@@ -171,6 +171,14 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
     mpi_errno = ipc_handle_cache_search(track_tree, pbase, len, (void **) &handle_obj);
     MPIR_ERR_CHECK(mpi_errno);
 
+#ifdef MPL_HAVE_ZE
+    if (handle_obj && handle_obj->mem_id != ipc_attr->gpu_attr.device_attr.prop.id) {
+        mpi_errno = ipc_handle_cache_delete(track_tree,
+                                            (void *) handle_obj->remote_base_addr, handle_obj->len);
+        MPIR_ERR_CHECK(mpi_errno);
+        handle_obj = NULL;
+    }
+#endif
     if (handle_obj == NULL) {
         mpl_err = MPL_gpu_ipc_handle_create(pbase, &ipc_attr->ipc_handle.gpu.ipc_handle);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -190,6 +198,11 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
     ipc_attr->ipc_handle.gpu.len = len;
     ipc_attr->ipc_handle.gpu.node_rank = MPIR_Process.local_rank;
     ipc_attr->ipc_handle.gpu.offset = (uintptr_t) vaddr - (uintptr_t) pbase;
+#ifdef MPL_HAVE_ZE
+    ipc_attr->ipc_handle.gpu.mem_id = ipc_attr->gpu_attr.device_attr.prop.id;
+#else
+    ipc_attr->ipc_handle.gpu.mem_id = 0;
+#endif
 
     ipc_attr->ipc_handle.gpu.global_dev_id = global_dev_id;
 
