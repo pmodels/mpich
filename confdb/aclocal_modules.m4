@@ -1,3 +1,35 @@
+dnl ==== mpl ====
+
+dnl internal routine
+AC_DEFUN([PAC_CONFIG_MPL_EMBEDDED],[
+    mpl_subdir_args="--disable-versioning --enable-embedded"
+    PAC_CONFIG_SUBDIR_ARGS(mpl_embedded_dir,[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
+])
+
+AC_DEFUN([PAC_CONFIG_MPL],[
+    dnl NOTE: we only support embedded mpl
+    m4_if(mpl_embedded_dir, [src/mpl], [
+        dnl ---- the main MPICH configure ----
+        PAC_CONFIG_MPL_EMBEDDED
+        PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
+        mplsrcdir="src/mpl"
+        mpllib="src/mpl/libmpl.la"
+    ], [
+        dnl ---- sub-configure (e.g. hydra, romio) ----
+        if test "$FROM_MPICH" = "yes"; then
+            mpl_lib="$main_top_builddir/src/mpl/libmpl.la"
+            mpl_includedir='-I$(main_top_builddir)/src/mpl/include -I$(main_top_srcdir)/src/mpl/include'
+        else
+            PAC_CONFIG_MPL_EMBEDDED
+            mpl_srcdir="mpl_embedded_dir"
+            mpl_dist_srcdir="mpl_embedded_dir"
+            mpl_lib="mpl_embedded_dir/libmpl.la"
+            mpl_includedir='-I$(top_builddir)/mpl_embedded_dir/include -I$(top_srcdir)/mpl_embedded_dir/include'
+        fi
+    ])
+])
+
 dnl ==== hwloc ====
 
 dnl internal routine, $1 is the extra cflags, hwloc_embedded_dir is m4 macro

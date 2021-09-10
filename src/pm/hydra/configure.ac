@@ -110,17 +110,6 @@ PAC_POP_ALL_FLAGS
 AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"`echo $ac_configure_args`",[Configure arguments])
 
 # MPL
-AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
-MPLLIBNAME=${MPLLIBNAME:-"mpl"}
-export MPLLIBNAME
-AC_SUBST(MPLLIBNAME)
-AC_ARG_WITH([mpl-prefix],
-            [AS_HELP_STRING([[--with-mpl-prefix[=DIR]]],
-                            [use the MPL library installed in DIR. Pass
-                             "embedded" to force usage of the MPL source
-                             distributed with Hydra.])],
-            [],dnl action-if-given
-            [with_mpl_prefix=embedded]) dnl action-if-not-given
 mpl_srcdir=""
 AC_SUBST([mpl_srcdir])
 # Controls whether we recurse into the MPL dir when running "dist" rules like
@@ -132,15 +121,7 @@ AC_SUBST([mpl_includedir])
 mpl_lib=""
 AC_SUBST([mpl_lib])
 m4_define([mpl_embedded_dir],[mpl])
-PAC_CHECK_HEADER_LIB_EXPLICIT([mpl],[mplconfig.h],[$MPLLIBNAME],[mpl_str_get_int_arg])
-if test "$with_mpl" = "embedded" ; then
-    mpl_srcdir="mpl"
-    mpl_dist_srcdir="mpl"
-    mpl_lib="mpl/lib${MPLLIBNAME}.la"
-    mpl_subdir_args="--disable-versioning --enable-embedded"
-    PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-    mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
-fi
+PAC_CONFIG_MPL
 
 # Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)

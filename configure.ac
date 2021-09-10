@@ -994,15 +994,8 @@ AC_SUBST([mpllibdir])
 mpllib=""
 AC_SUBST([mpllib])
 
-# NOTE: we only support embedded mpl now
-# no need for libtool versioning when embedding MPL
-mpl_subdir_args="--disable-versioning --enable-embedded"
-PAC_CONFIG_SUBDIR_ARGS([src/mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
-PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
-
-mplsrcdir="src/mpl"
-mpllib="src/mpl/libmpl.la"
+m4_define([mpl_embedded_dir],[src/mpl])
+PAC_CONFIG_MPL
 
 # Izem
 
