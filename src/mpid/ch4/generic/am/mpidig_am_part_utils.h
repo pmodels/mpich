@@ -19,8 +19,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
     am_hdr.rreq_ptr = rreq_ptr;
 
     int source = MPIDI_PART_REQUEST(rreq_ptr, rank);
-    CH4_CALL(am_send_hdr_reply(rreq_ptr->comm, source, MPIDIG_PART_CTS, &am_hdr, sizeof(am_hdr)),
-             MPIDI_REQUEST(rreq_ptr, is_local), mpi_errno);
+    CH4_CALL(am_send_hdr_reply(rreq_ptr->comm, source, MPIDIG_PART_CTS, &am_hdr, sizeof(am_hdr),
+                               0, 0), MPIDI_REQUEST(rreq_ptr, is_local), mpi_errno);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq,
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Request *sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__PART, 1);
+    MPIR_Request *sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__PART, 1, 0, 0);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     sreq->comm = part_sreq->comm;
     MPIR_Comm_add_ref(sreq->comm);
@@ -60,19 +60,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq,
                 MPIR_AINT_MAX);
 
     if (mode == MPIDIG_PART_REGULAR) {
-        CH4_CALL(am_isend
-                 (MPIDI_PART_REQUEST(part_sreq, rank), part_sreq->comm, MPIDIG_PART_SEND_DATA,
-                  &am_hdr, sizeof(am_hdr), MPIDI_PART_REQUEST(part_sreq, buffer), count,
-                  MPIDI_PART_REQUEST(part_sreq, datatype), sreq), MPIDI_REQUEST(part_sreq,
-                                                                                is_local),
-                 mpi_errno);
+        CH4_CALL(am_isend(MPIDI_PART_REQUEST(part_sreq, rank), part_sreq->comm,
+                          MPIDIG_PART_SEND_DATA,
+                          &am_hdr, sizeof(am_hdr), MPIDI_PART_REQUEST(part_sreq, buffer), count,
+                          MPIDI_PART_REQUEST(part_sreq, datatype), 0, 0, sreq),
+                 MPIDI_REQUEST(part_sreq, is_local), mpi_errno);
     } else {    /* MPIDIG_PART_REPLY */
-        CH4_CALL(am_isend_reply
-                 (part_sreq->comm, MPIDI_PART_REQUEST(part_sreq, rank), MPIDIG_PART_SEND_DATA,
-                  &am_hdr, sizeof(am_hdr), MPIDI_PART_REQUEST(part_sreq, buffer), count,
-                  MPIDI_PART_REQUEST(part_sreq, datatype), sreq), MPIDI_REQUEST(part_sreq,
-                                                                                is_local),
-                 mpi_errno);
+        CH4_CALL(am_isend_reply(part_sreq->comm, MPIDI_PART_REQUEST(part_sreq, rank),
+                                MPIDIG_PART_SEND_DATA,
+                                &am_hdr, sizeof(am_hdr),
+                                MPIDI_PART_REQUEST(part_sreq, buffer), count,
+                                MPIDI_PART_REQUEST(part_sreq, datatype), 0, 0, sreq),
+                 MPIDI_REQUEST(part_sreq, is_local), mpi_errno);
     }
 
     /* reset ready counter */
