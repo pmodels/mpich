@@ -290,6 +290,7 @@ int MPL_gpu_init(int debug_summary)
     MPL_gpu_info.debug_summary = debug_summary;
     MPL_gpu_info.enable_ipc = true;
     MPL_gpu_info.ipc_handle_type = MPL_GPU_IPC_HANDLE_SHAREABLE;
+    MPL_gpu_info.specialized_cache = false;
 
     char *visible_devices = getenv("CUDA_VISIBLE_DEVICES");
     if (visible_devices) {

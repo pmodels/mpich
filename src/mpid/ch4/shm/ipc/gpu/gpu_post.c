@@ -8,14 +8,19 @@
 cvars:
     - name        : MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE
       category    : CH4
-      type        : int
-      default     : 1
+      type        : enum
+      default     : specialized
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        By default, we will cache ipc handle. To manually disable ipc
-        handle cache, user can set this variable to 0.
+      description : |-
+        By default, we will cache ipc handles using the specialized cache mechanism. If the
+        gpu-specific backend does not implement a specialized cache, then we will fallback to
+        the generic cache mechanism. Users can optionally force the generic cache mechanism or
+        disable ipc caching entirely.
+        generic - use the cache mechanism in the generic layer
+        specialized - use the cache mechanism in a gpu-specific mpl layer (if applicable)
+        disabled - disable caching completely
 
     - name        : MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD
       category    : CH4
@@ -57,7 +62,7 @@ static int ipc_handle_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, 
     MPIR_FUNC_ENTER;
 
     *handle_obj = NULL;
-    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
+    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic) {
         int mpl_err = MPL_SUCCESS;
         mpl_err = MPL_gavl_tree_search(gavl_tree, addr, len, handle_obj);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_search");
@@ -78,7 +83,7 @@ static int ipc_handle_cache_insert(MPL_gavl_tree_t gavl_tree, const void *addr, 
     MPIR_FUNC_ENTER;
 
     *insert_successful = false;
-    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
+    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic) {
         int mpl_err = MPL_SUCCESS;
         mpl_err = MPL_gavl_tree_insert(gavl_tree, addr, len, handle_obj);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_insert");
@@ -99,7 +104,7 @@ static int ipc_handle_cache_delete(MPL_gavl_tree_t gavl_tree, const void *addr, 
     MPIR_FUNC_ENTER;
 
     int mpl_err = MPL_SUCCESS;
-    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
+    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic) {
         mpl_err = MPL_gavl_tree_delete_range(gavl_tree, addr, len);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**mpl_gavl_delete_range");
@@ -312,7 +317,7 @@ int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle)
     MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
-    if (!MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
+    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled) {
         int mpl_err = MPL_SUCCESS;
         mpl_err = MPL_gpu_ipc_handle_unmap((void *) ((uintptr_t) vaddr - handle.offset));
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
