@@ -177,7 +177,11 @@ int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
 
 int MPL_gpu_init(MPL_gpu_info_t * info)
 {
-    int mpl_err;
+    int mpl_err = MPL_SUCCESS;
+    if (gpu_initialized) {
+        goto fn_exit;
+    }
+
     mpl_err = gpu_ze_init_driver();
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
@@ -186,6 +190,11 @@ int MPL_gpu_init(MPL_gpu_info_t * info)
 
     device_count = global_ze_device_count;
     max_dev_id = device_count - 1;
+
+    if (device_count <= 0) {
+        gpu_initialized = 1;
+        goto fn_exit;
+    }
 
     local_to_global_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
     global_to_local_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
