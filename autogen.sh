@@ -100,11 +100,32 @@ do_build_configure=yes
 do_atdir_check=no
 do_atver_check=yes
 do_subcfg_m4=yes
+do_hwloc=yes
 do_izem=yes
 do_ofi=yes
 do_ucx=yes
 do_json=yes
 do_yaksa=yes
+do_test=yes
+do_hydra=yes
+do_hydra2=yes
+do_romio=yes
+
+do_quick=no
+# Check -quick option. When enabled, skip as much as we can.
+for arg in "$@" ; do
+    if test $arg = "-quick"; then
+        do_quick=yes
+        do_izem=no
+        do_ofi=no
+        do_ucx=no
+        do_yaksa=no
+        do_test=yes
+        do_hydra=yes
+        do_hydra2=no
+        do_romio=no
+    fi
+done
 
 # Allow MAKE to be set from the environment
 MAKE=${MAKE-make}
@@ -126,6 +147,8 @@ stepsCleared=no
 
 for arg in "$@" ; do
     case $arg in 
+        -quick)
+            ;;
 	-echo)
 	    set -x
 	    ;;
@@ -206,20 +229,15 @@ for arg in "$@" ; do
 	    autotoolsdir=`echo "A$arg" | sed -e 's/.*=//'`
 	    ;;
 
-    -without-izem|--without-izem)
-        do_izem=no
+    -without-*|--without-*)
+        opt=`echo A$arg | sed -e 's/^A--*without-//'`
+        var=do_$opt
+        eval $var=no
         ;;
-
-    -without-ofi|--without-ofi|-without-libfabric|--without-libfabric)
-        do_ofi=no
-        ;;
-
-    -without-ucx|--without-ucx)
-        do_ucx=no
-        ;;
-
-    -without-json|--without-json)
-        do_json=no
+    -with-*|--with-*)
+        opt=`echo A$arg | sed -e 's/^A--*with-//'`
+        var=do_$opt
+        eval $var=yes
         ;;
 
 	-help|--help|-usage|--usage)
@@ -624,7 +642,24 @@ echo
 check_submodule_presence modules/hwloc
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/pm/hydra2 src/mpi/romio modules/hwloc test/mpi modules/json-c modules/yaksa"
+externals="test/mpi"
+
+if [ "yes" = "$do_hydra" ] ; then
+    externals="${externals} src/pm/hydra"
+fi
+
+if [ "yes" = "$do_hydra2" ] ; then
+    externals="${externals} src/pm/hydra2"
+fi
+
+if [ "yes" = "$do_romio" ] ; then
+    externals="${externals} src/mpi/romio"
+fi
+
+if [ "yes" = "$do_hwloc" ] ; then
+    check_submodule_presence modules/hwloc
+    externals="${externals} modules/hwloc"
+fi
 
 if [ "yes" = "$do_izem" ] ; then
     check_submodule_presence modules/izem
@@ -643,10 +678,12 @@ fi
 
 if [ "yes" = "$do_json" ] ; then
     check_submodule_presence "modules/json-c"
+    externals="${externals} modules/json-c"
 fi
 
 if [ "yes" = "$do_yaksa" ] ; then
     check_submodule_presence "modules/yaksa"
+    externals="${externals} modules/yaksa"
 fi
 
 ########################################################################
@@ -663,34 +700,41 @@ echo "####################################"
 echo
 
 confdb_dirs=
-confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
-confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
 confdb_dirs="${confdb_dirs} src/mpl/confdb"
-confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
-confdb_dirs="${confdb_dirs} src/pm/hydra2/confdb"
-confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
-confdb_dirs="${confdb_dirs} src/pm/hydra2/mpl/confdb"
-confdb_dirs="${confdb_dirs} test/mpi/confdb"
-confdb_dirs="${confdb_dirs} test/mpi/dtpools/confdb"
-
-# hydra's copies of mpl and hwloc
-sync_external src/mpl src/pm/hydra/mpl
-sync_external src/mpl src/pm/hydra2/mpl
-
-# ROMIO's copy of mpl
-sync_external src/mpl src/mpi/romio/mpl
+if test "$do_romio" = "yes" ; then
+    confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
+    if test "$do_quick" = "no" ; then
+        sync_external src/mpl src/mpi/romio/mpl
+        confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
+    fi
+fi
+if test "$do_hydra" = "yes" ; then
+    confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
+    if test "$do_quick" = "no" ; then
+        sync_external src/mpl src/pm/hydra/mpl
+        sync_external modules/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
+        # remove .git directories to avoid confusing git clean
+        rm -rf src/pm/hydra/tools/topo/hwloc/hwloc/.git
+        confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
+    fi
+fi
+if test "$do_hydra2" = "yes" ; then
+    confdb_dirs="${confdb_dirs} src/pm/hydra2/confdb"
+    sync_external src/mpl src/pm/hydra2/mpl
+    sync_external modules/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
+    # remove .git directories to avoid confusing git clean
+    rm -rf src/pm/hydra2/libhydra/topo/hwloc/hwloc/.git
+    confdb_dirs="${confdb_dirs} src/pm/hydra2/mpl/confdb"
+fi
+if test "$do_test" = "yes" ; then
+    confdb_dirs="${confdb_dirs} test/mpi/confdb"
+    confdb_dirs="${confdb_dirs} test/mpi/dtpools/confdb"
+fi
 
 # all the confdb directories, by various names
 for destdir in $confdb_dirs ; do
     sync_external confdb "$destdir"
 done
-
-# Copying hwloc to hydra
-sync_external modules/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
-sync_external modules/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
-# remove .git directories to avoid confusing git clean
-rm -rf src/pm/hydra/tools/topo/hwloc/hwloc/.git
-rm -rf src/pm/hydra2/libhydra/topo/hwloc/hwloc/.git
 
 # a couple of other random files
 if [ -f maint/version.m4 ] ; then
