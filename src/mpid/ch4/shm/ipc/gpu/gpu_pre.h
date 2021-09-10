@@ -16,6 +16,7 @@ enum {
 
 typedef struct MPIDI_GPU_ipc_handle {
     MPL_gpu_ipc_mem_handle_t ipc_handle;
+    MPL_pointer_attr_t gpu_attr;
     int global_dev_id;
     uintptr_t remote_base_addr;
     uintptr_t len;

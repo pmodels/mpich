@@ -938,6 +938,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **gpu_get_global_dev_ids: gpu_get_global_dev_ids failed
 **gpu_get_buffer_info: gpu_get_buffer_info failed
 **gpu_get_dev_count: gpu_get_dev_count failed
+**gpu_compare_pointer_attr: gpu_compare_pointer_attr failed
 
 ## GAVL tree related error messages
 **mpl_gavl_search: mpl_gavl_search failed

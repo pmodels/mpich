@@ -69,6 +69,15 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     goto fn_exit;
 }
 
+int MPL_gpu_compare_pointer_attr(MPL_pointer_attr_t attr1, MPL_pointer_attr_t attr2, bool * same)
+{
+    int mpl_err = MPL_SUCCESS;
+    *same = (attr1.device_attr.device == attr2.device_attr.device &&
+             attr1.device_attr.devicePointer == attr2.device_attr.devicePointer &&
+             attr1.device_attr.hostPointer == attr2.device_attr.hostPointer);
+    return mpl_err;
+}
+
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     int mpl_err = MPL_SUCCESS;

@@ -61,6 +61,7 @@ static inline int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t
 
 int MPL_gpu_query_support(MPL_gpu_type_t * type);
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr);
+int MPL_gpu_compare_pointer_attr(MPL_pointer_attr_t attr1, MPL_pointer_attr_t attr2, bool * same);
 
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle);
 int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void **ptr);

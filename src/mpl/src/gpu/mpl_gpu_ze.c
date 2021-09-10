@@ -374,6 +374,13 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     goto fn_exit;
 }
 
+int MPL_gpu_compare_pointer_attr(MPL_pointer_attr_t attr1, MPL_pointer_attr_t attr2, bool * same)
+{
+    int mpl_err = MPL_SUCCESS;
+    *same = (attr1.device_attr.prop.id == attr2.device_attr.prop.id);
+    return mpl_err;
+}
+
 int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device)
 {
     int mpl_err = MPL_SUCCESS;

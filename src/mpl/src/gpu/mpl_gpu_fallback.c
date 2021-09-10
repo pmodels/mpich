@@ -12,6 +12,12 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
     return MPL_SUCCESS;
 }
 
+int MPL_gpu_compare_pointer_attr(MPL_pointer_attr_t attr1, MPL_pointer_attr_t attr2, bool * same)
+{
+    abort();
+    return MPL_ERR_GPU_INTERNAL;
+}
+
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     abort();
