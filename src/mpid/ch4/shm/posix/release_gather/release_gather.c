@@ -355,7 +355,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         if (mapfail_flag) {
             MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
         }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno_ret, errflag);
+        MPIR_ERR_CHECK(mpi_errno_ret);
 
         /* Calculate gather and release flag address and initialize to the gather and release states */
         release_gather_info_ptr->gather_flag_addr =
@@ -409,7 +410,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         if (mapfail_flag) {
             MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
         }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno_ret, errflag);
+        MPIR_ERR_CHECK(mpi_errno_ret);
 
         /* Store address of each of the children's reduce buffer */
         for (i = 0; i < RELEASE_GATHER_FIELD(comm_ptr, reduce_tree.num_children); i++) {
@@ -426,6 +428,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
   fn_exit:
     MPIR_FUNC_EXIT;
+    if (mpi_errno_ret != MPI_SUCCESS)
+        RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
