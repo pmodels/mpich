@@ -21,11 +21,25 @@ cvars:
         bytes), then enable GPU-based single copy protocol for intranode communication. The
         environment variable is valid only when then GPU IPC shmmod is enabled.
 
+    - name        : MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE
+      category    : CH4
+      type        : enum
+      default     : drmfd
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select implementation for ZE shareable IPC handle
+        pidfd - use pidfd_getfd syscall to implement shareable IPC handle
+        drmfd - force to use device fd-based shareable IPC handle
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 #include "gpu_pre.h"
 
+int MPIDI_GPU_get_ipc_type(MPIDI_IPCI_type_t * ipc_type);
+int MPIDI_GPU_get_ipc_threshold(size_t * threshold);
 int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
                            MPIDI_IPCI_ipc_attr_t * ipc_attr);
 int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype);

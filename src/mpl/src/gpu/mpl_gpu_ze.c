@@ -5,10 +5,15 @@
 
 #include "mpl.h"
 #include <assert.h>
+#include <dlfcn.h>
 
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef MPL_HAVE_ZE
+#include <dirent.h>
+#include "drm/i915_drm.h"
+#include <sys/ioctl.h>
+#include <sys/syscall.h>        /* Definition of SYS_* constants */
 
 static int gpu_initialized = 0;
 static int device_count;
@@ -17,14 +22,48 @@ static int max_dev_id;
 static int *local_to_global_map;        /* [device_count] */
 static int *global_to_local_map;        /* [max_dev_id + 1]   */
 
+static int shared_device_fd_count = 0;
+static int *shared_device_fds = NULL;
+
+/* pidfd */
+#ifndef __NR_pidfd_open
+#define __NR_pidfd_open 434     /* System call # on most architectures */
+#endif
+#ifndef __NR_pidfd_getfd
+#define __NR_pidfd_getfd 438    /* System call # on most architectures */
+#endif
+
+typedef struct {
+    int fd;
+    pid_t pid;
+    int dev_id;
+} fd_pid_t;
+
+typedef struct gpu_free_hook {
+    void (*free_hook) (void *dptr);
+    struct gpu_free_hook *next;
+} gpu_free_hook_s;
+
+pid_t mypid;
+
 /* Level-zero API v1.0:
  * http://spec.oneapi.com/level-zero/latest/index.html
  */
 ze_driver_handle_t global_ze_driver_handle;
 ze_device_handle_t *global_ze_devices_handle = NULL;
 ze_context_handle_t global_ze_context;
+ze_bool_t p2p_supported = false;
 uint32_t global_ze_device_count;
 static int gpu_ze_init_driver(void);
+static int fd_to_handle(int dev_fd, int fd, int *handle);
+static int handle_to_fd(int dev_fd, int handle, int *fd);
+static int close_handle(int dev_fd, int handle);
+
+static gpu_free_hook_s *free_hook_chain = NULL;
+
+static ze_result_t ZE_APICALL(*sys_zeMemFree) (ze_context_handle_t hContext, void *dptr);
+
+static int gpu_mem_hook_init(void);
 
 #define ZE_ERR_CHECK(ret) \
     do { \
@@ -46,13 +85,22 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
 
 int MPL_gpu_init(void)
 {
-    int mpl_err;
+    int mpl_err = MPL_SUCCESS;
+    if (gpu_initialized) {
+        goto fn_exit;
+    }
+
     mpl_err = gpu_ze_init_driver();
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
 
     device_count = global_ze_device_count;
     max_dev_id = device_count - 1;
+
+    if (device_count <= 0) {
+        gpu_initialized = 1;
+        goto fn_exit;
+    }
 
     local_to_global_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
     global_to_local_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
@@ -61,12 +109,49 @@ int MPL_gpu_init(void)
         global_to_local_map[i] = i;
     }
 
+    mypid = getpid();
+
+    gpu_mem_hook_init();
     gpu_initialized = 1;
 
   fn_exit:
     return mpl_err;
   fn_fail:
     goto fn_exit;
+}
+
+/* Functions for managing shareable IPC handles */
+static int fd_to_handle(int dev_fd, int fd, int *handle)
+{
+    struct drm_prime_handle open_fd = { 0, 0, 0 };
+    open_fd.fd = fd;
+
+    int ret = ioctl(dev_fd, DRM_IOCTL_PRIME_FD_TO_HANDLE, &open_fd);
+    assert(ret != -1);
+    *handle = open_fd.handle;
+    return ret;
+}
+
+static int handle_to_fd(int dev_fd, int handle, int *fd)
+{
+    struct drm_prime_handle open_fd = { 0, 0, 0 };
+    open_fd.flags = DRM_CLOEXEC | DRM_RDWR;
+    open_fd.handle = handle;
+
+    int ret = ioctl(dev_fd, DRM_IOCTL_PRIME_HANDLE_TO_FD, &open_fd);
+    assert(ret != -1);
+    *fd = open_fd.fd;
+    return ret;
+}
+
+static int close_handle(int dev_fd, int handle)
+{
+    struct drm_gem_close close = { };
+    close.handle = handle;
+
+    int ret = ioctl(dev_fd, DRM_IOCTL_GEM_CLOSE, &close);
+    assert(ret != -1);
+    return ret;
 }
 
 /* Loads a global ze driver */
@@ -137,6 +222,13 @@ static int gpu_ze_init_driver(void)
     ret = zeContextCreate(global_ze_driver_handle, &contextDesc, &global_ze_context);
     ZE_ERR_CHECK(ret);
 
+    if (device_count > 1) {
+        ze_bool_t val;
+        ret = zeDeviceCanAccessPeer(global_ze_devices_handle[0], global_ze_devices_handle[1], &val);
+        ZE_ERR_CHECK(ret);
+        p2p_supported = val;
+    }
+
   fn_exit:
     MPL_free(all_drivers);
     return ret_error;
@@ -153,6 +245,15 @@ int MPL_gpu_finalize(void)
     MPL_free(local_to_global_map);
     MPL_free(global_to_local_map);
     MPL_free(global_ze_devices_handle);
+    MPL_free(shared_device_fds);
+
+    gpu_free_hook_s *prev;
+    while (free_hook_chain) {
+        prev = free_hook_chain;
+        free_hook_chain = free_hook_chain->next;
+        MPL_free(prev);
+    }
+
     return MPL_SUCCESS;
 }
 
@@ -168,12 +269,64 @@ int MPL_gpu_local_to_global_dev_id(int local_dev_id)
     return local_to_global_map[local_dev_id];
 }
 
+int MPL_gpu_ipc_get_handle_type(MPL_gpu_ipc_handle_type_t * type)
+{
+    *type = MPL_GPU_IPC_HANDLE_SHAREABLE_FD;
+    return MPL_SUCCESS;
+}
+
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
-    ret = zeMemGetIpcHandle(global_ze_context, ptr, ipc_handle);
+    unsigned long shared_handle;
+    int i, fd, handle, status, dev_id = -1;
+    ze_device_handle_t device;
+    ze_ipc_mem_handle_t ze_ipc_handle;
+
+    ze_memory_allocation_properties_t ptr_attr = {
+        .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
+        .pNext = NULL,
+        .type = 0,
+        .id = 0,
+        .pageSize = 0,
+    };
+
+    ret = zeMemGetIpcHandle(global_ze_context, ptr, &ze_ipc_handle);
     ZE_ERR_CHECK(ret);
+
+    ret = zeMemGetAllocProperties(global_ze_context, ptr, &ptr_attr, &device);
+    ZE_ERR_CHECK(ret);
+
+    for (i = 0; i < device_count; i++) {
+        if (device == global_ze_devices_handle[i]) {
+            dev_id = i;
+            break;
+        }
+    }
+
+    if (dev_id == -1) {
+        goto fn_fail;
+    }
+
+    if (shared_device_fds != NULL) {
+        /* convert dma_buf fd to GEM handle */
+        memcpy(&fd, &ze_ipc_handle, sizeof(fd));
+        status = fd_to_handle(shared_device_fds[dev_id], fd, &handle);
+        if (status) {
+            goto fn_fail;
+        }
+
+        shared_handle = dev_id;
+        shared_handle = shared_handle << 32 | handle;
+        memcpy(ipc_handle, &shared_handle, sizeof(shared_handle));
+    } else {
+        fd_pid_t h;
+        memcpy(&h.fd, &ze_ipc_handle, sizeof(fd));
+        h.pid = mypid;
+        h.dev_id = dev_id;
+        memcpy(ipc_handle, &h, sizeof(fd_pid_t));
+    }
 
   fn_exit:
     return mpl_err;
@@ -186,12 +339,61 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
-    MPL_gpu_device_handle_t dev_handle = global_ze_devices_handle[dev_id];
+    unsigned long shared_handle;
+    int fd, src_dev_id, handle = 0, status;
+    MPL_gpu_device_handle_t dev_handle;
+    ze_ipc_mem_handle_t ze_ipc_handle;
 
-    ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ipc_handle, 0, ptr);
-    if (ret != ZE_RESULT_SUCCESS) {
-        mpl_err = MPL_ERR_GPU_INTERNAL;
-        goto fn_fail;
+    memset(&ze_ipc_handle, 0, sizeof(ze_ipc_mem_handle_t));
+
+    if (shared_device_fds != NULL) {
+        /* convert GEM handle to fd */
+        memcpy(&shared_handle, &ipc_handle, sizeof(shared_handle));
+        src_dev_id = shared_handle >> 32;
+        handle = shared_handle << 32 >> 32;
+
+        status = handle_to_fd(shared_device_fds[src_dev_id], handle, &fd);
+        if (status) {
+            goto fn_fail;
+        }
+    } else {
+        /* pidfd_getfd */
+        fd_pid_t h;
+        memcpy(&h, &ipc_handle, sizeof(fd_pid_t));
+        if (h.pid != mypid) {
+            int pid_fd = syscall(__NR_pidfd_open, h.pid, 0);
+            assert(pid_fd != -1);
+            fd = syscall(__NR_pidfd_getfd, pid_fd, h.fd, 0);
+            if (fd == -1) {
+                printf("Error> pidfd_getfd is not implemented!");
+                mpl_err = MPL_ERR_GPU_INTERNAL;
+                goto fn_fail;
+            }
+            close(pid_fd);
+        } else {
+            fd = h.fd;
+        }
+        src_dev_id = h.dev_id;
+    }
+
+    if (p2p_supported) {
+        dev_handle = global_ze_devices_handle[dev_id];
+    } else {
+        /* When p2p is not supported, open on the source device so that yaksa treats it as
+         * cross-device copying */
+        dev_handle = global_ze_devices_handle[src_dev_id];
+    }
+    memcpy(&ze_ipc_handle, &fd, sizeof(fd));
+
+    ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ze_ipc_handle, 0, ptr);
+    ZE_ERR_CHECK(ret);
+
+    if (shared_device_fds != NULL) {
+        /* close GEM handle */
+        status = close_handle(shared_device_fds[dev_id], handle);
+        if (status) {
+            goto fn_fail;
+        }
     }
 
   fn_exit:
@@ -360,9 +562,107 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
     goto fn_exit;
 }
 
+static void gpu_free_hooks_cb(void *dptr)
+{
+    gpu_free_hook_s *current = free_hook_chain;
+    if (dptr != NULL) {
+        /* we call gpu hook only when dptr != NULL */
+        while (current) {
+            current->free_hook(dptr);
+            current = current->next;
+        }
+    }
+    return;
+}
+
+static int gpu_mem_hook_init(void)
+{
+    void *libze_handle;
+
+    libze_handle = dlopen("libze_loader.so", RTLD_LAZY | RTLD_GLOBAL);
+    assert(libze_handle);
+
+    sys_zeMemFree = (void *) dlsym(libze_handle, "zeMemFree");
+    assert(sys_zeMemFree);
+
+    return MPL_SUCCESS;
+}
+
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
 {
+    gpu_free_hook_s *hook_obj = MPL_malloc(sizeof(gpu_free_hook_s), MPL_MEM_OTHER);
+    assert(hook_obj);
+    hook_obj->free_hook = free_hook;
+    hook_obj->next = NULL;
+    if (!free_hook_chain)
+        free_hook_chain = hook_obj;
+    else {
+        hook_obj->next = free_hook_chain;
+        free_hook_chain = hook_obj;
+    }
+
     return MPL_SUCCESS;
+}
+
+ze_result_t ZE_APICALL zeMemFree(ze_context_handle_t hContext, void *dptr)
+{
+    ze_result_t result;
+    gpu_free_hooks_cb(dptr);
+    result = sys_zeMemFree(hContext, dptr);
+    return (result);
+}
+
+/* ZE-Specific Functions */
+
+int MPL_ze_init_device_fds(int *num_fds, int *device_fds)
+{
+    const char *device_directory = "/dev/dri/by-path";
+    const char *device_suffix = "-render";
+    struct dirent *ent = NULL;
+    int n = 0;
+
+    DIR *dir = opendir(device_directory);
+    if (dir == NULL) {
+        goto fn_fail;
+    }
+
+    /* Search for all devices in the device directory */
+    while ((ent = readdir(dir)) != NULL) {
+        char dev_name[128];
+
+        if (ent->d_name[0] == '.') {
+            continue;
+        }
+
+        /* They must contain the device suffix */
+        if (strstr(ent->d_name, device_suffix) == NULL) {
+            continue;
+        }
+
+        strcpy(dev_name, device_directory);
+        strcat(dev_name, "/");
+        strcat(dev_name, ent->d_name);
+
+        /* Open the device */
+        if (device_fds) {
+            device_fds[n] = open(dev_name, O_RDWR);
+        }
+
+        n++;
+    }
+
+    *num_fds = n;
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+void MPL_ze_set_fds(int num_fds, int *fds)
+{
+    shared_device_fds = fds;
+    shared_device_fd_count = num_fds;
 }
 
 #endif /* MPL_HAVE_ZE */
