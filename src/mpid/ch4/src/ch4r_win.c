@@ -355,6 +355,10 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIDIG_WIN(win, win_id) = MPIDIG_generate_win_id(comm_ptr);
     MPIDIU_map_set(MPIDI_global.win_map, MPIDIG_WIN(win, win_id), win, MPL_MEM_RMA);
 
+    /* we need consistent vci to run am operations.
+     * Note: netmod and shm may further hash it down */
+    MPIDI_WIN(win, am_vci) = MPIDI_get_vci(SRC_VCI_FROM_SENDER, win->comm_ptr, 0, 0, 0);
+
     /* set winattr for performance optimization at fast path:
      * - check if comm is COMM_WORLD or dup of COMM_WORLD
      * - check if disable_shm_accumulate hint is set

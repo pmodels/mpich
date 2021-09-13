@@ -191,6 +191,8 @@ typedef struct MPIDIG_req_ext_t {
 
     MPIDIG_rreq_async_t recv_async;
     MPIDIG_sreq_async_t send_async;
+    uint8_t local_vci;
+    uint8_t remote_vci;
     struct iovec *iov;
     MPIDIG_req_cmpl_cb target_cmpl_cb;
     uint64_t seq_no;
@@ -511,6 +513,8 @@ typedef unsigned MPIDI_winattr_t;       /* bit-vector of zero or multiple intege
 typedef struct {
     MPIDI_winattr_t winattr;    /* attributes for performance optimization at fast path. */
     MPIDIG_win_t am;
+    int am_vci;                 /* both netmod and shm have to use the same vci for am operations or
+                                 * we won't be able to effectively progress at synchronization */
     union {
     MPIDI_NM_WIN_DECL} netmod;
 #ifndef MPIDI_CH4_DIRECT_NETMOD

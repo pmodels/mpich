@@ -123,8 +123,8 @@ static int fence_test(int seed, int testsize, int count, const char *basic_type,
 #elif defined(USE_PUT)
              "./putfence -seed=%d -testsize=%d -type=%s -count=%d -origmem=%s -targetmem=%s",
 #endif
-             seed, testsize, basic_type, count, MTest_memtype_name(orig.memtype),
-             MTest_memtype_name(target.memtype));
+             seed, testsize, basic_type, count, MTest_memtype_name(origmem),
+             MTest_memtype_name(targetmem));
     if (world_rank == 0) {
         MTestPrintfMsg(1, " %s\n", test_desc);
     }

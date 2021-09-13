@@ -89,7 +89,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_copy_from_unexp_req(MPIR_Request * req, void
         }
     }
 
-    MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
+    int vci = MPIDI_Request_get_vci(req);
+    MPIDU_genq_private_pool_free_cell(MPIDI_global.per_vci[vci].unexp_pack_buf_pool,
                                       MPIDIG_REQUEST(req, buffer));
 
     return mpi_errno;
@@ -102,8 +103,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_reply_ssend(MPIR_Request * rreq)
     MPIR_FUNC_ENTER;
     ack_msg.sreq_ptr = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     CH4_CALL(am_send_hdr_reply(rreq->comm, MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK,
-                               &ack_msg, (MPI_Aint) sizeof(ack_msg)),
+                               &ack_msg, (MPI_Aint) sizeof(ack_msg), local_vci, remote_vci),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -155,12 +158,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
             MPIDIG_REQUEST(rreq, datatype) = datatype;
             MPIDIG_REQUEST(rreq, buffer) = (char *) buf;
             MPIDIG_REQUEST(rreq, count) = count;
-            MPIDIG_REQUEST(rreq, req->seq_no) =
-                MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
-                             MPIDIG_REQUEST(rreq, req->seq_no),
-                             MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
             MPIDIG_recv_type_init(unexp_data_sz, rreq);
         }
     }
@@ -194,7 +191,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                              int rank, int tag, MPIR_Comm * comm,
-                                             int context_offset, MPIR_Request ** request,
+                                             int context_offset, int vci, MPIR_Request ** request,
                                              int alloc_req, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -203,7 +200,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     MPIR_FUNC_ENTER;
 
     unexp_req =
-        MPIDIG_rreq_dequeue(rank, tag, context_id, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
+        MPIDIG_rreq_dequeue(rank, tag, context_id, &MPIDI_global.per_vci[vci].unexp_list,
+                            MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
         unexp_req->comm = comm;
@@ -261,7 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
         rreq = *request;
         MPIDIG_request_init(rreq, MPIR_REQUEST_KIND__RECV);
     } else if (alloc_req) {
-        rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
+        rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2, vci, -1);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         rreq->comm = comm;
         MPIR_Comm_add_ref(comm);
@@ -276,10 +274,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
 
     if (!unexp_req) {
-        /* MPIDI_CS_ENTER(); */
-        MPIDIG_enqueue_request(rreq, &MPIDI_global.posted_list, MPIDIG_PT2PT_POSTED);
-        /* MPIDI_CS_EXIT(); */
+        MPIDIG_enqueue_request(rreq, &MPIDI_global.per_vci[vci].posted_list, MPIDIG_PT2PT_POSTED);
     } else {
+        MPIDIG_REQUEST(rreq, req->remote_vci) = MPIDIG_REQUEST(unexp_req, req->remote_vci);
         MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = rreq;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
     }
@@ -306,7 +303,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     MPIDIG_REQUEST(message, req->rreq.mrcv_datatype) = datatype;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
-    /* MPIDI_CS_ENTER(); */
     if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_BUSY) {
         MPIDIG_REQUEST(message, req->status) |= MPIDIG_REQ_UNEXP_CLAIMED;
     } else if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_RTS) {
@@ -322,7 +318,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
         mpi_errno = MPIDIG_handle_unexp_mrecv(message);
         MPIR_ERR_CHECK(mpi_errno);
     }
-    /* MPIDI_CS_EXIT(); */
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
@@ -338,21 +333,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
                                               int rank,
                                               int tag,
                                               MPIR_Comm * comm, int context_offset,
-                                              MPIR_Request ** request,
+                                              int vci, MPIR_Request ** request,
                                               int is_local, MPIR_Request * partner)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
     /* For anysource recv, we may be called while holding the vci lock of shm request (to
      * prevent shm progress). Therefore, recursive locking is allowed here */
-    MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(vci).lock);
 
-    mpi_errno =
-        MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
+    mpi_errno = MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, vci,
+                                request, 1, 0ULL);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIDI_REQUEST_SET_LOCAL(*request, is_local, partner);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
@@ -368,9 +363,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
     if (!MPIR_Request_is_complete(rreq) &&
         !MPIR_STATUS_GET_CANCEL_BIT(rreq->status) && !MPIDIG_REQUEST_IN_PROGRESS(rreq)) {
 
-        /* MPIDI_CS_ENTER(); */
-        found = MPIDIG_delete_posted(rreq, &MPIDI_global.posted_list);
-        /* MPIDI_CS_EXIT(); */
+        int vci = MPIDI_Request_get_vci(rreq);
+        found = MPIDIG_delete_posted(rreq, &MPIDI_global.per_vci[vci].posted_list);
 
         if (found) {
             MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));

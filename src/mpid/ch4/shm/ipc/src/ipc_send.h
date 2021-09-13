@@ -22,7 +22,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    /* note: MPIDI_POSIX_SEND_VSIS defined in posix_send.h */
+    int vsi_src, vsi_dst;
+    MPIDI_POSIX_SEND_VSIS(vsi_src, vsi_dst);
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vsi_src).lock);
 
     bool dt_contig;
     MPI_Aint true_lb;
@@ -60,7 +64,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
             }
 
             mpi_errno = MPIDI_IPCI_send_contig_lmt(buf, count, datatype, data_sz, rank, tag, comm,
-                                                   context_offset, addr, ipc_attr, request);
+                                                   context_offset, addr, ipc_attr, vsi_src, vsi_dst,
+                                                   request);
             MPIR_ERR_CHECK(mpi_errno);
             *done = true;
         }
@@ -68,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
          * threshold may be required to tradeoff the flattening overhead.*/
     }
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vsi_src).lock);
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:

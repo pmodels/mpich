@@ -334,7 +334,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
      * prevent shm progress). Therefore, recursive locking is allowed here */
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
-            MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 0,
+            MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, 0, request, 0,
                              partner);
     } else {
         int vni_src, vni_dst;
