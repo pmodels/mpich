@@ -60,7 +60,12 @@ static int get_av_table_index(int rank, int nic, int vni)
             return rank;
         }
     } else {
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
         int num_vnis = MPIDI_OFI_global.num_vnis;
+#else
+        /* with scalable endpoint as context, all vnis share the same address. */
+        int num_vnis = 1;
+#endif
         int num_nics = MPIDI_OFI_global.num_nics;
         int num_later_ranks = MPIR_Process.size - (rank + 1);
         return rank * num_nics * num_vnis + nic * num_vnis + vni + num_later_ranks;
