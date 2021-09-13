@@ -127,16 +127,22 @@ int MPIDI_POSIX_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_
     return mpi_errno;
 }
 
-int MPIDI_POSIX_mpi_win_create_hook(MPIR_Win * win)
+static void posix_win_init_common(MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_POSIX_win_t *posix_win ATTRIBUTE((unused)) = NULL;
-    MPIR_FUNC_ENTER;
+    MPIDI_WIN(win, am_vci) %= MPIDI_POSIX_global.num_vsis;
 
-    posix_win = &win->dev.shm.posix;
+    MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
     posix_win->shm_mutex_ptr = NULL;
     posix_win->outstanding_reqs_head = NULL;
     posix_win->outstanding_reqs_tail = NULL;
+}
+
+int MPIDI_POSIX_mpi_win_create_hook(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    posix_win_init_common(win);
 
     /* No optimization */
 
@@ -152,10 +158,7 @@ int MPIDI_POSIX_mpi_win_allocate_hook(MPIR_Win * win)
     bool mapfail_flag = false;
     MPIR_FUNC_ENTER;
 
-    posix_win = &win->dev.shm.posix;
-    posix_win->shm_mutex_ptr = NULL;
-    posix_win->outstanding_reqs_head = NULL;
-    posix_win->outstanding_reqs_tail = NULL;
+    posix_win_init_common(win);
 
     /* Enable shm RMA only when interprocess mutex is supported,
      * more than 1 processes exist on the node, and shm buffer has been successfully allocated. */
@@ -193,14 +196,14 @@ int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win * win)
     bool mapfail_flag = false;
     MPIR_FUNC_ENTER;
 
-    posix_win = &win->dev.shm.posix;
-    posix_win->outstanding_reqs_head = NULL;
-    posix_win->outstanding_reqs_tail = NULL;
+    posix_win_init_common(win);
 
     /* Enable shm RMA only when interprocess mutex is supported and
      * more than 1 processes exist on the node. */
     if (!shm_comm_ptr || !MPL_proc_mutex_enabled())
         goto fn_exit;
+
+    posix_win = &win->dev.shm.posix;
 
     /* allocate interprocess mutex for RMA atomics over shared memory */
     mpi_errno =
@@ -226,13 +229,9 @@ int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win * win)
 int MPIDI_POSIX_mpi_win_create_dynamic_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_POSIX_win_t *posix_win ATTRIBUTE((unused)) = NULL;
     MPIR_FUNC_ENTER;
 
-    posix_win = &win->dev.shm.posix;
-    posix_win->shm_mutex_ptr = NULL;
-    posix_win->outstanding_reqs_head = NULL;
-    posix_win->outstanding_reqs_tail = NULL;
+    posix_win_init_common(win);
 
     /* No optimization */
 
