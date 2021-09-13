@@ -15,7 +15,10 @@
 #include "mpitest.h"
 #include "mpithreadtest.h"
 
-#define CACHELINE_SIZE 64
+/* Alignment prevents either false-sharing on the CPU or serialization in the
+ * NIC's parallel TLB engine. At least it need be cacheline size. Using page
+ * size for optimum results. */
+#define BUFFER_ALIGNMENT 4096
 
 #define MESSAGE_SIZE 8
 #define NUM_MESSAGES 64000
@@ -55,16 +58,13 @@ MTEST_THREAD_RETURN_TYPE thread_fn(void *arg)
     win_posts = NUM_MESSAGES / WINDOW_SIZE;
     assert(win_posts * WINDOW_SIZE == NUM_MESSAGES);
 
-    /* Allocate a cache-aligned buffer to prevent potential effects of serialization:
-     * either false-sharing on the CPU or serialization in the NIC's parallel TLB
-     * engine
-     */
-    error = posix_memalign(&buf, CACHELINE_SIZE, MESSAGE_SIZE * sizeof(char));
+    /* Allocate origin buffer */
+    error = posix_memalign(&buf, BUFFER_ALIGNMENT, MESSAGE_SIZE * sizeof(char));
     if (error) {
         fprintf(stderr, "Thread %d: Error in allocating origin buffer\n", tid);
     }
     /* Allocate result_buf for OP_GACC */
-    error = posix_memalign(&result_buf, CACHELINE_SIZE, MESSAGE_SIZE * sizeof(char));
+    error = posix_memalign(&result_buf, BUFFER_ALIGNMENT, MESSAGE_SIZE * sizeof(char));
     if (error) {
         fprintf(stderr, "Thread %d: Error in allocating result buffer\n", tid);
     }
@@ -160,8 +160,8 @@ int main(int argc, char *argv[])
 
     /* Create a window per thread */
     int window_size = MESSAGE_SIZE;
-    if (window_size % CACHELINE_SIZE) {
-        window_size += (CACHELINE_SIZE - window_size % CACHELINE_SIZE);
+    if (window_size % BUFFER_ALIGNMENT) {
+        window_size += (BUFFER_ALIGNMENT - window_size % BUFFER_ALIGNMENT);
     }
     for (int i = 0; i < num_threads; i++) {
         void *mybase;
