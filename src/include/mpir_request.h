@@ -233,6 +233,8 @@ struct MPIR_Request {
         } rma;                  /* kind : MPIR_REQUEST_KIND__RMA */
     } u;
 
+    struct MPIR_Request *next, *prev;
+
     /* Other, device-specific information */
 #ifdef MPID_DEV_REQUEST_DECL
      MPID_DEV_REQUEST_DECL
