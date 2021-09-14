@@ -202,7 +202,7 @@ void MPID_nem_tcp_vc_dbg_print_sendq(FILE * stream, MPIDI_VC_t * vc)
                 sreq->dev.match.parts.context_id,
                 sreq->dev.match.parts.rank, sreq->dev.match.parts.tag);
         ++i;
-        sreq = sreq->dev.next;
+        sreq = sreq->next;
     }
 }
 

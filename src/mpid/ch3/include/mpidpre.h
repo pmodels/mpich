@@ -489,8 +489,6 @@ typedef struct MPIDI_Request {
     /* partner send request when a receive request is created by the
      * sender (only used for self send) */
     struct MPIR_Request * partner_request;
-
-    struct MPIR_Request * next;
 } MPIDI_Request;
 #define MPIR_REQUEST_DECL MPIDI_Request dev;
 
