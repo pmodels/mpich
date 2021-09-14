@@ -980,9 +980,9 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
     prev = NULL;
     while (req) {
         if (req->ch.vc == vc) {
-            MPIR_Request *next = req->dev.next;
+            MPIR_Request *next = req->next;
             if (prev)
-                prev->dev.next = next;
+                prev->next = next;
             else
                 MPIDI_CH3I_shm_sendq.head = next;
             if (MPIDI_CH3I_shm_sendq.tail == req)
@@ -997,7 +997,7 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
             req = next;
         } else {
             prev = req;
-            req = req->dev.next;
+            req = req->next;
         }
     }
 
