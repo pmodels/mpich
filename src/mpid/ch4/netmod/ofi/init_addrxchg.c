@@ -60,7 +60,12 @@ static int get_av_table_index(int rank, int nic, int vni)
             return rank;
         }
     } else {
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
         int num_vnis = MPIDI_OFI_global.num_vnis;
+#else
+        /* with scalable endpoint as context, all vnis share the same address. */
+        int num_vnis = 1;
+#endif
         int num_nics = MPIDI_OFI_global.num_nics;
         int num_later_ranks = MPIR_Process.size - (rank + 1);
         return rank * num_nics * num_vnis + nic * num_vnis + vni + num_later_ranks;
@@ -155,7 +160,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
 /* Step 2 & 3: exchange non-root contexts */
 
 /* Macros to reduce clutter, so we can focus on the ordering logics.
- * Note: they are not perfectly-wraaped, but tolearable since only used here. */
+ * Note: they are not perfectly wrapped, but tolerable since only used here. */
 #define GET_AV_AND_ADDRNAMES(rank) \
     MPIDI_OFI_addr_t *av ATTRIBUTE((unused)) = &MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)); \
     char *r_names = all_names + rank * num_vnis * num_nics * name_len;
