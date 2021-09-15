@@ -337,7 +337,7 @@ int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payload_len, 
 
     if (flags & MSG_PEEK) {
         /* Use regular recv for MSG_PEEK so that an FD isn't created if it's not the matching message */
-        sock_err = recv(MPIDI_IPCI_global_fd_socks[rank], payload, payload_len, flags);
+        sock_err = recv(MPIDI_IPCI_global_fd_socks[rank], iov.iov_base, iov.iov_len, flags);
         MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**recv", "**recv %s %d",
                              MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
     } else {
