@@ -99,6 +99,7 @@ static int MPIDI_IPC_mpi_ze_fd_setup(void)
                         "**mpl_ze_init_device_fds");
 
     fds = (int *) MPL_malloc(num_fds * sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!fds, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     if (MPIR_Process.local_rank == 0) {
         /* Setup the device fds */
@@ -144,7 +145,11 @@ int MPIDI_IPC_mpi_fd_init(void)
 
     fd_count = MPIR_Process.local_size;
     MPIDI_IPCI_global_fd_socks = (int *) MPL_calloc(fd_count, sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!MPIDI_IPCI_global_fd_socks, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
     MPIDI_IPCI_global_fd_pids = (pid_t *) MPL_calloc(fd_count, sizeof(pid_t), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!MPIDI_IPCI_global_fd_pids, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
     for (i = 0; i < fd_count; i++) {
         MPIDI_IPCI_global_fd_socks[i] = -1;
     }
