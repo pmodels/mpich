@@ -17,8 +17,10 @@ int unexp_message_indices[2];
  * FIXME: "self" message queues are not exposed
  */
 #ifdef HAVE_DEBUGGER_SUPPORT
-MPICH_API_PUBLIC MPIR_Request **const MPID_Recvq_posted_head_ptr = &MPIDI_global.posted_list;
-MPICH_API_PUBLIC MPIR_Request **const MPID_Recvq_unexpected_head_ptr = &MPIDI_global.unexp_list;
+MPICH_API_PUBLIC MPIR_Request **const MPID_Recvq_posted_head_ptr =
+    &MPIDI_global.per_vci[0].posted_list;
+MPICH_API_PUBLIC MPIR_Request **const MPID_Recvq_unexpected_head_ptr =
+    &MPIDI_global.per_vci[0].unexp_list;
 #endif
 
 int MPIDIG_recvq_init(void)

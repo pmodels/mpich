@@ -73,7 +73,7 @@ void MPID_nem_dbg_print_vc_sendq(FILE *stream, MPIDI_VC_t *vc)
                             sreq->dev.match.parts.rank,
                             sreq->dev.match.parts.tag);
             ++i;
-            sreq = sreq->dev.next;
+            sreq = sreq->next;
         }
     }
     else {

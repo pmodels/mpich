@@ -245,8 +245,8 @@ typedef struct MPIDI_per_vci {
      * section. */
     MPL_atomic_int_t progress_count;
 
-    MPIDI_Devreq_t *posted_list;
-    MPIDI_Devreq_t *unexp_list;
+    MPIR_Request *posted_list;
+    MPIR_Request *unexp_list;
     MPIDU_genq_private_pool_t request_pool;
     MPIDU_genq_private_pool_t unexp_pack_buf_pool;
 
@@ -272,8 +272,8 @@ typedef struct MPIDI_CH4_Global_t {
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
 
-    MPIDI_Devreq_t *part_posted_list;
-    MPIDI_Devreq_t *part_unexp_list;
+    MPIR_Request *part_posted_list;
+    MPIR_Request *part_unexp_list;
 
 #ifdef HAVE_SIGNAL
     void (*prev_sighandler) (int);
