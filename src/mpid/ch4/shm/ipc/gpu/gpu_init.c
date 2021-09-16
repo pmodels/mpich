@@ -57,6 +57,9 @@ static void ipc_handle_free_hook(void *dptr)
                 mpl_err = MPL_gavl_tree_delete_range(track_tree, pbase, len);
                 MPIR_Assert(mpl_err == MPL_SUCCESS);
             }
+
+            mpl_err = MPL_gpu_ipc_handle_destroy(pbase);
+            MPIR_Assert(mpl_err == MPL_SUCCESS);
         }
     }
 
