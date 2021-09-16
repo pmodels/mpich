@@ -446,7 +446,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
-            MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
+            MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr, 0, 0,
+                             request);
     } else {
         int vni_src, vni_dst;
         MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
@@ -489,7 +490,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                              request, errflag);
+                              0, 0, request, errflag);
     } else {
         int vni_src, vni_dst;
         MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
@@ -514,7 +515,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
-            MPIDIG_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
+            MPIDIG_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, addr, 0, 0,
+                              request);
     } else {
         int vni_src, vni_dst;
         MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */

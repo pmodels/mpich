@@ -45,7 +45,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                MPI_Aint am_hdr_sz,
                                                const void *data,
                                                MPI_Aint count, MPI_Datatype datatype,
-                                               MPIR_Request * sreq)
+                                               int src_vci, int dst_vci, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -140,14 +140,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Comm * comm,
                                                      const void *am_hdr,
                                                      MPI_Aint am_hdr_sz,
                                                      const void *data, MPI_Aint count,
-                                                     MPI_Datatype datatype, MPIR_Request * sreq)
+                                                     MPI_Datatype datatype,
+                                                     int src_vci, int dst_vci, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_NM_am_isend(src_rank, comm, handler_id,
-                                  am_hdr, am_hdr_sz, data, count, datatype, sreq);
+                                  am_hdr, am_hdr_sz, data, count, datatype, src_vci, dst_vci, sreq);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -171,7 +172,7 @@ MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_NM_am_eager_buf_limit(void)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
                                                   MPIR_Comm * comm,
                                                   int handler_id, const void *am_hdr,
-                                                  MPI_Aint am_hdr_sz)
+                                                  MPI_Aint am_hdr_sz, int src_vci, int dst_vci)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -215,12 +216,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Comm * comm,
                                                         int rank,
                                                         int handler_id, const void *am_hdr,
-                                                        MPI_Aint am_hdr_sz)
+                                                        MPI_Aint am_hdr_sz,
+                                                        int src_vci, int dst_vci)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz);
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz, src_vci, dst_vci);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

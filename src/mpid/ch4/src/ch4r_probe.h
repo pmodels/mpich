@@ -9,18 +9,19 @@
 #include "ch4_impl.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * comm,
-                                               int context_offset, int *flag, MPI_Status * status)
+                                               int context_offset, int vci, int *flag,
+                                               MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *unexp_req;
     MPIR_FUNC_ENTER;
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
 
-    /* MPIDI_CS_ENTER(); */
     unexp_req =
-        MPIDIG_rreq_find(source, tag, context_id, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
+        MPIDIG_rreq_find(source, tag, context_id, &MPIDI_global.per_vci[vci].unexp_list,
+                         MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
         *flag = 1;
@@ -33,28 +34,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
     } else {
         *flag = 0;
     }
-    /* MPIDI_CS_EXIT(); */
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm * comm,
-                                                int context_offset, int *flag,
+                                                int context_offset, int vci, int *flag,
                                                 MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *unexp_req;
 
     MPIR_FUNC_ENTER;
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
 
-    /* MPIDI_CS_ENTER(); */
     unexp_req =
-        MPIDIG_rreq_dequeue(source, tag, context_id, &MPIDI_global.unexp_list, MPIDIG_PT2PT_UNEXP);
+        MPIDIG_rreq_dequeue(source, tag, context_id, &MPIDI_global.per_vci[vci].unexp_list,
+                            MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
         *flag = 1;
@@ -74,9 +74,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
     } else {
         *flag = 0;
     }
-    /* MPIDI_CS_EXIT(); */
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }

@@ -15,6 +15,7 @@ static int win_init_sep(MPIR_Win * win);
 static int win_init_stx(MPIR_Win * win);
 static int win_init_global(MPIR_Win * win);
 static int win_init(MPIR_Win * win);
+static void win_init_am(MPIR_Win * win);
 
 static void load_acc_hint(MPIR_Win * win)
 {
@@ -310,6 +311,12 @@ static int win_set_per_win_sync(MPIR_Win * win)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static void win_init_am(MPIR_Win * win)
+{
+    /* TODO: MPIDI_WIN(win, am_vci) %= MPIDI_OFI_global.num_vnis; */
+    MPIDI_WIN(win, am_vci) = 0;
 }
 
 /*
@@ -781,6 +788,7 @@ int MPIDI_OFI_mpi_win_create_hook(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+    win_init_am(win);
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
@@ -805,6 +813,7 @@ int MPIDI_OFI_mpi_win_allocate_hook(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+    win_init_am(win);
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
@@ -827,6 +836,7 @@ int MPIDI_OFI_mpi_win_allocate_shared_hook(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+    win_init_am(win);
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
@@ -849,6 +859,7 @@ int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+    win_init_am(win);
 
     MPIR_CHKPMEM_DECL(1);
 
