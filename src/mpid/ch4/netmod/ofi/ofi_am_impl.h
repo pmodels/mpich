@@ -171,28 +171,19 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_am_unordered_msg_t
         } \
     } while (0)
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_am_clear_request(MPIR_Request * req)
-{
-    MPIR_FUNC_ENTER;
-
-    MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(req, sreq_hdr));
-    MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(req, rreq_hdr));
-
-    MPIR_FUNC_EXIT;
-}
-
 /* We call this at the point of sending am message, e.g.
  *     MPIDI_OFI_do_am_isend_{eager,pipeline,rdma_read}
  */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t am_hdr_sz,
-                                                    MPIR_Request * sreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_send_hdr(const void *am_hdr, size_t am_hdr_sz,
+                                                        MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_am_request_header_t *sreq_hdr;
+    MPIDI_OFI_am_send_hdr_t *sreq_hdr;
     MPIR_FUNC_ENTER;
 
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
 
+    MPIR_Assert(MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) == NULL);
     if (MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) == NULL) {
         MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_hdr_buf_pool, (void **) &sreq_hdr);
         MPIR_Assert(sreq_hdr);
@@ -212,17 +203,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_rreq(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_rdma_read_hdr(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_OFI_AMREQUEST(rreq, rreq_hdr) == NULL) {
-        MPIDI_OFI_am_request_header_t *rreq_hdr;
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_hdr_buf_pool, (void **) &rreq_hdr);
-        MPIR_Assert(rreq_hdr);
-        MPIDI_OFI_AMREQUEST(rreq, rreq_hdr) = rreq_hdr;
-    }
+    MPIR_Assert(MPIDI_OFI_AMREQUEST(rreq, rdma_read_hdr) == NULL);
+
+    void *cell;
+    MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_hdr_buf_pool, &cell);
+    MPIR_Assert(cell);
+    MPIDI_OFI_AMREQUEST(rreq, rdma_read_hdr) = cell;
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -253,7 +244,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
     msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, 0, 0);
 
     lmt_info = &MPIDI_OFI_AM_SREQ_HDR(sreq, lmt_info);
-    lmt_info->context_id = comm->context_id;
     lmt_info->src_rank = comm->rank;
     lmt_info->src_offset =
         !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS ? (uint64_t) 0 : (uint64_t) (uintptr_t) data;
@@ -448,7 +438,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
      * issue_deferred is set to true. They should have been saved in the request. */
 
     if (!issue_deferred) {
-        mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
+        mpi_errno = MPIDI_OFI_am_init_send_hdr(am_hdr, am_hdr_sz, sreq);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
@@ -621,7 +611,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
      * ignored when issue_deferred is set to true. They should have been saved in the request. */
 
     if (!issue_deferred) {
-        mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
+        mpi_errno = MPIDI_OFI_am_init_send_hdr(am_hdr, am_hdr_sz, sreq);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIDI_Datatype_check_contig(datatype, dt_contig);
@@ -738,7 +728,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
      * issue_deferred is set to true. They should have been saved in the request. */
 
     if (!issue_deferred) {
-        mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
+        mpi_errno = MPIDI_OFI_am_init_send_hdr(am_hdr, am_hdr_sz, sreq);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);

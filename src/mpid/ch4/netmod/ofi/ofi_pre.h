@@ -64,14 +64,9 @@ typedef enum {
 } MPIDI_OFI_deferred_am_op_e;
 
 typedef struct {
-    /* context id and src rank so the target side can
-     * issue RDMA read operation */
-    MPIR_Context_id_t context_id;
     int src_rank;
-
-    uint64_t src_offset;
+    MPI_Aint src_offset;
     MPIR_Request *sreq_ptr;
-    uint64_t am_hdr_src;
     uint64_t rma_key;
     MPI_Aint reg_sz;
 } MPIDI_OFI_lmt_msg_payload_t;
@@ -103,19 +98,6 @@ typedef struct MPIDI_OFI_am_unordered_msg {
      * Additional memory region may follow. */
 } MPIDI_OFI_am_unordered_msg_t;
 
-typedef struct {
-    MPIDI_OFI_am_header_t hdr;
-    MPIDI_OFI_lmt_msg_payload_t pyld;
-} MPIDI_OFI_lmt_msg_t;
-
-typedef struct {
-    void *unpack_buffer;
-    MPI_Aint pack_size;
-    uint64_t src_offset;
-    MPIR_Context_id_t context_id;
-    int src_rank;
-} MPIDI_OFI_lmt_unpack_t;
-
 typedef enum {
     MPIDI_OFI_AM_LMT_IOV,
     MPIDI_OFI_AM_LMT_UNPACK
@@ -123,12 +105,20 @@ typedef enum {
 
 typedef struct {
     MPIDI_OFI_lmt_msg_payload_t lmt_info;
-    struct fid_mr *lmt_mr;
+
     MPIDI_OFI_lmt_type_t lmt_type;
     union {
-        uint64_t lmt_cntr;
-        MPIDI_OFI_lmt_unpack_t unpack;
+        struct {
+            void *unpack_buffer;
+            MPI_Aint pack_size;
+        } unpack;
     } lmt_u;
+} MPIDI_OFI_am_rdma_read_hdr_t;
+
+typedef struct {
+    MPIDI_OFI_lmt_msg_payload_t lmt_info;
+    struct fid_mr *lmt_mr;
+
     void *pack_buffer;
     MPIR_Request *rreq_ptr;
     void *am_hdr;
@@ -138,7 +128,7 @@ typedef struct {
     uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
     struct iovec iov[3];
-} MPIDI_OFI_am_request_header_t;
+} MPIDI_OFI_am_send_hdr_t;
 
 typedef struct MPIDI_OFI_deferred_am_isend_req {
     int op;
@@ -157,17 +147,28 @@ typedef struct MPIDI_OFI_deferred_am_isend_req {
     struct MPIDI_OFI_deferred_am_isend_req *next;
 } MPIDI_OFI_deferred_am_isend_req_t;
 
+/* used for issuing fi_read */
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    MPIDI_OFI_am_request_header_t *sreq_hdr;
-    MPIDI_OFI_am_request_header_t *rreq_hdr;
+    void *rreq_ptr;
+    int is_last;                /* whether this is the last read message */
+} MPIDI_OFI_am_read_req_t;
+
+typedef struct {
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
+    int event_id;               /* fixed field, do not move */
+    MPIDI_OFI_am_send_hdr_t *sreq_hdr;  /* used during am_isend_{eager,rdma_read,pipeline} */
+    MPIDI_OFI_am_rdma_read_hdr_t *rdma_read_hdr;        /* only used during rdma_read */
     MPIDI_OFI_deferred_am_isend_req_t *deferred_req;    /* saving information when an AM isend is
                                                          * deferred */
     uint8_t am_type_choice;     /* save amtype to avoid double checking */
     MPI_Aint data_sz;           /* save data_sz to avoid double checking */
 } MPIDI_OFI_am_request_t;
 
+#define MPIDI_OFI_AMREQUEST(req,field)        ((req)->dev.ch4.am.netmod_am.ofi.field)
+#define MPIDI_OFI_AM_SREQ_HDR(req,field)      ((req)->dev.ch4.am.netmod_am.ofi.sreq_hdr->field)
+#define MPIDI_OFI_AM_RDMA_READ_HDR(req,field) ((req)->dev.ch4.am.netmod_am.ofi.rdma_read_hdr->field)
 
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */

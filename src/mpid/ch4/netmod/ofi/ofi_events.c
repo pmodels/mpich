@@ -4,6 +4,7 @@
  */
 
 #include "mpidimpl.h"
+#include "ofi_am_impl.h"
 #include "ofi_am_events.h"
 #include "ofi_events.h"
 
@@ -484,17 +485,20 @@ static int dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
 static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_am_header_t *msg_hdr;
-
     MPIR_FUNC_ENTER;
 
-    msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
+    int handler_id = MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr).handler_id;
+
     MPID_Request_complete(sreq);
 
     MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool,
                                       MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer));
     MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer) = NULL;
-    mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
+
+    /* free sreq_hdr in case origin_cb call am_send again. */
+    MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(sreq, sreq_hdr));
+
+    mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -521,25 +525,25 @@ static int am_isend_rdma_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sre
 static int am_isend_pipeline_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_am_header_t *msg_hdr;
-    MPIDI_OFI_am_send_pipeline_request_t *ofi_req;
-    MPIR_Request *sreq = NULL;
-
     MPIR_FUNC_ENTER;
 
+    MPIDI_OFI_am_send_pipeline_request_t *ofi_req;
     ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_send_pipeline_request_t, context);
-    msg_hdr = &ofi_req->msg_hdr;
-    sreq = ofi_req->sreq;
-    MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
+
+    MPIR_Request *sreq = ofi_req->sreq;
+
+    /* note: this only decrements the cc_ptr, should not free the sreq */
+    MPID_Request_complete(sreq);
 
     MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool, ofi_req->pack_buffer);
 
     MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, ofi_req);
 
     int is_done = MPIDIG_am_send_async_finish_seg(sreq);
-
     if (is_done) {
-        mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
+        int handler_id = MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr).handler_id;
+        MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(sreq, sreq_hdr));
+        mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -681,41 +685,47 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq;
-    MPIDI_OFI_am_request_t *ofi_req;
-
     MPIR_FUNC_ENTER;
 
-    ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_request_t, context);
-    rreq = (MPIR_Request *) ofi_req->rreq_hdr->rreq_ptr;
+    MPIDI_OFI_am_read_req_t *read_req;
+    read_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_read_req_t, context);
 
-    if (ofi_req->rreq_hdr->lmt_type == MPIDI_OFI_AM_LMT_IOV) {
-        ofi_req->rreq_hdr->lmt_u.lmt_cntr--;
-        if (ofi_req->rreq_hdr->lmt_u.lmt_cntr) {
+    MPIR_Request *rreq;
+    rreq = (MPIR_Request *) read_req->rreq_ptr;
+
+
+    if (MPIDI_OFI_AMREQUEST(rreq, rdma_read_hdr)->lmt_type == MPIDI_OFI_AM_LMT_IOV) {
+        if (!read_req->is_last) {
             goto fn_exit;
         }
-    } else if (ofi_req->rreq_hdr->lmt_type == MPIDI_OFI_AM_LMT_UNPACK) {
+    } else if (MPIDI_OFI_AMREQUEST(rreq, rdma_read_hdr)->lmt_type == MPIDI_OFI_AM_LMT_UNPACK) {
         int done = MPIDI_OFI_am_lmt_unpack_event(rreq);
         if (!done) {
             goto fn_exit;
         }
     }
 
+    /* All data read */
     MPIR_Comm *comm;
     if (rreq->kind == MPIR_REQUEST_KIND__RMA) {
         comm = rreq->u.rma.win->comm_ptr;
     } else {
         comm = rreq->comm;
     }
-    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_info).src_rank,
-                                              comm, MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_info).sreq_ptr);
 
+    int src_rank = MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_info).src_rank;
+    void *sreq_ptr = MPIDI_OFI_AM_RDMA_READ_HDR(rreq, lmt_info).sreq_ptr;
+
+    /* rdma_read_hdr can be freed now */
+    MPIDI_OFI_AM_FREE_REQ_HDR(MPIDI_OFI_AMREQUEST(rreq, rdma_read_hdr));
+
+    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(src_rank, comm, sreq_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     MPID_Request_complete(rreq);
   fn_exit:
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, ofi_req);
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, read_req);
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
