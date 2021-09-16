@@ -188,6 +188,9 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
         mpi_errno = ipc_handle_cache_delete(track_tree,
                                             (void *) handle_obj->remote_base_addr, handle_obj->len);
         MPIR_ERR_CHECK(mpi_errno);
+        mpl_err = MPL_gpu_ipc_handle_destroy((void *) handle_obj->remote_base_addr);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**gpu_ipc_handle_create");
         handle_obj = NULL;
     }
 #endif

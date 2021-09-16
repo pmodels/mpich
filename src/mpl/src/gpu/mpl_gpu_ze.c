@@ -20,6 +20,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #endif
 #include <sys/ioctl.h>
 #include <sys/syscall.h>        /* Definition of SYS_* constants */
+#include "uthash.h"
 
 static int gpu_initialized = 0;
 static int device_count;
@@ -41,6 +42,15 @@ static int *shared_device_fds = NULL;
 #ifndef __NR_pidfd_getfd
 #define __NR_pidfd_getfd 438    /* System call # on most architectures */
 #endif
+
+typedef struct {
+    const void *ptr;
+    int dev_id;
+    int handle;
+    UT_hash_handle hh;
+} MPL_ze_gem_hash_entry_t;
+
+static MPL_ze_gem_hash_entry_t *gem_hash = NULL;
 
 typedef struct {
     int fd;
@@ -378,9 +388,22 @@ static int gpu_ze_init_driver(void)
 
 int MPL_gpu_finalize(void)
 {
+    int i;
+
     MPL_free(local_to_global_map);
     MPL_free(global_to_local_map);
     MPL_free(global_ze_devices_handle);
+
+    MPL_ze_gem_hash_entry_t *entry = NULL, *tmp = NULL;
+    HASH_ITER(hh, gem_hash, entry, tmp) {
+        HASH_DELETE(hh, gem_hash, entry);
+        MPL_free(entry);
+    }
+
+    for (i = 0; i < shared_device_fd_count; ++i) {
+        close(shared_device_fds[i]);
+    }
+
     MPL_free(shared_device_fds);
 
     gpu_free_hook_s *prev;
@@ -456,12 +479,59 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
         shared_handle = dev_id;
         shared_handle = shared_handle << 32 | handle;
         memcpy(ipc_handle, &shared_handle, sizeof(shared_handle));
+
+        /* Hash (ptr, dev_id, handle) to close later */
+        MPL_ze_gem_hash_entry_t *entry = NULL;
+        HASH_FIND_PTR(gem_hash, &ptr, entry);
+
+        if (entry == NULL) {
+            entry =
+                (MPL_ze_gem_hash_entry_t *) MPL_malloc(sizeof(MPL_ze_gem_hash_entry_t),
+                                                       MPL_MEM_OTHER);
+            if (entry == NULL) {
+                goto fn_fail;
+            }
+
+            entry->ptr = ptr;
+            entry->dev_id = dev_id;
+            entry->handle = handle;
+            HASH_ADD_PTR(gem_hash, ptr, entry, MPL_MEM_OTHER);
+        }
     } else {
         fd_pid_t h;
         memcpy(&h.fd, &ze_ipc_handle, sizeof(fd));
         h.pid = mypid;
         h.dev_id = dev_id;
         memcpy(ipc_handle, &h, sizeof(fd_pid_t));
+    }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+int MPL_gpu_ipc_handle_destroy(const void *ptr)
+{
+    int status, mpl_err = MPL_SUCCESS;
+
+    if (shared_device_fds != NULL) {
+        MPL_ze_gem_hash_entry_t *entry = NULL;
+        HASH_FIND_PTR(gem_hash, &ptr, entry);
+        if (entry == NULL) {
+            /* This might get called for pointers that didn't have IPC handles created */
+            goto fn_exit;
+        }
+
+        HASH_DEL(gem_hash, entry);
+        MPL_free(entry);
+
+        /* close GEM handle */
+        status = close_handle(shared_device_fds[entry->dev_id], entry->handle);
+        if (status) {
+            goto fn_fail;
+        }
     }
 
   fn_exit:
@@ -519,14 +589,6 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
 
     ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ze_ipc_handle, 0, ptr);
     ZE_ERR_CHECK(ret);
-
-    if (shared_device_fds != NULL) {
-        /* close GEM handle */
-        status = close_handle(shared_device_fds[dev_id], handle);
-        if (status) {
-            goto fn_fail;
-        }
-    }
 
   fn_exit:
     return mpl_err;
