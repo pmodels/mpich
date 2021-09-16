@@ -146,7 +146,7 @@ static int handle_to_fd(int dev_fd, int handle, int *fd)
 
 static int close_handle(int dev_fd, int handle)
 {
-    struct drm_gem_close close = { };
+    struct drm_gem_close close = { 0, 0 };
     close.handle = handle;
 
     int ret = ioctl(dev_fd, DRM_IOCTL_GEM_CLOSE, &close);
