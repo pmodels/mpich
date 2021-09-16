@@ -343,6 +343,7 @@ fi
 ########################################################################
 ## Check if autoreconf can be patched to work
 ## when autotools are not in the same location.
+## We use -B (prepend directory to search path).
 ## This test needs to be done before individual tests of autotools
 ########################################################################
 
@@ -352,7 +353,7 @@ if [ "$same_atdir" != "yes" ] ; then
         ProgHomeDir $libtoolize libtooldir
     fi
     libtoolm4dir="$libtooldir/share/aclocal"
-    echo_n "Checking if $autoreconf accepts -I $libtoolm4dir... "
+    echo_n "Checking if $autoreconf accepts -B $libtoolm4dir... "
     new_autoreconf_works=no
     if [ -d "$libtoolm4dir" -a -f "$libtoolm4dir/libtool.m4" ] ; then
         recreate_tmp
@@ -361,14 +362,14 @@ AC_INIT(foo,1.0)
 AC_PROG_LIBTOOL
 AC_OUTPUT
 _EOF
-        AUTORECONF="$autoreconf -I $libtoolm4dir"
+        AUTORECONF="$autoreconf -B $libtoolm4dir"
         if (cd .tmp && $AUTORECONF -ivf >/dev/null 2>&1) ; then
             new_autoreconf_works=yes
         fi
         rm -rf .tmp
     fi
     echo "$new_autoreconf_works"
-    # If autoreconf accepts -I <libtool's m4 dir> correctly, use -I.
+    # If autoreconf accepts -B <libtool's m4 dir> correctly, use -B.
     # If not, run libtoolize before autoreconf (i.e. for autoconf <= 2.63)
     # This test is more general than checking the autoconf version.
     if [ "$new_autoreconf_works" != "yes" ] ; then
