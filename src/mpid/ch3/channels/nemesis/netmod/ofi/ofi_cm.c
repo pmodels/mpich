@@ -217,7 +217,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_R
     MPID_nem_ofi_create_req(&new_rreq, 1);
     MPIR_cc_inc(new_rreq->cc_ptr);
     new_rreq->dev.OnDataAvail = NULL;
-    new_rreq->dev.next = NULL;
+    new_rreq->next = NULL;
     REQ_OFI(new_rreq)->event_callback = MPID_nem_ofi_handle_packet;
     REQ_OFI(new_rreq)->vc = vc;
     REQ_OFI(new_rreq)->pack_buffer = pack_buffer;
@@ -232,7 +232,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_R
 
     MPID_nem_ofi_create_req(&sreq, 1);
     sreq->dev.OnDataAvail = NULL;
-    sreq->dev.next = NULL;
+    sreq->next = NULL;
     REQ_OFI(sreq)->event_callback = MPID_nem_ofi_cts_send_callback;
     REQ_OFI(sreq)->parent = new_rreq;
     FI_RC_RETRY(fi_tsend(gl_data.endpoint,
@@ -314,7 +314,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
     /* ----------------------------------- */
     MPID_nem_ofi_create_req(&persistent_req, 1);
     persistent_req->dev.OnDataAvail = NULL;
-    persistent_req->dev.next = NULL;
+    persistent_req->next = NULL;
     REQ_OFI(persistent_req)->vc = NULL;
     REQ_OFI(persistent_req)->event_callback = MPID_nem_ofi_preposted_callback;
     FI_RC_RETRY(fi_trecv(gl_data.endpoint,
@@ -333,7 +333,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
     MPID_nem_ofi_create_req(&conn_req, 1);
     conn_req->dev.user_buf = MPL_malloc(MPIDI_OFI_KVSAPPSTRLEN * sizeof(char), MPL_MEM_BUFFER);
     conn_req->dev.OnDataAvail = NULL;
-    conn_req->dev.next = NULL;
+    conn_req->next = NULL;
     REQ_OFI(conn_req)->vc = NULL;       /* We don't know the source yet */
     REQ_OFI(conn_req)->event_callback = MPID_nem_ofi_conn_req_callback;
     FI_RC_RETRY(fi_trecv(gl_data.endpoint,
@@ -540,7 +540,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     MPID_nem_ofi_create_req(&sreq, 1);
     sreq->kind = MPIR_REQUEST_KIND__SEND;
     sreq->dev.OnDataAvail = NULL;
-    sreq->dev.next = NULL;
+    sreq->next = NULL;
     REQ_OFI(sreq)->event_callback = MPID_nem_ofi_connect_to_root_callback;
     REQ_OFI(sreq)->pack_buffer = my_bc;
     if (gl_data.api_set == API_SET_1) {

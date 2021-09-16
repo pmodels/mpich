@@ -70,7 +70,7 @@
                                                                         \
         MPID_nem_ofi_create_req(&cts_req, 1);                           \
         cts_req->dev.OnDataAvail         = NULL;                        \
-        cts_req->dev.next                = NULL;                        \
+        cts_req->next                = NULL;                        \
         REQ_OFI(cts_req)->event_callback = MPID_nem_ofi_cts_recv_callback; \
         REQ_OFI(cts_req)->parent         = sreq;                        \
                                                                         \
@@ -355,7 +355,7 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
     MPID_nem_ofi_create_req(&sreq, 2);
     sreq->kind = MPIR_REQUEST_KIND__SEND;
     sreq->dev.OnDataAvail = NULL;
-    sreq->dev.next = NULL;
+    sreq->next = NULL;
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;
     if (gl_data.iov_limit > 1) {
         REQ_OFI(sreq)->real_hdr = MPL_malloc(sizeof(MPIDI_CH3_Pkt_t), MPL_MEM_BUFFER);
