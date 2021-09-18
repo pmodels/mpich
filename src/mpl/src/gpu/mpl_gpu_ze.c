@@ -434,13 +434,7 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
         goto fn_fail;
     }
 
-    if (p2p_supported) {
-        dev_handle = global_ze_devices_handle[dev_id];
-    } else {
-        /* When p2p is not supported, open on the source device so that yaksa treats it as
-         * cross-device copying */
-        dev_handle = global_ze_devices_handle[src_dev_id];
-    }
+    dev_handle = global_ze_devices_handle[dev_id];
     memcpy(&ze_ipc_handle, &fd, sizeof(fd));
 
     ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ze_ipc_handle, 0, ptr);
