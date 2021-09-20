@@ -75,6 +75,11 @@ static int init_worker(int vni)
     MPIDI_UCX_CHK_STATUS(ucx_status);
     MPIR_Assert(MPIDI_UCX_global.ctx[vni].addrname_len <= INT_MAX);
 
+    ucx_status = ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[vni].worker,
+                                           MPIDI_UCX_AM_HANDLER_ID,
+                                           &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -278,11 +283,6 @@ int MPIDI_UCX_init_world(void)
     /* initialize worker for vni 0 */
     mpi_errno = init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
-
-    ucs_status_t ucx_status =
-        ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID,
-                                  &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
 
     mpi_errno = initial_address_exchange();
     MPIR_ERR_CHECK(mpi_errno);

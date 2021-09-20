@@ -55,7 +55,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
 
     if (!flags) {
-        flags = FI_COMPLETION | FI_REMOTE_CQ_DATA;
+        flags = FI_COMPLETION;
     }
 
     size = num_contig * sizeof(struct iovec) + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));

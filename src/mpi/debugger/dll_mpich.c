@@ -6,10 +6,10 @@
 /* Allow fprintf in debug statements */
 /* style: allow:fprintf:5 sig:0 */
 
+#include "mpiimpl.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include "mpiimpl.h"
 
 /* #define DEBUG_MPIDBG_DLL 1 */
 

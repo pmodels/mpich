@@ -8,12 +8,25 @@
 
 #include "ch4_impl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_GLOBAL_PROGRESS
+      category    : CH4
+      type        : boolean
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If on, poll global progress every once a while. With per-vci configuration, turning global progress off may improve the threading performance.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* Global progress (polling every vci) is required for correctness. Currently we adopt the
  * simple approach to do global progress every MPIDI_CH4_PROG_POLL_MASK.
- *
- * TODO: every time we do global progress, there will be a performance lag. We could --
- * * amortize the cost by rotating the global vci to be polled (might be insufficient)
- * * accept user hints (require new user interface)
  */
 #define MPIDI_CH4_PROG_POLL_MASK 0xff
 
@@ -34,7 +47,7 @@ extern int global_vci_poll_count;
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
 {
-    if (MPIDI_global.n_vcis == 1 || !MPIDI_global.is_initialized) {
+    if (MPIDI_global.n_vcis == 1 || !MPIDI_global.is_initialized || !MPIR_CVAR_CH4_GLOBAL_PROGRESS) {
         return 0;
     } else {
         global_vci_poll_count++;

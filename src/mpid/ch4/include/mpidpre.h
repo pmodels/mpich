@@ -308,7 +308,6 @@ typedef struct MPIDI_Devreq_t {
         MPIDI_workq_elemt_t command;
 #endif
     } ch4;
-    struct MPIDI_Devreq_t *next, *prev;
 } MPIDI_Devreq_t;
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)
@@ -532,8 +531,8 @@ typedef unsigned MPIDI_locality_t;
 typedef struct MPIDIG_comm_t {
     uint32_t window_instance;
 #ifdef HAVE_DEBUGGER_SUPPORT
-    MPIDI_Devreq_t **posted_head_ptr;
-    MPIDI_Devreq_t **unexp_head_ptr;
+    MPIR_Request **posted_head_ptr;
+    MPIR_Request **unexp_head_ptr;
 #endif
 } MPIDIG_comm_t;
 
