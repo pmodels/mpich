@@ -1,1 +1,2 @@
 mt_pt2pt_msgrate 2 arg=-nthreads=4
+mt_pt2pt_msgrate 2 arg=-nthreads=4 arg=-sync=lockall
