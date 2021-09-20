@@ -100,6 +100,11 @@ int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr)
     return -1;
 }
 
+int MPL_gpu_get_root_device(int dev_id)
+{
+    return -1;
+}
+
 int MPL_gpu_global_to_local_dev_id(int global_dev_id)
 {
     return -1;

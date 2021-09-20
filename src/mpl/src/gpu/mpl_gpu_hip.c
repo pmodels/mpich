@@ -366,6 +366,11 @@ int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr)
     return attr->device;
 }
 
+int MPL_gpu_get_root_device(int dev_id)
+{
+    return dev_id;
+}
+
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
 {
     int mpl_err = MPL_SUCCESS;
