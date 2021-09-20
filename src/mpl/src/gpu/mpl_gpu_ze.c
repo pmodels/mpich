@@ -17,11 +17,14 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include "uthash.h"
 
 static int gpu_initialized = 0;
-static int device_count;
-static int max_dev_id;
+static uint32_t max_dev_id;
+static uint32_t device_count;
 
-static int *local_to_global_map;        /* [device_count] */
+static int *local_to_global_map;        /* [global_ze_device_count] */
 static int *global_to_local_map;        /* [max_dev_id + 1]   */
+
+/* Maps a subdevice id to the upper device id, specifically for indexing into shared_device_fds */
+static int *subdevice_map = NULL;
 
 static int shared_device_fd_count = 0;
 static int *shared_device_fds = NULL;
@@ -60,10 +63,16 @@ pid_t mypid;
  * http://spec.oneapi.com/level-zero/latest/index.html
  */
 ze_driver_handle_t global_ze_driver_handle;
+/* global_ze_devices_handle contains all devices and subdevices. Indices [0, device_count) are
+ * devices while the rest are subdevices. Keeping them all in the same array allows for easy
+ * comparison of device handle when a device id is passed from the upper layer. The only time it
+ * matters if we have a subdevice vs a device is when with creating or mapping an ipc handle. In
+ * situations, we use the subdevice_map to find the upper device id for indexing into
+ * shared_device_fds, since these are only opened on the upper devices. */
 ze_device_handle_t *global_ze_devices_handle = NULL;
 ze_context_handle_t global_ze_context;
 ze_bool_t p2p_supported = false;
-uint32_t global_ze_device_count;
+uint32_t global_ze_device_count;        /* This counts both devices and subdevices */
 static int gpu_ze_init_driver(void);
 static int fd_to_handle(int dev_fd, int fd, int *handle);
 static int handle_to_fd(int dev_fd, int handle, int *fd);
@@ -88,7 +97,7 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
         ret = MPL_gpu_init();
     }
 
-    *dev_cnt = device_count;
+    *dev_cnt = global_ze_device_count;
     *dev_id = max_dev_id;
     return ret;
 }
@@ -104,17 +113,16 @@ int MPL_gpu_init(void)
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
 
-    device_count = global_ze_device_count;
-    max_dev_id = device_count - 1;
+    max_dev_id = global_ze_device_count - 1;
 
-    if (device_count <= 0) {
+    if (global_ze_device_count <= 0) {
         gpu_initialized = 1;
         goto fn_exit;
     }
 
-    local_to_global_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
-    global_to_local_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
-    for (int i = 0; i < device_count; i++) {
+    local_to_global_map = MPL_malloc(global_ze_device_count * sizeof(int), MPL_MEM_OTHER);
+    global_to_local_map = MPL_malloc(global_ze_device_count * sizeof(int), MPL_MEM_OTHER);
+    for (int i = 0; i < global_ze_device_count; i++) {
         local_to_global_map[i] = i;
         global_to_local_map[i] = i;
     }
@@ -127,6 +135,44 @@ int MPL_gpu_init(void)
   fn_exit:
     return mpl_err;
   fn_fail:
+    goto fn_exit;
+}
+
+/* Get dev_id for shared_device_fds from regular dev_id */
+MPL_STATIC_INLINE_PREFIX int dev_id_to_shared_dev_id(int dev_id)
+{
+    return subdevice_map[dev_id];
+}
+
+/* Get dev_id from device */
+MPL_STATIC_INLINE_PREFIX int device_to_dev_id(ze_device_handle_t device)
+{
+    int dev_id = -1;
+    for (int d = 0; d < global_ze_device_count; d++) {
+        if (global_ze_devices_handle[d] == device) {
+            dev_id = d;
+            break;
+        }
+    }
+
+    return dev_id;
+}
+
+/* Get device from dev_id */
+MPL_STATIC_INLINE_PREFIX int dev_id_to_device(int dev_id, MPL_gpu_device_handle_t * device)
+{
+    int mpl_err = MPL_SUCCESS;
+
+    if (dev_id > max_dev_id) {
+        goto fn_fail;
+    }
+
+    *device = global_ze_devices_handle[dev_id];
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
     goto fn_exit;
 }
 
@@ -193,19 +239,19 @@ static int gpu_ze_init_driver(void)
     int i, d;
     /* Find a driver instance with a GPU device */
     for (i = 0; i < driver_count; ++i) {
-        global_ze_device_count = 0;
-        ret = zeDeviceGet(all_drivers[i], &global_ze_device_count, NULL);
+        device_count = 0;
+        ret = zeDeviceGet(all_drivers[i], &device_count, NULL);
         ZE_ERR_CHECK(ret);
         global_ze_devices_handle =
-            MPL_malloc(global_ze_device_count * sizeof(ze_device_handle_t), MPL_MEM_OTHER);
+            MPL_malloc(device_count * sizeof(ze_device_handle_t), MPL_MEM_OTHER);
         if (global_ze_devices_handle == NULL) {
             ret_error = MPL_ERR_GPU_NOMEM;
             goto fn_fail;
         }
-        ret = zeDeviceGet(all_drivers[i], &global_ze_device_count, global_ze_devices_handle);
+        ret = zeDeviceGet(all_drivers[i], &device_count, global_ze_devices_handle);
         ZE_ERR_CHECK(ret);
         /* Check if the driver supports a gpu */
-        for (d = 0; d < global_ze_device_count; ++d) {
+        for (d = 0; d < device_count; ++d) {
             ze_device_properties_t device_properties;
             ret = zeDeviceGetProperties(global_ze_devices_handle[d], &device_properties);
             ZE_ERR_CHECK(ret);
@@ -222,6 +268,58 @@ static int gpu_ze_init_driver(void)
             MPL_free(global_ze_devices_handle);
             global_ze_devices_handle = NULL;
         }
+    }
+
+    /* Setup subdevices */
+    global_ze_device_count = device_count;
+    if (global_ze_devices_handle != NULL) {
+        /* Count the subdevices */
+        uint32_t *subdevice_count = MPL_malloc(device_count * sizeof(uint32_t), MPL_MEM_OTHER);
+        if (subdevice_count == NULL) {
+            ret_error = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+
+        for (d = 0; d < device_count; ++d) {
+            subdevice_count[d] = 0;
+            ret = zeDeviceGetSubDevices(global_ze_devices_handle[d], &subdevice_count[d], NULL);
+            ZE_ERR_CHECK(ret);
+
+            global_ze_device_count += subdevice_count[d];
+        }
+
+        subdevice_map = MPL_malloc(global_ze_device_count * sizeof(int), MPL_MEM_OTHER);
+        if (subdevice_map == NULL) {
+            ret_error = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+
+        /* Add the subdevices to the device array */
+        global_ze_devices_handle =
+            MPL_realloc(global_ze_devices_handle,
+                        global_ze_device_count * sizeof(ze_device_handle_t), MPL_MEM_OTHER);
+        if (global_ze_devices_handle == NULL) {
+            ret_error = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+
+        int dev_id = device_count;
+        for (d = 0; d < device_count; ++d) {
+            ret =
+                zeDeviceGetSubDevices(global_ze_devices_handle[d], &subdevice_count[d],
+                                      &global_ze_devices_handle[dev_id]);
+            ZE_ERR_CHECK(ret);
+
+            /* Setup the subdevice map for shared_device_fds */
+            subdevice_map[d] = d;
+            for (i = 0; i < subdevice_count[d]; ++i) {
+                subdevice_map[dev_id + i] = d;
+            }
+
+            dev_id += subdevice_count[d];
+        }
+
+        MPL_free(subdevice_count);
     }
 
     ze_context_desc_t contextDesc = {
@@ -257,6 +355,7 @@ int MPL_gpu_finalize(void)
     MPL_free(local_to_global_map);
     MPL_free(global_to_local_map);
     MPL_free(global_ze_devices_handle);
+    MPL_free(subdevice_map);
 
     MPL_ze_gem_hash_entry_t *entry = NULL, *tmp = NULL;
     HASH_ITER(hh, gem_hash, entry, tmp) {
@@ -288,7 +387,7 @@ int MPL_gpu_global_to_local_dev_id(int global_dev_id)
 
 int MPL_gpu_local_to_global_dev_id(int local_dev_id)
 {
-    assert(local_dev_id < device_count);
+    assert(local_dev_id < global_ze_device_count);
     return local_to_global_map[local_dev_id];
 }
 
@@ -303,7 +402,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
     unsigned long shared_handle;
-    int i, fd, handle, status, dev_id = -1;
+    int fd, handle, status, dev_id = -1, shared_dev_id = -1;
     ze_device_handle_t device;
     ze_ipc_mem_handle_t ze_ipc_handle;
 
@@ -321,12 +420,8 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     ret = zeMemGetAllocProperties(global_ze_context, ptr, &ptr_attr, &device);
     ZE_ERR_CHECK(ret);
 
-    for (i = 0; i < device_count; i++) {
-        if (device == global_ze_devices_handle[i]) {
-            dev_id = i;
-            break;
-        }
-    }
+    dev_id = device_to_dev_id(device);
+    shared_dev_id = dev_id_to_shared_dev_id(dev_id);
 
     if (dev_id == -1) {
         goto fn_fail;
@@ -335,7 +430,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     if (shared_device_fds != NULL) {
         /* convert dma_buf fd to GEM handle */
         memcpy(&fd, &ze_ipc_handle, sizeof(fd));
-        status = fd_to_handle(shared_device_fds[dev_id], fd, &handle);
+        status = fd_to_handle(shared_device_fds[shared_dev_id], fd, &handle);
         if (status) {
             goto fn_fail;
         }
@@ -357,7 +452,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
             }
 
             entry->ptr = ptr;
-            entry->dev_id = dev_id;
+            entry->dev_id = shared_dev_id;
             entry->handle = handle;
             HASH_ADD_PTR(gem_hash, ptr, entry, MPL_MEM_OTHER);
         }
@@ -422,7 +517,9 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
         src_dev_id = shared_handle >> 32;
         handle = shared_handle << 32 >> 32;
 
-        status = handle_to_fd(shared_device_fds[src_dev_id], handle, &fd);
+        int shared_dev_id = dev_id_to_shared_dev_id(src_dev_id);
+
+        status = handle_to_fd(shared_device_fds[shared_dev_id], handle, &fd);
         if (status) {
             goto fn_fail;
         }
@@ -446,7 +543,10 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
         src_dev_id = h.dev_id;
     }
 
-    dev_handle = global_ze_devices_handle[dev_id];
+    mpl_err = dev_id_to_device(dev_id, &dev_handle);
+    if (mpl_err != MPL_SUCCESS) {
+        goto fn_fail;
+    }
     memcpy(&ze_ipc_handle, &fd, sizeof(fd));
 
     ret = zeMemOpenIpcHandle(global_ze_context, dev_handle, ze_ipc_handle, 0, ptr);
@@ -595,12 +695,9 @@ int MPL_gpu_unregister_host(const void *ptr)
 int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr)
 {
     int dev_id = -1;
-    for (int i = 0; i < global_ze_device_count; i++) {
-        if (global_ze_devices_handle[i] == attr->device) {
-            dev_id = i;
-            break;
-        }
-    }
+
+    dev_id = device_to_dev_id(attr->device);
+
     return dev_id;
 }
 
