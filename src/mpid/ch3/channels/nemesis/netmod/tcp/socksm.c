@@ -1775,14 +1775,14 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
              * on many platforms, including modern Linux. */
             if (it_plfd->revents & POLLERR || it_plfd->revents & POLLNVAL) {
                 int req_errno = MPI_SUCCESS;
-                ssize_t rc;
-                char dummy;
 
                 /* See if we can get a specific error for this fd
                  * (Stevens Network Programming Vol 1, pg 184) */
-                rc = read(it_plfd->fd, &dummy, 1);
 #ifdef HAVE_ERROR_CHECKING
+                ssize_t rc;
+                char dummy;
                 const char *err_str = "UNKNOWN";
+                rc = read(it_plfd->fd, &dummy, 1);
                 if (rc < 0)
                     err_str = MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE);
 #endif
