@@ -1111,7 +1111,9 @@ int MPIDI_CH3I_Sock_SetSockBufferSize(int fd, int firm)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     /* Get the socket buffer size if we haven't yet acquired it */
     if (sockBufSize < 0) {
