@@ -42,6 +42,77 @@ ATTRIBUTE((unused));
 int MPIDI_OFI_progress_uninlined(int vni);
 int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret);
 
+/* To support probing huge message, we need squeeze both the msgsize and rank
+ * into the 64-bit cq data. This is of course, not always possible, but we do
+ * our best. */
+/* first 2-bit mark the format:
+ * 0 - 7 + 1 -- 7 bytes minus 2 bits for msgsize and 1 byte for rank
+ * 1 - 6 + 2
+ * 2 - 5 + 3
+ * 3 - 4 + 4
+ */
+#define MPIDI_OFI_MAKE_CQ_SHIFT 62
+#define MPIDI_OFI_MAKE_CQ_MASK (((uint64_t) 1 << MPIDI_OFI_MAKE_CQ_SHIFT) - 1)
+
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_make_cq_data(int rank, MPI_Aint data_sz)
+{
+    uint64_t data = data_sz;
+    if (rank < 0x100) {
+        data = ((data << 8) + rank) & MPIDI_OFI_MAKE_CQ_MASK;
+    } else if (rank < 0x10000) {
+        data = (((data << 16) + rank) & MPIDI_OFI_MAKE_CQ_MASK) |
+            ((uint64_t) 1 << MPIDI_OFI_MAKE_CQ_SHIFT);
+    } else if (rank < 0x1000000) {
+        data = (((data << 24) + rank) & MPIDI_OFI_MAKE_CQ_MASK) |
+            ((uint64_t) 2 << MPIDI_OFI_MAKE_CQ_SHIFT);
+    } else {
+        data = (((data << 32) + rank) & MPIDI_OFI_MAKE_CQ_MASK) |
+            ((uint64_t) 3 << MPIDI_OFI_MAKE_CQ_SHIFT);
+    }
+    return data;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_cq_rank(struct fi_cq_tagged_entry *wc)
+{
+    uint64_t cq_data = wc->data;
+    if (wc->tag & MPIDI_OFI_HUGE_SEND) {
+        switch (cq_data >> MPIDI_OFI_MAKE_CQ_SHIFT) {
+            case 0:
+                return cq_data & (((uint64_t) 1 << 8) - 1);
+            case 1:
+                return cq_data & (((uint64_t) 1 << 16) - 1);
+            case 2:
+                return cq_data & (((uint64_t) 1 << 24) - 1);
+            case 3:
+                return cq_data & (((uint64_t) 1 << 32) - 1);
+            default:
+                /* impossible */
+                return 0;
+        }
+    } else {
+        return cq_data;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_OFI_get_cq_msgsize(struct fi_cq_tagged_entry * wc)
+{
+    MPIR_Assert(wc->tag & MPIDI_OFI_HUGE_SEND);
+    uint64_t cq_data = wc->data;
+    switch (cq_data >> MPIDI_OFI_MAKE_CQ_SHIFT) {
+        case 0:
+            return (MPI_Aint) ((cq_data & MPIDI_OFI_MAKE_CQ_MASK) >> 8);
+        case 1:
+            return (MPI_Aint) ((cq_data & MPIDI_OFI_MAKE_CQ_MASK) >> 16);
+        case 2:
+            return (MPI_Aint) ((cq_data & MPIDI_OFI_MAKE_CQ_MASK) >> 24);
+        case 3:
+            return (MPI_Aint) ((cq_data & MPIDI_OFI_MAKE_CQ_MASK) >> 32);
+        default:
+            /* impossible */
+            return 0;
+    }
+}
+
 /* vni mapping */
 /* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
  * we may get away with bit mask */

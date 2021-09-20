@@ -282,14 +282,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         int i, num_nics = MPIDI_OFI_global.num_nics;
         uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
         struct fid_mr **huge_send_mrs;
-        uint64_t msg_size = MPIDI_OFI_STRIPE_CHUNK_SIZE;
 
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
 
         MPIR_cc_inc(sreq->cc_ptr);
         if (!MPIDI_OFI_COMM(comm).enable_striping) {
             num_nics = 1;
-            msg_size = MPIDI_OFI_global.max_msg_size;
         }
         huge_send_mrs =
             (struct fid_mr **) MPL_malloc((num_nics * sizeof(struct fid_mr *)), MPL_MEM_BUFFER);
@@ -327,6 +325,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             }
         }
 
+        ctrl.type = MPIDI_OFI_CTRL_HUGE;
+        ctrl.origin_rank = comm->rank;
+        ctrl.msgsize = data_sz;
+        ctrl.seqno = 0;
+        ctrl.tag = tag;
+        ctrl.vni_src = vni_src;
+        ctrl.vni_dst = vni_dst;
+        ctrl.ackreq = sreq;
+
         /* Send the maximum amount of data that we can here to get things
          * started, then do the rest using the MR below. This can be confirmed
          * in the MPIDI_OFI_get_huge code where we start the offset at
@@ -336,25 +343,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         /* Store ordering unnecessary for dst_rank, so use relaxed store */
         MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(sreq, util_id), dst_rank);
         match_bits |= MPIDI_OFI_HUGE_SEND;      /* Add the bit for a huge message */
+        /* We need squeeze both rank and msgsize into cq data */
+        cq_data = MPIDI_OFI_make_cq_data(comm->rank, data_sz);
+        /* Note: we are sending the ctrl header, rather than the actual data. */
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                          send_buf, msg_size, NULL /* desc */ ,
+                                          &ctrl, sizeof(ctrl), NULL /* desc */ ,
                                           cq_data,
                                           MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
                                                                vni_remote),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
                              vni_local, tsenddata, FALSE /* eagain */);
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], msg_size);
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_sent_bytes_count[sender_nic], msg_size);
-        ctrl.type = MPIDI_OFI_CTRL_HUGE;
-        ctrl.seqno = 0;
-        ctrl.tag = tag;
-        ctrl.vni_src = vni_src;
-        ctrl.vni_dst = vni_dst;
-
-        /* Send information about the memory region here to get the lmt going. */
-        mpi_errno = MPIDI_OFI_do_control_send(&ctrl, send_buf, data_sz, dst_rank, comm, sreq);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], sizeof(ctrl));
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_sent_bytes_count[sender_nic], sizeof(ctrl));
     }
 
   fn_exit:

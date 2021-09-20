@@ -14,7 +14,6 @@
 
 static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int peek_empty_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
 static int ssend_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
 static uintptr_t recv_rbase(MPIDI_OFI_huge_recv_t * recv);
@@ -33,63 +32,22 @@ static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
     size_t count = 0;
     MPIR_FUNC_ENTER;
-    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
+    rreq->status.MPI_SOURCE = MPIDI_OFI_get_cq_rank(wc);
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
     rreq->status.MPI_ERROR = MPI_SUCCESS;
 
     if (MPIDI_OFI_HUGE_SEND & wc->tag) {
-        MPIDI_OFI_huge_recv_t *list_ptr;
-        bool found_msg = false;
-
-        /* If this is a huge message, find the control message on the unexpected list that matches
-         * with this and return the size in that. */
-        LL_FOREACH(MPIDI_unexp_huge_recv_head, list_ptr) {
-            uint64_t context_id = MPIDI_OFI_CONTEXT_MASK & wc->tag;
-            uint64_t tag = MPIDI_OFI_TAG_MASK & wc->tag;
-            if (list_ptr->remote_info.comm_id == context_id &&
-                list_ptr->remote_info.origin_rank == MPIDI_OFI_cqe_get_source(wc, false) &&
-                list_ptr->remote_info.tag == tag) {
-                count = list_ptr->remote_info.msgsize;
-                found_msg = true;
-            }
-        }
-        if (!found_msg) {
-            MPIDI_OFI_huge_recv_t *recv_elem;
-            MPIDI_OFI_huge_recv_list_t *huge_list_ptr;
-
-            /* Create an element in the posted list that only indicates a peek and will be
-             * deleted as soon as it's fulfilled without being matched. */
-            recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_COMM);
-            MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
-            recv_elem->peek = true;
-            MPIR_Comm *comm_ptr = rreq->comm;
-            recv_elem->comm_ptr = comm_ptr;
-            MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
-                           MPL_MEM_BUFFER);
-
-            huge_list_ptr =
-                (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*huge_list_ptr), 1, MPL_MEM_COMM);
-            MPIR_ERR_CHKANDJUMP(huge_list_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
-            recv_elem->remote_info.comm_id = huge_list_ptr->comm_id =
-                MPIDI_OFI_CONTEXT_MASK & wc->tag;
-            recv_elem->remote_info.origin_rank = huge_list_ptr->rank =
-                MPIDI_OFI_cqe_get_source(wc, false);
-            recv_elem->remote_info.tag = huge_list_ptr->tag = MPIDI_OFI_TAG_MASK & wc->tag;
-            recv_elem->localreq = huge_list_ptr->rreq = rreq;
-            recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-            recv_elem->done_fn = MPIDI_OFI_recv_event;
-            recv_elem->wc = *wc;
-            if (MPIDI_OFI_COMM(comm_ptr).enable_striping) {
-                recv_elem->cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
-            } else {
-                recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
-            }
-
-            LL_APPEND(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, huge_list_ptr);
-            goto fn_exit;
+        if (wc->buf) {
+            /* if we get a copy of buffer, we can check the control header for meta data */
+            MPIDI_OFI_send_control_t *ctrl_ptr = wc->buf;
+            MPIR_Assert(ctrl_ptr->type == MPIDI_OFI_CTRL_HUGE);
+            count = ctrl_ptr->msgsize;
+        } else {
+            /* otherwise, we only can get it from cq data, which won't be accurate when
+             * the meta data (count and rank) doesn't fit in 64-bit. */
+            count = MPIDI_OFI_get_cq_msgsize(wc);
         }
     } else {
-        /* Otherwise just get the size of the message we've already received. */
         count = wc->len;
     }
     MPIR_STATUS_SET_COUNT(rreq->status, count);
@@ -133,102 +91,39 @@ static int peek_empty_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     return MPI_SUCCESS;
 }
 
-/* If we posted a huge receive, this event gets called to translate the
- * completion queue entry into a get huge event */
-static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+/* Huge message, the data in the buffer is actually a ctrl header */
+int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
-    MPIR_Comm *comm_ptr;
     MPIR_FUNC_ENTER;
 
-    bool ready_to_get = false;
-    /* Check that the sender didn't underflow the message by sending less than
-     * the huge message threshold. When striping is enabled underflow occurs if
-     * the sender sends < MPIDI_OFI_STRIPE_CHUNK_SIZE through the huge message protocol
-     * or < MPIDI_OFI_global.stripe_threshold through normal send */
-    if (((wc->len < MPIDI_OFI_STRIPE_CHUNK_SIZE ||
-          (wc->len > MPIDI_OFI_STRIPE_CHUNK_SIZE && wc->len < MPIDI_OFI_global.stripe_threshold)) &&
-         MPIDI_OFI_COMM(rreq->comm).enable_striping) ||
-        (wc->len < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(rreq->comm).enable_striping)) {
-        return MPIDI_OFI_recv_event(wc, rreq, MPIDI_OFI_REQUEST(rreq, event_id));
-    }
-
-    comm_ptr = rreq->comm;
     MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
                             wc->len);
-    /* Check to see if the tracker is already in the unexpected list.
-     * Otherwise, allocate one. */
-    {
-        MPIDI_OFI_huge_recv_t *list_ptr;
 
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                        (MPL_DBG_FDEST, "SEARCHING HUGE UNEXPECTED LIST: (%d, %d, %llu)",
-                         comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc, false),
-                         (MPIDI_OFI_TAG_MASK & wc->tag)));
+    recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_BUFFER);
+    MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem, MPL_MEM_BUFFER);
 
-        LL_FOREACH(MPIDI_unexp_huge_recv_head, list_ptr) {
-            if (list_ptr->remote_info.comm_id == comm_ptr->context_id &&
-                list_ptr->remote_info.origin_rank == MPIDI_OFI_cqe_get_source(wc, false) &&
-                list_ptr->remote_info.tag == (MPIDI_OFI_TAG_MASK & wc->tag)) {
-                MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                                (MPL_DBG_FDEST, "MATCHED HUGE UNEXPECTED LIST: (%d, %d, %llu, %d)",
-                                 comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc, false),
-                                 (MPIDI_OFI_TAG_MASK & wc->tag), rreq->handle));
-
-                LL_DELETE(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, list_ptr);
-
-                recv_elem = list_ptr;
-                MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
-                               MPL_MEM_COMM);
-                break;
-            }
-        }
-    }
-
-    if (recv_elem) {
-        ready_to_get = true;
-    } else {
-        MPIDI_OFI_huge_recv_list_t *list_ptr;
-
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                        (MPL_DBG_FDEST, "CREATING HUGE POSTED ENTRY: (%d, %d, %llu)",
-                         comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc, false),
-                         (MPIDI_OFI_TAG_MASK & wc->tag)));
-
-        recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
-                       MPL_MEM_BUFFER);
-
-        list_ptr = (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*list_ptr), 1, MPL_MEM_BUFFER);
-        if (!list_ptr)
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-        list_ptr->comm_id = comm_ptr->context_id;
-        list_ptr->rank = MPIDI_OFI_cqe_get_source(wc, false);
-        list_ptr->tag = (MPIDI_OFI_TAG_MASK & wc->tag);
-        list_ptr->rreq = rreq;
-
-        LL_APPEND(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
-    }
+    /* We sent the huge ctrl header instead of the actual data */
+    void *recv_buf = MPIDI_OFI_REQUEST(rreq, util.iov.iov_base);
+    MPIR_Memcpy(&(recv_elem->remote_info), recv_buf, sizeof(recv_elem->remote_info));
 
     /* Plug the information for the huge event into the receive request and go
      * to the MPIDI_OFI_get_huge_event function. */
     recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
     recv_elem->peek = false;
-    recv_elem->comm_ptr = comm_ptr;
+    recv_elem->comm_ptr = rreq->comm;
     recv_elem->localreq = rreq;
     recv_elem->done_fn = MPIDI_OFI_recv_event;
     recv_elem->wc = *wc;
-    if (MPIDI_OFI_COMM(comm_ptr).enable_striping) {
-        recv_elem->cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
-    } else {
-        recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
-    }
-    if (ready_to_get) {
-        MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
-    }
+    recv_elem->cur_offset = 0;
+    MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
+
+    /* restore the wc as something MPIDI_OFI_recv_event will handle */
+    recv_elem->wc.tag &= ~MPIDI_OFI_HUGE_SEND;
+    recv_elem->wc.data = MPIDI_OFI_get_cq_rank(wc);
+    recv_elem->wc.len = 0;
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -464,7 +359,7 @@ static int accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
 {
     MPIR_FUNC_ENTER;
     MPIDI_OFI_dynamic_process_request_t *ctrl = (MPIDI_OFI_dynamic_process_request_t *) rreq;
-    ctrl->source = MPIDI_OFI_cqe_get_source(wc, false);
+    ctrl->source = MPIDI_OFI_get_cq_rank(wc);
     ctrl->tag = MPIDI_OFI_init_get_tag(wc->tag);
     ctrl->msglen = wc->len;
     ctrl->done = MPIDI_OFI_PEEK_FOUND;
@@ -765,7 +660,7 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
                 break;
 
             case MPIDI_OFI_EVENT_RECV_HUGE:
-                mpi_errno = recv_huge_event(wc, req);
+                mpi_errno = MPIDI_OFI_recv_huge_event(wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_RECV_PACK:

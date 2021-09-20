@@ -49,9 +49,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_PEEK;
     MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_START);
 
-    msg.msg_iov = NULL;
+    /* Supply a buffer for ctrl header for huge message */
+    MPIDI_OFI_send_control_t ctrl;
+    struct iovec iov;
+    iov.iov_base = &ctrl;
+    iov.iov_len = sizeof(ctrl);
+
+    msg.msg_iov = &iov;
     msg.desc = NULL;
-    msg.iov_count = 0;
+    msg.iov_count = 1;
     msg.addr = remote_proc;
     msg.tag = match_bits;
     msg.ignore = mask_bits;

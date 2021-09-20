@@ -13,6 +13,7 @@
 #include "utlist.h"
 
 int MPIDI_OFI_rma_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
+int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 
@@ -54,8 +55,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
     size_t count;
     MPIR_FUNC_ENTER;
 
+    if (wc->tag & MPIDI_OFI_HUGE_SEND) {
+        /* This is the case when sender sends a huge message, but
+         * receiver posted a small buffer.
+         */
+        MPI_Aint buflen = MPIDI_OFI_REQUEST(rreq, util.iov.iov_len);
+        /* TODO: replace with data truncation error */
+        MPIR_Assert(buflen >= sizeof(MPIDI_OFI_send_control_t));
+        MPIDI_OFI_recv_huge_event(wc, rreq);
+        goto fn_exit;
+    }
+
     rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
     rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
+    /* shouldn't we clean that tag for extra flags, e.g. synchronous bit? */
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
     count = wc->len;
     MPIR_STATUS_SET_COUNT(rreq->status, count);
