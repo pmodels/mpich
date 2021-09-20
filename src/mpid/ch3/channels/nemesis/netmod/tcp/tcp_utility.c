@@ -57,7 +57,9 @@ int MPID_nem_tcp_set_sockopts(int fd)
     int option, flags;
     int ret;
     socklen_t len;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
 /*     fprintf(stdout, __func__ " Enter\n"); fflush(stdout); */
     /* I heard you have to read the options after setting them in some implementations */
