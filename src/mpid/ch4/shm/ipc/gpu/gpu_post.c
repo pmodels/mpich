@@ -150,7 +150,11 @@ int MPIDI_GPU_get_ipc_threshold(size_t * threshold)
     MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
-    *threshold = MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD;
+    if (MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD < 0) {
+        *threshold = ULONG_MAX;
+    } else {
+        *threshold = MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD;
+    }
 #else
     *threshold = MPIR_AINT_MAX;
 #endif
