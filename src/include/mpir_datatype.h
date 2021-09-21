@@ -370,7 +370,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
                                              const MPI_Aint array_of_counts[],
                                              const MPI_Datatype array_of_types[])
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPI_Aint struct_sz, ints_sz, aints_sz, counts_sz, types_sz, contents_size;
     MPIR_Datatype_contents *cp;
     MPIR_Datatype *old_dtp;
@@ -455,11 +455,12 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
     for (MPI_Aint i = 0; i < nr_types; i++) {
         if (!HANDLE_IS_BUILTIN(array_of_types[i])) {
             MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
+            MPIR_Datatype_valid_ptr(old_dtp, mpi_errno);
             MPIR_Datatype_ptr_add_ref(old_dtp);
         }
     }
 
-    return MPI_SUCCESS;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIR_Datatype_access_contents(MPIR_Datatype_contents * cp,
