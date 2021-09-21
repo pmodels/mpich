@@ -594,8 +594,12 @@ bool MPIR_hwtopo_is_dev_close_by_name(const char *name)
     MPIR_hwtopo_gid_t gid = MPIR_hwtopo_get_obj_by_name(name);
     int hwloc_obj_index = HWTOPO_GET_INDEX(gid);
     int hwloc_obj_depth = HWTOPO_GET_DEPTH(gid);
-    is_close = pci_device_is_close(hwloc_get_obj_by_depth(hwloc_topology, hwloc_obj_depth,
-                                                          hwloc_obj_index));
+    hwloc_obj_t obj = hwloc_get_obj_by_depth(hwloc_topology, hwloc_obj_depth, hwloc_obj_index);
+    if (obj != NULL) {
+        is_close = pci_device_is_close(obj);
+    } else {
+        return false;
+    }
 #endif
     return is_close;
 }
