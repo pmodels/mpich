@@ -68,7 +68,7 @@ static inline
 #endif
         MPID_nem_ofi_create_req(&sync_req, 1);
         sync_req->dev.OnDataAvail = NULL;
-        sync_req->dev.next = NULL;
+        sync_req->next = NULL;
         REQ_OFI(sync_req)->event_callback = MPID_nem_ofi_sync_recv_callback;
         REQ_OFI(sync_req)->parent = rreq;
 #if API_SET == API_SET_1
@@ -149,7 +149,7 @@ static inline int ADD_SUFFIX(send_normal) (struct MPIDI_VC * vc,
         MPIR_cc_inc(sreq->cc_ptr);
         MPID_nem_ofi_create_req(&sync_req, 1);
         sync_req->dev.OnDataAvail = NULL;
-        sync_req->dev.next = NULL;
+        sync_req->next = NULL;
         REQ_OFI(sync_req)->event_callback = MPID_nem_ofi_sync_recv_callback;
         REQ_OFI(sync_req)->parent = sreq;
 #if API_SET == API_SET_1

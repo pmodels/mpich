@@ -26,7 +26,17 @@
 
 #define ERROR_MARGIN 0.05       /* FIXME: a better margin? */
 
-MPI_Comm *thread_comms;
+enum RMA_OPs {
+    OP_PUT,
+    OP_GET,
+    OP_ACC,
+    OP_GACC,
+    OP_INVALID
+};
+
+int rma_op = OP_INVALID;
+int world_rank;
+MPI_Comm *thread_wins;
 double *t_elapsed;
 
 MTEST_THREAD_RETURN_TYPE thread_fn(void *arg);
@@ -35,66 +45,72 @@ MTEST_THREAD_RETURN_TYPE thread_fn(void *arg)
 {
     int error;
     int tid;
-    MPI_Comm my_comm;
-    int rank;
+    MPI_Win my_win;
     int win_i, win_post_i, win_posts;
-    void *buf;
-    int sync_buf;
+    void *buf, *result_buf;
     MPI_Request requests[WINDOW_SIZE];
     MPI_Status statuses[WINDOW_SIZE];
     double t_start, t_end;
 
     tid = (int) (long) arg;
-    my_comm = thread_comms[tid];
-    MPI_Comm_rank(my_comm, &rank);
+    my_win = thread_wins[tid];
 
     win_posts = NUM_MESSAGES / WINDOW_SIZE;
     assert(win_posts * WINDOW_SIZE == NUM_MESSAGES);
 
+    /* Allocate origin buffer */
     error = posix_memalign(&buf, BUFFER_ALIGNMENT, MESSAGE_SIZE * sizeof(char));
     if (error) {
-        fprintf(stderr, "Thread %d: Error in allocating send buffer\n", tid);
+        fprintf(stderr, "Thread %d: Error in allocating origin buffer\n", tid);
+    }
+    /* Allocate result_buf for OP_GACC */
+    error = posix_memalign(&result_buf, BUFFER_ALIGNMENT, MESSAGE_SIZE * sizeof(char));
+    if (error) {
+        fprintf(stderr, "Thread %d: Error in allocating result buffer\n", tid);
     }
 
     /* Benchmark */
     t_start = MPI_Wtime();
 
     for (win_post_i = 0; win_post_i < win_posts; win_post_i++) {
-        for (win_i = 0; win_i < WINDOW_SIZE; win_i++) {
-            if (rank == 0) {
-                MPI_Isend(buf, MESSAGE_SIZE, MPI_CHAR, 1, tid, my_comm, &requests[win_i]);
-            } else {
-                MPI_Irecv(buf, MESSAGE_SIZE, MPI_CHAR, 0, tid, my_comm, &requests[win_i]);
+        MPI_Win_fence(0, my_win);
+        if (world_rank == 0) {
+            for (win_i = 0; win_i < WINDOW_SIZE; win_i++) {
+                if (rma_op == OP_PUT) {
+                    MPI_Put(buf, MESSAGE_SIZE, MPI_CHAR, 1, 0, MESSAGE_SIZE, MPI_CHAR, my_win);
+                } else if (rma_op == OP_GET) {
+                    MPI_Get(buf, MESSAGE_SIZE, MPI_CHAR, 1, 0, MESSAGE_SIZE, MPI_CHAR, my_win);
+                } else if (rma_op == OP_ACC) {
+                    MPI_Accumulate(buf, MESSAGE_SIZE, MPI_CHAR, 1, 0, MESSAGE_SIZE, MPI_CHAR,
+                                   MPI_REPLACE, my_win);
+                } else if (rma_op == OP_GACC) {
+                    MPI_Get_accumulate(buf, MESSAGE_SIZE, MPI_CHAR,
+                                       result_buf, MESSAGE_SIZE, MPI_CHAR,
+                                       1, 0, MESSAGE_SIZE, MPI_CHAR, MPI_NO_OP, my_win);
+                }
             }
         }
-        MPI_Waitall(WINDOW_SIZE, requests, statuses);
+        MPI_Win_fence(0, my_win);
     }
 
-    /* Sync */
-    if (rank == 0) {
-        MPI_Recv(&sync_buf, 1, MPI_INT, 1, tid, my_comm, MPI_STATUS_IGNORE);
-    } else {
-        MPI_Send(&sync_buf, 1, MPI_INT, 0, tid, my_comm);
-    }
-
-    if (rank == 0) {
+    if (world_rank == 0) {
         t_end = MPI_Wtime();
         t_elapsed[tid] = t_end - t_start;
     }
 
     free(buf);
+    free(result_buf);
     return 0;
 }
 
 
 int main(int argc, char *argv[])
 {
-    int rank, size;
+    int size;
     int provided;
     int num_threads;
     double onethread_msg_rate, multithread_msg_rate;
     int errors;
-    MPI_Info info;
 
     if (argc > 2) {
         fprintf(stderr, "Can support at most only the -nthreads argument.\n");
@@ -108,7 +124,7 @@ int main(int argc, char *argv[])
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if (size != 2) {
         fprintf(stderr, "please run with exactly two processes.\n");
@@ -122,17 +138,34 @@ int main(int argc, char *argv[])
     }
 
     MTestArgList *head = MTestArgListCreate(argc, argv);
-    num_threads = MTestArgListGetInt(head, "nthreads");
+    num_threads = MTestArgListGetInt_with_default(head, "nthreads", 4);
+    const char *tmp_str = MTestArgListGetString_with_default(head, "op", "put");
+    if (strcmp(tmp_str, "put") == 0) {
+        rma_op = OP_PUT;
+    } else if (strcmp(tmp_str, "get") == 0) {
+        rma_op = OP_GET;
+    } else if (strcmp(tmp_str, "acc") == 0) {
+        rma_op = OP_ACC;
+    } else if (strcmp(tmp_str, "gacc") == 0) {
+        rma_op = OP_GACC;
+    } else {
+        fprintf(stderr, "Invalid op - %s\n", tmp_str);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
     MTestArgListDestroy(head);
 
-    thread_comms = (MPI_Comm *) malloc(sizeof(MPI_Comm) * num_threads);
+    thread_wins = (MPI_Win *) malloc(sizeof(MPI_Win) * num_threads);
     t_elapsed = calloc(num_threads, sizeof(double));
 
-    /* Create a communicator per thread */
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "mpi_assert_new_vci", "true");
+    /* Create a window per thread */
+    int window_size = MESSAGE_SIZE;
+    if (window_size % BUFFER_ALIGNMENT) {
+        window_size += (BUFFER_ALIGNMENT - window_size % BUFFER_ALIGNMENT);
+    }
     for (int i = 0; i < num_threads; i++) {
-        MPI_Comm_dup_with_info(MPI_COMM_WORLD, info, &thread_comms[i]);
+        void *mybase;
+        MPI_Win_allocate(window_size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &mybase, &thread_wins[i]);
     }
 
     /* Run test with 1 thread */
@@ -150,7 +183,7 @@ int main(int argc, char *argv[])
     MTest_thread_barrier_free();
 
     /* Calculate message rate with multiple threads */
-    if (rank == 0) {
+    if (world_rank == 0) {
         MTestPrintfMsg(1, "Number of messages: %d\n", NUM_MESSAGES);
         MTestPrintfMsg(1, "Message size: %d\n", MESSAGE_SIZE);
         MTestPrintfMsg(1, "Window size: %d\n", WINDOW_SIZE);
@@ -180,10 +213,9 @@ int main(int argc, char *argv[])
     }
 
     for (int i = 0; i < num_threads; i++) {
-        MPI_Comm_free(&thread_comms[i]);
+        MPI_Win_free(&thread_wins[i]);
     }
-    MPI_Info_free(&info);
-    free(thread_comms);
+    free(thread_wins);
     free(t_elapsed);
 
     MTest_Finalize(errors);
