@@ -11,7 +11,13 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef MPL_HAVE_ZE
 #include <dirent.h>
+#if defined(MPL_HAVE_DRM_I915_DRM_H)
 #include "drm/i915_drm.h"
+#define MPL_ENABLE_DRMFD
+#elif defined(MPL_HAVE_LIBDRM_I915_DRM_H)
+#include "libdrm/i915_drm.h"
+#define MPL_ENABLE_DRMFD
+#endif
 #include <sys/ioctl.h>
 #include <sys/syscall.h>        /* Definition of SYS_* constants */
 #include "uthash.h"
@@ -179,6 +185,7 @@ MPL_STATIC_INLINE_PREFIX int dev_id_to_device(int dev_id, MPL_gpu_device_handle_
 /* Functions for managing shareable IPC handles */
 static int fd_to_handle(int dev_fd, int fd, int *handle)
 {
+#ifdef MPL_ENABLE_DRMFD
     struct drm_prime_handle open_fd = { 0, 0, 0 };
     open_fd.fd = fd;
 
@@ -186,10 +193,14 @@ static int fd_to_handle(int dev_fd, int fd, int *handle)
     assert(ret != -1);
     *handle = open_fd.handle;
     return ret;
+#else
+    return -1;
+#endif
 }
 
 static int handle_to_fd(int dev_fd, int handle, int *fd)
 {
+#ifdef MPL_ENABLE_DRMFD
     struct drm_prime_handle open_fd = { 0, 0, 0 };
     open_fd.flags = DRM_CLOEXEC | DRM_RDWR;
     open_fd.handle = handle;
@@ -198,16 +209,23 @@ static int handle_to_fd(int dev_fd, int handle, int *fd)
     assert(ret != -1);
     *fd = open_fd.fd;
     return ret;
+#else
+    return -1;
+#endif
 }
 
 static int close_handle(int dev_fd, int handle)
 {
+#ifdef MPL_ENABLE_DRMFD
     struct drm_gem_close close = { 0, 0 };
     close.handle = handle;
 
     int ret = ioctl(dev_fd, DRM_IOCTL_GEM_CLOSE, &close);
     assert(ret != -1);
     return ret;
+#else
+    return -1;
+#endif
 }
 
 /* Loads a global ze driver */
@@ -773,6 +791,11 @@ int MPL_ze_init_device_fds(int *num_fds, int *device_fds)
     const char *device_suffix = "-render";
     struct dirent *ent = NULL;
     int n = 0;
+
+#ifndef MPL_ENABLE_DRMFD
+    printf("Error> drmfd is not supported!");
+    goto fn_fail;
+#endif
 
     DIR *dir = opendir(device_directory);
     if (dir == NULL) {
