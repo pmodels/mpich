@@ -178,6 +178,7 @@ static int setup_multi_nic(int nic_count)
     int num_parents = 0;
     int local_rank = MPIR_Process.local_rank;
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
+    MPIR_CHKLMEM_DECL(1);
 
     MPIDI_OFI_global.num_nics = nic_count;
 
@@ -244,8 +245,10 @@ static int setup_multi_nic(int nic_count)
         local_rank % MPIDI_OFI_global.num_close_nics;
 
     if (old_idx != 0) {
-        MPIDI_OFI_nic_info_t *old_nics = MPL_malloc(sizeof(MPIDI_OFI_nic_info_t) *
-                                                    MPIDI_OFI_global.num_nics, MPL_MEM_ADDRESS);
+        MPIDI_OFI_nic_info_t *old_nics;
+        MPIR_CHKLMEM_MALLOC(old_nics, MPIDI_OFI_nic_info_t *, sizeof(MPIDI_OFI_nic_info_t) *
+                            MPIDI_OFI_global.num_nics, mpi_errno, "temporary nic info",
+                            MPL_MEM_ADDRESS);
         memcpy(old_nics, nics, sizeof(MPIDI_OFI_nic_info_t) * MPIDI_OFI_global.num_nics);
 
         /* Rotate the preferred NIC for each process starting at old_idx. */
@@ -256,7 +259,6 @@ static int setup_multi_nic(int nic_count)
             if (++old_idx >= MPIDI_OFI_global.num_close_nics)
                 old_idx = 0;
         }
-        MPL_free(old_nics);
     }
 
     /* Reorder the prov_use array based on nic_info array */
@@ -273,11 +275,15 @@ static int setup_multi_nic(int nic_count)
     snprintf(nics_str, 32, "%d", MPIDI_OFI_global.num_close_nics);
     MPIR_Info_set_impl(info_ptr, "num_close_nics", nics_str);
 
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 #endif
 
-bool MPIDI_OFI_nic_is_up(struct fi_info * prov)
+bool MPIDI_OFI_nic_is_up(struct fi_info *prov)
 {
 #ifdef HAVE_LIBFABRIC_NIC
     /* Make sure the NIC returned by OFI is not down. Some providers don't include NIC
