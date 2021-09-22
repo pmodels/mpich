@@ -58,23 +58,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
         /* This is the case when sender sends a huge message, but
          * receiver posted a small buffer.
          */
-        MPI_Aint buflen = MPIDI_OFI_REQUEST(rreq, util.iov.iov_len);
-        /* TODO: replace with data truncation error */
-        MPIR_Assert(buflen >= sizeof(MPIDI_OFI_huge_info_t));
-        MPIDI_OFI_recv_huge_event(wc, rreq);
+        rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+        if (wc->len >= sizeof(MPIDI_OFI_huge_info_t)) {
+            MPIDI_OFI_recv_huge_event(wc, rreq);
+        } else {
+            /* FIXME: How do we get the missing data */
+            MPIR_Assert(0);
+        }
         goto fn_exit;
     }
 
     rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
-    rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
+    /* we may set MPI_ERR_TRUNCATE already. See the HUGE_SEND branch above */
+    if (!rreq->status.MPI_ERROR) {
+        rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
+    }
     /* shouldn't we clean that tag for extra flags, e.g. synchronous bit? */
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
     count = wc->len;
     MPIR_STATUS_SET_COUNT(rreq->status, count);
 
-    /* If striping is enabled, this data will be counted elsewhere. */
-    if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_HUGE ||
-        !MPIDI_OFI_COMM(rreq->comm).enable_striping) {
+    /* Huge message data has already been counted */
+    if (event_id != MPIDI_OFI_EVENT_GET_HUGE) {
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
                                 wc->len);
     }

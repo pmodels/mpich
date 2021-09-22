@@ -97,6 +97,14 @@ int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
     MPIR_FUNC_ENTER;
 
+    if (!(wc->tag & MPIDI_OFI_HUGE_SEND)) {
+        /* This is the case that receiver expect a huge message, but sender
+         * sends a smaller message. This is okay, since the message fit
+         * in the buffer already. */
+        mpi_errno = MPIDI_OFI_recv_event(wc, rreq, MPIDI_OFI_EVENT_GET_HUGE);
+        goto fn_exit;
+    }
+
     MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
                             wc->len);
 
@@ -121,7 +129,10 @@ int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
     /* restore the wc as something MPIDI_OFI_recv_event will handle */
     recv_elem->wc.tag &= ~MPIDI_OFI_HUGE_SEND;
     recv_elem->wc.data = MPIDI_OFI_get_cq_rank(wc);
-    recv_elem->wc.len = 0;
+    recv_elem->wc.len = recv_elem->remote_info.msgsize;
+    if (recv_elem->remote_info.msgsize > MPIDI_OFI_REQUEST(rreq, util.iov.iov_len)) {
+        rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
