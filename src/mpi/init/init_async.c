@@ -181,6 +181,7 @@ static int get_thread_affinity(bool * apply_affinity, int **p_thread_affinity, i
 
         async_threads_per_node = local_size;
         thread_affinity = (int *) MPL_malloc(async_threads_per_node * sizeof(int), MPL_MEM_OTHER);
+        MPIR_Assert(thread_affinity);
 
         MPL_DBG_MSG_FMT(MPIR_DBG_INIT, VERBOSE,
                         (MPL_DBG_FDEST,
@@ -235,6 +236,7 @@ int MPIR_Init_async_thread(void)
 
 #ifdef DO_ASYNC_THREAD_AFFINITY
     if (apply_affinity) {
+        MPIR_Assert(thread_affinity);
         MPL_thread_set_affinity(progress_thread_id, &(thread_affinity[affinity_idx]), 1, &thr_err);
         MPIR_ERR_CHKANDJUMP1(thr_err, mpi_errno, MPI_ERR_OTHER, "**set_thread_affinity",
                              "**set_thread_affinity %d", thread_affinity[affinity_idx]);
