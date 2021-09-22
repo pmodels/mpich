@@ -7,11 +7,6 @@
 #include "ofi_impl.h"
 MPIDI_OFI_global_t MPIDI_OFI_global;
 
-MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_head = NULL;
-MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_tail = NULL;
-MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_head = NULL;
-MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_tail = NULL;
-
 unsigned long long PVAR_COUNTER_nic_sent_bytes_count[MPIDI_OFI_MAX_NICS] ATTRIBUTE((unused));
 unsigned long long PVAR_COUNTER_nic_recvd_bytes_count[MPIDI_OFI_MAX_NICS] ATTRIBUTE((unused));
 unsigned long long PVAR_COUNTER_striped_nic_sent_bytes_count[MPIDI_OFI_MAX_NICS]

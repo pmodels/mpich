@@ -334,10 +334,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         ctrl.vni_dst = vni_dst;
         ctrl.ackreq = sreq;
 
-        /* Send the maximum amount of data that we can here to get things
-         * started, then do the rest using the MR below. This can be confirmed
-         * in the MPIDI_OFI_get_huge code where we start the offset at
-         * MPIDI_OFI_global.max_msg_size */
         sreq->comm = comm;
         MPIR_Comm_add_ref(comm);
         /* Store ordering unnecessary for dst_rank, so use relaxed store */

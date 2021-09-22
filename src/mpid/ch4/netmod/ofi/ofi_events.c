@@ -208,16 +208,9 @@ static uintptr_t recv_rbase(MPIDI_OFI_huge_recv_t * recv_elem)
     }
 }
 
-/* Note: MPIDI_OFI_get_huge_event is invoked from three places --
- * 1. In recv_huge_event, when recv buffer is matched and first chunk received, and
- *    when control message (with remote info) has also been received.
- * 2. In MPIDI_OFI_get_huge, as a callback when control message is received, and
- *    when first chunk has been matched and received.
- *
- * recv_huge_event will fill the local request information, and the control message
- * callback will fill the remote (sender) information. Lastly --
- *
- * 3. As the event function when RDMA read (issued here) completes.
+/* Note: MPIDI_OFI_get_huge_event is invoked from two places --
+ * 1. In recv_huge_event, when recv buffer receives the control header.
+ * 2. As the event function when RDMA read (issued here) completes.
  */
 int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {

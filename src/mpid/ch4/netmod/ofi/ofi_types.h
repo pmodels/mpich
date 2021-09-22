@@ -501,24 +501,8 @@ typedef struct MPIDI_OFI_huge_recv {
                                          * (when in the unexpected list) */
 } MPIDI_OFI_huge_recv_t;
 
-/* The list of posted huge receives that haven't been matched yet. These need
- * to get matched up when handling the control message that starts transferring
- * data from the remote memory region and we need a way of matching up the
- * control messages with the "real" requests. */
-typedef struct MPIDI_OFI_huge_recv_list {
-    int comm_id;
-    int rank;
-    int tag;
-    MPIR_Request *rreq;
-    struct MPIDI_OFI_huge_recv_list *next;
-} MPIDI_OFI_huge_recv_list_t;
-
 /* Externs */
 extern MPIDI_OFI_global_t MPIDI_OFI_global;
-extern MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_head;
-extern MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_tail;
-extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_head;
-extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_tail;
 
 extern MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS];
 
