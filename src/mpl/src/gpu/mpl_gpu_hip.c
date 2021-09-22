@@ -442,6 +442,12 @@ hipError_t hipFree(void *dptr)
     return result;
 }
 
+int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
+                        MPL_pointer_attr_t * dest_attr, size_t size)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}
+
 /* ---- */
 struct stream_callback_wrapper {
     MPL_gpu_hostfn fn;

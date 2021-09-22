@@ -131,6 +131,12 @@ int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
     return MPL_SUCCESS;
 }
 
+int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
+                        MPL_pointer_attr_t * dest_attr, size_t size)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}
+
 int MPL_gpu_launch_hostfn(int stream, MPL_gpu_hostfn fn, void *data)
 {
     return -1;
