@@ -39,8 +39,7 @@ static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     if (MPIDI_OFI_HUGE_SEND & wc->tag) {
         if (wc->buf) {
             /* if we get a copy of buffer, we can check the control header for meta data */
-            MPIDI_OFI_send_control_t *ctrl_ptr = wc->buf;
-            MPIR_Assert(ctrl_ptr->type == MPIDI_OFI_CTRL_HUGE);
+            MPIDI_OFI_huge_info_t *ctrl_ptr = wc->buf;
             count = ctrl_ptr->msgsize;
         } else {
             /* otherwise, we only can get it from cq data, which won't be accurate when
@@ -243,16 +242,19 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
             bytesLeft : MPIDI_OFI_global.max_msg_size;
     }
     if (bytesToGet == 0ULL && recv_elem->chunks_outstanding == 0) {
-        MPIDI_OFI_send_control_t ctrl;
         /* recv_elem->localreq may be freed during done_fn.
          * Need to backup the handle here for later use with MPIDIU_map_erase. */
         uint64_t key_to_erase = recv_elem->localreq->handle;
         recv_elem->wc.len = recv_elem->cur_offset;
         recv_elem->done_fn(&recv_elem->wc, recv_elem->localreq, recv_elem->event_id);
+
+        MPIDI_OFI_send_control_t ctrl;
         ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
-        mpi_errno =
-            MPIDI_OFI_do_control_send(&ctrl, NULL, 0, recv_elem->remote_info.origin_rank,
-                                      recv_elem->comm_ptr, recv_elem->remote_info.ackreq);
+        ctrl.u.huge_ack.ackreq = recv_elem->remote_info.ackreq;
+
+        /* am_send_hdr */
+        mpi_errno = MPIDI_OFI_do_inject(recv_elem->remote_info.origin_rank, recv_elem->comm_ptr,
+                                        MPIDI_OFI_INTERNAL_HANDLER_CONTROL, &ctrl, sizeof(ctrl));
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters, key_to_erase);

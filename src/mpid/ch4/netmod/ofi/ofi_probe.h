@@ -50,7 +50,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_START);
 
     /* Supply a buffer for ctrl header for huge message */
-    MPIDI_OFI_send_control_t ctrl;
+    MPIDI_OFI_huge_info_t ctrl;
     struct iovec iov;
     iov.iov_base = &ctrl;
     iov.iov_len = sizeof(ctrl);

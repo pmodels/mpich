@@ -278,7 +278,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                              tsenddata, FALSE /* eagain */);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
     } else if (unlikely(1)) {
-        MPIDI_OFI_send_control_t ctrl;
+        MPIDI_OFI_huge_info_t ctrl;
         int i, num_nics = MPIDI_OFI_global.num_nics;
         uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
         struct fid_mr **huge_send_mrs;
@@ -325,11 +325,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             }
         }
 
-        ctrl.type = MPIDI_OFI_CTRL_HUGE;
         ctrl.origin_rank = comm->rank;
         ctrl.msgsize = data_sz;
-        ctrl.seqno = 0;
-        ctrl.tag = tag;
         ctrl.vni_src = vni_src;
         ctrl.vni_dst = vni_dst;
         ctrl.ackreq = sreq;

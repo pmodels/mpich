@@ -9,7 +9,6 @@
 #include "ofi_impl.h"
 #include "ofi_am_impl.h"
 #include "ofi_am_events.h"
-#include "ofi_control.h"
 #include "utlist.h"
 
 int MPIDI_OFI_rma_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
@@ -61,7 +60,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
          */
         MPI_Aint buflen = MPIDI_OFI_REQUEST(rreq, util.iov.iov_len);
         /* TODO: replace with data truncation error */
-        MPIR_Assert(buflen >= sizeof(MPIDI_OFI_send_control_t));
+        MPIR_Assert(buflen >= sizeof(MPIDI_OFI_huge_info_t));
         MPIDI_OFI_recv_huge_event(wc, rreq);
         goto fn_exit;
     }
