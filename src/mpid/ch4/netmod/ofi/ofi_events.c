@@ -174,6 +174,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         }
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
+        MPL_free(MPIDI_OFI_REQUEST(sreq, util.inject_buf));
         MPIDI_CH4_REQUEST_FREE(sreq);
     }
     /* c != 0, ssend */

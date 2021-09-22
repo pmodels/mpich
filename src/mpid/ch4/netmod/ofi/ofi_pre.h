@@ -186,7 +186,7 @@ typedef struct {
         struct iovec *nopack;
     } noncontig;
     union {
-        struct iovec iov;
+        struct iovec iov;       /* Stores recv buffer and size */
         void *inject_buf;       /* Internal buffer for inject emulation */
     } util;
 } MPIDI_OFI_request_t;

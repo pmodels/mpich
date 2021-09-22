@@ -323,15 +323,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             }
         }
 
-        MPIDI_OFI_huge_info_t ctrl;
+        MPIDI_OFI_huge_info_t *ctrl = MPL_malloc(sizeof(MPIDI_OFI_huge_info_t), MPL_MEM_OTHER);
+        MPIR_Assert(ctrl);
+        MPIDI_OFI_REQUEST(sreq, util.inject_buf) = ctrl;
+
         for (int i = 0; i < num_nics; i++) {
-            ctrl.rma_keys[i] = rma_keys[i];
+            ctrl->rma_keys[i] = rma_keys[i];
         }
-        ctrl.origin_rank = comm->rank;
-        ctrl.msgsize = data_sz;
-        ctrl.vni_src = vni_src;
-        ctrl.vni_dst = vni_dst;
-        ctrl.ackreq = sreq;
+        ctrl->origin_rank = comm->rank;
+        ctrl->msgsize = data_sz;
+        ctrl->vni_src = vni_src;
+        ctrl->vni_dst = vni_dst;
+        ctrl->ackreq = sreq;
 
         sreq->comm = comm;
         MPIR_Comm_add_ref(comm);
@@ -342,15 +345,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         cq_data = MPIDI_OFI_make_cq_data(comm->rank, data_sz);
         /* Note: we are sending the ctrl header, rather than the actual data. */
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                          &ctrl, sizeof(ctrl), NULL /* desc */ ,
+                                          ctrl, sizeof(*ctrl), NULL /* desc */ ,
                                           cq_data,
                                           MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
                                                                vni_remote),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
                              vni_local, tsenddata, FALSE /* eagain */);
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], sizeof(ctrl));
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_sent_bytes_count[sender_nic], sizeof(ctrl));
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], sizeof(*ctrl));
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_sent_bytes_count[sender_nic], sizeof(*ctrl));
     }
 
   fn_exit:
