@@ -127,7 +127,17 @@ int MPL_gpu_init(void)
     }
 
     local_to_global_map = MPL_malloc(global_ze_device_count * sizeof(int), MPL_MEM_OTHER);
+    if (local_to_global_map == NULL) {
+        mpl_err = MPL_ERR_GPU_NOMEM;
+        goto fn_fail;
+    }
+
     global_to_local_map = MPL_malloc(global_ze_device_count * sizeof(int), MPL_MEM_OTHER);
+    if (global_to_local_map == NULL) {
+        mpl_err = MPL_ERR_GPU_NOMEM;
+        goto fn_fail;
+    }
+
     for (int i = 0; i < global_ze_device_count; i++) {
         local_to_global_map[i] = i;
         global_to_local_map[i] = i;
