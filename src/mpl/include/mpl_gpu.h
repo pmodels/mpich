@@ -105,6 +105,9 @@ int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env);
 
 int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id);
 
+int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
+                        MPL_pointer_attr_t * dest_attr, size_t size);
+
 typedef void (*MPL_gpu_hostfn) (void *data);
 int MPL_gpu_launch_hostfn(MPL_gpu_stream_t stream, MPL_gpu_hostfn fn, void *data);
 bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream);
