@@ -106,8 +106,6 @@ do_ucx=yes
 do_json=yes
 do_yaksa=yes
 
-export do_build_configure
-
 # Allow MAKE to be set from the environment
 MAKE=${MAKE-make}
 
