@@ -278,8 +278,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                              tsenddata, FALSE /* eagain */);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
     } else if (unlikely(1)) {
-        MPIDI_OFI_huge_info_t ctrl;
-        int i, num_nics = MPIDI_OFI_global.num_nics;
+        int num_nics = MPIDI_OFI_global.num_nics;
         uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
         struct fid_mr **huge_send_mrs;
 
@@ -293,18 +292,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             (struct fid_mr **) MPL_malloc((num_nics * sizeof(struct fid_mr *)), MPL_MEM_BUFFER);
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* Set up a memory region for the lmt data transfer */
-            for (i = 0; i < num_nics; i++) {
-                ctrl.rma_keys[i] =
+            for (int i = 0; i < num_nics; i++) {
+                rma_keys[i] =
                     MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
-                rma_keys[i] = ctrl.rma_keys[i];
             }
         } else {
             /* zero them to avoid warnings */
-            for (i = 0; i < num_nics; i++) {
+            for (int i = 0; i < num_nics; i++) {
                 rma_keys[i] = 0;
             }
         }
-        for (i = 0; i < num_nics; i++) {
+        for (int i = 0; i < num_nics; i++) {
             MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(comm, vni_local, i)].domain,  /* In:  Domain Object */
                                      send_buf,  /* In:  Lower memory address */
                                      data_sz,   /* In:  Length              */
@@ -320,11 +318,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                        MPL_MEM_BUFFER);
         if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* MR_BASIC */
-            for (i = 0; i < num_nics; i++) {
-                ctrl.rma_keys[i] = fi_mr_key(huge_send_mrs[i]);
+            for (int i = 0; i < num_nics; i++) {
+                rma_keys[i] = fi_mr_key(huge_send_mrs[i]);
             }
         }
 
+        MPIDI_OFI_huge_info_t ctrl;
+        for (int i = 0; i < num_nics; i++) {
+            ctrl.rma_keys[i] = rma_keys[i];
+        }
         ctrl.origin_rank = comm->rank;
         ctrl.msgsize = data_sz;
         ctrl.vni_src = vni_src;
