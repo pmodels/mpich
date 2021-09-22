@@ -414,3 +414,9 @@ cudaError_t CUDARTAPI cudaFree(void *dptr)
     result = sys_cudaFree(dptr);
     return result;
 }
+
+int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
+                        MPL_pointer_attr_t * dest_attr, size_t size)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}

@@ -328,6 +328,12 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
     goto fn_exit;
 }
 
+int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
+                        MPL_pointer_attr_t * dest_attr, size_t size)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}
+
 static void gpu_free_hooks_cb(void *dptr)
 {
     gpu_free_hook_s *current = free_hook_chain;

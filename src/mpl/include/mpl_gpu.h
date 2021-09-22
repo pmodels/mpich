@@ -95,4 +95,7 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id);
 
 int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id);
 
+int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
+                        MPL_pointer_attr_t * dest_attr, size_t size);
+
 #endif /* ifndef MPL_GPU_H_INCLUDED */

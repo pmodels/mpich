@@ -599,6 +599,7 @@ AC_MSG_NOTICE([Timer type selected is $timer_type])
 AC_CHECK_HEADERS(sched.h)
 AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(x86intrin.h)
 AC_CHECK_FUNCS(sched_yield yield usleep sleep select)
 
 if test "$ac_cv_func_usleep" = "yes" ; then
