@@ -202,6 +202,12 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
      * inside MPID_Init */
     if (MPIR_CVAR_ENABLE_GPU) {
         int mpl_errno = MPL_gpu_init();
+
+        /* Disable GPUs if no devices are found */
+        if (mpl_errno == MPL_ERR_GPU_NODEVICE) {
+            MPIR_CVAR_ENABLE_GPU = 0;
+            mpl_errno = MPL_SUCCESS;
+        }
         MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
     }
 

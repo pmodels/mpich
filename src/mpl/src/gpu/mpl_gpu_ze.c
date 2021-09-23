@@ -248,6 +248,10 @@ static int gpu_ze_init_driver(void)
 
     ze_init_flag_t flags = ZE_INIT_FLAG_GPU_ONLY;
     ret = zeInit(flags);
+    if (ret == ZE_RESULT_ERROR_UNINITIALIZED) {
+        ret_error = MPL_ERR_GPU_NODEVICE;
+        goto fn_fail;
+    }
     ZE_ERR_CHECK(ret);
 
     ret = zeDriverGet(&driver_count, NULL);
