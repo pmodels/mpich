@@ -30,23 +30,29 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
 static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t count = 0;
+    MPI_Aint count = 0;
     MPIR_FUNC_ENTER;
-    rreq->status.MPI_SOURCE = MPIDI_OFI_get_cq_rank(wc);
-    rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
-    rreq->status.MPI_ERROR = MPI_SUCCESS;
 
     if (MPIDI_OFI_HUGE_SEND & wc->tag) {
+        int src_rank = MPIDI_OFI_get_huge_cq_rank(wc);
+        rreq->status.MPI_SOURCE = src_rank;
+        rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
+        rreq->status.MPI_ERROR = MPI_SUCCESS;
         if (wc->buf) {
             /* if we get a copy of buffer, we can check the control header for meta data */
             MPIDI_OFI_huge_info_t *ctrl_ptr = wc->buf;
             count = ctrl_ptr->msgsize;
         } else {
-            /* otherwise, we only can get it from cq data, which won't be accurate when
-             * the meta data (count and rank) doesn't fit in 64-bit. */
-            count = MPIDI_OFI_get_cq_msgsize(wc);
+            /* otherwise, we need use ctrl message to get msgsize */
+            int handle = MPIDI_OFI_get_huge_cq_sreq(wc);
+            int vni_src = MPIDI_OFI_REQUEST(rreq, vni_src);
+            int vni_dst = MPIDI_OFI_REQUEST(rreq, vni_dst);
+            MPIDI_OFI_huge_probe_msgsize(src_rank, rreq->comm, handle, vni_src, vni_dst, &count);
         }
     } else {
+        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
+        rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
+        rreq->status.MPI_ERROR = MPI_SUCCESS;
         count = wc->len;
     }
     MPIR_STATUS_SET_COUNT(rreq->status, count);
@@ -128,7 +134,7 @@ int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
 
     /* restore the wc as something MPIDI_OFI_recv_event will handle */
     recv_elem->wc.tag &= ~MPIDI_OFI_HUGE_SEND;
-    recv_elem->wc.data = MPIDI_OFI_get_cq_rank(wc);
+    recv_elem->wc.data = MPIDI_OFI_get_huge_cq_rank(wc);
     recv_elem->wc.len = recv_elem->remote_info.msgsize;
     if (recv_elem->remote_info.msgsize > MPIDI_OFI_REQUEST(rreq, util.iov.iov_len)) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
@@ -264,15 +270,8 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
         recv_elem->wc.len = recv_elem->cur_offset;
         MPIDI_OFI_recv_event(&recv_elem->wc, recv_elem->localreq, recv_elem->event_id);
 
-        MPIDI_OFI_send_control_t ctrl;
-        ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
-        ctrl.u.huge_ack.ackreq = recv_elem->remote_info.ackreq;
-
-        /* am_send_hdr */
-        MPIR_Comm *comm_ptr = recv_elem->comm_ptr;
-        mpi_errno = MPIDI_NM_am_send_hdr(origin_rank, comm_ptr,
-                                         MPIDI_OFI_INTERNAL_HANDLER_CONTROL, &ctrl, sizeof(ctrl),
-                                         vni_src, vni_dst);
+        mpi_errno = MPIDI_OFI_huge_ack(origin_rank, recv_elem->comm_ptr,
+                                       recv_elem->remote_info.ackreq, vni_src, vni_dst);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters, key_to_erase);
@@ -370,7 +369,7 @@ static int accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
 {
     MPIR_FUNC_ENTER;
     MPIDI_OFI_dynamic_process_request_t *ctrl = (MPIDI_OFI_dynamic_process_request_t *) rreq;
-    ctrl->source = MPIDI_OFI_get_cq_rank(wc);
+    ctrl->source = MPIDI_OFI_get_huge_cq_rank(wc);
     ctrl->tag = MPIDI_OFI_init_get_tag(wc->tag);
     ctrl->msglen = wc->len;
     ctrl->done = MPIDI_OFI_PEEK_FOUND;

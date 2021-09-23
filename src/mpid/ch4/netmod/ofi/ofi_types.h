@@ -127,9 +127,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 
 /* Typedefs */
 enum {
-    MPIDI_OFI_CTRL_HUGE,      /**< Huge message          */
-    MPIDI_OFI_CTRL_HUGEACK    /**< Huge message ack      */
-    /**< Huge message cleanup  */
+    MPIDI_OFI_CTRL_HUGE,
+    MPIDI_OFI_CTRL_HUGE_ACK,
+    MPIDI_OFI_CTRL_HUGE_PROBE,
+    MPIDI_OFI_CTRL_HUGE_PROBE_REPLY,
 };
 
 enum {
@@ -382,7 +383,7 @@ typedef struct {
 
 typedef struct {
     int origin_rank;
-    MPIR_Request *ackreq;
+    MPI_Request ackreq;         /* note: handle, not pointer */
     uintptr_t send_buf;
     size_t msgsize;
     uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
@@ -391,11 +392,27 @@ typedef struct {
 } MPIDI_OFI_huge_info_t;
 
 typedef struct {
+    bool done;
+    MPI_Aint msgsize;
+} MPIDI_OFI_huge_probe_reply_t;
+
+typedef struct {
     int16_t type;
     union {
         struct {
-            MPIR_Request *ackreq;
+            MPI_Request ackreq; /* note: handle, not pointer */
         } huge_ack;
+        struct {
+            int dst_rank;
+            int vni_src;
+            int vni_dst;
+            MPI_Request ackreq;
+            void *reply_ptr;
+        } huge_probe;
+        struct {
+            void *reply_ptr;
+            MPI_Aint msgsize;
+        } huge_probe_reply;
     } u;
 } MPIDI_OFI_send_control_t;
 

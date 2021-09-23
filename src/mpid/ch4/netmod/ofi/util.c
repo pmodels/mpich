@@ -150,6 +150,49 @@ void MPIDI_OFI_mr_key_allocator_destroy(void)
     MPL_free(mr_key_allocator.bitmask);
 }
 
+int MPIDI_OFI_huge_ack(int rank, MPIR_Comm * comm, MPI_Request handle, int vni_src, int vni_dst)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_send_control_t ctrl;
+    ctrl.type = MPIDI_OFI_CTRL_HUGE_ACK;
+    ctrl.u.huge_ack.ackreq = handle;
+
+    /* note: this is receiver ack sender */
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
+                                     &ctrl, sizeof(ctrl), vni_dst, vni_src);
+    return mpi_errno;
+}
+
+int MPIDI_OFI_huge_probe_msgsize(int rank, MPIR_Comm * comm, MPI_Request handle, int vni_src,
+                                 int vni_dst, MPI_Aint * msgsize)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_send_control_t ctrl;
+    MPIDI_OFI_huge_probe_reply_t reply;
+
+    reply.done = false;
+    ctrl.type = MPIDI_OFI_CTRL_HUGE_PROBE;
+    ctrl.u.huge_probe.ackreq = handle;
+    ctrl.u.huge_probe.reply_ptr = &reply;
+    ctrl.u.huge_probe.dst_rank = comm->rank;
+    ctrl.u.huge_probe.vni_src = vni_src;
+    ctrl.u.huge_probe.vni_dst = vni_dst;
+
+    /* note: this is receiver querying sender */
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm,
+                                     MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
+                                     &ctrl, sizeof(ctrl), vni_dst, vni_src);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_OFI_PROGRESS_WHILE(!reply.done, vni_dst);
+
+    *msgsize = reply.msgsize;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
                               uint32_t attr, MPIR_Request ** req)
@@ -162,8 +205,41 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
     }
 
     switch (ctrlsend->type) {
-        case MPIDI_OFI_CTRL_HUGEACK:
-            mpi_errno = MPIDI_OFI_dispatch_function(NULL, ctrlsend->u.huge_ack.ackreq);
+        case MPIDI_OFI_CTRL_HUGE_ACK:{
+                MPIR_Request *sreq;
+                MPIR_Request_get_ptr(ctrlsend->u.huge_ack.ackreq, sreq);
+                MPIR_Assert(sreq);
+                mpi_errno = MPIDI_OFI_dispatch_function(NULL, sreq);
+            }
+            break;
+
+        case MPIDI_OFI_CTRL_HUGE_PROBE:{
+                MPIR_Request *sreq;
+                MPIR_Request_get_ptr(ctrlsend->u.huge_probe.ackreq, sreq);
+                MPIR_Assert(sreq);
+
+                MPIDI_OFI_huge_info_t *info = MPIDI_OFI_REQUEST(sreq, util.inject_buf);
+
+                MPIDI_OFI_send_control_t reply;
+                reply.type = MPIDI_OFI_CTRL_HUGE_PROBE_REPLY;
+                reply.u.huge_probe_reply.reply_ptr = ctrlsend->u.huge_probe.reply_ptr;
+                reply.u.huge_probe_reply.msgsize = info->msgsize;
+
+                int dst_rank = ctrlsend->u.huge_probe.dst_rank;
+                int vni_src = ctrlsend->u.huge_probe.vni_src;
+                int vni_dst = ctrlsend->u.huge_probe.vni_dst;
+                /* note: this is sender replying receiver's probe */
+                mpi_errno = MPIDI_NM_am_send_hdr_reply(sreq->comm, dst_rank,
+                                                       MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
+                                                       &reply, sizeof(reply), vni_src, vni_dst);
+            }
+            break;
+
+        case MPIDI_OFI_CTRL_HUGE_PROBE_REPLY:{
+                MPIDI_OFI_huge_probe_reply_t *reply_ptr = ctrlsend->u.huge_probe_reply.reply_ptr;
+                reply_ptr->msgsize = ctrlsend->u.huge_probe_reply.msgsize;
+                reply_ptr->done = true;
+            }
             break;
 
         default:

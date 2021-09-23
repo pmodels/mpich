@@ -47,6 +47,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, comm->recvcontext_id + context_offset, tag);
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_PEEK;
+    MPIDI_OFI_REQUEST(rreq, vni_src) = vni_src;
+    MPIDI_OFI_REQUEST(rreq, vni_dst) = vni_dst;
     MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_START);
 
     /* Supply a buffer for ctrl header for huge message */

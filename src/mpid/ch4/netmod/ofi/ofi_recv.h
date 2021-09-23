@@ -156,6 +156,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
 
     *request = rreq;
+    /* vnis needed to ack huge message */
+    MPIDI_OFI_REQUEST(rreq, vni_src) = vni_src;
+    MPIDI_OFI_REQUEST(rreq, vni_dst) = vni_dst;
 
     /* Calculate the correct NICs. */
     sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->recvcontext_id, MPIR_Process.rank,

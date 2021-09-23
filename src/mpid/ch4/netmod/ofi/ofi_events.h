@@ -68,6 +68,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
              */
             wc->len = 0;
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+
+            /* ack sender we finished data transfer */
+            int src_rank = MPIDI_OFI_get_huge_cq_rank(wc);
+            MPI_Request handle = MPIDI_OFI_get_huge_cq_sreq(wc);
+            int vni_src = MPIDI_OFI_REQUEST(rreq, vni_src);
+            int vni_dst = MPIDI_OFI_REQUEST(rreq, vni_dst);
+            mpi_errno = MPIDI_OFI_huge_ack(src_rank, rreq->comm, handle, vni_src, vni_dst);
+            MPIR_ERR_CHECK(mpi_errno);
+            /* fall thru to normal recv_event handling */
         } else {
             /* the handler will set MPI_ERR_TRUNCATE */
             MPIDI_OFI_recv_huge_event(wc, rreq);

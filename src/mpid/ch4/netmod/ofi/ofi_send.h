@@ -334,15 +334,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         ctrl->msgsize = data_sz;
         ctrl->vni_src = vni_src;
         ctrl->vni_dst = vni_dst;
-        ctrl->ackreq = sreq;
+        ctrl->ackreq = sreq->handle;
 
         sreq->comm = comm;
         MPIR_Comm_add_ref(comm);
         /* Store ordering unnecessary for dst_rank, so use relaxed store */
         MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(sreq, util_id), dst_rank);
         match_bits |= MPIDI_OFI_HUGE_SEND;      /* Add the bit for a huge message */
-        /* We need squeeze both rank and msgsize into cq data */
-        cq_data = MPIDI_OFI_make_cq_data(comm->rank, data_sz);
+        /* The information is sent as data. Store request handle and rank in
+         * cq_data in case receive need call back, e.g. in the case of probe
+         * and truncation error.
+         */
+        cq_data = MPIDI_OFI_make_huge_cq_data(comm->rank, sreq->handle);
         /* Note: we are sending the ctrl header, rather than the actual data. */
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           ctrl, sizeof(*ctrl), NULL /* desc */ ,

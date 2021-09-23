@@ -42,75 +42,20 @@ ATTRIBUTE((unused));
 int MPIDI_OFI_progress_uninlined(int vni);
 int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret);
 
-/* To support probing huge message, we need squeeze both the msgsize and rank
- * into the 64-bit cq data. This is of course, not always possible, but we do
- * our best. */
-/* first 2-bit mark the format:
- * 0 - 7 + 1 -- 7 bytes minus 2 bits for msgsize and 1 byte for rank
- * 1 - 6 + 2
- * 2 - 5 + 3
- * 3 - 4 + 4
- */
-#define MPIDI_OFI_MAKE_CQ_SHIFT 62
-#define MPIDI_OFI_MAKE_CQ_MASK (((uint64_t) 1 << MPIDI_OFI_MAKE_CQ_SHIFT) - 1)
-
-MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_make_cq_data(int rank, MPI_Aint data_sz)
+/* For huge send, cq_data is made of request handle and src_rank */
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_make_huge_cq_data(int rank, int handle)
 {
-    uint64_t data = data_sz;
-    if (rank < 0x100) {
-        data = ((data << 8) + rank) & MPIDI_OFI_MAKE_CQ_MASK;
-    } else if (rank < 0x10000) {
-        data = (((data << 16) + rank) & MPIDI_OFI_MAKE_CQ_MASK) |
-            ((uint64_t) 1 << MPIDI_OFI_MAKE_CQ_SHIFT);
-    } else if (rank < 0x1000000) {
-        data = (((data << 24) + rank) & MPIDI_OFI_MAKE_CQ_MASK) |
-            ((uint64_t) 2 << MPIDI_OFI_MAKE_CQ_SHIFT);
-    } else {
-        data = (((data << 32) + rank) & MPIDI_OFI_MAKE_CQ_MASK) |
-            ((uint64_t) 3 << MPIDI_OFI_MAKE_CQ_SHIFT);
-    }
-    return data;
+    return ((uint64_t) handle << 32) | rank;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_cq_rank(struct fi_cq_tagged_entry *wc)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_cq_rank(struct fi_cq_tagged_entry *wc)
 {
-    uint64_t cq_data = wc->data;
-    if (wc->tag & MPIDI_OFI_HUGE_SEND) {
-        switch (cq_data >> MPIDI_OFI_MAKE_CQ_SHIFT) {
-            case 0:
-                return cq_data & (((uint64_t) 1 << 8) - 1);
-            case 1:
-                return cq_data & (((uint64_t) 1 << 16) - 1);
-            case 2:
-                return cq_data & (((uint64_t) 1 << 24) - 1);
-            case 3:
-                return cq_data & (((uint64_t) 1 << 32) - 1);
-            default:
-                /* impossible */
-                return 0;
-        }
-    } else {
-        return cq_data;
-    }
+    return (int) (wc->data & 0xffffffff);
 }
 
-MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_OFI_get_cq_msgsize(struct fi_cq_tagged_entry * wc)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_cq_sreq(struct fi_cq_tagged_entry *wc)
 {
-    MPIR_Assert(wc->tag & MPIDI_OFI_HUGE_SEND);
-    uint64_t cq_data = wc->data;
-    switch (cq_data >> MPIDI_OFI_MAKE_CQ_SHIFT) {
-        case 0:
-            return (MPI_Aint) ((cq_data & MPIDI_OFI_MAKE_CQ_MASK) >> 8);
-        case 1:
-            return (MPI_Aint) ((cq_data & MPIDI_OFI_MAKE_CQ_MASK) >> 16);
-        case 2:
-            return (MPI_Aint) ((cq_data & MPIDI_OFI_MAKE_CQ_MASK) >> 24);
-        case 3:
-            return (MPI_Aint) ((cq_data & MPIDI_OFI_MAKE_CQ_MASK) >> 32);
-        default:
-            /* impossible */
-            return 0;
-    }
+    return (int) (wc->data >> 32);
 }
 
 /* vni mapping */
@@ -379,10 +324,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_set(int ctx_idx, int val)
 #define MPIDI_OFI_COLL_MR_KEY 1
 #define MPIDI_OFI_INVALID_MR_KEY 0xFFFFFFFFFFFFFFFFULL
 int MPIDI_OFI_retry_progress(void);
-int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
-                              uint32_t attr, MPIR_Request ** req);
-int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
-                                       MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
+int MPIDI_OFI_huge_ack(int rank, MPIR_Comm * comm, MPI_Request handle, int vni_src, int vni_dst);
+int MPIDI_OFI_huge_probe_msgsize(int rank, MPIR_Comm * comm, MPI_Request handle, int vni_src,
+                                 int vni_dst, MPI_Aint * msgsize);
+int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz, uint32_t attr,
+                              MPIR_Request ** req);
+int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data, MPI_Aint in_data_sz, uint32_t attr,
+                                       MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(struct fid_ep *ep);
 int MPIDI_OFI_mr_key_allocator_init(void);
