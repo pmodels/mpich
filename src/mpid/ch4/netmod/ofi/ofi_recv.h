@@ -232,16 +232,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     if (unlikely(data_sz >= MPIDI_OFI_global.max_msg_size) && !MPIDI_OFI_COMM(comm).enable_striping) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
-        data_sz = MPIDI_OFI_global.max_msg_size;
     } else if (MPIDI_OFI_COMM(comm).enable_striping &&
                (data_sz >= MPIDI_OFI_global.stripe_threshold)) {
         MPIDI_OFI_huge_recv_t *huge_recv = (MPIDI_OFI_huge_recv_t *) rreq;
         huge_recv->chunks_outstanding = 0;
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
-        /* Receive has to be posted with size MPIDI_OFI_global.stripe_threshold to handle underflow */
-        data_sz = MPIDI_OFI_global.stripe_threshold;
-    } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
+    } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
+    }
 
     MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
     MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;

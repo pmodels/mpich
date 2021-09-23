@@ -138,6 +138,7 @@ int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
     recv_elem->wc.len = recv_elem->remote_info.msgsize;
     if (recv_elem->remote_info.msgsize > MPIDI_OFI_REQUEST(rreq, util.iov.iov_len)) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+        recv_elem->remote_info.msgsize = MPIDI_OFI_REQUEST(rreq, util.iov.iov_len);
     }
 
   fn_exit:
