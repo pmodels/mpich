@@ -58,14 +58,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
         /* This is the case when sender sends a huge message, but
          * receiver posted a small buffer.
          */
-        rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        if (wc->len >= sizeof(MPIDI_OFI_huge_info_t)) {
-            MPIDI_OFI_recv_huge_event(wc, rreq);
+        if (rreq->status.MPI_ERROR == MPI_ERR_TRUNCATE) {
+            /* The message, even the initial part, is lost in this case.
+             * The current MPI spec says we need return data overflow error,
+             * but does not say whether we are allowed to lose data.
+             * While losing data is concerning, note this is only the case when
+             * user send a "huge" message, but posted a "tiny" buffer, which
+             * likely is a error case that likely the contents doesn't matter.
+             */
+            wc->len = 0;
+            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
         } else {
-            /* FIXME: How do we get the missing data */
-            MPIR_Assert(0);
+            /* the handler will set MPI_ERR_TRUNCATE */
+            MPIDI_OFI_recv_huge_event(wc, rreq);
+            goto fn_exit;
         }
-        goto fn_exit;
     }
 
     rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
@@ -146,7 +153,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
 
     MPIDIU_request_complete(rreq);
 
-    /* Polling loop will check for truncation */
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;

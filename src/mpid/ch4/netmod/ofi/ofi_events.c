@@ -763,9 +763,9 @@ int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret)
                             break;
 
                         case MPIR_REQUEST_KIND__RECV:
+                            req->status.MPI_ERROR = MPI_ERR_TRUNCATE;
                             mpi_errno =
                                 MPIDI_OFI_dispatch_function((struct fi_cq_tagged_entry *) &e, req);
-                            req->status.MPI_ERROR = MPI_ERR_TRUNCATE;
                             break;
 
                         default:
