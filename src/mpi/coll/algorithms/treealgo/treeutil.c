@@ -211,6 +211,7 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
     /* Children calculation */
     depth = tree_ilog(k, nranks - 1);
     flip_bit = (int *) MPL_calloc(depth, sizeof(int), MPL_MEM_COLL);
+    MPIR_ERR_CHKANDJUMP(!flip_bit, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     for (j = 0; j < depth; j++) {
         if (MPL_getdigit(k, lrank, j)) {
@@ -234,5 +235,9 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
                      ct->parent, nranks, root));
     MPL_free(flip_bit);
 
+  fn_exit:
     return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
