@@ -150,87 +150,6 @@ void MPIDI_OFI_mr_key_allocator_destroy(void)
     MPL_free(mr_key_allocator.bitmask);
 }
 
-/* Translate the control message to get a huge message into a request to
- * actually perform the data transfer. */
-static int MPIDI_OFI_get_huge(int vni, MPIDI_OFI_huge_remote_info_t * info)
-{
-    MPIDI_OFI_huge_recv_t *recv_elem = NULL;
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    bool ready_to_get = false;
-
-    /* If there has been a posted receive, search through the list of unmatched
-     * receives to find the one that goes with the incoming message. */
-    {
-        MPIDI_OFI_huge_recv_list_t *list_ptr;
-
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                        (MPL_DBG_FDEST, "SEARCHING POSTED LIST: (%d, %d, %d)", info->comm_id,
-                         info->origin_rank, info->tag));
-
-        LL_FOREACH(MPIDI_posted_huge_recv_head, list_ptr) {
-            if (list_ptr->comm_id == info->comm_id &&
-                list_ptr->rank == info->origin_rank && list_ptr->tag == info->tag) {
-                MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                                (MPL_DBG_FDEST, "MATCHED POSTED LIST: (%d, %d, %d, %d)",
-                                 info->comm_id, info->origin_rank, info->tag,
-                                 list_ptr->rreq->handle));
-
-                LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
-
-                recv_elem = (MPIDI_OFI_huge_recv_t *)
-                    MPIDIU_map_lookup(MPIDI_OFI_global.huge_recv_counters, list_ptr->rreq->handle);
-
-                /* If this is a "peek" element for an MPI_Probe, it shouldn't be matched. Grab the
-                 * important information and remove the element from the list. */
-                if (recv_elem->peek) {
-                    MPIR_STATUS_SET_COUNT(recv_elem->localreq->status, info->msgsize);
-                    MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(recv_elem->localreq, util_id)),
-                                                 MPIDI_OFI_PEEK_FOUND);
-                    MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters,
-                                     recv_elem->localreq->handle);
-                    MPL_free(recv_elem);
-                    recv_elem = NULL;
-                }
-
-                MPL_free(list_ptr);
-                break;
-            }
-        }
-    }
-
-    if (recv_elem) {
-        ready_to_get = true;
-    } else {
-        /* Put the struct describing the transfer on an unexpected list to be retrieved later */
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                        (MPL_DBG_FDEST, "CREATING UNEXPECTED HUGE RECV: (%d, %d, %d)",
-                         info->comm_id, info->origin_rank, info->tag));
-
-        /* If this is unexpected, create a new tracker and put it in the unexpected list. */
-        recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_COMM);
-        if (!recv_elem)
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-        LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv_elem);
-    }
-
-    recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-    recv_elem->remote_info = *info;
-    recv_elem->next = NULL;
-    if (ready_to_get) {
-        MPIDI_OFI_get_huge_event(vni, NULL, (MPIR_Request *) recv_elem);
-    }
-
-    MPIR_FUNC_EXIT;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
                               uint32_t attr, MPIR_Request ** req)
 {
@@ -241,13 +160,14 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
         *req = NULL;
     }
 
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
     switch (ctrlsend->type) {
         case MPIDI_OFI_CTRL_HUGEACK:
-            mpi_errno = MPIDI_OFI_dispatch_function(0, NULL, ctrlsend->u.huge_ack.ackreq);
+            mpi_errno = MPIDI_OFI_dispatch_function(local_vci, NULL, ctrlsend->u.huge_ack.ackreq);
             break;
 
         case MPIDI_OFI_CTRL_HUGE:
-            mpi_errno = MPIDI_OFI_get_huge(0, &(ctrlsend->u.huge));
+            mpi_errno = MPIDI_OFI_recv_huge_control(&(ctrlsend->u.huge));
             break;
 
         default:
