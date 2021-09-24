@@ -309,7 +309,7 @@ static uintptr_t recv_rbase(MPIDI_OFI_huge_recv_t * recv_elem)
     if (!MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
         return 0;
     } else {
-        return recv_elem->remote_info.send_buf;
+        return (uintptr_t) recv_elem->remote_info.send_buf;
     }
 }
 
@@ -362,9 +362,13 @@ int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reques
         recv_elem->wc.len = recv_elem->cur_offset;
         MPIDI_OFI_recv_event(vni, &recv_elem->wc, recv_elem->localreq, recv_elem->event_id);
         ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
-        mpi_errno =
-            MPIDI_OFI_do_control_send(&ctrl, NULL, 0, recv_elem->remote_info.origin_rank,
-                                      recv_elem->comm_ptr, recv_elem->remote_info.ackreq);
+        ctrl.u.huge_ack.ackreq = recv_elem->remote_info.ackreq;
+        /* note: it's receiver ack sender */
+        int vni_remote = recv_elem->remote_info.vni_src;
+        int vni_local = recv_elem->remote_info.vni_dst;
+        mpi_errno = MPIDI_NM_am_send_hdr(recv_elem->remote_info.origin_rank, recv_elem->comm_ptr,
+                                         MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
+                                         &ctrl, sizeof(ctrl), vni_local, vni_remote);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters, key_to_erase);

@@ -9,7 +9,6 @@
 #include "ofi_impl.h"
 #include "ofi_am_impl.h"
 #include "ofi_am_events.h"
-#include "ofi_control.h"
 #include "utlist.h"
 
 int MPIDI_OFI_rma_done_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
