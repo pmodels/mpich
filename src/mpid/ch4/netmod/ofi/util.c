@@ -152,7 +152,7 @@ void MPIDI_OFI_mr_key_allocator_destroy(void)
 
 /* Translate the control message to get a huge message into a request to
  * actually perform the data transfer. */
-static int MPIDI_OFI_get_huge(int vni, MPIDI_OFI_send_control_t * info)
+static int MPIDI_OFI_get_huge(int vni, MPIDI_OFI_huge_remote_info_t * info)
 {
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
     int mpi_errno = MPI_SUCCESS;
@@ -242,17 +242,12 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
     }
 
     switch (ctrlsend->type) {
-        case MPIDI_OFI_CTRL_HUGEACK:{
-                /* FIXME: need vni from the callback parameters */
-                mpi_errno = MPIDI_OFI_dispatch_function(0, NULL, ctrlsend->ackreq);
-                goto fn_exit;
-            }
+        case MPIDI_OFI_CTRL_HUGEACK:
+            mpi_errno = MPIDI_OFI_dispatch_function(0, NULL, ctrlsend->u.huge_ack.ackreq);
             break;
 
-        case MPIDI_OFI_CTRL_HUGE:{
-                mpi_errno = MPIDI_OFI_get_huge(0, ctrlsend);
-                goto fn_exit;
-            }
+        case MPIDI_OFI_CTRL_HUGE:
+            mpi_errno = MPIDI_OFI_get_huge(0, &(ctrlsend->u.huge));
             break;
 
         default:

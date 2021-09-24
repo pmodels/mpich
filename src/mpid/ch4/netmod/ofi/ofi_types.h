@@ -384,17 +384,25 @@ typedef struct {
 } MPIDI_OFI_global_t;
 
 typedef struct {
-    int16_t type;
-    int16_t seqno;
     int origin_rank;
     MPIR_Request *ackreq;
-    uintptr_t send_buf;
+    void *send_buf;
     size_t msgsize;
     int comm_id;
     uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
     int tag;
     int vni_src;
     int vni_dst;
+} MPIDI_OFI_huge_remote_info_t;
+
+typedef struct {
+    int16_t type;
+    union {
+        MPIDI_OFI_huge_remote_info_t huge;
+        struct {
+            MPIR_Request *ackreq;
+        } huge_ack;
+    } u;
 } MPIDI_OFI_send_control_t;
 
 typedef struct MPIDI_OFI_win_acc_hint {
@@ -491,7 +499,7 @@ typedef struct MPIDI_OFI_huge_recv {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    MPIDI_OFI_send_control_t remote_info;
+    MPIDI_OFI_huge_remote_info_t remote_info;
     bool peek;                  /* Flag to indicate whether this struct has been created to track an uncompleted peek
                                  * operation. */
     size_t cur_offset;
