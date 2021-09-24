@@ -283,6 +283,11 @@ int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reques
     MPIR_FUNC_ENTER;
 
     void *recv_buf = MPIDI_OFI_REQUEST(recv_elem->localreq, util.iov.iov_base);
+    MPI_Aint data_sz = MPIDI_OFI_REQUEST(recv_elem->localreq, util.iov.iov_len);
+    if (recv_elem->remote_info.msgsize > data_sz) {
+        recv_elem->localreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+        recv_elem->remote_info.msgsize = data_sz;
+    }
 
     if (MPIDI_OFI_COMM(recv_elem->comm_ptr).enable_striping) {
         /* Subtract one stripe_chunk_size because we send the first chunk via a regular message

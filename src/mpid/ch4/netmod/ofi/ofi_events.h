@@ -54,7 +54,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
     MPIR_FUNC_ENTER;
 
     rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
-    rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
+    if (!rreq->status.MPI_ERROR) {
+        rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
+    }
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
     count = wc->len;
     MPIR_STATUS_SET_COUNT(rreq->status, count);
@@ -129,7 +131,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
 
     MPIDIU_request_complete(rreq);
 
-    /* Polling loop will check for truncation */
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
