@@ -491,7 +491,6 @@ typedef struct MPIDI_OFI_huge_recv {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    int (*done_fn) (int vni, struct fi_cq_tagged_entry * wc, MPIR_Request * req, int event_id);
     MPIDI_OFI_send_control_t remote_info;
     bool peek;                  /* Flag to indicate whether this struct has been created to track an uncompleted peek
                                  * operation. */
