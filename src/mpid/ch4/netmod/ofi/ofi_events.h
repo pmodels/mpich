@@ -12,7 +12,6 @@
 #include "utlist.h"
 
 int MPIDI_OFI_rma_done_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
-int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 int MPIDI_OFI_dispatch_function(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
