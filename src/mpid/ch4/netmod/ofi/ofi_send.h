@@ -283,8 +283,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         struct fid_mr **huge_send_mrs;
         uint64_t msg_size = MPIDI_OFI_STRIPE_CHUNK_SIZE;
 
-        MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
-
         MPIR_cc_inc(sreq->cc_ptr);
         if (!MPIDI_OFI_COMM(comm).enable_striping) {
             num_nics = 1;
@@ -333,18 +331,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIR_Comm_add_ref(comm);
         /* Store ordering unnecessary for dst_rank, so use relaxed store */
         MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(sreq, util_id), dst_rank);
-        match_bits |= MPIDI_OFI_HUGE_SEND;      /* Add the bit for a huge message */
-        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                          send_buf, msg_size, NULL /* desc */ ,
-                                          cq_data,
-                                          MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
-                                                               vni_remote),
-                                          match_bits,
-                                          (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                             vni_local, tsenddata, FALSE /* eagain */);
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], msg_size);
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_sent_bytes_count[sender_nic], msg_size);
 
+        /* send ctrl message first */
         MPIDI_OFI_send_control_t ctrl;
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
         for (int i = 0; i < num_nics; i++) {
@@ -359,10 +347,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         ctrl.u.huge.comm_id = comm->context_id;
         ctrl.u.huge.ackreq = sreq;
 
-        /* Send information about the memory region here to get the lmt going. */
         mpi_errno = MPIDI_NM_am_send_hdr(dst_rank, comm, MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
                                          &ctrl, sizeof(ctrl), vni_src, vni_dst);
         MPIR_ERR_CHECK(mpi_errno);
+
+        /* send main native message next */
+        MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
+
+        match_bits |= MPIDI_OFI_HUGE_SEND;      /* Add the bit for a huge message */
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                          send_buf, msg_size, NULL /* desc */ ,
+                                          cq_data,
+                                          MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
+                                                               vni_remote),
+                                          match_bits,
+                                          (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
+                             vni_local, tsenddata, FALSE /* eagain */);
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], msg_size);
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_sent_bytes_count[sender_nic], msg_size);
     }
 
   fn_exit:
