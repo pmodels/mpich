@@ -78,7 +78,6 @@ static int peek_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rre
             recv_elem->remote_info.tag = huge_list_ptr->tag = MPIDI_OFI_TAG_MASK & wc->tag;
             recv_elem->localreq = huge_list_ptr->rreq = rreq;
             recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-            recv_elem->done_fn = MPIDI_OFI_recv_event;
             recv_elem->wc = *wc;
             if (MPIDI_OFI_COMM(comm_ptr).enable_striping) {
                 recv_elem->cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
@@ -220,7 +219,6 @@ static int recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request 
     recv_elem->peek = false;
     recv_elem->comm_ptr = comm_ptr;
     recv_elem->localreq = rreq;
-    recv_elem->done_fn = MPIDI_OFI_recv_event;
     recv_elem->wc = *wc;
     if (MPIDI_OFI_COMM(comm_ptr).enable_striping) {
         recv_elem->cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
@@ -358,11 +356,11 @@ int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reques
     }
     if (bytesToGet == 0ULL && recv_elem->chunks_outstanding == 0) {
         MPIDI_OFI_send_control_t ctrl;
-        /* recv_elem->localreq may be freed during done_fn.
+        /* recv_elem->localreq may be freed during MPIDI_OFI_recv_event.
          * Need to backup the handle here for later use with MPIDIU_map_erase. */
         uint64_t key_to_erase = recv_elem->localreq->handle;
         recv_elem->wc.len = recv_elem->cur_offset;
-        recv_elem->done_fn(vni, &recv_elem->wc, recv_elem->localreq, recv_elem->event_id);
+        MPIDI_OFI_recv_event(vni, &recv_elem->wc, recv_elem->localreq, recv_elem->event_id);
         ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
         mpi_errno =
             MPIDI_OFI_do_control_send(&ctrl, NULL, 0, recv_elem->remote_info.origin_rank,
