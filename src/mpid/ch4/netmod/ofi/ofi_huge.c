@@ -16,15 +16,10 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
     MPIR_FUNC_ENTER;
 
     bool ready_to_get = false;
-    /* Check that the sender didn't underflow the message by sending less than
-     * the huge message threshold. When striping is enabled underflow occurs if
-     * the sender sends < MPIDI_OFI_STRIPE_CHUNK_SIZE through the huge message protocol
-     * or < MPIDI_OFI_global.stripe_threshold through normal send */
-    if (((wc->len < MPIDI_OFI_STRIPE_CHUNK_SIZE ||
-          (wc->len > MPIDI_OFI_STRIPE_CHUNK_SIZE && wc->len < MPIDI_OFI_global.stripe_threshold)) &&
-         MPIDI_OFI_COMM(rreq->comm).enable_striping) ||
-        (wc->len < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(rreq->comm).enable_striping)) {
-        return MPIDI_OFI_recv_event(vni, wc, rreq, MPIDI_OFI_REQUEST(rreq, event_id));
+    if (MPIDI_OFI_COMM(rreq->comm).enable_striping) {
+        MPIR_Assert(wc->len == MPIDI_OFI_STRIPE_CHUNK_SIZE);
+    } else {
+        MPIR_Assert(wc->len == MPIDI_OFI_global.max_msg_size);
     }
 
     comm_ptr = rreq->comm;
