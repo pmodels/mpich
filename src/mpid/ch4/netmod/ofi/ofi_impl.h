@@ -736,7 +736,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_malloc_pack_buffer(void **ptr, size_t
     if (MPIDI_OFI_ENABLE_HMEM) {
         return MPL_gpu_malloc_host(ptr, pack_size);
     } else {
+#ifdef MPL_DEFINE_ALIGNED_ALLOC
+        *ptr = MPL_aligned_alloc(256, pack_size, MPL_MEM_BUFFER);
+#else
         *ptr = MPL_malloc(pack_size, MPL_MEM_BUFFER);
+#endif
         return 0;
     }
 }
