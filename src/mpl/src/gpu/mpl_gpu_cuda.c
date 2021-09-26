@@ -146,7 +146,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     goto fn_exit;
 }
 
-int MPL_gpu_ipc_handle_destroy(const void *ptr)
+int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
 {
     return MPL_SUCCESS;
 }
