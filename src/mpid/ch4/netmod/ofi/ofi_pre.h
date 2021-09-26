@@ -200,6 +200,10 @@ typedef struct {
                                  * if needed. */
     enum MPIDI_OFI_req_kind kind;
     union {
+        struct fid_mr **huge_send_mrs;
+        MPIDI_OFI_huge_remote_info_t *info;
+    } huge_info;
+    union {
         struct {
             void *buf;
             size_t count;

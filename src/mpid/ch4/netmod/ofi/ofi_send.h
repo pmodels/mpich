@@ -313,9 +313,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                      &huge_send_mrs[i], /* Out: memregion object    */
                                      NULL), mr_reg);    /* In:  context             */
         }
-        /* Create map to the memory region */
-        MPIDIU_map_set(MPIDI_OFI_global.huge_send_counters, sreq->handle, huge_send_mrs,
-                       MPL_MEM_BUFFER);
+        MPIDI_OFI_REQUEST(sreq, huge_info.huge_send_mrs) = huge_send_mrs;
         if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* MR_BASIC */
             for (int i = 0; i < num_nics; i++) {
