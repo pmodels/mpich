@@ -30,20 +30,10 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
     {
         MPIDI_OFI_huge_recv_t *list_ptr;
 
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                        (MPL_DBG_FDEST, "SEARCHING HUGE UNEXPECTED LIST: (%d, %d, %llu)",
-                         comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc, false),
-                         (MPIDI_OFI_TAG_MASK & wc->tag)));
-
         LL_FOREACH(MPIDI_unexp_huge_recv_head, list_ptr) {
             if (list_ptr->remote_info.comm_id == comm_ptr->context_id &&
                 list_ptr->remote_info.origin_rank == MPIDI_OFI_cqe_get_source(wc, false) &&
                 list_ptr->remote_info.tag == (MPIDI_OFI_TAG_MASK & wc->tag)) {
-                MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                                (MPL_DBG_FDEST, "MATCHED HUGE UNEXPECTED LIST: (%d, %d, %llu, %d)",
-                                 comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc, false),
-                                 (MPIDI_OFI_TAG_MASK & wc->tag), rreq->handle));
-
                 LL_DELETE(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, list_ptr);
 
                 recv_elem = list_ptr;
@@ -58,11 +48,6 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
         ready_to_get = true;
     } else {
         MPIDI_OFI_huge_recv_list_t *list_ptr;
-
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                        (MPL_DBG_FDEST, "CREATING HUGE POSTED ENTRY: (%d, %d, %llu)",
-                         comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc, false),
-                         (MPIDI_OFI_TAG_MASK & wc->tag)));
 
         recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -118,18 +103,9 @@ int MPIDI_OFI_recv_huge_control(MPIDI_OFI_huge_remote_info_t * info)
     {
         MPIDI_OFI_huge_recv_list_t *list_ptr;
 
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                        (MPL_DBG_FDEST, "SEARCHING POSTED LIST: (%d, %d, %d)", info->comm_id,
-                         info->origin_rank, info->tag));
-
         LL_FOREACH(MPIDI_posted_huge_recv_head, list_ptr) {
             if (list_ptr->comm_id == info->comm_id &&
                 list_ptr->rank == info->origin_rank && list_ptr->tag == info->tag) {
-                MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                                (MPL_DBG_FDEST, "MATCHED POSTED LIST: (%d, %d, %d, %d)",
-                                 info->comm_id, info->origin_rank, info->tag,
-                                 list_ptr->rreq->handle));
-
                 LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
                 recv_elem = (MPIDI_OFI_huge_recv_t *)
@@ -157,11 +133,6 @@ int MPIDI_OFI_recv_huge_control(MPIDI_OFI_huge_remote_info_t * info)
         ready_to_get = true;
     } else {
         /* Put the struct describing the transfer on an unexpected list to be retrieved later */
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                        (MPL_DBG_FDEST, "CREATING UNEXPECTED HUGE RECV: (%d, %d, %d)",
-                         info->comm_id, info->origin_rank, info->tag));
-
-        /* If this is unexpected, create a new tracker and put it in the unexpected list. */
         recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_COMM);
         if (!recv_elem)
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
