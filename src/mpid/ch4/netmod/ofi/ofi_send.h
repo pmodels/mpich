@@ -313,7 +313,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                      &huge_send_mrs[i], /* Out: memregion object    */
                                      NULL), mr_reg);    /* In:  context             */
         }
-        MPIDI_OFI_REQUEST(sreq, huge_info.huge_send_mrs) = huge_send_mrs;
+        MPIDI_OFI_REQUEST(sreq, huge.send_mrs) = huge_send_mrs;
         if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* MR_BASIC */
             for (int i = 0; i < num_nics; i++) {
@@ -334,16 +334,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_send_control_t ctrl;
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
         for (int i = 0; i < num_nics; i++) {
-            ctrl.u.huge.rma_keys[i] = rma_keys[i];
+            ctrl.u.huge.info.rma_keys[i] = rma_keys[i];
         }
-        ctrl.u.huge.tag = tag;
-        ctrl.u.huge.vni_src = vni_src;
-        ctrl.u.huge.vni_dst = vni_dst;
-        ctrl.u.huge.origin_rank = comm->rank;
-        ctrl.u.huge.send_buf = send_buf;
-        ctrl.u.huge.msgsize = data_sz;
-        ctrl.u.huge.comm_id = comm->context_id;
-        ctrl.u.huge.ackreq = sreq;
+        ctrl.u.huge.info.comm_id = comm->context_id;
+        ctrl.u.huge.info.tag = tag;
+        ctrl.u.huge.info.origin_rank = comm->rank;
+        ctrl.u.huge.info.vni_src = vni_src;
+        ctrl.u.huge.info.vni_dst = vni_dst;
+        ctrl.u.huge.info.send_buf = send_buf;
+        ctrl.u.huge.info.msgsize = data_sz;
+        ctrl.u.huge.info.ackreq = sreq;
 
         mpi_errno = MPIDI_NM_am_send_hdr(dst_rank, comm, MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
                                          &ctrl, sizeof(ctrl), vni_src, vni_dst);

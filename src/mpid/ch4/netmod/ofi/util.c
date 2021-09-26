@@ -167,7 +167,10 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
             break;
 
         case MPIDI_OFI_CTRL_HUGE:
-            mpi_errno = MPIDI_OFI_recv_huge_control(&(ctrlsend->u.huge));
+            mpi_errno = MPIDI_OFI_recv_huge_control(ctrlsend->u.huge.info.comm_id,
+                                                    ctrlsend->u.huge.info.origin_rank,
+                                                    ctrlsend->u.huge.info.tag,
+                                                    &(ctrlsend->u.huge.info));
             break;
 
         default:
