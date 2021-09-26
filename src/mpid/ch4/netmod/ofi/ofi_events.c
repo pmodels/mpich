@@ -90,21 +90,11 @@ static int send_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request 
 
     if (c == 0) {
         MPIR_Comm *comm;
-        void *ptr;
         struct fid_mr **huge_send_mrs;
 
         comm = sreq->comm;
         num_nics = MPIDI_OFI_COMM(comm).enable_striping ? MPIDI_OFI_global.num_nics : 1;
-        /* Look for the memory region using the sreq handle */
-        ptr = MPIDIU_map_lookup(MPIDI_OFI_global.huge_send_counters, sreq->handle);
-        MPIR_Assert(ptr != MPIDIU_MAP_NOT_FOUND);
-
-        huge_send_mrs = (struct fid_mr **) ptr;
-
-        /* Send a cleanup message to the receivier and clean up local
-         * resources. */
-        /* Clean up the local counter */
-        MPIDIU_map_erase(MPIDI_OFI_global.huge_send_counters, sreq->handle);
+        huge_send_mrs = MPIDI_OFI_REQUEST(sreq, huge_info.huge_send_mrs);
 
         /* Clean up the memory region */
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
