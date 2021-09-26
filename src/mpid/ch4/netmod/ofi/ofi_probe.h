@@ -15,7 +15,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
                                                  MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
                                                  int *flag,
                                                  MPI_Status * status,
-                                                 MPIR_Request ** message, uint64_t peek_flags)
+                                                 MPIR_Request ** message,
+                                                 enum MPIDI_OFI_req_kind probe_kind)
 {
     int mpi_errno = MPI_SUCCESS;
     fi_addr_t remote_proc;
@@ -41,6 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     } else {
         rreq = &r;
     }
+    MPIDI_OFI_REQUEST(rreq, kind) = probe_kind;
     rreq->comm = comm;
     MPIR_Comm_add_ref(comm);
 
@@ -58,8 +60,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
     msg.data = 0;
 
-    MPIDI_OFI_CALL_RETURN(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg,
-                                      peek_flags | FI_PEEK | FI_COMPLETION), ofi_err);
+    uint64_t recv_flags = FI_PEEK | FI_COMPLETION;
+    if (probe_kind == MPIDI_OFI_req_kind__mprobe) {
+        recv_flags |= FI_CLAIM;
+    }
+    MPIDI_OFI_CALL_RETURN(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg, recv_flags), ofi_err);
     if (ofi_err == -FI_ENOMSG) {
         *flag = 0;
         if (message)
@@ -138,7 +143,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
     MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_dst);
     /* Set flags for mprobe peek, when ready */
     mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, vni_src, vni_dst,
-                                    flag, status, message, FI_CLAIM | FI_COMPLETION);
+                                    flag, status, message, MPIDI_OFI_req_kind__mprobe);
     MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_dst);
 
     if (mpi_errno != MPI_SUCCESS)
@@ -166,7 +171,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
     } else {
         MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_dst);
         mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr,
-                                        vni_src, vni_dst, flag, status, NULL, 0ULL);
+                                        vni_src, vni_dst, flag, status, NULL,
+                                        MPIDI_OFI_req_kind__probe);
         MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_dst);
     }
 
