@@ -178,11 +178,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
              * path for the whole chunk. For large memory size, pipeline
              * transfer should be applied. */
             force_gpu_pack = true;
-            dt_contig = 0;
         }
     }
 
-    if (!dt_contig) {
+    if (!dt_contig || force_gpu_pack) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && !force_gpu_pack &&
             ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping) ||
              (data_sz < MPIDI_OFI_global.stripe_threshold &&
@@ -207,6 +206,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer);
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = buf;
+#ifdef MPL_HAVE_ZE
+        if (dt_contig && attr.type == MPL_GPU_POINTER_DEV) {
+            int mpl_err = MPL_SUCCESS;
+            void *ptr;
+            mpl_err = MPL_ze_mmap_device_pointer(buf, &attr.device_attr, attr.device, &ptr);
+            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                "**mpl_ze_mmap_device_ptr");
+            MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = ptr;
+        }
+#endif
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype) = datatype;
     } else {
