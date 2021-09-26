@@ -94,7 +94,7 @@ static int send_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request 
 
         comm = sreq->comm;
         num_nics = MPIDI_OFI_COMM(comm).enable_striping ? MPIDI_OFI_global.num_nics : 1;
-        huge_send_mrs = MPIDI_OFI_REQUEST(sreq, huge_info.huge_send_mrs);
+        huge_send_mrs = MPIDI_OFI_REQUEST(sreq, huge.send_mrs);
 
         /* Clean up the memory region */
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {

@@ -14,9 +14,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
                                                  int context_offset,
                                                  MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
                                                  int *flag,
-                                                 MPI_Status * status,
-                                                 MPIR_Request ** message,
-                                                 enum MPIDI_OFI_req_kind probe_kind)
+                                                 MPI_Status * status, MPIR_Request ** message)
 {
     int mpi_errno = MPI_SUCCESS;
     fi_addr_t remote_proc;
@@ -42,7 +40,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     } else {
         rreq = &r;
     }
-    MPIDI_OFI_REQUEST(rreq, kind) = probe_kind;
+    if (message) {
+        MPIDI_OFI_REQUEST(rreq, kind) = MPIDI_OFI_req_kind__mprobe;
+    } else {
+        MPIDI_OFI_REQUEST(rreq, kind) = MPIDI_OFI_req_kind__probe;
+    }
+    MPIDI_OFI_REQUEST(rreq, huge.remote_info) = NULL;
     rreq->comm = comm;
     MPIR_Comm_add_ref(comm);
 
@@ -61,7 +64,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     msg.data = 0;
 
     uint64_t recv_flags = FI_PEEK | FI_COMPLETION;
-    if (probe_kind == MPIDI_OFI_req_kind__mprobe) {
+    if (message) {
         recv_flags |= FI_CLAIM;
     }
     MPIDI_OFI_CALL_RETURN(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg, recv_flags), ofi_err);
@@ -143,7 +146,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
     MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_dst);
     /* Set flags for mprobe peek, when ready */
     mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, vni_src, vni_dst,
-                                    flag, status, message, MPIDI_OFI_req_kind__mprobe);
+                                    flag, status, message);
     MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_dst);
 
     if (mpi_errno != MPI_SUCCESS)
@@ -171,8 +174,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
     } else {
         MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vni_dst);
         mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr,
-                                        vni_src, vni_dst, flag, status, NULL,
-                                        MPIDI_OFI_req_kind__probe);
+                                        vni_src, vni_dst, flag, status, NULL);
         MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_dst);
     }
 

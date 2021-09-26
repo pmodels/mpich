@@ -380,13 +380,13 @@ typedef struct {
 } MPIDI_OFI_global_t;
 
 typedef struct {
+    int comm_id;
     int origin_rank;
+    int tag;
     MPIR_Request *ackreq;
     void *send_buf;
     size_t msgsize;
-    int comm_id;
     uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
-    int tag;
     int vni_src;
     int vni_dst;
 } MPIDI_OFI_huge_remote_info_t;
@@ -394,7 +394,9 @@ typedef struct {
 typedef struct {
     int16_t type;
     union {
-        MPIDI_OFI_huge_remote_info_t huge;
+        struct {
+            MPIDI_OFI_huge_remote_info_t info;
+        } huge;
         struct {
             MPIR_Request *ackreq;
         } huge_ack;
@@ -495,17 +497,11 @@ typedef struct MPIDI_OFI_huge_recv {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    MPIDI_OFI_huge_remote_info_t remote_info;
-    bool peek;                  /* Flag to indicate whether this struct has been created to track an uncompleted peek
-                                 * operation. */
     size_t cur_offset;
     size_t stripe_size;
     int chunks_outstanding;
     MPIR_Comm *comm_ptr;
     MPIR_Request *localreq;
-    struct fi_cq_tagged_entry wc;
-    struct MPIDI_OFI_huge_recv *next;   /* Points to the next entry in the unexpected list
-                                         * (when in the unexpected list) */
 } MPIDI_OFI_huge_recv_t;
 
 /* The list of posted huge receives that haven't been matched yet. These need
@@ -516,16 +512,19 @@ typedef struct MPIDI_OFI_huge_recv_list {
     int comm_id;
     int rank;
     int tag;
-    MPIR_Request *rreq;
+    union {
+        MPIDI_OFI_huge_remote_info_t *info;     /* ctrl list */
+        MPIR_Request *rreq;     /* recv list */
+    } u;
     struct MPIDI_OFI_huge_recv_list *next;
 } MPIDI_OFI_huge_recv_list_t;
 
 /* Externs */
 extern MPIDI_OFI_global_t MPIDI_OFI_global;
-extern MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_head;
-extern MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_tail;
-extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_head;
-extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_tail;
+extern MPIDI_OFI_huge_recv_list_t *MPIDI_huge_ctrl_head;
+extern MPIDI_OFI_huge_recv_list_t *MPIDI_huge_ctrl_tail;
+extern MPIDI_OFI_huge_recv_list_t *MPIDI_huge_recv_head;
+extern MPIDI_OFI_huge_recv_list_t *MPIDI_huge_recv_tail;
 
 extern MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS];
 
