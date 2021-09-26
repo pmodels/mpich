@@ -961,11 +961,9 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     goto fn_exit;
 }
 
-int MPL_gpu_ipc_handle_destroy(const void *ptr)
+int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
 {
-    ze_result_t ret;
     int status, mpl_err = MPL_SUCCESS;
-    ze_device_handle_t device;
     MPL_ze_ipc_handle_entry_t *cache_entry = NULL;
     int dev_id;
     uint64_t mem_id;
@@ -989,23 +987,12 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr)
     }
 
     if (likely(MPL_gpu_info.specialized_cache)) {
-        ze_memory_allocation_properties_t ptr_attr = {
-            .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
-            .pNext = NULL,
-            .type = 0,
-            .id = 0,
-            .pageSize = 0,
-        };
-
-        ret = zeMemGetAllocProperties(ze_context, ptr, &ptr_attr, &device);
-        ZE_ERR_CHECK(ret);
-
-        dev_id = device_to_dev_id(device);
+        dev_id = device_to_dev_id(gpu_attr->device);
         if (dev_id == -1) {
             goto fn_fail;
         }
 
-        mem_id = ptr_attr.id;
+        mem_id = gpu_attr->device_attr.prop.id;
         HASH_FIND(hh, ipc_cache_tracked[dev_id], &mem_id, sizeof(uint64_t), cache_entry);
 
         if (cache_entry != NULL) {
