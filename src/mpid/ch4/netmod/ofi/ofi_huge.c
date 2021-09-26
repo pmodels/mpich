@@ -175,8 +175,20 @@ int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
             found_msg = true;
         }
     }
-    if (!found_msg) {
-        /* FIXME: the count is wrong in this case. We need progress until the control message is received */
+    if (found_msg) {
+        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
+        rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
+        rreq->status.MPI_ERROR = MPI_SUCCESS;
+        MPIR_STATUS_SET_COUNT(rreq->status, count);
+        /* util_id should be the last thing to change in rreq. Reason is
+         * we use util_id to indicate peek_event has completed and all the
+         * relevant values have been copied to rreq. */
+        MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_FOUND);
+    } else if (MPIDI_OFI_REQUEST(rreq, kind) == MPIDI_OFI_req_kind__probe) {
+        /* return not found for this probe. User can probe again. */
+        MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_NOT_FOUND);
+    } else if (MPIDI_OFI_REQUEST(rreq, kind) == MPIDI_OFI_req_kind__mprobe) {
+        /* post the rreq to list and let control handler handle it */
         MPIDI_OFI_huge_recv_t *recv_elem;
         MPIDI_OFI_huge_recv_list_t *huge_list_ptr;
 
@@ -207,16 +219,18 @@ int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
         }
 
         LL_APPEND(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, huge_list_ptr);
+
+        /* FIXME: we don't have the correct count so it wrong to return FOUND here */
+        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
+        rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
+        rreq->status.MPI_ERROR = MPI_SUCCESS;
+        MPIR_STATUS_SET_COUNT(rreq->status, count);
+        /* util_id should be the last thing to change in rreq. Reason is
+         * we use util_id to indicate peek_event has completed and all the
+         * relevant values have been copied to rreq. */
+        MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_FOUND);
     }
 
-    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
-    rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
-    rreq->status.MPI_ERROR = MPI_SUCCESS;
-    MPIR_STATUS_SET_COUNT(rreq->status, count);
-    /* util_id should be the last thing to change in rreq. Reason is
-     * we use util_id to indicate peek_event has completed and all the
-     * relevant values have been copied to rreq. */
-    MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_FOUND);
 
   fn_exit:
     MPIR_FUNC_EXIT;
