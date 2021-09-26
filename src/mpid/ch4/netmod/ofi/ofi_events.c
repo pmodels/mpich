@@ -488,7 +488,11 @@ int MPIDI_OFI_dispatch_function(int vni, struct fi_cq_tagged_entry *wc, MPIR_Req
                 break;
 
             case MPIDI_OFI_EVENT_RECV_HUGE:
-                mpi_errno = MPIDI_OFI_recv_huge_event(vni, wc, req);
+                if (wc->tag & MPIDI_OFI_HUGE_SEND) {
+                    mpi_errno = MPIDI_OFI_recv_huge_event(vni, wc, req);
+                } else {
+                    mpi_errno = MPIDI_OFI_recv_event(vni, wc, req, MPIDI_OFI_EVENT_RECV_HUGE);
+                }
                 break;
 
             case MPIDI_OFI_EVENT_RECV_PACK:
