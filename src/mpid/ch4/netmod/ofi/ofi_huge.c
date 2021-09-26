@@ -37,8 +37,7 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
                 LL_DELETE(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, list_ptr);
 
                 recv_elem = list_ptr;
-                MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
-                               MPL_MEM_COMM);
+                MPIDI_OFI_REQUEST(rreq, huge_info.recv_elem) = recv_elem;
                 break;
             }
         }
@@ -51,8 +50,7 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
 
         recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
-                       MPL_MEM_BUFFER);
+        MPIDI_OFI_REQUEST(rreq, huge_info.recv_elem) = recv_elem;
 
         list_ptr = (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*list_ptr), 1, MPL_MEM_BUFFER);
         if (!list_ptr)
@@ -108,8 +106,7 @@ int MPIDI_OFI_recv_huge_control(MPIDI_OFI_huge_remote_info_t * info)
                 list_ptr->rank == info->origin_rank && list_ptr->tag == info->tag) {
                 LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
-                recv_elem = (MPIDI_OFI_huge_recv_t *)
-                    MPIDIU_map_lookup(MPIDI_OFI_global.huge_recv_counters, list_ptr->rreq->handle);
+                recv_elem = MPIDI_OFI_REQUEST(rreq, huge_info.recv_elem);
 
                 /* If this is a "peek" element for an MPI_Probe, it shouldn't be matched. Grab the
                  * important information and remove the element from the list. */
@@ -117,8 +114,6 @@ int MPIDI_OFI_recv_huge_control(MPIDI_OFI_huge_remote_info_t * info)
                     MPIR_STATUS_SET_COUNT(recv_elem->localreq->status, info->msgsize);
                     MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(recv_elem->localreq, util_id)),
                                                  MPIDI_OFI_PEEK_FOUND);
-                    MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters,
-                                     recv_elem->localreq->handle);
                     MPL_free(recv_elem);
                     recv_elem = NULL;
                 }
@@ -199,8 +194,7 @@ int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
         recv_elem->peek = true;
         MPIR_Comm *comm_ptr = rreq->comm;
         recv_elem->comm_ptr = comm_ptr;
-        MPIDIU_map_set(MPIDI_OFI_global.huge_recv_counters, rreq->handle, recv_elem,
-                       MPL_MEM_BUFFER);
+        MPIDI_OFI_REQUEST(rreq, huge_info.recv_elem) = recv_elem;
 
         huge_list_ptr =
             (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*huge_list_ptr), 1, MPL_MEM_COMM);
@@ -312,7 +306,6 @@ int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reques
                                          &ctrl, sizeof(ctrl), vni_local, vni_remote);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters, key_to_erase);
         MPL_free(recv_elem);
 
         goto fn_exit;
