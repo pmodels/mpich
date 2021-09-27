@@ -28,9 +28,11 @@ static F90Predefined f90Types[MAX_F90_TYPES];
 static int MPIR_FreeF90Datatypes(void *d)
 {
     int i;
+    MPIR_Datatype *dptr;
 
     for (i = 0; i < nAlloc; i++) {
-        MPIR_Type_free_impl(&f90Types[i].d);
+        MPIR_Datatype_get_ptr(f90Types[i].d, dptr);
+        MPIR_Datatype_free(dptr);
     }
     return 0;
 }
