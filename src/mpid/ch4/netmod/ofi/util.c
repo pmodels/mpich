@@ -161,12 +161,15 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
     }
 
     int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+    MPIR_AssertDeclValue(int remote_vci, MPIDIG_AM_ATTR_SRC_VCI(attr));
     switch (ctrlsend->type) {
         case MPIDI_OFI_CTRL_HUGEACK:
             mpi_errno = MPIDI_OFI_dispatch_function(local_vci, NULL, ctrlsend->u.huge_ack.ackreq);
             break;
 
         case MPIDI_OFI_CTRL_HUGE:
+            MPIR_Assert(local_vci == ctrlsend->u.huge.info.vni_dst);
+            MPIR_Assert(remote_vci == ctrlsend->u.huge.info.vni_src);
             mpi_errno = MPIDI_OFI_recv_huge_control(ctrlsend->u.huge.info.comm_id,
                                                     ctrlsend->u.huge.info.origin_rank,
                                                     ctrlsend->u.huge.info.tag,
