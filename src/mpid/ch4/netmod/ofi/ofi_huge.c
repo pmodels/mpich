@@ -110,7 +110,7 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
     } else {
         /* Check for remote control info */
         MPIDI_OFI_huge_recv_list_t *list_ptr;
-        int comm_id = comm_ptr->context_id;
+        MPIR_Context_id_t comm_id = comm_ptr->recvcontext_id;
         int rank = MPIDI_OFI_cqe_get_source(wc, false);
         int tag = (MPIDI_OFI_TAG_MASK & wc->tag);
 
@@ -132,7 +132,7 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
         if (!list_ptr)
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        list_ptr->comm_id = comm_ptr->context_id;
+        list_ptr->comm_id = comm_ptr->recvcontext_id;
         list_ptr->rank = MPIDI_OFI_cqe_get_source(wc, false);
         list_ptr->tag = (MPIDI_OFI_TAG_MASK & wc->tag);
         list_ptr->u.rreq = rreq;
@@ -153,7 +153,7 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
 }
 
 /* This function is called when we receive a huge control message */
-int MPIDI_OFI_recv_huge_control(int comm_id, int rank, int tag,
+int MPIDI_OFI_recv_huge_control(MPIR_Context_id_t comm_id, int rank, int tag,
                                 MPIDI_OFI_huge_remote_info_t * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -224,10 +224,10 @@ int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
      * with this and return the size in that. */
     LL_FOREACH(MPIDI_huge_ctrl_head, list_ptr) {
         /* FIXME: fix the type of comm_id */
-        uint64_t context_id = MPIDI_OFI_CONTEXT_MASK & wc->tag;
+        MPIR_Context_id_t comm_id = rreq->comm->recvcontext_id;
         int rank = MPIDI_OFI_cqe_get_source(wc, false);
         int tag = (int) (MPIDI_OFI_TAG_MASK & wc->tag);
-        if (list_ptr->comm_id == context_id && list_ptr->rank == rank && list_ptr->tag == tag) {
+        if (list_ptr->comm_id == comm_id && list_ptr->rank == rank && list_ptr->tag == tag) {
             count = list_ptr->u.info->msgsize;
             found_msg = true;
             break;
@@ -263,7 +263,7 @@ int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
             (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*huge_list_ptr), 1, MPL_MEM_COMM);
         MPIR_ERR_CHKANDJUMP(huge_list_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        huge_list_ptr->comm_id = MPIDI_OFI_CONTEXT_MASK & wc->tag;
+        huge_list_ptr->comm_id = rreq->comm->recvcontext_id;
         huge_list_ptr->rank = MPIDI_OFI_cqe_get_source(wc, false);
         huge_list_ptr->tag = MPIDI_OFI_TAG_MASK & wc->tag;
         huge_list_ptr->u.rreq = rreq;
