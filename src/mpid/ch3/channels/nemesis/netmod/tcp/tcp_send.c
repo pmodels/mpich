@@ -67,7 +67,9 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
     struct iovec *iov;
     int complete;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 
@@ -211,7 +213,9 @@ static inline int tcp_large_writev(MPIDI_VC_t * vc, const struct iovec * iov, in
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     *offset_ptr = MPL_large_writev(vc_tcp->sc->fd, iov, iov_n);
     if (*offset_ptr == 0) {

@@ -11,7 +11,6 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *ureq = NULL;
-    MPIR_Win *win_ptr = NULL;
 
     MPIR_FUNC_ENTER;
 
@@ -20,6 +19,7 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request * sreq)
     }
 
     /* get window, decrement active request cnt on window */
+    MPIR_AssertDeclValue(MPIR_Win *win_ptr, NULL);
     MPIR_Win_get_ptr(sreq->dev.source_win_handle, win_ptr);
     MPIR_Assert(win_ptr != NULL);
     MPIDI_CH3I_RMA_Active_req_cnt--;

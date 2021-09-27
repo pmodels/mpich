@@ -425,7 +425,9 @@ static int send_id_info(const sockconn_t * const sc)
     int buf_size, iov_cnt = 2;
     ssize_t offset;
     size_t pg_id_len = 0;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 
@@ -489,7 +491,9 @@ static int send_tmpvc_info(const sockconn_t * const sc)
     struct iovec iov[3];
     int buf_size, iov_cnt = 2;
     ssize_t offset;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 
@@ -544,7 +548,9 @@ static int recv_id_or_tmpvc_info(sockconn_t * const sc, int *got_sc_eof)
     int hdr_len = sizeof(MPIDI_nem_tcp_header_t);
     struct iovec iov[2];
     char *pg_id = NULL;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
@@ -692,7 +698,9 @@ static int send_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t pkt_type)
     ssize_t offset;
     MPIDI_nem_tcp_header_t pkt;
     int pkt_len = sizeof(MPIDI_nem_tcp_header_t);
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_Assert(pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK ||
                 pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK ||
@@ -730,7 +738,9 @@ static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t * pkt_type)
     ssize_t nread;
     MPIDI_nem_tcp_header_t pkt;
     int pkt_len = sizeof(MPIDI_nem_tcp_header_t);
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 
@@ -768,7 +778,9 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
     struct pollfd *plfd = NULL;
     int idx = -1;
     int mpi_errno = MPI_SUCCESS;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_CHKLMEM_DECL(1);
 
@@ -988,7 +1000,9 @@ int close_cleanup_and_free_sc_plfd(sockconn_t * const sc)
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno2 = MPI_SUCCESS;
     int rc;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 
@@ -1481,7 +1495,9 @@ static int MPID_nem_tcp_recv_handler(sockconn_t * const sc)
     MPIR_AssertDeclValue(MPID_nem_tcp_vc_area * const sc_vc_tcp, VC_TCP(sc_vc));
     int mpi_errno = MPI_SUCCESS;
     ssize_t bytes_recvd;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 
@@ -1727,7 +1743,9 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
     /* num_polled is needed b/c the call to it_sc->handler() can change the
      * size of the table, which leads to iterating over invalid revents. */
     int num_polled = g_tbl_size;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     if (num_polled) {
         MPIR_Assert(MPID_nem_tcp_plfd_tbl != NULL);
@@ -1757,16 +1775,17 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
              * on many platforms, including modern Linux. */
             if (it_plfd->revents & POLLERR || it_plfd->revents & POLLNVAL) {
                 int req_errno = MPI_SUCCESS;
-                ssize_t rc;
-                char dummy;
-                const char *err_str ATTRIBUTE((unused)) = "UNKNOWN";
 
                 /* See if we can get a specific error for this fd
                  * (Stevens Network Programming Vol 1, pg 184) */
+#ifdef HAVE_ERROR_CHECKING
+                ssize_t rc;
+                char dummy;
+                const char *err_str = "UNKNOWN";
                 rc = read(it_plfd->fd, &dummy, 1);
                 if (rc < 0)
                     err_str = MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE);
-
+#endif
                 MPL_DBG_MSG(MPIDI_NEM_TCP_DBG_DET, VERBOSE, "error polling fd, closing sc");
                 if (it_sc->vc) {
                     MPIR_ERR_SET2(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail",
@@ -1833,7 +1852,9 @@ int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn
     socklen_t len;
     SA_IN rmt_addr;
     sockconn_t *l_sc;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 
