@@ -7,21 +7,42 @@
 #include "ofi_impl.h"
 #include "ofi_events.h"
 
+static int get_huge(MPIR_Request * rreq);
+static int get_huge_complete(MPIR_Request * rreq);
+
 static int get_huge(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(rreq, huge.remote_info);
-    MPIDI_OFI_huge_recv_t *recv_elem = NULL;
 
+    MPI_Aint cur_offset;
+    if (MPIDI_OFI_COMM(rreq->comm).enable_striping) {
+        cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
+    } else {
+        cur_offset = MPIDI_OFI_global.max_msg_size;
+    }
+
+    MPI_Aint data_sz = MPIDI_OFI_REQUEST(rreq, util.iov.iov_len);
+
+    if (data_sz < info->msgsize) {
+        rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+        info->msgsize = data_sz;
+    }
+
+    if (data_sz < cur_offset) {
+        /* huge message sent to small recv buffer */
+        mpi_errno = get_huge_complete(rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
+
+    MPIDI_OFI_huge_recv_t *recv_elem = NULL;
     recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_BUFFER);
     MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
     recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
     recv_elem->localreq = rreq;
-    if (MPIDI_OFI_COMM(rreq->comm).enable_striping) {
-        recv_elem->cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
-    } else {
-        recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
-    }
+    recv_elem->cur_offset = cur_offset;
+
     MPIDI_OFI_get_huge_event(info->vni_dst, NULL, (MPIR_Request *) recv_elem);
 
   fn_exit:
@@ -30,27 +51,27 @@ static int get_huge(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-static int get_huge_complete(MPIDI_OFI_huge_recv_t * recv_elem)
+static int get_huge_complete(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(recv_elem->localreq, huge.remote_info);
+    MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(rreq, huge.remote_info);
 
     /* note: it's receiver ack sender */
     int vni_remote = info->vni_src;
     int vni_local = info->vni_dst;
 
     struct fi_cq_tagged_entry wc;
-    wc.len = recv_elem->cur_offset;
+    wc.len = info->msgsize;
     wc.data = info->origin_rank;
     wc.tag = info->tag;
-    MPIDI_OFI_recv_event(vni_local, &wc, recv_elem->localreq, MPIDI_OFI_EVENT_GET_HUGE);
+    MPIDI_OFI_recv_event(vni_local, &wc, rreq, MPIDI_OFI_EVENT_GET_HUGE);
 
     MPIDI_OFI_send_control_t ctrl;
     ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
     ctrl.u.huge_ack.ackreq = info->ackreq;
-    mpi_errno = MPIDI_NM_am_send_hdr(info->origin_rank, comm,
+    mpi_errno = MPIDI_NM_am_send_hdr(info->origin_rank, rreq->comm,
                                      MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
                                      &ctrl, sizeof(ctrl), vni_local, vni_remote);
     MPIR_ERR_CHECK(mpi_errno);
@@ -72,7 +93,9 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
     MPIR_FUNC_ENTER;
 
     bool ready_to_get = false;
-    if (MPIDI_OFI_COMM(rreq->comm).enable_striping) {
+    if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_HUGE) {
+        /* huge send recved by a small buffer */
+    } else if (MPIDI_OFI_COMM(rreq->comm).enable_striping) {
         MPIR_Assert(wc->len == MPIDI_OFI_STRIPE_CHUNK_SIZE);
     } else {
         MPIR_Assert(wc->len == MPIDI_OFI_global.max_msg_size);
@@ -287,11 +310,6 @@ int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reques
     MPIR_FUNC_ENTER;
 
     void *recv_buf = MPIDI_OFI_REQUEST(recv_elem->localreq, util.iov.iov_base);
-    MPI_Aint data_sz = MPIDI_OFI_REQUEST(recv_elem->localreq, util.iov.iov_len);
-    if (info->msgsize > data_sz) {
-        recv_elem->localreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        info->msgsize = data_sz;
-    }
 
     if (MPIDI_OFI_COMM(comm).enable_striping) {
         /* Subtract one stripe_chunk_size because we send the first chunk via a regular message
@@ -314,7 +332,7 @@ int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reques
             bytesLeft : MPIDI_OFI_global.max_msg_size;
     }
     if (bytesToGet == 0ULL && recv_elem->chunks_outstanding == 0) {
-        mpi_errno = get_huge_complete(recv_elem);
+        mpi_errno = get_huge_complete(recv_elem->localreq);
         MPIR_ERR_CHECK(mpi_errno);
         MPL_free(recv_elem);
         goto fn_exit;
