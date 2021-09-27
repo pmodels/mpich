@@ -9,9 +9,6 @@
 #define MPIDI_OFI_OFF     0
 #define MPIDI_OFI_ON      1
 
-/* FIXME: check capability for fi_sendv */
-#define MPIDI_OFI_ENABLE_SENDV 0
-
 /* Check to see if the OFI library supports FI_ORDER_ATOMIC_* flags. */
 #if defined(FI_ORDER_ATOMIC_RAR) && defined(FI_ORDER_ATOMIC_RAW) && defined(FI_ORDER_ATOMIC_WAR) && defined(FI_ORDER_ATOMIC_WAW)
 /* Support for atomic flags was added in OFI 1.8. */
