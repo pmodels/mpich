@@ -89,13 +89,15 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win **win_ptr);
 #if !defined(HAVE_WINDOWS_H)
 #define MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr)                                              \
     do {                                                                                \
-        int pt_err = pthread_mutex_lock((win_ptr)->shm_mutex);                          \
+        MPIR_AssertDeclValue(int pt_err, 0);                                            \
+        pt_err = pthread_mutex_lock((win_ptr)->shm_mutex);                              \
         MPIR_Assert(pt_err == 0); \
     } while (0)
 
 #define MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr)                                            \
     do {                                                                                \
-        int pt_err = pthread_mutex_unlock((win_ptr)->shm_mutex);                        \
+        MPIR_AssertDeclValue(int pt_err, 0);                                            \
+        pt_err = pthread_mutex_unlock((win_ptr)->shm_mutex);                            \
         MPIR_Assert(pt_err == 0); \
     } while (0)
 
