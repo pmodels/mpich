@@ -53,6 +53,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
     size_t count;
     MPIR_FUNC_ENTER;
 
+    if (wc->tag & MPIDI_OFI_HUGE_SEND) {
+        mpi_errno = MPIDI_OFI_recv_huge_event(vni, wc, rreq);
+        goto fn_exit;
+    }
     rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
     if (!rreq->status.MPI_ERROR) {
         rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
