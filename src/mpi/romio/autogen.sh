@@ -6,5 +6,7 @@
 
 ${AUTORECONF:-autoreconf} ${autoreconf_args:-"-vif"} -I confdb
 
-echo "=== running autoreconf in 'mpl' ==="
-(cd mpl && ${AUTORECONF:-autoreconf} ${autoreconf_args:-"-vif"}) || exit 1
+if test -d mpl ; then
+    echo "=== running autoreconf in 'mpl' ==="
+    (cd mpl && ${AUTORECONF:-autoreconf} ${autoreconf_args:-"-vif"}) || exit 1
+fi
