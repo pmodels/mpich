@@ -327,7 +327,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     MPI_Aint am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
 
     MPIDI_OFI_am_header_t *msg_hdr;
-    if (MPIDI_OFI_ENABLE_SENDV || !MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer)) {
+    if (!MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer)) {
         msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
     } else {
         msg_hdr = MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer);
@@ -348,53 +348,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     MPIR_cc_inc(sreq->cc_ptr);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
 
-    if (MPIDI_OFI_ENABLE_SENDV) {
-        iov = MPIDI_OFI_AM_SREQ_HDR(sreq, iov);
-        iov[0].iov_base = msg_hdr;
-        iov[0].iov_len = sizeof(*msg_hdr);
-        iov[1].iov_base = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr);
-        iov[1].iov_len = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
-        if (!need_packing) {
-            /* assume contig */
-            MPI_Aint dt_true_lb;
-            MPIDI_Datatype_check_lb(datatype, dt_true_lb);
-            iov[2].iov_base = (char *) buf + dt_true_lb;
-            iov[2].iov_len = data_sz;
-        } else {
-            MPI_Aint packed_size;
-            mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0,
-                                          MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer), data_sz,
-                                          &packed_size);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIR_Assert(packed_size == data_sz);
-            iov[2].iov_base = MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer);
-            iov[2].iov_len = data_sz;
-        }
+    void *p_am_hdr, *p_am_data;
+    p_am_hdr = (char *) msg_hdr + sizeof(MPIDI_OFI_am_header_t);
+    p_am_data = (char *) p_am_hdr + am_hdr_sz;
 
-        MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[ctx_idx].tx, iov, NULL, 3,
-                                         MPIDI_OFI_comm_to_phys(comm, rank, nic, 0, 0),
-                                         &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
-    } else {
-        /* Can't use fi_sendv */
-        void *p_am_hdr, *p_am_data;
-        p_am_hdr = (char *) msg_hdr + sizeof(MPIDI_OFI_am_header_t);
-        p_am_data = (char *) p_am_hdr + am_hdr_sz;
-
-        if (p_am_hdr != MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr)) {
-            MPIR_Memcpy(p_am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
-        }
-
-        MPI_Aint packed_size;
-        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, p_am_data, data_sz, &packed_size);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Assert(packed_size == data_sz);
-
-        MPI_Aint total_msg_sz = sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz + data_sz;
-        MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[ctx_idx].tx, msg_hdr, total_msg_sz,
-                                        NULL,
-                                        MPIDI_OFI_comm_to_phys(comm, rank, nic, vni_src, vni_dst),
-                                        &MPIDI_OFI_AMREQUEST(sreq, context)), send);
+    if (p_am_hdr != MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr)) {
+        MPIR_Memcpy(p_am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
     }
+
+    MPI_Aint packed_size;
+    mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, p_am_data, data_sz, &packed_size);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(packed_size == data_sz);
+
+    MPI_Aint total_msg_sz = sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz + data_sz;
+    MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[ctx_idx].tx, msg_hdr, total_msg_sz,
+                                    NULL, MPIDI_OFI_comm_to_phys(comm, rank, nic, vni_src, vni_dst),
+                                    &MPIDI_OFI_AMREQUEST(sreq, context)), send);
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -441,47 +412,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     MPIR_cc_incr(sreq->cc_ptr, &c);
     send_req->event_id = MPIDI_OFI_EVENT_AM_SEND_PIPELINE;
 
-    if (MPIDI_OFI_ENABLE_SENDV) {
-        struct iovec *iov;
-        iov = send_req->iov;
+    MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + seg_sz;
+    MPIR_Memcpy(send_req->am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
+    MPI_Aint packed_size;
+    mpi_errno = MPIR_Typerep_pack(buf, count, datatype, offset,
+                                  send_req->am_data, seg_sz, &packed_size);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(packed_size == seg_sz);
 
-        iov[0].iov_base = msg_hdr;
-        iov[0].iov_len = sizeof(*msg_hdr);
-        iov[1].iov_base = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr);
-        iov[1].iov_len = am_hdr_sz;
-        if (!need_packing) {
-            /* assume contig */
-            MPI_Aint dt_true_lb;
-            MPIDI_Datatype_check_lb(datatype, dt_true_lb);
-            iov[2].iov_base = (char *) buf + dt_true_lb + offset;
-            iov[2].iov_len = seg_sz;
-        } else {
-            MPI_Aint packed_size;
-            mpi_errno = MPIR_Typerep_pack(buf, count, datatype, offset,
-                                          send_req->pack_buffer, seg_sz, &packed_size);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIR_Assert(packed_size == seg_sz);
-            iov[2].iov_base = send_req->pack_buffer;
-            iov[2].iov_len = seg_sz;
-        }
-        MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[ctx_idx].tx, iov, NULL, 3,
-                                         MPIDI_OFI_comm_to_phys(comm, rank, nic, vni_src, vni_dst),
-                                         &send_req->context), sendv);
-    } else {
-        /* Can't use fi_sendv */
-        MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + seg_sz;
-        MPIR_Memcpy(send_req->am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
-        MPI_Aint packed_size;
-        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, offset,
-                                      send_req->am_data, seg_sz, &packed_size);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Assert(packed_size == seg_sz);
-
-        MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[ctx_idx].tx, msg_hdr, total_msg_sz,
-                                        NULL,
-                                        MPIDI_OFI_comm_to_phys(comm, rank, nic, vni_src, vni_dst),
-                                        &send_req->context), send);
-    }
+    MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[ctx_idx].tx, msg_hdr, total_msg_sz,
+                                    NULL, MPIDI_OFI_comm_to_phys(comm, rank, nic, vni_src, vni_dst),
+                                    &send_req->context), send);
 
     MPIDIG_am_send_async_issue_seg(sreq, seg_sz);
     MPIR_ERR_CHECK(mpi_errno);
@@ -729,9 +670,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
     }
 
     void *pack_buffer = NULL;
-    if (need_packing || !MPIDI_OFI_ENABLE_SENDV) {
-        ALLOCATE_PACK_BUFFER_OR_DEFER(pack_buffer);
-    }
+    ALLOCATE_PACK_BUFFER_OR_DEFER(pack_buffer);
 
     MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vni[vni_src].am_hdr_buf_pool,
                                        (void **) &send_req);
