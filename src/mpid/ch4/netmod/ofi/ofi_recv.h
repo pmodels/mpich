@@ -230,6 +230,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
     /* Read ordering unnecessary for context_id, so use relaxed load */
     MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
+    MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
+    MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
 
     if (unlikely(data_sz >= MPIDI_OFI_global.max_msg_size) && !MPIDI_OFI_COMM(comm).enable_striping) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
@@ -244,8 +246,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
-    MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
-    MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
     if (!flags) {
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                       recv_buf,
