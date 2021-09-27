@@ -30,6 +30,40 @@ static int get_huge(MPIR_Request * rreq)
     goto fn_exit;
 }
 
+static int get_huge_complete(MPIDI_OFI_huge_recv_t * recv_elem)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(recv_elem->localreq, huge.remote_info);
+
+    /* note: it's receiver ack sender */
+    int vni_remote = info->vni_src;
+    int vni_local = info->vni_dst;
+
+    struct fi_cq_tagged_entry wc;
+    wc.len = recv_elem->cur_offset;
+    wc.data = info->origin_rank;
+    wc.tag = info->tag;
+    MPIDI_OFI_recv_event(vni_local, &wc, recv_elem->localreq, MPIDI_OFI_EVENT_GET_HUGE);
+
+    MPIDI_OFI_send_control_t ctrl;
+    ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
+    ctrl.u.huge_ack.ackreq = info->ackreq;
+    mpi_errno = MPIDI_NM_am_send_hdr(info->origin_rank, comm,
+                                     MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
+                                     &ctrl, sizeof(ctrl), vni_local, vni_remote);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPL_free(info);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* this function called by recv event of a huge message */
 int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
@@ -280,27 +314,9 @@ int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reques
             bytesLeft : MPIDI_OFI_global.max_msg_size;
     }
     if (bytesToGet == 0ULL && recv_elem->chunks_outstanding == 0) {
-        int vni = info->vni_dst;
-        struct fi_cq_tagged_entry wc;
-        wc.len = recv_elem->cur_offset;
-        wc.data = info->origin_rank;
-        wc.tag = info->tag;
-        MPIDI_OFI_recv_event(vni, &wc, recv_elem->localreq, recv_elem->event_id);
-
-        MPIDI_OFI_send_control_t ctrl;
-        ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
-        ctrl.u.huge_ack.ackreq = info->ackreq;
-        /* note: it's receiver ack sender */
-        int vni_remote = info->vni_src;
-        int vni_local = info->vni_dst;
-        mpi_errno = MPIDI_NM_am_send_hdr(info->origin_rank, comm,
-                                         MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
-                                         &ctrl, sizeof(ctrl), vni_local, vni_remote);
+        mpi_errno = get_huge_complete(recv_elem);
         MPIR_ERR_CHECK(mpi_errno);
-
-        MPL_free(info);
         MPL_free(recv_elem);
-
         goto fn_exit;
     }
 
