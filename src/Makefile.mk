@@ -5,7 +5,6 @@
 
 AM_CPPFLAGS += -I$(top_srcdir)/src/include
 
-include $(top_srcdir)/src/mpi/Makefile.mk
 include $(top_srcdir)/src/util/Makefile.mk
 include $(top_srcdir)/src/binding/Makefile.mk
 include $(top_srcdir)/src/env/Makefile.mk
