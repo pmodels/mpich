@@ -110,17 +110,6 @@ PAC_POP_ALL_FLAGS
 AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"`echo $ac_configure_args`",[Configure arguments])
 
 # MPL
-AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
-MPLLIBNAME=${MPLLIBNAME:-"mpl"}
-export MPLLIBNAME
-AC_SUBST(MPLLIBNAME)
-AC_ARG_WITH([mpl-prefix],
-            [AS_HELP_STRING([[--with-mpl-prefix[=DIR]]],
-                            [use the MPL library installed in DIR. Pass
-                             "embedded" to force usage of the MPL source
-                             distributed with Hydra.])],
-            [],dnl action-if-given
-            [with_mpl_prefix=embedded]) dnl action-if-not-given
 mpl_srcdir=""
 AC_SUBST([mpl_srcdir])
 # Controls whether we recurse into the MPL dir when running "dist" rules like
@@ -132,15 +121,7 @@ AC_SUBST([mpl_includedir])
 mpl_lib=""
 AC_SUBST([mpl_lib])
 m4_define([mpl_embedded_dir],[mpl])
-PAC_CHECK_HEADER_LIB_EXPLICIT([mpl],[mplconfig.h],[$MPLLIBNAME],[mpl_str_get_int_arg])
-if test "$with_mpl" = "embedded" ; then
-    mpl_srcdir="mpl"
-    mpl_dist_srcdir="mpl"
-    mpl_lib="mpl/lib${MPLLIBNAME}.la"
-    mpl_subdir_args="--disable-versioning --enable-embedded"
-    PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-    mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
-fi
+PAC_CONFIG_MPL
 
 # Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
@@ -402,44 +383,7 @@ for hydra_topolib in ${hydra_topolibs}; do
     case "$hydra_topolib" in
 	hwloc)
                 m4_define([hwloc_embedded_dir],[tools/topo/hwloc/hwloc])
-                PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
-
-                if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
-                    AC_MSG_CHECKING([if hwloc meets minimum version requirement])
-                    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <hwloc.h>], [
-                                       #if HWLOC_API_VERSION < 0x00020000
-                                       #error
-                                       #endif
-                                       return 0;])],[],[pac_have_hwloc=no])
-                    AC_MSG_RESULT([$pac_have_hwloc])
-
-                    # if an old hwloc was specified by the user, throw an error
-                    if test "$pac_have_hwloc" = "no" -a -n "$with_hwloc" -a "$with_hwloc" != "yes" ; then
-                        AC_MSG_ERROR([hwloc installation does not meet minimum version requirement (2.0). Please update your hwloc installation or use --with-hwloc=embedded.])
-                    fi
-                fi
-
-                if test "$pac_have_hwloc" = "no" -a "$with_hwloc" != "no"; then
-                    with_hwloc=embedded
-                    pac_have_hwloc=yes
-                fi
-		if test "$with_hwloc" = "embedded" ; then
-                    hydra_use_embedded_hwloc=yes
-                    PAC_PUSH_FLAG([CFLAGS])
-                    CFLAGS=""
-                    hwloc_config_args="--enable-embedded-mode --disable-visibility"
-                    hwloc_config_args="$hwloc_config_args --disable-libxml2"
-                    hwloc_config_args="$hwloc_config_args --disable-nvml"
-                    hwloc_config_args="$hwloc_config_args --disable-cuda"
-                    hwloc_config_args="$hwloc_config_args --disable-opencl"
-                    hwloc_config_args="$hwloc_config_args --disable-rsmi"
-                    PAC_CONFIG_SUBDIR_ARGS([tools/topo/hwloc/hwloc], [$hwloc_config_args],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
-                    PAC_POP_FLAG([CFLAGS])
-                    dnl Note that single quote is intentional to pass the variable as is
-                    hwloc_srcdir="tools/topo/hwloc/hwloc"
-                    hwloc_includedir='-I${srcdir}/${hwloc_srcdir}/include -I${builddir}/${hwloc_srcdir}/include'
-                    hwloc_lib='${builddir}/${hwloc_srcdir}/hwloc/libhwloc_embedded.la'
-                fi
+                PAC_CONFIG_HWLOC
 
 		if test "$pac_have_hwloc" = "yes" ; then
 		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
