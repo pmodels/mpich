@@ -170,7 +170,8 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
         case MPIDI_OFI_CTRL_HUGE:
             MPIR_Assert(local_vci == ctrlsend->u.huge.info.vni_dst);
             MPIR_Assert(remote_vci == ctrlsend->u.huge.info.vni_src);
-            mpi_errno = MPIDI_OFI_recv_huge_control(ctrlsend->u.huge.info.comm_id,
+            mpi_errno = MPIDI_OFI_recv_huge_control(local_vci,
+                                                    ctrlsend->u.huge.info.comm_id,
                                                     ctrlsend->u.huge.info.origin_rank,
                                                     ctrlsend->u.huge.info.tag,
                                                     &(ctrlsend->u.huge.info));
