@@ -170,6 +170,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
     MPIR_Request *sreq = *request;
 
+    bool is_huge_send = false;
+    MPI_Aint huge_thresh;
+    if (MPIDI_OFI_COMM(comm).enable_striping) {
+        huge_thresh = MPIDI_OFI_global.stripe_threshold;
+    } else {
+        huge_thresh = MPIDI_OFI_global.max_msg_size;
+    }
+    if (data_sz >= huge_thresh) {
+        is_huge_send = true;
+        /* huge send will always be synchronized */
+        type = 0;
+    }
+
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
@@ -266,9 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                              vni_local, tinjectdata, FALSE /* eagain */);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
         MPIDI_OFI_send_event(vni_src, NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
-    } else if ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping)
-               || (data_sz < MPIDI_OFI_global.stripe_threshold &&
-                   MPIDI_OFI_COMM(comm).enable_striping)) {
+    } else if (!is_huge_send) {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           send_buf, data_sz, NULL /* desc */ ,
                                           cq_data,
