@@ -344,6 +344,7 @@ typedef struct {
     MPI_Aint max_order_raw;
     MPI_Aint max_order_war;
     MPI_Aint max_order_waw;
+    MPI_Aint cq_data_size;
 
     /* Mutexes and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[MAX_OFI_MUTEXES];

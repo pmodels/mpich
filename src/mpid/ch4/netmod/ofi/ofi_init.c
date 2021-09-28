@@ -1402,6 +1402,7 @@ static int update_global_limits(struct fi_info *prov)
     MPIDI_OFI_global.rx_iov_limit = MPL_MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_OFI_global.rma_iov_limit = MPL_MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
+    MPIDI_OFI_global.cq_data_size = prov->domain_attr->cq_data_size;
 
     /* Ensure that we aren't trying to shove too many bits into the match_bits.
      * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
@@ -1474,6 +1475,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "rx_iov_limit: " MPI_AINT_FMT_DEC_SPEC "\n", MPIDI_OFI_global.rx_iov_limit);
     fprintf(stdout, "rma_iov_limit: " MPI_AINT_FMT_DEC_SPEC "\n", MPIDI_OFI_global.rma_iov_limit);
     fprintf(stdout, "max_mr_key_size: %" PRIu64 "\n", MPIDI_OFI_global.max_mr_key_size);
+    fprintf(stdout, "cq_data_size: " MPI_AINT_FMT_DEC_SPEC "\n", MPIDI_OFI_global.cq_data_size);
 }
 
 static void dump_dynamic_settings(void)
