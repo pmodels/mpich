@@ -183,24 +183,34 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, MPIDI_OFI_REQUEST(sreq, nic_num));
 
     if (type == MPIDI_OFI_SYNC_SEND) {  /* Branch should compile out */
-        uint64_t ssend_match, ssend_mask;
-        MPIDI_OFI_ssendack_request_t *ackreq;
-        ackreq = MPL_malloc(sizeof(MPIDI_OFI_ssendack_request_t), MPL_MEM_OTHER);
-        MPIR_ERR_CHKANDJUMP1(ackreq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem",
-                             "**nomem %s", "Ssend ack request alloc");
-        ackreq->event_id = MPIDI_OFI_EVENT_SSEND_ACK;
-        ackreq->signal_req = sreq;
         MPIR_cc_inc(sreq->cc_ptr);
-        ssend_match = MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, tag);
-        ssend_match |= MPIDI_OFI_SYNC_SEND_ACK;
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(comm, vni_local, receiver_nic)].rx,  /* endpoint    */
-                                      NULL,     /* recvbuf     */
-                                      0,        /* data sz     */
-                                      NULL,     /* memregion descr  */
-                                      MPIDI_OFI_av_to_phys(addr, sender_nic, vni_local, vni_remote),    /* remote proc */
-                                      ssend_match,      /* match bits  */
-                                      0ULL,     /* mask bits   */
-                                      (void *) &(ackreq->context)), vni_local, trecvsync, FALSE);
+        if (MPIDI_OFI_global.cq_data_size >= 8) {
+            /* use control channel for ack. We will need sreq handle to uniquely
+             * locate the sreq */
+            cq_data |= ((uint64_t) sreq->handle) << 4;
+        } else {
+            /* using tag matching for SYNC ACK. There is a risk of mismatch
+             * when multiple ssend with the same tag is on the fly */
+            uint64_t ssend_match, ssend_mask;
+            MPIDI_OFI_ssendack_request_t *ackreq;
+            ackreq = MPL_malloc(sizeof(MPIDI_OFI_ssendack_request_t), MPL_MEM_OTHER);
+            MPIR_ERR_CHKANDJUMP1(ackreq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem",
+                                 "**nomem %s", "Ssend ack request alloc");
+            ackreq->event_id = MPIDI_OFI_EVENT_SSEND_ACK;
+            ackreq->signal_req = sreq;
+            ssend_match =
+                MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, tag);
+            ssend_match |= MPIDI_OFI_SYNC_SEND_ACK;
+            MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(comm, vni_local, receiver_nic)].rx,      /* endpoint    */
+                                          NULL, /* recvbuf     */
+                                          0,    /* data sz     */
+                                          NULL, /* memregion descr  */
+                                          MPIDI_OFI_av_to_phys(addr, sender_nic, vni_local, vni_remote),        /* remote proc */
+                                          ssend_match,  /* match bits  */
+                                          0ULL, /* mask bits   */
+                                          (void *) &(ackreq->context)), vni_local, trecvsync,
+                                 FALSE);
+        }
     }
 
     send_buf = (char *) buf + dt_true_lb;

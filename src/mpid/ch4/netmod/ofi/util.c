@@ -252,6 +252,16 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
             mpi_errno = MPIDI_OFI_get_huge(local_vci, &(ctrlsend->u.huge));
             break;
 
+        case MPIDI_OFI_CTRL_SYNC_ACK:{
+                MPIR_Request *sreq;
+                MPI_Request handle = ctrlsend->u.sync_ack.sreq_handle;
+                MPIR_Request_get_ptr(handle, sreq);
+                MPIR_Assert(sreq);
+                mpi_errno = MPIDI_OFI_send_event(local_vci, NULL, sreq,
+                                                 MPIDI_OFI_REQUEST(sreq, event_id));
+            }
+            break;
+
         default:
             fprintf(stderr, "Bad control type: 0x%08x  %d\n", ctrlsend->type, ctrlsend->type);
             MPIR_Assert(0);

@@ -17,10 +17,7 @@ int MPIDI_OFI_dispatch_function(int vni, struct fi_cq_tagged_entry *wc, MPIR_Req
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
 {
-    if (unlikely(has_err)) {
-        return wc->data & ((1 << MPIDI_OFI_IDATA_SRC_BITS) - 1);
-    }
-    return wc->data;
+    return wc->data & ((1 << MPIDI_OFI_IDATA_SRC_BITS) - 1);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vni,
@@ -105,11 +102,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
 
     /* If synchronous, ack and complete when the ack is done */
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
-        /* Read ordering unnecessary for context_id stored in util_id here, so use relaxed load */
-        uint64_t ss_bits =
-            MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int(&MPIDI_OFI_REQUEST(rreq, util_id)),
-                                   rreq->status.MPI_TAG,
-                                   MPIDI_OFI_SYNC_SEND_ACK);
         MPIR_Comm *c = rreq->comm;
         int r = rreq->status.MPI_SOURCE;
         /* NOTE: use target rank, reply to src */
@@ -118,14 +110,33 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
         int vni_local = vni_dst;
         int vni_remote = vni_src;
         MPIR_Assert(vni_local == vni);
-        int nic = 0;
-        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni_local, nic);
-        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL /* buf */ ,
-                                            0 /* len */ ,
-                                            MPIR_Comm_rank(c),
-                                            MPIDI_OFI_comm_to_phys(c, r, nic, vni_local,
-                                                                   vni_remote),
-                                            ss_bits), vni_local, tinjectdata, FALSE /* eagain */);
+
+        if (MPIDI_OFI_global.cq_data_size >= 8) {
+            /* use control channel to send ack */
+            MPI_Request sreq_handle = (MPI_Request) (wc->data >> 32);
+            MPIDI_OFI_send_control_t ctrl;
+            ctrl.type = MPIDI_OFI_CTRL_SYNC_ACK;
+            ctrl.u.sync_ack.sreq_handle = sreq_handle;
+            mpi_errno = MPIDI_NM_am_send_hdr(r, c, MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
+                                             &ctrl, sizeof(ctrl), vni_local, vni_remote);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            /* use tag matching for ack */
+            uint64_t ss_bits =
+                MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int
+                                       (&MPIDI_OFI_REQUEST(rreq, util_id)),
+                                       rreq->status.MPI_TAG,
+                                       MPIDI_OFI_SYNC_SEND_ACK);
+            int nic = 0;
+            int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni_local, nic);
+            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL /* buf */ ,
+                                                0 /* len */ ,
+                                                MPIR_Comm_rank(c),
+                                                MPIDI_OFI_comm_to_phys(c, r, nic, vni_local,
+                                                                       vni_remote),
+                                                ss_bits), vni_local, tinjectdata,
+                                 FALSE /* eagain */);
+        }
     }
 
     MPIDIU_request_complete(rreq);

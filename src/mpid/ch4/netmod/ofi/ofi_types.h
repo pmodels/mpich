@@ -127,7 +127,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 /* Typedefs */
 enum {
     MPIDI_OFI_CTRL_HUGE,      /**< Huge message          */
-    MPIDI_OFI_CTRL_HUGEACK    /**< Huge message ack      */
+    MPIDI_OFI_CTRL_HUGEACK,   /**< Huge message ack      */
+    MPIDI_OFI_CTRL_SYNC_ACK,
     /**< Huge message cleanup  */
 };
 
@@ -405,6 +406,9 @@ typedef struct {
         struct {
             MPIR_Request *ackreq;
         } huge_ack;
+        struct {
+            MPI_Request sreq_handle;
+        } sync_ack;
     } u;
 } MPIDI_OFI_send_control_t;
 
