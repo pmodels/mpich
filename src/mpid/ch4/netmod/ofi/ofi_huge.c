@@ -333,13 +333,11 @@ int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reques
         goto fn_exit;
     }
 
-    int nic = 0;
     int vni_src = recv_elem->remote_info.vni_src;
     int vni_dst = recv_elem->remote_info.vni_dst;
     if (MPIDI_OFI_COMM(recv_elem->comm_ptr).enable_striping) {  /* if striping enabled */
-        MPIDI_OFI_cntr_incr(recv_elem->comm_ptr, vni_src, nic);
         if (recv_elem->cur_offset >= MPIDI_OFI_STRIPE_CHUNK_SIZE && bytesLeft > 0) {
-            for (nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
+            for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
                 int ctx_idx = MPIDI_OFI_get_ctx_index(recv_elem->comm_ptr, vni_dst, nic);
                 remote_key = recv_elem->remote_info.rma_keys[nic];
 
@@ -350,6 +348,8 @@ int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reques
                 bytesToGet =
                     (bytesLeft <= recv_elem->stripe_size) ? bytesLeft : recv_elem->stripe_size;
 
+                /* FIXME: Can we issue concurrent fi_read with the same context? */
+                MPIDI_OFI_cntr_incr(recv_elem->comm_ptr, vni_src, nic);
                 MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx, (void *) ((char *) recv_buf + recv_elem->cur_offset),    /* local buffer */
                                              bytesToGet,        /* bytes */
                                              NULL,      /* descriptor */
@@ -364,6 +364,7 @@ int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reques
             }
         }
     } else {
+        int nic = 0;
         int ctx_idx = MPIDI_OFI_get_ctx_index(recv_elem->comm_ptr, vni_src, nic);
         remote_key = recv_elem->remote_info.rma_keys[nic];
         MPIDI_OFI_cntr_incr(recv_elem->comm_ptr, vni_src, nic);
