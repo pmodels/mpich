@@ -31,8 +31,6 @@
 #define MPIDI_OFI_MAX_NUM_AM_BUFFERS       (8)
 #define MPIDI_OFI_AM_BUFF_SZ               (1 * 1024 * 1024)
 #define MPIDI_OFI_IOV_MAX                  (32)
-#define MPIDI_OFI_AM_HDR_POOL_CELL_SIZE            (1024)
-#define MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
 #define MPIDI_OFI_NUM_CQ_BUFFERED          (1024)
 #define MPIDI_OFI_STRIPE_CHUNK_SIZE        (2048)       /* First chunk sent through the preferred NIC during striping */
 
@@ -174,11 +172,11 @@ typedef struct MPIDI_OFI_am_send_pipeline_request {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIR_Request *sreq;
-    void *pack_buffer;
+    void *pack_buffer;          /* always allocated from pack_buf_pool */
+    void *msg_hdr;
     void *am_hdr;
-    uint16_t am_hdr_sz;
-    MPIDI_OFI_am_header_t msg_hdr MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
-    uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE] MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
+    void *am_data;
+    MPIDI_OFI_am_header_t msg_hdr_data MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
     struct iovec iov[3];
 } MPIDI_OFI_am_send_pipeline_request_t;

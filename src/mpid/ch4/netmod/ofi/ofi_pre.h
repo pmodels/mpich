@@ -116,6 +116,7 @@ typedef struct {
 } MPIDI_OFI_lmt_msg_t;
 
 typedef struct {
+    uint64_t rma_key;
     void *unpack_buffer;
     MPI_Aint pack_size;
     uint64_t src_offset;
@@ -129,23 +130,31 @@ typedef enum {
 } MPIDI_OFI_lmt_type_t;
 
 typedef struct {
-    MPIDI_OFI_lmt_msg_payload_t lmt_info;
     struct fid_mr *lmt_mr;
     MPIDI_OFI_lmt_type_t lmt_type;
     union {
         uint64_t lmt_cntr;
         MPIDI_OFI_lmt_unpack_t unpack;
     } lmt_u;
-    void *pack_buffer;
     MPIR_Request *rreq_ptr;
     void *am_hdr;
     uint16_t am_hdr_sz;
-    uint8_t pad[6];
-    MPIDI_OFI_am_header_t msg_hdr;
-    uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
+    /* used for packing non-contig data or the whole am message when payload doesn't fit */
+    void *pack_buffer;
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
     struct iovec iov[3];
+    /* AM send buffers, must be together so we can send without sendv.
+     * Note: since we allocate from genq pool, there may be some additional space
+     * to pack a small payload */
+    MPIDI_OFI_am_header_t msg_hdr;
+    uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
 } MPIDI_OFI_am_request_header_t;
+
+#define MPIDI_OFI_AM_HDR_POOL_CELL_SIZE             (1024)
+#define MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
+/* maximum am message size that can fit into request header buffer */
+#define MPIDI_OFI_AM_MAX_MSG_SIZE \
+    (MPIDI_OFI_AM_HDR_POOL_CELL_SIZE - offsetof(MPIDI_OFI_am_request_header_t, msg_hdr))
 
 typedef struct MPIDI_OFI_deferred_am_isend_req {
     int op;
