@@ -31,11 +31,16 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
     if (rank == 0) {
         ADIOI_Free(cont->obj_name);
         ADIOI_Free(cont->cont_name);
-        if (cont->attr.da_rel_path) {
-            MPL_direct_free(cont->attr.da_rel_path);
-            cont->attr.da_rel_path = NULL;
-        }
     }
+#if CHECK_DAOS_API_VERSION(1, 3)
+    duns_destroy_attr(&cont->attr);
+#else
+    if (cont->attr.da_rel_path) {
+        MPL_direct_free(cont->attr.da_rel_path);
+        cont->attr.da_rel_path = NULL;
+    }
+#endif
+
     ADIOI_Free(fd->fs_ptr);
     fd->fs_ptr = NULL;
 
