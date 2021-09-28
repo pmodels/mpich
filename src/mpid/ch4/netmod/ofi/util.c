@@ -241,13 +241,15 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
         *req = NULL;
     }
 
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+
     switch (ctrlsend->type) {
         case MPIDI_OFI_CTRL_HUGEACK:
-            mpi_errno = MPIDI_OFI_dispatch_function(0, NULL, ctrlsend->u.huge_ack.ackreq);
+            mpi_errno = MPIDI_OFI_dispatch_function(local_vci, NULL, ctrlsend->u.huge_ack.ackreq);
             break;
 
         case MPIDI_OFI_CTRL_HUGE:
-            mpi_errno = MPIDI_OFI_get_huge(0, &(ctrlsend->u.huge));
+            mpi_errno = MPIDI_OFI_get_huge(local_vci, &(ctrlsend->u.huge));
             break;
 
         default:
