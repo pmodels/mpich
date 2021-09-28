@@ -243,6 +243,12 @@ typedef struct {
     int cq_buffered_static_tail;
     MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
 
+    /* queues to matching huge recv and control message */
+    struct MPIDI_OFI_huge_recv_list *huge_ctrl_head;
+    struct MPIDI_OFI_huge_recv_list *huge_ctrl_tail;
+    struct MPIDI_OFI_huge_recv_list *huge_recv_head;
+    struct MPIDI_OFI_huge_recv_list *huge_recv_tail;
+
     char pad MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
 } MPIDI_OFI_per_vni_t;
 
@@ -521,10 +527,6 @@ typedef struct MPIDI_OFI_huge_recv_list {
 
 /* Externs */
 extern MPIDI_OFI_global_t MPIDI_OFI_global;
-extern MPIDI_OFI_huge_recv_list_t *MPIDI_huge_ctrl_head;
-extern MPIDI_OFI_huge_recv_list_t *MPIDI_huge_ctrl_tail;
-extern MPIDI_OFI_huge_recv_list_t *MPIDI_huge_recv_head;
-extern MPIDI_OFI_huge_recv_list_t *MPIDI_huge_recv_tail;
 
 extern MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS];
 
