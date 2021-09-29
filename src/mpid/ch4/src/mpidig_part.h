@@ -7,7 +7,7 @@
 #define MPIDIG_AM_PART_H_INCLUDED
 
 #include "ch4_impl.h"
-#include "mpidig_am_part_utils.h"
+#include "mpidig_part_utils.h"
 
 void MPIDIG_precv_matched(MPIR_Request * part_req);
 int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,

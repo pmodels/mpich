@@ -5,7 +5,7 @@
 
 #include "mpidimpl.h"
 #include "mpidch4r.h"
-#include "ch4r_callbacks.h"
+#include "mpidig_pt2pt_callbacks.h"
 
 static int handle_unexp_cmpl(MPIR_Request * rreq);
 static int recv_target_cmpl_cb(MPIR_Request * rreq);

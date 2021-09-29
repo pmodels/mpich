@@ -3,11 +3,10 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef CH4R_RECVQ_H_INCLUDED
-#define CH4R_RECVQ_H_INCLUDED
+#ifndef MPIDIG_RECVQ_H_INCLUDED
+#define MPIDIG_RECVQ_H_INCLUDED
 
 #include <mpidimpl.h>
-#include "mpidig_am.h"
 #include "utlist.h"
 #include "ch4_impl.h"
 
@@ -195,4 +194,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_delete_posted(MPIR_Request * req, MPIR_Reque
     return found;
 }
 
-#endif /* CH4R_RECVQ_H_INCLUDED */
+#endif /* MPIDIG_RECVQ_H_INCLUDED */

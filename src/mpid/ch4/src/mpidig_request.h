@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef CH4R_REQUEST_H_INCLUDED
-#define CH4R_REQUEST_H_INCLUDED
+#ifndef MPIDIG_REQUEST_H_INCLUDED
+#define MPIDIG_REQUEST_H_INCLUDED
 
 #include "ch4_types.h"
 #include "mpidu_genq.h"
@@ -168,4 +168,4 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
 }
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
 
-#endif /* CH4R_REQUEST_H_INCLUDED */
+#endif /* MPIDIG_REQUEST_H_INCLUDED */

@@ -5,7 +5,7 @@
 
 #include "mpidimpl.h"
 #include "mpidch4r.h"
-#include "mpidig_am_part_utils.h"
+#include "mpidig_part_utils.h"
 
 static int part_req_create(void *buf, int partitions, MPI_Aint count,
                            MPI_Datatype datatype, int rank, int tag,
