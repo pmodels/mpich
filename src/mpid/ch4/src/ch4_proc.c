@@ -4,10 +4,10 @@
  */
 
 #include "mpidimpl.h"
-#include "ch4r_proc.h"
+#include "ch4_proc.h"
 
 /* There are 3 terms referencing processes -- upid, lpid, gpid.
- * Refer to comment in ch4r_proc.h
+ * Refer to comment in ch4_proc.h
  */
 
 static int get_next_avtid(void);
