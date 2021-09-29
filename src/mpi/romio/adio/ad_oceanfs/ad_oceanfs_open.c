@@ -14,7 +14,7 @@ typedef struct oceanfs_group_lock {
 #define OCEANFS_IOCTL_GET_GROUPLOCK    _IOWR('S', 103, oceanfs_group_lock_t)
 #define OCEANFS_IOCTL_SET_GROUPLOCK    _IOWR('S', 111, oceanfs_group_lock_t)
 
-int ADIOI_OCEANFS_GetGroupLock(int fd, u_int64_t *lock_id)
+int ADIOI_OCEANFS_GetGroupLock(int fd, u_int64_t * lock_id)
 {
     oceanfs_group_lock_t group_lock;
     group_lock.fd = fd;
@@ -138,7 +138,7 @@ void ADIOI_OCEANFS_Open(ADIO_File fd, int *error_code)
 
     ADIOI_OCEANFS_SyncGroupLock(fd, rank);
 
-    if ((fd->fd_sys != -1) && ((u_int32_t)fd->access_mode & ADIO_APPEND)) {
+    if ((fd->fd_sys != -1) && ((u_int32_t) fd->access_mode & ADIO_APPEND)) {
         ret = lseek(fd->fd_sys, 0, SEEK_END);
         if (ret < 0) {
             *error_code = ADIOI_Err_create_code(myname, fd->filename, errno);
