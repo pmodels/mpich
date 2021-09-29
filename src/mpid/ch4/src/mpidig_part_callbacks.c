@@ -5,8 +5,8 @@
 
 #include "mpidimpl.h"
 #include "mpidch4r.h"
-#include "mpidig_am_part_callbacks.h"
-#include "mpidig_am_part_utils.h"
+#include "mpidig_part_callbacks.h"
+#include "mpidig_part_utils.h"
 
 static void part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_msg_t * msg_hdr)
 {

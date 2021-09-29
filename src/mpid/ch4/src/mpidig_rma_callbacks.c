@@ -4,9 +4,8 @@
  */
 
 #include "mpidimpl.h"
-#include "mpidch4r.h"
-#include "ch4r_rma_target_callbacks.h"
-#include "ch4r_util.h"  /* for completion order check */
+#include "mpidig_rma_callbacks.h"
+#include "mpidig_util.h"        /* for completion order check */
 
 /* ** RMA PROTOCOLS ** */
 /* Put (contig or small flattened_dt)
@@ -80,6 +79,168 @@
  *     -> MPIDIG_WIN_UNLOCKALL          - for each process
  *     MPIDIG_WIN_UNLOCKALL_ACK <-
  */
+
+/* This file includes all RMA callback routines on the packet issuing side.
+ * All handler functions are named with suffix "_origin_cb". */
+
+int MPIDIG_put_ack_origin_cb(MPIR_Request * req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(req);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_acc_ack_origin_cb(MPIR_Request * req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(req);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_get_acc_ack_origin_cb(MPIR_Request * req)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+    MPL_free(MPIDIG_REQUEST(req, req->areq.data));
+
+    MPID_Request_complete(req);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_cswap_ack_origin_cb(MPIR_Request * req)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    MPL_free(MPIDIG_REQUEST(req, req->creq.data));
+    MPID_Request_complete(req);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_get_ack_origin_cb(MPIR_Request * req)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    MPL_free(MPIDIG_REQUEST(req, req->greq.flattened_dt));
+    if (MPIDIG_REQUEST(req, req->greq.dt))
+        MPIR_Datatype_ptr_release(MPIDIG_REQUEST(req, req->greq.dt));
+
+    MPID_Request_complete(req);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_put_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_cswap_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_acc_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_get_acc_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_put_data_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_acc_data_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_get_acc_data_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_put_dt_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_acc_dt_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_get_acc_dt_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_get_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+/* All RMA callback routines on the packet receiving side. */
 
 static int ack_put(MPIR_Request * rreq);
 static int ack_cswap(MPIR_Request * rreq);
