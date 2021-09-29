@@ -575,7 +575,8 @@ void MPID_Request_free_hook(MPIR_Request *req)
 
     /* trigger request_completed callback function */
     if (req->dev.request_completed_cb != NULL && MPIR_Request_is_complete(req)) {
-        int mpi_errno = req->dev.request_completed_cb(req);
+        MPIR_AssertDeclValue(int mpi_errno, MPI_SUCCESS);
+        mpi_errno = req->dev.request_completed_cb(req);
         MPIR_Assert(mpi_errno == MPI_SUCCESS);
 
         req->dev.request_completed_cb = NULL;

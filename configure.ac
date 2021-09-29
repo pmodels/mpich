@@ -994,15 +994,8 @@ AC_SUBST([mpllibdir])
 mpllib=""
 AC_SUBST([mpllib])
 
-# NOTE: we only support embedded mpl now
-# no need for libtool versioning when embedding MPL
-mpl_subdir_args="--disable-versioning --enable-embedded"
-PAC_CONFIG_SUBDIR_ARGS([src/mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
-PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
-
-mplsrcdir="src/mpl"
-mpllib="src/mpl/libmpl.la"
+m4_define([mpl_embedded_dir],[src/mpl])
+PAC_CONFIG_MPL
 
 # Izem
 
@@ -1090,59 +1083,13 @@ hwloclib=""
 AC_SUBST([hwloclib])
 
 m4_define([hwloc_embedded_dir],[modules/hwloc])
-dnl minor difference from e.g. mpl and zm -- we'll prioritize system hwloc by default
-PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
-PAC_CHECK_HEADER_LIB_OPTIONAL([netloc],[netloc.h],[netloc],[netloc_get_all_host_nodes])
-
-if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
-    AC_MSG_CHECKING([if hwloc meets minimum version requirement])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <hwloc.h>], [
-                       #if HWLOC_API_VERSION < 0x00020000
-                       #error
-                       #endif
-                       return 0;])],[],[pac_have_hwloc=no])
-    AC_MSG_RESULT([$pac_have_hwloc])
-
-    # if an old hwloc was specified by the user, throw an error
-    if test "$pac_have_hwloc" = "no" -a -n "$with_hwloc" -a "$with_hwloc" != "yes" ; then
-        AC_MSG_ERROR([hwloc installation does not meet minimum version requirement (2.0). Please update your hwloc installation or use --with-hwloc=embedded.])
-    fi
-fi
-
-if test "$pac_have_hwloc" = "no" -a "$with_hwloc" != "no"; then
-    with_hwloc=embedded
-    pac_have_hwloc=yes
-    dnl TODO: check and configure embedded netloc
-fi
-
-if test "$with_hwloc" = "embedded" ; then
-    PAC_PUSH_FLAG([CFLAGS])
-    CFLAGS="$VISIBILITY_CFLAGS"
-    hwloc_config_args="--enable-embedded-mode --disable-visibility"
-    hwloc_config_args="$hwloc_config_args --disable-libxml2"
-    hwloc_config_args="$hwloc_config_args --disable-nvml"
-    hwloc_config_args="$hwloc_config_args --disable-cuda"
-    hwloc_config_args="$hwloc_config_args --disable-opencl"
-    hwloc_config_args="$hwloc_config_args --disable-rsmi"
-    PAC_CONFIG_SUBDIR_ARGS([modules/hwloc], [$hwloc_config_args],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
-    PAC_POP_FLAG([CFLAGS])
-    hwlocsrcdir="${main_top_builddir}/modules/hwloc"
-    hwloclib="${main_top_builddir}/modules/hwloc/hwloc/libhwloc_embedded.la"
-    PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/hwloc/include],[CPPFLAGS])
-    PAC_APPEND_FLAG([-I${main_top_builddir}/modules/hwloc/include],[CPPFLAGS])
-
-    # capture the line -- S["HWLOC_EMBEDDED_LIBS"]="-lm "
-    hwloc_embedded_libs=$(awk -F'"' '/^S."HWLOC_EMBEDDED_LIBS"/ {print $4}' modules/hwloc/config.status)
-    echo "hwloc_embedded_libs = $hwloc_embedded_libs"
-    if test -n "$hwloc_embedded_libs" ; then
-        dnl TODO: split and add individual lib
-        PAC_LIBS_ADD([$hwloc_embedded_libs])
-    fi
-fi
+PAC_CONFIG_HWLOC
 
 if test "$pac_have_hwloc" = "yes" ; then
     AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
 fi
+
+PAC_CHECK_HEADER_LIB_OPTIONAL([netloc],[netloc.h],[netloc],[netloc_get_all_host_nodes])
 if test "$pac_have_netloc" = "yes" ; then
     AC_DEFINE(HAVE_NETLOC,1,[Define if netloc is available])
 fi
