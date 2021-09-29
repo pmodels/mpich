@@ -9,7 +9,7 @@
 #include "ch4_types.h"
 #include "mpidig.h"
 #include "mpidu_shm.h"
-#include "ch4r_proc.h"
+#include "ch4_proc.h"
 #include "ch4_self.h"
 #include "ch4_vci.h"
 

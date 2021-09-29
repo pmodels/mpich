@@ -7,7 +7,7 @@
 #define MPIDCH4R_H_INCLUDED
 
 #include "mpidig_recvq.h"
-#include "ch4r_proc.h"
+#include "ch4_proc.h"
 #include "mpidig.h"
 #include "mpidig_pt2pt_callbacks.h"
 #include "mpidig_probe.h"

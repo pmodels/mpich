@@ -7,7 +7,7 @@
 #define MPIDIG_RECV_H_INCLUDED
 
 #include "ch4_impl.h"
-#include "ch4r_proc.h"
+#include "ch4_proc.h"
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_prepare_recv_req(int rank, int tag,
                                                       MPIR_Context_id_t context_id, void *buf,
