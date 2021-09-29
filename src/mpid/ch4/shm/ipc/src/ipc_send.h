@@ -38,9 +38,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     uintptr_t data_sz;
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, true_lb);
 
-    if (!dt_contig && (dt_ptr->true_lb < 0 || dt_ptr->extent < 0)) {
-        /* TODO: handle offset */
-        goto fn_exit;
+    if (!dt_contig) {
+        /* skip HINDEXED and STRUCT */
+        int combiner = dt_ptr->contents->combiner;
+        MPIR_Datatype *tmp_dtp = dt_ptr;
+        while (combiner == MPI_COMBINER_DUP || combiner == MPI_COMBINER_RESIZED) {
+            int *ints;
+            MPI_Aint *aints, *counts;
+            MPI_Datatype *types;
+            MPIR_Datatype_access_contents(tmp_dtp->contents, &ints, &aints, &counts, &types);
+            MPIR_Datatype_get_ptr(types[0], tmp_dtp);
+            combiner = tmp_dtp->contents->combiner;
+        }
+        switch (combiner) {
+            case MPI_COMBINER_HINDEXED:
+            case MPI_COMBINER_STRUCT:
+                goto fn_exit;
+        }
+
+        /* skip negative lb and extent */
+        if (dt_ptr->true_lb < 0 || dt_ptr->extent < 0) {
+            goto fn_exit;
+        }
     }
 
     MPI_Aint mem_size;
