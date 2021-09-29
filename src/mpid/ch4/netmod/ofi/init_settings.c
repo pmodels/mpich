@@ -61,6 +61,7 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
     /*           endpoint, so the netmod requires dynamic memory regions        */
     /* ------------------------------------------------------------------------ */
     hints->mode = FI_CONTEXT | FI_ASYNC_IOV | FI_RX_CQ_DATA;    /* We can handle contexts  */
+    hints->domain_attr->mr_mode |= FI_MR_ENDPOINT;
 
     if (MPIDI_OFI_get_required_version() >= FI_VERSION(1, 5)) {
 #ifdef FI_CONTEXT2
@@ -159,6 +160,8 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
             hints->domain_attr->mr_mode |= FI_MR_PROV_KEY;
         }
 #endif
+        /* This doesn't require an if check because it is supported all of the time. */
+        hints->domain_attr->mr_mode |= FI_MR_ENDPOINT;
     } else {
         /* In old versions FI_MR_BASIC is equivallent to set
          * FI_MR_VIRT_ADDR, FI_MR_PROV_KEY, and FI_MR_ALLOCATED on.
