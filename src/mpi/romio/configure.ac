@@ -192,7 +192,7 @@ dnl An m4 macro for use with m4_foreach_w and friends.  You should modify this
 dnl list if you want to add a known file system.  The list is just whitespace
 dnl separated, so you can use newlines and tabs as well.
 m4_define([known_filesystems_m4_w],
-          [daos nfs ufs pvfs2 testfs xfs panfs lustre gpfs ime quobytefs])dnl
+          [daos nfs ufs pvfs2 testfs xfs panfs lustre gpfs ime quobytefs oceanfs])dnl
 dnl
 dnl An m4 macro for use with m4_foreach and friends.  Expands to a quoted list of
 dnl quoted elements.  A bit easier to use without unintended expansion than the
@@ -989,6 +989,10 @@ if test -n "$file_system_quobytefs" ; then
 	PAC_APPEND_FLAG([-lquobyte],[LIBS])
 fi
 
+if test -n "$file_system_oceanfs" ; then
+    AC_DEFINE(ROMIO_OCEANFS,1,[Define for ROMIO with OCEANFS])
+fi
+
 #
 # Verify presence of pvfs2.h
 #
@@ -1427,7 +1431,7 @@ AC_ARG_VAR([main_top_srcdir],[set by the MPICH configure to indicate the MPICH s
 AC_ARG_VAR([main_top_builddir],[set by the MPICH configure to indicate the MPICH build root])
 
 # The main_top_srcdir is the location of the source for the building
-# package.  This is used only as part of the MPICH build, including 
+# package.  This is used only as part of the MPICH build, including
 # the documentation targets mandoc, htmldoc, and latexdoc
 if test -z "$main_top_srcdir" ; then
     if test "$FROM_MPICH" = yes ; then
