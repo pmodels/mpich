@@ -97,6 +97,10 @@
 #define DAOS_SUPER_MAGIC (0xDA05AD10)
 #endif
 
+#if defined(ROMIO_OCEANFS) && !defined(OCEANFS_SUPER_MAGIC)
+#define OCEANFS_SUPER_MAGIC (0x0CEAAEC0)
+#endif
+
 #ifdef ROMIO_HAVE_STRUCT_STATVFS_WITH_F_BASETYPE
 #ifdef HAVE_SYS_STATVFS_H
 #include <sys/statvfs.h>
@@ -180,6 +184,9 @@ static struct ADIO_FSTypes fstypes[] = {
 #endif
 #ifdef ROMIO_QUOBYTEFS
     {&ADIO_QUOBYTEFS_operations, ADIO_QUOBYTEFS, "quobyte:"},
+#endif
+#ifdef ROMIO_OCEANFS
+    {&ADIO_OCEANFS_operations, ADIO_OCEANFS, "oceanfs:"},
 #endif
     {0, 0, 0}   /* guard entry */
 };
@@ -439,6 +446,13 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 #ifdef DAOS_SUPER_MAGIC
     if (fsbuf.f_type == DAOS_SUPER_MAGIC) {
         *fstype = ADIO_DAOS;
+        return;
+    }
+#endif
+
+#ifdef OCEANFS_SUPER_MAGIC
+    if (fsbuf.f_type == OCEANFS_SUPER_MAGIC) {
+        *fstype = ADIO_OCEANFS;
         return;
     }
 #endif
