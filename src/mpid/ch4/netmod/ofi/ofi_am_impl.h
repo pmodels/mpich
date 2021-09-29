@@ -281,6 +281,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
                              0ULL,
                              lmt_info->rma_key,
                              0ULL, &MPIDI_OFI_AM_SREQ_HDR(sreq, lmt_mr), NULL), mr_reg);
+    mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], MPIDI_OFI_AM_SREQ_HDR(sreq, lmt_mr),
+                                  MPIDI_OFI_global.ctx[ctx_idx].ep, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPIDI_OFI_global.per_vni[vni_src].am_inflight_rma_send_mrs += 1;
 
     if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
