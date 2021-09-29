@@ -123,6 +123,10 @@ static inline int MPIDI_OFI_Allreduce_intra_small_msg_triggered(const void *send
                                   blk_sml_allred->recv_buf[i], 1024,
                                   FI_REMOTE_WRITE, 0ULL, requested_key, FI_RMA_EVENT,
                                   &blk_sml_allred->rcv_mr[i], NULL), 0, mr_reg, false);
+            if (MPIDI_OFI_global.prov_use[0]->domain_attr->mr_mode == FI_MR_ENDPOINT) {
+                MPIDI_OFI_CALL(fi_mr_bind(blk_sml_allred->rcv_mr[i],
+                                          &MPIDI_OFI_global.ctx[0].ep->fid, 0ULL), mr_bind);
+            }
         }
 
         blk_sml_allred->recv_cntr =

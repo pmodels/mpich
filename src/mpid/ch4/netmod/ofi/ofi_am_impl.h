@@ -278,6 +278,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
                              0ULL,
                              lmt_info->rma_key,
                              0ULL, &MPIDI_OFI_AM_SREQ_HDR(sreq, lmt_mr), NULL), mr_reg);
+    if (MPIDI_OFI_global.prov_use[0]->domain_attr->mr_mode == FI_MR_ENDPOINT) {
+        /* Bind the memory region to the endpoint */
+        MPIDI_OFI_CALL(fi_mr_bind(MPIDI_OFI_AM_SREQ_HDR(sreq, lmt_mr),
+                                  &MPIDI_OFI_global.ctx[ctx_idx].ep->fid, 0ULL), mr_bind);
+        MPIDI_OFI_CALL(fi_mr_enable(MPIDI_OFI_AM_SREQ_HDR(sreq, lmt_mr)), mr_enable);
+    }
     MPL_atomic_fetch_add_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 1);
 
     if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
