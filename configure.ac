@@ -40,6 +40,8 @@ dnl    MPID_NO_LONG_LONG     - if yes, the device does not support the
 dnl                            long long integer type
 dnl    MPID_NO_LONG_DOUBLE   - if yes, the device does not support the
 dnl                            long double type
+dnl    MPID_NO_FLOAT16       - if yes, the device does not support the
+dnl                            _Float16 type
 dnl    MPID_PM_NAMESERVER    - if set, provides the name of the nameserver
 dnl                            that the process manager supports.
 dnl                            This name server will be used if the
@@ -2708,6 +2710,7 @@ if test "$MPID_NO_FLOAT16" != "yes" ; then
     pac_cv_have_float16=yes,pac_cv_have_float16=no)])
     if test "$pac_cv_have_float16" = "yes" ; then
         AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
+        AC_CHECK_SIZEOF([_Float16])
     fi
 fi
 
@@ -2853,7 +2856,6 @@ AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
 #endif
   ])
 ])
-AC_CHECK_SIZEOF([_Float16])
 
 # we need really could just use the result of AC_CHECK_SIZEOF, but having a
 # HAVE_typename macro is useful for consistency
@@ -2881,6 +2883,7 @@ for type in short int long long_long float double long_double wchar_t \
                    $type != long_double -a \
                    $type != long_double_int -a \
                    $type != _Bool -a \
+                   $type != _Float16 -a \
                    $type != float__Complex -a \
                    $type != double__Complex -a \
                    $type != long_double__Complex ; then
@@ -3191,7 +3194,7 @@ fi
 if test ${len_long_double__Complex} != 0 ; then
     MPI_C_LONG_DOUBLE_COMPLEX=0x4c00${len_long_double__Complex}42
 fi
-if test ${len__Float16} != 0 ; then
+if test ${len__Float16} != 0 -a "$MPID_NO_FLOAT16" != "yes"; then
     MPIX_C_FLOAT16=0x4c000246
 fi
 
