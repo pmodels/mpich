@@ -18,3 +18,4 @@ sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100
 sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=shared arg=-recvmem=host
 sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=shared arg=-recvmem=reg_host
 sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=shared arg=-recvmem=shared
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8 arg=-sendmem=device arg=-recvmem=device env=MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE=1 timeLimit=600
