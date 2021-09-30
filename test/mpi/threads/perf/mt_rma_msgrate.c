@@ -71,8 +71,8 @@ MTEST_THREAD_RETURN_TYPE thread_fn(void *arg)
     /* Benchmark */
     t_start = MPI_Wtime();
 
+    MPI_Win_fence(0, my_win);
     for (win_post_i = 0; win_post_i < win_posts; win_post_i++) {
-        MPI_Win_fence(0, my_win);
         if (world_rank == 0) {
             for (win_i = 0; win_i < WINDOW_SIZE; win_i++) {
                 if (rma_op == OP_PUT) {
