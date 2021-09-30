@@ -343,6 +343,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Iallreduce_tree_triggered_rma(const void 
                    (MPIDI_OFI_global.ctx[0].domain, recvbuf, count * data_sz,
                     FI_REMOTE_WRITE | FI_REMOTE_READ, 0ULL, requested_key,
                     FI_RMA_EVENT, r_mr, NULL), mr_reg);
+    if (MPIDI_OFI_global.prov_use[0]->domain_attr->mr_mode == FI_MR_ENDPOINT) {
+        /* Bind the memory region to the endpoint */
+        MPIDI_OFI_CALL(fi_mr_bind(*r_mr, &MPIDI_OFI_global.ctx[0].ep->fid, 0ULL), mr_bind);
+    }
 
     /* Bind counters with the memory region so that when data is received in this region, the counter
      * gets incremented */
@@ -564,6 +568,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Iallreduce_kary_triggered_pipelined(const
                        (MPIDI_OFI_global.ctx[0].domain, (unsigned char *) recvbuf + i * chunk_size,
                         chunk_size, FI_REMOTE_WRITE, 0ULL, requested_key, FI_RMA_EVENT,
                         &((*r_mr)[i]), NULL), mr_reg);
+        if (MPIDI_OFI_global.prov_use[0]->domain_attr->mr_mode == FI_MR_ENDPOINT) {
+            /* Bind the memory region to the endpoint */
+            MPIDI_OFI_CALL(fi_mr_bind((*r_mr)[i], &MPIDI_OFI_global.ctx[0].ep->fid, 0ULL), mr_bind);
+        }
 
         MPIR_Assert(ret == 0);
     }

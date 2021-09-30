@@ -406,6 +406,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
                    (MPIDI_OFI_global.ctx[0].domain, buffer, count * data_sz,
                     FI_REMOTE_WRITE | FI_REMOTE_READ, 0ULL, MPIDI_OFI_COMM(comm_ptr).conn_id,
                     FI_RMA_EVENT, r_mr, NULL), mr_reg);
+    if (MPIDI_OFI_global.prov_use[0]->domain_attr->mr_mode == FI_MR_ENDPOINT) {
+        /* Bind the memory region to the endpoint */
+        MPIDI_OFI_CALL(fi_mr_bind(*r_mr, &MPIDI_OFI_global.ctx[0].ep->fid, 0ULL), mr_bind);
+    }
 
     /* Bind counters with the memory region so that when data is received in this region, the counter
      *      * gets incremented */
@@ -552,6 +556,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_rma(void *buffer, i
                    (MPIDI_OFI_global.ctx[0].domain, buffer, count * data_sz,
                     FI_REMOTE_WRITE | FI_REMOTE_READ, 0ULL, MPIDI_OFI_COMM(comm_ptr).conn_id,
                     FI_RMA_EVENT, r_mr, NULL), mr_reg);
+    if (MPIDI_OFI_global.prov_use[0]->domain_attr->mr_mode == FI_MR_ENDPOINT) {
+        /* Bind the memory region to the endpoint */
+        MPIDI_OFI_CALL(fi_mr_bind(*r_mr, &MPIDI_OFI_global.ctx[0].ep->fid, 0ULL), mr_bind);
+    }
 
     /* Bind counters with the memory region so that when data is received in this region, the counter
      * gets incremented */
@@ -713,6 +721,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_pipelined(void *buf
                        (MPIDI_OFI_global.ctx[0].domain, (unsigned char *) buffer + i * chunk_size,
                         chunk_size, FI_REMOTE_WRITE, 0ULL, i + 1, FI_RMA_EVENT, &((*r_mr)[i]),
                         NULL), mr_reg);
+        if (MPIDI_OFI_global.prov_use[0]->domain_attr->mr_mode == FI_MR_ENDPOINT) {
+            /* Bind the memory region to the endpoint */
+            MPIDI_OFI_CALL(fi_mr_bind(((*r_mr)[i]), &MPIDI_OFI_global.ctx[0].ep->fid, 0ULL),
+                           mr_bind);
+        }
 
         assert(ret == 0);
     }

@@ -195,10 +195,14 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
                                             NULL), rc); /* In:  context             */
             if (MPIDI_OFI_global.prov_use[0]->domain_attr->mr_mode == FI_MR_ENDPOINT) {
                 /* Bind the memory region to the endpoint */
+                MPIDI_OFI_CALL(fi_mr_bind(MPIDI_OFI_WIN(win).mr, &MPIDI_OFI_WIN(win).ep->fid, 0ULL),
+                               mr_bind);
+                /* Bind the memory region to the counter */
                 MPIDI_OFI_CALL(fi_mr_bind(MPIDI_OFI_WIN(win).mr,        /* In: memregion object    */
                                           &MPIDI_OFI_WIN(win).cmpl_cntr->fid,   /*  In: Fabric identifier of an associated resource  */
                                           0ULL),        /* In:  flags */
-                               mr_reg);
+                               mr_bind);
+                MPIDI_OFI_CALL(fi_mr_enable(MPIDI_OFI_WIN(win).mr), mr_enable);
             }
         }
 
@@ -942,7 +946,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     /* device buffers are not currently supported */
     if (MPIR_GPU_query_pointer_is_dev(base))
         rc = -1;
-    else
+    else {
         MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[ctx_idx].domain,   /* In:  Domain Object */
                                         base,   /* In:  Lower memory address */
                                         size,   /* In:  Length              */
@@ -952,6 +956,14 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
                                         0ULL,   /* In:  flags               */
                                         &mr,    /* Out: memregion object    */
                                         NULL), rc);     /* In:  context             */
+        if (MPIDI_OFI_global.prov_use[0]->domain_attr->mr_mode == FI_MR_ENDPOINT) {
+            /* Bind the memory region to the endpoint */
+            MPIDI_OFI_CALL(fi_mr_bind(mr, &MPIDI_OFI_WIN(win).ep->fid, 0ULL), mr_bind);
+            /* Bind the memory region to the counter */
+            MPIDI_OFI_CALL(fi_mr_bind(mr, &MPIDI_OFI_WIN(win).cmpl_cntr->fid, 0ULL), mr_bind);
+            MPIDI_OFI_CALL(fi_mr_enable(MPIDI_OFI_WIN(win).mr), mr_enable);
+        }
+    }
 
     /* Check if any process fails to register. If so, release local MR and force AM path. */
     MPIR_Allreduce(&rc, &allrc, 1, MPI_INT, MPI_MIN, comm_ptr, &errflag);
