@@ -9,13 +9,7 @@
 #include <mpi.h>
 #include "release_gather_types.h"
 
-#define MPIDI_POSIX_MAX_AM_HDR_SIZE     ((1 << MPIDI_POSIX_AM_HDR_SZ_BITS) - 1)
-
-#define MPIDI_POSIX_AM_HANDLER_ID_BITS  (8)     /* up to 64 */
-#define MPIDI_POSIX_AM_HDR_SZ_BITS      (8)
-#define MPIDI_POSIX_AM_TYPE_BITS     (8)
-#define MPIDI_POSIX_AM_UNUSED_BITS     (40)
-
+#define MPIDI_POSIX_MAX_AM_HDR_SIZE     800     /* constrained by MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE */
 #define MPIDI_POSIX_AM_MSG_HEADER_SIZE  (sizeof(MPIDI_POSIX_am_header_t))
 #define MPIDI_POSIX_MAX_IOV_NUM         (3)     /* am_hdr, [padding], payload */
 
@@ -59,10 +53,10 @@ typedef struct {
 } MPIDI_POSIX_request_t;
 
 typedef struct MPIDI_POSIX_am_header {
-    uint64_t handler_id:MPIDI_POSIX_AM_HANDLER_ID_BITS;
-    uint64_t am_hdr_sz:MPIDI_POSIX_AM_HDR_SZ_BITS;
-    uint64_t am_type:MPIDI_POSIX_AM_TYPE_BITS;
-    uint64_t unused:MPIDI_POSIX_AM_UNUSED_BITS;
+    int8_t am_type;
+    int8_t handler_id;
+    int16_t am_hdr_sz;
+    int32_t unused;
 } MPIDI_POSIX_am_header_t;
 
 typedef struct MPIDI_POSIX_am_request_header {
