@@ -509,12 +509,12 @@ int MPIDI_OFI_dispatch_function(int vni, struct fi_cq_tagged_entry *wc, MPIR_Req
                 mpi_errno = ssend_ack_event(vni, wc, req);
                 break;
 
-            case MPIDI_OFI_EVENT_GET_HUGE:
-                mpi_errno = MPIDI_OFI_get_huge_event(vni, wc, req);
-                break;
-
             case MPIDI_OFI_EVENT_CHUNK_DONE:
                 mpi_errno = chunk_done_event(vni, wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_HUGE_CHUNK_DONE:
+                mpi_errno = MPIDI_OFI_huge_chunk_done_event(vni, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_INJECT_EMU:
