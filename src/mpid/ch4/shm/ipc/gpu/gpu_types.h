@@ -15,7 +15,7 @@ typedef struct MPIDI_GPUI_dev_id {
 } MPIDI_GPUI_dev_id_t;
 
 typedef struct {
-    int **visible_dev_global_id;
+    int8_t **visible_dev_global_id;
     int *local_ranks;
     int *local_procs;
     int local_device_count;

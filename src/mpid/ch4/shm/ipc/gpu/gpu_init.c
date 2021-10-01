@@ -99,13 +99,13 @@ int MPIDI_GPU_init_world(void)
 
     MPIDI_GPUI_global.global_max_dev_id = node_max_dev_id;
 
-    MPIR_CHKPMEM_MALLOC(MPIDI_GPUI_global.visible_dev_global_id, int **,
-                        sizeof(int *) * MPIR_Process.local_size, mpi_errno, "gpu devmaps",
+    MPIR_CHKPMEM_MALLOC(MPIDI_GPUI_global.visible_dev_global_id, int8_t **,
+                        sizeof(int8_t *) * MPIR_Process.local_size, mpi_errno, "gpu devmaps",
                         MPL_MEM_SHM);
     for (int i = 0; i < MPIR_Process.local_size; ++i) {
         MPIDI_GPUI_global.visible_dev_global_id[i] =
-            (int *) MPL_malloc(sizeof(int) * (MPIDI_GPUI_global.global_max_dev_id + 1),
-                               MPL_MEM_OTHER);
+            (int8_t *) MPL_malloc(sizeof(int8_t) * (MPIDI_GPUI_global.global_max_dev_id + 1),
+                                  MPL_MEM_OTHER);
         MPIR_Assert(MPIDI_GPUI_global.visible_dev_global_id[i]);
 
         if (i == MPIR_Process.local_rank) {
@@ -116,7 +116,7 @@ int MPIDI_GPU_init_world(void)
                     MPIDI_GPUI_global.visible_dev_global_id[i][j] = 0;
             }
             MPIDU_Init_shm_put(MPIDI_GPUI_global.visible_dev_global_id[i],
-                               sizeof(int) * (MPIDI_GPUI_global.global_max_dev_id + 1));
+                               sizeof(int8_t) * (MPIDI_GPUI_global.global_max_dev_id + 1));
         }
     }
     MPIDU_Init_shm_barrier();
@@ -125,9 +125,9 @@ int MPIDI_GPU_init_world(void)
      * shm buffer size is defined as 64 bytes by default. Therefore, if number of
      * gpu device is larger than 16, the MPIDU_Init_shm_get would fail. */
     MPIR_Assert((MPIDI_GPUI_global.global_max_dev_id + 1) <=
-                MPIDU_INIT_SHM_BLOCK_SIZE / sizeof(int));
+                MPIDU_INIT_SHM_BLOCK_SIZE / sizeof(int8_t));
     for (int i = 0; i < MPIR_Process.local_size; ++i)
-        MPIDU_Init_shm_get(i, sizeof(int) * (MPIDI_GPUI_global.global_max_dev_id + 1),
+        MPIDU_Init_shm_get(i, sizeof(int8_t) * (MPIDI_GPUI_global.global_max_dev_id + 1),
                            MPIDI_GPUI_global.visible_dev_global_id[i]);
     MPIDU_Init_shm_barrier();
 
