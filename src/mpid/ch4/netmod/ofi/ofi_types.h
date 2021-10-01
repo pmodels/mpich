@@ -148,6 +148,7 @@ enum {
     MPIDI_OFI_EVENT_SSEND_ACK,
     MPIDI_OFI_EVENT_GET_HUGE,
     MPIDI_OFI_EVENT_CHUNK_DONE,
+    MPIDI_OFI_EVENT_HUGE_CHUNK_DONE,
     MPIDI_OFI_EVENT_INJECT_EMU,
     MPIDI_OFI_EVENT_DYNPROC_DONE,
     MPIDI_OFI_EVENT_ACCEPT_PROBE
@@ -499,16 +500,13 @@ typedef struct MPIDI_OFI_target_mr {
     uint64_t mr_key;
 } MPIDI_OFI_target_mr_t;
 
-typedef struct MPIDI_OFI_huge_recv {
+typedef struct MPIDI_OFI_read_chunk {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    size_t cur_offset;
-    size_t stripe_size;
-    int chunks_outstanding;
-    MPIR_Comm *comm_ptr;
     MPIR_Request *localreq;
-} MPIDI_OFI_huge_recv_t;
+    MPIR_cc_t *chunks_outstanding;
+} MPIDI_OFI_read_chunk_t;
 
 /* The list of posted huge receives that haven't been matched yet. These need
  * to get matched up when handling the control message that starts transferring

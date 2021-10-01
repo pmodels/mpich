@@ -29,21 +29,14 @@ static int get_huge(MPIR_Request * rreq)
         info->msgsize = data_sz;
     }
 
-    if (data_sz < cur_offset) {
+    if (info->msgsize <= cur_offset) {
         /* huge message sent to small recv buffer */
         mpi_errno = get_huge_complete(rreq);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
-    MPIDI_OFI_huge_recv_t *recv_elem = NULL;
-    recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_BUFFER);
-    MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-    recv_elem->localreq = rreq;
-    recv_elem->cur_offset = cur_offset;
-
-    MPIDI_OFI_get_huge_event(info->vni_dst, NULL, (MPIR_Request *) recv_elem);
+    MPIDI_OFI_get_huge_event(info->vni_dst, NULL, rreq);
 
   fn_exit:
     return mpi_errno;
@@ -305,95 +298,107 @@ static uintptr_t recv_rbase(MPIDI_OFI_huge_remote_info_t * remote_info)
  *
  * 3. As the event function when RDMA read (issued here) completes.
  */
-int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req)
+int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_huge_recv_t *recv_elem = (MPIDI_OFI_huge_recv_t *) req;
-    MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(recv_elem->localreq, huge.remote_info);
-    MPIR_Comm *comm = recv_elem->localreq->comm;
-    uint64_t remote_key;
-    size_t bytesLeft, bytesToGet;
+    MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(rreq, huge.remote_info);
+    MPIR_Comm *comm = rreq->comm;
     MPIR_FUNC_ENTER;
 
-    void *recv_buf = MPIDI_OFI_REQUEST(recv_elem->localreq, util.iov.iov_base);
+    MPI_Aint cur_offset, bytesLeft;
+    if (MPIDI_OFI_COMM(rreq->comm).enable_striping) {
+        cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
+    } else {
+        cur_offset = MPIDI_OFI_global.max_msg_size;
+    }
+    bytesLeft = info->msgsize - cur_offset;
 
+    void *recv_buf = MPIDI_OFI_REQUEST(rreq, util.iov.iov_base);
+
+    MPI_Aint chunk_size;
     if (MPIDI_OFI_COMM(comm).enable_striping) {
-        /* Subtract one stripe_chunk_size because we send the first chunk via a regular message
-         * instead of the memory region */
-        recv_elem->stripe_size = (info->msgsize - MPIDI_OFI_STRIPE_CHUNK_SIZE)
-            / MPIDI_OFI_global.num_nics;        /* striping */
-
-        if (recv_elem->stripe_size > MPIDI_OFI_global.max_msg_size) {
-            recv_elem->stripe_size = MPIDI_OFI_global.max_msg_size;
-        }
-        if (recv_elem->chunks_outstanding)
-            recv_elem->chunks_outstanding--;
-        bytesLeft = info->msgsize - recv_elem->cur_offset;
-        bytesToGet = (bytesLeft <= recv_elem->stripe_size) ? bytesLeft : recv_elem->stripe_size;
+        chunk_size = (info->msgsize - MPIDI_OFI_STRIPE_CHUNK_SIZE) / MPIDI_OFI_global.num_nics;
+        chunk_size = MPL_MIN(chunk_size, MPIDI_OFI_global.max_msg_size);
     } else {
-        /* Subtract one max_msg_size because we send the first chunk via a regular message
-         * instead of the memory region */
-        bytesLeft = info->msgsize - recv_elem->cur_offset;
-        bytesToGet = (bytesLeft <= MPIDI_OFI_global.max_msg_size) ?
-            bytesLeft : MPIDI_OFI_global.max_msg_size;
-    }
-    if (bytesToGet == 0ULL && recv_elem->chunks_outstanding == 0) {
-        mpi_errno = get_huge_complete(recv_elem->localreq);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPL_free(recv_elem);
-        goto fn_exit;
+        chunk_size = MPIDI_OFI_global.max_msg_size;
     }
 
-    int vni_src = info->vni_src;
-    int vni_dst = info->vni_dst;
-    if (MPIDI_OFI_COMM(comm).enable_striping) { /* if striping enabled */
-        if (recv_elem->cur_offset >= MPIDI_OFI_STRIPE_CHUNK_SIZE && bytesLeft > 0) {
-            for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-                int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_dst, nic);
-                remote_key = info->rma_keys[nic];
+    int num_chunks = MPL_DIV_ROUNDUP(bytesLeft, chunk_size);
 
-                bytesLeft = info->msgsize - recv_elem->cur_offset;
-                if (bytesLeft <= 0) {
-                    break;
-                }
-                bytesToGet =
-                    (bytesLeft <= recv_elem->stripe_size) ? bytesLeft : recv_elem->stripe_size;
+    /* note: this is receiver read from sender */
+    int vni_remote = info->vni_src;
+    int vni_local = info->vni_dst;
 
-                /* FIXME: Can we issue concurrent fi_read with the same context? */
-                MPIDI_OFI_cntr_incr(recv_elem->comm_ptr, vni_src, nic);
-                MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx, (void *) ((char *) recv_buf + recv_elem->cur_offset),    /* local buffer */
-                                             bytesToGet,        /* bytes */
-                                             NULL,      /* descriptor */
-                                             MPIDI_OFI_comm_to_phys(comm, info->origin_rank, nic, vni_dst, vni_src), recv_rbase(info) + recv_elem->cur_offset,  /* remote maddr */
-                                             remote_key,        /* Key */
-                                             (void *) &recv_elem->context), nic,        /* Context */
-                                     rdma_readfrom, FALSE);
-                MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[nic], bytesToGet);
-                MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_recvd_bytes_count[nic], bytesToGet);
-                recv_elem->cur_offset += bytesToGet;
-                recv_elem->chunks_outstanding++;
-            }
-        }
-    } else {
-        int nic = 0;
-        int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_src, nic);
-        remote_key = info->rma_keys[nic];
-        MPIDI_OFI_cntr_incr(comm, vni_src, nic);
-        MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx,  /* endpoint     */
-                                     (void *) ((char *) recv_buf + recv_elem->cur_offset),      /* local buffer */
-                                     bytesToGet,        /* bytes        */
-                                     NULL,      /* descriptor   */
-                                     MPIDI_OFI_comm_to_phys(comm, info->origin_rank, nic, vni_src, vni_dst),    /* Destination  */
-                                     recv_rbase(info) + recv_elem->cur_offset,  /* remote maddr */
-                                     remote_key,        /* Key          */
-                                     (void *) &recv_elem->context), vni_src, rdma_readfrom,     /* Context */
-                             FALSE);
+    /* We'll issue multiple fi_read for every chunks. All the chunks will be tracked by a
+     * chunks_outstanding counter. */
+    /* NOTE: there is a possibility completion happens in between issuing fi_read (due to
+     * MPIDI_OFI_CALL_RETRY). Thus we need initialize chunks_outstanding before issuing any
+     * chunk */
+    /* allocate and initialize cc_ptr. It will be freed by event completion when it reaches 0 */
+    MPIR_cc_t *cc_ptr;
+    cc_ptr = MPL_malloc(sizeof(MPIR_cc_t), MPL_MEM_OTHER);
+    MPIR_cc_set(cc_ptr, num_chunks);
+
+    int issued_chunks = 0;
+
+    int nic = 0;
+    while (bytesLeft > 0) {
+        int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, nic);
+        fi_addr_t addr =
+            MPIDI_OFI_comm_to_phys(comm, info->origin_rank, nic, vni_local, vni_remote);
+        uint64_t remote_key = info->rma_keys[nic];
+
+        MPI_Aint bytesToGet = MPL_MIN(chunk_size, bytesLeft);
+
+        MPIDI_OFI_read_chunk_t *chunk = MPL_malloc(sizeof(MPIDI_OFI_read_chunk_t), MPL_MEM_OTHER);
+        chunk->event_id = MPIDI_OFI_EVENT_HUGE_CHUNK_DONE;
+        chunk->localreq = rreq;
+        chunk->chunks_outstanding = cc_ptr;
+
+        MPIDI_OFI_cntr_incr(comm, vni_local, nic);
+        MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                     (void *) ((char *) recv_buf + cur_offset),
+                                     bytesToGet, NULL, addr, recv_rbase(info) + cur_offset,
+                                     remote_key, (void *) &chunk->context),
+                             vni_local, rdma_readfrom, FALSE);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[nic], bytesToGet);
-        recv_elem->cur_offset += bytesToGet;
+        if (MPIDI_OFI_COMM(comm).enable_striping) {
+            MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_recvd_bytes_count[nic], bytesToGet);
+            /* round-robin to next nic */
+            nic = (nic + 1) % MPIDI_OFI_global.num_nics;
+        }
+
+        issued_chunks++;
+        cur_offset += bytesToGet;
+        bytesLeft -= bytesToGet;
     }
+
+    MPIR_Assert(issued_chunks == num_chunks);
 
   fn_exit:
     MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_OFI_huge_chunk_done_event(int vni, struct fi_cq_tagged_entry *wc, void *req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_read_chunk_t *chunk_req = (MPIDI_OFI_read_chunk_t *) req;
+
+    int c;
+    MPIR_cc_decr(chunk_req->chunks_outstanding, &c);
+
+    if (c == 0) {
+        MPL_free(chunk_req->chunks_outstanding);
+        mpi_errno = get_huge_complete(chunk_req->localreq);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    MPL_free(chunk_req);
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
