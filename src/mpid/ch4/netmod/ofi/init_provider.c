@@ -91,6 +91,8 @@ static int find_provider(struct fi_info **prov_out)
     struct fi_info *hints = fi_allocinfo();
     MPIR_Assert(hints != NULL);
 
+    hints->domain_attr->mr_mode |= FI_MR_ENDPOINT;
+
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         /* NOTE: prov_list should not be freed until we initialize multi-nic */
         MPIDI_OFI_CALL(fi_getinfo(required_version, NULL, NULL, 0ULL, NULL, &prov_list), getinfo);
