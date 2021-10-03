@@ -76,7 +76,7 @@ int MPIR_Cancel_impl(MPIR_Request * request_ptr)
         case MPIR_REQUEST_KIND__PREQUEST_COLL:
             {
                 if (request_ptr->u.persist_coll.real_request != NULL) {
-                    MPIR_Assert(0 && "Not supported");
+                    MPIR_Assert_error("Cancel persistent collective not supported");
                 } else {
                     MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**requestpersistactive");
                 }
