@@ -305,7 +305,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
     }
 
     mpi_errno = MPIDI_POSIX_compute_accumulate((void *) origin_addr, origin_count, origin_datatype,
-                                               (char *) base + disp_unit * target_disp,
+                                               MPIR_get_contig_ptr(base, disp_unit * target_disp),
                                                target_count, target_datatype, op, mapped_device);
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_RMA_MUTEX_UNLOCK(posix_win->shm_mutex_ptr);

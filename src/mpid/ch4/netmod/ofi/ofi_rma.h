@@ -232,7 +232,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         MPIDI_OFI_win_cntr_incr(win);
         MPIDI_OFI_CALL_RETRY(fi_inject_write(MPIDI_OFI_WIN(win).ep,
-                                             (char *) origin_addr + origin_true_lb, target_bytes,
+                                             MPIR_get_contig_ptr(origin_addr, origin_true_lb),
+                                             target_bytes,
                                              MPIDI_OFI_av_to_phys(addr, nic, vni, vni),
                                              target_mr.addr + target_true_lb,
                                              target_mr.mr_key), vni, rdma_inject_write, FALSE);
@@ -264,7 +265,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         msg.iov_count = 1;
         msg.rma_iov = &riov;
         msg.rma_iov_count = 1;
-        iov.iov_base = (char *) origin_addr + origin_true_lb;
+        iov.iov_base = MPIR_get_contig_ptr(origin_addr, origin_true_lb);
         iov.iov_len = target_bytes;
         riov.addr = target_mr.addr + target_true_lb;
         riov.len = target_bytes;
@@ -439,7 +440,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         msg.rma_iov_count = 1;
         msg.context = NULL;
         msg.data = 0;
-        iov.iov_base = (char *) origin_addr + origin_true_lb;
+        iov.iov_base = MPIR_get_contig_ptr(origin_addr, origin_true_lb);
         iov.iov_len = target_bytes;
         riov.addr = target_mr.addr + target_true_lb;
         riov.len = target_bytes;
@@ -626,8 +627,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
     if (unlikely(!target_mr_found))
         goto am_fallback;
 
-    buffer = (char *) origin_addr + true_lb;
-    rbuffer = (char *) result_addr + true_lb;
+    buffer = MPIR_get_contig_ptr(origin_addr, true_lb);
+    rbuffer = MPIR_get_contig_ptr(result_addr, true_lb);
 
     MPIDI_OFI_query_acc_atomic_support(datatype, MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT, MPI_OP_NULL,
                                        win, winattr, &fi_dt, &fi_op, &max_count, &dt_size);
@@ -774,7 +775,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
         struct fi_rma_ioc targetv;
         struct fi_msg_atomic msg;
 
-        originv.addr = (char *) origin_addr + origin_true_lb;
+        originv.addr = MPIR_get_contig_ptr(origin_addr, origin_true_lb);
         originv.count = basic_count;
         targetv.addr = target_mr.addr + target_true_lb;
         targetv.count = basic_count;
@@ -918,9 +919,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
         struct fi_rma_ioc targetv;
         struct fi_msg_atomic msg;
 
-        originv.addr = (char *) origin_addr + origin_true_lb;
+        originv.addr = MPIR_get_contig_ptr(origin_addr, origin_true_lb);
         originv.count = basic_count;
-        resultv.addr = (char *) result_addr + result_true_lb;
+        resultv.addr = MPIR_get_contig_ptr(result_addr, result_true_lb);
         resultv.count = basic_count;
         targetv.addr = target_mr.addr + target_true_lb;
         targetv.count = basic_count;

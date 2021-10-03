@@ -174,7 +174,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIDI_OFI_REQUEST(rreq, datatype) = datatype;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
-    recv_buf = (char *) buf + dt_true_lb;
+    recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(recv_buf, &attr);
     if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
