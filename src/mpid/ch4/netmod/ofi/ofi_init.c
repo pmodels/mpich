@@ -1480,6 +1480,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_MAX_AM_HDR_SIZE: %d\n", (int) MPIDI_OFI_MAX_AM_HDR_SIZE);
     fprintf(stdout, "sizeof(MPIDI_OFI_am_request_header_t): %d\n",
             (int) sizeof(MPIDI_OFI_am_request_header_t));
+    fprintf(stdout, "sizeof(MPIDI_OFI_per_vni_t): %d\n", (int) sizeof(MPIDI_OFI_per_vni_t));
     fprintf(stdout, "MPIDI_OFI_AM_HDR_POOL_CELL_SIZE: %d\n", (int) MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
     fprintf(stdout, "MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE: %d\n",
             (int) MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
