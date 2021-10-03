@@ -357,12 +357,13 @@ int MPID_Init(int requested, int *provided)
     if (mpi_errno != MPI_SUCCESS)
         return mpi_errno;
 
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
 #ifdef MPIDI_CH4_USE_MT_RUNTIME
-    int rank = MPIR_Process.rank;
-    if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
         print_runtime_configurations();
-#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
-
+#endif
+        fprintf(stdout, "==== Various sizes and limits ====\n");
+        fprintf(stdout, "sizeof(MPIDI_per_vci_t): %d\n", (int) sizeof(MPIDI_per_vci_t));
+    }
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_init(&MPIDI_global.workqueue);
 #endif /* #ifdef MPIDI_CH4_USE_WORK_QUEUES */
