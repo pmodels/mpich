@@ -59,7 +59,7 @@ int MPIR_Typerep_ipack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatyp
 
     /* Handle contig case quickly */
     if (contig) {
-        MPIR_Memcpy(outbuf, (char *) inbuf + dt_true_lb + inoffset, data_sz);
+        MPIR_Memcpy(outbuf, MPIR_get_contig_ptr(inbuf, dt_true_lb + inoffset), data_sz);
         *actual_pack_bytes = data_sz;
     } else {
         segp = MPIR_Segment_alloc(inbuf, incount, datatype);
@@ -126,7 +126,7 @@ int MPIR_Typerep_iunpack(const void *inbuf, MPI_Aint insize,
 
     /* Handle contig case quickly */
     if (contig) {
-        MPIR_Memcpy((char *) outbuf + dt_true_lb + outoffset, inbuf, data_sz);
+        MPIR_Memcpy(MPIR_get_contig_ptr(outbuf, dt_true_lb + outoffset), inbuf, data_sz);
         *actual_unpack_bytes = data_sz;
     } else {
         segp = MPIR_Segment_alloc(outbuf, outcount, datatype);
