@@ -451,9 +451,9 @@ static int contig_m2m(MPI_Aint * blocks_p,
 #endif
 
     if (paramp->direction == M2M_TO_USERBUF) {
-        MPIR_Memcpy((char *) paramp->userbuf + rel_off, paramp->streambuf, size);
+        MPIR_Memcpy(MPIR_get_contig_ptr(paramp->userbuf, rel_off), paramp->streambuf, size);
     } else {
-        MPIR_Memcpy(paramp->streambuf, (char *) paramp->userbuf + rel_off, size);
+        MPIR_Memcpy(paramp->streambuf, MPIR_get_contig_ptr(paramp->userbuf, rel_off), size);
     }
     paramp->streambuf += size;
     return 0;
@@ -562,7 +562,7 @@ static int blkidx_m2m(MPI_Aint * blocks_p,
 
         MPIR_Assert(curblock < count);
 
-        cbufp = (char *) paramp->userbuf + rel_off + offsetarray[curblock];
+        cbufp = MPIR_get_contig_ptr(paramp->userbuf, rel_off + offsetarray[curblock]);
 
         /* there was some casting going on here at one time but now all types
          * are promoted to big values */
@@ -620,7 +620,7 @@ static int index_m2m(MPI_Aint * blocks_p,
         MPIR_Assert(curblock < count);
         cur_block_sz = blockarray[curblock];
 
-        cbufp = (char *) paramp->userbuf + rel_off + offsetarray[curblock];
+        cbufp = MPIR_get_contig_ptr(paramp->userbuf, rel_off + offsetarray[curblock]);
 
         if (cur_block_sz > blocks_left)
             cur_block_sz = blocks_left;

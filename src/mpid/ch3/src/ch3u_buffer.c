@@ -66,15 +66,13 @@ void MPIDI_CH3U_Buffer_copy(
     
     if (sdt_contig && rdt_contig)
     {
-	MPIR_FUNC_ENTER;
-	MPIR_Memcpy((char *)rbuf + rdt_true_lb, (const char *)sbuf + sdt_true_lb, sdata_sz);
-	MPIR_FUNC_EXIT;
+	MPIR_Memcpy(MPIR_get_contig_ptr(rbuf, rdt_true_lb), MPIR_get_contig_ptr(sbuf, sdt_true_lb), sdata_sz);
 	*rsz = sdata_sz;
     }
     else if (sdt_contig)
     {
         MPI_Aint actual_unpack_bytes;
-        MPIR_Typerep_unpack((char*) sbuf + sdt_true_lb, sdata_sz, rbuf, rcount, rdt, 0, &actual_unpack_bytes);
+        MPIR_Typerep_unpack(MPIR_get_contig_ptr(sbuf, sdt_true_lb), sdata_sz, rbuf, rcount, rdt, 0, &actual_unpack_bytes);
         /* --BEGIN ERROR HANDLING-- */
         if (actual_unpack_bytes != sdata_sz)
         {
@@ -86,7 +84,7 @@ void MPIDI_CH3U_Buffer_copy(
     else if (rdt_contig)
     {
 	MPI_Aint actual_pack_bytes;
-	MPIR_Typerep_pack(sbuf, scount, sdt, 0, (char*)rbuf + rdt_true_lb, sdata_sz, &actual_pack_bytes);
+	MPIR_Typerep_pack(sbuf, scount, sdt, 0, MPIR_get_contig_ptr(rbuf, rdt_true_lb), sdata_sz, &actual_pack_bytes);
 	/* --BEGIN ERROR HANDLING-- */
 	if (actual_pack_bytes != sdata_sz)
 	{

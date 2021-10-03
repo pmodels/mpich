@@ -117,7 +117,7 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
     if (dt_contig && data_sz <= MPIDI_EAGER_SHORT_SIZE) {
 	mpi_errno = MPIDI_CH3_EagerContigShortSend( &sreq, 
 					       MPIDI_CH3_PKT_EAGERSHORT_SEND,
-					       (char *)buf + dt_true_lb,
+                                               MPIR_get_contig_ptr(buf, dt_true_lb),
 					       data_sz, rank, tag, comm, 
 					       context_offset );
     }
@@ -130,7 +130,7 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
         {
  	    mpi_errno = MPIDI_CH3_EagerContigSend( &sreq, 
 						   MPIDI_CH3_PKT_EAGER_SEND,
-						   (char *)buf + dt_true_lb,
+                                                   MPIR_get_contig_ptr(buf, dt_true_lb),
 						   data_sz, rank, tag, comm, 
 						   context_offset );
 	}
