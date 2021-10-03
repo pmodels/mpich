@@ -1480,7 +1480,7 @@ int MPIDIG_put_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         MPIDIG_REQUEST(rreq, req->preq.flattened_dt) = NULL;
         MPIDIG_REQUEST(rreq, req->preq.dt) = NULL;
 
-        MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset + msg_hdr->target_true_lb);
+        MPIDIG_REQUEST(rreq, buffer) = MPIR_get_contig_ptr(base, offset + msg_hdr->target_true_lb);
         MPIDIG_REQUEST(rreq, count) = msg_hdr->target_count;
         MPIDIG_REQUEST(rreq, datatype) = msg_hdr->target_datatype;
         MPIDIG_recv_type_init(msg_hdr->origin_data_sz, rreq);
@@ -2104,7 +2104,8 @@ int MPIDIG_get_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     } else {
         MPIR_Assert(!in_data_sz || in_data_sz == 0);
         MPIDIG_recv_init(1, 0, NULL, 0, rreq);
-        MPIDIG_REQUEST(rreq, req->greq.addr) = (char *) base + offset + msg_hdr->target_true_lb;
+        MPIDIG_REQUEST(rreq, req->greq.addr) =
+            MPIR_get_contig_ptr(base, offset + msg_hdr->target_true_lb);
     }
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
