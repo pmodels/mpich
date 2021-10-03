@@ -58,22 +58,24 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     if (sendtype_iscontig) {
         MPI_Aint actual_unpack_bytes;
         if (typereq_req) {
-            MPIR_Typerep_iunpack((char *) sendbuf + sendtype_true_lb, copy_sz, recvbuf, recvcount,
-                                 recvtype, 0, &actual_unpack_bytes, typereq_req);
+            MPIR_Typerep_iunpack(MPIR_get_contig_ptr(sendbuf, sendtype_true_lb), copy_sz, recvbuf,
+                                 recvcount, recvtype, 0, &actual_unpack_bytes, typereq_req);
         } else {
-            MPIR_Typerep_unpack((char *) sendbuf + sendtype_true_lb, copy_sz, recvbuf, recvcount,
-                                recvtype, 0, &actual_unpack_bytes);
+            MPIR_Typerep_unpack(MPIR_get_contig_ptr(sendbuf, sendtype_true_lb), copy_sz, recvbuf,
+                                recvcount, recvtype, 0, &actual_unpack_bytes);
         }
         MPIR_ERR_CHKANDJUMP(actual_unpack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
                             "**dtypemismatch");
     } else if (recvtype_iscontig) {
         MPI_Aint actual_pack_bytes;
         if (typereq_req) {
-            MPIR_Typerep_ipack(sendbuf, sendcount, sendtype, 0, (char *) recvbuf + recvtype_true_lb,
-                               copy_sz, &actual_pack_bytes, typereq_req);
+            MPIR_Typerep_ipack(sendbuf, sendcount, sendtype, 0,
+                               MPIR_get_contig_ptr(recvbuf, recvtype_true_lb), copy_sz,
+                               &actual_pack_bytes, typereq_req);
         } else {
-            MPIR_Typerep_pack(sendbuf, sendcount, sendtype, 0, (char *) recvbuf + recvtype_true_lb,
-                              copy_sz, &actual_pack_bytes);
+            MPIR_Typerep_pack(sendbuf, sendcount, sendtype, 0,
+                              MPIR_get_contig_ptr(recvbuf, recvtype_true_lb), copy_sz,
+                              &actual_pack_bytes);
         }
         MPIR_ERR_CHKANDJUMP(actual_pack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
                             "**dtypemismatch");
