@@ -288,7 +288,7 @@ def dump_mpir_impl_blocking(name):
     dump_close("}")
     dump_else()
     if re.match(r'(scan|exscan|neighbor_)', name):
-        G.out.append("MPIR_Assert(0 && \"Only intra-communicator allowed\");")
+        G.out.append("MPIR_Assert_error(\"Only intra-communicator allowed\");")
     else:
         dump_open("switch (MPIR_CVAR_%s_INTER_ALGORITHM) {" % NAME)
         dump_cases("inter")
@@ -371,7 +371,7 @@ def dump_sched_impl(name):
     dump_close("}")
     dump_else()
     if re.match(r'(scan|exscan|neighbor_)', name):
-        G.out.append("MPIR_Assert(0 && \"Only intra-communicator allowed\");")
+        G.out.append("MPIR_Assert_error(\"Only intra-communicator allowed\");")
     else:
         dump_open("switch (MPIR_CVAR_%s_INTER_ALGORITHM) {" % NAME)
         dump_cases("inter")
