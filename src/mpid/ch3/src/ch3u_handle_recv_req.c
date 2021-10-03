@@ -302,8 +302,8 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
 
     if (is_contig) {
         MPIR_Memcpy(resp_req->dev.user_buf,
-                    (void *) ((char *) rreq->dev.real_user_buf + dt_true_lb +
-                              stream_offset), stream_data_len);
+                    MPIR_get_contig_ptr(rreq->dev.real_user_buf, dt_true_lb + stream_offset),
+                    stream_data_len);
     }
     else {
         MPI_Aint actual_pack_bytes;

@@ -373,9 +373,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
 		{
 		    unsigned char const * restrict p = 
 			(unsigned char *)eagershort_pkt->data;
-		    unsigned char * restrict bufp = 
-			(unsigned char *)(char*)(rreq->dev.user_buf) + 
-			dt_true_lb;
+		    unsigned char * restrict bufp = MPIR_get_contig_ptr(rreq->dev.user_buf, dt_true_lb);
 		    int i;
 		    for (i=0; i<data_sz; i++) {
 			*bufp++ = *p++;

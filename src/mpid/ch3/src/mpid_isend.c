@@ -120,7 +120,7 @@ int MPID_Isend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
 	{
 	    mpi_errno = MPIDI_CH3_EagerContigIsend( &sreq, 
 						    MPIDI_CH3_PKT_EAGER_SEND,
-						    (char*)buf + dt_true_lb, 
+                                                    MPIR_get_contig_ptr(buf, dt_true_lb),
 						    data_sz, rank, tag, 
 						    comm, context_offset );
 	}
