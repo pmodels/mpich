@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef CH4R_PROBE_H_INCLUDED
-#define CH4R_PROBE_H_INCLUDED
+#ifndef MPIDIG_PROBE_H_INCLUDED
+#define MPIDIG_PROBE_H_INCLUDED
 
 #include "ch4_impl.h"
 
@@ -80,4 +80,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
     return mpi_errno;
 }
 
-#endif /* CH4R_PROBE_H_INCLUDED */
+#endif /* MPIDIG_PROBE_H_INCLUDED */

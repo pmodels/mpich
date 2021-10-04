@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef CH4R_RMA_H_INCLUDED
-#define CH4R_RMA_H_INCLUDED
+#ifndef MPIDIG_RMA_H_INCLUDED
+#define MPIDIG_RMA_H_INCLUDED
 
 #include "ch4_impl.h"
 
@@ -822,4 +822,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_fetch_and_op(const void *origin_addr, vo
     goto fn_exit;
 }
 
-#endif /* CH4R_RMA_H_INCLUDED */
+#endif /* MPIDIG_RMA_H_INCLUDED */

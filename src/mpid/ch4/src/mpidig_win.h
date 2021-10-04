@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef CH4R_WIN_H_INCLUDED
-#define CH4R_WIN_H_INCLUDED
+#ifndef MPIDIG_WIN_H_INCLUDED
+#define MPIDIG_WIN_H_INCLUDED
 
 #include "ch4_types.h"
 
@@ -869,4 +869,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
     goto fn_exit;
 }
 
-#endif /* CH4R_WIN_H_INCLUDED */
+#endif /* MPIDIG_WIN_H_INCLUDED */

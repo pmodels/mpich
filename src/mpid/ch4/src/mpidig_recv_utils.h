@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef MPIDIG_AM_MSG_H_INCLUDED
-#define MPIDIG_AM_MSG_H_INCLUDED
+#ifndef MPIDIG_RECV_UTILS_H_INCLUDED
+#define MPIDIG_RECV_UTILS_H_INCLUDED
 
 /* This file is for supporting routines used for generic layer message matching
  * and data transfer. They are used by protocols such as send, ssend, and send_long.
@@ -380,4 +380,4 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq)
     }
 }
 
-#endif /* MPIDIG_AM_MSG_H_INCLUDED */
+#endif /* MPIDIG_RECV_UTILS_H_INCLUDED */

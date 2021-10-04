@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef MPIDIG_AM_REQ_CACHE_H_INCLUDED
-#define MPIDIG_AM_REQ_CACHE_H_INCLUDED
+#ifndef MPIDIG_REQ_CACHE_H_INCLUDED
+#define MPIDIG_REQ_CACHE_H_INCLUDED
 
 /* the request cache is for saving the mapping between sreq and rreq for recv request that has more
  * data coming. The implementation uses a hash table that maps (sreq, key2) -> (rreq). We only
@@ -45,4 +45,4 @@ static inline void MPIDIG_req_cache_remove(void *req_map, uint64_t key)
     }
 }
 
-#endif /* MPIDIG_AM_REQ_CACHE_H_INCLUDED */
+#endif /* MPIDIG_REQ_CACHE_H_INCLUDED */

@@ -50,13 +50,13 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
    They create request objects that are not usable by the
    lower layers until further initialization takes place.
 
-   CH4R_request_xxx functions can be used to create and destroy
+   MPIDIG_request_xxx functions can be used to create and destroy
    request objects at any CH4 layer, including shmmod and netmod.
    These functions create and initialize a base request with
    the appropriate "above device" fields initialized, and any
    required CH4 layer fields initialized.
 
-   The net/shm mods can upcall to CH4R to create a request, or
+   The net/shm mods can upcall to MPIDIG to create a request, or
    they can iniitalize their own requests internally, but note
    that all the fields from the upper layers must be initialized
    properly.
@@ -68,7 +68,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
    ref hits zero or there will be a memory leak. The generic
    release function will not release any memory pointed to by
    the request because it does not know about the internals of
-   the ch4r/netmod/shmmod fields of the request.
+   the mpidig/netmod/shmmod fields of the request.
 */
 MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
 {
