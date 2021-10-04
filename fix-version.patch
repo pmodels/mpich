@@ -1,9 +1,11 @@
+diff --git a/maint/version.m4 b/maint/version.m4
+index f72d55c..2464c4b 100644
 --- a/maint/version.m4
 +++ b/maint/version.m4
 @@ -36,6 +36,6 @@ m4_define([MPICH_RELEASE_DATE_m4],[unreleased development copy])dnl
  # standard, and does not include MPIX_ functions and C++ bindings.
  
- # last version: 4.0a1 - 13:11:1
+ # last version: 3.4.2 - 13:10:1
 -m4_define([libmpi_so_version_m4],[0:0:0])dnl
 +m4_define([libmpi_so_version_m4],[13:10:1])dnl
  
