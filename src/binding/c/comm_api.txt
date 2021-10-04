@@ -148,9 +148,11 @@ MPI_Comm_set_info:
 MPI_Comm_set_name:
     .desc: Sets the print name for a communicator
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
     MPL_strncpy(comm_ptr->name, comm_name, MPI_MAX_OBJECT_NAME);
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
 }
 
 MPI_Comm_size:
@@ -199,6 +201,9 @@ MPI_Comm_test_inter:
 {
     *flag = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 }
+
+MPI_Intercomm_create_from_groups:
+    .desc: Create an intercommuncator from local and remote groups
 
 MPI_Intercomm_create:
     .desc: Creates an intercommuncator from two intracommunicators

@@ -8,17 +8,16 @@ from local_python.binding_common import *
 from local_python import RE
 
 import sys
-import os
 import re
 import copy
 
 # ---- top-level routines ----
 
-def dump_mpi_c(func, map_type="SMALL"):
+def dump_mpi_c(func, is_large=False):
     """Dumps the function's C source code to G.out array"""
 
-    # map_type may be "SMALL" or "BIG"
-    func['_map_type'] = map_type
+    # whether it is a large count function
+    func['_is_large'] = is_large
 
     check_func_directives(func)
     filter_c_parameters(func)
@@ -29,7 +28,7 @@ def dump_mpi_c(func, map_type="SMALL"):
 
     process_func_parameters(func)
 
-    G.mpi_declares.append(get_declare_function(func, map_type, "proto"))
+    G.mpi_declares.append(get_declare_function(func, is_large, "proto"))
 
     # collect error codes additional from auto generated ones
     if 'error' in func:
@@ -37,7 +36,7 @@ def dump_mpi_c(func, map_type="SMALL"):
             G.err_codes[a] = 1
 
     # -- "dump" accumulates output lines in G.out
-    if map_type == "SMALL":
+    if not is_large:
         # only include once (skipping "BIG")
         G.out.append("#include \"mpiimpl.h\"")
         if 'include' in func:
@@ -68,13 +67,11 @@ def dump_mpi_c(func, map_type="SMALL"):
 
     # Create the MPI and QMPI wrapper functions that will call the above, "real" version of the
     # function in the MPII prefix
-    dump_qmpi_wrappers(func, func['_map_type'])
+    dump_qmpi_wrappers(func, func['_is_large'])
 
 def get_func_file_path(func, root_dir):
     file_path = None
     dir_path = root_dir + '/' + func['dir']
-    if not os.path.isdir(dir_path):
-        os.mkdir(dir_path)
     if 'file' in func:
         file_path = dir_path + '/' + func['file'] + ".c"
     elif RE.match(r'MPI_T_(\w+)', func['name'], re.IGNORECASE):
@@ -183,6 +180,35 @@ def get_qmpi_typedef_from_func_decl(func_decl):
     func_decl = re.sub(" MPICH_ATTR_POINTER_WITH_TYPE_TAG\(.*,.*\)", "", func_decl, 1)
     return func_decl
 
+def need_skip_qmpi(func_name):
+    # If this is a large count function, it needs to have the suffix removed since we add that
+    # later, but it's not in the G.FUNCS list below
+    if func_name.lower()[-2:] == "_c":
+        func_name = func_name[:-2]
+
+    # Some of the MPIX_ functions are not in the list because they are functions to be added in a
+    # future MPI standard. Internally, we treat them as MPI_ functions and add the X later, but they
+    # will be in G.FUNCS without the X.
+    no_x_func_name = func_name
+    if no_x_func_name.lower()[:4] == "mpix":
+        no_x_func_name = "mpi" + no_x_func_name[4:]
+
+    if func_name.lower() in G.FUNCS or no_x_func_name.lower() in G.FUNCS:
+        if func_name.lower() in G.FUNCS:
+            func = G.FUNCS[func_name.lower()];
+        elif no_x_func_name.lower() in G.FUNCS:
+            func = G.FUNCS[no_x_func_name.lower()];
+
+        if 'dir' not in func or 'not_implemented' in func:
+            return True
+        elif re.match(r'MPI_DUP_FN', func['name']):
+            return True
+        else:
+            return False
+    else:
+        # Warn?
+        return True
+
 def dump_mpi_proto_h(f):
     def dump_line(s, tail, Out):
         tlist = split_line_with_break(s, tail, 100)
@@ -244,12 +270,8 @@ def dump_mpi_proto_h(f):
         for l in G.mpi_declares:
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', l);
             func_name = m.group(1);
-            if func_name.lower() in G.FUNCS:
-                func = G.FUNCS[func_name.lower()];
-                if 'dir' not in func or 'not_implemented' in func:
-                    continue
-                if re.match(r'MPI_DUP_FN', func['name']):
-                    continue
+            if need_skip_qmpi(func_name):
+                continue
             print("    " + func_name.upper() + "_T,", file=Out)
         print("    MPI_LAST_FUNC_T", file=Out)
         print("};", file=Out)
@@ -258,13 +280,8 @@ def dump_mpi_proto_h(f):
         # -- QMPI prototypes --
         for func_decl in G.mpi_declares:
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
-            func_name = m.group(1);
-            if func_name.lower() in G.FUNCS:
-                func = G.FUNCS[func_name.lower()];
-                if 'dir' not in func or 'not_implemented' in func:
-                    continue
-                if re.match(r'MPI_DUP_FN', func['name']):
-                    continue
+            if need_skip_qmpi(m.group(1)):
+                continue
             func_decl = get_qmpi_decl_from_func_decl(func_decl)
             dump_proto_line(func_decl, Out)
 
@@ -273,13 +290,8 @@ def dump_mpi_proto_h(f):
         # -- QMPI function typedefs --
         for func_decl in G.mpi_declares:
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
-            func_name = m.group(1);
-            if func_name.lower() in G.FUNCS:
-                func = G.FUNCS[func_name.lower()];
-                if 'dir' not in func or 'not_implemented' in func:
-                    continue
-                if re.match(r'MPI_DUP_FN', func['name']):
-                    continue
+            if need_skip_qmpi(m.group(1)):
+                continue
             func_decl = get_qmpi_typedef_from_func_decl(func_decl)
             dump_line(func_decl, '', Out)
         print("", file=Out)
@@ -320,14 +332,9 @@ def dump_qmpi_register_h(f):
         for l in G.mpi_declares:
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', l);
             func_name = m.group(1);
-            if func_name.lower() in G.FUNCS:
-                func = G.FUNCS[func_name.lower()];
-                if 'dir' not in func or 'not_implemented' in func:
-                    continue
-                if re.match(r'MPI_DUP_FN', func['name']):
-                    continue
-            print("    MPIR_QMPI_pointers[%s_T] = (void (*)(void)) &Q%s;" % (func_name.upper(),
-                func_name), file=Out)
+            if need_skip_qmpi(func_name):
+                continue
+            print("    MPIR_QMPI_pointers[%s_T] = (void (*)(void)) &Q%s;" % (func_name.upper(), func_name), file=Out)
         print("", file=Out)
         print("    return MPI_SUCCESS;", file=Out)
         print("}", file=Out)
@@ -427,7 +434,7 @@ def check_params_with_large_only(func):
                 if not p['large_only']:
                     func['params_small'].append(p)
     if func['_has_large_only']:
-        if func['_map_type'] == "SMALL":
+        if not func['_is_large']:
             func['c_parameters'] = func['params_small']
         else:
             func['c_parameters'] = func['params_large']
@@ -553,14 +560,18 @@ def process_func_parameters(func):
             do_handle_ptr = 1
             if kind == "INFO" and not RE.match(r'mpi_(info_.*|.*_set_info)$', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_INFO_NULL"
-            elif kind == "REQUEST" and RE.match(r'mpi_(wait|test|request_get_status)', func_name, re.IGNORECASE):
+            elif kind == "REQUEST" and RE.match(r'mpi_(wait|test|request_get_status|parrived)', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_REQUEST_NULL"
         elif kind == "RANK" and name == "root":
             validation_list.insert(0, {'kind': "ROOT", 'name': name})
         elif RE.match(r'(COUNT|TAG)$', kind):
             validation_list.append({'kind': RE.m.group(1), 'name': name})
         elif RE.match(r'RANK(_NNI)?$', kind):
-            validation_list.append({'kind': 'RANK', 'name': name})
+            if RE.match(r'mpi_intercomm_create_from_groups', func_name, re.IGNORECASE):
+                # TODO: add validation
+                pass
+            else:
+                validation_list.append({'kind': 'RANK', 'name': name})
         elif RE.match(r'(POLY)?(XFER_NUM_ELEM|DTYPE_NUM_ELEM_NNI|DTYPE_PACK_SIZE)', kind):
             validation_list.append({'kind': "COUNT", 'name': name})
         elif RE.match(r'(POLY)?DTYPE_NUM_ELEM', kind):
@@ -697,13 +708,13 @@ def dump_copy_right():
     G.out.append(" */")
     G.out.append("")
 
-def dump_qmpi_wrappers(func, mapping):
+def dump_qmpi_wrappers(func, is_large):
     parameters = ""
     for p in func['c_parameters']:
         parameters = parameters + ", " + p['name']
 
-    func_name = get_function_name(func, mapping)
-    func_decl = get_declare_function(func, mapping)
+    func_name = get_function_name(func, is_large)
+    func_decl = get_declare_function(func, is_large)
     qmpi_decl = get_qmpi_decl_from_func_decl(func_decl)
 
     static_call = re.sub(r'MPI(X?)_', r'internal\1_', func_name, 1)
@@ -758,7 +769,7 @@ def dump_qmpi_wrappers(func, mapping):
     G.out.append("#endif /* ENABLE_QMPI */")
 
 def dump_profiling(func):
-    func_name = get_function_name(func, func['_map_type'])
+    func_name = get_function_name(func, func['_is_large'])
     G.out.append("/* -- Begin Profiling Symbol Block for routine %s */" % func_name)
     G.out.append("#if defined(HAVE_PRAGMA_WEAK)")
     G.out.append("#pragma weak %s = P%s" % (func_name, func_name))
@@ -767,7 +778,7 @@ def dump_profiling(func):
     G.out.append("#elif defined(HAVE_PRAGMA_CRI_DUP)")
     G.out.append("#pragma _CRI duplicate %s as P%s" % (func_name, func_name))
     G.out.append("#elif defined(HAVE_WEAK_ATTRIBUTE)")
-    s = get_declare_function(func, func['_map_type'])
+    s = get_declare_function(func, func['_is_large'])
     dump_line_with_break(s, " __attribute__ ((weak, alias(\"P%s\")));" % (func_name))
     G.out.append("#endif")
     G.out.append("/* -- End Profiling Symbol Block */")
@@ -783,7 +794,7 @@ def dump_profiling(func):
 
 def dump_manpage(func):
     G.out.append("/*@")
-    G.out.append("   %s - %s" % (get_function_name(func, func['_map_type']), func['desc']))
+    G.out.append("   %s - %s" % (get_function_name(func, func['_is_large']), func['desc']))
     G.out.append("")
     lis_map = G.MAPS['LIS_KIND_MAP']
     for p in func['c_parameters']:
@@ -876,10 +887,9 @@ def get_function_internal_prototype(func_decl):
 # ---- the function part ----
 def dump_function_internal(func, kind):
     """Appends to G.out array the MPI function implementation."""
-    func_name = get_function_name(func, func['_map_type']);
-    state_name = "MPID_STATE_" + func_name.upper()
+    func_name = get_function_name(func, func['_is_large']);
 
-    s = get_declare_function(func, func['_map_type'])
+    s = get_declare_function(func, func['_is_large'])
     if kind == "polymorph":
         (extra_param, extra_arg) = get_polymorph_param_and_arg(func['polymorph'])
         s = re.sub(r'MPI(X?)_([a-zA-Z0-9_]*\()', r'MPI\1I_\2', s, 1)
@@ -898,26 +908,26 @@ def dump_function_internal(func, kind):
 
     if "impl" in func and func['impl'] == "direct":
         # e.g. MPI_Aint_add
-        dump_function_direct(func, state_name)
+        dump_function_direct(func)
     elif kind == 'call-polymorph':
         (extra_param, extra_arg) = get_polymorph_param_and_arg(func['polymorph'])
         repl_name = re.sub(r'MPI(X?)_', r'MPI\1I_', func_name, 1)
         repl_args = get_function_args(func) + ', ' + extra_arg
         repl_call = "mpi_errno = %s(%s);" % (repl_name, repl_args)
-        dump_function_replace(func, state_name, repl_call)
+        dump_function_replace(func, repl_call)
     elif kind == 'call-replace':
         RE.search(r'with\s+(\w+)', func['replace'])
         repl_name = "P" + RE.m.group(1)
         repl_args = get_function_args(func)
         repl_call = "mpi_errno = %s(%s);" % (repl_name, repl_args)
-        dump_function_replace(func, state_name, repl_call)
+        dump_function_replace(func, repl_call)
     else:
-        dump_function_normal(func, state_name)
+        dump_function_normal(func)
 
     G.out.append("DEDENT")
     G.out.append("}")
 
-    if func['_has_poly'] and func['_poly_impl'] != "separate" and func['_map_type'] == "BIG":
+    if func['_has_poly'] and func['_poly_impl'] != "separate" and func['_is_large']:
         pass
     else:
         if "decl" in func:
@@ -971,7 +981,7 @@ def check_large_parameters(func):
             else:
                 func['_poly_in_list'].append(p)
 
-def dump_function_normal(func, state_name):
+def dump_function_normal(func):
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     if '_handle_ptr_list' in func:
         for p in func['_handle_ptr_list']:
@@ -981,8 +991,6 @@ def dump_function_normal(func, state_name):
     if 'code-declare' in func:
         for l in func['code-declare']:
             G.out.append(l)
-
-    G.out.append("MPIR_FUNC_TERSE_STATE_DECL(%s);" % state_name)
 
     if not '_skip_initcheck' in func:
         G.out.append("")
@@ -998,7 +1006,7 @@ def dump_function_normal(func, state_name):
             G.out.append("MPIR_T_THREAD_CS_ENTER();")
         else:
             G.out.append("MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
-    G.out.append("MPIR_FUNC_TERSE_ENTER(%s);" % state_name)
+    G.out.append("MPIR_FUNC_TERSE_ENTER;")
     if '_handle_ptr_list' in func:
         G.out.append("")
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
@@ -1055,7 +1063,7 @@ def dump_function_normal(func, state_name):
     # ----
     def dump_body_of_routine():
         if 'body' in func:
-            if func['_map_type'] == "BIG" and func['_poly_impl'] == "separate":
+            if func['_is_large'] and func['_poly_impl'] == "separate":
                 if 'code-large_count' not in func:
                     raise Exception("%s missing large count code block." % func['name'])
                 for l in func['code-large_count']:
@@ -1078,7 +1086,7 @@ def dump_function_normal(func, state_name):
     # ----
     G.out.append("/* ... body of routine ... */")
 
-    if func['_map_type'] == "BIG" and 'code-large_count' not in func:
+    if func['_is_large'] and 'code-large_count' not in func:
         # BIG but internally is using MPI_Aint
         impl_args_save = copy.copy(func['_impl_arg_list'])
 
@@ -1097,7 +1105,7 @@ def dump_function_normal(func, state_name):
 
         dump_if_close()
 
-    elif func['_map_type'] == "SMALL" and func['_has_poly'] and func['_poly_impl'] != "separate":
+    elif not func['_is_large'] and func['_has_poly'] and func['_poly_impl'] != "separate":
         # SMALL but internally is using MPI_Aint
         dump_poly_pre_filter(func)
         dump_body_of_routine()
@@ -1114,7 +1122,7 @@ def dump_function_normal(func, state_name):
     G.out.append("fn_exit:")
     for l in func['code-clean_up']:
         G.out.append(l)
-    G.out.append("MPIR_FUNC_TERSE_EXIT(%s);" % state_name)
+    G.out.append("MPIR_FUNC_TERSE_EXIT;")
 
     if not '_skip_global_cs' in func:
         if func['dir'] == 'mpit':
@@ -1136,9 +1144,9 @@ def replace_impl_arg_list(arg_list, old, new):
         if arg_list[i] == old:
                 arg_list[i] = new
 
-def check_aint_fits(map_type, val):
+def check_aint_fits(is_large, val):
     # only need check when swapping `MPI_Count` to `MPI_Aint`
-    if map_type == "BIG":
+    if is_large:
         dump_if_open("%s > MPIR_AINT_MAX" % val)
         dump_error("too_big_for_input", "%s", '"%s"' % val)
         dump_if_close()
@@ -1150,7 +1158,7 @@ def add_poly_impl_cast(func):
         replace_impl_arg_list(func['_impl_arg_list'], p['name'], "(MPI_Aint *) " + p['name'])
 
 def check_poly_is_aint(func, p):
-    if func['_map_type'] == "BIG":
+    if func['_is_large']:
         return G.MAPS['BIG_C_KIND_MAP'][p['kind']] == "MPI_Aint"
     else:
         return G.MAPS['SMALL_C_KIND_MAP'][p['kind']] == "MPI_Aint"
@@ -1170,7 +1178,7 @@ def dump_poly_pre_filter(func):
                 replace_impl_arg_list(func['_impl_arg_list'], p['name'], "&%s_c" % p['name'])
 
     def filter_array():
-        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter\b)', func['name'], re.IGNORECASE):
+        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
             dump_coll_v_swap(func)
         elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
             dump_type_create_swap(func)
@@ -1179,13 +1187,13 @@ def dump_poly_pre_filter(func):
                 # non-v-collectives should use separate impl
                 raise Exception("Unhandled POLY-array function %s" % func['name'])
     # ----
-    if func['_map_type'] == "BIG":
+    if func['_is_large']:
         for p in func['_poly_in_list']:
             if not check_poly_is_aint(func, p):
-                check_aint_fits("BIG", p['name'])
+                check_aint_fits(True, p['name'])
         for p in func['_poly_inout_list']:
             if not check_poly_is_aint(func, p):
-                check_aint_fits("BIG", '*' + p['name'])
+                check_aint_fits(True, '*' + p['name'])
 
     filter_output()
     filter_array()
@@ -1213,14 +1221,14 @@ def dump_poly_post_filter(func):
                     G.out.append("*%s = %s;" % (p['name'], val))
 
     def filter_array(int_max):
-        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter\b)', func['name'], re.IGNORECASE):
+        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
             dump_coll_v_exit(func)
         elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
             dump_type_create_exit(func)
 
     # ----
     int_max = None
-    if func['_map_type'] == "SMALL":
+    if not func['_is_large']:
         int_max = "INT_MAX"
     filter_output(int_max)
     filter_array(int_max)
@@ -1233,7 +1241,7 @@ def dump_type_create_swap(func):
         new_name = p['name'] + '_c'
         G.out.append("MPI_Aint *%s = MPL_malloc(%s * sizeof(MPI_Aint), MPL_MEM_OTHER);" % (new_name, n))
         dump_for_open("i", n)
-        check_aint_fits(func['_map_type'], "%s[i]" % p['name'])
+        check_aint_fits(func['_is_large'], "%s[i]" % p['name'])
         G.out.append("%s[i] = %s[i];" % (new_name, p['name']))
         dump_for_close()
         replace_impl_arg_list(func['_impl_arg_list'], p['name'], new_name)
@@ -1246,7 +1254,7 @@ def push_impl_decl(func, impl_name=None):
     if not impl_name:
         impl_name = re.sub(r'^MPIX?_', 'MPIR_', func['name']) + "_impl"
 
-    if func['_map_type'] == "BIG":
+    if func['_is_large']:
         # add suffix to differentiate
         impl_name = re.sub(r'_impl$', '_large_impl', impl_name)
 
@@ -1311,7 +1319,7 @@ def dump_coll_v_swap(func):
         replace_impl_arg_list(func['_impl_arg_list'], old, new)
 
     def check_fit(val):
-        check_aint_fits(func['_map_type'], val)
+        check_aint_fits(func['_is_large'], val)
 
     # -- swapping routines
     def allocate_tmp_array(n):
@@ -1355,7 +1363,7 @@ def dump_coll_v_swap(func):
             replace_arg('sendcounts', 'tmp_array')
             replace_arg('recvcounts', 'tmp_array + indegree')
     # classical collectives
-    elif RE.match(r'mpi_i?reduce_scatter\b', func['name'], re.IGNORECASE):
+    elif RE.match(r'(mpi_i?reduce_scatter(_init)?\b)', func['name'], re.IGNORECASE):
         G.out.append("int n = comm_ptr->local_size;")
         allocate_tmp_array("n")
         swap_one("n", "recvcounts")
@@ -1421,7 +1429,7 @@ def dump_body_impl(func, prefix='mpir'):
         for p in func['_has_handle_out']:
             (name, kind) = (p['name'], p['kind'])
             mpir_type = G.handle_mpir_types[kind]
-            G.out.append("%s *%s_ptr = NULL;" % (mpir_type, name))
+            G.out.append("%s *%s_ptr ATTRIBUTE((unused)) = NULL;" % (mpir_type, name))
             if kind in G.handle_NULLs:
                 G.out.append("*%s = %s;" % (name, G.handle_NULLs[kind]))
     elif RE.match(r'mpi_type_', func['name'], re.IGNORECASE):
@@ -1432,7 +1440,7 @@ def dump_body_impl(func, prefix='mpir'):
                 G.out.append("*%s = MPI_DATATYPE_NULL;" % p['name'])
 
     impl = func['name']
-    if func['_map_type'] == "BIG" and func['_poly_impl'] == "separate":
+    if func['_is_large'] and func['_poly_impl'] == "separate":
         impl += '_large'
     if prefix == 'mpid':
         impl = re.sub(r'^MPIX?_', 'MPID_', impl)
@@ -1463,18 +1471,17 @@ def dump_body_impl(func, prefix='mpir'):
         else:
             print("Not sure how to handle inout %s" % p['name'], file=sys.stderr)
 
-def dump_function_replace(func, state_name, repl_call):
+def dump_function_replace(func, repl_call):
     G.out.append("int mpi_errno = MPI_SUCCESS;")
 
-    G.out.append("MPIR_FUNC_TERSE_STATE_DECL(%s);" % state_name)
-    G.out.append("MPIR_FUNC_TERSE_ENTER(%s);" % state_name)
+    G.out.append("MPIR_FUNC_TERSE_ENTER;")
     G.out.append("")
     G.out.append(repl_call)
     G.out.append("")
-    G.out.append("MPIR_FUNC_TERSE_EXIT(%s);" % state_name)
+    G.out.append("MPIR_FUNC_TERSE_EXIT;")
     G.out.append("return mpi_errno;")
 
-def dump_function_direct(func, state_name):
+def dump_function_direct(func):
     for l in func['body']:
         G.out.append(l)
 
@@ -1508,9 +1515,9 @@ def dump_mpi_fn_fail(func):
 def get_fn_fail_create_code(func):
     s = "mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,"
 
-    func_name = get_function_name(func, func['_map_type'])
+    func_name = get_function_name(func, func['_is_large'])
     err_name = func_name.lower()
-    mapping = get_mapping(func['_map_type'])
+    mapping = get_kind_map('C', func['_is_large'])
 
     (fmts, args, err_fmts) = ([], [], [])
     fmt_codes = {'RANK': "i", 'TAG': "t", 'COMMUNICATOR': "C", 'ASSERT': "A", 'DATATYPE': "D", 'ERRHANDLER': "E", 'FILE': "F", 'GROUP': "G", 'INFO': "I", 'OPERATION': "O", 'REQUEST': "R", 'WINDOW': "W", 'SESSION': "S", 'KEYVAL': "K", "GREQUEST_CLASS": "x"}
@@ -1617,7 +1624,7 @@ def dump_handle_ptr_var(func, p):
             G.out.append("MPIR_Request **request_ptrs = request_ptr_array;")
     else:
         mpir = G.handle_mpir_types[kind]
-        G.out.append("%s *%s_ptr = NULL;" % (mpir, name))
+        G.out.append("%s *%s_ptr ATTRIBUTE((unused)) = NULL;" % (mpir, name))
 
 def dump_validate_handle(func, p):
     func_name = func['name']
@@ -1850,6 +1857,8 @@ def dump_validation(func, t):
         p = name.split(',')
         if kind == "USERBUFFER-simple":
             dump_validate_userbuffer_simple(func, p[0], p[1], p[2])
+        elif kind == "USERBUFFER-partition":
+            dump_validate_userbuffer_partition(func, p[0], p[1], p[2], p[3])
         elif kind == "USERBUFFER-reduce":
             G.err_codes['MPI_ERR_OP'] = 1
             dump_validate_userbuffer_reduce(func, p[0], p[1], p[2], p[3], p[4])
@@ -1992,6 +2001,12 @@ def dump_validate_userbuffer_simple(func, buf, ct, dt):
     if check_no_op:
         dump_if_close()
 
+def dump_validate_userbuffer_partition(func, buf, partitions, ct, dt):
+    dump_validate_userbuffer_simple(func, buf, ct, dt)
+    dump_if_open("%s > 0" % ct)
+    G.out.append("MPIR_ERRTEST_ARGNONPOS(%s, \"%s\", mpi_errno, MPI_ERR_ARG);" % (partitions, partitions))
+    dump_if_close()
+
 def dump_validate_userbuffer_neighbor_vw(func, kind, buf, ct, dt, disp):
     dump_validate_get_topo_size(func)
     size = "outdegree"
@@ -2021,7 +2036,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         G.out.append("}")
         G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", %s, mpi_errno);" % (sbuf, sbuf, ct))
         G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", %s, mpi_errno);" % (rbuf, rbuf, ct))
-    elif RE.match(r'mpi_i?reduce$', func['name'], re.IGNORECASE):
+    elif RE.match(r'mpi_i?reduce(_init)?$', func['name'], re.IGNORECASE):
         G.out.append("if (" + cond_intra + ") {")
         G.out.append("    MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);")
         G.out.append("} else {")
@@ -2058,7 +2073,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         dump_validate_op(op, dt, True)
         dump_validate_datatype(func, dt)
         (sct, rct) = (ct, ct)
-        if RE.search(r'reduce_scatter$', func['name'], re.IGNORECASE):
+        if RE.search(r'reduce_scatter(_init)?$', func['name'], re.IGNORECASE):
             dump_validate_get_comm_size(func)
             G.out.append("int sum = 0;")
             dump_for_open('i', 'comm_size')
@@ -2154,7 +2169,7 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
             G.out.append("if (%s) {" % cond)
             G.out.append("    MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);")
             G.out.append("}")
-        elif RE.search(r'i?(allgather|gather|scatter)(v?)$', func_name, re.IGNORECASE):
+        elif RE.search(r'i?(allgather|gather|scatter)(v?)(_init)?$', func_name, re.IGNORECASE):
             t1, t2 = RE.m.group(1, 2)
             (a, b) = ("send", "recv")
             if RE.match(r'scatter', t1, re.IGNORECASE):
@@ -2184,7 +2199,7 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
 def dump_validate_datatype(func, dt):
     G.out.append("MPIR_ERRTEST_DATATYPE(%s, \"datatype\", mpi_errno);" % dt)
     G.out.append("if (!HANDLE_IS_BUILTIN(%s)) {" % dt)
-    G.out.append("    MPIR_Datatype *datatype_ptr = NULL;")
+    G.out.append("    MPIR_Datatype *datatype_ptr ATTRIBUTE((unused)) = NULL;")
     G.out.append("    MPIR_Datatype_get_ptr(%s, datatype_ptr);" % dt)
     G.out.append("    MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);")
     dump_error_check("    ")
@@ -2208,7 +2223,7 @@ def dump_validate_op(op, dt, is_coll):
 
 def dump_validate_get_comm_size(func):
     if '_got_comm_size' not in func:
-        if RE.match(r'mpi_i?reduce_scatter\b', func['name'], re.IGNORECASE):
+        if RE.match(r'mpi_i?(reduce_scatter_init|reduce_scatter)\b', func['name'], re.IGNORECASE):
             G.out.append("int comm_size = comm_ptr->local_size;")
         else:
             G.out.append("int comm_size;")
@@ -2227,39 +2242,16 @@ def dump_validate_get_topo_size(func):
 
 # ---- supporting routines (reusable) ----
 
-def get_mapping(map_type):
-    if map_type == "SMALL":
-        return G.MAPS['SMALL_C_KIND_MAP']
-    else:
-        return G.MAPS['BIG_C_KIND_MAP']
-
-def get_function_name(func, map_type="SMALL"):
-    big_use_mpix = True 
-    if map_type == "BIG":
-        name = func['name'] + "_c"
-        if big_use_mpix:
-            G.mpix_symbols[name] = "functions"
-            name = re.sub(r'MPI_', 'MPIX_', name)
-        return name
-    else:
-        name = func['name']
-        if 'mpix' in func:
-            G.mpix_symbols[name] = "functions"
-            name = re.sub(r'MPI_', 'MPIX_', name)
-        return name
-
 def get_function_args(func):
     arg_list = []
     for p in func['c_parameters']:
         arg_list.append(p['name'])
     return ', '.join(arg_list)
 
-def get_declare_function(func, map_type="SMALL", kind=""):
+def get_declare_function(func, is_large, kind=""):
     filter_c_parameters(func)
-    check_params_with_large_only(func)
-
-    name = get_function_name(func, map_type)
-    mapping = get_mapping(map_type)
+    name = get_function_name(func, is_large)
+    mapping = get_kind_map('C', is_large)
 
     ret = "int"
     if 'return' in func:
@@ -2276,23 +2268,21 @@ def get_declare_function(func, map_type="SMALL", kind=""):
         s += " MPICH_API_PUBLIC"
     return s
 
-    G.out.append(s)
-
 def get_C_params(func, mapping):
     param_list = []
     for p in func['c_parameters']:
-        param_list.append(get_C_param(p, mapping))
+        param_list.append(get_C_param(p, func, mapping))
     if not len(param_list):
         return ["void"]
     else:
         return param_list
 
 def get_impl_param(func, param):
-    mapping = get_mapping(func['_map_type'])
+    mapping = get_kind_map('C', func['_is_large'])
 
-    s = get_C_param(param, mapping)
+    s = get_C_param(param, func, mapping)
     if RE.match(r'POLY', param['kind']):
-        if func['_map_type'] == "BIG":
+        if func['_is_large']:
             # internally we always use MPI_Aint for poly type
             s = re.sub(r'MPI_Count', r'MPI_Aint', s)
         elif func['_poly_impl'] != "separate":

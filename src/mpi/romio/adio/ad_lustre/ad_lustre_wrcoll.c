@@ -105,7 +105,8 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     int i, filetype_is_contig, nprocs, myrank, do_collect = 0;
     int contig_access_count = 0, buftype_is_contig, interleave_count = 0;
-    int *count_my_req_per_proc, count_my_req_procs, count_others_req_procs;
+    int *count_my_req_per_proc, count_my_req_procs;
+    int *count_others_req_per_proc, count_others_req_procs;
     ADIO_Offset orig_fp, start_offset, end_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *end_offsets = NULL;
     ADIO_Offset *len_list = NULL;
@@ -295,8 +296,8 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
      */
 
     ADIOI_Calc_others_req(fd, count_my_req_procs, count_my_req_per_proc,
-                          my_req, nprocs, myrank, &count_others_req_procs, &others_req);
-    ADIOI_Free(count_my_req_per_proc);
+                          my_req, nprocs, myrank, &count_others_req_procs,
+                          &count_others_req_per_proc, &others_req);
 
     /* exchange data and write in sizes of no more than stripe_size. */
     ADIOI_LUSTRE_Exch_and_write(fd, buf, datatype, nprocs, myrank,
@@ -338,12 +339,8 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     /* free all memory allocated for collective I/O */
     /* free others_req */
-    ADIOI_Free(others_req[0].offsets);
-    ADIOI_Free(others_req[0].mem_ptrs);
-    ADIOI_Free(others_req);
-    ADIOI_Free(buf_idx[0]);     /* also my_req[*].offsets and my_req[*].lens */
-    ADIOI_Free(buf_idx);
-    ADIOI_Free(my_req);
+    ADIOI_LUSTRE_Free_my_req(nprocs, count_my_req_per_proc, my_req, buf_idx);
+    ADIOI_Free_others_req(nprocs, count_others_req_per_proc, others_req);
     ADIOI_Free(offset_list);
     ADIOI_Free(st_offsets);
 
@@ -399,7 +396,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     char *write_buf = NULL;
     MPI_Status status;
     ADIOI_Flatlist_node *flat_buf = NULL;
-    MPI_Aint buftype_extent;
+    MPI_Aint lb, buftype_extent;
     int stripe_size = striping_info[0], avail_cb_nodes = striping_info[2];
     int data_sieving = 0;
     ADIO_Offset *srt_off = NULL;
@@ -499,7 +496,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     if (!buftype_is_contig) {
         flat_buf = ADIOI_Flatten_and_find(datatype);
     }
-    MPI_Type_extent(datatype, &buftype_extent);
+    MPI_Type_get_extent(datatype, &lb, &buftype_extent);
     /* I need to check if there are any outstanding nonblocking writes to
      * the file, which could potentially interfere with the writes taking
      * place in this collective write call. Since this is not likely to be
@@ -579,7 +576,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                         recv_count[i]++;
                         ADIOI_Assert((((ADIO_Offset) (uintptr_t) write_buf) + req_off - off) ==
                                      (ADIO_Offset) (uintptr_t) (write_buf + req_off - off));
-                        MPI_Address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
+                        MPI_Get_address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
                         recv_size[i] += req_len;
                     } else {
                         break;

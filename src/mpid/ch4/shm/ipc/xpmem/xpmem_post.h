@@ -41,11 +41,13 @@ cvars:
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *vaddr, uintptr_t data_sz,
                                                       MPIDI_IPCI_ipc_attr_t * ipc_attr)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_GET_IPC_ATTR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_GET_IPC_ATTR);
+    MPIR_FUNC_ENTER;
 
     memset(&ipc_attr->ipc_handle, 0, sizeof(MPIDI_IPCI_ipc_handle_t));
 
+    if (vaddr == MPI_BOTTOM) {
+        goto fn_none;
+    }
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     if (MPIR_CVAR_CH4_XPMEM_ENABLE) {
         ipc_attr->ipc_type = MPIDI_IPCI_TYPE__XPMEM;
@@ -57,17 +59,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *vaddr, uintptr
     }
 #endif
 
+  fn_none:
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
     ipc_attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
   fn_exit:
 #endif
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_GET_IPC_ATTR);
+    MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
 
-int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits);
+int MPIDI_XPMEM_init_local(void);
+int MPIDI_XPMEM_init_world(void);
 int MPIDI_XPMEM_mpi_finalize_hook(void);
 int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t mem_handle, void **vaddr);
 

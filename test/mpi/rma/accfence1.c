@@ -130,7 +130,7 @@ static int accfence_test(int seed, int testsize, int count, const char *basic_ty
                 MPI_Win_fence(0, win);
                 /* This should have the same effect, in terms of
                  * transferring data, as a send/recv pair */
-                errs += MTest_dtp_check(&target, 0, 1, count, errs < 10);
+                errs += MTest_dtp_check(&target, 0, 1, count, &orig, errs < 10);
             } else {
                 MPI_Win_fence(0, win);
             }

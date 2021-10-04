@@ -15,8 +15,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t 
                                                        MPIR_Request * ackreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_CONTROL_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_CONTROL_SEND);
+    MPIR_FUNC_ENTER;
 
     control->origin_rank = comm_ptr->rank;
     control->send_buf = (uintptr_t) send_buf;
@@ -26,9 +25,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t 
 
     mpi_errno = MPIDI_OFI_do_inject(rank, comm_ptr,
                                     MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
-                                    (void *) control, sizeof(*control));
+                                    (void *) control, sizeof(*control), 0, 0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_CONTROL_SEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 

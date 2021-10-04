@@ -16,16 +16,6 @@ categories :
       description : A category for CH4 UCX netmod variables
 
 cvars:
-    - name        : MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG
-      category    : CH4_UCX
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Prints out the ucx netmod capability.
-
     - name        : MPIR_CVAR_CH4_UCX_MAX_VNIS
       category    : CH4_UCX
       type        : int
@@ -85,22 +75,28 @@ static int init_worker(int vni)
     MPIDI_UCX_CHK_STATUS(ucx_status);
     MPIR_Assert(MPIDI_UCX_global.ctx[vni].addrname_len <= INT_MAX);
 
+    ucx_status = ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[vni].worker,
+                                           MPIDI_UCX_AM_HANDLER_ID,
+                                           &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static int initial_address_exchange(MPIR_Comm * init_comm)
+static int initial_address_exchange(void)
 {
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucx_status;
+    MPIR_Comm *init_comm = NULL;
 
     void *table;
     int recv_bc_len;
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
-    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
+    mpi_errno = MPIDU_bc_table_create(rank, size, MPIR_Process.node_map,
                                       MPIDI_UCX_global.ctx[0].if_address,
                                       (int) MPIDI_UCX_global.ctx[0].addrname_len, FALSE,
                                       MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &recv_bc_len);
@@ -111,6 +107,9 @@ static int initial_address_exchange(MPIR_Comm * init_comm)
         int *node_roots = MPIR_Process.node_root_map;
         int num_nodes = MPIR_Process.num_nodes;
         int *rank_map;
+
+        mpi_errno = MPIDI_create_init_comm(&init_comm);
+        MPIR_ERR_CHECK(mpi_errno);
 
         for (int i = 0; i < num_nodes; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
@@ -149,6 +148,9 @@ static int initial_address_exchange(MPIR_Comm * init_comm)
     }
 
   fn_exit:
+    if (init_comm) {
+        MPIDI_destroy_init_comm(&init_comm);
+    }
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -256,7 +258,7 @@ int MPIDI_UCX_init_local(int *tag_bits)
         *tag_bits = MPIDI_UCX_TAG_BITS;
     }
 
-    if (MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG && MPIR_Process.rank == 0) {
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
         printf("==== UCX netmod Capability ====\n");
         printf("MPIDI_UCX_CONTEXT_ID_BITS: %d\n", MPIDI_UCX_CONTEXT_ID_BITS);
         printf("MPIDI_UCX_RANK_BITS: %d\n", MPIDI_UCX_RANK_BITS);
@@ -274,109 +276,24 @@ int MPIDI_UCX_init_local(int *tag_bits)
     goto fn_exit;
 }
 
-int MPIDI_UCX_init_world(MPIR_Comm * init_comm)
+int MPIDI_UCX_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    int tmp = MPIR_Process.tag_bits;
-    mpi_errno = MPIDI_UCX_mpi_init_hook(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.appnum,
-                                        &tmp, init_comm);
-    /* the code updates tag_bits should be moved to MPIDI_xxx_init_local */
-    MPIR_Assert(tmp == MPIR_Process.tag_bits);
-
-    return mpi_errno;
-}
-
-int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
 
     /* initialize worker for vni 0 */
     mpi_errno = init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
 
-    ucs_status_t ucx_status =
-        ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID,
-                                  &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-
-    mpi_errno = initial_address_exchange(init_comm);
+    mpi_errno = initial_address_exchange();
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:
-    if (MPIDI_UCX_global.ctx[0].worker != NULL)
+    if (MPIDI_UCX_global.ctx[0].worker != NULL) {
         ucp_worker_destroy(MPIDI_UCX_global.ctx[0].worker);
-
+    }
     goto fn_exit;
-}
-
-int MPIDI_UCX_mpi_finalize_hook(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Comm *comm;
-    ucs_status_ptr_t ucp_request;
-    ucs_status_ptr_t *pending;
-
-    comm = MPIR_Process.comm_world;
-    int n = MPIDI_UCX_global.num_vnis;
-    pending = MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size * n * n, MPL_MEM_OTHER);
-
-    int p = 0;
-    for (int i = 0; i < comm->local_size; i++) {
-        MPIDI_UCX_addr_t *av = &MPIDI_UCX_AV(&MPIDIU_get_av(0, i));
-        for (int vni_local = 0; vni_local < MPIDI_UCX_global.num_vnis; vni_local++) {
-            for (int vni_remote = 0; vni_remote < MPIDI_UCX_global.num_vnis; vni_remote++) {
-                ucp_request = ucp_disconnect_nb(av->dest[vni_local][vni_remote]);
-                MPIDI_UCX_CHK_REQUEST(ucp_request);
-                if (ucp_request != UCS_OK) {
-                    pending[p] = ucp_request;
-                    p++;
-                }
-            }
-        }
-    }
-
-    /* now complete the outstaning requests! Important: call progress in between, otherwise we
-     * deadlock! */
-    int completed = p;
-    while (completed != 0) {
-        for (int i = 0; i < MPIDI_UCX_global.num_vnis; i++) {
-            ucp_worker_progress(MPIDI_UCX_global.ctx[i].worker);
-        }
-        completed = p;
-        for (int i = 0; i < p; i++) {
-            if (ucp_request_is_completed(pending[i]) != 0)
-                completed -= 1;
-        }
-    }
-
-    for (int i = 0; i < p; i++) {
-        ucp_request_release(pending[i]);
-    }
-
-    mpi_errno = MPIR_pmi_barrier();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    for (int i = 0; i < MPIDI_UCX_global.num_vnis; i++) {
-        if (MPIDI_UCX_global.ctx[i].worker != NULL) {
-            ucp_worker_destroy(MPIDI_UCX_global.ctx[i].worker);
-        }
-    }
-
-    if (MPIDI_UCX_global.context != NULL)
-        ucp_cleanup(MPIDI_UCX_global.context);
-
-  fn_exit:
-    MPL_free(pending);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-
 }
 
 /* static functions for MPIDI_UCX_post_init */
@@ -432,23 +349,72 @@ int MPIDI_UCX_post_init(void)
     goto fn_exit;
 }
 
-int MPIDI_UCX_get_vci_attr(int vci)
+int MPIDI_UCX_mpi_finalize_hook(void)
 {
-    MPIR_Assert(0 <= vci && vci < 1);
-    return MPIDI_VCI_TX | MPIDI_VCI_RX;
-}
+    int mpi_errno = MPI_SUCCESS;
 
-int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
+    if (!MPIDI_global.is_initialized) {
+        /* Nothing to do */
+        return mpi_errno;
+    }
 
-int MPIDI_UCX_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
-                              int **remote_lupids)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
+    ucs_status_ptr_t ucp_request;
+    ucs_status_ptr_t *pending;
+
+    int n = MPIDI_UCX_global.num_vnis;
+    pending = MPL_malloc(sizeof(ucs_status_ptr_t) * MPIR_Process.size * n * n, MPL_MEM_OTHER);
+
+    int p = 0;
+    for (int i = 0; i < MPIR_Process.size; i++) {
+        MPIDI_UCX_addr_t *av = &MPIDI_UCX_AV(&MPIDIU_get_av(0, i));
+        for (int vni_local = 0; vni_local < MPIDI_UCX_global.num_vnis; vni_local++) {
+            for (int vni_remote = 0; vni_remote < MPIDI_UCX_global.num_vnis; vni_remote++) {
+                ucp_request = ucp_disconnect_nb(av->dest[vni_local][vni_remote]);
+                MPIDI_UCX_CHK_REQUEST(ucp_request);
+                if (ucp_request != UCS_OK) {
+                    pending[p] = ucp_request;
+                    p++;
+                }
+            }
+        }
+    }
+
+    /* now complete the outstaning requests! Important: call progress in between, otherwise we
+     * deadlock! */
+    int completed;
+    do {
+        for (int i = 0; i < MPIDI_UCX_global.num_vnis; i++) {
+            ucp_worker_progress(MPIDI_UCX_global.ctx[i].worker);
+        }
+        completed = p;
+        for (int i = 0; i < p; i++) {
+            if (ucp_request_is_completed(pending[i]) != 0)
+                completed -= 1;
+        }
+    } while (completed != 0);
+
+    for (int i = 0; i < p; i++) {
+        ucp_request_release(pending[i]);
+    }
+
+    mpi_errno = MPIR_pmi_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    for (int i = 0; i < MPIDI_UCX_global.num_vnis; i++) {
+        if (MPIDI_UCX_global.ctx[i].worker != NULL) {
+            ucp_worker_destroy(MPIDI_UCX_global.ctx[i].worker);
+        }
+    }
+
+    if (MPIDI_UCX_global.context != NULL)
+        ucp_cleanup(MPIDI_UCX_global.context);
+
+  fn_exit:
+    MPL_free(pending);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+
 }
 
 int MPIDI_UCX_mpi_free_mem(void *ptr)

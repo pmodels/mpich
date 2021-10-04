@@ -12,9 +12,9 @@
 ## Makefile.am
 
 # AM_CPPFLAGS are used for C++ code as well
-AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include @cuda_CPPFLAGS@ @ze_CPPFLAGS@
-AM_LDFLAGS = @cuda_LDFLAGS@ @ze_LDFLAGS@
-LDADD = $(top_builddir)/util/mtest.$(OBJEXT) $(top_builddir)/util/mtest_common.$(OBJEXT) @cuda_LIBS@ @ze_LIBS@
+AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include @cuda_CPPFLAGS@ @ze_CPPFLAGS@ @hip_CPPFLAGS@
+AM_LDFLAGS = @cuda_LDFLAGS@ @ze_LDFLAGS@ @hip_LDFLAGS@
+LDADD = $(top_builddir)/util/mtest.$(OBJEXT) $(top_builddir)/util/mtest_common.$(OBJEXT) @cuda_LIBS@ @ze_LIBS@ @hip_LIBS@
 
 # Add libdtpools support
 AM_CPPFLAGS += -I$(top_srcdir)/dtpools/include

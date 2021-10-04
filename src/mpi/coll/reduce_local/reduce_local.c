@@ -36,11 +36,11 @@ static void call_user_op_cxx(const void *inbuf, void *inoutbuf, int count, MPI_D
 
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
 static void call_user_op_f77(const void *inbuf, void *inoutbuf, MPI_Fint count, MPI_Fint datatype,
-                             MPIR_User_function * uop)
+                             MPIR_User_function uop)
 {
     /* Take off the global locks before calling user functions */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    (uop->f77_function) ((void *) inbuf, inoutbuf, &count, &datatype);
+    (uop.f77_function) ((void *) inbuf, inoutbuf, &count, &datatype);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 #endif
@@ -61,9 +61,15 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         if (mpi_errno != MPI_SUCCESS)
             goto fn_exit;
         /* --END ERROR HANDLING-- */
-        /* get the function by indexing into the op table */
-        uop = MPIR_OP_HDL_TO_FN(op);
-        (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
+        if (MPIR_Typerep_reduce_is_supported(op, datatype)) {
+            mpi_errno = MPIR_Typerep_reduce(inbuf, inoutbuf, count, datatype, op);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_exit;
+        } else {
+            /* get the function by indexing into the op table */
+            uop = MPIR_OP_HDL_TO_FN(op);
+            (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
+        }
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
 

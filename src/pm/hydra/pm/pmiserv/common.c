@@ -121,7 +121,8 @@ char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, c
 HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs ** kvs, int pgid)
 {
     HYD_status status = HYD_SUCCESS;
-    char hostname[MAX_HOSTNAME_LEN];
+    char hostname[MAX_HOSTNAME_LEN - 40];       /* Remove space taken up by the integers and other
+                                                 * characters below. */
     unsigned int seed;
     MPL_time_t tv;
     double secs;
@@ -129,7 +130,7 @@ HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs ** kvs, int pgid)
 
     HYDU_FUNC_ENTER();
 
-    if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
+    if (gethostname(hostname, MAX_HOSTNAME_LEN - 40) < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
     MPL_wtime(&tv);

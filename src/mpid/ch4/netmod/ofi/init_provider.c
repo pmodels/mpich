@@ -13,12 +13,11 @@
  *    Macros are redirected to fields in MPIDI_OFI_global.settings.
  *    a. First, get a list of providers by fi_getinfo with NULL hints. Environment
  *       variable FI_PROVIDER can be used to filter the list at libfabric layer.
- *    b. Pick providers based on optimal and minimal settings, and provider name if
- *       MPIR_CVAR_OFI_USE_PROVIDER is set. Global settings are not used at
- *       this stage and remain uninitialized. The optimal settings are the
- *       default set or the preset matching MPIR_CVAR_OFI_USE_PROVIDER.
+ *    b. Pick providers based on optimal and minimal settings.  Global settings are not
+ *       used at this stage and remain uninitialized. The optimal settings are the
+ *       default set.
  *    c. The selected provider is used to initialize hints and get final providers.
- *       c.1. Initialize global.settings with preset matching the selected provider name.
+ *       c.1. Initialize global.settings with preset matching the default set.
  *       c.2. Init hints using global settings.
  *       c.3. Use the hints to get final providers. This may take a
  *            few tries, each time relaxing attributes such as tx_attr and
@@ -34,7 +33,7 @@
  */
 
 static int find_provider(struct fi_info **prov_out);
-static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list);
+static struct fi_info *pick_provider_from_list(struct fi_info *prov_list);
 
 /* Need hold prov_list until we done setting up multi-nic */
 static struct fi_info *prov_list = NULL;
@@ -77,9 +76,14 @@ static int find_provider(struct fi_info **prov_out)
     int mpi_errno = MPI_SUCCESS;
     int ret;                    /* return from fi_getinfo() */
 
-    const char *provname = MPIR_CVAR_OFI_USE_PROVIDER;
+    const char *provname = NULL;
+    if (MPIR_CVAR_OFI_USE_PROVIDER != NULL) {
+        fprintf(stderr, "MPIR_CVAR_OFI_USE_PROVIDER is no longer supported in CH4. Use FI_PROVIDER"
+                "instead\n");
+    }
+
     int required_version = MPIDI_OFI_get_required_version();
-    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
         printf("Required minimum FI_VERSION: %x, current version: %x\n", required_version,
                fi_version());
     }
@@ -93,7 +97,7 @@ static int find_provider(struct fi_info **prov_out)
 
         /* Pick a best matching provider and use it to refine hints */
         struct fi_info *prov;
-        prov = pick_provider_from_list(provname, prov_list);
+        prov = pick_provider_from_list(prov_list);
 
         MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
 
@@ -108,7 +112,7 @@ static int find_provider(struct fi_info **prov_out)
         MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings, provname);
         /* The presets may have non-default minimum version requirement */
         required_version = MPIDI_OFI_get_required_version();
-        if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+        if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
             printf("Required minimum FI_VERSION: %x, current version: %x\n", required_version,
                    fi_version());
         }
@@ -156,13 +160,23 @@ static int find_provider(struct fi_info **prov_out)
     }
 
     /* last sanity check */
-    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
-        MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_SAFE,
-                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE) || (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL || defined(MPIDI_OFI_VNI_USE_DOMAIN))
+    MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_DOMAIN,
+                        mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+#else
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
+            MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_SAFE,
+                                mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+        } else {
+            MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_COMPLETION,
+                                mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+        }
     } else {
         MPIR_ERR_CHKANDJUMP(prov_list->domain_attr->threading != FI_THREAD_DOMAIN,
                             mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
     }
+#endif
 
     MPIDI_OFI_set_auto_progress(prov_list);
     *prov_out = prov_list;
@@ -213,33 +227,44 @@ static const char *get_prov_addr(struct fi_info *prov)
     return addr_str;
 }
 
-static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *list)
+/* return a score of preference. Default is 0.
+ * Return < 0 for less favorable providers.
+ * Return > 0 for more favorable providers.
+ */
+static int provider_preference(const char *prov_name)
 {
-    bool provname_is_set = (provname &&
-                            strcmp(provname, MPIDI_OFI_SET_NAME_DEFAULT) != 0 &&
-                            strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL) != 0);
+    if (MPL_stricmp(prov_name, "UDP;ofi_rxd") == 0) {
+        return -1;
+    }
 
+    return 0;
+}
+
+static struct fi_info *pick_provider_from_list(struct fi_info *list)
+{
     MPIDI_OFI_capabilities_t optimal_settings, minimal_settings;
-    MPIDI_OFI_init_settings(&optimal_settings, provname);
+    MPIDI_OFI_init_settings(&optimal_settings, MPIDI_OFI_SET_NAME_DEFAULT);
     MPIDI_OFI_init_settings(&minimal_settings, MPIDI_OFI_SET_NAME_MINIMAL);
 
     int best_score = 0;
+    int best_pref_score = 0;
     struct fi_info *best_prov = NULL;
     for (struct fi_info * prov = list; prov; prov = prov->next) {
-        if (provname_is_set && 0 != strcmp(provname, prov->fabric_attr->prov_name)) {
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "Skipping provider: name mismatch"));
+        /* Confirm the NIC backed by the provider is actually up. */
+        if (!MPIDI_OFI_nic_is_up(prov)) {
             continue;
         }
 
         int score = MPIDI_OFI_match_provider(prov, &optimal_settings, &minimal_settings);
-        if (best_score < score) {
+        int pref_score = provider_preference(prov->fabric_attr->prov_name);
+        if (best_score < score || (best_score == score && best_pref_score < pref_score)) {
             best_score = score;
+            best_pref_score = pref_score;
             best_prov = prov;
         }
-        if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
-            printf("provider: %s, score = %d, %s\n", prov->fabric_attr->prov_name, score,
-                   get_prov_addr(prov));
+        if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
+            printf("provider: %s, score = %d, pref = %d, %s\n", prov->fabric_attr->prov_name,
+                   score, pref_score, get_prov_addr(prov));
         }
     }
 

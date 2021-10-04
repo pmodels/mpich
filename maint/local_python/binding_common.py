@@ -7,6 +7,41 @@ from local_python import MPI_API_Global as G
 from local_python import RE
 import re
 
+def get_kind_map(lang, is_large=False):
+    if lang.upper() == 'C':
+        if is_large:
+            return G.MAPS['BIG_C_KIND_MAP']
+        else:
+            return G.MAPS['SMALL_C_KIND_MAP']
+    elif lang.upper() == 'F08':
+        if is_large:
+            return G.MAPS['BIG_F08_KIND_MAP']
+        else:
+            return G.MAPS['SMALL_F08_KIND_MAP']
+    elif lang.upper() == 'F90':
+        return G.MAPS['SMALL_F90_KIND_MAP']
+    elif lang.upper() == "LIS":
+        return G.MAPS['LIS_KIND_MAP']
+    else:
+        raise Exception("Kind Mapping for [%s] not available" % lang)
+
+def function_has_POLY_parameters(func):
+    for p in func['parameters']:
+        if p['kind'].startswith('POLY'):
+            return True
+    return False
+
+def get_function_name(func, is_large=False):
+    if is_large:
+        name = func['name'] + "_c"
+        return name
+    else:
+        name = func['name']
+        if 'mpix' in func:
+            G.mpix_symbols[name] = "functions"
+            name = re.sub(r'MPI_', 'MPIX_', name)
+        return name
+
 def split_line_with_break(s, tail, N=100):
     """Breaks a long line with proper indentations.
     This simplistic routine splits on ", ", thus only works with function declarations
@@ -43,8 +78,13 @@ def split_line_with_break(s, tail, N=100):
                 tlist.append(',')
                 out_list.append(''.join(tlist))
                 # start new line with leading spaces
-                tlist = [' ' * n_lead, a]
-                n = n_lead + len(a)
+                # if lead is too much, it won't look good
+                if n_lead > N - 40:
+                    tlist = [' ' * 20, a]
+                    n = 20 + len(a)
+                else:
+                    tlist = [' ' * n_lead, a]
+                    n = n_lead + len(a)
         # leave last segment with tail
     else:
         # only break long function declaration or call for now
@@ -64,7 +104,7 @@ def split_line_with_break(s, tail, N=100):
 
     return out_list
 
-def get_C_param(param, mapping):
+def get_C_param(param, func, mapping):
     kind = param['kind']
     if kind == "VARARGS":
         return "..."
@@ -72,17 +112,34 @@ def get_C_param(param, mapping):
     want_star, want_bracket = '', ''
     param_type = mapping[kind]
 
-    if param_type in G.mpix_symbols:
-        param_type = re.sub(r'MPI_', 'MPIX_', param_type)
-
     if param['func_type']:
         param_type = param['func_type']
         if mapping['_name'].startswith("BIG_"):
             param_type += "_c"
 
+    if param_type in G.mpix_symbols:
+        param_type = re.sub(r'MPI_', 'MPIX_', param_type)
+
     if not param_type:
         raise Exception("Type mapping [%s] %s not found!" % (mapping, kind))
-    if not want_star:
+
+    # We special treat a few cases to simplify the general rules
+    if kind == "ARGUMENT_COUNT":
+        if re.match(r'mpi_info_create_env', func['name'], re.IGNORECASE):
+            # -> int argc
+            pass
+        else:
+            # MPI_Init, MPI_Init_thread -> int *argc
+            want_star = 1
+    elif kind == "ARGUMENT_LIST":
+        if re.match(r'mpi_info_create_env', func['name'], re.IGNORECASE):
+            # -> char *argv[]
+            want_star = 1
+            want_bracket = 1
+        else:
+            # MPI_Init, MPI_Init_thread -> char ***argv
+            want_star = 3
+    elif not want_star:
         if is_pointer_type(param):
             if kind == "STRING_ARRAY":
                 want_star = 1
@@ -90,8 +147,6 @@ def get_C_param(param, mapping):
             elif kind == "STRING_2DARRAY":
                 want_star = 2
                 want_bracket = 1
-            elif kind == "ARGUMENT_LIST":
-                want_star = 3
             elif param['pointer'] is not None and not param['pointer']:
                 want_bracket = 1
             elif param['length'] is not None and kind != "STRING":
@@ -167,6 +222,9 @@ def get_userbuffer_group(func_name, parameters, i):
     elif RE.match(r'mpi_i?(allreduce|reduce|scan|exscan)', func_name, re.IGNORECASE):
         group_kind = "USERBUFFER-reduce"
         group_count = 5
+    elif RE.match(r'mpi_p(send|recv)_init', func_name, re.IGNORECASE):
+        group_kind = "USERBUFFER-partition"
+        group_count = 4
     elif RE.search(r'XFER_NUM_ELEM', p2['kind']) and RE.search(r'DATATYPE', p3['kind']):
         group_kind = "USERBUFFER-simple"
         group_count = 3

@@ -43,9 +43,6 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
     MPI_Status *starray;
     MPIR_CHKLMEM_DECL(6);
 
-    if (recvcount == 0)
-        return MPI_SUCCESS;
-
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 

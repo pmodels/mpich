@@ -72,15 +72,15 @@ static void start_sends(MPI_Request * reqs, MPI_Status * stats)
 {
     MPI_Start(&reqs[0]);
     fill_data(1, bufs[0]);
-    MPI_Pready_range(0, PARTITIONS - 1, &reqs[0]);
+    MPI_Pready_range(0, PARTITIONS - 1, reqs[0]);
 
     MPI_Start(&reqs[1]);
     fill_data(2, bufs[1]);
-    MPI_Pready_range(0, PARTITIONS - 1, &reqs[1]);
+    MPI_Pready_range(0, PARTITIONS - 1, reqs[1]);
 
     MPI_Start(&reqs[2]);
     fill_data(3, bufs[2]);
-    MPI_Pready_range(0, PARTITIONS - 1, &reqs[2]);
+    MPI_Pready_range(0, PARTITIONS - 1, reqs[2]);
 
     MPI_Waitall(3, reqs, stats);
 }
@@ -237,15 +237,15 @@ static int test_same_comm_same_tag(void)
 
         MPI_Start(&reqs[2]);
         fill_data(3, bufs[2]);
-        MPI_Pready_range(0, PARTITIONS - 1, &reqs[2]);
+        MPI_Pready_range(0, PARTITIONS - 1, reqs[2]);
 
         MPI_Start(&reqs[0]);
         fill_data(1, bufs[0]);
-        MPI_Pready_range(0, PARTITIONS - 1, &reqs[0]);
+        MPI_Pready_range(0, PARTITIONS - 1, reqs[0]);
 
         MPI_Start(&reqs[1]);
         fill_data(2, bufs[1]);
-        MPI_Pready_range(0, PARTITIONS - 1, &reqs[1]);
+        MPI_Pready_range(0, PARTITIONS - 1, reqs[1]);
 
         MPI_Waitall(3, reqs, stats);
 

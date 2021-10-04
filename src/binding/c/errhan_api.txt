@@ -179,3 +179,27 @@ MPI_Win_set_errhandler:
         goto fn_fail;
     }
 }
+
+MPI_Session_call_errhandler:
+    .desc: Call the error handler installed on a MPI session
+    .docnotes: ThreadSafeNoUpdate
+    .skip: global_cs
+
+MPI_Session_create_errhandler:
+    .desc: Create an error handler for use with MPI session
+
+MPI_Session_get_errhandler:
+    .desc: Get the error handler for the MPI session
+    .docnotes: ThreadSafeNoUpdate
+
+MPI_Session_set_errhandler:
+    .desc: Set MPI session error handler
+    .docnotes: ThreadSafeNoUpdate
+{ -- error_check --
+    if (!HANDLE_IS_BUILTIN(errhandler) && errhandler_ptr->kind != MPIR_SESSION) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                         __func__, __LINE__, MPI_ERR_ARG,
+                                         "**errhandnotsession", NULL);
+        goto fn_fail;
+    }
+}

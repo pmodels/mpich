@@ -7,9 +7,7 @@
 #define GENTRAN_UTILS_H_INCLUDED
 
 #include "mpiimpl.h"
-#include "tsp_gentran_types.h"
-#include "tsp_gentran.h"
-#include "utarray.h"
+#include "gentran_types.h"
 
 extern MPII_Coll_queue_t MPII_coll_queue;
 extern int MPII_Genutil_progress_hook_id;
@@ -35,8 +33,5 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 
 /* Hook to make progress on nonblocking collective operations  */
 int MPII_Genutil_progress_hook(int *);
-
-/* Function to reset a schedule for reuse */
-int MPII_Genutil_sched_reset(MPII_Genutil_sched_t * sched);
 
 #endif /* GENTRAN_UTILS_H_INCLUDED */

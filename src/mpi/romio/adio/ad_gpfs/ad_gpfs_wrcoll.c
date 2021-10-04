@@ -108,7 +108,8 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     int i, filetype_is_contig, nprocs, nprocs_for_coll, myrank;
     int contig_access_count = 0, interleave_count = 0, buftype_is_contig;
-    int *count_my_req_per_proc, count_my_req_procs, count_others_req_procs;
+    int *count_my_req_per_proc, count_my_req_procs;
+    int *count_others_req_per_proc, count_others_req_procs;
     ADIO_Offset orig_fp, start_offset, end_offset, fd_size, min_st_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *fd_start = NULL,
         *fd_end = NULL, *end_offsets = NULL;
@@ -424,17 +425,15 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     if (gpfsmpio_tuneblocking)
         ADIOI_GPFS_Calc_others_req(fd, count_my_req_procs,
                                    count_my_req_per_proc, my_req,
-                                   nprocs, myrank, &count_others_req_procs, &others_req);
+                                   nprocs, myrank, &count_others_req_procs,
+                                   &count_others_req_per_proc, &others_req);
     else
         ADIOI_Calc_others_req(fd, count_my_req_procs,
                               count_my_req_per_proc, my_req,
-                              nprocs, myrank, &count_others_req_procs, &others_req);
+                              nprocs, myrank, &count_others_req_procs,
+                              &count_my_req_per_proc, &others_req);
 
     GPFSMPIO_T_CIO_SET_GET(w, 1, 1, GPFSMPIO_CIO_T_DEXCH, GPFSMPIO_CIO_T_OTHREQ);
-
-    ADIOI_Free(count_my_req_per_proc);
-    ADIOI_Free(my_req[0].offsets);
-    ADIOI_Free(my_req);
 
     /* exchange data and write in sizes of no more than coll_bufsize. */
     ADIOI_Exch_and_write(fd, buf, datatype, nprocs, myrank,
@@ -447,15 +446,14 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     GPFSMPIO_T_CIO_REPORT(1, fd, myrank, nprocs);
 
     /* free all memory allocated for collective I/O */
-    if (others_req[0].offsets) {
-        ADIOI_Free(others_req[0].offsets);
+    if (gpfsmpio_tuneblocking) {
+        ADIOI_GPFS_Free_my_req(nprocs, count_my_req_per_proc, my_req, buf_idx);
+        ADIOI_GPFS_Free_others_req(nprocs, count_others_req_per_proc, others_req);
+    } else {
+        ADIOI_Free_my_req(nprocs, count_my_req_per_proc, my_req, buf_idx);
+        ADIOI_Free_others_req(nprocs, count_others_req_per_proc, others_req);
     }
-    if (others_req[0].mem_ptrs) {
-        ADIOI_Free(others_req[0].mem_ptrs);
-    }
-    ADIOI_Free(others_req);
 
-    ADIOI_Free(buf_idx);
     ADIOI_Free(offset_list);
     ADIOI_Free(st_offsets);
     ADIOI_Free(fd_start);
@@ -607,7 +605,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     int *send_buf_idx, *curr_to_proc, *done_to_proc;
     MPI_Status status;
     ADIOI_Flatlist_node *flat_buf = NULL;
-    MPI_Aint buftype_extent;
+    MPI_Aint lb, buftype_extent;
     int info_flag, coll_bufsize;
     char *value;
     static char myname[] = "ADIOI_EXCH_AND_WRITE";
@@ -720,7 +718,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     if (!buftype_is_contig) {
         flat_buf = ADIOI_Flatten_and_find(datatype);
     }
-    MPI_Type_extent(datatype, &buftype_extent);
+    MPI_Type_get_extent(datatype, &lb, &buftype_extent);
 
 
 /* I need to check if there are any outstanding nonblocking writes to
@@ -791,7 +789,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
                         count[i]++;
                         ADIOI_Assert((((ADIO_Offset) (uintptr_t) write_buf) + req_off - off) ==
                                      (ADIO_Offset) (uintptr_t) (write_buf + req_off - off));
-                        MPI_Address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
+                        MPI_Get_address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
                         ADIOI_Assert((off + size - req_off) == (int) (off + size - req_off));
                         recv_size[i] += (int) (MPL_MIN(off + size - req_off, (unsigned) req_len));
 

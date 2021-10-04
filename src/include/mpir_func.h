@@ -21,51 +21,22 @@
 
 /* function enter and exit macros */
 #if defined(MPL_USE_DBG_LOGGING)
-#define MPIR_FUNC_ENTER(a) MPL_DBG_MSG(MPL_DBG_ROUTINE_ENTER,TYPICAL,"Entering "#a)
+#define MPIR_FUNC_ENTER_(level) MPL_DBG_MSG_S(MPL_DBG_ROUTINE_ENTER, level, "Entering %s", __func__)
+#define MPIR_FUNC_EXIT_(level)  MPL_DBG_MSG_S(MPL_DBG_ROUTINE_EXIT, level, "Leaving %s", __func__)
 #elif defined(MPICH_DEBUG_MEMARENA)
-#define MPIR_FUNC_ENTER(a) MPL_trvalid("Entering " #a)
-#endif
-
-#if defined(MPL_USE_DBG_LOGGING)
-#define MPIR_FUNC_EXIT(a) MPL_DBG_MSG(MPL_DBG_ROUTINE_EXIT,TYPICAL,"Leaving "#a)
-#elif defined(MPICH_DEBUG_MEMARENA)
-#define MPIR_FUNC_EXIT(a) MPL_trvalid("Leaving " #a)
+#define MPIR_FUNC_ENTER MPL_trvalid2("line %d - entering %s\n", __LINE__, __func__)
+#define MPIR_FUNC_EXIT MPL_trvalid2("line %d - leaving %s\n", __LINE__, __func__)
 #endif
 
 /* state declaration macros */
 #if defined(MPL_USE_DBG_LOGGING) || defined(MPICH_DEBUG_MEMARENA)
 
-#define MPIR_FUNC_TERSE_STATE_DECL(a)
-#define MPIR_FUNC_TERSE_INIT_STATE_DECL(a)
-#define MPIR_FUNC_TERSE_FINALIZE_STATE_DECL(a)
-#define MPIR_FUNC_TERSE_ENTER(a)             MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_TERSE_EXIT(a)              MPIR_FUNC_EXIT(a)
-#define MPIR_FUNC_TERSE_PT2PT_ENTER(a)       MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_TERSE_PT2PT_EXIT(a)        MPIR_FUNC_EXIT(a)
-#define MPIR_FUNC_TERSE_PT2PT_ENTER_FRONT(a) MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_TERSE_PT2PT_EXIT_FRONT(a)  MPIR_FUNC_EXIT(a)
-#define MPIR_FUNC_TERSE_PT2PT_ENTER_BACK(a)  MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_TERSE_PT2PT_ENTER_BOTH(a)  MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_TERSE_PT2PT_EXIT_BACK(a)   MPIR_FUNC_EXIT(a)
-#define MPIR_FUNC_TERSE_PT2PT_EXIT_BOTH(a)   MPIR_FUNC_EXIT(a)
-#define MPIR_FUNC_TERSE_COLL_ENTER(a)        MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_TERSE_COLL_EXIT(a)         MPIR_FUNC_EXIT(a)
-#define MPIR_FUNC_TERSE_RMA_ENTER(a)         MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_TERSE_RMA_EXIT(a)          MPIR_FUNC_EXIT(a)
-#define MPIR_FUNC_TERSE_REQUEST_ENTER(a)	 MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_TERSE_REQUEST_EXIT(a)		 MPIR_FUNC_EXIT(a)
-#define MPIR_FUNC_TERSE_INIT_ENTER(a)        MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_TERSE_INIT_EXIT(a)         MPIR_FUNC_EXIT(a)
-#define MPIR_FUNC_TERSE_FINALIZE_ENTER(a)    MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_TERSE_FINALIZE_EXIT(a)     MPIR_FUNC_EXIT(a)
-
-#define MPIR_FUNC_VERBOSE_STATE_DECL(a)
-#define MPIR_FUNC_VERBOSE_ENTER(a)           MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_VERBOSE_EXIT(a)            MPIR_FUNC_EXIT(a)
-#define MPIR_FUNC_VERBOSE_PT2PT_ENTER(a)     MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_VERBOSE_PT2PT_EXIT(a)      MPIR_FUNC_EXIT(a)
-#define MPIR_FUNC_VERBOSE_RMA_ENTER(a)       MPIR_FUNC_ENTER(a)
-#define MPIR_FUNC_VERBOSE_RMA_EXIT(a)        MPIR_FUNC_EXIT(a)
+#define MPIR_FUNC_ENTER                   MPIR_FUNC_ENTER_(TYPICAL)
+#define MPIR_FUNC_EXIT                    MPIR_FUNC_EXIT_(TYPICAL)
+#define MPIR_FUNC_TERSE_ENTER             MPIR_FUNC_ENTER_(TERSE)
+#define MPIR_FUNC_TERSE_EXIT              MPIR_FUNC_EXIT_(TERSE)
+#define MPIR_FUNC_VERBOSE_ENTER           MPIR_FUNC_ENTER_(VERBOSE)
+#define MPIR_FUNC_VERBOSE_EXIT            MPIR_FUNC_EXIT_(VERBOSE)
 
 #else /* ! defined(MPL_USE_DBG_LOGGING) && ! defined(MPICH_DEBUG_MEMARENA) */
 
@@ -75,47 +46,20 @@
     HAVE_TIMING == MPICH_TIMING_KIND__ALL || \
     HAVE_TIMING == MPICH_TIMING_KIND__RUNTIME)
 
-#include "mpiallstates.h"
-
 #if (USE_LOGGING == MPICH_LOGGING__EXTERNAL)
 #include "mpilogging.h"
 #else
-#error You must select a logging library if timing is enabled
+#error You must select a logging library or enable logging if timing is enabled
 #endif
 
 #else /* HAVE_TIMING and doing logging */
 
-#define MPIR_FUNC_TERSE_STATE_DECL(a)
-#define MPIR_FUNC_TERSE_INIT_STATE_DECL(a)
-#define MPIR_FUNC_TERSE_FINALIZE_STATE_DECL(a)
-#define MPIR_FUNC_TERSE_EXIT(a)
-#define MPIR_FUNC_TERSE_ENTER(a)
-#define MPIR_FUNC_TERSE_PT2PT_ENTER(a)
-#define MPIR_FUNC_TERSE_PT2PT_ENTER_FRONT(a)
-#define MPIR_FUNC_TERSE_PT2PT_EXIT_FRONT(a)
-#define MPIR_FUNC_TERSE_PT2PT_ENTER_BACK(a)
-#define MPIR_FUNC_TERSE_PT2PT_ENTER_BOTH(a)
-#define MPIR_FUNC_TERSE_PT2PT_EXIT(a)
-#define MPIR_FUNC_TERSE_PT2PT_EXIT_BACK(a)
-#define MPIR_FUNC_TERSE_PT2PT_EXIT_BOTH(a)
-#define MPIR_FUNC_TERSE_COLL_ENTER(a)
-#define MPIR_FUNC_TERSE_COLL_EXIT(a)
-#define MPIR_FUNC_TERSE_RMA_ENTER(a)
-#define MPIR_FUNC_TERSE_RMA_EXIT(a)
-#define MPIR_FUNC_TERSE_REQUEST_ENTER(a)
-#define MPIR_FUNC_TERSE_REQUEST_EXIT(a)
-#define MPIR_FUNC_TERSE_INIT_ENTER(a)
-#define MPIR_FUNC_TERSE_INIT_EXIT(a)
-#define MPIR_FUNC_TERSE_FINALIZE_ENTER(a)
-#define MPIR_FUNC_TERSE_FINALIZE_EXIT(a)
-
-#define MPIR_FUNC_VERBOSE_STATE_DECL(a)
-#define MPIR_FUNC_VERBOSE_ENTER(a)
-#define MPIR_FUNC_VERBOSE_EXIT(a)
-#define MPIR_FUNC_VERBOSE_PT2PT_ENTER(a)
-#define MPIR_FUNC_VERBOSE_PT2PT_EXIT(a)
-#define MPIR_FUNC_VERBOSE_RMA_ENTER(a)
-#define MPIR_FUNC_VERBOSE_RMA_EXIT(a)
+#define MPIR_FUNC_ENTER
+#define MPIR_FUNC_EXIT
+#define MPIR_FUNC_TERSE_ENTER
+#define MPIR_FUNC_TERSE_EXIT
+#define MPIR_FUNC_VERBOSE_ENTER
+#define MPIR_FUNC_VERBOSE_EXIT
 
 #endif /* HAVE_TIMING */
 

@@ -28,6 +28,7 @@ static MPIDI_OFI_pack_chunk *create_chunk(void *pack_buffer, MPI_Aint unpack_siz
 void MPIDI_OFI_complete_chunks(MPIDI_OFI_win_request_t * winreq)
 {
     MPIDI_OFI_pack_chunk *chunk = winreq->chunks;
+    int vni = winreq->vni;
 
     while (chunk) {
         if (chunk->unpack_size > 0) {
@@ -41,7 +42,8 @@ void MPIDI_OFI_complete_chunks(MPIDI_OFI_win_request_t * winreq)
         }
 
         MPIDI_OFI_pack_chunk *next = chunk->next;
-        MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool, chunk->pack_buffer);
+        MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vni[vni].pack_buf_pool,
+                                          chunk->pack_buffer);
         MPL_free(chunk);
         chunk = next;
     }
@@ -70,6 +72,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    req->vni = MPIDI_OFI_WIN(win).vni;
     req->next = MPIDI_OFI_WIN(win).syncQ;
     MPIDI_OFI_WIN(win).syncQ = req;
     req->sigreq = sigreq;
@@ -189,6 +192,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     struct fi_rma_iov riov;
     uint64_t flags;
     void *pack_buffer;
+    int vni = req->vni;
 
     if (sigreq)
         flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
@@ -198,7 +202,8 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     int j = req->noncontig.put.target.iov_cur;
     size_t msg_len;
     while (req->noncontig.put.origin.pack_offset < req->noncontig.put.origin.total_bytes) {
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool, &pack_buffer);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vni[vni].pack_buf_pool,
+                                           &pack_buffer);
         if (pack_buffer == NULL)
             break;
 
@@ -224,7 +229,6 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         MPIDI_OFI_pack_chunk *chunk = create_chunk(pack_buffer, 0, 0, req);
         MPIR_ERR_CHKANDSTMT(chunk == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
-        int vni = MPIDI_OFI_WIN(win).vni;
         int nic = 0;
         msg.desc = NULL;
         msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, nic, vni, vni);
@@ -279,6 +283,7 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     struct fi_rma_iov riov;
     uint64_t flags;
     void *pack_buffer;
+    int vni = req->vni;
 
     if (sigreq)
         flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
@@ -288,7 +293,8 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     int j = req->noncontig.get.target.iov_cur;
     size_t msg_len;
     while (req->noncontig.get.origin.pack_offset < req->noncontig.get.origin.total_bytes) {
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool, &pack_buffer);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vni[vni].pack_buf_pool,
+                                           &pack_buffer);
         if (pack_buffer == NULL)
             break;
 
@@ -309,7 +315,6 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
             create_chunk(pack_buffer, msg_len, req->noncontig.get.origin.pack_offset, req);
         MPIR_ERR_CHKANDSTMT(chunk == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
-        int vni = MPIDI_OFI_WIN(win).vni;
         int nic = 0;
         msg.desc = NULL;
         msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, nic, vni, vni);
@@ -372,6 +377,7 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    req->vni = MPIDI_OFI_WIN(win).vni;
     req->sigreq = sigreq;
 
     /* allocate target iovecs */
@@ -432,6 +438,7 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    req->vni = MPIDI_OFI_WIN(win).vni;
     req->sigreq = sigreq;
 
     /* allocate target iovecs */

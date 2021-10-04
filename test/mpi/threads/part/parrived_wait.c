@@ -101,7 +101,7 @@ static MTEST_THREAD_RETURN_TYPE run_send_test(void *arg)
 
     for (int i = lo; i <= high; i++)
         fill_send_partition(i, iter);
-    MPI_Pready_range(lo, high, &req);
+    MPI_Pready_range(lo, high, req);
 
     MTestPrintfMsg(1, "Rank %d tid %d sent partitions range %d:%d "
                    "with count %ld of basic elements\n", rank, tid, lo, high, scount);
@@ -124,7 +124,7 @@ static MTEST_THREAD_RETURN_TYPE run_recv_test(void *arg)
         int part1_completed = 0, part2_completed = 0;
         while (part1_completed == 0 || part2_completed == 0) {
             int flag = 0;
-            MPI_Parrived(&req, i, &flag);
+            MPI_Parrived(req, i, &flag);
             if (flag && part1_completed == 0) {
                 part1_completed = 1;
                 MTestPrintfMsg(1, "Rank %d tid %d received partition %d "
@@ -134,7 +134,7 @@ static MTEST_THREAD_RETURN_TYPE run_recv_test(void *arg)
             }
 
             if (i + 1 < rpart) {
-                MPI_Parrived(&req, i + 1, &flag);
+                MPI_Parrived(req, i + 1, &flag);
                 if (flag && part2_completed == 0) {
                     part2_completed = 1;
                     MTestPrintfMsg(1, "Rank %d tid %d received partition %d "

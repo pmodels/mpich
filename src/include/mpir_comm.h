@@ -90,6 +90,10 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
     MPIR_COMM_HINT_EAGAIN,      /* ch4:ofi */
     MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING,   /* ch4:ofi */
     MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING,    /* ch4:ofi */
+    MPIR_COMM_HINT_MULTI_NIC_PREF_NIC,  /* ch4:ofi */
+    MPIR_COMM_HINT_SENDER_VCI,  /* ch4 */
+    MPIR_COMM_HINT_RECEIVER_VCI,        /* ch4 */
+    MPIR_COMM_HINT_VCI, /* ch4. Generic hint, useful to select vci_idx, progress thread etc. */
     /* dynamic hints starts here */
     MPIR_COMM_HINT_PREDEFINED_COUNT
 };
@@ -110,7 +114,8 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
   receiving.  In the case of an Intracommunicator, they are the same
   context id.  They differ in the case of intercommunicators, where
   they may come from processes in different comm worlds (in the
-  case of MPI-2 dynamic process intercomms).
+  case of MPI-2 dynamic process intercomms). With intercomms, we are
+  sending with context_id, which is the same as peer's recvcontext_id.
 
   The virtual connection table is an explicit member of this structure.
   This contains the information used to contact a particular process,
@@ -153,7 +158,7 @@ struct MPIR_Comm {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     MPID_Thread_mutex_t mutex;
     MPIR_Context_id_t context_id;       /* Send context id.  See notes */
-    MPIR_Context_id_t recvcontext_id;   /* Send context id.  See notes */
+    MPIR_Context_id_t recvcontext_id;   /* Recv context id (locally allocated).  See notes */
     int remote_size;            /* Value of MPI_Comm_(remote)_size */
     int rank;                   /* Value of MPI_Comm_rank */
     MPIR_Attribute *attributes; /* List of attributes */
@@ -283,6 +288,10 @@ int MPIR_Comm_commit(MPIR_Comm *);
 
 int MPIR_Comm_is_parent_comm(MPIR_Comm *);
 
+/* peer intercomm is an internal 1-to-1 intercomm used for connecting dynamic processes */
+int MPIR_peer_intercomm_create(MPIR_Context_id_t context_id, MPIR_Context_id_t recvcontext_id,
+                               uint64_t remote_lpid, int is_low_group, MPIR_Comm ** newcomm);
+
 #if defined(HAVE_ROMIO)
 int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm);
 #endif
@@ -373,4 +382,10 @@ int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info);
 int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info);
 int MPII_Comm_check_hints(MPIR_Comm * comm_ptr);
 
+int MPIR_init_comm_self(void);
+int MPIR_init_comm_world(void);
+#ifdef MPID_NEEDS_ICOMM_WORLD
+int MPIR_init_icomm_world(void);
+#endif
+int MPIR_finalize_builtin_comms(void);
 #endif /* MPIR_COMM_H_INCLUDED */

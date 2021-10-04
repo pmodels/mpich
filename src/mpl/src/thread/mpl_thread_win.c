@@ -349,4 +349,11 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err)
     }
 }
 
+void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affinity_size, int *err)
+{
+    /* stub implementation */
+    if (err)
+        *err = MPL_ERR_THREAD;
+}
+
 #endif

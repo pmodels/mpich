@@ -13,8 +13,10 @@
  *---------------------------------------------------------------------------*/
 /* This structure is used to implement the group operations such as
    MPI_Group_translate_ranks */
+/* note: next_lpid (with idx_of_first_lpid in MPIR_Group) gives a linked list
+ * in a sorted lpid ascending order */
 typedef struct MPII_Group_pmap_t {
-    int lpid;                   /* local process id, from VCONN */
+    uint64_t lpid;              /* local process id, from VCONN */
     int next_lpid;              /* Index of next lpid (in lpid order) */
 } MPII_Group_pmap_t;
 
@@ -60,8 +62,6 @@ struct MPIR_Group {
     MPII_Group_pmap_t *lrank_to_lpid;   /* Array mapping a local rank to local
                                          * process number */
     int is_local_dense_monotonic;       /* see NOTE-G1 */
-    const char *pset_name;      /* set to one of the pre-configured pset names,
-                                 * or NULL if it is not directly from a pset */
 
     /* We may want some additional data for the RMA syncrhonization calls */
     /* Other, device-specific information */

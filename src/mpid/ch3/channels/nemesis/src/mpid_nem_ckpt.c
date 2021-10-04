@@ -155,9 +155,8 @@ int MPIDI_nem_ckpt_init(void)
     cr_client_id_t client_id;
     int ret;
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NEM_CKPT_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NEM_CKPT_INIT);
+    MPIR_FUNC_ENTER;
 
     if (!MPIR_CVAR_NEMESIS_ENABLE_CKPOINT)
         goto fn_exit;
@@ -180,7 +179,7 @@ int MPIDI_nem_ckpt_init(void)
                          MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NEM_CKPT_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -191,9 +190,8 @@ int MPIDI_nem_ckpt_finalize(void)
     int mpi_errno = MPI_SUCCESS;
     int ret;
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NEM_CKPT_FINALIZE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NEM_CKPT_FINALIZE);
+    MPIR_FUNC_ENTER;
 
     ret = sem_destroy(&ckpt_sem);
     MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_destroy", "**sem_destroy %s",
@@ -203,7 +201,7 @@ int MPIDI_nem_ckpt_finalize(void)
                          MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NEM_CKPT_FINALIZE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -216,9 +214,8 @@ static int reinit_pmi(void)
     int pg_rank, pg_size;
     int kvs_name_sz, pg_id_sz;
     
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_REINIT_PMI);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_REINIT_PMI);
+    MPIR_FUNC_ENTER;
 
     /* Init pmi and do some sanity checks */
     ret = PMI_Init(&has_parent);
@@ -258,7 +255,7 @@ static int reinit_pmi(void)
     CHECK_ERR(ret, "PMI_Get_my_name");
 
     
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_REINIT_PMI);
+    MPIR_FUNC_EXIT;
     return 0;
 }
 
@@ -313,9 +310,8 @@ static int open_io_socket(socktype_t socktype, int rank, int dupfd)
     int port;
     int len;
     char *id_p;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_OPEN_IO_SOCKET);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_OPEN_IO_SOCKET);
+    MPIR_FUNC_ENTER;
 
     memset(&sock_addr, 0, sizeof(sock_addr));
     memset(&addr, 0, sizeof(addr));
@@ -357,7 +353,7 @@ static int open_io_socket(socktype_t socktype, int rank, int dupfd)
     ret = close(fd);
     CHECK_ERR_ERRNO(ret, "close socket");
     
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_OPEN_IO_SOCKET);
+    MPIR_FUNC_EXIT;
 fn_exit:
     return 0;
 }
@@ -365,9 +361,8 @@ fn_exit:
 static int restore_stdinouterr(int rank)
 {
     int ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RESTORE_STDINOUTERR);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RESTORE_STDINOUTERR);
+    MPIR_FUNC_ENTER;
 
     if (rank == 0) {
         ret = open_io_socket(IN_SOCK,  rank, 0);
@@ -378,7 +373,7 @@ static int restore_stdinouterr(int rank)
     ret = open_io_socket(ERR_SOCK, rank, 2);
     CHECK_ERR(ret, "open stdin socket");
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_RESTORE_STDINOUTERR);
+    MPIR_FUNC_EXIT;
     return 0;
 }
 
@@ -387,9 +382,8 @@ int MPIDI_nem_ckpt_start(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NEM_CKPT_START);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NEM_CKPT_START);
+    MPIR_FUNC_ENTER;
 
     if (checkpointing)
         goto fn_exit;
@@ -434,7 +428,7 @@ int MPIDI_nem_ckpt_start(void)
     
 
 fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NEM_CKPT_START);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 fn_fail:
 
@@ -447,9 +441,8 @@ int MPIDI_nem_ckpt_finish(void)
     int i;
     int ret;
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NEM_CKPT_FINISH);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NEM_CKPT_FINISH);
+    MPIR_FUNC_ENTER;
 
     /* Since we're checkpointing the shared memory region (i.e., the
        channels between local procs), we don't have to flush those
@@ -493,7 +486,7 @@ int MPIDI_nem_ckpt_finish(void)
     checkpointing = FALSE;
     
 fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NEM_CKPT_FINISH);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 fn_fail:
 
@@ -506,9 +499,8 @@ static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *d
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_ckpt_marker_t * const ckpt_pkt = (MPID_nem_pkt_ckpt_marker_t *)pkt;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PKT_CKPT_MARKER_HANDLER);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PKT_CKPT_MARKER_HANDLER);
+    MPIR_FUNC_ENTER;
 
     if (!checkpointing) {
         mpi_errno = MPIDI_nem_ckpt_start();
@@ -533,7 +525,7 @@ static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *d
     *req = NULL;
 
 fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PKT_CKPT_MARKER_HANDLER);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 fn_fail:
 
@@ -544,9 +536,8 @@ fn_fail:
 int MPIDI_nem_ckpt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arraySize)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_CKPT_PKTHANDLER_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_CKPT_PKTHANDLER_INIT);
+    MPIR_FUNC_ENTER;
 
     /* Check that the array is large enough */
     if (arraySize <= MPIDI_CH3_PKT_END_ALL) {
@@ -556,7 +547,7 @@ int MPIDI_nem_ckpt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arr
     pktArray[MPIDI_NEM_PKT_CKPT_MARKER] = pkt_ckpt_marker_handler;
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_CKPT_PKTHANDLER_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:
     goto fn_exit;

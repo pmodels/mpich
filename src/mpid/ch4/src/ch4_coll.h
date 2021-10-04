@@ -20,8 +20,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
         .comm_ptr = comm,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BARRIER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BARRIER);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -45,7 +44,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BARRIER);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -66,8 +65,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
 
     const MPIDI_Csel_container_s *cnt = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BCAST);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -97,7 +95,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BCAST);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -121,8 +119,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
         .u.allreduce.op = op,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLREDUCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLREDUCE);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -155,7 +152,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLREDUCE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -181,8 +178,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
         .u.allgather.recvtype = recvtype,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLGATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLGATHER);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -208,7 +204,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLGATHER);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -236,8 +232,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
         .u.allgatherv.recvtype = recvtype,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLGATHERV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLGATHERV);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -263,7 +258,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLGATHERV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -290,8 +285,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
         .u.scatter.root = root,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCATTER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCATTER);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -315,7 +309,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SCATTER);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -343,8 +337,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint *
         .u.scatterv.root = root,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCATTERV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCATTERV);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -369,7 +362,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint *
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SCATTERV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -396,8 +389,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, MPI_Aint sendcount
         .u.gather.root = root,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GATHER);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -422,7 +414,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, MPI_Aint sendcount
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GATHER);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -451,8 +443,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
         .u.gatherv.root = root,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GATHERV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GATHERV);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -477,7 +468,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GATHERV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -503,8 +494,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, MPI_Aint sendcou
         .u.alltoall.recvtype = recvtype,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALL);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -528,7 +518,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, MPI_Aint sendcou
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -557,8 +547,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
         .u.alltoallv.recvtype = recvtype,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALLV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALLV);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -584,7 +573,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALLV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -614,8 +603,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint 
         .u.alltoallw.recvtypes = recvtypes,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALLW);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALLW);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -641,7 +629,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALLW);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -666,8 +654,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
         .u.reduce.root = root,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -700,7 +687,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REDUCE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -725,8 +712,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
         .u.reduce_scatter.op = op,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE_SCATTER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE_SCATTER);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -750,7 +736,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REDUCE_SCATTER);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -775,8 +761,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
         .u.reduce_scatter_block.op = op,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE_SCATTER_BLOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE_SCATTER_BLOCK);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -801,7 +786,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REDUCE_SCATTER_BLOCK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -825,8 +810,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, MPI_A
         .u.scan.op = op,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCAN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCAN);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -854,7 +838,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, MPI_A
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SCAN);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -878,8 +862,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, MPI
         .u.exscan.op = op,
     };
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_EXSCAN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_EXSCAN);
+    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -902,7 +885,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, MPI
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_EXSCAN);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -915,13 +898,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_allgather(const void *sendbuf, MPI_Ai
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEIGHBOR_ALLGATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEIGHBOR_ALLGATHER);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_neighbor_allgather(sendbuf, sendcount, sendtype,
                                           recvbuf, recvcount, recvtype, comm);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEIGHBOR_ALLGATHER);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -933,13 +915,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_allgatherv(const void *sendbuf, MPI_A
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEIGHBOR_ALLGATHERV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEIGHBOR_ALLGATHERV);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_neighbor_allgatherv(sendbuf, sendcount, sendtype,
                                            recvbuf, recvcounts, displs, recvtype, comm);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEIGHBOR_ALLGATHERV);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -953,13 +934,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallv(const void *sendbuf,
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEIGHBOR_ALLTOALLV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEIGHBOR_ALLTOALLV);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_neighbor_alltoallv(sendbuf, sendcounts, sdispls,
                                           sendtype, recvbuf, recvcounts, rdispls, recvtype, comm);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEIGHBOR_ALLTOALLV);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -974,13 +954,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallw(const void *sendbuf,
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEIGHBOR_ALLTOALLW);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEIGHBOR_ALLTOALLW);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_neighbor_alltoallw(sendbuf, sendcounts, sdispls,
                                           sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEIGHBOR_ALLTOALLW);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -991,13 +970,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoall(const void *sendbuf, MPI_Ain
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEIGHBOR_ALLTOALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEIGHBOR_ALLTOALL);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_neighbor_alltoall(sendbuf, sendcount, sendtype,
                                          recvbuf, recvcount, recvtype, comm);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEIGHBOR_ALLTOALL);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1008,13 +986,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_allgather(const void *sendbuf, MPI_A
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INEIGHBOR_ALLGATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INEIGHBOR_ALLGATHER);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ineighbor_allgather(sendbuf, sendcount, sendtype,
                                            recvbuf, recvcount, recvtype, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INEIGHBOR_ALLGATHER);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1027,13 +1004,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_allgatherv(const void *sendbuf, MPI_
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INEIGHBOR_ALLGATHERV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INEIGHBOR_ALLGATHERV);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ineighbor_allgatherv(sendbuf, sendcount, sendtype,
                                             recvbuf, recvcounts, displs, recvtype, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INEIGHBOR_ALLGATHERV);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1044,13 +1020,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoall(const void *sendbuf, MPI_Ai
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INEIGHBOR_ALLTOALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INEIGHBOR_ALLTOALL);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ineighbor_alltoall(sendbuf, sendcount, sendtype,
                                           recvbuf, recvcount, recvtype, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INEIGHBOR_ALLTOALL);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1065,14 +1040,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallv(const void *sendbuf,
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INEIGHBOR_ALLTOALLV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INEIGHBOR_ALLTOALLV);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ineighbor_alltoallv(sendbuf, sendcounts, sdispls,
                                            sendtype, recvbuf, recvcounts, rdispls, recvtype, comm,
                                            req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INEIGHBOR_ALLTOALLV);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1087,14 +1061,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallw(const void *sendbuf,
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INEIGHBOR_ALLTOALLW);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INEIGHBOR_ALLTOALLW);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ineighbor_alltoallw(sendbuf, sendcounts, sdispls,
                                            sendtypes, recvbuf, recvcounts, rdispls, recvtypes,
                                            comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INEIGHBOR_ALLTOALLW);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1102,12 +1075,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ibarrier(MPIR_Comm * comm, MPIR_Request ** req
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IBARRIER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IBARRIER);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ibarrier(comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IBARRIER);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1116,12 +1088,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ibcast(void *buffer, MPI_Aint count, MPI_Datat
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IBCAST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IBCAST);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ibcast(buffer, count, datatype, root, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IBCAST);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1132,13 +1103,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iallgather(const void *sendbuf, MPI_Aint sendc
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IALLGATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IALLGATHER);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_iallgather(sendbuf, sendcount, sendtype, recvbuf,
                                   recvcount, recvtype, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IALLGATHER);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1150,13 +1120,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iallgatherv(const void *sendbuf, MPI_Aint send
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IALLGATHERV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IALLGATHERV);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_iallgatherv(sendbuf, sendcount, sendtype, recvbuf,
                                    recvcounts, displs, recvtype, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IALLGATHERV);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1166,12 +1135,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iallreduce(const void *sendbuf, void *recvbuf,
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IALLREDUCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IALLREDUCE);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_iallreduce(sendbuf, recvbuf, count, datatype, op, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IALLREDUCE);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1182,13 +1150,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ialltoall(const void *sendbuf, MPI_Aint sendco
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IALLTOALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IALLTOALL);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ialltoall(sendbuf, sendcount, sendtype, recvbuf,
                                  recvcount, recvtype, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IALLTOALL);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1200,13 +1167,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallv(const void *sendbuf, const MPI_Aint
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IALLTOALLV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IALLTOALLV);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ialltoallv(sendbuf, sendcounts, sdispls, sendtype,
                                   recvbuf, recvcounts, rdispls, recvtype, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IALLTOALLV);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1219,13 +1185,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallw(const void *sendbuf, const MPI_Aint
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IALLTOALLW);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IALLTOALLW);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ialltoallw(sendbuf, sendcounts, sdispls, sendtypes,
                                   recvbuf, recvcounts, rdispls, recvtypes, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IALLTOALLW);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1235,12 +1200,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iexscan(const void *sendbuf, void *recvbuf, MP
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IEXSCAN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IEXSCAN);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_iexscan(sendbuf, recvbuf, count, datatype, op, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IEXSCAN);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1251,13 +1215,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Igather(const void *sendbuf, MPI_Aint sendcoun
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IGATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IGATHER);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_igather(sendbuf, sendcount, sendtype, recvbuf,
                                recvcount, recvtype, root, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IGATHER);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1269,13 +1232,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Igatherv(const void *sendbuf, MPI_Aint sendcou
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IGATHERV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IGATHERV);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_igatherv(sendbuf, sendcount, sendtype, recvbuf,
                                 recvcounts, displs, recvtype, root, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IGATHERV);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1286,12 +1248,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter_block(const void *sendbuf, voi
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IREDUCE_SCATTER_BLOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IREDUCE_SCATTER_BLOCK);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IREDUCE_SCATTER_BLOCK);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1302,12 +1263,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter(const void *sendbuf, void *rec
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IREDUCE_SCATTER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IREDUCE_SCATTER);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IREDUCE_SCATTER);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1317,12 +1277,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ireduce(const void *sendbuf, void *recvbuf, MP
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IREDUCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IREDUCE);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_ireduce(sendbuf, recvbuf, count, datatype, op, root, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IREDUCE);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1332,12 +1291,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iscan(const void *sendbuf, void *recvbuf, MPI_
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISCAN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISCAN);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_iscan(sendbuf, recvbuf, count, datatype, op, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ISCAN);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1348,13 +1306,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iscatter(const void *sendbuf, MPI_Aint sendcou
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISCATTER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISCATTER);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_iscatter(sendbuf, sendcount, sendtype, recvbuf,
                                 recvcount, recvtype, root, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ISCATTER);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1366,13 +1323,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iscatterv(const void *sendbuf, const MPI_Aint 
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISCATTERV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISCATTERV);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_NM_mpi_iscatterv(sendbuf, sendcounts, displs, sendtype,
                                  recvbuf, recvcount, recvtype, root, comm, req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ISCATTERV);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -1381,12 +1337,357 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast_init(void *buffer, MPI_Aint count, MPI_D
                                              MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BCAST_INIT);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIR_Bcast_init_impl(buffer, count, datatype, root, comm_ptr, info_ptr, request);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BCAST_INIT);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Allreduce_init(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                                 MPI_Datatype datatype, MPI_Op op,
+                                                 MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                                                 MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Allreduce_init_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, info_ptr,
+                                         request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Reduce_init(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                              MPI_Datatype datatype, MPI_Op op, int root,
+                                              MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                                              MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Reduce_init_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+                                      info_ptr, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Alltoall_init(const void *sendbuf, MPI_Aint sendcount,
+                                                MPI_Datatype sendtype, void *recvbuf,
+                                                MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                                                MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Alltoall_init_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                        comm_ptr, info_ptr, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv_init(const void *sendbuf, const MPI_Aint sendcounts[],
+                                                 const MPI_Aint sdispls[], MPI_Datatype sendtype,
+                                                 void *recvbuf, const MPI_Aint recvcounts[],
+                                                 const MPI_Aint rdispls[], MPI_Datatype recvtype,
+                                                 MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                                                 MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Alltoallv_init_impl(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                         recvcounts, rdispls, recvtype, comm_ptr, info_ptr,
+                                         request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw_init(const void *sendbuf, const MPI_Aint sendcounts[],
+                                                 const MPI_Aint sdispls[],
+                                                 const MPI_Datatype sendtypes[],
+                                                 void *recvbuf, const MPI_Aint recvcounts[],
+                                                 const MPI_Aint rdispls[],
+                                                 const MPI_Datatype recvtypes[],
+                                                 MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                                                 MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Alltoallw_init_impl(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
+                                         recvcounts, rdispls, recvtypes, comm_ptr, info_ptr,
+                                         request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Allgather_init(const void *sendbuf, MPI_Aint sendcount,
+                                                 MPI_Datatype sendtype, void *recvbuf,
+                                                 MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                 MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                                                 MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Allgather_init_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                         comm_ptr, info_ptr, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv_init(const void *sendbuf, MPI_Aint sendcount,
+                                                  MPI_Datatype sendtype, void *recvbuf,
+                                                  const MPI_Aint * recvcounts,
+                                                  const MPI_Aint * displs, MPI_Datatype recvtype,
+                                                  MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                                                  MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Allgatherv_init_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                          displs, recvtype, comm_ptr, info_ptr, request);
+
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block_init(const void *sendbuf, void *recvbuf,
+                                                            MPI_Aint recvcount,
+                                                            MPI_Datatype datatype, MPI_Op op,
+                                                            MPIR_Comm * comm, MPIR_Info * info,
+                                                            MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Reduce_scatter_block_init_impl(sendbuf, recvbuf, recvcount, datatype, op, comm,
+                                                    info, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_init(const void *sendbuf, void *recvbuf,
+                                                      const MPI_Aint recvcounts[],
+                                                      MPI_Datatype datatype, MPI_Op op,
+                                                      MPIR_Comm * comm, MPIR_Info * info,
+                                                      MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Reduce_scatter_init_impl(sendbuf, recvbuf, recvcounts, datatype, op, comm,
+                                              info, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Scan_init(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                            MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                            MPIR_Info * info, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Scan_init_impl(sendbuf, recvbuf, count, datatype, op, comm, info, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Gather_init(const void *sendbuf, MPI_Aint sendcount,
+                                              MPI_Datatype sendtype, void *recvbuf,
+                                              MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                                              MPIR_Comm * comm, MPIR_Info * info,
+                                              MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Gather_init_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                      root, comm, info, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Gatherv_init(const void *sendbuf, MPI_Aint sendcount,
+                                               MPI_Datatype sendtype, void *recvbuf,
+                                               const MPI_Aint recvcounts[], const MPI_Aint displs[],
+                                               MPI_Datatype recvtype, int root, MPIR_Comm * comm,
+                                               MPIR_Info * info, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Gatherv_init_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
+                                       recvtype, root, comm, info, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Scatter_init(const void *sendbuf, MPI_Aint sendcount,
+                                               MPI_Datatype sendtype, void *recvbuf,
+                                               MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                                               MPIR_Comm * comm, MPIR_Info * info,
+                                               MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Scatter_init_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                       root, comm, info, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Scatterv_init(const void *sendbuf, const MPI_Aint sendcounts[],
+                                                const MPI_Aint displs[], MPI_Datatype sendtype,
+                                                void *recvbuf, MPI_Aint recvcount,
+                                                MPI_Datatype recvtype, int root, MPIR_Comm * comm,
+                                                MPIR_Info * info, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Scatterv_init_impl(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                        recvtype, root, comm, info, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Barrier_init(MPIR_Comm * comm, MPIR_Info * info,
+                                               MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Barrier_init_impl(comm, info, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Exscan_init(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                              MPIR_Info * info, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Exscan_init_impl(sendbuf, recvbuf, count, datatype, op, comm, info, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_allgather_init(const void *sendbuf, MPI_Aint sendcount,
+                                                          MPI_Datatype sendtype, void *recvbuf,
+                                                          MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                          MPIR_Comm * comm, MPIR_Info * info,
+                                                          MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Neighbor_allgather_init_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                                  recvtype, comm, info, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_allgatherv_init(const void *sendbuf, MPI_Aint sendcount,
+                                                           MPI_Datatype sendtype, void *recvbuf,
+                                                           const MPI_Aint recvcounts[],
+                                                           const MPI_Aint displs[],
+                                                           MPI_Datatype recvtype, MPIR_Comm * comm,
+                                                           MPIR_Info * info,
+                                                           MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Neighbor_allgatherv_init_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                                   recvcounts, displs, recvtype, comm, info,
+                                                   request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoall_init(const void *sendbuf, MPI_Aint sendcount,
+                                                         MPI_Datatype sendtype, void *recvbuf,
+                                                         MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                         MPIR_Comm * comm, MPIR_Info * info,
+                                                         MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Neighbor_alltoall_init_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                                 recvtype, comm, info, request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallv_init(const void *sendbuf,
+                                                          const MPI_Aint sendcounts[],
+                                                          const MPI_Aint sdispls[],
+                                                          MPI_Datatype sendtype, void *recvbuf,
+                                                          const MPI_Aint recvcounts[],
+                                                          const MPI_Aint rdispls[],
+                                                          MPI_Datatype recvtype, MPIR_Comm * comm,
+                                                          MPIR_Info * info, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Neighbor_alltoallv_init_impl(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                                  recvcounts, rdispls, recvtype, comm, info,
+                                                  request);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallw_init(const void *sendbuf,
+                                                          const MPI_Aint sendcounts[],
+                                                          const MPI_Aint sdispls[],
+                                                          const MPI_Datatype sendtypes[],
+                                                          void *recvbuf,
+                                                          const MPI_Aint recvcounts[],
+                                                          const MPI_Aint rdispls[],
+                                                          const MPI_Datatype recvtypes[],
+                                                          MPIR_Comm * comm, MPIR_Info * info,
+                                                          MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Neighbor_alltoallw_init_impl(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
+                                                  recvcounts, rdispls, recvtypes, comm, info,
+                                                  request);
+
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 

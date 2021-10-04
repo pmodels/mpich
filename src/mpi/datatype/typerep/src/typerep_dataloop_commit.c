@@ -300,13 +300,13 @@ void MPIR_Typerep_commit(MPI_Datatype type)
                     }
                     MPI_Aint *disps = aints;
                     int err = MPIR_Dataloop_create_struct(n, blkls, disps, types, (void **) dlp_p);
-                    MPIR_Assert(0 == err);
+                    MPIR_Assertp(0 == err);
                     MPL_free(blkls);
                 } else {
                     MPI_Aint *blkls = counts + 1;
                     MPI_Aint *disps = counts + 1 + n;
                     int err = MPIR_Dataloop_create_struct(n, blkls, disps, types, (void **) dlp_p);
-                    MPIR_Assert(0 == err);
+                    MPIR_Assertp(0 == err);
                 }
             }
             break;

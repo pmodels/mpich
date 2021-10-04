@@ -9,18 +9,6 @@
 
 #define MPIDI_OFI_MR_KEY_PREFIX_SHIFT 63
 
-int MPIDI_OFI_handle_cq_error_util(int ctx_idx, ssize_t ret)
-{
-    int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
-
-    mpi_errno = MPIDI_OFI_handle_cq_error(ctx_idx, ret);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
-    return mpi_errno;
-}
-
 int MPIDI_OFI_retry_progress(void)
 {
     /* We do not call progress on hooks form netmod level
@@ -164,16 +152,13 @@ void MPIDI_OFI_mr_key_allocator_destroy(void)
 
 /* Translate the control message to get a huge message into a request to
  * actually perform the data transfer. */
-static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
+static int MPIDI_OFI_get_huge(int vni, MPIDI_OFI_send_control_t * info)
 {
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
-    MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_HUGE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_HUGE);
+    MPIR_FUNC_ENTER;
 
-    /* Look up the communicator */
-    comm_ptr = MPIDIG_context_id_to_comm(info->comm_id);
+    bool ready_to_get = false;
 
     /* If there has been a posted receive, search through the list of unmatched
      * receives to find the one that goes with the incoming message. */
@@ -195,8 +180,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
                 LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
                 recv_elem = (MPIDI_OFI_huge_recv_t *)
-                    MPIDIU_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
-                                      list_ptr->rreq->handle);
+                    MPIDIU_map_lookup(MPIDI_OFI_global.huge_recv_counters, list_ptr->rreq->handle);
 
                 /* If this is a "peek" element for an MPI_Probe, it shouldn't be matched. Grab the
                  * important information and remove the element from the list. */
@@ -204,7 +188,7 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
                     MPIR_STATUS_SET_COUNT(recv_elem->localreq->status, info->msgsize);
                     MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(recv_elem->localreq, util_id)),
                                                  MPIDI_OFI_PEEK_FOUND);
-                    MPIDIU_map_erase(MPIDI_OFI_COMM(recv_elem->comm_ptr).huge_recv_counters,
+                    MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters,
                                      recv_elem->localreq->handle);
                     MPL_free(recv_elem);
                     recv_elem = NULL;
@@ -216,8 +200,10 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
         }
     }
 
-    if (recv_elem == NULL) {    /* Put the struct describing the transfer on an
-                                 * unexpected list to be retrieved later */
+    if (recv_elem) {
+        ready_to_get = true;
+    } else {
+        /* Put the struct describing the transfer on an unexpected list to be retrieved later */
         MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
                         (MPL_DBG_FDEST, "CREATING UNEXPECTED HUGE RECV: (%d, %d, %d)",
                          info->comm_id, info->origin_rank, info->tag));
@@ -231,17 +217,13 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     }
 
     recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-    if (MPIDI_OFI_COMM(comm_ptr).enable_striping) {
-        recv_elem->cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
-    } else {
-        recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
-    }
     recv_elem->remote_info = *info;
-    recv_elem->comm_ptr = comm_ptr;
     recv_elem->next = NULL;
-    MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
+    if (ready_to_get) {
+        MPIDI_OFI_get_huge_event(vni, NULL, (MPIR_Request *) recv_elem);
+    }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_GET_HUGE);
+    MPIR_FUNC_EXIT;
 
   fn_exit:
     return mpi_errno;
@@ -249,24 +231,26 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     goto fn_exit;
 }
 
-int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint data_sz,
-                              int is_local, int is_async, MPIR_Request ** req)
+int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
+                              uint32_t attr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) am_hdr;
 
-    if (is_async)
+    if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
+    }
 
     switch (ctrlsend->type) {
         case MPIDI_OFI_CTRL_HUGEACK:{
-                mpi_errno = MPIDI_OFI_dispatch_function(NULL, ctrlsend->ackreq);
+                /* FIXME: need vni from the callback parameters */
+                mpi_errno = MPIDI_OFI_dispatch_function(0, NULL, ctrlsend->ackreq);
                 goto fn_exit;
             }
             break;
 
         case MPIDI_OFI_CTRL_HUGE:{
-                mpi_errno = MPIDI_OFI_get_huge(ctrlsend);
+                mpi_errno = MPIDI_OFI_get_huge(0, ctrlsend);
                 goto fn_exit;
             }
             break;

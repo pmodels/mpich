@@ -7,7 +7,7 @@
 #define MPIDIG_AM_H_INCLUDED
 
 #define MPIDI_AM_HANDLERS_MAX (64)
-#define MPIDIG_IS_REQUEST_READY_FOR_RECV(_req) (MPIDIG_REQUEST((_req), recv_ready))
+#define MPIDI_AM_RNDV_CB_MAX  (10)
 
 enum {
     MPIDIG_SEND = 0,
@@ -44,7 +44,6 @@ enum {
 
     MPIDIG_CSWAP_REQ,
     MPIDIG_CSWAP_ACK,
-    MPIDIG_FETCH_OP,
 
     MPIDIG_WIN_COMPLETE,
     MPIDIG_WIN_POST,
@@ -59,10 +58,19 @@ enum {
 
     MPIDIG_COMM_ABORT,
 
+    MPIDI_IPC_ACK,
+
     MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
     MPIDI_OFI_AM_RDMA_READ_ACK,
 
     MPIDIG_HANDLER_STATIC_MAX
+};
+
+enum {
+    MPIDIG_RNDV_GENERIC = 0,
+    MPIDIG_RNDV_IPC,
+
+    MPIDIG_RNDV_STATIC_MAX
 };
 
 typedef int (*MPIDIG_am_target_cmpl_cb) (MPIR_Request * req);
@@ -74,15 +82,39 @@ typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
  * object is returned, the caller is expected to transfer the payload to the request,
  * and call target_cmpl_cb upon complete.
  *
- * If is_async is false/0, a request object will never be returned.
+ * Transport sets attr with a bit mask of flags. We use uint32_t for attr.
+ * Bits are reserved as following:
+ *     0-7    ch4-layer defined flags (defined below)
+ *     8-15   source vci
+ *     16-23  destination vci
+ *     24-31  reserved for transport (e.g. transport internal rndv id)
+ *
+ * The vci bits are needed once we enable multiple vcis for active messages.
  */
-typedef int (*MPIDIG_am_target_msg_cb) (int handler_id, void *am_hdr,
-                                        void *data, MPI_Aint data_sz,
-                                        int is_local, int is_async, MPIR_Request ** req);
+
+#define MPIDIG_AM_ATTR__IS_LOCAL  0x1   /* from shm transport */
+#define MPIDIG_AM_ATTR__IS_ASYNC  0x2   /* need request and will asynchronously finish the data copy */
+#define MPIDIG_AM_ATTR__IS_RNDV   0x4   /* rndv mode, call MPIDI_{NM,SHM}_am_get_data_copy_cb to setup callback */
+
+#define MPIDIG_AM_ATTR_SRC_VCI_SHIFT 8
+#define MPIDIG_AM_ATTR_DST_VCI_SHIFT 16
+#define MPIDIG_AM_ATTR_TRANSPORT_SHIFT 24
+
+#define MPIDIG_AM_ATTR_SRC_VCI(attr) ((attr >> MPIDIG_AM_ATTR_SRC_VCI_SHIFT) & 0xff)
+#define MPIDIG_AM_ATTR_DST_VCI(attr) ((attr >> MPIDIG_AM_ATTR_DST_VCI_SHIFT) & 0xff)
+#define MPIDIG_AM_ATTR_SET_VCIS(attr, src_vci, dst_vci) \
+    do { \
+        attr |= ((src_vci) << MPIDIG_AM_ATTR_SRC_VCI_SHIFT) | ((dst_vci) << MPIDIG_AM_ATTR_DST_VCI_SHIFT); \
+    } while (0)
+
+typedef int (*MPIDIG_am_target_msg_cb) (void *am_hdr, void *data, MPI_Aint data_sz,
+                                        uint32_t attr, MPIR_Request ** req);
+typedef int (*MPIDIG_am_rndv_cb) (MPIR_Request * rreq);
 
 typedef struct MPIDIG_global_t {
     MPIDIG_am_target_msg_cb target_msg_cbs[MPIDI_AM_HANDLERS_MAX];
     MPIDIG_am_origin_cb origin_cbs[MPIDI_AM_HANDLERS_MAX];
+    MPIDIG_am_rndv_cb rndv_cbs[MPIDI_AM_RNDV_CB_MAX];
     /* Control parameters for global progress of RMA target-side active messages.
      * TODO: performance loss need be studied since we add atomic operations
      * in RMA sync and callback routines.*/
@@ -96,6 +128,7 @@ extern MPIDIG_global_t MPIDIG_global;
 void MPIDIG_am_reg_cb(int handler_id,
                       MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
 int MPIDIG_am_reg_cb_dynamic(MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
+void MPIDIG_am_rndv_reg_cb(int rndv_id, MPIDIG_am_rndv_cb rndv_cb);
 
 int MPIDIG_am_init(void);
 void MPIDIG_am_finalize(void);

@@ -131,7 +131,7 @@ static int accpscw_test(int seed, int testsize, int count, const char *basic_typ
                 MPI_Win_wait(win);
                 /* This should have the same effect, in terms of
                  * transferring data, as a send/recv pair */
-                errs += MTest_dtp_check(&target, 0, 1, count, errs < 10);
+                errs += MTest_dtp_check(&target, 0, 1, count, &orig, errs < 10);
             } else {
                 /* Nothing; the other processes need not call any
                  * MPI routines */

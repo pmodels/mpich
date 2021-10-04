@@ -410,7 +410,7 @@ int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session * session)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    *session = MPL_malloc(sizeof(MPI_T_pvar_session), MPL_MEM_MPIT);
+    *session = MPL_malloc(sizeof(MPIR_T_pvar_session_t), MPL_MEM_MPIT);
     if (!*session) {
         *session = MPI_T_PVAR_SESSION_NULL;
         mpi_errno = MPI_T_ERR_OUT_OF_SESSIONS;

@@ -89,7 +89,7 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
     if (MPIDI_OFI_ENABLE_TAGGED) {
         hints->caps |= FI_TAGGED;       /* Tag matching interface  */
         hints->caps |= FI_DIRECTED_RECV;        /* Match source address    */
-        hints->domain_attr->cq_data_size = 4;   /* Minimum size for completion data entry */
+        hints->domain_attr->cq_data_size = MPIDI_OFI_MIN_CQ_DATA_SIZE;  /* Minimum size for completion data entry */
     }
 
     if (MPIDI_OFI_ENABLE_AM) {
@@ -109,6 +109,8 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
     /* endpoint type:  see FI_EP_RDM                                            */
     /* Filters applied (for this netmod, we need providers that can support):   */
     /* THREAD_DOMAIN:  Progress serialization is handled by netmod (locking)    */
+    /* or THREAD_COMPLETION: netmod serializes concurrent accesses to OFI       */
+    /*                 objects that share the same completion structure.        */
     /* PROGRESS_AUTO:  request providers that make progress without requiring   */
     /*                 the ADI to dedicate a thread to advance the state        */
     /* FI_DELIVERY_COMPLETE:  RMA operations are visible in remote memory       */
@@ -116,11 +118,20 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
     /* FI_EP_RDM:  Reliable datagram                                            */
     /* ------------------------------------------------------------------------ */
     hints->addr_format = FI_FORMAT_UNSPEC;
-    if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {
-        hints->domain_attr->threading = FI_THREAD_DOMAIN;
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE) || (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL || defined(MPIDI_OFI_VNI_USE_DOMAIN))
+    hints->domain_attr->threading = FI_THREAD_DOMAIN;
+#else
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
+            hints->domain_attr->threading = FI_THREAD_SAFE;
+        } else {
+            hints->domain_attr->threading = FI_THREAD_COMPLETION;
+        }
     } else {
-        hints->domain_attr->threading = FI_THREAD_SAFE;
+        hints->domain_attr->threading = FI_THREAD_DOMAIN;
     }
+#endif
+
     MPIDI_OFI_set_auto_progress(hints);
     hints->domain_attr->resource_mgmt = FI_RM_ENABLED;
     hints->domain_attr->av_type = MPIDI_OFI_ENABLE_AV_TABLE ? FI_AV_TABLE : FI_AV_MAP;
@@ -280,7 +291,8 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
      * queue object (at least 32 bits). Previously, this was a separate capability set,
      * but as more and more providers supported this feature, the decision was made to
      * require it. */
-    CHECK_CAP(enable_tagged, !(prov->caps & FI_TAGGED) || prov->domain_attr->cq_data_size < 4);
+    CHECK_CAP(enable_tagged, !(prov->caps & FI_TAGGED) ||
+              prov->domain_attr->cq_data_size < MPIDI_OFI_MIN_CQ_DATA_SIZE);
 
     CHECK_CAP(enable_am, (prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV));
 
@@ -327,10 +339,9 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
     UPDATE_SETTING_BY_INFO(enable_tagged,
                            (prov->caps & FI_TAGGED) &&
                            (prov->caps & FI_DIRECTED_RECV) &&
-                           (prov->domain_attr->cq_data_size >= 4));
+                           (prov->domain_attr->cq_data_size >= MPIDI_OFI_MIN_CQ_DATA_SIZE));
     UPDATE_SETTING_BY_INFO(enable_am,
-                           (prov->caps & (FI_MSG | FI_MULTI_RECV | FI_READ)) ==
-                           (FI_MSG | FI_MULTI_RECV | FI_READ));
+                           (prov->caps & (FI_MSG | FI_MULTI_RECV)) == (FI_MSG | FI_MULTI_RECV));
     UPDATE_SETTING_BY_INFO(enable_rma, prov->caps & FI_RMA);
     UPDATE_SETTING_BY_INFO(enable_atomics, prov->caps & FI_ATOMICS);
 #ifdef FI_HMEM

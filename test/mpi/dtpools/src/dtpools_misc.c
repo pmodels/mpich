@@ -214,6 +214,22 @@ unsigned int DTPI_high_count(unsigned int count)
     return count / DTPI_low_count(count);
 }
 
+void DTPI_rand_init(DTPI_pool_s * dtpi, int seed, int rand_count)
+{
+    dtpi->seed = seed;
+    dtpi->rand_count = rand_count;
+    dtpi->rand_idx = 0;
+
+    srand(dtpi->seed);
+    for (int i = 0; i < dtpi->rand_count; i++)
+        rand();
+
+    for (int i = 0; i < DTPI_RAND_LIST_SIZE; i++) {
+        dtpi->rand_count++;
+        dtpi->rand_list[i] = rand();
+    }
+}
+
 int DTPI_rand(DTPI_pool_s * dtpi)
 {
     int ret;
@@ -225,15 +241,6 @@ int DTPI_rand(DTPI_pool_s * dtpi)
 
     if (dtpi->rand_idx == DTPI_RAND_LIST_SIZE) {
         dtpi->rand_idx = 0;
-
-        srand(dtpi->seed);
-        for (int i = 0; i < dtpi->rand_count; i++)
-            rand();
-
-        for (int i = 0; i < DTPI_RAND_LIST_SIZE; i++) {
-            dtpi->rand_count++;
-            dtpi->rand_list[i] = rand();
-        }
     }
 
     ret = dtpi->rand_list[dtpi->rand_idx];

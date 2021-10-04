@@ -35,10 +35,11 @@ int main(int argc, char **argv)
 #if MPI_VERSION >= 4
     MPI_Comm dup2;
     MPI_Comm_dup(dup, &dup2);
-    MPI_Comm_get_info(dup, &info_out);
+    MPI_Comm_get_info(dup2, &info_out);
     MPI_Info_get(info_out, "mpi_assert_no_any_tag", MPI_MAX_INFO_VAL, val, &flag);
-    if (flag) {
-        fprintf(stderr, "Hint was set, when not expected\n");
+    if (flag && strcmp(val, "true") == 0) {
+        fprintf(stderr,
+                "Hint (mpi_assert_no_any_tag) was not expected to be copied from original communicator\n");
         errs++;
     }
     MPI_Comm_free(&dup2);

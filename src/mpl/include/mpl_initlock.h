@@ -25,7 +25,7 @@
 
 static inline void MPL_initlock_lock(MPL_initlock_t * lock)
 {
-    int ret = pthread_mutex_lock(lock);
+    int ret ATTRIBUTE((unused)) = pthread_mutex_lock(lock);
     assert(ret == 0);
 }
 
@@ -37,7 +37,7 @@ static inline int MPL_initlock_trylock(MPL_initlock_t * lock)
 
 static inline void MPL_initlock_unlock(MPL_initlock_t * lock)
 {
-    int ret = pthread_mutex_unlock(lock);
+    int ret ATTRIBUTE((unused)) = pthread_mutex_unlock(lock);
     assert(ret == 0);
 }
 

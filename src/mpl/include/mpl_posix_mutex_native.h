@@ -21,7 +21,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
 
 /* FIXME: using constant initializer if available */
 
-/* FIXME: convert errors to an MPL_THREAD_ERR value */
+/* FIXME: convert errors to an MPL_ERR_THREAD value */
 
 #if !defined(MPL_PTHREAD_MUTEX_ERRORCHECK_VALUE)
 

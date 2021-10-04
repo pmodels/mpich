@@ -12,8 +12,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_part_start(MPIR_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PART_STARTALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PART_STARTALL);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_part_start(request);
@@ -29,7 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_part_start(MPIR_Request * request)
     MPIR_Part_request_activate(request);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PART_STARTALL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -40,8 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Pready_range(int partition_low, int partition_
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PREADY_RANGE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PREADY_RANGE);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_pready_range(partition_low, partition_high, request);
@@ -55,7 +53,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Pready_range(int partition_low, int partition_
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PREADY_RANGE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -66,8 +64,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Pready_list(int length, int array_of_partition
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PREADY_LIST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PREADY_LIST);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_pready_list(length, array_of_partitions, request);
@@ -81,7 +78,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Pready_list(int length, int array_of_partition
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PREADY_LIST);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -91,8 +88,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Parrived(MPIR_Request * request, int partition
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ARRIVED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ARRIVED);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_parrived(request, partition, flag);
@@ -106,7 +102,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Parrived(MPIR_Request * request, int partition
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ARRIVED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

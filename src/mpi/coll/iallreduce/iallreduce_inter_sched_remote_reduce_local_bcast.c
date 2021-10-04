@@ -35,7 +35,7 @@ int MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast(const void *sendbuf, v
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno =
-            MPIR_Ireduce_sched_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+            MPIR_Ireduce_inter_sched_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* no barrier, these reductions can be concurrent */
@@ -43,13 +43,13 @@ int MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast(const void *sendbuf, v
         /* reduce to rank 0 of right group */
         root = 0;
         mpi_errno =
-            MPIR_Ireduce_sched_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+            MPIR_Ireduce_inter_sched_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* reduce to rank 0 of left group */
         root = 0;
         mpi_errno =
-            MPIR_Ireduce_sched_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+            MPIR_Ireduce_inter_sched_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* no barrier, these reductions can be concurrent */
@@ -57,7 +57,7 @@ int MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast(const void *sendbuf, v
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno =
-            MPIR_Ireduce_sched_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+            MPIR_Ireduce_inter_sched_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -72,7 +72,7 @@ int MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast(const void *sendbuf, v
     }
     lcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Ibcast_sched_auto(recvbuf, count, datatype, 0, lcomm_ptr, s);
+    mpi_errno = MPIR_Ibcast_intra_sched_auto(recvbuf, count, datatype, 0, lcomm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

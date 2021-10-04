@@ -13,8 +13,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_part_start(MPIR_Request * request);
 MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_start(MPIR_Request * preq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PREQUEST_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PREQUEST_START);
+    MPIR_FUNC_ENTER;
 
     MPIR_Comm *comm = preq->comm;
     switch (MPIDI_PREQUEST(preq, p_type)) {
@@ -104,7 +103,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_start(MPIR_Request * preq)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PREQUEST_START);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -112,8 +111,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
 {
     int mpi_errno = MPI_SUCCESS, i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_STARTALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_STARTALL);
+    MPIR_FUNC_ENTER;
 
     for (i = 0; i < count; i++) {
         MPIR_Request *const preq = requests[i];
@@ -145,7 +143,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_STARTALL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

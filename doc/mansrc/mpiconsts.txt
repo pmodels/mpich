@@ -428,8 +428,10 @@ Special value for error codes array:
 . MPI_Copy_function - Function to copy attributes (see 'MPI_Keyval_create')
 . MPI_Delete_function - Function to delete attributes (see 'MPI_Keyval_create')
 . MPI_ERRORS_ARE_FATAL - Error handler that forces exit on error
-- MPI_ERRORS_RETURN - Error handler that returns error codes (as value of
+. MPI_ERRORS_RETURN - Error handler that returns error codes (as value of
  MPI routine in C and through last argument in Fortran)
+- MPI_ERRORS_ABORT - Error handler that forces exit on error (only aborts local
+ process if the error handler is invoked on a session)
 
  MPI Attribute Default Functions:
 +I MPI_COMM_NULL_COPY_FN - Predefined attribute copy function for communicators

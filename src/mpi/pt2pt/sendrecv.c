@@ -5,9 +5,9 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Sendrecv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Sendrecv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                        int dest, int sendtag,
-                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                       void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                        int source, int recvtag, MPIR_Comm * comm_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -89,8 +89,9 @@ int MPIR_Sendrecv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     goto fn_exit;
 }
 
-int MPIR_Sendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag,
-                               int source, int recvtag, MPIR_Comm * comm_ptr, MPI_Status * status)
+int MPIR_Sendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+                               int sendtag, int source, int recvtag, MPIR_Comm * comm_ptr,
+                               MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -101,8 +102,7 @@ int MPIR_Sendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int 
     MPI_Aint actual_pack_bytes = 0;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SENDRECV_REPLACE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SENDRECV_REPLACE);
+    MPIR_FUNC_ENTER;
 
     if (count > 0 && dest != MPI_PROC_NULL) {
         MPIR_Pack_size(count, datatype, &tmpbuf_size);
@@ -168,15 +168,15 @@ int MPIR_Sendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int 
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SENDRECV_REPLACE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-int MPIR_Isendrecv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Isendrecv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                         int dest, int sendtag,
-                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                        void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                         int source, int recvtag, MPIR_Comm * comm_ptr, MPIR_Request ** p_req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -205,8 +205,8 @@ int MPIR_Isendrecv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
     mpi_errno = MPIR_Sched_pt2pt_recv(recvbuf, recvcount, recvtype, recvtag, source, comm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* note: we are not using collective tag, so passing in 0 as a dummy */
-    mpi_errno = MPIR_Sched_start(s, comm_ptr, 0, p_req);
+    /* note: we are not using collective tag */
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, p_req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -221,8 +221,8 @@ static int release_temp_buffer(MPIR_Comm * comm_ptr, int tag, void *state)
     return MPI_SUCCESS;
 }
 
-int MPIR_Isendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag,
-                                int source, int recvtag, MPIR_Comm * comm_ptr,
+int MPIR_Isendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+                                int sendtag, int source, int recvtag, MPIR_Comm * comm_ptr,
                                 MPIR_Request ** p_req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -260,10 +260,6 @@ int MPIR_Isendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int
     }
 
     MPIR_Sched_t s = MPIR_SCHED_NULL;
-    int sched_tag;
-
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &sched_tag);
-    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);
     MPIR_ERR_CHECK(mpi_errno);
@@ -278,7 +274,8 @@ int MPIR_Isendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int
     mpi_errno = MPIR_Sched_cb(&release_temp_buffer, tmpbuf, s);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(s, comm_ptr, sched_tag, p_req);
+    /* note: we are not using collective tag */
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, p_req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

@@ -20,7 +20,7 @@ typedef struct Finalize_func_t {
 } Finalize_func_t;
 /* When full debugging is enabled, each MPI handle type has a finalize handler
    installed to detect unfreed handles.  */
-#define MAX_FINALIZE_FUNC 64
+#define MAX_FINALIZE_FUNC 256
 static MPL_initlock_t fstack_lock = MPL_INITLOCK_INITIALIZER;
 static Finalize_func_t fstack[MAX_FINALIZE_FUNC];
 static int fstack_sp = 0;
@@ -67,4 +67,13 @@ void MPII_Call_finalize_callbacks(int min_prio, int max_prio)
             }
         }
     }
+}
+
+void MPII_dump_debug_summary(void)
+{
+    printf("==== data structure summary ====\n");
+    printf("sizeof(MPIR_Comm): %ld\n", sizeof(MPIR_Comm));
+    printf("sizeof(MPIR_Request): %ld\n", sizeof(MPIR_Request));
+    printf("sizeof(MPIR_Datatype): %ld\n", sizeof(MPIR_Datatype));
+    printf("================================\n");
 }

@@ -178,14 +178,14 @@ static int run_test(MPI_Comm comm, MPI_Win win, int count, enum acc_type acc)
             /* this check is not valid for multi-origin tests, as some
              * origins might receive the value that has already been
              * overwritten by other origins */
-            errs += MTest_dtp_check(&result, 1, 2, count, errs < 10);
+            errs += MTest_dtp_check(&result, 1, 2, count, &orig, errs < 10);
 #endif
         }
     } else if (rank == target_rank) {
         MPI_Barrier(comm);
         MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
 
-        errs += MTest_dtp_check(&target, 0, 1, count, errs < 10);
+        errs += MTest_dtp_check(&target, 0, 1, count, &orig, errs < 10);
         MTest_dtp_init(&target, 1, 2, count);
 
         MPI_Win_unlock(rank, win);

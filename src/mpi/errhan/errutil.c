@@ -245,9 +245,11 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
                      comm_ptr, fcname, errcode));
 
     if (comm_ptr) {
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+        MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+        MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
         errhandler = comm_ptr->errhandler;
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+        MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+        MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
     }
 
     if (errhandler == NULL) {
@@ -272,12 +274,15 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
     /* comm_ptr may have changed to comm_world.  Keep this locked as long as we
      * are using the errhandler to prevent it from disappearing out from under
      * us. */
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
     errhandler = comm_ptr->errhandler;
 
     /* --BEGIN ERROR HANDLING-- */
-    if (errhandler == NULL || errhandler->handle == MPI_ERRORS_ARE_FATAL) {
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    if (errhandler == NULL || errhandler->handle == MPI_ERRORS_ARE_FATAL ||
+        errhandler->handle == MPI_ERRORS_ABORT) {
+        MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+        MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
         /* Calls MPID_Abort */
         MPIR_Handle_fatal_error(comm_ptr, fcname, errcode);
         /* never get here */
@@ -324,7 +329,8 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
 
     }
 
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
     return errcode;
 }
 
@@ -350,7 +356,8 @@ int MPIR_Err_return_win(MPIR_Win * win_ptr, const char fcname[], int errcode)
     /* --BEGIN ERROR HANDLING-- */
     if (MPIR_Err_is_fatal(errcode) ||
         win_ptr == NULL || win_ptr->errhandler == NULL ||
-        win_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL) {
+        win_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL ||
+        win_ptr->errhandler->handle == MPI_ERRORS_ABORT) {
         /* Calls MPID_Abort */
         MPIR_Handle_fatal_error(NULL, fcname, errcode);
     }

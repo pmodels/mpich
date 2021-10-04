@@ -17,7 +17,7 @@ AC_MSG_NOTICE([RUNNING PREREQ FOR CH4 DEVICE])
 m4_define([libfabric_embedded_dir],[modules/libfabric])
 m4_define([ucx_embedded_dir],[modules/ucx])
 PAC_PROBE_HEADER_LIB(libfabric,[rdma/fabric.h], [fabric], [fi_getinfo])
-PAC_PROBE_HEADER_LIB(ucx,[ucp/api/ucp.h], [ucp], [ucp_config_read])
+PAC_PROBE_HEADER_LIB(ucx,[ucp/api/ucp.h], [ucp], [ucp_config_read], [-lucs -lucm -luct])
 
 # the CH4 device depends on the common NBC scheduler code
 build_mpid_common_sched=yes
@@ -196,6 +196,12 @@ MPIDI_${net_upper}_win_t ${net};"
         ch4_netmod_addr_decl="${ch4_netmod_addr_decl} \\
 MPIDI_${net_upper}_addr_t ${net};"
     fi
+    if test -z "$ch4_netmod_part_decl" ; then
+        ch4_netmod_part_decl="MPIDI_${net_upper}_part_t ${net};"
+    else
+        ch4_netmod_part_decl="${ch4_netmod_part_decl} \\
+MPIDI_${net_upper}_part_t ${net};"
+    fi
 
 
 
@@ -223,6 +229,7 @@ AC_SUBST(ch4_netmod_dt_decl)
 AC_SUBST(ch4_netmod_win_decl)
 AC_SUBST(ch4_netmod_addr_decl)
 AC_SUBST(ch4_netmod_op_decl)
+AC_SUBST(ch4_netmod_part_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_pre_include)
 AM_SUBST_NOTMAKE(ch4_netmod_coll_globals_default)
 AM_SUBST_NOTMAKE(ch4_netmod_coll_params_include)
@@ -233,6 +240,7 @@ AM_SUBST_NOTMAKE(ch4_netmod_dt_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_win_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_addr_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_op_decl)
+AM_SUBST_NOTMAKE(ch4_netmod_part_decl)
 
 AC_ARG_ENABLE(ch4-netmod-inline,
     [--enable-ch4-netmod-inline

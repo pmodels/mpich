@@ -11,7 +11,7 @@ static_subdirs = mpi_t comm
 # For future tests - note that the IO and RMA directories are optional,
 # and need to be handled as shown in this comment
 #SUBDIRS      = $(static_subdirs) $(iodir) $(rmadir)
-SUBDIRS      = $(static_subdirs)
+SUBDIRS      = $(static_subdirs) $(threadsdir)
 # For future tests, as noted above
 #DIST_SUBDIRS = $(static_subdirs) io rma
 DIST_SUBDIRS = $(static_subdirs)

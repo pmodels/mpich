@@ -33,7 +33,6 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPI_Datatype newtype;
     int *displs;
     MPIR_CHKLMEM_DECL(1);       /* displs */
-    MPIR_SCHED_CHKPMEM_DECL(2); /* tmp_buf (2x) */
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(sendbuf != MPI_IN_PLACE);       /* we do not handle in-place */
@@ -49,7 +48,8 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
     /* allocate temporary buffer */
     /* must be same size as entire recvbuf for Phase 3 */
     nbytes = recvtype_sz * recvcount * comm_size;
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+    tmp_buf = MPIR_Sched_alloc_state(s, nbytes);
+    MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     /* Do Phase 1 of the algorithim. Shift the data blocks on process i
      * upwards by a distance of i blocks. Store the result in recvbuf. */
@@ -142,11 +142,9 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

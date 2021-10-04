@@ -3,6 +3,10 @@
 ----------------------------------------------------------------------
 
 ### CH4
+ * Embedded modules
+   - The release is thoroughly tested with embedded libfabric and ucx.
+     Using externally installed libfabric or ucx is likely to succeed
+     but less tested.
 
  * Build Issues
    - Embedded ucx or libfabric builds will not succeed with Solaris
@@ -13,7 +17,7 @@
    - Not supported in UCX netmod at this time
 
  * Test failures
-   - CH4 will not currently pass 100% of the testsuite.
+   - test/mpi/errors/coll does not 100% pass.
    - Test failures differ based on experimental setup and network
      support built in.
 
@@ -35,6 +39,8 @@
    --disable-error-checking flag is passed to configure.
 
 ### Fine-grained thread safety
+
+ * Multiple VCIs (--enable-thread-cs=per-vci) is only supported in ch4.
 
  * ch3:sock does not (and will not) support fine-grained threading.
 

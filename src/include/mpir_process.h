@@ -19,8 +19,9 @@ typedef struct PreDefined_attrs {
 
 struct MPIR_Session {
     MPIR_OBJECT_HEADER;
+    MPID_Thread_mutex_t mutex;
+    MPIR_Errhandler *errhandler;
     int thread_level;
-    void *dummy;                /* hack to insure pointer alignment (for MPIR_Handle_common access) */
 };
 
 extern MPIR_Session MPIR_Session_direct[];

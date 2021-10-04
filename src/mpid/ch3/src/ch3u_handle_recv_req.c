@@ -11,9 +11,8 @@ int MPIDI_CH3U_Handle_recv_req(MPIDI_VC_t * vc, MPIR_Request * rreq, int *comple
     static int in_routine ATTRIBUTE((unused)) = FALSE;
     int mpi_errno = MPI_SUCCESS;
     int (*reqFn) (MPIDI_VC_t *, MPIR_Request *, int *);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_HANDLE_RECV_REQ);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_HANDLE_RECV_REQ);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(in_routine == FALSE);
     in_routine = TRUE;
@@ -32,7 +31,7 @@ int MPIDI_CH3U_Handle_recv_req(MPIDI_VC_t * vc, MPIR_Request * rreq, int *comple
     in_routine = FALSE;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_HANDLE_RECV_REQ);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -80,9 +79,8 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     MPIR_Win *win_ptr;
     MPI_Win source_win_handle = rreq->dev.source_win_handle;
     int pkt_flags = rreq->dev.pkt_flags;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTRECVCOMPLETE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTRECVCOMPLETE);
+    MPIR_FUNC_ENTER;
 
     /* NOTE: It is possible that this request is already completed before
      * entering this handler. This happens when this req handler is called
@@ -119,7 +117,7 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     *complete = TRUE;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTRECVCOMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
@@ -138,9 +136,8 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq,
     MPI_Datatype basic_type;
     MPI_Aint predef_count, predef_dtp_size;
     MPI_Aint stream_offset;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRECVCOMPLETE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRECVCOMPLETE);
+    MPIR_FUNC_ENTER;
 
     /* NOTE: It is possible that this request is already completed before
      * entering this handler. This happens when this req handler is called
@@ -211,7 +208,7 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq,
     *complete = TRUE;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRECVCOMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
@@ -239,9 +236,8 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     MPI_Aint extent, type_size;
     MPI_Aint stream_data_len, total_len;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMRECVCOMPLETE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMRECVCOMPLETE);
+    MPIR_FUNC_ENTER;
 
     /* Judge if origin buffer is empty */
     if (rreq->dev.op == MPI_NO_OP) {
@@ -368,7 +364,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     *complete = TRUE;
   fn_exit:
     MPIR_CHKPMEM_COMMIT();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMRECVCOMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
@@ -392,9 +388,8 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     int is_contig;
     int is_empty_origin = FALSE;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPRECVCOMPLETE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPRECVCOMPLETE);
+    MPIR_FUNC_ENTER;
 
     /* Judge if origin buffer is empty */
     if (rreq->dev.op == MPI_NO_OP) {
@@ -492,7 +487,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
 
   fn_exit:
     MPIR_CHKPMEM_COMMIT();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPRECVCOMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -507,9 +502,8 @@ int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unu
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype*new_dtp = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTDERIVEDDTRECVCOMPLETE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTDERIVEDDTRECVCOMPLETE);
+    MPIR_FUNC_ENTER;
 
     /* get data from extended header */
     new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
@@ -540,7 +534,7 @@ int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unu
 
     *complete = FALSE;
   fn_fail:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTDERIVEDDTRECVCOMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -554,9 +548,8 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
     MPI_Aint stream_offset;
     MPI_Aint type_size;
     MPI_Datatype basic_dtp;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMMETADATARECVCOMPLETE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMMETADATARECVCOMPLETE);
+    MPIR_FUNC_ENTER;
 
     stream_offset = 0;
 
@@ -637,7 +630,7 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
 
     *complete = FALSE;
   fn_fail:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMMETADATARECVCOMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -653,9 +646,8 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
     MPI_Aint type_size;
     MPI_Datatype basic_dtp;
     int is_empty_origin = FALSE;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMMETADATARECVCOMPLETE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMMETADATARECVCOMPLETE);
+    MPIR_FUNC_ENTER;
 
     /* Judge if origin buffer is empty */
     if (rreq->dev.op == MPI_NO_OP) {
@@ -751,7 +743,7 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
     }
 
   fn_fail:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMMETADATARECVCOMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -766,9 +758,8 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
     MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt = &upkt.get_resp;
     MPIR_Request *sreq;
     MPIR_Win *win_ptr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GETDERIVEDDTRECVCOMPLETE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GETDERIVEDDTRECVCOMPLETE);
+    MPIR_FUNC_ENTER;
 
     MPIR_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
@@ -834,7 +825,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
     *complete = TRUE;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_GETDERIVEDDTRECVCOMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -846,9 +837,8 @@ int MPIDI_CH3_ReqHandler_UnpackUEBufComplete(MPIDI_VC_t * vc ATTRIBUTE((unused))
 {
     int recv_pending;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKUEBUFCOMPLETE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKUEBUFCOMPLETE);
+    MPIR_FUNC_ENTER;
 
     MPIDI_Request_decr_pending(rreq);
     MPIDI_Request_check_pending(rreq, &recv_pending);
@@ -870,7 +860,7 @@ int MPIDI_CH3_ReqHandler_UnpackUEBufComplete(MPIDI_VC_t * vc ATTRIBUTE((unused))
     *complete = TRUE;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKUEBUFCOMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -879,9 +869,8 @@ int MPIDI_CH3_ReqHandler_UnpackUEBufComplete(MPIDI_VC_t * vc ATTRIBUTE((unused))
 int MPIDI_CH3_ReqHandler_UnpackSRBufComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKSRBUFCOMPLETE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKSRBUFCOMPLETE);
+    MPIR_FUNC_ENTER;
 
     MPIDI_CH3U_Request_unpack_srbuf(rreq);
 
@@ -906,7 +895,7 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufComplete(MPIDI_VC_t * vc, MPIR_Request * rre
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKSRBUFCOMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -916,9 +905,8 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)
                                               MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKSRBUFRELOADIOV);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKSRBUFRELOADIOV);
+    MPIR_FUNC_ENTER;
 
     MPIDI_CH3U_Request_unpack_srbuf(rreq);
     mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
@@ -927,7 +915,7 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)
     }
     *complete = FALSE;
   fn_fail:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKSRBUFRELOADIOV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -935,9 +923,8 @@ int MPIDI_CH3_ReqHandler_ReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                    MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_RELOADIOV);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_RELOADIOV);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
     if (mpi_errno != MPI_SUCCESS) {
@@ -945,7 +932,7 @@ int MPIDI_CH3_ReqHandler_ReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     }
     *complete = FALSE;
   fn_fail:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_RELOADIOV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -1678,9 +1665,8 @@ int MPIDI_CH3I_Release_lock(MPIR_Win * win_ptr)
 {
     MPIDI_RMA_Target_lock_entry_t *target_lock_entry, *target_lock_entry_next;
     int requested_lock, mpi_errno = MPI_SUCCESS, temp_entered_count;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_RELEASE_LOCK);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_RELEASE_LOCK);
+    MPIR_FUNC_ENTER;
 
     if (win_ptr->current_lock_type == MPI_LOCK_SHARED) {
         /* decr ref cnt */
@@ -1761,7 +1747,7 @@ int MPIDI_CH3I_Release_lock(MPIR_Win * win_ptr)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_RELEASE_LOCK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1778,9 +1764,8 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete(MPIDI_VC_t * vc,
     int pkt_flags;
     MPIDI_RMA_Target_lock_entry_t *target_lock_queue_entry = rreq->dev.target_lock_queue_entry;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_PIGGYBACKLOCKOPRECVCOMPLETE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_PIGGYBACKLOCKOPRECVCOMPLETE);
+    MPIR_FUNC_ENTER;
 
     /* This handler is triggered when we received all data of a lock queue
      * entry */
@@ -1847,7 +1832,7 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete(MPIDI_VC_t * vc,
     *complete = TRUE;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_PIGGYBACKLOCKOPRECVCOMPLETE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

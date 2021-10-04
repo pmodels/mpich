@@ -6,6 +6,33 @@
 #ifndef MPIR_GPU_UTIL_H_INCLUDED
 #define MPIR_GPU_UTIL_H_INCLUDED
 
+/* A helper function for allocating temporary buffer */
+MPL_STATIC_INLINE_PREFIX void *MPIR_alloc_buffer(MPI_Aint count, MPI_Datatype datatype)
+{
+    MPI_Aint extent, true_lb, true_extent;
+    MPIR_Datatype_get_extent_macro(datatype, extent);
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+
+    MPI_Aint shift = true_lb;
+    MPI_Aint size = true_extent;
+    if (count > 1) {
+        if (extent >= 0) {
+            size += extent * (count - 1);
+        } else {
+            MPI_Aint size_before = (-extent) * (count - 1);
+            /* extra counts are being packed *before*, so need *increase* the size */
+            size += size_before;
+            /* the allocated pointer will be *already* shifted by this amount */
+            shift -= size_before;
+        }
+    }
+    void *host_buf = MPL_malloc(size, MPL_MEM_OTHER);
+    MPIR_Assert(host_buf);
+
+    host_buf = (char *) host_buf - shift;
+    return host_buf;
+}
+
 /* If buf is device memory, allocate a host buffer that can hold the data,
  * return the host buffer, or NULL if buf is not device memory */
 MPL_STATIC_INLINE_PREFIX void *MPIR_gpu_host_alloc(const void *buf,
@@ -17,28 +44,7 @@ MPL_STATIC_INLINE_PREFIX void *MPIR_gpu_host_alloc(const void *buf,
     if (attr.type != MPL_GPU_POINTER_DEV) {
         return NULL;
     } else {
-        MPI_Aint extent, true_lb, true_extent;
-        MPIR_Datatype_get_extent_macro(datatype, extent);
-        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-
-        MPI_Aint shift = true_lb;
-        MPI_Aint size = true_extent;
-        if (count > 1) {
-            if (extent >= 0) {
-                size += extent * (count - 1);
-            } else {
-                MPI_Aint size_before = (-extent) * (count - 1);
-                /* extra counts are being packed *before*, so need *increase* the size */
-                size += size_before;
-                /* the allocated pointer will be *already* shifted by this amount */
-                shift -= size_before;
-            }
-        }
-        void *host_buf = MPL_malloc(size, MPL_MEM_OTHER);
-        MPIR_Assert(host_buf);
-
-        host_buf = (char *) host_buf - shift;
-        return host_buf;
+        return MPIR_alloc_buffer(count, datatype);
     }
 }
 

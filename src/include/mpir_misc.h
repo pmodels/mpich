@@ -56,6 +56,8 @@ extern const char MPII_Version_F77[] MPICH_API_PUBLIC;
 extern const char MPII_Version_FC[] MPICH_API_PUBLIC;
 extern const char MPII_Version_custom[] MPICH_API_PUBLIC;
 
+extern MPL_initlock_t MPIR_init_lock;
+
 #include "typerep_pre.h"        /* needed for MPIR_Typerep_req */
 
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,

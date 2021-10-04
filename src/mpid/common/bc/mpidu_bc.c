@@ -132,10 +132,8 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     int mpi_errno = MPI_SUCCESS;
 
     /* FIXME: rank, size, nodemap parameters are not needed */
-    int my_rank = MPIR_Process.rank;
-    int my_size = MPIR_Process.size;
-    MPIR_Assert(my_rank == rank);
-    MPIR_Assert(my_size == size);
+    MPIR_Assert(MPIR_Process.rank == rank);
+    MPIR_Assert(MPIR_Process.size == size);
 
     int recv_bc_len = bc_len;
     if (!same_len) {

@@ -17,15 +17,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ISEND);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_IPC_mpi_isend(buf, count, datatype, rank, tag, comm,
                                     context_offset, addr, request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ISEND);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -39,14 +38,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_isend_coll(const void *buf, MPI_Aint coun
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_ISEND_COLL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_ISEND_COLL);
+    MPIR_FUNC_ENTER;
 
     ret =
         MPIDI_POSIX_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                request, errflag);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_ISEND_COLL);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -57,14 +55,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_issend(const void *buf, MPI_Aint coun
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_ISSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ISSEND);
+    MPIR_FUNC_ENTER;
 
     ret =
         MPIDI_POSIX_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                request);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ISSEND);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -72,12 +69,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_send(MPIR_Request * sreq)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_CANCEL_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_CANCEL_SEND);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_cancel_send(sreq);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_CANCEL_SEND);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -86,14 +82,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_
                                                  int context_offset, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IRECV);
+    MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDI_IPC_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+    mpi_errno =
+        MPIDI_POSIX_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IRECV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -104,14 +100,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
+    MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDI_IPC_mpi_imrecv(buf, count, datatype, message);
+    mpi_errno = MPIDI_POSIX_mpi_imrecv(buf, count, datatype, message);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -121,12 +116,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_CANCEL_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_CANCEL_RECV);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_cancel_recv(rreq);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_CANCEL_RECV);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -136,12 +130,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_improbe(int source, int tag, MPIR_Com
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IMPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IMPROBE);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IMPROBE);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
@@ -151,12 +144,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iprobe(int source, int tag, MPIR_Comm
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IPROBE);
+    MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_iprobe(source, tag, comm, context_offset, flag, status);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IPROBE);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 

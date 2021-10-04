@@ -61,7 +61,7 @@ static HYD_status list_to_nodes(char *str)
     regmatch_t rmatch[MAX_RMATCH];
     regmatch_t ematch[MAX_EMATCH];
     char hostname[MAX_HOSTNAME_LEN];
-    char base_str[MAX_HOSTNAME_LEN];
+    char base_str[MAX_HOSTNAME_LEN - MAX_NNODES_STRLEN];
     char rbegin[MAX_NNODES_STRLEN];
     char rend[MAX_NNODES_STRLEN];
     char *gpattern[2];
@@ -143,7 +143,7 @@ static HYD_status list_to_nodes(char *str)
 
             if (regexec(&rmatch_old, rpattern, MAX_RMATCH, rmatch, 0) == 0) {
                 /* matched range: (h)(00)-(h)(12) */
-                MPL_snprintf_nowarn(base_str, MAX_HOSTNAME_LEN, "%.*s",
+                MPL_snprintf_nowarn(base_str, MAX_HOSTNAME_LEN - MAX_NNODES_STRLEN, "%.*s",
                                     (int) (rmatch[1].rm_eo - rmatch[1].rm_so),
                                     rpattern + rmatch[1].rm_so);
                 MPL_snprintf_nowarn(rbegin, MAX_NNODES_STRLEN, "%.*s",
@@ -189,7 +189,7 @@ static HYD_status list_to_nodes(char *str)
         *(gpattern[0] + gmatch[0][0].rm_eo) = 0;
 
         /* extranct base_str from atom 2 in group-0 */
-        MPL_snprintf_nowarn(base_str, MAX_HOSTNAME_LEN, "%.*s",
+        MPL_snprintf_nowarn(base_str, MAX_HOSTNAME_LEN - MAX_NNODES_STRLEN, "%.*s",
                             (int) (gmatch[0][2].rm_eo - gmatch[0][2].rm_so),
                             gpattern[0] + gmatch[0][2].rm_so);
 

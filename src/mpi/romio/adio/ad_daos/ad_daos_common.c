@@ -4,8 +4,11 @@
  */
 
 #include "ad_daos.h"
+#include <gurt/common.h>
 #include <daos_errno.h>
 
+bool adio_daos_bypass_duns;
+const char *adio_daos_path_prefix = NULL;
 int ADIOI_DAOS_Initialized = MPI_KEYVAL_INVALID;
 
 static int ad_daos_end(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
@@ -49,6 +52,9 @@ void ADIOI_DAOS_Init(int *error_code)
         fprintf(stderr, "Failed to init daos handle hash table\n");
         return;
     }
+
+    d_getenv_bool("DAOS_BYPASS_DUNS", &adio_daos_bypass_duns);
+    adio_daos_path_prefix = getenv("DAOS_UNS_PREFIX");
 
     /** attach to comm_self destroy to finalize DAOS */
     MPI_Keyval_create(MPI_NULL_COPY_FN, ad_daos_end, &ADIOI_DAOS_Initialized, (void *) 0);

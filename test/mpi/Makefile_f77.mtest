@@ -11,7 +11,7 @@
 
 # these CPPFLAGS are only used when building C/C++ source files, not for actual
 # F77 code itself
-AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include @cuda_CPPFLAGS@ @ze_CPPFLAGS@
+AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include @cuda_CPPFLAGS@ @ze_CPPFLAGS@ @hip_CPPFLAGS@
 
 # This is right for many platforms, but not all.  The right fix involves a
 # configure test, but this version is no worse than the simplemake version was.

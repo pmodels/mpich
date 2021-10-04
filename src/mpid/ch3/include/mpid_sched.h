@@ -10,6 +10,7 @@
 #define MPIR_Sched_cb MPIDU_Sched_cb
 #define MPIR_Sched_cb2 MPIDU_Sched_cb2
 #define MPIR_Sched_next_tag  MPIDU_Sched_next_tag
+#define MPIR_Sched_set_tag  MPIDU_Sched_set_tag
 #define MPIR_Sched_create MPIDU_Sched_create
 #define MPIR_Sched_clone MPIDU_Sched_clone
 #define MPIR_Sched_free MPIDU_Sched_free

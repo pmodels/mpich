@@ -41,6 +41,12 @@ int MPII_Ibcast_sched_test_curr_length(MPIR_Comm * comm, int tag, void *state)
     return mpi_errno;
 }
 
+int MPII_Ibcast_sched_init_length(MPIR_Comm * comm, int tag, void *state)
+{
+    struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
+    ibcast_state->curr_bytes = ibcast_state->initial_bytes;
+    return MPI_SUCCESS;
+}
 
 int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state)
 {

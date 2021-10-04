@@ -58,17 +58,42 @@ AC_DEFUN([PAC_PREFIX_ALL_FLAGS],[
 	PAC_PREFIX_FLAG($1, EXTRA_LIBS)
 ])
 
+AC_DEFUN([PAC_CHECK_FGREP_WORD],[
+    AC_PROG_FGREP
+    AC_MSG_CHECKING([if fgrep support -w option])
+    if echo 'ab*c' | $FGREP -w -e 'ab*c' >/dev/null 2>&1 ; then
+        pac_has_fgrep_word="yes"
+        AC_MSG_RESULT([$pac_has_fgrep_word])
+    else
+        pac_has_fgrep_word="no"
+        AC_MSG_RESULT([$pac_has_fgrep_word])
+        AC_MSG_WARN([fgrep does not support -w option, skip flag deduplication])
+    fi
+])
+AC_DEFUN([PAC_FGREP_WORD],[
+	AC_REQUIRE([PAC_CHECK_FGREP_WORD])
+        if test x$pac_has_fgrep_word = "xyes"; then
+            AS_IF(
+                    [echo "$$2" | $FGREP -w -e "$1" >/dev/null 2>&1],
+                    [$3],
+                    [$4]
+            )
+        else
+            $4
+        fi
+])
+
 dnl Usage: PAC_APPEND_FLAG([-02], [CFLAGS])
 dnl appends the given argument to the specified shell variable unless the
 dnl argument is already present in the variable
 AC_DEFUN([PAC_APPEND_FLAG],[
-	AC_REQUIRE([AC_PROG_FGREP])
-	AS_IF(
-		[echo "$$2" | $FGREP -e "\<$1\>" >/dev/null 2>&1],
-		[echo "$2(='$$2') contains '$1', not appending" >&AS_MESSAGE_LOG_FD],
-		[echo "$2(='$$2') does not contain '$1', appending" >&AS_MESSAGE_LOG_FD
-		$2="$$2 $1"]
-	)
+    PAC_FGREP_WORD(
+        [$1],
+        [$2],
+        [echo "$2(='$$2') contains '$1', not appending" >&AS_MESSAGE_LOG_FD],
+        [echo "$2(='$$2') does not contain '$1', appending" >&AS_MESSAGE_LOG_FD
+        $2="$$2 $1"]
+    )
 ])
 
 dnl Usage: PAC_PREPEND_FLAG([-lpthread], [LIBS])
@@ -78,13 +103,13 @@ dnl
 dnl This is typically used for LIBS and similar variables because libraries
 dnl should be added in reverse order.
 AC_DEFUN([PAC_PREPEND_FLAG],[
-        AC_REQUIRE([AC_PROG_FGREP])
-        AS_IF(
-                [echo "$$2" | $FGREP -e "\<$1\>" >/dev/null 2>&1],
-                [echo "$2(='$$2') contains '$1', not prepending" >&AS_MESSAGE_LOG_FD],
-                [echo "$2(='$$2') does not contain '$1', prepending" >&AS_MESSAGE_LOG_FD
-                $2="$1 $$2"]
-        )
+    PAC_FGREP_WORD(
+        [$1],
+        [$2],
+        [echo "$2(='$$2') contains '$1', not prepending" >&AS_MESSAGE_LOG_FD],
+        [echo "$2(='$$2') does not contain '$1', prepending" >&AS_MESSAGE_LOG_FD
+        $2="$1 $$2"]
+    )
 ])
 
 

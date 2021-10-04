@@ -1,0 +1,437 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
+# This file lists all collective algorithms with annotations. It is used by
+# maint/gen_coll.py to generate src/mpi/coll/mpir_coll.c, which implements
+# top-level collective functions, such as (using bcast for example) --
+#     MPIR_Bcast, MPIR_Bcast_impl, MPIR_Bcast_allcomm_auto,
+#     MPIR_Ibcast, MPIR_Ibcast_impl, MPIR_Ibcast_sched_impl, MPIR_Ibcast_allcomm_sched_auto,
+#     MPIR_Bcast_init, MPIR_Bcast_init_impl
+#
+# The format is (reference actual examples) --
+#
+# [func-commkind]
+#     [algorithm_name]
+#         [key]: [values]
+#
+# Notes:
+#   * indentations (use 4 spaces) and ':' behind keys are significant
+#   * auto and nb algorithms are assumed and not listed
+#   * most collectives have 4 variations: blocking/nonblocking-intra/inter,
+#     but some don't have intercomm variations (scan, exscan, and neighborhood collectives).
+#   * arbitrary keys are allowed in the format as long as it observes indentation and colon.
+#
+# Recognized attribute keys (by gen_coll.py):
+#   * restrictions:
+#         possible values include parent-comm, power-of-two, inplace, no-inplace,
+#         cummutative, builtin-op, node-consecutive, displs-ordered, size-ge-pof2
+#   * extra_params and cvar_params:
+#         Additional parameters specific to the algorithm functions. Most algorithm functions
+#         use the same arguments (e.g. as MPIR_Bcast), but some may require additional
+#         parameters. For csel selections, they are supplied int the container structure (with
+#         field name listed in extraparams). For CVAR direct algorithm, they are supplied with
+#         CVAR names listed in cvar_params (without the common prefix).
+#   * func_name:
+#         Some algorithm use another algorithm or use a different function name.
+#   * extra_const_params:
+#         Some algorithm may need extra params that are not depend on csel container or variable CVARs.
+
+barrier-intra:
+    dissemination
+    smp
+        restrictions: parent-comm
+barrier-inter:
+    bcast
+ibarrier-intra:
+    sched_recursive_doubling
+ibarrier-inter:
+    sched_bcast
+
+bcast-intra:
+    binomial
+    scatter_recursive_doubling_allgather
+    scatter_ring_allgather
+    smp
+        restrictions: parent-comm
+ibcast-intra:
+    sched_binomial
+    sched_smp
+        restrictions: parent-comm
+    sched_scatter_recursive_doubling_allgather
+        restrictions: power-of-two
+    sched_scatter_ring_allgather
+    tsp_tree
+        extra_params: tree_type, k, chunk_size
+        cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE
+    tsp_scatterv_recexch_allgatherv
+        func_name: scatterv_allgatherv
+        extra_params: scatterv_k, allgatherv_k
+        cvar_params: SCATTERV_KVAL, ALLGATHERV_RECEXCH_KVAL
+    tsp_ring
+        func_name: tree
+        extra_const_params: tree_type=MPIR_TREE_TYPE_KARY, k=1
+        extra_params: chunk_size
+        cvar_params: RING_CHUNK_SIZE
+bcast-inter:
+    remote_send_local_bcast
+ibcast-inter:
+    sched_flat
+
+gather-intra:
+    binomial
+gather-inter:
+    linear
+    local_gather_remote_send
+igather-intra:
+    sched_binomial
+    tsp_tree
+        extra_params: k
+        cvar_params: TREE_KVAL
+igather-inter:
+    sched_long
+    sched_short
+
+gatherv-intra:
+    linear
+        allcomm: 1
+gatherv-inter:
+    linear
+        allcomm: 1
+igatherv-intra:
+    sched_linear
+        allcomm: 1
+    tsp_linear
+        allcomm: 1
+igatherv-inter:
+    sched_linear
+        allcomm: 1
+    tsp_linear
+        allcomm: 1
+
+scatter-intra:
+    binomial
+scatter-inter:
+    linear
+    remote_send_local_scatter
+iscatter-intra:
+    sched_binomial
+    tsp_tree
+        extra_params: k
+        cvar_params: TREE_KVAL
+iscatter-inter:
+    sched_linear
+    sched_remote_send_local_scatter
+
+scatterv-intra:
+    linear
+        allcomm: 1
+scatterv-inter:
+    linear
+        allcomm: 1
+iscatterv-intra:
+    sched_linear
+        allcomm: 1
+    tsp_linear
+        allcomm: 1
+iscatterv-inter:
+    sched_linear
+        allcomm: 1
+    tsp_linear
+        allcomm: 1
+
+allgather-intra:
+    brucks
+    recursive_doubling
+        restrictions: power-of-two
+    ring
+allgather-inter:
+    local_gather_remote_bcast
+iallgather-intra:
+    sched_ring
+    sched_brucks
+    sched_recursive_doubling
+        restrictions: power-of-two
+    tsp_ring
+    tsp_brucks
+        extra_params: k
+        cvar_params: BRUCKS_KVAL
+    tsp_recexch_doubling
+        func_name: recexch
+        extra_const_params: recexch_type=MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+    tsp_recexch_halving
+        func_name: recexch
+        extra_const_params: recexch_type=MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+iallgather-inter:
+    sched_local_gather_remote_bcast
+
+allgatherv-intra:
+    brucks
+    recursive_doubling
+        restrictions: power-of-two
+    ring
+allgatherv-inter:
+    remote_gather_local_bcast
+iallgatherv-intra:
+    sched_brucks
+    sched_recursive_doubling
+        restrictions: power-of-two
+    sched_ring
+    tsp_recexch_doubling
+        restrictions: displs-ordered
+        func_name: recexch
+        extra_const_params: recexch_type=MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_DOUBLING
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+    tsp_recexch_halving
+        restrictions: displs-ordered
+        func_name: recexch
+        extra_const_params: recexch_type=MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_HALVING
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+    tsp_ring
+    tsp_brucks
+        extra_params: k
+        cvar_params: BRUCKS_KVAL
+iallgatherv-inter:
+    sched_remote_gather_local_bcast
+
+alltoall-intra:
+    brucks
+        restrictions: noinplace
+    pairwise
+        restrictions: noinplace
+    pairwise_sendrecv_replace
+        restrictions: inplace
+    scattered
+        restrictions: noinplace
+alltoall-inter:
+    pairwise_exchange
+ialltoall-intra:
+    sched_brucks
+        restrictions: noinplace
+    sched_inplace
+        restrictions: inplace
+    sched_pairwise
+        restrictions: noinplace
+    sched_permuted_sendrecv
+        restrictions: noinplace
+    tsp_ring
+    tsp_brucks
+        extra_params: k, buffer_per_phase
+        cvar_params: BRUCKS_KVAL, BRUCKS_BUFFER_PER_NBR
+    tsp_scattered
+        extra_params: batch_size, bblock
+        cvar_params: SCATTERED_BATCH_SIZE, SCATTERED_OUTSTANDING_TASKS
+ialltoall-inter:
+    sched_pairwise_exchange
+
+alltoallv-intra:
+    pairwise_sendrecv_replace
+        restrictions: inplace
+    scattered
+        restrictions: noinplace
+alltoallv-inter:
+    pairwise_exchange
+ialltoallv-intra:
+    sched_blocked
+        restrictions: noinplace
+    sched_inplace
+        restrictions: inplace
+    tsp_scattered
+        restrictions: noinplace
+        extra_params: batch_size, bblock
+        cvar_params: SCATTERED_BATCH_SIZE, SCATTERED_OUTSTANDING_TASKS
+    tsp_blocked
+        restrictions: noinplace
+        extra_params: bblock
+        cvar_params: THROTTLE
+    tsp_inplace
+        restrictions: inplace
+ialltoallv-inter:
+    sched_pairwise_exchange
+
+alltoallw-intra:
+    pairwise_sendrecv_replace
+        restrictions: inplace
+    scattered
+        restrictions: noinplace
+alltoallw-inter:
+    pairwise_exchange
+ialltoallw-intra:
+    sched_blocked
+        restrictions: noinplace
+    sched_inplace
+        restrictions: inplace
+    tsp_blocked
+        restrictions: noinplace
+        extra_params: bblock
+        cvar_params: THROTTLE
+    tsp_inplace
+        restrictions: inplace
+ialltoallw-inter:
+    sched_pairwise_exchange
+
+reduce-intra:
+    binomial
+    smp
+        restrictions: commutative, parent-comm
+    reduce_scatter_gather
+        restrictions: size-ge-pof2, builtin-op
+reduce-inter:
+    local_reduce_remote_send
+ireduce-intra:
+    sched_smp
+        restrictions: commutative, parent-comm
+    sched_binomial
+    sched_reduce_scatter_gather
+        restrictions: size-ge-pof2, builtin-op
+    tsp_tree
+        restrictions: commutative
+        extra_params: tree_type, k, chunk_size, buffer_per_child
+        cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
+    tsp_ring
+        func_name: tree
+        extra_const_params: tree_type=MPIR_TREE_TYPE_KARY, k=1
+        extra_params: chunk_size, buffer_per_child
+        cvar_params: RING_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
+ireduce-inter:
+    sched_local_reduce_remote_send
+
+allreduce-intra:
+    smp
+        restrictions: commutative, parent-comm
+    recursive_doubling
+    reduce_scatter_allgather
+        restrictions: size-ge-pof2, builtin-op
+allreduce-inter:
+    reduce_exchange_bcast
+iallreduce-intra:
+    sched_naive
+    sched_smp
+        restrictions: commutative, parent-comm
+    sched_recursive_doubling
+    sched_reduce_scatter_allgather
+        restrictions: size-ge-pof2, builtin-op
+    tsp_recexch_single_buffer
+        func_name: recexch
+        extra_const_params: recexch_type=MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+    tsp_recexch_multiple_buffer
+        func_name: recexch
+        extra_const_params: recexch_type=MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+    tsp_tree
+        extra_params: tree_type, k, chunk_size, buffer_per_child
+        cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
+    tsp_ring
+        restrictions: commutative
+    tsp_recexch_reduce_scatter_recexch_allgatherv
+        restrictions: commutative
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+iallreduce-inter:
+    sched_remote_reduce_local_bcast
+
+reduce_scatter-intra:
+    noncommutative
+    pairwise
+        restrictions: commutative
+    recursive_doubling
+    recursive_halving
+        restrictions: commutative
+reduce_scatter-inter:
+    remote_reduce_local_scatter
+ireduce_scatter-intra:
+    sched_noncommutative
+        restrictions: power-of-two
+    sched_recursive_doubling
+    sched_pairwise
+        restrictions: commutative
+    sched_recursive_halving
+        restrictions: commutative
+    tsp_recexch
+        restrictions: commutative
+        extra_const_params: recexch_type=IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_DOUBLING
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+ireduce_scatter-inter:
+    sched_remote_reduce_local_scatterv
+
+reduce_scatter_block-intra:
+    noncommutative
+        restrictions: power-of-two
+    recursive_doubling
+    pairwise
+        restrictions: commutative
+    recursive_halving
+        restrictions: commutative
+reduce_scatter_block-inter:
+    remote_reduce_local_scatter
+ireduce_scatter_block-intra:
+    sched_noncommutative
+        restrictions: power-of-two
+    sched_recursive_doubling
+    sched_pairwise
+        restrictions: commutative
+    sched_recursive_halving
+        restrictions: commutative
+    tsp_recexch
+        restrictions: commutative
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+ireduce_scatter_block-inter:
+    sched_remote_reduce_local_scatterv
+
+scan-intra:
+    smp
+        restrictions: commutative, node-consecutive
+    recursive_doubling
+iscan-intra:
+    sched_smp
+        restrictions: commutative, node-consecutive
+    sched_recursive_doubling
+    tsp_recursive_doubling
+
+exscan-intra:
+    recursive_doubling
+iexscan-intra:
+    sched_recursive_doubling
+
+neighbor_allgather-intra:
+ineighbor_allgather-intra:
+    sched_linear
+        allcomm: 1
+    tsp_linear
+        allcomm: 1
+neighbor_allgatherv-intra:
+ineighbor_allgatherv-intra:
+    sched_linear
+        allcomm: 1
+    tsp_linear
+        allcomm: 1
+neighbor_alltoall-intra:
+ineighbor_alltoall-intra:
+    sched_linear
+        allcomm: 1
+    tsp_linear
+        allcomm: 1
+neighbor_alltoallv-intra:
+ineighbor_alltoallv-intra:
+    sched_linear
+        allcomm: 1
+    tsp_linear
+        allcomm: 1
+neighbor_alltoallw-intra:
+ineighbor_alltoallw-intra:
+    sched_linear
+        allcomm: 1
+    tsp_linear
+        allcomm: 1

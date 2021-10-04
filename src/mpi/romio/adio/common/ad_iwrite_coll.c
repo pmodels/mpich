@@ -449,11 +449,6 @@ static void ADIOI_GEN_IwriteStridedColl_exch(ADIOI_NBC_Request * nbc_req, int *e
 {
     ADIOI_GEN_IwriteStridedColl_vars *vars = nbc_req->data.wr.wsc_vars;
     ADIOI_Iexch_and_write_vars *eaw_vars = NULL;
-    ADIOI_Access *my_req = vars->my_req;
-
-    ADIOI_Free(vars->count_my_req_per_proc);
-    ADIOI_Free(my_req[0].offsets);
-    ADIOI_Free(my_req);
 
     /* exchange data and write in sizes of no more than coll_bufsize. */
     /* Cast away const'ness for the below function */
@@ -534,11 +529,12 @@ static void ADIOI_GEN_IwriteStridedColl_free(ADIOI_NBC_Request * nbc_req, int *e
         *error_code = old_error;
 
     /* free all memory allocated for collective I/O */
+    ADIOI_Free_my_req(vars->nprocs, vars->count_my_req_per_proc, vars->my_req, vars->buf_idx);
+
     ADIOI_Free(others_req[0].offsets);
     ADIOI_Free(others_req[0].mem_ptrs);
     ADIOI_Free(others_req);
 
-    ADIOI_Free(vars->buf_idx);
     ADIOI_Free(vars->offset_list);
     ADIOI_Free(vars->st_offsets);
     ADIOI_Free(vars->fd_start);
@@ -580,6 +576,7 @@ static void ADIOI_Iexch_and_write(ADIOI_NBC_Request * nbc_req, int *error_code)
     MPI_Datatype datatype = vars->datatype;
     int nprocs = vars->nprocs;
     ADIOI_Access *others_req = vars->others_req;
+    MPI_Aint lb;
 
     /* Send data to appropriate processes and write in sizes of no more
      * than coll_bufsize.
@@ -675,7 +672,7 @@ static void ADIOI_Iexch_and_write(ADIOI_NBC_Request * nbc_req, int *error_code)
     if (!vars->buftype_is_contig) {
         vars->flat_buf = ADIOI_Flatten_and_find(datatype);
     }
-    MPI_Type_extent(datatype, &vars->buftype_extent);
+    MPI_Type_get_extent(datatype, &lb, &vars->buftype_extent);
 
 
     /* I need to check if there are any outstanding nonblocking writes to
@@ -773,7 +770,7 @@ static void ADIOI_Iexch_and_write_l1_begin(ADIOI_NBC_Request * nbc_req, int *err
                     count[i]++;
                     ADIOI_Assert((((ADIO_Offset) (uintptr_t) write_buf) + req_off - off) ==
                                  (ADIO_Offset) (uintptr_t) (write_buf + req_off - off));
-                    MPI_Address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
+                    MPI_Get_address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
                     ADIOI_Assert((off + size - req_off) == (int) (off + size - req_off));
                     recv_size[i] += (int) (MPL_MIN(off + size - req_off, (unsigned) req_len));
 

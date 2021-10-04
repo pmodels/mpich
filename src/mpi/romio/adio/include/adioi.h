@@ -95,9 +95,18 @@ struct ADIOI_Hints_struct {
 typedef struct ADIOI_Datarep {
     char *name;
     void *state;
+    int is_large;
     MPI_Datarep_extent_function *extent_fn;
-    MPI_Datarep_conversion_function *read_conv_fn;
-    MPI_Datarep_conversion_function *write_conv_fn;
+    union {
+        struct {
+            MPI_Datarep_conversion_function *read_conv_fn;
+            MPI_Datarep_conversion_function *write_conv_fn;
+        } small;
+        struct {
+            MPI_Datarep_conversion_function_c *read_conv_fn;
+            MPI_Datarep_conversion_function_c *write_conv_fn;
+        } large;
+    } u;
     struct ADIOI_Datarep *next; /* pointer to next datarep */
 } ADIOI_Datarep;
 
@@ -480,11 +489,15 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
                        int *count_my_req_procs_ptr,
                        int **count_my_req_per_proc_ptr,
                        ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
+void ADIOI_Free_my_req(int nprocs, int *count_my_req_per_proc,
+                       ADIOI_Access * my_req, MPI_Aint * buf_idx);
 void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
                            int *count_my_req_per_proc,
                            ADIOI_Access * my_req,
                            int nprocs, int myrank,
-                           int *count_others_req_procs_ptr, ADIOI_Access ** others_req_ptr);
+                           int *count_others_req_procs_ptr,
+                           int **count_others_req_per_proc_ptr, ADIOI_Access ** others_req_ptr);
+void ADIOI_Free_others_req(int nprocs, int *count_others_req_per_proc, ADIOI_Access * others_req);
 
 
 /* Nonblocking Collective I/O internals */
@@ -605,7 +618,7 @@ typedef struct view_state {
     ADIO_Offset disp;           /* file view params */
     ADIO_Offset byte_off;
     ADIO_Offset sz;
-    ADIO_Offset ext;            /* preserved extent from MPI_Type_extent */
+    ADIO_Offset ext;            /* preserved extent from MPI_Type_get_extent */
     ADIO_Offset type_sz;
 
     /* Current state */
@@ -828,7 +841,27 @@ int MPIOI_File_iread_all(MPI_File fh,
                          void *buf,
                          int count, MPI_Datatype datatype, char *myname, MPI_Request * request);
 
+int MPIOI_File_read_ordered(MPI_File fh, void *buf, int count,
+                            MPI_Datatype datatype, MPI_Status * status);
+int MPIOI_File_read_ordered_begin(MPI_File fh, void *buf, int count, MPI_Datatype datatype);
+int MPIOI_File_read_shared(MPI_File fh, void *buf, int count,
+                           MPI_Datatype datatype, MPI_Status * status);
+int MPIOI_File_iread_shared(MPI_File fh, void *buf, int count,
+                            MPI_Datatype datatype, MPI_Request * request);
+int MPIOI_File_write_ordered(MPI_File fh, const void *buf, int count,
+                             MPI_Datatype datatype, MPI_Status * status);
+int MPIOI_File_write_ordered_begin(MPI_File fh, const void *buf, int count, MPI_Datatype datatype);
+int MPIOI_File_write_shared(MPI_File fh, const void *buf, int count,
+                            MPI_Datatype datatype, MPI_Status * status);
+int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, int count,
+                             MPI_Datatype datatype, MPIO_Request * request);
 
+typedef void (*MPIOI_VOID_FN) (void *);
+int MPIOI_Register_datarep(const char *datarep,
+                           MPIOI_VOID_FN * read_conversion_fn,
+                           MPIOI_VOID_FN * write_conversion_fn,
+                           MPI_Datarep_extent_function * dtype_file_extent_fn,
+                           void *extra_state, int is_large);
 
 /* Unix-style file locking */
 

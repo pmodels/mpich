@@ -23,8 +23,7 @@ static inline MPIDI_VC_t *ofi_wc_to_vc(cq_tagged_entry_t * wc)
     MPIDI_PG_t *pg = NULL;
     uint64_t match_bits = wc->tag;
     int wc_pgid;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_OFI_TAG_TO_VC);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_OFI_TAG_TO_VC);
+    MPIR_FUNC_ENTER;
     if (gl_data.api_set == API_SET_1) {
         wc_pgid = get_pgid(match_bits);
     } else {
@@ -65,7 +64,7 @@ static inline MPIDI_VC_t *ofi_wc_to_vc(cq_tagged_entry_t * wc)
             MPIR_Assert(0);
         }
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_OFI_TAG_TO_VC);
+    MPIR_FUNC_EXIT;
     return vc;
 }
 
@@ -94,8 +93,7 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Re
     char *addr = NULL;
     fi_addr_t direct_addr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_CONN_REQ_CALLBACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_CONN_REQ_CALLBACK);
+    MPIR_FUNC_ENTER;
 
     MPIR_Memcpy(bc, rreq->dev.user_buf, wc->len);
     bc[wc->len] = '\0';
@@ -133,7 +131,7 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Re
     MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT;
   fn_exit:
     MPL_free(addr);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_CONN_REQ_CALLBACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     MPL_free(vc);
@@ -153,8 +151,7 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
     int mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t *vc;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_HANDLE_PACKET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_HANDLE_PACKET);
+    MPIR_FUNC_ENTER;
     if (MPIR_cc_get(rreq->cc) == 1) {
         vc = REQ_OFI(rreq)->vc;
         MPIR_Assert(vc);
@@ -164,7 +161,7 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
     }
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_HANDLE_PACKET);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -178,12 +175,11 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
 static inline int MPID_nem_ofi_cts_send_callback(cq_tagged_entry_t * wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_CTS_SEND_CALLBACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_CTS_SEND_CALLBACK);
+    MPIR_FUNC_ENTER;
     MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_handle_packet(wc, REQ_OFI(sreq)->parent));
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_CTS_SEND_CALLBACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -205,8 +201,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_R
     char *pack_buffer = NULL;
     MPIDI_VC_t *vc;
     MPIR_Request *new_rreq, *sreq;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_PREPOSTED_CALLBACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_PREPOSTED_CALLBACK);
+    MPIR_FUNC_ENTER;
 
     vc = ofi_wc_to_vc(wc);
     MPIR_Assert(vc);
@@ -222,7 +217,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_R
     MPID_nem_ofi_create_req(&new_rreq, 1);
     MPIR_cc_inc(new_rreq->cc_ptr);
     new_rreq->dev.OnDataAvail = NULL;
-    new_rreq->dev.next = NULL;
+    new_rreq->next = NULL;
     REQ_OFI(new_rreq)->event_callback = MPID_nem_ofi_handle_packet;
     REQ_OFI(new_rreq)->vc = vc;
     REQ_OFI(new_rreq)->pack_buffer = pack_buffer;
@@ -237,7 +232,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_R
 
     MPID_nem_ofi_create_req(&sreq, 1);
     sreq->dev.OnDataAvail = NULL;
-    sreq->dev.next = NULL;
+    sreq->next = NULL;
     REQ_OFI(sreq)->event_callback = MPID_nem_ofi_cts_send_callback;
     REQ_OFI(sreq)->parent = new_rreq;
     FI_RC_RETRY(fi_tsend(gl_data.endpoint,
@@ -259,7 +254,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_R
     MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                          "**nomem", "**nomem %s", "Pack Buffer alloc");
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_PREPOSTED_CALLBACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -273,15 +268,14 @@ int MPID_nem_ofi_connect_to_root_callback(cq_tagged_entry_t * wc ATTRIBUTE((unus
                                           MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_CONNECT_TO_ROOT_CALLBACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_CONNECT_TO_ROOT_CALLBACK);
+    MPIR_FUNC_ENTER;
 
     MPL_free(REQ_OFI(sreq)->pack_buffer);
 
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_CONNECT_TO_ROOT_CALLBACK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -297,8 +291,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *persistent_req, *conn_req;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_CM_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_CM_INIT);
+    MPIR_FUNC_ENTER;
 
     /* ------------------------------------- */
     /* Set up CH3 and netmod data structures */
@@ -321,7 +314,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
     /* ----------------------------------- */
     MPID_nem_ofi_create_req(&persistent_req, 1);
     persistent_req->dev.OnDataAvail = NULL;
-    persistent_req->dev.next = NULL;
+    persistent_req->next = NULL;
     REQ_OFI(persistent_req)->vc = NULL;
     REQ_OFI(persistent_req)->event_callback = MPID_nem_ofi_preposted_callback;
     FI_RC_RETRY(fi_trecv(gl_data.endpoint,
@@ -340,7 +333,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
     MPID_nem_ofi_create_req(&conn_req, 1);
     conn_req->dev.user_buf = MPL_malloc(MPIDI_OFI_KVSAPPSTRLEN * sizeof(char), MPL_MEM_BUFFER);
     conn_req->dev.OnDataAvail = NULL;
-    conn_req->dev.next = NULL;
+    conn_req->next = NULL;
     REQ_OFI(conn_req)->vc = NULL;       /* We don't know the source yet */
     REQ_OFI(conn_req)->event_callback = MPID_nem_ofi_conn_req_callback;
     FI_RC_RETRY(fi_trecv(gl_data.endpoint,
@@ -354,7 +347,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
 
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_CM_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 
   fn_fail:
@@ -368,8 +361,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
 int MPID_nem_ofi_cm_finalize()
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_CM_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_CM_FINALIZE);
+    MPIR_FUNC_ENTER;
     FI_RC(fi_cancel((fid_t) gl_data.endpoint,
                     &(REQ_OFI(gl_data.persistent_req)->ofi_context)), cancel);
     MPIR_STATUS_SET_CANCEL_BIT(gl_data.persistent_req->status, TRUE);
@@ -382,7 +374,7 @@ int MPID_nem_ofi_cm_finalize()
     MPIR_STATUS_SET_COUNT(gl_data.conn_req->status, 0);
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(gl_data.conn_req));
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_CM_FINALIZE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -400,8 +392,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
     int len, ret, mpi_errno = MPI_SUCCESS;
     char bc[MPIDI_OFI_KVSAPPSTRLEN], *addr = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_VC_CONNECT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_VC_CONNECT);
+    MPIR_FUNC_ENTER;
     addr = MPL_malloc(gl_data.bound_addrlen, MPL_MEM_ADDRESS);
     MPIR_Assert(addr);
     MPIR_Assert(1 != VC_OFI(vc)->ready);
@@ -420,7 +411,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
 
   fn_exit:
     MPL_free(addr);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_VC_CONNECT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 
   fn_fail:
@@ -433,8 +424,7 @@ int MPID_nem_ofi_vc_init(MPIDI_VC_t * vc)
     MPIDI_CH3I_VC *const vc_ch = &vc->ch;
     MPID_nem_ofi_vc_t *const vc_ofi = VC_OFI(vc);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_VC_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_VC_INIT);
+    MPIR_FUNC_ENTER;
     vc->sendNoncontig_fn = MPID_nem_ofi_SendNoncontig;
     vc_ch->iStartContigMsg = MPID_nem_ofi_iStartContigMsg;
     vc_ch->iSendContig = MPID_nem_ofi_iSendContig;
@@ -450,7 +440,7 @@ int MPID_nem_ofi_vc_init(MPIDI_VC_t * vc)
         vc_ofi->is_cmvc = 1;
     } else {
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_VC_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -461,8 +451,7 @@ int MPID_nem_ofi_vc_init(MPIDI_VC_t * vc)
 /* ------------------------------------------------------------------------ */
 int MPID_nem_ofi_vc_destroy(MPIDI_VC_t * vc)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_VC_DESTROY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_VC_DESTROY);
+    MPIR_FUNC_ENTER;
     if (gl_data.cm_vcs && vc && (VC_OFI(vc)->is_cmvc == 1)) {
         if (vc->pg != NULL) {
             printf("ERROR: VC Destroy (%p) pg = %s\n", vc, (char *) vc->pg->id);
@@ -483,19 +472,18 @@ int MPID_nem_ofi_vc_destroy(MPIDI_VC_t * vc)
         }
     }
     VC_OFI(vc)->ready = 0;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_VC_DESTROY);
+    MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
 
 int MPID_nem_ofi_vc_terminate(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_VC_TERMINATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_VC_TERMINATE);
+    MPIR_FUNC_ENTER;
     MPIDI_CH3I_NM_OFI_RC(MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED));
     VC_OFI(vc)->ready = 0;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_VC_TERMINATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -525,8 +513,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     MPIR_Request *sreq;
     uint64_t conn_req_send_bits;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NM_CONNECT_TO_ROOT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NM_CONNECT_TO_ROOT);
+    MPIR_FUNC_ENTER;
     addr = MPL_malloc(gl_data.bound_addrlen, MPL_MEM_ADDRESS);
     bc = MPL_malloc(MPIDI_OFI_KVSAPPSTRLEN, MPL_MEM_ADDRESS);
     MPIR_Assertp(addr);
@@ -547,17 +534,17 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     str_errno = MPL_str_add_int_arg(&bc, &my_bc_len, "tag", new_vc->port_name_tag);
     MPIR_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
     MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_get_business_card
-                         (MPIR_Process.comm_world->rank, &bc, &my_bc_len));
+                         (MPIR_Process.rank, &bc, &my_bc_len));
     my_bc_len = MPIDI_OFI_KVSAPPSTRLEN - my_bc_len;
 
     MPID_nem_ofi_create_req(&sreq, 1);
     sreq->kind = MPIR_REQUEST_KIND__SEND;
     sreq->dev.OnDataAvail = NULL;
-    sreq->dev.next = NULL;
+    sreq->next = NULL;
     REQ_OFI(sreq)->event_callback = MPID_nem_ofi_connect_to_root_callback;
     REQ_OFI(sreq)->pack_buffer = my_bc;
     if (gl_data.api_set == API_SET_1) {
-        conn_req_send_bits = init_sendtag(0, MPIR_Process.comm_world->rank, 0, MPIDI_OFI_CONN_REQ);
+        conn_req_send_bits = init_sendtag(0, MPIR_Process.rank, 0, MPIDI_OFI_CONN_REQ);
         FI_RC_RETRY(fi_tsend(gl_data.endpoint,
                              REQ_OFI(sreq)->pack_buffer,
                              my_bc_len,
@@ -570,7 +557,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
                                  REQ_OFI(sreq)->pack_buffer,
                                  my_bc_len,
                                  gl_data.mr,
-                                 MPIR_Process.comm_world->rank,
+                                 MPIR_Process.rank,
                                  VC_OFI(new_vc)->direct_addr,
                                  conn_req_send_bits, &(REQ_OFI(sreq)->ofi_context)), tsend);
     }
@@ -580,7 +567,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     gl_data.cm_vcs = new_vc;
   fn_exit:
     MPL_free(addr);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NM_CONNECT_TO_ROOT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     MPL_free(my_bc);
@@ -591,8 +578,7 @@ int MPID_nem_ofi_get_business_card(int my_rank ATTRIBUTE((unused)),
                                    char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS, str_errno = MPL_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_GET_BUSINESS_CARD);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_GET_BUSINESS_CARD);
+    MPIR_FUNC_ENTER;
     str_errno = MPL_str_add_binary_arg(bc_val_p,
                                        val_max_sz_p,
                                        "OFI", (char *) &gl_data.bound_addr, gl_data.bound_addrlen);
@@ -601,7 +587,7 @@ int MPID_nem_ofi_get_business_card(int my_rank ATTRIBUTE((unused)),
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_GET_BUSINESS_CARD);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

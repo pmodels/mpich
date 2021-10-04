@@ -660,6 +660,24 @@ AS_CASE([$enable_yield],
 
 
 #######################################################################
+## START OF MISC CODE
+#######################################################################
+
+AC_CHECK_HEADERS(sys/sysinfo.h unistd.h)
+
+AC_CHECK_FUNCS(get_nprocs)
+AC_CHECK_DECLS([_SC_NPROCESSORS_ONLN],[],[],[[#include <unistd.h>]])
+
+if test "$ac_cv_func_get_nprocs" = "yes" -o "$ac_cv_have_decl__SC_NPROCESSORS_ONLN" = "yes"; then
+    AC_DEFINE(HAVE_MISC_GETNPROCS,1, [Define if get_nprocs or _SC_NPROCESSORS_ONLN is Vilable.])
+fi
+
+#######################################################################
+## END OF MISC CODE
+#######################################################################
+
+
+#######################################################################
 ## START OF THREADS CODE
 #######################################################################
 
@@ -783,6 +801,45 @@ case $with_proc_mutex_package in
     AC_CHECK_FUNC([pthread_mutex_init],[],[AC_MSG_ERROR([unable to find pthreads library])])
     # pthread_mutexattr_setpshared is first released in Issue 5
     AC_CHECK_FUNCS(pthread_mutexattr_setpshared)
+
+    AC_CHECK_FUNCS(pthread_setaffinity_np)
+
+    #
+    # Check for the Linux functions for controlling processor affinity.
+    #
+    # LINUX: sched_setaffinity
+    # AIX:   bindprocessor
+    # OSX (Leopard): thread_policy_set
+    AC_CHECK_FUNCS([sched_setaffinity sched_getaffinity bindprocessor thread_policy_set])
+    if test "$ac_cv_func_sched_setaffinity" = "yes" ; then
+        # Test for the cpu process set type
+        AC_CACHE_CHECK([whether cpu_set_t available],pac_cv_have_cpu_set_t,[
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sched.h>]],[[cpu_set_t t;]])],
+                pac_cv_have_cpu_set_t=yes,pac_cv_have_cpu_set_t=no)
+        ])
+        if test "$pac_cv_have_cpu_set_t" = yes ; then
+            AC_DEFINE(HAVE_CPU_SET_T,1,[Define if cpu_set_t is defined in sched.h])
+
+        AC_CACHE_CHECK([whether the CPU_SET and CPU_ZERO macros are defined], pac_cv_cpu_set_defined,[
+                AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+                    #include <sched.h>
+                    ]],[[
+                    cpu_set_t t;
+                    CPU_ZERO(&t);
+                    CPU_SET(1,&t);
+                    ]])], pac_cv_cpu_set_defined=yes,pac_cv_cpu_set_defined=no)
+            ])
+	    if test "$pac_cv_cpu_set_defined" = "yes" ; then
+	        AC_DEFINE(HAVE_CPU_SET_MACROS,1,[Define if CPU_SET and CPU_ZERO defined])
+            fi
+        # FIXME: Some versions of sched_setaffinity return ENOSYS (!),
+	    # so we should test for the unfriendly and useless behavior
+        fi
+    fi
+
+    if test "$ac_cv_func_pthread_setaffinity_np" = "yes" ; then
+      AC_DEFINE(HAVE_PTHREAD_SETAFFINITY_NP,1, [Define if pthread_setaffinity_np is available.])
+    fi
 
     AC_MSG_NOTICE([POSIX will be used for interprocess mutex package.])
     PROC_MUTEX_PACKAGE_NAME=MPL_PROC_MUTEX_PACKAGE_POSIX
@@ -988,7 +1045,10 @@ AC_SUBST(libmpl_so_versionflags)
 #######################################################################
 ## START OF GPU CODE
 #######################################################################
+GPU_SUPPORT=
+AC_SUBST(GPU_SUPPORT)
 have_gpu="no"
+
 # Check CUDA availability
 PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSynchronize])
 if test "$pac_have_cuda" = "yes" ; then
@@ -999,6 +1059,7 @@ if test "X${pac_have_cuda}" = "Xyes" ; then
     PAC_LIBS_ADD(-lcuda)
     AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
     have_gpu="yes"
+    GPU_SUPPORT="CUDA"
 fi
 AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
 
@@ -1008,9 +1069,27 @@ if test "$have_gpu" = "no" ; then
     if test "X${pac_have_ze}" = "Xyes" ; then
         AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
         have_gpu="yes"
+        GPU_SUPPORT="ZE"
     fi
 fi
 AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
+
+
+# Check HIP availability
+if test "$have_gpu" = "no" ; then
+    PAC_APPEND_FLAG([-D__HIP_PLATFORM_AMD__], [CPPFLAGS])
+    PAC_CHECK_HEADER_LIB_OPTIONAL([hip],[hip/hip_runtime_api.h],[amdhip64],[hipStreamSynchronize])
+fi
+
+if test "X${pac_have_hip}" = "Xyes" ; then
+    have_gpu="yes"
+    AC_DEFINE([HAVE_HIP],[1],[Define if HIP is available])
+    GPU_SUPPORT="HIP"
+else
+    CPPFLAGS=`echo $CPPFLAGS | sed 's/-D__HIP_PLATFORM_AMD__)//g'`
+fi
+AM_CONDITIONAL([MPL_HAVE_HIP],[test "X${pac_have_hip}" = "Xyes"])
+
 #######################################################################
 ## END OF GPU CODE
 #######################################################################

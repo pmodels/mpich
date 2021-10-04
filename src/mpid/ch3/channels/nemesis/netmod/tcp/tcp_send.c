@@ -67,10 +67,11 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
     struct iovec *iov;
     int complete;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_SEND_QUEUED);
+#endif
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_SEND_QUEUED);
+    MPIR_FUNC_ENTER;
 
     MPL_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "vc = %p", vc);
     MPIR_Assert(vc != NULL);
@@ -161,7 +162,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
         UNSET_PLFD(vc_tcp);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_SEND_QUEUED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -185,9 +186,8 @@ int MPID_nem_tcp_conn_est(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CONN_EST);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_CONN_EST);
+    MPIR_FUNC_ENTER;
 
     /* only update VC state when it is not being closed.
      * Note that we still need change state here if the VC is passively
@@ -202,7 +202,7 @@ int MPID_nem_tcp_conn_est(MPIDI_VC_t * vc)
     }
 
   fn_fail:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_CONN_EST);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -213,7 +213,9 @@ static inline int tcp_large_writev(MPIDI_VC_t * vc, const struct iovec * iov, in
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     *offset_ptr = MPL_large_writev(vc_tcp->sc->fd, iov, iov_n);
     if (*offset_ptr == 0) {
@@ -313,9 +315,8 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
     MPIR_Request *sreq = NULL;
     intptr_t offset = 0;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
@@ -384,7 +385,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
     *sreq_ptr = sreq;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -398,9 +399,8 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t * vc, void *hdr, intptr_t hdr
     MPIR_Request *sreq = NULL;
     intptr_t offset = 0;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG_PAUSED);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG_PAUSED);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
@@ -467,7 +467,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t * vc, void *hdr, intptr_t hdr
     *sreq_ptr = sreq;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG_PAUSED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -479,9 +479,8 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
     int mpi_errno = MPI_SUCCESS;
     intptr_t offset = 0;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_ISENDCONTIGMSG);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_ISENDCONTIGMSG);
+    MPIR_FUNC_ENTER;
 
     MPIR_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
@@ -560,7 +559,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_ISENDCONTIGMSG);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -573,8 +572,7 @@ int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     int mpi_errno = MPI_SUCCESS, i;
     intptr_t offset = 0, data_sz = 0;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_ISENDIOV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_ISENDIOV);
+    MPIR_FUNC_ENTER;
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_iSendIov");
 
@@ -660,7 +658,7 @@ int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_ISENDIOV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -678,8 +676,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *heade
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
     int iov_offset;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
+    MPIR_FUNC_ENTER;
     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_SendNoncontig");
     MPIR_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
@@ -767,7 +764,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *heade
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     MPIR_Request_free(sreq);
@@ -779,9 +776,8 @@ int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req;
     MPID_nem_tcp_vc_area *const vc_tcp = VC_TCP(vc);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_ERROR_OUT_SEND_QUEUE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_ERROR_OUT_SEND_QUEUE);
+    MPIR_FUNC_ENTER;
 
     /* we don't call onDataAvail or onFinal handlers because this is
      * an error condition and we just want to mark them as complete */
@@ -805,7 +801,7 @@ int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_ERROR_OUT_SEND_QUEUE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
