@@ -144,9 +144,7 @@ int dbgrI_field_offset(mqs_type * type, char *name)
         case TYPE_MPIDI_REQUEST:
             {
                 struct MPIDI_Request c;
-                if (strcmp(name, "next") == 0) {
-                    off = ((char *) &c.next - (char *) &c);
-                } else if (strcmp(name, "match") == 0) {
+                if (strcmp(name, "match") == 0) {
                     off = ((char *) &c.match - (char *) &c);
                 } else if (strcmp(name, "user_buf") == 0) {
                     off = ((char *) &c.user_buf - (char *) &c);
@@ -188,8 +186,6 @@ int dbgrI_field_offset(mqs_type * type, char *name)
                 MPIDI_Devreq_t c;
                 if (strcmp(name, "am") == 0) {
                     off = ((char *) &c.ch4.am - (char *) &c);
-                } else if (strcmp(name, "next") == 0) {
-                    off = ((char *) &c.next - (char *) &c);
                 } else {
                     printf("Panic! Unrecognized MPIDI_Devreq_t field %s\n", name);
                 }
@@ -237,11 +233,9 @@ int dbgrI_field_offset(mqs_type * type, char *name)
                     off = ((char *) &c.status - (char *) &c);
                 } else if (strcmp(name, "cc") == 0) {
                     off = ((char *) &c.cc - (char *) &c);
-                }
-                /* else if (strcmp(name, "next") == 0) {
-                 * off = ((char *)&c.next - (char *)&c);
-                 * } */
-                else {
+                } else if (strcmp(name, "next") == 0) {
+                    off = ((char *) &c.next - (char *) &c);
+                } else {
                     printf("Panic! Unrecognized request field %s\n", name);
                 }
             }

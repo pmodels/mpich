@@ -299,13 +299,13 @@ int mqs_image_has_queues(mqs_image * image, const char **message)
             dev_offs = dbgr_field_offset(req_type, (char *) "dev");
             i_info->req_status_offs = dbgr_field_offset(req_type, (char *) "status");
             i_info->req_cc_offs = dbgr_field_offset(req_type, (char *) "cc");
+            i_info->req_next_offs = dbgr_field_offset(req_type, (char *) "next");
             if (dev_offs >= 0) {
                 i_info->req_dev_offs = dev_offs;
 #ifdef HAVE_CH4_DEBUGGER_SUPPORT
                 /* Only support CH4 active message */
                 /* buffer, count, rank, tag, context_id and datatype are stored in AM request */
                 mqs_type *dreq_type = dbgr_find_type(image, (char *) "MPIDI_Devreq_t", mqs_lang_c);
-                i_info->req_next_offs = dev_offs + dbgr_field_offset(dreq_type, (char *) "next");
 
                 int am_offs = dev_offs + dbgr_field_offset(dreq_type, (char *) "am");
                 mqs_type *am_req_type = dbgr_find_type(image, (char *) "MPIDIG_req_t", mqs_lang_c);
@@ -325,8 +325,6 @@ int mqs_image_has_queues(mqs_image * image, const char **message)
                                                      mqs_lang_c);
                 if (dreq_type) {
                     int loff, match_offs;
-                    loff = dbgr_field_offset(dreq_type, (char *) "next");
-                    i_info->req_next_offs = dev_offs + loff;
                     loff = dbgr_field_offset(dreq_type, (char *) "user_buf");
                     i_info->req_user_buf_offs = dev_offs + loff;
                     loff = dbgr_field_offset(dreq_type, (char *) "user_count");

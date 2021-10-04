@@ -118,7 +118,9 @@ int MPID_nem_tcp_listen(int sockfd);
 static int set_up_listener(void)
 {
     int mpi_errno = MPI_SUCCESS;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 
@@ -149,7 +151,9 @@ static int set_up_listener(void)
 int MPID_nem_tcp_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 
@@ -382,7 +386,9 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
     int ret;
     MPL_sockaddr_t sock_id;
     socklen_t len;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 
@@ -572,7 +578,9 @@ int MPID_nem_tcp_listen(int sockfd)
     int mpi_errno = MPI_SUCCESS;
     int ret;
     unsigned short port;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 

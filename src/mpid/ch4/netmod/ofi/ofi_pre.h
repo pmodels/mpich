@@ -124,6 +124,13 @@ typedef struct MPIDI_OFI_am_header_t {
     uint64_t payload_sz:MPIDI_OFI_AM_PAYLOAD_SZ_BITS;   /* data size on this OFI message. This
                                                          * could be the size of a pipeline segment
                                                          * */
+    /* vnis are needed for callbacks and to reply.
+     * Note: technically the vni_dst don't need be transported since the receiver
+     * always know which vni it receives the message. However, having both of them
+     * in the header makes the design symmetric and thus easier to maintain.
+     */
+    uint8_t vni_src;
+    uint8_t vni_dst;
     uint16_t seqno:MPIDI_OFI_AM_SEQ_NO_BITS;    /* Sequence number of this message.
                                                  * Number is unique to (fi_src_addr,
                                                  * fi_dest_addr) pair. */
@@ -146,6 +153,7 @@ typedef struct {
 } MPIDI_OFI_lmt_msg_t;
 
 typedef struct {
+    uint64_t rma_key;
     void *unpack_buffer;
     MPI_Aint pack_size;
     uint64_t src_offset;
@@ -159,23 +167,31 @@ typedef enum {
 } MPIDI_OFI_lmt_type_t;
 
 typedef struct {
-    MPIDI_OFI_lmt_msg_payload_t lmt_info;
     struct fid_mr *lmt_mr;
     MPIDI_OFI_lmt_type_t lmt_type;
     union {
         uint64_t lmt_cntr;
         MPIDI_OFI_lmt_unpack_t unpack;
     } lmt_u;
-    void *pack_buffer;
     MPIR_Request *rreq_ptr;
     void *am_hdr;
     uint16_t am_hdr_sz;
-    uint8_t pad[6];
-    MPIDI_OFI_am_header_t msg_hdr;
-    uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
+    /* used for packing non-contig data or the whole am message when payload doesn't fit */
+    void *pack_buffer;
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
     struct iovec iov[3];
+    /* AM send buffers, must be together so we can send without sendv.
+     * Note: since we allocate from genq pool, there may be some additional space
+     * to pack a small payload */
+    MPIDI_OFI_am_header_t msg_hdr;
+    uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
 } MPIDI_OFI_am_request_header_t;
+
+#define MPIDI_OFI_AM_HDR_POOL_CELL_SIZE             (1024)
+#define MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
+/* maximum am message size that can fit into request header buffer */
+#define MPIDI_OFI_AM_MAX_MSG_SIZE \
+    (MPIDI_OFI_AM_HDR_POOL_CELL_SIZE - offsetof(MPIDI_OFI_am_request_header_t, msg_hdr))
 
 typedef struct MPIDI_OFI_deferred_am_isend_req {
     int op;
@@ -187,8 +203,9 @@ typedef struct MPIDI_OFI_deferred_am_isend_req {
     MPI_Datatype datatype;
     MPIR_Request *sreq;
     bool need_packing;
-
     MPI_Aint data_sz;
+    int vni_src;
+    int vni_dst;
 
     struct MPIDI_OFI_deferred_am_isend_req *prev;
     struct MPIDI_OFI_deferred_am_isend_req *next;

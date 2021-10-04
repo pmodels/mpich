@@ -228,11 +228,11 @@ int MPIDI_CH3I_Comm_commit_pre_hook(MPIR_Comm *comm)
     /* do some sanity checks */
     LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
-                        mapper->dir == MPIR_COMM_MAP_DIR__L2R);
+            MPIR_Assertp(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+                         mapper->dir == MPIR_COMM_MAP_DIR__L2R);
         if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
-                        mapper->dir == MPIR_COMM_MAP_DIR__R2L);
+            MPIR_Assertp(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+                         mapper->dir == MPIR_COMM_MAP_DIR__R2L);
     }
 
     /* First, handle all the mappers that contribute to the local part

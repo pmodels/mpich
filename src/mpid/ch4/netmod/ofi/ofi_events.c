@@ -12,23 +12,24 @@
  * value that is generally common across the different providers. */
 #define MPIDI_OFI_MAX_ERR_DATA_SIZE 64
 
-static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-static int peek_empty_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
-static int ssend_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
+static int peek_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+static int peek_empty_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+static int recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+static int send_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
+static int ssend_ack_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
 static uintptr_t recv_rbase(MPIDI_OFI_huge_recv_t * recv);
-static int chunk_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
-static int inject_emu_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
-static int accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-static int dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
-static int am_isend_rdma_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
-static int am_isend_pipeline_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
-static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
+static int chunk_done_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
+static int inject_emu_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
+static int accept_probe_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+static int dynproc_done_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+static int am_isend_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
+static int am_isend_rdma_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
+static int am_isend_pipeline_event(int vni, struct fi_cq_tagged_entry *wc,
+                                   MPIR_Request * dont_use_me);
+static int am_recv_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+static int am_read_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
 
-static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+static int peek_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t count = 0;
@@ -104,7 +105,7 @@ static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     goto fn_exit;
 }
 
-static int peek_empty_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+static int peek_empty_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     MPIR_FUNC_ENTER;
     MPIDI_OFI_dynamic_process_request_t *ctrl;
@@ -135,7 +136,7 @@ static int peek_empty_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 
 /* If we posted a huge receive, this event gets called to translate the
  * completion queue entry into a get huge event */
-static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+static int recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
@@ -151,7 +152,7 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
           (wc->len > MPIDI_OFI_STRIPE_CHUNK_SIZE && wc->len < MPIDI_OFI_global.stripe_threshold)) &&
          MPIDI_OFI_COMM(rreq->comm).enable_striping) ||
         (wc->len < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(rreq->comm).enable_striping)) {
-        return MPIDI_OFI_recv_event(wc, rreq, MPIDI_OFI_REQUEST(rreq, event_id));
+        return MPIDI_OFI_recv_event(vni, wc, rreq, MPIDI_OFI_REQUEST(rreq, event_id));
     }
 
     comm_ptr = rreq->comm;
@@ -227,7 +228,7 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
         recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
     }
     if (ready_to_get) {
-        MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
+        MPIDI_OFI_get_huge_event(vni, NULL, (MPIR_Request *) recv_elem);
     }
 
   fn_exit:
@@ -237,7 +238,7 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     goto fn_exit;
 }
 
-static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
+static int send_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int c, num_nics;
@@ -291,13 +292,14 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
     goto fn_exit;
 }
 
-static int ssend_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
+static int ssend_ack_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
     int mpi_errno;
     MPIDI_OFI_ssendack_request_t *req = (MPIDI_OFI_ssendack_request_t *) sreq;
     MPIR_FUNC_ENTER;
     mpi_errno =
-        MPIDI_OFI_send_event(NULL, req->signal_req, MPIDI_OFI_REQUEST(req->signal_req, event_id));
+        MPIDI_OFI_send_event(vni, NULL, req->signal_req,
+                             MPIDI_OFI_REQUEST(req->signal_req, event_id));
 
     MPL_free(req);
     MPIR_FUNC_EXIT;
@@ -324,7 +326,7 @@ static uintptr_t recv_rbase(MPIDI_OFI_huge_recv_t * recv_elem)
  *
  * 3. As the event function when RDMA read (issued here) completes.
  */
-int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
+int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_huge_recv_t *recv_elem = (MPIDI_OFI_huge_recv_t *) req;
@@ -364,7 +366,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
              * Need to backup the handle here for later use with MPIDIU_map_erase. */
             uint64_t key_to_erase = recv_elem->localreq->handle;
             recv_elem->wc.len = recv_elem->cur_offset;
-            recv_elem->done_fn(&recv_elem->wc, recv_elem->localreq, recv_elem->event_id);
+            recv_elem->done_fn(vni, &recv_elem->wc, recv_elem->localreq, recv_elem->event_id);
             ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
             mpi_errno =
                 MPIDI_OFI_do_control_send(&ctrl, NULL, 0, recv_elem->remote_info.origin_rank,
@@ -436,7 +438,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
     goto fn_exit;
 }
 
-static int chunk_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
+static int chunk_done_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {
     int c;
     MPIR_FUNC_ENTER;
@@ -452,7 +454,7 @@ static int chunk_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
     return MPI_SUCCESS;
 }
 
-static int inject_emu_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
+static int inject_emu_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {
     int incomplete;
     MPIR_FUNC_ENTER;
@@ -469,7 +471,7 @@ static int inject_emu_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
     return MPI_SUCCESS;
 }
 
-static int accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+static int accept_probe_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     MPIR_FUNC_ENTER;
     MPIDI_OFI_dynamic_process_request_t *ctrl = (MPIDI_OFI_dynamic_process_request_t *) rreq;
@@ -481,7 +483,7 @@ static int accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
     return MPI_SUCCESS;
 }
 
-static int dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+static int dynproc_done_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     MPIR_FUNC_ENTER;
     MPIDI_OFI_dynamic_process_request_t *ctrl = (MPIDI_OFI_dynamic_process_request_t *) rreq;
@@ -490,7 +492,7 @@ static int dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
     return MPI_SUCCESS;
 }
 
-static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
+static int am_isend_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -500,7 +502,7 @@ static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
     msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
     MPID_Request_complete(sreq);
 
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool,
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vni[vni].pack_buf_pool,
                                       MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer));
     MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer) = NULL;
     mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
@@ -513,7 +515,7 @@ static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
     goto fn_exit;
 }
 
-static int am_isend_rdma_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
+static int am_isend_rdma_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -527,7 +529,8 @@ static int am_isend_rdma_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sre
     return mpi_errno;
 }
 
-static int am_isend_pipeline_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me)
+static int am_isend_pipeline_event(int vni, struct fi_cq_tagged_entry *wc,
+                                   MPIR_Request * dont_use_me)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -537,13 +540,14 @@ static int am_isend_pipeline_event(struct fi_cq_tagged_entry *wc, MPIR_Request *
     MPIR_FUNC_ENTER;
 
     ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_send_pipeline_request_t, context);
-    msg_hdr = &ofi_req->msg_hdr;
+    msg_hdr = ofi_req->msg_hdr;
     sreq = ofi_req->sreq;
     MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
 
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool, ofi_req->pack_buffer);
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vni[vni].pack_buf_pool,
+                                      ofi_req->pack_buffer);
 
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, ofi_req);
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vni[vni].am_hdr_buf_pool, ofi_req);
 
     int is_done = MPIDIG_am_send_async_finish_seg(sreq);
 
@@ -560,7 +564,7 @@ static int am_isend_pipeline_event(struct fi_cq_tagged_entry *wc, MPIR_Request *
     goto fn_exit;
 }
 
-static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+static int am_recv_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *am_hdr;
@@ -592,7 +596,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     }
 #endif
 
-    expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(am_hdr->fi_src_addr);
+    expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(vni, am_hdr->fi_src_addr);
     if (am_hdr->seqno != expected_seqno) {
         /* This message came earlier than the one that we were expecting.
          * Put it in the queue to process it later. */
@@ -601,7 +605,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
                          "Expected seqno=%d but got %d (am_type=%d addr=%" PRIx64 "). "
                          "Enqueueing it to the queue.\n",
                          expected_seqno, am_hdr->seqno, am_hdr->am_type, am_hdr->fi_src_addr));
-        mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(orig_buf);
+        mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(vni, orig_buf);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
@@ -666,7 +670,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     MPL_free(uo_msg);
 
     /* See if we can process other messages in the queue */
-    if ((uo_msg = MPIDI_OFI_am_claim_unordered_msg(fi_src_addr, next_seqno)) != NULL) {
+    if ((uo_msg = MPIDI_OFI_am_claim_unordered_msg(vni, fi_src_addr, next_seqno)) != NULL) {
         am_hdr = &uo_msg->am_hdr;
         orig_buf = am_hdr;
 #ifdef NEEDS_STRICT_ALIGNMENT
@@ -678,7 +682,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     }
 
     /* Record the next expected sequence number from fi_src_addr */
-    MPIDI_OFI_am_set_next_recv_seqno(fi_src_addr, next_seqno);
+    MPIDI_OFI_am_set_next_recv_seqno(vni, fi_src_addr, next_seqno);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -687,7 +691,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     goto fn_exit;
 }
 
-static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me)
+static int am_read_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
@@ -716,109 +720,109 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     } else {
         comm = rreq->comm;
     }
-    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_info).src_rank,
-                                              comm, MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_info).sreq_ptr);
+    MPIDI_OFI_lmt_msg_payload_t *lmt_info = (void *) MPIDI_OFI_AM_RREQ_HDR(rreq, am_hdr_buf);
+    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(lmt_info->src_rank, comm, lmt_info->sreq_ptr);
 
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     MPID_Request_complete(rreq);
   fn_exit:
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, ofi_req);
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vni[vni].am_hdr_buf_pool, ofi_req);
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
+int MPIDI_OFI_dispatch_function(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_SEND) {
         /* Passing the event_id as a parameter; do not need to load it from the
          * request object each time the send_event handler is invoked */
-        mpi_errno = MPIDI_OFI_send_event(wc, req, MPIDI_OFI_EVENT_SEND);
+        mpi_errno = MPIDI_OFI_send_event(vni, wc, req, MPIDI_OFI_EVENT_SEND);
         goto fn_exit;
     } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_RECV) {
         /* Passing the event_id as a parameter; do not need to load it from the
          * request object each time the send_event handler is invoked */
-        mpi_errno = MPIDI_OFI_recv_event(wc, req, MPIDI_OFI_EVENT_RECV);
+        mpi_errno = MPIDI_OFI_recv_event(vni, wc, req, MPIDI_OFI_EVENT_RECV);
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND)) {
-        mpi_errno = am_isend_event(wc, req);
+        mpi_errno = am_isend_event(vni, wc, req);
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND_RDMA)) {
-        mpi_errno = am_isend_rdma_event(wc, req);
+        mpi_errno = am_isend_rdma_event(vni, wc, req);
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND_PIPELINE)) {
-        mpi_errno = am_isend_pipeline_event(wc, req);
+        mpi_errno = am_isend_pipeline_event(vni, wc, req);
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_RECV)) {
         if (wc->flags & FI_RECV)
-            mpi_errno = am_recv_event(wc, req);
+            mpi_errno = am_recv_event(vni, wc, req);
 
         if (unlikely(wc->flags & FI_MULTI_RECV)) {
             MPIDI_OFI_am_repost_request_t *am = (MPIDI_OFI_am_repost_request_t *) req;
-            mpi_errno = MPIDI_OFI_am_repost_buffer(am->index);
+            mpi_errno = MPIDI_OFI_am_repost_buffer(vni, am->index);
         }
 
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_READ)) {
-        mpi_errno = am_read_event(wc, req);
+        mpi_errno = am_read_event(vni, wc, req);
         goto fn_exit;
     } else if (unlikely(1)) {
         switch (MPIDI_OFI_REQUEST(req, event_id)) {
             case MPIDI_OFI_EVENT_PEEK:
-                mpi_errno = peek_event(wc, req);
+                mpi_errno = peek_event(vni, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_RECV_HUGE:
-                mpi_errno = recv_huge_event(wc, req);
+                mpi_errno = recv_huge_event(vni, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_RECV_PACK:
-                mpi_errno = MPIDI_OFI_recv_event(wc, req, MPIDI_OFI_EVENT_RECV_PACK);
+                mpi_errno = MPIDI_OFI_recv_event(vni, wc, req, MPIDI_OFI_EVENT_RECV_PACK);
                 break;
 
             case MPIDI_OFI_EVENT_RECV_NOPACK:
-                mpi_errno = MPIDI_OFI_recv_event(wc, req, MPIDI_OFI_EVENT_RECV_NOPACK);
+                mpi_errno = MPIDI_OFI_recv_event(vni, wc, req, MPIDI_OFI_EVENT_RECV_NOPACK);
                 break;
 
             case MPIDI_OFI_EVENT_SEND_HUGE:
-                mpi_errno = send_huge_event(wc, req);
+                mpi_errno = send_huge_event(vni, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_SEND_PACK:
-                mpi_errno = MPIDI_OFI_send_event(wc, req, MPIDI_OFI_EVENT_SEND_PACK);
+                mpi_errno = MPIDI_OFI_send_event(vni, wc, req, MPIDI_OFI_EVENT_SEND_PACK);
                 break;
 
             case MPIDI_OFI_EVENT_SEND_NOPACK:
-                mpi_errno = MPIDI_OFI_send_event(wc, req, MPIDI_OFI_EVENT_SEND_NOPACK);
+                mpi_errno = MPIDI_OFI_send_event(vni, wc, req, MPIDI_OFI_EVENT_SEND_NOPACK);
                 break;
 
             case MPIDI_OFI_EVENT_SSEND_ACK:
-                mpi_errno = ssend_ack_event(wc, req);
+                mpi_errno = ssend_ack_event(vni, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_GET_HUGE:
-                mpi_errno = MPIDI_OFI_get_huge_event(wc, req);
+                mpi_errno = MPIDI_OFI_get_huge_event(vni, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_CHUNK_DONE:
-                mpi_errno = chunk_done_event(wc, req);
+                mpi_errno = chunk_done_event(vni, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_INJECT_EMU:
-                mpi_errno = inject_emu_event(wc, req);
+                mpi_errno = inject_emu_event(vni, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_DYNPROC_DONE:
-                mpi_errno = dynproc_done_event(wc, req);
+                mpi_errno = dynproc_done_event(vni, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_ACCEPT_PROBE:
-                mpi_errno = accept_probe_event(wc, req);
+                mpi_errno = accept_probe_event(vni, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_ABORT:
@@ -833,7 +837,7 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
     return mpi_errno;
 }
 
-int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret)
+int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_cq_err_entry e;
@@ -842,6 +846,7 @@ int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret)
     ssize_t ret_cqerr;
     MPIR_FUNC_ENTER;
 
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
     switch (ret) {
         case -FI_EAVAIL:
             /* Provide separate error buffer for each thread. This makes the
@@ -862,12 +867,13 @@ int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret)
 
                     switch (req->kind) {
                         case MPIR_REQUEST_KIND__SEND:
-                            mpi_errno = MPIDI_OFI_dispatch_function(NULL, req);
+                            mpi_errno = MPIDI_OFI_dispatch_function(vni, NULL, req);
                             break;
 
                         case MPIR_REQUEST_KIND__RECV:
                             mpi_errno =
-                                MPIDI_OFI_dispatch_function((struct fi_cq_tagged_entry *) &e, req);
+                                MPIDI_OFI_dispatch_function(vni, (struct fi_cq_tagged_entry *) &e,
+                                                            req);
                             req->status.MPI_ERROR = MPI_ERR_TRUNCATE;
                             break;
 
@@ -887,7 +893,7 @@ int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret)
 
                 case FI_ENOMSG:
                     req = MPIDI_OFI_context_to_request(e.op_context);
-                    mpi_errno = peek_empty_event(NULL, req);
+                    mpi_errno = peek_empty_event(vni, NULL, req);
                     break;
 
                 default:

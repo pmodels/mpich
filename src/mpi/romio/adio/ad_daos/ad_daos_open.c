@@ -70,10 +70,10 @@ static int cache_handles(struct ADIO_DAOS_cont *cont)
 {
     int rc;
 
-    cont->c = adio_daos_coh_lookup(cont->attr.da_cuuid);
+    cont->c = adio_daos_coh_lookup(&cont->attr);
     if (cont->c == NULL) {
         /** insert handle into container hashtable */
-        rc = adio_daos_coh_insert(cont->attr.da_cuuid, cont->coh, &cont->c);
+        rc = adio_daos_coh_insert(&cont->attr, cont->coh, NULL, &cont->c);
     } else {
         /** g2l handle not needed, already cached */
         rc = daos_cont_close(cont->coh, NULL);
@@ -82,10 +82,10 @@ static int cache_handles(struct ADIO_DAOS_cont *cont)
     if (rc)
         return rc;
 
-    cont->p = adio_daos_poh_lookup(cont->attr.da_puuid);
+    cont->p = adio_daos_poh_lookup(&cont->attr);
     if (cont->p == NULL) {
         /** insert handle into pool hashtable */
-        rc = adio_daos_poh_insert(cont->attr.da_puuid, cont->poh, &cont->p);
+        rc = adio_daos_poh_insert(&cont->attr, cont->poh, &cont->p);
     } else {
         /** g2l handle not needed, already cached */
         rc = daos_pool_disconnect(cont->poh, NULL);
@@ -97,13 +97,18 @@ static int cache_handles(struct ADIO_DAOS_cont *cont)
 
 static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
 {
-    char uuid_buf[74];
     d_iov_t pool_hdl = { NULL, 0, 0 };
     d_iov_t cont_hdl = { NULL, 0, 0 };
     d_iov_t dfs_hdl = { NULL, 0, 0 };
     d_iov_t file_hdl = { NULL, 0, 0 };
     char *buf = NULL;
-    uint64_t total_size = 0;
+    uint64_t total_size;
+    daos_size_t buf_size;
+#if CHECK_DAOS_API_VERSION(1, 4)
+    daos_size_t pool_len, cont_len;
+#else
+    daos_size_t pool_len = 37, cont_len = 37;
+#endif
     int rc = 0;
 
     if (rank == 0) {
@@ -120,7 +125,18 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
         if (rc)
             return rc;
 
-        total_size = sizeof(uuid_buf) + pool_hdl.iov_buf_len + cont_hdl.iov_buf_len +
+        buf_size = 0;
+#if CHECK_DAOS_API_VERSION(1, 4)
+        pool_len = strlen(cont->attr.da_pool) + 1;
+#endif
+        buf_size += pool_len;
+
+#if CHECK_DAOS_API_VERSION(1, 4)
+        cont_len = strlen(cont->attr.da_cont) + 1;
+#endif
+        buf_size += cont_len;
+
+        total_size = buf_size + pool_hdl.iov_buf_len + cont_hdl.iov_buf_len +
             dfs_hdl.iov_buf_len + file_hdl.iov_buf_len + sizeof(daos_size_t) * 4;
     }
 
@@ -137,10 +153,19 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
     if (rank == 0) {
         char *ptr = buf;
 
+#if CHECK_DAOS_API_VERSION(1, 4)
+        strcpy(ptr, cont->attr.da_pool);
+#else
         uuid_unparse(cont->attr.da_puuid, ptr);
-        ptr += 37;
+#endif
+        ptr += pool_len;
+
+#if CHECK_DAOS_API_VERSION(1, 4)
+        strcpy(ptr, cont->attr.da_cont);
+#else
         uuid_unparse(cont->attr.da_cuuid, ptr);
-        ptr += 37;
+#endif
+        ptr += cont_len;
 
         *((daos_size_t *) ptr) = pool_hdl.iov_buf_len;
         ptr += sizeof(daos_size_t);
@@ -185,15 +210,27 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
     if (rank != 0) {
         char *ptr = buf;
 
+#if CHECK_DAOS_API_VERSION(1, 4)
+        strncpy(cont->attr.da_pool, ptr, DAOS_PROP_LABEL_MAX_LEN + 1);
+        cont->attr.da_pool[DAOS_PROP_LABEL_MAX_LEN] = 0;
+        pool_len = strlen(cont->attr.da_pool) + 1;
+#else
         rc = uuid_parse(ptr, cont->attr.da_puuid);
         if (rc)
             goto out;
-        ptr += 37;
+#endif
+        ptr += pool_len;
 
+#if CHECK_DAOS_API_VERSION(1, 4)
+        strncpy(cont->attr.da_cont, ptr, DAOS_PROP_LABEL_MAX_LEN + 1);
+        cont->attr.da_cont[DAOS_PROP_LABEL_MAX_LEN] = 0;
+        cont_len = strlen(cont->attr.da_cont) + 1;
+#else
         rc = uuid_parse(ptr, cont->attr.da_cuuid);
         if (rc)
             goto out;
-        ptr += 37;
+#endif
+        ptr += cont_len;
 
         pool_hdl.iov_buf_len = *((daos_size_t *) ptr);
         ptr += sizeof(daos_size_t);
@@ -251,40 +288,66 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
 
 static int get_pool_cont_uuids(const char *path, struct duns_attr_t *attr)
 {
-    bool bypass_duns = false;
-    char *uuid_str;
+    char *str;
     int rc;
 
-    d_getenv_bool("DAOS_BYPASS_DUNS", &bypass_duns);
+    if (adio_daos_bypass_duns)
+        goto resolve_with_env;
 
-    if (!bypass_duns) {
+    if (adio_daos_path_prefix) {
+        char *new_path;
+
+        new_path = ADIOI_Malloc(strlen(path) + strlen(adio_daos_path_prefix) + 2);
+        if (new_path == NULL)
+            return ENOMEM;
+        snprintf(new_path, PATH_MAX, "%s/%s", adio_daos_path_prefix, path);
+        rc = duns_resolve_path(new_path, attr);
+        ADIOI_Free(new_path);
+    } else {
+#if CHECK_DAOS_API_VERSION(1, 4)
+        attr->da_flags = DUNS_NO_PREFIX;
+#else
         attr->da_no_prefix = true;
+#endif
         rc = duns_resolve_path(path, attr);
-        if (rc)
-            PRINT_MSG(stderr, "duns_resolve_path() failed on path %s (%d)\n", path, rc);
-        return rc;
     }
 
-    /* use the env variables to retrieve the pool and container */
-    uuid_str = getenv("DAOS_POOL");
-    if (uuid_str == NULL) {
-        PRINT_MSG(stderr, "Can't retrieve DAOS pool uuid\n");
+    if (rc)
+        PRINT_MSG(stderr, "duns_resolve_path() failed on path %s (%d)\n", path, rc);
+    return rc;
+
+  resolve_with_env:
+    /* use env variables to retrieve the pool and container */
+
+    str = getenv("DAOS_POOL");
+    if (str == NULL) {
+        PRINT_MSG(stderr, "Can't retrieve DAOS pool uuid/label\n");
         return EINVAL;
     }
-    if (uuid_parse(uuid_str, attr->da_puuid) < 0) {
+#if CHECK_DAOS_API_VERSION(1, 4)
+    strncpy(attr->da_pool, str, DAOS_PROP_LABEL_MAX_LEN + 1);
+    attr->da_pool[DAOS_PROP_LABEL_MAX_LEN] = 0;
+#else
+    if (uuid_parse(str, attr->da_puuid) < 0) {
         PRINT_MSG(stderr, "Failed to parse pool uuid\n");
         return EINVAL;
     }
+#endif
 
-    uuid_str = getenv("DAOS_CONT");
-    if (uuid_str == NULL) {
-        PRINT_MSG(stderr, "Can't retrieve DAOS cont uuid\n");
+    str = getenv("DAOS_CONT");
+    if (str == NULL) {
+        PRINT_MSG(stderr, "Can't retrieve DAOS cont uuid/label\n");
         return EINVAL;
     }
-    if (uuid_parse(uuid_str, attr->da_cuuid) < 0) {
-        PRINT_MSG(stderr, "Failed to parse container uuid\n");
+#if CHECK_DAOS_API_VERSION(1, 4)
+    strncpy(attr->da_cont, str, DAOS_PROP_LABEL_MAX_LEN + 1);
+    attr->da_cont[DAOS_PROP_LABEL_MAX_LEN] = 0;
+#else
+    if (uuid_parse(str, attr->da_cuuid) < 0) {
+        PRINT_MSG(stderr, "Failed to parse cont uuid\n");
         return EINVAL;
     }
+#endif
 
     attr->da_oclass_id = OC_UNKNOWN;
     attr->da_chunk_size = 0;
@@ -332,7 +395,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     fprintf(stderr, "OCLASS  = %d\n", cont->attr.da_oclass_id);
 #endif
 
-    rc = adio_daos_poh_lookup_connect(cont->attr.da_puuid, &cont->p);
+    rc = adio_daos_poh_lookup_connect(&cont->attr, &cont->p);
     if (rc) {
         PRINT_MSG(stderr, "Failed to connect to DAOS Pool (%d)\n", rc);
         *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
@@ -341,7 +404,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
     cont->poh = cont->p->open_hdl;
 
-    rc = adio_daos_coh_lookup_create(cont->poh, cont->attr.da_cuuid, O_RDWR,
+    rc = adio_daos_coh_lookup_create(cont->poh, &cont->attr, O_RDWR,
                                      (fd->access_mode & ADIO_CREATE), &cont->c);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
@@ -398,10 +461,6 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
   out:
     return;
-  err_obj:
-    dfs_release(cont->obj);
-    if (fd->access_mode & ADIO_CREATE)
-        dfs_remove(cont->dfs, NULL, cont->obj_name, false, NULL);
   err_cont:
     adio_daos_coh_release(cont->c);
     cont->c = NULL;
@@ -409,10 +468,14 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     adio_daos_poh_release(cont->p);
     cont->p = NULL;
   err_free:
+#if CHECK_DAOS_API_VERSION(1, 4)
+    duns_destroy_attr(&cont->attr);
+#else
     if (cont->attr.da_rel_path) {
         MPL_direct_free(cont->attr.da_rel_path);
         cont->attr.da_rel_path = NULL;
     }
+#endif
     ADIOI_Free(cont->obj_name);
     ADIOI_Free(cont->cont_name);
     goto out;
@@ -531,14 +594,14 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
         goto out_free;
     }
 
-    rc = adio_daos_poh_lookup_connect(attr.da_puuid, &p);
+    rc = adio_daos_poh_lookup_connect(&attr, &p);
     if (rc || p == NULL) {
         PRINT_MSG(stderr, "Failed to connect to pool\n");
         *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
         goto out_free;
     }
 
-    rc = adio_daos_coh_lookup_create(p->open_hdl, attr.da_cuuid, O_RDWR, false, &c);
+    rc = adio_daos_coh_lookup_create(p->open_hdl, &attr, O_RDWR, false, &c);
     if (rc || c == NULL) {
         *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
         goto out_pool;
@@ -582,8 +645,12 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
   out_pool:
     adio_daos_poh_release(p);
   out_free:
+#if CHECK_DAOS_API_VERSION(1, 4)
+    duns_destroy_attr(&attr);
+#else
     if (attr.da_rel_path)
         MPL_direct_free(attr.da_rel_path);
+#endif
     ADIOI_Free(obj_name);
     ADIOI_Free(cont_name);
     return;
