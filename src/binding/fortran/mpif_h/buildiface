@@ -44,7 +44,7 @@ my @out_prefixes = qw(mpi_ mpix_);
 $header_file = "mpi_fortimpl.h";
 $debug = 0;
 $writeRoutineList = 0;   # Set to 1 to get a list of MPI routines
-$do_fint = 0;            # Set to 1 to support C and Fortran integers of a
+$do_fint = 1;            # Set to 1 to support C and Fortran integers of a
                          # different size
 $within_fint = 0;        # This is set to 1 while generating code for the
                          # do_fint branch
