@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
 
                 MTestPrintfMsg(1,
                                "Sending partitions = %d, count = %ld (total size %d bytes) of datatype %s",
-                               partitions, partition_count, nbytes * sendcnt,
+                               partitions, partition_count, nbytes,
                                DTP_obj_get_description(send.dtp_obj));
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++)
