@@ -332,7 +332,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 #include "ch4_vci.h"
 
 /* Active message and generic implementatiions */
-#include "mpidig_am.h"
+#include "mpidig.h"
 #include "mpidch4r.h"
 
 /* Include netmod and shm implementations  */

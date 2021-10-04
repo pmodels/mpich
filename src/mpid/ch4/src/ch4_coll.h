@@ -7,7 +7,7 @@
 #define CH4_COLL_H_INCLUDED
 
 #include "ch4_impl.h"
-#include "ch4r_proc.h"
+#include "ch4_proc.h"
 #include "ch4_coll_impl.h"
 
 MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)

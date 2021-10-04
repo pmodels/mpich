@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef MPIDIG_AM_PART_UTILS_H_INCLUDED
-#define MPIDIG_AM_PART_UTILS_H_INCLUDED
+#ifndef MPIDIG_PART_UTILS_H_INCLUDED
+#define MPIDIG_PART_UTILS_H_INCLUDED
 
 #include "ch4_impl.h"
 
@@ -84,4 +84,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq,
   fn_fail:
     goto fn_exit;
 }
-#endif /* MPIDIG_AM_PART_UTILS_H_INCLUDED */
+#endif /* MPIDIG_PART_UTILS_H_INCLUDED */
