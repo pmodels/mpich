@@ -170,6 +170,9 @@ static int construct_resized(DTP_pool_s dtp, int attr_tree_depth, DTPI_Attr_s * 
         if (!VALUE_FITS_IN_AINT(e * count))
             continue;
 
+        if (!VALUE_FITS_IN_AINT(e + attr->u.resized.lb))
+            continue;
+
         attr->u.resized.extent = (MPI_Aint) e;
         break;
     }
