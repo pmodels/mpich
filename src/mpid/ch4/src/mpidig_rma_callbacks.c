@@ -1714,7 +1714,6 @@ int MPIDIG_put_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIR_Typerep_unflatten(dt, MPIDIG_REQUEST(rreq, req->preq.flattened_dt));
     MPIDIG_REQUEST(rreq, req->preq.dt) = dt;
     MPIDIG_REQUEST(rreq, datatype) = dt->handle;
-    MPIDIG_REQUEST(rreq, count) /= dt->size;
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = put_target_cmpl_cb;
     MPIDIG_recv_type_init(MPIDIG_REQUEST(rreq, req->preq.origin_data_sz), rreq);
