@@ -3770,11 +3770,7 @@ dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain th
 	# interface (was error)
 	# Check to see if the f77 binding has enabled the code to support
 	# the case of int != fint.
-	if grep HAVE_FINT_IS_INT $main_top_srcdir/src/binding/fortran/mpif_h/testf.c 2>&1 1>/dev/null ; then
-	    AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
-	else
-            AC_MSG_ERROR([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-fortran on the configure line for MPICH.])
-	fi
+        AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
     fi
 
     # We must convert all hex values to decimal (!).
