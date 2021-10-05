@@ -20,6 +20,10 @@ int MPIR_Assert_fail(const char *cond, const char *file_name, int line_num);
 int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, const char *fmt,
                          ...);
 
+/* Instead of "MPIR_Assert(0)", use "MPIR_Assert_error(error_msg)" */
+#define MPIR_Assert_error(errmsg) \
+    MPIR_Assert_fail(errmsg, __FILE__, __LINE__)
+
 /*
  * MPIR_Assert()
  *
