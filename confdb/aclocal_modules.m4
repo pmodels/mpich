@@ -79,7 +79,7 @@ AC_DEFUN([PAC_CONFIG_HWLOC],[
             PAC_APPEND_FLAG([-I${main_top_builddir}/modules/hwloc/include],[CPPFLAGS])
 
             # capture the line -- S["HWLOC_EMBEDDED_LIBS"]="-lm "
-            hwloc_embedded_libs=$(awk -F'"' '/^S."HWLOC_EMBEDDED_LIBS"/ {print $4}' modules/hwloc/config.status)
+            hwloc_embedded_libs=$(awk -F'"' '/^S."HWLOC_EMBEDDED_LIBS"/ {print $[]4}' modules/hwloc/config.status)
             echo "hwloc_embedded_libs = $hwloc_embedded_libs"
             if test -n "$hwloc_embedded_libs" ; then
                 dnl TODO: split and add individual lib
