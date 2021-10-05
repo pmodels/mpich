@@ -69,7 +69,7 @@ static int MPIR_fd_recv(int fd, void *buffer, int length)
 
     while (length) {
         /* See discussion on send above for the cast to int. */
-        num_bytes = (int) recv(fd, buffer, length, 0);
+        num_bytes = (int) recv(fd, buffer, length, MSG_DONTWAIT);
         /* --BEGIN ERROR HANDLING-- */
         if (num_bytes == -1) {
 #ifdef HAVE_WINDOWS_H
@@ -77,7 +77,11 @@ static int MPIR_fd_recv(int fd, void *buffer, int length)
 #else
             result = errno;
 #endif
-            if (result == SOCKET_EINTR) {
+            if (result == SOCKET_EINTR || result == EAGAIN || result == EWOULDBLOCK) {
+                /* poll global progress. This is necessary in case the sender is stuck in a barrier
+                 * which is waiting for an injected send from this process */
+                mpi_errno = MPID_Progress_test(NULL);
+                MPIR_ERR_CHECK(mpi_errno);
                 continue;
             } else {
                 MPIR_ERR_SET1(mpi_errno, MPI_ERR_INTERN, "**join_recv", "**join_recv %d", result);
