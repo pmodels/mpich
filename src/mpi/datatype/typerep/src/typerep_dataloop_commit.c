@@ -429,5 +429,5 @@ static void create_named(MPI_Datatype type)
 
 void MPIR_Typerep_free(MPIR_Datatype * typeptr)
 {
-    MPIR_Dataloop_free(&typeptr->typerep.handle);
+    MPIR_Dataloop_free((void **) &typeptr->typerep.handle);
 }
