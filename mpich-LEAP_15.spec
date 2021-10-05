@@ -61,7 +61,7 @@
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        1.g65dcaccf3%{?dist}
+Release:        1%{?dist}
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
