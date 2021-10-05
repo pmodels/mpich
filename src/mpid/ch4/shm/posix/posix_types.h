@@ -28,6 +28,7 @@ typedef struct {
     MPIDU_genq_private_pool_t am_hdr_buf_pool;
     MPIDI_POSIX_am_request_header_t *postponed_queue;
     MPIR_Request **active_rreq;
+    char pad MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
 } MPIDI_POSIX_per_vsi_t;
 
 typedef struct {

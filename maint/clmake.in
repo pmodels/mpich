@@ -90,6 +90,7 @@ $rootSrcDir = "";
     'copying python',
     'LOOP WAS VECTORIZED',
     'Using variables ',
+    'remark #\d+: .*', # intel compiler
 );
 # In the past, we also needed
 # WARNING 84.*not used for resolving any symbol

@@ -300,7 +300,7 @@ static int call_errhandler(MPIR_Errhandler * errhandler, int errorcode, int hand
             } else if (kind == MPIR_WIN) {
                 cxx_kind = 2;
             } else {
-                MPIR_Assert(0 && "not supported");
+                MPIR_Assert_error("kind not supported");
             }
             MPIR_Process.cxx_call_errfn(cxx_kind, &handle, &errorcode,
                                         (void (*)(void)) errhandler->errfn.C_Comm_Handler_function);

@@ -174,7 +174,7 @@ static int setup_single_nic(void)
 static int setup_multi_nic(int nic_count)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_hwtopo_gid_t parents[MPIDI_OFI_MAX_NICS];
+    MPIR_hwtopo_gid_t parents[MPIDI_OFI_MAX_NICS] = { 0 };
     int num_parents = 0;
     int local_rank = MPIR_Process.local_rank;
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;

@@ -243,7 +243,7 @@ typedef struct {
     int cq_buffered_static_tail;
     MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
 
-    char pad[] MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
+    char pad MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
 } MPIDI_OFI_per_vni_t;
 
 typedef struct {

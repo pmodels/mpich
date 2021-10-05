@@ -155,7 +155,7 @@ static int external32_basic_convert(char *dest_buf,
                      * range. It won't work if value overflow anyway. */
                     *(int64_t *) dest_ptr = (int32_t) tmp;
                 } else {
-                    MPIR_Assert(0 && "Unhandled conversion of unequal size");
+                    MPIR_Assert_error("Unhandled conversion of unequal size");
                 }
 
                 src_ptr += src_el_size;
@@ -169,14 +169,14 @@ static int external32_basic_convert(char *dest_buf,
                     tmp = (int32_t) (*(const int64_t *) src_ptr);
                     BASIC_convert32(tmp, *(uint32_t *) dest_ptr);
                 } else {
-                    MPIR_Assert(0 && "Unhandled conversion of unequal size");
+                    MPIR_Assert_error("Unhandled conversion of unequal size");
                 }
 
                 src_ptr += src_el_size;
                 dest_ptr += dest_el_size;
             }
         } else {
-            MPIR_Assert(0 && "Unhandled conversion of unequal size");
+            MPIR_Assert_error("Unhandled conversion of unequal size");
         }
     }
     return 0;
