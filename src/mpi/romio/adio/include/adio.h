@@ -239,6 +239,7 @@ typedef struct ADIOI_FileD {
 #ifdef ROMIO_QUOBYTEFS
     struct quobyte_fh *file_handle;     /* file handle for quobytefs */
 #endif
+    int dirty_write;            /* this client has written data */
 } ADIOI_FileD;
 
 typedef struct ADIOI_FileD *ADIO_File;

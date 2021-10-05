@@ -128,6 +128,12 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         fd->hints->min_fdomain_size = 0;
         fd->hints->striping_unit = 0;
 
+        /* temporally synchronizing flush: I think this is going to be a useful
+         * optimization for all users, but might have surprising hangs if
+         * client code incorrectly treats MPI_File_sync as independent */
+        ADIOI_Info_set(info, "romio_synchronized_flush", "disabled");
+        fd->hints->synchronizing_flush = 0;
+
         fd->hints->initialized = 1;
 
         /* ADIO_Open sets up collective buffering arrays.  If we are in this
@@ -249,6 +255,9 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
          * process hints for it. */
         ADIOI_Info_check_and_install_int(fd, users_info, "striping_unit",
                                          &(fd->hints->striping_unit), myname, error_code);
+
+        ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_synchronized_flush",
+                                             &(fd->hints->synchronizing_flush), myname, error_code);
     }
 
     /* Begin hint post-processig: some hints take precedence over or conflict
