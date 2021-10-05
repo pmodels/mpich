@@ -22,7 +22,7 @@
 
 %define pname mpich
 
-%define vers  4.0~a1
+%define vers  4.0~a2
 %define _vers 4_0
 
 %define build_flavor ofi
@@ -61,7 +61,7 @@
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        2.g032b3aeb2%{?dist}
+Release:        1.g65dcaccf3%{?dist}
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
@@ -460,6 +460,9 @@ fi
 %endif # !testsuite
 
 %changelog
+* Tue Oct 5 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 4.0~a2-1
+- Update to 4.0a2 git hash 65dcaccf3
+
 * Fri Aug 6 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 4.0~a1-2
 - remove --with-cart
 
