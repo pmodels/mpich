@@ -185,6 +185,11 @@ typedef struct {
     MPI_Aint data_sz;           /* save data_sz to avoid double checking */
 } MPIDI_OFI_am_request_t;
 
+enum MPIDI_OFI_req_kind {
+    MPIDI_OFI_req_kind__any,
+    MPIDI_OFI_req_kind__probe,
+    MPIDI_OFI_req_kind__mprobe,
+};
 
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
@@ -193,6 +198,11 @@ typedef struct {
     MPI_Datatype datatype;
     int nic_num;                /* Store the nic number so we can use it to cancel a request later
                                  * if needed. */
+    enum MPIDI_OFI_req_kind kind;
+    union {
+        struct fid_mr **send_mrs;
+        void *remote_info;
+    } huge;
     union {
         struct {
             void *buf;
