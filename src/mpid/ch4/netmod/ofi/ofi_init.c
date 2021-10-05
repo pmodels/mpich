@@ -528,7 +528,7 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
-                            offsetof(MPIDI_OFI_huge_recv_t, context));
+                            offsetof(MPIDI_OFI_read_chunk_t, context));
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_am_repost_request_t, context));
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
@@ -557,10 +557,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* -------------------------------- */
     MPIDIU_map_create(&MPIDI_OFI_global.win_map, MPL_MEM_RMA);
     MPIDIU_map_create(&MPIDI_OFI_global.req_map, MPL_MEM_OTHER);
-
-    /* Create huge protocol maps */
-    MPIDIU_map_create(&MPIDI_OFI_global.huge_send_counters, MPL_MEM_COMM);
-    MPIDIU_map_create(&MPIDI_OFI_global.huge_recv_counters, MPL_MEM_COMM);
 
     /* Initialize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
@@ -903,9 +899,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
     MPIDIU_map_destroy(MPIDI_OFI_global.req_map);
-
-    MPIDIU_map_destroy(MPIDI_OFI_global.huge_send_counters);
-    MPIDIU_map_destroy(MPIDI_OFI_global.huge_recv_counters);
 
     if (MPIDI_OFI_ENABLE_AM) {
         for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {

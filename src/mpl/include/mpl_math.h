@@ -12,6 +12,8 @@ extern "C" {
 #endif
 /* *INDENT-OFF* */
 
+#define MPL_DIV_ROUNDUP(total, chunk)  ((total + (chunk - 1)) / chunk)
+
 /* Returns the nearest (smaller than or equal to) power of two of a number*/
 static inline int MPL_pof2(int number)
 {
