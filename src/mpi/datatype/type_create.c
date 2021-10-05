@@ -34,7 +34,7 @@
         new_dtp->name[0] = 0; \
         new_dtp->contents = NULL; \
         new_dtp->flattened = NULL; \
-        new_dtp->typerep.handle = NULL; \
+        new_dtp->typerep.handle = MPIR_TYPEREP_HANDLE_NULL; \
     } while (0)
 
 int MPIR_Type_contiguous(MPI_Aint count, MPI_Datatype oldtype, MPI_Datatype * newtype)
