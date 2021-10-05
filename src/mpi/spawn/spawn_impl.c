@@ -22,7 +22,10 @@
 
 static int MPIR_fd_send(int fd, void *buffer, int length)
 {
+    int mpi_errno = MPI_SUCCESS;
     int result, num_bytes;
+
+    MPIR_FUNC_ENTER;
 
     while (length) {
         /* The expectation is that the length of a join message will fit
@@ -36,10 +39,12 @@ static int MPIR_fd_send(int fd, void *buffer, int length)
 #else
             result = errno;
 #endif
-            if (result == SOCKET_EINTR)
+            if (result == SOCKET_EINTR) {
                 continue;
-            else
-                return result;
+            } else {
+                MPIR_ERR_SET1(mpi_errno, MPI_ERR_INTERN, "**join_send", "**join_send %d", result);
+                goto fn_fail;
+            }
         }
         /* --END ERROR HANDLING-- */
         else {
@@ -47,12 +52,20 @@ static int MPIR_fd_send(int fd, void *buffer, int length)
             buffer = (char *) buffer + num_bytes;
         }
     }
-    return 0;
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static int MPIR_fd_recv(int fd, void *buffer, int length)
 {
+    int mpi_errno = MPI_SUCCESS;
     int result, num_bytes;
+
+    MPIR_FUNC_ENTER;
 
     while (length) {
         /* See discussion on send above for the cast to int. */
@@ -64,10 +77,12 @@ static int MPIR_fd_recv(int fd, void *buffer, int length)
 #else
             result = errno;
 #endif
-            if (result == SOCKET_EINTR)
+            if (result == SOCKET_EINTR) {
                 continue;
-            else
-                return result;
+            } else {
+                MPIR_ERR_SET1(mpi_errno, MPI_ERR_INTERN, "**join_recv", "**join_recv %d", result);
+                goto fn_fail;
+            }
         }
         /* --END ERROR HANDLING-- */
         else {
@@ -75,16 +90,22 @@ static int MPIR_fd_recv(int fd, void *buffer, int length)
             buffer = (char *) buffer + num_bytes;
         }
     }
-    return 0;
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Comm_join_impl(int fd, MPIR_Comm ** p_intercomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int err;
     MPIR_Comm *intercomm_ptr;
     char *local_port, *remote_port;
     MPIR_CHKLMEM_DECL(2);
+
+    MPIR_FUNC_ENTER;
 
     MPIR_CHKLMEM_MALLOC(local_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "local port name",
                         MPL_MEM_DYNAMIC);
@@ -96,13 +117,11 @@ int MPIR_Comm_join_impl(int fd, MPIR_Comm ** p_intercomm_ptr)
     mpi_errno = MPIR_Open_port_impl(NULL, local_port);
     MPIR_ERR_CHKANDJUMP((mpi_errno != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, "**openportfailed");
 
-    err = MPIR_fd_send(fd, local_port, MPI_MAX_PORT_NAME);
-    MPIR_ERR_CHKANDJUMP1((err != 0), mpi_errno, MPI_ERR_INTERN, "**join_send", "**join_send %d",
-                         err);
+    mpi_errno = MPIR_fd_send(fd, local_port, MPI_MAX_PORT_NAME);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    err = MPIR_fd_recv(fd, remote_port, MPI_MAX_PORT_NAME);
-    MPIR_ERR_CHKANDJUMP1((err != 0), mpi_errno, MPI_ERR_INTERN, "**join_recv", "**join_recv %d",
-                         err);
+    mpi_errno = MPIR_fd_recv(fd, remote_port, MPI_MAX_PORT_NAME);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_ERR_CHKANDJUMP2((strcmp(local_port, remote_port) == 0), mpi_errno, MPI_ERR_INTERN,
                          "**join_portname", "**join_portname %s %s", local_port, remote_port);
@@ -126,6 +145,7 @@ int MPIR_Comm_join_impl(int fd, MPIR_Comm ** p_intercomm_ptr)
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
