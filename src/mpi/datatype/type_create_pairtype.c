@@ -71,7 +71,7 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep.handle = NULL;
+    new_dtp->typerep.handle = MPIR_TYPEREP_HANDLE_NULL;
 
     switch (type) {
         case MPI_FLOAT_INT:

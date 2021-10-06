@@ -216,7 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                       (void *) &(ackreq->context)), vni_local, trecvsync, FALSE);
     }
 
-    send_buf = (char *) buf + dt_true_lb;
+    send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(send_buf, &attr);
     if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
@@ -404,7 +404,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
     if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send))) {
         MPI_Aint actual_pack_bytes = 0;
-        void *send_buf = (char *) buf + dt_true_lb;
+        void *send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(send_buf, &attr);
         if (attr.type == MPL_GPU_POINTER_DEV) {

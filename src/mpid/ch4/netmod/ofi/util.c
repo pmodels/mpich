@@ -188,33 +188,9 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
 
 
 /* MPI Datatype Processing for RMA */
-#define isS_INT(x) ((x)==MPI_INTEGER ||                                \
-    (x) == MPI_INT32_T || (x) == MPI_INTEGER4 ||       \
-                     (x) == MPI_INT)
-#define isUS_INT(x) ((x) == MPI_UINT32_T || (x) == MPI_UNSIGNED)
-#define isS_SHORT(x) ((x) == MPI_SHORT || (x) == MPI_INT16_T ||        \
-                       (x) == MPI_INTEGER2)
-#define isUS_SHORT(x) ((x) == MPI_UNSIGNED_SHORT || (x) == MPI_UINT16_T)
-#define isS_CHAR(x) ((x) == MPI_SIGNED_CHAR || (x) == MPI_INT8_T ||    \
-                      (x) == MPI_INTEGER1 || (x) == MPI_CHAR)
-#define isUS_CHAR(x) ((x) == MPI_BYTE ||                               \
-                       (x) == MPI_UNSIGNED_CHAR || (x) == MPI_UINT8_T)
-#define isS_LONG(x) ((x) == MPI_LONG || (x) == MPI_AINT)
-#define isUS_LONG(x) ((x) == MPI_UNSIGNED_LONG)
-#define isS_LONG_LONG(x) ((x) == MPI_INT64_T || (x) == MPI_OFFSET ||   \
-    (x) == MPI_INTEGER8 || (x) == MPI_LONG_LONG || \
-                           (x) == MPI_LONG_LONG_INT || (x) == MPI_COUNT)
-#define isUS_LONG_LONG(x) ((x) == MPI_UINT64_T || (x) == MPI_UNSIGNED_LONG_LONG)
 #define isFLOAT(x) ((x) == MPI_FLOAT || (x) == MPI_REAL)
 #define isDOUBLE(x) ((x) == MPI_DOUBLE || (x) == MPI_DOUBLE_PRECISION)
 #define isLONG_DOUBLE(x) ((x) == MPI_LONG_DOUBLE)
-#define isLOC_TYPE(x) ((x) == MPI_2REAL || (x) == MPI_2DOUBLE_PRECISION || \
-    (x) == MPI_2INTEGER || (x) == MPI_FLOAT_INT ||  \
-    (x) == MPI_DOUBLE_INT || (x) == MPI_LONG_INT || \
-    (x) == MPI_2INT || (x) == MPI_SHORT_INT ||      \
-                        (x) == MPI_LONG_DOUBLE_INT)
-#define isBOOL(x) ((x) == MPI_C_BOOL)
-#define isLOGICAL(x) ((x) == MPI_LOGICAL)
 #define isSINGLE_COMPLEX(x) ((x) == MPI_COMPLEX || (x) == MPI_C_FLOAT_COMPLEX)
 #define isDOUBLE_COMPLEX(x) ((x) == MPI_DOUBLE_COMPLEX || (x) == MPI_COMPLEX8 || \
                               (x) == MPI_C_DOUBLE_COMPLEX)
@@ -247,45 +223,64 @@ static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum 
     *fi_dt = FI_DATATYPE_LAST;
     *fi_op = FI_ATOMIC_OP_LAST;
 
-    if (isS_INT(dt))
-        *fi_dt = FI_INT32;
-    else if (isUS_INT(dt))
-        *fi_dt = FI_UINT32;
-    else if (isFLOAT(dt))
-        *fi_dt = FI_FLOAT;
-    else if (isDOUBLE(dt))
-        *fi_dt = FI_DOUBLE;
-    else if (isLONG_DOUBLE(dt))
-        *fi_dt = FI_LONG_DOUBLE;
-    else if (isS_CHAR(dt))
-        *fi_dt = FI_INT8;
-    else if (isUS_CHAR(dt))
-        *fi_dt = FI_UINT8;
-    else if (isS_SHORT(dt))
-        *fi_dt = FI_INT16;
-    else if (isUS_SHORT(dt))
-        *fi_dt = FI_UINT16;
-    else if (isS_LONG(dt))
-        *fi_dt = FI_INT64;
-    else if (isUS_LONG(dt))
-        *fi_dt = FI_UINT64;
-    else if (isS_LONG_LONG(dt))
-        *fi_dt = FI_INT64;
-    else if (isUS_LONG_LONG(dt))
-        *fi_dt = FI_UINT64;
-    else if (isSINGLE_COMPLEX(dt))
-        *fi_dt = FI_FLOAT_COMPLEX;
-    else if (isDOUBLE_COMPLEX(dt))
-        *fi_dt = FI_DOUBLE_COMPLEX;
-    else if (isLOC_TYPE(dt))
-        *fi_dt = FI_DATATYPE_LAST;
-    else if (isLOGICAL(dt))
-        *fi_dt = FI_UINT32;
-    else if (isBOOL(dt))
-        *fi_dt = FI_UINT8;
+    int dt_size;
+    MPIR_Datatype_get_size_macro(dt, dt_size);
 
-    if (*fi_dt == FI_DATATYPE_LAST)
+    if (dt == MPI_CHAR || dt == MPI_SIGNED_CHAR || dt == MPI_SHORT ||
+        dt == MPI_INT || dt == MPI_LONG || dt == MPI_LONG_LONG ||
+        dt == MPI_INT8_T || dt == MPI_INT16_T || dt == MPI_INT32_T || dt == MPI_INT64_T ||
+        dt == MPI_INTEGER || dt == MPI_INTEGER1 || dt == MPI_INTEGER2 ||
+        dt == MPI_INTEGER4 || dt == MPI_INTEGER8 ||
+        dt == MPI_AINT || dt == MPI_COUNT || dt == MPI_OFFSET) {
+        switch (dt_size) {
+            case 1:
+                *fi_dt = FI_INT8;
+                break;
+            case 2:
+                *fi_dt = FI_INT16;
+                break;
+            case 4:
+                *fi_dt = FI_INT32;
+                break;
+            case 8:
+                *fi_dt = FI_INT64;
+                break;
+            default:
+                goto fn_fail;
+        }
+    } else if (dt == MPI_UNSIGNED_CHAR || dt == MPI_UNSIGNED_SHORT || dt == MPI_UNSIGNED ||
+               dt == MPI_UNSIGNED_LONG || dt == MPI_UNSIGNED_LONG_LONG ||
+               dt == MPI_UINT8_T || dt == MPI_UINT16_T || dt == MPI_UINT32_T ||
+               dt == MPI_UINT64_T || dt == MPI_C_BOOL || dt == MPI_LOGICAL) {
+        switch (dt_size) {
+            case 1:
+                *fi_dt = FI_UINT8;
+                break;
+            case 2:
+                *fi_dt = FI_UINT16;
+                break;
+            case 4:
+                *fi_dt = FI_UINT32;
+                break;
+            case 8:
+                *fi_dt = FI_UINT64;
+                break;
+            default:
+                goto fn_fail;
+        }
+    } else if (isFLOAT(dt)) {
+        *fi_dt = FI_FLOAT;
+    } else if (isDOUBLE(dt)) {
+        *fi_dt = FI_DOUBLE;
+    } else if (isLONG_DOUBLE(dt)) {
+        *fi_dt = FI_LONG_DOUBLE;
+    } else if (isSINGLE_COMPLEX(dt)) {
+        *fi_dt = FI_FLOAT_COMPLEX;
+    } else if (isDOUBLE_COMPLEX(dt)) {
+        *fi_dt = FI_DOUBLE_COMPLEX;
+    } else {
         goto fn_fail;
+    }
 
     *fi_op = FI_ATOMIC_OP_LAST;
 

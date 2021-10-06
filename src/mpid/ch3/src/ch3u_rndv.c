@@ -235,7 +235,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, vo
 	iov[0].iov_base = (void *)rs_pkt;
 	iov[0].iov_len = sizeof(*rs_pkt);
 	
-	iov[1].iov_base = (void *)((char *)sreq->dev.user_buf + dt_true_lb);
+	iov[1].iov_base = MPIR_get_contig_ptr(sreq->dev.user_buf, dt_true_lb);
 	iov[1].iov_len = data_sz;
 
         MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);

@@ -311,7 +311,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         }
         mpi_errno = do_accumulate_op((void *) origin_addr, origin_count, origin_datatype,
-                                     (void *) ((char *) base + disp_unit * target_disp),
+                                     MPIR_get_contig_ptr(base, disp_unit * target_disp),
                                      target_count, target_datatype, 0, op,
                                      MPIDI_RMA_ACC_SRCBUF_DEFAULT);
         if (shm_op) {

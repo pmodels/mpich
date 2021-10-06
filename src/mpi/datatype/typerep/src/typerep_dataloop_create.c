@@ -13,7 +13,9 @@ static void update_type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint st
 {
     int old_is_contig;
     MPI_Aint old_sz;
-    MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub, eff_stride;
+    MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
+    /* we only need calc eff_stride if count > 1 */
+    MPI_Aint eff_stride = 0;
 
     if (HANDLE_IS_BUILTIN(oldtype)) {
         MPI_Aint el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
@@ -33,7 +35,9 @@ static void update_type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint st
         newtype->builtin_element_size = el_sz;
         newtype->basic_type = oldtype;
 
-        eff_stride = (strideinbytes) ? stride : (stride * el_sz);
+        if (count > 1) {
+            eff_stride = (strideinbytes) ? stride : (stride * el_sz);
+        }
     } else {    /* user-defined base type (oldtype) */
 
         MPIR_Datatype *old_dtp;
@@ -55,7 +59,9 @@ static void update_type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint st
         newtype->builtin_element_size = old_dtp->builtin_element_size;
         newtype->basic_type = old_dtp->basic_type;
 
-        eff_stride = (strideinbytes) ? stride : (stride * old_dtp->extent);
+        if (count > 1) {
+            eff_stride = (strideinbytes) ? stride : (stride * old_dtp->extent);
+        }
     }
 
     MPII_DATATYPE_VECTOR_LB_UB(count, eff_stride, blocklength,
@@ -419,7 +425,7 @@ int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype)
 
     MPIR_Datatype_get_ptr(oldtype, dtp);
     if (dtp->is_committed)
-        MPIR_Dataloop_dup(dtp->typerep.handle, &newtype->typerep.handle);
+        MPIR_Dataloop_dup(dtp->typerep.handle, (void **) &newtype->typerep.handle);
 
     newtype->is_contig = dtp->is_contig;
     newtype->size = dtp->size;

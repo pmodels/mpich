@@ -130,7 +130,7 @@ static inline int ADD_SUFFIX(send_normal) (struct MPIDI_VC * vc,
 #endif
 
     sreq->dev.match.parts.tag = match_bits;
-    send_buffer = (char *) buf + dt_true_lb;
+    send_buffer = MPIR_get_contig_ptr(buf, dt_true_lb);
     if (!dt_contig) {
         send_buffer = (char *) MPL_malloc(data_sz, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(send_buffer == NULL, mpi_errno,
@@ -263,7 +263,7 @@ ADD_SUFFIX(do_isend) (struct MPIDI_VC * vc,
         if (should_create_req == MPID_CREATE_REQ)
             MPID_nem_ofi_create_req_lw(request, 1);
 
-        mpi_errno = ADD_SUFFIX(send_lightweight) (vc, (char *) buf + dt_true_lb, data_sz,
+        mpi_errno = ADD_SUFFIX(send_lightweight) (vc, MPIR_get_contig_ptr(buf, dt_true_lb), data_sz,
                                                   dest, tag, comm, context_offset);
     } else
         mpi_errno = ADD_SUFFIX(send_normal) (vc, buf, count, datatype, dest, tag, comm,
@@ -380,7 +380,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted) (struct MPIDI_VC * vc, struct MPIR_Requ
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype,
                             dt_contig, data_sz, dt_ptr, dt_true_lb);
     if (dt_contig) {
-        recv_buffer = (char *) rreq->dev.user_buf + dt_true_lb;
+        recv_buffer = MPIR_get_contig_ptr(rreq->dev.user_buf, dt_true_lb);
     } else {
         recv_buffer = (char *) MPL_malloc(data_sz, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(recv_buffer == NULL, mpi_errno, MPI_ERR_OTHER,

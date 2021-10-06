@@ -188,8 +188,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
          */
 
         if (is_empty_origin == FALSE) {
-            iov[iovcnt].iov_base =
-                (void *) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
+            iov[iovcnt].iov_base = MPIR_get_contig_ptr(rma_op->origin_addr, dt_true_lb + stream_offset);
             iov[iovcnt].iov_len = stream_size;
             iovcnt++;
         }
@@ -242,8 +241,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     if (is_origin_contig) {
         /* origin data is contiguous */
         if (is_empty_origin == FALSE) {
-            iov[iovcnt].iov_base =
-                (void *) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
+            iov[iovcnt].iov_base = MPIR_get_contig_ptr(rma_op->origin_addr, dt_true_lb + stream_offset);
             iov[iovcnt].iov_len = stream_size;
             iovcnt++;
         }

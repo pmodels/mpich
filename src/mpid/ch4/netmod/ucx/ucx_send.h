@@ -62,7 +62,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     const void *send_buf;
     size_t send_count;
     if (dt_contig) {
-        send_buf = (char *) buf + dt_true_lb;
+        send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
         send_count = data_sz;
     } else {
         send_buf = buf;

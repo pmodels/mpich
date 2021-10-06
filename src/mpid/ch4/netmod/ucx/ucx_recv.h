@@ -106,7 +106,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     void *recv_buf;
     size_t recv_count;
     if (dt_contig) {
-        recv_buf = (char *) buf + dt_true_lb;
+        recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
         recv_count = data_sz;
     } else {
         recv_buf = buf;
@@ -160,7 +160,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     void *recv_buf;
     size_t recv_count;
     if (dt_contig) {
-        recv_buf = (char *) buf + dt_true_lb;
+        recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
         recv_count = data_sz;
     } else {
         recv_buf = buf;
