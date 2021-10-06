@@ -37,7 +37,7 @@ void MPIDI_OFI_complete_chunks(MPIDI_OFI_win_request_t * winreq)
                                 chunk->unpack_size, winreq->noncontig.get.origin.addr,
                                 winreq->noncontig.get.origin.count,
                                 winreq->noncontig.get.origin.datatype, chunk->unpack_offset,
-                                &actual_unpack_bytes);
+                                &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
             MPIR_Assert(chunk->unpack_size == actual_unpack_bytes);
         }
 
@@ -223,7 +223,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         MPIR_Typerep_pack(req->noncontig.put.origin.addr, req->noncontig.put.origin.count,
                           req->noncontig.put.origin.datatype,
                           req->noncontig.put.origin.pack_offset, pack_buffer,
-                          msg_len, &actual_pack_bytes);
+                          msg_len, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
         MPIR_Assert(msg_len == actual_pack_bytes);
 
         MPIDI_OFI_pack_chunk *chunk = create_chunk(pack_buffer, 0, 0, req);

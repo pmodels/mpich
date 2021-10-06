@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
                 /* Root packs the data before sending, for non contiguous datatypes */
                 mpi_errno =
                     MPIR_Typerep_pack(ori_buffer, ori_count, ori_datatype, 0, buffer, count,
-                                      &actual_packed_unpacked_bytes);
+                                      &actual_packed_unpacked_bytes, MPIR_TYPEREP_FLAG_NONE);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
             }
         }
@@ -151,7 +151,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
             /* Non-root unpack the data if expecting non-contiguous datatypes */
             mpi_errno =
                 MPIR_Typerep_unpack(buffer, count, ori_buffer, ori_count, ori_datatype, 0,
-                                    &actual_packed_unpacked_bytes);
+                                    &actual_packed_unpacked_bytes, MPIR_TYPEREP_FLAG_NONE);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
         }
         MPL_free(buffer);

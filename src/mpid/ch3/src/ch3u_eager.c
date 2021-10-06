@@ -394,8 +394,9 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
 		recv_data_sz = rreq->dev.recv_data_sz;
 
 		MPI_Aint actual_unpack_bytes;
-		MPIR_Typerep_unpack(eagershort_pkt->data, recv_data_sz, rreq->dev.user_buf,
-				 rreq->dev.user_count, rreq->dev.datatype, 0, &actual_unpack_bytes);
+        MPIR_Typerep_unpack(eagershort_pkt->data, recv_data_sz, rreq->dev.user_buf,
+                 rreq->dev.user_count, rreq->dev.datatype, 0, &actual_unpack_bytes,
+                 MPIR_TYPEREP_FLAG_NONE);
 
 		if (actual_unpack_bytes != recv_data_sz) {
 		    /* --BEGIN ERROR HANDLING-- */

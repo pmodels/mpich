@@ -353,7 +353,8 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
 
         MPI_Aint actual_pack_bytes;
         MPIR_Typerep_pack(origin_addr, origin_count, origin_datatype,
-                       stream_offset, packed_buf, stream_size, &actual_pack_bytes);
+                       stream_offset, packed_buf, stream_size, &actual_pack_bytes,
+                       MPIR_TYPEREP_FLAG_NONE);
         MPIR_Assert(actual_pack_bytes == stream_size);
 
         if (shm_op) {
@@ -473,7 +474,8 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
 
         MPI_Aint actual_pack_bytes;
         MPIR_Typerep_pack(origin_addr, origin_count, origin_datatype,
-                       stream_offset, packed_buf, stream_size, &actual_pack_bytes);
+                       stream_offset, packed_buf, stream_size, &actual_pack_bytes,
+                       MPIR_TYPEREP_FLAG_NONE);
         MPIR_Assert(actual_pack_bytes == stream_size);
 
         MPIR_Assert(stream_count == (int) stream_count);

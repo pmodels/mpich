@@ -258,7 +258,8 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
                 MPI_Aint actual_pack_bytes;
                 void *pbuf = (void *) ((char *) p->msg.msgbuf + p->msg.count);
                 mpi_errno =
-                    MPIR_Typerep_pack(buf, count, dtype, 0, pbuf, packsize, &actual_pack_bytes);
+                    MPIR_Typerep_pack(buf, count, dtype, 0, pbuf, packsize, &actual_pack_bytes,
+                                      MPIR_TYPEREP_FLAG_NONE);
                 MPIR_ERR_CHECK(mpi_errno);
                 p->msg.count += actual_pack_bytes;
             } else {

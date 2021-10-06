@@ -262,7 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPI_Aint actual_pack_bytes;
         MPIR_Typerep_pack(buf, count, datatype, 0,
                           MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer), data_sz,
-                          &actual_pack_bytes);
+                          &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer);
     } else {
         MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = NULL;
@@ -416,7 +416,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                 /* Force pack for GPU buffer. */
                 void *host_buf = NULL;
                 MPIR_gpu_malloc_host(&host_buf, data_sz);
-                MPIR_Typerep_pack(buf, count, datatype, 0, host_buf, data_sz, &actual_pack_bytes);
+                MPIR_Typerep_pack(buf, count, datatype, 0, host_buf, data_sz, &actual_pack_bytes,
+                                  MPIR_TYPEREP_FLAG_NONE);
                 MPIR_Assert(actual_pack_bytes == data_sz);
                 send_buf = host_buf;
             }

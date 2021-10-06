@@ -103,7 +103,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         MPI_Aint actual_pack_bytes;
         mpi_errno =
             MPIR_Typerep_pack(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
-                              data_sz, &actual_pack_bytes);
+                              data_sz, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(actual_pack_bytes == data_sz);
 

@@ -172,7 +172,8 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
 
             MPI_Aint actual_unpack_bytes;
             MPIR_Typerep_unpack(buf, data_sz, rreq->dev.user_buf, rreq->dev.user_count,
-                             rreq->dev.datatype, rreq->dev.msg_offset, &actual_unpack_bytes);
+                             rreq->dev.datatype, rreq->dev.msg_offset, &actual_unpack_bytes,
+                             MPIR_TYPEREP_FLAG_NONE);
 
             /* --BEGIN ERROR HANDLING-- */
             if (actual_unpack_bytes != data_sz)
