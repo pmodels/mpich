@@ -519,7 +519,7 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 	       datatype.  If not we should return an error (unless
 	       configured with --enable-fast) */
 	    MPIR_FUNC_ENTER;
-	    MPIR_Memcpy((char *)rreq->dev.user_buf + dt_true_lb, rreq->dev.tmpbuf,
+	    MPIR_Memcpy(MPIR_get_contig_ptr(rreq->dev.user_buf, dt_true_lb), rreq->dev.tmpbuf,
 		   unpack_sz);
 	    MPIR_FUNC_EXIT;
 	}

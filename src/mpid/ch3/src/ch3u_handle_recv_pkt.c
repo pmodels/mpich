@@ -138,7 +138,7 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
             MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"Copying contiguous data to user buffer");
             /* copy data out of the receive buffer */
             if (rreq->dev.drop_data == FALSE) {
-                MPIR_Memcpy((char*)(rreq->dev.user_buf) + dt_true_lb, buf, data_sz);
+                MPIR_Memcpy(MPIR_get_contig_ptr(rreq->dev.user_buf, dt_true_lb), buf, data_sz);
             }
             *buflen = data_sz;
             *complete = TRUE;
@@ -147,8 +147,7 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
         {
             MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"IOV loaded for contiguous read");
             
-            rreq->dev.iov[0].iov_base =
-                (void *)((char*)(rreq->dev.user_buf) + dt_true_lb);
+            rreq->dev.iov[0].iov_base = MPIR_get_contig_ptr(rreq->dev.user_buf, dt_true_lb);
             rreq->dev.iov[0].iov_len = data_sz;
             rreq->dev.iov_count = 1;
             *buflen = 0;
@@ -307,8 +306,7 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
 	   entire message.  However, we haven't yet *read* the data 
 	   (this code describes how to read the data into the destination) */
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"IOV loaded for contiguous read");
-	rreq->dev.iov[0].iov_base =
-	    (void *)((char*)(rreq->dev.user_buf) + dt_true_lb);
+	rreq->dev.iov[0].iov_base = MPIR_get_contig_ptr(rreq->dev.user_buf, dt_true_lb);
 	rreq->dev.iov[0].iov_len = data_sz;
 	rreq->dev.iov_count = 1;
 	/* FIXME: We want to set the OnDataAvail to the appropriate 

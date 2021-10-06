@@ -74,7 +74,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
     if (is_contig) {
         /* contiguous. no need to pack. */
-        tmp_buf = (char *) buffer + true_lb;
+        tmp_buf = MPIR_get_contig_ptr(buffer, true_lb);
     } else {
         tmp_buf = (void *) MPIR_TSP_sched_malloc(nbytes, sched);
 

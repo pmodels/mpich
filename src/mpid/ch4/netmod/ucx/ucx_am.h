@@ -89,7 +89,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         ucp_dt_iov_t *iov = sreq->dev.ch4.am.netmod_am.ucx.iov;
         iov[0].buffer = send_buf;
         iov[0].length = sizeof(ucx_hdr) + am_hdr_sz;
-        iov[1].buffer = (char *) data + dt_true_lb;
+        iov[1].buffer = MPIR_get_contig_ptr(data, dt_true_lb);
         iov[1].length = data_sz;
 
         send_buf_p = iov;

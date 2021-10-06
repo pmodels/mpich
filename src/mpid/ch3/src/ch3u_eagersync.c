@@ -64,7 +64,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **sreq_p,
 	
         iov[0].iov_base = (void *)es_pkt;
         iov[0].iov_len = sizeof(*es_pkt);
-	iov[1].iov_base = (void *) ((char *)buf + dt_true_lb);
+	iov[1].iov_base = MPIR_get_contig_ptr(buf, dt_true_lb);
 	iov[1].iov_len = data_sz;
 	
 	MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
