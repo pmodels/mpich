@@ -144,7 +144,7 @@ static int epoch_test(int seed, int testsize, int count, const char *basic_type,
             }
             /* target checks data, then target puts */
             if (rank == target_rank) {
-                errs += MTest_dtp_check(&target, 0, 1, count, errs < MAX_PERR);
+                errs += MTest_dtp_check(&target, 0, 1, count, &orig, errs < MAX_PERR);
 
                 err = MPI_Put((char *) orig.buf + orig.dtp_obj.DTP_buf_offset,
                               origcount, origtype, orig_rank,
@@ -163,7 +163,7 @@ static int epoch_test(int seed, int testsize, int count, const char *basic_type,
             }
             /* src checks data, then Src and target puts */
             if (rank == orig_rank) {
-                errs += MTest_dtp_check(&target, 0, 1, count, errs < MAX_PERR);
+                errs += MTest_dtp_check(&target, 0, 1, count, &orig, errs < MAX_PERR);
 
                 err = MPI_Put((char *) orig.buf + orig.dtp_obj.DTP_buf_offset, origcount, origtype,
                               target_rank, target.dtp_obj.DTP_buf_offset / extent, targetcount,
@@ -191,10 +191,10 @@ static int epoch_test(int seed, int testsize, int count, const char *basic_type,
             }
             /* src and target checks data */
             if (rank == orig_rank) {
-                errs += MTest_dtp_check(&target, 0, 1, count, errs < MAX_PERR);
+                errs += MTest_dtp_check(&target, 0, 1, count, &orig, errs < MAX_PERR);
             }
             if (rank == target_rank) {
-                errs += MTest_dtp_check(&target, 0, 1, count, errs < MAX_PERR);
+                errs += MTest_dtp_check(&target, 0, 1, count, &orig, errs < MAX_PERR);
             }
 
             MTest_dtp_destroy(&orig);

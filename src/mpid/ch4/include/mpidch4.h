@@ -13,8 +13,6 @@
  */
 
 int MPID_Init(int, int *);
-int MPID_Init_local(int requested, int *provided);
-int MPID_Init_world(void);
 int MPID_InitCompleted(void);
 MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Cancel_send(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
@@ -26,7 +24,7 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *, MPIR_Group **, int);
 int MPID_Comm_revoke(MPIR_Comm *, int);
 int MPID_Comm_failure_ack(MPIR_Comm *);
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm *) MPL_STATIC_INLINE_SUFFIX;
-int MPID_Comm_get_lpid(MPIR_Comm *, int, int *, bool);
+int MPID_Comm_get_lpid(MPIR_Comm *, int, uint64_t *, bool);
 int MPID_CS_finalize(void);
 int MPID_Finalize(void);
 int MPID_Get_universe_size(int *);
@@ -171,8 +169,8 @@ int MPID_Type_commit_hook(MPIR_Datatype *);
 int MPID_Type_free_hook(MPIR_Datatype *);
 int MPID_Op_commit_hook(MPIR_Op *);
 int MPID_Op_free_hook(MPIR_Op *);
-int MPID_Intercomm_exchange_map(MPIR_Comm *, int, MPIR_Comm *, int, int *, int **, int *);
-int MPID_Create_intercomm_from_lpids(MPIR_Comm *, int, const int[]);
+int MPID_Intercomm_exchange_map(MPIR_Comm *, int, MPIR_Comm *, int, int *, uint64_t **, int *);
+int MPID_Create_intercomm_from_lpids(MPIR_Comm *, int, const uint64_t[]);
 int MPID_Comm_commit_pre_hook(MPIR_Comm *);
 int MPID_Comm_free_hook(MPIR_Comm *);
 int MPID_Comm_set_hints(MPIR_Comm *, MPIR_Info *);
@@ -369,7 +367,8 @@ extern MPL_dbg_class MPIDI_CH4_DBG_COMM;
 extern MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
 #endif /* MPL_USE_DBG_LOGGING */
 
-
-
+/* routines only used during init */
+int MPIDI_create_init_comm(MPIR_Comm ** comm_ptr);
+void MPIDI_destroy_init_comm(MPIR_Comm ** comm_ptr);
 
 #endif /* MPIDCH4_H_INCLUDED */

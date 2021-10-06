@@ -16,6 +16,7 @@
 extern yaksa_info_t MPII_yaksa_info_nogpu;
 
 yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type);
+yaksa_type_t MPII_Typerep_get_yaksa_op(MPI_Op op);
 
 static inline yaksa_info_t MPII_yaksa_get_info(MPL_pointer_attr_t * inattr,
                                                MPL_pointer_attr_t * outattr)
@@ -29,7 +30,7 @@ static inline yaksa_info_t MPII_yaksa_get_info(MPL_pointer_attr_t * inattr,
 #ifdef MPL_HAVE_GPU
     /* Note: MPL_GPU_TYPE_CUDA/ZE are enums, can't be used in #if-expression. Use a branch
      * in stead. The branch should be optimized away. */
-    int rc;
+    int rc ATTRIBUTE((unused));
     if (MPL_HAVE_GPU == MPL_GPU_TYPE_CUDA) {
         yaksa_info_keyval_append(info, "yaksa_gpu_driver", "cuda", 5);
         rc = yaksa_info_keyval_append(info, "yaksa_cuda_inbuf_ptr_attr", &inattr->device_attr,

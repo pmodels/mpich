@@ -30,11 +30,7 @@
 #define MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE  (16 * 1024)
 #define MPIDI_OFI_MAX_NUM_AM_BUFFERS       (8)
 #define MPIDI_OFI_AM_BUFF_SZ               (1 * 1024 * 1024)
-#define MPIDI_OFI_CACHELINE_SIZE           (MPL_CACHELINE_SIZE)
 #define MPIDI_OFI_IOV_MAX                  (32)
-#define MPIDI_OFI_AM_HDR_POOL_CELL_SIZE            (1024)
-#define MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
-#define MPIDI_OFI_AM_HDR_POOL_MAX_NUM_CELLS         (257 * 1024)
 #define MPIDI_OFI_NUM_CQ_BUFFERED          (1024)
 #define MPIDI_OFI_STRIPE_CHUNK_SIZE        (2048)       /* First chunk sent through the preferred NIC during striping */
 
@@ -115,14 +111,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 
 /* Field accessor macros */
 #define MPIDI_OFI_AMREQUEST(req,field)     ((req)->dev.ch4.am.netmod_am.ofi.field)
-#define MPIDI_OFI_AMREQUEST_HDR(req,field) ((req)->dev.ch4.am.netmod_am.ofi.req_hdr->field)
-#define MPIDI_OFI_AMREQUEST_HDR_PTR(req)   ((req)->dev.ch4.am.netmod_am.ofi.req_hdr)
+#define MPIDI_OFI_AM_SREQ_HDR(req,field) ((req)->dev.ch4.am.netmod_am.ofi.sreq_hdr->field)
+#define MPIDI_OFI_AM_RREQ_HDR(req,field) ((req)->dev.ch4.am.netmod_am.ofi.rreq_hdr->field)
 #define MPIDI_OFI_REQUEST(req,field)       ((req)->dev.ch4.netmod.ofi.field)
 #define MPIDI_OFI_AV(av)                   ((av)->netmod.ofi)
 
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 
 #define MPIDI_OFI_NUM_CQ_ENTRIES 8
+/* MPICH requires at least 32 bits of space in the completion queue data field. */
+#define MPIDI_OFI_MIN_CQ_DATA_SIZE 4
 
 /* Typedefs */
 enum {
@@ -174,11 +172,11 @@ typedef struct MPIDI_OFI_am_send_pipeline_request {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIR_Request *sreq;
-    void *pack_buffer;
+    void *pack_buffer;          /* always allocated from pack_buf_pool */
+    void *msg_hdr;
     void *am_hdr;
-    uint16_t am_hdr_sz;
-    MPIDI_OFI_am_header_t msg_hdr MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
-    uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE] MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
+    void *am_data;
+    MPIDI_OFI_am_header_t msg_hdr_data MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
     struct iovec iov[3];
 } MPIDI_OFI_am_send_pipeline_request_t;
@@ -213,6 +211,41 @@ typedef struct {
     bool mpi_acc_valid;
 } MPIDI_OFI_atomic_valid_t;
 
+typedef struct MPIDI_OFI_cq_list_t {
+    struct fi_cq_tagged_entry cq_entry;
+    fi_addr_t source;
+    struct MPIDI_OFI_cq_list_t *next;
+} MPIDI_OFI_cq_list_t;
+
+/* global per-vni am related fields */
+typedef struct {
+    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+
+    MPIDU_genq_private_pool_t am_hdr_buf_pool;
+    MPIDU_genq_private_pool_t pack_buf_pool;
+
+    /* Queue to store defferend am send */
+    MPIDI_OFI_deferred_am_isend_req_t *deferred_am_isend_q;
+
+    /* Sequence number trackers for active messages */
+    void *am_send_seq_tracker;
+    void *am_recv_seq_tracker;
+
+    /* Queue (utlist) to store early-arrival active messages */
+    MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
+
+    /* Completion queue buffering */
+    struct fi_cq_tagged_entry cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
+    int cq_buffered_static_head;
+    int cq_buffered_static_tail;
+    MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
+
+    char pad[] MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
+} MPIDI_OFI_per_vni_t;
+
 typedef struct {
     struct fid_domain *domain;
     struct fid_av *av;
@@ -236,18 +269,8 @@ typedef struct {
 
 typedef union {
     MPID_Thread_mutex_t m;
-    char cacheline[MPIDI_OFI_CACHELINE_SIZE];
-} MPIDI_OFI_cacheline_mutex_t MPL_ATTR_ALIGNED(MPIDI_OFI_CACHELINE_SIZE);
-
-typedef struct MPIDI_OFI_cq_list_t {
-    struct fi_cq_tagged_entry cq_entry;
-    fi_addr_t source;
-    struct MPIDI_OFI_cq_list_t *next;
-} MPIDI_OFI_cq_list_t;
-
-typedef struct {
-    struct fi_cq_tagged_entry cq_entry;
-} MPIDI_OFI_cq_buff_entry_t;
+    char cacheline[MPL_CACHELINE_SIZE];
+} MPIDI_OFI_cacheline_mutex_t;
 
 typedef struct {
     unsigned enable_av_table:1;
@@ -323,6 +346,7 @@ typedef struct {
     /* Mutexes and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[MAX_OFI_MUTEXES];
     MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_VNIS * MPIDI_OFI_MAX_NICS];
+    MPIDI_OFI_per_vni_t per_vni[MPIDI_OFI_MAX_VNIS];
     int num_vnis;
     int num_nics;
     int num_close_nics;
@@ -335,28 +359,13 @@ typedef struct {
      * OFI provider at MPI initialization.*/
     MPIDI_OFI_atomic_valid_t win_op_table[MPIR_DATATYPE_N_PREDEFINED][MPIDIG_ACCU_NUM_OP];
 
+    /* huge protocol globals */
+    void *huge_send_counters;
+    void *huge_recv_counters;
+
     /* Active Message Globals */
-    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    MPIDU_genq_private_pool_t am_hdr_buf_pool;
     MPL_atomic_int_t am_inflight_inject_emus;
     MPL_atomic_int_t am_inflight_rma_send_mrs;
-    /* Sequence number trackers for active messages */
-    void *am_send_seq_tracker;
-    void *am_recv_seq_tracker;
-    /* Queue (utlist) to store early-arrival active messages */
-    MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
-
-    /* Pack buffers for various communication */
-    MPIDU_genq_private_pool_t pack_buf_pool;
-
-    /* Completion queue buffering */
-    MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
-    int cq_buffered_static_head;
-    int cq_buffered_static_tail;
-    MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
 
     /* Process management and PMI globals */
     int pname_set;
@@ -366,11 +375,7 @@ typedef struct {
     char pname[MPI_MAX_PROCESSOR_NAME];
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
 
-    /* Communication info for dynamic processes */
-    MPIDI_OFI_conn_manager_t conn_mgr;
-
     void *req_map;
-    MPIDI_OFI_deferred_am_isend_req_t *deferred_am_isend_q;
 
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
@@ -418,6 +423,7 @@ typedef struct MPIDI_OFI_pack_chunk {
 typedef struct MPIDI_OFI_win_request {
     struct MPIDI_OFI_win_request *next;
     struct MPIDI_OFI_win_request *prev;
+    int vni;
     int rma_type;
     MPIR_Request **sigreq;
     MPIDI_OFI_pack_chunk *chunks;
@@ -485,7 +491,7 @@ typedef struct MPIDI_OFI_huge_recv {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    int (*done_fn) (struct fi_cq_tagged_entry * wc, MPIR_Request * req, int event_id);
+    int (*done_fn) (int vni, struct fi_cq_tagged_entry * wc, MPIR_Request * req, int event_id);
     MPIDI_OFI_send_control_t remote_info;
     bool peek;                  /* Flag to indicate whether this struct has been created to track an uncompleted peek
                                  * operation. */

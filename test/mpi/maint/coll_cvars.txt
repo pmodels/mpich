@@ -1,0 +1,485 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
+# This config file is used by maint/gen_coll_cvar.py to generate
+# coll/testlist.cvar, which include tests that test specific collective
+# algorithms controlled by using CVARs.
+
+# The basic format are indentation-based hierarchy. There are 2 top level
+# groups -- "tests" and "algorithms".
+#
+# "tests" lists tests grouped by collective operation then by intra-blocking,
+# intra-nonblocking, inter-blocking, inter-nonblocking, and persistent. The
+# leaf-node specifies tests in the same format used in testlist.
+#
+# "algorithms" lists algorithm names grouped by hierarchy manner. Each
+# algorithm name, e.g. binomial under bcast intra-blocking, refers to
+#     MPIR_CVAR_BCAST_INTRA_ALGORITHM=binomial
+# Device layer algorithm are prefixed, e.g. posix:release_gather, refers to
+#     MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM=release_gather
+# Each algorithm can also have a list of additional cvar variables with a list
+# of values separated by comma. For example,
+#        .MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS=2,4
+#        .MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL=8,64
+# will generate 4 tests setting each CVAR respectively. Note the leading dot
+# part of the format, not part of the CVAR name.
+#
+# Each algorithm with each additional cvar choice will generate a test against
+# each test listed in the corresponding group. Additionally, each nonblocking
+# algorithm will be tested against each blocking test using the nb algorithm.
+# Each nonblocking algorithm will be tested against each persistent test as
+# well.
+
+-------------------------------------------------
+tests:
+    allgather:
+        intra-blocking:
+            allgather2 10
+            allgather3 10
+        persistent:
+            p_allgather 10
+    allgatherv:
+        intra-blocking:
+            allgatherv2 10
+            allgatherv3 10
+            allgatherv4 4 timeLimit=600
+        persistent:
+            p_allgatherv 10
+    allreduce:
+        intra-blocking:
+            allred 4 arg=-count=100
+            allred 7 arg=-count=10
+            allredmany 4
+            allred2 4
+            allred3 10
+            allred5 5
+            allred6 4
+            allred6 7
+        persistent:
+            p_allred 7
+    alltoall:
+        intra-blocking:
+            alltoall1 8
+        persistent:
+            p_alltoall 8
+    alltoallv:
+        intra-blocking:
+            alltoallv 8
+            alltoallv0 10
+        persistent:
+            p_alltoallv 10
+    alltoallw:
+        intra-blocking:
+            alltoallw1 10
+            alltoallw2 10
+            alltoallw_zeros 1
+            alltoallw_zeros 2
+            alltoallw_zeros 5
+            alltoallw_zeros 8
+        persistent:
+            p_alltoallw 10
+    bcast:
+        intra-blocking:
+            bcasttest 10
+            bcastzerotype 5
+        persistent:
+            p_bcast 4
+            p_bcast2 8
+    gather:
+        intra-blocking:
+            gather 4
+            gather2 4
+        persistent:
+            p_gather 4
+    gatherv:
+        intra-blocking:
+            gatherv 5
+        persistent:
+            p_gatherv 5
+    neighbor_allgather:
+        intra-blocking:
+            neighb_allgather 4
+        persistent:
+            p_neighb_allgather 4
+    neighbor_allgatherv:
+        intra-blocking:
+            neighb_allgatherv 4
+        persistent:
+            p_neighb_allgatherv 4
+    neighbor_alltoall:
+        intra-blocking:
+            neighb_alltoall 4
+        persistent:
+            p_neighb_alltoall 4
+    neighbor_alltoallv:
+        intra-blocking:
+            neighb_alltoallv 4
+        persistent:
+            p_neighb_alltoallv 4
+    neighbor_alltoallw:
+        intra-blocking:
+            neighb_alltoallw 4
+    reduce:
+        intra-blocking:
+            reduce 5
+            reduce 10
+            red3 10
+            red4 10
+        persistent:
+            p_red 5
+    reduce_scatter:
+        intra-blocking:
+            redscat 4
+            redscat 6
+            redscat2 4
+            redscat2 5
+            redscat2 10
+            redscat3 8
+        persistent:
+            p_redscat 4
+            redscat 4
+    reduce_scatter_block:
+        intra-blocking:
+            red_scat_block 4
+            red_scat_block 5
+            red_scat_block 8
+            red_scat_block2 4
+            red_scat_block2 5
+            red_scat_block2 10
+            redscatblk3 8
+            redscatblk3 10
+        persistent:
+            p_red_scat_block 4
+    scan:
+        intra-blocking:
+            scantst 4
+            op_coll 4
+        persistent:
+            p_scan 4
+    scatter:
+        intra-blocking:
+            scattern 4
+            scatter2 4
+            scatter3 4
+        persistent:
+            p_scatter 4
+    scatterv:
+        intra-blocking:
+            scatterv 4
+        persistent:
+            p_scatterv 4
+
+--------------------------------------------------
+algorithms:
+    allgather:
+        inter-blocking:
+            local_gather_remote_bcast
+        inter-nonblocking:
+            sched_local_gather_remote_bcast
+        intra-blocking:
+            brucks
+            recursive_doubling
+            ring
+        intra-nonblocking:
+            sched_ring
+            sched_brucks
+            sched_recursive_doubling
+            tsp_ring
+            tsp_brucks
+                .MPIR_CVAR_IALLGATHER_BRUCKS_KVAL=2,3,4
+            tsp_recexch_doubling
+                .MPIR_CVAR_IALLGATHER_RECEXCH_KVAL=2,3,4
+            tsp_recexch_halving
+                .MPIR_CVAR_IALLGATHER_RECEXCH_KVAL=2,3,4
+    allgatherv:
+        inter-blocking:
+            remote_gather_local_bcast
+        inter-nonblocking:
+            sched_remote_gather_local_bcast
+        intra-blocking:
+            brucks
+            recursive_doubling
+            ring
+        intra-nonblocking:
+            sched_brucks
+            sched_recursive_doubling
+            sched_ring
+            tsp_recexch_doubling
+                .MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL=2,3,4
+            tsp_recexch_halving
+                .MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL=2,3,4
+            tsp_ring
+            tsp_brucks
+                .MPIR_CVAR_IALLGATHERV_BRUCKS_KVAL=2,3,4
+    allreduce:
+        inter-blocking:
+            reduce_exchange_bcast
+        inter-nonblocking:
+            sched_remote_reduce_local_bcast
+        intra-blocking:
+            smp
+            recursive_doubling
+            reduce_scatter_allgather
+            posix:release_gather
+                .MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072
+                .MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=16384
+                .MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL=4,8
+        intra-nonblocking:
+            sched_naive
+            sched_smp
+            sched_recursive_doubling
+            sched_reduce_scatter_allgather
+            tsp_recexch_single_buffer
+            tsp_recexch_multiple_buffer
+            tsp_tree
+                .MPIR_CVAR_IALLREDUCE_TREE_TYPE=kary,knomial_1,knomial_2
+                .MPIR_CVAR_IALLREDUCE_TREE_KVAL=2,3,4
+                .MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096
+            tsp_ring
+            tsp_recexch_reduce_scatter_recexch_allgatherv
+                .MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=2,3,4
+    alltoall:
+        inter-blocking:
+            pairwise_exchange
+        inter-nonblocking:
+            sched_pairwise_exchange
+        intra-blocking:
+            brucks
+            pairwise
+            pairwise_sendrecv_replace
+            scattered
+        intra-nonblocking:
+            sched_brucks
+            sched_inplace
+            sched_pairwise
+            sched_permuted_sendrecv
+            tsp_ring
+            tsp_brucks
+                .MPIR_CVAR_IALLTOALL_BRUCKS_KVAL=2,3,4
+                .MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=0,1
+            tsp_scattered
+                .MPIR_CVAR_IALLTOALL_SCATTERED_BATCH_SIZE=1,2,4
+                .MPIR_CVAR_IALLTOALL_SCATTERED_OUTSTANDING_TASKS=4,8
+    alltoallv:
+        inter-blocking:
+            pairwise_exchange
+        inter-nonblocking:
+            sched_pairwise_exchange
+        intra-blocking:
+            pairwise_sendrecv_replace
+            scattered
+        intra-nonblocking:
+            sched_blocked
+            sched_inplace
+            tsp_scattered
+                .MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE=1,2,4
+                .MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS=4,8
+            tsp_blocked
+            tsp_inplace
+    alltoallw:
+        inter-blocking:
+            pairwise_exchange
+        inter-nonblocking:
+            sched_pairwise_exchange
+        intra-blocking:
+            pairwise_sendrecv_replace
+            scattered
+        intra-nonblocking:
+            sched_blocked
+            sched_inplace
+            tsp_blocked
+            tsp_inplace
+    barrier:
+        inter-blocking:
+            bcast
+        inter-nonblocking:
+            sched_bcast
+        intra-blocking:
+            dissemination
+        intra-nonblocking:
+            sched_recursive_doubling
+            tsp_recexch
+    bcast:
+        inter-blocking:
+            remote_send_local_bcast
+        inter-nonblocking:
+            sched_flat
+        intra-blocking:
+            binomial
+            smp
+            scatter_recursive_doubling_allgather
+            scatter_ring_allgather
+            posix:release_gather
+                .MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072
+                .MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE=16384,32768
+                .MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS=2,4
+                .MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL=8,64
+                .MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE=knomial_1,knomial_2
+        intra-nonblocking:
+            sched_binomial
+            sched_smp
+            sched_scatter_recursive_doubling_allgather
+            sched_scatter_ring_allgather
+            tsp_tree
+                .MPIR_CVAR_IBCAST_TREE_TYPE=kary,knomial_1,knomial_2
+                .MPIR_CVAR_IBCAST_TREE_KVAL=3
+                .MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE=4096
+            tsp_scatterv_recexch_allgatherv
+                .MPIR_CVAR_IBCAST_SCATTERV_KVAL=3
+                .MPIR_CVAR_IBCAST_ALLGATHER_RECEXCH=3
+            tsp_ring
+                .MPIR_CVAR_IBCAST_RING_CHUNK_SIZE=4096
+    exscan:
+        intra-blocking:
+            recursive_doubling
+        intra-nonblocking:
+            sched_recursive_doubling
+    gather:
+        inter-blocking:
+            linear
+            local_gather_remote_send
+        inter-nonblocking:
+            sched_long
+            sched_short
+        intra-blocking:
+            binomial
+        intra-nonblocking:
+            sched_binomial
+            tsp_tree
+                .MPIR_CVAR_IGATHER_TREE_KVAL=2,3,4
+    gatherv:
+        inter-blocking:
+            linear
+        inter-nonblocking:
+            sched_linear
+        intra-blocking:
+            linear
+        intra-nonblocking:
+            sched_linear
+            tsp_linear
+    neighbor_allgather:
+        inter-nonblocking:
+            sched_linear
+            tsp_linear
+        intra-nonblocking:
+            sched_linear
+            tsp_linear
+    neighbor_allgatherv:
+        inter-nonblocking:
+            sched_linear
+            tsp_linear
+        intra-nonblocking:
+            sched_linear
+            tsp_linear
+    neighbor_alltoall:
+        inter-nonblocking:
+            sched_linear
+            tsp_linear
+        intra-nonblocking:
+            sched_linear
+            tsp_linear
+    neighbor_alltoallv:
+        inter-nonblocking:
+            sched_linear
+            tsp_linear
+        intra-nonblocking:
+            sched_linear
+            tsp_linear
+    neighbor_alltoallw:
+        inter-nonblocking:
+            sched_linear
+            tsp_linear
+        intra-nonblocking:
+            sched_linear
+            tsp_linear
+    reduce:
+        inter-blocking:
+            local_reduce_remote_send
+        inter-nonblocking:
+            sched_local_reduce_remote_send
+        intra-blocking:
+            binomial
+            smp
+            reduce_scatter_gather
+            posix:release_gather
+                .MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072
+                .MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=16384,32768
+                .MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS=2,4
+                .MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL=4,8
+                .MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE=knomial_1,knomial_2
+        intra-nonblocking:
+            sched_smp
+            sched_binomial
+            sched_reduce_scatter_gather
+            tsp_tree
+                .MPIR_CVAR_IREDUCE_TREE_TYPE=kary,knomial_1,knomial_2
+                .MPIR_CVAR_IREDUCE_TREE_KVAL=3
+                .MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096
+            tsp_ring
+                .MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE=4096
+    reduce_scatter:
+        inter-blocking:
+            remote_reduce_local_scatter
+        inter-nonblocking:
+            sched_remote_reduce_local_scatterv
+        intra-blocking:
+            pairwise
+            recursive_halving
+            recursive_doubling
+        intra-nonblocking:
+            sched_noncommutative
+            sched_pairwise
+            sched_recursive_halving
+            sched_recursive_doubling
+            tsp_recexch
+                .MPIR_CVAR_IREDUCE_SCATTER_RECEXCH_KVAL=2,3,4
+    reduce_scatter_block:
+        inter-blocking:
+            remote_reduce_local_scatter
+        inter-nonblocking:
+            sched_remote_reduce_local_scatterv
+        intra-blocking:
+            noncommutative
+            pairwise
+            recursive_halving
+            recursive_doubling
+        intra-nonblocking:
+            sched_noncommutative
+            sched_pairwise
+            sched_recursive_halving
+            sched_recursive_doubling
+            tsp_recexch
+                .MPIR_CVAR_IREDUCE_SCATTER_BLOCK_RECEXCH_KVAL=2,3,4
+    scan:
+        intra-blocking:
+            smp
+            recursive_doubling
+        intra-nonblocking:
+            sched_smp
+            sched_recursive_doubling
+            tsp_recursive_doubling
+    scatter:
+        inter-blocking:
+            linear
+            remote_send_local_scatter
+        inter-nonblocking:
+            sched_linear
+            sched_remote_send_local_scatter
+        intra-blocking:
+            binomial
+        intra-nonblocking:
+            sched_binomial
+            tsp_tree
+                .MPIR_CVAR_ISCATTER_TREE_KVAL=2,3,4
+    scatterv:
+        inter-blocking:
+            linear
+        inter-nonblocking:
+            sched_linear
+        intra-blocking:
+            linear
+        intra-nonblocking:
+            sched_linear
+            tsp_linear

@@ -15,7 +15,6 @@ int MPIR_Ireduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint co
     void *tmp_buf = NULL;
     MPIR_Comm *nc;
     MPIR_Comm *nrc;
-    MPIR_SCHED_CHKPMEM_DECL(1);
 
     MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
@@ -37,15 +36,15 @@ int MPIR_Ireduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint co
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPIR_Datatype_get_extent_macro(datatype, extent);
 
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)),
-                                  mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+        tmp_buf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+        MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *) ((char *) tmp_buf - true_lb);
     }
 
     /* do the intranode reduce on all nodes other than the root's node */
     if (nc != NULL && MPIR_Get_intranode_rank(comm_ptr, root) == -1) {
-        mpi_errno = MPIR_Ireduce_sched_auto(sendbuf, tmp_buf, count, datatype, op, 0, nc, s);
+        mpi_errno = MPIR_Ireduce_intra_sched_auto(sendbuf, tmp_buf, count, datatype, op, 0, nc, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
@@ -56,9 +55,9 @@ int MPIR_Ireduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint co
             /* I am not on root's node.  Use tmp_buf if we
              * participated in the first reduce, otherwise use sendbuf */
             const void *buf = (nc == NULL ? sendbuf : tmp_buf);
-            mpi_errno = MPIR_Ireduce_sched_auto(buf, NULL, count, datatype,
-                                                op, MPIR_Get_internode_rank(comm_ptr, root), nrc,
-                                                s);
+            mpi_errno = MPIR_Ireduce_intra_sched_auto(buf, NULL, count, datatype,
+                                                      op, MPIR_Get_internode_rank(comm_ptr, root),
+                                                      nrc, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         } else {        /* I am on root's node. I have not participated in the earlier reduce. */
@@ -66,9 +65,10 @@ int MPIR_Ireduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint co
                 /* I am not the root though. I don't have a valid recvbuf.
                  * Use tmp_buf as recvbuf. */
 
-                mpi_errno = MPIR_Ireduce_sched_auto(sendbuf, tmp_buf, count, datatype,
-                                                    op, MPIR_Get_internode_rank(comm_ptr, root),
-                                                    nrc, s);
+                mpi_errno = MPIR_Ireduce_intra_sched_auto(sendbuf, tmp_buf, count, datatype,
+                                                          op, MPIR_Get_internode_rank(comm_ptr,
+                                                                                      root), nrc,
+                                                          s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
@@ -77,9 +77,10 @@ int MPIR_Ireduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint co
             } else {
                 /* I am the root. in_place is automatically handled. */
 
-                mpi_errno = MPIR_Ireduce_sched_auto(sendbuf, recvbuf, count, datatype,
-                                                    op, MPIR_Get_internode_rank(comm_ptr, root),
-                                                    nrc, s);
+                mpi_errno = MPIR_Ireduce_intra_sched_auto(sendbuf, recvbuf, count, datatype,
+                                                          op, MPIR_Get_internode_rank(comm_ptr,
+                                                                                      root), nrc,
+                                                          s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
@@ -91,17 +92,16 @@ int MPIR_Ireduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint co
 
     /* do the intranode reduce on the root's node */
     if (nc != NULL && MPIR_Get_intranode_rank(comm_ptr, root) != -1) {
-        mpi_errno = MPIR_Ireduce_sched_auto(sendbuf, recvbuf, count, datatype,
-                                            op, MPIR_Get_intranode_rank(comm_ptr, root), nc, s);
+        mpi_errno = MPIR_Ireduce_intra_sched_auto(sendbuf, recvbuf, count, datatype,
+                                                  op, MPIR_Get_intranode_rank(comm_ptr, root), nc,
+                                                  s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

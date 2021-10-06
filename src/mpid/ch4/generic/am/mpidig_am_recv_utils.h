@@ -28,9 +28,37 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_set_buffer_attr(MPIR_Request * rreq)
     p->is_device_buffer = (attr.type == MPL_GPU_POINTER_DEV);
 }
 
-/* caching recv buffer information */
-MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_check_rndv_cb(MPIR_Request * rreq)
 {
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb) {
+        mpi_errno = MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (MPIDIG_REQUEST(rreq, rndv_hdr)) {
+            MPL_free(MPIDIG_REQUEST(rreq, rndv_hdr));
+            MPIDIG_REQUEST(rreq, rndv_hdr) = NULL;
+        }
+        /* the data_copy_cb may complete rreq (e.g. ucx am_send_hdr may invoke
+         * progress recursively and finish several callbacks before it return.
+         * Thus we need check MPIDIG_REQUEST(rreq, req) still there. */
+        if (MPIDIG_REQUEST(rreq, req)) {
+            MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb = NULL;
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* caching recv buffer information */
+MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     p->recv_type = MPIDIG_RECV_DATATYPE;
     p->in_data_sz = in_data_sz;
@@ -43,11 +71,21 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Re
     if (in_data_sz > max_data_size) {
         rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(max_data_size, in_data_sz);
     }
+
+    mpi_errno = MPIDIG_recv_check_rndv_cb(rreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_sz,
-                                               void *data, MPI_Aint data_sz, MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_init(int is_contig, MPI_Aint in_data_sz,
+                                              void *data, MPI_Aint data_sz, MPIR_Request * rreq)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     p->in_data_sz = in_data_sz;
     if (is_contig) {
@@ -61,6 +99,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_s
     }
 
     MPIDIG_recv_set_buffer_attr(rreq);
+
+    mpi_errno = MPIDIG_recv_check_rndv_cb(rreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_finish(MPIR_Request * rreq)
@@ -272,6 +318,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
             return 0;
         }
     }
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_recv_initialized(MPIR_Request * rreq)
+{
+    return MPIDIG_REQUEST(rreq, req->recv_async).recv_type != MPIDIG_RECV_NONE;
+}
+
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDIG_recv_in_data_sz(MPIR_Request * rreq)
+{
+    return MPIDIG_REQUEST(rreq, req->recv_async).in_data_sz;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_set_data_copy_cb(MPIR_Request * rreq,
+                                                           MPIDIG_recv_data_copy_cb cb)
+{
+    MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb = cb;
 }
 
 /* internal routines */

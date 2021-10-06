@@ -32,9 +32,8 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, struct iovec *iov, int n_iov, MPIR_Req
     int in_cs = FALSE;
     int again = 0;
     int j;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
+    MPIR_FUNC_ENTER;
 
     MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
 
@@ -180,7 +179,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, struct iovec *iov, int n_iov, MPIR_Req
     if (in_cs) {
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:
     goto fn_exit;

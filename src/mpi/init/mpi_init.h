@@ -25,16 +25,18 @@ cvars:
         If true, list any memory that was allocated by MPICH and that
         remains allocated when MPI_Finalize completes.
 
-    - name        : MPIR_CVAR_MEM_CATEGORY_INFORMATION
+    - name        : MPIR_CVAR_DEBUG_SUMMARY
       category    : DEVELOPER
+      alt-env     : MPIR_CVAR_MEM_CATEGORY_INFORMATION, MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG, MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG
       type        : boolean
       default     : false
       class       : none
       verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If true, print a summary of memory allocation by category. The category
-        definitions are found in mpl_trmem.h.
+        If true, print internal summary of various debug information, such as memory allocation by category.
+        Each layer may print their own summary information. For example, ch4-ofi may print its provider
+        capability settings.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -48,7 +50,6 @@ void MPII_thread_mutex_create(void);
 void MPII_thread_mutex_destroy(void);
 
 int MPII_init_local_proc_attrs(int *p_thread_required);
-int MPII_finalize_local_proc_attrs(void);
 int MPII_init_tag_ub(void);
 
 void MPII_init_windows(void);
@@ -61,6 +62,7 @@ int MPII_init_async(void);
 int MPII_finalize_async(void);
 
 void MPII_Call_finalize_callbacks(int min_prio, int max_prio);
+void MPII_dump_debug_summary(void);
 
 /* MPI_Init[_thread]/MPI_Finalize only can be used in "world" model where it only
  * can be initialized and finalized once, while we can have multiple sessions.
@@ -87,7 +89,9 @@ static inline void MPII_world_set_finalized(void)
 
 static inline bool MPII_world_is_initialized(void)
 {
-    return (MPL_atomic_load_int(&MPIR_world_model_state) == MPICH_WORLD_MODEL_INITIALIZED);
+    /* Note: the standards says that whether MPI_FINALIZE has been called does
+     * not affect the behavior of MPI_INITIALIZED. */
+    return (MPL_atomic_load_int(&MPIR_world_model_state) != MPICH_WORLD_MODEL_UNINITIALIZED);
 }
 
 static inline bool MPII_world_is_finalized(void)
@@ -115,8 +119,7 @@ static inline void MPII_pre_init_memory_tracing(void)
 static inline void MPII_post_init_memory_tracing(void)
 {
 #ifdef USE_MEMORY_TRACING
-    MPL_trconfig(MPIR_Process.comm_world->rank,
-                 MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
+    MPL_trconfig(MPIR_Process.rank, MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 #endif
 }
 
@@ -133,7 +136,7 @@ static inline void MPII_finalize_memory_tracing(void)
              * ignore, if desired, memory leaks in the MPID_Init call */
             MPL_trdump((void *) 0, -1);
         }
-        if (MPIR_CVAR_MEM_CATEGORY_INFORMATION)
+        if (MPIR_CVAR_DEBUG_SUMMARY)
             MPL_trcategorydump(stderr);
     }
 #endif

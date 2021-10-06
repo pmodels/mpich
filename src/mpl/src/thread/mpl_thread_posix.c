@@ -4,6 +4,7 @@
  */
 
 #include "mpl.h"
+#include <sched.h>
 
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
@@ -50,7 +51,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         thread_info->data = data;
 
         err = pthread_create(idp, NULL, MPLI_thread_start, thread_info);
-        /* FIXME: convert error to an MPL_THREAD_ERR value */
+        /* FIXME: convert error to an MPL_ERR_THREAD value */
     } else {
         err = 1000000000;
     }
@@ -80,6 +81,47 @@ void *MPLI_thread_start(void *arg)
     func(data);
 
     return NULL;
+}
+
+void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affinity_size,
+                             int *errp)
+{
+#if defined(MPL_HAVE_PTHREAD_SETAFFINITY_NP) && defined(MPL_HAVE_CPU_SET_MACROS)
+    int err = MPL_SUCCESS, pthread_err;
+    int proc_idx, set_size = 0;
+    cpu_set_t cpuset;
+    __CPU_ZERO_S(sizeof(cpu_set_t), &cpuset);
+
+    for (proc_idx = 0; proc_idx < affinity_size; proc_idx++)
+        __CPU_SET_S(affinity_arr[proc_idx], sizeof(cpu_set_t), &cpuset);
+
+    if ((pthread_err = pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset)) != 0) {
+        err = MPL_ERR_THREAD;
+        goto fn_exit;
+    }
+
+    if ((pthread_err = pthread_getaffinity_np(thread, sizeof(cpu_set_t), &cpuset)) != 0) {
+        err = MPL_ERR_THREAD;
+        goto fn_exit;
+    }
+
+    for (proc_idx = 0; proc_idx < affinity_size; proc_idx++) {
+        if (__CPU_ISSET_S(affinity_arr[proc_idx], sizeof(cpu_set_t), &cpuset))
+            set_size++;
+    }
+    if (set_size != affinity_size) {
+        err = MPL_ERR_THREAD;
+        goto fn_exit;
+    }
+
+  fn_exit:
+    if (errp != NULL)
+        *errp = err;
+#else
+    /* stub implementation */
+    if (errp)
+        *errp = MPL_ERR_THREAD;
+#endif
 }
 
 #endif

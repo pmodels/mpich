@@ -85,7 +85,7 @@ static void host_free_buffer_registered(void *ptr)
 int MPIDIG_am_check_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t buf_size_limit = 0;
+    size_t buf_size_limit ATTRIBUTE((unused)) = 0;
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     buf_size_limit = MPIDI_NM_am_eager_buf_limit();
 #else
@@ -109,50 +109,60 @@ int MPIDIG_am_reg_cb_dynamic(MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg
 void MPIDIG_am_reg_cb(int handler_id,
                       MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_REG_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_REG_CB);
+    MPIR_FUNC_ENTER;
 
     MPIDIG_global.target_msg_cbs[handler_id] = target_msg_cb;
     MPIDIG_global.origin_cbs[handler_id] = origin_cb;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_REG_CB);
+    MPIR_FUNC_EXIT;
 }
+
+void MPIDIG_am_rndv_reg_cb(int rndv_id, MPIDIG_am_rndv_cb rndv_cb)
+{
+    MPIR_FUNC_ENTER;
+
+    MPIR_Assert(rndv_id < MPIDIG_RNDV_STATIC_MAX);
+    MPIDIG_global.rndv_cbs[rndv_id] = rndv_cb;
+
+    MPIR_FUNC_EXIT;
+}
+
 
 int MPIDIG_am_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_INIT);
+    MPIR_FUNC_ENTER;
 
-    MPIDI_global.comm_req_lists = (MPIDIG_comm_req_list_t *)
-        MPL_calloc(MPIR_MAX_CONTEXT_MASK * MPIR_CONTEXT_INT_BITS,
-                   sizeof(MPIDIG_comm_req_list_t), MPL_MEM_OTHER);
-    MPIDI_global.posted_list = NULL;
-    MPIDI_global.unexp_list = NULL;
+    for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
+        MPIDI_global.per_vci[vci].posted_list = NULL;
+        MPIDI_global.per_vci[vci].unexp_list = NULL;
+
+        mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIDIU_REQUEST_POOL_CELL_SIZE,
+                                                          MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK,
+                                                          0 /* unlimited */ ,
+                                                          host_alloc, host_free,
+                                                          &MPIDI_global.per_vci[vci].request_pool);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* The cell size need to match the send side (ofi short msg size) */
+        mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE,
+                                                          MPIR_CVAR_CH4_NUM_AM_PACK_BUFFERS_PER_CHUNK,
+                                                          0 /* unlimited */ ,
+                                                          host_alloc_buffer_registered,
+                                                          host_free_buffer_registered,
+                                                          &MPIDI_global.
+                                                          per_vci[vci].unexp_pack_buf_pool);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPIDI_global.per_vci[vci].cmpl_list = NULL;
+        MPL_atomic_store_uint64(&MPIDI_global.per_vci[vci].exp_seq_no, 0);
+        MPL_atomic_store_uint64(&MPIDI_global.per_vci[vci].nxt_seq_no, 0);
+    }
+
     MPIDI_global.part_posted_list = NULL;
     MPIDI_global.part_unexp_list = NULL;
 
-    MPIDI_global.cmpl_list = NULL;
-    MPL_atomic_store_uint64(&MPIDI_global.exp_seq_no, 0);
-    MPL_atomic_store_uint64(&MPIDI_global.nxt_seq_no, 0);
-
     MPL_atomic_store_int(&MPIDIG_global.rma_am_flag, 0);
     MPIR_cc_set(&MPIDIG_global.rma_am_poll_cntr, 0);
-
-    mpi_errno =
-        MPIDU_genq_private_pool_create_unsafe(MPIDIU_REQUEST_POOL_CELL_SIZE,
-                                              MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK,
-                                              MPIDIU_REQUEST_POOL_MAX_NUM_CELLS, host_alloc,
-                                              host_free, &MPIDI_global.request_pool);
-    MPIR_ERR_CHECK(mpi_errno);
-    /* The cell size need to match the send side (ofi short msg size) */
-    mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE,
-                                                      MPIR_CVAR_CH4_NUM_AM_PACK_BUFFERS_PER_CHUNK,
-                                                      INT_MAX,
-                                                      host_alloc_buffer_registered,
-                                                      host_free_buffer_registered,
-                                                      &MPIDI_global.unexp_pack_buf_pool);
-    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(MPIDIG_HANDLER_STATIC_MAX <= MPIDI_AM_HANDLERS_MAX);
 
@@ -180,16 +190,16 @@ int MPIDIG_am_init(void)
     MPIDIG_am_reg_cb(MPIDIG_ACC_ACK, NULL, &MPIDIG_acc_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_GET_ACC_ACK,
                      &MPIDIG_get_acc_ack_origin_cb, &MPIDIG_get_acc_ack_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_COMPLETE, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_POST, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCK_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_COMPLETE, NULL, &MPIDIG_win_complete_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_POST, NULL, &MPIDIG_win_post_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCK, NULL, &MPIDIG_win_lock_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCK_ACK, NULL, &MPIDIG_win_lock_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK, NULL, &MPIDIG_win_unlock_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK_ACK, NULL, &MPIDIG_win_unlock_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL, NULL, &MPIDIG_win_lockall_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL_ACK, NULL, &MPIDIG_win_lockall_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL, NULL, &MPIDIG_win_unlockall_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL_ACK, NULL, &MPIDIG_win_unlockall_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_DT_REQ, &MPIDIG_put_dt_origin_cb, &MPIDIG_put_dt_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_DT_ACK, NULL, &MPIDIG_put_dt_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_DAT_REQ,
@@ -204,6 +214,8 @@ int MPIDIG_am_init(void)
     MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DAT_REQ,
                      &MPIDIG_get_acc_data_origin_cb, &MPIDIG_get_acc_data_target_msg_cb);
 
+    MPIDIG_am_rndv_reg_cb(MPIDIG_RNDV_GENERIC, &MPIDIG_do_cts);
+
     MPIDIG_am_comm_abort_init();
 
     mpi_errno = MPIDIG_RMA_Init_sync_pvars();
@@ -212,7 +224,7 @@ int MPIDIG_am_init(void)
     mpi_errno = MPIDIG_RMA_Init_targetcb_pvars();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_INIT);
+    MPIR_FUNC_EXIT;
 
   fn_exit:
     return mpi_errno;
@@ -222,13 +234,13 @@ int MPIDIG_am_init(void)
 
 void MPIDIG_am_finalize(void)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_FINALIZE);
+    MPIR_FUNC_ENTER;
 
     MPIDIU_map_destroy(MPIDI_global.win_map);
-    MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.request_pool);
-    MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.unexp_pack_buf_pool);
-    MPL_free(MPIDI_global.comm_req_lists);
+    for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
+        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.per_vci[vci].request_pool);
+        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.per_vci[vci].unexp_pack_buf_pool);
+    }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_FINALIZE);
+    MPIR_FUNC_EXIT;
 }

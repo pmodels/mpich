@@ -77,6 +77,8 @@ my $line_limit = 80;    # Max line length
 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
     'MPI_Win_errhandler_function*' =>
 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
+    'MPI_Session_errhandler_function*' =>
+'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
     'MPI_Comm_errhandler_function*' =>
 'INTERFACE %nl%SUBROUTINE %name%(vv0,vv1)%nl%INTEGER vv0,vv1%nl%END SUBROUTINE%nl%END INTERFACE',
     'MPI_File_errhandler_function*' =>

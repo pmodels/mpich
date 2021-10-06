@@ -93,7 +93,6 @@ dnl To let other scripts and in particular the configure in test/mpi
 dnl know that they are being invoked from within the MPICH configure,
 dnl the following environment variables are set and exported:
 dnl    FROM_MPICH
-dnl    MPICH_ENABLE_F77
 dnl    MPICH_ENABLE_FC
 dnl    MPICH_ENABLE_CXX
 dnl
@@ -254,10 +253,6 @@ AC_CONFIG_MACRO_DIR([confdb])
 FROM_MPICH=yes
 export FROM_MPICH
 
-# Save a copy of precious flags as USER_* before any of these flags
-# are being modified by configure tests.
-PAC_PREFIX_ALL_FLAGS(USER)
-
 # WRAPPER_xFLAGS are used by mpicc and friends.
 #
 # WRAPPER_CFLAGS and other compile flags are used for compile options
@@ -313,6 +308,10 @@ CPPFLAGS="$CPPFLAGS $MPICHLIB_CPPFLAGS"
 CXXFLAGS="$CXXFLAGS $MPICHLIB_CXXFLAGS"
 FFLAGS="$FFLAGS $MPICHLIB_FFLAGS"
 FCFLAGS="$FCFLAGS $MPICHLIB_FCFLAGS"
+
+# Save a copy of precious flags as USER_* before any of these flags
+# are being modified by configure tests.
+PAC_PREFIX_ALL_FLAGS(USER)
 
 dnl include all subsystem m4 fragments now that the core autoconf functionality
 dnl has been setup.  No fragment should do anything except define
@@ -401,6 +400,7 @@ AC_ARG_ENABLE([mpit-pvars],
         recvq    - All message queue-related
         nem      - All nemesis-related
         rma      - All rma-related
+        multinic - All multinic-related
         all      - All variables above
 ],[],[enable_mpit_pvars=none])
 
@@ -443,18 +443,8 @@ dnl In addition, we check whether f77 and fc can work together.
 AC_ARG_ENABLE(fortran,
 [  --enable-fortran=option - Control the level of Fortran support in the MPICH implementation.
 	yes|all   - Enable all available Fortran implementations (F77, F90+)
-	f77       - Enable Fortran 77 support
-	fc        - Enable Fortran 90 and 2008 support
 	no|none   - No Fortran support
 ],,[enable_fortran=all])
-
-AC_ARG_ENABLE(f77,
-	AS_HELP_STRING([--enable-f77],
-		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_f77=yes])
-
-AC_ARG_ENABLE(fc,
-	AS_HELP_STRING([--enable-fc],
-		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_fc=yes])
 
 AC_ARG_ENABLE(cxx,
 	AS_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
@@ -711,42 +701,24 @@ AC_PROG_CXX
 : ${FCFLAGS=""}
 AC_PROG_FC
 
-save_IFS="$IFS"
-IFS=","
 enable_f77=no
 enable_fc=no
-for option in $enable_fortran ; do
-    case "$option" in
-        yes|all)
-		enable_f77=yes
-		enable_fc=yes
-		;;
-        no|none)
-		;;
-        f77)
-		enable_f77=yes
-		;;
-        fc)
-		enable_fc=yes
-		;;
-        *)
-		IFS="$save_IFS"
-		AC_MSG_WARN([Unknown value $option for --enable-fortran])
-		IFS=","
-		;;
-    esac
-done
-IFS="$save_IFS"
+case "$enable_fortran" in
+    yes|all)
+            enable_f77=yes
+            enable_fc=yes
+            ;;
+    no|none)
+            ;;
+    *)
+            AC_MSG_WARN([Unknown value $option for --enable-fortran])
+            ;;
+esac
 
-if test "$enable_f77" = "no" ; then
-   if test "$enable_fc" = "yes" ; then
-      AC_MSG_ERROR([Fortran 90 support requires enabling Fortran 77])
-   fi
-fi
-
-if test ! -z "$FC" -a -z "$F77" ; then
-   F77=$FC
-   if test ! -z "$FCFLAGS" -a -z "$FFLAGS" ; then
+# HACK, use $FC as F77. We should remove all the F77 usages.
+if test "$enable_fc" = "yes" ; then
+    F77=$FC
+   if test ! -z "$FCFLAGS" ; then
       FFLAGS=$FCFLAGS
    fi
 fi
@@ -862,6 +834,10 @@ devicereldir=src/mpid/$device_name
 export device_name
 export device_args
 export devicedir
+
+if test "$device_name" = "ch4" ; then
+    AC_DEFINE([ENABLE_LOCAL_SESSION_INIT], 1, [Define to skip initializing builtin world comm during MPI_Session_init])
+fi
 
 # expand all of the prereq macros in the correct order
 m4_map([PAC_SUBCFG_DO_PREREQ], [PAC_SUBCFG_MODULE_LIST])
@@ -1018,15 +994,8 @@ AC_SUBST([mpllibdir])
 mpllib=""
 AC_SUBST([mpllib])
 
-# NOTE: we only support embedded mpl now
-# no need for libtool versioning when embedding MPL
-mpl_subdir_args="--disable-versioning --enable-embedded"
-PAC_CONFIG_SUBDIR_ARGS([src/mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
-PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
-
-mplsrcdir="src/mpl"
-mpllib="src/mpl/libmpl.la"
+m4_define([mpl_embedded_dir],[src/mpl])
+PAC_CONFIG_MPL
 
 # Izem
 
@@ -1114,59 +1083,13 @@ hwloclib=""
 AC_SUBST([hwloclib])
 
 m4_define([hwloc_embedded_dir],[modules/hwloc])
-dnl minor difference from e.g. mpl and zm -- we'll prioritize system hwloc by default
-PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
-PAC_CHECK_HEADER_LIB_OPTIONAL([netloc],[netloc.h],[netloc],[netloc_get_all_host_nodes])
-
-if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
-    AC_MSG_CHECKING([if hwloc meets minimum version requirement])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <hwloc.h>], [
-                       #if HWLOC_API_VERSION < 0x00020000
-                       #error
-                       #endif
-                       return 0;])],[],[pac_have_hwloc=no])
-    AC_MSG_RESULT([$pac_have_hwloc])
-
-    # if an old hwloc was specified by the user, throw an error
-    if test "$pac_have_hwloc" = "no" -a -n "$with_hwloc" -a "$with_hwloc" != "yes" ; then
-        AC_MSG_ERROR([hwloc installation does not meet minimum version requirement])
-    fi
-fi
-
-if test "$pac_have_hwloc" = "no" ; then
-    with_hwloc=embedded
-    pac_have_hwloc=yes
-    dnl TODO: check and configure embedded netloc
-fi
-
-if test "$with_hwloc" = "embedded" ; then
-    PAC_PUSH_FLAG([CFLAGS])
-    CFLAGS="$VISIBILITY_CFLAGS"
-    hwloc_config_args="--enable-embedded-mode --disable-visibility"
-    hwloc_config_args="$hwloc_config_args --disable-libxml2"
-    hwloc_config_args="$hwloc_config_args --disable-nvml"
-    hwloc_config_args="$hwloc_config_args --disable-cuda"
-    hwloc_config_args="$hwloc_config_args --disable-opencl"
-    hwloc_config_args="$hwloc_config_args --disable-rsmi"
-    PAC_CONFIG_SUBDIR_ARGS([modules/hwloc], [$hwloc_config_args],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
-    PAC_POP_FLAG([CFLAGS])
-    hwlocsrcdir="${main_top_builddir}/modules/hwloc"
-    hwloclib="${main_top_builddir}/modules/hwloc/hwloc/libhwloc_embedded.la"
-    PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/hwloc/include],[CPPFLAGS])
-    PAC_APPEND_FLAG([-I${main_top_builddir}/modules/hwloc/include],[CPPFLAGS])
-
-    # capture the line -- S["HWLOC_EMBEDDED_LIBS"]="-lm "
-    hwloc_embedded_libs=$(awk -F'"' '/^S."HWLOC_EMBEDDED_LIBS"/ {print $4}' modules/hwloc/config.status)
-    echo "hwloc_embedded_libs = $hwloc_embedded_libs"
-    if test -n "$hwloc_embedded_libs" ; then
-        dnl TODO: split and add individual lib
-        PAC_LIBS_ADD([$hwloc_embedded_libs])
-    fi
-fi
+PAC_CONFIG_HWLOC
 
 if test "$pac_have_hwloc" = "yes" ; then
     AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
 fi
+
+PAC_CHECK_HEADER_LIB_OPTIONAL([netloc],[netloc.h],[netloc],[netloc_get_all_host_nodes])
 if test "$pac_have_netloc" = "yes" ; then
     AC_DEFINE(HAVE_NETLOC,1,[Define if netloc is available])
 fi
@@ -1728,13 +1651,15 @@ for var in $enable_mpit_pvars ; do
             [nem],[enable_pvar_nem=yes],
             [recvq],[enable_pvar_recvq=yes],
             [rma],[enable_pvar_rma=yes],
-	    [dims],[enable_pvar_dims=yes],
+            [dims],[enable_pvar_dims=yes],
+            [multinic],[enable_pvar_multinic=yes],
             [all|yes],
             [enable_pvar_nem=yes
              enable_pvar_recvq=yes
              enable_pvar_rma=yes
-	     enable_pvar_dims=yes
-	     ],
+             enable_pvar_dims=yes
+             enable_pvar_multinic=yes
+             ],
             [no|none],[],
             [IFS=$save_IFS
              AC_MSG_WARN([Unknown value ($option) for enable-mpit-pvars])
@@ -1780,6 +1705,14 @@ if test "$enable_mpit_events" = "yes" ; then
     AC_DEFINE(HAVE_MPIT_EVENTS, [1], [Define if MPI_T Events are enabled])
 fi
 
+if test -n "$enable_pvar_multinic" ; then
+    status_multinic_pvars=1
+else
+    status_multinic_pvars=0
+fi
+AC_DEFINE_UNQUOTED(ENABLE_PVAR_MULTINIC,$status_multinic_pvars,
+          [Define to 1 to enable message count transmitted through multiple NICs MPI_T performance variables])
+
 # ---------------------------------------------------------------------------
 # Support for the language bindings: Fortran 77, Fortran 90, and C++
 #
@@ -1800,21 +1733,13 @@ fi
 #
 # First, determine whether we are/can support the language bindings
 #
-# Since F90/F90FLAGS are replaced by FC/FCFLAGS, rather than silently
-# substituting them, i.e. FC=$F90 and FCFLAGS=$F90FLAGS, we choose to emit
-# an error message and abort to avoid any ambiguous/hidden bug in choosing
-# Fortran90 compilers.
-if test -n "$F90" -o -n "$F90FLAGS" ; then
-    AC_MSG_ERROR([F90 and F90FLAGS are replaced by FC and FCFLAGS respectively in this configure, please unset F90/F90FLAGS and set FC/FCFLAGS instead and rerun configure again.])
-fi
-# ----------------------------------------------------------------------------
 # Handle default choices for the Fortran compilers
 # Note that these have already been set above
 
-if test "$enable_f77" = "yes"; then
-    if test "$F77" = "" -o "$F77" = "no"; then
-        # No Fortran 77 compiler found; abort
-        AC_MSG_ERROR([No Fortran 77 compiler found. If you don't need to
+if test "$enable_fc" = "yes"; then
+    if test "$FC" = "" -o "$FC" = "no"; then
+        # No Fortran compiler found; abort
+        AC_MSG_ERROR([No Fortran compiler found. If you don't need to
         build any Fortran programs, you can disable Fortran support using
         --disable-fortran. If you do want to build Fortran
         programs, you need to install a Fortran compiler such as gfortran
@@ -4438,16 +4363,6 @@ AC_CHECK_FUNCS([qsort])
 
 PAC_C_MACRO_VA_ARGS
 
-# Check for alloca function.  May set HAVE_ALLOCA_H and HAVE_ALLOCA
-AC_FUNC_ALLOCA
-# We don't use alloca unless USE_ALLOCA is also set.
-AC_ARG_ENABLE(alloca,
-	AS_HELP_STRING([--enable-alloca],
-		[Use alloca to allocate temporary memory if available]),,enable_alloca=no)
-if test "$enable_alloca" = yes ; then
-    AC_DEFINE(USE_ALLOCA,1,[Define if alloca should be used if available])
-fi
-
 if test "$enable_g_mem" != "yes" ; then
     # Strdup is needed only if memory tracing is not enabled.
     AC_CHECK_FUNCS(strdup)
@@ -4962,10 +4877,8 @@ dnl steps because it does not depend on them.
 # that the correct decisions are made since this configure happens before the
 # MPICH library is built.
 MPICH_ENABLE_CXX=$enable_cxx
-MPICH_ENABLE_F77=$enable_f77
 MPICH_ENABLE_FC=$enable_fc
 export MPICH_ENABLE_CXX
-export MPICH_ENABLE_F77
 export MPICH_ENABLE_FC
 AM_CONDITIONAL([BUILD_CXX_BINDING],[test "$enable_cxx" = "yes"])
 AM_CONDITIONAL([BUILD_F77_BINDING],[test "$enable_f77" = "yes"])
@@ -5120,7 +5033,7 @@ if test "X$enable_shared" = "Xyes" ; then
             PAC_POP_FLAG([LDFLAGS])
 
             # Technically we may not be able to use the same form of the argument
-            # for all four compilers (CC/CXX/F77/FC).  But we only think this is
+            # for all three compilers (CC/CXX/FC).  But we only think this is
             # necessary for Darwin for now, so this unconditional, single-var
             # approximation will work for now.
             if test "X$pac_cv_wl_flat_namespace_works" = "Xyes" ; then
@@ -5300,7 +5213,7 @@ export pkgconfigdir
 if test "$f08_works" = "yes" ; then
     PAC_CHECK_PYTHON
     PAC_FC_CHECK_REAL128
-    cmd="$PYTHON maint/gen_binding_f08.py"
+    cmd="$PYTHON $srcdir/maint/gen_binding_f08.py"
     if test "$pac_fc_has_real128" = "no" ; then
         cmd="$cmd -no-real128"
     fi
@@ -5335,8 +5248,6 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpicc.bash \
           src/env/mpicxx.sh \
 	  src/env/mpicxx.bash \
-	  src/env/mpif77.sh \
-	  src/env/mpif77.bash \
 	  src/env/mpifort.sh \
 	  src/env/mpifort.bash \
           src/env/parkill \
@@ -5349,11 +5260,22 @@ AC_CONFIG_FILES([Makefile \
 AC_OUTPUT
 
 if test ${device_name} = "ch4" ; then
+    t_netmod=$ch4_netmods
+    if test "$ch4_netmods" = "ofi" -a "$with_libfabric" = "embedded"; then
+        t_netmod="ofi (embedded libfabric)"
+    elif test "$ch4_netmods" = "ucx" -a "$with_ucx" = "embedded"; then
+        t_netmod="ucx (embedded)"
+    fi
+    t_xpmem=""
+    if test "$pac_have_xpmem" = "yes" ; then
+        t_xpmem="xpmem"
+    fi
 cat <<EOF
 ***
 *** device: ch4
-*** netmods: ${ch4_netmods}
-*** shm: ${ch4_shm}
+*** netmods: ${t_netmod}
+*** shm: ${ch4_shm} $t_xpmem
+*** gpu: ${GPU_SUPPORT}
 ***
 EOF
 elif test ${DEVICE} = "ch3:nemesis" ; then

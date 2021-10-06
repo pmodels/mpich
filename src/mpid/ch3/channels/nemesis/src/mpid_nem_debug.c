@@ -9,9 +9,8 @@
 /* --BEGIN ERROR HANDLING-- */
 void MPID_nem_dbg_dump_cell (volatile struct MPID_nem_cell *cell)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
+    MPIR_FUNC_ENTER;
 
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  src = %6d", cell->header.source);
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  dst = %6d", cell->header.dest);
@@ -19,7 +18,7 @@ void MPID_nem_dbg_dump_cell (volatile struct MPID_nem_cell *cell)
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  sqn = %6d", cell->header.seqno);
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  typ = %6d", cell->header.type);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
+    MPIR_FUNC_EXIT;
 }
 
 #define state_case(suffix)             \
@@ -74,7 +73,7 @@ void MPID_nem_dbg_print_vc_sendq(FILE *stream, MPIDI_VC_t *vc)
                             sreq->dev.match.parts.rank,
                             sreq->dev.match.parts.tag);
             ++i;
-            sreq = sreq->dev.next;
+            sreq = sreq->next;
         }
     }
     else {

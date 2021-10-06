@@ -36,9 +36,6 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
 
-    if (recvcount == 0)
-        return MPI_SUCCESS;
-
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 

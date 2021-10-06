@@ -6,10 +6,6 @@
 #include "mpiimpl.h"
 #include "group.h"
 
-/* temporary declaration until auto-generated */
-int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *pset_name,
-                                      MPIR_Group ** newgroup_ptr);
-
 int MPIR_Group_compare_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2, int *result)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -65,9 +61,8 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     int mpi_errno = MPI_SUCCESS;
     int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
     int *flags = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
+    MPIR_FUNC_ENTER;
     /* Return a group consisting of the members of group1 that are *not*
      * in group2 */
     size1 = group_ptr1->size;
@@ -124,7 +119,7 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 
   fn_exit:
     MPL_free(flags);
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -136,9 +131,8 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
     int mpi_errno = MPI_SUCCESS;
     int size, i, newi;
     int *flags = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
+    MPIR_FUNC_ENTER;
 
     size = group_ptr->size;
 
@@ -171,7 +165,7 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 
   fn_exit:
     MPL_free(flags);
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -198,9 +192,8 @@ int MPIR_Group_incl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_INCL_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_INCL_IMPL);
+    MPIR_FUNC_ENTER;
 
     if (n == 0) {
         *new_group_ptr = MPIR_Group_empty;
@@ -224,7 +217,7 @@ int MPIR_Group_incl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_INCL_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -236,9 +229,8 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
     int mpi_errno = MPI_SUCCESS;
     int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
     int *flags = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_INTERSECTION_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_INTERSECTION_IMPL);
+    MPIR_FUNC_ENTER;
     /* Return a group consisting of the members of group1 that are
      * in group2 */
     size1 = group_ptr1->size;
@@ -284,7 +276,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
             (*new_group_ptr)->lrank_to_lpid[k].lpid = lpid;
             if (i == group_ptr1->rank)
                 (*new_group_ptr)->rank = k;
-            if (lpid > MPIR_Process.comm_world->local_size ||
+            if (lpid > MPIR_Process.size ||
                 (k > 0 && (*new_group_ptr)->lrank_to_lpid[k - 1].lpid != (lpid - 1))) {
                 (*new_group_ptr)->is_local_dense_monotonic = FALSE;
             }
@@ -295,7 +287,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
 
   fn_exit:
     MPL_free(flags);
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_INTERSECTION_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -307,9 +299,8 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
     int mpi_errno = MPI_SUCCESS;
     int size, i, j, k, nnew, first, last, stride;
     int *flags = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
+    MPIR_FUNC_ENTER;
     /* Compute size, assuming that included ranks are valid (and distinct) */
     size = group_ptr->size;
     nnew = 0;
@@ -377,7 +368,7 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
 
   fn_exit:
     MPL_free(flags);
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -388,9 +379,8 @@ int MPIR_Group_range_incl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
 {
     int mpi_errno = MPI_SUCCESS;
     int first, last, stride, nnew, i, j, k;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
+    MPIR_FUNC_ENTER;
 
     /* Compute size, assuming that included ranks are valid (and distinct) */
     nnew = 0;
@@ -442,7 +432,7 @@ int MPIR_Group_range_incl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
     /* TODO calculate is_local_dense_monotonic */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -526,9 +516,8 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     int mpi_errno = MPI_SUCCESS;
     int g1_idx, g2_idx, nnew, i, k, size1, size2, mylpid;
     int *flags = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_UNION_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_UNION_IMPL);
+    MPIR_FUNC_ENTER;
 
     /* Determine the size of the new group.  The new group consists of all
      * members of group1 plus the members of group2 that are not in group1.
@@ -620,7 +609,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 
   fn_exit:
     MPL_free(flags);
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_UNION_IMPL);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -632,7 +621,7 @@ int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *ps
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr;
 
-    if (strcmp(pset_name, "mpi://WORLD") == 0) {
+    if (MPL_stricmp(pset_name, "mpi://WORLD") == 0) {
         mpi_errno = MPIR_Group_create(MPIR_Process.size, &group_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -645,8 +634,7 @@ int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *ps
         }
         group_ptr->lrank_to_lpid[group_ptr->size - 1].next_lpid = -1;
         group_ptr->idx_of_first_lpid = 0;
-        group_ptr->pset_name = "mpi://WORLD";
-    } else if (strcmp(pset_name, "mpi://SELF") == 0) {
+    } else if (MPL_stricmp(pset_name, "mpi://SELF") == 0) {
         mpi_errno = MPIR_Group_create(1, &group_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -656,7 +644,6 @@ int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *ps
         group_ptr->lrank_to_lpid[0].lpid = MPIR_Process.rank;
         group_ptr->lrank_to_lpid[0].next_lpid = -1;
         group_ptr->idx_of_first_lpid = 0;
-        group_ptr->pset_name = "mpi://SELF";
     } else {
         /* TODO: Implement pset struct, locate pset struct ptr */
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**psetinvalidname");

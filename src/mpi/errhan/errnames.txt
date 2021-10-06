@@ -233,8 +233,6 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **invalidmembind %d: cannot bind memory to object (%d). \
 A memory object id was expected but a non-memory object id was passed instead
 
-**partitionsneg: Negative partitions
-**partitionsneg %d: Negative partitions, value is %d
 **partitioninvalid: Invalid partition
 **partitioninvalid %d: Invalid partition, value is %d 
 **partitioninvalid %d %d: Invalid partition range, values are %d %d
@@ -276,6 +274,7 @@ be in the range 0 to %d
 **errhandlernull:Null errhandler 
 **errhandnotfile:Error handler is not a file error handler
 **errhandnotwin:Error handler is not a win error handler
+**errhandnotsession:Error handler is not a session error handler
 **storageorder:Invalid storage order
 **storageorder %d: Invalid storage order (%d)
 **darraydist:For MPI_DISTRIBUTE_NONE, the number of processes in that \
@@ -905,6 +904,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpir_wingetattr:MPII_Win_get_attr failed
 **mpir_wingetattr %W %d %p %p:MPII_Win_get_attr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
 
+## Gentran related error messages
+**nofence: invalid Gentran fence
+**nullvertex:  Gentran vertex is NULL
 
 # Datarep conversion function not supported by ROMIO (Temporary until implemented)
 **drconvnotsupported:Read and Write datarep conversions are currently not supported by MPI-IO
@@ -939,6 +941,13 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpl_gavl_create: mpl_gavl_create failed
 **mpl_gavl_delete_range: mpl_gavl_delete_range failed
 **mpl_gavl_delete_start_addr: mpl_gavl_delete_start_addr failed
+
+## Async thread affinity related error messages
+**parse_thread_affinity:Failed to parse async thread affinity string
+**parse_thread_affinity %s:Failed to parse async thread affinity string [%s]
+**set_thread_affinity:Failed to set the async thread affinity
+**set_thread_affinity %d:Failed to set the async thread affinity to the logical processor [%d]
+
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
 # for extracterrmsgs) (still to do: move the undefined names here)

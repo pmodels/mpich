@@ -38,7 +38,6 @@ int MPIR_Ireduce_scatter_intra_sched_noncommutative(const void *sendbuf, void *r
     void *tmp_buf0;
     void *tmp_buf1;
     void *result_ptr;
-    MPIR_SCHED_CHKPMEM_DECL(3);
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
@@ -63,10 +62,10 @@ int MPIR_Ireduce_scatter_intra_sched_noncommutative(const void *sendbuf, void *r
     block_size = recvcounts[0];
     total_count = block_size * comm_size;
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf0, void *, true_extent * total_count, mpi_errno, "tmp_buf0",
-                              MPL_MEM_BUFFER);
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf1, void *, true_extent * total_count, mpi_errno, "tmp_buf1",
-                              MPL_MEM_BUFFER);
+    tmp_buf0 = MPIR_Sched_alloc_state(s, true_extent * total_count);
+    MPIR_ERR_CHKANDJUMP(!tmp_buf0, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    tmp_buf1 = MPIR_Sched_alloc_state(s, true_extent * total_count);
+    MPIR_ERR_CHKANDJUMP(!tmp_buf1, mpi_errno, MPI_ERR_OTHER, "**nomem");
     /* adjust for potential negative lower bound in datatype */
     tmp_buf0 = (void *) ((char *) tmp_buf0 - true_lb);
     tmp_buf1 = (void *) ((char *) tmp_buf1 - true_lb);
@@ -141,10 +140,8 @@ int MPIR_Ireduce_scatter_intra_sched_noncommutative(const void *sendbuf, void *r
     result_ptr = (char *) (buf0_was_inout ? tmp_buf0 : tmp_buf1) + recv_offset * true_extent;
     mpi_errno = MPIR_Sched_copy(result_ptr, size, datatype, recvbuf, size, datatype, s);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

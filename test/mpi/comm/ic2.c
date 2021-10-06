@@ -50,11 +50,29 @@ int main(int argc, char **argv)
     ranks[0] = a;
     ranks[1] = b;
     MPI_Group_incl(gworld, 2, ranks, &g0);
-    MPI_Comm_create(MPI_COMM_WORLD, g0, &c0);
 
     ranks[0] = c;
     ranks[1] = d;
     MPI_Group_incl(gworld, 2, ranks, &g1);
+
+#if MPI_VERSION >= 4
+    /* Test MPI_Intercomm_create_from_groups */
+    if (rank == a || rank == b) {
+        remote_leader = c;
+        MPI_Intercomm_create_from_groups(g0, 0, g1, 0, "tag",
+                                         MPI_INFO_NULL, MPI_ERRORS_ARE_FATAL, &ic);
+    } else if (rank == c || rank == d) {
+        remote_leader = a;
+        MPI_Intercomm_create_from_groups(g1, 0, g0, 0, "tag",
+                                         MPI_INFO_NULL, MPI_ERRORS_ARE_FATAL, &ic);
+    }
+    if (ic != MPI_COMM_NULL) {
+        MPI_Comm_free(&ic);
+    }
+#endif
+
+    /* Test MPI_Intercomm_create */
+    MPI_Comm_create(MPI_COMM_WORLD, g0, &c0);
     MPI_Comm_create(MPI_COMM_WORLD, g1, &c1);
 
     if (rank == a || rank == b) {
@@ -65,16 +83,16 @@ int main(int argc, char **argv)
         MPI_Intercomm_create(c1, 0, MPI_COMM_WORLD, remote_leader, tag, &ic);
     }
 
-    MPI_Group_free(&g0);
-    MPI_Group_free(&g1);
-    MPI_Group_free(&gworld);
-
     if (c0 != MPI_COMM_NULL)
         MPI_Comm_free(&c0);
     if (c1 != MPI_COMM_NULL)
         MPI_Comm_free(&c1);
     if (ic != MPI_COMM_NULL)
         MPI_Comm_free(&ic);
+
+    MPI_Group_free(&g0);
+    MPI_Group_free(&g1);
+    MPI_Group_free(&gworld);
 
     MTest_Finalize(errs);
 

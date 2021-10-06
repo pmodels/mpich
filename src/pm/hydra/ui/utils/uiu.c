@@ -42,6 +42,7 @@ void HYD_uiu_init_params(void)
     HYD_server_info.num_pmi_calls = 0;
 #endif /* ENABLE_PROFILING */
 
+    HYD_ui_info.output_from = -1;
     HYD_ui_info.prepend_pattern = NULL;
     HYD_ui_info.outfile_pattern = NULL;
     HYD_ui_info.errfile_pattern = NULL;
@@ -251,6 +252,10 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    if (HYD_ui_info.output_from != -1 && rank != HYD_ui_info.output_from) {
+        goto fn_exit;
+    }
 
     pattern = (_fd == STDOUT_FILENO) ? HYD_ui_info.outfile_pattern :
         (_fd == STDERR_FILENO) ? HYD_ui_info.errfile_pattern : NULL;

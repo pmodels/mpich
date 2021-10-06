@@ -8,10 +8,11 @@
 # mpi_sources
 
 mpi_core_sources +=                             \
-    src/mpi/coll/ialltoall/ialltoall.c \
     src/mpi/coll/ialltoall/ialltoall_intra_sched_inplace.c  \
     src/mpi/coll/ialltoall/ialltoall_intra_sched_brucks.c   \
     src/mpi/coll/ialltoall/ialltoall_intra_sched_permuted_sendrecv.c  \
     src/mpi/coll/ialltoall/ialltoall_intra_sched_pairwise.c \
     src/mpi/coll/ialltoall/ialltoall_inter_sched_pairwise_exchange.c \
-    src/mpi/coll/ialltoall/ialltoall_gentran_algos.c
+    src/mpi/coll/ialltoall/ialltoall_tsp_brucks.c \
+    src/mpi/coll/ialltoall/ialltoall_tsp_ring.c \
+    src/mpi/coll/ialltoall/ialltoall_tsp_scattered.c

@@ -35,8 +35,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put(const void *origin_addr,
                                        MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
@@ -67,7 +66,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put(const void *origin_addr,
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -82,8 +81,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get(void *origin_addr,
                                        MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
@@ -116,7 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get(void *origin_addr,
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -132,8 +130,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate(const void *origin_addr,
                                               MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress();
@@ -160,7 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate(const void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -174,8 +171,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap(const void *origin_addr,
                                                     MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress();
@@ -201,7 +197,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap(const void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -218,8 +214,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate(const void *origin_addr,
                                                MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RACCUMULATE);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress();
@@ -245,7 +240,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate(const void *origin_addr,
 #endif
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -265,8 +260,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate(const void *origin_addr,
                                                    MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RGET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RGET_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress();
@@ -296,7 +290,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate(const void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RGET_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -309,8 +303,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op(const void *origin_addr,
                                                 MPI_Aint target_disp, MPI_Op op, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FETCH_AND_OP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_FETCH_AND_OP);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress();
@@ -336,7 +329,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op(const void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_FETCH_AND_OP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -352,8 +345,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget(void *origin_addr,
                                         MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RGET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RGET);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress();
@@ -380,7 +372,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget(void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RGET);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -396,8 +388,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput(const void *origin_addr,
                                         MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RPUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RPUT);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress();
@@ -424,7 +415,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput(const void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RPUT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -443,8 +434,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate(const void *origin_addr,
                                                   MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress();
@@ -474,7 +464,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate(const void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -490,14 +480,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Put(const void *origin_addr,
                                       MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PUT);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_put(origin_addr, origin_count, origin_datatype,
                           target_rank, target_disp, target_count, target_datatype, win);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PUT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -512,14 +501,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get(void *origin_addr,
                                       MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_get(origin_addr, origin_count, origin_datatype,
                           target_rank, target_disp, target_count, target_datatype, win);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GET);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -535,14 +523,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *origin_addr,
                                              MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
                                  target_disp, target_count, target_datatype, op, win);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -556,14 +543,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Compare_and_swap(const void *origin_addr,
                                                    MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMPARE_AND_SWAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMPARE_AND_SWAP);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_compare_and_swap(origin_addr, compare_addr, result_addr,
                                        datatype, target_rank, target_disp, win);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMPARE_AND_SWAP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -579,15 +565,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Raccumulate(const void *origin_addr,
                                               MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_raccumulate(origin_addr, origin_count, origin_datatype, target_rank,
                                   target_disp, target_count, target_datatype, op, win, request);
 
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -607,15 +592,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *origin_addr,
                                                   MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RGET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RGET_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_rget_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                       result_count, result_datatype, target_rank, target_disp,
                                       target_count, target_datatype, op, win, request);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RGET_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -628,14 +612,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Fetch_and_op(const void *origin_addr,
                                                MPI_Aint target_disp, MPI_Op op, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_FETCH_AND_OP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FETCH_AND_OP);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_fetch_and_op(origin_addr, result_addr,
                                    datatype, target_rank, target_disp, op, win);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FETCH_AND_OP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -652,14 +635,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget(void *origin_addr,
                                        MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RGET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RGET);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_rget(origin_addr, origin_count, origin_datatype, target_rank,
                            target_disp, target_count, target_datatype, win, request);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RGET);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -675,15 +657,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rput(const void *origin_addr,
                                        MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RPUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RPUT);
+    MPIR_FUNC_ENTER;
 
 
     mpi_errno = MPIDI_rput(origin_addr, origin_count, origin_datatype, target_rank,
                            target_disp, target_count, target_datatype, win, request);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RPUT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -702,15 +683,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_accumulate(const void *origin_addr,
                                                  MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_ACCUMULATE);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDI_get_accumulate(origin_addr, origin_count, origin_datatype,
                                      result_addr, result_count, result_datatype, target_rank,
                                      target_disp, target_count, target_datatype, op, win);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GET_ACCUMULATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

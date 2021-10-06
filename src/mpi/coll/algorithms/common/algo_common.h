@@ -29,8 +29,7 @@ static inline int MPIR_Algo_calculate_pipeline_chunk_info(MPI_Aint chunk_size, M
     int maxelems;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_ALGO_CALCULATE_PIPELINE_CHUNK_INFO);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_ALGO_CALCULATE_PIPELINE_CHUNK_INFO);
+    MPIR_FUNC_ENTER;
 
     if (count == 0 || type_size == 0) {
         *num_segments = *segsize_floor = *segsize_ceil = 0;
@@ -39,7 +38,7 @@ static inline int MPIR_Algo_calculate_pipeline_chunk_info(MPI_Aint chunk_size, M
 
     maxelems = chunk_size / type_size;
 
-    if (maxelems == 0 || maxelems >= count) {   /* disable pipelining */
+    if (chunk_size <= 0 || maxelems >= count) { /* disable pipelining */
         *num_segments = 1;
         *segsize_floor = *segsize_ceil = count;
         goto fn_exit;
@@ -51,7 +50,7 @@ static inline int MPIR_Algo_calculate_pipeline_chunk_info(MPI_Aint chunk_size, M
         *segsize_floor = maxelems;
     *num_segments = (count + *segsize_ceil - 1) / (*segsize_ceil);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_ALGO_CALCULATE_PIPELINE_CHUNK_INFO);
+    MPIR_FUNC_EXIT;
 
   fn_exit:
     return mpi_errno;

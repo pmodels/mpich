@@ -59,9 +59,6 @@ int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
     void *partial_scan, *tmp_buf;
     MPIR_CHKLMEM_DECL(2);
 
-    if (count == 0)
-        return MPI_SUCCESS;
-
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 

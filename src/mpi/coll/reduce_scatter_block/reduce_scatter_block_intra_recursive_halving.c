@@ -66,10 +66,6 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
     }
 #endif /* HAVE_ERROR_CHECKING */
 
-    if (recvcount == 0) {
-        goto fn_exit;
-    }
-
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 

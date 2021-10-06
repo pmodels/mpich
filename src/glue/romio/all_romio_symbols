@@ -156,7 +156,7 @@ while (<FD>) {
 	elsif ($arglist[$x] =~ /MPI_Errhandler/) {
 	    print OUTFD " = MPI_ERRHANDLER_NULL;\n";
 	}
-	elsif ($arglist[$x] =~ /MPI_Offset/) {
+	elsif ($arglist[$x] =~ /MPI_Offset|MPI_Count/) {
 	    print OUTFD " = 0;\n";
 	}
 	elsif ($arglist[$x] =~ /int/) {

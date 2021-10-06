@@ -20,13 +20,12 @@ MPI_Aint_add:
 */
 {
     MPI_Aint result;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_AINT_ADD);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_AINT_ADD);
+    MPIR_FUNC_TERSE_ENTER;
     result = MPID_Aint_add(base, disp);
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_AINT_ADD);
+    MPIR_FUNC_TERSE_EXIT;
 
     return result;
 }
@@ -52,13 +51,12 @@ MPI_Aint_diff:
 */
 {
     MPI_Aint result;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_AINT_ADD);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_AINT_ADD);
+    MPIR_FUNC_TERSE_ENTER;
     result = MPID_Aint_diff(addr1, addr2);
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_AINT_ADD);
+    MPIR_FUNC_TERSE_EXIT;
 
     return result;
 }
@@ -131,11 +129,10 @@ MPI_Pcontrol:
 {
     int mpi_errno = MPI_SUCCESS;
     va_list list;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PCONTROL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_PCONTROL);
+    MPIR_FUNC_TERSE_ENTER;
 
     /* ... body of routine ...  */
 
@@ -148,7 +145,7 @@ MPI_Pcontrol:
     va_end(list);
 
     /* ... end of body of routine ... */
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_PCONTROL);
+    MPIR_FUNC_TERSE_EXIT;
     return mpi_errno;
     /* There should never be any fn_fail case; this suppresses warnings from
      * compilers that object to unused labels */
@@ -196,9 +193,23 @@ MPIX_Query_cuda_support:
     .skip: global_cs, Errors
 {
     int is_supported = 0;
-    int mpi_errno;
+    int mpi_errno ATTRIBUTE((unused));
 
     mpi_errno = PMPIX_GPU_query_support(MPIX_GPU_SUPPORT_CUDA, &is_supported);
+    assert(mpi_errno);
+
+    return is_supported;
+}
+
+MPIX_Query_ze_support:
+    .desc: Returns whether ZE (Intel GPU) is supported
+    .impl: direct
+    .skip: global_cs, Errors
+{
+    int is_supported = 0;
+    int mpi_errno ATTRIBUTE((unused));
+
+    mpi_errno = PMPIX_GPU_query_support(MPIX_GPU_SUPPORT_ZE, &is_supported);
     assert(mpi_errno);
 
     return is_supported;

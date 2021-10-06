@@ -22,7 +22,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request,
                                                 MPIR_Request * partner)
 {
-    return MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 0,
+    return MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, 0, request, 0,
                             partner);
 }
 

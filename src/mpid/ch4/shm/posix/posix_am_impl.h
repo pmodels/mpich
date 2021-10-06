@@ -14,26 +14,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_reque
                                                             req_hdr_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_RELEASE_REQ_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_RELEASE_REQ_HDR);
+    MPIR_FUNC_ENTER;
 
 #ifndef POSIX_AM_REQUEST_INLINE
-    MPIDU_genq_private_pool_free_cell(MPIDI_POSIX_global.am_hdr_buf_pool, (*req_hdr_ptr));
+    int vsi = (*req_hdr_ptr)->src_vsi;
+    MPIDU_genq_private_pool_free_cell(MPIDI_POSIX_global.per_vsi[vsi].am_hdr_buf_pool,
+                                      (*req_hdr_ptr));
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_RELEASE_REQ_HDR);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
                                                          size_t am_hdr_sz,
                                                          MPIDI_POSIX_am_request_header_t **
-                                                         req_hdr_ptr, MPIR_Request * sreq)
+                                                         req_hdr_ptr, MPIR_Request * sreq, int vsi)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_am_request_header_t *req_hdr = *req_hdr_ptr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_INIT_REQ_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_INIT_REQ_HDR);
+    MPIR_FUNC_ENTER;
 
 #ifdef POSIX_AM_REQUEST_INLINE
     if (req_hdr == NULL && sreq != NULL) {
@@ -42,7 +42,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
 #endif /* POSIX_AM_REQUEST_INLINE */
 
     if (req_hdr == NULL) {
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_POSIX_global.am_hdr_buf_pool, (void **) &req_hdr);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_POSIX_global.per_vsi[vsi].am_hdr_buf_pool,
+                                           (void **) &req_hdr);
         MPIR_ERR_CHKANDJUMP(!req_hdr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         req_hdr->am_hdr = (void *) &req_hdr->am_hdr_buf[0];
@@ -58,7 +59,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
     *req_hdr_ptr = req_hdr;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_INIT_REQ_HDR);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 
   fn_fail:

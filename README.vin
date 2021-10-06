@@ -495,8 +495,7 @@ for the requested provider by removing runtime branches to determine
 provider capabilities. Note that using this feature with a version of the
 libfabric library older than that recommended with this version of MPICH is
 unsupported and may result in unexpected behavior. This is also true when
-using the environment variable MPIR_CVAR_OFI_USE_PROVIDER, which will also
-do some optimization for the requested provider.
+using the environment variable FI_PROVIDER.
 
 The currently expected version of libfabric is: %LIBFABRIC_VERSION%.
 
@@ -526,6 +525,27 @@ to "error" instead of the default "warn" by using:
 
   UCX_LOG_LEVEL=error
   export UCX_LOG_LEVEL
+
+GPU support
+***********
+
+GPU support is automatically enabled if CUDA or ZE runtime is detected
+during configure. To specify where CUDA or ZE is installed, use:
+
+  --with-cuda=<path>  or --with-ze=<path>
+
+If the lib/ and include/ are not in the same path, both can be specified
+separately, for example:
+
+  --with-cuda-include= and --with-cuda-lib=
+
+In addition, if CUDA or ZE support can be explicitly disabled by using:
+
+  --without-cuda  or  --without-ze
+
+If desirable, GPU support can be disabled during runtime by setting
+environment variable MPIR_CVAR_ENABLE_GPU=0. This may help avoid the GPU
+initialization and detection overhead for non-GPU applications.
 
 -------------------------------------------------------------------------
 
@@ -807,24 +827,25 @@ This will setup the OFI netmod to use the optimal configuration for the
 sockets provider, and will set various compile time constants. These settings
 cannot be changed at runtime.
 
-If runtime configuration is needed, continue to use the device string as before
-(without the OFI provider extension) and set various environment variables to
+If runtime configuration is needed, use:
+
+    --with-device=ch4:ofi
+
+i.e. without the OFI provider extension, and set various environment variables to
 achieve a similar configuration. To select the desired provider:
 
-    % export MPIR_CVAR_OFI_USE_PROVIDER=sockets
+    % export FI_PROVIDER=sockets
 
 This will select the OFI provider and the associated MPICH capability set. To
 change the preset configuration, there exists an extended set of environment
-variables. As an example, the immediate data fields can be disabled by using
+variables. As an example, native provider RMA atomics can be disabled by using
 the environment variable:
 
-    % export MPIR_CVAR_OFI_ENABLE_TAGGED=0
+    % export MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS=0
 
-For some configuration options (in particular, MPIR_CVAR_OFI_ENABLE_TAGGED and
-MPIR_CVAR_OFI_ENABLE_RMA), a default build of MPICH using the CH4 OFI netmod
-will fail if these options are not enabled. This is so that, for performance,
-MPICH can assume that some commonly available features are enabled by the OFI
-provider.
+For some configuration options (in particular, MPIR_CVAR_CH4_OFI_ENABLE_TAGGED and
+MPIR_CVAR_CH4_OFI_ENABLE_RMA), if disabled, some functionality may fallback to
+generic implementations.
 
 A full list of capability set configuration variables can be found in the
 environment variables README.envvar.

@@ -435,15 +435,20 @@ typedef struct DTPI_Attr {
 typedef struct {
     DTP_pool_s dtp;
     DTPI_Attr_s *attr_tree;
+    const char *desc;
 } DTPI_obj_s;
 
 int DTPI_obj_free(DTPI_obj_s * obj_priv);
 int DTPI_parse_base_type_str(DTP_pool_s * dtp, const char *str);
+int DTPI_parse_desc(const char *desc, const char **desc_list, int *depth, int max_depth);
 unsigned int DTPI_low_count(unsigned int count);
 unsigned int DTPI_high_count(unsigned int count);
 int DTPI_construct_datatype(DTP_pool_s dtp, int attr_tree_depth, DTPI_Attr_s ** attr_tree,
                             MPI_Datatype * newtype, MPI_Aint * new_count);
+int DTPI_custom_datatype(DTP_pool_s dtp, DTPI_Attr_s ** attr_tree, MPI_Datatype * newtype,
+                         MPI_Aint * new_count, const char **desc_list, int depth);
 int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtpi, char **desc);
+void DTPI_rand_init(DTPI_pool_s * dtpi, int seed, int rand_count);
 int DTPI_rand(DTPI_pool_s * dtpi);
 int DTPI_init_verify(DTP_pool_s dtp, DTP_obj_s obj, void *buf, DTPI_Attr_s * attr_tree,
                      size_t buf_offset, int *val_start, int val_stride, int *rem_val_count,

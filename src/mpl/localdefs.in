@@ -3,5 +3,6 @@
 # by the top-level configure.  This lets us propagate shell variable changes
 # back upstream.
 
+GPU_SUPPORT="@GPU_SUPPORT@"
 CPPFLAGS="@CPPFLAGS@"
 WRAPPER_LIBS="$WRAPPER_LIBS @LIBS@"

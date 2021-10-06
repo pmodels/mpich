@@ -8,7 +8,7 @@
 
 #include "mplconfig.h"
 
-/* NOTE: PATH_MAX is simply an arbitary convenience size. It only be used
+/* NOTE: PATH_MAX is simply an arbitrary convenience size. It only be used
  * in non-critical paths or where we are certain the file path is very short.
  * Critical paths should consider using dynamic buffer.
  */
@@ -50,6 +50,8 @@ char *MPL_strerror(int errnum);
 int MPL_strnapp(char *dest, const char *src, size_t n);
 void MPL_create_pathname(char *dest_filename, const char *dirname,
                          const char *prefix, const int is_dir);
+
+int MPL_stricmp(const char *a, const char *b);
 
 /* *INDENT-ON* */
 #if defined(__cplusplus)

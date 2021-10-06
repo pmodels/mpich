@@ -53,6 +53,9 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
 
 #define MPL_thread_yield thr_yield
 
+/* See mpl_thread_posix.h for interface description. */
+void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affinity_size,
+                             int *err);
 
 /*
  *    Mutexes
@@ -65,7 +68,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) = mutex_init(mutex_ptr_, USYNC_THREAD, NULL);   \
-            /* FIXME: convert error to an MPL_THREAD_ERR value */       \
+            /* FIXME: convert error to an MPL_ERR_THREAD value */       \
         }                                                               \
     } while (0)
 
@@ -76,7 +79,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) = mutex_destroy(mutex_ptr_);                    \
-            /* FIXME: convert error to an MPL_THREAD_ERR value */       \
+            /* FIXME: convert error to an MPL_ERR_THREAD value */       \
         }                                                               \
     } while (0)
 
@@ -87,7 +90,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) = mutex_lock(mutex_ptr_);                       \
-            /* FIXME: convert error to an MPL_THREAD_ERR value */       \
+            /* FIXME: convert error to an MPL_ERR_THREAD value */       \
         }                                                               \
     } while (0)
 
@@ -98,7 +101,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) = mutex_unlock(mutex_ptr_);                     \
-            /* FIXME: convert error to an MPL_THREAD_ERR value */       \
+            /* FIXME: convert error to an MPL_ERR_THREAD value */       \
         }                                                               \
     } while (0)
 
@@ -114,7 +117,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) == cond_init(cond_ptr_, NULL, NULL);            \
-            /* FIXME: convert error to an MPL_THREAD_ERR value */       \
+            /* FIXME: convert error to an MPL_ERR_THREAD value */       \
         }                                                               \
     } while (0)
 
@@ -125,7 +128,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) = cond_destroy(cond_ptr_);                      \
-            /* FIXME: convert error to a MPL_THREAD_ERR value */        \
+            /* FIXME: convert error to a MPL_ERR_THREAD value */        \
         }                                                               \
     } while (0)
 
@@ -136,7 +139,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) = cond_wait((cond_ptr_), (mutex_ptr_));         \
-            /* FIXME: convert error to a MPL_THREAD_ERR value */        \
+            /* FIXME: convert error to a MPL_ERR_THREAD value */        \
         }                                                               \
     } while (0)
 
@@ -147,7 +150,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) = cond_broadcast(cond_ptr_);                    \
-            /* FIXME: convert error to a MPL_THREAD_ERR value */        \
+            /* FIXME: convert error to a MPL_ERR_THREAD value */        \
         }                                                               \
     } while (0)
 
@@ -158,7 +161,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) = cond_signal(cond_ptr_);                       \
-            /* FIXME: convert error to a MPL_THREAD_ERR value */        \
+            /* FIXME: convert error to a MPL_ERR_THREAD value */        \
         }                                                               \
     } while (0)
 
@@ -173,7 +176,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) = thr_keycreate((tls_ptr_), (exit_func_ptr_));  \
-            /* FIXME: convert error to a MPL_THREAD_ERR value */        \
+            /* FIXME: convert error to a MPL_ERR_THREAD value */        \
         }                                                               \
     } while (0)
 
@@ -198,7 +201,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) = thr_setspecific(*(tls_ptr_), (value_));       \
-            /* FIXME: convert error to a MPL_THREAD_ERR value */        \
+            /* FIXME: convert error to a MPL_ERR_THREAD value */        \
         }                                                               \
     } while (0)
 
@@ -209,7 +212,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
         else {                                                          \
             *(err_ptr_) = thr_setspecific(*(tls_ptr_), (value_ptr_));   \
-            /* FIXME: convert error to a MPL_THREAD_ERR value */        \
+            /* FIXME: convert error to a MPL_ERR_THREAD value */        \
         }                                                               \
     } while (0)
 

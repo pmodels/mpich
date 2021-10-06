@@ -76,6 +76,17 @@ Show=eval
 #
 # End of initialization of variables
 #---------------------------------------------------------------------
+
+# Check recursive situations
+# User mistakes, e.g. setting MPICH_CC=mpicc, may end up recursively running
+# this script. A simple check to bail if that's the case.
+if [ -n "$MPICH_RECURSION_CHECK" ] ; then
+    echo "This script ($0) is being called recursively, check that MPICH_FC does not refer to mpifort."
+    exit 1
+fi
+MPICH_RECURSION_CHECK=1
+export MPICH_RECURSION_CHECK
+
 # Environment Variables.
 # The environment variables MPICH_FC may be used to override the
 # default choices.
@@ -359,9 +370,9 @@ if [ "$linking" = yes ] ; then
         rc=$?
     else
         if [ "$static_mpi" = no ] ; then
-          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} "${allargs[@]}" $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
+          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} $allargs $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
         else
-          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} "${allargs[@]}" $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
+          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} $allargs $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
         fi
         rc=$?
     fi

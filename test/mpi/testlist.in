@@ -9,7 +9,7 @@ info
 init
 mpi_t
 pt2pt
-part
+@partdir@
 @rmadir@
 @spawndir@
 topo

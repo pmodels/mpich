@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 
                 MTestPrintfMsg(1, "Rank %d sends partition %d with count %ld of basic elements\n",
                                rank, i, scount);
-                MPI_Pready(i, &req);
+                MPI_Pready(i, req);
             }
 #else /* default pready from first partition to last */
             for (int i = 0; i < spart; i++) {
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 
                 MTestPrintfMsg(1, "Rank %d sends partition %d with count %ld of basic elements\n",
                                rank, i, scount);
-                MPI_Pready(i, &req);
+                MPI_Pready(i, req);
             }
 #endif
 
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
                 int part1_completed = 0, part2_completed = 0;
                 while (part1_completed == 0 || part2_completed == 0) {
 
-                    MPI_Parrived(&req, i, &flag);
+                    MPI_Parrived(req, i, &flag);
                     if (flag && part1_completed == 0) {
                         part1_completed = 1;
                         MTestPrintfMsg(1, "Rank %d Received partition %d "
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
                     }
 
                     if (i + 1 < rpart) {
-                        MPI_Parrived(&req, i + 1, &flag);
+                        MPI_Parrived(req, i + 1, &flag);
                         if (flag && part2_completed == 0) {
                             part2_completed = 1;
                             MTestPrintfMsg(1, "Rank %d Received partition %d "

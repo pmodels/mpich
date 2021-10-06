@@ -131,7 +131,8 @@ mutex_bench 4
 mutex_bench_shared 4
 mutex_bench_shm 4
 mutex_bench_shm_ordered 4
-rma_contig 2 timeLimit=720
+rma_contig 2 arg=-iter=10
+rma_contig 2 arg=-iter=32768
 badrma 2
 acc_loc 4
 acc_ordering 2

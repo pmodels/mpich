@@ -938,7 +938,7 @@ extern char *MPIDI_DBG_parent_str;
 #if defined(HAVE_MACRO_VA_ARGS)
 #   define MPIDI_err_printf(func, fmt, ...)				\
     {									\
-        MPL_error_printf("[%d] ERROR - %s(): " fmt "\n", MPIR_Process.comm_world->rank, func, __VA_ARGS__);    \
+        MPL_error_printf("[%d] ERROR - %s(): " fmt "\n", MPIR_Process.rank, func, __VA_ARGS__);    \
         fflush(stdout);							\
     }
 #endif

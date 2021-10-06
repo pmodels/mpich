@@ -17,7 +17,7 @@ c2f2cf_SOURCES = c2f2c.c c2f2cf.f
 ctypesinf_SOURCES = ctypesinf.f ctypesfromc.c
 
 # C programs get a different mtest utility object
-c2fmult_LDADD = $(mtest_c_objects) @cuda_LIBS@ @ze_LIBS@ @cuda_LDFLAGS@ @ze_LDFLAGS@
+c2fmult_LDADD = $(mtest_c_objects) @cuda_LIBS@ @ze_LIBS@ @hip_LIBS@ @cuda_LDFLAGS@ @ze_LDFLAGS@ @hip_LDFLAGS@
 c2fmult_SOURCES = c2fmult.c
 
 ## add1size.h will be distributed because it's listed in AC_CONFIG_FILES/AC_OUTPUT

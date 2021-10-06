@@ -55,12 +55,9 @@ extern const char MPII_Version_device[];
 /* MPIR_world_model_state tracks so we only init and finalize once in world model */
 MPL_atomic_int_t MPIR_world_model_state = MPL_ATOMIC_INT_T_INITIALIZER(0);
 
-/* Use init_lock to protect concurrent init/finalize (include session init/finalize) */
-static MPL_initlock_t init_lock = MPL_INITLOCK_INITIALIZER;
-
 /* Use init_counter to track when we are initializing for the first time or
  * when we are finalize for the last time and need cleanup states */
-/* Note: we are not using atomic variable since it is always accessed under init_lock */
+/* Note: we are not using atomic variable since it is always accessed under MPIR_init_lock */
 static int init_counter;
 
 /* TODO: currently the world model is not distinguished with session model, neither between
@@ -106,16 +103,25 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     bool is_world_model = (p_session_ptr == NULL);
     int err;
 
-    MPL_initlock_lock(&init_lock);
+    MPL_initlock_lock(&MPIR_init_lock);
 
     if (!is_world_model) {
         *p_session_ptr = (MPIR_Session *) MPIR_Handle_obj_alloc(&MPIR_Session_mem);
         MPIR_ERR_CHKHANDLEMEM(*p_session_ptr);
+
+        (*p_session_ptr)->errhandler = NULL;
+        /* FIXME: actually do something with session thread_level */
+        (*p_session_ptr)->thread_level = user_required;
+
+        {
+            int thr_err;
+            MPID_Thread_mutex_create(&(*p_session_ptr)->mutex, &thr_err);
+            MPIR_Assert(thr_err == 0);
+        }
     }
 
     init_counter++;
     if (init_counter > 1) {
-        *provided = MPIR_ThreadInfo.thread_provided;
         goto fn_exit;
     }
     /**********************************************************************/
@@ -202,6 +208,22 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
+    bool need_init_builtin_comms = true;
+#ifdef ENABLE_LOCAL_SESSION_INIT
+    need_init_builtin_comms = is_world_model;
+#endif
+    if (need_init_builtin_comms) {
+        mpi_errno = MPIR_init_comm_world();
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPIR_init_comm_self();
+        MPIR_ERR_CHECK(mpi_errno);
+
+#ifdef MPID_NEEDS_ICOMM_WORLD
+        mpi_errno = MPIR_init_icomm_world();
+        MPIR_ERR_CHECK(mpi_errno);
+#endif
+    }
 
     /**********************************************************************/
     /* Section 5: contains post device initialization code.  Anything
@@ -225,6 +247,9 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPII_init_dbg_logging();
     MPII_Wait_for_debugger();
 
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
+        MPII_dump_debug_summary();
+    }
 
     /**********************************************************************/
     /* Section 6: simply lets the device know that we are done with
@@ -232,8 +257,10 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
      * setup. */
     /**********************************************************************/
 
-    mpi_errno = MPID_InitCompleted();
-    MPIR_ERR_CHECK(mpi_errno);
+    if (is_world_model) {
+        mpi_errno = MPID_InitCompleted();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__INITIALIZED);
 
@@ -248,21 +275,22 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 #endif
 
-    mpi_errno = MPII_init_async();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (provided)
-        *provided = MPIR_ThreadInfo.thread_provided;
-
   fn_exit:
     if (is_world_model) {
         MPII_world_set_initilized();
+
+        mpi_errno = MPII_init_async();
+        MPIR_ERR_CHECK(mpi_errno);
     }
-    MPL_initlock_unlock(&init_lock);
+    if (provided) {
+        *provided = MPIR_ThreadInfo.thread_provided;
+    }
+    MPL_initlock_unlock(&MPIR_init_lock);
     return mpi_errno;
 
   fn_fail:
-    goto fn_exit;
+    MPL_initlock_unlock(&MPIR_init_lock);
+    return mpi_errno;
 }
 
 int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provided)
@@ -275,13 +303,17 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
 int MPII_Finalize(MPIR_Session * session_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank = MPIR_Process.comm_world->rank;
+    int rank = MPIR_Process.rank;
     bool is_world_model = (session_ptr == NULL);
 
-    MPL_initlock_lock(&init_lock);
+    MPL_initlock_lock(&MPIR_init_lock);
 
     if (!is_world_model) {
         /* handle any clean up on session */
+        int thr_err;
+        MPID_Thread_mutex_destroy(&session_ptr->mutex, &thr_err);
+        MPIR_Assert(thr_err == 0);
+
         MPIR_Handle_obj_free(&MPIR_Session_mem, session_ptr);
     }
 
@@ -300,7 +332,7 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPIR_ThreadInfo.isThreaded = 0;
 #endif
 
-    mpi_errno = MPII_finalize_local_proc_attrs();
+    mpi_errno = MPIR_finalize_builtin_comms();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Call the high-priority callbacks */
@@ -353,7 +385,7 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     if (is_world_model) {
         MPII_world_set_finalized();
     }
-    MPL_initlock_unlock(&init_lock);
+    MPL_initlock_unlock(&MPIR_init_lock);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

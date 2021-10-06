@@ -8,8 +8,17 @@
 
 #include "ch4_types.h"
 
+/* There are 3 terms referencing processes:
+ * upid, or "unversal process id", is netmod layer address (addrname)
+ * lpid, or "local process id", is av entry index in an ch4-layer table
+ * gpid, or "global process id", is av table index plus av entry index
+ *
+ * For non-dynamic processes, av table index is 0, thus lpid equals to gpid (other than type).
+ * The upid is used when establishing netmod connections.
+ * The lpid and gpid are defined here with avt manager.
+ */
+
 int MPIDIU_get_n_avts(void);
-int MPIDIU_get_max_n_avts(void);
 int MPIDIU_get_avt_size(int avtid);
 int MPIDIU_new_avt(int size, int *avtid);
 int MPIDIU_free_avt(int avtid);
@@ -18,16 +27,9 @@ int MPIDIU_avt_release_ref(int avtid);
 int MPIDIU_avt_init(void);
 int MPIDIU_avt_destroy(void);
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p);
-int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p);
-int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out);
-int MPIDIU_build_nodemap_avtid(int myrank, MPIR_Comm * comm, int sz, int avtid);
 
-int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
-                           int **remote_lupids, int *remote_node_ids);
-int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
-                                     int *is_low_group, int pure_intracomm,
-                                     size_t * remote_upid_size, char *remote_upids,
-                                     int **remote_lupids, int *remote_node_ids);
+int MPIDIU_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
+                          uint64_t * remote_gpids);
 int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size);
 int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut);
 int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size);
@@ -36,8 +38,7 @@ int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut);
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank, int *idx,
                                                      int *avtid)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_PID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_PID);
+    MPIR_FUNC_ENTER;
 
     *avtid = 0;
 
@@ -93,68 +94,62 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
     }
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " comm_to_pid: rank=%d, avtid=%d idx=%d", rank, *avtid, *idx));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_COMM_RANK_TO_PID);
+    MPIR_FUNC_EXIT;
     return *idx;
 }
 
 MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
 {
     MPIDI_av_entry_t *ret = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
+    MPIR_FUNC_ENTER;
 
+    int lpid;
     switch (MPIDI_COMM(comm, map).mode) {
         case MPIDI_RANK_MAP_DIRECT:
-            ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]->table[rank];
+            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).avtid]->table[rank];
             break;
         case MPIDI_RANK_MAP_DIRECT_INTRA:
-            ret = &MPIDI_av_table0->table[rank];
+            ret = &MPIDI_global.avt_mgr.av_table0->table[rank];
             break;
         case MPIDI_RANK_MAP_OFFSET:
-            ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
+            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).avtid]
                 ->table[rank + MPIDI_COMM(comm, map).reg.offset];
             break;
         case MPIDI_RANK_MAP_OFFSET_INTRA:
-            ret = &MPIDI_av_table0->table[rank + MPIDI_COMM(comm, map).reg.offset];
+            ret = &MPIDI_global.avt_mgr.av_table0->table[rank + MPIDI_COMM(comm, map).reg.offset];
             break;
         case MPIDI_RANK_MAP_STRIDE:
-            ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
-                ->table[MPIDI_CALC_STRIDE_SIMPLE(rank,
-                                                 MPIDI_COMM(comm, map).reg.stride.stride,
-                                                 MPIDI_COMM(comm, map).reg.stride.offset)];
+            lpid = MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                            MPIDI_COMM(comm, map).reg.stride.offset);
+            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).avtid]->table[lpid];
             break;
         case MPIDI_RANK_MAP_STRIDE_INTRA:
-            ret = &MPIDI_av_table0->table[MPIDI_CALC_STRIDE_SIMPLE(rank,
-                                                                   MPIDI_COMM(comm,
-                                                                              map).reg.
-                                                                   stride.stride, MPIDI_COMM(comm,
-                                                                                             map).
-                                                                   reg.stride.offset)];
+            lpid = MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                            MPIDI_COMM(comm, map).reg.stride.offset);
+            ret = &MPIDI_global.avt_mgr.av_table0->table[lpid];
             break;
         case MPIDI_RANK_MAP_STRIDE_BLOCK:
-            ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
-                ->table[MPIDI_CALC_STRIDE(rank,
-                                          MPIDI_COMM(comm, map).reg.stride.stride,
-                                          MPIDI_COMM(comm, map).reg.stride.blocksize,
-                                          MPIDI_COMM(comm, map).reg.stride.offset)];
+            lpid = MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                     MPIDI_COMM(comm, map).reg.stride.blocksize,
+                                     MPIDI_COMM(comm, map).reg.stride.offset);
+            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).avtid]->table[lpid];
             break;
         case MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA:
-            ret = &MPIDI_av_table0->table[MPIDI_CALC_STRIDE(rank,
-                                                            MPIDI_COMM(comm, map).reg.stride.stride,
-                                                            MPIDI_COMM(comm,
-                                                                       map).reg.stride.blocksize,
-                                                            MPIDI_COMM(comm,
-                                                                       map).reg.stride.offset)];
+            lpid = MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                     MPIDI_COMM(comm, map).reg.stride.blocksize,
+                                     MPIDI_COMM(comm, map).reg.stride.offset);
+            ret = &MPIDI_global.avt_mgr.av_table0->table[lpid];
             break;
         case MPIDI_RANK_MAP_LUT:
-            ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
+            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).avtid]
                 ->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank]];
             break;
         case MPIDI_RANK_MAP_LUT_INTRA:
-            ret = &MPIDI_av_table0->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank]];
+            ret =
+                &MPIDI_global.avt_mgr.av_table0->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank]];
             break;
         case MPIDI_RANK_MAP_MLUT:
-            ret = &MPIDI_av_table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].avtid]
+            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].avtid]
                 ->table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].lpid];
             break;
         case MPIDI_RANK_MAP_NONE:
@@ -164,15 +159,14 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * co
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " comm_to_av_addr: rank=%d, av addr=%p", rank, (void *) ret));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int rank, int *idx,
                                                            int *avtid)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_PID_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_PID_LOCAL);
+    MPIR_FUNC_ENTER;
 
     *avtid = MPIDI_COMM(comm, local_map).avtid;
     switch (MPIDI_COMM(comm, local_map).mode) {
@@ -210,15 +204,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " comm_to_pid_local: rank=%d, avtid=%d idx=%d",
                      rank, *avtid, *idx));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_COMM_RANK_TO_PID_LOCAL);
+    MPIR_FUNC_EXIT;
     return *idx;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RANK_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RANK_IS_LOCAL);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     ret = MPIDIU_comm_rank_to_av(comm, rank)->is_local;
@@ -226,15 +219,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_is_local(int rank, MPIR_Comm * comm)
                     (MPL_DBG_FDEST, " is_local=%d, rank=%d", ret, rank));
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RANK_IS_LOCAL);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIU_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AV_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AV_IS_LOCAL);
+    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     ret = av->is_local;
@@ -242,15 +234,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_av_is_local(MPIDI_av_entry_t * av)
                     (MPL_DBG_FDEST, " is_local=%d, av=%p", ret, (void *) av));
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AV_IS_LOCAL);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
 {
     int ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RANK_TO_LPID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RANK_TO_LPID);
+    MPIR_FUNC_ENTER;
 
     int avtid = 0, lpid = 0;
     MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
@@ -260,7 +251,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
         ret = -1;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RANK_TO_LPID);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 

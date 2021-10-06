@@ -20,8 +20,3 @@ mpi_core_sources +=   \
 noinst_HEADERS +=   \
     src/util/mpir_nodemap.h
 
-if MAINTAINER_MODE
-# normally built by autogen.sh, but this rebuild rule is here
-$(top_srcdir)/src/util/cvar/mpir_cvars.c: $(top_srcdir)/maint/extractcvars
-	( cd $(top_srcdir) && $(top_srcdir)/maint/extractcvars --dirs="`cat $(top_srcdir)/maint/cvardirs`")
-endif MAINTAINER_MODE

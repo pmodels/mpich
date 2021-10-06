@@ -36,24 +36,24 @@ int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(const void *sendbuf, 
     if (comm_ptr->is_low_group) {
         /* gatherv from right group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Igatherv_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                             recvcounts, displs, recvtype, root, comm_ptr, s);
+        mpi_errno = MPIR_Igatherv_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
+                                                   recvcounts, displs, recvtype, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         /* gatherv to right group */
         root = 0;
-        mpi_errno = MPIR_Igatherv_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                             recvcounts, displs, recvtype, root, comm_ptr, s);
+        mpi_errno = MPIR_Igatherv_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
+                                                   recvcounts, displs, recvtype, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* gatherv to left group  */
         root = 0;
-        mpi_errno = MPIR_Igatherv_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                             recvcounts, displs, recvtype, root, comm_ptr, s);
+        mpi_errno = MPIR_Igatherv_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
+                                                   recvcounts, displs, recvtype, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         /* gatherv from left group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Igatherv_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                             recvcounts, displs, recvtype, root, comm_ptr, s);
+        mpi_errno = MPIR_Igatherv_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
+                                                   recvcounts, displs, recvtype, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -76,7 +76,7 @@ int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(const void *sendbuf, 
     mpi_errno = MPIR_Type_commit_impl(&newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Ibcast_sched_auto(recvbuf, 1, newtype, 0, newcomm_ptr, s);
+    mpi_errno = MPIR_Ibcast_intra_sched_auto(recvbuf, 1, newtype, 0, newcomm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Type_free_impl(&newtype);

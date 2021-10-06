@@ -18,7 +18,6 @@ int MPIR_Ialltoallv_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
     int i, j;
     MPI_Aint recvtype_extent, recvtype_sz;
     int dst, rank;
-    MPIR_SCHED_CHKPMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -44,8 +43,8 @@ int MPIR_Ialltoallv_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
         max_count = MPL_MAX(max_count, recvcounts[i]);
     }
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, max_count * recvtype_sz, mpi_errno,
-                              "Ialltoallv tmp_buf", MPL_MEM_BUFFER);
+    tmp_buf = MPIR_Sched_alloc_state(s, max_count * recvtype_sz);
+    MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     for (i = 0; i < comm_size; ++i) {
         /* start inner loop at i to avoid re-exchanging data */
@@ -77,10 +76,8 @@ int MPIR_Ialltoallv_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
 
     MPIR_SCHED_BARRIER(s);
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

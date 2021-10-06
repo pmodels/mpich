@@ -623,9 +623,9 @@ extern void MPIR_T_PVAR_REGISTER_impl(MPIR_T_pvar_class_t varclass, MPI_Datatype
 
 #define MPIR_T_PVAR_COUNTER_ARRAY_INIT_impl(name_) \
     do { \
-        int count_; \
-        count_ = sizeof(PVAR_COUNTER_##name_)/sizeof(PVAR_COUNTER_##name_[0]); \
-        MPIR_T_PVAR_COUNTER_ARRAY_INIT_VAR_impl(PVAR_COUNTER_##name_, count_); \
+        int init_count_; \
+        init_count_ = sizeof(PVAR_COUNTER_##name_)/sizeof(PVAR_COUNTER_##name_[0]); \
+        MPIR_T_PVAR_COUNTER_ARRAY_INIT_VAR_impl(PVAR_COUNTER_##name_, init_count_); \
     } while (0)
 #define MPIR_T_PVAR_COUNTER_ARRAY_GET_impl(name_, idx_) \
     MPIR_T_PVAR_COUNTER_ARRAY_GET_VAR_impl(PVAR_COUNTER_##name_, idx_)
@@ -637,7 +637,7 @@ extern void MPIR_T_PVAR_REGISTER_impl(MPIR_T_pvar_class_t varclass, MPI_Datatype
             verb_, bind_, flags_, cat_, desc_) \
     do { \
         void *addr_; \
-        int count_;  \
+        int static_count_;  \
         /* Allowable datatypes only */ \
         MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG); \
@@ -645,9 +645,9 @@ extern void MPIR_T_PVAR_REGISTER_impl(MPIR_T_pvar_class_t varclass, MPI_Datatype
         MPIR_Assert(sizeof(PVAR_COUNTER_##name_[0]) == MPIR_Datatype_get_basic_size(dtype_)); \
         addr_ = PVAR_COUNTER_##name_; \
         MPIR_T_PVAR_COUNTER_ARRAY_INIT_impl(name_); \
-        count_ = sizeof(PVAR_COUNTER_##name_)/sizeof(PVAR_COUNTER_##name_[0]); \
+        static_count_ = sizeof(PVAR_COUNTER_##name_)/sizeof(PVAR_COUNTER_##name_[0]); \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_COUNTER, dtype_, #name_, \
-            addr_, count_, MPI_T_ENUM_NULL, verb_, bind_, flags_, NULL, NULL, cat_, desc_); \
+            addr_, static_count_, MPI_T_ENUM_NULL, verb_, bind_, flags_, NULL, NULL, cat_, desc_); \
     } while (0)
 
 /* Dynamic counter array is already provided by MPIR_T_PVAR_COUNTER_REGISTER_DYNAMIC */

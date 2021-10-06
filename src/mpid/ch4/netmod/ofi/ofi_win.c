@@ -15,13 +15,13 @@ static int win_init_sep(MPIR_Win * win);
 static int win_init_stx(MPIR_Win * win);
 static int win_init_global(MPIR_Win * win);
 static int win_init(MPIR_Win * win);
+static void win_init_am(MPIR_Win * win);
 
 static void load_acc_hint(MPIR_Win * win)
 {
     int op_index = 0, i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_LOAD_ACC_HINT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_LOAD_ACC_HINT);
+    MPIR_FUNC_ENTER;
 
     if (!MPIDI_OFI_WIN(win).acc_hint)
         MPIDI_OFI_WIN(win).acc_hint = MPL_malloc(sizeof(MPIDI_OFI_win_acc_hint_t), MPL_MEM_RMA);
@@ -73,7 +73,7 @@ static void load_acc_hint(MPIR_Win * win)
         }
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_LOAD_ACC_HINT);
+    MPIR_FUNC_EXIT;
 }
 
 /* Set OFI attributes and capabilities for RMA. */
@@ -126,8 +126,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     MPIDI_OFI_win_targetinfo_t *winfo;
     int nic = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_ALLGATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_WIN_ALLGATHER);
+    MPIR_FUNC_ENTER;
 
     if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         MPIDI_OFI_WIN(win).mr_key = MPIDI_OFI_WIN(win).win_id;
@@ -137,7 +136,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
 
     /* we need register mr on the correct domain for the vni */
     int vni = MPIDI_OFI_get_win_vni(win);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
     /* Register the allocated win buffer or MPI_BOTTOM (NULL) for dynamic win.
      * It is clear that we cannot register NULL when FI_MR_ALLOCATED is set, thus
@@ -223,7 +222,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     load_acc_hint(win);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_ALLGATHER);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -242,10 +241,9 @@ static int win_set_per_win_sync(MPIR_Win * win)
 {
     int ret, mpi_errno = MPI_SUCCESS;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(MPIDI_OFI_WIN(win).vni, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, MPIDI_OFI_WIN(win).vni, nic);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_SET_PER_WIN_SYNC);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_WIN_SET_PER_WIN_SYNC);
+    MPIR_FUNC_ENTER;
 
     struct fi_cntr_attr cntr_attr;
     memset(&cntr_attr, 0, sizeof(cntr_attr));
@@ -275,10 +273,15 @@ static int win_set_per_win_sync(MPIR_Win * win)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_SET_PER_WIN_SYNC);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static void win_init_am(MPIR_Win * win)
+{
+    MPIDI_WIN(win, am_vci) %= MPIDI_OFI_global.num_vnis;
 }
 
 /*
@@ -296,10 +299,9 @@ static int win_init_sep(MPIR_Win * win)
     struct fi_info *finfo;
     int nic = 0;
     int vni = MPIDI_OFI_WIN(win).vni;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_INIT_SEP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_WIN_INIT_SEP);
+    MPIR_FUNC_ENTER;
 
     finfo = fi_dupinfo(MPIDI_OFI_global.prov_use[0]);
     MPIR_Assert(finfo);
@@ -391,7 +393,7 @@ static int win_init_sep(MPIR_Win * win)
 
   fn_exit:
     fi_freeinfo(finfo);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_INIT_SEP);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {
@@ -425,10 +427,9 @@ static int win_init_stx(MPIR_Win * win)
     bool have_per_win_cntr = false;
     int nic = 0;
     int vni = MPIDI_OFI_WIN(win).vni;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_INIT_STX);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_WIN_INIT_STX);
+    MPIR_FUNC_ENTER;
 
     /* WB TODO - Only setting up nic[0] for RMA right now. */
     finfo = fi_dupinfo(MPIDI_OFI_global.prov_use[0]);
@@ -520,7 +521,7 @@ static int win_init_stx(MPIR_Win * win)
 
   fn_exit:
     fi_freeinfo(finfo);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_INIT_STX);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     if (MPIDI_OFI_WIN(win).ep != NULL) {
@@ -537,25 +538,24 @@ static int win_init_stx(MPIR_Win * win)
 
 static int win_init_global(MPIR_Win * win)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_INIT_GLOBAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_WIN_INIT_GLOBAL);
+    MPIR_FUNC_ENTER;
 
     int vni = MPIDI_OFI_WIN(win).vni;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
     MPIDI_OFI_WIN(win).ep = MPIDI_OFI_global.ctx[ctx_idx].tx;
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_OFI_global.ctx[ctx_idx].rma_cmpl_cntr;
     MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr;
 #else
-    ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
     /* NOTE: shared with ctx[0] */
     MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_OFI_global.ctx[ctx_idx].rma_cmpl_cntr;
     MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr;
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_INIT_GLOBAL);
+    MPIR_FUNC_EXIT;
 
     return 0;
 }
@@ -564,8 +564,7 @@ static int win_init(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_WIN_INIT);
+    MPIR_FUNC_ENTER;
 
     MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devwin_t) >= sizeof(MPIDI_OFI_win_t));
 
@@ -608,20 +607,19 @@ static int win_init(MPIR_Win * win)
     win_init_global(win);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_INIT);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 /* Callback of MPL_gavl_tree_create to delete local registered MR for dynamic window */
 static void dwin_close_mr(void *obj)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DWIN_CLOSE_MR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DWIN_CLOSE_MR);
+    MPIR_FUNC_ENTER;
 
     /* Close local MR */
     struct fid_mr *mr = (struct fid_mr *) obj;
     if (mr) {
-        int ret;
+        int ret ATTRIBUTE((unused));
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             uint64_t requested_key = fi_mr_key(mr);
             MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, requested_key);
@@ -630,56 +628,52 @@ static void dwin_close_mr(void *obj)
         MPIR_Assert(ret >= 0);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DWIN_CLOSE_MR);
+    MPIR_FUNC_EXIT;
     return;
 }
 
 /* Callback of MPL_gavl_tree_create to delete remote registered MR for dynamic window */
 static void dwin_free_target_mr(void *obj)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DWIN_FREE_TARGET_MEM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DWIN_FREE_TARGET_MEM);
+    MPIR_FUNC_ENTER;
 
     /* Free cached buffer for remote MR */
     MPL_free(obj);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DWIN_FREE_TARGET_MEM);
+    MPIR_FUNC_EXIT;
     return;
 }
 
 int MPIDI_OFI_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_SET_INFO);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_SET_INFO);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_mpi_win_set_info(win, info);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_SET_INFO);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIDI_OFI_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_GET_INFO);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_GET_INFO);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_mpi_win_get_info(win, info_p_p);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_GET_INFO);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIDI_OFI_mpi_win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_FREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_FREE);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_mpi_win_free(win_ptr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_FREE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -687,24 +681,22 @@ int MPIDI_OFI_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_In
                              MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIDI_OFI_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_ATTACH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_ATTACH);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_mpi_win_attach(win, base, size);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_ATTACH);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -713,25 +705,23 @@ int MPIDI_OFI_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * 
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE_SHARED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE_SHARED);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_mpi_win_allocate_shared(size, disp_unit, info_ptr, comm_ptr, base_ptr,
                                                win_ptr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE_SHARED);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIDI_OFI_mpi_win_detach(MPIR_Win * win, const void *base)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_DETACH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_DETACH);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_mpi_win_detach(win, base);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_DETACH);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -739,24 +729,22 @@ int MPIDI_OFI_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, M
                                void *baseptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win_ptr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
 int MPIDI_OFI_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE_DYNAMIC);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE_DYNAMIC);
+    MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_mpi_win_create_dynamic(info, comm, win_ptr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE_DYNAMIC);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -764,8 +752,8 @@ int MPIDI_OFI_mpi_win_create_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE_HOOK);
+    MPIR_FUNC_ENTER;
+    win_init_am(win);
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
@@ -779,7 +767,7 @@ int MPIDI_OFI_mpi_win_create_hook(MPIR_Win * win)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -789,8 +777,8 @@ int MPIDI_OFI_mpi_win_allocate_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE_HOOK);
+    MPIR_FUNC_ENTER;
+    win_init_am(win);
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
@@ -802,7 +790,7 @@ int MPIDI_OFI_mpi_win_allocate_hook(MPIR_Win * win)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -812,8 +800,8 @@ int MPIDI_OFI_mpi_win_allocate_shared_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE_SHARED_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE_SHARED_HOOK);
+    MPIR_FUNC_ENTER;
+    win_init_am(win);
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
@@ -825,7 +813,7 @@ int MPIDI_OFI_mpi_win_allocate_shared_hook(MPIR_Win * win)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_ALLOCATE_SHARED_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -835,8 +823,8 @@ int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE_DYNAMIC_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE_DYNAMIC_HOOK);
+    MPIR_FUNC_ENTER;
+    win_init_am(win);
 
     MPIR_CHKPMEM_DECL(1);
 
@@ -878,7 +866,7 @@ int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
     MPIR_CHKPMEM_COMMIT();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_CREATE_DYNAMIC_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -894,18 +882,16 @@ typedef struct dwin_target_mr {
 int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_ATTACH_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_ATTACH_HOOK);
+    MPIR_FUNC_ENTER;
 
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm *comm_ptr = win->comm_ptr;
     dwin_target_mr_t *target_mrs;
     int mpl_err = MPL_SUCCESS, i;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(MPIDI_OFI_WIN(win).vni, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, MPIDI_OFI_WIN(win).vni, nic);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_ATTACH_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_ATTACH_HOOK);
+    MPIR_FUNC_ENTER;
 
     MPIR_CHKLMEM_DECL(1);
 
@@ -978,7 +964,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_ATTACH_HOOK);
+    MPIR_FUNC_EXIT;
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
@@ -988,8 +974,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
 int MPIDI_OFI_mpi_win_detach_hook(MPIR_Win * win, const void *base)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_DETACH_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_DETACH_HOOK);
+    MPIR_FUNC_ENTER;
 
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm *comm_ptr = win->comm_ptr;
@@ -1029,7 +1014,7 @@ int MPIDI_OFI_mpi_win_detach_hook(MPIR_Win * win, const void *base)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_DETACH_HOOK);
+    MPIR_FUNC_EXIT;
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
@@ -1041,12 +1026,11 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     int nic = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_WIN_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_WIN_FREE_HOOK);
+    MPIR_FUNC_ENTER;
 
     if (MPIDI_OFI_ENABLE_RMA) {
         int vni = MPIDI_OFI_WIN(win).vni;
-        int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
         MPIDI_OFI_mr_key_free(MPIDI_OFI_COLL_MR_KEY, MPIDI_OFI_WIN(win).win_id);
         MPIDIU_map_erase(MPIDI_OFI_global.win_map, MPIDI_OFI_WIN(win).win_id);
         /* For scalable EP: push transmit context index back into available pool. */
@@ -1080,7 +1064,7 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
     /* This hook is called by CH4 generic call before CH4 finalization */
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_WIN_FREE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

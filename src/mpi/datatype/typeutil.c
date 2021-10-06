@@ -147,7 +147,7 @@ static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
     for (i = 0; i < sizeof(mpi_pairtypes) / sizeof(mpi_pairtypes[0]); i++) {
         if (mpi_pairtypes[i].dtype != MPI_DATATYPE_NULL) {
             MPIR_Datatype_get_ptr(mpi_pairtypes[i].dtype, dptr);
-            MPIR_Datatype_ptr_release(dptr);
+            MPIR_Datatype_free(dptr);
             mpi_pairtypes[i].dtype = MPI_DATATYPE_NULL;
         }
     }

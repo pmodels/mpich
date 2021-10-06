@@ -54,17 +54,17 @@ typedef GENERIC_Q_DECL(struct MPIR_Request) MPID_nem_lmt_rts_queue_t;
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST,                         \
                           "MPID_nem_lmt_rtsq_enqueue req=%p (handle=%#x), queue=%p",    \
                           ep, (ep)->handle, qp));                                       \
-        GENERIC_Q_ENQUEUE (qp, ep, dev.next);                                           \
+        GENERIC_Q_ENQUEUE (qp, ep, next);                                           \
     } while (0)
 #define MPID_nem_lmt_rtsq_dequeue(qp, epp)  do {                                        \
-        GENERIC_Q_DEQUEUE (qp, epp, dev.next);                                          \
+        GENERIC_Q_DEQUEUE (qp, epp, next);                                          \
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST,                         \
                           "MPID_nem_lmt_rtsq_dequeue req=%p (handle=%#x), queue=%p",    \
                           *(epp), *(epp) ? (*(epp))->handle : -1, qp));                 \
     } while (0)
 #define MPID_nem_lmt_rtsq_search_remove(qp, req_id, epp) do {                           \
         GENERIC_Q_SEARCH_REMOVE(qp, _e->handle == (req_id), epp,                        \
-                struct MPIR_Request, dev.next);                                         \
+                struct MPIR_Request, next);                                         \
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST,                         \
                     "MPID_nem_lmt_rtsq_search_remove req=%p (handle=%#x), queue=%p",    \
                     *(epp), req_id, qp));                                               \

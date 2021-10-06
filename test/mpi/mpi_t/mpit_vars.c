@@ -84,10 +84,10 @@ int PrintSources(FILE * fp)
     MPI_T_source_get_num(&num_sources);
     if (verbose)
         fprintf(fp, "%d MPI Event Sources\n", num_sources);
-    for (i = 0; i < num_sources; i++) {
+    for (int i = 0; i < num_sources; i++) {
         name_len = sizeof(name);
         desc_len = sizeof(desc);
-        MPI_T_source_get_info(i, name, &name_len, desc, &desc_len, &verbosity, &ordering,
+        MPI_T_source_get_info(i, name, &name_len, desc, &desc_len, &ordering,
                               &ticks_per_second, &max_ticks, NULL);
         if (verbose) {
             fprintf(fp, "name: %s\n", name);
@@ -117,7 +117,7 @@ int PrintEvents(FILE * fp)
     MPI_T_event_get_num(&num_events);
     if (verbose)
         fprintf(fp, "%d MPI Events\n", num_events);
-    for (i = 0; i < num_events; i++) {
+    for (int i = 0; i < num_events; i++) {
         name_len = sizeof(name);
         desc_len = sizeof(desc);
         MPI_T_event_get_info(i, name, &name_len, &verbosity, NULL, NULL, NULL, &enumtype, NULL,

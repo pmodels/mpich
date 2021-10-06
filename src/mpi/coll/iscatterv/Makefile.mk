@@ -8,6 +8,5 @@
 # mpi_sources
 
 mpi_core_sources +=                             \
-    src/mpi/coll/iscatterv/iscatterv.c \
     src/mpi/coll/iscatterv/iscatterv_allcomm_sched_linear.c	\
-    src/mpi/coll/iscatterv/iscatterv_gentran_algos.c
+    src/mpi/coll/iscatterv/iscatterv_tsp_linear.c

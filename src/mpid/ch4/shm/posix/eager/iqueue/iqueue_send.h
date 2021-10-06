@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_eager_buf_limit(void)
 MPL_STATIC_INLINE_PREFIX int
 MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void *am_hdr,
                        MPI_Aint am_hdr_sz, const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                       MPI_Aint offset, MPI_Aint * bytes_sent)
+                       MPI_Aint offset, int src_vsi, int dst_vsi, MPI_Aint * bytes_sent)
 {
     MPIDI_POSIX_eager_iqueue_transport_t *transport;
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
@@ -47,11 +47,10 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
     int ret = MPIDI_POSIX_OK;
     MPI_Aint packed_size = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
+    MPIR_FUNC_ENTER;
 
     /* Get the transport object that holds all of the global variables. */
-    transport = MPIDI_POSIX_eager_iqueue_get_transport();
+    transport = MPIDI_POSIX_eager_iqueue_get_transport(src_vsi, dst_vsi);
 
     /* Try to get a new cell to hold the message */
     MPIDU_genq_shmem_pool_cell_alloc(transport->cell_pool, (void **) &cell);
@@ -111,7 +110,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
+    MPIR_FUNC_EXIT;
     return ret;
 }
 

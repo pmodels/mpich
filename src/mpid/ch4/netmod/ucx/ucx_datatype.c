@@ -26,13 +26,14 @@ static void finish_pack(void *state);
 static void *start_pack(void *context, const void *buffer, size_t count)
 {
     struct pack_state *state;
+    MPIR_Datatype *dt_ptr = context;
 
     /* Todo: Add error handling */
     state = MPL_malloc(sizeof(struct pack_state), MPL_MEM_DATATYPE);
 
     state->buffer = (void *) buffer;
     state->count = count;
-    state->datatype = *((MPI_Datatype *) context);
+    state->datatype = dt_ptr->handle;
 
     return (void *) state;
 }
@@ -40,13 +41,14 @@ static void *start_pack(void *context, const void *buffer, size_t count)
 static void *start_unpack(void *context, void *buffer, size_t count)
 {
     struct pack_state *state;
+    MPIR_Datatype *dt_ptr = context;
 
     /* Todo: Add error handling */
     state = MPL_malloc(sizeof(struct pack_state), MPL_MEM_DATATYPE);
 
     state->buffer = buffer;
     state->count = count;
-    state->datatype = *((MPI_Datatype *) context);
+    state->datatype = dt_ptr->handle;
 
     return (void *) state;
 }

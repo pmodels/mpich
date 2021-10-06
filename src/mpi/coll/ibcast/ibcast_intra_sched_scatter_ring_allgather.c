@@ -41,10 +41,6 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    /* If there is only one process, return */
-    if (comm_size == 1)
-        goto fn_exit;
-
     if (HANDLE_IS_BUILTIN(datatype))
         is_contig = 1;
     else {
@@ -69,7 +65,6 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
     }
 
     ibcast_state->n_bytes = nbytes;
-    ibcast_state->curr_bytes = 0;
     if (is_contig) {
         /* contiguous, no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -90,12 +85,15 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
     scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
     /* curr_size is the amount of data that this process now has stored in
-     * buffer at byte offset (rank*scatter_size) */
-    curr_size = MPL_MIN(scatter_size, (nbytes - (rank * scatter_size)));
+     * buffer at byte offset (relative_rank*scatter_size) */
+    int relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
+    curr_size = MPL_MIN(scatter_size, (nbytes - (relative_rank * scatter_size)));
     if (curr_size < 0)
         curr_size = 0;
     /* curr_size bytes already inplace */
-    ibcast_state->curr_bytes = curr_size;
+    ibcast_state->initial_bytes = curr_size;
+    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_init_length, ibcast_state, s);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */
 

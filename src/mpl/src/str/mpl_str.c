@@ -416,3 +416,37 @@ void MPL_create_pathname(char *dest_filename, const char *dirname,
         MPL_snprintf(dest_filename, PATH_MAX, "%s.%u.%u%c", prefix, rdm, pid, is_dir ? '/' : '\0');
     }
 }
+
+/*@ MPL_stricmp - Case insensitive string comparison
+
+Arguments:
+s1, s2  - The strings to compare
+
+Return:
+  0 - s1 is equal to s2
+  <0 - s1 is less than s2
+  >0 - s1 is greater than s2
+
+Module:
+  Utility
+@*/
+int MPL_stricmp(const char *s1, const char *s2)
+{
+    while (*s1 && *s2) {
+        if (toupper(*s1) < toupper(*s2)) {
+            return -1;
+        } else if (toupper(*s1) > toupper(*s2)) {
+            return 1;
+        }
+        s1++;
+        s2++;
+    }
+    if (*s1 == *s2) {
+        /* both '\0' */
+        return 0;
+    } else if (*s2) {
+        return -1;
+    } else {
+        return 1;
+    }
+}

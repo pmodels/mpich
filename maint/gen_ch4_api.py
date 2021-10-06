@@ -1,3 +1,8 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 import re
 import os
 
@@ -44,7 +49,7 @@ def load_ch4_api(ch4_api_txt):
             if RE.match(r'(.*API|PARAM):', line):
                 flag = RE.m.group(1)
             elif re.search(r'API$', flag):
-                if RE.match(r'\s+(NM|SHM|MPIDIG)(\*?)\s*:\s*(.+)', line):
+                if RE.match(r'\s+(NM|SHM)(\*?)\s*:\s*(.+)', line):
                     nm, inline, t = RE.m.group(1, 2, 3)
                     tlist = re.split(r',\s*', t)
                     if nm == "NM":
@@ -53,8 +58,6 @@ def load_ch4_api(ch4_api_txt):
                     elif nm == 'SHM':
                         cur_api['shm_params'] = tlist
                         cur_api['shm_inline'] = inline
-                    elif nm == 'MPIDIG':
-                        cur_api['mpidig_params'] = tlist
                 elif RE.match(r'\s+(\w+)\s*:\s*(.+)', line):
                     name, ret = RE.m.group(1, 2)
                     cur_api = {'name': name, 'ret': ret}
@@ -190,8 +193,7 @@ def dump_netmod_impl_h(h_file):
                 print("    %s ret;" % a['ret'], file=Out)
                 print("", file=Out)
             NAME = a['name'].upper()
-            print("    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
-            print("    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("    MPIR_FUNC_ENTER;", file=Out)
             print("", file=Out)
             s = "    "
             if use_ret:
@@ -203,7 +205,7 @@ def dump_netmod_impl_h(h_file):
             dump_s_param_tail(Out, s, a['nm_params'], ");", 1)
             print("", file=Out)
 
-            print("    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("    MPIR_FUNC_EXIT;", file=Out)
             if use_ret:
                 print("    return ret;", file=Out)
             print("}", file=Out)
@@ -251,8 +253,7 @@ def dump_netmod_impl_c(c_file):
                 print("    %s ret;" % a['ret'], file=Out)
                 print("", file=Out)
             NAME = a['name'].upper()
-            print("    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
-            print("    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("    MPIR_FUNC_ENTER;", file=Out)
             print("", file=Out)
             s = "    "
             if use_ret:
@@ -264,7 +265,7 @@ def dump_netmod_impl_c(c_file):
             dump_s_param_tail(Out, s, a['nm_params'], ");", 1)
             print("", file=Out)
 
-            print("    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("    MPIR_FUNC_EXIT;", file=Out)
             if use_ret:
                 print("    return ret;", file=Out)
             print("}", file=Out)
@@ -401,15 +402,14 @@ def dump_stub_file(stub_file, mod, is_inline, is_nm):
             dump_s_param_tail(Out, s, params, ")")
             print("{", file=Out)
             if a['ret'] == 'int':
-                if 'mpidig_params' in a:
-                    s = "    return MPIDIG_%s(" % a['name']
-                    dump_s_param_tail(Out, s, a['mpidig_params'], ");", is_arg=True)
-                else:
-                    print("    int mpi_errno = MPI_SUCCESS;", file=Out)
-                    print("    return mpi_errno;", file=Out)
+                print("    int mpi_errno = MPI_SUCCESS;", file=Out)
+                print("    MPIR_Assert(0);", file=Out)
+                print("    return mpi_errno;", file=Out)
             elif a['ret'] == 'void':
+                print("    MPIR_Assert(0);", file=Out)
                 print("    return;", file=Out)
             else:
+                print("    MPIR_Assert(0);", file=Out)
                 print("    return 0;", file=Out)
             print("}", file=Out)
         if is_inline:

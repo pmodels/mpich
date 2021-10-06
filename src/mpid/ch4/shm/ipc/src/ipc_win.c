@@ -6,7 +6,8 @@
 #include "mpidimpl.h"
 #include "ipc_noinline.h"
 #include "ipc_types.h"
-#include "ipc_mem.h"
+#include "../xpmem/xpmem_post.h"
+#include "../gpu/gpu_post.h"
 
 /* Return global node rank of each process in the shared communicator.
  * I.e., rank in MPIR_Process.comm_world->node_comm. The caller routine
@@ -17,8 +18,7 @@ static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ra
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *shm_group_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_GET_NODE_RANKS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_GET_NODE_RANKS);
+    MPIR_FUNC_ENTER;
 
     for (i = 0; i < shm_comm_ptr->local_size; i++)
         shm_ranks[i] = i;
@@ -42,7 +42,7 @@ static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ra
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_GET_NODE_RANKS);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -68,8 +68,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
     int *ranks_in_shm_grp = NULL;
     MPIDI_IPCI_ipc_attr_t ipc_attr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_MPI_WIN_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_MPI_WIN_CREATE_HOOK);
+    MPIR_FUNC_ENTER;
     MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(2);
 
@@ -152,6 +151,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         shared_table[i].size = ipc_shared_table[i].size;
         shared_table[i].disp_unit = ipc_shared_table[i].disp_unit;
         shared_table[i].shm_base_addr = NULL;
+        shared_table[i].ipc_mapped_device = -1;
 
         if (i == shm_comm_ptr->rank) {
             shared_table[i].shm_base_addr = win->base;
@@ -167,11 +167,17 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                 case MPIDI_IPCI_TYPE__GPU:
                     /* FIXME: remote win buffer should be mapped to each of their corresponding
                      * local GPU device. */
-                    mpi_errno =
-                        MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,
-                                                 ipc_attr.gpu_attr.device, MPI_BYTE,
-                                                 &shared_table[i].shm_base_addr);
-                    MPIR_ERR_CHECK(mpi_errno);
+                    {
+                        MPIDI_GPU_ipc_handle_t handle = ipc_shared_table[i].ipc_handle.gpu;
+                        int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.gpu_attr);
+                        int map_dev_id = MPIDI_GPU_ipc_get_map_dev(handle.global_dev_id, dev_id,
+                                                                   MPI_BYTE);
+                        mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,
+                                                             map_dev_id,
+                                                             &shared_table[i].shm_base_addr);
+                        MPIR_ERR_CHECK(mpi_errno);
+                        shared_table[i].ipc_mapped_device = map_dev_id;
+                    }
                     break;
                 case MPIDI_IPCI_TYPE__NONE:
                     /* no-op */
@@ -194,7 +200,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MPI_WIN_CREATE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -205,8 +211,7 @@ int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_MPI_WIN_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_MPI_WIN_FREE_HOOK);
+    MPIR_FUNC_ENTER;
 
     if (win->create_flavor != MPI_WIN_FLAVOR_CREATE ||
         !shm_comm_ptr || !MPIDIG_WIN(win, shared_table))
@@ -215,6 +220,6 @@ int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win)
     MPL_free(MPIDIG_WIN(win, shared_table));
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MPI_WIN_FREE_HOOK);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }

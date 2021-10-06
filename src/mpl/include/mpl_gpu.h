@@ -15,6 +15,9 @@
 #elif defined MPL_HAVE_ZE
 #define MPL_HAVE_GPU MPL_GPU_TYPE_ZE
 #include "mpl_gpu_ze.h"
+#elif defined MPL_HAVE_HIP
+#define MPL_HAVE_GPU MPL_GPU_TYPE_HIP
+#include "mpl_gpu_hip.h"
 #else
 #include "mpl_gpu_fallback.h"
 #endif
@@ -36,6 +39,7 @@ typedef enum {
     MPL_GPU_TYPE_NONE = 0,
     MPL_GPU_TYPE_CUDA,
     MPL_GPU_TYPE_ZE,
+    MPL_GPU_TYPE_HIP,
 } MPL_gpu_type_t;
 
 #ifndef MPL_HAVE_GPU
@@ -54,8 +58,7 @@ int MPL_gpu_query_support(MPL_gpu_type_t * type);
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr);
 
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle);
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, MPL_gpu_device_handle_t dev_handle,
-                           void **ptr);
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void **ptr);
 int MPL_gpu_ipc_handle_unmap(void *ptr);
 
 int MPL_gpu_malloc_host(void **ptr, size_t size);
@@ -69,9 +72,10 @@ int MPL_gpu_free(void *ptr);
 int MPL_gpu_init(void);
 int MPL_gpu_finalize(void);
 
-int MPL_gpu_get_dev_id(MPL_gpu_device_handle_t dev_handle, int *dev_id);
-int MPL_gpu_get_dev_handle(int dev_id, MPL_gpu_device_handle_t * dev_handle);
-int MPL_gpu_get_global_dev_ids(int *global_ids, int count);
+int MPL_gpu_global_to_local_dev_id(int global_dev_id);
+int MPL_gpu_local_to_global_dev_id(int local_dev_id);
+
+int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr);
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len);
 
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr));

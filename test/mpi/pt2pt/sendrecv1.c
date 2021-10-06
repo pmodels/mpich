@@ -109,7 +109,7 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
 
                 /* only up to sendcnt should be updated */
                 errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, source, 0, errs < 10);
-                errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
+                errs += MTest_dtp_check(&recv, 0, 1, sendcnt, &send, errs < 10);
             }
             MTest_dtp_destroy(&send);
             MTest_dtp_destroy(&recv);

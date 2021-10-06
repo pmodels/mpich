@@ -1,7 +1,7 @@
 Summary:        A high-performance implementation of MPI
 Name:           mpich
-Version:        4.0~a1
-Release:        2.g032b3aeb2%{?dist}
+Version:        4.0~a2
+Release:        1%{?dist}
 License:        MIT
 URL:            http://www.mpich.org/
 
@@ -345,6 +345,9 @@ find %{buildroot} -type f -name "*.la" -delete
 %{python3_sitearch}/%{name}.pth
 
 %changelog
+* Tue Oct 5 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 4.0~a2-1
+- Update to 4.0a2 git hash 65dcaccf3
+
 * Fri Aug 6 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 4.0~a1-2
 - remove --with-cart
 

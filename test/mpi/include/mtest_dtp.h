@@ -378,6 +378,17 @@ static inline int MTest_dtp_create(struct mtest_obj *obj, bool alloc)
     return err;
 }
 
+static inline int MTest_dtp_create_custom(struct mtest_obj *obj, bool alloc, const char *desc)
+{
+    int err = DTP_obj_create_custom(obj->dtp, &obj->dtp_obj, desc);
+    if (alloc && obj->buf_mode != MTEST_DTP_BUF_MAX) {
+        MTestMalloc(obj->dtp_obj.DTP_bufsize, obj->memtype, &obj->buf_h, &obj->buf, obj->device_id);
+        assert(obj->buf && obj->buf_h);
+        obj->buf_mode = MTEST_DTP_BUF_OBJ;
+    }
+    return err;
+}
+
 static inline int MTest_dtp_destroy(struct mtest_obj *obj)
 {
     int err = DTP_obj_free(obj->dtp_obj);
@@ -392,10 +403,7 @@ static inline int MTest_dtp_destroy(struct mtest_obj *obj)
 /* utilitis for each instance of dtp obj */
 static inline void MTest_dtp_print_desc(struct mtest_obj *obj)
 {
-    char *desc;
-    DTP_obj_get_description(obj->dtp_obj, &desc);
-    printf("%s [%s]\n", obj->name, desc);
-    free(desc);
+    printf("%s [%s]\n", obj->name, DTP_obj_get_description(obj->dtp_obj));
 }
 
 static inline int MTest_dtp_init(struct mtest_obj *obj, int start, int stride, int count)
@@ -412,7 +420,7 @@ static inline int MTest_dtp_init(struct mtest_obj *obj, int start, int stride, i
 }
 
 static inline int MTest_dtp_check(struct mtest_obj *obj, int start, int stride, int count,
-                                  int verbose)
+                                  struct mtest_obj *obj2, int verbose)
 {
     int err;
     MTestCopyContent(obj->buf, obj->buf_h, obj->dtp_obj.DTP_bufsize, obj->memtype);
@@ -421,6 +429,9 @@ static inline int MTest_dtp_check(struct mtest_obj *obj, int start, int stride, 
         if (verbose) {
             printf("DTP_obj_buf_check failed.\n");
             MTest_dtp_print_desc(obj);
+            if (obj2) {
+                MTest_dtp_print_desc(obj2);
+            }
         }
         return 1;
     }

@@ -91,7 +91,7 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
         err = MPI_Wait(&req, &status);
 
         errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, rank, 0, errs < 10);
-        errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
+        errs += MTest_dtp_check(&recv, 0, 1, sendcnt, &send, errs < 10);
 
         MTest_dtp_init(&recv, -1, -1, sendcnt);
 
@@ -116,7 +116,7 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
         err = MPI_Wait(&req, &status);
 
         errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, rank, 0, errs < 10);
-        errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
+        errs += MTest_dtp_check(&recv, 0, 1, sendcnt, &send, errs < 10);
 
         MTest_dtp_init(&recv, -1, -1, sendcnt);
 
@@ -141,7 +141,7 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
         err = MPI_Wait(&req, &status);
 
         errs += MTestCheckStatus(&status, dtp.DTP_base_type, sendcnt, rank, 0, errs < 10);
-        errs += MTest_dtp_check(&recv, 0, 1, sendcnt, errs < 10);
+        errs += MTest_dtp_check(&recv, 0, 1, sendcnt, &send, errs < 10);
 
         MTest_dtp_destroy(&send);
         MTest_dtp_destroy(&recv);
