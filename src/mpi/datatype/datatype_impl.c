@@ -68,7 +68,8 @@ int MPIR_Pack_impl(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint actual_pack_bytes;
     void *buf = (void *) ((char *) outbuf + *position);
-    mpi_errno = MPIR_Typerep_pack(inbuf, incount, datatype, 0, buf, outsize, &actual_pack_bytes);
+    mpi_errno = MPIR_Typerep_pack(inbuf, incount, datatype, 0, buf, outsize, &actual_pack_bytes,
+                                  MPIR_TYPEREP_FLAG_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     *position += actual_pack_bytes;
 
@@ -102,7 +103,8 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
     MPI_Aint actual_unpack_bytes;
     void *buf = (void *) ((char *) inbuf + *position);
     mpi_errno =
-        MPIR_Typerep_unpack(buf, insize, outbuf, outcount, datatype, 0, &actual_unpack_bytes);
+        MPIR_Typerep_unpack(buf, insize, outbuf, outcount, datatype, 0, &actual_unpack_bytes,
+                            MPIR_TYPEREP_FLAG_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     *position += actual_unpack_bytes;
 

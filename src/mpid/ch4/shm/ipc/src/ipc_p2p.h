@@ -133,7 +133,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_
         mpi_errno = MPIR_Typerep_unpack(src_buf, src_data_sz,
                                         MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq,
                                                                                      count),
-                                        MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
+                                        MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes,
+                                        MPIR_TYPEREP_FLAG_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(actual_unpack_bytes == src_data_sz);
     } else {

@@ -308,7 +308,8 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     else {
         MPI_Aint actual_pack_bytes;
         MPIR_Typerep_pack(rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
-                       stream_offset, resp_req->dev.user_buf, stream_data_len, &actual_pack_bytes);
+                       stream_offset, resp_req->dev.user_buf, stream_data_len, &actual_pack_bytes,
+                       MPIR_TYPEREP_FLAG_NONE);
         MPIR_Assert(actual_pack_bytes == stream_data_len);
     }
 
@@ -433,7 +434,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     else {
         MPI_Aint actual_pack_bytes;
         MPIR_Typerep_pack(rreq->dev.real_user_buf, 1, rreq->dev.datatype, 0, resp_req->dev.user_buf,
-                       type_size, &actual_pack_bytes);
+                       type_size, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
         MPIR_Assert(actual_pack_bytes == type_size);
     }
 
@@ -1283,7 +1284,8 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     else {
         MPI_Aint actual_pack_bytes;
         MPIR_Typerep_pack(get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype,
-                       0, sreq->dev.user_buf, type_size * recv_count, &actual_pack_bytes);
+                       0, sreq->dev.user_buf, type_size * recv_count, &actual_pack_bytes,
+                       MPIR_TYPEREP_FLAG_NONE);
         MPIR_Assert(actual_pack_bytes == type_size * recv_count);
     }
 
@@ -1422,7 +1424,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
     else {
         MPI_Aint actual_pack_bytes;
         MPIR_Typerep_pack(fop_pkt->addr, 1, fop_pkt->datatype, 0, resp_req->dev.user_buf,
-                       type_size, &actual_pack_bytes);
+                       type_size, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
         MPIR_Assert(actual_pack_bytes == type_size);
     }
 

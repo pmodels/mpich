@@ -72,7 +72,8 @@ void MPIDI_CH3U_Buffer_copy(
     else if (sdt_contig)
     {
         MPI_Aint actual_unpack_bytes;
-        MPIR_Typerep_unpack(MPIR_get_contig_ptr(sbuf, sdt_true_lb), sdata_sz, rbuf, rcount, rdt, 0, &actual_unpack_bytes);
+        MPIR_Typerep_unpack(MPIR_get_contig_ptr(sbuf, sdt_true_lb), sdata_sz, rbuf, rcount, rdt, 0,
+                            &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
         /* --BEGIN ERROR HANDLING-- */
         if (actual_unpack_bytes != sdata_sz)
         {
@@ -84,7 +85,8 @@ void MPIDI_CH3U_Buffer_copy(
     else if (rdt_contig)
     {
 	MPI_Aint actual_pack_bytes;
-	MPIR_Typerep_pack(sbuf, scount, sdt, 0, MPIR_get_contig_ptr(rbuf, rdt_true_lb), sdata_sz, &actual_pack_bytes);
+    MPIR_Typerep_pack(sbuf, scount, sdt, 0, MPIR_get_contig_ptr(rbuf, rdt_true_lb), sdata_sz,
+                      &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
 	/* --BEGIN ERROR HANDLING-- */
 	if (actual_pack_bytes != sdata_sz)
 	{
@@ -134,8 +136,10 @@ void MPIDI_CH3U_Buffer_copy(
 	    if (max_pack_bytes == 0)
 		break;
 
-	    MPIR_Typerep_pack(sbuf, scount, sdt, sfirst, buf, max_pack_bytes, &actual_pack_bytes);
-	    MPIR_Typerep_unpack(buf, actual_pack_bytes, rbuf, rcount, rdt, rfirst, &actual_unpack_bytes);
+        MPIR_Typerep_pack(sbuf, scount, sdt, sfirst, buf, max_pack_bytes, &actual_pack_bytes,
+                          MPIR_TYPEREP_FLAG_NONE);
+        MPIR_Typerep_unpack(buf, actual_pack_bytes, rbuf, rcount, rdt, rfirst, &actual_unpack_bytes,
+                            MPIR_TYPEREP_FLAG_NONE);
 	    MPIR_Assert(actual_pack_bytes == actual_unpack_bytes);
 
 	    sfirst += actual_pack_bytes;

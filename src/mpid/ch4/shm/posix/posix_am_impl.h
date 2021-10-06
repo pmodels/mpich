@@ -53,7 +53,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
     }
 
     if (am_hdr) {
-        MPIR_Typerep_copy(req_hdr->am_hdr, am_hdr, am_hdr_sz);
+        MPIR_Typerep_copy(req_hdr->am_hdr, am_hdr, am_hdr_sz, MPIR_TYPEREP_FLAG_NONE);
     }
 
     *req_hdr_ptr = req_hdr;
