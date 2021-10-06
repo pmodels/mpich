@@ -83,6 +83,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *vaddr, uintptr
 
     memset(&ipc_attr->ipc_handle, 0, sizeof(MPIDI_IPCI_ipc_handle_t));
 
+    if (vaddr == MPI_BOTTOM) {
+        goto fn_none;
+    }
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     if (MPIR_CVAR_CH4_XPMEM_ENABLE) {
         ipc_attr->ipc_type = MPIDI_IPCI_TYPE__XPMEM;
@@ -94,6 +97,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *vaddr, uintptr
     }
 #endif
 
+  fn_none:
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
     ipc_attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
 

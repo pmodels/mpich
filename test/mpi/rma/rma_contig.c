@@ -15,6 +15,7 @@
 #define MIN_NUM_ITERATIONS 8
 #define NUM_WARMUP_ITER 1
 
+int max_num_iterations = MAX_NUM_ITERATIONS;
 const int verbose = 0;
 static int rank;
 
@@ -64,7 +65,7 @@ static void run_test(int lock_mode, int lock_assert)
     for (target_rank = 0; rank == 0 && target_rank < nproc; target_rank++) {
         for (data_size = sizeof(double); data_size <= MAX_DATA_SIZE; data_size *= 2) {
             double t_get, t_put, t_acc;
-            int num_iter = MAX_NUM_ITERATIONS;
+            int num_iter = max_num_iterations;
 
             /* Scale the number of iterations by log_2 of the data size, so
              * that we run each test for a reasonable amount of time. */
@@ -125,8 +126,11 @@ static void run_test(int lock_mode, int lock_assert)
 
 int main(int argc, char **argv)
 {
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    max_num_iterations = MTestArgListGetInt_with_default(head, "iter", MAX_NUM_ITERATIONS);
+    MTestArgListDestroy(head);
 
+    MTest_Init(&argc, &argv);
     run_test(MPI_LOCK_EXCLUSIVE, 0);
     run_test(MPI_LOCK_EXCLUSIVE, MPI_MODE_NOCHECK);
     run_test(MPI_LOCK_SHARED, 0);

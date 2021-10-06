@@ -319,8 +319,7 @@ static int win_set_per_win_sync(MPIR_Win * win)
 
 static void win_init_am(MPIR_Win * win)
 {
-    /* TODO: MPIDI_WIN(win, am_vci) %= MPIDI_OFI_global.num_vnis; */
-    MPIDI_WIN(win, am_vci) = 0;
+    MPIDI_WIN(win, am_vci) %= MPIDI_OFI_global.num_vnis;
 }
 
 /*

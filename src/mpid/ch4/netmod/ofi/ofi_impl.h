@@ -40,7 +40,7 @@ ATTRIBUTE((unused));
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
 int MPIDI_OFI_progress_uninlined(int vni);
-int MPIDI_OFI_handle_cq_error(int ctx_idx, ssize_t ret);
+int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
 
 /* vni mapping */
 /* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
@@ -628,11 +628,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm
  */
 
 /* local macros to make the code cleaner */
-#define CQ_S_LIST MPIDI_OFI_global.cq_buffered_static_list
-#define CQ_S_HEAD MPIDI_OFI_global.cq_buffered_static_head
-#define CQ_S_TAIL MPIDI_OFI_global.cq_buffered_static_tail
-#define CQ_D_HEAD MPIDI_OFI_global.cq_buffered_dynamic_head
-#define CQ_D_TAIL MPIDI_OFI_global.cq_buffered_dynamic_tail
+#define CQ_S_LIST MPIDI_OFI_global.per_vni[vni].cq_buffered_static_list
+#define CQ_S_HEAD MPIDI_OFI_global.per_vni[vni].cq_buffered_static_head
+#define CQ_S_TAIL MPIDI_OFI_global.per_vni[vni].cq_buffered_static_tail
+#define CQ_D_HEAD MPIDI_OFI_global.per_vni[vni].cq_buffered_dynamic_head
+#define CQ_D_TAIL MPIDI_OFI_global.per_vni[vni].cq_buffered_dynamic_tail
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_has_cq_buffered(int vni)
 {
@@ -655,7 +655,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
             goto fn_exit;
 
         if (ret < 0) {
-            mpi_errno = MPIDI_OFI_handle_cq_error(ctx_idx, ret);
+            mpi_errno = MPIDI_OFI_handle_cq_error(vni, nic, ret);
             goto fn_fail;
         }
 
@@ -668,7 +668,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
             list_entry->cq_entry = cq_entry;
             LL_APPEND(CQ_D_HEAD, CQ_D_TAIL, list_entry);
         } else {
-            CQ_S_LIST[CQ_S_HEAD].cq_entry = cq_entry;
+            CQ_S_LIST[CQ_S_HEAD] = cq_entry;
             CQ_S_HEAD = (CQ_S_HEAD + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
         }
     }
@@ -687,7 +687,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged
     if (1) {
         /* If the static list isn't empty, do so first */
         if (CQ_S_HEAD != CQ_S_TAIL) {
-            wc[0] = CQ_S_LIST[CQ_S_TAIL].cq_entry;
+            wc[0] = CQ_S_LIST[CQ_S_TAIL];
             CQ_S_TAIL = (CQ_S_TAIL + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
         }
         /* If there's anything in the dynamic list, it goes second. */

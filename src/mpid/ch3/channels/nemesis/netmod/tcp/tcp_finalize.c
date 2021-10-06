@@ -9,7 +9,9 @@ int MPID_nem_tcp_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
+#ifdef HAVE_ERROR_CHECKING
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     MPIR_FUNC_ENTER;
 
