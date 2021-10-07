@@ -335,20 +335,17 @@ static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum 
             *fi_op = FI_LXOR;
             goto fn_exit;
 
-        case MPI_REPLACE:{
-                *fi_op = FI_ATOMIC_WRITE;
-                goto fn_exit;
-            }
+        case MPI_REPLACE:
+            *fi_op = FI_ATOMIC_WRITE;
+            goto fn_exit;
 
-        case MPI_NO_OP:{
-                *fi_op = FI_ATOMIC_READ;
-                goto fn_exit;
-            }
+        case MPI_NO_OP:
+            *fi_op = FI_ATOMIC_READ;
+            goto fn_exit;
 
-        case MPI_OP_NULL:{
-                *fi_op = FI_CSWAP;
-                goto fn_exit;
-            }
+        case MPI_OP_NULL:
+            *fi_op = FI_CSWAP;
+            goto fn_exit;
 
         default:
             goto fn_fail;
