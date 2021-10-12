@@ -11,6 +11,9 @@
 #include "mpir_attr_generic.h"
 #include "mpii_f77interface.h"
 #include <sys/types.h>  /* for ssize_t */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* Handle different mechanisms for passing Fortran CHARACTER to routines.
  *
@@ -50,6 +53,145 @@
 #define FORT_MIXED_LEN(a)
 #define FORT_END_LEN(a)       , FORT_SIZE_INT a
 #endif
+
+/* NOTE: both leading and trailing spaces are not counted */
+static inline int get_fort_str_len(char *s, int len)
+{
+    char *p = s + len - 1;
+    while (*p == ' ' && p > s) {
+        p--;
+    }
+    while (s < p && *s == ' ') {
+        s++;
+    }
+
+    if (p == s && *s == ' ') {
+        return 0;
+    } else {
+        return (int) (p + 1 - s);
+    }
+}
+
+/* NOTE: n is returned from get_fort_str_len.
+ *       s may include leading spaces that will be removed.
+ */
+static inline void copy_fort_str_to_c(char *c_str, char *s, int n)
+{
+    if (n > 0) {
+        while (*s == ' ') {
+            s++;
+        }
+        memcpy(c_str, s, n);
+    }
+    c_str[n] = '\0';
+}
+
+/* duplicate fortran string to a C string */
+static inline char *MPIR_fort_dup_str(char *s, int len)
+{
+    int n = get_fort_str_len(s, len);
+    char *c_str = (char *) malloc(n + 1);
+    copy_fort_str_to_c(c_str, s, n);
+
+    return c_str;
+}
+
+/* duplicate fortran string array (e.g. argv in MPI_Comm_spawn)
+ *
+ * If count > 0, we have count strings, e.g. array_of_commands.
+ * Otherwise, the array is terminated by an empty/NULL string.
+ *
+ * When we assume the array is NULL terminated, user mistakes can easily become
+ * undefined behavior. But I guess that is not much we can do.
+ */
+static inline char **MPIR_fort_dup_str_array(char *s, int len, int stride, int count)
+{
+    int num_strs;
+
+    if (count > 0) {
+        num_strs = count;
+    } else {
+        /* Compute the size of the array by looking for an all-blank line */
+        num_strs = 0;
+        char *p = s;
+        while (1) {
+            int n = get_fort_str_len(p, len);
+            if (n == 0) {
+                break;
+            }
+            num_strs++;
+            p += stride;
+        }
+        count = num_strs;
+        /* add terminating string */
+        num_strs++;
+    }
+
+    char **strs = (char **) malloc(num_strs * sizeof(char *));
+
+    if (count > 0) {
+        char *str = (char *) malloc(num_strs * (len + 1));
+
+        for (int i = 0; i < count; i++) {
+            char *p1 = s + i * stride;
+            char *p2 = str + i * (len + 1);
+
+            int n = get_fort_str_len(p1, len);
+            copy_fort_str_to_c(p2, p1, n);
+
+            strs[i] = p2;
+        }
+    }
+
+    if (num_strs > count) {
+        /* Null terminate the array */
+        strs[count] = NULL;
+    }
+
+    return strs;
+}
+
+static inline void MPIR_fort_free_str_array(char **strs)
+{
+    if (strs[0]) {
+        free(strs[0]);
+    }
+    free(strs);
+}
+
+/* duplicate fortran string 2d array (e.g. array_of_argv in MPI_Comm_spawn_multiple) */
+static inline char ***MPIR_fort_dup_str_2d_array(char *s, int len, int count)
+{
+    char ***str_2d_array = malloc(count * sizeof(char **));
+    for (int k = 0; k < count; k++) {
+        char *p = s + k * len;  /* NOTE: column-major */
+
+        str_2d_array[k] = MPIR_fort_dup_str_array(p, len, count * len, 0);
+    }
+
+    return str_2d_array;
+}
+
+static inline void MPIR_fort_free_str_2d_array(char ***str_2d_array, int count)
+{
+    for (int i = 0; i < count; i++) {
+        MPIR_fort_free_str_array(str_2d_array[i]);
+    }
+    free(str_2d_array);
+}
+
+static inline void MPIR_fort_copy_str_from_c(char *s, int len, char *c_str)
+{
+    int n = strlen(c_str);
+    if (n > len) {
+        n = len;
+    }
+
+    memcpy(s, c_str, n);
+    for (int i = n; i < len; i++) {
+        s[i] = ' ';
+    }
+}
 
 /* ------------------------------------------------------------------------- */
 /* The following definitions are used to support the Microsoft compilers
@@ -156,6 +298,7 @@ extern FORT_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE;
 /* MPI_F_ERRCODES_IGNORE is defined as a Fortran INTEGER type, so must
    be declared as MPI_Fint */
 extern FORT_DLL_SPEC MPI_Fint *MPI_F_ERRCODES_IGNORE;
+extern FORT_DLL_SPEC void *MPI_F_ARGV_NULL;
 extern FORT_DLL_SPEC void *MPI_F_ARGVS_NULL;
 /* MPIR_F_PTR checks for the Fortran MPI_BOTTOM and provides the value
    MPI_BOTTOM if found
