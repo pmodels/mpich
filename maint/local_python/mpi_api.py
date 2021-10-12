@@ -317,3 +317,21 @@ def get_type_create_f90_func_list():
         "MPI_Type_create_f90_complex",
     ]
     return [G.FUNCS[a.lower()] for a in type_func_name_list]
+
+def get_f77_dummy_func_list():
+    dummy_func_name_list = [
+        "MPI_DUP_FN",
+        "MPI_NULL_COPY_FN",
+        "MPI_NULL_DELETE_FN",
+        "MPI_COMM_DUP_FN",
+        "MPI_COMM_NULL_COPY_FN",
+        "MPI_COMM_NULL_DELETE_FN",
+        "MPI_TYPE_DUP_FN",
+        "MPI_TYPE_NULL_COPY_FN",
+        "MPI_TYPE_NULL_DELETE_FN",
+        "MPI_WIN_DUP_FN",
+        "MPI_WIN_NULL_COPY_FN",
+        "MPI_WIN_NULL_DELETE_FN",
+        "MPI_CONVERSION_FN_NULL",
+    ]
+    return [G.FUNCS[a.lower()] for a in dummy_func_name_list]
