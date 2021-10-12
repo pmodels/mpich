@@ -1,5 +1,6 @@
 proberank 1
 truncmsg1 2
+truncmsg1 2 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
 truncmsg2 2
 truncmsg_mrecv 2 mpiversion=3.0
 # multiple completion ests

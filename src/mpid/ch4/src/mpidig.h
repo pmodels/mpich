@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef MPIDIG_AM_H_INCLUDED
-#define MPIDIG_AM_H_INCLUDED
+#ifndef MPIDIG_H_INCLUDED
+#define MPIDIG_H_INCLUDED
 
 #define MPIDI_AM_HANDLERS_MAX (64)
 #define MPIDI_AM_RNDV_CB_MAX  (10)
@@ -140,4 +140,9 @@ int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code);
 
 int MPIDIG_am_check_init(void);
 
-#endif /* MPIDIG_AM_H_INCLUDED */
+int MPIDIG_init_comm(MPIR_Comm * comm);
+int MPIDIG_destroy_comm(MPIR_Comm * comm);
+void *MPIDIG_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr);
+int MPIDIG_mpi_free_mem(void *ptr);
+
+#endif /* MPIDIG_H_INCLUDED */

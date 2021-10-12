@@ -144,7 +144,7 @@ void MPIR_Typerep_commit(MPI_Datatype type)
         case MPI_COMBINER_HVECTOR_INTEGER:
         case MPI_COMBINER_HINDEXED_INTEGER:
         case MPI_COMBINER_STRUCT_INTEGER:
-            MPIR_Assert(0 && "wrong combiner");
+            MPIR_Assert_error("wrong combiner");
             break;
         default:
             break;
@@ -429,5 +429,5 @@ static void create_named(MPI_Datatype type)
 
 void MPIR_Typerep_free(MPIR_Datatype * typeptr)
 {
-    MPIR_Dataloop_free(&typeptr->typerep.handle);
+    MPIR_Dataloop_free((void **) &typeptr->typerep.handle);
 }

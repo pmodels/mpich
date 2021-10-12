@@ -10,7 +10,6 @@
 /* NOTE: headers with global struct need be included before ofi_types.h */
 #include "ofi_types.h"
 #include "mpidch4r.h"
-#include "mpidig_am.h"
 #include "ch4_impl.h"
 
 extern unsigned long long PVAR_COUNTER_nic_sent_bytes_count[MPIDI_OFI_MAX_NICS] ATTRIBUTE((unused));
@@ -308,6 +307,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_set(int ctx_idx, int val)
 #define MPIDI_OFI_COLL_MR_KEY 1
 #define MPIDI_OFI_INVALID_MR_KEY 0xFFFFFFFFFFFFFFFFULL
 int MPIDI_OFI_retry_progress(void);
+int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+int MPIDI_OFI_recv_huge_control(int vni, MPIR_Context_id_t comm_id, int rank, int tag,
+                                MPIDI_OFI_huge_remote_info_t * info);
+int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+int MPIDI_OFI_huge_chunk_done_event(int vni, struct fi_cq_tagged_entry *wc, void *req);
 int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
                               uint32_t attr, MPIR_Request ** req);
 int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,

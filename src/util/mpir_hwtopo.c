@@ -135,7 +135,7 @@ static hwloc_obj_type_t get_hwloc_obj_type(MPIR_hwtopo_type_e type)
             hwloc_obj_type = HWLOC_OBJ_PCI_DEVICE;
             break;
         default:
-            hwloc_obj_type = -1;
+            hwloc_obj_type = (hwloc_obj_type_t) (-1);
     }
 
     return hwloc_obj_type;
@@ -517,7 +517,7 @@ int MPIR_hwtopo_mem_bind(void *baseaddr, size_t len, MPIR_hwtopo_gid_t gid)
     hwloc_bitmap_or(bitmap, bitmap, hwloc_obj->nodeset);
 
     if (hwloc_obj->type == HWLOC_OBJ_NUMANODE) {
-        flags |= HWLOC_MEMBIND_BYNODESET;
+        flags = (hwloc_membind_flags_t) ((int) flags | (int) HWLOC_MEMBIND_BYNODESET);
     } else {
 #ifdef HAVE_ERROR_CHECKING
         ret =

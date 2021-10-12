@@ -83,6 +83,14 @@ int main(int argc, char *argv[])
             err = MPI_Recv(buf, LongLen - 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
             errs += checkTruncError(err, "long");
         }
+        /* Test when the receive buffer is much shorter */
+        if (rank == source) {
+            err = MPI_Send(buf, LongLen, MPI_INT, dest, 0, MPI_COMM_WORLD);
+            errs += checkOk(err, "long");
+        } else if (rank == dest) {
+            err = MPI_Recv(buf, ShortLen, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
+            errs += checkTruncError(err, "long-receive-short");
+        }
     }
 
     free(buf);

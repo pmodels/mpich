@@ -156,6 +156,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
 
     *request = rreq;
+    MPIDI_OFI_REQUEST(rreq, kind) = MPIDI_OFI_req_kind__any;
+    if (!flags) {
+        MPIDI_OFI_REQUEST(rreq, huge.remote_info) = NULL;       /* for huge recv remote info */
+    }
 
     /* Calculate the correct NICs. */
     sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->recvcontext_id, MPIR_Process.rank,
@@ -170,7 +174,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIDI_OFI_REQUEST(rreq, datatype) = datatype;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
-    recv_buf = (char *) buf + dt_true_lb;
+    recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(recv_buf, &attr);
     if (data_sz &&
@@ -229,22 +233,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
     /* Read ordering unnecessary for context_id, so use relaxed load */
     MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
+    MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
+    MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
 
     if (unlikely(data_sz >= MPIDI_OFI_global.max_msg_size) && !MPIDI_OFI_COMM(comm).enable_striping) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
         data_sz = MPIDI_OFI_global.max_msg_size;
     } else if (MPIDI_OFI_COMM(comm).enable_striping &&
                (data_sz >= MPIDI_OFI_global.stripe_threshold)) {
-        MPIDI_OFI_huge_recv_t *huge_recv = (MPIDI_OFI_huge_recv_t *) rreq;
-        huge_recv->chunks_outstanding = 0;
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
         /* Receive has to be posted with size MPIDI_OFI_global.stripe_threshold to handle underflow */
         data_sz = MPIDI_OFI_global.stripe_threshold;
     } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
-    MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
-    MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
     if (!flags) {
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                       recv_buf,

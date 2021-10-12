@@ -67,7 +67,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
         /* contiguous. no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
-        tmp_buf = (char *) buffer + true_lb;
+        tmp_buf = MPIR_get_contig_ptr(buffer, true_lb);
     } else {
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 

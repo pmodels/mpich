@@ -4,7 +4,7 @@
  */
 
 #include "mpidimpl.h"
-#include "ch4r_recvq.h"
+#include "mpidig_recvq.h"
 
 int unexp_message_indices[2];
 

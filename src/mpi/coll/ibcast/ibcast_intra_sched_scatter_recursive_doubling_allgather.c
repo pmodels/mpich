@@ -100,7 +100,7 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
         /* contiguous. no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
-        tmp_buf = (char *) buffer + true_lb;
+        tmp_buf = MPIR_get_contig_ptr(buffer, true_lb);
     } else {
         if (rank == root) {
             mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, s);

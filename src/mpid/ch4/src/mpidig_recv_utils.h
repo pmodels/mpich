@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef MPIDIG_AM_MSG_H_INCLUDED
-#define MPIDIG_AM_MSG_H_INCLUDED
+#ifndef MPIDIG_RECV_UTILS_H_INCLUDED
+#define MPIDIG_RECV_UTILS_H_INCLUDED
 
 /* This file is for supporting routines used for generic layer message matching
  * and data transfer. They are used by protocols such as send, ssend, and send_long.
@@ -349,7 +349,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq)
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     if (dt_contig) {
         p->recv_type = MPIDIG_RECV_CONTIG;
-        p->iov_one.iov_base = (char *) MPIDIG_REQUEST(rreq, buffer) + dt_true_lb;
+        p->iov_one.iov_base = MPIR_get_contig_ptr(MPIDIG_REQUEST(rreq, buffer), dt_true_lb);
         p->iov_one.iov_len = data_sz;
     } else {
         struct iovec *iov;
@@ -380,4 +380,4 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq)
     }
 }
 
-#endif /* MPIDIG_AM_MSG_H_INCLUDED */
+#endif /* MPIDIG_RECV_UTILS_H_INCLUDED */

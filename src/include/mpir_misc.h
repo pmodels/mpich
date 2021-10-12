@@ -66,6 +66,14 @@ int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendty
                     void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                     MPIR_Typerep_req * typereq_req);
 
+/* Contiguous datatype calculates buffer address with `(char *) buf + dt_true_lb`.
+ * However, dt_true_lb is treated as ptrdiff_t (signed), and when buf is MPI_BOTTOM
+ * and on 32-bit systems, ubsan will warn the latter overflow. Cast to uintptr_t
+ * to work around.
+ */
+#define MPIR_get_contig_ptr(buf, true_lb) \
+    (void *) ((uintptr_t) buf + (uintptr_t) (true_lb))
+
 /*@ MPIR_Add_finalize - Add a routine to be called when MPI_Finalize is invoked
 
 + routine - Routine to call

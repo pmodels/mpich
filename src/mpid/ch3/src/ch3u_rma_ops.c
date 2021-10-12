@@ -309,8 +309,8 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 
         get_pkt = &(op_ptr->pkt.get);
         MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
-        get_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
-            win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
+        get_pkt->addr = MPIR_get_contig_ptr(win_ptr->basic_info_table[target_rank].base_addr,
+            win_ptr->basic_info_table[target_rank].disp_unit * target_disp);
         get_pkt->count = target_count;
         get_pkt->datatype = target_datatype;
         get_pkt->info.flattened_type_size = 0;
@@ -498,8 +498,8 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
             MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE);
         }
 
-        accum_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
-            win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
+        accum_pkt->addr = MPIR_get_contig_ptr(win_ptr->basic_info_table[target_rank].base_addr,
+            win_ptr->basic_info_table[target_rank].disp_unit * target_disp);
         accum_pkt->count = target_count;
         accum_pkt->datatype = target_datatype;
         accum_pkt->info.flattened_type_size = 0;

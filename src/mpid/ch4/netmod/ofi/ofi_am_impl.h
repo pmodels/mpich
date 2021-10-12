@@ -772,7 +772,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
         MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer) = send_buf;
     } else {
         MPIDI_Datatype_check_lb(datatype, dt_true_lb);
-        send_buf = (char *) buf + dt_true_lb;
+        send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     }
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,

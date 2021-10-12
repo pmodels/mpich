@@ -150,87 +150,6 @@ void MPIDI_OFI_mr_key_allocator_destroy(void)
     MPL_free(mr_key_allocator.bitmask);
 }
 
-/* Translate the control message to get a huge message into a request to
- * actually perform the data transfer. */
-static int MPIDI_OFI_get_huge(int vni, MPIDI_OFI_send_control_t * info)
-{
-    MPIDI_OFI_huge_recv_t *recv_elem = NULL;
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    bool ready_to_get = false;
-
-    /* If there has been a posted receive, search through the list of unmatched
-     * receives to find the one that goes with the incoming message. */
-    {
-        MPIDI_OFI_huge_recv_list_t *list_ptr;
-
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                        (MPL_DBG_FDEST, "SEARCHING POSTED LIST: (%d, %d, %d)", info->comm_id,
-                         info->origin_rank, info->tag));
-
-        LL_FOREACH(MPIDI_posted_huge_recv_head, list_ptr) {
-            if (list_ptr->comm_id == info->comm_id &&
-                list_ptr->rank == info->origin_rank && list_ptr->tag == info->tag) {
-                MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                                (MPL_DBG_FDEST, "MATCHED POSTED LIST: (%d, %d, %d, %d)",
-                                 info->comm_id, info->origin_rank, info->tag,
-                                 list_ptr->rreq->handle));
-
-                LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
-
-                recv_elem = (MPIDI_OFI_huge_recv_t *)
-                    MPIDIU_map_lookup(MPIDI_OFI_global.huge_recv_counters, list_ptr->rreq->handle);
-
-                /* If this is a "peek" element for an MPI_Probe, it shouldn't be matched. Grab the
-                 * important information and remove the element from the list. */
-                if (recv_elem->peek) {
-                    MPIR_STATUS_SET_COUNT(recv_elem->localreq->status, info->msgsize);
-                    MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(recv_elem->localreq, util_id)),
-                                                 MPIDI_OFI_PEEK_FOUND);
-                    MPIDIU_map_erase(MPIDI_OFI_global.huge_recv_counters,
-                                     recv_elem->localreq->handle);
-                    MPL_free(recv_elem);
-                    recv_elem = NULL;
-                }
-
-                MPL_free(list_ptr);
-                break;
-            }
-        }
-    }
-
-    if (recv_elem) {
-        ready_to_get = true;
-    } else {
-        /* Put the struct describing the transfer on an unexpected list to be retrieved later */
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                        (MPL_DBG_FDEST, "CREATING UNEXPECTED HUGE RECV: (%d, %d, %d)",
-                         info->comm_id, info->origin_rank, info->tag));
-
-        /* If this is unexpected, create a new tracker and put it in the unexpected list. */
-        recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_COMM);
-        if (!recv_elem)
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-        LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv_elem);
-    }
-
-    recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-    recv_elem->remote_info = *info;
-    recv_elem->next = NULL;
-    if (ready_to_get) {
-        MPIDI_OFI_get_huge_event(vni, NULL, (MPIR_Request *) recv_elem);
-    }
-
-    MPIR_FUNC_EXIT;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
                               uint32_t attr, MPIR_Request ** req)
 {
@@ -241,18 +160,21 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
         *req = NULL;
     }
 
+    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
+    MPIR_AssertDeclValue(int remote_vci, MPIDIG_AM_ATTR_SRC_VCI(attr));
     switch (ctrlsend->type) {
-        case MPIDI_OFI_CTRL_HUGEACK:{
-                /* FIXME: need vni from the callback parameters */
-                mpi_errno = MPIDI_OFI_dispatch_function(0, NULL, ctrlsend->ackreq);
-                goto fn_exit;
-            }
+        case MPIDI_OFI_CTRL_HUGEACK:
+            mpi_errno = MPIDI_OFI_dispatch_function(local_vci, NULL, ctrlsend->u.huge_ack.ackreq);
             break;
 
-        case MPIDI_OFI_CTRL_HUGE:{
-                mpi_errno = MPIDI_OFI_get_huge(0, ctrlsend);
-                goto fn_exit;
-            }
+        case MPIDI_OFI_CTRL_HUGE:
+            MPIR_Assert(local_vci == ctrlsend->u.huge.info.vni_dst);
+            MPIR_Assert(remote_vci == ctrlsend->u.huge.info.vni_src);
+            mpi_errno = MPIDI_OFI_recv_huge_control(local_vci,
+                                                    ctrlsend->u.huge.info.comm_id,
+                                                    ctrlsend->u.huge.info.origin_rank,
+                                                    ctrlsend->u.huge.info.tag,
+                                                    &(ctrlsend->u.huge.info));
             break;
 
         default:
@@ -266,33 +188,9 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
 
 
 /* MPI Datatype Processing for RMA */
-#define isS_INT(x) ((x)==MPI_INTEGER ||                                \
-    (x) == MPI_INT32_T || (x) == MPI_INTEGER4 ||       \
-                     (x) == MPI_INT)
-#define isUS_INT(x) ((x) == MPI_UINT32_T || (x) == MPI_UNSIGNED)
-#define isS_SHORT(x) ((x) == MPI_SHORT || (x) == MPI_INT16_T ||        \
-                       (x) == MPI_INTEGER2)
-#define isUS_SHORT(x) ((x) == MPI_UNSIGNED_SHORT || (x) == MPI_UINT16_T)
-#define isS_CHAR(x) ((x) == MPI_SIGNED_CHAR || (x) == MPI_INT8_T ||    \
-                      (x) == MPI_INTEGER1 || (x) == MPI_CHAR)
-#define isUS_CHAR(x) ((x) == MPI_BYTE ||                               \
-                       (x) == MPI_UNSIGNED_CHAR || (x) == MPI_UINT8_T)
-#define isS_LONG(x) ((x) == MPI_LONG || (x) == MPI_AINT)
-#define isUS_LONG(x) ((x) == MPI_UNSIGNED_LONG)
-#define isS_LONG_LONG(x) ((x) == MPI_INT64_T || (x) == MPI_OFFSET ||   \
-    (x) == MPI_INTEGER8 || (x) == MPI_LONG_LONG || \
-                           (x) == MPI_LONG_LONG_INT || (x) == MPI_COUNT)
-#define isUS_LONG_LONG(x) ((x) == MPI_UINT64_T || (x) == MPI_UNSIGNED_LONG_LONG)
 #define isFLOAT(x) ((x) == MPI_FLOAT || (x) == MPI_REAL)
 #define isDOUBLE(x) ((x) == MPI_DOUBLE || (x) == MPI_DOUBLE_PRECISION)
 #define isLONG_DOUBLE(x) ((x) == MPI_LONG_DOUBLE)
-#define isLOC_TYPE(x) ((x) == MPI_2REAL || (x) == MPI_2DOUBLE_PRECISION || \
-    (x) == MPI_2INTEGER || (x) == MPI_FLOAT_INT ||  \
-    (x) == MPI_DOUBLE_INT || (x) == MPI_LONG_INT || \
-    (x) == MPI_2INT || (x) == MPI_SHORT_INT ||      \
-                        (x) == MPI_LONG_DOUBLE_INT)
-#define isBOOL(x) ((x) == MPI_C_BOOL)
-#define isLOGICAL(x) ((x) == MPI_LOGICAL)
 #define isSINGLE_COMPLEX(x) ((x) == MPI_COMPLEX || (x) == MPI_C_FLOAT_COMPLEX)
 #define isDOUBLE_COMPLEX(x) ((x) == MPI_DOUBLE_COMPLEX || (x) == MPI_COMPLEX8 || \
                               (x) == MPI_C_DOUBLE_COMPLEX)
@@ -327,45 +225,64 @@ int MPIDI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum f
     if (fi_op != NULL)
         *fi_op = FI_ATOMIC_OP_LAST;
 
-    if (isS_INT(dt))
-        *fi_dt = FI_INT32;
-    else if (isUS_INT(dt))
-        *fi_dt = FI_UINT32;
-    else if (isFLOAT(dt))
-        *fi_dt = FI_FLOAT;
-    else if (isDOUBLE(dt))
-        *fi_dt = FI_DOUBLE;
-    else if (isLONG_DOUBLE(dt))
-        *fi_dt = FI_LONG_DOUBLE;
-    else if (isS_CHAR(dt))
-        *fi_dt = FI_INT8;
-    else if (isUS_CHAR(dt))
-        *fi_dt = FI_UINT8;
-    else if (isS_SHORT(dt))
-        *fi_dt = FI_INT16;
-    else if (isUS_SHORT(dt))
-        *fi_dt = FI_UINT16;
-    else if (isS_LONG(dt))
-        *fi_dt = FI_INT64;
-    else if (isUS_LONG(dt))
-        *fi_dt = FI_UINT64;
-    else if (isS_LONG_LONG(dt))
-        *fi_dt = FI_INT64;
-    else if (isUS_LONG_LONG(dt))
-        *fi_dt = FI_UINT64;
-    else if (isSINGLE_COMPLEX(dt))
-        *fi_dt = FI_FLOAT_COMPLEX;
-    else if (isDOUBLE_COMPLEX(dt))
-        *fi_dt = FI_DOUBLE_COMPLEX;
-    else if (isLOC_TYPE(dt))
-        *fi_dt = FI_DATATYPE_LAST;
-    else if (isLOGICAL(dt))
-        *fi_dt = FI_UINT32;
-    else if (isBOOL(dt))
-        *fi_dt = FI_UINT8;
+    int dt_size;
+    MPIR_Datatype_get_size_macro(dt, dt_size);
 
-    if (*fi_dt == FI_DATATYPE_LAST)
+    if (dt == MPI_CHAR || dt == MPI_SIGNED_CHAR || dt == MPI_SHORT ||
+        dt == MPI_INT || dt == MPI_LONG || dt == MPI_LONG_LONG ||
+        dt == MPI_INT8_T || dt == MPI_INT16_T || dt == MPI_INT32_T || dt == MPI_INT64_T ||
+        dt == MPI_INTEGER || dt == MPI_INTEGER1 || dt == MPI_INTEGER2 ||
+        dt == MPI_INTEGER4 || dt == MPI_INTEGER8 ||
+        dt == MPI_AINT || dt == MPI_COUNT || dt == MPI_OFFSET) {
+        switch (dt_size) {
+            case 1:
+                *fi_dt = FI_INT8;
+                break;
+            case 2:
+                *fi_dt = FI_INT16;
+                break;
+            case 4:
+                *fi_dt = FI_INT32;
+                break;
+            case 8:
+                *fi_dt = FI_INT64;
+                break;
+            default:
+                goto fn_fail;
+        }
+    } else if (dt == MPI_UNSIGNED_CHAR || dt == MPI_UNSIGNED_SHORT || dt == MPI_UNSIGNED ||
+               dt == MPI_UNSIGNED_LONG || dt == MPI_UNSIGNED_LONG_LONG ||
+               dt == MPI_UINT8_T || dt == MPI_UINT16_T || dt == MPI_UINT32_T ||
+               dt == MPI_UINT64_T || dt == MPI_C_BOOL || dt == MPI_LOGICAL) {
+        switch (dt_size) {
+            case 1:
+                *fi_dt = FI_UINT8;
+                break;
+            case 2:
+                *fi_dt = FI_UINT16;
+                break;
+            case 4:
+                *fi_dt = FI_UINT32;
+                break;
+            case 8:
+                *fi_dt = FI_UINT64;
+                break;
+            default:
+                goto fn_fail;
+        }
+    } else if (isFLOAT(dt)) {
+        *fi_dt = FI_FLOAT;
+    } else if (isDOUBLE(dt)) {
+        *fi_dt = FI_DOUBLE;
+    } else if (isLONG_DOUBLE(dt)) {
+        *fi_dt = FI_LONG_DOUBLE;
+    } else if (isSINGLE_COMPLEX(dt)) {
+        *fi_dt = FI_FLOAT_COMPLEX;
+    } else if (isDOUBLE_COMPLEX(dt)) {
+        *fi_dt = FI_DOUBLE_COMPLEX;
+    } else {
         goto fn_fail;
+    }
 
     if (fi_op == NULL)
         goto fn_exit;

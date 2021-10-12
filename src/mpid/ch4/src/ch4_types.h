@@ -254,7 +254,7 @@ typedef struct MPIDI_per_vci {
     MPL_atomic_uint64_t exp_seq_no;
     MPL_atomic_uint64_t nxt_seq_no;
 
-    char pad[] MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
+    char pad MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
 } MPIDI_per_vci_t;
 
 #define MPIDI_VCI(i) MPIDI_global.per_vci[i]

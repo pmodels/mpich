@@ -170,6 +170,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
     MPIR_Request *sreq = *request;
 
+    bool is_huge_send = false;
+    MPI_Aint huge_thresh;
+    if (MPIDI_OFI_COMM(comm).enable_striping) {
+        huge_thresh = MPIDI_OFI_global.stripe_threshold;
+    } else {
+        huge_thresh = MPIDI_OFI_global.max_msg_size;
+    }
+    if (data_sz >= huge_thresh) {
+        is_huge_send = true;
+        /* huge send will always be synchronized */
+        type = 0;
+    }
+
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
@@ -203,7 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                       (void *) &(ackreq->context)), vni_local, trecvsync, FALSE);
     }
 
-    send_buf = (char *) buf + dt_true_lb;
+    send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(send_buf, &attr);
     if (data_sz &&
@@ -269,9 +282,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                              vni_local, tinjectdata, FALSE /* eagain */);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
         MPIDI_OFI_send_event(vni_src, NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
-    } else if ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping)
-               || (data_sz < MPIDI_OFI_global.stripe_threshold &&
-                   MPIDI_OFI_COMM(comm).enable_striping)) {
+    } else if (!is_huge_send) {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           send_buf, data_sz, NULL /* desc */ ,
                                           cq_data,
@@ -281,13 +292,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                              tsenddata, FALSE /* eagain */);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
     } else if (unlikely(1)) {
-        MPIDI_OFI_send_control_t ctrl;
-        int i, num_nics = MPIDI_OFI_global.num_nics;
+        int num_nics = MPIDI_OFI_global.num_nics;
         uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
         struct fid_mr **huge_send_mrs;
         uint64_t msg_size = MPIDI_OFI_STRIPE_CHUNK_SIZE;
-
-        MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
 
         MPIR_cc_inc(sreq->cc_ptr);
         if (!MPIDI_OFI_COMM(comm).enable_striping) {
@@ -298,18 +306,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             (struct fid_mr **) MPL_malloc((num_nics * sizeof(struct fid_mr *)), MPL_MEM_BUFFER);
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* Set up a memory region for the lmt data transfer */
-            for (i = 0; i < num_nics; i++) {
-                ctrl.rma_keys[i] =
+            for (int i = 0; i < num_nics; i++) {
+                rma_keys[i] =
                     MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
-                rma_keys[i] = ctrl.rma_keys[i];
             }
         } else {
             /* zero them to avoid warnings */
-            for (i = 0; i < num_nics; i++) {
+            for (int i = 0; i < num_nics; i++) {
                 rma_keys[i] = 0;
             }
         }
-        for (i = 0; i < num_nics; i++) {
+        for (int i = 0; i < num_nics; i++) {
             MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(comm, vni_local, i)].domain,  /* In:  Domain Object */
                                      send_buf,  /* In:  Lower memory address */
                                      data_sz,   /* In:  Length              */
@@ -328,13 +335,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                 MPIDI_OFI_CALL(fi_mr_enable(huge_send_mrs[i]), mr_enable);
             }
         }
-        /* Create map to the memory region */
-        MPIDIU_map_set(MPIDI_OFI_global.huge_send_counters, sreq->handle, huge_send_mrs,
-                       MPL_MEM_BUFFER);
+        MPIDI_OFI_REQUEST(sreq, huge.send_mrs) = huge_send_mrs;
         if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* MR_BASIC */
-            for (i = 0; i < num_nics; i++) {
-                ctrl.rma_keys[i] = fi_mr_key(huge_send_mrs[i]);
+            for (int i = 0; i < num_nics; i++) {
+                rma_keys[i] = fi_mr_key(huge_send_mrs[i]);
             }
         }
 
@@ -346,6 +351,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIR_Comm_add_ref(comm);
         /* Store ordering unnecessary for dst_rank, so use relaxed store */
         MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(sreq, util_id), dst_rank);
+
+        /* send ctrl message first */
+        MPIDI_OFI_send_control_t ctrl;
+        ctrl.type = MPIDI_OFI_CTRL_HUGE;
+        for (int i = 0; i < num_nics; i++) {
+            ctrl.u.huge.info.rma_keys[i] = rma_keys[i];
+        }
+        ctrl.u.huge.info.comm_id = comm->context_id;
+        ctrl.u.huge.info.tag = tag;
+        ctrl.u.huge.info.origin_rank = comm->rank;
+        ctrl.u.huge.info.vni_src = vni_src;
+        ctrl.u.huge.info.vni_dst = vni_dst;
+        ctrl.u.huge.info.send_buf = send_buf;
+        ctrl.u.huge.info.msgsize = data_sz;
+        ctrl.u.huge.info.ackreq = sreq;
+
+        mpi_errno = MPIDI_NM_am_send_hdr(dst_rank, comm, MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
+                                         &ctrl, sizeof(ctrl), vni_src, vni_dst);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* send main native message next */
+        MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
+
         match_bits |= MPIDI_OFI_HUGE_SEND;      /* Add the bit for a huge message */
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           send_buf, msg_size, NULL /* desc */ ,
@@ -357,15 +385,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                              vni_local, tsenddata, FALSE /* eagain */);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], msg_size);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_sent_bytes_count[sender_nic], msg_size);
-        ctrl.type = MPIDI_OFI_CTRL_HUGE;
-        ctrl.seqno = 0;
-        ctrl.tag = tag;
-        ctrl.vni_src = vni_src;
-        ctrl.vni_dst = vni_dst;
-
-        /* Send information about the memory region here to get the lmt going. */
-        mpi_errno = MPIDI_OFI_do_control_send(&ctrl, send_buf, data_sz, dst_rank, comm, sreq);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -396,7 +415,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
     if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send))) {
         MPI_Aint actual_pack_bytes = 0;
-        void *send_buf = (char *) buf + dt_true_lb;
+        void *send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(send_buf, &attr);
         if (data_sz > 0 &&
