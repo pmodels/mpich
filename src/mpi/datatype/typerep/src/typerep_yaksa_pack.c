@@ -629,7 +629,7 @@ static int typerep_op_fallback(void *source_buf, MPI_Aint source_count, MPI_Data
         MPI_Aint vec_len;
         struct iovec *typerep_vec = NULL;
         {
-            MPIR_Datatype *dtp;
+            MPIR_Datatype *dtp ATTRIBUTE((unused));
             MPIR_Datatype_get_ptr(target_dtp, dtp);
             MPIR_Assert(dtp != NULL);
             MPIR_Assert(dtp->basic_type == source_dtp);
