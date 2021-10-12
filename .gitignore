@@ -414,6 +414,8 @@ Makefile.am-stamp
 /src/binding/fortran/mpif_h/mpif77
 /src/binding/fortran/mpif_h/*.c
 !/src/binding/fortran/mpif_h/attr_proxy.c
+!/src/binding/fortran/mpif_h/statusf2c.c
+!/src/binding/fortran/mpif_h/statusc2f.c
 /src/binding/fortran/mpif_h/fproto.h
 /src/binding/fortran/mpif_h/mpif.h
 /src/binding/fortran/mpif_h/mpif.h.in
