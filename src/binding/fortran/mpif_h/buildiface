@@ -3163,9 +3163,8 @@ sub blankpad_ctof {
     $cvar =~ s/^v/p/;
     # Only execute this code if there was no error
     print $OUTFD "\
-    if (!$errparmrval) {char *p = $outvar, *pc=$cvar;
-        while (*pc) {*p++ = *pc++;}
-        while ((p-$outvar) < $strlen) { *p++ = ' '; }
+    if (!$errparmrval) {
+        MPIR_fort_copy_str_from_c($outvar, $strlen, $cvar);
     }
 ";
     $clean_up .= "    free( $cvar );\n";
@@ -3253,22 +3252,7 @@ sub addnull_in_arg {
 sub addnull_ftoc {
     my $count = $_[0];
 
-    # Working backwards from the length argument, find the first
-    # nonblank character
-    # end of the string.  The declared length is given by a variable
-    # whose name is derived from outvar
-    $strlen = "v$count";
-    $strlen =~ s/^v/d/;
-    print $OUTFD "\
-    {char *p = v$count + $strlen - 1;
-     int  li;
-        while (*p == ' ' && p > v$count) p--;
-        p++;
-        p$count = (char *)malloc(p-v$count + 1);
-        for (li=0; li<(p-v$count); li++) { p$count\[li\] = v$count\[li\]; }
-        p$count\[li\] = 0;
-    }
-";
+    print $OUTFD "    p$count = MPIR_fort_dup_str(v$count, d$count);\n";
     $clean_up .= "    free( p$count );\n";
 }
 # ----------------------------------------------------------------------------
@@ -3287,24 +3271,7 @@ sub addnullandtrim_in_arg {
 sub addnullandtrim_ftoc {
     my $count = $_[0];
 
-    # Working backwards from the length argument, find the first
-    # nonblank character
-    # end of the string.  The declared length is given by a variable
-    # whose name is derived from outvar
-    $strlen = "v$count";
-    $strlen =~ s/^v/d/;
-    print $OUTFD "\
-    {char *p = v$count + $strlen - 1;
-     char *pin = v$count;
-     int  li;
-        while (*p == ' ' && p > v$count) p--;
-        p++;
-        while (*pin == ' ' && pin < p) pin++;
-        p$count = (char *)malloc(p-pin + 1);
-        for (li=0; li<(p-pin); li++) { p$count\[li\] = pin\[li\]; }
-        p$count\[li\] = 0;
-    }
-";
+    print $OUTFD "    p$count = MPIR_fort_dup_str(v$count, d$count);\n";
     $clean_up .= "    free( p$count );\n";
 }
 
@@ -3315,9 +3282,6 @@ sub addnullandtrim_ftoc {
 sub chararray_in_decl {
     my $count = $_[0];
     print $OUTFD "    char **p$count;\n";
-    if (!$Array_size) { print $OUTFD "    char *pcpy$count;\n"; }
-    # pcpy<digit> is used for the case where the array length is not known
-    print $OUTFD "    int  asize$count=0;\n";
 }
 sub chararray_in_arg {
     my $count = $_[0];
@@ -3326,54 +3290,19 @@ sub chararray_in_arg {
 sub chararray_ftoc {
     my $count = $_[0];
 
-    # There is a special case - the input is MPI_ARGV_NULL.  We
-    # detect this by checking for a null string (all blanks).
-    # The initialization of MPI_ARGV_NULL is done in the special
-    #init setup
-    &specialInitStatement( $OUTFD );
-    # First, compute the number of elements.  In Fortran, a null
-    # string terminates the array.  The array is stored as
-    # a two-dimensional field of fixed-length characters.
-    # Then copy the strings into the new storage, appending the
-    # null at the end
-    print $OUTFD "\
-    { int i;
-      char *ptmp = NULL;\n";
+    my $asize = 0;
     if ($Array_size) {
-        print $OUTFD "\
-      asize$count = (int)$Array_size + 1;\n";
+        $asize = $Array_size;
     }
-    else {
-        print $OUTFD "\
-      /* Compute the size of the array by looking for an all-blank line */
-      pcpy$count = v$count;
-      for (asize$count=1; 1; asize$count++) {
-          char *pt = pcpy$count + d$count - 1;
-          while (*pt == ' ' && pt > pcpy$count) pt--;
-          if (*pt == ' ') break;
-          pcpy$count += d$count;
-      }\n";
-    }
-    print $OUTFD "\
-      p$count = (char **)malloc( asize$count * sizeof(char *));
-      if (asize$count-1 > 0) ptmp = (char *)malloc(asize$count * (d$count + 1));
-      for (i=0; i<asize$count-1; i++) {
-          char *p = v$count + i * d$count, *pin, *pdest;
-          int j;
+    print $OUTFD "    if (v$count == MPI_F_ARGV_NULL) {\n";
+    print $OUTFD "        p$count = MPI_ARGV_NULL;\n";
+    print $OUTFD "    } else {\n";
+    print $OUTFD "        p$count = MPIR_fort_dup_str_array(v$count, d$count, d$count, $asize);\n";
+    print $OUTFD "    }\n";
 
-          pdest = ptmp + i * (d$count + 1);
-          p$count\[i\] = pdest;
-          /* Move to the end and work back */
-          pin = p + d$count - 1;
-          while (*pin == ' ' && pin > p) pin--;
-          /* Copy and then null terminate */
-          for (j=0; j<(pin-p)+1; j++) { pdest\[j\] = p\[j\]; }
-          pdest\[j\] = 0;
-          }
-    /* Null terminate the array */
-    p$count\[asize$count-1\] = 0;
+    $clean_up .= "    if (v$count != MPI_F_ARGV_NULL) {
+        MPIR_fort_free_str_array(p$count);
     }\n";
-    $clean_up .= "    if (asize$count-1 > 0) free( p$count\[0\] );\n    free( p$count );\n";
 }
 
 # Add null to 2-dimensional arrays of input strings.  Used only
@@ -3396,111 +3325,14 @@ sub chararray2_ftoc {
         return 1;
     }
 
-    # First, compute the number of elements.  In Fortran, a null
-    # string terminates the array.  The array is stored as
-    # a two-dimensional field of fixed-length characters.
-    # Then copy the strings into the new storage, appending the
-    # null at the end
-    # Since this is a 2-d array, we always know the first dimension,
-    # the second dimension must be computed, this is asize$count.
-    # The first dimension is Array_size.
-    &specialInitStatement( $OUTFD );
-    print $OUTFD "\
-    /* Check for the special case of a the null args case. */
-    if (v$count == MPI_F_ARGVS_NULL) { v$count = (char *)MPI_ARGVS_NULL; }
-    else {
-        /* We must convert from the 2-dimensional Fortran array of
-           fixed length strings to a C variable-sized array (really an
-           array of pointers for each command of pointers to each
-           argument, which is null terminated.*/\n";
+    print $OUTFD "    if (v$count == MPI_F_ARGVS_NULL) {\n";
+    print $OUTFD "        p$count = MPI_ARGVS_NULL;\n";
+    print $OUTFD "    } else {\n";
+    print $OUTFD "        p$count = MPIR_fort_dup_str_2d_array(v$count, d$count, $Array_size);\n";
+    print $OUTFD "    }\n";
 
-    # We must be careful.  A blank line is ALL blank, not just leading blank
-    # We must also be careful allocating the array, as C and Fortran
-    # arrays are not the same.  In C, for a two dimensional array
-    # sized at run time, we must
-    # allocate an array of pointers to arrays.
-    #    p = (char ***) malloc( nrows * sizeof(char **) )
-    # where we are letting using p[nrows][colindex].
-    # For MPI_Comm_spawn_multiple, each of these rows is for one command.
-    # Each p[k] is a pointer to an array of character strings.
-    # For MPI_Comm_spawn_multiple, all we know is that in the
-    # corresponding Fortran code, the two-dimensional character array
-    # contains an all-blank entry as the terminating element; the
-    # corresponding C array must have a null entry (pointer) in
-    # the corresponding position.
-    # Thus, the C code must make several allocations:
-    #    p = nrows * sizeof(char **)
-    # for p[k], (ncols + 1) * sizeof(char *)
-    # for p[k][i], space for the ith input argument.
-    # To reduce the number of allocations, we allocate space for all
-    # elements on a row at one time.
-
-    # Purely local variables don't need $count
-    print $OUTFD "\
-      int k;
-
-      /* Allocate the array of pointers for the commands */
-      p$count = (char ***)malloc($Array_size * sizeof(char **));
-
-      for (k=0; k<$Array_size; k++) {
-        /* For each command, find the number of command-line arguments.
-           They are terminated by an empty entry. */
-        /* Find the first entry in the Fortran array for this row */
-        char *p = v$count + k * d$count;
-        ssize_t arglen = 0;
-        int argcnt=0, i;
-        char **pargs, *pdata;
-        for (argcnt=0; 1; argcnt ++) {
-            char *pin = p + d$count - 1; /* Move to the end of the
-                                            current Fortran string */
-            while (*pin == ' ' && pin > p) pin--; /* Move backwards until
-                                                    we find a non-blank
-                                                    (Fortran is blank padded)*/
-            if (pin == p && *pin == ' ') {
-                /* found the terminating empty arg */
-                break;
-            }
-            /* Keep track of the amount of space needed */
-            arglen += (pin - p) + 2;   /* add 1 for the null */
-            /* Advance to the next entry in the array */
-            p += ($Array_size) * d$count;
-        }
-
-        /* argcnt is the number of provided arguments.
-           Allocate the necessary elements and copy, null terminating copies */
-        pargs = (char **)malloc((argcnt+1)*sizeof(char *));
-        pdata = (char *)malloc(arglen);
-        p$count\[k\] = pargs;
-        pargs\[argcnt\] = 0;  /* Null terminate end */
-        /* Copy each argument to consecutive locations in pdata,
-           and set the corresponding pointer entry */
-        p = v$count + k * d$count;
-        for (i=0; i<argcnt; i++) {
-            int j;
-            char *pin;
-            p$count\[k\]\[i\] = pdata;
-            /* Move to the end and work back */
-            pin = p + d$count - 1;
-            while (*pin == ' ' && pin > p) pin--;
-            /* Copy and then null terminate */
-            for (j=0; j<(pin-p)+1; j++) { *pdata++ = p\[j\]; }
-            *pdata++ = 0;
-            /* Advance to the next entry in the array */
-            p += ($Array_size) * d$count;
-        }
-        /* Set the terminator */
-        p3[k][i] = 0;
-       }
-    }\n";
-
-    $clean_up .= "    if (v$count != (char *)MPI_ARGVS_NULL) {
-        int i;
-        for (i=0; i <$Array_size; i++) {
-            free( p$count\[i\]\[0\] );  /* Free space allocated to args */
-            free( p$count\[i\] );       /* Free space allocated to arg array */
-        }
-        /* Free the array of arrays */
-        free( p$count );
+    $clean_up .= "    if (v$count != MPI_F_ARGVS_NULL) {
+        MPIR_fort_free_str_2d_array(p$count, $Array_size);
     }\n";
 }
 
