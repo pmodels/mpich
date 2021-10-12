@@ -188,6 +188,18 @@ def is_pointer_type(param):
     else:
         return 0
 
+def param_is_in(p):
+    if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
+        return True
+    else:
+        return False
+
+def param_is_out(p):
+    if p['param_direction'] == 'out' or p['param_direction'] == 'inout':
+        return True
+    else:
+        return False
+
 def get_userbuffer_group(func_name, parameters, i):
     """internal function used by process_func_parameters"""
     p = parameters[i]
