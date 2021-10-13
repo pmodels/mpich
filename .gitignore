@@ -152,7 +152,6 @@ Makefile.am-stamp
 
 # random stuff
 /maint/gcovmerge
-/src/binding/fortran/mpif_h/buildiface-stamp
 /src/binding/fortran/use_mpi/buildiface-stamp
 /src/binding/cxx/buildiface-stamp
 
