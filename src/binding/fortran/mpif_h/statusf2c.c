@@ -9,14 +9,15 @@
 #include <stdio.h>
 
 /* -- Begin Profiling Symbol Block for routine MPI_Status_f2c */
-#if defined(USE_WEAK_SYMBOLS) && !defined(USE_ONLY_MPI_NAMES)
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Status_f2c = PMPI_Status_f2c
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_Status_f2c  MPI_Status_f2c
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Status_f2c as PMPI_Status_f2c
-#endif
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Status_f2c(const MPI_Fint * f_status, MPI_Status * c_status)
+    __attribute__ ((weak, alias("PMPI_Status_f2c")));
 #endif
 /* -- End Profiling Symbol Block */
 
