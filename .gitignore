@@ -152,7 +152,6 @@ Makefile.am-stamp
 
 # random stuff
 /maint/gcovmerge
-/src/binding/fortran/use_mpi/buildiface-stamp
 /src/binding/cxx/buildiface-stamp
 
 # script-generated f90 test files
@@ -189,7 +188,6 @@ Makefile.am-stamp
 /src/mpi/coll/src/csel_json_autogen.c
 
 # stamp "witness" files from the new build system
-/src/binding/fortran/use_mpi/buildiface.stamp
 /src/binding/fortran/use_mpi/mpi.mod-stamp
 /src/binding/fortran/use_mpi/mpi_base.mod-stamp
 /src/binding/fortran/use_mpi/mpi_constants.mod-stamp
@@ -223,7 +221,6 @@ Makefile.am-stamp
 /src/pm/gforker/mpiexec.gforker
 /maint/Version
 /src/binding/fortran/mpif_h/Makefile_wrappers.mk
-/src/binding/fortran/use_mpi/Makefile.mk
 
 # MPICH2 parameter handling
 /src/include/mpir_cvars.h
