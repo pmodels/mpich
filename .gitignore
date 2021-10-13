@@ -224,7 +224,6 @@ Makefile.am-stamp
 /maint/Version
 /src/binding/fortran/mpif_h/Makefile_wrappers.mk
 /src/binding/fortran/use_mpi/Makefile.mk
-/src/binding/fortran/use_mpi_f08/Makefile.mk
 
 # MPICH2 parameter handling
 /src/include/mpir_cvars.h
