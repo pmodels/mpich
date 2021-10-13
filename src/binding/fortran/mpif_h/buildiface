@@ -1012,10 +1012,6 @@ if ($build_prototypes) {
 #
 # This block can be used to create the Makefile
 if ("$buildMakefile") {
-    # create a stamp file for use by Makefile.mk rebuild make logic
-    open STAMPFD, '>', 'buildiface-stamp';
-    close STAMPFD;
-
     open ( MAKEFD, ">Makefile_wrappers.mk.new" ) || die "Cannot create Makefile_wrappers.mk.new";
     print MAKEFD <<EOT;
 ## DO NOT EDIT
