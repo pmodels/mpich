@@ -226,7 +226,7 @@ static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum 
     int dt_size;
     MPIR_Datatype_get_size_macro(dt, dt_size);
 
-    if (dt == MPI_CHAR || dt == MPI_SIGNED_CHAR || dt == MPI_SHORT ||
+    if (dt == MPI_BYTE || dt == MPI_CHAR || dt == MPI_SIGNED_CHAR || dt == MPI_SHORT ||
         dt == MPI_INT || dt == MPI_LONG || dt == MPI_LONG_LONG ||
         dt == MPI_INT8_T || dt == MPI_INT16_T || dt == MPI_INT32_T || dt == MPI_INT64_T ||
         dt == MPI_INTEGER || dt == MPI_INTEGER1 || dt == MPI_INTEGER2 ||
