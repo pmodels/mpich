@@ -310,16 +310,19 @@ static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum
             *fi_op = FI_BXOR;
             break;
         case MPI_LAND:
+            /* FIXME: ignore all fp types? */
             if (!isLONG_DOUBLE(dt)) {
                 *fi_op = FI_LAND;
             }
             break;
         case MPI_LOR:
+            /* FIXME: ignore all fp types? */
             if (!isLONG_DOUBLE(dt)) {
                 *fi_op = FI_LOR;
             }
             break;
         case MPI_LXOR:
+            /* FIXME: ignore all fp types? */
             if (!isLONG_DOUBLE(dt)) {
                 *fi_op = FI_LXOR;
             }
