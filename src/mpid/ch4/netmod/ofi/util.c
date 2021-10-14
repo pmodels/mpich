@@ -218,7 +218,7 @@ static bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
     return valid_flag;
 }
 
-static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
+static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
 {
     *fi_dt = FI_DATATYPE_LAST;
     *fi_op = FI_ATOMIC_OP_LAST;
@@ -246,7 +246,8 @@ static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum 
                 *fi_dt = FI_INT64;
                 break;
             default:
-                goto fn_fail;
+                /* no matching type */
+                goto fn_exit;
         }
     } else if (dt == MPI_UNSIGNED_CHAR || dt == MPI_UNSIGNED_SHORT || dt == MPI_UNSIGNED ||
                dt == MPI_UNSIGNED_LONG || dt == MPI_UNSIGNED_LONG_LONG ||
@@ -266,7 +267,8 @@ static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum 
                 *fi_dt = FI_UINT64;
                 break;
             default:
-                goto fn_fail;
+                /* no matching type */
+                goto fn_exit;
         }
     } else if (isFLOAT(dt)) {
         *fi_dt = FI_FLOAT;
@@ -279,7 +281,8 @@ static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum 
     } else if (isDOUBLE_COMPLEX(dt)) {
         *fi_dt = FI_DOUBLE_COMPLEX;
     } else {
-        goto fn_fail;
+        /* no matching type */
+        goto fn_exit;
     }
 
     *fi_op = FI_ATOMIC_OP_LAST;
@@ -316,21 +319,21 @@ static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum 
 
         case MPI_LAND:
             if (isLONG_DOUBLE(dt))
-                goto fn_fail;
+                goto fn_exit;
 
             *fi_op = FI_LAND;
             goto fn_exit;
 
         case MPI_LOR:
             if (isLONG_DOUBLE(dt))
-                goto fn_fail;
+                goto fn_exit;
 
             *fi_op = FI_LOR;
             goto fn_exit;
 
         case MPI_LXOR:
             if (isLONG_DOUBLE(dt))
-                goto fn_fail;
+                goto fn_exit;
 
             *fi_op = FI_LXOR;
             goto fn_exit;
@@ -348,13 +351,12 @@ static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum 
             goto fn_exit;
 
         default:
-            goto fn_fail;
+            /* no matching op */
+            goto fn_exit;
     }
 
   fn_exit:
-    return MPI_SUCCESS;
-  fn_fail:
-    return -1;
+    return;
 }
 
 #define _TBL MPIDI_OFI_global.win_op_table[i][j]
