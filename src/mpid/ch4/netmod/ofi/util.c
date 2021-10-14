@@ -318,24 +318,21 @@ static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum
             break;
 
         case MPI_LAND:
-            if (isLONG_DOUBLE(dt))
-                goto fn_exit;
-
-            *fi_op = FI_LAND;
+            if (!isLONG_DOUBLE(dt)) {
+                *fi_op = FI_LAND;
+            }
             goto fn_exit;
 
         case MPI_LOR:
-            if (isLONG_DOUBLE(dt))
-                goto fn_exit;
-
-            *fi_op = FI_LOR;
+            if (!isLONG_DOUBLE(dt)) {
+                *fi_op = FI_LOR;
+            }
             goto fn_exit;
 
         case MPI_LXOR:
-            if (isLONG_DOUBLE(dt))
-                goto fn_exit;
-
-            *fi_op = FI_LXOR;
+            if (!isLONG_DOUBLE(dt)) {
+                *fi_op = FI_LXOR;
+            }
             goto fn_exit;
 
         case MPI_REPLACE:
