@@ -134,7 +134,7 @@ struct MPIR_Datatype {
     /* handle to the backend datatype engine + some content that we
      * query from it and cache over here for performance reasons */
     struct {
-        void *handle;
+        MPIR_TYPEREP_HANDLE_TYPE handle;
         MPI_Aint num_contig_blocks;     /* contig blocks in one datatype element */
     } typerep;
 

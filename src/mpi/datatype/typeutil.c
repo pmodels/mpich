@@ -427,7 +427,7 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep.handle = NULL;
+    new_dtp->typerep.handle = MPIR_TYPEREP_HANDLE_NULL;
 
     new_dtp->size = 0;
     new_dtp->lb = 0;

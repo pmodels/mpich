@@ -148,6 +148,7 @@ enum {
     MPIDI_OFI_EVENT_SSEND_ACK,
     MPIDI_OFI_EVENT_GET_HUGE,
     MPIDI_OFI_EVENT_CHUNK_DONE,
+    MPIDI_OFI_EVENT_HUGE_CHUNK_DONE,
     MPIDI_OFI_EVENT_INJECT_EMU,
     MPIDI_OFI_EVENT_DYNPROC_DONE,
     MPIDI_OFI_EVENT_ACCEPT_PROBE
@@ -243,7 +244,13 @@ typedef struct {
     int cq_buffered_static_tail;
     MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
 
-    char pad[] MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
+    /* queues to matching huge recv and control message */
+    struct MPIDI_OFI_huge_recv_list *huge_ctrl_head;
+    struct MPIDI_OFI_huge_recv_list *huge_ctrl_tail;
+    struct MPIDI_OFI_huge_recv_list *huge_recv_head;
+    struct MPIDI_OFI_huge_recv_list *huge_recv_tail;
+
+    char pad MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
 } MPIDI_OFI_per_vni_t;
 
 typedef struct {
@@ -361,9 +368,6 @@ typedef struct {
      * OFI provider at MPI initialization.*/
     MPIDI_OFI_atomic_valid_t win_op_table[MPIR_DATATYPE_N_PREDEFINED][MPIDIG_ACCU_NUM_OP];
 
-    /* huge protocol globals */
-    void *huge_send_counters;
-    void *huge_recv_counters;
     /* stores the maximum of last recently used optimized memory region key */
     uint64_t global_max_optimized_mr_key;
     /* stores the maximum of last recently used regular memory region key */
@@ -392,17 +396,27 @@ typedef struct {
 } MPIDI_OFI_global_t;
 
 typedef struct {
-    int16_t type;
-    int16_t seqno;
+    MPIR_Context_id_t comm_id;
     int origin_rank;
-    MPIR_Request *ackreq;
-    uintptr_t send_buf;
-    size_t msgsize;
-    int comm_id;
-    uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
     int tag;
+    MPIR_Request *ackreq;
+    void *send_buf;
+    size_t msgsize;
+    uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
     int vni_src;
     int vni_dst;
+} MPIDI_OFI_huge_remote_info_t;
+
+typedef struct {
+    int16_t type;
+    union {
+        struct {
+            MPIDI_OFI_huge_remote_info_t info;
+        } huge;
+        struct {
+            MPIR_Request *ackreq;
+        } huge_ack;
+    } u;
 } MPIDI_OFI_send_control_t;
 
 typedef struct MPIDI_OFI_win_acc_hint {
@@ -495,42 +509,31 @@ typedef struct MPIDI_OFI_target_mr {
     uint64_t mr_key;
 } MPIDI_OFI_target_mr_t;
 
-typedef struct MPIDI_OFI_huge_recv {
+typedef struct MPIDI_OFI_read_chunk {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    int (*done_fn) (int vni, struct fi_cq_tagged_entry * wc, MPIR_Request * req, int event_id);
-    MPIDI_OFI_send_control_t remote_info;
-    bool peek;                  /* Flag to indicate whether this struct has been created to track an uncompleted peek
-                                 * operation. */
-    size_t cur_offset;
-    size_t stripe_size;
-    int chunks_outstanding;
-    MPIR_Comm *comm_ptr;
     MPIR_Request *localreq;
-    struct fi_cq_tagged_entry wc;
-    struct MPIDI_OFI_huge_recv *next;   /* Points to the next entry in the unexpected list
-                                         * (when in the unexpected list) */
-} MPIDI_OFI_huge_recv_t;
+    MPIR_cc_t *chunks_outstanding;
+} MPIDI_OFI_read_chunk_t;
 
 /* The list of posted huge receives that haven't been matched yet. These need
  * to get matched up when handling the control message that starts transferring
  * data from the remote memory region and we need a way of matching up the
  * control messages with the "real" requests. */
 typedef struct MPIDI_OFI_huge_recv_list {
-    int comm_id;
+    MPIR_Context_id_t comm_id;
     int rank;
     int tag;
-    MPIR_Request *rreq;
+    union {
+        MPIDI_OFI_huge_remote_info_t *info;     /* ctrl list */
+        MPIR_Request *rreq;     /* recv list */
+    } u;
     struct MPIDI_OFI_huge_recv_list *next;
 } MPIDI_OFI_huge_recv_list_t;
 
 /* Externs */
 extern MPIDI_OFI_global_t MPIDI_OFI_global;
-extern MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_head;
-extern MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_tail;
-extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_head;
-extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_tail;
 
 extern MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS];
 

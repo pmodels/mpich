@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef MPIDIG_AM_PART_CALLBACKS_H_INCLUDED
-#define MPIDIG_AM_PART_CALLBACKS_H_INCLUDED
+#ifndef MPIDIG_PART_CALLBACKS_H_INCLUDED
+#define MPIDIG_PART_CALLBACKS_H_INCLUDED
 
 int MPIDIG_part_send_data_origin_cb(MPIR_Request * req);
 
@@ -15,4 +15,4 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 int MPIDIG_part_send_data_target_msg_cb(void *am_hdr, void *data,
                                         MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
 
-#endif /* MPIDIG_AM_PART_CALLBACKS_H_INCLUDED */
+#endif /* MPIDIG_PART_CALLBACKS_H_INCLUDED */

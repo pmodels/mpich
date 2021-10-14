@@ -7,7 +7,7 @@
 #define CH4_WIN_H_INCLUDED
 
 #include "ch4_impl.h"
-#include "ch4r_win.h"
+#include "mpidig_win.h"
 
 MPL_STATIC_INLINE_PREFIX int MPID_Win_start(MPIR_Group * group, int assert, MPIR_Win * win)
 {

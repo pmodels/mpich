@@ -48,6 +48,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
             MPI_Datatype *types;
             MPIR_Datatype_access_contents(tmp_dtp->contents, &ints, &aints, &counts, &types);
             MPIR_Datatype_get_ptr(types[0], tmp_dtp);
+            if (!tmp_dtp || !tmp_dtp->contents) {
+                break;
+            }
             combiner = tmp_dtp->contents->combiner;
         }
         switch (combiner) {
@@ -64,7 +67,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     MPI_Aint mem_size;
     void *mem_addr;
     if (dt_contig) {
-        mem_addr = (char *) buf + true_lb;
+        mem_addr = MPIR_get_contig_ptr(buf, true_lb);
         mem_size = data_sz;
     } else {
         mem_addr = (char *) buf;

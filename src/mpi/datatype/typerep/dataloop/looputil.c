@@ -155,7 +155,7 @@ static int external32_basic_convert(char *dest_buf,
                      * range. It won't work if value overflow anyway. */
                     *(int64_t *) dest_ptr = (int32_t) tmp;
                 } else {
-                    MPIR_Assert(0 && "Unhandled conversion of unequal size");
+                    MPIR_Assert_error("Unhandled conversion of unequal size");
                 }
 
                 src_ptr += src_el_size;
@@ -169,14 +169,14 @@ static int external32_basic_convert(char *dest_buf,
                     tmp = (int32_t) (*(const int64_t *) src_ptr);
                     BASIC_convert32(tmp, *(uint32_t *) dest_ptr);
                 } else {
-                    MPIR_Assert(0 && "Unhandled conversion of unequal size");
+                    MPIR_Assert_error("Unhandled conversion of unequal size");
                 }
 
                 src_ptr += src_el_size;
                 dest_ptr += dest_el_size;
             }
         } else {
-            MPIR_Assert(0 && "Unhandled conversion of unequal size");
+            MPIR_Assert_error("Unhandled conversion of unequal size");
         }
     }
     return 0;
@@ -451,9 +451,9 @@ static int contig_m2m(MPI_Aint * blocks_p,
 #endif
 
     if (paramp->direction == M2M_TO_USERBUF) {
-        MPIR_Memcpy((char *) paramp->userbuf + rel_off, paramp->streambuf, size);
+        MPIR_Memcpy(MPIR_get_contig_ptr(paramp->userbuf, rel_off), paramp->streambuf, size);
     } else {
-        MPIR_Memcpy(paramp->streambuf, (char *) paramp->userbuf + rel_off, size);
+        MPIR_Memcpy(paramp->streambuf, MPIR_get_contig_ptr(paramp->userbuf, rel_off), size);
     }
     paramp->streambuf += size;
     return 0;
@@ -562,7 +562,7 @@ static int blkidx_m2m(MPI_Aint * blocks_p,
 
         MPIR_Assert(curblock < count);
 
-        cbufp = (char *) paramp->userbuf + rel_off + offsetarray[curblock];
+        cbufp = MPIR_get_contig_ptr(paramp->userbuf, rel_off + offsetarray[curblock]);
 
         /* there was some casting going on here at one time but now all types
          * are promoted to big values */
@@ -620,7 +620,7 @@ static int index_m2m(MPI_Aint * blocks_p,
         MPIR_Assert(curblock < count);
         cur_block_sz = blockarray[curblock];
 
-        cbufp = (char *) paramp->userbuf + rel_off + offsetarray[curblock];
+        cbufp = MPIR_get_contig_ptr(paramp->userbuf, rel_off + offsetarray[curblock]);
 
         if (cur_block_sz > blocks_left)
             cur_block_sz = blocks_left;

@@ -5,7 +5,7 @@
 
 #include "mpidimpl.h"
 #include "mpidch4r.h"
-#include "ch4r_win.h"
+#include "mpidig_win.h"
 
 enum {
     SHM_WIN_OPTIONAL,

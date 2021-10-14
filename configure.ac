@@ -1989,7 +1989,7 @@ if test "$enable_f77" = "yes" ; then
 	# that turns off checking for *everything* is not something that
 	# configure should do - if the user wants this, they can follow
 	# the instructions in the following error message.
-	AC_MSG_ERROR([The Fortran compiler $F77 does not accept programs that call the same routine with arguments of different types without the option $addarg.  Rerun configure with FFLAGS=$addarg])
+        AC_MSG_ERROR([The Fortran compiler $FC does not accept programs that call the same routine with arguments of different types without the option $addarg.  Rerun configure with FCFLAGS=$addarg])
     fi
 
     bindings="$bindings f77"

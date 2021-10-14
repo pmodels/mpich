@@ -67,7 +67,7 @@ int MPII_Coll_finalize(void);
 #define MPII_SCHED_CREATE_SCHED_P() \
     do { \
         MPIR_Sched_t s = MPIR_SCHED_NULL; \
-        int sched_kind = MPIR_SCHED_KIND_REGULAR; \
+        enum MPIR_Sched_kind sched_kind = MPIR_SCHED_KIND_REGULAR; \
         if (is_persistent) { \
             sched_kind = MPIR_SCHED_KIND_PERSISTENT; \
         } \

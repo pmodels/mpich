@@ -95,7 +95,7 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
         if (dt_contig) {
             mpi_errno = MPIDI_CH3_EagerContigIsend( &sreq,
                                                     MPIDI_CH3_PKT_READY_SEND,
-                                                    (char*)buf + dt_true_lb,
+                                                    MPIR_get_contig_ptr(buf, dt_true_lb),
                                                     data_sz, rank, tag,
                                                     comm, context_offset );
             

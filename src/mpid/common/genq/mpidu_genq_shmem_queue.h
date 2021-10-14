@@ -232,7 +232,7 @@ static inline int MPIDU_genq_shmem_queue_dequeue(MPIDU_genq_shmem_pool_t pool,
     } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPSC) {
         rc = MPIDU_genqi_nem_mpsc_dequeue(pool_obj, queue_obj, cell);
     } else {
-        MPIR_Assert(0 && "Invalid GenQ flag");
+        MPIR_Assert_error("Invalid GenQ flag");
     }
 
     MPIR_FUNC_EXIT;
@@ -255,7 +255,7 @@ static inline int MPIDU_genq_shmem_queue_enqueue(MPIDU_genq_shmem_pool_t pool,
     } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPSC) {
         rc = MPIDU_genqi_nem_mpsc_enqueue(pool_obj, queue_obj, cell);
     } else {
-        MPIR_Assert(0 && "Invalid GenQ flag");
+        MPIR_Assert_error("Invalid GenQ flag");
     }
 
     MPIR_FUNC_EXIT;

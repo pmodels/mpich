@@ -139,7 +139,7 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
         MPIR_Datatype *dtp;
         MPIR_Datatype_get_ptr(datatype, dtp);
         is_contig = dtp->is_contig;
-        inbuf_ptr = (const char *) inbuf + dtp->true_lb;
+        inbuf_ptr = MPIR_get_contig_ptr(inbuf, dtp->true_lb);
         total_size = incount * dtp->size;
     }
 
@@ -153,7 +153,7 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
         (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
          outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
         *actual_pack_bytes = MPL_MIN(total_size - inoffset, max_pack_bytes);
-        MPIR_Memcpy(outbuf, (const char *) inbuf_ptr + inoffset, *actual_pack_bytes);
+        MPIR_Memcpy(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), *actual_pack_bytes);
         goto fn_exit;
     }
 
@@ -262,7 +262,7 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
         MPIR_Datatype *dtp;
         MPIR_Datatype_get_ptr(datatype, dtp);
         is_contig = dtp->is_contig;
-        outbuf_ptr = (char *) outbuf + dtp->true_lb;
+        outbuf_ptr = MPIR_get_contig_ptr(outbuf, dtp->true_lb);
         total_size = outcount * dtp->size;
     }
 
@@ -276,7 +276,7 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
         (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
          outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
         *actual_unpack_bytes = MPL_MIN(total_size - outoffset, insize);
-        MPIR_Memcpy((char *) outbuf_ptr + outoffset, inbuf, *actual_unpack_bytes);
+        MPIR_Memcpy(MPIR_get_contig_ptr(outbuf_ptr, outoffset), inbuf, *actual_unpack_bytes);
         goto fn_exit;
     }
 
@@ -467,12 +467,12 @@ int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source
                                           op, mapped_device);
         } else if (source_is_contig) {
             MPIR_Type_get_true_extent_impl(source_dtp, &true_lb, &true_extent);
-            void *addr = (char *) source_buf + true_lb;
+            void *addr = MPIR_get_contig_ptr(source_buf, true_lb);
             mpi_errno = typerep_op_unpack(addr, target_buf, target_count, target_dtp,
                                           op, mapped_device);
         } else if (target_is_contig) {
             MPIR_Type_get_true_extent_impl(target_dtp, &true_lb, &true_extent);
-            void *addr = (char *) target_buf + true_lb;
+            void *addr = MPIR_get_contig_ptr(target_buf, true_lb);
             mpi_errno = typerep_op_pack(source_buf, addr, source_count, source_dtp,
                                         op, mapped_device);
         } else {
@@ -629,14 +629,15 @@ static int typerep_op_fallback(void *source_buf, MPI_Aint source_count, MPI_Data
         MPI_Aint vec_len;
         struct iovec *typerep_vec = NULL;
         {
-            MPIR_Datatype *dtp;
+            MPIR_Datatype *dtp ATTRIBUTE((unused));
             MPIR_Datatype_get_ptr(target_dtp, dtp);
             MPIR_Assert(dtp != NULL);
             MPIR_Assert(dtp->basic_type == source_dtp);
             MPIR_Assert(dtp->basic_type != MPI_DATATYPE_NULL);
 
-            /* +1 needed because Rob says so */
-            vec_len = dtp->typerep.num_contig_blocks * target_count + 1;
+            mpi_errno = MPIR_Typerep_iov_len(target_count, target_dtp,
+                                             source_dtp_size * source_count, &vec_len);
+            MPIR_ERR_CHECK(mpi_errno);
             typerep_vec = (struct iovec *)
                 MPL_malloc(vec_len * sizeof(struct iovec), MPL_MEM_OTHER);
             MPIR_ERR_CHKANDJUMP(!typerep_vec, mpi_errno, MPI_ERR_OTHER, "**nomem");

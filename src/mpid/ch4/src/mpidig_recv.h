@@ -3,11 +3,11 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef MPIDIG_AM_RECV_H_INCLUDED
-#define MPIDIG_AM_RECV_H_INCLUDED
+#ifndef MPIDIG_RECV_H_INCLUDED
+#define MPIDIG_RECV_H_INCLUDED
 
 #include "ch4_impl.h"
-#include "ch4r_proc.h"
+#include "ch4_proc.h"
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_prepare_recv_req(int rank, int tag,
                                                       MPIR_Context_id_t context_id, void *buf,
@@ -84,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_copy_from_unexp_req(MPIR_Request * req, void
              * the one used in MPI_Barrier.  In another case, the datatype can specify
              * the absolute address of the buffer (e.g. buf == MPI_BOTTOM).
              */
-            char *addr = (char *) user_buf + dt_true_lb;
+            char *addr = MPIR_get_contig_ptr(user_buf, dt_true_lb);
             MPIR_Typerep_copy(addr, MPIDIG_REQUEST(req, buffer), nbytes);
         }
     }
@@ -379,4 +379,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
     return mpi_errno;
 }
 
-#endif /* MPIDIG_AM_RECV_H_INCLUDED */
+#endif /* MPIDIG_RECV_H_INCLUDED */

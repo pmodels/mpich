@@ -9,11 +9,9 @@
 #include "ofi_impl.h"
 #include "ofi_am_impl.h"
 #include "ofi_am_events.h"
-#include "ofi_control.h"
 #include "utlist.h"
 
 int MPIDI_OFI_rma_done_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
-int MPIDI_OFI_get_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 int MPIDI_OFI_dispatch_function(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
@@ -55,8 +53,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
     size_t count;
     MPIR_FUNC_ENTER;
 
+    if (wc->tag & MPIDI_OFI_HUGE_SEND) {
+        mpi_errno = MPIDI_OFI_recv_huge_event(vni, wc, rreq);
+        goto fn_exit;
+    }
     rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
-    rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
+    if (!rreq->status.MPI_ERROR) {
+        rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
+    }
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
     count = wc->len;
     MPIR_STATUS_SET_COUNT(rreq->status, count);
@@ -131,7 +135,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
 
     MPIDIU_request_complete(rreq);
 
-    /* Polling loop will check for truncation */
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;

@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef MPIDIG_AM_SEND_UTILS_H_INCLUDED
-#define MPIDIG_AM_SEND_UTILS_H_INCLUDED
+#ifndef MPIDIG_SEND_UTILS_H_INCLUDED
+#define MPIDIG_SEND_UTILS_H_INCLUDED
 
 /* This file is for supporting routines used for pipelined data send. These routines mainly is for
  * managing the send request counters, completion counters and DT refcount */
@@ -68,4 +68,4 @@ MPL_STATIC_INLINE_PREFIX bool MPIDIG_am_send_async_finish_seg(MPIR_Request * sre
     return is_done;
 }
 
-#endif /* MPIDIG_AM_SEND_UTILS_H_INCLUDED */
+#endif /* MPIDIG_SEND_UTILS_H_INCLUDED */
