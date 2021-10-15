@@ -8,12 +8,10 @@
 
 #ifdef F77_NAME_UPPER
 #define mpirinitc_ MPIRINITC
-#define mpirinitc2_ MPIRINITC2
 #elif defined(F77_NAME_LOWER_2USCORE) || defined(F77_NAME_LOWER_USCORE)
 /* leave name alone */
 #else
 #define mpirinitc_ mpirinitc
-#define mpirinitc2_ mpirinitc2
 #endif
 /* These functions are called from Fortran so only need prototypes in
    this file.  Note that the second-to-last argument is a character array, so
@@ -22,8 +20,9 @@
 FORT_DLL_SPEC void FORT_CALL mpirinitc_(void *si, void *ssi,
                                         void *bt, void *ip,
                                         void *uw, void *ecsi,
-                                        void *asn FORT_MIXED_LEN(d1), void *we FORT_END_LEN(d1));
-FORT_DLL_SPEC void FORT_CALL mpirinitc2_(char *FORT_MIXED_LEN_DECL FORT_END_LEN_DECL);
+                                        void *an FORT_MIXED_LEN(d1),
+                                        void *asn FORT_MIXED_LEN(d1),
+                                        void *we FORT_END_LEN(d1) FORT_END_LEN(d2));
 
 /*
     # MPI-2, section 4.12.5, on the declaration of MPI_F_STATUS_IGNORE
@@ -40,13 +39,16 @@ void *MPI_F_STATUS_IGNORE   = 0;
 void *MPI_F_STATUSES_IGNORE = 0;
 */
 MPI_Fint *MPI_F_ERRCODES_IGNORE = 0;
+void *MPI_F_ARGV_NULL = 0;
 void *MPI_F_ARGVS_NULL = 0;
 void *MPIR_F_MPI_WEIGHTS_EMPTY = 0;
 
 FORT_DLL_SPEC void FORT_CALL mpirinitc_(void *si, void *ssi,
                                         void *bt, void *ip,
                                         void *uw, void *ecsi,
-                                        void *asn FORT_MIXED_LEN(d1), void *we FORT_END_LEN(d1))
+                                        void *an FORT_MIXED_LEN(d1),
+                                        void *asn FORT_MIXED_LEN(d1),
+                                        void *we FORT_END_LEN(d1) FORT_END_LEN(d2))
 {
     MPI_F_STATUS_IGNORE = (MPI_Fint *) si;
     MPI_F_STATUSES_IGNORE = (MPI_Fint *) ssi;
@@ -54,19 +56,10 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc_(void *si, void *ssi,
     MPIR_F_MPI_IN_PLACE = ip;
     MPIR_F_MPI_UNWEIGHTED = uw;
     MPI_F_ERRCODES_IGNORE = (MPI_Fint *) ecsi;
+    MPI_F_ARGV_NULL = an;
     MPI_F_ARGVS_NULL = asn;
     MPIR_F_MPI_WEIGHTS_EMPTY = we;
 }
-
-/* Initialize the Fortran ARGV_NULL to a blank.  Using this routine
-   avoids potential problems with string manipulation routines that
-   exist in the Fortran runtime but not in the C runtime libraries */
-FORT_DLL_SPEC void FORT_CALL mpirinitc2_(char *an FORT_MIXED_LEN(d1) FORT_END_LEN(d1))
-{
-    *an = ' ';
-}
-
-
 
 /*
    Enable all known common block symbols mangling to be alias to each other,

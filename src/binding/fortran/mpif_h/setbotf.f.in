@@ -22,7 +22,6 @@
        save /MPIPRIVC/
 !      MPI_ARGVS_NULL 
 !      (Fortran requires character data in a separate common block)
-       call mpirinitc(si, ssi, bt, ip, uw, ecsi, asn, we)
-       call mpirinitc2(an)
+       call mpirinitc(si, ssi, bt, ip, uw, ecsi, an, asn, we)
        return
        end
