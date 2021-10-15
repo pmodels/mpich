@@ -152,8 +152,6 @@ Makefile.am-stamp
 
 # random stuff
 /maint/gcovmerge
-/src/binding/fortran/mpif_h/buildiface-stamp
-/src/binding/fortran/use_mpi/buildiface-stamp
 /src/binding/cxx/buildiface-stamp
 
 # script-generated f90 test files
@@ -190,7 +188,6 @@ Makefile.am-stamp
 /src/mpi/coll/src/csel_json_autogen.c
 
 # stamp "witness" files from the new build system
-/src/binding/fortran/use_mpi/buildiface.stamp
 /src/binding/fortran/use_mpi/mpi.mod-stamp
 /src/binding/fortran/use_mpi/mpi_base.mod-stamp
 /src/binding/fortran/use_mpi/mpi_constants.mod-stamp
@@ -223,9 +220,7 @@ Makefile.am-stamp
 /src/pm/mpd/aclocal.m4
 /src/pm/gforker/mpiexec.gforker
 /maint/Version
-/src/binding/fortran/mpif_h/Makefile.mk
-/src/binding/fortran/use_mpi/Makefile.mk
-/src/binding/fortran/use_mpi_f08/Makefile.mk
+/src/binding/fortran/mpif_h/Makefile_wrappers.mk
 
 # MPICH2 parameter handling
 /src/include/mpir_cvars.h
@@ -414,6 +409,8 @@ Makefile.am-stamp
 /src/binding/fortran/mpif_h/mpif77
 /src/binding/fortran/mpif_h/*.c
 !/src/binding/fortran/mpif_h/attr_proxy.c
+!/src/binding/fortran/mpif_h/statusf2c.c
+!/src/binding/fortran/mpif_h/statusc2f.c
 /src/binding/fortran/mpif_h/fproto.h
 /src/binding/fortran/mpif_h/mpif.h
 /src/binding/fortran/mpif_h/mpif.h.in
