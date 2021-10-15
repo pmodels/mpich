@@ -30,40 +30,26 @@ MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
 MPID_MAX_PROCESSOR_NAME=128
 MPID_MAX_ERROR_STRING=512
 
+pac_ch4_choice=none
+
 # $device_args - contains the netmods
 if test -z "${device_args}" ; then
   AS_CASE([$host_os],
   [linux*],[
     dnl attempt to choose a netmod from the installed libraries
     if test $have_ucx = "yes" -a $have_libfabric = "no" ; then
+        pac_ch4_choice="ucx-have-ucx"
         ch4_netmods=ucx
     elif test $have_ucx = "no" -a $have_libfabric = "yes" ; then
+        pac_ch4_choice="ofi-have-libfabric"
         ch4_netmods=ofi
     else
-        dnl prompt the user to choose
-        AC_MSG_ERROR([no ch4 netmod selected
-
-  The default ch4 device could not detect a preferred network
-  library. Supported options are ofi (libfabric) and ucx:
-
-    --with-device=ch4:ofi or --with-device=ch4:ucx
-
-  Configure will use an embedded copy of libfabric or ucx if one is
-  not found in the user environment. An installation can be specified
-  by adding
-
-    --with-libfabric=<path/to/install> or --with-ucx=<path/to/install>
-
-  to the configuration.
-
-  The previous MPICH default device (ch3) is also available and
-  supported with option:
-
-    --with-device=ch3
-    ])
+        pac_ch4_choice="ofi-default"
+        ch4_netmods=ofi
     fi],
     [
       dnl non-linux use libfabric
+      pac_ch4_choice="ofi-default"
       ch4_netmods=ofi
     ])
 else
@@ -453,5 +439,57 @@ AM_CONDITIONAL([BUILD_CH4_SHM],[test "${with_ch4_shmmods}" != "none" -a "${with_
 AM_CONDITIONAL([BUILD_CH4_COLL_TUNING],[test -e "$srcdir/src/mpid/ch4/src/ch4_coll_globals.c"])
 
 ])dnl end _BODY
+
+dnl Summary notes at the end of configure
+AC_DEFUN([PAC_CH4_CONFIG_SUMMARY], [
+    t_netmod=$ch4_netmods
+    if test "$ch4_netmods" = "ofi" -a "$with_libfabric" = "embedded"; then
+        t_netmod="ofi (embedded libfabric)"
+    elif test "$ch4_netmods" = "ucx" -a "$with_ucx" = "embedded"; then
+        t_netmod="ucx (embedded)"
+    fi
+    t_xpmem=""
+    if test "$pac_have_xpmem" = "yes" ; then
+        t_xpmem="xpmem"
+    fi
+    t_gpu="disabled"
+    if test -n "${GPU_SUPPORT}" ; then
+        t_gpu="${GPU_SUPPORT}"
+    fi
+    cat <<EOF
+***
+*** device      : ch4:${t_netmod}
+*** shm feature : ${ch4_shm} $t_xpmem
+*** gpu support : ${t_gpu}
+***
+EOF    
+
+    if test "$pac_ch4_choice" = "ofi-default" ; then
+        cat <<EOF
+  MPICH is configured with device ch4:ofi, which should work
+  for TCP networks and any high-bandwidth interconnect
+  supported by libfabric. MPICH can also be configured with
+  "--with-device=ch4:ucx", which should work for TCP networks
+  and any high-bandwidth interconnect supported by the UCX
+  library. In addition, the legacy device ch3 (--with-device=ch3)
+  is also available. 
+EOF        
+    elif test "$pac_ch4_choice" = "ofi-have-libfabric" ; then
+        cat <<EOF
+  MPICH is configured with device ch4:ofi using libfabric.
+  Alternatively, MPICH can be configured using
+  "--with-device=ch4:ucx" to use the UCX library. In addition,
+  the legacy device ch3 (--with-device=ch3) is also available.
+EOF        
+    elif test "$pac_ch4_choice" = "ofi-have-ucx" ; then
+        cat <<EOF
+  MPICH is configured with device ch4:ucx using UCX library.
+  Alternatively, MPICH can be configured using
+  "--with-device=ch4:ofi" to use the libfabric library. In
+  addition, the legacy device ch3 (--with-device=ch3) is also
+  available.
+EOF        
+    fi
+])
 
 [#] end of __file__
