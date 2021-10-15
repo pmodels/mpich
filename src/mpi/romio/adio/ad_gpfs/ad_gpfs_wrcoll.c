@@ -473,7 +473,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
             }
         }
 */
-        ADIOI_Free(fd->my_req_mem);
+        ADIOI_Free(fd->my_req_buf);
     } else {
         ADIOI_Free(my_req[0].offsets);
     }
