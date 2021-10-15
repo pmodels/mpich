@@ -93,6 +93,21 @@ static void ADIOI_Heap_merge(ADIOI_Access * others_req, int *count,
                              ADIO_Offset * srt_off, int *srt_len, int *start_pos,
                              int nprocs, int nprocs_recv, int total_elements);
 
+void ADIOI_GPFS_TAM_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * len_list,
+                            int contig_access_count, ADIO_Offset
+                            min_st_offset, ADIO_Offset * fd_start,
+                            ADIO_Offset * fd_end, ADIO_Offset fd_size,
+                            int nprocs,
+                            int *count_my_req_procs_ptr,
+                            int **count_my_req_per_proc_ptr,
+                            ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
+
+void ADIOI_TAM_Calc_others_req(ADIO_File fd, int count_my_req_procs,
+                           int *count_my_req_per_proc,
+                           ADIOI_Access * my_req,
+                           int nprocs, int myrank,
+                           int *count_others_req_procs_ptr, ADIOI_Access ** others_req_ptr);
+
 
 void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                                  MPI_Datatype datatype, int file_ptr_type,
@@ -408,16 +423,22 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 /* calculate what portions of the access requests of this process are
    located in what file domains */
 
-    if (gpfsmpio_tuneblocking)
+    if (gpfsmpio_tuneblocking) {
+/*
         ADIOI_GPFS_Calc_my_req(fd, offset_list, len_list, contig_access_count,
                                min_st_offset, fd_start, fd_end, fd_size,
                                nprocs, &count_my_req_procs,
                                &count_my_req_per_proc, &my_req, &buf_idx);
-    else
+*/
+        ADIOI_GPFS_TAM_Calc_my_req(fd, offset_list, len_list, contig_access_count,
+                               min_st_offset, fd_start, fd_end, fd_size,
+                               nprocs, &count_my_req_procs,
+                               &count_my_req_per_proc, &my_req, &buf_idx);
+    } else {
         ADIOI_Calc_my_req(fd, offset_list, len_list, contig_access_count,
                           min_st_offset, fd_start, fd_end, fd_size,
                           nprocs, &count_my_req_procs, &count_my_req_per_proc, &my_req, &buf_idx);
-
+    }
     GPFSMPIO_T_CIO_SET_GET(w, 1, 1, GPFSMPIO_CIO_T_OTHREQ, GPFSMPIO_CIO_T_MYREQ);
 
     /* based on everyone's my_req, calculate what requests of other
@@ -427,24 +448,32 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
      * count_others_req_per_proc[i] indicates how many separate contiguous
      * requests of proc. i lie in this process's file domain.
      */
-    if (gpfsmpio_tuneblocking)
+    if (gpfsmpio_tuneblocking) {
+/*
         ADIOI_GPFS_Calc_others_req(fd, count_my_req_procs,
                                    count_my_req_per_proc, my_req,
                                    nprocs, myrank, &count_others_req_procs, &others_req);
-    else
+*/
+        ADIOI_TAM_Calc_others_req(fd, count_my_req_procs,
+                              count_my_req_per_proc, my_req,
+                              nprocs, myrank, &count_others_req_procs, &others_req);
+    } else {
         ADIOI_Calc_others_req(fd, count_my_req_procs,
                               count_my_req_per_proc, my_req,
                               nprocs, myrank, &count_others_req_procs, &others_req);
-
+    }
     GPFSMPIO_T_CIO_SET_GET(w, 1, 1, GPFSMPIO_CIO_T_DEXCH, GPFSMPIO_CIO_T_OTHREQ);
 
     ADIOI_Free(count_my_req_per_proc);
     if (gpfsmpio_tuneblocking) {
+/*
         for ( i = 0; i < nprocs; ++i ) {
             if ( my_req[i].count ) {
                 ADIOI_Free(my_req[i].offsets);
             }
         }
+*/
+        ADIOI_Free(fd->my_req_mem);
     } else {
         ADIOI_Free(my_req[0].offsets);
     }
@@ -462,12 +491,16 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     /* free all memory allocated for collective I/O */
     if (gpfsmpio_tuneblocking) {
+/*
         for ( i = 0; i < nprocs; ++i ) {
             if ( others_req[i].count ) {
                 ADIOI_Free(others_req[i].offsets);
                 ADIOI_Free(others_req[i].mem_ptrs);
             }
         }
+*/
+        ADIOI_Free(fd->other_req_mem);
+        ADIOI_Free(fd->other_req_buf);
     } else {
         ADIOI_Free(others_req[0].offsets);
         ADIOI_Free(others_req[0].mem_ptrs);
