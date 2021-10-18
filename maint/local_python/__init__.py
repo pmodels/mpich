@@ -145,9 +145,9 @@ class MPI_API_Global:
 
     def parse_cmdline():
         for a in sys.argv[1:]:
-            if RE.match(r'--?(\w+)=(.*)', a):
+            if RE.match(r'--?([\w-]+)=(.*)', a):
                 MPI_API_Global.opts[RE.m.group(1)] = RE.m.group(2)
-            elif RE.match(r'--?(\w.+)', a):
+            elif RE.match(r'--?([\w-].+)', a):
                 MPI_API_Global.opts[RE.m.group(1)] = 1
             else:
                 MPI_API_Global.args.append(a)
