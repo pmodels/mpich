@@ -11,7 +11,7 @@ from local_python import RE
 import os
 
 def main():
-    # currently support -no-real128, -no-mpiio, -aint-is-int
+    # currently support -no-real128, -no-mpiio, -fint-size, -aint-size, -count-size, -cint-size
     G.parse_cmdline()
 
     binding_dir = G.get_srcdir_path("src/binding")
@@ -29,7 +29,7 @@ def main():
 
     skip_large_list = []
     # skip large variations because MPI_ADDRESS_KIND == MPI_COUNT_KIND
-    if 'aint-is-int' not in G.opts:
+    if G.opts['aint-size'] == G.opts['count-size']:
         skip_large_list.extend(["MPI_Op_create", "MPI_Register_datarep", "MPI_Type_create_resized", "MPI_Type_get_extent", "MPI_Type_get_true_extent", "MPI_File_get_type_extent", "MPI_Win_allocate", "MPI_Win_allocate_shared", "MPI_Win_create", "MPI_Win_shared_query"])
     # skip File large count functions because it is not implemented yet
     for func in func_list:
