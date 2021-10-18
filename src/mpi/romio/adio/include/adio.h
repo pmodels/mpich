@@ -319,6 +319,9 @@ typedef struct {
 #define ADIO_SCALABLE_RESIZE     307    /* file system supports resizing from one
                                          * processor (nfs, e.g. does not) */
 
+#define ADIO_IMMEDIATELY_VISIBLE 308    /* a write from one client immediately
+                                         * visible on other clients (POSIX semantics) */
+
 /* for default file permissions */
 #define ADIO_PERM_NULL           -1
 
