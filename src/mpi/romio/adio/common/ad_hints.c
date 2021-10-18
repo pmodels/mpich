@@ -32,12 +32,10 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     }
     ad_get_env_vars();
 
+    /* Interpreting MPI-4.0 to mean ROMIO should only return hints it knows
+     * about when user calls MPI_File_get_info */
     if (fd->info == MPI_INFO_NULL) {
-        if (users_info == MPI_INFO_NULL)
-            MPI_Info_create(&(fd->info));
-        else
-            /* duplicate users_info to preserve hints not used in ROMIO */
-            MPI_Info_dup(users_info, &(fd->info));
+        MPI_Info_create(&(fd->info));
     }
     info = fd->info;
 
