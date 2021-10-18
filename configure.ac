@@ -5216,6 +5216,7 @@ if test "$f08_works" = "yes" ; then
     if test "$enable_romio" = "no" ; then
         cmd="$cmd -no-mpiio"
     fi
+    cmd="$cmd -fint-size=$SIZEOF_F77_INTEGER -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
     AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd"])
 fi
 
