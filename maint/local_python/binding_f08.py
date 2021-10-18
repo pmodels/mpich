@@ -1554,3 +1554,33 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
     else:
         print("get_F_c_decl: unhandled type %s: %s - %s" % (p['name'], t_f, t_c))
         return None
+
+#----------------------------------------
+# Depend on integer size, POLY parameters don't always end up with different interfaces
+def get_real_POLY_kinds():
+    G.real_poly_kinds = {}
+
+    def get_int_type(fortran_type):
+        if fortran_type == "INTEGER":
+            return "fint"
+        elif "MPI_ADDRESS_KIND" in fortran_type:
+            return "aint"
+        elif "MPI_COUNT_KIND" in fortran_type:
+            return "count"
+        else:
+            raise Exception("Unrecognized POLY type")
+
+    small_map = G.MAPS['SMALL_F08_KIND_MAP']
+    large_map = G.MAPS['BIG_F08_KIND_MAP']
+    for kind in small_map:
+        if small_map[kind].startswith('POLY'):
+            a = get_int_type(small_map[kind]) + "-size"
+            b = get_int_type(large_map[kind]) + "-size"
+            if G.opts[a] != G.opts[b]:
+                G.real_poly_kinds['kind'] = 1
+
+def function_has_real_POLY_parameters(func):
+    for p in func['parameters']:
+        if p['kind'] in G.real_poly_kinds:
+            return True
+    return False

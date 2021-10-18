@@ -37,11 +37,12 @@ def main():
             skip_large_list.append(func['name'])
 
     # preprocess
+    get_real_POLY_kinds()
     for func in func_list:
         check_func_directives(func)
         if '_skip_fortran' in func:
             continue
-        if function_has_POLY_parameters(func) and func['name'] not in skip_large_list:
+        if function_has_real_POLY_parameters(func) and func['name'] not in skip_large_list:
             func['_need_large'] = True
         else:
             func['_need_large'] = False
