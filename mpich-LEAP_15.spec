@@ -61,7 +61,7 @@
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
@@ -156,6 +156,7 @@ Requires:       libstdc++-devel
 %endif
 Requires:       %{name} = %{version}
 Requires:       daos-devel
+Requires:       libfabric-devel
 
 %description devel
 MPICH is a freely available, portable implementation of MPI, the
@@ -460,6 +461,9 @@ fi
 %endif # !testsuite
 
 %changelog
+* Thu Oct 14 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 4.0~a2-2
+- add BR libfabric-devel for mpich-devel package
+
 * Tue Oct 5 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 4.0~a2-1
 - Update to 4.0a2 git hash 65dcaccf3
 
