@@ -378,7 +378,7 @@ typedef enum MPIR_Win_model {
 } MPIR_Win_model_t;
 
 /* Upper bound on the overhead in bsend for each message buffer */
-#define MPI_BSEND_OVERHEAD @BSEND_OVERHEAD@
+#define MPI_BSEND_OVERHEAD 96
 
 /* Topology types */
 typedef enum MPIR_Topo_type { MPI_GRAPH=1, MPI_CART=2, MPI_DIST_GRAPH=3 } MPIR_Topo_type;

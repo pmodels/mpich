@@ -4505,9 +4505,9 @@ if test "$ac_cv_sizeof_MPII_Bsend_data_t" = "0" ; then
     # argument, so code that depended on the prior defined behavior now
     # silently breaks.
 fi
-BSEND_OVERHEAD=$ac_cv_sizeof_MPII_Bsend_data_t
-export BSEND_OVERHEAD
-AC_SUBST(BSEND_OVERHEAD)
+if test $ac_cv_sizeof_MPII_Bsend_data_t -gt 96 ; then
+    AC_MSG_ERROR([MPI_BSEND_OVERHEAD exceeds current ABI value])
+fi
 
 dnl Configure any subdirectories.  Note that config.status will *not*
 dnl reexecute these!
