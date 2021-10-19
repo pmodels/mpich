@@ -3608,73 +3608,20 @@ dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain th
     double_mpi=${MPI_DOUBLE:-0}
     long_double_mpi=${MPI_LONG_DOUBLE:-0}
 
-    #
-    # The following code was correct for MPI-1, which allowed these datatypes
-    # to be an alias for another MPI type.  MPI-2 requires these to
-    # be distinct types, so these are enumerated
-    if test "$use_alias_types" = yes ; then
-        for len in 1 2 4 8 16 ; do
-            eval F77_INTEGER$len=0
-            #eval testval=\$"pac_cv_f77_sizeof_integer_$len"
-            eval testval=\$"pac_cv_fort_integer$len"
-            if test "$testval" = no ; then continue ; fi
-	    testval=$len
-            noval="yes"
-            AC_MSG_CHECKING([for C type matching Fortran integer*$len])
-            for c_type in char short int long "long_long" ; do
-	        eval ctypelen=\$"ac_cv_sizeof_$c_type"
-  	        if test "$testval" = "$ctypelen" -a "$ctypelen" -gt 0 ; then
-	            AC_MSG_RESULT($c_type)
-  	            eval F77_INTEGER$len=\$"${c_type}_mpi"
-	            noval="no"
-	            break
-                fi
-            done
-            if test "$noval" = "yes" ; then
-                AC_MSG_RESULT([unavailable])
-            fi
-        done
+    # Simply determine which types exist.  These may have been set by the
+    # toplevel configure
+    for var in INTEGER1 INTEGER2 INTEGER4 INTEGER8 INTEGER16 \
+        REAL4 REAL8 REAL16 COMPLEX8 COMPLEX16 COMPLEX32 ; do
+        eval varname=MPI_$var
+        eval varvalue=\$$varname
+        #echo "$varname = $varvalue"
+        if test "$varvalue" = MPI_DATATYPE_NULL ; then
+            eval F77_$var=0
+        else
+            eval F77_$var=\$$varname
+        fi
+    done
 
-        # Complex is set separately above
-        for len in 4 8 16 ; do
-            len2=`expr $len + $len`
-            eval F77_REAL$len=0
-            #eval F77_COMPLEX$len2=0
-            #eval testval=\$"pac_cv_f77_sizeof_real_$len"
-            eval testval=\$"pac_cv_fort_real$len"
-            if test "$testval" = no ; then continue ; fi
-	    testval=$len
-            noval="yes"
-            AC_MSG_CHECKING([for C type matching Fortran real*$len])
-            for c_type in float double "long_double" ; do
-	        eval ctypelen=\$"ac_cv_sizeof_$c_type"
-	        if test "$testval" = "$ctypelen" -a "$ctypelen" -gt 0 ; then
-	            AC_MSG_RESULT($c_type)
-  	            eval F77_REAL$len=\$"${c_type}_mpi"
-	            #eval F77_COMPLEX$len2=\$"${c_type}_cplx_mpi"
-                    noval="no"
-	            break
-                fi
-            done
-            if test "$noval" = "yes" ; then
-                AC_MSG_RESULT([unavailable])
-            fi
-        done
-    else
-        # Simply determine which types exist.  These may have been set by the
-        # toplevel configure
-        for var in INTEGER1 INTEGER2 INTEGER4 INTEGER8 INTEGER16 \
-            REAL4 REAL8 REAL16 COMPLEX8 COMPLEX16 COMPLEX32 ; do
-  	    eval varname=MPI_$var
-            eval varvalue=\$$varname
-	    #echo "$varname = $varvalue"
-  	    if test "$varvalue" = MPI_DATATYPE_NULL ; then
-	        eval F77_$var=0
-  	    else
-                eval F77_$var=\$$varname
-  	    fi
-       done
-    fi
     # We must convert all hex values to decimal (!)
     for var in INTEGER1 INTEGER2 INTEGER4 INTEGER8 INTEGER16 \
         REAL4 REAL8 REAL16 COMPLEX8 COMPLEX16 COMPLEX32 ; do
