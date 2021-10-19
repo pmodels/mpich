@@ -542,7 +542,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(MPIR_Comm * comm, fi_a
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_src, nic);
 
-    MPIDI_CH4_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__SEND, 0, 1);
+    MPIDI_CH4_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__SEND, vni_src, 1);
     MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     len = am_hdr_sz + sizeof(*msg_hdrp);
     ibuf = (char *) MPL_malloc(len, MPL_MEM_BUFFER);
