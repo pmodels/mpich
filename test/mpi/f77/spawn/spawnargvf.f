@@ -20,7 +20,7 @@ C       implicit none
         character*(80)   argv(64)
         integer argc
         data inargv /"a", "b=c", "d e", "-pf", " Ss", " " /
-        data outargv /"a", "b=c", "d e", "-pf", " Ss", " " /
+        data outargv /"a", "b=c", "d e", "-pf", "Ss", " " /
         integer ierr
         integer can_spawn
 

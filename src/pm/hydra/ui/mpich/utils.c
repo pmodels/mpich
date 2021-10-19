@@ -15,6 +15,14 @@ static char **config_argv = NULL;
 static int reading_config_file = 0;
 static struct HYD_arg_match_table match_table[];
 
+#define ASSERT_ARGV \
+    do { \
+        if (!**argv) { \
+            status = HYD_FAILURE; \
+            HYDU_ERR_POP(status, "missing command line argument, add -h for help\n"); \
+        }\
+    } while (0)
+
 static void init_ui_mpich_info(void)
 {
     HYD_ui_mpich_info.ppn = -1;
@@ -777,6 +785,7 @@ static HYD_status np_fn(char *arg, char ***argv)
     status = get_current_exec(&exec);
     HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
+    ASSERT_ARGV;
     status = HYDU_set_int(arg, &exec->proc_count, atoi(**argv));
     HYDU_ERR_POP(status, "error getting executable process count\n");
 
