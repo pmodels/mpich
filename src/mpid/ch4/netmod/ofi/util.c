@@ -228,7 +228,7 @@ int MPIDI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum f
     int dt_size;
     MPIR_Datatype_get_size_macro(dt, dt_size);
 
-    if (dt == MPI_CHAR || dt == MPI_SIGNED_CHAR || dt == MPI_SHORT ||
+    if (dt == MPI_BYTE || dt == MPI_CHAR || dt == MPI_SIGNED_CHAR || dt == MPI_SHORT ||
         dt == MPI_INT || dt == MPI_LONG || dt == MPI_LONG_LONG ||
         dt == MPI_INT8_T || dt == MPI_INT16_T || dt == MPI_INT32_T || dt == MPI_INT64_T ||
         dt == MPI_INTEGER || dt == MPI_INTEGER1 || dt == MPI_INTEGER2 ||
@@ -248,6 +248,7 @@ int MPIDI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum f
                 *fi_dt = FI_INT64;
                 break;
             default:
+                /* no matching type */
                 goto fn_fail;
         }
     } else if (dt == MPI_UNSIGNED_CHAR || dt == MPI_UNSIGNED_SHORT || dt == MPI_UNSIGNED ||
@@ -268,6 +269,7 @@ int MPIDI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum f
                 *fi_dt = FI_UINT64;
                 break;
             default:
+                /* no matching type */
                 goto fn_fail;
         }
     } else if (isFLOAT(dt)) {
@@ -281,6 +283,7 @@ int MPIDI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum f
     } else if (isDOUBLE_COMPLEX(dt)) {
         *fi_dt = FI_DOUBLE_COMPLEX;
     } else {
+        /* no matching type */
         goto fn_fail;
     }
 
@@ -292,70 +295,54 @@ int MPIDI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum f
     switch (op) {
         case MPI_SUM:
             *fi_op = FI_SUM;
-            goto fn_exit;
-
+            break;
         case MPI_PROD:
             *fi_op = FI_PROD;
-            goto fn_exit;
-
+            break;
         case MPI_MAX:
             *fi_op = FI_MAX;
-            goto fn_exit;
-
+            break;
         case MPI_MIN:
             *fi_op = FI_MIN;
-            goto fn_exit;
-
+            break;
         case MPI_BAND:
             *fi_op = FI_BAND;
-            goto fn_exit;
-
+            break;
         case MPI_BOR:
             *fi_op = FI_BOR;
-            goto fn_exit;
-
+            break;
         case MPI_BXOR:
             *fi_op = FI_BXOR;
-            goto fn_exit;
             break;
-
         case MPI_LAND:
-            if (isLONG_DOUBLE(dt))
-                goto fn_fail;
-
-            *fi_op = FI_LAND;
-            goto fn_exit;
-
+            /* FIXME: ignore all fp types? */
+            if (!isLONG_DOUBLE(dt)) {
+                *fi_op = FI_LAND;
+            }
+            break;
         case MPI_LOR:
-            if (isLONG_DOUBLE(dt))
-                goto fn_fail;
-
-            *fi_op = FI_LOR;
-            goto fn_exit;
-
+            /* FIXME: ignore all fp types? */
+            if (!isLONG_DOUBLE(dt)) {
+                *fi_op = FI_LOR;
+            }
+            break;
         case MPI_LXOR:
-            if (isLONG_DOUBLE(dt))
-                goto fn_fail;
-
-            *fi_op = FI_LXOR;
-            goto fn_exit;
-
-        case MPI_REPLACE:{
-                *fi_op = FI_ATOMIC_WRITE;
-                goto fn_exit;
+            /* FIXME: ignore all fp types? */
+            if (!isLONG_DOUBLE(dt)) {
+                *fi_op = FI_LXOR;
             }
-
-        case MPI_NO_OP:{
-                *fi_op = FI_ATOMIC_READ;
-                goto fn_exit;
-            }
-
-        case MPI_OP_NULL:{
-                *fi_op = FI_CSWAP;
-                goto fn_exit;
-            }
-
+            break;
+        case MPI_REPLACE:
+            *fi_op = FI_ATOMIC_WRITE;
+            break;
+        case MPI_NO_OP:
+            *fi_op = FI_ATOMIC_READ;
+            break;
+        case MPI_OP_NULL:
+            *fi_op = FI_CSWAP;
+            break;
         default:
+            /* no matching op */
             goto fn_fail;
     }
 

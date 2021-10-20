@@ -431,6 +431,10 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
         pg->proxy_list->next = NULL;
         HYDU_free_proxy_list(pg->proxy_list);
         pg->proxy_list = tmp;
+        if (pg->proxy_list == NULL) {
+            status = HYD_FAILURE;
+            HYDU_ERR_POP(status, "Missing executable.\n");
+        }
     }
     for (proxy = pg->proxy_list; proxy->next;) {
         if (proxy->next->exec_list == NULL) {
