@@ -153,12 +153,13 @@ static int get_huge_complete(MPIR_Request * rreq)
     wc.len = info->msgsize;
     wc.data = info->origin_rank;
     wc.tag = info->tag;
+    MPIR_Comm *comm_ptr = rreq->comm;
     MPIDI_OFI_recv_event(vni_local, &wc, rreq, MPIDI_OFI_EVENT_GET_HUGE);
 
     MPIDI_OFI_send_control_t ctrl;
     ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
     ctrl.u.huge_ack.ackreq = info->ackreq;
-    mpi_errno = MPIDI_NM_am_send_hdr(info->origin_rank, rreq->comm,
+    mpi_errno = MPIDI_NM_am_send_hdr(info->origin_rank, comm_ptr,
                                      MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
                                      &ctrl, sizeof(ctrl), vni_local, vni_remote);
     MPIR_ERR_CHECK(mpi_errno);
