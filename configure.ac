@@ -3530,22 +3530,6 @@ dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain th
     # MPI_2COMPLEX=0x4c00${len_doublecplx}24
     # MPI_2DOUBLE_COMPLEX=0x4c00${len_2dc}25
 
-    #
-    # Temporary for the vast majority of systems that use 4 byte reals and
-    # 8 byte doubles
-    # Lengths at this point are in hex, hence "10" = 10 base 16 = 16 base 10.
-    if test "$len_double" = "08" ; then
-        F77_COMPLEX8=$MPI_COMPLEX
-    fi
-    if test "$len_doublecplx" = "10" ; then
-        F77_COMPLEX16=$MPI_DOUBLE_COMPLEX
-    fi
-    if test "$len_long_double" = "10" -a "$MPID_NO_LONG_DOUBLE" != "yes" ; then
-        F77_COMPLEX32="0x4c002025"
-    else
-        F77_COMPLEX32="MPI_DATATYPE_NULL"
-    fi
-
     MPI_F77_PACKED=$MPI_PACKED
     MPI_F77_UB=$MPI_UB
     MPI_F77_LB=$MPI_LB
