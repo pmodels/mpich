@@ -149,6 +149,9 @@ static int get_huge_complete(MPIR_Request * rreq)
     int vni_remote = info->vni_src;
     int vni_local = info->vni_dst;
 
+    /* important: save comm_ptr because MPIDI_OFI_recv_event may free the request. */
+    MPIR_Comm *comm_ptr = rreq->comm;
+
     struct fi_cq_tagged_entry wc;
     wc.len = info->msgsize;
     wc.data = info->origin_rank;
@@ -158,7 +161,7 @@ static int get_huge_complete(MPIR_Request * rreq)
     MPIDI_OFI_send_control_t ctrl;
     ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
     ctrl.u.huge_ack.ackreq = info->ackreq;
-    mpi_errno = MPIDI_NM_am_send_hdr(info->origin_rank, rreq->comm,
+    mpi_errno = MPIDI_NM_am_send_hdr(info->origin_rank, comm_ptr,
                                      MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
                                      &ctrl, sizeof(ctrl), vni_local, vni_remote);
     MPIR_ERR_CHECK(mpi_errno);
