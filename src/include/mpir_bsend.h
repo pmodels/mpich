@@ -49,11 +49,14 @@ typedef struct MPII_Bsend_msg {
 } MPII_Bsend_msg_t;
 
 /* BsendData describes a bsend request */
+/* NOTE: The size of this structure determines the value of
+ * MPI_BSEND_OVERHEAD in mpi.h, which is part of the MPICH ABI. */
 typedef struct MPII_Bsend_data {
     size_t size;                /* size that is available for data */
     size_t total_size;          /* total size of this segment,
                                  * including all headers */
     struct MPII_Bsend_data *next, *prev;
+    int dummy;                  /* dummy var to preserve ABI compatibility */
     struct MPIR_Request *request;
     MPII_Bsend_msg_t msg;
     double alignpad;            /* make sure that the struct
