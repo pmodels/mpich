@@ -20,6 +20,7 @@ C
            smsg(1) = 3
            call mpi_send( smsg, 1, MPI_INT, 1, 0, MPI_COMM_WORLD, ierr )
        else if (wrank .eq. 1) then
+          rmsg(1) = 0 
           call mpi_recv( rmsg, 1, MPI_INT, 0, 0, MPI_COMM_WORLD,
      $         MPI_STATUS_IGNORE, ierr ) 
           if (rmsg(1) .ne. 3) then
