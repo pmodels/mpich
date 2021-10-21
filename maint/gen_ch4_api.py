@@ -280,13 +280,11 @@ def dump_func_table_c(c_file, mod):
     print("  --> [%s]" % c_file)
     with open(c_file, "w") as Out:
         dump_copyright(Out)
-        print("#include \"mpl.h\"", file=Out)
-        print("", file=Out)
-        print("MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;", file=Out)
-        print("", file=Out)
         print("#ifndef NETMOD_INLINE", file=Out)
         print("#define NETMOD_DISABLE_INLINES", file=Out)
         print("#include <mpidimpl.h>", file=Out)
+        print("MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;", file=Out)
+        print("", file=Out)
         print("#include \"netmod_inline.h\"", file=Out)
         print("MPIDI_NM_funcs_t MPIDI_NM_%s_funcs = {" % mod, file=Out)
         for a in G.apis:
