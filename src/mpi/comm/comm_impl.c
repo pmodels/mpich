@@ -263,7 +263,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
             /* This mapping is relative to comm world */
             MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "comm-create - mapping into world[%d] = %ld", i, g_lpid));
+                             "comm-create - mapping into world[%d] = %" PRIu64, i, g_lpid));
             if (g_lpid < wsize) {
                 mapping[i] = g_lpid;
             } else {
