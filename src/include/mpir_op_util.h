@@ -155,7 +155,7 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
 #define MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
 #endif
 /* also test against MPI_DATATYPE_NULL for extra safety, 0x0c000000 is the uncasted value. */
-#if defined(HAVE_CXX_COMPLEX) && (MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE != 0x0c000000)
+#if defined(HAVE_CXX_COMPLEX) && defined(HAVE_CXX_LONG_DOUBLE_COMPLEX)
 #undef MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX
 #define MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
 #endif
@@ -321,7 +321,7 @@ typedef struct {
 #define MPIR_OP_TYPE_GROUP_LOGICAL                                                    \
     MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_LOGICAL, MPI_Fint, mpir_typename_logical)     \
     MPIR_OP_TYPE_MACRO_HAVE_C_BOOL(MPI_C_BOOL, _Bool, mpir_typename_c_bool)           \
-    MPIR_OP_TYPE_MACRO_HAVE_CXX(MPIR_CXX_BOOL_VALUE, MPIR_CXX_BOOL_CTYPE, mpir_typename_cxx_bool_value)
+    MPIR_OP_TYPE_MACRO_HAVE_CXX(MPI_CXX_BOOL, MPIR_CXX_BOOL_CTYPE, mpir_typename_cxx_bool_value)
 #define MPIR_OP_TYPE_GROUP_LOGICAL_EXTRA        /* empty, provided for consistency */
 
 /* complex group */
@@ -334,9 +334,9 @@ typedef struct {
     MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_DOUBLE_COMPLEX, d_fc_complex, mpir_typename_double_complex)                           \
     MPIR_OP_TYPE_MACRO_HAVE_COMPLEX8(MPI_COMPLEX8, s_complex, mpir_typename_complex8)                                         \
     MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16(MPI_COMPLEX16, d_complex, mpir_typename_complex16)                                      \
-    MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(MPIR_CXX_COMPLEX_VALUE, s_complex, mpir_typename_cxx_complex_value)                   \
-    MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(MPIR_CXX_DOUBLE_COMPLEX_VALUE, d_complex, mpir_typename_cxx_double_complex_value)     \
-    MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX(MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE, ld_complex, mpir_typename_cxx_long_double_complex_value)
+    MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(MPI_CXX_FLOAT_COMPLEX, s_complex, mpir_typename_cxx_complex_value)                   \
+    MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(MPI_CXX_DOUBLE_COMPLEX, d_complex, mpir_typename_cxx_double_complex_value)     \
+    MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX(MPI_CXX_LONG_DOUBLE_COMPLEX, ld_complex, mpir_typename_cxx_long_double_complex_value)
 
 /* byte group */
 #define MPIR_OP_TYPE_GROUP_BYTE         \
