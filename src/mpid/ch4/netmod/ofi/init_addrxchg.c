@@ -293,6 +293,8 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
             }
         }
     }
+    mpi_errno = MPIR_Barrier_fallback(comm, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_check:
     if (MPIDI_OFI_ENABLE_AV_TABLE) {
