@@ -118,7 +118,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_check_progress_made_vci(MPID_Progress_state 
   } while (0)
 #endif
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state, int wait)
+static inline int MPIDI_progress_test(MPID_Progress_state * state, int wait)
 {
     int mpi_errno = MPI_SUCCESS;
     int made_progress = 0;

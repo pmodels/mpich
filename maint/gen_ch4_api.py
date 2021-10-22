@@ -133,8 +133,12 @@ def dump_netmod_h(h_file):
             s += "MPIDI_NM_%s(" % (a['name'])
             tail = ");"
             if a['nm_inline']:
-                s = "MPL_STATIC_INLINE_PREFIX %s" % (s)
-                tail = ") MPL_STATIC_INLINE_SUFFIX;"
+                if a['name'] == 'progress':
+                    s = "static inline %s" % (s)
+                    tail = ") MPL_STATIC_INLINE_SUFFIX;"
+                else:
+                    s = "MPL_STATIC_INLINE_PREFIX %s" % (s)
+                    tail = ") MPL_STATIC_INLINE_SUFFIX;"
             dump_s_param_tail(Out, s, a['nm_params'], tail)
         print("", file=Out)
         print("#endif /* %s */" % INC, file=Out)
