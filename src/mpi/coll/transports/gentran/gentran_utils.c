@@ -427,6 +427,9 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
     /* update the list of outgoing vertices of the incoming
      * vertices */
     for (i = 0; i < n_in_vtcs; i++) {
+        if (in_vtcs[i] == -1) {
+            continue;
+        }
         vtx_t *in_vtx = (vtx_t *) utarray_eltptr(&sched->vtcs, in_vtcs[i]);
         MPIR_Assert(in_vtx != NULL);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "invtx: %d", in_vtcs[i]));
