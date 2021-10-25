@@ -81,7 +81,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
 
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIDIG_REQUEST(sreq, datatype) = datatype;
-    MPIDIG_REQUEST(sreq, buffer) = (char *) buf;
+    MPIDIG_REQUEST(sreq, buffer) = (void *) buf;
     MPIDIG_REQUEST(sreq, count) = count;
 #endif
 
@@ -98,7 +98,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
         MPIDIG_REQUEST(sreq, req->sreq).datatype = datatype;
         MPIDIG_REQUEST(sreq, req->sreq).rank = am_hdr.src_rank;
         MPIDIG_REQUEST(sreq, req->sreq).context_id = am_hdr.context_id;
-        MPIDIG_REQUEST(sreq, rank) = rank;
+        MPIDIG_REQUEST(sreq, u.send.dest) = rank;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDIG_AM_SEND_SET_RNDV(am_hdr.flags, MPIDIG_RNDV_GENERIC);
 

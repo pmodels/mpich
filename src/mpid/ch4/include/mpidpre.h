@@ -209,13 +209,20 @@ typedef struct MPIDIG_req_t {
     MPIDI_SHM_REQUEST_AM_DECL} shm_am;
 #endif
     MPIDIG_req_ext_t *req;
-    void *buffer;
     void *rndv_hdr;
+    void *buffer;
     MPI_Aint count;
-    int rank;
-    int tag;
-    MPIR_Context_id_t context_id;
     MPI_Datatype datatype;
+    union {
+        struct {
+            int dest;
+        } send;
+        struct {
+            int source;
+            MPIR_Context_id_t context_id;
+            int tag;
+        } recv;
+    } u;
 } MPIDIG_req_t;
 
 /* Structure to capture arguments for pt2pt persistent communications */
@@ -251,13 +258,18 @@ typedef struct MPIDI_part_request {
 
     /* partitioned attributes */
     void *buffer;
-    MPI_Aint count;             /* count per partition */
-    int rank;
-    int tag;
-    MPIR_Context_id_t context_id;       /* temporarily store send context_id in unexp_rreq.
-                                         * Valid also in posted_rreq so that single dequeue
-                                         * routine can be used. */
+    MPI_Aint count;
     MPI_Datatype datatype;
+    union {
+        struct {
+            int dest;
+        } send;
+        struct {
+            int source;
+            MPIR_Context_id_t context_id;
+            int tag;
+        } recv;
+    } u;
     union {
     MPIDI_NM_PART_DECL} netmod;
 } MPIDI_part_request_t;

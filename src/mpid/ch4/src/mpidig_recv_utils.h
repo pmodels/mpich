@@ -148,8 +148,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_get_recv_iov_count(MPIR_Request * rreq)
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     if (p->recv_type == MPIDIG_RECV_DATATYPE) {
         MPI_Aint num_iov;
-        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype),
-                             p->in_data_sz, &num_iov);
+        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, count),
+                             MPIDIG_REQUEST(rreq, datatype), p->in_data_sz, &num_iov);
         return num_iov;
     } else if (p->recv_type == MPIDIG_RECV_CONTIG) {
         return 1;
@@ -343,8 +343,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq)
     MPI_Aint data_sz;
     MPIR_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
-    MPIDI_Datatype_get_info(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype),
-                            dt_contig, data_sz, dt_ptr, dt_true_lb);
+    MPIDI_Datatype_get_info(MPIDIG_REQUEST(rreq, count),
+                            MPIDIG_REQUEST(rreq, datatype), dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     if (dt_contig) {
@@ -354,8 +354,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq)
     } else {
         struct iovec *iov;
         MPI_Aint num_iov;
-        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype),
-                             data_sz, &num_iov);
+        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, count),
+                             MPIDIG_REQUEST(rreq, datatype), data_sz, &num_iov);
         MPIR_Assert(num_iov > 0);
 
         iov = MPL_malloc(num_iov * sizeof(struct iovec), MPL_MEM_OTHER);
