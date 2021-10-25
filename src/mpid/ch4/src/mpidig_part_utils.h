@@ -18,7 +18,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
     am_hdr.sreq_ptr = MPIDIG_PART_REQUEST(rreq_ptr, peer_req_ptr);
     am_hdr.rreq_ptr = rreq_ptr;
 
-    int source = MPIDI_PART_REQUEST(rreq_ptr, rank);
+    int source = MPIDI_PART_REQUEST(rreq_ptr, u.recv.source);
     CH4_CALL(am_send_hdr_reply(rreq_ptr->comm, source, MPIDIG_PART_CTS, &am_hdr, sizeof(am_hdr),
                                0, 0), MPIDI_REQUEST(rreq_ptr, is_local), mpi_errno);
 
@@ -60,13 +60,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq,
                 MPIR_AINT_MAX);
 
     if (mode == MPIDIG_PART_REGULAR) {
-        CH4_CALL(am_isend(MPIDI_PART_REQUEST(part_sreq, rank), part_sreq->comm,
+        CH4_CALL(am_isend(MPIDI_PART_REQUEST(part_sreq, u.send.dest), part_sreq->comm,
                           MPIDIG_PART_SEND_DATA,
-                          &am_hdr, sizeof(am_hdr), MPIDI_PART_REQUEST(part_sreq, buffer), count,
-                          MPIDI_PART_REQUEST(part_sreq, datatype), 0, 0, sreq),
+                          &am_hdr, sizeof(am_hdr), MPIDI_PART_REQUEST(part_sreq, buffer),
+                          count, MPIDI_PART_REQUEST(part_sreq, datatype), 0, 0, sreq),
                  MPIDI_REQUEST(part_sreq, is_local), mpi_errno);
     } else {    /* MPIDIG_PART_REPLY */
-        CH4_CALL(am_isend_reply(part_sreq->comm, MPIDI_PART_REQUEST(part_sreq, rank),
+        CH4_CALL(am_isend_reply(part_sreq->comm, MPIDI_PART_REQUEST(part_sreq, u.send.dest),
                                 MPIDIG_PART_SEND_DATA,
                                 &am_hdr, sizeof(am_hdr),
                                 MPIDI_PART_REQUEST(part_sreq, buffer), count,
