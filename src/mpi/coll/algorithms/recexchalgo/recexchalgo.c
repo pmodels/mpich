@@ -45,10 +45,8 @@ int MPII_Recexchalgo_start(int rank, int nranks, int k, MPII_Recexchalgo_t *rece
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    recexch->step1_recvfrom = NULL;
-    recexch->nbr_bufs = NULL;
-    recexch->is_commutative = 0;
-    recexch->myidxes = NULL;
+    memset(recexch, 0, sizeof(*recexch));
+    recexch->k = k;
 
     if (nranks <= k) {
         /* trivial case, only step 1 and step 3 */
@@ -60,12 +58,14 @@ int MPII_Recexchalgo_start(int rank, int nranks, int k, MPII_Recexchalgo_t *rece
             recexch->step1_sendto = nranks - 1;
         } else {
             int n = nranks - 1;
+            recexch->step1_sendto = -1;
             recexch->step1_nrecvs = n;
             if (n > 0) {
                 recexch->step1_recvfrom = (int *) MPL_malloc(sizeof(int) * n, MPL_MEM_COLL);
                 MPIR_ERR_CHKANDJUMP(!recexch->step1_recvfrom, mpi_errno, MPI_ERR_OTHER, "**nomem");
+                /* to accomodate immutable op, we need accumulate from right side */
                 for (int i = 0; i < n; i++) {
-                    recexch->step1_recvfrom[i] = nranks - 1;
+                    recexch->step1_recvfrom[i] = i;
                 }
             }
         }
@@ -102,39 +102,36 @@ int MPII_Recexchalgo_start(int rank, int nranks, int k, MPII_Recexchalgo_t *rece
 
     recexch->T = T;
 
-    recexch->step1_nrecvs = 0;
-
     /* Step 1 */
+    recexch->step1_sendto = -1;
     if (rank < T) {
         if (rank % k != (k - 1)) {
             /* I am a non-participating rank */
-            recexch->step1_nrecvs = 0;
             recexch->step1_sendto = MPL_MIN(rank + (k - 1 - rank % k), T);
             recexch->in_step2 = false;
             newrank = -1;
         } else {
             recexch->step1_nrecvs = k - 1;
-            recexch->step1_recvfrom = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
-            MPIR_ERR_CHKANDJUMP(!recexch->step1_recvfrom, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-            for (int i = 0; i < k - 1; i++) {
-                recexch->step1_recvfrom[i] = rank - i - 1;
-            }
-
             recexch->in_step2 = true;
             newrank = rank / k;
         }
     } else if (rank == T) {
         recexch->step1_nrecvs = T % k;
-        for (int i = 0; recexch->step1_nrecvs; i++) {
-            recexch->step1_recvfrom[i] = T - 1 - i;
-        }
-
         recexch->in_step2 = true;
         newrank = rank - rem;
     } else {
         recexch->in_step2 = true;
         newrank = rank - rem;
+    }
+
+    if (recexch->step1_nrecvs > 0) {
+        int n = recexch->step1_nrecvs;
+        recexch->step1_recvfrom = (int *) MPL_malloc(n * sizeof(int), MPL_MEM_COLL);
+        MPIR_ERR_CHKANDJUMP(!recexch->step1_recvfrom, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+        for (int i = 0; i < n; i++) {
+            recexch->step1_recvfrom[i] = rank - n + i;
+        }
     }
 
     /* Step 2 */

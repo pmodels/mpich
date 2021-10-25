@@ -39,9 +39,9 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf, void *rec
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* participating rank */
+        int reduce_id = -1;
+        int recv_id = -1;
         for (int i = 0; i < recexch->step1_nrecvs; i++) {
-            int reduce_id = -1;
-            int recv_id = -1;
             int vtcs[2];
 
             int nbr = recexch->step1_recvfrom[i];
@@ -54,7 +54,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf, void *rec
             } else {
                 /* serial irecv */
                 nbr_buf = recexch->nbr_bufs[0];
-                vtcs[0] = recv_id;
+                vtcs[0] = reduce_id;
             }
 
             mpi_errno = MPIR_TSP_sched_irecv(nbr_buf, count, datatype,
