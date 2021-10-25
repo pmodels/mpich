@@ -16,6 +16,7 @@ extern "C" {
 
 /* Define routines for integer sort */
 void MPL_sort_int_array(int *arr, int n);
+void MPL_reverse_int_array(int *arr, int n);
 
 /* *INDENT-ON* */
 #if defined(__cplusplus)

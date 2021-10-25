@@ -30,3 +30,13 @@ void MPL_sort_int_array(int *arr, int n)
     }
 #endif
 }
+
+void MPL_reverse_int_array(int *arr, int n)
+{
+    for (int i = 0; i < n / 2; i++) {
+        int j = n - 1 - i;
+        int tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+    }
+}
