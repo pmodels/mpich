@@ -624,7 +624,7 @@ def get_algo_extra_args(algo, kind):
 def get_algo_extra_params(algo):
     extra_args = []
     if 'extra_const_params' in algo:
-        t = re.sub(r'=\S+', '', algo['extra_const_params'])
+        t = re.sub(r'=[^,\s]+', '', algo['extra_const_params'])
         extra_args.extend(t.replace(' ', '').split(','))
     extra_args.extend(algo['extra_params'].replace(' ', '').split(','))
     extra_params = []
