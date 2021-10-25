@@ -447,7 +447,7 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
     /* check if there was any fence operation and add appropriate dependencies.
      * The application will never explicitly specify a dependency on it,
      * the transport has to make sure that the dependency on the fence operation is met */
-    if (sched->last_fence != -1 && sched->last_fence != vtx_id && n_in_vtcs == 0) {
+    if (sched->last_fence != -1 && sched->last_fence != vtx_id) {
         /* add vtx as outgoing vtx of last_fence */
         vtx_t *sched_fence = (vtx_t *) utarray_eltptr(&sched->vtcs, sched->last_fence);
         MPIR_Assert(sched_fence != NULL);
