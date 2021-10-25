@@ -3340,11 +3340,13 @@ if test "$enable_f77" = yes ; then
         len_integer="04"
     fi
     MPI_INTEGER=0x4c00${len_integer}1b
-    MPI_REAL=0x4c00${len_integer}1c
     MPI_LOGICAL=0x4c00${len_integer}1d
     AC_SUBST(MPI_INTEGER)
-    AC_SUBST(MPI_REAL)
     AC_SUBST(MPI_LOGICAL)
+
+    len_real=`printf "%02x" $pac_cv_f77_sizeof_real`
+    MPI_REAL=0x4c00${len_real}1c
+    AC_SUBST(MPI_REAL)
 
     if test -z "$pac_cv_f77_sizeof_double_precision" ; then
         AC_MSG_ERROR([Unable to configure with Fortran support because configure could not determine the size of a Fortran DOUBLE PRECISION.  Consider setting CROSS_F77_SIZEOF_DOUBLE_PRECISION to the length in bytes of a Fortran DOUBLE PRECISION])
@@ -3437,8 +3439,8 @@ if test "$enable_f77" = yes ; then
     # reals and double precision that are the same size (not valid Fortran,
     # but used by some applications)
 
-    len_2integer=`expr 2 \* $len_integer`
-    len_2real=`expr 2 \* $len_integer`
+    len_2integer=`expr 2 \* $pac_cv_f77_sizeof_integer`
+    len_2real=`expr 2 \* $pac_cv_f77_sizeof_real`
     len_doublecplx=`expr $pac_cv_f77_sizeof_double_precision \* 2`
     if test "$len_doublecplx" = 0 ; then
         # We have a problem
@@ -5216,6 +5218,7 @@ if test "$f08_works" = "yes" ; then
     if test "$enable_romio" = "no" ; then
         cmd="$cmd -no-mpiio"
     fi
+    cmd="$cmd -fint-size=$SIZEOF_F77_INTEGER -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
     AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd"])
 fi
 
