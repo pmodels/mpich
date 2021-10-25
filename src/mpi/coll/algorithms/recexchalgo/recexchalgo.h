@@ -6,12 +6,29 @@
 #ifndef RECEXCHALGO_H_INCLUDED
 #define RECEXCHALGO_H_INCLUDED
 
+typedef struct {
+    int k;
+    int p_of_k;
+    int T;
+    bool in_step2;
+    int step1_sendto;
+    int step1_nrecvs;
+    int *step1_recvfrom;
+    int step2_nphases;
+    int **step2_nbrs;
+
+    int per_nbr_buffer;  /* if false, use a single temporary buffer */
+    void **nbr_bufs;     /* temp buffer allocated with MPIR_TSP_sched_malloc */
+
+    int is_commutative;  /* if false, step2_nbrs are sorted and myidx is set */
+    int *myidxes;          /* for each phase, set to number of nbrs to the left */
+} MPII_Recexchalgo_t;
+
 int MPII_Recexchalgo_init(void);
 int MPII_Recexchalgo_comm_init(MPIR_Comm * comm);
 int MPII_Recexchalgo_comm_cleanup(MPIR_Comm * comm);
-int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_, int *step1_sendto,
-                                   int **step1_recvfrom_, int *step1_nrecvs,
-                                   int ***step2_nbrs_, int *step2_nphases, int *p_of_k_, int *T_);
+int MPII_Recexchalgo_start(int rank, int nranks, int k, MPII_Recexchalgo_t *recexch);
+void MPII_Recexchalgo_finish(MPII_Recexchalgo_t *recexch);
 /* Converts original rank to rank in step 2 of recursive exchange */
 int MPII_Recexchalgo_origrank_to_step2rank(int rank, int rem, int T, int k);
 /* Converts rank in step 2 of recursive exchange to original rank */

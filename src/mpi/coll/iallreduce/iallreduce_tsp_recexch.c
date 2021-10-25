@@ -8,821 +8,395 @@
 #include "recexchalgo.h"
 #include "iallreduce_tsp_recursive_exchange_common.h"
 
-/* Allreduce single buffer and multiple buffer without dtcopy algorithms are an optimization to the existing
- * allreduce recexch algorithms. These two algorithms are decoupled and written as separate algorithms
- * for readability */
-
-/* Routine to schedule a recursive exchange based allreduce using single receive buffer without
- * data copy in step2. Similar to other recursive exchange algorithms, this algorithm also involves "k"
- * partners in every communication phase. Removing the data copy in step2 improves performance but at the cost
- * of increased dependencies. */
-int MPIR_TSP_Iallreduce_sched_intra_single_buffer_without_dtcopy_recexch(const void *sendbuf,
-                                                                         void *recvbuf,
-                                                                         MPI_Aint count,
-                                                                         MPI_Datatype datatype,
-                                                                         MPI_Op op,
-                                                                         MPIR_Comm * comm, int k,
-                                                                         MPIR_TSP_sched_t sched)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_Assert(k == 2);        /* This algorithm will deadlock if the exchange involves more than 2 partners */
-
-    int is_inplace, i;
-    int dtcopy_id = -1;
-    size_t extent;
-    MPI_Aint lb, true_extent;
-    int is_commutative;
-    int nranks, rank;
-    int step1_sendto = -1, step1_nrecvs, *step1_recvfrom;
-    int step2_nphases, **step2_nbrs;
-    int p_of_k, T;
-    int nvtcs, *vtcs;
-    int nbr, phase;
-    int send_id, reduce_id, recv_id;
-    bool in_step2;
-    void *step1_recvbuf = NULL;
-    void *nbr_buffer = NULL;
-    int tag;
-
-    MPIR_FUNC_ENTER;
-
-    is_inplace = (sendbuf == MPI_IN_PLACE);
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
-
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
-    is_commutative = MPIR_Op_is_commutative(op);
-
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-    /* if there is only 1 rank, copy data from sendbuf
-     * to recvbuf and exit */
-    if (nranks == 1) {
-        if (!is_inplace) {
-            int dummy_id;
-            mpi_errno =
-                MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype, sched,
-                                         0, NULL, &dummy_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
-        goto fn_exit;
-    }
-
-    /* get the neighbors, the function allocates the required memory */
-    MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,
-                                   &step1_recvfrom, &step1_nrecvs,
-                                   &step2_nbrs, &step2_nphases, &p_of_k, &T);
-
-    in_step2 = (step1_sendto == -1);    /* whether this rank participates in Step 2 */
-    vtcs = MPL_malloc(sizeof(int) * (step2_nphases) * 2, MPL_MEM_COLL); /* to store graph dependencies */
-    MPIR_Assert(vtcs != NULL);  /* If memory allocation for vtcs fails, MPI will abort. Else MPI would be inconsistent */
-
-
-    if (in_step2 && !is_inplace) {      /* copy the data to recvbuf but only if you are a rank participating in Step 2 */
-        mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, count, datatype,
-                                             recvbuf, count, datatype, sched, 0, NULL, &dtcopy_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "After initial dt copy"));
-    }
-
-    /* Step 1 */
-    if (!in_step2) {
-        /* non-participating rank sends the data to a participating rank */
-        void *buf_to_send;
-        if (is_inplace)
-            buf_to_send = recvbuf;
-        else
-            buf_to_send = (void *) sendbuf;
-        int dummy_id;
-        mpi_errno =
-            MPIR_TSP_sched_isend(buf_to_send, count, datatype, step1_sendto, tag, comm, sched, 0,
-                                 NULL, &dummy_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-    } else {    /* Step 2 participating rank */
-        step1_recvbuf = MPIR_TSP_sched_malloc(count * extent, sched);
-        MPIR_Assert(step1_recvbuf != NULL);
-
-        for (i = 0; i < step1_nrecvs; i++) {    /* participating rank gets data from non-partcipating ranks */
-            /* recv dependencies */
-            nvtcs = 0;
-            if (i != 0) {
-                vtcs[nvtcs++] = reduce_id;
-                MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                (MPL_DBG_FDEST, "step1 recv depend on reduce_id %d", reduce_id));
-            }
-            mpi_errno = MPIR_TSP_sched_irecv(step1_recvbuf, count, datatype,
-                                             step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs,
-                                             &recv_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-            /* setup reduce dependencies */
-            nvtcs = 1;
-            vtcs[0] = recv_id;
-            if (i == 0 && !is_inplace)
-                vtcs[nvtcs++] = dtcopy_id;
-            mpi_errno = MPIR_TSP_sched_reduce_local(step1_recvbuf, recvbuf, count,
-                                                    datatype, op, sched, nvtcs, vtcs, &reduce_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
-    }
-
-    /* Step 2 */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Start Step2"));
-
-    /* allocate memory for receive buffers */
-    if (in_step2) {
-        nbr_buffer = step1_recvbuf;
-        MPIR_Assert(nbr_buffer != NULL);
-    }
-
-    for (phase = 0; phase < step2_nphases && step1_sendto == -1; phase++) {
-
-        nbr = step2_nbrs[phase][0];
-        /* send data to all the neighbors */
-        nvtcs = 0;
-        if ((phase == 0 && step1_nrecvs > 0) || phase != 0) {
-            vtcs[nvtcs++] = reduce_id;
-        } else if (phase == 0 && in_step2 && !is_inplace) {
-            vtcs[nvtcs++] = dtcopy_id;
-        }
-
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST, "sending data to %d. I'm dependent on nvtcs %d", nbr,
-                         nvtcs));
-        mpi_errno =
-            MPIR_TSP_sched_isend(recvbuf, count, datatype, nbr, tag, comm, sched, nvtcs, vtcs,
-                                 &send_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-
-        /* receive and reduce data from the neighbors to the left */
-        nvtcs = 0;
-        if ((phase == 0 && step1_nrecvs > 0) || phase != 0) {
-            vtcs[nvtcs++] = reduce_id;
-        }
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST,
-                         "receiving data to %d. I'm dependent on nvtcs %d vtcs %d",
-                         nbr, nvtcs, vtcs[0]));
-        mpi_errno =
-            MPIR_TSP_sched_irecv(nbr_buffer, count, datatype, nbr, tag, comm, sched, nvtcs, vtcs,
-                                 &recv_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-
-        nvtcs = 2;
-        vtcs[0] = recv_id;
-        vtcs[1] = send_id;
-
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST,
-                         "reducing data with count %ld dependent %d nvtcs", count, nvtcs));
-        if (is_commutative) {
-            mpi_errno =
-                MPIR_TSP_sched_reduce_local(nbr_buffer, recvbuf, count, datatype, op,
-                                            sched, nvtcs, vtcs, &reduce_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        } else {
-            mpi_errno =
-                MPIR_TSP_sched_reduce_local(recvbuf, nbr_buffer, count, datatype, op,
-                                            sched, nvtcs, vtcs, &reduce_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-            mpi_errno =
-                MPIR_TSP_sched_localcopy(nbr_buffer, count, datatype, recvbuf, count,
-                                         datatype, sched, 1, &reduce_id, &reduce_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
-    }
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "After Step 2"));
-
-    /* Step 3: This is reverse of Step 1. Ranks that participated in Step 2
-     * send the data to non-partcipating ranks */
-    if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
-        int dummy_id;
-        mpi_errno =
-            MPIR_TSP_sched_irecv(recvbuf, count, datatype, step1_sendto, tag, comm, sched, 0, NULL,
-                                 &dummy_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-    } else {
-        /* Wait for the last reduce to complete */
-        nvtcs = 1;
-        vtcs[0] = reduce_id;
-        for (i = 0; i < step1_nrecvs; i++) {
-            int dummy_id;
-            mpi_errno =
-                MPIR_TSP_sched_isend(recvbuf, count, datatype, step1_recvfrom[i], tag, comm, sched,
-                                     nvtcs, vtcs, &dummy_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
-    }
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Done Step 3"));
-
-    /* free all allocated memory for storing nbrs */
-    for (i = 0; i < step2_nphases; i++)
-        MPL_free(step2_nbrs[i]);
-    MPL_free(step2_nbrs);
-    MPL_free(step1_recvfrom);
-    MPL_free(vtcs);
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* Routine to schedule a recursive exchange based allreduce using separate receive buffer
- * for each partner and in each phase and without data copy in step2.
- * Removing the data copy improves performance but at the cost
- * of increased dependencies. */
-int MPIR_TSP_Iallreduce_sched_intra_multiple_buffer_without_dtcopy_recexch(const void *sendbuf,
-                                                                           void *recvbuf,
-                                                                           MPI_Aint count,
-                                                                           MPI_Datatype datatype,
-                                                                           MPI_Op op,
-                                                                           MPIR_Comm * comm, int k,
-                                                                           MPIR_TSP_sched_t sched)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    int is_inplace, i, j;
-    int dtcopy_id = -1;
-    size_t extent;
-    MPI_Aint lb, true_extent;
-    int is_commutative;
-    int nranks, rank;
-    int step1_sendto = -1, step1_nrecvs, *step1_recvfrom;
-    int step2_nphases, **step2_nbrs;
-    int p_of_k, T;
-    int buf = 0;
-    int nvtcs, step1_id, *recv_id, *vtcs;
-    int myidx, nbr, phase;
-    int counter = 0;
-    int *reduce_id, imcast_id;
-    bool in_step2;
-    void **step1_recvbuf = NULL;
-    void **nbr_buffer = NULL;
-    int tag;
-
-    MPIR_FUNC_ENTER;
-
-    is_inplace = (sendbuf == MPI_IN_PLACE);
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
-
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
-    is_commutative = MPIR_Op_is_commutative(op);
-
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-    /* if there is only 1 rank, copy data from sendbuf
-     * to recvbuf and exit */
-    if (nranks == 1) {
-        if (!is_inplace) {
-            int dummy_id;
-            mpi_errno =
-                MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype, sched,
-                                         0, NULL, &dummy_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
-        goto fn_exit;
-    }
-
-    /* get the neighbors, the function allocates the required memory */
-    MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,
-                                   &step1_recvfrom, &step1_nrecvs,
-                                   &step2_nbrs, &step2_nphases, &p_of_k, &T);
-
-    in_step2 = (step1_sendto == -1);    /* whether this rank participates in Step 2 */
-    reduce_id = (int *) MPL_malloc(sizeof(int) * k, MPL_MEM_COLL);      /* to store reduce vertex ids */
-    recv_id = (int *) MPL_malloc(sizeof(int) * step2_nphases * (k - 1), MPL_MEM_COLL);  /* to store receive vertex ids */
-    vtcs = MPL_malloc(sizeof(int) * (step2_nphases) * k, MPL_MEM_COLL); /* to store graph dependencies */
-    /* If memory allocation fails here, MPI will abort. Else MPI would be inconsistent */
-    MPIR_Assert(reduce_id != NULL && recv_id != NULL && vtcs != NULL);
-
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Beforeinitial dt copy"));
-    if (in_step2 && !is_inplace) {      /* copy the data to recvbuf but only if you are a rank participating in Step 2 */
-        mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, count, datatype,
-                                             recvbuf, count, datatype, sched, 0, NULL, &dtcopy_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-    }
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "After initial dt copy"));
-
-    /* Step 1 */
-    if (!in_step2) {
-        /* non-participating rank sends the data to a participating rank */
-        void *buf_to_send;
-        if (is_inplace)
-            buf_to_send = recvbuf;
-        else
-            buf_to_send = (void *) sendbuf;
-        int dummy_id;
-        mpi_errno =
-            MPIR_TSP_sched_isend(buf_to_send, count, datatype, step1_sendto, tag, comm, sched,
-                                 0, NULL, &dummy_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-    } else {    /* Step 2 participating rank */
-        step1_recvbuf = (void **) MPL_malloc(sizeof(void *) * step1_nrecvs, MPL_MEM_COLL);
-        MPIR_Assert(step1_recvbuf != NULL);
-
-        for (i = 0; i < step1_nrecvs; i++) {    /* participating rank gets data from non-partcipating ranks */
-            step1_recvbuf[i] = MPIR_TSP_sched_malloc(count * extent, sched);
-
-            /* recv dependencies */
-            nvtcs = 0;
-            mpi_errno = MPIR_TSP_sched_irecv(step1_recvbuf[i], count, datatype,
-                                             step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs,
-                                             &recv_id[i]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-            /* setup reduce dependencies */
-            nvtcs = 1;
-            vtcs[0] = recv_id[i];
-            if (is_commutative) {
-                if (!is_inplace) {      /* wait for the data to be copied to recvbuf */
-                    vtcs[nvtcs++] = dtcopy_id;
-                }
-            } else {    /* if not commutative */
-                /* wait for datacopy to complete if i==0 && !is_inplace else wait for previous reduce */
-                if (i == 0 && !is_inplace)
-                    vtcs[nvtcs++] = dtcopy_id;
-                else if (i != 0)
-                    vtcs[nvtcs++] = reduce_id[i - 1];
-            }
-            mpi_errno = MPIR_TSP_sched_reduce_local(step1_recvbuf[i], recvbuf, count,
-                                                    datatype, op, sched, nvtcs, vtcs,
-                                                    &reduce_id[i]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
-    }
-
-    mpi_errno = MPIR_TSP_sched_sink(sched, &step1_id);  /* sink for all the tasks up to end of Step 1 */
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-    /* Step 2 */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Start Step2"));
-
-    /* allocate memory for receive buffers */
-    nbr_buffer = (void **) MPL_malloc(sizeof(void *) * step2_nphases * (k - 1), MPL_MEM_COLL);
-    MPIR_Assert(nbr_buffer != NULL);
-    buf = 0;
-    for (i = 0; i < step2_nphases; i++) {
-        for (j = 0; j < (k - 1); j++, buf++) {
-            nbr_buffer[buf] = MPIR_TSP_sched_malloc(count * extent, sched);
-        }
-    }
-
-    buf = 0;
-    for (phase = 0; phase < step2_nphases && step1_sendto == -1; phase++) {
-        if (!is_commutative) {
-            /* sort the neighbor list so that receives can be posted in order */
-#if defined(HAVE_QSORT)
-            qsort(step2_nbrs[phase], k - 1, sizeof(int), MPII_Algo_compare_int);
-#else
-            MPIR_insertion_sort(step2_nbrs[phase], k - 1);
-#endif
-        }
-        /* myidx is the index in the neighbors list such that
-         * all neighbors before myidx have ranks less than my rank
-         * and neighbors at and after myidx have rank greater than me.
-         * This is useful only in the non-commutative case. */
-        myidx = 0;
-        /* send data to all the neighbors */
-        if (phase == 0) {
-            nvtcs = 1;
-            vtcs[0] = step1_id;
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "phase is 0"));
-        } else if (is_commutative) {    /* wait for all the previous receives to have completed */
-            nvtcs = 0;
-            for (j = 0; j < k - 1; j++)
-                vtcs[nvtcs++] = reduce_id[j];
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "Depend on all reduces (%d)", nvtcs));
-        } else {        /* if it is not commutative or if there is only one recv buffer */
-            /*just wait for the last recv_reduce to complete as recv_reduce happen in order */
-            nvtcs = 1;
-            vtcs[0] = reduce_id[k - 2];
-        }
-
-        if (!is_commutative)
-            for (i = 0; i < k - 1; i++) {
-                nbr = step2_nbrs[phase][i];
-                if (rank > nbr) {
-                    myidx = i + 1;
-                }
-            }
-        mpi_errno =
-            MPIR_TSP_sched_imcast(recvbuf, count, datatype, step2_nbrs[phase], k - 1, tag, comm,
-                                  sched, nvtcs, vtcs, &imcast_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST, "sending imcast to %d brs. I'm dependent on nvtcs %d",
-                         k - 1, nvtcs));
-
-        /* receive and reduce data from the neighbors to the left */
-        for (i = myidx - 1, counter = 0; i >= 0; i--, counter++, buf++) {
-            nbr = step2_nbrs[phase][i];
-            nvtcs = 0;
-            mpi_errno =
-                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, sched, nvtcs,
-                                     vtcs, &recv_id[buf]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-
-            nvtcs = 1;
-            vtcs[0] = recv_id[buf];
-            /*If no dtcopy, reduce should wait on all previous phase sends to complete */
-            if (counter == 0 || is_commutative) {
-                vtcs[nvtcs++] = imcast_id;
-            } else {
-                vtcs[nvtcs++] = reduce_id[counter - 1];
-            }
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST,
-                             "reducing data with count %ld dependent %d nvtcs counter %d",
-                             count, nvtcs, counter));
-            mpi_errno =
-                MPIR_TSP_sched_reduce_local(nbr_buffer[buf], recvbuf, count, datatype, op,
-                                            sched, nvtcs, vtcs, &reduce_id[counter]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-
-        }
-
-        /* receive and reduce data from the neighbors to the right */
-        for (i = myidx; i < k - 1; i++, counter++, buf++) {
-            nbr = step2_nbrs[phase][i];
-            nvtcs = 0;
-            mpi_errno =
-                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, sched, nvtcs,
-                                     vtcs, &recv_id[buf]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-
-            nvtcs = 1;
-            vtcs[0] = recv_id[buf];
-            /*If no dtcopy, reduce should wait on all previous phase sends to complete */
-            if (counter == 0 || is_commutative) {
-                vtcs[nvtcs++] = imcast_id;
-            } else {
-                vtcs[nvtcs++] = reduce_id[counter - 1];
-            }
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST,
-                             "reducing data with count %ld dependent %d nvtcs counter %d right neighbor",
-                             count, nvtcs, counter));
-            if (is_commutative) {
-                mpi_errno =
-                    MPIR_TSP_sched_reduce_local(nbr_buffer[buf], recvbuf, count, datatype, op,
-                                                sched, nvtcs, vtcs, &reduce_id[counter]);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-            } else {
-                mpi_errno =
-                    MPIR_TSP_sched_reduce_local(recvbuf, nbr_buffer[buf], count, datatype, op,
-                                                sched, nvtcs, vtcs, &reduce_id[counter]);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-                mpi_errno =
-                    MPIR_TSP_sched_localcopy(nbr_buffer[buf], count, datatype, recvbuf, count,
-                                             datatype, sched, 1, &reduce_id[counter],
-                                             &reduce_id[counter]);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-            }
-        }
-    }
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "After Step 2"));
-
-    /* Step 3: This is reverse of Step 1. Ranks that participated in Step 2
-     * send the data to non-partcipating ranks */
-    if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
-        int dummy_id;
-        mpi_errno =
-            MPIR_TSP_sched_irecv(recvbuf, count, datatype, step1_sendto, tag, comm, sched, 0, NULL,
-                                 &dummy_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-    } else {
-        for (i = 0; i < step1_nrecvs; i++) {
-            if (is_commutative) {
-                /* If commutative, wait for all the prev reduce calls to complete
-                 * since they can happen in any order */
-                nvtcs = k - 1;
-                MPIR_Localcopy(reduce_id, k - 1, MPI_INT, vtcs, k - 1, MPI_INT);
-            } else {
-                /* If non commutative, wait for the last reduce to complete, as they happen in sequential order */
-                nvtcs = 1;
-                vtcs[0] = reduce_id[k - 2];
-            }
-            int dummy_id;
-            mpi_errno =
-                MPIR_TSP_sched_isend(recvbuf, count, datatype, step1_recvfrom[i], tag, comm, sched,
-                                     nvtcs, vtcs, &dummy_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
-    }
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Done Step 3"));
-
-    /* free all allocated memory for storing nbrs */
-    for (i = 0; i < step2_nphases; i++)
-        MPL_free(step2_nbrs[i]);
-    MPL_free(step2_nbrs);
-    MPL_free(step1_recvfrom);
-    MPL_free(reduce_id);
-    MPL_free(recv_id);
-    MPL_free(vtcs);
-    MPL_free(nbr_buffer);
-    if (in_step2)
-        MPL_free(step1_recvbuf);
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
+static int alloc_nbr_bufs(int n, MPI_Aint dt_size, int per_nbr_buffer,
+                          MPII_Recexchalgo_t * recexch,
+                          MPIR_TSP_sched_t sched);
+static void *get_nbr_buf(MPII_Recexchalgo_t *recexch, int phase, int i, int per_nbr_buffer);
+static int prepare_non_commutative(MPII_Recexchalgo_t *recexch, int rank);
+static int do_step2_recv_and_reduce(void *recvbuf,
+                                    MPI_Aint count, MPI_Datatype datatype, MPI_Op op, 
+                                    int tag, MPIR_Comm * comm, MPIR_TSP_sched_t sched,
+                                    MPII_Recexchalgo_t *recexch, int phase, int i,
+                                    int pre_reduce_id, int last_reduce_id, int *vtx_out);
+static int do_step2(void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
+                    MPI_Op op, int tag, MPIR_Comm * comm, MPI_Aint dt_size,
+                    MPIR_TSP_sched_t sched, MPII_Recexchalgo_t *recexch,
+                    int pre_reduce_id, int do_dtcopy);
+static int iallreduce_sched_intra_recexch_zero(MPIR_Comm * comm, int k, MPIR_TSP_sched_t sched);
 
 /* Routine to schedule a recursive exchange based allreduce */
 int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                                            MPI_Datatype datatype, MPI_Op op,
-                                            MPIR_Comm * comm, int per_nbr_buffer, int k,
+                                            MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                            int per_nbr_buffer, int do_dtcopy, int k,
                                             MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-    int is_inplace, i, j;
-    int dtcopy_id = -1;
-    size_t extent;
-    MPI_Aint lb, true_extent;
-    int is_commutative;
-    int nranks, rank;
-    int step1_sendto = -1, step1_nrecvs = 0, *step1_recvfrom;
-    int step2_nphases = 0, **step2_nbrs;
-    int p_of_k, T;
-    int buf = 0;
-    int nvtcs, step1_id, *recv_id, *vtcs;
-    int myidx, nbr, phase;
-    int counter = 0;
-    int *reduce_id, imcast_id;
-    bool in_step2;
-    void *tmp_buf;
-    void **step1_recvbuf = NULL;
-    void **nbr_buffer;
-    int tag, vtx_id;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-
     MPIR_FUNC_ENTER;
 
-    is_inplace = (sendbuf == MPI_IN_PLACE);
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    if (count == 0) {
+        mpi_errno = iallreduce_sched_intra_recexch_zero(comm, k, sched);
+        goto fn_exit;
+    } 
 
+    int is_inplace = (sendbuf == MPI_IN_PLACE);
+    int is_commutative = MPIR_Op_is_commutative(op);
+    int nranks = MPIR_Comm_size(comm);
+    int rank = MPIR_Comm_rank(comm);
+
+    MPI_Aint lb, extent, true_extent, dt_size;
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
-    is_commutative = MPIR_Op_is_commutative(op);
+    dt_size = count * extent;
 
-    tmp_buf = MPIR_TSP_sched_malloc(count * extent, sched);
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
+    int tag;
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
 
-    /* get the neighbors, the function allocates the required memory */
-    MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,
-                                   &step1_recvfrom, &step1_nrecvs,
-                                   &step2_nbrs, &step2_nphases, &p_of_k, &T);
-    in_step2 = (step1_sendto == -1);    /* whether this rank participates in Step 2 */
-    reduce_id = (int *) MPL_malloc(sizeof(int) * k, MPL_MEM_COLL);      /* to store reduce vertex ids */
-    recv_id = (int *) MPL_malloc(sizeof(int) * step2_nphases * (k - 1), MPL_MEM_COLL);  /* to store receive vertex ids */
-    vtcs = MPL_malloc(sizeof(int) * (step2_nphases) * k, MPL_MEM_COLL); /* to store graph dependencies */
-    MPIR_Assert(reduce_id != NULL && recv_id != NULL && vtcs != NULL);
+    MPII_Recexchalgo_t recexch;
+    MPII_Recexchalgo_start(rank, nranks, k, &recexch);
 
-    if (in_step2 && !is_inplace && count > 0) { /* copy the data to recvbuf but only if you are a rank participating in Step 2 */
+    /* allocate memory for receive buffers */
+    mpi_errno = alloc_nbr_bufs(recexch.step2_nphases * (k - 1), dt_size,
+                               per_nbr_buffer, &recexch, sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (!is_commutative) {
+        prepare_non_commutative(&recexch, rank);
+    }
+
+    int dtcopy_id = -1;
+    if (recexch.in_step2 && !is_inplace) {
         mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, count, datatype,
                                              recvbuf, count, datatype, sched, 0, NULL, &dtcopy_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* Step 1 */
-    MPIR_TSP_Iallreduce_sched_intra_recexch_step1(sendbuf, recvbuf, count,
-                                                  datatype, op, is_commutative,
-                                                  tag, extent, dtcopy_id, recv_id, reduce_id, vtcs,
-                                                  is_inplace, step1_sendto, in_step2, step1_nrecvs,
-                                                  step1_recvfrom, per_nbr_buffer, &step1_recvbuf,
-                                                  comm, sched);
+    /* Step 1 - non-participating ranks send data to participating ranks */
+    mpi_errno = MPIR_TSP_Iallreduce_sched_intra_recexch_step1(sendbuf, recvbuf, count,
+                                                              datatype, op, comm,
+                                                              tag, dt_size, dtcopy_id,
+                                                              &recexch, sched);
 
-    mpi_errno = MPIR_TSP_sched_sink(sched, &step1_id);  /* sink for all the tasks up to end of Step 1 */
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    /* Step 2 */
-    /* allocate memory for receive buffers */
-    nbr_buffer = (void **) MPL_malloc(sizeof(void *) * step2_nphases * (k - 1), MPL_MEM_COLL);
-    MPIR_Assert(nbr_buffer != NULL);
-    buf = 0;
-    if (step2_nphases > 0)
-        nbr_buffer[0] = MPIR_TSP_sched_malloc(count * extent, sched);
-    for (i = 0; i < step2_nphases; i++) {
-        for (j = 0; j < (k - 1); j++, buf++) {
-            if (per_nbr_buffer)
-                nbr_buffer[buf] = MPIR_TSP_sched_malloc(count * extent, sched);
-            else
-                nbr_buffer[buf] = nbr_buffer[0];
-        }
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Step 2 - recursive exchange on power-of-k processes */
+    if (recexch.in_step2) {
+        mpi_errno = do_step2(recvbuf, count, datatype, op, tag, comm, dt_size,
+                             sched, &recexch, dtcopy_id, do_dtcopy);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
-    buf = 0;
-    for (phase = 0; phase < step2_nphases && step1_sendto == -1; phase++) {
-        if (!is_commutative) {
-            /* sort the neighbor list so that receives can be posted in order */
-            MPL_sort_int_array(step2_nbrs[phase], k - 1);
-        }
-        /* copy the data to a temporary buffer so that sends ands recvs
-         * can be posted simultaneously */
-        if (count != 0) {
-            if (phase == 0) {   /* wait for Step 1 to complete */
-                nvtcs = 1;
-                vtcs[0] = step1_id;
-            } else {
-                /* wait for the previous sends to complete */
-                vtcs[0] = imcast_id;
-                nvtcs = 1;
-                if (is_commutative && per_nbr_buffer == 1) {
-                    /* wait for all the previous reductions to complete */
-                    MPIR_Localcopy(reduce_id, k - 1, MPI_INT, vtcs + nvtcs, k - 1, MPI_INT);
-                    nvtcs += k - 1;
-                } else {        /* if it is not commutative or if there is only one recv buffer */
-                    /* just wait for the last reduce to complete as reductions happen in sequential order */
-                    vtcs[nvtcs++] = reduce_id[k - 2];
-                }
-            }
-            mpi_errno =
-                MPIR_TSP_sched_localcopy(recvbuf, count, datatype, tmp_buf, count, datatype, sched,
-                                         nvtcs, vtcs, &dtcopy_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+    /* Step 3: participating ranks send reduced data to non-participating ranks */
+    mpi_errno = MPIR_TSP_Iallreduce_sched_intra_recexch_step3(recvbuf, count, datatype,
+                                                              comm, tag, &recexch, sched);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        }
-        /* myidx is the index in the neighbors list such that
-         * all neighbors before myidx have ranks less than my rank
-         * and neighbors at and after myidx have rank greater than me.
-         * This is useful only in the non-commutative case. */
-        myidx = 0;
-        /* send data to all the neighbors */
-        if (count == 0) {
-            if (phase == 0) {
-                nvtcs = 1;
-                vtcs[0] = step1_id;
-                MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "count and phase are 0"));
-            } else {    /* wait for all the previous receives to have completed */
-                MPIR_Localcopy(recv_id, phase * (k - 1), MPI_INT, vtcs, phase * (k - 1), MPI_INT);
-                nvtcs = phase * (k - 1);
-                MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                (MPL_DBG_FDEST, "count 0. Depend on all previous %d recvs.",
-                                 nvtcs));
-            }
-        } else {
-            nvtcs = 1;
-            vtcs[0] = dtcopy_id;
-        }
-
-        if (!is_commutative) {
-            for (i = 0; i < k - 1; i++) {
-                nbr = step2_nbrs[phase][i];
-                if (rank > nbr) {
-                    myidx = i + 1;
-                }
-            }
-        }
-        mpi_errno =
-            MPIR_TSP_sched_imcast(tmp_buf, count, datatype, step2_nbrs[phase], k - 1, tag, comm,
-                                  sched, nvtcs, vtcs, &imcast_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST, "sending imcast to %d brs. I'm dependent on nvtcs %d",
-                         k - 1, nvtcs));
-
-        /* receive and reduce data from the neighbors to the left */
-        for (i = myidx - 1, counter = 0; i >= 0; i--, counter++, buf++) {
-            nbr = step2_nbrs[phase][i];
-            nvtcs = 0;
-            if (count != 0 && per_nbr_buffer == 0 && (phase != 0 || counter != 0)) {
-                vtcs[nvtcs++] = (counter == 0) ? reduce_id[k - 2] : reduce_id[counter - 1];
-            }
-            mpi_errno =
-                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, sched, nvtcs,
-                                     vtcs, &recv_id[buf]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-
-            if (count != 0) {
-                nvtcs = 1;
-                vtcs[0] = recv_id[buf];
-                if (counter == 0 || is_commutative) {
-                    vtcs[nvtcs++] = dtcopy_id;
-                } else {
-                    vtcs[nvtcs++] = reduce_id[counter - 1];
-                }
-                mpi_errno =
-                    MPIR_TSP_sched_reduce_local(nbr_buffer[buf], recvbuf, count, datatype, op,
-                                                sched, nvtcs, vtcs, &reduce_id[counter]);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-            }
-
-        }
-
-        /* receive and reduce data from the neighbors to the right */
-        for (i = myidx; i < k - 1; i++, counter++, buf++) {
-            nbr = step2_nbrs[phase][i];
-            nvtcs = 0;
-            if (count != 0 && per_nbr_buffer == 0 && (phase != 0 || counter != 0)) {
-                vtcs[nvtcs++] = (counter == 0) ? reduce_id[k - 2] : reduce_id[counter - 1];
-            }
-            mpi_errno =
-                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, sched, nvtcs,
-                                     vtcs, &recv_id[buf]);
-
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-
-            if (count != 0) {
-                nvtcs = 1;
-                vtcs[0] = recv_id[buf];
-                if (counter == 0 || is_commutative) {
-                    vtcs[nvtcs++] = dtcopy_id;
-                } else {
-                    vtcs[nvtcs++] = reduce_id[counter - 1];
-                }
-                if (is_commutative) {
-                    mpi_errno =
-                        MPIR_TSP_sched_reduce_local(nbr_buffer[buf], recvbuf, count, datatype, op,
-                                                    sched, nvtcs, vtcs, &reduce_id[counter]);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-                } else {
-                    mpi_errno =
-                        MPIR_TSP_sched_reduce_local(recvbuf, nbr_buffer[buf], count, datatype, op,
-                                                    sched, nvtcs, vtcs, &reduce_id[counter]);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-                    mpi_errno =
-                        MPIR_TSP_sched_localcopy(nbr_buffer[buf], count, datatype, recvbuf, count,
-                                                 datatype, sched, 1, &reduce_id[counter], &vtx_id);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-                    reduce_id[counter] = vtx_id;
-                }
-            }
-        }
-    }
-
-    /* Step 3: This is reverse of Step 1. Ranks that participated in Step 2
-     * send the data to non-partcipating ranks */
-    if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
-        mpi_errno =
-            MPIR_TSP_sched_irecv(recvbuf, count, datatype, step1_sendto, tag, comm, sched, 0, NULL,
-                                 &vtx_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-    } else {
-        for (i = 0; i < step1_nrecvs; i++) {
-            if (count == 0) {
-                nvtcs = step2_nphases * (k - 1);
-                MPIR_Localcopy(recv_id, step2_nphases * (k - 1), MPI_INT, vtcs,
-                               step2_nphases * (k - 1), MPI_INT);
-            } else if (is_commutative && per_nbr_buffer == 1) {
-                /* If commutative, wait for all the prev reduce calls to complete
-                 * since they can happen in any order */
-                nvtcs = k - 1;
-                MPIR_Localcopy(reduce_id, k - 1, MPI_INT, vtcs, k - 1, MPI_INT);
-            } else {
-                /* If non commutative, wait for the last reduce to complete, as they happen in sequential order */
-                nvtcs = 1;
-                vtcs[0] = reduce_id[k - 2];
-            }
-            mpi_errno =
-                MPIR_TSP_sched_isend(recvbuf, count, datatype, step1_recvfrom[i], tag, comm, sched,
-                                     nvtcs, vtcs, &vtx_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
-    }
-
-    /* free all allocated memory for storing nbrs */
-    for (i = 0; i < step2_nphases; i++)
-        MPL_free(step2_nbrs[i]);
-    MPL_free(step2_nbrs);
-    MPL_free(step1_recvfrom);
-    MPL_free(reduce_id);
-    MPL_free(recv_id);
-    MPL_free(vtcs);
-    MPL_free(nbr_buffer);
-    if (in_step2)
-        MPL_free(step1_recvbuf);
+    MPII_Recexchalgo_finish(&recexch);
 
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static int prepare_non_commutative(MPII_Recexchalgo_t *recexch, int rank)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int k = recexch->k;
+    int nphases = recexch->step2_nphases;
+    int *myidxes;
+
+    recexch->is_commutative = true;
+    myidxes = (int *) MPL_malloc(nphases * sizeof(int), MPL_MEM_COLL);
+    MPIR_ERR_CHKANDJUMP(!myidxes, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    for (int phase = 0; phase < nphases; phase++) {
+        int *nbrs = recexch->step2_nbrs[phase];
+        MPL_sort_int_array(nbrs, k - 1);
+
+        /* myidx is the index in the neighbors list such that
+        * all neighbors before myidx have ranks less than my rank
+        * and neighbors at and after myidx have rank greater than me.
+        * This is useful only in the non-commutative case. */
+        int myidx = 0;
+        for (int i = 0; i < k - 1; i++) {
+            if (rank > nbrs[i]) {
+                myidx = i + 1;
+            }
+        }
+        myidxes[phase] = myidx;
+
+        /* NOTE: since we are accumulating into recvbuf, in order to
+         * preserve operation order, we need follow the reduction sequence:
+         *     myidx-1, myidx-2, ..., 0, myidx, myidx+1, ..., k-1
+         * Rather than use spearate for-loops, rearrange the list here so 
+         * a single for i=0:k-1 loop will work.
+         */
+        MPL_reverse_int_array(nbrs, myidx);
+    }
+    recexch->myidxes = myidxes;
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int do_step2_recv_and_reduce(void *recvbuf,
+                                    MPI_Aint count, MPI_Datatype datatype, MPI_Op op, 
+                                    int tag, MPIR_Comm * comm, MPIR_TSP_sched_t sched,
+                                    MPII_Recexchalgo_t *recexch, int phase, int i,
+                                    int pre_reduce_id, int last_reduce_id, int *vtx_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int per_nbr_buffer = recexch->per_nbr_buffer;
+    int is_commutative = recexch->is_commutative;
+    int nbr = recexch->step2_nbrs[phase][i];
+    void *nbr_buf = get_nbr_buf(recexch, phase, i, per_nbr_buffer);
+
+    int nvtcs;
+    int vtcs[2];
+
+    /* -- recv from nbr -- */
+    if (per_nbr_buffer) {
+        nvtcs = 0;
+    } else {
+        nvtcs = 1;
+        vtcs[0] = last_reduce_id;
+    }
+        
+    int recv_id;
+    mpi_errno = MPIR_TSP_sched_irecv(nbr_buf, count, datatype,
+                                     nbr, tag, comm, sched,
+                                     nvtcs, vtcs, &recv_id);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* -- reduce_local -- */
+    if (is_commutative) {
+        vtcs[0] = recv_id;
+        vtcs[1] = pre_reduce_id;
+        mpi_errno = MPIR_TSP_sched_reduce_local(nbr_buf, recvbuf, count, datatype, op,
+                                                sched, 2, vtcs, vtx_out);
+    } else {
+        vtcs[0] = recv_id;
+        vtcs[1] = last_reduce_id;
+        if (i < recexch->myidxes[phase]) {
+            /* nbr_buf + recvbuf */
+            mpi_errno = MPIR_TSP_sched_reduce_local(nbr_buf, recvbuf, count, datatype, op,
+                                                    sched, 2, vtcs, vtx_out);
+        } else {
+            /* recvbuf + nbr_buf */
+            /* TODO: instead of reduce and copy, we should just amend reduce_local */
+            mpi_errno = MPIR_TSP_sched_reduce_local(recvbuf, nbr_buf, count, datatype, op,
+                                                    sched, 2, vtcs, vtx_out);
+            MPIR_ERR_CHECK(mpi_errno);
+
+            mpi_errno = MPIR_TSP_sched_localcopy(nbr_buf, count, datatype,
+                                                    recvbuf, count, datatype, sched,
+                                                    1, vtx_out, vtx_out);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int do_step2(void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
+                    MPI_Op op, int tag, MPIR_Comm * comm, MPI_Aint dt_size,
+                    MPIR_TSP_sched_t sched, MPII_Recexchalgo_t *recexch,
+                    int pre_reduce_id, int do_dtcopy)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    int k = recexch->k;
+    int nphases = recexch->step2_nphases;
+
+    int *reduce_ids = MPL_malloc((k - 1) * sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!reduce_ids, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    void *tmp_buf;
+    if (do_dtcopy) {
+        tmp_buf = MPIR_TSP_sched_malloc(dt_size, sched);
+        MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    } else {
+        /* directly send from recvbuf */
+        tmp_buf = recvbuf;
+    }
+
+    int last_reduce_id = pre_reduce_id;
+    int imcast_id = -1;
+    int dtcopy_id = -1;
+    for (int phase = 0; phase < nphases; phase++) {
+        /* -- dtcopy -- */
+        if (do_dtcopy) {
+            int vtcs[2];
+            vtcs[0] = last_reduce_id;
+            vtcs[1] = imcast_id;
+            mpi_errno = MPIR_TSP_sched_localcopy(recvbuf, count, datatype,
+                                                 tmp_buf, count, datatype, sched,
+                                                 2, vtcs, &dtcopy_id);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        /* -- send data to all the neighbors -- */
+        mpi_errno = MPIR_TSP_sched_imcast(tmp_buf, count, datatype,
+                                          recexch->step2_nbrs[phase], k - 1, tag, comm,
+                                          sched, 1, &last_reduce_id, &imcast_id);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* -- recv data and reduce_local -- */
+        int last_reduce_id = -1;
+        for (int i = 0; i < k - 1; i++) {
+            int pre_id;
+            if (do_dtcopy) {
+                /* just depend on the initial in-place copy to finish */
+                pre_id = pre_reduce_id;
+            } else {
+                /* no_dtcopy need wait for imcast finish with recvbuf */
+                pre_id = imcast_id;
+            }
+            mpi_errno = do_step2_recv_and_reduce(recvbuf, count, datatype, op, tag, comm,
+                                                 sched, recexch, phase, i,
+                                                 pre_id, last_reduce_id, &reduce_ids[i]);
+            MPIR_ERR_CHECK(mpi_errno);
+            last_reduce_id = reduce_ids[i];
+        }
+
+        if (recexch->per_nbr_buffer) {
+            /* get a sink dependency on all reduces for this phase */
+            mpi_errno = MPIR_TSP_sched_selective_sink(sched, k - 1, reduce_ids, &last_reduce_id);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+
+  fn_exit:
+    MPL_free(reduce_ids);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int iallreduce_sched_intra_recexch_zero(MPIR_Comm * comm, int k, MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    int nranks = MPIR_Comm_size(comm);
+    int rank = MPIR_Comm_rank(comm);
+
+    /* For correctness, transport based collectives need to get the
+     * tag from the same pool as schedule based collectives */
+    int tag;
+    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+
+    MPII_Recexchalgo_t recexch;
+    MPII_Recexchalgo_start(rank, nranks, k, &recexch);
+
+    /* Step 1 - non-participating ranks send data to participating ranks */
+    mpi_errno = MPIR_TSP_Iallreduce_sched_intra_recexch_step1_zero(comm, tag, &recexch, sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Step 2 */
+    if (recexch.in_step2) {
+        int imcast_id = -1;
+        int *recv_id = MPL_malloc(recexch.step2_nphases * (k - 1) * sizeof(int), MPL_MEM_OTHER);
+        
+        for (int phase = 0; phase < recexch.step2_nphases; phase++) {
+            /* depend on all previous recv */
+            mpi_errno = MPIR_TSP_sched_imcast(NULL, 0, MPI_DATATYPE_NULL,
+                                              recexch.step2_nbrs[phase], k - 1,
+                                              tag, comm, sched,
+                                              phase * (k - 1), recv_id, &imcast_id);
+            MPIR_ERR_CHECK(mpi_errno);
+
+            for (int i = 0; i < k - 1; i++) {
+                mpi_errno = MPIR_TSP_sched_irecv(NULL, 0, MPI_DATATYPE_NULL,
+                                                 recexch.step2_nbrs[phase][i],
+                                                 tag, comm, sched, 0, NULL, &recv_id[i]);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+        }
+        MPL_free(recv_id);
+    }
+
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Step 3: This is reverse of Step 1. Ranks that participated in Step 2
+     * send the data to non-partcipating ranks */
+    mpi_errno = MPIR_TSP_Iallreduce_sched_intra_recexch_step3_zero(comm, tag, &recexch, sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPII_Recexchalgo_finish(&recexch);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int alloc_nbr_bufs(int n, MPI_Aint dt_size, int per_nbr_buffer,
+                          MPII_Recexchalgo_t * recexch,
+                          MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void **bufs = NULL;
+
+    bufs = (void **) MPL_malloc(n * sizeof(void *), MPL_MEM_COLL);
+    MPIR_ERR_CHKANDJUMP(!bufs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    if (!per_nbr_buffer) {
+        /* single buffer */
+        bufs[0] = MPIR_TSP_sched_malloc(dt_size, sched);
+        MPIR_ERR_CHKANDJUMP(!bufs[0], mpi_errno, MPI_ERR_OTHER, "**nomem");
+        for (int i = 1; i < n; i++) {
+            bufs[i] = (char *) bufs[0];
+        }
+    } else {
+        /* multiple buffer */
+        bufs[0] = MPIR_TSP_sched_malloc(dt_size * n, sched);
+        MPIR_ERR_CHKANDJUMP(!bufs[0], mpi_errno, MPI_ERR_OTHER, "**nomem");
+        for (int i = 1; i < n; i++) {
+            bufs[i] = (char *) bufs[0] + dt_size * i;
+        }
+    }
+
+  fn_exit:
+    recexch->per_nbr_buffer = per_nbr_buffer;
+    recexch->nbr_bufs = bufs;
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    if (bufs) {
+        MPL_free(bufs);
+        bufs = NULL;
+    }
+    goto fn_exit;
+}
+
+static void *get_nbr_buf(MPII_Recexchalgo_t *recexch, int phase, int i, int per_nbr_buffer)
+{
+    if (per_nbr_buffer) {
+        int k = recexch->k;
+        return recexch->nbr_bufs[phase * (k - 1) + i];
+    } else {
+        return recexch->nbr_bufs[0];
+    }
 }

@@ -8,6 +8,10 @@
 #include "recexchalgo.h"        /* for MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2 */
 #include "iallreduce_tsp_recursive_exchange_common.h"
 
+/* Recursive-exchange algorithm with radix k
+ * Refer to MPII_Recexchalgo_get_neighbors and its comment for its high level algorithm.
+ */
+
 /* Routine to schedule a recursive exchange based allreduce */
 int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(const void *sendbuf,
                                                                               void *recvbuf,
@@ -34,7 +38,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     int nvtcs, sink_id, *recv_id = NULL, *vtcs = NULL;
     int *send_id = NULL, *reduce_id = NULL;
     MPI_Aint *cnts = NULL, *displs = NULL;
-    bool in_step2 = false;
     void *tmp_recvbuf;
     void **step1_recvbuf = NULL;
     int tag, vtx_id;
@@ -59,11 +62,11 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* get the neighbors, the function allocates the required memory */
-    MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,
-                                   &step1_recvfrom, &step1_nrecvs,
-                                   &step2_nbrs, &step2_nphases, &p_of_k, &T);
-    in_step2 = (step1_sendto == -1);    /* whether this rank participates in Step 2 */
+    MPII_Recexchalgo_t recexch;
+    MPII_Recexchalgo_start(rank, nranks, k, &recexch);
+    recexch.per_nbr_buffer = per_nbr_buffer;
+    recexch.is_commutative = is_commutative;
+
     log_pofk = step2_nphases;
     send_id = (int *) MPL_malloc(sizeof(int) * k, MPL_MEM_COLL);        /* to store send vertex ids */
     reduce_id = (int *) MPL_malloc(sizeof(int) * k, MPL_MEM_COLL);      /* to store reduce vertex ids */
@@ -73,7 +76,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
 
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Beforeinitial dt copy\n"));
-    if (in_step2 && !is_inplace && count > 0) { /* copy the data to tmp_recvbuf but only if you are a rank participating in Step 2 */
+    if (recexch.in_step2 && !is_inplace && count > 0) { /* copy the data to tmp_recvbuf but only if you are a rank participating in Step 2 */
         mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, count, datatype,
                                              recvbuf, count, datatype, sched, 0, NULL, &dtcopy_id);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
@@ -83,11 +86,9 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     per_nbr_buffer = 0;
     /* Step 1 */
     MPIR_TSP_Iallreduce_sched_intra_recexch_step1(sendbuf, recvbuf, count,
-                                                  datatype, op, is_commutative,
-                                                  tag, extent, dtcopy_id, recv_id, reduce_id, vtcs,
-                                                  is_inplace, step1_sendto, in_step2, step1_nrecvs,
-                                                  step1_recvfrom, per_nbr_buffer, &step1_recvbuf,
-                                                  comm, sched);
+                                                  datatype, op, comm, is_commutative,
+                                                  tag, count * extent, dtcopy_id,
+                                                  &recexch, sched);
 
     mpi_errno = MPIR_TSP_sched_sink(sched, &sink_id);   /* sink for all the tasks up to end of Step 1 */
     if (mpi_errno)
@@ -96,7 +97,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     /* Step 2 */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Start Step2"));
 
-    if (in_step2) {
+    if (recexch.in_step2) {
         MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, sizeof(MPI_Aint) * nranks, mpi_errno, "cnts",
                             MPL_MEM_COLL);
         MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, sizeof(MPI_Aint) * nranks, mpi_errno, "displs",
@@ -155,16 +156,12 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    /* free all allocated memory for storing nbrs */
-    for (i = 0; i < step2_nphases; i++)
-        MPL_free(step2_nbrs[i]);
-    MPL_free(step2_nbrs);
-    MPL_free(step1_recvfrom);
+    MPII_Recexchalgo_finish(&recexch);
     MPL_free(send_id);
     MPL_free(reduce_id);
     MPL_free(recv_id);
     MPL_free(vtcs);
-    if (in_step2)
+    if (recexch.in_step2)
         MPL_free(step1_recvbuf);
 
     MPIR_FUNC_EXIT;
