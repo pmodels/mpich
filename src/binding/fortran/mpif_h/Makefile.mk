@@ -8,12 +8,14 @@ EXTRA_DIST += src/binding/fortran/mpif_h/buildiface
 
 mpi_f77_sources += src/binding/fortran/mpif_h/attr_proxy.c
 
-include $(top_srcdir)/src/binding/fortran/mpif_h/Makefile_wrappers.mk
-
 if BUILD_F77_BINDING
-mpi_f77_sources += src/binding/fortran/mpif_h/fdebug.c \
-                src/binding/fortran/mpif_h/setbot.c \
-                src/binding/fortran/mpif_h/setbotf.f
+
+mpi_f77_sources += \
+	src/binding/fortran/mpif_h/fortran_binding.c \
+	src/binding/fortran/mpif_h/fdebug.c \
+	src/binding/fortran/mpif_h/setbot.c \
+	src/binding/fortran/mpif_h/setbotf.f
+
 mpi_sources += src/binding/fortran/mpif_h/statusf2c.c src/binding/fortran/mpif_h/statusc2f.c
 
 # FIXME does AM_CPPFLAGS need to be included elsewhere somehow in the
@@ -21,7 +23,9 @@ mpi_sources += src/binding/fortran/mpif_h/statusf2c.c src/binding/fortran/mpif_h
 AM_CPPFLAGS += -I${main_top_srcdir}/src/binding/fortran/mpif_h
 
 
-noinst_HEADERS += src/binding/fortran/mpif_h/fproto.h src/binding/fortran/mpif_h/mpi_fortimpl.h
+noinst_HEADERS += \
+	src/binding/fortran/mpif_h/fortran_profile.h \
+	src/binding/fortran/mpif_h/mpi_fortimpl.h
 
 # config.status copies src/binding/fortran/mpif_h/mpif.h to src/include (see the relevant
 # AC_CONFIG_COMMANDS in configure.ac), so we need to delete it at distclean time

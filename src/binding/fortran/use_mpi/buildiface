@@ -31,7 +31,6 @@ if (!-s "binding.sub") {
 
 require "$mydir/binding.sub";
 
-$arg_string = join(' ', @ARGV);
 $gDebug = 0;
 
 $prototype_file  = "../../../include/mpi_proto.h";
