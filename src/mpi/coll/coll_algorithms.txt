@@ -320,21 +320,23 @@ iallreduce-intra:
         restrictions: size-ge-pof2, builtin-op
     tsp_recexch_single_buffer
         func_name: recexch
-        extra_const_params: recexch_type=MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER
+        extra_const_params: per_nbr_buffer=0, do_dtcopy=1
         extra_params: k
         cvar_params: RECEXCH_KVAL
     tsp_recexch_multiple_buffer
         func_name: recexch
-        extra_const_params: recexch_type=MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER
+        extra_const_params: per_nbr_buffer=1, do_dtcopy=1
         extra_params: k
         cvar_params: RECEXCH_KVAL
     tsp_recexch_single_buffer_without_dtcopy
-        func_name: single_buffer_without_dtcopy_recexch
+        func_name: recexch
+        extra_const_params: per_nbr_buffer=0, do_dtcopy=0
         extra_params: k
         cvar_params: RECEXCH_KVAL
         restrictions: commutative
     tsp_recexch_multiple_buffer_without_dtcopy
-        func_name: multiple_buffer_without_dtcopy_recexch
+        func_name: recexch
+        extra_const_params: per_nbr_buffer=1, do_dtcopy=0
         extra_params: k
         cvar_params: RECEXCH_KVAL
         restrictions: commutative

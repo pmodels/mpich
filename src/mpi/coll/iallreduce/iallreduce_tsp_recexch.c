@@ -16,13 +16,10 @@
  * data copy in step2. Similar to other recursive exchange algorithms, this algorithm also involves "k"
  * partners in every communication phase. Removing the data copy in step2 improves performance but at the cost
  * of increased dependencies. */
-int MPIR_TSP_Iallreduce_sched_intra_single_buffer_without_dtcopy_recexch(const void *sendbuf,
-                                                                         void *recvbuf,
-                                                                         MPI_Aint count,
-                                                                         MPI_Datatype datatype,
-                                                                         MPI_Op op,
-                                                                         MPIR_Comm * comm, int k,
-                                                                         MPIR_TSP_sched_t sched)
+static int single_buffer_without_dtcopy_recexch(const void *sendbuf, void *recvbuf,
+                                                MPI_Aint count, MPI_Datatype datatype,
+                                                MPI_Op op, MPIR_Comm * comm, int k,
+                                                MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -240,13 +237,10 @@ int MPIR_TSP_Iallreduce_sched_intra_single_buffer_without_dtcopy_recexch(const v
  * for each partner and in each phase and without data copy in step2.
  * Removing the data copy improves performance but at the cost
  * of increased dependencies. */
-int MPIR_TSP_Iallreduce_sched_intra_multiple_buffer_without_dtcopy_recexch(const void *sendbuf,
-                                                                           void *recvbuf,
-                                                                           MPI_Aint count,
-                                                                           MPI_Datatype datatype,
-                                                                           MPI_Op op,
-                                                                           MPIR_Comm * comm, int k,
-                                                                           MPIR_TSP_sched_t sched)
+static int multiple_buffer_without_dtcopy_recexch(const void *sendbuf, void *recvbuf,
+                                                  MPI_Aint count, MPI_Datatype datatype,
+                                                  MPI_Op op, MPIR_Comm * comm, int k,
+                                                  MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -552,8 +546,8 @@ int MPIR_TSP_Iallreduce_sched_intra_multiple_buffer_without_dtcopy_recexch(const
 /* Routine to schedule a recursive exchange based allreduce */
 int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                             MPI_Datatype datatype, MPI_Op op,
-                                            MPIR_Comm * comm, int per_nbr_buffer, int k,
-                                            MPIR_TSP_sched_t sched)
+                                            MPIR_Comm * comm, int per_nbr_buffer, int do_dtcopy,
+                                            int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -579,6 +573,17 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
+
+    if (!do_dtcopy) {
+        if (!per_nbr_buffer) {
+            mpi_errno = single_buffer_without_dtcopy_recexch(sendbuf, recvbuf, count, datatype,
+                                                             op, comm, k, sched);
+        } else {
+            mpi_errno = multiple_buffer_without_dtcopy_recexch(sendbuf, recvbuf, count, datatype,
+                                                               op, comm, k, sched);
+        }
+        goto fn_exit;
+    }
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     nranks = MPIR_Comm_size(comm);
