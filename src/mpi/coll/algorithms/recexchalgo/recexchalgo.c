@@ -40,24 +40,42 @@ int MPII_Recexchalgo_comm_cleanup(MPIR_Comm * comm)
  * participating in Step 2. In Step 3, the ranks that participated in Step 2 send
  * the final data to non-partcipating ranks.
 */
-int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
-                                   int *step1_sendto, int **step1_recvfrom_, int *step1_nrecvs,
-                                   int ***step2_nbrs_, int *step2_nphases, int *p_of_k_, int *T_)
+int MPII_Recexchalgo_start(int rank, int nranks, int k, MPII_Recexchalgo_t * recexch)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, j, k;
-    int p_of_k = 1, log_p_of_k = 0, rem, T, newrank;
-    int **step2_nbrs;
-    int *step1_recvfrom;
-
     MPIR_FUNC_ENTER;
 
-    k = *k_;
-    if (nranks < k)     /* If size of the communicator is less than k, reduce the value of k */
-        k = (nranks > 2) ? nranks : 2;
-    *k_ = k;
+    memset(recexch, 0, sizeof(*recexch));
+    recexch->k = k;
+
+    if (nranks < k) {
+        /* trivial case, only step 1 and step 3 */
+        recexch->k = nranks;
+        recexch->in_step2 = 0;
+        recexch->step2_nphases = 0;
+
+        if (rank < nranks - 1) {
+            recexch->step1_sendto = nranks - 1;
+        } else {
+            int n = nranks - 1;
+            recexch->step1_sendto = -1;
+            recexch->step1_nrecvs = n;
+            if (n > 0) {
+                recexch->step1_recvfrom = (int *) MPL_malloc(sizeof(int) * n, MPL_MEM_COLL);
+                MPIR_ERR_CHKANDJUMP(!recexch->step1_recvfrom, mpi_errno, MPI_ERR_OTHER, "**nomem");
+                /* to accommodate immutable op, we need accumulate from right side */
+                for (int i = 0; i < n; i++) {
+                    recexch->step1_recvfrom[i] = i;
+                }
+            }
+        }
+
+        goto fn_exit;
+    }
 
     /* Calculate p_of_k, p_of_k is the largest power of k that is less than nranks */
+    int p_of_k = 1;
+    int log_p_of_k = 0;
     while (p_of_k <= nranks) {
         p_of_k *= k;
         log_p_of_k++;
@@ -65,20 +83,10 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
     p_of_k /= k;
     log_p_of_k--;
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "allocate memory for storing communication pattern"));
-    step1_recvfrom = *step1_recvfrom_ = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
-    step2_nbrs = *step2_nbrs_ = (int **) MPL_malloc(sizeof(int *) * log_p_of_k, MPL_MEM_COLL);
-    MPIR_Assert(step1_recvfrom != NULL && *step1_recvfrom_ != NULL && step2_nbrs != NULL &&
-                *step2_nbrs_ != NULL);
+    recexch->p_of_k = p_of_k;
+    recexch->step2_nphases = log_p_of_k;
 
-    for (i = 0; i < log_p_of_k; i++) {
-        (*step2_nbrs_)[i] = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
-    }
-
-    *step2_nphases = log_p_of_k;
-
-    rem = nranks - p_of_k;
+    int rem, T, newrank;
     /* rem is the number of ranks that do not particpate in Step 2
      * We need to identify these non-participating ranks. This is done in the following way.
      * The first T ranks are divided into sets of k consecutive ranks each.
@@ -87,49 +95,59 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
      * The non-participating ranks send their data to the participating rank
      * in their corresponding set.
      */
-    T = (rem * k) / (k - 1);
-    *T_ = T;
-    *p_of_k_ = p_of_k;
+    rem = nranks - p_of_k;
 
+    /* since we are adding 1 participating rank with every k - 1 non-participating ranks,
+     * we effectively expand rem by the ration of k / (k - 1).
+     * Note: the extra processes are accounted in T, rem % (k-1) * k / (k-1) == rem % (k-1).
+     * */
+    T = rem * k / (k - 1);
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "step 1 nbr calculation started. T is %d", T));
-    *step1_nrecvs = 0;
-    *step1_sendto = -1;
+    recexch->T = T;
 
     /* Step 1 */
+    recexch->step1_sendto = -1;
     if (rank < T) {
-        if (rank % k != (k - 1)) {      /* I am a non-participating rank */
-            *step1_sendto = rank + (k - 1 - rank % k);  /* partipating rank to send the data to */
-            /* if the corresponding participating rank is not in T,
-             * then send to the Tth rank to preserve non-commutativity */
-            if (*step1_sendto > T - 1)
-                *step1_sendto = T;
-            newrank = -1;       /* tag this rank as non-participating */
-        } else {        /* participating rank */
-            for (i = 0; i < k - 1; i++) {
-                step1_recvfrom[i] = rank - i - 1;
-            }
-            *step1_nrecvs = k - 1;
-            newrank = rank / k; /* this is the new rank amongst the set of participating ranks */
+        if (rank % k != (k - 1)) {
+            /* I am a non-participating rank */
+            recexch->step1_sendto = MPL_MIN(rank + (k - 1 - rank % k), T);
+            recexch->in_step2 = false;
+            newrank = -1;
+        } else {
+            recexch->step1_nrecvs = k - 1;
+            recexch->in_step2 = true;
+            newrank = rank / k;
         }
-    } else {    /* rank >= T */
+    } else if (rank == T) {
+        recexch->step1_nrecvs = T % k;
+        recexch->in_step2 = true;
         newrank = rank - rem;
+    } else {
+        recexch->in_step2 = true;
+        newrank = rank - rem;
+    }
 
-        if (rank == T && (T - 1) % k != k - 1 && T >= 1) {
-            int nsenders = (T - 1) % k + 1;     /* number of ranks sending their data to me in Step 1 */
+    if (recexch->step1_nrecvs > 0) {
+        int n = recexch->step1_nrecvs;
+        recexch->step1_recvfrom = (int *) MPL_malloc(n * sizeof(int), MPL_MEM_COLL);
+        MPIR_ERR_CHKANDJUMP(!recexch->step1_recvfrom, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-            for (j = nsenders - 1; j >= 0; j--) {
-                step1_recvfrom[nsenders - 1 - j] = T - nsenders + j;
-            }
-            *step1_nrecvs = nsenders;
+        for (int i = 0; i < n; i++) {
+            recexch->step1_recvfrom[i] = rank - n + i;
         }
     }
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "step 1 nbr computation completed"));
-
     /* Step 2 */
-    if (*step1_sendto == -1) {  /* calculate step2_nbrs only for participating ranks */
+    if (recexch->in_step2) {
+        recexch->step2_nbrs = (int **) MPL_malloc(sizeof(int *) * log_p_of_k, MPL_MEM_COLL);
+        MPIR_ERR_CHKANDJUMP(!recexch->step2_nbrs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+        for (int i = 0; i < log_p_of_k; i++) {
+            recexch->step2_nbrs[i] = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
+            MPIR_ERR_CHKANDJUMP(!recexch->step2_nbrs[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
+        }
+
+        /* calculate step2_nbrs only for participating ranks */
         int *digit = (int *) MPL_malloc(sizeof(int) * log_p_of_k, MPL_MEM_COLL);
         MPIR_Assert(digit != NULL);
         int temprank = newrank;
@@ -137,7 +155,7 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
         int phase = 0, cbit, cnt, nbr, power;
 
         /* calculate the digits in base k representation of newrank */
-        for (i = 0; i < log_p_of_k; i++)
+        for (int i = 0; i < log_p_of_k; i++)
             digit[i] = 0;
 
         int remainder, i_digit = 0;
@@ -151,24 +169,21 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
         while (mask < p_of_k) {
             cbit = digit[phase];        /* phase_th digit changes in this phase, obtain its original value */
             cnt = 0;
-            for (i = 0; i < k; i++) {   /* there are k-1 neighbors */
+            for (int i = 0; i < k; i++) {       /* there are k-1 neighbors */
                 if (i != cbit) {        /* do not generate yourself as your nieighbor */
                     digit[phase] = i;   /* this gets us the base k representation of the neighbor */
 
                     /* calculate the base 10 value of the neighbor rank */
                     nbr = 0;
                     power = 1;
-                    for (j = 0; j < log_p_of_k; j++) {
+                    for (int j = 0; j < log_p_of_k; j++) {
                         nbr += digit[j] * power;
                         power *= k;
                     }
 
                     /* calculate its real rank and store it */
-                    step2_nbrs[phase][cnt] =
+                    recexch->step2_nbrs[phase][cnt] =
                         (nbr < rem / (k - 1)) ? (nbr * k) + (k - 1) : nbr + rem;
-                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                    (MPL_DBG_FDEST, "step2_nbrs[%d][%d] is %d", phase, cnt,
-                                     step2_nbrs[phase][cnt]));
                     cnt++;
                 }
             }
@@ -182,11 +197,36 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
         MPL_free(digit);
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
+void MPII_Recexchalgo_finish(MPII_Recexchalgo_t * recexch)
+{
+    if (recexch->step1_sendto == -1) {
+        if (recexch->step1_recvfrom) {
+            MPL_free(recexch->step1_recvfrom);
+        }
+    }
+
+    if (recexch->in_step2) {
+        for (int i = 0; i < recexch->step2_nphases; i++) {
+            MPL_free(recexch->step2_nbrs[i]);
+        }
+        MPL_free(recexch->step2_nbrs);
+
+        if (recexch->myidxes) {
+            MPL_free(recexch->myidxes);
+        }
+    }
+
+    if (recexch->nbr_bufs) {
+        MPL_free(recexch->nbr_bufs);
+    }
+}
 
 int MPII_Recexchalgo_origrank_to_step2rank(int rank, int rem, int T, int k)
 {
