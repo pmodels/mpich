@@ -242,7 +242,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
                                              int is_dist_halving, int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_inplace, i;
+    int is_inplace;
     int nranks, rank;
     size_t recv_extent;
     MPI_Aint recv_lb, true_extent;

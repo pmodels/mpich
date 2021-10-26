@@ -545,7 +545,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     int counter = 0;
     int *reduce_id, imcast_id;
     void *tmp_buf;
-    void **step1_recvbuf = NULL;
     void **nbr_buffer;
     int tag, vtx_id;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
@@ -580,6 +579,13 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 
     MPII_Recexchalgo_t recexch;
     MPII_Recexchalgo_start(rank, nranks, k, &recexch);
+    recexch.per_nbr_buffer = per_nbr_buffer;
+    recexch.is_commutative = is_commutative;
+
+    mpi_errno = MPIR_TSP_Iallreduce_recexch_alloc_nbr_bufs(recexch.step2_nphases * (k - 1),
+                                                           count * extent, &recexch, sched);
+    MPIR_ERR_CHECK(mpi_errno);
+    nbr_buffer = recexch.nbr_bufs;
 
     reduce_id = (int *) MPL_malloc(sizeof(int) * k, MPL_MEM_COLL);      /* to store reduce vertex ids */
     recv_id = (int *) MPL_malloc(sizeof(int) * recexch.step2_nphases * (k - 1), MPL_MEM_COLL);  /* to store receive vertex ids */
@@ -594,34 +600,14 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 
     /* Step 1 */
     MPIR_TSP_Iallreduce_sched_intra_recexch_step1(sendbuf, recvbuf, count,
-                                                  datatype, op, is_commutative,
-                                                  tag, extent, dtcopy_id, recv_id, reduce_id, vtcs,
-                                                  is_inplace, recexch.step1_sendto,
-                                                  recexch.in_step2, recexch.step1_nrecvs,
-                                                  recexch.step1_recvfrom, per_nbr_buffer,
-                                                  &recexch.step1_recvbuf, comm, sched);
+                                                  datatype, op, comm,
+                                                  tag, count * extent, dtcopy_id, &recexch, sched);
 
     mpi_errno = MPIR_TSP_sched_sink(sched, &step1_id);  /* sink for all the tasks up to end of Step 1 */
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     /* Step 2 */
-    /* allocate memory for receive buffers */
-    nbr_buffer =
-        (void **) MPL_malloc(sizeof(void *) * recexch.step2_nphases * (k - 1), MPL_MEM_COLL);
-    MPIR_Assert(nbr_buffer != NULL);
-    buf = 0;
-    if (recexch.step2_nphases > 0)
-        nbr_buffer[0] = MPIR_TSP_sched_malloc(count * extent, sched);
-    for (i = 0; i < recexch.step2_nphases; i++) {
-        for (j = 0; j < (k - 1); j++, buf++) {
-            if (per_nbr_buffer)
-                nbr_buffer[buf] = MPIR_TSP_sched_malloc(count * extent, sched);
-            else
-                nbr_buffer[buf] = nbr_buffer[0];
-        }
-    }
-
     buf = 0;
     for (phase = 0; phase < recexch.step2_nphases && recexch.step1_sendto == -1; phase++) {
         if (!is_commutative) {
@@ -796,9 +782,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     MPL_free(reduce_id);
     MPL_free(recv_id);
     MPL_free(vtcs);
-    MPL_free(nbr_buffer);
-    if (recexch.in_step2)
-        MPL_free(step1_recvbuf);
 
   fn_exit:
     MPIR_FUNC_EXIT;
