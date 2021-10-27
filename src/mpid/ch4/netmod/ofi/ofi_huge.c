@@ -156,7 +156,6 @@ static int get_huge_complete(MPIR_Request * rreq)
     wc.len = info->msgsize;
     wc.data = info->origin_rank;
     wc.tag = info->tag;
-    MPIR_Comm *comm_ptr = rreq->comm;
     MPIDI_OFI_recv_event(vni_local, &wc, rreq, MPIDI_OFI_EVENT_GET_HUGE);
 
     MPIDI_OFI_send_control_t ctrl;
