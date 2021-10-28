@@ -324,7 +324,6 @@ algorithms:
                 .MPIR_CVAR_BARRIER_TREE_KVAL=2,3,4,8 
         intra-nonblocking:
             sched_recursive_doubling
-            tsp_recexch
     bcast:
         inter-blocking:
             remote_send_local_bcast
