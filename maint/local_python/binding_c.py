@@ -1308,10 +1308,12 @@ def dump_body_coll(func):
         G.out.append("*request = request_ptr->handle;")
     elif RE.match(r'mpi_neighbor_', func['name'], re.IGNORECASE):
         dump_line_with_break("mpi_errno = %s(%s);" % (mpir_name, args))
+        dump_error_check("")
     else:
         # blocking collectives
         G.out.append("MPIR_Errflag_t errflag = MPIR_ERR_NONE;")
         dump_line_with_break("mpi_errno = %s(%s, &errflag);" % (mpir_name, args))
+        dump_error_check("")
 
 def dump_coll_v_swap(func):
     # -- wrappers to make code cleaner

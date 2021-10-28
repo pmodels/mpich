@@ -149,6 +149,9 @@ static int get_huge_complete(MPIR_Request * rreq)
     int vni_remote = info->vni_src;
     int vni_local = info->vni_dst;
 
+    /* important: save comm_ptr because MPIDI_OFI_recv_event may free the request. */
+    MPIR_Comm *comm_ptr = rreq->comm;
+
     struct fi_cq_tagged_entry wc;
     wc.len = info->msgsize;
     wc.data = info->origin_rank;
