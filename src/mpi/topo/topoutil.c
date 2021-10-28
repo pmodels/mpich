@@ -165,10 +165,16 @@ static int MPIR_Topology_copy_fn(MPI_Comm comm ATTRIBUTE((unused)),
     } else if (old_topology->kind == MPI_DIST_GRAPH) {
         copy_topology->topo.dist_graph.indegree = old_topology->topo.dist_graph.indegree;
         copy_topology->topo.dist_graph.outdegree = old_topology->topo.dist_graph.outdegree;
+        copy_topology->topo.dist_graph.is_weighted = old_topology->topo.dist_graph.is_weighted;
         MPIR_ARRAY_COPY_HELPER(dist_graph, in, indegree);
-        MPIR_ARRAY_COPY_HELPER(dist_graph, in_weights, indegree);
         MPIR_ARRAY_COPY_HELPER(dist_graph, out, outdegree);
-        MPIR_ARRAY_COPY_HELPER(dist_graph, out_weights, outdegree);
+        if (old_topology->topo.dist_graph.is_weighted) {
+            MPIR_ARRAY_COPY_HELPER(dist_graph, in_weights, indegree);
+            MPIR_ARRAY_COPY_HELPER(dist_graph, out_weights, outdegree);
+        } else {
+            copy_topology->topo.dist_graph.in_weights = NULL;
+            copy_topology->topo.dist_graph.out_weights = NULL;
+        }
     }
     /* --BEGIN ERROR HANDLING-- */
     else {
