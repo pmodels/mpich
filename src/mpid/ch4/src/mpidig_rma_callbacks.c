@@ -208,6 +208,7 @@ int MPIDIG_put_dt_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->preq.target_datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -217,6 +218,7 @@ int MPIDIG_acc_dt_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->areq.target_datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -226,6 +228,7 @@ int MPIDIG_get_acc_dt_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->areq.target_datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -1191,8 +1194,6 @@ int MPIDIG_put_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     preq = (MPIR_Request *) msg_hdr->preq_ptr;
     win = preq->u.rma.win;
 
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(preq, req->preq.target_datatype));
-
     MPIDIG_win_remote_cmpl_cnt_decr(win, MPIDIG_REQUEST(preq, u.send.dest));
 
     MPID_Request_complete(preq);
@@ -1221,8 +1222,6 @@ int MPIDIG_acc_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     rreq = (MPIR_Request *) msg_hdr->req_ptr;
     win = rreq->u.rma.win;
 
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, req->areq.target_datatype));
-
     MPIDIG_win_remote_cmpl_cnt_decr(win, MPIDIG_REQUEST(rreq, u.send.dest));
     MPIDIG_win_remote_acc_cmpl_cnt_decr(win, MPIDIG_REQUEST(rreq, u.send.dest));
 
@@ -1249,8 +1248,6 @@ int MPIDIG_get_acc_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_acc_ack);
 
     rreq = (MPIR_Request *) msg_hdr->req_ptr;
-
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, req->areq.target_datatype));
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = get_acc_ack_target_cmpl_cb;
 
