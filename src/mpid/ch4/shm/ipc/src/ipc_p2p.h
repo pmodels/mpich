@@ -219,8 +219,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
     am_hdr.ipc_type = ipc_hdr->ipc_type;
     am_hdr.req_ptr = sreq_ptr;
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     CH4_CALL(am_send_hdr(MPIDIG_REQUEST(rreq, rank), rreq->comm, MPIDI_IPC_ACK,
-                         &am_hdr, sizeof(am_hdr), 0, 0), 1, mpi_errno);
+                         &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
