@@ -27,6 +27,9 @@ static int MPIR_fd_send(int fd, void *buffer, int length)
 
     MPIR_FUNC_ENTER;
 
+    /* setting socket to nonblocking */
+    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
+
     while (length) {
         /* The expectation is that the length of a join message will fit
          * in an int.  For Unixes that define send as returning ssize_t,
@@ -39,7 +42,7 @@ static int MPIR_fd_send(int fd, void *buffer, int length)
 #else
             result = errno;
 #endif
-            if (result == SOCKET_EINTR) {
+            if (result == SOCKET_EINTR || result == EAGAIN || result == EWOULDBLOCK) {
                 continue;
             } else {
                 MPIR_ERR_SET1(mpi_errno, MPI_ERR_INTERN, "**join_send", "**join_send %d", result);
@@ -67,9 +70,12 @@ static int MPIR_fd_recv(int fd, void *buffer, int length)
 
     MPIR_FUNC_ENTER;
 
+    /* setting socket to nonblocking */
+    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
+
     while (length) {
         /* See discussion on send above for the cast to int. */
-        num_bytes = (int) recv(fd, buffer, length, MSG_DONTWAIT);
+        num_bytes = (int) recv(fd, buffer, length, 0);
         /* --BEGIN ERROR HANDLING-- */
         if (num_bytes == -1) {
 #ifdef HAVE_WINDOWS_H
