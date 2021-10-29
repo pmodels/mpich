@@ -8,6 +8,7 @@
 #include "datatype.h"
 #include "mpidu_init_shm.h"
 
+#include <strings.h>    /* for strncasecmp */
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
 #endif
