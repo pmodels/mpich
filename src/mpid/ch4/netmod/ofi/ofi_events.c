@@ -164,7 +164,7 @@ static int inject_emu_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request
     if (!incomplete) {
         MPL_free(MPIDI_OFI_REQUEST(req, util.inject_buf));
         MPIDI_CH4_REQUEST_FREE(req);
-        MPL_atomic_fetch_sub_int(&MPIDI_OFI_global.am_inflight_inject_emus, 1);
+        MPIDI_OFI_global.per_vni[vni].am_inflight_inject_emus -= 1;
     }
 
     MPIR_FUNC_EXIT;
