@@ -421,7 +421,10 @@ static int am_read_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * 
         comm = rreq->comm;
     }
     MPIDI_OFI_lmt_msg_payload_t *lmt_info = (void *) MPIDI_OFI_AM_RREQ_HDR(rreq, am_hdr_buf);
-    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(lmt_info->src_rank, comm, lmt_info->sreq_ptr);
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
+    mpi_errno = MPIDI_OFI_do_am_rdma_read_ack(lmt_info->src_rank, comm, lmt_info->sreq_ptr,
+                                              local_vci, remote_vci);
 
     MPIR_ERR_CHECK(mpi_errno);
 
