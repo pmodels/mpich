@@ -235,6 +235,10 @@ typedef struct {
     void *am_send_seq_tracker;
     void *am_recv_seq_tracker;
 
+    /* active message trackers */
+    int am_inflight_inject_emus;
+    int am_inflight_rma_send_mrs;
+
     /* Queue (utlist) to store early-arrival active messages */
     MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
 
@@ -365,10 +369,6 @@ typedef struct {
     /* OFI atomics limitation of each pair of <dtype, op> returned by the
      * OFI provider at MPI initialization.*/
     MPIDI_OFI_atomic_valid_t win_op_table[MPIR_DATATYPE_N_PREDEFINED][MPIDIG_ACCU_NUM_OP];
-
-    /* Active Message Globals */
-    MPL_atomic_int_t am_inflight_inject_emus;
-    MPL_atomic_int_t am_inflight_rma_send_mrs;
 
     /* Process management and PMI globals */
     int pname_set;
