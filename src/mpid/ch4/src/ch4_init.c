@@ -8,6 +8,7 @@
 #include "datatype.h"
 #include "mpidu_init_shm.h"
 
+#include <strings.h>    /* for strncasecmp */
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
 #endif
@@ -663,9 +664,12 @@ void *MPID_Alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
              * process is bound to the corresponding device; allocate
              * memory and bind it to device. */
             assert(mem_gid != MPIR_HWTOPO_GID_ROOT);
-            real_buf =
-                MPL_mmap(NULL, size + alignment, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1,
-                         0, MPL_MEM_USER);
+#ifdef MAP_ANON
+            real_buf = MPL_mmap(NULL, size + alignment, PROT_READ | PROT_WRITE,
+                                MAP_ANON | MAP_PRIVATE, -1, 0, MPL_MEM_USER);
+#else
+            real_buf = MPL_malloc(size + alignment, MPL_MEM_USER);
+#endif
             MPIR_hwtopo_mem_bind(real_buf, size + alignment, mem_gid);
             break;
 
