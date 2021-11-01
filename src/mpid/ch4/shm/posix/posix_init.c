@@ -39,6 +39,8 @@ cvars:
 #include "posix_csel_container.h"
 #include "mpidu_genq.h"
 
+#include <strings.h>    /* for strncasecmp */
+
 extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
 
 static int choose_posix_eager(void);
