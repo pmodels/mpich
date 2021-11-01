@@ -179,4 +179,7 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
      * not an aggregaor and we are doing deferred open, we returned earlier)*/
     fd->is_open = 1;
 
+    /* sync optimization: we can omit the fsync() call if we do no writes */
+    fd->dirty_write = 0;
+
 }

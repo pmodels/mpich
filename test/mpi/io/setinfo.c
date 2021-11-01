@@ -86,13 +86,7 @@ int main(int argc, char *argv[])
     MPI_Info_get(infoout, (char *) "access_style", 1024, value, &flag);
     /* Note that an implementation is allowed to ignore the set_info,
      * so we'll accept either the original or the updated version */
-    if (!flag) {
-        ;
-        /*
-         * errs++;
-         * printf("Access style hint not saved\n");
-         */
-    } else {
+    if (flag) {
         if (strcmp(value, "read_once") != 0 && strcmp(value, "write_once,random") != 0) {
             errs++;
             printf("value for access_style unexpected; is %s\n", value);
