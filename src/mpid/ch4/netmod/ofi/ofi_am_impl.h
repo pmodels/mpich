@@ -281,7 +281,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
                              0ULL,
                              lmt_info->rma_key,
                              0ULL, &MPIDI_OFI_AM_SREQ_HDR(sreq, lmt_mr), NULL), mr_reg);
-    MPL_atomic_fetch_add_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 1);
+    MPIDI_OFI_global.per_vni[vni_src].am_inflight_rma_send_mrs += 1;
 
     if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         /* MR_BASIC */
@@ -546,7 +546,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(MPIR_Comm * comm, fi_a
 
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_INJECT_EMU;
     MPIDI_OFI_REQUEST(sreq, util.inject_buf) = ibuf;
-    MPL_atomic_fetch_add_int(&MPIDI_OFI_global.am_inflight_inject_emus, 1);
+    MPIDI_OFI_global.per_vni[vni_src].am_inflight_inject_emus += 1;
 
     MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[ctx_idx].tx, ibuf, len,
                                     NULL /* desc */ , addr, &(MPIDI_OFI_REQUEST(sreq, context))),

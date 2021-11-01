@@ -203,7 +203,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_rdma_read_ack(int rank, MPIR_Comm * comm,
-                                                           MPIR_Request * sreq_ptr)
+                                                           MPIR_Request * sreq_ptr,
+                                                           int local_vci, int remote_vci)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_rdma_read_ack_msg_t ack_msg;
@@ -212,7 +213,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_rdma_read_ack(int rank, MPIR_Comm *
 
     ack_msg.sreq_ptr = sreq_ptr;
     mpi_errno = MPIDI_NM_am_send_hdr_reply(comm, rank, MPIDI_OFI_AM_RDMA_READ_ACK,
-                                           &ack_msg, (MPI_Aint) sizeof(ack_msg), 0, 0);
+                                           &ack_msg, (MPI_Aint) sizeof(ack_msg),
+                                           local_vci, remote_vci);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
