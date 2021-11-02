@@ -124,9 +124,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
                  is_local, mpi_errno);
         MPL_free(header);
     } else {
-        MPIDIG_REQUEST(sreq, req->preq.origin_addr) = (void *) origin_addr;
-        MPIDIG_REQUEST(sreq, req->preq.origin_count) = origin_count;
-        MPIDIG_REQUEST(sreq, req->preq.origin_datatype) = origin_datatype;
+        MPIDIG_REQUEST(sreq, buffer) = (void *) origin_addr;
+        MPIDIG_REQUEST(sreq, count) = origin_count;
+        MPIDIG_REQUEST(sreq, datatype) = origin_datatype;
         MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
         /* add reference to ensure the flattened_dt buffer does not get freed */
         MPIDIG_REQUEST(sreq, req->preq.target_datatype) = target_datatype;
@@ -359,9 +359,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
                           vci, vci, sreq), is_local, mpi_errno);
         MPL_free(header);
     } else {
-        MPIDIG_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
-        MPIDIG_REQUEST(sreq, req->areq.origin_count) = origin_count;
-        MPIDIG_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
+        MPIDIG_REQUEST(sreq, buffer) = (void *) origin_addr;
+        MPIDIG_REQUEST(sreq, count) = origin_count;
+        MPIDIG_REQUEST(sreq, datatype) = origin_datatype;
         MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
         /* add reference to ensure the flattened_dt buffer does not get freed */
         MPIDIG_REQUEST(sreq, req->areq.target_datatype) = target_datatype;
