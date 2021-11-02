@@ -4246,25 +4246,9 @@ AC_CONFIG_FILES([Makefile \
           test/commands/cmdtests])
 AC_OUTPUT
 
+echo '*****************************************************'
 if test ${device_name} = "ch4" ; then
-    t_netmod=$ch4_netmods
-    if test "$ch4_netmods" = "ofi" -a "$with_libfabric" = "embedded"; then
-        t_netmod="ofi (embedded libfabric)"
-    elif test "$ch4_netmods" = "ucx" -a "$with_ucx" = "embedded"; then
-        t_netmod="ucx (embedded)"
-    fi
-    t_xpmem=""
-    if test "$pac_have_xpmem" = "yes" ; then
-        t_xpmem="xpmem"
-    fi
-cat <<EOF
-***
-*** device: ch4
-*** netmods: ${t_netmod}
-*** shm: ${ch4_shm} $t_xpmem
-*** gpu: ${GPU_SUPPORT}
-***
-EOF
+    PAC_CH4_CONFIG_SUMMARY()
 elif test ${DEVICE} = "ch3:nemesis" ; then
 cat <<EOF
 ***
@@ -4279,5 +4263,6 @@ cat <<EOF
 ***
 EOF
 fi
+echo '*****************************************************'
 
 echo 'Configuration completed.'
