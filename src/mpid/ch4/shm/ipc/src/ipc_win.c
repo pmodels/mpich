@@ -151,6 +151,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         shared_table[i].disp_unit = ipc_shared_table[i].disp_unit;
         shared_table[i].shm_base_addr = NULL;
         shared_table[i].ipc_mapped_device = -1;
+        shared_table[i].ipc_type = ipc_shared_table[i].ipc_type;
 
         if (i == shm_comm_ptr->rank) {
             shared_table[i].shm_base_addr = win->base;
@@ -162,19 +163,36 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                         MPIDI_XPMEM_ipc_handle_map(ipc_shared_table[i].ipc_handle.xpmem,
                                                    &shared_table[i].shm_base_addr);
                     MPIR_ERR_CHECK(mpi_errno);
+                    shared_table[i].mapped_type = 2;
                     break;
                 case MPIDI_IPCI_TYPE__GPU:
                     /* FIXME: remote win buffer should be mapped to each of their corresponding
                      * local GPU device. */
                     {
                         MPIDI_GPU_ipc_handle_t handle = ipc_shared_table[i].ipc_handle.gpu;
+                        shared_table[i].ipc_handle = handle;
                         int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.gpu_attr);
                         int map_dev_id = MPIDI_GPU_ipc_get_map_dev(handle.global_dev_id, dev_id,
                                                                    MPI_BYTE);
-                        mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,
-                                                             map_dev_id,
-                                                             &shared_table[i].shm_base_addr, false);
-                        MPIR_ERR_CHECK(mpi_errno);
+                        int fast_copy = 0;
+                        if (shared_table[i].size <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE) {
+                            mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,
+                                                                 map_dev_id,
+                                                                 &shared_table[i].shm_base_addr,
+                                                                 true);
+                            if (mpi_errno == MPI_SUCCESS) {
+                                fast_copy = 1;
+                                shared_table[i].mapped_type = 1;
+                            }
+                        }
+                        if (!fast_copy) {
+                            mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,
+                                                                 map_dev_id,
+                                                                 &shared_table[i].shm_base_addr,
+                                                                 false);
+                            MPIR_ERR_CHECK(mpi_errno);
+                            shared_table[i].mapped_type = 0;
+                        }
                         shared_table[i].ipc_mapped_device = map_dev_id;
                     }
                     break;
@@ -216,9 +234,22 @@ int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win)
         !shm_comm_ptr || !MPIDIG_WIN(win, shared_table))
         goto fn_exit;
 
+    MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
+    for (int i = 0; i < shm_comm_ptr->local_size; i++) {
+        if (i == shm_comm_ptr->rank)
+            continue;
+        if (shared_table[i].ipc_type == MPIDI_IPCI_TYPE__GPU) {
+            MPIDI_GPU_ipc_handle_unmap(shared_table[i].shm_base_addr, shared_table[i].ipc_handle,
+                                       shared_table[i].mapped_type);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+
     MPL_free(MPIDIG_WIN(win, shared_table));
 
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
