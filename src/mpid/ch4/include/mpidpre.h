@@ -73,15 +73,6 @@ typedef enum {
 #define MPIDI_PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
 #define MPIDI_MAX_KVS_VALUE_LEN  4096
 
-typedef struct MPIDIG_sreq_t {
-    /* persistent send fields */
-    const void *src_buf;
-    MPI_Aint count;
-    MPI_Datatype datatype;
-    int rank;
-    MPIR_Context_id_t context_id;
-} MPIDIG_sreq_t;
-
 typedef struct MPIDIG_rreq_t {
     /* mrecv fields */
     void *mrcv_buffer;
@@ -179,7 +170,6 @@ typedef struct MPIDIG_sreq_async {
 
 typedef struct MPIDIG_req_ext_t {
     union {
-        MPIDIG_sreq_t sreq;
         MPIDIG_rreq_t rreq;
         MPIDIG_put_req_t preq;
         MPIDIG_get_req_t greq;

@@ -166,7 +166,7 @@ int MPIDIG_send_data_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->sreq).datatype);
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -487,9 +487,9 @@ int MPIDIG_send_cts_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     CH4_CALL(am_isend_reply(sreq->comm,
                             MPIDIG_REQUEST(sreq, u.send.dest), MPIDIG_SEND_DATA,
                             &send_hdr, sizeof(send_hdr),
-                            MPIDIG_REQUEST(sreq, req->sreq).src_buf,
-                            MPIDIG_REQUEST(sreq, req->sreq).count,
-                            MPIDIG_REQUEST(sreq, req->sreq).datatype, local_vci, remote_vci, sreq),
+                            MPIDIG_REQUEST(sreq, buffer),
+                            MPIDIG_REQUEST(sreq, count),
+                            MPIDIG_REQUEST(sreq, datatype), local_vci, remote_vci, sreq),
              MPIDI_REQUEST(sreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
