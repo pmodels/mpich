@@ -1861,11 +1861,14 @@ sub PrintConstants {
     # C counterpart; their MPI Datatype handles are determined by the
     # configure step and inserted into mpicxx.h as #define's
     foreach $dtype (@cppdtypes) {
+        my $use_dtype = $dtype;
+        if ($dtype eq "COMPLEX") {
+            $use_dtype = "FLOAT_COMPLEX"
+        }
 	print $OUTFD "${extern}Datatype $dtype";
-	if ($giveValue) { print $OUTFD "(MPIR_CXX_$dtype);\n"; }
+	if ($giveValue) { print $OUTFD "(MPI_CXX_$use_dtype);\n"; }
 	else { 
 	    print $OUTFD ";\n"; 
-	    print $OUTFD "#define MPIR_CXX_$dtype \@MPIR_CXX_${dtype}\@\n";
 	}
     }
 
