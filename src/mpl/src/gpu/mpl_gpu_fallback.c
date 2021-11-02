@@ -26,6 +26,11 @@ int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
     return ret;
 }
 
+int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id)
+{
+    return MPL_SUCCESS;
+}
+
 int MPL_gpu_ipc_get_handle_type(MPL_gpu_ipc_handle_type_t * type)
 {
     return MPL_SUCCESS;
