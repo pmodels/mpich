@@ -102,10 +102,7 @@ typedef struct MPIDIG_get_req_t {
 
 typedef struct MPIDIG_cswap_req_t {
     MPIR_Request *creq_ptr;
-    void *addr;
-    MPI_Datatype datatype;
     void *data;
-    void *result_addr;
 } MPIDIG_cswap_req_t;
 
 typedef struct MPIDIG_acc_req_t {
