@@ -894,13 +894,13 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
     int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
     int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     if (MPIDIG_REQUEST(rreq, req->greq.flattened_dt) == NULL) {
-        MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, req->greq.datatype),
-                                  MPIDIG_REQUEST(rreq, req->greq.count), get_ack.target_data_sz);
+        MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, datatype),
+                                  MPIDIG_REQUEST(rreq, count), get_ack.target_data_sz);
         CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(rreq, u.recv.source),
                                 MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
-                                (void *) MPIDIG_REQUEST(rreq, req->greq.addr),
-                                MPIDIG_REQUEST(rreq, req->greq.count),
-                                MPIDIG_REQUEST(rreq, req->greq.datatype), local_vci, remote_vci,
+                                MPIDIG_REQUEST(rreq, buffer),
+                                MPIDIG_REQUEST(rreq, count),
+                                MPIDIG_REQUEST(rreq, datatype), local_vci, remote_vci,
                                 rreq), MPIDI_REQUEST(rreq, is_local), mpi_errno);
         MPID_Request_complete(rreq);
         MPIR_ERR_CHECK(mpi_errno);
@@ -917,13 +917,13 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_Typerep_unflatten(dt, MPIDIG_REQUEST(rreq, req->greq.flattened_dt));
     MPIDIG_REQUEST(rreq, req->greq.dt) = dt;
     /* count is still target_data_sz now, use it for reply */
-    get_ack.target_data_sz = MPIDIG_REQUEST(rreq, req->greq.count);
-    MPIDIG_REQUEST(rreq, req->greq.count) /= dt->size;
+    get_ack.target_data_sz = MPIDIG_REQUEST(rreq, count);
+    MPIDIG_REQUEST(rreq, count) /= dt->size;
 
     CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(rreq, u.recv.source),
                             MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
-                            MPIDIG_REQUEST(rreq, req->greq.addr),
-                            MPIDIG_REQUEST(rreq, req->greq.count), dt->handle, local_vci,
+                            MPIDIG_REQUEST(rreq, buffer),
+                            MPIDIG_REQUEST(rreq, count), dt->handle, local_vci,
                             remote_vci, rreq), MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPID_Request_complete(rreq);
     MPIR_ERR_CHECK(mpi_errno);
@@ -1138,7 +1138,7 @@ static int get_ack_target_cmpl_cb(MPIR_Request * rreq)
 
     MPIDIG_recv_finish(rreq);
 
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, req->greq.datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
     MPID_Request_complete(rreq);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -2092,8 +2092,8 @@ int MPIDIG_get_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     size_t offset = win->disp_unit * msg_hdr->target_disp;
 
     rreq->u.rma.win = win;
-    MPIDIG_REQUEST(rreq, req->greq.count) = msg_hdr->target_count;
-    MPIDIG_REQUEST(rreq, req->greq.datatype) = msg_hdr->target_datatype;
+    MPIDIG_REQUEST(rreq, count) = msg_hdr->target_count;
+    MPIDIG_REQUEST(rreq, datatype) = msg_hdr->target_datatype;
     MPIDIG_REQUEST(rreq, req->greq.flattened_dt) = NULL;
     MPIDIG_REQUEST(rreq, req->greq.dt) = NULL;
     MPIDIG_REQUEST(rreq, req->greq.greq_ptr) = msg_hdr->greq_ptr;
@@ -2103,12 +2103,11 @@ int MPIDIG_get_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         void *flattened_dt = MPL_malloc(msg_hdr->flattened_sz, MPL_MEM_BUFFER);
         MPIDIG_recv_init(1, msg_hdr->flattened_sz, flattened_dt, msg_hdr->flattened_sz, rreq);
         MPIDIG_REQUEST(rreq, req->greq.flattened_dt) = flattened_dt;
-        MPIDIG_REQUEST(rreq, req->greq.addr) = (char *) base + offset;
+        MPIDIG_REQUEST(rreq, buffer) = (char *) base + offset;
     } else {
         MPIR_Assert(!in_data_sz || in_data_sz == 0);
         MPIDIG_recv_init(1, 0, NULL, 0, rreq);
-        MPIDIG_REQUEST(rreq, req->greq.addr) =
-            MPIR_get_contig_ptr(base, offset + msg_hdr->target_true_lb);
+        MPIDIG_REQUEST(rreq, buffer) = MPIR_get_contig_ptr(base, offset + msg_hdr->target_true_lb);
     }
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
@@ -2145,10 +2144,6 @@ int MPIDIG_get_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIDI_REQUEST(rreq, is_local) = (attr & MPIDIG_AM_ATTR__IS_LOCAL) ? 1 : 0;
 #endif
 
-    /* setup recv fields for get data */
-    MPIDIG_REQUEST(rreq, buffer) = MPIDIG_REQUEST(rreq, req->greq.addr);
-    MPIDIG_REQUEST(rreq, count) = MPIDIG_REQUEST(rreq, req->greq.count);
-    MPIDIG_REQUEST(rreq, datatype) = MPIDIG_REQUEST(rreq, req->greq.datatype);
     MPIDIG_recv_type_init(msg_hdr->target_data_sz, rreq);
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
