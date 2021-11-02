@@ -91,10 +91,6 @@ typedef struct MPIDIG_put_req_t {
     MPIR_Request *preq_ptr;
     void *flattened_dt;
     MPIR_Datatype *dt;
-    void *origin_addr;
-    int origin_count;
-    MPI_Datatype origin_datatype;
-    void *target_addr;
     MPI_Datatype target_datatype;
     MPI_Aint origin_data_sz;
 } MPIDIG_put_req_t;
