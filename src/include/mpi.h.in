@@ -110,13 +110,13 @@ typedef int MPI_Datatype;
 #define MPI_SHORT          ((MPI_Datatype)@MPI_SHORT@)
 #define MPI_UNSIGNED_SHORT ((MPI_Datatype)@MPI_UNSIGNED_SHORT@)
 #define MPI_INT            ((MPI_Datatype)@MPI_INT@)
-#define MPI_UNSIGNED       ((MPI_Datatype)@MPI_UNSIGNED_INT@)
+#define MPI_UNSIGNED       ((MPI_Datatype)@MPI_UNSIGNED@)
 #define MPI_LONG           ((MPI_Datatype)@MPI_LONG@)
 #define MPI_UNSIGNED_LONG  ((MPI_Datatype)@MPI_UNSIGNED_LONG@)
 #define MPI_FLOAT          ((MPI_Datatype)@MPI_FLOAT@)
 #define MPI_DOUBLE         ((MPI_Datatype)@MPI_DOUBLE@)
 #define MPI_LONG_DOUBLE    ((MPI_Datatype)@MPI_LONG_DOUBLE@)
-#define MPI_LONG_LONG_INT  ((MPI_Datatype)@MPI_LONG_LONG@)
+#define MPI_LONG_LONG_INT  ((MPI_Datatype)@MPI_LONG_LONG_INT@)
 #define MPI_UNSIGNED_LONG_LONG ((MPI_Datatype)@MPI_UNSIGNED_LONG_LONG@)
 #define MPI_LONG_LONG      MPI_LONG_LONG_INT
 
@@ -265,7 +265,7 @@ static const MPI_Datatype mpich_mpi_c_long_double_complex MPICH_ATTR_TYPE_TAG_C9
 
 /* MPI-3 C++ types */
 #define MPI_CXX_BOOL                ((MPI_Datatype)@MPIR_CXX_BOOL@)
-#define MPI_CXX_FLOAT_COMPLEX       ((MPI_Datatype)@MPIR_CXX_COMPLEX@)
+#define MPI_CXX_FLOAT_COMPLEX       ((MPI_Datatype)@MPIR_CXX_FLOAT_COMPLEX@)
 #define MPI_CXX_DOUBLE_COMPLEX      ((MPI_Datatype)@MPIR_CXX_DOUBLE_COMPLEX@)
 #define MPI_CXX_LONG_DOUBLE_COMPLEX ((MPI_Datatype)@MPIR_CXX_LONG_DOUBLE_COMPLEX@)
 

@@ -427,6 +427,7 @@ print $constants_fh "\n! Datatypes\n";
 foreach $key (qw(COMPLEX  DOUBLE_COMPLEX  LOGICAL REAL DOUBLE_PRECISION INTEGER 2INTEGER
                  2DOUBLE_PRECISION 2REAL CHARACTER))
 {
+    $mpidef{"MPI_$key"} = "\@F08_MPI_$key\@";
     &print_param("MPI_Datatype", "MPI_$key");
 }
 
@@ -442,11 +443,21 @@ foreach $key (qw(BYTE UB LB PACKED
                  LONG_INT SHORT_INT 2INT LONG_DOUBLE_INT
                  INT8_T INT16_T INT32_T INT64_T
                  UINT8_T UINT16_T UINT32_T UINT64_T
-                 C_BOOL C_FLOAT_COMPLEX C_COMPLEX C_DOUBLE_COMPLEX C_LONG_DOUBLE_COMPLEX
-                 AINT OFFSET COUNT
-                 CXX_BOOL CXX_FLOAT_COMPLEX CXX_DOUBLE_COMPLEX CXX_LONG_DOUBLE_COMPLEX))
+                 C_BOOL C_FLOAT_COMPLEX C_COMPLEX C_DOUBLE_COMPLEX C_LONG_DOUBLE_COMPLEX))
 {
-    $mpidef{"MPI_$key"} = "\@F08_$key\@";
+    $mpidef{"MPI_$key"} = "\@F08_MPI_$key\@";
+    &print_param("MPI_Datatype", "MPI_$key");
+}
+
+foreach $key (qw(AINT OFFSET COUNT))
+{
+    $mpidef{"MPI_$key"} = "\@F08_MPI_${key}_DATATYPE\@";
+    &print_param("MPI_Datatype", "MPI_$key");
+}
+
+foreach $key (qw(CXX_BOOL CXX_FLOAT_COMPLEX CXX_DOUBLE_COMPLEX CXX_LONG_DOUBLE_COMPLEX))
+{
+    $mpidef{"MPI_$key"} = "\@F08_MPIR_${key}\@";
     &print_param("MPI_Datatype", "MPI_$key");
 }
 
