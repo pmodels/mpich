@@ -181,6 +181,7 @@ int MPIDIG_put_data_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -190,6 +191,7 @@ int MPIDIG_acc_data_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -199,6 +201,7 @@ int MPIDIG_get_acc_data_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -1577,6 +1580,8 @@ int MPIDIG_put_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
     win = origin_req->u.rma.win;
+    /* origin datatype to be released in MPIDIG_put_data_origin_cb */
+    MPIDIG_REQUEST(rreq, datatype) = MPIDIG_REQUEST(origin_req, datatype);
 
     CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(origin_req, u.send.dest),
                             MPIDIG_PUT_DAT_REQ, &dat_msg, sizeof(dat_msg),
@@ -1586,7 +1591,6 @@ int MPIDIG_put_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
                             local_vci, remote_vci, rreq),
              (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, datatype));
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
@@ -1621,6 +1625,8 @@ int MPIDIG_acc_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
     win = origin_req->u.rma.win;
+    /* origin datatype to be released in MPIDIG_acc_data_origin_cb */
+    MPIDIG_REQUEST(rreq, datatype) = MPIDIG_REQUEST(origin_req, datatype);
 
     CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(origin_req, u.send.dest),
                             MPIDIG_ACC_DAT_REQ, &dat_msg, sizeof(dat_msg),
@@ -1630,7 +1636,6 @@ int MPIDIG_acc_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
                             local_vci, remote_vci, rreq),
              (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, datatype));
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
@@ -1665,6 +1670,8 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(void *am_hdr, void *data,
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
     win = origin_req->u.rma.win;
+    /* origin datatype to be released in MPIDIG_get_acc_data_origin_cb */
+    MPIDIG_REQUEST(rreq, datatype) = MPIDIG_REQUEST(origin_req, req->areq.origin_datatype);
 
     CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(origin_req, u.send.dest),
                             MPIDIG_GET_ACC_DAT_REQ, &dat_msg, sizeof(dat_msg),
@@ -1673,7 +1680,6 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(void *am_hdr, void *data,
                             MPIDIG_REQUEST(origin_req, req->areq.origin_datatype), local_vci,
                             remote_vci, rreq), (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->areq.origin_datatype));
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
