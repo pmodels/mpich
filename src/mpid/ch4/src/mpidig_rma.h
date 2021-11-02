@@ -192,9 +192,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     sreq->u.rma.win = win;
-    MPIDIG_REQUEST(sreq, req->greq.addr) = origin_addr;
-    MPIDIG_REQUEST(sreq, req->greq.count) = origin_count;
-    MPIDIG_REQUEST(sreq, req->greq.datatype) = origin_datatype;
+    MPIDIG_REQUEST(sreq, buffer) = origin_addr;
+    MPIDIG_REQUEST(sreq, count) = origin_count;
+    MPIDIG_REQUEST(sreq, datatype) = origin_datatype;
     MPIDIG_REQUEST(sreq, req->greq.target_datatype) = target_datatype;
     MPIDIG_REQUEST(sreq, u.send.dest) = target_rank;
     MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
