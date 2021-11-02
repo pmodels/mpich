@@ -489,7 +489,7 @@ static int ack_cswap(MPIR_Request * rreq)
 
     MPIR_FUNC_ENTER;
 
-    MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, req->creq.datatype), 1, data_sz);
+    MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, datatype), 1, data_sz);
     result_addr = ((char *) MPIDIG_REQUEST(rreq, req->creq.data)) + data_sz;
 
     MPIR_cc_inc(rreq->cc_ptr);
@@ -499,7 +499,7 @@ static int ack_cswap(MPIR_Request * rreq)
     int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     CH4_CALL(am_isend_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, u.recv.source),
                             MPIDIG_CSWAP_ACK, &ack_msg, sizeof(ack_msg), result_addr, 1,
-                            MPIDIG_REQUEST(rreq, req->creq.datatype), local_vci, remote_vci, rreq),
+                            MPIDIG_REQUEST(rreq, datatype), local_vci, remote_vci, rreq),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -1042,7 +1042,7 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
     if (!MPIDIG_check_cmpl_order(rreq, vci))
         return mpi_errno;
 
-    MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, req->creq.datatype), 1, data_sz);
+    MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, datatype), 1, data_sz);
     origin_addr = MPIDIG_REQUEST(rreq, req->creq.data);
     compare_addr = ((char *) MPIDIG_REQUEST(rreq, req->creq.data)) + data_sz;
 
@@ -1054,12 +1054,12 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
     }
 #endif
 
-    if (MPIR_Compare_equal((void *) MPIDIG_REQUEST(rreq, req->creq.addr), compare_addr,
-                           MPIDIG_REQUEST(rreq, req->creq.datatype))) {
-        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, req->creq.addr), data_sz);
-        MPIR_Typerep_copy((void *) MPIDIG_REQUEST(rreq, req->creq.addr), origin_addr, data_sz);
+    if (MPIR_Compare_equal((void *) MPIDIG_REQUEST(rreq, buffer), compare_addr,
+                           MPIDIG_REQUEST(rreq, datatype))) {
+        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, buffer), data_sz);
+        MPIR_Typerep_copy((void *) MPIDIG_REQUEST(rreq, buffer), origin_addr, data_sz);
     } else {
-        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, req->creq.addr), data_sz);
+        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, buffer), data_sz);
     }
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -1286,8 +1286,8 @@ int MPIDIG_cswap_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_cas_ack);
 
     rreq = (MPIR_Request *) msg_hdr->req_ptr;
-    MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, req->creq.datatype), 1, data_sz);
-    void *result_addr = MPIDIG_REQUEST(rreq, req->creq.result_addr);
+    MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, datatype), 1, data_sz);
+    void *result_addr = MPIDIG_REQUEST(rreq, buffer);
 
     MPIDIG_recv_init(1, data_sz, result_addr, data_sz, rreq);
 
@@ -1827,8 +1827,8 @@ int MPIDIG_cswap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 
     rreq->u.rma.win = win;
     MPIDIG_REQUEST(rreq, req->creq.creq_ptr) = msg_hdr->req_ptr;
-    MPIDIG_REQUEST(rreq, req->creq.datatype) = msg_hdr->datatype;
-    MPIDIG_REQUEST(rreq, req->creq.addr) = (char *) base + offset;
+    MPIDIG_REQUEST(rreq, datatype) = msg_hdr->datatype;
+    MPIDIG_REQUEST(rreq, buffer) = (char *) base + offset;
     MPIDIG_REQUEST(rreq, u.recv.source) = msg_hdr->src_rank;
 
     MPIR_Assert(dt_contig == 1);

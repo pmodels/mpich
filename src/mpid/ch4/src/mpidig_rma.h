@@ -783,9 +783,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     sreq->u.rma.win = win;
-    MPIDIG_REQUEST(sreq, req->creq.addr) = result_addr;
-    MPIDIG_REQUEST(sreq, req->creq.datatype) = datatype;
-    MPIDIG_REQUEST(sreq, req->creq.result_addr) = result_addr;
+    MPIDIG_REQUEST(sreq, buffer) = result_addr;
+    MPIDIG_REQUEST(sreq, datatype) = datatype;
     MPIDIG_REQUEST(sreq, req->creq.data) = p_data;
     MPIDIG_REQUEST(sreq, u.send.dest) = target_rank;
     MPIR_cc_inc(sreq->cc_ptr);
