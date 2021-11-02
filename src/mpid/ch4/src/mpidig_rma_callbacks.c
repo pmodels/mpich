@@ -133,8 +133,7 @@ int MPIDIG_get_ack_origin_cb(MPIR_Request * req)
     MPIR_FUNC_ENTER;
 
     MPL_free(MPIDIG_REQUEST(req, req->greq.flattened_dt));
-    if (MPIDIG_REQUEST(req, req->greq.dt))
-        MPIR_Datatype_ptr_release(MPIDIG_REQUEST(req, req->greq.dt));
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(req, datatype));
 
     MPID_Request_complete(req);
     MPIR_FUNC_EXIT;
@@ -915,7 +914,7 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
     }
     MPIR_Object_set_ref(dt, 1);
     MPIR_Typerep_unflatten(dt, MPIDIG_REQUEST(rreq, req->greq.flattened_dt));
-    MPIDIG_REQUEST(rreq, req->greq.dt) = dt;
+    MPIDIG_REQUEST(rreq, datatype) = dt->handle;
     /* count is still target_data_sz now, use it for reply */
     get_ack.target_data_sz = MPIDIG_REQUEST(rreq, count);
     MPIDIG_REQUEST(rreq, count) /= dt->size;
@@ -943,8 +942,7 @@ static int put_target_cmpl_cb(MPIR_Request * rreq)
     MPIDIG_recv_finish(rreq);
 
     MPL_free(MPIDIG_REQUEST(rreq, req->preq.flattened_dt));
-    if (MPIDIG_REQUEST(rreq, req->preq.dt))
-        MPIR_Datatype_ptr_release(MPIDIG_REQUEST(rreq, req->preq.dt));
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
 
     mpi_errno = ack_put(rreq);
     MPIR_ERR_CHECK(mpi_errno);
@@ -1471,7 +1469,6 @@ int MPIDIG_put_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         MPIR_Object_set_ref(dt, 1);
         MPIR_Typerep_unflatten(dt, (char *) am_hdr + sizeof(*msg_hdr));
         MPIDIG_REQUEST(rreq, req->preq.flattened_dt) = NULL;
-        MPIDIG_REQUEST(rreq, req->preq.dt) = dt;
 
         MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset);
         MPIDIG_REQUEST(rreq, datatype) = dt->handle;
@@ -1479,7 +1476,6 @@ int MPIDIG_put_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         MPIDIG_recv_type_init(msg_hdr->origin_data_sz, rreq);
     } else {
         MPIDIG_REQUEST(rreq, req->preq.flattened_dt) = NULL;
-        MPIDIG_REQUEST(rreq, req->preq.dt) = NULL;
 
         MPIDIG_REQUEST(rreq, buffer) = MPIR_get_contig_ptr(base, offset + msg_hdr->target_true_lb);
         MPIDIG_REQUEST(rreq, count) = msg_hdr->target_count;
@@ -1716,7 +1712,6 @@ int MPIDIG_put_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     /* Note: handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(dt, 1);
     MPIR_Typerep_unflatten(dt, MPIDIG_REQUEST(rreq, req->preq.flattened_dt));
-    MPIDIG_REQUEST(rreq, req->preq.dt) = dt;
     MPIDIG_REQUEST(rreq, datatype) = dt->handle;
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = put_target_cmpl_cb;
@@ -2095,7 +2090,6 @@ int MPIDIG_get_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIDIG_REQUEST(rreq, count) = msg_hdr->target_count;
     MPIDIG_REQUEST(rreq, datatype) = msg_hdr->target_datatype;
     MPIDIG_REQUEST(rreq, req->greq.flattened_dt) = NULL;
-    MPIDIG_REQUEST(rreq, req->greq.dt) = NULL;
     MPIDIG_REQUEST(rreq, req->greq.greq_ptr) = msg_hdr->greq_ptr;
     MPIDIG_REQUEST(rreq, u.recv.source) = msg_hdr->src_rank;
 
