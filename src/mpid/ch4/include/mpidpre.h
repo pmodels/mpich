@@ -200,6 +200,12 @@ typedef struct MPIDIG_req_t {
             MPIR_Context_id_t context_id;
             int tag;
         } recv;
+        struct {
+            int target_rank;
+        } origin;
+        struct {
+            int origin_rank;
+        } target;
     } u;
 } MPIDIG_req_t;
 
