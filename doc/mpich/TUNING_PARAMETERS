@@ -63,18 +63,10 @@ MPICH uses the environment variable `MPIR_CVAR_<collname>_COMPOSITION` to indica
 
 * NM only: Does not apply a composition. The collective executes without taking into account whether the ranks are within the same or different nodes.
 
-* Multi-Leaders: When using a composition, a rank in each node is selected to communicate to drive the inter-node part of the collective. With this option, we allow multiple leaders to participate on that part of the collective. This is specially important if the message is large. It can also take advantage of multiple network cards.
-
 *  NM + SHM with reduce + Bcast. The intra-node part of the collective uses an algorithm that takes advantage of the shared memory of the node and that executes the collective as an intra-node reduce, and inter-node allreduce, and an intra-node reduce operation.
 
 For non-blocking collectives IBCAST, IREDUCE, and IALLREDUCE, pipelined implementations can be enabled with the CVAR `MPIR_CVAR_<collname>_COMPOSITION_PIPELINE_CHUNK_SIZE` and corresponding chunksize, where \<collname\> can be IBCAST, IREDUCE, or IALLREDUCE.
 A "0" value is used to disable pipelining. This CVAR can be used only when one of the  NM + SHM compositions is chosen. When using pipelining with IBCAST, IREDUCE or IALLREDUCE, the CVAR `MPIR_CVAR_<collname>_COMPOSITION_WINDOW_SIZE` controls how many outstanding chunks can be in flight concurrently.
-
-Multi-leader algorithms are supported for ALLREDUCE, ALLTOALL, and ALLGATHER when the  CVAR `MPIR_CVAR_<collname>_COMPOSITION` is set to the appropriate value. In this case:
-
-* `MPIR_CVAR_NUM_MULTI_LEADS` indicates the number of leader ranks per node.
-* `MPIR_CVAR_ALLREDUCE_SHM_PER_LEADER` indicates the amount of shared memory region (in
- bytes) per node-leader and communicator for ALLREDUCE.
 
 
 **Table I: CVARS for composition configurations**
@@ -104,20 +96,18 @@ Multi-leader algorithms are supported for ALLREDUCE, ALLTOALL, and ALLGATHER whe
 |                |                                                   | MPIR_CVAR_REDUCE_COMPOSITION = {1, 2})         |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
 | ALLREDUCE/     | MPIR_CVAR_ALLREDUCE_COMPOSITION /                 | 0 (Auto Selection) 1 (NM + SHM with reduce +   |
-| IALLREDUCE     | MPIR_CVAR_IALLREDUCE_COMPOSITION                  | bcast) 2 (NM only) 3(SHM only) 4(Multi-Leaders)|
+| IALLREDUCE     | MPIR_CVAR_IALLREDUCE_COMPOSITION                  | bcast) 2 (NM only) 3(SHM only)                 |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
 | IALLREDUCE     | MPIR_CVAR_IALLREDUCE_COMPOSITION_PIPELINE_CHUNK   | CHUNK_SIZE (only valid with                    |
 |                | _SIZE                                             | MPIR_CVAR_IBCAST_COMPOSITION = {1}. Set value  |
 |                |                                                   | to 0 to disable pipelining                     |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
-| IALLREDUCE     | MPIR_CVAR_IALLREDUCE_COMPOSITION_WINDOW_SIZE      | WINDOW_SIZE (only valid with  		      |
+| IALLREDUCE     | MPIR_CVAR_IALLREDUCE_COMPOSITION_WINDOW_SIZE      | WINDOW_SIZE (only valid with                   |
 |                |                                                   | MPIR_CVAR_IALLREDUCE_COMPOSITION = {1}.        |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
-| ALLTOALL       | MPIR_CVAR_ALLTOALL_COMPOSITION                    | 0 (Auto Selection), 1 (Multi-Leaders),         |
-|                |                                                   | 3 (NM only)                                    |
+| ALLTOALL       | MPIR_CVAR_ALLTOALL_COMPOSITION                    | 0 (Auto Selection), 3 (NM only)                |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
-| ALLGATHER      | MPIR_CVAR_ALLGATHER_COMPOSITION                   | 0 (Auto Selection), 1 (Multi-Leaders),         |
-|                |                                                   | 3 (NM only)                                    |
+| ALLGATHER      | MPIR_CVAR_ALLGATHER_COMPOSITION                   | 0 (Auto Selection), 3 (NM only)                |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
 | BARRIER /      | MPIR_CVAR_BARRIER_COMPOSITION /                   | 0 (Auto Selection), 1 (NM + SHM), 2 (NM only)  |
 | IBARRIER       | MPI_CVAR_IBARRIER_COMPOSITION                     |                                                |
