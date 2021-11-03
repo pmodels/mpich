@@ -210,7 +210,7 @@ int MPIDIG_put_dt_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->preq.target_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, u.origin.target_datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -220,7 +220,7 @@ int MPIDIG_acc_dt_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->areq.target_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, u.origin.target_datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -230,7 +230,7 @@ int MPIDIG_get_acc_dt_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->areq.target_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, u.origin.target_datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -1134,7 +1134,7 @@ static int get_ack_target_cmpl_cb(MPIR_Request * rreq)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, req->greq.target_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, u.origin.target_datatype));
 
     win = rreq->u.rma.win;
     MPIDIG_win_remote_cmpl_cnt_decr(win, MPIDIG_REQUEST(rreq, u.origin.target_rank));
