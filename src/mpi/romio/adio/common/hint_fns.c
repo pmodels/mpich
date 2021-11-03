@@ -70,6 +70,12 @@ int ADIOI_Info_check_and_install_enabled(ADIO_File fd, MPI_Info info, const char
         } else if (!strcmp(value, "automatic") || !strcmp(value, "AUTOMATIC")) {
             ADIOI_Info_set(fd->info, key, value);
             *local_cache = ADIOI_HINT_AUTO;
+            /* treat the user-provided string like "enabled":  either it is a hint
+             * ROMIO knows about and can support it, or ROMIO will not return the
+             * hint at all in the MPI_File_get_info info object */
+        } else if (!strcmp(value, "requested") || !strcmp(value, "REQUESTED")) {
+            ADIOI_Info_set(fd->info, key, "enable");
+            *local_cache = ADIOI_HINT_ENABLE;
         }
 
         tmp_val = *local_cache;

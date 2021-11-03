@@ -32,12 +32,10 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     }
     ad_get_env_vars();
 
+    /* Interpreting MPI-4.0 to mean ROMIO should only return hints it knows
+     * about when user calls MPI_File_get_info */
     if (fd->info == MPI_INFO_NULL) {
-        if (users_info == MPI_INFO_NULL)
-            MPI_Info_create(&(fd->info));
-        else
-            /* duplicate users_info to preserve hints not used in ROMIO */
-            MPI_Info_dup(users_info, &(fd->info));
+        MPI_Info_create(&(fd->info));
     }
     info = fd->info;
 
@@ -127,6 +125,12 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
          * no good default value so just leave it unset */
         fd->hints->min_fdomain_size = 0;
         fd->hints->striping_unit = 0;
+
+        /* temporally synchronizing flush: I think this is going to be a useful
+         * optimization for all users, but might have surprising hangs if
+         * client code incorrectly treats MPI_File_sync as independent */
+        ADIOI_Info_set(info, "romio_synchronized_flush", "disabled");
+        fd->hints->synchronizing_flush = 0;
 
         fd->hints->initialized = 1;
 
@@ -249,6 +253,9 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
          * process hints for it. */
         ADIOI_Info_check_and_install_int(fd, users_info, "striping_unit",
                                          &(fd->hints->striping_unit), myname, error_code);
+
+        ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_synchronized_flush",
+                                             &(fd->hints->synchronizing_flush), myname, error_code);
     }
 
     /* Begin hint post-processig: some hints take precedence over or conflict
