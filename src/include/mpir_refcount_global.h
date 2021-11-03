@@ -9,7 +9,7 @@
 /* define a type for the completion counter */
 /* memory barriers aren't needed in this impl, because all access to completion
  * counters is done while holding the GLOBAL critical section */
-typedef volatile int MPIR_cc_t;
+typedef int MPIR_cc_t;
 #define MPIR_cc_get(cc_) (cc_)
 #define MPIR_cc_set(cc_ptr_, val_) (*(cc_ptr_)) = (val_)
 #define MPIR_cc_is_complete(cc_ptr_) (0 == *(cc_ptr_))
