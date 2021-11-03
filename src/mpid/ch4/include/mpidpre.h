@@ -90,14 +90,12 @@ typedef struct MPIDIG_part_am_req_t {
 typedef struct MPIDIG_put_req_t {
     MPIR_Request *preq_ptr;
     void *flattened_dt;
-    MPI_Datatype target_datatype;
     MPI_Aint origin_data_sz;
 } MPIDIG_put_req_t;
 
 typedef struct MPIDIG_get_req_t {
     MPIR_Request *greq_ptr;
     void *flattened_dt;
-    MPI_Datatype target_datatype;
 } MPIDIG_get_req_t;
 
 typedef struct MPIDIG_cswap_req_t {
@@ -202,6 +200,7 @@ typedef struct MPIDIG_req_t {
         } recv;
         struct {
             int target_rank;
+            MPI_Datatype target_datatype;
         } origin;
         struct {
             int origin_rank;
