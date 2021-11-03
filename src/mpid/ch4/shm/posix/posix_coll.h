@@ -69,6 +69,17 @@ cvars:
         release_gather - Force shm optimized algo using release, gather primitives
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE)
 
+    - name        : MPIR_CVAR_POSIX_POLL_FREQUENCY
+      category    : COLLECTIVE
+      type        : int
+      default     : 1000
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar sets the number of loops before the yield function is called.  A
+        value of 0 disables yielding.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
