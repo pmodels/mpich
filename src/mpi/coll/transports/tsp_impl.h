@@ -45,7 +45,7 @@ int MPIR_TSP_sched_generic(int type_id, void *data,
 
 /* Transport function to schedule an isend vertex */
 int MPIR_TSP_sched_isend(const void *buf,
-                         int count,
+                         MPI_Aint count,
                          MPI_Datatype dt,
                          int dest,
                          int tag,
@@ -54,7 +54,7 @@ int MPIR_TSP_sched_isend(const void *buf,
 
 /* Transport function to schedule a issend vertex */
 int MPIR_TSP_sched_issend(const void *buf,
-                          int count,
+                          MPI_Aint count,
                           MPI_Datatype dt,
                           int dest,
                           int tag,
@@ -63,7 +63,7 @@ int MPIR_TSP_sched_issend(const void *buf,
 
 /* Transport function to schedule an irecv vertex */
 int MPIR_TSP_sched_irecv(void *buf,
-                         int count,
+                         MPI_Aint count,
                          MPI_Datatype dt,
                          int source,
                          int tag,
@@ -72,7 +72,7 @@ int MPIR_TSP_sched_irecv(void *buf,
 
 /* Transport function to schedule a irecv with status vertex */
 int MPIR_TSP_sched_irecv_status(void *buf,
-                                int count,
+                                MPI_Aint count,
                                 MPI_Datatype dt,
                                 int source,
                                 int tag,
@@ -81,7 +81,7 @@ int MPIR_TSP_sched_irecv_status(void *buf,
 
 /* Transport function to schedule an imcast vertex */
 int MPIR_TSP_sched_imcast(const void *buf,
-                          int count,
+                          MPI_Aint count,
                           MPI_Datatype dt,
                           int *dests,
                           int num_dests,
@@ -91,7 +91,7 @@ int MPIR_TSP_sched_imcast(const void *buf,
 
 
 /* Transport function to schedule a local reduce vertex */
-int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, int count,
+int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count,
                                 MPI_Datatype datatype, MPI_Op op, MPIR_TSP_sched_t sched,
                                 int n_in_vtcs, int *in_vtcs, int *vtx_id);
 

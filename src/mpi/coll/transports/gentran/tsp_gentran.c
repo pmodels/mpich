@@ -187,7 +187,7 @@ int MPIR_TSP_sched_generic(int type_id, void *data,
 }
 
 int MPIR_TSP_sched_isend(const void *buf,
-                         int count,
+                         MPI_Aint count,
                          MPI_Datatype dt,
                          int dest,
                          int tag,
@@ -224,7 +224,7 @@ int MPIR_TSP_sched_isend(const void *buf,
 
 
 int MPIR_TSP_sched_irecv(void *buf,
-                         int count,
+                         MPI_Aint count,
                          MPI_Datatype dt,
                          int source,
                          int tag,
@@ -258,7 +258,7 @@ int MPIR_TSP_sched_irecv(void *buf,
 }
 
 int MPIR_TSP_sched_irecv_status(void *buf,
-                                int count,
+                                MPI_Aint count,
                                 MPI_Datatype dt,
                                 int source,
                                 int tag,
@@ -295,7 +295,7 @@ int MPIR_TSP_sched_irecv_status(void *buf,
 
 
 int MPIR_TSP_sched_imcast(const void *buf,
-                          int count,
+                          MPI_Aint count,
                           MPI_Datatype dt,
                           int *dests,
                           int num_dests,
@@ -335,7 +335,7 @@ int MPIR_TSP_sched_imcast(const void *buf,
 }
 
 int MPIR_TSP_sched_issend(const void *buf,
-                          int count,
+                          MPI_Aint count,
                           MPI_Datatype dt,
                           int dest,
                           int tag,
@@ -367,7 +367,7 @@ int MPIR_TSP_sched_issend(const void *buf,
     return mpi_errno;
 }
 
-int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, int count,
+int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count,
                                 MPI_Datatype datatype, MPI_Op op, MPIR_TSP_sched_t s,
                                 int n_in_vtcs, int *in_vtcs, int *vtx_id)
 {
