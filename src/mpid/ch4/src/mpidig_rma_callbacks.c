@@ -1672,13 +1672,13 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(void *am_hdr, void *data,
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
     win = origin_req->u.rma.win;
     /* origin datatype to be released in MPIDIG_get_acc_data_origin_cb */
-    MPIDIG_REQUEST(rreq, datatype) = MPIDIG_REQUEST(origin_req, req->areq.origin_datatype);
+    MPIDIG_REQUEST(rreq, datatype) = MPIDIG_REQUEST(origin_req, datatype);
 
     CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(origin_req, u.origin.target_rank),
                             MPIDIG_GET_ACC_DAT_REQ, &dat_msg, sizeof(dat_msg),
-                            MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
-                            MPIDIG_REQUEST(origin_req, req->areq.origin_count),
-                            MPIDIG_REQUEST(origin_req, req->areq.origin_datatype), local_vci,
+                            MPIDIG_REQUEST(origin_req, buffer),
+                            MPIDIG_REQUEST(origin_req, count),
+                            MPIDIG_REQUEST(origin_req, datatype), local_vci,
                             remote_vci, rreq), (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
