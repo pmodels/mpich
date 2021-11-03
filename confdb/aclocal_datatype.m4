@@ -177,7 +177,7 @@ AC_DEFUN([PAC_F77_CHECK_FIXED_INTEGER], [
         eval pac_cv_f77_sizeof_integer$1=0
     else
         eval pac_cv_f77_sizeof_integer$1=$1
-        AC_DEFINE_UNQUOTED(MPIR_REAL$1_CTYPE,$pac_retval,[C type to use for MPI_INTEGER$1])
+        AC_DEFINE_UNQUOTED(MPIR_INTEGER$1_CTYPE,$pac_retval,[C type to use for MPI_INTEGER$1])
     fi
 ])
 
