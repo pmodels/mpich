@@ -527,6 +527,7 @@ def dump_f77_c_func(func):
         err = func['parameters'][-1]['name']
         if re.match(r'MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
             G.out.append("/* dummy function, not callable */")
+            G.out.append("return 0;")
         elif re.match(r'MPI.*_DUP_FN', func['name'], re.IGNORECASE):
             G.out.append("* (MPI_Aint *) attribute_val_out = * (MPI_Aint *) attribute_val_in;")
             G.out.append("*flag = MPII_TO_FLOG(1);")
@@ -841,7 +842,10 @@ def dump_f77_c_func(func):
         c_arg_list_A.insert(0, "0, 0")
         c_arg_list_B.insert(0, "0, 0")
 
-    if 'return' not in func:
+    if re.match(r'MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
+        param_str = "void *userbuf, MPI_Datatype datatype, int count, void *filebuf, MPI_Offset position, void *extra_state"
+        return_type = "int"
+    elif 'return' not in func:
         if not need_skip_ierr:
             if c_param_list:
                 param_str = ', '.join(c_param_list) + ", MPI_Fint *ierr"
