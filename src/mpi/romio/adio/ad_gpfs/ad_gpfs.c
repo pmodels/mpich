@@ -22,11 +22,7 @@ struct ADIOI_Fns_struct ADIO_GPFS_operations = {
     ADIOI_GPFS_WriteStridedColl,        /* WriteStridedColl */
     ADIOI_GEN_SeekIndividual,   /* SeekIndividual */
     ADIOI_GEN_Fcntl,    /* Fcntl */
-#if defined(BGQPLATFORM) || defined(PEPLATFORM)
-    ADIOI_GPFS_SetInfo, /* SetInfo for BlueGene or PE */
-#else
-    ADIOI_GEN_SetInfo,  /* SetInfo for any platform besides BlueGene or PE */
-#endif
+    ADIOI_GPFS_SetInfo, /* SetInfo, including parsing environment variables for GPFS driver  */
     ADIOI_GEN_ReadStrided,      /* ReadStrided */
     ADIOI_GEN_WriteStrided,     /* WriteStrided */
     ADIOI_GPFS_Close,   /* Close */

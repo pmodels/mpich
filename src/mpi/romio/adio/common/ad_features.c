@@ -15,6 +15,7 @@ int ADIOI_GEN_Feature(ADIO_File fd, int flag)
         case ADIO_UNLINK_AFTER_CLOSE:
         case ADIO_TWO_PHASE:
         case ADIO_SCALABLE_RESIZE:
+        case ADIO_IMMEDIATELY_VISIBLE:
             return 1;
             break;
         case ADIO_SCALABLE_OPEN:

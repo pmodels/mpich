@@ -235,6 +235,10 @@ typedef struct {
     void *am_send_seq_tracker;
     void *am_recv_seq_tracker;
 
+    /* active message trackers */
+    int am_inflight_inject_emus;
+    int am_inflight_rma_send_mrs;
+
     /* Queue (utlist) to store early-arrival active messages */
     MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
 
@@ -372,10 +376,6 @@ typedef struct {
     uint64_t global_max_optimized_mr_key;
     /* stores the maximum of last recently used regular memory region key */
     uint64_t global_max_regular_mr_key;
-
-    /* Active Message Globals */
-    MPL_atomic_int_t am_inflight_inject_emus;
-    MPL_atomic_int_t am_inflight_rma_send_mrs;
 
     /* Process management and PMI globals */
     int pname_set;

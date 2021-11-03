@@ -1082,8 +1082,11 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     /* Progress until we drain all inflight RMA send long buffers */
     /* NOTE: am currently only use vni 0. Need update once that changes */
-    while (MPL_atomic_load_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs) > 0)
-        MPIDI_OFI_PROGRESS(0);
+    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+        while (MPIDI_OFI_global.per_vni[vni].am_inflight_rma_send_mrs > 0) {
+            MPIDI_OFI_PROGRESS(vni);
+        }
+    }
 
     /* Destroy RMA key allocator */
     MPIDI_OFI_mr_key_allocator_destroy();
@@ -1107,9 +1110,12 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     /* Progress until we drain all inflight injection emulation requests */
     /* NOTE: am currently only use vni 0. Need update once that changes */
-    while (MPL_atomic_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) > 0)
-        MPIDI_OFI_PROGRESS(0);
-    MPIR_Assert(MPL_atomic_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) == 0);
+    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
+        while (MPIDI_OFI_global.per_vni[vni].am_inflight_inject_emus > 0) {
+            MPIDI_OFI_PROGRESS(vni);
+        }
+        MPIR_Assert(MPIDI_OFI_global.per_vni[vni].am_inflight_inject_emus == 0);
+    }
 
     /* Tearing down endpoints in reverse order they were created */
     for (int nic = MPIDI_OFI_global.num_nics - 1; nic >= 0; nic--) {
@@ -1784,12 +1790,13 @@ int ofi_am_init(void)
             MPIDI_OFI_global.per_vni[vni].am_unordered_msgs = NULL;
 
             MPIDI_OFI_global.per_vni[vni].deferred_am_isend_q = NULL;
+
+            MPIDI_OFI_global.per_vni[vni].am_inflight_inject_emus = 0;
+            MPIDI_OFI_global.per_vni[vni].am_inflight_rma_send_mrs = 0;
         }
         MPIDIG_am_reg_cb(MPIDI_OFI_INTERNAL_HANDLER_CONTROL, NULL, &MPIDI_OFI_control_handler);
         MPIDIG_am_reg_cb(MPIDI_OFI_AM_RDMA_READ_ACK, NULL, &MPIDI_OFI_am_rdma_read_ack_handler);
     }
-    MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
-    MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
 
   fn_exit:
     return mpi_errno;
