@@ -86,7 +86,7 @@ int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr);
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len);
 
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr));
-int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id);
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id);
 
 int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id);
 

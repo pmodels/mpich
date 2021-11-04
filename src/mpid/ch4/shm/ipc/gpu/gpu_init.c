@@ -76,12 +76,15 @@ int MPIDI_GPU_init_world(void)
 {
     int mpl_err, mpi_errno = MPI_SUCCESS;
     int device_count;
+    /* my_max_* represents the max value local to the process. node_max_* represents the max value
+     * between all node-local processes. */
     int my_max_dev_id, node_max_dev_id = -1;
+    int my_max_subdev_id, node_max_subdev_id = -1;
 
     MPIR_CHKPMEM_DECL(1);
 
     MPIDI_GPUI_global.initialized = 0;
-    mpl_err = MPL_gpu_get_dev_count(&device_count, &my_max_dev_id);
+    mpl_err = MPL_gpu_get_dev_count(&device_count, &my_max_dev_id, &my_max_subdev_id);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_get_dev_count");
     if (device_count < 0)
         goto fn_exit;
@@ -97,7 +100,26 @@ int MPIDI_GPU_init_world(void)
     }
     MPIDU_Init_shm_barrier();
 
-    MPIDI_GPUI_global.global_max_dev_id = node_max_dev_id;
+    MPIDU_Init_shm_put(&my_max_subdev_id, sizeof(int));
+    MPIDU_Init_shm_barrier();
+
+    /* get node max subdevice count */
+    for (int i = 0; i < MPIR_Process.local_size; ++i) {
+        MPIDU_Init_shm_get(i, sizeof(int), &my_max_subdev_id);
+        if (my_max_subdev_id > node_max_subdev_id)
+            node_max_subdev_id = my_max_subdev_id;
+    }
+    MPIDU_Init_shm_barrier();
+
+    /* Initialize the local and global device mappings */
+    MPL_gpu_init_device_mappings(node_max_dev_id, node_max_subdev_id);
+
+    if (my_max_subdev_id > 0) {
+        MPIDI_GPUI_global.global_max_dev_id =
+            node_max_dev_id + (node_max_dev_id + 1) * my_max_subdev_id;
+    } else {
+        MPIDI_GPUI_global.global_max_dev_id = node_max_dev_id;
+    }
 
     MPIR_CHKPMEM_MALLOC(MPIDI_GPUI_global.visible_dev_global_id, int8_t **,
                         sizeof(int8_t *) * MPIR_Process.local_size, mpi_errno, "gpu devmaps",
