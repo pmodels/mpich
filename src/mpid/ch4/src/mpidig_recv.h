@@ -16,11 +16,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_prepare_recv_req(int rank, int tag,
 {
     MPIR_FUNC_ENTER;
 
-    MPIDIG_REQUEST(rreq, rank) = rank;
-    MPIDIG_REQUEST(rreq, tag) = tag;
-    MPIDIG_REQUEST(rreq, context_id) = context_id;
+    MPIDIG_REQUEST(rreq, u.recv.source) = rank;
+    MPIDIG_REQUEST(rreq, u.recv.tag) = tag;
+    MPIDIG_REQUEST(rreq, u.recv.context_id) = context_id;
     MPIDIG_REQUEST(rreq, datatype) = datatype;
-    MPIDIG_REQUEST(rreq, buffer) = (char *) buf;
+    MPIDIG_REQUEST(rreq, buffer) = buf;
     MPIDIG_REQUEST(rreq, count) = count;
 
     MPIR_FUNC_EXIT;
@@ -105,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_reply_ssend(MPIR_Request * rreq)
 
     int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
     int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
-    CH4_CALL(am_send_hdr_reply(rreq->comm, MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK,
+    CH4_CALL(am_send_hdr_reply(rreq->comm, MPIDIG_REQUEST(rreq, u.recv.source), MPIDIG_SSEND_ACK,
                                &ack_msg, (MPI_Aint) sizeof(ack_msg), local_vci, remote_vci),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
@@ -127,8 +127,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
         /* if we have an unexp buffer, we just need to copy the data in it to the user buffer */
         /* This is the fast path and we can avoid calling the target_cmpl_cb and complete the
          * request here */
-        rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
-        rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
+        rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, u.recv.source);
+        rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, u.recv.tag);
 
         mpi_errno = MPIDIG_copy_from_unexp_req(rreq, buf, datatype, count);
         MPIR_ERR_CHECK(mpi_errno);
@@ -156,7 +156,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
             MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
             MPIR_Datatype_add_ref_if_not_builtin(datatype);
             MPIDIG_REQUEST(rreq, datatype) = datatype;
-            MPIDIG_REQUEST(rreq, buffer) = (char *) buf;
+            MPIDIG_REQUEST(rreq, buffer) = buf;
             MPIDIG_REQUEST(rreq, count) = count;
             MPIDIG_recv_type_init(unexp_data_sz, rreq);
         }
@@ -214,7 +214,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
             /* Matching receive is now posted, tell the netmod/shmmod */
             MPIR_Datatype_add_ref_if_not_builtin(datatype);
             MPIDIG_REQUEST(unexp_req, datatype) = datatype;
-            MPIDIG_REQUEST(unexp_req, buffer) = (char *) buf;
+            MPIDIG_REQUEST(unexp_req, buffer) = buf;
             MPIDIG_REQUEST(unexp_req, count) = count;
             if (*request == NULL) {
                 /* Regular (non-enqueuing) path: MPIDIG is responsbile for allocating
@@ -310,7 +310,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
         MPI_Aint data_sz = MPIDIG_REQUEST(message, count);
         /* Matching receive is now posted, tell the netmod */
         MPIDIG_REQUEST(message, datatype) = datatype;
-        MPIDIG_REQUEST(message, buffer) = (char *) buf;
+        MPIDIG_REQUEST(message, buffer) = buf;
         MPIDIG_REQUEST(message, count) = count;
         MPIDIG_REQUEST(message, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
         MPIDIG_recv_type_init(data_sz, message);
