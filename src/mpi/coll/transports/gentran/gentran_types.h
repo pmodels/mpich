@@ -45,7 +45,7 @@ typedef struct MPII_Genutil_vtx_t {
     union {
         struct {
             const void *buf;
-            int count;
+            MPI_Aint count;
             MPI_Datatype dt;
             int dest;
             int tag;
@@ -54,7 +54,7 @@ typedef struct MPII_Genutil_vtx_t {
         } isend;
         struct {
             void *buf;
-            int count;
+            MPI_Aint count;
             MPI_Datatype dt;
             int src;
             int tag;
@@ -63,7 +63,7 @@ typedef struct MPII_Genutil_vtx_t {
         } irecv;
         struct {
             void *buf;
-            int count;
+            MPI_Aint count;
             MPI_Datatype dt;
             int src;
             int tag;
@@ -73,7 +73,7 @@ typedef struct MPII_Genutil_vtx_t {
         } irecv_status;
         struct {
             const void *buf;
-            int count;
+            MPI_Aint count;
             MPI_Datatype dt;
             UT_array dests;
             int num_dests;
@@ -84,7 +84,7 @@ typedef struct MPII_Genutil_vtx_t {
         } imcast;
         struct {
             const void *buf;
-            int count;
+            MPI_Aint count;
             MPI_Datatype dt;
             int dest;
             int tag;
@@ -94,7 +94,7 @@ typedef struct MPII_Genutil_vtx_t {
         struct {
             const void *inbuf;
             void *inoutbuf;
-            int count;
+            MPI_Aint count;
             MPI_Datatype datatype;
             MPI_Op op;
         } reduce_local;

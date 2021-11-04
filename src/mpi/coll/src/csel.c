@@ -909,7 +909,8 @@ static inline MPI_Aint get_avg_msgsize(MPIR_Csel_coll_sig_s coll_info)
 
 static inline int get_count(MPIR_Csel_coll_sig_s coll_info)
 {
-    int count = 0, i = 0;
+    MPI_Aint count = 0;
+    int i = 0;
     int comm_size = coll_info.comm_ptr->local_size;
 
     switch (coll_info.coll_type) {
