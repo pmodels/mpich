@@ -17,4 +17,9 @@ int MPIDI_GPU_init_world(void);
 int MPIDI_GPU_mpi_finalize_hook(void);
 int MPIDI_GPU_ipc_handle_cache_insert(int rank, MPIR_Comm * comm, MPIDI_GPU_ipc_handle_t handle);
 
+typedef struct {
+    int max_dev_id;
+    int max_subdev_id;
+} MPIDI_GPU_device_info_t;
+
 #endif /* GPU_POST_H_INCLUDED */

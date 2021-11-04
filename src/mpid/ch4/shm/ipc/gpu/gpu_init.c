@@ -75,26 +75,44 @@ int MPIDI_GPU_init_world(void)
 {
     int mpl_err, mpi_errno = MPI_SUCCESS;
     int device_count;
+    /* my_max_* represents the max value local to the process. node_max_* represents the max value
+     * between all node-local processes. */
     int my_max_dev_id, node_max_dev_id = -1;
+    int my_max_subdev_id, node_max_subdev_id = -1;
+    MPIDI_GPU_device_info_t local_gpu_info, remote_gpu_info;
 
     MPIDI_GPUI_global.initialized = 0;
-    mpl_err = MPL_gpu_get_dev_count(&device_count, &my_max_dev_id);
+    mpl_err = MPL_gpu_get_dev_count(&device_count, &my_max_dev_id, &my_max_subdev_id);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_get_dev_count");
     if (device_count < 0)
         goto fn_exit;
 
-    MPIDU_Init_shm_put(&my_max_dev_id, sizeof(int));
+    local_gpu_info.max_dev_id = remote_gpu_info.max_dev_id = my_max_dev_id;
+    local_gpu_info.max_subdev_id = remote_gpu_info.max_subdev_id = my_max_subdev_id;
+
+    MPIDU_Init_shm_put(&local_gpu_info, sizeof(MPIDI_GPU_device_info_t));
     MPIDU_Init_shm_barrier();
 
     /* get node max device id */
     for (int i = 0; i < MPIR_Process.local_size; i++) {
-        MPIDU_Init_shm_get(i, sizeof(int), &my_max_dev_id);
-        if (my_max_dev_id > node_max_dev_id)
-            node_max_dev_id = my_max_dev_id;
+        MPIDU_Init_shm_get(i, sizeof(MPIDI_GPU_device_info_t), &remote_gpu_info);
+        if (remote_gpu_info.max_dev_id > node_max_dev_id)
+            node_max_dev_id = remote_gpu_info.max_dev_id;
+        if (remote_gpu_info.max_subdev_id > node_max_subdev_id)
+            node_max_subdev_id = remote_gpu_info.max_subdev_id;
     }
     MPIDU_Init_shm_barrier();
 
-    MPIDI_GPUI_global.global_max_dev_id = node_max_dev_id;
+    /* Initialize the local and global device mappings */
+    MPL_gpu_init_device_mappings(node_max_dev_id, node_max_subdev_id);
+
+    if (node_max_subdev_id > 0) {
+        /* global_device_count = device_count * (subdevice_count + 1)
+         * global_max_dev_id = global_devices - 1 */
+        MPIDI_GPUI_global.global_max_dev_id = (node_max_dev_id + 1) * (node_max_subdev_id + 2) - 1;
+    } else {
+        MPIDI_GPUI_global.global_max_dev_id = node_max_dev_id;
+    }
 
     MPIDI_GPUI_global.local_procs = MPIR_Process.node_local_map;
     MPIDI_GPUI_global.local_ranks =

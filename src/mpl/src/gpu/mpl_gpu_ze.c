@@ -113,7 +113,7 @@ static int gpu_mem_hook_init(void);
             goto fn_fail; \
     } while (0)
 
-int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdev_id)
 {
     int ret = MPL_SUCCESS;
     if (!gpu_initialized) {
@@ -122,6 +122,7 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
 
     *dev_cnt = local_ze_device_count;
     *dev_id = max_dev_id;
+    *subdev_id = max_subdev_id;
     return ret;
 }
 
