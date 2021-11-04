@@ -905,12 +905,13 @@ static HYD_status launch_procs(struct pmip_pg *pg)
                 int dev_count = 0;
                 int n_dev_ids = 0;
                 int max_dev_id = 0;
+                int max_subdev_id = 0;
                 char **all_dev_ids = NULL;
                 char **child_dev_ids = NULL;
                 char *affinity_env_str = NULL;
                 int n_gpu_assgined = 0;
 
-                MPL_gpu_get_dev_count(&dev_count, &max_dev_id);
+                MPL_gpu_get_dev_count(&dev_count, &max_dev_id, &max_subdev_id);
                 MPL_gpu_get_dev_list(&n_dev_ids, &all_dev_ids, allocate_subdev);
                 child_dev_ids = (char **) MPL_malloc(n_local_gpus * sizeof(char *), MPL_MEM_OTHER);
                 HYDU_ASSERT(child_dev_ids, status);

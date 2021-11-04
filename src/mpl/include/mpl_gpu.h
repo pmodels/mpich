@@ -97,7 +97,7 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len);
 int MPL_gpu_get_root_device(int dev_id);
 
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr));
-int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id);
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id);
 int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev);
 int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env);
 
