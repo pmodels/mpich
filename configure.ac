@@ -2735,8 +2735,6 @@ AC_CHECK_SIZEOF(wchar_t, 0, [
 #endif
 ])
 
-AC_CHECK_SIZEOF(_BOOL, 0)
-
 AC_CHECK_SIZEOF(__float128, 0)
 if test "$ac_cv_sizeof___float128" = "16" ; then
     AC_DEFINE(HAVE_FLOAT128, 1, [Define if __float128 is supported])

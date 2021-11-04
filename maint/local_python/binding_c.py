@@ -160,25 +160,35 @@ def dump_mpir_impl_h(f):
         print("#endif /* MPIR_IMPL_H_INCLUDED */", file=Out)
 
 def get_qmpi_decl_from_func_decl(func_decl):
-    func_decl = re.sub('\(void\)', '()', func_decl, 1)
-    func_decl = re.sub(' MPI', ' QMPI', func_decl, 1)
-    func_decl = re.sub('\(', '(QMPI_Context context, int tool_id, ', func_decl, 1)
-    func_decl = re.sub(', \)', ')', func_decl, 1) # Remove the extra comma from the previous
-                                                  # line (if there is one)
-    return func_decl
+    if RE.match(r'(.*) (MPIX?_\w+)\((.*?)\)(.*)', func_decl):
+        T, name, args, tail = RE.m.group(1,2,3,4)
+    else:
+        raise Exception("Bad pattern in declaration %s" % func_decl)
+
+    if args == 'void':
+        t = "%s Q%s(QMPI_Context context, int tool_id)" % (T, name)
+    else:
+        t = "%s Q%s(QMPI_Context context, int tool_id, %s)" % (T, name, args)
+
+    while RE.search(r'MPICH_ATTR_POINTER_WITH_TYPE_TAG\((\d+),(\d+)\)(.*)', tail):
+        i1, i2, tail = RE.m.group(1, 2, 3)
+        t += " MPICH_ATTR_POINTER_WITH_TYPE_TAG(%d,%d)" % (int(i1) + 2, int(i2) + 2)
+
+    t += " MPICH_API_PUBLIC"
+
+    return t
 
 def get_qmpi_typedef_from_func_decl(func_decl):
-    func_decl = re.sub('\(void\)', '()', func_decl, 1)
-    func_decl = re.sub(" MPI", " QMPI", func_decl, 1)
-    func_decl = re.sub("\(", "_t) (QMPI_Context context, int tool_id, ", func_decl, 1)
-    func_decl = re.sub(', \)', ')', func_decl, 1) # Remove the extra comma from the previous
-                                                  # line (if there is one)
-    func_decl = re.sub("QMPI", "(QMPI", func_decl, 1)
-    func_decl = re.sub("^", "typedef ", func_decl, 1)
-    func_decl = re.sub("\s*$", ";", func_decl, 1)
-    func_decl = re.sub(" MPICH_API_PUBLIC", "", func_decl, 1)
-    func_decl = re.sub(" MPICH_ATTR_POINTER_WITH_TYPE_TAG\(.*,.*\)", "", func_decl, 1)
-    return func_decl
+    if RE.match(r'(.*) (MPIX?_\w+)\((.*?)\)', func_decl):
+        T, name, args = RE.m.group(1,2,3)
+    else:
+        raise Exception("Bad pattern in declaration %s" % func_decl)
+
+    if args == 'void':
+        t = "typedef %s (Q%s_t) (QMPI_Context context, int tool_id);" % (T, name)
+    else:
+        t = "typedef %s (Q%s_t) (QMPI_Context context, int tool_id, %s);" % (T, name, args)
+    return t
 
 def need_skip_qmpi(func_name):
     # If this is a large count function, it needs to have the suffix removed since we add that
