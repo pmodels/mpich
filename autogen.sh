@@ -71,6 +71,8 @@ do_quick=no
 for arg in "$@" ; do
     if test $arg = "-quick"; then
         do_quick=yes
+        do_hwloc=no
+        do_json=no
         do_izem=no
         do_ofi=no
         do_ucx=no
