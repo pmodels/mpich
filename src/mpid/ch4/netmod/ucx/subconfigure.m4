@@ -41,7 +41,13 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
     if test "$with_ucx" = "embedded" ; then
         PAC_PUSH_ALL_FLAGS()
         PAC_RESET_ALL_FLAGS()
-        PAC_CONFIG_SUBDIR_ARGS([modules/ucx],[--disable-static --enable-embedded --with-java=no],[],[AC_MSG_ERROR(ucx configure failed)])
+        if test "$enable_fast" = "yes" -o "$enable_fast" = "all" ; then
+            # add flags from contrib/configure-release and contrib/configure-opt scripts in the ucx source
+            ucx_opt_flags="--disable-logging --disable-debug --disable-assertions --disable-params-check --enable-optimizations"
+        else
+            ucx_opt_flags=""
+        fi
+        PAC_CONFIG_SUBDIR_ARGS([modules/ucx],[--disable-static --enable-embedded --with-java=no $ucx_opt_flags],[],[AC_MSG_ERROR(ucx configure failed)])
         PAC_POP_ALL_FLAGS()
         PAC_APPEND_FLAG([-I${main_top_builddir}/modules/ucx/src], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/ucx/src], [CPPFLAGS])
