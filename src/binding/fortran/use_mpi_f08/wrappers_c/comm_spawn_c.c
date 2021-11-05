@@ -3,7 +3,6 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpiimpl.h"
 #include "cdesc.h"
 
 int MPIR_Comm_spawn_c(const char *command, char *argv_f, int maxprocs, MPI_Info info, int root,

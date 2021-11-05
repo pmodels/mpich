@@ -3,7 +3,6 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpiimpl.h"
 #include "cdesc.h"
 
 int MPIR_Comm_spawn_multiple_c(int count, char *array_of_commands_f,
