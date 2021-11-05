@@ -57,16 +57,13 @@ MPICH uses the environment variable `MPIR_CVAR_<collname>_COMPOSITION` to indica
 
 *  Auto: Auto selection by using the JSON file.
 
-*   NM + SHM with send-recv is used for BCAST, IBCAST, REDUCE, and IREDUCE algorithms and uses an algorithm that takes advantage of the shared memory among the ranks on the same node. With this composition, if the collective root rank and the node lead rank are different, there is first a  point to point message between the collective root rank and the lead rank of the node where the collective root rank runs (MPICH usually selects as lead rank the rank with lowest id on the node).
+*   NM + SHM with send-recv is used for BCAST and REDUCE algorithms and uses an algorithm that takes advantage of the shared memory among the ranks on the same node. With this composition, if the collective root rank and the node lead rank are different, there is first a  point to point message between the collective root rank and the lead rank of the node where the collective root rank runs (MPICH usually selects as lead rank the rank with lowest id on the node).
 
-*  NM + SHM without send-recv is used for BCAST, IBCAST, REDUCE, and IREDUCE algorithms and uses an algorithm that takes advantage of the shared memory among the ranks on the same node. With this composition, if the collective root rank and the node lead rank are different there is no point to point message, but instead a BCAST or a REDUCE operation is performed on the node where the collective root rank runs. This Bcast or Reduce is executed in the beginning of the BCAST or at the end of the REDUCE, respectively.
+*  NM + SHM without send-recv is used for BCAST and REDUCE algorithms and uses an algorithm that takes advantage of the shared memory among the ranks on the same node. With this composition, if the collective root rank and the node lead rank are different there is no point to point message, but instead a BCAST or a REDUCE operation is performed on the node where the collective root rank runs. This Bcast or Reduce is executed in the beginning of the BCAST or at the end of the REDUCE, respectively.
 
 * NM only: Does not apply a composition. The collective executes without taking into account whether the ranks are within the same or different nodes.
 
 *  NM + SHM with reduce + Bcast. The intra-node part of the collective uses an algorithm that takes advantage of the shared memory of the node and that executes the collective as an intra-node reduce, and inter-node allreduce, and an intra-node reduce operation.
-
-For non-blocking collectives IBCAST, IREDUCE, and IALLREDUCE, pipelined implementations can be enabled with the CVAR `MPIR_CVAR_<collname>_COMPOSITION_PIPELINE_CHUNK_SIZE` and corresponding chunksize, where \<collname\> can be IBCAST, IREDUCE, or IALLREDUCE.
-A "0" value is used to disable pipelining. This CVAR can be used only when one of the  NM + SHM compositions is chosen. When using pipelining with IBCAST, IREDUCE or IALLREDUCE, the CVAR `MPIR_CVAR_<collname>_COMPOSITION_WINDOW_SIZE` controls how many outstanding chunks can be in flight concurrently.
 
 
 **Table I: CVARS for composition configurations**
@@ -75,42 +72,20 @@ A "0" value is used to disable pipelining. This CVAR can be used only when one o
 + ============== + ================================================= + ============================================== +
 | Composition    | Name of CVAR                                      | Options                                        |
 + ============== + ================================================= + ============================================== +
-| BCAST/IBCASST  | MPIR_CVAR_BCAST_COMPOSITION/                      | 0 (Auto Selection), 1 (NM + SHM with send-recv)|
-|                | MPIR_CVAR_IBCAST_COMPOSITION                      | 2 (NM + SHM without send-recv), 3 (NM only)    |
-+ -------------- + ------------------------------------------------- + ---------------------------------------------- +
-| IBCAST         | MPIR_CVAR_IBCAST_COMPOSITION_PIPELINE_CHUNK_SIZE  | CHUNK_SIZE (only valid with                    |
-|                |                                                   | MPIR_CVAR_IBCAST_COMPOSITION = {1, 2}). Set    |
-|                |                                                   | value to 0 to disable pipelining               |
-+ -------------- + ------------------------------------------------- + ---------------------------------------------- +
-| IBCAST         | MPIR_CVAR_IBCAST_COMPOSITION_WINDOW_SIZE          | WINDOW_SIZE (only valid with                   |
-|                |                                                   | MPIR_CVAR_IBCAST_COMPOSITION = {1, 2})         |
+| BCAST          | MPIR_CVAR_BCAST_COMPOSITION                       | 0 (Auto Selection), 1 (NM + SHM with send-recv)|
+|                |                                                   | 2 (NM + SHM without send-recv), 3 (NM only)    |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
 | REDUCE/IREDUCE | MPIR_CVAR_REDUCE_COMPOSITION /                    | 0 (Auto Selection), 1 (NM + SHM with send-recv)|
 |                | MPIR_CVAR_IREDUCE_COMPOSITION                     | 2 (NM + SHM without send-recv), 3 (NM only)    |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
-| IREDUCE        | MPIR_CVAR_IREDUCE_COMPOSITION_PIPELINE_CHUNK_SIZE | CHUNK_SIZE (only valid with                    |
-|                |                                                   | MPIR_CVAR_IBCAST_COMPOSITION = {1, 2}. Set     |
-|                |                                                   | value to 0  disable pipelining                 |
-+ -------------- + ------------------------------------------------- + ---------------------------------------------- +
-| IREDUCE        | MPIR_CVAR_IREDUCE_COMPOSITION_WINDOW_SIZE         | WINDOW_SIZE (only valid with                   |
-|                |                                                   | MPIR_CVAR_REDUCE_COMPOSITION = {1, 2})         |
-+ -------------- + ------------------------------------------------- + ---------------------------------------------- +
-| ALLREDUCE/     | MPIR_CVAR_ALLREDUCE_COMPOSITION /                 | 0 (Auto Selection) 1 (NM + SHM with reduce +   |
-| IALLREDUCE     | MPIR_CVAR_IALLREDUCE_COMPOSITION                  | bcast) 2 (NM only) 3(SHM only)                 |
-+ -------------- + ------------------------------------------------- + ---------------------------------------------- +
-| IALLREDUCE     | MPIR_CVAR_IALLREDUCE_COMPOSITION_PIPELINE_CHUNK   | CHUNK_SIZE (only valid with                    |
-|                | _SIZE                                             | MPIR_CVAR_IBCAST_COMPOSITION = {1}. Set value  |
-|                |                                                   | to 0 to disable pipelining                     |
-+ -------------- + ------------------------------------------------- + ---------------------------------------------- +
-| IALLREDUCE     | MPIR_CVAR_IALLREDUCE_COMPOSITION_WINDOW_SIZE      | WINDOW_SIZE (only valid with                   |
-|                |                                                   | MPIR_CVAR_IALLREDUCE_COMPOSITION = {1}.        |
+| ALLREDUCE/     | MPIR_CVAR_ALLREDUCE_COMPOSITION                   | 0 (Auto Selection) 1 (NM + SHM with reduce +   |
+|                |                                                   | bcast) 2 (NM only) 3(SHM only)                 |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
 | ALLTOALL       | MPIR_CVAR_ALLTOALL_COMPOSITION                    | 0 (Auto Selection), 3 (NM only)                |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
 | ALLGATHER      | MPIR_CVAR_ALLGATHER_COMPOSITION                   | 0 (Auto Selection), 3 (NM only)                |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
-| BARRIER /      | MPIR_CVAR_BARRIER_COMPOSITION /                   | 0 (Auto Selection), 1 (NM + SHM), 2 (NM only)  |
-| IBARRIER       | MPI_CVAR_IBARRIER_COMPOSITION                     |                                                |
+| BARRIER        | MPIR_CVAR_BARRIER_COMPOSITION                     | 0 (Auto Selection), 1 (NM + SHM), 2 (NM only)  |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
 | SCAN           | MPIR_CVAR_SCAN_COMPOSITION                        | 0 (Auto Selection), 1 (NM + SHM), 2 (NM only)  |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
