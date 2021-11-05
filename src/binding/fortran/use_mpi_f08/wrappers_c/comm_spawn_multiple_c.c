@@ -52,14 +52,18 @@ int MPIR_Comm_spawn_multiple_c(int count, char *array_of_commands_f,
         array_of_argv_c = MPI_ARGVS_NULL;
     } else {
         array_of_argv_c = (char ***) malloc(sizeof(char **) * count);
-        if (!array_of_argv_c)
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+        if (!array_of_argv_c) {
+            mpi_errno = MPI_ERR_OTHER;
+            goto fn_fail;
+        }
 
         /* Allocate a temp buf to put args of a command */
         len = 256;      /* length of buf. Initialized with an arbitrary value */
         buf = (char *) malloc(sizeof(char) * len);
-        if (!buf)
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+        if (!buf) {
+            mpi_errno = MPI_ERR_OTHER;
+            goto fn_fail;
+        }
 
         for (i = 0; i < count; i++) {
             /* Extract args of command i, and put them in buf */
@@ -72,7 +76,8 @@ int MPIR_Comm_spawn_multiple_c(int count, char *array_of_commands_f,
                     newbuf = (char *) realloc(buf, len);
                     if (!newbuf) {
                         free(buf);
-                        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+                        mpi_errno = MPI_ERR_OTHER;
+                        goto fn_fail;
                     }
                     buf = newbuf;
                 }
