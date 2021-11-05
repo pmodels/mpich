@@ -68,6 +68,9 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
         if (MPIR_Part_request_is_active(posted_req)) {
             mpi_errno = MPIDIG_part_issue_cts(posted_req);
         }
+
+        /* release handshake reference */
+        MPIR_Request_free_unsafe(posted_req);
     } else {
         MPIR_Request *unexp_req = NULL;
 
