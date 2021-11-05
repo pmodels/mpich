@@ -79,6 +79,12 @@ for arg in "$@" ; do
         do_hydra=yes
         do_hydra2=no
         do_romio=no
+
+        if test -e 'modules.tar.gz' -a ! -e 'modules/PREBUILT' ; then
+            echo_n "Untaring modules.tar.gz... "
+            tar xf modules.tar.gz
+            echo "done"
+        fi
     fi
 done
 
