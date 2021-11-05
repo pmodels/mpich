@@ -684,11 +684,6 @@ export autoreconf_args
 ## Read the command-line arguments
 ########################################################################
 
-# List of steps that we will consider (We do not include depend
-# because the values for depend are not just yes/no)
-AllSteps="geterrmsgs bindings f77 build_configure getparms"
-stepsCleared=no
-
 for arg in "$@" ; do
     case $arg in 
         -quick)
@@ -728,13 +723,6 @@ for arg in "$@" ; do
 		echo "-do=$opt is unrecognized"
 		exit 1
 	    else
-		if [ $stepsCleared = no ] ; then
-		    for step in $AllSteps ; do
-			var=do_$step
-			eval $var=no
-		    done
-		    stepsCleared=yes
-		fi
 		var=do_$opt
 		eval $var=yes
 	    fi
@@ -812,13 +800,9 @@ for arg in "$@" ; do
     twice, as in 
          autogen.sh && autogen.sh -distrib
 
-    Use --do=stepname to update only a single step.  For example, 
-    --do=build_configure only updates the configure scripts.  The available
-    steps are:
+    -quick skips most of the modules autoconf. This is used when modules
+    are prebuilt and used specifically in CI testing to accelerate the build.
 EOF
-	    for step in $AllSteps ; do
-		echo "        $step"
-	    done
 	    exit 1
 	    ;;
 
