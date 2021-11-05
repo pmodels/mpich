@@ -303,14 +303,19 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             AC_MSG_NOTICE([Enabling direct embedded provider: ${ofi_direct_provider}])
         fi
 
-        ofi_subdir_args="$ofi_subdir_args $prov_config"
-
-        dnl Unset all of these env vars so they don't pollute the libfabric configuration
-        PAC_PUSH_ALL_FLAGS()
-        PAC_RESET_ALL_FLAGS()
-        CFLAGS="$CFLAGS $VISIBILITY_CFLAGS"
-        PAC_CONFIG_SUBDIR_ARGS([modules/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
-        PAC_POP_ALL_FLAGS()
+        ofilib="modules/libfabric/src/libfabric.la"
+        if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$ofilib"; then
+            ofisrcdir=""
+        else
+            ofi_subdir_args="$ofi_subdir_args $prov_config"
+            dnl Unset all of these env vars so they don't pollute the libfabric configuration
+            PAC_PUSH_ALL_FLAGS()
+            PAC_RESET_ALL_FLAGS()
+            CFLAGS="$CFLAGS $VISIBILITY_CFLAGS"
+            PAC_CONFIG_SUBDIR_ARGS([modules/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
+            PAC_POP_ALL_FLAGS()
+            ofisrcdir="${main_top_builddir}/modules/libfabric"
+        fi
         PAC_APPEND_FLAG([-I${main_top_builddir}/modules/libfabric/include], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/libfabric/include], [CPPFLAGS])
 
@@ -319,9 +324,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
             PAC_APPEND_FLAG([-DFABRIC_DIRECT],[CPPFLAGS])
         fi
-
-        ofisrcdir="${main_top_builddir}/modules/libfabric"
-        ofilib="modules/libfabric/src/libfabric.la"
     else
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an external libfabric])
         PAC_LIBS_ADD([-lfabric])

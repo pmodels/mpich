@@ -1083,10 +1083,14 @@ PAC_CHECK_HEADER_LIB_EXPLICIT([zm],[lock/zm_ticket.h],[$ZMLIBNAME],[zm_ticket_in
 if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; then
     if test "$with_zm" = "embedded" ; then
         if test -e "${use_top_srcdir}/modules/izem" ; then
-            zm_subdir_args="--enable-embedded"
-            PAC_CONFIG_SUBDIR_ARGS([modules/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
-            zmsrcdir="${main_top_builddir}/modules/izem"
-            zmlib="${main_top_builddir}/modules/izem/src/lib${ZMLIBNAME}.la"
+            zmlib="modules/izem/src/lib${ZMLIBNAME}.la"
+            if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$zmlib"; then
+                zmsrcdir=""
+            else
+                zm_subdir_args="--enable-embedded"
+                PAC_CONFIG_SUBDIR_ARGS([modules/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
+                zmsrcdir="${main_top_builddir}/modules/izem"
+            fi
             PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/izem/src/include],[CPPFLAGS])
             PAC_APPEND_FLAG([-I${main_top_builddir}/modules/izem/src/include],[CPPFLAGS])
         else
@@ -1103,12 +1107,16 @@ AC_SUBST([jsonsrcdir])
 jsonlib=""
 AC_SUBST([jsonlib])
 
-PAC_PUSH_ALL_FLAGS()
-PAC_RESET_ALL_FLAGS()
-PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--enable-embedded --disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
-PAC_POP_ALL_FLAGS()
-jsonsrcdir="${main_top_builddir}/modules/json-c"
-jsonlib="${main_top_builddir}/modules/json-c/libjson-c.la"
+jsonlib="modules/json-c/libjson-c.la"
+if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$jsonlib"; then
+    jsonsrcdir=""
+else
+    PAC_PUSH_ALL_FLAGS()
+    PAC_RESET_ALL_FLAGS()
+    PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--enable-embedded --disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
+    PAC_POP_ALL_FLAGS()
+    jsonsrcdir="${main_top_builddir}/modules/json-c"
+fi
 PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
 PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
 
