@@ -162,6 +162,9 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
 
         MPIDIG_precv_matched(*request);
     } else {
+        /* add a reference for handshake */
+        MPIR_Request_add_ref(*request);
+
         MPIDIG_enqueue_request(*request, &MPIDI_global.part_posted_list, MPIDIG_PART);
     }
 
