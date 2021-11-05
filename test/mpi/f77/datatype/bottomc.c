@@ -38,6 +38,11 @@ void c_routine_(MPI_Fint * ftype, int *errs)
     int buf[6];
     int i, rank;
 
+    /* The test only works when MPI_INTEGER has the same size as MPI_INT */
+    if (sizeof(MPI_Fint) != sizeof(int)) {
+        return;
+    }
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     MPI_Aint displs[2];
@@ -54,9 +59,7 @@ void c_routine_(MPI_Fint * ftype, int *errs)
     if (rank == 0) {
         /* the message sent contains an int count of 5, followed
          * by the 5 MPI_INTEGER entries of the Fortran array R.
-         * Here we assume MPI_INTEGER has the same size as MPI_INT
          */
-        assert(sizeof(MPI_Fint) == sizeof(int));
         MPI_Send(MPI_BOTTOM, 1, newtype, 1, 0, MPI_COMM_WORLD);
     } else {
         MPI_Recv(buf, 6, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);

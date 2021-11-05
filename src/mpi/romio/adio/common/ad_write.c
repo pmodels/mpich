@@ -89,6 +89,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
         bytes_xfered += err;
         p += err;
     }
+    fd->dirty_write = 1;
 
 #ifdef ROMIO_GPFS
     if (gpfsmpio_timing)

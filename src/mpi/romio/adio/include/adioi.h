@@ -47,6 +47,7 @@ struct ADIOI_Hints_struct {
     int deferred_open;
     int start_iodevice;
     int min_fdomain_size;
+    int synchronizing_flush;    /* "romio_synchronized_flush" hint */
     char *cb_config_list;
     int *ranklist;
     union {

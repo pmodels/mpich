@@ -91,6 +91,11 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     fd->hints->initialized = 0;
     fd->info = MPI_INFO_NULL;
 
+    /* Some ROMIO drivers will support "write tracking": omit an fsync() call
+     * if no writes happened.  Drivers supporting that feature will set the bit
+     * on write, and clear the bit on open, close, and sync. */
+    fd->dirty_write = 1;
+
     /* move system-wide hint processing *back* into open, but this time the
      * hintfile reader will do a scalable read-and-broadcast.  The global
      * ADIOI_syshints will get initialized at first open.  subsequent open
@@ -202,7 +207,8 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
             }
         }
         ADIOI_Free(fd->filename);
-        ADIOI_Free(fd->hints->ranklist);
+        if (fd->hints->ranklist != NULL)
+            ADIOI_Free(fd->hints->ranklist);
         if (fd->hints->cb_config_list != NULL)
             ADIOI_Free(fd->hints->cb_config_list);
         ADIOI_Free(fd->hints);
