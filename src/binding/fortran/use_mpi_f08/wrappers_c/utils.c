@@ -4,6 +4,7 @@
  */
 
 #include "cdesc.h"
+#include <string.h>
 
 /*
   Convert an array of strings in Fortran Format to an array of strings in C format (i.e., char* a[]).

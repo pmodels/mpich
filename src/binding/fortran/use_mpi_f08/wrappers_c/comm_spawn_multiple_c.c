@@ -4,6 +4,7 @@
  */
 
 #include "cdesc.h"
+#include <string.h>
 
 int MPIR_Comm_spawn_multiple_c(int count, char *array_of_commands_f,
                                char *array_of_argv_f, const int *array_of_maxprocs,
