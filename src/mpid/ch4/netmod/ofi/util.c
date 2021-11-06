@@ -25,10 +25,15 @@ typedef struct MPIDI_OFI_mr_key_allocator_t {
 } MPIDI_OFI_mr_key_allocator_t;
 
 static MPIDI_OFI_mr_key_allocator_t mr_key_allocator;
+static MPID_Thread_mutex_t mr_key_allocator_lock;
 
 int MPIDI_OFI_mr_key_allocator_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    int err;
+    MPID_Thread_mutex_create(&mr_key_allocator_lock, &err);
+    MPIR_Assert(err == 0);
 
     mr_key_allocator.chunk_size = 128;
     mr_key_allocator.num_ints = mr_key_allocator.chunk_size;
@@ -66,8 +71,8 @@ uint64_t MPIDI_OFI_mr_key_alloc(int key_type, uint64_t requested_key)
     switch (key_type) {
         case MPIDI_OFI_LOCAL_MR_KEY:
             {
-                uint64_t i;
-                for (i = mr_key_allocator.last_free_mr_key; i < mr_key_allocator.num_ints; i++) {
+                MPID_THREAD_CS_ENTER(VCI, mr_key_allocator_lock);
+                for (int i = mr_key_allocator.last_free_mr_key; i < mr_key_allocator.num_ints; i++) {
                     if (mr_key_allocator.bitmask[i]) {
                         register uint64_t val, nval;
                         val = mr_key_allocator.bitmask[i];
@@ -96,6 +101,7 @@ uint64_t MPIDI_OFI_mr_key_alloc(int key_type, uint64_t requested_key)
                                sizeof(uint64_t) * mr_key_allocator.chunk_size);
                     }
                 }
+                MPID_THREAD_CS_EXIT(VCI, mr_key_allocator_lock);
                 break;
             }
 
@@ -123,12 +129,14 @@ void MPIDI_OFI_mr_key_free(int key_type, uint64_t alloc_key)
             {
                 uint64_t int_index, bitpos, numbits;
 
+                MPID_THREAD_CS_ENTER(VCI, mr_key_allocator_lock);
                 numbits = sizeof(uint64_t) * 8;
                 int_index = alloc_key / numbits;
                 bitpos = alloc_key % numbits;
                 mr_key_allocator.last_free_mr_key =
                     MPL_MIN(int_index, mr_key_allocator.last_free_mr_key);
                 mr_key_allocator.bitmask[int_index] |= (0x1ULL << bitpos);
+                MPID_THREAD_CS_EXIT(VCI, mr_key_allocator_lock);
                 break;
             }
 
@@ -147,7 +155,9 @@ void MPIDI_OFI_mr_key_free(int key_type, uint64_t alloc_key)
 
 void MPIDI_OFI_mr_key_allocator_destroy(void)
 {
+    MPID_THREAD_CS_ENTER(VCI, mr_key_allocator_lock);
     MPL_free(mr_key_allocator.bitmask);
+    MPID_THREAD_CS_EXIT(VCI, mr_key_allocator_lock);
 }
 
 int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
