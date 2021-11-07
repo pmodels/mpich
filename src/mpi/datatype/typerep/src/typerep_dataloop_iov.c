@@ -12,17 +12,22 @@ int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype type, MPI_
                         struct iovec *iov, MPI_Aint max_iov_len, MPI_Aint max_iov_bytes,
                         MPI_Aint * actual_iov_len, MPI_Aint * actual_iov_bytes)
 {
-    MPIR_Segment *seg;
     int mpi_errno = MPI_SUCCESS;
 
-    seg = MPIR_Segment_alloc(buf, count, type);
+    if (max_iov_len == 0 || max_iov_bytes == 0) {
+        *actual_iov_len = 0;
+        *actual_iov_bytes = 0;
+    } else {
+        MPIR_Segment *seg;
+        seg = MPIR_Segment_alloc(buf, count, type);
 
-    MPI_Aint last = byte_offset + max_iov_bytes;
-    *actual_iov_len = max_iov_len;
-    MPIR_Segment_to_iov(seg, byte_offset, &last, iov, (int *) actual_iov_len);
-    *actual_iov_bytes = last - byte_offset;
+        MPI_Aint last = byte_offset + max_iov_bytes;
+        *actual_iov_len = max_iov_len;
+        MPIR_Segment_to_iov(seg, byte_offset, &last, iov, (int *) actual_iov_len);
+        *actual_iov_bytes = last - byte_offset;
 
-    MPIR_Segment_free(seg);
+        MPIR_Segment_free(seg);
+    }
 
     return mpi_errno;
 }
