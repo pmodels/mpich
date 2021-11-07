@@ -240,6 +240,34 @@ typedef struct ADIOI_FileD {
     struct quobyte_fh *file_handle;     /* file handle for quobytefs */
 #endif
     int dirty_write;            /* this client has written data */
+
+    /* Hint variables used by TAM */
+    char *my_req_buf;
+    char *other_req_buf;
+    char *other_req_mem;
+
+    int *global_aggregators;
+
+    int nprocs_aggregator;
+    int local_aggregator_size;
+    int is_local_aggregator;
+    int *aggregator_local_ranks;
+    int *local_aggregators;
+    int my_local_aggregator;
+    MPI_Request *req;
+    MPI_Status *sts;
+    MPI_Aint *global_recv_size;
+    MPI_Aint *local_lens;
+    int *local_send_size;
+    int *array_of_blocklengths;
+    MPI_Aint *array_of_displacements;
+    MPI_Datatype *new_types;
+    char *local_buf;
+    size_t local_buf_size;
+    int *cb_send_size;
+    int **local_aggregator_domain;
+    int *local_aggregator_domain_size;
+    int global_aggregator_index;
 } ADIOI_FileD;
 
 typedef struct ADIOI_FileD *ADIO_File;

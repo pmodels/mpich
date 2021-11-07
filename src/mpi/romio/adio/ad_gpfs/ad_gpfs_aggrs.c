@@ -196,6 +196,8 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
                                   ADIO_Offset * fd_size_ptr, void *fs_ptr)
 {
     ADIO_Offset min_st_offset, max_end_offset, *fd_start, *fd_end, *fd_size;
+
+
     int i, aggr;
     TRACE_ERR("Entering ADIOI_GPFS_Calc_file_domains\n");
     blksize_t blksize;
@@ -611,6 +613,222 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
     TRACE_ERR("Leaving ADIOI_GPFS_Calc_my_req\n");
 }
 
+/*
+ * ADIOI_GPFS_TAM_Calc_my_req() overrides ADIOI_Calc_my_req for the default implementation
+ * is specific for static file domain partitioning.
+ *
+ * ADIOI_Calc_my_req() - calculate what portions of the access requests
+ * of this process are located in the file domains of various processes
+ * (including this one)
+ */
+void ADIOI_GPFS_TAM_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * len_list,
+                                int contig_access_count, ADIO_Offset
+                                min_st_offset, ADIO_Offset * fd_start,
+                                ADIO_Offset * fd_end, ADIO_Offset fd_size,
+                                int nprocs,
+                                int *count_my_req_procs_ptr,
+                                int **count_my_req_per_proc_ptr,
+                                ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr)
+/* Possibly reconsider if buf_idx's are ok as int's, or should they be aints/offsets?
+   They are used as memory buffer indices so it seems like the 2G limit is in effect */
+{
+    ADIO_Offset *ptr;
+    int *count_my_req_per_proc, count_my_req_procs;
+    MPI_Aint *buf_idx;
+    int i, l, proc;
+    size_t memLen;
+    ADIO_Offset fd_len, rem_len, curr_idx, off;
+    ADIOI_Access *my_req;
+    int myrank;
+
+    MPI_Comm_rank(fd->comm, &myrank);
+
+
+    TRACE_ERR("Entering ADIOI_GPFS_TAM_Calc_my_req\n");
+
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event(5024, 0, NULL);
+#endif
+    *count_my_req_per_proc_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int));
+    count_my_req_per_proc = *count_my_req_per_proc_ptr;
+/* count_my_req_per_proc[i] gives the no. of contig. requests of this
+   process in process i's file domain. calloc initializes to zero.
+   I'm allocating memory of size nprocs, so that I can do an
+   MPI_Alltoall later on.*/
+
+    buf_idx = (MPI_Aint *) ADIOI_Malloc(nprocs * sizeof(MPI_Aint));
+/* buf_idx is relevant only if buftype_is_contig.
+   buf_idx[i] gives the index into user_buf where data received
+   from proc. i should be placed. This allows receives to be done
+   without extra buffer. This can't be done if buftype is not contig. */
+
+    /* initialize buf_idx to -1 */
+    for (i = 0; i < nprocs; i++)
+        buf_idx[i] = -1;
+
+    /* one pass just to calculate how much space to allocate for my_req;
+     * contig_access_count was calculated way back in ADIOI_Calc_my_off_len()
+     */
+    for (i = 0; i < contig_access_count; i++) {
+        /* short circuit offset/len processing if len == 0
+         *      (zero-byte  read/write */
+        if (len_list[i] == 0)
+            continue;
+        off = offset_list[i];
+        fd_len = len_list[i];
+        /* note: we set fd_len to be the total size of the access.  then
+         * ADIOI_Calc_aggregator() will modify the value to return the
+         * amount that was available from the file domain that holds the
+         * first part of the access.
+         */
+        /* BES */
+        proc = ADIOI_GPFS_Calc_aggregator(fd, off, min_st_offset, &fd_len, fd_size,
+                                          fd_start, fd_end);
+        count_my_req_per_proc[proc]++;
+
+        /* figure out how much data is remaining in the access (i.e. wasn't
+         * part of the file domain that had the starting byte); we'll take
+         * care of this data (if there is any) in the while loop below.
+         */
+        rem_len = len_list[i] - fd_len;
+
+        while (rem_len > 0) {
+            off += fd_len;      /* point to first remaining byte */
+            fd_len = rem_len;   /* save remaining size, pass to calc */
+            proc = ADIOI_GPFS_Calc_aggregator(fd, off, min_st_offset, &fd_len,
+                                              fd_size, fd_start, fd_end);
+
+            count_my_req_per_proc[proc]++;
+            rem_len -= fd_len;  /* reduce remaining length by amount from fd */
+        }
+    }
+
+/* now allocate space for my_req, offset, and len */
+
+    *my_req_ptr = (ADIOI_Access *)
+        ADIOI_Malloc(nprocs * sizeof(ADIOI_Access));
+    my_req = *my_req_ptr;
+
+    /* combine offsets and lens into a single regions so we can make one
+     * exchange instead of two later on.  Over-allocate the 'offsets' array and
+     * make 'lens' point to the over-allocated part
+     */
+    memLen = 0;
+    for (i = 0; i < nprocs; i++)
+        memLen += count_my_req_per_proc[i];
+    ptr = (ADIO_Offset *) ADIOI_Malloc((memLen * 2 + 1) * sizeof(ADIO_Offset));
+    fd->my_req_buf = (char *) ptr;
+
+    count_my_req_procs = 0;
+    for (i = 0; i < nprocs; ++i) {
+        my_req[i].count = 0;
+    }
+/* Prepare for TAM version of metadata aggregation. For an aggregator, the request for itself is placed to the end of the array. This is useful for efficient data transfer through contiguous MPI pt2pt function later.*/
+    if (fd->is_agg) {
+        for (i = 0; i < fd->hints->cb_nodes; i++) {
+            if (fd->hints->ranklist[i] != myrank && count_my_req_per_proc[fd->hints->ranklist[i]]) {
+                my_req[fd->hints->ranklist[i]].offsets = ptr;
+                ptr += count_my_req_per_proc[fd->hints->ranklist[i]];
+                my_req[fd->hints->ranklist[i]].lens = ptr;
+                ptr += count_my_req_per_proc[fd->hints->ranklist[i]];
+                count_my_req_procs++;
+            }
+        }
+        if (count_my_req_per_proc[myrank]) {
+            my_req[myrank].offsets = ptr;
+            ptr += count_my_req_per_proc[myrank];
+            my_req[myrank].lens = ptr;
+            ptr += count_my_req_per_proc[myrank];
+            count_my_req_procs++;
+        }
+    } else {
+        for (i = 0; i < fd->hints->cb_nodes; i++) {
+            if (count_my_req_per_proc[fd->hints->ranklist[i]]) {
+                my_req[fd->hints->ranklist[i]].offsets = ptr;
+                ptr += count_my_req_per_proc[fd->hints->ranklist[i]];
+                my_req[fd->hints->ranklist[i]].lens = ptr;
+                ptr += count_my_req_per_proc[fd->hints->ranklist[i]];
+                count_my_req_procs++;
+            }
+        }
+    }
+
+/* now fill in my_req */
+    curr_idx = 0;
+    for (i = 0; i < contig_access_count; i++) {
+        /* short circuit offset/len processing if len == 0
+         *      (zero-byte  read/write */
+        if (len_list[i] == 0)
+            continue;
+        off = offset_list[i];
+        fd_len = len_list[i];
+        proc = ADIOI_GPFS_Calc_aggregator(fd, off, min_st_offset, &fd_len, fd_size,
+                                          fd_start, fd_end);
+
+        /* for each separate contiguous access from this process */
+        if (buf_idx[proc] == -1) {
+            ADIOI_Assert(curr_idx == (MPI_Aint) curr_idx);
+            buf_idx[proc] = (MPI_Aint) curr_idx;
+        }
+
+        l = my_req[proc].count;
+        curr_idx += fd_len;
+
+        rem_len = len_list[i] - fd_len;
+
+        /* store the proc, offset, and len information in an array
+         * of structures, my_req. Each structure contains the
+         * offsets and lengths located in that process's FD,
+         * and the associated count.
+         */
+        my_req[proc].offsets[l] = off;
+        my_req[proc].lens[l] = fd_len;
+        my_req[proc].count++;
+
+        while (rem_len > 0) {
+            off += fd_len;
+            fd_len = rem_len;
+            proc = ADIOI_GPFS_Calc_aggregator(fd, off, min_st_offset, &fd_len,
+                                              fd_size, fd_start, fd_end);
+
+            if (buf_idx[proc] == -1) {
+                ADIOI_Assert(curr_idx == (MPI_Aint) curr_idx);
+                buf_idx[proc] = (MPI_Aint) curr_idx;
+            }
+
+            l = my_req[proc].count;
+            curr_idx += fd_len;
+            rem_len -= fd_len;
+
+            my_req[proc].offsets[l] = off;
+            my_req[proc].lens[l] = fd_len;
+            my_req[proc].count++;
+        }
+    }
+
+
+
+#ifdef AGG_DEBUG
+    for (i = 0; i < nprocs; i++) {
+        if (count_my_req_per_proc[i] > 0) {
+            DBG_FPRINTF(stderr, "data needed from %d (count = %d):\n", i, my_req[i].count);
+            for (l = 0; l < my_req[i].count; l++) {
+                DBG_FPRINTF(stderr, "   off[%d] = %lld, len[%d] = %lld\n", l,
+                            (long long) my_req[i].offsets[l], l, (long long) my_req[i].lens[l]);
+            }
+        }
+        DBG_FPRINTF(stderr, "buf_idx[%d] = 0x%x\n", i, buf_idx[i]);
+    }
+#endif
+
+    *count_my_req_procs_ptr = count_my_req_procs;
+    *buf_idx_ptr = buf_idx;
+#ifdef AGGREGATION_PROFILE
+    MPE_Log_event(5025, 0, NULL);
+#endif
+    TRACE_ERR("Leaving ADIOI_GPFS_Calc_my_req\n");
+}
+
 void ADIOI_GPFS_Free_my_req(int nprocs, int *count_my_req_per_proc,
                             ADIOI_Access * my_req, MPI_Aint * buf_idx)
 {
@@ -619,6 +837,15 @@ void ADIOI_GPFS_Free_my_req(int nprocs, int *count_my_req_per_proc,
             ADIOI_Free(my_req[i].offsets);
         }
     }
+    ADIOI_Free(my_req);
+    ADIOI_Free(count_my_req_per_proc);
+    ADIOI_Free(buf_idx);
+}
+
+void ADIOI_GPFS_TAM_Free_my_req(ADIO_File fd, int nprocs, int *count_my_req_per_proc,
+                                ADIOI_Access * my_req, MPI_Aint * buf_idx)
+{
+    ADIOI_Free(fd->my_req_buf);
     ADIOI_Free(my_req);
     ADIOI_Free(count_my_req_per_proc);
     ADIOI_Free(buf_idx);

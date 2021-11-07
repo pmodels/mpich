@@ -55,9 +55,18 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
                             int *count_my_req_procs_ptr,
                             int **count_my_req_per_proc_ptr,
                             ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
-
+void ADIOI_GPFS_TAM_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * len_list,
+                                int contig_access_count, ADIO_Offset
+                                min_st_offset, ADIO_Offset * fd_start,
+                                ADIO_Offset * fd_end, ADIO_Offset fd_size,
+                                int nprocs,
+                                int *count_my_req_procs_ptr,
+                                int **count_my_req_per_proc_ptr,
+                                ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
 void ADIOI_GPFS_Free_my_req(int nprocs, int *count_my_req_per_proc,
                             ADIOI_Access * my_req, MPI_Aint * buf_idx);
+void ADIOI_GPFS_TAM_Free_my_req(ADIO_File fd, int nprocs, int *count_my_req_per_proc,
+                                ADIOI_Access * my_req, MPI_Aint * buf_idx);
 
 void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
                                 int *count_my_req_per_proc,
@@ -69,5 +78,12 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 
 void ADIOI_GPFS_Free_others_req(int nprocs, int *count_others_req_per_proc,
                                 ADIOI_Access * others_req);
+
+/* Implemented in adio/common/ad_read_coll.c */
+void ADIOI_TAM_Read_Kernel(ADIO_File fd, int myrank, char *read_contig_buf, char **recv_buf,
+                           char *recv_buf_start, int *send_size, int *recv_size, int nprocs_send,
+                           size_t recv_total_size, int sum_send, int coll_bufsize,
+                           int *partial_send, ADIOI_Access * others_req, int *count,
+                           int *start_pos);
 
 #endif /* AD_GPFS_AGGRS_H_INCLUDED */

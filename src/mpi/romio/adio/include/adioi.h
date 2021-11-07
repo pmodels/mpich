@@ -331,6 +331,8 @@ struct ADIOI_Fns_struct {
 #define ADIO_IwriteStridedColl(fd,buf,count,datatype,file_ptr_type,offset,request,error_code) \
     (*(fd->fns->ADIOI_xxx_IwriteStridedColl))(fd,buf,count,datatype,file_ptr_type,offset,request,error_code)
 
+
+
 #define ADIO_Flush(fd,error_code) (*(fd->fns->ADIOI_xxx_Flush))(fd,error_code)
 
 #define ADIO_Resize(fd,size,error_code)                 \
@@ -490,15 +492,31 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
                        int *count_my_req_procs_ptr,
                        int **count_my_req_per_proc_ptr,
                        ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
+void ADIOI_TAM_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * len_list,
+                           int contig_access_count, ADIO_Offset
+                           min_st_offset, ADIO_Offset * fd_start,
+                           ADIO_Offset * fd_end, ADIO_Offset fd_size,
+                           int nprocs,
+                           int *count_my_req_procs_ptr,
+                           int **count_my_req_per_proc_ptr,
+                           ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
 void ADIOI_Free_my_req(int nprocs, int *count_my_req_per_proc,
                        ADIOI_Access * my_req, MPI_Aint * buf_idx);
+void ADIOI_TAM_Free_my_req(ADIO_File fd, int nprocs, int *count_my_req_per_proc,
+                           ADIOI_Access * my_req, MPI_Aint * buf_idx);
 void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
                            int *count_my_req_per_proc,
                            ADIOI_Access * my_req,
                            int nprocs, int myrank,
                            int *count_others_req_procs_ptr,
                            int **count_others_req_per_proc_ptr, ADIOI_Access ** others_req_ptr);
+void ADIOI_TAM_Calc_others_req(ADIO_File fd, int count_my_req_procs,
+                               int *count_my_req_per_proc,
+                               ADIOI_Access * my_req,
+                               int nprocs, int myrank,
+                               int *count_others_req_procs_ptr, ADIOI_Access ** others_req_ptr);
 void ADIOI_Free_others_req(int nprocs, int *count_others_req_per_proc, ADIOI_Access * others_req);
+void ADIOI_TAM_Free_others_req(ADIO_File fd, int nprocs, ADIOI_Access * others_req);
 
 
 /* Nonblocking Collective I/O internals */
