@@ -6,6 +6,7 @@
 #include "mpiimpl.h"
 #include <dataloop.h>
 #include "typerep_pre.h"
+#include "typerep_internal.h"
 
 int MPIR_Typerep_icopy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
                        MPIR_Typerep_req * typereq_req)
@@ -172,10 +173,27 @@ int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source
                     bool source_is_packed, int mapped_device)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
 
-    MPIR_Assert(0);
+    /* trivial cases */
+    if (op == MPI_NO_OP) {
+        goto fn_exit;
+    }
 
+    /* error checking */
+    MPIR_Assert(HANDLE_IS_BUILTIN(op));
+    MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(source_dtp));
+
+    mpi_errno = MPII_Typerep_op_fallback(source_buf, source_count, source_dtp,
+                                         target_buf, target_count, target_dtp,
+                                         op, source_is_packed);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Typerep_reduce(const void *in_buf, void *out_buf, MPI_Aint count, MPI_Datatype datatype,
