@@ -51,16 +51,17 @@ int MPIR_Typerep_ipack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatyp
         data_sz = incount * dt_ptr->size;
     }
 
-    /* make sure we don't pack more than the max bytes */
-    /* FIXME: we need to make sure to pack each basic datatype
-     * atomically, even if the max_pack_bytes allows us to split it */
-    if (data_sz > max_pack_bytes)
-        data_sz = max_pack_bytes;
-
     /* Handle contig case quickly */
     if (contig) {
-        MPIR_Memcpy(outbuf, MPIR_get_contig_ptr(inbuf, dt_true_lb + inoffset), data_sz);
-        *actual_pack_bytes = data_sz;
+        MPI_Aint pack_size = data_sz - inoffset;
+
+        /* make sure we don't pack more than the max bytes */
+        /* FIXME: we need to make sure to pack each basic datatype
+         * atomically, even if the max_pack_bytes allows us to split it */
+        pack_size = MPL_MIN(pack_size, max_pack_bytes);
+
+        MPIR_Memcpy(outbuf, MPIR_get_contig_ptr(inbuf, dt_true_lb + inoffset), pack_size);
+        *actual_pack_bytes = pack_size;
     } else {
         segp = MPIR_Segment_alloc(inbuf, incount, datatype);
         MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
