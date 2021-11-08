@@ -68,6 +68,9 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
         if (MPIR_Part_request_is_active(posted_req)) {
             mpi_errno = MPIDIG_part_issue_cts(posted_req);
         }
+
+        /* release handshake reference */
+        MPIR_Request_free_unsafe(posted_req);
     } else {
         MPIR_Request *unexp_req = NULL;
 
@@ -76,9 +79,9 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
         MPIR_ERR_CHKANDSTMT(unexp_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
 
-        MPIDI_PART_REQUEST(unexp_req, rank) = msg_hdr->src_rank;
-        MPIDI_PART_REQUEST(unexp_req, tag) = msg_hdr->tag;
-        MPIDI_PART_REQUEST(unexp_req, context_id) = msg_hdr->context_id;
+        MPIDI_PART_REQUEST(unexp_req, u.recv.source) = msg_hdr->src_rank;
+        MPIDI_PART_REQUEST(unexp_req, u.recv.tag) = msg_hdr->tag;
+        MPIDI_PART_REQUEST(unexp_req, u.recv.context_id) = msg_hdr->context_id;
         part_rreq_update_sinfo(unexp_req, msg_hdr);
 
         MPIDIG_enqueue_request(unexp_req, &MPIDI_global.part_unexp_list, MPIDIG_PART);

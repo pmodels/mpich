@@ -24,13 +24,17 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
     req->comm = comm;
 
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    MPIDI_PART_REQUEST(req, datatype) = datatype;
 
-    MPIDI_PART_REQUEST(req, rank) = rank;
-    MPIDI_PART_REQUEST(req, tag) = tag;
     MPIDI_PART_REQUEST(req, buffer) = buf;
     MPIDI_PART_REQUEST(req, count) = count;
-    MPIDI_PART_REQUEST(req, context_id) = comm->context_id;
+    MPIDI_PART_REQUEST(req, datatype) = datatype;
+    if (kind == MPIR_REQUEST_KIND__PART_SEND) {
+        MPIDI_PART_REQUEST(req, u.send.dest) = rank;
+    } else {
+        MPIDI_PART_REQUEST(req, u.recv.source) = rank;
+        MPIDI_PART_REQUEST(req, u.recv.tag) = tag;
+        MPIDI_PART_REQUEST(req, u.recv.context_id) = comm->context_id;
+    }
 
     req->u.part.partitions = partitions;
     MPIR_Part_request_inactivate(req);
@@ -69,8 +73,8 @@ void MPIDIG_precv_matched(MPIR_Request * part_req)
 
     /* Set status for partitioned req */
     MPIR_STATUS_SET_COUNT(part_req->status, sdata_size);
-    part_req->status.MPI_SOURCE = MPIDI_PART_REQUEST(part_req, rank);
-    part_req->status.MPI_TAG = MPIDI_PART_REQUEST(part_req, tag);
+    part_req->status.MPI_SOURCE = MPIDI_PART_REQUEST(part_req, u.recv.source);
+    part_req->status.MPI_TAG = MPIDI_PART_REQUEST(part_req, u.recv.tag);
     part_req->status.MPI_ERROR = MPI_SUCCESS;
 
     /* Additional check for partitioned pt2pt: require identical buffer size */
@@ -158,6 +162,9 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
 
         MPIDIG_precv_matched(*request);
     } else {
+        /* add a reference for handshake */
+        MPIR_Request_add_ref(*request);
+
         MPIDIG_enqueue_request(*request, &MPIDI_global.part_posted_list, MPIDIG_PART);
     }
 
