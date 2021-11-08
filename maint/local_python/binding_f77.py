@@ -463,7 +463,7 @@ def dump_f77_c_func(func):
         c_arg_list_B.append(v)
         if func_type == "MPI_Datarep_conversion_function":
             # FIXME: check name mangling
-            code_list_common.append("if (%s == (MPI_Datarep_conversion_function *) (void *) mpi_conversion_fn_null_) {" % v)
+            code_list_common.append("if (%s == (MPI_Datarep_conversion_function *) mpi_conversion_fn_null_) {" % v)
             code_list_common.append("    %s = NULL;" % v)
             code_list_common.append("}")
 
