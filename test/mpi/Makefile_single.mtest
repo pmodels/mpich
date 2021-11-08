@@ -12,7 +12,7 @@
 include $(top_srcdir)/Makefile_common.mtest
 
 ## then add rules/vars for mtest_single.o
-LDADD += $(top_builddir)/util/mtest_single.$(OBJEXT)
+LDADD += $(top_builddir)/util/libmtest_single.la
 
-$(top_builddir)/util/mtest_single.$(OBJEXT): $(top_srcdir)/util/mtest_single.c
-	(cd $(top_builddir)/util && $(MAKE) mtest_single.$(OBJEXT))
+$(top_builddir)/util/libmtest_single.la:
+	(cd $(top_builddir)/util && $(MAKE) libmtest_single.la)

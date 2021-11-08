@@ -88,7 +88,9 @@ noinst_PROGRAMS =             \
 # Some of the tests use a more comprehensive set of datatype tests.
 # These must specify a different LDADD that includes the object file
 # with these additional routines
-LDADDDATA = $(top_builddir)/util/dtypes.$(OBJEXT)
+LDADDDATA = $(top_builddir)/util/libdtypes.la
+$(top_builddir)/util/libdtypes.la:
+	(cd $(top_builddir)/util && $(MAKE))
 
 sendrecvt2_LDADD = $(LDADD) $(LDADDDATA)
 sendrecvt4_LDADD = $(LDADD) $(LDADDDATA)
