@@ -89,7 +89,7 @@ void list_to_nodes(char *str, struct list **node_list)
     regcomp(&ematch_old, "([a-z]+[0-9]+)", REG_EXTENDED | REG_ICASE);
 
     /* compile group-0 regex for new format: "h00-[00-12,14] | h00[00-12,14] | h00-14 | h0014" */
-    regcomp(&gmatch_new[0], "(,|^)([a-z0-9][\\.a-z0-9-]+)(\\[[-,0-9]+\\])?(,|$)",
+    regcomp(&gmatch_new[0], "(,|^)([a-z0-9][\\.a-z0-9-]*)(\\[[-,0-9]+\\])?(,|$)",
             REG_EXTENDED | REG_ICASE);
 
     /* compile group-1 regex for new format: "00-12 | 14" */
