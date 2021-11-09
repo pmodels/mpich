@@ -34,6 +34,7 @@
 #endif
 
 #include <limits.h>
+
 /* prototypes of functions used for collective writes only. */
 static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
                                  datatype, int nprocs, int myrank, ADIOI_Access
@@ -1108,7 +1109,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
         j = 0;
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
-                MPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
+                MPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, ADIOI_COLL_TAG(i, iter),
                           fd->comm, requests + j);
                 j++;
             }
@@ -1127,7 +1128,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
         for (i = 0; i < nprocs; i++)
             if (send_size[i]) {
                 MPI_Isend(((char *) buf) + buf_idx[i], send_size[i],
-                          MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, send_req + j);
+                          MPI_BYTE, i, ADIOI_COLL_TAG(i, iter), fd->comm, send_req + j);
                 j++;
                 buf_idx[i] += send_size[i];
             }
@@ -1157,8 +1158,8 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
         for (i = 0; i < nprocs; i++) {
             MPI_Status wkl_status;
             if (recv_size[i]) {
-                MPI_Recv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
-                         fd->comm, &wkl_status);
+                MPI_Recv(MPI_BOTTOM, 1, recv_types[j], i, ADIOI_COLL_TAG(i, iter), fd->comm,
+                         &wkl_status);
                 j++;
             }
         }
@@ -1337,7 +1338,7 @@ static void ADIOI_Fill_send_buffer(ADIO_File fd, const void *buf, ADIOI_Flatlist
                     ADIOI_BUF_COPY}
                     if (send_buf_idx[p] == send_size[p]) {
                         MPI_Isend(send_buf[p], send_size[p], MPI_BYTE, p,
-                                  myrank + p + 100 * iter, fd->comm, requests + jj);
+                                  ADIOI_COLL_TAG(p, iter), fd->comm, requests + jj);
                         jj++;
                     }
                 } else {
@@ -1731,7 +1732,7 @@ static void ADIOI_Fill_send_buffer_nosend(ADIO_File fd, const void *buf, ADIOI_F
                     /*
                      * if (send_buf_idx[p] == send_size[p]) {
                      * MPI_Isend(send_buf[p], send_size[p], MPI_BYTE, p,
-                     * myrank+p+100*iter, fd->comm, requests+jj);
+                     * ADIOI_COLL_TAG(p, iter), fd->comm, requests+jj);
                      * jj++;
                      * }
                      */

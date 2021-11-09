@@ -806,8 +806,8 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
         j = 0;
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
-                MPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i,
-                          myrank + i + 100 * iter, fd->comm, requests + j);
+                MPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, ADIOI_COLL_TAG(i, iter), fd->comm,
+                          requests + j);
                 j++;
             }
         }
@@ -824,7 +824,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
             if (send_size[i]) {
                 ADIOI_Assert(buf_idx[i] != -1);
                 MPI_Issend(((char *) buf) + buf_idx[i], send_size[i],
-                           MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, send_req + j);
+                           MPI_BYTE, i, ADIOI_COLL_TAG(i, iter), fd->comm, send_req + j);
                 j++;
             }
     } else if (nprocs_send) {
@@ -849,8 +849,8 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
         for (i = 0; i < nprocs; i++) {
             MPI_Status wkl_status;
             if (recv_size[i]) {
-                MPI_Recv(MPI_BOTTOM, 1, recv_types[j], i,
-                         myrank + i + 100 * iter, fd->comm, &wkl_status);
+                MPI_Recv(MPI_BOTTOM, 1, recv_types[j], i, ADIOI_COLL_TAG(i, iter), fd->comm,
+                         &wkl_status);
                 j++;
             }
         }
@@ -1025,7 +1025,7 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
                     ADIOI_BUF_COPY}
                     if (send_buf_idx[p] == send_size[p]) {
                         MPI_Issend(send_buf[p], send_size[p], MPI_BYTE, p,
-                                   myrank + p + 100 * iter, fd->comm, requests + jj);
+                                   ADIOI_COLL_TAG(p, iter), fd->comm, requests + jj);
                         jj++;
                     }
                 } else {
