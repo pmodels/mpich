@@ -18,7 +18,9 @@
 # Generate C API interface functions including man page notes and error
   checking using Python scripts.
 
-# Generate Fortran mpi_f08 binding using Python scripts.
+# Generate Fortran bindings using Python scripts.
+
+# Generate collective entrance functions and generate per-algorithm tests.
 
 # Support explicit --without-cuda configure option.
 
@@ -28,9 +30,22 @@
 
 # Multi-NIC support in ch4:ofi.
 
-   A full list of changes is available at the following link:
+# Default to ch4:ofi when configure doesn't have a clear choice. Add message
+  block at the end of configure to advise user.
 
-     http://www.mpich.org/static/downloads/4.0a2/shortlog
+# Multiple VCI is fully implemented including the active message fallback paths.
+
+# Extend IPC to support non-contig datatypes.
+
+# Add AMD GPU support using HIP.
+
+# Add generic RNDV callback mechanism with active messages.
+
+# Refactor ch4 dynamic process functions.
+
+# Avoid building MPL and hwloc multiple times.
+
+# Many bug fixes and code clean-ups.
 
 ===============================================================================
                                Changes in 3.4
