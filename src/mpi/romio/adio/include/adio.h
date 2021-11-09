@@ -328,6 +328,16 @@ typedef struct {
 #define ADIOI_FILE_COOKIE 2487376
 #define ADIOI_REQ_COOKIE 3493740
 
+/* In collective read/write using send/recv for data exchange in multiple iterations,
+ * use following tag for consistency.
+ */
+/* Note: originally we used the formula - myrank + rank + 100 * iter. This is not
+ * safe since iter can be very large for huge messages and potentially exceed tag
+ * limit. Since we don't really need source/dest in the tag, and the message matching
+ * order is guaranteed, a constant tag will do.
+ */
+#define ADIOI_COLL_TAG(rank,iter) 0
+
 /* ADIO function prototypes */
 /* all these may not be necessary, as many of them are macro replaced to
    function pointers that point to the appropriate functions for each
