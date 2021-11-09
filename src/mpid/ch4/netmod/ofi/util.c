@@ -192,7 +192,6 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
             MPIR_Assert(0);
     }
 
-  fn_exit:
     return mpi_errno;
 }
 
