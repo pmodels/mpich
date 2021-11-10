@@ -93,7 +93,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
         cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_DATA;
     }
 
-    /* We want to skip packing of send buffer is there is no data to be sent . buf == NULL is
+    /* We want to skip packing of send buffer if there is no data to be sent . buf == NULL is
      * not a correct check here because derived datatype can use absolute address for displacement
      * which requires buffer address passed as MPI_BOTTOM which is usually NULL. count == 0 is also
      * not reliable because the derived datatype could have zero block size which contains no
@@ -101,13 +101,10 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
     if (bytes_sent) {
         MPIR_Typerep_pack(buf, count, datatype, offset, payload, available, &packed_size);
         cell->payload_size += packed_size;
+        *bytes_sent = packed_size;
     }
 
     MPIDU_genq_shmem_queue_enqueue(transport->cell_pool, terminal, (void *) cell);
-
-    if (bytes_sent) {
-        *bytes_sent = packed_size;
-    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
