@@ -151,13 +151,9 @@ check_package("autoconf");
 check_package("automake");
 print("\n");
 
-## IMPORTANT: Changing the autotools versions can result in ABI
-## breakage. So make sure the ABI string in the release tarball is
-## updated when you do that.
-check_autotools_version("autoconf", "2.69");
-check_autotools_version("automake", "1.15");
-check_autotools_version("libtool", "2.4.6");
-print("\n");
+## NOTE: Different autotools versions may result in accidental ABI chanages.
+## For flexibility, we no longer enforce the check for specific versions.
+## Always double check using the ABI compatibility tool before the final release.
 
 
 my $tdir = tempdir(CLEANUP => 1);
