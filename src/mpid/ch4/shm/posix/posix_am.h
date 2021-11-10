@@ -272,9 +272,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
                                                      bool issue_deferred, int src_vsi, int dst_vsi)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rc = 0;
-    MPI_Aint data_sz, send_size, offset = 0;
-    MPIDI_POSIX_am_header_t *msg_hdr_p;
 
     MPIR_FUNC_ENTER;
 
@@ -282,9 +279,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
      * we need to skip some code path in the scenario. Also am_hdr, am_hdr_sz and data_sz are
      * ignored when issue_deferred is set to true. They should have been saved in the request. */
 
+    MPIDI_POSIX_am_header_t *msg_hdr_p;
     if (!issue_deferred) {
-        MPIDI_POSIX_AMREQUEST(sreq, req_hdr) = NULL;
+        MPI_Aint data_sz;
 
+        MPIDI_POSIX_AMREQUEST(sreq, req_hdr) = NULL;
         MPIDI_Datatype_check_size(datatype, count, data_sz);
 
         msg_hdr_p = msg_hdr;
@@ -304,15 +303,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
         goto fn_deferred;
     }
 
-    send_size = MPIDIG_am_send_async_get_data_sz_left(sreq);
+    MPI_Aint offset, sent_size;
     offset = MPIDIG_am_send_async_get_offset(sreq);
-    MPI_Aint *bytes_sent_out = MPIDIG_am_send_async_get_data_sz_left(sreq) ? &send_size : NULL;
+
+    int rc;
     if (offset) {
         rc = MPIDI_POSIX_eager_send(grank, NULL, NULL, 0, data, count, datatype, offset,
-                                    src_vsi, dst_vsi, bytes_sent_out);
+                                    src_vsi, dst_vsi, &sent_size);
     } else {
         rc = MPIDI_POSIX_eager_send(grank, msg_hdr, am_hdr, am_hdr_sz, data, count, datatype,
-                                    offset, src_vsi, dst_vsi, bytes_sent_out);
+                                    offset, src_vsi, dst_vsi, &sent_size);
     }
 
     if (rc == MPIDI_POSIX_NOK) {
@@ -325,8 +325,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST,
-                     "issue seg for req handle=0x%x send_size %ld", sreq->handle, send_size));
-    MPIDIG_am_send_async_issue_seg(sreq, send_size);
+                     "issue seg for req handle=0x%x sent_size %ld", sreq->handle, sent_size));
+    MPIDIG_am_send_async_issue_seg(sreq, sent_size);
     MPIDIG_am_send_async_finish_seg(sreq);
 
     /* if there IS MORE DATA to be sent and we ARE NOT called for issue deferred op, enqueue.
