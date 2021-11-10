@@ -565,21 +565,6 @@ if test "$enable_strict_done" != "yes" ; then
         -fno-var-tracking
     "
 
-    case "$pac_cv_cc_vendor" in
-        gnu)
-            pac_common_strict_flags="${pac_common_strict_flags}
-                -Wno-unused-label
-            "
-            ;;
-        icx)
-            pac_common_strict_flags="${pac_common_strict_flags}
-                -Wno-unused-label
-            "
-            ;;
-        *)
-            ;;
-    esac
-
     if test -z "$1"; then
         flags=no
     else
