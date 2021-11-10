@@ -26,6 +26,40 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+int MPIR_Comm_rank_impl(MPIR_Comm * comm_ptr, int *rank)
+{
+    *rank = MPIR_Comm_rank(comm_ptr);
+    return MPI_SUCCESS;
+}
+
+int MPIR_Comm_size_impl(MPIR_Comm * comm_ptr, int *size)
+{
+    *size = MPIR_Comm_size(comm_ptr);
+    return MPI_SUCCESS;
+}
+
+int MPIR_Comm_remote_size_impl(MPIR_Comm * comm_ptr, int *size)
+{
+    *size = comm_ptr->remote_size;
+    return MPI_SUCCESS;
+}
+
+int MPIR_Comm_set_name_impl(MPIR_Comm * comm_ptr, const char *comm_name)
+{
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
+    MPL_strncpy(comm_ptr->name, comm_name, MPI_MAX_OBJECT_NAME);
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
+    return MPI_SUCCESS;
+}
+
+int MPIR_Comm_test_inter_impl(MPIR_Comm * comm_ptr, int *flag)
+{
+    *flag = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+    return MPI_SUCCESS;
+}
+
 /* used in MPIR_Comm_group_impl and MPIR_Comm_create_group_impl */
 static int comm_create_local_group(MPIR_Comm * comm_ptr)
 {

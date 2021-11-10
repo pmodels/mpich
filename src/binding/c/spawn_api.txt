@@ -17,10 +17,6 @@ MPI_Comm_get_parent:
     After the parent communicator is freed or disconnected, 'MPI_Comm_get_parent'
     returns 'MPI_COMM_NULL'.
 */
-{
-    *parent = (MPIR_Process.comm_parent == NULL) ? MPI_COMM_NULL :
-        (MPIR_Process.comm_parent)->handle;
-}
 
 MPI_Comm_join:
     .desc: Create a communicator by joining two processes connected by a socket

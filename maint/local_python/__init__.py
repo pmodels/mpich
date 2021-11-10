@@ -109,7 +109,7 @@ class MPI_API_Global:
         'OPERATION': "MPI_OP_NULL",
         'INFO': "MPI_INFO_NULL",
         'WINDOW': "MPI_WIN_NULL",
-        # 'KEYVAL': "",
+        'KEYVAL': "MPI_KEYVAL_INVALID",
         'REQUEST': "MPI_REQUEST_NULL",
         'MESSAGE': "MPI_MESSAGE_NULL",
         'SESSION': "MPI_SESSION_NULL",

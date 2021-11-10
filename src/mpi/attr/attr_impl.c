@@ -18,7 +18,24 @@ void MPIR_free_keyval(MPII_Keyval * keyval_ptr)
             MPIR_Handle_obj_free(&MPII_Keyval_mem, keyval_ptr);
         }
     }
-    return;
+}
+
+int MPIR_Comm_free_keyval_impl(MPII_Keyval * keyval_ptr)
+{
+    MPIR_free_keyval(keyval_ptr);
+    return MPI_SUCCESS;
+}
+
+int MPIR_Type_free_keyval_impl(MPII_Keyval * keyval_ptr)
+{
+    MPIR_free_keyval(keyval_ptr);
+    return MPI_SUCCESS;
+}
+
+int MPIR_Win_free_keyval_impl(MPII_Keyval * keyval_ptr)
+{
+    MPIR_free_keyval(keyval_ptr);
+    return MPI_SUCCESS;
 }
 
 int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
