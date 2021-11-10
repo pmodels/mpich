@@ -17,7 +17,9 @@
  * ADIOI_Calc_aggregator()
  * ADIOI_Calc_file_domains()
  * ADIOI_Calc_my_req()
+ * ADIOI_Free_my_req()
  * ADIOI_Calc_others_req()
+ * ADIOI_Free_others_req()
  *
  * The last three of these were originally in ad_read_coll.c, but they are
  * also shared with ad_write_coll.c.  I felt that they were better kept with
@@ -418,13 +420,21 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
 #endif
 }
 
-
+void ADIOI_Free_my_req(int nprocs, int *count_my_req_per_proc,
+                       ADIOI_Access * my_req, MPI_Aint * buf_idx)
+{
+    ADIOI_Free(count_my_req_per_proc);
+    ADIOI_Free(my_req[0].offsets);
+    ADIOI_Free(my_req);
+    ADIOI_Free(buf_idx);
+}
 
 void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
                            int *count_my_req_per_proc,
                            ADIOI_Access * my_req,
                            int nprocs, int myrank,
-                           int *count_others_req_procs_ptr, ADIOI_Access ** others_req_ptr)
+                           int *count_others_req_procs_ptr,
+                           int **count_others_req_per_proc_ptr, ADIOI_Access ** others_req_ptr)
 {
 /* determine what requests of other processes lie in this process's
    file domain */
@@ -476,7 +486,7 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
         } else
             others_req[i].count = 0;
     }
-    ADIOI_Free(count_others_req_per_proc);
+    *count_others_req_per_proc_ptr = count_others_req_per_proc;
 
 /* now send the calculated offsets and lengths to respective processes */
 
@@ -517,6 +527,13 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 #endif
 }
 
+void ADIOI_Free_others_req(int nprocs, int *count_others_req_per_proc, ADIOI_Access * others_req)
+{
+    ADIOI_Free(count_others_req_per_proc);
+    ADIOI_Free(others_req[0].offsets);
+    ADIOI_Free(others_req[0].mem_ptrs);
+    ADIOI_Free(others_req);
+}
 
 /* Nonblocking version of ADIOI_Calc_others_req().
    It consists of three functions - ADIOI_Icalc_others_req(),

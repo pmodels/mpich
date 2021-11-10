@@ -467,8 +467,8 @@ static HYD_status prepend_rank_fn(char *arg, char ***argv)
 
 static void pattern_info(void)
 {
-    printf("   Regular expressions can include:\n");
-    printf("       %%r: Process rank\n");
+    printf("   Supported substitutions include:\n");
+    printf("       %%r: Process rank (in MPI_COMM_WORLD)\n");
     printf("       %%g: Process group ID\n");
     printf("       %%p: Proxy ID\n");
     printf("       %%h: Hostname\n");

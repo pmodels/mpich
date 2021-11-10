@@ -29,26 +29,26 @@ extern char MPID_nem_hostname[MAX_HOSTNAME_LEN];
 #define MPID_NEM_POLL_OUT     1
 
 #define MPID_NEM_ASYMM_NULL_VAL    64
-typedef MPI_Aint MPID_nem_addr_t;
 extern  char *MPID_nem_asymm_base_addr;
 
 #define MPID_NEM_REL_NULL (0x0)
-#define MPID_NEM_IS_REL_NULL(rel_ptr) (MPL_atomic_relaxed_load_ptr(&(rel_ptr).p) == MPID_NEM_REL_NULL)
-#define MPID_NEM_SET_REL_NULL(rel_ptr) (MPL_atomic_relaxed_store_ptr(&((rel_ptr).p), MPID_NEM_REL_NULL))
+#define MPID_NEM_IS_REL_NULL(rel_ptr) (MPL_atomic_acquire_load_ptr(&(rel_ptr).p) == MPID_NEM_REL_NULL)
+#define MPID_NEM_SET_REL_NULL(rel_ptr) (MPL_atomic_release_store_ptr(&((rel_ptr).p), MPID_NEM_REL_NULL))
 #define MPID_NEM_REL_ARE_EQUAL(rel_ptr1, rel_ptr2) \
-    (MPL_atomic_relaxed_load_ptr(&(rel_ptr1).p) == MPL_atomic_relaxed_load_ptr(&(rel_ptr2).p))
+    (MPL_atomic_acquire_load_ptr(&(rel_ptr1).p) == MPL_atomic_acquire_load_ptr(&(rel_ptr2).p))
 
 #ifndef MPID_NEM_SYMMETRIC_QUEUES
 
 static inline MPID_nem_cell_ptr_t MPID_NEM_REL_TO_ABS (MPID_nem_cell_rel_ptr_t r)
 {
-    return (MPID_nem_cell_ptr_t)((char*)MPL_atomic_relaxed_load_ptr(&r.p) + (MPID_nem_addr_t)MPID_nem_asymm_base_addr);
+    void *p = MPL_atomic_acquire_load_ptr(&r.p);
+    return (MPID_nem_cell_ptr_t) (void *) ((uintptr_t) p + (uintptr_t) MPID_nem_asymm_base_addr);
 }
 
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_ABS_TO_REL (MPID_nem_cell_ptr_t a)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    MPL_atomic_relaxed_store_ptr(&ret.p, (char *)a - (MPID_nem_addr_t)MPID_nem_asymm_base_addr);
+    MPL_atomic_release_store_ptr(&ret.p, (void *) ((uintptr_t) a - (uintptr_t) MPID_nem_asymm_base_addr));
     return ret;
 }
 

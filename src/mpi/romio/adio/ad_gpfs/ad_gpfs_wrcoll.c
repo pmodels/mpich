@@ -108,7 +108,8 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     int i, filetype_is_contig, nprocs, nprocs_for_coll, myrank;
     int contig_access_count = 0, interleave_count = 0, buftype_is_contig;
-    int *count_my_req_per_proc, count_my_req_procs, count_others_req_procs;
+    int *count_my_req_per_proc, count_my_req_procs;
+    int *count_others_req_per_proc, count_others_req_procs;
     ADIO_Offset orig_fp, start_offset, end_offset, fd_size, min_st_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *fd_start = NULL,
         *fd_end = NULL, *end_offsets = NULL;
@@ -424,17 +425,15 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     if (gpfsmpio_tuneblocking)
         ADIOI_GPFS_Calc_others_req(fd, count_my_req_procs,
                                    count_my_req_per_proc, my_req,
-                                   nprocs, myrank, &count_others_req_procs, &others_req);
+                                   nprocs, myrank, &count_others_req_procs,
+                                   &count_others_req_per_proc, &others_req);
     else
         ADIOI_Calc_others_req(fd, count_my_req_procs,
                               count_my_req_per_proc, my_req,
-                              nprocs, myrank, &count_others_req_procs, &others_req);
+                              nprocs, myrank, &count_others_req_procs,
+                              &count_my_req_per_proc, &others_req);
 
     GPFSMPIO_T_CIO_SET_GET(w, 1, 1, GPFSMPIO_CIO_T_DEXCH, GPFSMPIO_CIO_T_OTHREQ);
-
-    ADIOI_Free(count_my_req_per_proc);
-    ADIOI_Free(my_req[0].offsets);
-    ADIOI_Free(my_req);
 
     /* exchange data and write in sizes of no more than coll_bufsize. */
     ADIOI_Exch_and_write(fd, buf, datatype, nprocs, myrank,
@@ -447,15 +446,14 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     GPFSMPIO_T_CIO_REPORT(1, fd, myrank, nprocs);
 
     /* free all memory allocated for collective I/O */
-    if (others_req[0].offsets) {
-        ADIOI_Free(others_req[0].offsets);
+    if (gpfsmpio_tuneblocking) {
+        ADIOI_GPFS_Free_my_req(nprocs, count_my_req_per_proc, my_req, buf_idx);
+        ADIOI_GPFS_Free_others_req(nprocs, count_others_req_per_proc, others_req);
+    } else {
+        ADIOI_Free_my_req(nprocs, count_my_req_per_proc, my_req, buf_idx);
+        ADIOI_Free_others_req(nprocs, count_others_req_per_proc, others_req);
     }
-    if (others_req[0].mem_ptrs) {
-        ADIOI_Free(others_req[0].mem_ptrs);
-    }
-    ADIOI_Free(others_req);
 
-    ADIOI_Free(buf_idx);
     ADIOI_Free(offset_list);
     ADIOI_Free(st_offsets);
     ADIOI_Free(fd_start);

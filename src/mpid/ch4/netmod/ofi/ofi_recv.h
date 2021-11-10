@@ -46,7 +46,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
         goto unpack;
 
     if (!flags) {
-        flags = FI_COMPLETION | FI_REMOTE_CQ_DATA;
+        flags = FI_COMPLETION;
     }
 
     size = num_contig * sizeof(struct iovec) + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
