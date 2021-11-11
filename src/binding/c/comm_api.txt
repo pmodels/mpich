@@ -114,9 +114,6 @@ MPI_Comm_rank:
     .desc: Determines the rank of the calling process in the communicator
     .skip: global_cs
     .extra: ignore_revoked_comm
-{
-    *rank = MPIR_Comm_rank(comm_ptr);
-}
 
 MPI_Comm_remote_group:
     .desc: Accesses the remote group associated with
@@ -131,9 +128,6 @@ MPI_Comm_remote_size:
     .desc: Determines the size of the remote group
     .skip: global_cs
     .extra: ignore_revoked_comm
-{
-    *size = comm_ptr->remote_size;
-}
 
 MPI_Comm_set_info:
     .desc: Set new values for the hints of the communicator associated with comm
@@ -147,22 +141,12 @@ MPI_Comm_set_info:
 
 MPI_Comm_set_name:
     .desc: Sets the print name for a communicator
-{
-    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
-    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
-    MPL_strncpy(comm_ptr->name, comm_name, MPI_MAX_OBJECT_NAME);
-    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
-    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
-}
 
 MPI_Comm_size:
     .desc: Determines the size of the group associated with a communicator
     .skip: global_cs
     .docnotes: NULL
     .extra: ignore_revoked_comm
-{
-    *size = MPIR_Comm_size(comm_ptr);
-}
 
 MPI_Comm_split:
     .desc: Creates new communicators based on colors and keys
@@ -198,9 +182,6 @@ MPI_Comm_split_type:
 MPI_Comm_test_inter:
     .desc: Tests to see if a comm is an inter-communicator
     .skip: global_cs
-{
-    *flag = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
-}
 
 MPI_Intercomm_create_from_groups:
     .desc: Create an intercommuncator from local and remote groups

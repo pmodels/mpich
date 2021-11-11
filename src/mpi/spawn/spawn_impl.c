@@ -20,6 +20,14 @@
 #define SOCKET_EINTR        EINTR
 #endif
 
+int MPIR_Comm_get_parent_impl(MPI_Comm * parent)
+{
+    *parent = (MPIR_Process.comm_parent == NULL) ? MPI_COMM_NULL :
+        (MPIR_Process.comm_parent)->handle;
+
+    return MPI_SUCCESS;
+}
+
 static int MPIR_fd_send(int fd, void *buffer, int length)
 {
     int mpi_errno = MPI_SUCCESS;
