@@ -31,6 +31,8 @@ static int *global_to_local_map;        /* [max_dev_id + 1]   */
 
 /* Maps a subdevice id to the upper device id, specifically for indexing into shared_device_fds */
 static int *subdevice_map = NULL;
+/* Keeps the subdevice count for all locally visible devices */
+static uint32_t *subdevice_count = NULL;
 
 static int shared_device_fd_count = 0;
 static int *shared_device_fds = NULL;
@@ -305,7 +307,7 @@ static int gpu_ze_init_driver(void)
     local_ze_device_count = device_count;
     if (ze_devices_handle != NULL) {
         /* Count the subdevices */
-        uint32_t *subdevice_count = MPL_malloc(device_count * sizeof(uint32_t), MPL_MEM_OTHER);
+        subdevice_count = MPL_malloc(device_count * sizeof(uint32_t), MPL_MEM_OTHER);
         if (subdevice_count == NULL) {
             ret_error = MPL_ERR_GPU_NOMEM;
             goto fn_fail;
@@ -349,8 +351,6 @@ static int gpu_ze_init_driver(void)
 
             dev_id += subdevice_count[d];
         }
-
-        MPL_free(subdevice_count);
     }
 
     ze_context_desc_t contextDesc = {
@@ -380,6 +380,7 @@ int MPL_gpu_finalize(void)
     MPL_free(global_to_local_map);
     MPL_free(ze_devices_handle);
     MPL_free(subdevice_map);
+    MPL_free(subdevice_count);
 
     MPL_ze_gem_hash_entry_t *entry = NULL, *tmp = NULL;
     HASH_ITER(hh, gem_hash, entry, tmp) {
