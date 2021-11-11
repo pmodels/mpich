@@ -40,7 +40,7 @@
 
 ### Lacking channel-specific features
 
- * ch3 does not presently support communication across heterogeneous
+ * MPICH does not presently support communication across heterogeneous
    platforms (e.g., a big-endian machine communicating with a
    little-endian machine).
 
