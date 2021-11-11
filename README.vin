@@ -91,9 +91,8 @@ shared memory), Hydra process management) of MPICH up and running.
       ./configure --prefix=/home/<USERNAME>/mpich-install 2>&1 | tee c.txt
 
     The configure will try to determine the best device (the internal
-    network modules) based on system environment. It will abort when it
-    can't decide which is the best choice. Supply the device option to
-    proceed. E.g.
+    network modules) based on system environment. You may also supply
+    a device configuration. E.g.
 
       ./configure --prefix=... --with-device=ch4:ofi |...
 
