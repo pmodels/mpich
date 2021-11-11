@@ -25,6 +25,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 static int gpu_initialized = 0;
 static uint32_t device_count;
 static uint32_t max_dev_id;
+static uint32_t max_subdev_id;
 static char **device_list = NULL;
 #define MAX_GPU_STR_LEN 256
 static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
@@ -238,11 +239,65 @@ int MPL_gpu_init(int debug_summary)
     MPL_gpu_info.enable_ipc = true;
     MPL_gpu_info.ipc_handle_type = MPL_GPU_IPC_HANDLE_SHAREABLE_FD;
 
-    max_dev_id = local_ze_device_count - 1;
+    max_dev_id = 0;
+    max_subdev_id = 0;
 
     if (local_ze_device_count <= 0) {
         gpu_initialized = 1;
         goto fn_exit;
+    }
+
+    /* Parse ZE_AFFINITY_MASK to get max_dev_id and max_subdev_id */
+    char *visible_devices = getenv("ZE_AFFINITY_MASK");
+    if (visible_devices) {
+        size_t len = strlen(visible_devices);
+
+        char *devices = MPL_malloc(len + 1, MPL_MEM_OTHER);
+        if (devices == NULL) {
+            mpl_err = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+        char *dev, *free_ptr = devices;
+
+        memcpy(devices, visible_devices, len + 1);
+        char *tmp = strtok_r(devices, ",", &dev);
+
+        while (tmp != NULL) {
+            char *subdev;
+            char *subdevices = strtok_r(tmp, ".", &subdev);
+            int device = atoi(subdevices);
+            tmp = NULL;
+
+            /* Get max_dev_id (ignores subdevices) */
+            if (device > max_dev_id) {
+                max_dev_id = device;
+            }
+
+            subdevices = strtok_r(tmp, ".", &subdev);
+            tmp = NULL;
+
+            /* Get max_subdev_id */
+            if (subdevices != NULL) {
+                int subdev_id = atoi(subdevices);
+                if (subdev_id > max_subdev_id) {
+                    max_subdev_id = subdev_id;
+                }
+            }
+
+            devices = NULL;
+            tmp = strtok_r(devices, ",", &dev);
+        }
+
+        MPL_free(free_ptr);
+    } else {
+        max_dev_id = device_count - 1;
+    }
+
+    /* Make sure to include subdevices that weren't detected above in the ZE_AFFINITY_MASK. */
+    for (int i = 0; i < device_count; ++i) {
+        if (subdevice_count[i] > 0 && (subdevice_count[i] - 1) > max_subdev_id) {
+            max_subdev_id = subdevice_count[i] - 1;
+        }
     }
 
     local_to_global_map = MPL_malloc(local_ze_device_count * sizeof(int), MPL_MEM_OTHER);
