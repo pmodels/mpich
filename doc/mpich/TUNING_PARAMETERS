@@ -489,8 +489,8 @@ Here are the standard hints from the MPI 4.0 standard that are supported (we rec
 * `mpi_assert_no_any_tag`: Set this hint if the application does not use MPI_ANY_TAG on the given communciator.
 
 MPICH also supports a non-standard per-communicator info hint that provides the user with more control of a communicator-VCI mapping:
-* `thread_id`: Specific sender and receiver VCI can be selected for each communicator using this hint. Applications can utilize this feature to control how messages are spread across the VCIs.
-For instance, programmers can write the applications so that pairs of threads communicate by using different communicator, where each communicator can be mapped to a different VCI through the `thread_id` info hint. Valid values for this info hints are 0 to (total vcis - 1). This hint is also utilized by MPICH to select a progress thread to process reduction collective operation.
+* `vci`: Specific sender and receiver VCI can be selected for each communicator using this hint. Applications can utilize this feature to control how messages are spread across the VCIs.
+For instance, programmers can write the applications so that pairs of threads communicate by using different communicator, where each communicator can be mapped to a different VCI through the `vci` info hint. Valid values for this info hints are 0 to (total vcis - 1). This hint is also utilized by MPICH to select a progress thread to process reduction collective operation.
 
 
 **4. Shared Memory**
