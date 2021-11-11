@@ -33,6 +33,15 @@
    have correctness or performance issues.  Known correctness issues
    include dynamic process support and generalized request support.
 
+### Fortran
+
+ * The Fortran mpi module (use mpi) does not define explicit interfaces
+   for MPI routines with choice buffer arguments. Because of this, some
+   Fortran compilers require extra flags to build the Fortran bindings,
+   and compile-time type checking is not available for choice buffer
+   routines.  The Fortran 2008 module (use mpi_f08) does defines
+   explicit interfaces for all MPI routines, therefore providing
+   compile-time type checking even for choice buffer routines.
 
 ### Lacking channel-specific features
 
