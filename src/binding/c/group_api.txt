@@ -106,16 +106,10 @@ MPI_Group_range_incl:
 MPI_Group_rank:
     .desc: Returns the rank of this process in the given group
     .skip: global_cs
-{
-    *rank = group_ptr->rank;
-}
 
 MPI_Group_size:
     .desc: Returns the size of a group
     .skip: global_cs
-{
-    *size = group_ptr->size;
-}
 
 MPI_Group_translate_ranks:
     .desc: Translates the ranks of processes in one group to those in another group

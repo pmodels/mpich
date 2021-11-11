@@ -52,10 +52,6 @@ MPI_Comm_delete_attr:
 
 MPI_Comm_free_keyval:
     .desc: Frees an attribute key for communicators
-{
-    MPIR_free_keyval(comm_keyval_ptr);
-    *comm_keyval = MPI_KEYVAL_INVALID;
-}
 
 MPI_Comm_get_attr:
     .desc: Retrieves attribute value by key
@@ -123,10 +119,6 @@ MPI_Type_delete_attr:
 
 MPI_Type_free_keyval:
     .desc: Frees an attribute key for datatypes
-{
-    MPIR_free_keyval(type_keyval_ptr);
-    *type_keyval = MPI_KEYVAL_INVALID;
-}
 
 MPI_Type_get_attr:
     .desc: Retrieves attribute value by key
@@ -187,10 +179,6 @@ MPI_Win_delete_attr:
 
 MPI_Win_free_keyval:
     .desc: Frees an attribute key for MPI RMA windows
-{
-    MPIR_free_keyval(win_keyval_ptr);
-    *win_keyval = MPI_KEYVAL_INVALID;
-}
 
 MPI_Win_get_attr:
     .desc: Get attribute cached on an MPI window object

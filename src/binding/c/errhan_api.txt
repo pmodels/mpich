@@ -48,11 +48,6 @@ MPI_Delete_error_string:
 MPI_Error_class:
     .desc: Converts an error code into an error class
     .skip: initcheck, global_cs
-{
-    /* We include the dynamic bit because this is needed to fully
-     * describe the dynamic error classes */
-    *errorclass = errorcode & (ERROR_CLASS_MASK | ERROR_DYN_MASK);
-}
 
 MPI_Error_string:
     .desc: Return a string for a given error code
@@ -63,10 +58,6 @@ MPI_Error_string:
     'ierr' argument (in Fortran).  These can be converted into error classes
     with the routine 'MPI_Error_class'.
 */
-{
-    MPIR_Err_get_string(errorcode, string, MPI_MAX_ERROR_STRING, NULL);
-    *resultlen = (int) strlen(string);
-}
 
 MPI_Errhandler_create:
     comm_errhandler_fn: FUNCTION_SMALL, func_type=MPI_Comm_errhandler_function, [user defined error handling procedure]

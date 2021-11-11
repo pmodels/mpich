@@ -4,5 +4,6 @@
 ##
 
 mpi_core_sources += \
+    src/mpi/rma/rma_impl.c        \
     src/mpi/rma/winutil.c         \
     src/mpi/rma/rmatypeutil.c
