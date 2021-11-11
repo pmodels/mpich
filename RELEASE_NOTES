@@ -3,17 +3,7 @@
 ----------------------------------------------------------------------
 
 ### CH4
- * Embedded modules
-   - The release is thoroughly tested with embedded libfabric and ucx.
-     Using externally installed libfabric or ucx is likely to succeed
-     but less tested.
-
- * Build Issues
-   - Embedded ucx or libfabric builds will not succeed with Solaris
-     compilers.
-
  * Dynamic process support
-   - Requires fi_tagged capability in OFI netmod
    - Not supported in UCX netmod at this time
 
  * Test failures
@@ -28,15 +18,6 @@
    https://github.com/android-ndk/ndk/issues/289).  You can workaround
    this issue by explicitly linking your application to libstdc++
    instead (e.g., mpicxx -o foo foo.cxx -lstdc++).
-
- * GCC builds - When using Homebrew or Macports gcc (not the default
-   gcc, which is just a symlink to clang), a bug in gcc
-   (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=40838) causes stack
-   alignment issues in some cases causing segmentation faults.  You
-   can workaround this issue by building mpich with clang, or by
-   passing a lower optimization level than the default (-O2).
-   Currently, this bug only seems to show up when the
-   --disable-error-checking flag is passed to configure.
 
 ### Fine-grained thread safety
 
@@ -57,17 +38,6 @@
  * ch3 does not presently support communication across heterogeneous
    platforms (e.g., a big-endian machine communicating with a
    little-endian machine).
-
- * Support for "external32" data representation is incomplete. This
-   affects the MPI_Pack_external and MPI_Unpack_external routines, as
-   well the external data representation capabilities of ROMIO.  In
-   particular: noncontiguous user buffers could consume egregious
-   amounts of memory in the MPI library and any types which vary in
-   width between the native representation and the external32
-   representation will likely cause corruption.  The following ticket
-   contains some additional information:
-
-     http://trac.mpich.org/projects/mpich/ticket/1754
 
  * ch3 has known problems in some cases when threading and dynamic
    processes are used together on communicators of size greater than
