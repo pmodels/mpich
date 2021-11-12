@@ -308,6 +308,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         dnl Unset all of these env vars so they don't pollute the libfabric configuration
         PAC_PUSH_ALL_FLAGS()
         PAC_RESET_ALL_FLAGS()
+        CFLAGS="$CFLAGS $VISIBILITY_CFLAGS"
         PAC_CONFIG_SUBDIR_ARGS([modules/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
         PAC_POP_ALL_FLAGS()
         PAC_APPEND_FLAG([-I${main_top_builddir}/modules/libfabric/include], [CPPFLAGS])

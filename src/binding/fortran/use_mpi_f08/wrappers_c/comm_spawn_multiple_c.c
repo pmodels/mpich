@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpiimpl.h"
 #include "cdesc.h"
+#include <string.h>
 
 int MPIR_Comm_spawn_multiple_c(int count, char *array_of_commands_f,
                                char *array_of_argv_f, const int *array_of_maxprocs,
@@ -52,15 +52,19 @@ int MPIR_Comm_spawn_multiple_c(int count, char *array_of_commands_f,
     if ((char ***) array_of_argv_f == MPI_ARGVS_NULL) {
         array_of_argv_c = MPI_ARGVS_NULL;
     } else {
-        array_of_argv_c = (char ***) MPL_malloc(sizeof(char **) * count, MPL_MEM_BUFFER);
-        if (!array_of_argv_c)
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+        array_of_argv_c = (char ***) malloc(sizeof(char **) * count);
+        if (!array_of_argv_c) {
+            mpi_errno = MPI_ERR_OTHER;
+            goto fn_fail;
+        }
 
         /* Allocate a temp buf to put args of a command */
         len = 256;      /* length of buf. Initialized with an arbitrary value */
-        buf = (char *) MPL_malloc(sizeof(char) * len, MPL_MEM_BUFFER);
-        if (!buf)
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+        buf = (char *) malloc(sizeof(char) * len);
+        if (!buf) {
+            mpi_errno = MPI_ERR_OTHER;
+            goto fn_fail;
+        }
 
         for (i = 0; i < count; i++) {
             /* Extract args of command i, and put them in buf */
@@ -70,10 +74,11 @@ int MPIR_Comm_spawn_multiple_c(int count, char *array_of_commands_f,
             do {
                 if (offset + argv_elem_len > len) {     /* Make sure buf is big enough */
                     len = offset + argv_elem_len;
-                    newbuf = (char *) MPL_realloc(buf, len, MPL_MEM_BUFFER);
+                    newbuf = (char *) realloc(buf, len);
                     if (!newbuf) {
-                        MPL_free(buf);
-                        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+                        free(buf);
+                        mpi_errno = MPI_ERR_OTHER;
+                        goto fn_fail;
                     }
                     buf = newbuf;
                 }
@@ -96,25 +101,25 @@ int MPIR_Comm_spawn_multiple_c(int count, char *array_of_commands_f,
                 MPIR_Fortran_array_of_string_f2c(buf, &(array_of_argv_c[i]), argv_elem_len, 0, 0);
             if (mpi_errno != MPI_SUCCESS) {
                 for (j = i - 1; j >= 0; j--)
-                    MPL_free(array_of_argv_c[j]);
-                MPL_free(buf);
+                    free(array_of_argv_c[j]);
+                free(buf);
                 goto fn_fail;
             }
         }
 
-        MPL_free(buf);
+        free(buf);
     }
 
     mpi_errno = PMPI_Comm_spawn_multiple(count, array_of_commands_c, array_of_argv_c,
                                          array_of_maxprocs, array_of_info, root, comm, intercomm,
                                          array_of_errcodes);
 
-    MPL_free(array_of_commands_c);
+    free(array_of_commands_c);
 
     if (array_of_argv_c != MPI_ARGVS_NULL) {
         for (i = 0; i < count; i++)
-            MPL_free(array_of_argv_c[i]);
-        MPL_free(array_of_argv_c);
+            free(array_of_argv_c[i]);
+        free(array_of_argv_c);
     }
 
   fn_exit:

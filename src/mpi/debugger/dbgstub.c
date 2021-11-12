@@ -199,11 +199,11 @@ int dbgrI_field_offset(mqs_type * type, char *name)
                 } else if (strcmp(name, "count") == 0) {
                     off = ((char *) &c.count - (char *) &c);
                 } else if (strcmp(name, "rank") == 0) {
-                    off = ((char *) &c.rank - (char *) &c);
+                    off = ((char *) &c.u.recv.source - (char *) &c);
                 } else if (strcmp(name, "tag") == 0) {
-                    off = ((char *) &c.tag - (char *) &c);
+                    off = ((char *) &c.u.recv.tag - (char *) &c);
                 } else if (strcmp(name, "context_id") == 0) {
-                    off = ((char *) &c.context_id - (char *) &c);
+                    off = ((char *) &c.u.recv.context_id - (char *) &c);
                 } else if (strcmp(name, "datatype") == 0) {
                     off = ((char *) &c.datatype - (char *) &c);
                 } else {

@@ -986,6 +986,31 @@ if test "$enable_extended_context_bits" = "yes" ; then
     AC_DEFINE([HAVE_EXTENDED_CONTEXT_BITS],[1],[Define to enable extended context id bit space])
 fi
 
+# Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
+# and -lp$MPILIBNAME.
+NEEDSPLIB=yes
+if test $enable_weak_symbols = yes ; then
+    # Turn off weak symbols if they aren't available
+    PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
+fi
+if test $enable_weak_symbols = "yes" ; then
+    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
+    NEEDSPLIB=no
+    # Check for the ability to support multiple weak symbols
+    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
+       PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
+    fi
+fi
+export NEEDSPLIB
+
+AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
+PAC_CHECK_VISIBILITY
+AC_SUBST(VISIBILITY_CFLAGS)
+# disable visibility if building profiling library
+if test "$NEEDSPLIB" = "yes" ; then
+    VISIBILITY_CFLAGS=""
+fi
+
 # MPL
 mplsrcdir=""
 AC_SUBST([mplsrcdir])
@@ -1032,31 +1057,6 @@ if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; the
     fi
 fi
 
-
-# Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
-# and -lp$MPILIBNAME.
-NEEDSPLIB=yes
-if test $enable_weak_symbols = yes ; then
-    # Turn off weak symbols if they aren't available
-    PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
-fi
-if test $enable_weak_symbols = "yes" ; then
-    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
-    NEEDSPLIB=no
-    # Check for the ability to support multiple weak symbols
-    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
-       PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
-    fi
-fi
-export NEEDSPLIB
-
-AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
-PAC_CHECK_VISIBILITY
-AC_SUBST(VISIBILITY_CFLAGS)
-# disable visibility if building profiling library
-if test "$NEEDSPLIB" = "yes" ; then
-    VISIBILITY_CFLAGS=""
-fi
 
 # json-c
 
@@ -2344,18 +2344,6 @@ if test "$enable_cxx" = "yes" ; then
     # the CPP name space
     AC_SUBST(FORTRAN_BINDING)
 
-    # Special C++ datatypes.  Set to DATATYPE NULL first; we'll
-    # replace the ones that we have later, after we have determined
-    # the C datatypes
-    MPIR_CXX_BOOL=0x0c000000
-    MPIR_CXX_COMPLEX=0x0c000000
-    MPIR_CXX_DOUBLE_COMPLEX=0x0c000000
-    MPIR_CXX_LONG_DOUBLE_COMPLEX=0x0c000000
-    AC_SUBST(MPIR_CXX_BOOL)
-    AC_SUBST(MPIR_CXX_COMPLEX)
-    AC_SUBST(MPIR_CXX_DOUBLE_COMPLEX)
-    AC_SUBST(MPIR_CXX_LONG_DOUBLE_COMPLEX)
-
     # determine shared library flags for CXX
     cxx_shlib_conf=src/env/cxx_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([CXX],[$cxx_shlib_conf])
@@ -2863,365 +2851,22 @@ AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
   AC_CHECK_TYPES([long double _Complex])
 ])
 
+dnl define shell functions e.g. to_hex, to_dec, get_c_int_type, get_c_float_type
+PAC_DATATYPE_UTILS()
+
 # Generate a hex version of the size of each type
-for type in short int long long_long float double long_double wchar_t \
-    float_int double_int long_int short_int two_int long_double_int     \
-    _Bool float__Complex double__Complex long_double__Complex \
-    _Float16; do
+for type in short int long float double \
+    float_int double_int long_int short_int two_int ; do
     eval len=\$ac_cv_sizeof_$type
     if test -z "$len" ; then
-       len=0
-       # Check for sizes from the CHECK_SIZEOF_DERIVED macro
-       eval pclen=\$ac_cv_sizeof_$type
-       if test -n "$pclen" ; then
-           len=$pclen
-       else
-           # check for a non-optional type
-           if test $type != long_long -a \
-                   $type != long_double -a \
-                   $type != long_double_int -a \
-                   $type != _Bool -a \
-                   $type != float__Complex -a \
-                   $type != double__Complex -a \
-                   $type != long_double__Complex ; then
-               AC_MSG_ERROR([Configure was unable to determine the size of $type ; if cross compiling,
+        AC_MSG_ERROR([Configure was unable to determine the size of $type ; if cross compiling,
 use the environment variables CROSS_SIZEOF_typename, e.g., CROSS_SIZEOF_SHORT,
 or use the --with-cross=file configure option to specify a file containing
 Bourne (sh) shell assignments to CROSS_SIZEOF_typename for all datatype
 types.  The program maint/getcross.c can be compiled and run on the target
 system; this program outputs an appropriate file for the --with-cross option])
-	   fi
-       fi
-    fi
-    #
-    # Take len and turn it into two hex digits (there are 8 bits available
-    # in the built-in datatype handle for the length; see
-    # src/mpid/common/datatype/mpidu_datatype.h)
-    if test "$len" -gt 255 ; then
-         AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type $type is $len bytes)])
-    fi
-    tmplen=$len
-    hexlen=""
-    while test $tmplen -gt 0 ; do
-        lowdigit=`expr $tmplen - 16 \* \( $tmplen / 16 \)`
-	case $lowdigit in
-         10) char=a ;;
-	 11) char=b ;;
-	 12) char=c ;;
-	 13) char=d ;;
-	 14) char=e ;;
-	 15) char=f ;;
-	  *) char=$lowdigit ;;
-	esac
-	hexlen="$char$hexlen"
-	tmplen=`expr $tmplen / 16`
-    done
-    if test $len -lt 16 ; then
-        hexlen="0$hexlen"
-    fi
-    if test $len = 0 ; then
-        # This sometimes happens for wchar_t
-        hexlen="00";
-    fi
-    eval len_$type=$hexlen
-done
-# By definition, sizeof char is 1
-MPI_CHAR="0x4c000101"
-MPI_UNSIGNED_CHAR="0x4c000102"
-MPI_SHORT="0x4c00${len_short}03"
-MPI_UNSIGNED_SHORT="0x4c00${len_short}04"
-MPI_INT="0x4c00${len_int}05"
-MPI_UNSIGNED_INT="0x4c00${len_int}06"
-MPI_LONG="0x4c00${len_long}07"
-MPI_UNSIGNED_LONG="0x4c00${len_long}08"
-if test "$len_long_long" != 0 -a "$MPID_NO_LONG_LONG" != yes ; then
-    MPI_LONG_LONG="0x4c00${len_long_long}09"
-else
-    MPI_LONG_LONG=MPI_DATATYPE_NULL;
-fi
-MPI_FLOAT="0x4c00${len_float}0a"
-MPI_DOUBLE="0x4c00${len_double}0b"
-if test "$len_long_double" != 0 -a "$MPID_NO_LONG_DOUBLE" != yes ; then
-    MPI_LONG_DOUBLE="0x4c00${len_long_double}0c"
-else
-    MPI_LONG_DOUBLE=MPI_DATATYPE_NULL
-fi
-# If you change MPI_BYTE, you must change it in src/binding/fortran/mpif_h/buildiface
-MPI_BYTE="0x4c00010d"
-MPI_WCHAR="0x4c00${len_wchar_t}0e"
-MPI_PACKED="0x4c00010f"
-MPI_LB="0x4c000010"
-MPI_UB="0x4c000011"
-#
-# These should define the mixed types *only* for contiguous data.
-# For example, MPI_SHORT_INT may have a gap; it will need to be defined
-# as a derived type instead.  For IA32, this only affects short_int.
-MPI_2INT="0x4c00${len_two_int}16"
-#
-# For now we aren't being too clever about figuring out which of these
-# are in fact contiguous, so these are all allocated as "real" types.
-#
-# These values correspond to direct types 0..5.
-#
-dnl MPI_FLOAT_INT="0x4c00${len_float_int}12"
-dnl MPI_DOUBLE_INT="0x4c00${len_double_int}13"
-dnl MPI_LONG_INT="0x4c00${len_long_int}14"
-dnl MPI_SHORT_INT="0x4c00${len_short_int}15"
-dnl MPI_LONG_DOUBLE_INT="0x4c00${len_long_double_int}17"
-MPI_FLOAT_INT="0x8c000000"
-MPI_DOUBLE_INT="0x8c000001"
-MPI_LONG_INT="0x8c000002"
-MPI_SHORT_INT="0x8c000003"
-if test "$MPID_NO_LONG_DOUBLE" != yes ; then
-    MPI_LONG_DOUBLE_INT="0x8c000004"
-else
-    MPI_LONG_DOUBLE_INT=MPI_DATATYPE_NULL
-fi
-
-# 2 additional predefined types named in MPI-2
-MPI_SIGNED_CHAR="0x4c000118"
-if test "$len_long_long" != 0 -a "$MPID_NO_LONG_LONG" != yes ; then
-    MPI_UNSIGNED_LONG_LONG="0x4c00${len_long_long}19"
-else
-    MPI_UNSIGNED_LONG_LONG=MPI_DATATYPE_NULL
-fi
-
-AC_SUBST(MPI_CHAR)
-AC_SUBST(MPI_UNSIGNED_CHAR)
-AC_SUBST(MPI_SHORT)
-AC_SUBST(MPI_UNSIGNED_SHORT)
-AC_SUBST(MPI_INT)
-AC_SUBST(MPI_UNSIGNED_INT)
-AC_SUBST(MPI_LONG)
-AC_SUBST(MPI_UNSIGNED_LONG)
-AC_SUBST(MPI_LONG_LONG)
-AC_SUBST(MPI_FLOAT)
-AC_SUBST(MPI_DOUBLE)
-AC_SUBST(MPI_LONG_DOUBLE)
-AC_SUBST(MPI_BYTE)
-AC_SUBST(MPI_WCHAR)
-AC_SUBST(MPI_PACKED)
-AC_SUBST(MPI_LB)
-AC_SUBST(MPI_UB)
-AC_SUBST(MPI_FLOAT_INT)
-AC_SUBST(MPI_DOUBLE_INT)
-AC_SUBST(MPI_LONG_INT)
-AC_SUBST(MPI_SHORT_INT)
-AC_SUBST(MPI_2INT)
-AC_SUBST(MPI_LONG_DOUBLE_INT)
-AC_SUBST(MPI_SIGNED_CHAR)
-AC_SUBST(MPI_UNSIGNED_LONG_LONG)
-#
-# FIXME: Leftover from separate fortran system
-## Export the basic C types so that the Fortran system can use them
-#export MPI_CHAR
-#export MPI_SHORT
-#export MPI_INT
-#export MPI_LONG
-#export MPI_LONG_LONG
-#export MPI_FLOAT
-#export MPI_DOUBLE
-#export MPI_LONG_DOUBLE
-#
-# Size-specific types.  Initialize as NULL
-MPI_REAL4=MPI_DATATYPE_NULL
-MPI_REAL8=MPI_DATATYPE_NULL
-MPI_REAL16=MPI_DATATYPE_NULL
-MPI_COMPLEX8=MPI_DATATYPE_NULL
-MPI_COMPLEX16=MPI_DATATYPE_NULL
-MPI_COMPLEX32=MPI_DATATYPE_NULL
-MPI_INTEGER1=MPI_DATATYPE_NULL
-MPI_INTEGER2=MPI_DATATYPE_NULL
-MPI_INTEGER4=MPI_DATATYPE_NULL
-MPI_INTEGER8=MPI_DATATYPE_NULL
-MPI_INTEGER16=MPI_DATATYPE_NULL
-AC_SUBST(MPI_REAL4)
-AC_SUBST(MPI_REAL8)
-AC_SUBST(MPI_REAL16)
-AC_SUBST(MPI_COMPLEX8)
-AC_SUBST(MPI_COMPLEX16)
-AC_SUBST(MPI_COMPLEX32)
-AC_SUBST(MPI_INTEGER1)
-AC_SUBST(MPI_INTEGER2)
-AC_SUBST(MPI_INTEGER4)
-AC_SUBST(MPI_INTEGER8)
-AC_SUBST(MPI_INTEGER16)
-export MPI_REAL4
-export MPI_REAL8
-export MPI_REAL16
-export MPI_COMPLEX8
-export MPI_COMPLEX16
-export MPI_COMPLEX32
-export MPI_INTEGER1
-export MPI_INTEGER2
-export MPI_INTEGER4
-export MPI_INTEGER8
-export MPI_INTEGER16
-#
-# Try to find corresponding types for the size-specific types.
-#
-# Assume that the float/double/long double are simply spaced
-# Datatypes used up through 26 in Fortran
-# 27,28,29,2a,2b,2c
-if test "$ac_cv_sizeof_float" = "4" ; then
-    MPI_REAL4="0x4c000427"
-    MPI_COMPLEX8="0x4c000828"
-    MPIR_REAL4_CTYPE=float
-fi
-if test "$ac_cv_sizeof_double" = "8" ; then
-    MPI_REAL8="0x4c000829"
-    MPI_COMPLEX16="0x4c00102a"
-    MPIR_REAL8_CTYPE=double
-fi
-if test "$ac_cv_sizeof___float128" = "16" ; then
-    MPI_REAL16="0x4c00102b"
-    MPI_COMPLEX32="0x4c00202c"
-    MPIR_REAL16_CTYPE="__float128"
-elif test "$ac_cv_sizeof_long_double" = "16" -a "$MPID_NO_LONG_DOUBLE" != yes ; then
-    MPI_REAL16="0x4c00102b"
-    MPI_COMPLEX32="0x4c00202c"
-    MPIR_REAL16_CTYPE="long double"
-fi
-if test -n "$MPIR_REAL4_CTYPE" ; then
-    AC_DEFINE_UNQUOTED(MPIR_REAL4_CTYPE,$MPIR_REAL4_CTYPE,[C type to use for MPI_REAL4])
-fi
-if test -n "$MPIR_REAL8_CTYPE" ; then
-    AC_DEFINE_UNQUOTED(MPIR_REAL8_CTYPE,$MPIR_REAL8_CTYPE,[C type to use for MPI_REAL8])
-fi
-if test -n "$MPIR_REAL16_CTYPE" ; then
-    AC_DEFINE_UNQUOTED(MPIR_REAL16_CTYPE,$MPIR_REAL16_CTYPE,[C type to use for MPI_REAL16])
-fi
-# For complex 8/16/32, we assume that these are 2 consecutive real4/8/16
-#
-# Search for the integer types
-for type in char short int long long_long ; do
-    # ctype is a valid C type which we can use to declare a C version of
-    # this item
-    ctype=`echo $type | sed 's/_/ /'`
-    eval len=\$ac_cv_sizeof_$type
-    if test -n "$len" ; then
-    case $len in
-    1) if test "$MPI_INTEGER1" = "MPI_DATATYPE_NULL" ; then
-           MPI_INTEGER1="0x4c00012d"
-	   MPIR_INTEGER1_CTYPE="$ctype"
-       fi
-       ;;
-    2) if test "$MPI_INTEGER2" = "MPI_DATATYPE_NULL" ; then
-           MPI_INTEGER2="0x4c00022f"
-	   MPIR_INTEGER2_CTYPE="$ctype"
-       fi
-       ;;
-    4) if test "$MPI_INTEGER4" = "MPI_DATATYPE_NULL" ; then
-           MPI_INTEGER4="0x4c000430"
-	   MPIR_INTEGER4_CTYPE="$ctype"
-       fi
-       ;;
-    8) if test "$MPI_INTEGER8" = "MPI_DATATYPE_NULL" ; then
-           MPI_INTEGER8="0x4c000831"
-	   MPIR_INTEGER8_CTYPE="$ctype"
-       fi
-       ;;
-    16) if test "$MPI_INTEGER16" = "MPI_DATATYPE_NULL" ; then
-           MPI_INTEGER16="0x4c001032"
-	   MPIR_INTEGER16_CTYPE="$ctype"
-       fi
-       ;;
-    *)
-    ;;
-    esac
     fi
 done
-#
-# Add the definitions of these types
-if test -n "$MPIR_INTEGER1_CTYPE" ; then
-    AC_DEFINE_UNQUOTED(MPIR_INTEGER1_CTYPE,$MPIR_INTEGER1_CTYPE,[C type to use for MPI_INTEGER1])
-fi
-if test -n "$MPIR_INTEGER2_CTYPE" ; then
-   AC_DEFINE_UNQUOTED(MPIR_INTEGER2_CTYPE,$MPIR_INTEGER2_CTYPE,[C type to use for MPI_INTEGER2])
-fi
-if test -n "$MPIR_INTEGER4_CTYPE" ; then
-   AC_DEFINE_UNQUOTED(MPIR_INTEGER4_CTYPE,$MPIR_INTEGER4_CTYPE,[C type to use for MPI_INTEGER4])
-fi
-if test -n "$MPIR_INTEGER8_CTYPE" ; then
-   AC_DEFINE_UNQUOTED(MPIR_INTEGER8_CTYPE,$MPIR_INTEGER8_CTYPE,[C type to use for MPI_INTEGER8])
-fi
-if test -n "$MPIR_INTEGER16_CTYPE" ; then
-   AC_DEFINE_UNQUOTED(MPIR_INTEGER16_CTYPE,$MPIR_INTEGER16_CTYPE,[C type to use for MPI_INTEGER16])
-fi
-
-# ----------------------------------------------------------------------------
-
-# C99 types
-# The predefined types must be distinct types (as opposed to aliases to MPI_INT
-# or MPI_WHATEVER) in order to correctly support MPI_Type_{get,set}_name.
-#
-# FIXME the "basic id" portion should be automatically assigned.  It's too easy
-# to have a conflict when this is done by hand.
-#
-# Because we make up a matching type for the fixed-width types if one doesn't
-# exist, we don't ever set these to MPI_DATATYPE_NULL.  If we come across a
-# platform where 64-bit sizes aren't supported just add a test like the other
-# types.
-MPI_INT8_T=0x4c000137
-MPI_INT16_T=0x4c000238
-MPI_INT32_T=0x4c000439
-MPI_INT64_T=0x4c00083a
-MPI_UINT8_T=0x4c00013b
-MPI_UINT16_T=0x4c00023c
-MPI_UINT32_T=0x4c00043d
-MPI_UINT64_T=0x4c00083e
-
-# The compiler may or may not support these types, depending on its level of C99
-# compliance.  We check for each one individually before assigning a handle
-# number.
-MPI_C_BOOL=MPI_DATATYPE_NULL
-MPI_C_FLOAT_COMPLEX=MPI_DATATYPE_NULL
-MPI_C_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
-MPI_C_LONG_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
-MPIX_C_FLOAT16=MPI_DATATYPE_NULL
-if test ${len__Bool} != 0 ; then
-    MPI_C_BOOL=0x4c00${len__Bool}3f
-fi
-if test ${len_float__Complex} != 0 ; then
-    MPI_C_FLOAT_COMPLEX=0x4c00${len_float__Complex}40
-fi
-if test ${len_double__Complex} != 0 ; then
-    MPI_C_DOUBLE_COMPLEX=0x4c00${len_double__Complex}41
-fi
-if test ${len_long_double__Complex} != 0 ; then
-    MPI_C_LONG_DOUBLE_COMPLEX=0x4c00${len_long_double__Complex}42
-fi
-if test ${len__Float16} != 0 ; then
-    MPIX_C_FLOAT16=0x4c000246
-fi
-
-AC_SUBST(MPI_INT8_T)
-AC_SUBST(MPI_INT16_T)
-AC_SUBST(MPI_INT32_T)
-AC_SUBST(MPI_INT64_T)
-AC_SUBST(MPI_UINT8_T)
-AC_SUBST(MPI_UINT16_T)
-AC_SUBST(MPI_UINT32_T)
-AC_SUBST(MPI_UINT64_T)
-AC_SUBST(MPI_C_BOOL)
-AC_SUBST(MPI_C_FLOAT_COMPLEX)
-AC_SUBST(MPI_C_DOUBLE_COMPLEX)
-AC_SUBST(MPI_C_LONG_DOUBLE_COMPLEX)
-AC_SUBST(MPIX_C_FLOAT16)
-export MPI_INT8_T
-export MPI_INT16_T
-export MPI_INT32_T
-export MPI_INT64_T
-export MPI_UINT8_T
-export MPI_UINT16_T
-export MPI_UINT32_T
-export MPI_UINT64_T
-export MPI_C_BOOL
-export MPI_C_FLOAT_COMPLEX
-export MPI_C_DOUBLE_COMPLEX
-export MPI_C_LONG_DOUBLE_COMPLEX
-export MPIX_C_FLOAT16
-
 
 # ----------------------------------------------------------------------------
 # We can now create the Fortran versions of the datatype values, along with
@@ -3241,6 +2886,8 @@ export MPIX_C_FLOAT16
 #
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = yes ; then
+    pac_cv_f77_sizeof_character=1
+
     # Up to size checking code in main configure.ac (where it tries to
     # find the matching C sizes) as part of defining mpi_integer8 etc.
     # The results are available in pac_cv_sizeof_f77_<type>
@@ -3294,55 +2941,10 @@ if test "$enable_f77" = yes ; then
         pac_cv_fort_real16=yes,
         pac_cv_fort_real16=no)])
 
-    # Create the default datatype names for the standard MPI Fortran types
-    MPI_CHARACTER=0x4c00011a
-    AC_SUBST(MPI_CHARACTER)
-
     if test -z "$pac_cv_f77_sizeof_integer" -o \
        "X$pac_cv_f77_sizeof_integer" = "X0" ; then
         AC_MSG_ERROR([Unable to configure with Fortran support because configure could not determine the size of a Fortran INTEGER.  Consider setting CROSS_F77_SIZEOF_INTEGER to the length in bytes of a Fortran INTEGER])
     fi
-    len_integer=$pac_cv_f77_sizeof_integer
-    # Convert to two digit hex
-    len=$len_integer
-    #
-    # Take len and turn it into two hex digits (there are 8 bits available
-    # in the built-in datatype handle for the length; see
-    # src/mpid/common/datatype/mpidu_datatype.h).  This code is taken
-    # from the code in mpich/configure.ac
-    if test "$len" -gt 255 ; then
-        AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type INTEGER is $len bytes)])
-    fi
-    tmplen=$len
-    hexlen=""
-    while test $tmplen -gt 0 ; do
-        lowdigit=`expr $tmplen - 16 \* \( $tmplen / 16 \)`
-        case $lowdigit in
-        10) char=a ;;
-        11) char=b ;;
-        12) char=c ;;
-        13) char=d ;;
-        14) char=e ;;
-        15) char=f ;;
-         *) char=$lowdigit ;;
-        esac
-        hexlen="$char$hexlen"
-        tmplen=`expr $tmplen / 16`
-    done
-    if test $len -lt 16 ; then
-        hexlen="0$hexlen"
-    fi
-    len_integer=$hexlen
-    if test "$len_integer" = 0 ; then
-        # We have a problem
-        AC_MSG_WARN([Unable to determine size of an INTEGER type; using 4])
-        # We make the length 4
-        len_integer="04"
-    fi
-    MPI_INTEGER=0x4c00${len_integer}1b
-    MPI_LOGICAL=0x4c00${len_integer}1d
-    AC_SUBST(MPI_INTEGER)
-    AC_SUBST(MPI_LOGICAL)
 
     len_real=`printf "%02x" $pac_cv_f77_sizeof_real`
     MPI_REAL=0x4c00${len_real}1c
@@ -3351,407 +2953,41 @@ if test "$enable_f77" = yes ; then
     if test -z "$pac_cv_f77_sizeof_double_precision" ; then
         AC_MSG_ERROR([Unable to configure with Fortran support because configure could not determine the size of a Fortran DOUBLE PRECISION.  Consider setting CROSS_F77_SIZEOF_DOUBLE_PRECISION to the length in bytes of a Fortran DOUBLE PRECISION])
     fi
-    len_double=$pac_cv_f77_sizeof_double_precision
-    # Convert to two digit hex
-    len=$len_double
-    #
-    # Take len and turn it into two hex digits (there are 8 bits available
-    # in the built-in datatype handle for the length; see
-    # src/mpid/common/datatype/mpidu_datatype.h).  This code is taken
-    # from the code in mpich/configure.ac
-    if test "$len" -gt 255 ; then
-        AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type DOUBLE is $len bytes)])
-    fi
-    tmplen=$len
-    hexlen=""
-    while test $tmplen -gt 0 ; do
-        lowdigit=`expr $tmplen - 16 \* \( $tmplen / 16 \)`
-        case $lowdigit in
-        10) char=a ;;
-        11) char=b ;;
-        12) char=c ;;
-        13) char=d ;;
-        14) char=e ;;
-        15) char=f ;;
-         *) char=$lowdigit ;;
-        esac
-        hexlen="$char$hexlen"
-        tmplen=`expr $tmplen / 16`
-    done
-    if test $len -lt 16 ; then
-        hexlen="0$hexlen"
-    fi
-    len_double=$hexlen
-    if test "$len_double" = 0 ; then
-       # We have a problem
-       AC_MSG_WARN([Unable to determine size of a DOUBLE PRECISION type; using 8])
-       # We make the length 8
-       len_double="08"
-    fi
+
+    # Provide the corresponding C types for MPI_INTEGER
+    AC_MSG_CHECKING([for C type matching Fortran integer])
+    get_c_int_type $pac_cv_f77_sizeof_integer
+    MPI_FINT=$pac_retval
+    AC_MSG_RESULT($MPI_FINT)
 
     # Provide the corresponding C types for MPI_REAL and MPI_DOUBLE
-    AC_MSG_CHECKING([for C type matching Fortran real])
-    noval=yes
-    for c_type in float double "long_double" ; do
-        eval ctypelen=\$"ac_cv_sizeof_$c_type"
-        if test "$pac_cv_f77_sizeof_real" = "$ctypelen" -a \
-          "$ctypelen" -gt 0 ; then
-	    c_type=`echo $c_type | sed -e 's/_/ /g'`
-	    AC_MSG_RESULT($c_type)
-	    MPIR_FC_REAL_CTYPE=$c_type
-	    noval="no"
-	    break
-        fi
-    done
-    if test "$noval" = "yes" ; then
-        # Set a default
-        MPIR_FC_REAL_CTYPE="float"
-        AC_MSG_RESULT([unavailable])
-    fi
-
-    noval=yes
-    AC_MSG_CHECKING([for C type matching Fortran double])
-    for c_type in double "long_double" float ; do
-        eval ctypelen=\$"ac_cv_sizeof_$c_type"
-        if test "$pac_cv_f77_sizeof_double_precision" = "$ctypelen" -a \
-          "$ctypelen" -gt 0 ; then
-	    c_type=`echo $c_type | sed -e 's/_/ /g'`
-	    AC_MSG_RESULT($c_type)
-	    MPIR_FC_DOUBLE_CTYPE=$c_type
-	    noval="no"
-	    break
-        fi
-    done
-    if test "$noval" = "yes" ; then
-        # Set a default
-        MPIR_FC_DOUBLE_CTYPE="double"
-        AC_MSG_RESULT([unavailable])
-    fi
-
     # These are needed to correctly implement the MPI reduction operations
-    AC_DEFINE_UNQUOTED([MPIR_FC_REAL_CTYPE],[$MPIR_FC_REAL_CTYPE],
-     [The C type for FORTRAN REAL])
-    AC_DEFINE_UNQUOTED([MPIR_FC_DOUBLE_CTYPE],[$MPIR_FC_DOUBLE_CTYPE],
-     [The C type for FORTRAN DOUBLE PRECISION])
 
-    # Use the proper length values for these items in case we are building
-    # with Fortran integers that are not the same size as C ints and
-    # reals and double precision that are the same size (not valid Fortran,
-    # but used by some applications)
+    AC_MSG_CHECKING([for C type matching Fortran real])
+    get_c_float_type $pac_cv_f77_sizeof_real
+    MPIR_FC_REAL_CTYPE=$pac_retval
+    AC_MSG_RESULT($MPIR_FC_REAL_CTYPE)
+    AC_DEFINE_UNQUOTED([MPIR_FC_REAL_CTYPE],[$MPIR_FC_REAL_CTYPE], [The C type for FORTRAN REAL])
 
-    len_2integer=`expr 2 \* $pac_cv_f77_sizeof_integer`
-    len_2real=`expr 2 \* $pac_cv_f77_sizeof_real`
-    len_doublecplx=`expr $pac_cv_f77_sizeof_double_precision \* 2`
-    if test "$len_doublecplx" = 0 ; then
-        # We have a problem
-        AC_MSG_WARN([Unable to determine size of a DOUBLE PRECISION type; using 8])
-        # We make the length 8*2 (in hex)
-        len_doublecplx="16"
-    fi
+    AC_MSG_CHECKING([for C type matching Fortran double])
+    get_c_float_type $pac_cv_f77_sizeof_double_precision
+    MPIR_FC_DOUBLE_CTYPE=$pac_retval
+    AC_MSG_RESULT($MPIR_FC_DOUBLE_CTYPE)
+    AC_DEFINE_UNQUOTED([MPIR_FC_DOUBLE_CTYPE],[$MPIR_FC_DOUBLE_CTYPE], [The C type for FORTRAN DOUBLE PRECISION])
 
-    for lenname in len_2integer len_2real len_doublecplx ; do
-        eval len=\$$lenname
-	if test "$len" -gt 255 ; then
-            AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type $lenname is $len bytes)])
-	fi
-    	tmplen=$len
-        hexlen=""
-        while test $tmplen -gt 0 ; do
-            lowdigit=`expr $tmplen - 16 \* \( $tmplen / 16 \)`
-            case $lowdigit in
-            10) char=a ;;
-            11) char=b ;;
-            12) char=c ;;
-            13) char=d ;;
-            14) char=e ;;
-            15) char=f ;;
-            *) char=$lowdigit ;;
-            esac
-            hexlen="$char$hexlen"
-            tmplen=`expr $tmplen / 16`
-        done
-        if test $len -lt 16 ; then
-            hexlen="0$hexlen"
-        fi
-        eval ${lenname}=$hexlen
-        if test "$hexlen" = 0 ; then
-           # We have a problem
-           AC_MSG_WARN([Unable to determine size of a $lenname type; using 8])
-           # We make the length 8
-           eval ${lenname}=$hexlen
-        fi
-    done
+    # get C types for Fortran fixed-size REAL and INTEGER. If no equivallent C type, set
+    # pac_cv_f77_sizeof_real# to 0, so that PAC_SET_MPI_TYPE can skip the type.
 
-    MPI_DOUBLE_PRECISION=0x4c00${len_double}1f
-    MPI_2INTEGER=0x4c00${len_2integer}20
-    MPI_2REAL=0x4c00${len_2real}21
-    MPI_COMPLEX=0x4c00${len_2real}1e
-    AC_SUBST(MPI_COMPLEX)
-    AC_SUBST(MPI_DOUBLE_PRECISION)
-    AC_SUBST(MPI_2INTEGER)
-    AC_SUBST(MPI_2REAL)
+    PAC_F77_CHECK_FIXED_REAL(4)
+    PAC_F77_CHECK_FIXED_REAL(8)
+    PAC_F77_CHECK_FIXED_REAL(16)
 
-dnl     len=$len_doublecplx
-dnl     #
-dnl     # Take len and turn it into two hex digits (there are 8 bits available
-dnl     # in the built-in datatype handle for the length; see
-dnl     # src/mpid/common/datatype/mpidu_datatype.h).  This code is taken
-dnl     # from the code in mpich/configure.ac
-dnl     if test "$len" -gt 255 ; then
-dnl         AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type DOUBLE COMPLEX is $len bytes)])
-dnl     fi
-dnl     tmplen=$len
-dnl     hexlen=""
-dnl     while test $tmplen -gt 0 ; do
-dnl         lowdigit=`expr $tmplen - 16 \* \( $tmplen / 16 \)`
-dnl         case $lowdigit in
-dnl         10) char=a ;;
-dnl         11) char=b ;;
-dnl         12) char=c ;;
-dnl         13) char=d ;;
-dnl         14) char=e ;;
-dnl         15) char=f ;;
-dnl          *) char=$lowdigit ;;
-dnl         esac
-dnl         hexlen="$char$hexlen"
-dnl         tmplen=`expr $tmplen / 16`
-dnl     done
-dnl     if test $len -lt 16 ; then
-dnl         hexlen="0$hexlen"
-dnl     fi
-dnl     len_doublecplx=$hexlen
+    PAC_F77_CHECK_FIXED_INTEGER(1)
+    PAC_F77_CHECK_FIXED_INTEGER(2)
+    PAC_F77_CHECK_FIXED_INTEGER(4)
+    PAC_F77_CHECK_FIXED_INTEGER(8)
+    PAC_F77_CHECK_FIXED_INTEGER(16)
 
-    MPI_DOUBLE_COMPLEX=0x4c00${len_doublecplx}22
-    MPI_2DOUBLE_PRECISION=0x4c00${len_doublecplx}23
-    AC_SUBST(MPI_DOUBLE_COMPLEX)
-    AC_SUBST(MPI_2DOUBLE_PRECISION)
-
-dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain the gap in seq id
-    # MPI_2COMPLEX=0x4c00${len_doublecplx}24
-    # MPI_2DOUBLE_COMPLEX=0x4c00${len_2dc}25
-
-    #
-    # Temporary for the vast majority of systems that use 4 byte reals and
-    # 8 byte doubles
-    # Lengths at this point are in hex, hence "10" = 10 base 16 = 16 base 10.
-    if test "$len_double" = "08" ; then
-        F77_COMPLEX8=$MPI_COMPLEX
-    fi
-    if test "$len_doublecplx" = "10" ; then
-        F77_COMPLEX16=$MPI_DOUBLE_COMPLEX
-    fi
-    if test "$len_long_double" = "10" -a "$MPID_NO_LONG_DOUBLE" != "yes" ; then
-        F77_COMPLEX32="0x4c002025"
-    else
-        F77_COMPLEX32="MPI_DATATYPE_NULL"
-    fi
-
-    MPI_F77_PACKED=$MPI_PACKED
-    MPI_F77_UB=$MPI_UB
-    MPI_F77_LB=$MPI_LB
-    MPI_F77_BYTE=$MPI_BYTE
-    AC_SUBST(MPI_F77_PACKED)
-    AC_SUBST(MPI_F77_UB)
-    AC_SUBST(MPI_F77_LB)
-    AC_SUBST(MPI_F77_BYTE)
-    #
-    # We must convert all hex values to decimal (!)
-    # It would be nice to use expr to extract the next character rather than
-    # the heavier-weight sed, but expr under Tru64 Unix discards leading zeros,
-    # even when used only with the match (:) command.  Rather than have
-    # configure figure out if expr works, we just use sed.  Sigh.
-    for var in CHARACTER INTEGER REAL LOGICAL DOUBLE_PRECISION COMPLEX \
-        DOUBLE_COMPLEX 2INTEGER 2REAL 2DOUBLE_PRECISION \
-        F77_PACKED F77_UB F77_LB F77_BYTE; do
-        fullvar="MPI_$var"
-        eval fullvarvalue=\$$fullvar
-        #echo "$fullvar = $fullvarvalue"
-        value=0
-        fullvarvalue=`echo $fullvarvalue | sed -e 's/..\(.*\)/\1/'`
-        for pos in 3 4 5 6 7 8 9 10 ; do
-            # This works, even for Tru64, because only a single character
-  	    # is extracted
-            char=`expr $fullvarvalue : '\(.\)'`
-	    # FIXME: Tru64 Unix eliminates leading zeros (!)
- 	    # How do we fix something that broken?
-	    fullvarvalue=`echo $fullvarvalue | sed -e 's/.\(.*\)/\1/'`
-            case $char in
-                a) char=10 ;;
-	        b) char=11 ;;
-	        c) char=12 ;;
-	        d) char=13 ;;
-	        e) char=14 ;;
-	        f) char=15 ;;
-            esac
-            value=`expr $value \* 16 + $char`
-        done
-        #echo "$fullvar = $value"
-	if test "X$value" = "X"; then
-            eval origvarvalue=\$$fullvar
-	    AC_MSG_ERROR([Internal Error: Failed to convert $fullvar value to hex!  Original value was $origvarvalue])
-        fi
-        eval $fullvar=$value
-    done
-    AC_LANG([C])
-
-    # Now, handle the sized types
-    #
-    # Preload the C mpi types
-    # THESE MUST MATCH THE DEFINITIONS IN MPI.H and MPIF.H
-    # We use these to match the optional Fortran types
-    char_mpi=${MPI_CHAR:-0}
-    short_mpi=${MPI_SHORT:-0}
-    int_mpi=${MPI_INT:-0}
-    long_mpi=${MPI_LONG:-0}
-    long_long_mpi=${MPI_LONG_LONG:-0}
-    float_mpi=${MPI_FLOAT:-0}
-    double_mpi=${MPI_DOUBLE:-0}
-    long_double_mpi=${MPI_LONG_DOUBLE:-0}
-
-    #
-    # The following code was correct for MPI-1, which allowed these datatypes
-    # to be an alias for another MPI type.  MPI-2 requires these to
-    # be distinct types, so these are enumerated
-    if test "$use_alias_types" = yes ; then
-        for len in 1 2 4 8 16 ; do
-            eval F77_INTEGER$len=0
-            #eval testval=\$"pac_cv_f77_sizeof_integer_$len"
-            eval testval=\$"pac_cv_fort_integer$len"
-            if test "$testval" = no ; then continue ; fi
-	    testval=$len
-            noval="yes"
-            AC_MSG_CHECKING([for C type matching Fortran integer*$len])
-            for c_type in char short int long "long_long" ; do
-	        eval ctypelen=\$"ac_cv_sizeof_$c_type"
-  	        if test "$testval" = "$ctypelen" -a "$ctypelen" -gt 0 ; then
-	            AC_MSG_RESULT($c_type)
-  	            eval F77_INTEGER$len=\$"${c_type}_mpi"
-	            noval="no"
-	            break
-                fi
-            done
-            if test "$noval" = "yes" ; then
-                AC_MSG_RESULT([unavailable])
-            fi
-        done
-
-        # Complex is set separately above
-        for len in 4 8 16 ; do
-            len2=`expr $len + $len`
-            eval F77_REAL$len=0
-            #eval F77_COMPLEX$len2=0
-            #eval testval=\$"pac_cv_f77_sizeof_real_$len"
-            eval testval=\$"pac_cv_fort_real$len"
-            if test "$testval" = no ; then continue ; fi
-	    testval=$len
-            noval="yes"
-            AC_MSG_CHECKING([for C type matching Fortran real*$len])
-            for c_type in float double "long_double" ; do
-	        eval ctypelen=\$"ac_cv_sizeof_$c_type"
-	        if test "$testval" = "$ctypelen" -a "$ctypelen" -gt 0 ; then
-	            AC_MSG_RESULT($c_type)
-  	            eval F77_REAL$len=\$"${c_type}_mpi"
-	            #eval F77_COMPLEX$len2=\$"${c_type}_cplx_mpi"
-                    noval="no"
-	            break
-                fi
-            done
-            if test "$noval" = "yes" ; then
-                AC_MSG_RESULT([unavailable])
-            fi
-        done
-    else
-        # Simply determine which types exist.  These may have been set by the
-        # toplevel configure
-        for var in INTEGER1 INTEGER2 INTEGER4 INTEGER8 INTEGER16 \
-            REAL4 REAL8 REAL16 COMPLEX8 COMPLEX16 COMPLEX32 ; do
-  	    eval varname=MPI_$var
-            eval varvalue=\$$varname
-	    #echo "$varname = $varvalue"
-  	    if test "$varvalue" = MPI_DATATYPE_NULL ; then
-	        eval F77_$var=0
-  	    else
-                eval F77_$var=\$$varname
-  	    fi
-       done
-    fi
-    # We must convert all hex values to decimal (!)
-    for var in INTEGER1 INTEGER2 INTEGER4 INTEGER8 INTEGER16 \
-        REAL4 REAL8 REAL16 COMPLEX8 COMPLEX16 COMPLEX32 ; do
-        fullvar="F77_$var"
-        eval fullvarvalue=\$$fullvar
-        if test "$fullvarvalue" = 0 -o -z "$fullvarvalue" ; then
-            eval $fullvar=MPI_DATATYPE_NULL
-            continue
-        fi
-        #echo "$fullvar = $fullvarvalue"
-        value=0
-        # See the comments above on why expr with : cannot be used here
-        fullvarvalue=`echo $fullvarvalue | sed -e 's/..\(.*\)/\1/'`
-        for pos in 3 4 5 6 7 8 9 10 ; do
-            #char=`expr substr $fullvarvalue $pos 1`
-            char=`expr $fullvarvalue : '\(.\)'`
-	    # We don't test for success of expr here because some expr's are
-  	    # buggy and set the status to one on expressions like
-            #    expr 00ccc : '\(.\)'
-            # while both
-            #    expr 00ccc : '\(..\)'
-            # and
-            #    expr 100cc : '\(.\)'
-            # return a zero status.  So the status is set even on success,
-            # if the result is a single character that is a zero (!)
-	    #rc=$?
-    	    #if test "$rc" != 0 ; then
-  	    dnl #    AC_MSG_WARN([Failure (status $rc) in extracting first char from $fullvarvalue])
-  	    #    break
-	    #fi
-	    fullvarvalue=`echo $fullvarvalue | sed -e 's/.\(.*\)/\1/'`
-            case $char in
-                a) char=10 ;;
-	        b) char=11 ;;
-	        c) char=12 ;;
-	        d) char=13 ;;
-	        e) char=14 ;;
-	        f) char=15 ;;
-            esac
-            value=`expr $value \* 16 + $char`
-	    if test $? != 0 ; then
-	        AC_MSG_WARN([Failure to evaluate $value \* 16 + $char])
-	    fi
-        done
-        #echo "$fullvar = $value"
-        eval $fullvar=$value
-    done
-    AC_SUBST(F77_INTEGER1)
-    AC_SUBST(F77_INTEGER2)
-    AC_SUBST(F77_INTEGER4)
-    AC_SUBST(F77_INTEGER8)
-    AC_SUBST(F77_INTEGER16)
-    AC_SUBST(F77_REAL4)
-    AC_SUBST(F77_REAL8)
-    AC_SUBST(F77_REAL16)
-    AC_SUBST(F77_COMPLEX8)
-    AC_SUBST(F77_COMPLEX16)
-    AC_SUBST(F77_COMPLEX32)
-
-    noval="yes"
-    AC_MSG_CHECKING([for C type matching Fortran integer])
-    for c_type in char short int long "long_long" ; do
-        eval ctypelen=\$"ac_cv_sizeof_$c_type"
-        if test "$pac_cv_f77_sizeof_integer" = "$ctypelen" -a \
-          "$ctypelen" -gt 0 ; then
-	    c_type=`echo $c_type | sed -e 's/_/ /g'`
-	    AC_MSG_RESULT($c_type)
-	    MPI_FINT=$c_type
-	    noval="no"
-	    break
-        fi
-    done
-    if test "$noval" = "yes" ; then
-        # Set a default
-        MPI_FINT="int"
-        AC_MSG_RESULT([unavailable])
-    fi
     # We also need to check the size of MPI_Aint vs MPI_Fint, and
     # define AINT_LARGER_THAN_FINT if aint is larger (this
     # affects code in MPI_Address)
@@ -3765,114 +3001,11 @@ dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain th
     fi
 
     # Include a defined value for Fint is int
-    if test "$MPI_FINT" = "int" ; then
+    if test "$SIZEOF_F77_INTEGER" == "$ac_cv_sizeof_int" ; then
         AC_DEFINE(HAVE_FINT_IS_INT,1,[Define if Fortran integer are the same size as C ints])
-    elif test "$SIZEOF_F77_INTEGER" != "$ac_cv_sizeof_int" ; then
-        # Make this fatal because we do not want to build a broken fortran
-	# interface (was error)
-	# Check to see if the f77 binding has enabled the code to support
-	# the case of int != fint.
+    else
         AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
     fi
-
-    # We must convert all hex values to decimal (!).
-    # This is for the C types so they are also available in Fortran
-    for var in CHAR SIGNED_CHAR UNSIGNED_CHAR WCHAR SHORT \
-                  UNSIGNED_SHORT INT UNSIGNED_INT LONG UNSIGNED_LONG \
-                  FLOAT DOUBLE LONG_DOUBLE LONG_LONG_INT \
-                  UNSIGNED_LONG_LONG LONG_LONG FLOAT_INT DOUBLE_INT \
-                  LONG_INT SHORT_INT "2INT" LONG_DOUBLE_INT \
-                  INT8_T INT16_T INT32_T INT64_T            \
-                  UINT8_T UINT16_T UINT32_T UINT64_T        \
-                  C_BOOL C_FLOAT_COMPLEX C_DOUBLE_COMPLEX   \
-                  C_LONG_DOUBLE_COMPLEX AINT OFFSET ; do
-        fullvar="MPI_$var"
-        fullf77var="MPI_F77_$var"
-        eval fullvarvalue=\$$fullvar
-        #echo "$fullvar = $fullvarvalue"
-        if test "x$fullvarvalue" = "x" -o \
-                "x$fullvarvalue" = "xMPI_DATATYPE_NULL" ; then
-             eval $fullf77var="MPI_DATATYPE_NULL"
-              continue
-        fi
-        value=0
-        fullvarvalue=`echo $fullvarvalue | sed -e 's/..\(.*\)/\1/'`
-        offset=0
-        for pos in 3 4 5 6 7 8 9 10 ; do
-            # This works, even for Tru64, because only a single character
-            # is extracted
-            char=`expr $fullvarvalue : '\(.\)'`
-            # FIXME: Tru64 Unix eliminates leading zeros (!)
-            # How do we fix something that broken?
-            fullvarvalue=`echo $fullvarvalue | sed -e 's/.\(.*\)/\1/'`
-            case $char in
-                a) char=10 ;;
-                b) char=11 ;;
-                c) char=12 ;;
-                d) char=13 ;;
-                e) char=14 ;;
-                f) char=15 ;;
-            esac
-            # For Fortran, if the value is too big for an unsigned int,
-            # we need to make it a signed (negative) int. Currently, the
-            # types in this class are the minloc/maxloc types.
-            if test $pos = 3 -a $char -ge 8 ; then
-                #echo "for $var in position $pos found a value >= 8"
-                char=`expr $char - 8`
-                offset=-2147483648
-            fi
-            value=`expr $value \* 16 + $char`
-        done
-        if test "$offset" != 0 ; then
-            #echo "$fullf77var: $value, $offset"
-            value=`expr $value + $offset`
-        fi
-        #echo "$fullf77var = $value"
-        eval $fullf77var=$value
-    done
-    AC_SUBST(MPI_F77_CHAR)
-    AC_SUBST(MPI_F77_SIGNED_CHAR)
-    AC_SUBST(MPI_F77_UNSIGNED_CHAR)
-    AC_SUBST(MPI_F77_WCHAR)
-    AC_SUBST(MPI_F77_SHORT)
-    AC_SUBST(MPI_F77_UNSIGNED_SHORT)
-    MPI_F77_UNSIGNED=$MPI_F77_UNSIGNED_INT
-    AC_SUBST(MPI_F77_UNSIGNED)
-    AC_SUBST(MPI_F77_INT)
-    AC_SUBST(MPI_F77_LONG)
-    AC_SUBST(MPI_F77_UNSIGNED_LONG)
-    AC_SUBST(MPI_F77_FLOAT)
-    AC_SUBST(MPI_F77_DOUBLE)
-    AC_SUBST(MPI_F77_LONG_DOUBLE)
-    AC_SUBST(MPI_F77_UNSIGNED_LONG_LONG)
-    MPI_F77_LONG_LONG_INT=$MPI_F77_LONG_LONG
-    AC_SUBST(MPI_F77_LONG_LONG_INT)
-    AC_SUBST(MPI_F77_LONG_LONG)
-    AC_SUBST(MPI_F77_FLOAT_INT)
-    AC_SUBST(MPI_F77_DOUBLE_INT)
-    AC_SUBST(MPI_F77_LONG_INT)
-    AC_SUBST(MPI_F77_SHORT_INT)
-    AC_SUBST(MPI_F77_2INT)
-    AC_SUBST(MPI_F77_LONG_DOUBLE_INT)
-    AC_SUBST(MPI_F77_INT8_T)
-    AC_SUBST(MPI_F77_INT16_T)
-    AC_SUBST(MPI_F77_INT32_T)
-    AC_SUBST(MPI_F77_INT64_T)
-    AC_SUBST(MPI_F77_UINT8_T)
-    AC_SUBST(MPI_F77_UINT16_T)
-    AC_SUBST(MPI_F77_UINT32_T)
-    AC_SUBST(MPI_F77_UINT64_T)
-    AC_SUBST(MPI_F77_C_BOOL)
-    AC_SUBST(MPI_F77_C_FLOAT_COMPLEX)
-    # C_COMPLEX is an alias for FLOAT_COMPLEX
-    MPI_F77_C_COMPLEX=$MPI_F77_C_FLOAT_COMPLEX
-    AC_SUBST(MPI_F77_C_COMPLEX)
-    AC_SUBST(MPI_F77_C_DOUBLE_COMPLEX)
-    AC_SUBST(MPI_F77_C_LONG_DOUBLE_COMPLEX)
-    # these two are not yet defined, but AC_SUBST only cares about them at
-    # AC_OUTPUT-time
-    AC_SUBST(MPI_F77_AINT)
-    AC_SUBST(MPI_F77_OFFSET)
 
     # Try and compute the values of .true. and .false. in Fortran
     # This code has been removed because the Fortran binding code does
@@ -4064,51 +3197,36 @@ dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain th
     #
 
     AC_LANG([C])
+else
+    MPI_FINT=int
+
+    # set following sizes to 0 will disable the corresponding datatype
+    pac_cv_f77_sizeof_character=0
+    pac_cv_f77_sizeof_integer=0
+    pac_cv_f77_sizeof_real=0
+    pac_cv_f77_sizeof_double_precision=0
+    pac_cv_f77_sizeof_integer1=0
+    pac_cv_f77_sizeof_integer2=0
+    pac_cv_f77_sizeof_integer4=0
+    pac_cv_f77_sizeof_integer8=0
+    pac_cv_f77_sizeof_integer16=0
+    pac_cv_f77_sizeof_real4=0
+    pac_cv_f77_sizeof_real8=0
+    pac_cv_f77_sizeof_real16=0
+
+    AC_DEFINE(HAVE_NO_FORTRAN_MPI_TYPES_IN_C,1,[Define if the Fortran types are not available in C])
 fi
 # ----------------------------------------------------------------------------
 # C++ types
 
-# default to null types
-# Set to "0x0c000000" instead of "MPI_DATATYPE_NULL" because these values
-# sometimes are used in preprocessor tests where we cannot compare the
-# type-casted values.
-MPIR_CXX_BOOL=0x0c000000
-MPIR_CXX_COMPLEX=0x0c000000
-MPIR_CXX_DOUBLE_COMPLEX=0x0c000000
-MPIR_CXX_LONG_DOUBLE_COMPLEX=0x0c000000
-MPI_F77_CXX_BOOL=MPI_DATATYPE_NULL
-MPI_F77_CXX_FLOAT_COMPLEX=MPI_DATATYPE_NULL
-MPI_F77_CXX_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
-MPI_F77_CXX_LONG_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
 if test "$enable_cxx" = "yes" ; then
     AC_LANG([C++])
     AC_CHECK_SIZEOF(bool)
 
-    # Find a C type that matches the size of the C++ boolean type
-    case "$ac_cv_sizeof_bool" in
-    	 $ac_cv_sizeof__Bool)
-		bool_type=_Bool
-		;;
-    	 $ac_cv_sizeof_unsigned_char)
-		bool_type="unsigned char"
-		;;
-    	 $ac_cv_sizeof_unsigned_short)
-		bool_type="unsigned short"
-		;;
-    	 $ac_cv_sizeof_unsigned_int)
-		bool_type="unsigned int"
-		;;
-    	 $ac_cv_sizeof_unsigned_long)
-		bool_type="unsigned long"
-		;;
-    	 $ac_cv_sizeof_unsigned_long_long)
-		bool_type="unsigned long long"
-		;;
-         *)
-		AC_MSG_ERROR([unable to determine matching C type for C++ bool])
-		;;
-    esac
-    AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_CTYPE],[$bool_type],
+    AC_MSG_CHECKING([for C types matching C++ bool])
+    get_c_bool_type $ac_cv_sizeof_bool
+    AC_MSG_RESULT([$pac_retval])
+    AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_CTYPE],[$pac_retval],
 			[a C type used to compute C++ bool reductions])
 
     AC_CHECK_HEADER(complex)
@@ -4139,63 +3257,286 @@ using namespace std;
                 "$ac_cv_sizeof_DoubleComplex" != 0 ; then
             AC_DEFINE(HAVE_CXX_COMPLEX,1,[Define is C++ supports complex types])
         fi
+        # mark availability of c++ long double complex
+        if test $ac_cv_sizeof_long_double__Complex != 0 ; then
+            AC_DEFINE([HAVE_CXX_LONG_DOUBLE_COMPLEX], 1, [Define if C++ supports long double complex])
+        fi
 
-        # Datatypes are given by
-        # 0x4c00 <length in bytes> (1 byte) <unique num> (1 byte)
-        # where the unique nums are
-        # 33,34,35,36
-        case "$ac_cv_sizeof_bool" in
-           1)    MPIR_CXX_BOOL=0x4c000133 ;;
-           2)    MPIR_CXX_BOOL=0x4c000233 ;;
-           4)    MPIR_CXX_BOOL=0x4c000433 ;;
-           8)    MPIR_CXX_BOOL=0x4c000833 ;;
-           *) ;;
-        esac
-        case "$ac_cv_sizeof_Complex" in
-           8)    MPIR_CXX_COMPLEX=0x4c000834 ;;
-           16)   MPIR_CXX_COMPLEX=0x4c001034 ;;
-           *) ;;
-        esac
-        case "$ac_cv_sizeof_DoubleComplex" in
-           8)    MPIR_CXX_DOUBLE_COMPLEX=0x4c000835 ;;
-           16)   MPIR_CXX_DOUBLE_COMPLEX=0x4c001035 ;;
-           32)   MPIR_CXX_DOUBLE_COMPLEX=0x4c002035 ;;
-           *) ;;
-        esac
-        # only enable CXX "long double" if we have a C "long double", since we
-        # currently perform reductions on CXX "long double" types via C.
-        if test "X$pac_cv_have_long_double" = "Xyes" ; then
-            case "$ac_cv_sizeof_LongDoubleComplex" in
-               8)    MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c000836 ;;
-               16)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c001036 ;;
-               24)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c001836 ;;
-               32)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c002036 ;;
-               *) ;;
-            esac
+    fi
+
+    AC_LANG([C])
+else
+    # set following sizes to 0 to disable the corresponding datatypes
+    ac_cv_sizeof_bool=0
+    ac_cv_sizeof_Complex=0
+    ac_cv_sizeof_DoubleComplex=0
+    ac_cv_sizeof_LongDoubleComplex=0
+fi
+
+# ------------
+# MPI_FINT
+# ------------
+# MPI_FINT is already set
+AC_SUBST(MPI_FINT)
+
+# ------------
+# MPI_AINT
+# ------------
+# Note that aint_size must be used instead of void_p where the desired check
+# is on the size of MPI_Aint
+aint_size=$ac_cv_sizeof_void_p
+if test "$with_aint_size" -gt 0 ; then
+   aint_size=$with_aint_size
+   if test "$aint_size" != "$ac_cv_sizeof_void_p" ; then
+        AC_MSG_RESULT([Overriding MPI_Aint to be $aint_size bytes])
+   fi
+fi
+if test "$ac_cv_sizeof_void_p" -lt "$aint_size" ; then
+    AC_DEFINE(USE_AINT_FOR_ATTRVAL,1,[Define if MPI_Aint should be used instead of void * for storing attribute values])
+fi
+
+get_c_int_type $aint_size
+MPI_AINT=$pac_retval
+MPI_SIZEOF_AINT=$aint_size
+export MPI_SIZEOF_AINT
+
+case $MPI_AINT in
+    int)
+        MPI_AINT_FMT_DEC_SPEC="%d"
+        MPI_AINT_FMT_HEX_SPEC="%x"
+        MPIR_AINT_MAX="INT_MAX"
+        ;;
+    long)
+        MPI_AINT_FMT_DEC_SPEC="%ld"
+        MPI_AINT_FMT_HEX_SPEC="%lx"
+        MPIR_AINT_MAX="LONG_MAX"
+        ;;
+    long_long)
+        MPI_AINT_FMT_DEC_SPEC="%lld"
+        MPI_AINT_FMT_HEX_SPEC="%llx"
+        # tt#1776: if LLONG_MAX is missing, we fix it up in C, b/c it's
+        # easier there.  See mpiiimpl.h.
+        MPIR_AINT_MAX="LLONG_MAX"
+        ;;
+    short)
+        MPI_AINT_FMT_DEC_SPEC="%hd"
+        MPI_AINT_FMT_HEX_SPEC="%hx"
+        MPIR_AINT_MAX="SHRT_MAX"
+        ;;
+    *)
+        AC_MSG_WARN([unable to determine format specifiers for MPI_Aint, defaulting to int])
+        MPI_AINT_FMT_DEC_SPEC="%d"
+        MPI_AINT_FMT_HEX_SPEC="%x"
+        MPIR_AINT_MAX="INT_MAX"
+    ;;
+esac
+export MPI_AINT_FMT_DEC_SPEC MPI_AINT_FMT_HEX_SPEC
+
+AC_SUBST(MPI_AINT)
+AC_SUBST(MPI_AINT_FMT_DEC_SPEC)
+AC_SUBST(MPI_AINT_FMT_HEX_SPEC)
+AC_DEFINE_UNQUOTED([MPIR_AINT_MAX],[$MPIR_AINT_MAX],[limits.h _MAX constant for MPI_Aint])
+
+# ------------
+# MPI_OFFSET
+# ------------
+# If ROMIO was successfully configured, then ROMIO will have exported the
+# definition of MPI_OFFSET_TYPE through its localdefs file (created by the
+# ROMIO configure in src/mpi/romio/localdefs).  If MPI_OFFSET_TYPE was not
+# defined, this code attempts to find a good choice for MPI_OFFSET_TYPE
+# (As the offset type is used for File operations, the specific type
+# really doesn't matter if ROMIO doesn't provide it).
+if test -n "$MPI_OFFSET_TYPE" ; then
+    # We got the value from the ROMIO configure
+    MPI_OFFSET="$MPI_OFFSET_TYPE"
+    # Get and export the size of this type if possible
+    if test -z "$MPI_SIZEOF_OFFSET" ; then
+        # set a default
+        AC_CACHE_CHECK([the sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,[
+            ac_cv_sizeof_MPI_Offset=unknown
+            AC_COMPUTE_INT([ac_cv_sizeof_MPI_Offset],[sizeof($MPI_OFFSET)],[],[
+                AC_MSG_WARN([Unable to determine the size of MPI_Offset])
+            ])
+	])
+	if test "$ac_cv_sizeof_MPI_Offset" != "unknown" ; then
+  	    MPI_SIZEOF_OFFSET=$ac_cv_sizeof_MPI_Offset
         fi
     fi
-    AC_LANG([C])
-
-    # Make these available to the collective operations and other code
-    AC_DEFINE_UNQUOTED(MPIR_CXX_BOOL_VALUE,$MPIR_CXX_BOOL,[Define as the MPI Datatype handle for MPI::BOOL])
-    AC_DEFINE_UNQUOTED(MPIR_CXX_COMPLEX_VALUE,$MPIR_CXX_COMPLEX,[Define as the MPI Datatype handle for MPI::COMPLEX])
-    AC_DEFINE_UNQUOTED(MPIR_CXX_DOUBLE_COMPLEX_VALUE,$MPIR_CXX_DOUBLE_COMPLEX,[Define as the MPI Datatype handle for MPI::DOUBLE_COMPLEX])
-    AC_DEFINE_UNQUOTED(MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE,$MPIR_CXX_LONG_DOUBLE_COMPLEX,[Define as the MPI Datatype handle for MPI::LONG_DOUBLE_COMPLEX])
-
-    # compute F77 decimal constant values for these types
-    PAC_CONV_HEX_TO_DEC([$MPIR_CXX_BOOL],               [MPI_F77_CXX_BOOL])
-    PAC_CONV_HEX_TO_DEC([$MPIR_CXX_COMPLEX],            [MPI_F77_CXX_FLOAT_COMPLEX])
-    PAC_CONV_HEX_TO_DEC([$MPIR_CXX_DOUBLE_COMPLEX],     [MPI_F77_CXX_DOUBLE_COMPLEX])
-    PAC_CONV_HEX_TO_DEC([$MPIR_CXX_LONG_DOUBLE_COMPLEX],[MPI_F77_CXX_LONG_DOUBLE_COMPLEX])
+    export MPI_SIZEOF_OFFSET
+else
+    # Make a guess at the appropriate definition for offset.  Try to
+    # find a 64bit type.
+    if test "$ac_cv_sizeof_long" = 8 ; then
+        MPI_OFFSET="long"
+	# Make the size of this type available to other configures
+	MPI_SIZEOF_OFFSET=8
+    elif test "$ac_cv_sizeof_long_long" = 8 ; then
+        MPI_OFFSET="long long"
+	# Make the size of this type available to other configures
+	MPI_SIZEOF_OFFSET=8
+    else
+        MPI_OFFSET=long
+        MPI_SIZEOF_OFFSET=$ac_cv_sizeof_long
+    fi
+    export MPI_SIZEOF_OFFSET
 fi
-AC_SUBST([MPIR_CXX_BOOL])
-AC_SUBST([MPIR_CXX_COMPLEX])
-AC_SUBST([MPIR_CXX_DOUBLE_COMPLEX])
-AC_SUBST([MPIR_CXX_LONG_DOUBLE_COMPLEX])
-AC_SUBST([MPI_F77_CXX_BOOL])
-AC_SUBST([MPI_F77_CXX_FLOAT_COMPLEX])
-AC_SUBST([MPI_F77_CXX_DOUBLE_COMPLEX])
-AC_SUBST([MPI_F77_CXX_LONG_DOUBLE_COMPLEX])
+AC_SUBST(MPI_OFFSET)
+
+AS_CASE([$MPI_OFFSET],
+        [int],         [MPIR_OFFSET_MAX="INT_MAX"],
+        [long],        [MPIR_OFFSET_MAX="LONG_MAX"],
+        ['long long'], [MPIR_OFFSET_MAX="LLONG_MAX"],
+        [short],       [MPIR_OFFSET_MAX="SHRT_MAX"],
+        [AC_MSG_ERROR([unable to determine MPIR_OFFSET_MAX for MPI_Offset])])
+AC_DEFINE_UNQUOTED([MPIR_OFFSET_MAX],[$MPIR_OFFSET_MAX],[limits.h _MAX constant for MPI_Offset])
+
+# FIXME: we need an explanation of why we need both MPI_OFFSET and
+# MPI_OFFSET_TYPEDEF.   Why is MPI_OFFSET_TYPEDEF necessary?
+# This appears to be used by the Windows "winconfigure.wsf" which is used
+# to create a multiline definition using an #ifdef check on USE_GCC
+# We may wish to use a different approach
+MPI_OFFSET_TYPEDEF="typedef $MPI_OFFSET MPI_Offset;"
+AC_SUBST(MPI_OFFSET_TYPEDEF)
+#
+# Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT
+# The value for this comes from ROMIO, and is needed in mpif.h.in
+# First, we check that this works with both Fortran compilers (if
+# they are defined)
+#
+# If there is no FORTRAN_MPI_OFFSET type (because ROMIO is disabled),
+# just use INTEGER
+if test -z "$FORTRAN_MPI_OFFSET" ; then
+    FORTRAN_MPI_OFFSET=INTEGER
+fi
+if test "$enable_f77" = yes -a "$enable_fc" = yes ; then
+    AC_LANG_PUSH([Fortran 77])
+    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 77])
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
+    ],[has_f77_offsettype=yes],[has_f77_offsetype=no])
+    AC_MSG_RESULT($has_f77_offsettype)
+    AC_LANG_POP([Fortran 77])
+
+    AC_LANG_PUSH([Fortran])
+    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 90])
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
+    ],[has_fc_offsettype=yes],[has_fc_offsetype=no])
+    AC_LANG_POP([Fortran])
+    AC_MSG_RESULT($has_fc_offsettype)
+
+    if test "$has_f77_offsettype" != yes -o "$has_fc_offsettype" != yes ; then
+        AC_MSG_WARN([mpif.h is not compatible with both $F77 $FFLAGS and $FC $FCFLAGS.  We recommend that you set both F77 and FC to the same compiler and reconfigure.])
+    fi
+fi
+AC_SUBST(FORTRAN_MPI_OFFSET)
+
+# ------------
+# MPI_COUNT
+# ------------
+# quick sanity checking to avoid a bad test immediately below
+AS_IF([test -z "$MPI_SIZEOF_AINT"],
+      [AC_MSG_ERROR([size of MPI_Aint is unknown at this stage])])
+AS_IF([test -z "$MPI_SIZEOF_OFFSET"],
+      [AC_MSG_ERROR([size of MPI_Offset is unknown at this stage])])
+
+AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
+      [# an unlikely case, but I suppose it's theoretically possible
+       MPI_COUNT="$MPI_AINT"
+       COUNT_KIND="$ADDRESS_KIND"
+       MPIR_COUNT_MAX="$MPIR_AINT_MAX"
+       MPI_SIZEOF_COUNT="$MPI_SIZEOF_AINT"],
+      [# don't bother checking whether Aint or Offset are larger than int, they
+       # surely will be
+       MPI_COUNT="$MPI_OFFSET"
+       COUNT_KIND="$OFFSET_KIND"
+       MPIR_COUNT_MAX="$MPIR_OFFSET_MAX"
+       MPI_SIZEOF_COUNT="$MPI_SIZEOF_OFFSET"])
+AC_SUBST([MPI_COUNT])
+AC_SUBST([COUNT_KIND])
+AC_DEFINE_UNQUOTED([MPIR_COUNT_MAX],[$MPIR_COUNT_MAX],[limits.h _MAX constant for MPI_Count])
+AC_DEFINE_UNQUOTED(MPIR_Ucount,unsigned $MPI_COUNT,[MPIR_Ucount is an unsigned MPI_Count-sized integer])
+
+#--------------------------------------------------------------------------------
+# Now we collected all the datatype sizes, we can set values for MPI builtin datatypes
+AC_MSG_CHECKING([MPI datatypes])
+# PAC_SET_MPI_TYPE(hex_idx, NAME, len)
+PAC_SET_MPI_TYPE(01, MPI_CHAR, 1)
+PAC_SET_MPI_TYPE(02, MPI_UNSIGNED_CHAR, 1)
+PAC_SET_MPI_TYPE(03, MPI_SHORT, $ac_cv_sizeof_short)
+PAC_SET_MPI_TYPE(04, MPI_UNSIGNED_SHORT, $ac_cv_sizeof_short)
+PAC_SET_MPI_TYPE(05, MPI_INT, $ac_cv_sizeof_int)
+PAC_SET_MPI_TYPE(06, MPI_UNSIGNED, $ac_cv_sizeof_int)
+PAC_SET_MPI_TYPE(07, MPI_LONG, $ac_cv_sizeof_long)
+PAC_SET_MPI_TYPE(08, MPI_UNSIGNED_LONG, $ac_cv_sizeof_long)
+PAC_SET_MPI_TYPE(09, MPI_LONG_LONG_INT, $ac_cv_sizeof_long_long)
+PAC_SET_MPI_TYPE(0a, MPI_FLOAT, $ac_cv_sizeof_float)
+PAC_SET_MPI_TYPE(0b, MPI_DOUBLE, $ac_cv_sizeof_double)
+PAC_SET_MPI_TYPE(0c, MPI_LONG_DOUBLE, $ac_cv_sizeof_long_double)
+PAC_SET_MPI_TYPE(0d, MPI_BYTE, 1)
+PAC_SET_MPI_TYPE(0e, MPI_WCHAR, $ac_cv_sizeof_wchar_t)
+PAC_SET_MPI_TYPE(0f, MPI_PACKED, 1)
+PAC_SET_MPI_LBUB(10, MPI_LB)
+PAC_SET_MPI_LBUB(11, MPI_UB)
+
+PAC_SET_MPI_PAIRTYPE(00, MPI_FLOAT_INT)
+PAC_SET_MPI_PAIRTYPE(01, MPI_DOUBLE_INT)
+PAC_SET_MPI_PAIRTYPE(02, MPI_LONG_INT)
+PAC_SET_MPI_PAIRTYPE(03, MPI_SHORT_INT)
+PAC_SET_MPI_TYPE(16, MPI_2INT, $ac_cv_sizeof_two_int)
+PAC_SET_MPI_PAIRTYPE(04, MPI_LONG_DOUBLE_INT)
+PAC_SET_MPI_TYPE(18, MPI_SIGNED_CHAR, 1)
+PAC_SET_MPI_TYPE(19, MPI_UNSIGNED_LONG_LONG, $ac_cv_sizeof_long_long)
+PAC_SET_MPI_TYPE(1a, MPI_CHARACTER, $pac_cv_f77_sizeof_character)
+PAC_SET_MPI_TYPE(1b, MPI_INTEGER, $pac_cv_f77_sizeof_integer)
+PAC_SET_MPI_TYPE(1c, MPI_REAL, $pac_cv_f77_sizeof_real)
+PAC_SET_MPI_TYPE(1d, MPI_LOGICAL, $pac_cv_f77_sizeof_integer)
+PAC_SET_MPI_TYPE(1e, MPI_COMPLEX, $pac_cv_f77_sizeof_real, 2)
+PAC_SET_MPI_TYPE(1f, MPI_DOUBLE_PRECISION, $pac_cv_f77_sizeof_double_precision)
+PAC_SET_MPI_TYPE(20, MPI_2INTEGER, $pac_cv_f77_sizeof_integer, 2)
+PAC_SET_MPI_TYPE(21, MPI_2REAL, $pac_cv_f77_sizeof_real, 2)
+PAC_SET_MPI_TYPE(22, MPI_DOUBLE_COMPLEX, $pac_cv_f77_sizeof_double_precision, 2)
+PAC_SET_MPI_TYPE(23, MPI_2DOUBLE_PRECISION, $pac_cv_f77_sizeof_double_precision, 2)
+PAC_SET_MPI_TYPE(24, MPI_2COMPLEX, $pac_cv_f77_sizeof_real, 4)
+PAC_SET_MPI_TYPE(25, MPI_2DOUBLE_COMPLEX, $pac_cv_f77_sizeof_double_precision, 4)
+
+PAC_SET_MPI_TYPE(27, MPI_REAL4, $pac_cv_f77_sizeof_real4)
+PAC_SET_MPI_TYPE(28, MPI_COMPLEX8, $pac_cv_f77_sizeof_real4, 2)
+PAC_SET_MPI_TYPE(29, MPI_REAL8, $pac_cv_f77_sizeof_real8)
+PAC_SET_MPI_TYPE(2a, MPI_COMPLEX16, $pac_cv_f77_sizeof_real8, 2)
+PAC_SET_MPI_TYPE(2b, MPI_REAL16, $pac_cv_f77_sizeof_real16)
+PAC_SET_MPI_TYPE(2c, MPI_COMPLEX32, $pac_cv_f77_sizeof_real16, 2)
+PAC_SET_MPI_TYPE(2d, MPI_INTEGER1, $pac_cv_f77_sizeof_integer1)
+
+PAC_SET_MPI_TYPE(2f, MPI_INTEGER2, $pac_cv_f77_sizeof_integer2)
+PAC_SET_MPI_TYPE(30, MPI_INTEGER4, $pac_cv_f77_sizeof_integer4)
+PAC_SET_MPI_TYPE(31, MPI_INTEGER8, $pac_cv_f77_sizeof_integer8)
+PAC_SET_MPI_TYPE(32, MPI_INTEGER16, $pac_cv_f77_sizeof_integer16)
+PAC_SET_MPI_TYPE(33, MPIR_CXX_BOOL, $ac_cv_sizeof_bool)
+PAC_SET_MPI_TYPE(34, MPIR_CXX_FLOAT_COMPLEX, $ac_cv_sizeof_Complex)
+PAC_SET_MPI_TYPE(35, MPIR_CXX_DOUBLE_COMPLEX, $ac_cv_sizeof_DoubleComplex)
+PAC_SET_MPI_TYPE(36, MPIR_CXX_LONG_DOUBLE_COMPLEX, $ac_cv_sizeof_LongDoubleComplex)
+PAC_SET_MPI_TYPE(37, MPI_INT8_T, 1)
+PAC_SET_MPI_TYPE(38, MPI_INT16_T, 2)
+PAC_SET_MPI_TYPE(39, MPI_INT32_T, 4)
+PAC_SET_MPI_TYPE(3a, MPI_INT64_T, 8)
+PAC_SET_MPI_TYPE(3b, MPI_UINT8_T, 1)
+PAC_SET_MPI_TYPE(3c, MPI_UINT16_T, 2)
+PAC_SET_MPI_TYPE(3d, MPI_UINT32_T, 4)
+PAC_SET_MPI_TYPE(3e, MPI_UINT64_T, 8)
+PAC_SET_MPI_TYPE(3f, MPI_C_BOOL, $ac_cv_sizeof__Bool)
+PAC_SET_MPI_TYPE(40, MPI_C_FLOAT_COMPLEX, $ac_cv_sizeof_float__Complex)
+PAC_SET_MPI_TYPE(41, MPI_C_DOUBLE_COMPLEX, $ac_cv_sizeof_double__Complex)
+PAC_SET_MPI_TYPE(42, MPI_C_LONG_DOUBLE_COMPLEX, $ac_cv_sizeof_long_double__Complex)
+PAC_SET_MPI_TYPE(43, MPI_AINT_DATATYPE, $MPI_SIZEOF_AINT)
+PAC_SET_MPI_TYPE(44, MPI_OFFSET_DATATYPE, $MPI_SIZEOF_OFFSET)
+PAC_SET_MPI_TYPE(45, MPI_COUNT_DATATYPE, $MPI_SIZEOF_COUNT)
+PAC_SET_MPI_TYPE(46, MPIX_C_FLOAT16, 2)
+AC_MSG_RESULT([done])
+
+# aliases
+PAC_SET_MPI_DATATYPE_ALIAS(MPI_LONG_LONG, MPI_LONG_LONG_INT)
+PAC_SET_MPI_DATATYPE_ALIAS(MPI_C_COMPLEX, MPI_C_FLOAT_COMPLEX)
 
 # ------------------------------------------------------------------------
 # Test if  type_tag_for_datatype is agnostic to modifiers such as const, volatile, and restrict
@@ -4395,89 +3736,7 @@ if test "$NEEDSPLIB" = "yes" ; then
 fi
 AC_SUBST(LPMPILIBNAME)
 
-# Note that aint_size must be used instead of void_p where the desired check
-# is on the size of MPI_Aint
-aint_size=$ac_cv_sizeof_void_p
-if test "$with_aint_size" -gt 0 ; then
-   aint_size=$with_aint_size
-   if test "$aint_size" != "$ac_cv_sizeof_void_p" ; then
-        AC_MSG_RESULT([Overriding MPI_Aint to be $aint_size bytes])
-   fi
-fi
-MPI_AINT=int
-for type in int long long_long short ; do
-    eval len=\$ac_cv_sizeof_$type
-    if test "$len" = "$aint_size" ; then
-        MPI_AINT=`echo $type | sed -e 's/_/ /'`
-        # Make the sizeof AINT available to other configures
-        MPI_SIZEOF_AINT=$len
-        export MPI_SIZEOF_AINT
-        case $type in
-            int)
-                MPI_AINT_FMT_DEC_SPEC="%d"
-                MPI_AINT_FMT_HEX_SPEC="%x"
-                MPIR_AINT_MAX="INT_MAX"
-                ;;
-            long)
-                MPI_AINT_FMT_DEC_SPEC="%ld"
-                MPI_AINT_FMT_HEX_SPEC="%lx"
-                MPIR_AINT_MAX="LONG_MAX"
-                ;;
-            long_long)
-                MPI_AINT_FMT_DEC_SPEC="%lld"
-                MPI_AINT_FMT_HEX_SPEC="%llx"
-                # tt#1776: if LLONG_MAX is missing, we fix it up in C, b/c it's
-                # easier there.  See mpiiimpl.h.
-                MPIR_AINT_MAX="LLONG_MAX"
-                ;;
-            short)
-                MPI_AINT_FMT_DEC_SPEC="%hd"
-                MPI_AINT_FMT_HEX_SPEC="%hx"
-                MPIR_AINT_MAX="SHRT_MAX"
-                ;;
-            *)
-                AC_MSG_WARN([unable to determine format specifiers for MPI_Aint, defaulting to int])
-                MPI_AINT_FMT_DEC_SPEC="%d"
-                MPI_AINT_FMT_HEX_SPEC="%x"
-                MPIR_AINT_MAX="INT_MAX"
-            ;;
-        esac
-        export MPI_AINT_FMT_DEC_SPEC MPI_AINT_FMT_HEX_SPEC
-        break
-    fi
-done
-AC_SUBST(MPI_AINT)
-AC_SUBST(MPI_AINT_FMT_DEC_SPEC)
-AC_SUBST(MPI_AINT_FMT_HEX_SPEC)
-AC_DEFINE_UNQUOTED([MPIR_AINT_MAX],[$MPIR_AINT_MAX],[limits.h _MAX constant for MPI_Aint])
-
 # ----------------------------------------------------------------------------
-# MPI_AINT datatype
-# ----------------------------------------------------------------------------
-# Must be done after MPI_Aint type determination but before subconfigures.
-
-# convert to 2-char hex size
-case "$MPI_SIZEOF_AINT" in
-    4)    len_mpi_aint=04 ;;
-    8)    len_mpi_aint=08 ;;
-    16)   len_mpi_aint=10 ;;
-    *)    AC_MSG_ERROR([Unable to convert MPI_SIZEOF_AINT to a hex string.  This is either because we are building on a very strange platform or there is a bug somewhere in configure.]) ;;
-esac
-# MPI_AINT and MPI_OFFSET are already taken, appending a _DATATYPE suffix
-MPI_AINT_DATATYPE=0x4c00${len_mpi_aint}43
-AC_SUBST(MPI_AINT_DATATYPE)
-export MPI_AINT_DATATYPE
-
-# 0x4c000043 is 1275068483 in decimal, add ($MPI_SIZEOF_AINT * 256) and you get
-# the decimal equivalent of the hex number
-MPI_F77_AINT=`expr 1275068483 '+' '(' 256 '*' $MPI_SIZEOF_AINT ')'`
-AC_SUBST(MPI_F77_AINT)
-export MPI_F77_AINT
-# ----------------------------------------------------------------------------
-
-if test "$ac_cv_sizeof_void_p" -lt "$aint_size" ; then
-    AC_DEFINE(USE_AINT_FOR_ATTRVAL,1,[Define if MPI_Aint should be used instead of void * for storing attribute values])
-fi
 
 # with MPI_AINT defined, now we can
 # Get the size for the bsendoverhead
@@ -4623,183 +3882,6 @@ dnl PAC_SUBDIR_CACHE_CLEANUP
 # Make subsystems available to makefiles.
 # FIXME does the makefile actually need this?
 subsystems="$devsubsystems $subsystems $bindingsubsystems"
-
-if test "$enable_f77" != "yes" ; then
-    # These are Fortran datatypes ONLY.  Set to null if no Fortran compiler.
-    for name in CHARACTER INTEGER REAL LOGICAL COMPLEX DOUBLE_PRECISION \
-	2INTEGER 2REAL DOUBLE_COMPLEX 2DOUBLE_PRECISION ; do
-	fullname="MPI_$name"
-	eval $fullname=MPI_DATATYPE_NULL
-    done
-    AC_MSG_WARN([Could not define Fortran MPI datatypes for C])
-    AC_DEFINE(HAVE_NO_FORTRAN_MPI_TYPES_IN_C,1,[Define if the Fortran types are not available in C])
-    # Temporary values for MPI_Fint (need help from the Fortran subsystem)
-    MPI_FINT=int
-fi
-AC_SUBST(MPI_CHARACTER)
-AC_SUBST(MPI_INTEGER)
-AC_SUBST(MPI_REAL)
-AC_SUBST(MPI_LOGICAL)
-AC_SUBST(MPI_COMPLEX)
-AC_SUBST(MPI_DOUBLE_PRECISION)
-AC_SUBST(MPI_2INTEGER)
-AC_SUBST(MPI_2REAL)
-AC_SUBST(MPI_DOUBLE_COMPLEX)
-AC_SUBST(MPI_2DOUBLE_PRECISION)
-AC_SUBST(MPI_FINT)
-
-# If ROMIO was successfully configured, then ROMIO will have exported the
-# definition of MPI_OFFSET_TYPE through its localdefs file (created by the
-# ROMIO configure in src/mpi/romio/localdefs).  If MPI_OFFSET_TYPE was not
-# defined, this code attempts to find a good choice for MPI_OFFSET_TYPE
-# (As the offset type is used for File operations, the specific type
-# really doesn't matter if ROMIO doesn't provide it).
-if test -n "$MPI_OFFSET_TYPE" ; then
-    # We got the value from the ROMIO configure
-    MPI_OFFSET="$MPI_OFFSET_TYPE"
-    # Get and export the size of this type if possible
-    if test -z "$MPI_SIZEOF_OFFSET" ; then
-        # set a default
-        AC_CACHE_CHECK([the sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,[
-            ac_cv_sizeof_MPI_Offset=unknown
-            AC_COMPUTE_INT([ac_cv_sizeof_MPI_Offset],[sizeof($MPI_OFFSET)],[],[
-                AC_MSG_WARN([Unable to determine the size of MPI_Offset])
-            ])
-	])
-	if test "$ac_cv_sizeof_MPI_Offset" != "unknown" ; then
-  	    MPI_SIZEOF_OFFSET=$ac_cv_sizeof_MPI_Offset
-        fi
-    fi
-    export MPI_SIZEOF_OFFSET
-else
-    # Make a guess at the appropriate definition for offset.  Try to
-    # find a 64bit type.
-    if test "$ac_cv_sizeof_long" = 8 ; then
-        MPI_OFFSET="long"
-	# Make the size of this type available to other configures
-	MPI_SIZEOF_OFFSET=8
-    elif test "$ac_cv_sizeof_long_long" = 8 ; then
-        MPI_OFFSET="long long"
-	# Make the size of this type available to other configures
-	MPI_SIZEOF_OFFSET=8
-    else
-        MPI_OFFSET=long
-        MPI_SIZEOF_OFFSET=$ac_cv_sizeof_long
-    fi
-    export MPI_SIZEOF_OFFSET
-fi
-AC_SUBST(MPI_OFFSET)
-
-AS_CASE([$MPI_OFFSET],
-        [int],         [MPIR_OFFSET_MAX="INT_MAX"],
-        [long],        [MPIR_OFFSET_MAX="LONG_MAX"],
-        ['long long'], [MPIR_OFFSET_MAX="LLONG_MAX"],
-        [short],       [MPIR_OFFSET_MAX="SHRT_MAX"],
-        [AC_MSG_ERROR([unable to determine MPIR_OFFSET_MAX for MPI_Offset])])
-AC_DEFINE_UNQUOTED([MPIR_OFFSET_MAX],[$MPIR_OFFSET_MAX],[limits.h _MAX constant for MPI_Offset])
-
-# FIXME: we need an explanation of why we need both MPI_OFFSET and
-# MPI_OFFSET_TYPEDEF.   Why is MPI_OFFSET_TYPEDEF necessary?
-# This appears to be used by the Windows "winconfigure.wsf" which is used
-# to create a multiline definition using an #ifdef check on USE_GCC
-# We may wish to use a different approach
-MPI_OFFSET_TYPEDEF="typedef $MPI_OFFSET MPI_Offset;"
-AC_SUBST(MPI_OFFSET_TYPEDEF)
-#
-# Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT
-# The value for this comes from ROMIO, and is needed in mpif.h.in
-# First, we check that this works with both Fortran compilers (if
-# they are defined)
-#
-# If there is no FORTRAN_MPI_OFFSET type (because ROMIO is disabled),
-# just use INTEGER
-if test -z "$FORTRAN_MPI_OFFSET" ; then
-    FORTRAN_MPI_OFFSET=INTEGER
-fi
-if test "$enable_f77" = yes -a "$enable_fc" = yes ; then
-    AC_LANG_PUSH([Fortran 77])
-    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 77])
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
-    ],[has_f77_offsettype=yes],[has_f77_offsetype=no])
-    AC_MSG_RESULT($has_f77_offsettype)
-    AC_LANG_POP([Fortran 77])
-
-    AC_LANG_PUSH([Fortran])
-    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 90])
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
-    ],[has_fc_offsettype=yes],[has_fc_offsetype=no])
-    AC_LANG_POP([Fortran])
-    AC_MSG_RESULT($has_fc_offsettype)
-
-    if test "$has_f77_offsettype" != yes -o "$has_fc_offsettype" != yes ; then
-        AC_MSG_WARN([mpif.h is not compatible with both $F77 $FFLAGS and $FC $FCFLAGS.  We recommend that you set both F77 and FC to the same compiler and reconfigure.])
-    fi
-fi
-AC_SUBST(FORTRAN_MPI_OFFSET)
-#
-
-# ----------------------------------------------------------------------------
-# MPI_OFFSET datatype
-# ----------------------------------------------------------------------------
-# must be done after ROMIO configure step
-case "$MPI_SIZEOF_OFFSET" in
-    4)    len_mpi_offset=04 ;;
-    8)    len_mpi_offset=08 ;;
-    16)   len_mpi_offset=10 ;;
-    *)    AC_MSG_ERROR([Unable to convert MPI_SIZEOF_OFFSET to a hex string.  This is either because we are building on a very strange platform or there is a bug somewhere in configure.]) ;;
-esac
-MPI_OFFSET_DATATYPE=0x4c00${len_mpi_offset}44
-AC_SUBST(MPI_OFFSET_DATATYPE)
-export MPI_OFFSET_DATATYPE
-
-# 0x4c000044 is 1275068484 in decimal, add ($MPI_SIZEOF_OFFSET * 256) and you get
-# the decimal equivalent of the hex number
-MPI_F77_OFFSET=`expr 1275068484 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
-AC_SUBST(MPI_F77_OFFSET)
-export MPI_F77_OFFSET
-
-# ----------------------------------------------------------------------------
-# MPI_COUNT datatype
-# ----------------------------------------------------------------------------
-# quick sanity checking to avoid a bad test immediately below
-AS_IF([test -z "$MPI_SIZEOF_AINT"],
-      [AC_MSG_ERROR([size of MPI_Aint is unknown at this stage])])
-AS_IF([test -z "$MPI_SIZEOF_OFFSET"],
-      [AC_MSG_ERROR([size of MPI_Offset is unknown at this stage])])
-
-AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
-      [# an unlikely case, but I suppose it's theoretically possible
-       MPI_COUNT="$MPI_AINT"
-       COUNT_KIND="$ADDRESS_KIND"
-       MPIR_COUNT_MAX="$MPIR_AINT_MAX"
-       MPI_SIZEOF_COUNT="$MPI_SIZEOF_AINT"],
-      [# don't bother checking whether Aint or Offset are larger than int, they
-       # surely will be
-       MPI_COUNT="$MPI_OFFSET"
-       COUNT_KIND="$OFFSET_KIND"
-       MPIR_COUNT_MAX="$MPIR_OFFSET_MAX"
-       MPI_SIZEOF_COUNT="$MPI_SIZEOF_OFFSET"])
-AC_SUBST([MPI_COUNT])
-AC_SUBST([COUNT_KIND])
-AC_DEFINE_UNQUOTED([MPIR_COUNT_MAX],[$MPIR_COUNT_MAX],[limits.h _MAX constant for MPI_Count])
-AC_DEFINE_UNQUOTED(MPIR_Ucount,unsigned $MPI_COUNT,[MPIR_Ucount is an unsigned MPI_Count-sized integer])
-
-AS_CASE([$MPI_SIZEOF_COUNT],
-        [4], [len_mpi_count=04],
-        [8], [len_mpi_count=08],
-        [16],[len_mpi_count=10],
-        [AC_MSG_ERROR([Unable to convert MPI_SIZEOF_COUNT to a hex string!])])
-MPI_COUNT_DATATYPE=0x4c00${len_mpi_count}45
-AC_SUBST([MPI_COUNT_DATATYPE])
-
-# 0x4c000045 is 1275068485 in decimal, add ($MPI_SIZEOF_COUNT * 256) and you get
-# the decimal equivalent of the hex number
-MPI_F77_COUNT=`expr 1275068485 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
-AC_SUBST([MPI_F77_COUNT])
-
-# ----------------------------------------------------------------------------
 
 # MPI_STATUS_SIZE is hardcoded and need to be synchronized with mpi.h
 MPI_STATUS_SIZE=5
@@ -5071,103 +4153,7 @@ if test "X$enable_shared" = "Xyes" ; then
     )
 fi
 
-# Set F08 versions of datatypes, which have type MPI_Datatype and are not integers anymore.
-# If the corresponding F77 datatypes exist, i.e., not MPI_DATATYPE_NULL, we simply use their
-# integer value (already converted into decimal) in F08 counterparts. Otherwise, we use
-# MPI_VAL value of F08 MPI_DATATYPE_NULL.
-# We put the code at the end to ensure all F77 datatypes have been set.
-
 if test "X$f08_works" = "Xyes"; then
-    for type in INTEGER1 INTEGER2 INTEGER4 INTEGER8 INTEGER16 \
-                REAL4 REAL8 REAL16 \
-                COMPLEX8 COMPLEX16 COMPLEX32; do
-        eval f77typename=F77_$type
-        eval f77typevalue=\$$f77typename
-        if test "$f77typevalue" = MPI_DATATYPE_NULL ; then
-            eval F08_$type=MPI_DATATYPE_NULL%MPI_VAL
-        else
-            eval F08_$type=$f77typevalue
-        fi
-    done
-    AC_SUBST(F08_INTEGER1)
-    AC_SUBST(F08_INTEGER2)
-    AC_SUBST(F08_INTEGER4)
-    AC_SUBST(F08_INTEGER8)
-    AC_SUBST(F08_INTEGER16)
-    AC_SUBST(F08_REAL4)
-    AC_SUBST(F08_REAL8)
-    AC_SUBST(F08_REAL16)
-    AC_SUBST(F08_COMPLEX8)
-    AC_SUBST(F08_COMPLEX16)
-    AC_SUBST(F08_COMPLEX32)
-
-    for type in PACKED UB LB BYTE \
-                CHAR SIGNED_CHAR UNSIGNED_CHAR WCHAR SHORT \
-                UNSIGNED_SHORT UNSIGNED INT LONG UNSIGNED_INT UNSIGNED_LONG \
-                FLOAT DOUBLE LONG_DOUBLE LONG_LONG_INT \
-                UNSIGNED_LONG_LONG LONG_LONG FLOAT_INT DOUBLE_INT \
-                LONG_INT SHORT_INT "2INT" LONG_DOUBLE_INT \
-                INT8_T INT16_T INT32_T INT64_T            \
-                UINT8_T UINT16_T UINT32_T UINT64_T        \
-                C_BOOL C_FLOAT_COMPLEX C_COMPLEX C_DOUBLE_COMPLEX  C_LONG_DOUBLE_COMPLEX \
-                AINT OFFSET COUNT \
-                CXX_BOOL CXX_FLOAT_COMPLEX CXX_DOUBLE_COMPLEX CXX_LONG_DOUBLE_COMPLEX; do
-        eval f77typename=MPI_F77_$type
-        eval f77typevalue=\$$f77typename
-        if test "$f77typevalue" = MPI_DATATYPE_NULL ; then
-            eval F08_$type=MPI_DATATYPE_NULL%MPI_VAL
-        else
-            eval F08_$type=$f77typevalue
-        fi
-    done
-    AC_SUBST(F08_PACKED)
-    AC_SUBST(F08_UB)
-    AC_SUBST(F08_LB)
-    AC_SUBST(F08_BYTE)
-    AC_SUBST(F08_CHAR)
-    AC_SUBST(F08_SIGNED_CHAR)
-    AC_SUBST(F08_UNSIGNED_CHAR)
-    AC_SUBST(F08_WCHAR)
-    AC_SUBST(F08_SHORT)
-    AC_SUBST(F08_UNSIGNED_SHORT)
-    AC_SUBST(F08_UNSIGNED)
-    AC_SUBST(F08_INT)
-    AC_SUBST(F08_LONG)
-    AC_SUBST(F08_UNSIGNED_INT)
-    AC_SUBST(F08_UNSIGNED_LONG)
-    AC_SUBST(F08_FLOAT)
-    AC_SUBST(F08_DOUBLE)
-    AC_SUBST(F08_LONG_DOUBLE)
-    AC_SUBST(F08_LONG_LONG_INT)
-    AC_SUBST(F08_UNSIGNED_LONG_LONG)
-    AC_SUBST(F08_LONG_LONG)
-    AC_SUBST(F08_FLOAT_INT)
-    AC_SUBST(F08_DOUBLE_INT)
-    AC_SUBST(F08_LONG_INT)
-    AC_SUBST(F08_SHORT_INT)
-    AC_SUBST(F08_2INT)
-    AC_SUBST(F08_LONG_DOUBLE_INT)
-    AC_SUBST(F08_INT8_T)
-    AC_SUBST(F08_INT16_T)
-    AC_SUBST(F08_INT32_T)
-    AC_SUBST(F08_INT64_T)
-    AC_SUBST(F08_UINT8_T)
-    AC_SUBST(F08_UINT16_T)
-    AC_SUBST(F08_UINT32_T)
-    AC_SUBST(F08_UINT64_T)
-    AC_SUBST(F08_C_BOOL)
-    AC_SUBST(F08_C_FLOAT_COMPLEX)
-    AC_SUBST(F08_C_COMPLEX)
-    AC_SUBST(F08_C_DOUBLE_COMPLEX)
-    AC_SUBST(F08_C_LONG_DOUBLE_COMPLEX)
-    AC_SUBST(F08_AINT)
-    AC_SUBST(F08_OFFSET)
-    AC_SUBST(F08_COUNT)
-    AC_SUBST(F08_CXX_BOOL)
-    AC_SUBST(F08_CXX_FLOAT_COMPLEX)
-    AC_SUBST(F08_CXX_DOUBLE_COMPLEX)
-    AC_SUBST(F08_CXX_LONG_DOUBLE_COMPLEX)
-
     AS_CASE([$MPI_AINT],
         [short],       [F08_C_AINT="c_short"],
         [int],         [F08_C_AINT="c_int"],
@@ -5258,25 +4244,9 @@ AC_CONFIG_FILES([Makefile \
           test/commands/cmdtests])
 AC_OUTPUT
 
+echo '*****************************************************'
 if test ${device_name} = "ch4" ; then
-    t_netmod=$ch4_netmods
-    if test "$ch4_netmods" = "ofi" -a "$with_libfabric" = "embedded"; then
-        t_netmod="ofi (embedded libfabric)"
-    elif test "$ch4_netmods" = "ucx" -a "$with_ucx" = "embedded"; then
-        t_netmod="ucx (embedded)"
-    fi
-    t_xpmem=""
-    if test "$pac_have_xpmem" = "yes" ; then
-        t_xpmem="xpmem"
-    fi
-cat <<EOF
-***
-*** device: ch4
-*** netmods: ${t_netmod}
-*** shm: ${ch4_shm} $t_xpmem
-*** gpu: ${GPU_SUPPORT}
-***
-EOF
+    PAC_CH4_CONFIG_SUMMARY()
 elif test ${DEVICE} = "ch3:nemesis" ; then
 cat <<EOF
 ***
@@ -5291,5 +4261,6 @@ cat <<EOF
 ***
 EOF
 fi
+echo '*****************************************************'
 
 echo 'Configuration completed.'

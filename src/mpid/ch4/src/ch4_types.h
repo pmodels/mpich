@@ -260,8 +260,6 @@ typedef struct MPIDI_per_vci {
 #define MPIDI_VCI(i) MPIDI_global.per_vci[i]
 
 typedef struct MPIDI_CH4_Global_t {
-    MPIR_Request *request_test;
-    MPIR_Comm *comm_test;
     int pname_set;
     int pname_len;
     char pname[MPI_MAX_PROCESSOR_NAME];

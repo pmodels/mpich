@@ -56,9 +56,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     MPIR_Comm_add_ref(comm);
     MPIDIG_REQUEST(sreq, buffer) = (void *) buf;
     MPIDIG_REQUEST(sreq, datatype) = datatype;
-    MPIDIG_REQUEST(sreq, rank) = rank;
+    MPIDIG_REQUEST(sreq, u.send.dest) = rank;
     MPIDIG_REQUEST(sreq, count) = count;
-    MPIDIG_REQUEST(sreq, context_id) = comm->context_id + context_offset;
 
     am_hdr.ipc_hdr.ipc_type = ipc_attr.ipc_type;
     am_hdr.ipc_hdr.ipc_handle = ipc_attr.ipc_handle;
@@ -132,7 +131,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_
     if (ipc_hdr->is_contig) {
         MPI_Aint actual_unpack_bytes;
         mpi_errno = MPIR_Typerep_unpack(src_buf, src_data_sz,
-                                        MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                                        MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq,
+                                                                                     count),
                                         MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(actual_unpack_bytes == src_data_sz);
@@ -176,8 +176,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
 
     /* Set receive status */
     MPIR_STATUS_SET_COUNT(rreq->status, recv_data_sz);
-    rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
-    rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
+    rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, u.recv.source);
+    rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, u.recv.tag);
 
     /* attach remote buffer */
     if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__XPMEM) {
@@ -211,8 +211,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
 
     IPC_TRACE("handle_lmt_recv: handle matched rreq %p [source %d, tag %d, "
               " context_id 0x%x], copy dst %p, bytes %ld\n", rreq,
-              MPIDIG_REQUEST(rreq, rank), MPIDIG_REQUEST(rreq, tag),
-              MPIDIG_REQUEST(rreq, context_id), (char *) MPIDIG_REQUEST(rreq, buffer),
+              MPIDIG_REQUEST(rreq, u.recv.source), MPIDIG_REQUEST(rreq, u.recv.tag),
+              MPIDIG_REQUEST(rreq, u.recv.context_id), (char *) MPIDIG_REQUEST(rreq, buffer),
               recv_data_sz);
 
     MPIDI_IPC_ack_t am_hdr;
@@ -221,7 +221,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
 
     int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
     int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
-    CH4_CALL(am_send_hdr(MPIDIG_REQUEST(rreq, rank), rreq->comm, MPIDI_IPC_ACK,
+    CH4_CALL(am_send_hdr(MPIDIG_REQUEST(rreq, u.recv.source), rreq->comm, MPIDI_IPC_ACK,
                          &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 

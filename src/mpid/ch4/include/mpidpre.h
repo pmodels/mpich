@@ -73,22 +73,12 @@ typedef enum {
 #define MPIDI_PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
 #define MPIDI_MAX_KVS_VALUE_LEN  4096
 
-typedef struct MPIDIG_sreq_t {
-    /* persistent send fields */
-    const void *src_buf;
-    MPI_Aint count;
-    MPI_Datatype datatype;
-    int rank;
-    MPIR_Context_id_t context_id;
-} MPIDIG_sreq_t;
-
 typedef struct MPIDIG_rreq_t {
     /* mrecv fields */
     void *mrcv_buffer;
     uint64_t mrcv_count;
     MPI_Datatype mrcv_datatype;
 
-    uint64_t ignore;
     MPIR_Request *peer_req_ptr;
     MPIR_Request *match_req;
 } MPIDIG_rreq_t;
@@ -100,31 +90,17 @@ typedef struct MPIDIG_part_am_req_t {
 typedef struct MPIDIG_put_req_t {
     MPIR_Request *preq_ptr;
     void *flattened_dt;
-    MPIR_Datatype *dt;
-    void *origin_addr;
-    int origin_count;
-    MPI_Datatype origin_datatype;
-    void *target_addr;
-    MPI_Datatype target_datatype;
     MPI_Aint origin_data_sz;
 } MPIDIG_put_req_t;
 
 typedef struct MPIDIG_get_req_t {
     MPIR_Request *greq_ptr;
-    void *addr;
-    MPI_Datatype datatype;
-    int count;
     void *flattened_dt;
-    MPIR_Datatype *dt;
-    MPI_Datatype target_datatype;
 } MPIDIG_get_req_t;
 
 typedef struct MPIDIG_cswap_req_t {
     MPIR_Request *creq_ptr;
-    void *addr;
-    MPI_Datatype datatype;
     void *data;
-    void *result_addr;
 } MPIDIG_cswap_req_t;
 
 typedef struct MPIDIG_acc_req_t {
@@ -180,7 +156,6 @@ typedef struct MPIDIG_sreq_async {
 
 typedef struct MPIDIG_req_ext_t {
     union {
-        MPIDIG_sreq_t sreq;
         MPIDIG_rreq_t rreq;
         MPIDIG_put_req_t preq;
         MPIDIG_get_req_t greq;
@@ -210,13 +185,27 @@ typedef struct MPIDIG_req_t {
     MPIDI_SHM_REQUEST_AM_DECL} shm_am;
 #endif
     MPIDIG_req_ext_t *req;
-    void *buffer;
     void *rndv_hdr;
+    void *buffer;
     MPI_Aint count;
-    int rank;
-    int tag;
-    MPIR_Context_id_t context_id;
     MPI_Datatype datatype;
+    union {
+        struct {
+            int dest;
+        } send;
+        struct {
+            int source;
+            MPIR_Context_id_t context_id;
+            int tag;
+        } recv;
+        struct {
+            int target_rank;
+            MPI_Datatype target_datatype;
+        } origin;
+        struct {
+            int origin_rank;
+        } target;
+    } u;
 } MPIDIG_req_t;
 
 /* Structure to capture arguments for pt2pt persistent communications */
@@ -252,13 +241,18 @@ typedef struct MPIDI_part_request {
 
     /* partitioned attributes */
     void *buffer;
-    MPI_Aint count;             /* count per partition */
-    int rank;
-    int tag;
-    MPIR_Context_id_t context_id;       /* temporarily store send context_id in unexp_rreq.
-                                         * Valid also in posted_rreq so that single dequeue
-                                         * routine can be used. */
+    MPI_Aint count;
     MPI_Datatype datatype;
+    union {
+        struct {
+            int dest;
+        } send;
+        struct {
+            int source;
+            MPIR_Context_id_t context_id;
+            int tag;
+        } recv;
+    } u;
     union {
     MPIDI_NM_PART_DECL} netmod;
 } MPIDI_part_request_t;
