@@ -623,3 +623,7 @@ MPICH now supports GPU-to-GPU Interprocess Communication (IPC) with builtin data
 * `MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD`: Specifies the data size threshold (in bytes) for which GPU IPC is used.
 
 * `MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE`: Selects an implementation for ZE shareable IPC handle, it can be drmfd (the default) which uses device fd-based shareable IPC handle, or pidfd, which uses an implementation based on pidfd_getfd syscall (only available after Linux kernel 5.6.0)
+
+In some circumstances, one may want to disable the GPU support:
+
+* `MPIR_CVAR_ENABLE_GPU`: The default value of this CVAR is 1. Set to 0 to disable GPU support including GPU initialization.
