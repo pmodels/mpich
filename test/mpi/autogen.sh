@@ -4,6 +4,27 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+check_copy() {
+    name=$1
+    orig=$2
+    printf "Checking $name... "
+    if test ! -e $name ; then
+        if test -e $orig; then
+            cp -a $orig $name
+            echo "copy from $orig"
+        else
+            echo "missing"
+            exit 1
+        fi
+    else
+        echo "found"
+    fi
+}
+
+check_copy version.m4     ../../maint/version.m4
+check_copy confdb         ../../confdb
+check_copy dtpools/confdb ../../confdb
+
 # Create and/or update the f90 tests
 printf "Create or update the Fortran 90 tests derived from the Fortran 77 tests... "
 for dir in f77/* ; do
