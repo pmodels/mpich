@@ -1,5 +1,8 @@
-
-
+/Makefile_mpitests.mtest
+/**/Makefile_mpitests.mk
+/all_mpitests.c
+/run_mpitests
+/run_mpitests.stamp
 /aclocal.m4
 /attr/attr2type
 /attr/attrdeleteget

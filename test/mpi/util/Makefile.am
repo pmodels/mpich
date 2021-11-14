@@ -17,6 +17,10 @@ libmtest_la_CPPFLAGS = $(AM_CPPFLAGS) @cuda_CPPFLAGS@ @ze_CPPFLAGS@ @hip_CPPFLAG
 noinst_LTLIBRARIES += libdtypes.la
 libdtypes_la_SOURCES = dtypes.c
 
+#---- run_mpitests ------------------------------------------------------------
+noinst_LTLIBRARIES += librun_mpitests.la
+librun_mpitests_la_SOURCES = run_mpitests.c
+
 #---- CXX ---------------------------------------------------------------------
 if HAS_CXX
 

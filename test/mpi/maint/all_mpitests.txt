@@ -1,0 +1,21 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
+# This file lists all tests that can be linked into run_mpitests. Each
+# file defineds a test function with signature of
+#
+#         int run(const char *arg)
+#
+# that runs a test. The function returns errors count, 0 if successful.
+#
+# The format of this file:
+#
+#         path/to/test [additional LDADD objects]
+#
+# Each line should start at the beginning of a line without leading spaces.
+# Specify additional LDADD objects, if any, following the test name. E.g.
+#
+#         coll/allgatherv4 -lm
+#

@@ -51,6 +51,20 @@ check_copy() {
     fi
 }
 
+PYTHON=
+check_PYTHON() {
+    if test 3 = `python -c 'import sys; print(sys.version_info[0])'`; then
+        PYTHON=python
+    elif test 3 = `python3 -c 'import sys; print(sys.version_info[0])'`; then
+        PYTHON=python3
+    fi
+
+    if test -z "$PYTHON" ; then
+        echo "python3 not found"
+        exit 1
+    fi
+}
+
 check_copy version.m4     ../../maint/version.m4
 check_copy confdb         ../../confdb
 check_copy dtpools/confdb ../../confdb
@@ -101,6 +115,9 @@ for dir in errors/f77/* ; do
     fi
 done
 echo "done"
+
+check_PYTHON
+$PYTHON maint/gen_all_mpitests.py
 
 echo "Running autoreconf in ."
 autoreconf -ivf
