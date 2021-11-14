@@ -697,10 +697,6 @@ AS_IF([test "x$enable_fc"  = "xno"],[FC=no])
 : ${CXXFLAGS=""}
 AC_PROG_CXX
 
-# suppress default "-g -O2" from AC_PROG_FC
-: ${FCFLAGS=""}
-AC_PROG_FC
-
 enable_f77=no
 enable_fc=no
 case "$enable_fortran" in
@@ -715,22 +711,29 @@ case "$enable_fortran" in
             ;;
 esac
 
-# HACK, use $FC as F77. We should remove all the F77 usages.
-if test "$enable_fc" = "yes" ; then
-    F77=$FC
-   if test ! -z "$FCFLAGS" ; then
-      FFLAGS=$FCFLAGS
-   fi
+if test "$enable_fortran" != "no" ; then
+    # suppress default "-g -O2" from AC_PROG_FC
+    : ${FCFLAGS=""}
+    AC_PROG_FC
+
+    # HACK, use $FC as F77. We should remove all the F77 usages.
+    if test "$enable_fc" = "yes" ; then
+        F77=$FC
+        if test ! -z "$FCFLAGS" ; then
+            FFLAGS=$FCFLAGS
+        fi
+    fi
+
+    # This needs to come after we've potentially set F77=$FC. Otherwise, we could
+    # override the user's Fortran compiler selection when only specifying FC at configure
+    # time, as is allowed.
+    # suppress default "-g -O2" from AC_PROG_F77
+    : ${FFLAGS=""}
+    AC_PROG_F77
+
 fi
 
-AM_CONDITIONAL([INSTALL_MPIF77],[test "$F77" != "$FC" -a "$FFLAGS" != "$FCFLAGS"])
-
-# This needs to come after we've potentially set F77=$FC. Otherwise, we could
-# override the user's Fortran compiler selection when only specifying FC at configure
-# time, as is allowed.
-# suppress default "-g -O2" from AC_PROG_F77
-: ${FFLAGS=""}
-AC_PROG_F77
+AM_CONDITIONAL([INSTALL_MPIF77],[test "$enable_fc" = "yes" -a "$F77" != "$FC" -a "$FFLAGS" != "$FCFLAGS"])
 
 # compute canonical system types
 AC_CANONICAL_BUILD
