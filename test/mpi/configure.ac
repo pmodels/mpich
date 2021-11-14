@@ -859,7 +859,7 @@ AC_CHECK_FUNCS(getrusage)
 # some tests, we need to know if we are MPI 2.1 or MPI 2.2,
 # particularly for new routines in Fortran
 AC_CACHE_CHECK([for major version of MPI],pac_cv_mpi_major_version,[
-    for pac_cv_mpi_major_version in 3 2 1 unknown ; do
+    for pac_cv_mpi_major_version in 4 3 2 1 unknown ; do
         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[
 #if MPI_VERSION == $pac_cv_mpi_major_version
     ''' force failure '''
