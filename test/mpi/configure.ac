@@ -145,8 +145,7 @@ AC_ARG_ENABLE(cxx,
         [AC_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
 
 AC_ARG_ENABLE(romio,
-        [AC_HELP_STRING([--enable-romio],[Enable ROMIO MPI I/O implementation])],,
-        [enable_romio=yes])
+        [AC_HELP_STRING([--enable-romio],[Enable MPI I/O tests])])
 
 AC_ARG_ENABLE(namepub,
         [AC_HELP_STRING([--enable-namepub],
@@ -881,6 +880,17 @@ MPI_SUBVERSION=$pac_cv_mpi_minor_version
 AC_SUBST(MPI_VERSION)
 AC_SUBST(MPI_SUBVERSION)
 
+AC_MSG_CHECKING([whether MPI-IO is available])
+AC_LINK_IFELSE([
+        AC_LANG_PROGRAM([#include "mpi.h"],[
+            MPI_File fh;
+            MPI_Init(0,0);
+            MPI_File_open(MPI_COMM_WORLD,"/dev/null",MPI_MODE_WRONLY,MPI_INFO_NULL,&fh);
+            MPI_File_close(&fh);
+            MPI_Finalize();])
+    ],[mpi_io_works=yes],[mpi_io_works=no])
+AC_MSG_RESULT($mpi_io_works)
+
 # Running Fortran 77 compiler tests
 AC_PROG_F77
 if test "$enable_f77" = yes ; then
@@ -1356,6 +1366,11 @@ if test "$enable_cxx" = yes ; then
         AC_MSG_WARN([The compiler $CXX does not support C++ namespaces.  This may cause problems for the tests])
     fi
     AC_LANG_POP([C++])
+
+    dnl for util/mtest_cxx.cxx
+    if test "$mpi_io_works" = "yes" ; then
+        AC_DEFINE(HAVE_MPI_IO,1,[Define if MPI-IO (really ROMIO) is included])
+    fi
 fi
 
 AC_LANG_C
@@ -1364,9 +1379,10 @@ LT_INIT()
 
 # IO
 iodir="#"
-if test "$enable_romio" != no ; then
+if test "$enable_romio" != no -a "$mpi_io_works" = yes ; then
     iodir=io
-    AC_DEFINE(HAVE_MPI_IO,1,[Define if MPI-IO (really ROMIO) is included])
+
+    dnl for io/async.c
     AC_CACHE_CHECK([whether MPIO_Request is defined for MPI IO],
     pac_cv_have_mpio_request,[
         AC_COMPILE_IFELSE([
