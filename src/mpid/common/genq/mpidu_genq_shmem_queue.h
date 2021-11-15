@@ -13,11 +13,13 @@
 #include <stdio.h>
 
 #define MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPSC
+#define MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPMC MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPMC
 
 typedef enum {
     MPIDU_GENQ_SHMEM_QUEUE_TYPE__SERIAL,
     MPIDU_GENQ_SHMEM_QUEUE_TYPE__INV_MPSC,
     MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPSC,
+    MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPMC,
 } MPIDU_genq_shmem_queue_type_e;
 
 /* SERIAL */
@@ -64,7 +66,7 @@ static inline int MPIDU_genqi_serial_enqueue(MPIDU_genqi_shmem_pool_s * pool_obj
     return 0;
 }
 
-/* NEMESIS QUEUE */
+/* NEMESIS MPSC QUEUE */
 
 static inline int MPIDU_genqi_nem_mpsc_init(MPIDU_genq_shmem_queue_u * queue)
 {
@@ -128,6 +130,91 @@ static inline int MPIDU_genqi_nem_mpsc_enqueue(MPIDU_genqi_shmem_pool_s * pool_o
     }
     return 0;
 }
+
+/* NEMESIS MPMC QUEUE */
+
+static inline int MPIDU_genqi_nem_mpmc_init(MPIDU_genq_shmem_queue_u * queue)
+{
+    MPL_atomic_store_ptr(&queue->q.head.m, NULL);
+    MPL_atomic_store_ptr(&queue->q.tail.m, NULL);
+    return 0;
+}
+
+static inline int MPIDU_genqi_nem_mpmc_dequeue(MPIDU_genqi_shmem_pool_s * pool_obj,
+                                               MPIDU_genq_shmem_queue_u * queue, void **cell)
+{
+    int counter = 0;
+
+    /* Add an inner loop here to avoid going all the way around the progress engine in the case of
+     * contention on this lock. If this is heavily contended, eventually this will give up and kick
+     * back out to the full progress engine. */
+    while (counter++ <= 20) {
+        void *handle = MPL_atomic_load_ptr(&queue->q.head.m);
+        if (!handle) {
+            /* queue is empty */
+            *cell = NULL;
+            break;
+        } else {
+            MPIDU_genqi_shmem_cell_header_s *cell_h = NULL;
+            cell_h = HANDLE_TO_HEADER(pool_obj, handle);
+            *cell = HEADER_TO_CELL(cell_h);
+
+            void *next_handle = MPL_atomic_load_ptr(&cell_h->u.nem_queue.next_m);
+            if (next_handle != NULL) {
+                /* just dequeue the head */
+                if (MPL_atomic_cas_ptr(&queue->q.head.m, handle, next_handle) != handle) {
+                    /* Multiple head dequeues at the same time. Give up holding the head of the queue
+                     * and start over. */
+                    *cell = NULL;
+                    continue;
+                }
+            } else {
+                /* single element, tail == head,
+                 * have to make sure no enqueuing is in progress */
+                if (MPL_atomic_cas_ptr(&queue->q.head.m, handle, NULL) != handle) {
+                    /* Conflicts over head/tail pointers. Give up holding the head of the queue and
+                     * start over. */
+                    *cell = NULL;
+                    continue;
+                }
+                if (MPL_atomic_cas_ptr(&queue->q.tail.m, handle, NULL) == handle) {
+                    /* no enqueuing in progress, we are done */
+                } else {
+                    /* busy wait for the enqueuing to finish */
+                    do {
+                        next_handle = MPL_atomic_load_ptr(&cell_h->u.nem_queue.next_m);
+                    } while (next_handle == NULL);
+                    /* then set the header */
+                    MPL_atomic_store_ptr(&queue->q.head.m, next_handle);
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+static inline int MPIDU_genqi_nem_mpmc_enqueue(MPIDU_genqi_shmem_pool_s * pool_obj,
+                                               MPIDU_genq_shmem_queue_u * queue, void *cell)
+{
+    MPIDU_genqi_shmem_cell_header_s *cell_h = CELL_TO_HEADER(cell);
+    MPL_atomic_store_ptr(&cell_h->u.nem_queue.next_m, NULL);
+
+    void *handle = (void *) cell_h->handle;
+
+    void *tail_handle = NULL;
+    tail_handle = MPL_atomic_swap_ptr(&queue->q.tail.m, handle);
+    if (tail_handle == NULL) {
+        /* queue was empty */
+        MPL_atomic_store_ptr(&queue->q.head.m, handle);
+    } else {
+        MPIDU_genqi_shmem_cell_header_s *tail_cell_h = NULL;
+        tail_cell_h = HANDLE_TO_HEADER(pool_obj, tail_handle);
+        MPL_atomic_store_ptr(&tail_cell_h->u.nem_queue.next_m, handle);
+    }
+    return 0;
+}
+
 
 /* INVERSE QUEUE */
 
@@ -231,6 +318,8 @@ static inline int MPIDU_genq_shmem_queue_dequeue(MPIDU_genq_shmem_pool_t pool,
         rc = MPIDU_genqi_inv_mpsc_dequeue(pool_obj, queue_obj, cell);
     } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPSC) {
         rc = MPIDU_genqi_nem_mpsc_dequeue(pool_obj, queue_obj, cell);
+    } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPMC) {
+        rc = MPIDU_genqi_nem_mpmc_dequeue(pool_obj, queue_obj, cell);
     } else {
         MPIR_Assert_error("Invalid GenQ flag");
     }
@@ -254,6 +343,8 @@ static inline int MPIDU_genq_shmem_queue_enqueue(MPIDU_genq_shmem_pool_t pool,
         rc = MPIDU_genqi_inv_mpsc_enqueue(pool_obj, queue_obj, cell);
     } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPSC) {
         rc = MPIDU_genqi_nem_mpsc_enqueue(pool_obj, queue_obj, cell);
+    } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPMC) {
+        rc = MPIDU_genqi_nem_mpmc_enqueue(pool_obj, queue_obj, cell);
     } else {
         MPIR_Assert_error("Invalid GenQ flag");
     }

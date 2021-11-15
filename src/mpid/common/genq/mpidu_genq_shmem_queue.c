@@ -22,6 +22,8 @@ int MPIDU_genq_shmem_queue_init(MPIDU_genq_shmem_queue_t queue, int flags)
         rc = MPIDU_genqi_inv_mpsc_init(queue_obj);
     } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPSC) {
         rc = MPIDU_genqi_nem_mpsc_init(queue_obj);
+    } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPMC) {
+        rc = MPIDU_genqi_nem_mpmc_init(queue_obj);
     } else {
         MPIR_Assert_error("Invalid GenQ flag");
     }
