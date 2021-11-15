@@ -66,4 +66,5 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
 void MTestFree(mtest_mem_type_e type, void *hostbuf, void *devicebuf);
 void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_e type);
 void MTest_finalize_gpu(void);
+void MTest_init_visibility_gpu(void);
 #endif
