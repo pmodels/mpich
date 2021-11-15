@@ -726,3 +726,138 @@ void MTest_finalize_gpu(void)
     }
 #endif
 }
+
+void MTest_init_visibility_gpu()
+{
+    int err = 0;
+#ifdef HAVE_ZE
+    const char *dev_str = 0;
+    const char *subdev_str = 0;
+    const char *affinity_str = 0;
+    char *mask = 0;
+    int device_count = -1;
+    int subdevice_count = -1;
+
+    /* Only set a mask if MTEST_GPU_VISIBILITY_AFFINITY is set. Possible options:
+     * - CONTIGUOUS_DEVICE: processes are given a single device in monotonically increasing order
+     *   - Example (3 devices, 4 ranks):
+     *     rank 0: ZE_AFFINITY_MASK=0
+     *     rank 1: ZE_AFFINITY_MASK=1
+     *     rank 2: ZE_AFFINITY_MASK=2
+     *     rank 3: ZE_AFFINITY_MASK=0
+     * - CONTIGUOUS_SUBDEVICE: processes are given a single subdevice in monotonically increasing
+     *                         order
+     *   - Example (2 device, 2 subdevices each, 4 ranks):
+     *     rank 0: ZE_AFFINITY_MASK=0.0
+     *     rank 1: ZE_AFFINITY_MASK=0.1
+     *     rank 2: ZE_AFFINITY_MASK=1.0
+     *     rank 3: ZE_AFFINITY_MASK=1.1
+     * - CONTIGUOUS_SINGLE_SUBDEVICE: Only a single subdevice of each device is used, given in
+     *                                monotonically increasing order
+     *   - Example (3 devices, 2 subdevices each, 4 ranks):
+     *     rank 0: ZE_AFFINITY_MASK=0.0
+     *     rank 1: ZE_AFFINITY_MASK=1.0
+     *     rank 2: ZE_AFFINITY_MASK=2.0
+     *     rank 3: ZE_AFFINITY_MASK=0.0
+     * - CONTIGUOUS_MULTI_SUBDEVICE: processes are each given all subdevices for a single device
+     *                               in monotonically increasing order
+     *   - Example (3 devices, 2 subdevices each, 4 ranks):
+     *     rank 0: ZE_AFFINITY_MASK=0.0,0.1
+     *     rank 1: ZE_AFFINITY_MASK=1.0,1.1
+     *     rank 2: ZE_AFFINITY_MASK=2.0,2.1
+     *     rank 3: ZE_AFFINITY_MASK=0.0,0.1
+     */
+    affinity_str = getenv("MTEST_GPU_VISIBILITY_AFFINITY");
+    if (affinity_str && *affinity_str) {
+        /* Get max device ID */
+        dev_str = getenv("MTEST_GPU_VISIBILITY_DEVICE_COUNT");
+        if (dev_str && *dev_str) {
+            device_count = atoi(dev_str);
+        }
+
+        /* Get max subdevice ID */
+        subdev_str = getenv("MTEST_GPU_VISIBILITY_SUBDEVICE_COUNT");
+        if (subdev_str && *subdev_str) {
+            subdevice_count = atoi(dev_str);
+        }
+
+        if (device_count > 0) {
+            int local_rank_id = -1;
+            const char *local_rank_id_str = 0;
+
+            /* Get the MPI local rank ID */
+            local_rank_id_str = getenv("MPI_LOCALRANKID");
+            if (local_rank_id_str && *local_rank_id_str) {
+                local_rank_id = atoi(local_rank_id_str);
+            }
+
+            /* Set the affinity mask based on affinity type */
+            if (strcmp(affinity_str, "CONTIGUOUS_DEVICE") == 0 ||
+                strcmp(affinity_str, "contiguous_device") == 0) {
+                int buf_sz = 1;
+                int device_affinity = local_rank_id % device_count;
+
+                buf_sz += snprintf(NULL, 0, "%d", device_affinity);
+                mask = malloc(buf_sz * sizeof(char));
+                snprintf(mask, sizeof(mask), "%d", device_affinity);
+            } else if (subdevice_count > 0 && (strcmp(affinity_str, "CONTIGUOUS_SUBDEVICE") == 0 ||
+                                               strcmp(affinity_str, "contiguous_subdevice") == 0)) {
+                /* This assumes every device has the same number of subdevices */
+                int buf_sz = 1;
+                int total_subdev = device_count * subdevice_count;
+                int device_affinity =
+                    ((local_rank_id % (total_subdev)) / subdevice_count) % device_count;
+                int subdevice_affinity = local_rank_id % subdevice_count;
+
+                buf_sz += snprintf(NULL, 0, "%d.%d", device_affinity, subdevice_affinity);
+                mask = malloc(buf_sz * sizeof(char));
+                snprintf(mask, sizeof(mask), "%d.%d", device_affinity, subdevice_affinity);
+            } else if (subdevice_count > 0 &&
+                       (strcmp(affinity_str, "CONTIGUOUS_SINGLE_SUBDEVICE") == 0 ||
+                        strcmp(affinity_str, "contiguous_single_subdevice") == 0)) {
+                int buf_sz = 1;
+                int device_affinity = local_rank_id % device_count;
+                int subdevice_affinity = 0;
+
+                buf_sz += snprintf(NULL, 0, "%d.%d", device_affinity, subdevice_affinity);
+                mask = malloc(buf_sz * sizeof(char));
+                snprintf(mask, sizeof(mask), "%d.%d", device_affinity, subdevice_affinity);
+            } else if (subdevice_count > 0 &&
+                       (strcmp(affinity_str, "CONTIGUOUS_MULTI_SUBDEVICE") == 0 ||
+                        strcmp(affinity_str, "contiguous_multi_subdevice") == 0)) {
+                int offset = 0;
+                int buf_sz = 1;
+                int device_affinity = local_rank_id % device_count;
+
+                /* Calculate the size of the mask */
+                for (int i = 0; i < subdevice_count; ++i) {
+                    if (i > 0) {
+                        buf_sz += 1;    // For a comma
+                    }
+                    buf_sz += snprintf(NULL, 0, "%d.%d", device_affinity, i);
+                }
+
+                mask = malloc(buf_sz * sizeof(char));
+
+                /* Calculate the size of the mask */
+                for (int i = 0; i < subdevice_count; ++i) {
+                    if (i > 0) {
+                        offset += snprintf(mask + offset, buf_sz - offset, ",");
+                    }
+                    offset += snprintf(mask + offset, buf_sz - offset, "%d.%d", device_affinity, i);
+                }
+            } else {
+                fprintf(stderr, "Unrecognized device affinity %s\n", affinity_str);
+                /* Use exit since MPI_Init/Init_thread has not been called. */
+                exit(1);
+            }
+
+            err = setenv("ZE_AFFINITY_MASK", mask, 1);
+
+            if (mask) {
+                free(mask);
+            }
+        }
+    }
+#endif
+}
