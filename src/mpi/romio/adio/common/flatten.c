@@ -128,7 +128,7 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
             for (i = 0; i < flat->count; i++) {
                 DBG_FPRINTF(stderr,
                             "ADIOI_Flatten_datatype:: i %#X, blocklens %#llX, indices %#llX\n", i,
-                            flat->blocklens[i], flat->indices[i]);
+                            (long long) flat->blocklens[i], (long long) flat->indices[i]);
             }
         }
 #endif
@@ -164,8 +164,8 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
     MPI_Type_get_contents(datatype, nints, nadds, ntypes, ints, adds, types);
 
 #ifdef FLATTEN_DEBUG
-    DBG_FPRINTF(stderr, "ADIOI_Flatten:: st_offset %#llX, curr_index %#llX\n", st_offset,
-                *curr_index);
+    DBG_FPRINTF(stderr, "ADIOI_Flatten:: st_offset %#llX, curr_index %#llX\n",
+                (long long) st_offset, (long long) *curr_index);
     DBG_FPRINTF(stderr, "ADIOI_Flatten:: nints %#X, nadds %#X, ntypes %#X\n", nints, nadds, ntypes);
     for (i = 0; i < nints; ++i) {
         DBG_FPRINTF(stderr, "ADIOI_Flatten:: ints[%lld]=%#X\n", (long long) i, ints[i]);
@@ -238,13 +238,15 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
                 DBG_FPRINTF(stderr,
                             "ADIOI_Flatten:: MPI_COMBINER_DARRAY <ADIOI_Flatten(dtype, flat->indices[%#X] %#llX, flat->blocklens[%#X] %#llX, st_offset %#llX, curr_index %#llX);\n",
-                            0, flat->indices[0], 0, flat->blocklens[0], st_offset, *curr_index);
+                            0, (long long) flat->indices[0], 0, (long long) flat->blocklens[0],
+                            (long long) st_offset, (long long) *curr_index);
 #endif
                 ADIOI_Flatten(dtype, flat, st_offset, curr_index);
 #ifdef FLATTEN_DEBUG
                 DBG_FPRINTF(stderr,
                             "ADIOI_Flatten:: MPI_COMBINER_DARRAY >ADIOI_Flatten(dtype, flat->indices[%#X] %#llX, flat->blocklens[%#X] %#llX, st_offset %#llX, curr_index %#llX);\n",
-                            0, flat->indices[0], 0, flat->blocklens[0], st_offset, *curr_index);
+                            0, (long long) flat->indices[0], 0, (long long) flat->blocklens[0],
+                            (long long) st_offset, (long long) *curr_index);
 #endif
                 MPI_Type_free(&dtype);
             }
@@ -272,7 +274,8 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
                 DBG_FPRINTF(stderr,
                             "ADIOI_Flatten:: simple flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",
-                            j, flat->indices[j], j, flat->blocklens[j]);
+                            (long long) j, (long long) flat->indices[j],
+                            (long long) j, (long long) flat->blocklens[j]);
 #endif
                 (*curr_index)++;
             } else {
@@ -291,7 +294,8 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
                         DBG_FPRINTF(stderr,
                                     "ADIOI_Flatten:: derived flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",
-                                    j, flat->indices[j], j, flat->blocklens[j]);
+                                    (long long) j, (long long) flat->indices[j],
+                                    (long long) j, (long long) flat->blocklens[j]);
 #endif
                         j++;
                     }
@@ -765,7 +769,8 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
                             DBG_FPRINTF(stderr,
                                         "ADIOI_Flatten:: simple old_extent " MPI_AINT_FMT_HEX_SPEC
                                         ", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",
-                                        old_extent, j, flat->indices[j], j, flat->blocklens[j]);
+                                        old_extent, (long long) j, (long long) flat->indices[j],
+                                        (long long) j, (long long) flat->blocklens[j]);
 #endif
                             j++;
                         }
@@ -803,7 +808,8 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
                 DBG_FPRINTF(stderr,
                             "ADIOI_Flatten:: simple adds[%#X] " MPI_AINT_FMT_HEX_SPEC
                             ", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n", 0,
-                            adds[0], j, flat->indices[j], j, flat->blocklens[j]);
+                            adds[0], (long long) j, (long long) flat->indices[j],
+                            (long long) j, (long long) flat->blocklens[j]);
 #endif
 
                 (*curr_index)++;
@@ -832,7 +838,8 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
                 DBG_FPRINTF(stderr,
                             "ADIOI_Flatten:: simple adds[%#X] " MPI_AINT_FMT_HEX_SPEC
                             ", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n", 0,
-                            adds[0], j, flat->indices[j], j, flat->blocklens[j]);
+                            adds[0], (long long) j, (long long) flat->indices[j],
+                            (long long) j, (long long) flat->blocklens[j]);
 #endif
 
                 (*curr_index)++;
@@ -858,7 +865,8 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
             DBG_FPRINTF(stderr,
                         "ADIOI_Flatten:: simple adds[%#X] " MPI_AINT_FMT_HEX_SPEC
                         ", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n", 1, adds[1],
-                        j, flat->indices[j], j, flat->blocklens[j]);
+                        (long long) j, (long long) flat->indices[j],
+                        (long long) j, (long long) flat->blocklens[j]);
 #endif
 
             (*curr_index)++;
@@ -882,8 +890,8 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
     ADIOI_Free(types);
 
 #ifdef FLATTEN_DEBUG
-    DBG_FPRINTF(stderr, "ADIOI_Flatten:: return st_offset %#llX, curr_index %#llX\n", st_offset,
-                *curr_index);
+    DBG_FPRINTF(stderr, "ADIOI_Flatten:: return st_offset %#llX, curr_index %#llX\n",
+                (long long) st_offset, (long long) *curr_index);
 #endif
 
 }
