@@ -61,7 +61,7 @@
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
@@ -461,6 +461,9 @@ fi
 %endif # !testsuite
 
 %changelog
+* Mon Nov 15 2021 Wang Shilong <shilong.wang@intel.com> - 4.0~a2-3
+- Rebuilt for breaking DAOS API change
+
 * Thu Oct 14 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 4.0~a2-2
 - add BR libfabric-devel for mpich-devel package
 

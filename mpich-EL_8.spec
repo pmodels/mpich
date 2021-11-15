@@ -5,7 +5,7 @@
 Summary:        A high-performance implementation of MPI
 Name:           mpich
 Version:        4.0~a2
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        MIT
 URL:            http://www.mpich.org/
 
@@ -243,6 +243,9 @@ make check VERBOSE=1 \
 %{python3_sitearch}/%{name}.pth
 
 %changelog
+* Mon Nov 15 2021 Wang Shilong <shilong.wang@intel.com> - 4.0~a2-2
+- Rebuilt for breaking DAOS API change
+
 * Tue Oct 5 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 4.0~a2-1
 - Update to 4.0a2 git hash 65dcaccf3
 
