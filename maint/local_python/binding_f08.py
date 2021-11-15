@@ -1575,16 +1575,19 @@ def get_real_POLY_kinds():
         elif "MPI_COUNT_KIND" in fortran_type:
             return "count"
         else:
-            raise Exception("Unrecognized POLY type")
+            raise Exception("Unrecognized POLY int type: %s" % fortran_type)
 
     small_map = G.MAPS['SMALL_F08_KIND_MAP']
     large_map = G.MAPS['BIG_F08_KIND_MAP']
     for kind in small_map:
-        if small_map[kind].startswith('POLY'):
+        if kind == 'POLYFUNCTION':
+            # TODO: potentially tricky. Might be easier to treat individual function case by case.
+            G.real_poly_kinds[kind] = 1
+        elif kind.startswith('POLY'):
             a = get_int_type(small_map[kind]) + "-size"
             b = get_int_type(large_map[kind]) + "-size"
             if G.opts[a] != G.opts[b]:
-                G.real_poly_kinds['kind'] = 1
+                G.real_poly_kinds[kind] = 1
 
 def function_has_real_POLY_parameters(func):
     for p in func['parameters']:
