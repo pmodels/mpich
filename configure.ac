@@ -3004,7 +3004,7 @@ if test "$enable_f77" = yes ; then
     fi
 
     # Include a defined value for Fint is int
-    if test "$SIZEOF_F77_INTEGER" == "$ac_cv_sizeof_int" ; then
+    if test "$pac_cv_f77_sizeof_integer" == "$ac_cv_sizeof_int" ; then
         AC_DEFINE(HAVE_FINT_IS_INT,1,[Define if Fortran integer are the same size as C ints])
     else
         AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
@@ -4207,7 +4207,7 @@ if test "$f08_works" = "yes" ; then
     if test "$enable_romio" = "no" ; then
         cmd="$cmd -no-mpiio"
     fi
-    cmd="$cmd -fint-size=$SIZEOF_F77_INTEGER -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
+    cmd="$cmd -fint-size=$pac_cv_f77_sizeof_integer -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
     AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd"])
 fi
 
