@@ -9,6 +9,10 @@
 #include "mpiimpl.h"
 #include "typerep_pre.h"
 
+int MPII_Typerep_op_fallback(void *source_buf, MPI_Aint source_count, MPI_Datatype source_dtp,
+                             void *target_buf, MPI_Aint target_count, MPI_Datatype target_dtp,
+                             MPI_Op op, bool source_is_packed);
+
 #if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
 
 #include "yaksa.h"

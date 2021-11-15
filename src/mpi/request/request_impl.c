@@ -5,6 +5,20 @@
 
 #include "mpiimpl.h"
 
+int MPIR_Status_set_cancelled_impl(MPI_Status * status, int flag)
+{
+    MPIR_STATUS_SET_CANCEL_BIT(*status, flag ? TRUE : FALSE);
+
+    return MPI_SUCCESS;
+}
+
+int MPIR_Test_cancelled_impl(const MPI_Status * status, int *flag)
+{
+    *flag = MPIR_STATUS_GET_CANCEL_BIT(*status);
+
+    return MPI_SUCCESS;
+}
+
 int MPIR_Cancel_impl(MPIR_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -6,6 +6,18 @@
 #include "mpiimpl.h"
 #include "group.h"
 
+int MPIR_Group_rank_impl(MPIR_Group * group_ptr, int *rank)
+{
+    *rank = group_ptr->rank;
+    return MPI_SUCCESS;
+}
+
+int MPIR_Group_size_impl(MPIR_Group * group_ptr, int *size)
+{
+    *size = group_ptr->size;
+    return MPI_SUCCESS;
+}
+
 int MPIR_Group_compare_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2, int *result)
 {
     int mpi_errno = MPI_SUCCESS;

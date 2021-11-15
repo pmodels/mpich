@@ -576,23 +576,6 @@ if test "$enable_strict_done" != "yes" ; then
     posix_std=2001
     enable_opt=yes
     pac_cc_strict_werror=no
-
-    case "$pac_cv_cc_vendor" in
-        gnu)
-            pac_common_strict_flags="${pac_common_strict_flags}
-                -Wno-unused-label
-            "
-            ;;
-        icx)
-            pac_common_strict_flags="${pac_common_strict_flags}
-                -Wno-unused-label
-            "
-            c_std=c11
-            ;;
-        *)
-            ;;
-    esac
-
     for flag in ${flags}; do
         case "$flag" in
              error)

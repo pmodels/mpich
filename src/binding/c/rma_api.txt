@@ -419,10 +419,6 @@ MPI_Win_get_info:
 
 MPI_Win_get_name:
     .desc: Get the print name associated with the MPI RMA window
-{
-    MPL_strncpy(win_name, win_ptr->name, MPI_MAX_OBJECT_NAME);
-    *resultlen = (int) strlen(win_name);
-}
 
 MPI_Win_lock:
     .desc: Begin an RMA access epoch at the target process
@@ -526,9 +522,6 @@ MPI_Win_set_info:
 
 MPI_Win_set_name:
     .desc: Set the print name for an MPI RMA window
-{
-    MPL_strncpy(win_ptr->name, win_name, MPI_MAX_OBJECT_NAME);
-}
 
 MPI_Win_shared_query:
     .desc: Query the size and base pointer for a patch of a shared memory window

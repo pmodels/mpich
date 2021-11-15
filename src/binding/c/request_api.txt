@@ -127,16 +127,10 @@ MPI_Startall:
 
 MPI_Status_set_cancelled:
     .desc: Sets the cancelled state associated with a request
-{
-    MPIR_STATUS_SET_CANCEL_BIT(*status, flag ? TRUE : FALSE);
-}
 
 MPI_Test_cancelled:
     .desc: Tests to see if a request was cancelled
     .skip: global_cs
-{
-    *flag = MPIR_STATUS_GET_CANCEL_BIT(*status);
-}
 
 MPI_Test:
     .desc: Test for the completion of a request
