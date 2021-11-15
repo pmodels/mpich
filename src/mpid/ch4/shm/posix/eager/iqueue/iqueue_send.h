@@ -53,7 +53,8 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
     transport = MPIDI_POSIX_eager_iqueue_get_transport(src_vsi, dst_vsi);
 
     /* Try to get a new cell to hold the message */
-    MPIDU_genq_shmem_pool_cell_alloc(transport->cell_pool, (void **) &cell);
+    MPIDU_genq_shmem_pool_cell_alloc(transport->cell_pool, (void **) &cell,
+                                     MPIR_Process.local_rank);
 
     /* If a cell wasn't available, let the caller know that we weren't able to send the message
      * immediately. */
