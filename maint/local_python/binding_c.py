@@ -1983,7 +1983,12 @@ def dump_validation(func, t):
         dump_if_open("%s > 0" % t['length'])
         G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
         dump_for_open('i', t['length'])
-        dump_if_open("%s[i] != MPI_DATATYPE_NULL && !HANDLE_IS_BUILTIN(%s[i])" % (name, name))
+        if re.match(r'mpi_type_create_struct', func_name, re.IGNORECASE):
+            # MPI_DATATYPE_NULL not allowed
+            cond = "!HANDLE_IS_BUILTIN(%s[i])" % name
+        else:
+            cond = "%s[i] != MPI_DATATYPE_NULL && !HANDLE_IS_BUILTIN(%s[i])" % (name, name)
+        dump_if_open(cond)
         G.out.append("MPIR_Datatype *datatype_ptr;")
         G.out.append("MPIR_Datatype_get_ptr(%s[i], datatype_ptr);" % name)
         G.out.append("MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);")
