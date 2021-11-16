@@ -31,6 +31,11 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int block_idx)
     /* init cell headers */
     int idx = block_idx * pool->cells_per_proc;
     for (int i = 0; i < pool->cells_per_proc; i++) {
+        /* Have the "host" process for each cell zero-out the cell contents to force the first-touch
+         * policy to make the pages resident to that process. */
+        memset((char *) pool->cell_header_base + (idx + i) * pool->cell_alloc_size, 0,
+               pool->cell_alloc_size);
+
         pool->cell_headers[i] =
             (MPIDU_genqi_shmem_cell_header_s *) ((char *) pool->cell_header_base
                                                  + (idx + i) * pool->cell_alloc_size);
