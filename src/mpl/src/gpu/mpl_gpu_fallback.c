@@ -5,9 +5,14 @@
 
 #include "mpl.h"
 
-int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
 {
-    *dev_cnt = *dev_id = -1;
+    *dev_cnt = *dev_id = *subdevice_id = -1;
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id)
+{
     return MPL_SUCCESS;
 }
 

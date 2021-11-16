@@ -3,9 +3,16 @@
 allred 4 arg=-counts=10,100 arg=-memtype=all
 allred 7 arg=-counts=10 arg=-memtype=all
 allred2 4 arg=-memtype=all
+allred2 12 arg=-memtype=all
 reduce 5 arg=-memtype=all
 reduce 7 arg=-memtype=all
 op_coll 4 arg=-memtype=all
+
+# ZE_AFFINITY_MASK tests
+allred2 12 arg=-memtype=all env=MTEST_GPU_VISIBILITY_AFFINITY=CONTIGUOUS_DEVICE
+allred2 12 arg=-memtype=all env=MTEST_GPU_VISIBILITY_AFFINITY=CONTIGUOUS_SUBDEVICE
+allred2 12 arg=-memtype=all env=MTEST_GPU_VISIBILITY_AFFINITY=CONTIGUOUS_SINGLE_SUBDEVICE
+allred2 12 arg=-memtype=all env=MTEST_GPU_VISIBILITY_AFFINITY=CONTIGUOUS_MULTI_SUBDEVICE
 
 # The dtp test will iterate over all typelist and counts, each time will repeat [repeat] times and select seed, testsize, memtypes accordingly
 # set MPITEST_VERBOSE=1 to the list of tests being run.

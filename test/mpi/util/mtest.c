@@ -140,6 +140,9 @@ void MTest_Init_thread(int *argc, char ***argv, int required, int *provided)
 void MTest_Init(int *argc, char ***argv)
 {
     int provided;
+
+    MTest_init_visibility_gpu();
+
 #if MPI_VERSION >= 2 || defined(HAVE_MPI_INIT_THREAD)
     const char *str = 0;
     int threadLevel;
