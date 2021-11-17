@@ -93,3 +93,38 @@ extern int MPIR_Fortran_array_of_string_f2c(const char *strs_f, char ***strs_c, 
   fn_fail:
     goto fn_exit;
 }
+
+void *MPIR_F08_get_MPI_STATUS_IGNORE(void)
+{
+    return (void *) MPI_STATUS_IGNORE;
+}
+
+void *MPIR_F08_get_MPI_STATUSES_IGNORE(void)
+{
+    return (void *) MPI_STATUSES_IGNORE;
+}
+
+void *MPIR_F08_get_MPI_ARGV_NULL(void)
+{
+    return (void *) MPI_ARGV_NULL;
+}
+
+void *MPIR_F08_get_MPI_ARGVS_NULL(void)
+{
+    return (void *) MPI_ARGVS_NULL;
+}
+
+void *MPIR_F08_get_MPI_ERRCODES_IGNORE(void)
+{
+    return (void *) MPI_ERRCODES_IGNORE;
+}
+
+void *MPIR_F08_get_MPI_UNWEIGHTED(void)
+{
+    return (void *) MPI_UNWEIGHTED;
+}
+
+void *MPIR_F08_get_MPI_WEIGHTS_EMPTY(void)
+{
+    return (void *) MPI_WEIGHTS_EMPTY;
+}

@@ -6,12 +6,6 @@
 #include "cdesc.h"
 #include <limits.h>
 
-MPI_Status *MPIR_C_MPI_STATUS_IGNORE = MPI_STATUS_IGNORE;
-MPI_Status *MPIR_C_MPI_STATUSES_IGNORE = MPI_STATUSES_IGNORE;
-char **MPIR_C_MPI_ARGV_NULL = MPI_ARGV_NULL;
-char ***MPIR_C_MPI_ARGVS_NULL = MPI_ARGVS_NULL;
-int *MPIR_C_MPI_ERRCODES_IGNORE = MPI_ERRCODES_IGNORE;
-
 /* Fortran 2008 specifies a maximum rank of 15 */
 #define MAX_RANK  (15)
 
