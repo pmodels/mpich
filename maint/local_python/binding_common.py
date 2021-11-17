@@ -55,14 +55,9 @@ def split_line_with_break(s, tail, N=100):
     if RE.match(r'(\s*)', s):
         n_lead = len(RE.m.group(1)) + 4
 
-    if len(s) < N:
-        tlist.append(s)
-        n = len(s)
-    elif RE.match(r'(.*?\()(.*)', s):
-        # line with function pattern, match indent at opening parenthesis
-        s_lead, s_next = RE.m.group(1,2)
-        n_lead = len(s_lead)
-
+    # -------------
+    def break_s_next(s_lead, s_next):
+        nonlocal tlist, n
         for a in s_next.split(', '):
             if n == 0:
                 # first line
@@ -86,10 +81,19 @@ def split_line_with_break(s, tail, N=100):
                     tlist = [' ' * n_lead, a]
                     n = n_lead + len(a)
         # leave last segment with tail
-    else:
-        # only break long function declaration or call for now
+
+    # -------------
+    if len(s) < N:
         tlist.append(s)
         n = len(s)
+    elif RE.match(r'(.*?\()(.*)', s):
+        # line with function pattern, match indent at opening parenthesis
+        s_lead, s_next = RE.m.group(1,2)
+        n_lead = len(s_lead)
+
+        break_s_next(s_lead, s_next)
+    else:
+        break_s_next('', s)
 
     # tail is mostly for "__attribute__ ((weak, alias(...))));",
     # which contains , that we do not desire to break
