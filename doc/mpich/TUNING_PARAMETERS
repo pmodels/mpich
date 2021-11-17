@@ -477,8 +477,7 @@ MPICH users can use the CVAR MPIR_CVAR_CH4_MT_MODEL to select at runtime among t
 
 Users can specify the number of VCIs to use by setting the environment variable `MPIR_CVAR_CH4_NUM_VCIS=<number_vcis>`, where the value `<num_vcis>` should be less or equal than the number of network contexts provided by the OFI provider. This number can be retrieved from the OFI provider. Running the  `fi_info -v` command should return the number of transmit contexts (max_ep_tx_ctx) and receive contexts (max_ep_rx_ctx) it supports. MPICH uses the minimum of max_ep_tx_ctx and max_ep_rx_ctx as the maximum number of VCIs it can support. If the system has multiple NICS, this value is the `minimum across all the NICS` X `number of NICs`.
 
-When multiple VCIs are used, MPICH tries to make per-vci progress to avoid lock contention inside the progress engine, but it progresses all VCIs once every `MPIR_CVAR_CH4_GLOBAL_PROGRESS_INTERVAL` times to avoid potential deadlocks. Setting `MPIR_CVAR_CH4_GLOBAL_PROGRESS_INTERVAL` to a non-positive value disables global progress, but this should only be used for experimentation, not for running applications.
-
+When multiple VCIs are used, MPICH tries to make per-vci progress to avoid lock contention inside the progress engine. However, it also progresses all VCIs, i.e., make global progress, once in a while to avoid potential deadlocks. Such global progress is turned on by default but can be turned off by setting `MPIR_CVAR_CH4_GLOBAL_PROGRESS=0`, which can improve performance under the use of multiple VCIs. However, caution should be taken as it can result in a deadlock.
 
 **3.2 Communicator Info Hints**
 
