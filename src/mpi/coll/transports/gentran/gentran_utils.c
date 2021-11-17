@@ -424,12 +424,19 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
                      "Updating in_vtcs of vtx %d, vtx_kind %d, n_in_vtcs %d", vtx_id,
                      vtx->vtx_kind, n_in_vtcs));
 
+    int max_in_vtx_id = -1;
+
     /* update the list of outgoing vertices of the incoming
      * vertices */
     for (i = 0; i < n_in_vtcs; i++) {
         if (in_vtcs[i] == -1) {
             continue;
         }
+
+        if (max_in_vtx_id < in_vtcs[i]) {
+            max_in_vtx_id = in_vtcs[i];
+        }
+
         vtx_t *in_vtx = (vtx_t *) utarray_eltptr(&sched->vtcs, in_vtcs[i]);
         MPIR_Assert(in_vtx != NULL);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "invtx: %d", in_vtcs[i]));
@@ -447,7 +454,7 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
     /* check if there was any fence operation and add appropriate dependencies.
      * The application will never explicitly specify a dependency on it,
      * the transport has to make sure that the dependency on the fence operation is met */
-    if (sched->last_fence != -1 && sched->last_fence != vtx_id) {
+    if (sched->last_fence != -1 && sched->last_fence != vtx_id && sched->last_fence > max_in_vtx_id) {
         /* add vtx as outgoing vtx of last_fence */
         vtx_t *sched_fence = (vtx_t *) utarray_eltptr(&sched->vtcs, sched->last_fence);
         MPIR_Assert(sched_fence != NULL);
