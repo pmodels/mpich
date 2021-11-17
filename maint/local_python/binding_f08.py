@@ -921,21 +921,21 @@ def dump_F_uses(uses):
         else:
             mpi_c_list_2.append(a)
     if iso_c_binding_list:
-        G.out.append("USE, intrinsic :: iso_c_binding, ONLY : %s" % ', '.join(iso_c_binding_list))
+        dump_fortran_line("USE, intrinsic :: iso_c_binding, ONLY : %s" % ', '.join(iso_c_binding_list))
     if mpi_f08_list_1:
-        G.out.append("USE :: mpi_f08_types, ONLY : %s" % ', '.join(mpi_f08_list_1))
+        dump_fortran_line("USE :: mpi_f08_types, ONLY : %s" % ', '.join(mpi_f08_list_1))
     if mpi_f08_list_2:
-        G.out.append("USE :: mpi_f08_compile_constants, ONLY : %s" % ', '.join(mpi_f08_list_2))
+        dump_fortran_line("USE :: mpi_f08_compile_constants, ONLY : %s" % ', '.join(mpi_f08_list_2))
     if mpi_f08_list_3:
-        G.out.append("USE :: mpi_f08_link_constants, ONLY : %s" % ', '.join(mpi_f08_list_3))
+        dump_fortran_line("USE :: mpi_f08_link_constants, ONLY : %s" % ', '.join(mpi_f08_list_3))
     if mpi_f08_list_4:
-        G.out.append("USE :: mpi_f08_callbacks, ONLY : %s" % ', '.join(mpi_f08_list_4))
+        dump_fortran_line("USE :: mpi_f08_callbacks, ONLY : %s" % ', '.join(mpi_f08_list_4))
     if mpi_c_list_1:
-        G.out.append("USE :: mpi_c_interface_types, ONLY : %s" % ', '.join(mpi_c_list_1))
+        dump_fortran_line("USE :: mpi_c_interface_types, ONLY : %s" % ', '.join(mpi_c_list_1))
     if mpi_c_list_2:
-        G.out.append("USE :: mpi_c_interface, ONLY : %s" % ', '.join(mpi_c_list_2))
+        dump_fortran_line("USE :: mpi_c_interface, ONLY : %s" % ', '.join(mpi_c_list_2))
     if mpi_c_list_3:
-        G.out.append("USE :: mpi_c_interface_glue, ONLY : %s" % ', '.join(mpi_c_list_3))
+        dump_fortran_line("USE :: mpi_c_interface_glue, ONLY : %s" % ', '.join(mpi_c_list_3))
 
 def dump_F_if_open(cond):
     G.out.append("IF (%s) THEN" % cond)
