@@ -278,22 +278,22 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
             break;
 
         case MPI_COMPLEX8:
-            if (sizeof(float) == 8)
+            if (sizeof(float) == 4)
                 yaksa_type = YAKSA_TYPE__C_COMPLEX;
-            else if (sizeof(double) == 8)
+            else if (sizeof(double) == 4)
                 yaksa_type = YAKSA_TYPE__C_DOUBLE_COMPLEX;
-            else if (sizeof(long double) == 8)
+            else if (sizeof(long double) == 4)
                 yaksa_type = YAKSA_TYPE__C_LONG_DOUBLE_COMPLEX;
             else
                 assert(0);
             break;
 
         case MPI_COMPLEX16:
-            if (sizeof(float) == 16)
+            if (sizeof(float) == 8)
                 yaksa_type = YAKSA_TYPE__C_COMPLEX;
-            else if (sizeof(double) == 16)
+            else if (sizeof(double) == 8)
                 yaksa_type = YAKSA_TYPE__C_DOUBLE_COMPLEX;
-            else if (sizeof(long double) == 16)
+            else if (sizeof(long double) == 8)
                 yaksa_type = YAKSA_TYPE__C_LONG_DOUBLE_COMPLEX;
             else
                 assert(0);
