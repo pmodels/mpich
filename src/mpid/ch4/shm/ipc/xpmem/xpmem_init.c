@@ -28,8 +28,14 @@ int MPIDI_XPMEM_init_world(void)
 #endif /* MPL_USE_DBG_LOGGING */
 
     /* Try to share entire address space */
-    MPIDI_XPMEMI_global.segid = xpmem_make(0, XPMEM_MAXADDR_SIZE, XPMEM_PERMIT_MODE,
-                                           MPIDI_XPMEMI_PERMIT_VALUE);
+    /* if failed, retry a few times */
+    MPIDI_XPMEMI_global.segid = -1;
+    for (i = 0; MPIDI_XPMEMI_global.segid == -1 && i < 5; i++) {
+        if (i > 0)
+            sleep(5);
+        MPIDI_XPMEMI_global.segid = xpmem_make(0, XPMEM_MAXADDR_SIZE, XPMEM_PERMIT_MODE,
+                                               MPIDI_XPMEMI_PERMIT_VALUE);
+    }
 #ifdef MPIDI_CH4_SHM_XPMEM_ALLOW_SILENT_FALLBACK
     if (MPIDI_XPMEMI_global.segid == -1) {
         /* do not throw an error; instead gracefully disable XPMEM */
