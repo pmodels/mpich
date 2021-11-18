@@ -28,7 +28,7 @@ static hipError_t(*sys_hipFree) (void *dptr);
 
 static int gpu_mem_hook_init();
 
-int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
 {
     int ret = MPL_SUCCESS;
     if (!gpu_initialized) {
@@ -37,7 +37,13 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
 
     *dev_cnt = device_count;
     *dev_id = max_dev_id;
+    *subdevice_id = 0;
     return ret;
+}
+
+int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id)
+{
+    return MPL_SUCCESS;
 }
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
