@@ -506,7 +506,7 @@ def process_func_parameters(func):
                 validation_list.append({'kind': "ARGNULL-length", 'name': name, 'length': p['length']})
             else:
                 validation_list.append({'kind': "ARGNULL", 'name': name})
-            if RE.search(r'get_errhandler$', func_name):
+            if RE.search(r'(get_errhandler|mpi_comm_get_parent)$', func_name, re.IGNORECASE):
                 # we may get the built-in handler, which doesn't have pointer
                 pass
             elif kind == "GREQUEST_CLASS" or kind == "DATATYPE":
@@ -2034,7 +2034,9 @@ def dump_validate_userbuffer_neighbor_vw(func, kind, buf, ct, dt, disp):
         dt += '[i]'
         dump_validate_datatype(func, dt)
     G.out.append("MPIR_ERRTEST_COUNT(%s, mpi_errno);" % ct)
-    G.out.append("MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
+    G.out.append("if (%s[i] == 0) {" % disp)
+    G.out.append("    MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
+    G.out.append("}")
     dump_for_close()
 
 def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
@@ -2164,7 +2166,11 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
 
     # -- check count && buffer
     G.out.append("MPIR_ERRTEST_COUNT(%s, mpi_errno);" % ct)
+    if disp:
+        dump_if_open("%s[i] == 0" % disp)
     G.out.append("MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
+    if disp:
+        dump_if_close()
 
     if with_vw:
         dump_for_close() # i = 0:comm_size

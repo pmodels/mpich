@@ -507,3 +507,20 @@ int MPIR_Errhandler_free_impl(MPIR_Errhandler * errhan_ptr)
     }
     return MPI_SUCCESS;
 }
+
+int MPIR_Error_class_impl(int errorcode, int *errorclass)
+{
+    /* We include the dynamic bit because this is needed to fully
+     * describe the dynamic error classes */
+    *errorclass = errorcode & (ERROR_CLASS_MASK | ERROR_DYN_MASK);
+
+    return MPI_SUCCESS;
+}
+
+int MPIR_Error_string_impl(int errorcode, char *string, int *resultlen)
+{
+    MPIR_Err_get_string(errorcode, string, MPI_MAX_ERROR_STRING, NULL);
+    *resultlen = (int) strlen(string);
+
+    return MPI_SUCCESS;
+}

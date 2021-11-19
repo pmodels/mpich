@@ -6,6 +6,29 @@
 #include "mpiimpl.h"
 #include "datatype.h"
 
+int MPIR_Get_address_impl(const void *location, MPI_Aint * address)
+{
+    /* SX_4 needs to set CHAR_PTR_IS_ADDRESS
+     * The reason is that it computes the different in two pointers in
+     * an "int", and addresses typically have the high (bit 31) bit set;
+     * thus the difference, when cast as MPI_Aint (long), is sign-extended,
+     * making the absolute address negative.  Without a copy of the C
+     * standard, I can't tell if this is a compiler bug or a language bug.
+     */
+#ifdef CHAR_PTR_IS_ADDRESS
+    *address = (MPI_Aint) location;
+#else
+    /* Note that this is the "portable" way to generate an address.
+     * The difference of two pointers is the number of elements
+     * between them, so this gives the number of chars between location
+     * and ptr.  As long as sizeof(char) represents one byte,
+     * of bytes from 0 to location */
+    *address = (MPI_Aint) ((char *) location - (char *) MPI_BOTTOM);
+#endif
+    /* The same code is used in MPI_Address */
+    return MPI_SUCCESS;
+}
+
 int MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_Aint * count)
 {
     MPI_Aint size;
@@ -168,7 +191,7 @@ int MPIR_Type_commit_impl(MPI_Datatype * datatype_p)
     return mpi_errno;
 }
 
-void MPIR_Type_free_impl(MPI_Datatype * datatype)
+int MPIR_Type_free_impl(MPI_Datatype * datatype)
 {
     MPIR_Datatype *datatype_ptr = NULL;
 
@@ -176,6 +199,8 @@ void MPIR_Type_free_impl(MPI_Datatype * datatype)
     MPIR_Assert(datatype_ptr);
     MPIR_Datatype_ptr_release(datatype_ptr);
     *datatype = MPI_DATATYPE_NULL;
+
+    return MPI_SUCCESS;
 }
 
 int MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * extent)
@@ -188,7 +213,7 @@ int MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * e
     return MPI_SUCCESS;
 }
 
-void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * extent)
+int MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * extent)
 {
     MPIR_Datatype *datatype_ptr = NULL;
 
@@ -201,6 +226,7 @@ void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Coun
         *lb = datatype_ptr->lb;
         *extent = datatype_ptr->extent; /* derived, should be same as ub - lb */
     }
+    return MPI_SUCCESS;
 }
 
 int MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
@@ -211,13 +237,14 @@ int MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
     MPIR_Type_get_true_extent_x_impl(datatype, &true_lb_x, &true_extent_x);
     *true_lb = (true_lb_x > MPIR_AINT_MAX) ? MPI_UNDEFINED : (MPI_Aint) true_lb_x;
     *true_extent = (true_extent_x > MPIR_AINT_MAX) ? MPI_UNDEFINED : (MPI_Aint) true_extent_x;
+
     return MPI_SUCCESS;
 }
 
 /* any non-MPI functions go here, especially non-static ones */
 
-void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb,
-                                      MPI_Count * true_extent)
+int MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb,
+                                     MPI_Count * true_extent)
 {
     MPIR_Datatype *datatype_ptr = NULL;
 
@@ -230,17 +257,8 @@ void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb
         *true_lb = datatype_ptr->true_lb;
         *true_extent = datatype_ptr->true_ub - datatype_ptr->true_lb;
     }
-}
 
-void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement)
-{
-    if (HANDLE_IS_BUILTIN(datatype)) {
-        *displacement = 0;
-    } else {
-        MPIR_Datatype *datatype_ptr = NULL;
-        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-        *displacement = datatype_ptr->lb;
-    }
+    return MPI_SUCCESS;
 }
 
 int MPIR_Type_size_impl(MPI_Datatype datatype, MPI_Aint * size)
@@ -378,4 +396,21 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Type_get_name_impl(MPIR_Datatype * datatype_ptr, char *type_name, int *resultlen)
+{
+    /* Include the null in MPI_MAX_OBJECT_NAME */
+    MPL_strncpy(type_name, datatype_ptr->name, MPI_MAX_OBJECT_NAME);
+    *resultlen = (int) strlen(type_name);
+
+    return MPI_SUCCESS;
+}
+
+int MPIR_Type_set_name_impl(MPIR_Datatype * datatype_ptr, const char *type_name)
+{
+    /* Include the null in MPI_MAX_OBJECT_NAME */
+    MPL_strncpy(datatype_ptr->name, type_name, MPI_MAX_OBJECT_NAME);
+
+    return MPI_SUCCESS;
 }
