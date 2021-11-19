@@ -140,6 +140,7 @@ int MPIDI_IPC_mpi_fd_init(void)
     char sock_name[SOCK_MAX_STR_LEN];
     char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
     pid_t pid;
+    int enable = 1;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
 
@@ -196,6 +197,8 @@ int MPIDI_IPC_mpi_fd_init(void)
                                  "**sock_create", "**sock_create %s %d",
                                  MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
 
+            setsockopt(MPIDI_IPCI_global_fd_socks[i], SOL_SOCKET, SO_REUSEADDR, &enable,
+                       sizeof(int));
             sockaddr.sun_family = AF_UNIX;
             strcpy(sockaddr.sun_path, sock_name);
 
@@ -226,6 +229,7 @@ int MPIDI_IPC_mpi_fd_init(void)
                              "**sock_create %s %d",
                              MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
 
+        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
         sockaddr.sun_family = AF_UNIX;
         strcpy(sockaddr.sun_path, sock_name);
 
@@ -246,13 +250,26 @@ int MPIDI_IPC_mpi_fd_init(void)
         MPIR_ERR_CHKANDJUMP2(MPIDI_IPCI_global_fd_socks[0] == -1, mpi_errno, MPI_ERR_OTHER,
                              "**sock_accept", "**sock_accept %s %d",
                              MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+        setsockopt(MPIDI_IPCI_global_fd_socks[0], SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
+        close(sock);
     }
 
     mpi_errno = MPIDI_IPC_mpi_ze_fd_setup();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Cleanup the sockets upon completion of init - they are no longer needed */
-    MPIDI_IPC_mpi_fd_cleanup();
+    /* close client first, and then server to avoid the TIME_WAIT */
+    if (MPIR_Process.local_rank == 0) {
+        mpi_errno = MPIDI_IPC_mpi_fd_cleanup();
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIDU_Init_shm_barrier();
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno = MPIDU_Init_shm_barrier();
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIDI_IPC_mpi_fd_cleanup();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     return mpi_errno;
