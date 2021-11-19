@@ -99,11 +99,8 @@ AC_ARG_ENABLE(echo,
 AC_ARG_ENABLE(fortran,
 [  --enable-fortran=option - Control the level of Fortran support in the MPICH implementation.
         yes|all   - Enable all available Fortran implementations (F77, F90, F08)
-        f77       - Enable Fortran 77 support
-        f90       - Enable Fortran 90 support
-        f08       - Enable Fortran 2008 support
         no|none   - No Fortran support
-],,[enable_fortran=f77,f90])
+],,[enable_fortran=all])
 
 save_IFS="$IFS"
 IFS=","
@@ -121,15 +118,6 @@ for option in $enable_fortran ; do
                 enable_f77=no
                 enable_fc=no
                 enable_f08=no
-                ;;
-        f77)
-                enable_f77=yes
-                ;;
-        f90)
-                enable_fc=yes
-                ;;
-        f08)
-                enable_f08=yes
                 ;;
         *)
                 IFS="$save_IFS"
