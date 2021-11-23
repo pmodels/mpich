@@ -1,0 +1,4 @@
+# The Intel MPICH team is primarily responsible for the collective TSP
+# and algorithm frameworks.
+/src/mpi/coll/algorithms/ @pmodels/mpich-intel
+/src/mpi/coll/transports/ @pmodels/mpich-intel
