@@ -151,10 +151,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     char *send_buf;
     uint64_t match_bits;
     bool force_gpu_pack = false;
+    bool register_mem = false;
     int vni_local = vni_src;
     int vni_remote = vni_dst;
     int sender_nic = 0, receiver_nic = 0;
     int ctx_idx = 0;
+    void *desc = NULL;
+    struct fid_mr *mr = NULL;
 
     MPIR_FUNC_ENTER;
 
@@ -219,6 +222,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(send_buf, &attr);
+
     if (data_sz &&
         (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
          attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
@@ -229,9 +233,35 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
              * transfer should be applied. */
             dt_contig = 0;
             force_gpu_pack = true;
+        } else {
+            if (MPIDI_OFI_ENABLE_MR_HMEM && dt_contig) {
+                register_mem = true;
+            } else {
+                dt_contig = 0;
+                force_gpu_pack = true;
+            }
+        }
+    } else if (MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG && data_sz && MPIDI_OFI_ENABLE_HMEM &&
+               MPIDI_OFI_ENABLE_MR_HMEM) {
+        if (dt_contig) {
+            register_mem = true;
         }
     }
 
+    if (register_mem) {
+        /* OFI does not support tiles yet, need to pass the root device. */
+        int card_num = MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(&attr));
+        MPIDI_OFI_register_memory(send_buf, data_sz, attr.type, card_num, ctx_idx, &mr);
+        if (mr != NULL) {
+            desc = fi_mr_desc(mr);
+            /* Cache the mrs for closing during Finalize() */
+            struct MPIDI_GPU_RDMA_queue_t *new_mr =
+                MPL_malloc(sizeof(struct MPIDI_GPU_RDMA_queue_t), MPL_MEM_BUFFER);
+            new_mr->mr = mr;
+            DL_APPEND(MPIDI_OFI_global.gdr_mrs, new_mr);
+        }
+
+    }
     if (!dt_contig && data_sz) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && !force_gpu_pack &&
             ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping) ||
@@ -272,7 +302,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = NULL;
     }
 
-    if (data_sz <= MPIDI_OFI_global.max_buffered_send) {
+    if (data_sz <= MPIDI_OFI_global.max_buffered_send && !MPIDI_OFI_ENABLE_MR_HMEM) {
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                             send_buf,
                                             data_sz,
@@ -284,7 +314,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_send_event(vni_src, NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
     } else if (!is_huge_send) {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                          send_buf, data_sz, NULL /* desc */ ,
+                                          send_buf, data_sz, desc /* desc */ ,
                                           cq_data,
                                           MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
                                                                vni_remote), match_bits,
@@ -316,6 +346,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                 rma_keys[i] = 0;
             }
         }
+        /* TODO: Add GPU direct RDMA support */
         for (int i = 0; i < num_nics; i++) {
             MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(comm, vni_local, i)].domain,  /* In:  Domain Object */
                                      send_buf,  /* In:  Lower memory address */
@@ -428,8 +459,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                 MPIR_Typerep_pack(buf, count, datatype, 0, host_buf, data_sz, &actual_pack_bytes);
                 MPIR_Assert(actual_pack_bytes == data_sz);
                 send_buf = host_buf;
+            } else {
+                mpi_errno =
+                    MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
+                                          context_offset, addr, vni_src, vni_dst, request,
+                                          dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag);
+                goto fn_exit;
             }
+        } else if (MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG && data_sz && MPIDI_OFI_ENABLE_HMEM &&
+                   MPIDI_OFI_ENABLE_MR_HMEM) {
+            mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
+                                              context_offset, addr, vni_src, vni_dst, request,
+                                              dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag);
+            goto fn_exit;
         }
+
         mpi_errno = MPIDI_OFI_send_lightweight(send_buf, data_sz, cq_data, dst_rank, tag, comm,
                                                context_offset, addr, vni_src, vni_dst);
         if (actual_pack_bytes > 0) {
@@ -446,6 +490,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                                           dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag);
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
