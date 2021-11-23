@@ -127,34 +127,7 @@ fn_maint_configure() {
     echo
     echo "------------------------------------"
     echo "Initiating building required scripts"
-    # Build scripts such as checkbuilds if necessary
-    ran_maint_configure=no
-    run_configure=no
-    # The information that autoconf uses is saved in the autom4te*.cache
-    # file; since this cache is not accurate, we delete it.
-    if [ ! -x maint/configure ] ; then
-        (cd maint && $autoconf && rm -rf autom4te*.cache )
-    elif find maint -name 'configure.ac' -newer 'maint/configure' >/dev/null 2>&1 ; then
-        # The above relies on the Unix find command
-        (cd maint && $autoconf && rm -rf autom4te*.cache)
-    fi
-    if [ ! -x maint/checkbuilds ] ; then
-        run_configure=yes
-    fi
-
-    # The following relies on the Unix find command
-    if [ -s maint/checkbuilds ] ; then 
-        if find maint -name 'checkbuilds.in' -newer 'maint/checkbuilds' >/dev/null 2>&1 ; then
-            run_configure=yes
-        fi
-    else
-        run_configure=yes
-    fi
-
-    if [ "$run_configure" = "yes" ] ; then
-        (cd maint && ./configure)
-        ran_maint_configure=yes
-    fi
+    (cd maint && $autoconf && rm -rf autom4te*.cache && ./configure)
     echo "Done building required scripts"
     echo "------------------------------------"
     echo
