@@ -207,6 +207,56 @@ fn_getcvars() {
         echo "failed"
         error "unable to extract control variables"
         exit 1
+
+# internal
+_patch_libtool() {
+    _file=$1
+    _patch=$2
+    if test -f "$_file" ; then
+        echo_n "Patching $_file with $_patch..."
+        patch -N -s -l $_file maint/patches/optional/confdb/$_patch && :
+        if [ $? -eq 0 ] ; then
+            # Remove possible leftovers, which don't imply a failure
+            rm -f $_file.orig
+            # updates _patch_successful for return
+            _patch_successful=yes
+            echo "done"
+        else
+            echo "failed"
+        fi
+    fi
+}
+
+fn_autoreconf_amdir() {
+    _dir=$1
+    if [ -d "$_dir" -o -L "$_dir" ] ; then
+        echo "------------------------------------------------------------------------"
+        echo "running $autoreconf in $_dir"
+        (cd $_dir && $autoreconf $autoreconf_args) || exit 1
+
+        # Patching ltmain.sh and libtool.m4
+        # This works with libtool versions 2.4 - 2.4.2.
+        # Older versions are not supported to build mpich.
+        # Newer versions should have this patch already included.
+
+        _patch_successful=no
+
+        _patch_libtool $_dir/confdb/ltmain.sh  intel-compiler.patch
+        _patch_libtool $_dir/confdb/libtool.m4 sys_lib_dlsearch_path_spec.patch
+        _patch_libtool $_dir/confdb/libtool.m4 big-sur.patch
+        if test "$do_bindings" = "yes" ; then
+            _patch_libtool $_dir/confdb/libtool.m4 darwin-ifort.patch
+            _patch_libtool $_dir/confdb/libtool.m4 oracle-fort.patch
+            _patch_libtool $_dir/confdb/libtool.m4 flang.patch
+            _patch_libtool $_dir/confdb/libtool.m4 arm-compiler.patch
+            _patch_libtool $_dir/confdb/libtool.m4 ibm-xlf.patch
+        fi
+
+        if test "$_patch_successful" = "yes" ; then
+            (cd $_dir && $autoconf -f) || exit 1
+            # Reset timestamps to avoid confusing make
+            touch -r $_dir/confdb/ltversion.m4 $_dir/confdb/ltmain.sh $_dir/confdb/libtool.m4
+        fi
     fi
 }
 
@@ -1016,123 +1066,7 @@ if [ "$do_build_configure" = "yes" ] ; then
     done
 
     for amdir in $amdirs ; do
-	if [ -d "$amdir" -o -L "$amdir" ] ; then
-	    echo "------------------------------------------------------------------------"
-	    echo "running $autoreconf in $amdir"
-            (cd $amdir && $autoreconf $autoreconf_args) || exit 1
-            # Patching ltmain.sh
-            if [ -f $amdir/confdb/ltmain.sh ] ; then
-                echo_n "Patching ltmain.sh for compatibility with Intel compiler options... "
-                patch -N -s -l $amdir/confdb/ltmain.sh maint/patches/optional/confdb/intel-compiler.patch && :
-                if [ $? -eq 0 ] ; then
-                    # Remove possible leftovers, which don't imply a failure
-                    rm -f $amdir/confdb/ltmain.sh.orig
-                    echo "done"
-                else
-                    echo "failed"
-                fi
-                # Rebuild configure
-                (cd $amdir && $autoconf -f) || exit 1
-                # Reset ltmain.sh timestamps to avoid confusing make
-                touch -r $amdir/confdb/ltversion.m4 $amdir/confdb/ltmain.sh
-            fi
-            # Patching libtool.m4
-            # This works with libtool versions 2.4 - 2.4.2.
-            # Older versions are not supported to build mpich.
-            # Newer versions should have this patch already included.
-            if [ -f $amdir/confdb/libtool.m4 ] ; then
-                # There is no need to patch if we're not going to use Fortran.
-                ifort_patch_requires_rebuild=no
-                oracle_patch_requires_rebuild=no
-                flang_patch_requires_rebuild=no
-                arm_patch_requires_rebuild=no
-                ibm_patch_requires_rebuild=no
-                sys_lib_dlsearch_path_patch_requires_rebuild=no
-                macos_patch_requires_rebuild=no
-                echo_n "Patching libtool.m4 for system dynamic library search path..."
-                patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/sys_lib_dlsearch_path_spec.patch && :
-                if [ $? -eq 0 ] ; then
-                    sys_lib_dlsearch_path_patch_requires_rebuild=yes
-                    # Remove possible leftovers, which don't imply a failure
-                    rm -f $amdir/confdb/libtool.m4.orig
-                    echo "done"
-                else
-                    echo "failed"
-                fi
-                echo_n "Patching libtool.m4 for compatibility macOS BigSur..."
-                patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/big-sur.patch && :
-                if [ $? -eq 0 ] ; then
-                    macos_patch_requires_rebuild=yes
-                    # Remove possible leftovers, which don't imply a failure
-                    rm -f $amdir/confdb/libtool.m4.orig
-                    echo "done"
-                else
-                    echo "failed"
-                fi
-                if [ $do_bindings = "yes" ] ; then
-                    echo_n "Patching libtool.m4 for compatibility with ifort on OSX... "
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/darwin-ifort.patch && :
-                    if [ $? -eq 0 ] ; then
-                        ifort_patch_requires_rebuild=yes
-                        # Remove possible leftovers, which don't imply a failure
-                        rm -f $amdir/confdb/libtool.m4.orig
-                        echo "done"
-                    else
-                        echo "failed"
-                    fi
-                    echo_n "Patching libtool.m4 for fort compatibility with Oracle Dev Studio 12.6..."
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/oracle-fort.patch && :
-                    if [ $? -eq 0 ] ; then
-                        oracle_patch_requires_rebuild=yes
-                        # Remove possible leftovers, which don't imply a failure
-                        rm -f $amdir/confdb/libtool.m4.orig
-                        echo "done"
-                    else
-                        echo "failed"
-                    fi
-                    echo_n "Patching libtool.m4 for compatibility with Flang..."
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/flang.patch && :
-                    if [ $? -eq 0 ] ; then
-                        flang_patch_requires_rebuild=yes
-                        # Remove possible leftovers, which don't imply a failure
-                        rm -f $amdir/confdb/libtool.m4.orig
-                        echo "done"
-                    else
-                        echo "failed"
-                    fi
-                    echo_n "Patching libtool.m4 for compatibility with Arm LLVM compilers..."
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/arm-compiler.patch && :
-                    if [ $? -eq 0 ] ; then
-                        arm_patch_requires_rebuild=yes
-                        # Remove possible leftovers, which don't imply a failure
-                        rm -f $amdir/confdb/libtool.m4.orig
-                        echo "done"
-                    else
-                        echo "failed"
-                    fi
-                    echo_n "Patching libtool.m4 for compatibility with IBM XL Fortran compilers..."
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/ibm-xlf.patch && :
-                    if [ $? -eq 0 ] ; then
-                        ibm_patch_requires_rebuild=yes
-                        # Remove possible leftovers, which don't imply a failure
-                        rm -f $amdir/confdb/libtool.m4.orig
-                        echo "done"
-                    else
-                        echo "failed"
-                    fi
-                fi
-
-                if [ $ifort_patch_requires_rebuild = "yes" ] || [ $oracle_patch_requires_rebuild = "yes" ] \
-                    || [ $arm_patch_requires_rebuild = "yes" ] || [ $ibm_patch_requires_rebuild = "yes" ] \
-                    || [ $sys_lib_dlsearch_path_patch_requires_rebuild = "yes" ] || [ $flang_patch_requires_rebuild = "yes" ] \
-                    || [ $macos_patch_requires_rebuild = "yes" ]; then
-                    # Rebuild configure
-                    (cd $amdir && $autoconf -f) || exit 1
-                    # Reset libtool.m4 timestamps to avoid confusing make
-                    touch -r $amdir/confdb/ltversion.m4 $amdir/confdb/libtool.m4
-                fi
-            fi
-	fi
+        fn_autoreconf_amdir $amdir
     done
 fi
 
