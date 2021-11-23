@@ -207,6 +207,39 @@ fn_getcvars() {
         echo "failed"
         error "unable to extract control variables"
         exit 1
+    fi
+}
+
+fn_f77() {
+    echo_n "Building Fortran 77 interface... "
+    ( cd src/binding/fortran/mpif_h && chmod a+x ./buildiface && ./buildiface )
+    $PYTHON maint/gen_binding_f77.py
+    echo "done"
+}
+
+fn_f90() {
+    echo_n "Building Fortran 90 interface... "
+    # Remove any copy of mpi_base.f90 (this is used to handle the
+    # Double precision vs. Real*8 option
+    rm -f src/binding/fortran/use_mpi/mpi_base.f90.orig
+    ( cd src/binding/fortran/use_mpi && chmod a+x ./buildiface && ./buildiface )
+    echo "done"
+}
+
+fn_f08() {
+    echo_n "Building Fortran 08 interface... "
+    # Top-level files
+    ( cd src/binding/fortran/use_mpi_f08 && chmod a+x ./buildiface && ./buildiface )
+    # generate src/binding/fortran/use_mpi_f08/wrappers_c/...
+    echo "done"
+}
+
+fn_cxx() {
+    echo_n "Building C++ interface... "
+    ( cd src/binding/cxx && chmod a+x ./buildiface &&
+        ./buildiface -nosep -initfile=./cxx.vlist )
+    echo "done"
+}
 
 # internal
 _patch_libtool() {
@@ -287,10 +320,13 @@ echo "done"
 ########################################################################
 
 # Default choices
-do_bindings=yes
+do_bindings=yes  # if no, skips patching libtool for Fortran
 do_geterrmsgs=yes
 do_getcvars=yes
 do_f77=yes
+do_f90=yes
+do_f08=yes
+do_cxx=yes
 do_build_configure=yes
 do_atdir_check=no
 do_atver_check=yes
@@ -982,44 +1018,19 @@ echo "done"
 ########################################################################
 
 # Create the bindings if necessary 
-if [ $do_bindings = "yes" ] ; then
-    if [ $do_f77 = "yes" ] ; then
-        build_f77=yes
-        build_f90=yes
-        build_f08=yes
-    fi
-
-    if [ $build_f77 = "yes" ] ; then
-	echo_n "Building Fortran 77 interface... "
-	( cd src/binding/fortran/mpif_h && chmod a+x ./buildiface && ./buildiface )
-        $PYTHON maint/gen_binding_f77.py
-	echo "done"
-    fi
-    if [ $build_f90 = "yes" ] ; then
-	echo_n "Building Fortran 90 interface... "
-	# Remove any copy of mpi_base.f90 (this is used to handle the
-	# Double precision vs. Real*8 option
-	rm -f src/binding/fortran/use_mpi/mpi_base.f90.orig
-	( cd src/binding/fortran/use_mpi && chmod a+x ./buildiface && ./buildiface )
-	echo "done"
-    fi
-    if [ $build_f08 = "yes" ] ; then
-	echo_n "Building Fortran 08 interface... "
-	# Top-level files
-	( cd src/binding/fortran/use_mpi_f08 && chmod a+x ./buildiface && ./buildiface )
-        # generate src/binding/fortran/use_mpi_f08/wrappers_c/...
-	echo "done"
-    fi
-
-    build_cxx=yes
-    if [ $build_cxx = "yes" ] ; then
-	echo_n "Building C++ interface... "
-	( cd src/binding/cxx && chmod a+x ./buildiface &&
-	  ./buildiface -nosep -initfile=./cxx.vlist )
-	echo "done"
-    fi
+if [ $do_f77 = "yes" ] ; then
+    fn_f77
+fi
+if [ $do_f90 = "yes" ] ; then
+    fn_f90
+fi
+if [ $do_f08 = "yes" ] ; then
+    fn_f08
 fi
 
+if [ $do_cxx = "yes" ] ; then
+    fn_cxx
+fi
 
 ########################################################################
 ## Extract error messages
