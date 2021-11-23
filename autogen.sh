@@ -195,6 +195,21 @@ EOF
     fi
 }
 
+fn_getcvars() {
+    echo_n "Extracting control variables (cvar) ... "
+    if test ! -x maint/extractcvars ; then
+        fn_maint_configure
+    fi
+
+    if ./maint/extractcvars --dirs="`cat maint/cvardirs`"; then
+        echo "done"
+    else
+        echo "failed"
+        error "unable to extract control variables"
+        exit 1
+    fi
+}
+
 # end of utility functions
 #-----------------------------------------------------------------------
 
@@ -973,17 +988,8 @@ fi
 fn_maint_configure
 
 # new parameter code
-echo_n "Extracting control variables (cvar) ... "
-if test -x maint/extractcvars -a "$do_getcvars" = "yes" ; then
-    if ./maint/extractcvars --dirs="`cat maint/cvardirs`"; then
-        echo "done"
-    else
-        echo "failed"
-        error "unable to extract control variables"
-        exit 1
-    fi
-else
-    echo "skipped"
+if test "$do_getcvars" = "yes" ; then
+    fn_getcvars
 fi
 
 echo
