@@ -68,6 +68,61 @@ sync_external () {
 }
 
 ########################################################################
+## Step functions
+########################################################################
+
+fn_set_autotools() {
+    if [ -n "$autotoolsdir" ] ; then
+        if [ -x $autotoolsdir/autoconf -a -x $autotoolsdir/autoheader ] ; then
+            autoconf=$autotoolsdir/autoconf
+            autoheader=$autotoolsdir/autoheader
+            autoreconf=$autotoolsdir/autoreconf
+            automake=$autotoolsdir/automake
+            autom4te=$autotoolsdir/autom4te
+            aclocal=$autotoolsdir/aclocal
+            if [ -x "$autotoolsdir/glibtoolize" ] ; then
+                libtoolize=$autotoolsdir/glibtoolize
+            else
+                libtoolize=$autotoolsdir/libtoolize
+            fi
+
+            AUTOCONF=$autoconf
+            AUTOHEADER=$autoheader
+            AUTORECONF=$autoreconf
+            AUTOMAKE=$automake
+            AUTOM4TE=$autom4te
+            ACLOCAL=$aclocal
+            LIBTOOLIZE=$libtoolize
+
+            export AUTOCONF
+            export AUTOHEADER
+            export AUTORECONF
+            export AUTOM4TE
+            export AUTOMAKE
+            export ACLOCAL
+            export LIBTOOLIZE
+        else
+            echo "could not find executable autoconf and autoheader in $autotoolsdir"
+            exit 1
+        fi
+    else
+        autoconf=${AUTOCONF:-autoconf}
+        autoheader=${AUTOHEADER:-autoheader}
+        autoreconf=${AUTORECONF:-autoreconf}
+        autom4te=${AUTOM4TE:-autom4te}
+        automake=${AUTOMAKE:-automake}
+        aclocal=${ACLOCAL:-aclocal}
+        if test -z "${LIBTOOLIZE+set}" && ( glibtoolize --version ) >/dev/null 2>&1 ; then
+            libtoolize=glibtoolize
+        else
+            libtoolize=${LIBTOOLIZE:-libtoolize}
+        fi
+    fi
+}
+
+# end of utility functions
+#-----------------------------------------------------------------------
+
 echo
 echo "####################################"
 echo "## Checking user environment"
@@ -290,52 +345,7 @@ done
 ## Check for the location of autotools
 ########################################################################
 
-if [ -n "$autotoolsdir" ] ; then
-    if [ -x $autotoolsdir/autoconf -a -x $autotoolsdir/autoheader ] ; then
-        autoconf=$autotoolsdir/autoconf
-        autoheader=$autotoolsdir/autoheader
-        autoreconf=$autotoolsdir/autoreconf
-        automake=$autotoolsdir/automake
-        autom4te=$autotoolsdir/autom4te
-        aclocal=$autotoolsdir/aclocal
-        if [ -x "$autotoolsdir/glibtoolize" ] ; then
-            libtoolize=$autotoolsdir/glibtoolize
-        else
-            libtoolize=$autotoolsdir/libtoolize
-        fi
-
-	AUTOCONF=$autoconf
-	AUTOHEADER=$autoheader
-        AUTORECONF=$autoreconf
-        AUTOMAKE=$automake
-	AUTOM4TE=$autom4te
-        ACLOCAL=$aclocal
-        LIBTOOLIZE=$libtoolize
-
-	export AUTOCONF
-	export AUTOHEADER
-        export AUTORECONF
-        export AUTOM4TE
-        export AUTOMAKE
-        export ACLOCAL
-        export LIBTOOLIZE
-    else
-        echo "could not find executable autoconf and autoheader in $autotoolsdir"
-	exit 1
-    fi
-else
-    autoconf=${AUTOCONF:-autoconf}
-    autoheader=${AUTOHEADER:-autoheader}
-    autoreconf=${AUTORECONF:-autoreconf}
-    autom4te=${AUTOM4TE:-autom4te}
-    automake=${AUTOMAKE:-automake}
-    aclocal=${ACLOCAL:-aclocal}
-    if test -z "${LIBTOOLIZE+set}" && ( glibtoolize --version ) >/dev/null 2>&1 ; then
-        libtoolize=glibtoolize
-    else
-        libtoolize=${LIBTOOLIZE:-libtoolize}
-    fi
-fi
+fn_set_autotools
 
 ProgHomeDir $autoconf   autoconfdir
 ProgHomeDir $automake   automakedir
