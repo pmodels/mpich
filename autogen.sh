@@ -133,6 +133,68 @@ fn_maint_configure() {
     echo
 }
 
+fn_geterrmsgs() {
+    if test ! -x maint/extracterrmsgs ; then
+        fn_maint_configure
+    fi
+
+    echo_n "Extracting error messages... "
+    rm -rf .tmp
+    rm -f .err
+    rm -f unusederr.txt
+    maint/extracterrmsgs -careful=unusederr.txt \
+        -skip=src/util/multichannel/mpi.c `cat maint/errmsgdirs` > \
+        .tmp 2>.err
+    # (error here is ok)
+    echo "done"
+
+    update_errdefs=yes
+    if [ -s .err ] ; then
+        cat .err
+        rm -f .err2
+        grep -v "Warning:" .err > .err2
+        if [ -s .err2 ] ; then
+            warn "Because of errors in extracting error messages, the file"
+            warn "src/mpi/errhan/defmsg.h was not updated."
+            error "Error message files in src/mpi/errhan were not updated."
+            rm -f .tmp .err .err2
+            exit 1
+        fi
+        rm -f .err .err2
+    else
+        # In case it exists but has zero size
+        rm -f .err
+    fi
+    if [ -s unusederr.txt ] ; then
+        warn "There are unused error message texts in src/mpi/errhan/errnames.txt"
+        warn "See the file unusederr.txt for the complete list"
+    fi
+    if [ -s .tmp -a "$update_errdefs" = "yes" ] ; then
+        mv .tmp src/mpi/errhan/defmsg.h
+    fi
+    if [ ! -s src/mpi/errhan/defmsg.h ] ; then
+        echo_n "Creating a dummy defmsg.h file... "
+        cat > src/mpi/errhan/defmsg.h <<EOF
+typedef struct { const unsigned int sentinal1; const char *short_name, *long_name; const unsigned int sentinal2; } msgpair;
+static const int generic_msgs_len = 0;
+static msgpair generic_err_msgs[] = { {0xacebad03, 0, "no error catalog", 0xcb0bfa11}, };
+static const int specific_msgs_len = 0;
+static msgpair specific_err_msgs[] = {  {0xacebad03,0,0,0xcb0bfa11}, };
+#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__NONE
+#define MPIR_MAX_ERROR_CLASS_INDEX 54
+static int class_to_index[] = {
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0 };
+#endif
+EOF
+        echo "done"
+    fi
+}
+
 # end of utility functions
 #-----------------------------------------------------------------------
 
@@ -900,64 +962,8 @@ fi
 
 # Capture the error messages
 if [ $do_geterrmsgs = "yes" ] ; then
-    if [ -x maint/extracterrmsgs ] ; then
-        echo_n "Extracting error messages... "
-        rm -rf .tmp
-        rm -f .err
-	rm -f unusederr.txt
-        maint/extracterrmsgs -careful=unusederr.txt \
-	    -skip=src/util/multichannel/mpi.c `cat maint/errmsgdirs` > \
-	    .tmp 2>.err
-        # (error here is ok)
-	echo "done"
-
-        update_errdefs=yes
-        if [ -s .err ] ; then 
-            cat .err
-            rm -f .err2
-            grep -v "Warning:" .err > .err2
-            if [ -s .err2 ] ; then
-                warn "Because of errors in extracting error messages, the file"
-                warn "src/mpi/errhan/defmsg.h was not updated."
-		error "Error message files in src/mpi/errhan were not updated."
-   	        rm -f .tmp .err .err2
-		exit 1
-            fi
-            rm -f .err .err2
-        else
-            # In case it exists but has zero size
-            rm -f .err
-        fi
-	if [ -s unusederr.txt ] ; then
-	    warn "There are unused error message texts in src/mpi/errhan/errnames.txt"
-	    warn "See the file unusederr.txt for the complete list"
-        fi
-        if [ -s .tmp -a "$update_errdefs" = "yes" ] ; then
-            mv .tmp src/mpi/errhan/defmsg.h
-        fi
-        if [ ! -s src/mpi/errhan/defmsg.h ] ; then
-            echo_n "Creating a dummy defmsg.h file... "
-	    cat > src/mpi/errhan/defmsg.h <<EOF
-typedef struct { const unsigned int sentinal1; const char *short_name, *long_name; const unsigned int sentinal2; } msgpair;
-static const int generic_msgs_len = 0;
-static msgpair generic_err_msgs[] = { {0xacebad03, 0, "no error catalog", 0xcb0bfa11}, };
-static const int specific_msgs_len = 0;
-static msgpair specific_err_msgs[] = {  {0xacebad03,0,0,0xcb0bfa11}, };
-#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__NONE
-#define MPIR_MAX_ERROR_CLASS_INDEX 54
-static int class_to_index[] = {
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0 };
-#endif
-EOF
-	    echo "done"
-        fi
-    fi
-fi  # do_geterrmsgs
+    fn_geterrmsgs
+fi
 
 
 ########################################################################
