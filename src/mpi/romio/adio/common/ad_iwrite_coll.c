@@ -1156,7 +1156,7 @@ static void ADIOI_W_Iexchange_data_send(ADIOI_NBC_Request * nbc_req, int *error_
         j = 0;
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
-                MPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
+                MPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, ADIOI_COLL_TAG(i, iter),
                           fd->comm, vars->requests + j);
                 j++;
             }
@@ -1175,7 +1175,7 @@ static void ADIOI_W_Iexchange_data_send(ADIOI_NBC_Request * nbc_req, int *error_
         for (i = 0; i < nprocs; i++)
             if (send_size[i]) {
                 MPI_Isend(((char *) buf) + buf_idx[i], send_size[i],
-                          MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, vars->send_req + j);
+                          MPI_BYTE, i, ADIOI_COLL_TAG(i, iter), fd->comm, vars->send_req + j);
                 j++;
                 buf_idx[i] += send_size[i];
             }
@@ -1211,7 +1211,7 @@ static void ADIOI_W_Iexchange_data_send(ADIOI_NBC_Request * nbc_req, int *error_
         j = 0;
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
-                MPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, myrank + i + 100 * iter,
+                MPI_Irecv(MPI_BOTTOM, 1, recv_types[j], i, ADIOI_COLL_TAG(i, iter),
                           fd->comm, vars->req3 + j);
                 j++;
             }

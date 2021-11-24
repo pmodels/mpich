@@ -339,10 +339,10 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 #ifdef RDCOLL_DEBUG
         {
             int ii;
-            DBG_FPRINTF(stderr, "flattened %3lld : ", flat_file->count);
+            DBG_FPRINTF(stderr, "flattened %3lld : ", (long long) flat_file->count);
             for (ii = 0; ii < flat_file->count; ii++) {
-                DBG_FPRINTF(stderr, "%16lld:%-16lld", flat_file->indices[ii],
-                            flat_file->blocklens[ii]);
+                DBG_FPRINTF(stderr, "%16lld:%-16lld", (long long) flat_file->indices[ii],
+                            (long long) flat_file->blocklens[ii]);
             }
             DBG_FPRINTF(stderr, "\n");
         }
@@ -796,7 +796,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
                 MPI_Irecv(((char *) buf) + buf_idx[i], recv_size[i],
-                          MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, requests + j);
+                          MPI_BYTE, i, ADIOI_COLL_TAG(i, iter), fd->comm, requests + j);
                 j++;
                 buf_idx[i] += recv_size[i];
             }
@@ -812,11 +812,11 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
                 MPI_Irecv(recv_buf[i], recv_size[i], MPI_BYTE, i,
-                          myrank + i + 100 * iter, fd->comm, requests + j);
+                          ADIOI_COLL_TAG(i, iter), fd->comm, requests + j);
                 j++;
 #ifdef RDCOLL_DEBUG
                 DBG_FPRINTF(stderr, "node %d, recv_size %d, tag %d \n",
-                            myrank, recv_size[i], myrank + i + 100 * iter);
+                            myrank, recv_size[i], ADIOI_COLL_TAG(i, iter));
 #endif
             }
         }
@@ -839,7 +839,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                          MPI_BYTE, &send_type);
             /* absolute displacement; use MPI_BOTTOM in send */
             MPI_Type_commit(&send_type);
-            MPI_Isend(MPI_BOTTOM, 1, send_type, i, myrank + i + 100 * iter,
+            MPI_Isend(MPI_BOTTOM, 1, send_type, i, ADIOI_COLL_TAG(i, iter),
                       fd->comm, requests + nprocs_recv + j);
             MPI_Type_free(&send_type);
             if (partial_send[i])
