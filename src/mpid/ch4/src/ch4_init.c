@@ -726,7 +726,11 @@ int MPID_Free_mem(void *user_buf)
     switch (container->buf_type) {
         case ALLOC_MEM_BUF_TYPE__HBM:
         case ALLOC_MEM_BUF_TYPE__DDR:
+#ifdef MAP_ANON
             MPL_munmap(container->real_buf, container->size, MPL_MEM_USER);
+#else
+            MPL_free(container->real_buf, MPL_MEM_USER);
+#endif
             break;
 
         case ALLOC_MEM_BUF_TYPE__NETMOD:
