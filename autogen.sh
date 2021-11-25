@@ -324,6 +324,225 @@ fn_autoreconf_amdir() {
     fi
 }
 
+########################################################################
+## functions for checking prerequisites
+########################################################################
+
+fn_check_autotools() {
+    ProgHomeDir $autoconf   autoconfdir
+    ProgHomeDir $automake   automakedir
+    ProgHomeDir $libtoolize libtooldir
+
+    echo_n "Checking if autotools are in the same location... "
+    if [ "$autoconfdir" = "$automakedir" -a "$autoconfdir" = "$libtooldir" ] ; then
+        same_atdir=yes
+        echo "yes, all in $autoconfdir"
+    else
+        same_atdir=no
+        echo "no"
+        echo "	autoconf is in $autoconfdir"
+        echo "	automake is in $automakedir"
+        echo "	libtool  is in $libtooldir"
+        # Emit a big warning message if $same_atdir = no.
+        warn "Autotools are in different locations. In rare occasion,"
+        warn "resulting configure or makefile may fail in some unexpected ways."
+    fi
+
+    ########################################################################
+    ## Check if autoreconf can be patched to work
+    ## when autotools are not in the same location.
+    ## This test needs to be done before individual tests of autotools
+    ########################################################################
+
+    # If autotools are not in the same location, override autoreconf appropriately.
+    if [ "$same_atdir" != "yes" ] ; then
+        if [ -z "$libtooldir" ] ; then
+            ProgHomeDir $libtoolize libtooldir
+        fi
+        libtoolm4dir="$libtooldir/share/aclocal"
+        echo_n "Checking if $autoreconf accepts -I $libtoolm4dir... "
+        new_autoreconf_works=no
+        if [ -d "$libtoolm4dir" -a -f "$libtoolm4dir/libtool.m4" ] ; then
+            recreate_tmp
+            cat >.tmp/configure.ac <<_EOF
+AC_INIT(foo,1.0)
+AC_PROG_LIBTOOL
+AC_OUTPUT
+_EOF
+            AUTORECONF="$autoreconf -I $libtoolm4dir"
+            if (cd .tmp && $AUTORECONF -ivf >/dev/null 2>&1) ; then
+                new_autoreconf_works=yes
+            fi
+            rm -rf .tmp
+        fi
+        echo "$new_autoreconf_works"
+        # If autoreconf accepts -I <libtool's m4 dir> correctly, use -I.
+        # If not, run libtoolize before autoreconf (i.e. for autoconf <= 2.63)
+        # This test is more general than checking the autoconf version.
+        if [ "$new_autoreconf_works" != "yes" ] ; then
+            echo_n "Checking if $autoreconf works after an additional $libtoolize step... "
+            new_autoreconf_works=no
+            recreate_tmp
+            # Need AC_CONFIG_
+            cat >.tmp/configure.ac <<_EOF
+AC_INIT(foo,1.0)
+AC_CONFIG_AUX_DIR([m4])
+AC_CONFIG_MACRO_DIR([m4])
+AC_PROG_LIBTOOL
+AC_OUTPUT
+_EOF
+            cat >.tmp/Makefile.am <<_EOF
+ACLOCAL_AMFLAGS = -I m4
+_EOF
+            AUTORECONF="eval $libtoolize && $autoreconf"
+            if (cd .tmp && $AUTORECONF -ivf >u.txt 2>&1) ; then
+                new_autoreconf_works=yes
+            fi
+            rm -rf .tmp
+            echo "$new_autoreconf_works"
+        fi
+        if [ "$new_autoreconf_works" = "yes" ] ; then
+            export AUTORECONF
+            autoreconf="$AUTORECONF"
+        else
+            # Since all autoreconf workarounds do not work, we need
+            # to require all autotools to be in the same directory.
+            do_atdir_check=yes
+            error "Since none of the autoreconf workaround works"
+            error "and autotools are not in the same directory, aborting..."
+            error "Updating autotools or putting all autotools in the same location"
+            error "may resolve the issue."
+            exit 1
+        fi
+    fi
+
+    if test $do_quick = "yes" ; then
+        : # skip autotool versions check in quick mode (since it is too slow)
+    else
+        ########################################################################
+        ## Verify autoconf version
+        ########################################################################
+
+        echo_n "Checking for autoconf version... "
+        recreate_tmp
+        ver=2.67
+        # petsc.mcs.anl.gov's /usr/bin/autoreconf is version 2.65 which returns OK
+        # if configure.ac has AC_PREREQ() withOUT AC_INIT.
+        #
+        # ~/> hostname
+        # petsc
+        # ~> /usr/bin/autoconf --version
+        # autoconf (GNU Autoconf) 2.65
+        # ....
+        # ~/> cat configure.ac
+        # AC_PREREQ(2.68)
+        # ~/> /usr/bin/autoconf ; echo "rc=$?"
+        # configure.ac:1: error: Autoconf version 2.68 or higher is required
+        # configure.ac:1: the top level
+        # autom4te: /usr/bin/m4 failed with exit status: 63
+        # rc=63
+        # ~/> /usr/bin/autoreconf ; echo "rc=$?"
+        # rc=0
+        cat > .tmp/configure.ac<<EOF
+AC_INIT
+AC_PREREQ($ver)
+AC_OUTPUT
+EOF
+        if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
+            echo ">= $ver"
+        else
+            echo "bad autoconf installation"
+            cat <<EOF
+You either do not have autoconf in your path or it is too old (version
+$ver or higher required). You may be able to use
+
+    autoconf --version
+
+Unfortunately, there is no standard format for the version output and
+it changes between autotools versions.  In addition, some versions of
+autoconf choose among many versions and provide incorrect output).
+EOF
+            exit 1
+        fi
+
+
+        ########################################################################
+        ## Verify automake version
+        ########################################################################
+
+        echo_n "Checking for automake version... "
+        recreate_tmp
+        ver=1.15
+        cat > .tmp/configure.ac<<EOF
+AC_INIT(testver,1.0)
+AC_CONFIG_AUX_DIR([m4])
+AC_CONFIG_MACRO_DIR([m4])
+m4_ifdef([AM_INIT_AUTOMAKE],,[m4_fatal([AM_INIT_AUTOMAKE not defined])])
+AM_INIT_AUTOMAKE([$ver foreign])
+AC_MSG_RESULT([A message])
+AC_OUTPUT([Makefile])
+EOF
+    cat <<EOF >.tmp/Makefile.am
+ACLOCAL_AMFLAGS = -I m4
+EOF
+        if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
+        if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
+            echo ">= $ver"
+        else
+            echo "bad automake installation"
+            cat <<EOF
+You either do not have automake in your path or it is too old (version
+$ver or higher required). You may be able to use
+
+    automake --version
+
+Unfortunately, there is no standard format for the version output and
+it changes between autotools versions.  In addition, some versions of
+autoconf choose among many versions and provide incorrect output).
+EOF
+            exit 1
+        fi
+
+
+        ########################################################################
+        ## Verify libtool version
+        ########################################################################
+
+        echo_n "Checking for libtool version... "
+        recreate_tmp
+        ver=2.4.4
+        cat <<EOF >.tmp/configure.ac
+AC_INIT(testver,1.0)
+AC_CONFIG_AUX_DIR([m4])
+AC_CONFIG_MACRO_DIR([m4])
+m4_ifdef([LT_PREREQ],,[m4_fatal([LT_PREREQ not defined])])
+LT_PREREQ($ver)
+LT_INIT()
+AC_MSG_RESULT([A message])
+EOF
+        cat <<EOF >.tmp/Makefile.am
+ACLOCAL_AMFLAGS = -I m4
+EOF
+        if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
+        if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
+            echo ">= $ver"
+        else
+            echo "bad libtool installation"
+            cat <<EOF
+You either do not have libtool in your path or it is too old
+(version $ver or higher required). You may be able to use
+
+    libtool --version
+
+Unfortunately, there is no standard format for the version output and
+it changes between autotools versions.  In addition, some versions of
+autoconf choose among many versions and provide incorrect output).
+EOF
+            exit 1
+        fi
+    fi
+}
+
 # end of utility functions
 #-----------------------------------------------------------------------
 
@@ -553,219 +772,7 @@ done
 ########################################################################
 
 fn_set_autotools
-
-ProgHomeDir $autoconf   autoconfdir
-ProgHomeDir $automake   automakedir
-ProgHomeDir $libtoolize libtooldir
-
-echo_n "Checking if autotools are in the same location... "
-if [ "$autoconfdir" = "$automakedir" -a "$autoconfdir" = "$libtooldir" ] ; then
-    same_atdir=yes
-    echo "yes, all in $autoconfdir"
-else
-    same_atdir=no
-    echo "no"
-    echo "	autoconf is in $autoconfdir"
-    echo "	automake is in $automakedir"
-    echo "	libtool  is in $libtooldir"
-    # Emit a big warning message if $same_atdir = no.
-    warn "Autotools are in different locations. In rare occasion,"
-    warn "resulting configure or makefile may fail in some unexpected ways."
-fi
-
-########################################################################
-## Check if autoreconf can be patched to work
-## when autotools are not in the same location.
-## This test needs to be done before individual tests of autotools
-########################################################################
-
-# If autotools are not in the same location, override autoreconf appropriately.
-if [ "$same_atdir" != "yes" ] ; then
-    if [ -z "$libtooldir" ] ; then
-        ProgHomeDir $libtoolize libtooldir
-    fi
-    libtoolm4dir="$libtooldir/share/aclocal"
-    echo_n "Checking if $autoreconf accepts -I $libtoolm4dir... "
-    new_autoreconf_works=no
-    if [ -d "$libtoolm4dir" -a -f "$libtoolm4dir/libtool.m4" ] ; then
-        recreate_tmp
-        cat >.tmp/configure.ac <<_EOF
-AC_INIT(foo,1.0)
-AC_PROG_LIBTOOL
-AC_OUTPUT
-_EOF
-        AUTORECONF="$autoreconf -I $libtoolm4dir"
-        if (cd .tmp && $AUTORECONF -ivf >/dev/null 2>&1) ; then
-            new_autoreconf_works=yes
-        fi
-        rm -rf .tmp
-    fi
-    echo "$new_autoreconf_works"
-    # If autoreconf accepts -I <libtool's m4 dir> correctly, use -I.
-    # If not, run libtoolize before autoreconf (i.e. for autoconf <= 2.63)
-    # This test is more general than checking the autoconf version.
-    if [ "$new_autoreconf_works" != "yes" ] ; then
-        echo_n "Checking if $autoreconf works after an additional $libtoolize step... "
-        new_autoreconf_works=no
-        recreate_tmp
-        # Need AC_CONFIG_
-        cat >.tmp/configure.ac <<_EOF
-AC_INIT(foo,1.0)
-AC_CONFIG_AUX_DIR([m4])
-AC_CONFIG_MACRO_DIR([m4])
-AC_PROG_LIBTOOL
-AC_OUTPUT
-_EOF
-        cat >.tmp/Makefile.am <<_EOF
-ACLOCAL_AMFLAGS = -I m4
-_EOF
-        AUTORECONF="eval $libtoolize && $autoreconf"
-        if (cd .tmp && $AUTORECONF -ivf >u.txt 2>&1) ; then
-            new_autoreconf_works=yes
-        fi
-        rm -rf .tmp
-        echo "$new_autoreconf_works"
-    fi
-    if [ "$new_autoreconf_works" = "yes" ] ; then
-        export AUTORECONF
-        autoreconf="$AUTORECONF"
-    else
-        # Since all autoreconf workarounds do not work, we need
-        # to require all autotools to be in the same directory.
-        do_atdir_check=yes
-        error "Since none of the autoreconf workaround works"
-        error "and autotools are not in the same directory, aborting..."
-        error "Updating autotools or putting all autotools in the same location"
-        error "may resolve the issue."
-        exit 1
-    fi
-fi
-
-if test $do_quick = "yes" ; then
-    : # skip autotool versions check in quick mode (since it is too slow)
-else
-    ########################################################################
-    ## Verify autoconf version
-    ########################################################################
-
-    echo_n "Checking for autoconf version... "
-    recreate_tmp
-    ver=2.67
-    # petsc.mcs.anl.gov's /usr/bin/autoreconf is version 2.65 which returns OK
-    # if configure.ac has AC_PREREQ() withOUT AC_INIT.
-    #
-    # ~/> hostname
-    # petsc
-    # ~> /usr/bin/autoconf --version
-    # autoconf (GNU Autoconf) 2.65
-    # ....
-    # ~/> cat configure.ac
-    # AC_PREREQ(2.68)
-    # ~/> /usr/bin/autoconf ; echo "rc=$?"
-    # configure.ac:1: error: Autoconf version 2.68 or higher is required
-    # configure.ac:1: the top level
-    # autom4te: /usr/bin/m4 failed with exit status: 63
-    # rc=63
-    # ~/> /usr/bin/autoreconf ; echo "rc=$?"
-    # rc=0
-    cat > .tmp/configure.ac<<EOF
-AC_INIT
-AC_PREREQ($ver)
-AC_OUTPUT
-EOF
-    if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
-        echo ">= $ver"
-    else
-        echo "bad autoconf installation"
-        cat <<EOF
-You either do not have autoconf in your path or it is too old (version
-$ver or higher required). You may be able to use
-
-    autoconf --version
-
-Unfortunately, there is no standard format for the version output and
-it changes between autotools versions.  In addition, some versions of
-autoconf choose among many versions and provide incorrect output).
-EOF
-        exit 1
-    fi
-
-
-    ########################################################################
-    ## Verify automake version
-    ########################################################################
-
-    echo_n "Checking for automake version... "
-    recreate_tmp
-    ver=1.15
-    cat > .tmp/configure.ac<<EOF
-AC_INIT(testver,1.0)
-AC_CONFIG_AUX_DIR([m4])
-AC_CONFIG_MACRO_DIR([m4])
-m4_ifdef([AM_INIT_AUTOMAKE],,[m4_fatal([AM_INIT_AUTOMAKE not defined])])
-AM_INIT_AUTOMAKE([$ver foreign])
-AC_MSG_RESULT([A message])
-AC_OUTPUT([Makefile])
-EOF
-cat <<EOF >.tmp/Makefile.am
-ACLOCAL_AMFLAGS = -I m4
-EOF
-    if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
-    if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
-        echo ">= $ver"
-    else
-        echo "bad automake installation"
-        cat <<EOF
-You either do not have automake in your path or it is too old (version
-$ver or higher required). You may be able to use
-
-    automake --version
-
-Unfortunately, there is no standard format for the version output and
-it changes between autotools versions.  In addition, some versions of
-autoconf choose among many versions and provide incorrect output).
-EOF
-        exit 1
-    fi
-
-
-    ########################################################################
-    ## Verify libtool version
-    ########################################################################
-
-    echo_n "Checking for libtool version... "
-    recreate_tmp
-    ver=2.4.4
-    cat <<EOF >.tmp/configure.ac
-AC_INIT(testver,1.0)
-AC_CONFIG_AUX_DIR([m4])
-AC_CONFIG_MACRO_DIR([m4])
-m4_ifdef([LT_PREREQ],,[m4_fatal([LT_PREREQ not defined])])
-LT_PREREQ($ver)
-LT_INIT()
-AC_MSG_RESULT([A message])
-EOF
-    cat <<EOF >.tmp/Makefile.am
-ACLOCAL_AMFLAGS = -I m4
-EOF
-    if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
-    if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
-        echo ">= $ver"
-    else
-        echo "bad libtool installation"
-        cat <<EOF
-You either do not have libtool in your path or it is too old
-(version $ver or higher required). You may be able to use
-
-    libtool --version
-
-Unfortunately, there is no standard format for the version output and
-it changes between autotools versions.  In addition, some versions of
-autoconf choose among many versions and provide incorrect output).
-EOF
-        exit 1
-    fi
-fi
+fn_check_autotools
 
 ########################################################################
 ## Checking for bash
