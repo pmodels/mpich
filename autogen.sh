@@ -45,7 +45,7 @@ echo "done"
 
 # Default choices
 do_bindings=yes  # if no, skips patching libtool for Fortran
-do_geterrmsgs=yes
+do_errmsgs=yes
 do_getcvars=yes
 do_f77=yes
 do_f90=yes
@@ -198,7 +198,7 @@ fn_maint_configure() {
     echo
 }
 
-fn_geterrmsgs() {
+fn_errmsgs() {
     if test ! -x maint/extracterrmsgs ; then
         fn_maint_configure
     fi
@@ -721,30 +721,6 @@ for arg in "$@" ; do
             export autoreconf_args
             ;;
 
-	-with-errmsgs|--with-errmsgs)
-	    do_geterrmsgs=yes
-	    ;;
-
-	-without-errmsgs|--without-errmsgs)
-	    do_geterrmsgs=no
-	    ;;
-
-	-with-bindings|--with-bindings)
-	    do_bindings=yes
-	    ;;
-
-	-without-bindings|--without-bindings)
-	    do_bindings=no
-	    ;;
-
-	-with-f77|--with-f77)
-	    do_f77=yes
-	    ;;
-
-	-without-f77|--without-f77)
-	    do_f77=no
-	    ;;
-
 	-with-autotools=*|--with-autotools=*)
 	    autotoolsdir=`echo "A$arg" | sed -e 's/.*=//'`
 	    ;;
@@ -753,11 +729,25 @@ for arg in "$@" ; do
             opt=`echo A$arg | sed -e 's/^A--*without-//'`
             var=do_$opt
             eval $var=no
+            case "$opt" in
+                bindings)
+                    do_f77=no
+                    do_f90=no
+                    do_f08=no
+                    do_cxx=no
+                    ;;
+            esac
             ;;
+
         -with-*|--with-*)
             opt=`echo A$arg | sed -e 's/^A--*with-//'`
             var=do_$opt
             eval $var=yes
+            case "$opt" in
+                f77 | f90 | f08 | cxx)
+                    do_bindings=yes
+                    ;;
+            esac
             ;;
 
 	-help|--help|-usage|--usage)
@@ -1015,8 +1005,8 @@ fi
 ########################################################################
 
 # Capture the error messages
-if [ $do_geterrmsgs = "yes" ] ; then
-    fn_geterrmsgs
+if [ $do_errmsgs = "yes" ] ; then
+    fn_errmsgs
 fi
 
 
