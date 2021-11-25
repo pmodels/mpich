@@ -13,15 +13,6 @@
 # mpich tree.  This is not yet implemented.
 
 
-########################################################################
-## Utility functions
-########################################################################
-
-recreate_tmp() {
-    rm -rf .tmp
-    mkdir .tmp 2>&1 >/dev/null
-}
-
 warn() {
     echo "===> WARNING: $@"
 }
@@ -33,6 +24,80 @@ error() {
 echo_n() {
     # "echo -n" isn't portable, must portably implement with printf
     printf "%s" "$*"
+}
+
+########################################################################
+## Checks to make sure we are running from the correct location
+########################################################################
+
+echo_n "Verifying the location of autogen.sh... "
+if [ ! -d maint -o ! -s maint/version.m4 ] ; then
+    echo "must execute at top level directory for now"
+    exit 1
+fi
+# Set the SRCROOTDIR to be used later and avoid "cd ../../"-like usage.
+SRCROOTDIR=$PWD
+echo "done"
+
+########################################################################
+## Initialize variables to default values (possibly from the environment)
+########################################################################
+
+# Default choices
+do_bindings=yes  # if no, skips patching libtool for Fortran
+do_geterrmsgs=yes
+do_getcvars=yes
+do_f77=yes
+do_f90=yes
+do_f08=yes
+do_cxx=yes
+do_build_configure=yes
+do_atdir_check=no
+do_atver_check=yes
+do_subcfg_m4=yes
+do_hwloc=yes
+do_izem=yes
+do_ofi=yes
+do_ucx=yes
+do_json=yes
+do_yaksa=yes
+do_test=yes
+do_hydra=yes
+do_hydra2=yes
+do_romio=yes
+
+do_quick=no
+# Check -quick option. When enabled, skip as much as we can.
+for arg in "$@" ; do
+    if test $arg = "-quick"; then
+        do_quick=yes
+        do_izem=no
+        do_ofi=no
+        do_ucx=no
+        do_yaksa=no
+        do_test=yes
+        do_hydra=yes
+        do_hydra2=no
+        do_romio=no
+    fi
+done
+
+# Allow MAKE to be set from the environment
+MAKE=${MAKE-make}
+
+# amdirs are the directories that make use of autoreconf
+amdirs=". src/mpl"
+
+autoreconf_args="-if"
+export autoreconf_args
+
+########################################################################
+## Utility functions
+########################################################################
+
+recreate_tmp() {
+    rm -rf .tmp
+    mkdir .tmp 2>&1 >/dev/null
 }
 
 # Assume Program's install-dir is <install-dir>/bin/<prog>.
@@ -608,77 +673,6 @@ fn_check_python3() {
 
 # end of utility functions
 #-----------------------------------------------------------------------
-
-echo
-echo "####################################"
-echo "## Checking user environment"
-echo "####################################"
-echo
-
-########################################################################
-## Checks to make sure we are running from the correct location
-########################################################################
-
-echo_n "Verifying the location of autogen.sh... "
-if [ ! -d maint -o ! -s maint/version.m4 ] ; then
-    echo "must execute at top level directory for now"
-    exit 1
-fi
-# Set the SRCROOTDIR to be used later and avoid "cd ../../"-like usage.
-SRCROOTDIR=$PWD
-echo "done"
-
-########################################################################
-## Initialize variables to default values (possibly from the environment)
-########################################################################
-
-# Default choices
-do_bindings=yes  # if no, skips patching libtool for Fortran
-do_geterrmsgs=yes
-do_getcvars=yes
-do_f77=yes
-do_f90=yes
-do_f08=yes
-do_cxx=yes
-do_build_configure=yes
-do_atdir_check=no
-do_atver_check=yes
-do_subcfg_m4=yes
-do_hwloc=yes
-do_izem=yes
-do_ofi=yes
-do_ucx=yes
-do_json=yes
-do_yaksa=yes
-do_test=yes
-do_hydra=yes
-do_hydra2=yes
-do_romio=yes
-
-do_quick=no
-# Check -quick option. When enabled, skip as much as we can.
-for arg in "$@" ; do
-    if test $arg = "-quick"; then
-        do_quick=yes
-        do_izem=no
-        do_ofi=no
-        do_ucx=no
-        do_yaksa=no
-        do_test=yes
-        do_hydra=yes
-        do_hydra2=no
-        do_romio=no
-    fi
-done
-
-# Allow MAKE to be set from the environment
-MAKE=${MAKE-make}
-
-# amdirs are the directories that make use of autoreconf
-amdirs=". src/mpl"
-
-autoreconf_args="-if"
-export autoreconf_args
 
 ########################################################################
 ## Read the command-line arguments
