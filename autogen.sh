@@ -188,6 +188,61 @@ set_autotools() {
     fi
 }
 
+externals=
+set_externals() {
+    if test -z "$externals" ; then
+        #TODO: if necessary, run: git submodule update --init
+
+        # hwloc is always required
+        check_submodule_presence modules/hwloc
+
+        # external packages that require autogen.sh to be run for each of them
+        externals="test/mpi"
+
+        if [ "yes" = "$do_hydra" ] ; then
+            externals="${externals} src/pm/hydra"
+        fi
+
+        if [ "yes" = "$do_hydra2" ] ; then
+            externals="${externals} src/pm/hydra2"
+        fi
+
+        if [ "yes" = "$do_romio" ] ; then
+            externals="${externals} src/mpi/romio"
+        fi
+
+        if [ "yes" = "$do_hwloc" ] ; then
+            check_submodule_presence modules/hwloc
+            externals="${externals} modules/hwloc"
+        fi
+
+        if [ "yes" = "$do_izem" ] ; then
+            check_submodule_presence modules/izem
+            externals="${externals} modules/izem"
+        fi
+
+        if [ "yes" = "$do_ucx" ] ; then
+            check_submodule_presence modules/ucx
+            externals="${externals} modules/ucx"
+        fi
+
+        if [ "yes" = "$do_ofi" ] ; then
+            check_submodule_presence modules/libfabric
+            externals="${externals} modules/libfabric"
+        fi
+
+        if [ "yes" = "$do_json" ] ; then
+            check_submodule_presence "modules/json-c"
+            externals="${externals} modules/json-c"
+        fi
+
+        if [ "yes" = "$do_yaksa" ] ; then
+            check_submodule_presence "modules/yaksa"
+            externals="${externals} modules/yaksa"
+        fi
+    fi
+}
+
 PYTHON=
 check_python3() {
     echo_n "Checking for Python 3... "
@@ -475,8 +530,9 @@ autogen_external() {
 fn_build_configure() {
     set_autotools
     if [ "$do_build_configure" = "yes" ] ; then
+        set_externals
         for external in $externals ; do
-        autogen_external $external
+            autogen_external $external
         done
 
         for amdir in $amdirs ; do
@@ -883,60 +939,7 @@ check_python3
 ########################################################################
 ## Setup external packages
 ########################################################################
-
-echo
-echo "###########################################################"
-echo "## Checking submodules"
-echo "###########################################################"
-echo
-
-# hwloc is always required
-check_submodule_presence modules/hwloc
-
-# external packages that require autogen.sh to be run for each of them
-externals="test/mpi"
-
-if [ "yes" = "$do_hydra" ] ; then
-    externals="${externals} src/pm/hydra"
-fi
-
-if [ "yes" = "$do_hydra2" ] ; then
-    externals="${externals} src/pm/hydra2"
-fi
-
-if [ "yes" = "$do_romio" ] ; then
-    externals="${externals} src/mpi/romio"
-fi
-
-if [ "yes" = "$do_hwloc" ] ; then
-    check_submodule_presence modules/hwloc
-    externals="${externals} modules/hwloc"
-fi
-
-if [ "yes" = "$do_izem" ] ; then
-    check_submodule_presence modules/izem
-    externals="${externals} modules/izem"
-fi
-
-if [ "yes" = "$do_ucx" ] ; then
-    check_submodule_presence modules/ucx
-    externals="${externals} modules/ucx"
-fi
-
-if [ "yes" = "$do_ofi" ] ; then
-    check_submodule_presence modules/libfabric
-    externals="${externals} modules/libfabric"
-fi
-
-if [ "yes" = "$do_json" ] ; then
-    check_submodule_presence "modules/json-c"
-    externals="${externals} modules/json-c"
-fi
-
-if [ "yes" = "$do_yaksa" ] ; then
-    check_submodule_presence "modules/yaksa"
-    externals="${externals} modules/yaksa"
-fi
+set_externals
 
 ########################################################################
 # This used to be an optionally installed hook to help with git-svn
