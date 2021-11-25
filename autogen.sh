@@ -188,6 +188,32 @@ set_autotools() {
     fi
 }
 
+PYTHON=
+check_python3() {
+    echo_n "Checking for Python 3... "
+    PYTHON=
+    if test 3 = `python -c 'import sys; print(sys.version_info[0])'`; then
+        PYTHON=python
+    fi
+
+    if test -z "$PYTHON" -a 3 = `python3 -c 'import sys; print(sys.version_info[0])'`; then
+        PYTHON=python3
+    fi
+
+    if test -z "$PYTHON" ; then
+        echo "not found"
+        exit 1
+    else
+        echo "$PYTHON"
+    fi
+}
+
+set_PYTHON() {
+    if test -z "$PYTHON" ; then
+        check_python3
+    fi
+}
+
 ########################################################################
 ## Step functions
 ########################################################################
@@ -313,6 +339,7 @@ fn_update_README() {
 }
 
 fn_f77() {
+    set_PYTHON
     echo_n "Building Fortran 77 interface... "
     ( cd src/binding/fortran/mpif_h && chmod a+x ./buildiface && ./buildiface )
     $PYTHON maint/gen_binding_f77.py
@@ -340,6 +367,26 @@ fn_cxx() {
     echo_n "Building C++ interface... "
     ( cd src/binding/cxx && chmod a+x ./buildiface &&
         ./buildiface -nosep -initfile=./cxx.vlist )
+    echo "done"
+}
+
+fn_ch4_api() {
+    set_PYTHON
+    echo_n "generating ch4 API boilerplates... "
+    $PYTHON ./maint/gen_ch4_api.py
+}
+
+fn_gen_coll() {
+    set_PYTHON
+    echo_n "generating Collective functions..."
+    $PYTHON maint/gen_coll.py
+    echo "done"
+}
+
+fn_gen_binding_c() {
+    set_PYTHON
+    echo_n "generating MPI C functions..."
+    $PYTHON maint/gen_binding_c.py
     echo "done"
 }
 
@@ -660,25 +707,6 @@ fn_check_bash_find_patch_xargs() {
     fi
 }
 
-fn_check_python3() {
-    echo_n "Checking for Python 3... "
-    PYTHON=
-    if test 3 = `python -c 'import sys; print(sys.version_info[0])'`; then
-        PYTHON=python
-    fi
-
-    if test -z "$PYTHON" -a 3 = `python3 -c 'import sys; print(sys.version_info[0])'`; then
-        PYTHON=python3
-    fi
-
-    if test -z "$PYTHON" ; then
-        echo "not found"
-        exit 1
-    else
-        echo "$PYTHON"
-    fi
-}
-
 # end of utility functions
 #-----------------------------------------------------------------------
 
@@ -807,7 +835,7 @@ done
 fn_check_autotools
 
 fn_check_bash_find_patch_xargs
-fn_check_python3
+check_python3
 
 
 ########################################################################
@@ -975,18 +1003,12 @@ echo "done"
 ########################################################################
 ## Building Collective top-level code
 ########################################################################
-
-echo_n "generating Collective functions..."
-$PYTHON maint/gen_coll.py
-echo "done"
+fn_gen_coll
 
 ########################################################################
 ## Building C interfaces
 ########################################################################
-
-echo_n "generating MPI C functions..."
-$PYTHON maint/gen_binding_c.py
-echo "done"
+fn_gen_binding_c
 
 ########################################################################
 ## Building non-C interfaces
@@ -1056,15 +1078,7 @@ if [ "$do_build_configure" = "yes" ] ; then
     done
 fi
 
-echo
-echo
-echo "###########################################################"
-echo "## Generating CH4 API boilerplates"
-echo "###########################################################"
-echo
-
-echo_n "generating ch4 API boilerplates... "
-$PYTHON ./maint/gen_ch4_api.py
+fn_ch4_api
 
 echo
 echo
