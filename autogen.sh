@@ -120,18 +120,6 @@ check_submodule_presence() {
     fi
 }
 
-sync_external () {
-    srcdir=$1
-    destdir=$2
-
-    echo "syncing '$srcdir' --> '$destdir'"
-
-    # deletion prevents creating 'confdb/confdb' situation, also cleans
-    # stray files that may have crept in somehow
-    rm -rf "$destdir"
-    cp -pPR "$srcdir" "$destdir"
-}
-
 ########################################################################
 ## prerequisite functions
 ########################################################################
@@ -272,6 +260,87 @@ set_PYTHON() {
 ########################################################################
 ## Step functions
 ########################################################################
+
+sync_external () {
+    srcdir=$1
+    destdir=$2
+
+    echo "syncing '$srcdir' --> '$destdir'"
+
+    # deletion prevents creating 'confdb/confdb' situation, also cleans
+    # stray files that may have crept in somehow
+    rm -rf "$destdir"
+    cp -pPR "$srcdir" "$destdir"
+}
+
+fn_copy_confdb_etc() {
+    # This used to be an optionally installed hook to help with git-svn
+    # versions of the old SVN repo.  Now that we are using git, this is our
+    # mechanism that replaces relative svn:externals paths, such as for
+    # "confdb" and "mpl". The basic plan is to delete the destdir and then
+    # copy all of the files, warts and all, from the source directory to the
+    # destination directory.
+    echo
+    echo "####################################"
+    echo "## Replicating confdb (and similar)"
+    echo "####################################"
+    echo
+
+    confdb_dirs=
+    confdb_dirs="${confdb_dirs} src/mpl/confdb"
+    if test "$do_romio" = "yes" ; then
+        confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
+        if test "$do_quick" = "no" ; then
+            sync_external src/mpl src/mpi/romio/mpl
+            confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
+        fi
+    fi
+    if test "$do_hydra" = "yes" ; then
+        confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
+        if test "$do_quick" = "no" ; then
+            sync_external src/mpl src/pm/hydra/mpl
+            sync_external modules/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
+            # remove .git directories to avoid confusing git clean
+            rm -rf src/pm/hydra/tools/topo/hwloc/hwloc/.git
+            confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
+        fi
+    fi
+    if test "$do_hydra2" = "yes" ; then
+        confdb_dirs="${confdb_dirs} src/pm/hydra2/confdb"
+        sync_external src/mpl src/pm/hydra2/mpl
+        sync_external modules/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
+        # remove .git directories to avoid confusing git clean
+        rm -rf src/pm/hydra2/libhydra/topo/hwloc/hwloc/.git
+        confdb_dirs="${confdb_dirs} src/pm/hydra2/mpl/confdb"
+    fi
+    if test "$do_test" = "yes" ; then
+        confdb_dirs="${confdb_dirs} test/mpi/confdb"
+        confdb_dirs="${confdb_dirs} test/mpi/dtpools/confdb"
+    fi
+
+    # all the confdb directories, by various names
+    for destdir in $confdb_dirs ; do
+        sync_external confdb "$destdir"
+    done
+
+    # a couple of other random files
+    if [ -f maint/version.m4 ] ; then
+        cp -pPR maint/version.m4 src/pm/hydra/version.m4
+        cp -pPR maint/version.m4 src/pm/hydra2/version.m4
+        cp -pPR maint/version.m4 src/mpi/romio/version.m4
+        cp -pPR maint/version.m4 test/mpi/version.m4
+    fi
+
+    # Now sanity check that some of the above sync was successful
+    f="aclocal_cc.m4"
+    for d in $confdb_dirs ; do
+        if [ -f "$d/$f" ] ; then :
+        else
+            error "expected to find '$f' in '$d'"
+            exit 1
+        fi
+    done
+}
 
 fn_maint_configure() {
     set_autotools
@@ -942,79 +1011,7 @@ check_python3
 set_externals
 
 ########################################################################
-# This used to be an optionally installed hook to help with git-svn
-# versions of the old SVN repo.  Now that we are using git, this is our
-# mechanism that replaces relative svn:externals paths, such as for
-# "confdb" and "mpl". The basic plan is to delete the destdir and then
-# copy all of the files, warts and all, from the source directory to the
-# destination directory.
-echo
-echo "####################################"
-echo "## Replicating confdb (and similar)"
-echo "####################################"
-echo
-
-confdb_dirs=
-confdb_dirs="${confdb_dirs} src/mpl/confdb"
-if test "$do_romio" = "yes" ; then
-    confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
-    if test "$do_quick" = "no" ; then
-        sync_external src/mpl src/mpi/romio/mpl
-        confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
-    fi
-fi
-if test "$do_hydra" = "yes" ; then
-    confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
-    if test "$do_quick" = "no" ; then
-        sync_external src/mpl src/pm/hydra/mpl
-        sync_external modules/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
-        # remove .git directories to avoid confusing git clean
-        rm -rf src/pm/hydra/tools/topo/hwloc/hwloc/.git
-        confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
-    fi
-fi
-if test "$do_hydra2" = "yes" ; then
-    confdb_dirs="${confdb_dirs} src/pm/hydra2/confdb"
-    sync_external src/mpl src/pm/hydra2/mpl
-    sync_external modules/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
-    # remove .git directories to avoid confusing git clean
-    rm -rf src/pm/hydra2/libhydra/topo/hwloc/hwloc/.git
-    confdb_dirs="${confdb_dirs} src/pm/hydra2/mpl/confdb"
-fi
-if test "$do_test" = "yes" ; then
-    confdb_dirs="${confdb_dirs} test/mpi/confdb"
-    confdb_dirs="${confdb_dirs} test/mpi/dtpools/confdb"
-fi
-
-# all the confdb directories, by various names
-for destdir in $confdb_dirs ; do
-    sync_external confdb "$destdir"
-done
-
-# a couple of other random files
-if [ -f maint/version.m4 ] ; then
-    cp -pPR maint/version.m4 src/pm/hydra/version.m4
-    cp -pPR maint/version.m4 src/pm/hydra2/version.m4
-    cp -pPR maint/version.m4 src/mpi/romio/version.m4
-    cp -pPR maint/version.m4 test/mpi/version.m4
-fi
-
-# Now sanity check that some of the above sync was successful
-f="aclocal_cc.m4"
-for d in $confdb_dirs ; do
-    if [ -f "$d/$f" ] ; then :
-    else
-        error "expected to find '$f' in '$d'"
-        exit 1
-    fi
-done
-
-echo
-echo
-echo "###########################################################"
-echo "## Autogenerating required files"
-echo "###########################################################"
-echo
+fn_copy_confdb_etc
 
 ########################################################################
 ## Building maint/Version
