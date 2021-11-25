@@ -338,6 +338,18 @@ fn_update_README() {
     fi
 }
 
+fn_gen_subcfg_m4() {
+    echo_n "Creating subsys_include.m4... "
+    ./maint/gen_subcfg_m4
+    echo "done"
+}
+
+fn_romio_glue() {
+    echo_n "Building ROMIO glue code... "
+    ( cd src/glue/romio && chmod a+x ./all_romio_symbols && ./all_romio_symbols ../../mpi/romio/include/mpio.h.in )
+    echo "done"
+}
+
 fn_f77() {
     set_PYTHON
     echo_n "Building Fortran 77 interface... "
@@ -387,6 +399,12 @@ fn_gen_binding_c() {
     set_PYTHON
     echo_n "generating MPI C functions..."
     $PYTHON maint/gen_binding_c.py
+    echo "done"
+}
+
+fn_json_gen() {
+    echo_n "generating json char arrays... "
+    ./maint/tuning/coll/json_gen.sh
     echo "done"
 }
 
@@ -987,18 +1005,14 @@ set -e
 ## Building subsys_include.m4
 ########################################################################
 if [ "X$do_subcfg_m4" = Xyes ] ; then
-    echo_n "Creating subsys_include.m4... "
-    ./maint/gen_subcfg_m4
-    echo "done"
+    fn_gen_subcfg_m4
 fi
 
 
 ########################################################################
 ## Building ROMIO glue code
 ########################################################################
-echo_n "Building ROMIO glue code... "
-( cd src/glue/romio && chmod a+x ./all_romio_symbols && ./all_romio_symbols ../../mpi/romio/include/mpio.h.in )
-echo "done"
+fn_romio_glue
 
 ########################################################################
 ## Building Collective top-level code
@@ -1080,13 +1094,4 @@ fi
 
 fn_ch4_api
 
-echo
-echo
-echo "###########################################################"
-echo "## Creating JSON char arrays"
-echo "###########################################################"
-echo
-
-echo_n "generating json char arrays... "
-./maint/tuning/coll/json_gen.sh
-echo "done"
+fn_json_gen
