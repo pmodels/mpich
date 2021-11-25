@@ -1581,8 +1581,11 @@ def get_real_POLY_kinds():
     large_map = G.MAPS['BIG_F08_KIND_MAP']
     for kind in small_map:
         if kind == 'POLYFUNCTION':
-            # TODO: potentially tricky. Might be easier to treat individual function case by case.
-            G.real_poly_kinds[kind] = 1
+            # Currently there are only two: MPI_User_function, MPI_Datarep_conversion_function,
+            # both contains parameter POLYXFER_NUM_ELEM. However, Fortran is not able to
+            # differentiate generic interface based on different function signature. Disable
+            # for now.
+            pass
         elif kind.startswith('POLY'):
             a = get_int_type(small_map[kind]) + "-size"
             b = get_int_type(large_map[kind]) + "-size"
