@@ -706,20 +706,14 @@ for arg in "$@" ; do
 
 	-do=*|--do=*)
 	    opt=`echo A$arg | sed -e 's/^A--*do=//'`
-	    case $opt in 
-		build-configure|configure) opt=build_configure ;;
-	    esac
-	    var=do_$opt
-
-	    # Check that this opt is known
-	    eval oldval=\$"$var"
-	    if [ -z "$oldval" ] ; then
+            if type fn_$opt | grep -q 'function' ; then
+                echo Running step $opt...
+                fn_$opt
+                exit 0
+            else
 		echo "-do=$opt is unrecognized"
 		exit 1
-	    else
-		var=do_$opt
-		eval $var=yes
-	    fi
+            fi
 	    ;;
 
         -verbose-autoreconf|--verbose-autoreconf)
