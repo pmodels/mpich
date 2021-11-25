@@ -543,6 +543,69 @@ EOF
     fi
 }
 
+fn_check_bash_find_patch_xargs() {
+    echo_n "Checking for bash... "
+    if test "`which bash 2>&1 > /dev/null ; echo $?`" = "0" ;then
+        echo "done"
+    else
+        echo "bash not found" ;
+        exit 1;
+    fi
+
+    echo_n "Checking for UNIX find... "
+    find ./maint -name 'configure.ac' > /dev/null 2>&1
+    if [ $? = 0 ] ; then
+        echo "done"
+    else
+        echo "not found (error)"
+        exit 1
+    fi
+
+    echo_n "Checking for UNIX patch... "
+    patch -v > /dev/null 2>&1
+    if [ $? = 0 ] ; then
+        echo "done"
+    else
+        echo "not found (error)"
+        exit 1
+    fi
+
+    echo_n "Checking if xargs rm -rf works... "
+    if [ -d "`find ./maint -name __random_dir__`" ] ; then
+        error "found a directory named __random_dir__"
+        exit 1
+    else
+        mkdir ./maint/__random_dir__
+        find ./maint -name __random_dir__ | xargs rm -rf > /dev/null 2>&1
+        if [ $? = 0 ] ; then
+            echo "yes"
+        else
+            echo "no (error)"
+            rm -rf ./maint/__random_dir__
+            exit 1
+        fi
+    fi
+}
+
+fn_check_python3() {
+    echo_n "Checking for Python 3... "
+    PYTHON=
+    if test 3 = `python -c 'import sys; print(sys.version_info[0])'`; then
+        PYTHON=python
+    fi
+
+    if test -z "$PYTHON" -a 3 = `python3 -c 'import sys; print(sys.version_info[0])'`; then
+        PYTHON=python3
+    fi
+
+    if test -z "$PYTHON" ; then
+        echo "not found"
+        exit 1
+    else
+        echo "$PYTHON"
+    fi
+}
+
 # end of utility functions
 #-----------------------------------------------------------------------
 
@@ -774,86 +837,9 @@ done
 fn_set_autotools
 fn_check_autotools
 
-########################################################################
-## Checking for bash
-########################################################################
+fn_check_bash_find_patch_xargs
+fn_check_python3
 
-echo_n "Checking for bash... "
-if test "`which bash 2>&1 > /dev/null ; echo $?`" = "0" ;then
-    echo "done"
-else
-    echo "bash not found" ;
-    exit 1;
-fi
-
-########################################################################
-## Checking for UNIX find
-########################################################################
-
-echo_n "Checking for UNIX find... "
-find ./maint -name 'configure.ac' > /dev/null 2>&1
-if [ $? = 0 ] ; then
-    echo "done"
-else
-    echo "not found (error)"
-    exit 1
-fi
-
-
-########################################################################
-## Checking for UNIX patch
-########################################################################
-
-echo_n "Checking for UNIX patch... "
-patch -v > /dev/null 2>&1
-if [ $? = 0 ] ; then
-    echo "done"
-else
-    echo "not found (error)"
-    exit 1
-fi
-
-
-########################################################################
-## Checking if xargs rm -rf works
-########################################################################
-
-echo_n "Checking if xargs rm -rf works... "
-if [ -d "`find ./maint -name __random_dir__`" ] ; then
-    error "found a directory named __random_dir__"
-    exit 1
-else
-    mkdir ./maint/__random_dir__
-    find ./maint -name __random_dir__ | xargs rm -rf > /dev/null 2>&1
-    if [ $? = 0 ] ; then
-	echo "yes"
-    else
-	echo "no (error)"
-	rm -rf ./maint/__random_dir__
-	exit 1
-    fi
-fi
-
-########################################################################
-## Check for Python 3
-########################################################################
-
-echo_n "Checking for Python 3... "
-PYTHON=
-if test 3 = `python -c 'import sys; print(sys.version_info[0])'`; then
-    PYTHON=python
-fi
-
-if test -z "$PYTHON" -a 3 = `python3 -c 'import sys; print(sys.version_info[0])'`; then
-    PYTHON=python3
-fi
-
-if test -z "$PYTHON" ; then
-    echo "not found"
-    exit 1
-else
-    echo "$PYTHON"
-fi
 
 ########################################################################
 ## Setup external packages
