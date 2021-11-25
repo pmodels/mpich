@@ -427,9 +427,8 @@ _patch_libtool() {
     fi
 }
 
-fn_autoreconf_amdir() {
+autoreconf_amdir() {
     _dir=$1
-    set_autotools
     if [ -d "$_dir" -o -L "$_dir" ] ; then
         echo "------------------------------------------------------------------------"
         echo "running $autoreconf in $_dir"
@@ -458,6 +457,31 @@ fn_autoreconf_amdir() {
             # Reset timestamps to avoid confusing make
             touch -r $_dir/confdb/ltversion.m4 $_dir/confdb/ltmain.sh $_dir/confdb/libtool.m4
         fi
+    fi
+}
+
+autogen_external() {
+    _dir=$1
+    if [ -d "$_dir" -o -L "$_dir" ] ; then
+        echo "------------------------------------------------------------------------"
+        echo "running third-party initialization in $_dir"
+        (cd $_dir && ./autogen.sh) || exit 1
+    else
+        error "external directory $_dir missing"
+        exit 1
+    fi
+}
+
+fn_build_configure() {
+    set_autotools
+    if [ "$do_build_configure" = "yes" ] ; then
+        for external in $externals ; do
+        autogen_external $external
+        done
+
+        for amdir in $amdirs ; do
+            autoreconf_amdir $amdir
+        done
     fi
 }
 
@@ -1064,33 +1088,10 @@ if test "$do_getcvars" = "yes" ; then
     fn_getcvars
 fi
 
-echo
-echo
-echo "###########################################################"
-echo "## Generating configure files"
-echo "###########################################################"
-echo
-
 ########################################################################
 ## Running autotools on non-simplemake directories
 ########################################################################
-
-if [ "$do_build_configure" = "yes" ] ; then
-    for external in $externals ; do
-       if [ -d "$external" -o -L "$external" ] ; then
-           echo "------------------------------------------------------------------------"
-           echo "running third-party initialization in $external"
-           (cd $external && ./autogen.sh) || exit 1
-       else
-           error "external directory $external missing"
-           exit 1
-       fi
-    done
-
-    for amdir in $amdirs ; do
-        fn_autoreconf_amdir $amdir
-    done
-fi
+fn_build_configure
 
 fn_ch4_api
 
