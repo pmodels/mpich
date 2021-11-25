@@ -133,62 +133,67 @@ sync_external () {
 }
 
 ########################################################################
-## Step functions
+## prerequisite functions
 ########################################################################
 
-fn_set_autotools() {
-    if [ -n "$autotoolsdir" ] ; then
-        if [ -x $autotoolsdir/autoconf -a -x $autotoolsdir/autoheader ] ; then
-            autoconf=$autotoolsdir/autoconf
-            autoheader=$autotoolsdir/autoheader
-            autoreconf=$autotoolsdir/autoreconf
-            automake=$autotoolsdir/automake
-            autom4te=$autotoolsdir/autom4te
-            aclocal=$autotoolsdir/aclocal
-            if [ -x "$autotoolsdir/glibtoolize" ] ; then
-                libtoolize=$autotoolsdir/glibtoolize
+autoconf=
+set_autotools() {
+    if test -z "$autoconf" ; then
+        if [ -n "$autotoolsdir" ] ; then
+            if [ -x $autotoolsdir/autoconf -a -x $autotoolsdir/autoheader ] ; then
+                autoconf=$autotoolsdir/autoconf
+                autoheader=$autotoolsdir/autoheader
+                autoreconf=$autotoolsdir/autoreconf
+                automake=$autotoolsdir/automake
+                autom4te=$autotoolsdir/autom4te
+                aclocal=$autotoolsdir/aclocal
+                if [ -x "$autotoolsdir/glibtoolize" ] ; then
+                    libtoolize=$autotoolsdir/glibtoolize
+                else
+                    libtoolize=$autotoolsdir/libtoolize
+                fi
+
+                AUTOCONF=$autoconf
+                AUTOHEADER=$autoheader
+                AUTORECONF=$autoreconf
+                AUTOMAKE=$automake
+                AUTOM4TE=$autom4te
+                ACLOCAL=$aclocal
+                LIBTOOLIZE=$libtoolize
+
+                export AUTOCONF
+                export AUTOHEADER
+                export AUTORECONF
+                export AUTOM4TE
+                export AUTOMAKE
+                export ACLOCAL
+                export LIBTOOLIZE
             else
-                libtoolize=$autotoolsdir/libtoolize
+                echo "could not find executable autoconf and autoheader in $autotoolsdir"
+                exit 1
             fi
-
-            AUTOCONF=$autoconf
-            AUTOHEADER=$autoheader
-            AUTORECONF=$autoreconf
-            AUTOMAKE=$automake
-            AUTOM4TE=$autom4te
-            ACLOCAL=$aclocal
-            LIBTOOLIZE=$libtoolize
-
-            export AUTOCONF
-            export AUTOHEADER
-            export AUTORECONF
-            export AUTOM4TE
-            export AUTOMAKE
-            export ACLOCAL
-            export LIBTOOLIZE
         else
-            echo "could not find executable autoconf and autoheader in $autotoolsdir"
-            exit 1
-        fi
-    else
-        autoconf=${AUTOCONF:-autoconf}
-        autoheader=${AUTOHEADER:-autoheader}
-        autoreconf=${AUTORECONF:-autoreconf}
-        autom4te=${AUTOM4TE:-autom4te}
-        automake=${AUTOMAKE:-automake}
-        aclocal=${ACLOCAL:-aclocal}
-        if test -z "${LIBTOOLIZE+set}" && ( glibtoolize --version ) >/dev/null 2>&1 ; then
-            libtoolize=glibtoolize
-        else
-            libtoolize=${LIBTOOLIZE:-libtoolize}
+            autoconf=${AUTOCONF:-autoconf}
+            autoheader=${AUTOHEADER:-autoheader}
+            autoreconf=${AUTORECONF:-autoreconf}
+            autom4te=${AUTOM4TE:-autom4te}
+            automake=${AUTOMAKE:-automake}
+            aclocal=${ACLOCAL:-aclocal}
+            if test -z "${LIBTOOLIZE+set}" && ( glibtoolize --version ) >/dev/null 2>&1 ; then
+                libtoolize=glibtoolize
+            else
+                libtoolize=${LIBTOOLIZE:-libtoolize}
+            fi
         fi
     fi
 }
 
+########################################################################
+## Step functions
+########################################################################
+
 fn_maint_configure() {
-    if test -z "$autoconf" ; then
-        fn_set_autotools
-    fi
+    set_autotools
     echo
     echo "------------------------------------"
     echo "Initiating building required scripts"
@@ -276,6 +281,7 @@ fn_getcvars() {
 }
 
 fn_maint_version() {
+    set_autotools
     # build a substitute maint/Version script now that we store the single copy of
     # this information in an m4 file for autoconf's benefit
     echo_n "Generating a helper maint/Version... "
@@ -358,6 +364,7 @@ _patch_libtool() {
 
 fn_autoreconf_amdir() {
     _dir=$1
+    set_autotools
     if [ -d "$_dir" -o -L "$_dir" ] ; then
         echo "------------------------------------------------------------------------"
         echo "running $autoreconf in $_dir"
@@ -394,6 +401,7 @@ fn_autoreconf_amdir() {
 ########################################################################
 
 fn_check_autotools() {
+    set_autotools
     ProgHomeDir $autoconf   autoconfdir
     ProgHomeDir $automake   automakedir
     ProgHomeDir $libtoolize libtooldir
@@ -796,7 +804,6 @@ done
 ## Check for the location of autotools
 ########################################################################
 
-fn_set_autotools
 fn_check_autotools
 
 fn_check_bash_find_patch_xargs
