@@ -44,7 +44,7 @@ echo "done"
 ########################################################################
 
 # Default choices
-do_bindings=yes  # if no, skips patching libtool for Fortran
+do_fortran=yes  # if no, skips patching libtool for Fortran
 do_errmsgs=yes
 do_getcvars=yes
 do_f77=yes
@@ -568,7 +568,7 @@ autoreconf_amdir() {
         _patch_libtool $_dir/confdb/ltmain.sh  intel-compiler.patch
         _patch_libtool $_dir/confdb/libtool.m4 sys_lib_dlsearch_path_spec.patch
         _patch_libtool $_dir/confdb/libtool.m4 big-sur.patch
-        if test "$do_bindings" = "yes" ; then
+        if test "$do_fortran" = "yes" ; then
             _patch_libtool $_dir/confdb/libtool.m4 darwin-ifort.patch
             _patch_libtool $_dir/confdb/libtool.m4 oracle-fort.patch
             _patch_libtool $_dir/confdb/libtool.m4 flang.patch
@@ -933,11 +933,10 @@ for arg in "$@" ; do
             var=do_$opt
             eval $var=no
             case "$opt" in
-                bindings)
+                fortran)
                     do_f77=no
                     do_f90=no
                     do_f08=no
-                    do_cxx=no
                     ;;
             esac
             ;;
@@ -947,8 +946,8 @@ for arg in "$@" ; do
             var=do_$opt
             eval $var=yes
             case "$opt" in
-                f77 | f90 | f08 | cxx)
-                    do_bindings=yes
+                f77 | f90 | f08)
+                    do_fortran=yes
                     ;;
             esac
             ;;
@@ -1000,16 +999,16 @@ done
 ########################################################################
 
 fn_check_autotools
-
 fn_check_bash_find_patch_xargs
 check_python3
-
 
 ########################################################################
 ## Setup external packages
 ########################################################################
 set_externals
 
+########################################################################
+## duplicating confdb, mpl, version.m4 etc.
 ########################################################################
 fn_copy_confdb_etc
 
@@ -1070,8 +1069,6 @@ fi
 ########################################################################
 ## Extract error messages
 ########################################################################
-
-# Capture the error messages
 if [ $do_errmsgs = "yes" ] ; then
     fn_errmsgs
 fi
@@ -1080,7 +1077,6 @@ fi
 ########################################################################
 ## Build required scripts
 ########################################################################
-
 fn_maint_configure
 
 # new parameter code
