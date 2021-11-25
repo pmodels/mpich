@@ -755,16 +755,16 @@ for arg in "$@" ; do
 	    autotoolsdir=`echo "A$arg" | sed -e 's/.*=//'`
 	    ;;
 
-    -without-*|--without-*)
-        opt=`echo A$arg | sed -e 's/^A--*without-//'`
-        var=do_$opt
-        eval $var=no
-        ;;
-    -with-*|--with-*)
-        opt=`echo A$arg | sed -e 's/^A--*with-//'`
-        var=do_$opt
-        eval $var=yes
-        ;;
+        -without-*|--without-*)
+            opt=`echo A$arg | sed -e 's/^A--*without-//'`
+            var=do_$opt
+            eval $var=no
+            ;;
+        -with-*|--with-*)
+            opt=`echo A$arg | sed -e 's/^A--*with-//'`
+            var=do_$opt
+            eval $var=yes
+            ;;
 
 	-help|--help|-usage|--usage)
 	    cat <<EOF
