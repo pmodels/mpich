@@ -2245,6 +2245,20 @@ if test "$enable_fc" = "yes" ; then
     AC_SUBST(FC_OTHER_LIBS)
 
     PAC_FC_CHECK_IGNORE_TKR
+
+    if test -z "$PYTHON" ; then
+        if test -f src/binding/fortran/use_mpi/mpi_base.f90 ; then
+            AC_MSG_NOTICE([Use pre-generated Fortran mpi binding. To prevent issues, install Python 3 and re-run configure.])
+        else
+            AC_MSG_ERROR([Python 3 is required to generate F90 bindings but not found!])
+        fi
+    else
+        cmd_f90="$PYTHON $srcdir/maint/gen_binding_f90.py"
+        if test "$pac_fc_ignore_tkr" != "no" ; then
+            cmd_f90="$cmd_f90 -ignore-tkr=$pac_fc_ignore_tkr"
+        fi
+        AC_CONFIG_COMMANDS([gen_binding_f90], [$cmd_gen_binding_f90], [cmd_gen_binding_f90="$cmd_f90"])
+    fi
 fi
 
 if test "X$modincdir" = "X" ; then
