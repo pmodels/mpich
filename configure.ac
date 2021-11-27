@@ -2240,7 +2240,8 @@ if test "$enable_fc" = "yes" ; then
     # Check whether additional libraries are needed when linking with C
     PAC_PROG_FC_AND_C_STDIO_LIBS
     AC_SUBST(FC_OTHER_LIBS)
-    # ------------------------------------------------
+
+    PAC_FC_CHECK_IGNORE_TKR
 fi
 
 if test "X$modincdir" = "X" ; then
