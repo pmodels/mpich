@@ -710,6 +710,9 @@ case "$enable_fortran" in
             ;;
 esac
 
+# Python 3 is needed to generate Fortran bindings
+PAC_CHECK_PYTHON
+
 if test "$enable_fortran" != "no" ; then
     # suppress default "-g -O2" from AC_PROG_FC
     : ${FCFLAGS=""}
@@ -4236,17 +4239,24 @@ AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
 if test "$f08_works" = "yes" ; then
-    PAC_CHECK_PYTHON
     PAC_FC_CHECK_REAL128
-    cmd="$PYTHON $srcdir/maint/gen_binding_f08.py"
-    if test "$pac_fc_has_real128" = "no" ; then
-        cmd="$cmd -no-real128"
+    if test -z "$PYTHON" ; then
+        if test -f src/binding/fortran/use_mpi_f08/mpi_f08.f90 ; then
+            AC_MSG_NOTICE([Using pre-generated Fortran mpi_f08 binding source. To prevent issues, install Python 3 and rerun configure.])
+        else
+            AC_MSG_ERROR([Python 3 is required to generate F08 bindings but not found!])
+        fi
+    else
+        cmd_f08="$PYTHON $srcdir/maint/gen_binding_f08.py"
+        if test "$pac_fc_has_real128" = "no" ; then
+            cmd_f08="$cmd_f08 -no-real128"
+        fi
+        if test "$enable_romio" = "no" ; then
+            cmd_f08="$cmd_f08 -no-mpiio"
+        fi
+        cmd_f08="$cmd_f08 -fint-size=$pac_cv_f77_sizeof_integer -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
+        AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd_f08"])
     fi
-    if test "$enable_romio" = "no" ; then
-        cmd="$cmd -no-mpiio"
-    fi
-    cmd="$cmd -fint-size=$pac_cv_f77_sizeof_integer -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
-    AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd"])
 fi
 
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
