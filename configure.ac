@@ -4261,8 +4261,6 @@ AC_CONFIG_FILES([Makefile \
 	  src/binding/fortran/mpif_h/mpif.h \
 	  src/binding/fortran/mpif_h/setbotf.f \
 	  src/binding/fortran/mpif_h/setbot.c \
-	  src/binding/fortran/use_mpi/mpi_sizeofs.f90 \
-	  src/binding/fortran/use_mpi/mpi_constants.f90 \
 	  src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90 \
 	  src/binding/fortran/use_mpi_f08/mpi_c_interface_types.f90 \
 	  src/packaging/pkgconfig/mpich.pc \
