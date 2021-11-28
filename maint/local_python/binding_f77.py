@@ -9,12 +9,8 @@ from local_python import RE
 
 import re
 
-def get_f77_name(func):
-    name = func['name']
-    return name
-
 def dump_f77_c_func(func):
-    name = get_f77_name(func).lower()
+    func_name = get_function_name(func)
     f_mapping = get_kind_map('F90')
     c_mapping = get_kind_map('C')
 
@@ -828,7 +824,7 @@ def dump_f77_c_func(func):
 
     process_func_parameters()
 
-    c_func_name = func['name']
+    c_func_name = func_name
     if need_ATTR_AINT:
         if RE.match(r'MPI_Attr_(get|put)', func['name'], re.IGNORECASE):
             if RE.m.group(1) == 'put':
@@ -868,7 +864,7 @@ def dump_f77_c_func(func):
     if c_param_list_end:
         param_str += ' ' + ' '.join(c_param_list_end)
 
-    use_name = dump_profiling(name, param_str, return_type)
+    use_name = dump_profiling(func_name, param_str, return_type)
     G.out.append("")
     dump_mpi_decl_begin(use_name, param_str, return_type)
 
@@ -1121,8 +1117,6 @@ def dump_fortran_line(s):
 # -------------------------------
 def check_func_directives(func):
     if 'dir' in func and func['dir'] == "mpit":
-        func['_skip_fortran'] = 1
-    elif 'mpix' in func:
         func['_skip_fortran'] = 1
     elif RE.match(r'mpix_grequest_', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
