@@ -19,6 +19,8 @@ class RE:
 def main():
     parse_args()
     load_xfail_conf()
+    if os.path.exists('test/mpi'):
+        os.chdir('test/mpi')
     apply_xfails()
 
 # ---- subroutines --------------------------------------------
@@ -76,6 +78,7 @@ def load_xfail_conf():
             elif RE.match(r'\s*(.*?)\s*\/(.*)\/\s*xfail=(\w*)\s*(\S+)\s*$', line):
                 # -- new direct pattern
                 cond, pat, reason, testlist = RE.m.group(1, 2, 3, 4)
+                testlist = re.sub(r'^test\/mpi\/', '', testlist)
                 if match_states(cond, G.states):
                     cond = re.sub(r'\s\s+', ' ', cond)
                     if testlist not in G.xfails:
