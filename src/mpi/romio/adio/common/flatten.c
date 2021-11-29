@@ -208,7 +208,6 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
                                         &ints[3 * dims + 3],    /* psizes */
                                         ints[4 * dims + 3],     /* order */
                                         types[0], &dtype);
-                ADIOI_Flatten(dtype, flat, st_offset, curr_index);
                 MPI_Type_free(&dtype);
             }
             break;
