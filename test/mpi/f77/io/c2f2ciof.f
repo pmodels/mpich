@@ -16,7 +16,7 @@ C Test just the MPI-IO FILE object
 
       errs = 0
 
-      call mpi_init( ierr )
+      call mtest_init( ierr )
 
       call mpi_comm_rank( MPI_COMM_WORLD, wrank, ierr )
       call  mpi_comm_group( MPI_COMM_WORLD, wgroup, ierr )
