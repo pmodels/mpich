@@ -16,6 +16,9 @@
 #define MPIO_Request MPI_Request
 #endif
 
+extern int MPIR_F08_MPI_IN_PLACE;
+extern int MPIR_F08_MPI_BOTTOM;
+
 extern int cdesc_create_datatype(CFI_cdesc_t * cdesc, MPI_Aint oldcount, MPI_Datatype oldtype,
                                  MPI_Datatype * newtype);
 extern int MPIR_Fortran_array_of_string_f2c(const char *strs_f, char ***strs_c, int str_len,
