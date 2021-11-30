@@ -116,11 +116,17 @@ int MPL_gpu_init_device_mappings(int max_devid, int max_subdevid)
 {
     int mpl_err = MPL_SUCCESS;
     int global_dev_count = max_devid + 1;
-    int global_subdev_count = max_subdevid + 1;
+    int global_subdev_count = 0;
 
-    if (global_subdev_count == 0) {
+    /* If max_subdevid is 0, then all procs use tile 0 as root devices, so subdevices aren't
+     * needed. */
+    if (max_subdevid == 0) {
         global_ze_device_count = global_dev_count;
     } else {
+        /* We can still have the situation where all procs use non-zero tile as root devices, but
+         * this can't be detected unless we also reduce subdevice count. Thus, consider them as
+         * subdevices in the global_to_local_map even if they are all root devices. */
+        global_subdev_count = max_subdevid + 1;
         global_ze_device_count = global_dev_count * (global_subdev_count + 1);
     }
 
