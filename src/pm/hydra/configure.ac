@@ -11,6 +11,10 @@ AC_INIT([Hydra], MPICH_VERSION_m4)
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
 
+if test "$FROM_MPICH" != "yes" ; then
+    PAC_PREFIX_ALL_FLAGS(USER)
+fi
+
 AC_ARG_PROGRAM
 
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
