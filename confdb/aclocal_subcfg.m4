@@ -1,24 +1,3 @@
-dnl PAC_RESET_ALL_FLAGS - Reset precious flags to those set by the user
-AC_DEFUN([PAC_RESET_ALL_FLAGS],[
-	if test "$FROM_MPICH" = "yes" ; then
-	   CFLAGS="$USER_CFLAGS"
-	   CPPFLAGS="$USER_CPPFLAGS"
-	   CXXFLAGS="$USER_CXXFLAGS"
-	   FFLAGS="$USER_FFLAGS"
-	   FCFLAGS="$USER_FCFLAGS"
-	   LDFLAGS="$USER_LDFLAGS"
-	   LIBS="$USER_LIBS"
-	fi
-])
-
-dnl PAC_RESET_LINK_FLAGS - Reset precious link flags to those set by the user
-AC_DEFUN([PAC_RESET_LINK_FLAGS],[
-	if test "$FROM_MPICH" = "yes" ; then
-	   LDFLAGS="$USER_LDFLAGS"
-	   LIBS="$USER_LIBS"
-	fi
-])
-
 dnl Sandbox configure with additional arguments
 dnl Usage: PAC_CONFIG_SUBDIR_ARGS(subdir,configure-args,action-if-success,action-if-failure)
 dnl
