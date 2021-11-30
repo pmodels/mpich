@@ -114,9 +114,10 @@ int MPIDI_GPU_init_world(void)
     /* Initialize the local and global device mappings */
     MPL_gpu_init_device_mappings(node_max_dev_id, node_max_subdev_id);
 
-    if (my_max_subdev_id > 0) {
-        MPIDI_GPUI_global.global_max_dev_id =
-            node_max_dev_id + (node_max_dev_id + 1) * my_max_subdev_id;
+    if (node_max_subdev_id > 0) {
+        /* global_device_count = device_count * (subdevice_count + 1)
+         * global_max_dev_id = global_devices - 1 */
+        MPIDI_GPUI_global.global_max_dev_id = (node_max_dev_id + 1) * (node_max_subdev_id + 2) - 1;
     } else {
         MPIDI_GPUI_global.global_max_dev_id = node_max_dev_id;
     }
