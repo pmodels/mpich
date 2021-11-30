@@ -58,6 +58,27 @@ AC_DEFUN([PAC_PREFIX_ALL_FLAGS],[
 	PAC_PREFIX_FLAG($1, EXTRA_LIBS)
 ])
 
+dnl PAC_RESET_ALL_FLAGS - Reset precious flags to those set by the user
+AC_DEFUN([PAC_RESET_ALL_FLAGS],[
+	if test "$FROM_MPICH" = "yes" ; then
+	   CFLAGS="$USER_CFLAGS"
+	   CPPFLAGS="$USER_CPPFLAGS"
+	   CXXFLAGS="$USER_CXXFLAGS"
+	   FFLAGS="$USER_FFLAGS"
+	   FCFLAGS="$USER_FCFLAGS"
+	   LDFLAGS="$USER_LDFLAGS"
+	   LIBS="$USER_LIBS"
+	fi
+])
+
+dnl PAC_RESET_LINK_FLAGS - Reset precious link flags to those set by the user
+AC_DEFUN([PAC_RESET_LINK_FLAGS],[
+	if test "$FROM_MPICH" = "yes" ; then
+	   LDFLAGS="$USER_LDFLAGS"
+	   LIBS="$USER_LIBS"
+	fi
+])
+
 AC_DEFUN([PAC_CHECK_FGREP_WORD],[
     AC_PROG_FGREP
     AC_MSG_CHECKING([if fgrep support -w option])
