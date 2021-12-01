@@ -226,18 +226,9 @@ AC_ARG_ENABLE(strictmpi,
         [enable_strictmpi=no])
 
 AC_ARG_ENABLE(threads,
-        [--enable-threads=level - Specify the level of thread support expected from the
-                                MPI implementation.  The following levels are supported.
-
-        single - No threads (MPI_THREAD_SINGLE)
-        funneled - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
-        serialized - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
-        multiple - Fully multi-threaded (MPI_THREAD_MULTIPLE)
-
-        The default is to run check. If enabled and no level is
-        specified, the level is set to multiple.  If disabled, the
-        level is set to single.],,
-        [enable_threads=default])
+        [AS_HELP_STRING([--enable-threads],
+                [Whether to enable multi-thread tests])],,
+        [enable_threads=yes])
 
 AC_ARG_ENABLE(xfail,
         [AC_HELP_STRING([--enable-xfail],
@@ -453,25 +444,6 @@ if test -n "$F90" -o -n "$F90FLAGS" ; then
     AC_MSG_ERROR([F90 and F90FLAGS are replaced by FC and FCFLAGS respectively in this configure, please unset F90/F90FLAGS and set FC/FCFLAGS instead and rerun configure again.])
 fi
 
-# check whether to enable thread tests
-#
-if test "$enable_threads" = "yes" ; then
-    enable_threads=multiple
-elif test "$enable_threads" = "no" ; then
-    enable_threads=single
-elif test "$enable_threads" = default ; then
-    # I believe AC_TRY_RUN here is OK. The worst case (for cross compile) will result in
-    # multi-thread tests disabled. By pass by explicitly configure with --enable-threads=xxx
-    AC_TRY_RUN(AC_LANG_PROGRAM([#include "mpi.h"],[
-            int provided = MPI_THREAD_SINGLE;
-            MPI_Init_thread(0,0,MPI_THREAD_MULTIPLE,&provided);
-            MPI_Finalize();
-            if (provided != MPI_THREAD_MULTIPLE) exit(1);
-        ]),
-        [enable_threads=multiple], [enable_threads=single], [enable_threads=single]
-    )
-fi
-
 # errordir is substituted into the testlist file as errors when the
 # tests should check error handling and as a comment (#) otherwise.
 errordir="#"
@@ -503,10 +475,10 @@ else
 fi
 AC_SUBST(comm_overlap)
 
-#
-# Only run the threads tests if multiple is specified
-if test "$enable_threads" = "multiple" -o "$enable_threads" = "runtime" ; then
-    threadsdir="threads"
+# The multi-thread tests can be disabled by --disable-threads
+threadsdir="threads"
+if test "$enable_threads" = "no"; then
+    threadsdir="#threads"
 fi
 #
 # Only run the checkpointing tests if enabled
