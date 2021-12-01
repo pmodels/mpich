@@ -6,6 +6,7 @@
 #ifndef CDESC_H_INCLUDED
 #define CDESC_H_INCLUDED
 
+#include "mpichconf.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ISO_Fortran_binding.h>
