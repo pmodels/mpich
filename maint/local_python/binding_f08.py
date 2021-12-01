@@ -173,7 +173,7 @@ def dump_f08_wrappers_f(func, is_large):
     has_comm_size = False  # arrays of length = comm_size
     status_var = ""
     status_count = ""
-    is_alltoallw = False
+    is_alltoallvw = False
 
     if need_cdesc(func):
         f08ts_name = get_f08ts_name(func, is_large)
@@ -189,28 +189,33 @@ def dump_f08_wrappers_f(func, is_large):
         arg_list_2.append("c_null_ptr")
         arg_list_2.append("c_null_ptr")
         uses['c_null_ptr'] = 1
-    elif RE.match(r'mpi_i?alltoallw', func['name'], re.IGNORECASE):
-        # Need check MPI_IN_PLACE in order to skip sendtypes array
-        is_alltoallw = True
+    elif RE.match(r'mpi_i?alltoall[vw]', func['name'], re.IGNORECASE):
+        # Need check MPI_IN_PLACE in order to skip accessing sender arrays
+        is_alltoallvw = True
         uses['c_loc'] = 1
         uses['c_associated'] = 1
         uses['MPI_IN_PLACE'] = 1
 
     # alltoallw inplace hack (since it is a corner case)
-    def dump_alltoallw_inplace(arg_list_1, arg_list_2, convert_list_2):
+    def dump_alltoallvw_inplace(arg_list_1, arg_list_2, convert_list_2):
         # cannot use like sendcounts(1:length)
         if G.opts['fint-size'] == G.opts['cint-size']:
-            send_args = "sendbuf, sendcounts, sdispls, sendtypes(1:1)%MPI_VAL"
-            args1 = send_args + ", " + ', '.join(arg_list_1[4:])
+            if re.match(r'mpi_i?alltoallw', func['name'], re.IGNORECASE):
+                send_args = "sendbuf, sendcounts, sdispls, sendtypes(1:1)%MPI_VAL"
+                args1 = send_args + ", " + ', '.join(arg_list_1[4:])
+            else:
+                # alltoallv is fine
+                args1 = ', '.join(arg_list_1)
             dump_fortran_line("ierror_c = %s(%s)" % (c_func_name, args1))
         else:
             args2 = ', '.join(arg_list_2)
             G.out.append("sendcounts_c = sendcounts(1:1)")
-            G.out.append("sdispls_c = sdispls_c(1:1)")
-            G.out.append("sendtypes_c = sendtypes(1:1)%MPI_VAL")
+            G.out.append("sdispls_c = sdispls(1:1)")
             G.out.append("recvcounts_c = recvcounts(1:length)")
-            G.out.append("rdispls_c = rdispls_c(1:length)")
-            G.out.append("recvtypes_c = recvtypes(1:length)%MPI_VAL")
+            G.out.append("rdispls_c = rdispls(1:length)")
+            if re.match(r'mpi_i?alltoallw', func['name'], re.IGNORECASE):
+                G.out.append("sendtypes_c = sendtypes(1:1)%MPI_VAL")
+                G.out.append("recvtypes_c = recvtypes(1:length)%MPI_VAL")
             dump_fortran_line("ierror_c = %s(%s)" % (c_func_name, args2))
             G.out.extend(convert_list_2)
 
@@ -590,7 +595,7 @@ def dump_f08_wrappers_f(func, is_large):
             has_attribute_val = True
         f_param_list.append(p['name'])
         f_decl = get_F_decl(p, f08_mapping)
-        if is_alltoallw and p['name'] == 'sendbuf':
+        if is_alltoallvw and p['name'] == 'sendbuf':
             f_decl = re.sub(r' ::', ', TARGET ::', f_decl)
         f_decl_list.append(f_decl)
         check_decl_uses(f_decl, uses)
@@ -703,9 +708,9 @@ def dump_f08_wrappers_f(func, is_large):
     else:
         ret = 'res'
 
-    if is_alltoallw:
+    if is_alltoallvw:
         dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
-        dump_alltoallw_inplace(arg_list_1, arg_list_2, convert_list_2)
+        dump_alltoallvw_inplace(arg_list_1, arg_list_2, convert_list_2)
         dump_F_else()
     if need_check_int_kind and G.opts['fint-size'] == G.opts['cint-size']:
         dump_call("%s = %s(%s)" % (ret, c_func_name, ', '.join(arg_list_1)), False)
@@ -714,7 +719,7 @@ def dump_f08_wrappers_f(func, is_large):
         dump_call("%s = %s(%s)" % (ret, c_func_name, ', '.join(arg_list_2)), True)
         G.out.extend(convert_list_2)
 
-    if is_alltoallw:
+    if is_alltoallvw:
         dump_F_if_close()
     G.out.append("")
 
@@ -1570,16 +1575,19 @@ def get_real_POLY_kinds():
         elif "MPI_COUNT_KIND" in fortran_type:
             return "count"
         else:
-            raise Exception("Unrecognized POLY type")
+            raise Exception("Unrecognized POLY int type: %s" % fortran_type)
 
     small_map = G.MAPS['SMALL_F08_KIND_MAP']
     large_map = G.MAPS['BIG_F08_KIND_MAP']
     for kind in small_map:
-        if small_map[kind].startswith('POLY'):
+        if kind == 'POLYFUNCTION':
+            # TODO: potentially tricky. Might be easier to treat individual function case by case.
+            G.real_poly_kinds[kind] = 1
+        elif kind.startswith('POLY'):
             a = get_int_type(small_map[kind]) + "-size"
             b = get_int_type(large_map[kind]) + "-size"
             if G.opts[a] != G.opts[b]:
-                G.real_poly_kinds['kind'] = 1
+                G.real_poly_kinds[kind] = 1
 
 def function_has_real_POLY_parameters(func):
     for p in func['parameters']:

@@ -697,10 +697,6 @@ AS_IF([test "x$enable_fc"  = "xno"],[FC=no])
 : ${CXXFLAGS=""}
 AC_PROG_CXX
 
-# suppress default "-g -O2" from AC_PROG_FC
-: ${FCFLAGS=""}
-AC_PROG_FC
-
 enable_f77=no
 enable_fc=no
 case "$enable_fortran" in
@@ -715,22 +711,29 @@ case "$enable_fortran" in
             ;;
 esac
 
-# HACK, use $FC as F77. We should remove all the F77 usages.
-if test "$enable_fc" = "yes" ; then
-    F77=$FC
-   if test ! -z "$FCFLAGS" ; then
-      FFLAGS=$FCFLAGS
-   fi
+if test "$enable_fortran" != "no" ; then
+    # suppress default "-g -O2" from AC_PROG_FC
+    : ${FCFLAGS=""}
+    AC_PROG_FC
+
+    # HACK, use $FC as F77. We should remove all the F77 usages.
+    if test "$enable_fc" = "yes" ; then
+        F77=$FC
+        if test ! -z "$FCFLAGS" ; then
+            FFLAGS=$FCFLAGS
+        fi
+    fi
+
+    # This needs to come after we've potentially set F77=$FC. Otherwise, we could
+    # override the user's Fortran compiler selection when only specifying FC at configure
+    # time, as is allowed.
+    # suppress default "-g -O2" from AC_PROG_F77
+    : ${FFLAGS=""}
+    AC_PROG_F77
+
 fi
 
-AM_CONDITIONAL([INSTALL_MPIF77],[test "$F77" != "$FC" -a "$FFLAGS" != "$FCFLAGS"])
-
-# This needs to come after we've potentially set F77=$FC. Otherwise, we could
-# override the user's Fortran compiler selection when only specifying FC at configure
-# time, as is allowed.
-# suppress default "-g -O2" from AC_PROG_F77
-: ${FFLAGS=""}
-AC_PROG_F77
+AM_CONDITIONAL([INSTALL_MPIF77],[test "$enable_fc" = "yes" -a "$F77" != "$FC" -a "$FFLAGS" != "$FCFLAGS"])
 
 # compute canonical system types
 AC_CANONICAL_BUILD
@@ -3001,7 +3004,7 @@ if test "$enable_f77" = yes ; then
     fi
 
     # Include a defined value for Fint is int
-    if test "$SIZEOF_F77_INTEGER" == "$ac_cv_sizeof_int" ; then
+    if test "$pac_cv_f77_sizeof_integer" == "$ac_cv_sizeof_int" ; then
         AC_DEFINE(HAVE_FINT_IS_INT,1,[Define if Fortran integer are the same size as C ints])
     else
         AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
@@ -4204,7 +4207,7 @@ if test "$f08_works" = "yes" ; then
     if test "$enable_romio" = "no" ; then
         cmd="$cmd -no-mpiio"
     fi
-    cmd="$cmd -fint-size=$SIZEOF_F77_INTEGER -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
+    cmd="$cmd -fint-size=$pac_cv_f77_sizeof_integer -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
     AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd"])
 fi
 
