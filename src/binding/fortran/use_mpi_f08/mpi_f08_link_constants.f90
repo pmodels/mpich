@@ -24,10 +24,6 @@ implicit none
 type(MPI_Status), bind(C, name="MPIR_F08_MPI_STATUS_IGNORE_OBJ"), target :: MPI_STATUS_IGNORE
 type(MPI_Status), dimension(1), bind(C, name="MPIR_F08_MPI_STATUSES_IGNORE_OBJ"), target :: MPI_STATUSES_IGNORE
 
-! Though these two variables are required by MPI-3 Standard, they are not used in MPICH
-type(c_ptr), bind(C, name="MPI_F08_STATUS_IGNORE")   :: MPI_F08_STATUS_IGNORE   ! Point to MPI_STATUS_IGNORE
-type(c_ptr), bind(C, name="MPI_F08_STATUSES_IGNORE") :: MPI_F08_STATUSES_IGNORE ! Point to MPI_STATUSES_IGNORE
-
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
