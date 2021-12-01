@@ -403,10 +403,8 @@ else
         AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
     fi
 fi
-# Make sure we export CC before configuring DTPools, since MPI is
-# needed to build the library.
-export CC
-AC_CONFIG_SUBDIRS([dtpools])
+
+PAC_CONFIG_SUBDIR_ARGS([dtpools])
 
 # Running C compiler tests
 AC_PROG_CC
