@@ -25,6 +25,9 @@ check_copy version.m4     ../../maint/version.m4
 check_copy confdb         ../../confdb
 check_copy dtpools/confdb ../../confdb
 
+echo "Running autoreconf in dtpools"
+(cd dtpools && autoreconf -ivf)
+
 # Create and/or update the f90 tests
 printf "Create or update the Fortran 90 tests derived from the Fortran 77 tests... "
 for dir in f77/* ; do
@@ -57,4 +60,5 @@ for dir in errors/f77/* ; do
 done
 echo "done"
 
+echo "Running autoreconf in ."
 autoreconf -ivf
