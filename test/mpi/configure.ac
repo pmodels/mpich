@@ -1280,9 +1280,20 @@ fi
 # Running C++ compiler tests
 AC_PROG_CXX
 if test "$enable_cxx" = yes ; then
-    if test -z "$CXX" ; then
+    AC_MSG_CHECKING([that we can build MPI programs with CXX binding])
+    AC_LANG_PUSH([C++])
+    AC_LINK_IFELSE([
+        AC_LANG_PROGRAM([#include "mpi.h"], [
+            MPI::Init(NULL, NULL);
+            MPI::Finalize();
+        ])
+    ],[
+        AC_MSG_RESULT(yes)
+    ],[
         enable_cxx=no
-    fi
+        AC_MSG_RESULT(no)
+    ])
+    AC_LANG_POP([C++])
 fi
 # Simple tests for which other languages we can handle
 cxxdir="#"
