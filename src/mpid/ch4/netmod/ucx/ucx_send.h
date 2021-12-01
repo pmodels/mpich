@@ -14,14 +14,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_send_cmpl_cb(void *request, ucs_status_t
                                                      void *user_data)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPIR_Request *req = ucp_request->req;
+    MPIR_Request *req = user_data;
 
     MPIR_FUNC_ENTER;
 
     if (unlikely(status == UCS_ERR_CANCELED))
         MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
     MPIDI_Request_complete_fast(req);
-    ucp_request->req = NULL;
     ucp_request_release(ucp_request);
 
     MPIR_FUNC_EXIT;
@@ -72,6 +71,36 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
         MPIR_Datatype_ptr_add_ref(dt_ptr);
     }
 
+    if (!is_sync) {
+        /* try immediate completion */
+        param.op_attr_mask |= UCP_OP_ATTR_FLAG_FORCE_IMM_CMPL;
+
+        ucp_request =
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nbx(ep, send_buf, send_count, ucx_tag, &param);
+        if (ucp_request == NULL) {
+            if (req == NULL) {
+                req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+            } else {
+                MPIR_cc_set(&req->cc, 0);
+            }
+
+            goto fn_exit;
+        }
+
+        /* clear immediate bit */
+        param.op_attr_mask &= ~UCP_OP_ATTR_FLAG_FORCE_IMM_CMPL;
+    }
+
+    /* no immediate completion */
+    if (req == NULL) {
+        req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, vci_src, 2);
+    } else {
+        MPIR_Request_add_ref(req);
+    }
+    param.op_attr_mask |= UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    param.op_attr_mask |= UCP_OP_ATTR_FIELD_USER_DATA;
+    param.user_data = req;
+
     if (is_sync) {
         ucp_request =
             (MPIDI_UCX_ucp_request_t *) ucp_tag_send_sync_nbx(ep, send_buf, send_count,
@@ -82,22 +111,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     }
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
-    if (ucp_request) {
-        if (req == NULL) {
-            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, vci_src, 2);
-        } else {
-            MPIR_Request_add_ref(req);
-        }
-        ucp_request->req = req;
-        MPIDI_UCX_REQ(req).ucp_request = ucp_request;
-    } else if (req != NULL) {
-        MPIR_cc_set(&req->cc, 0);
-    } else if (have_request) {
-        req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
-    }
-    *request = req;
-
   fn_exit:
+    *request = req;
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
