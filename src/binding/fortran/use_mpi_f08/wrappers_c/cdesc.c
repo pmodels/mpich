@@ -5,6 +5,7 @@
 
 #include "cdesc.h"
 #include <limits.h>
+#include <assert.h>
 
 /* Fortran 2008 specifies a maximum rank of 15 */
 #define MAX_RANK  (15)
@@ -24,12 +25,12 @@ int cdesc_create_datatype(CFI_cdesc_t * cdesc, MPI_Aint oldcount, MPI_Datatype o
 #ifdef HAVE_ERROR_CHECKING
     {
         int size;
-        MPIR_Assert(cdesc->rank <= MAX_RANK);
+        assert(cdesc->rank <= MAX_RANK);
         PMPI_Type_size(oldtype, &size);
         /* When cdesc->elem_len != size, things suddenly become complicated. Generally, it is hard to create
          * a composite datatype based on two datatypes. Currently we don't support it and doubt it is useful.
          */
-        MPIR_Assert(cdesc->elem_len == size);
+        assert(cdesc->elem_len == size);
     }
 #endif
 
