@@ -596,11 +596,18 @@ configuration options can be found using:
 ==================================
 
 To test MPICH, we package the MPICH test suite in the MPICH
-distribution. You can run the test suite using:
+distribution. You can run the test suite after "make install" using:
 
      make testing
 
-The results summary will be placed in test/summary.xml
+The results summary will be placed in test/summary.xml.
+
+The test suite can be used independently to test any installed MPI
+implementations:
+
+     cd test/mpi
+     ./configure --with-mpi=/path/to/mpi
+     make testing
 
 -------------------------------------------------------------------------
 
