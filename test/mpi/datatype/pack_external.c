@@ -234,7 +234,7 @@ int main(int argc, char **argv)
 
         const char *ref = get_pack_buffer(dt_list[i]);
         if (mpi_type_is_bool(dt_list[i].mpi_type)) {
-            /* Many C compilers will covert boolean values on assignment, e.g. 2->1,
+            /* Many C compilers will convert boolean values on assignment, e.g. 2->1,
              * but some compilers does not, e.g. Solaris suncc.
              * Current MPICH relies on compiler conversion. For other compilers, it is
              * probably not critical as long as the rount trip check (below) passes.
@@ -244,10 +244,10 @@ int main(int argc, char **argv)
                    get_mpi_type_name(dt_list[i].mpi_type));
             errs++;
             const char *p = pack_buf + OFFSET;
-            for (int i = 0; i < size; i++) {
-                if (ref[i] != p[i]) {
-                    printf("    pack_buf[%d] is 0x%02x, expect 0x%02x\n", i, p[i] & 0xff,
-                           ref[i] & 0xff);
+            for (int j = 0; j < size; j++) {
+                if (ref[j] != p[j]) {
+                    printf("    pack_buf[%d] is 0x%02x, expect 0x%02x\n", j, p[j] & 0xff,
+                           ref[j] & 0xff);
                 }
             }
         }

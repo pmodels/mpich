@@ -224,7 +224,6 @@ int test_probe_normal(int id, int iter, int count, int *buff, MPI_Comm comm, int
 
     }
 
-  fn_exit:
     return errs;
 }
 

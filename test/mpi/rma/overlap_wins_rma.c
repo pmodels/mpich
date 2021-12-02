@@ -158,7 +158,7 @@ static void print_target_data(void)
     fflush(stdout);
 }
 
-static int run_test()
+static int run_test(void)
 {
     int errors = 0;
     int i, x;

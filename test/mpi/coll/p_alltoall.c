@@ -36,7 +36,6 @@ int main(int argc, char **argv)
     MPI_Comm comm;
     int iters = 10;
     int j = 0;
-    int root = 1;
     int count = 1;              /* sendcount and recvcount. */
 
     MTest_Init(&argc, &argv);

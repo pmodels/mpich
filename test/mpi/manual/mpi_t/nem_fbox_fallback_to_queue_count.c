@@ -37,7 +37,7 @@ MPI_T_pvar_handle fbox_handle;
  * Question: Do we really want to write pvars other than reset?
  */
 void blank_test(void);
-void blank_test()
+void blank_test(void)
 {
     uint64_t temp[2] = { -1 };
 
@@ -118,7 +118,7 @@ static void send_first_test(void)
  *        workaround.
  */
 void recv_first_test(void);
-void recv_first_test()
+void recv_first_test(void)
 {
     uint64_t nem_fbox_fall_back_to_queue_count[2] = { -1 };
 

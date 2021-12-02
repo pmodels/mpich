@@ -147,7 +147,6 @@ int main(int argc, char *argv[])
         CHECK_SUCCESS(MPI_Comm_disconnect(&parent));
     }
 
-  fn_exit:
     /* Do not call MTest_Finalize (and thus MTest_Init) to avoid printing extra
      * "No Errors" as many as spawned MPI processes. */
     MPI_Finalize();

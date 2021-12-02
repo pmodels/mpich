@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 {
     MPI_Datatype dt, dt2, newtype;
     int position, psize, insize, outsize;
-    signed char *inbuf = 0, *outbuf = 0, *pbuf = 0, *p;
+    char *inbuf = 0, *outbuf = 0, *pbuf = 0, *p;
     int i, j, k;
     int errs = 0;
     int veccount = 16, stride = 16;

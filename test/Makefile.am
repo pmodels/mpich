@@ -9,9 +9,11 @@
 SUBDIRS = mpi commands .
 
 # Test both the MPI routines and the MPICH command scripts
-testing:
+testing: mpi/Makefile
 	(NOXMLCLOSE=YES && export NOXMLCLOSE && cd mpi && $(MAKE) testing)
 	(XMLFILE=../mpi/summary.xml && XMLCONTINUE=YES && \
 	export XMLFILE && export XMLCONTINUE && \
 	cd commands && $(MAKE) testing)
 
+mpi/Makefile:
+	cd mpi && ./autogen.sh && ./configure --with-mpi=${prefix}

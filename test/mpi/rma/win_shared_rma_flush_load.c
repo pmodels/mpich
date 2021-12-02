@@ -99,7 +99,7 @@ static int check_local_result(int iter)
 #define check_local_result(iter) (0)
 #endif
 
-static int run_test()
+static int run_test(void)
 {
     int i = 0, x = 0;
     int errors = 0;

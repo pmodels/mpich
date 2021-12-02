@@ -50,7 +50,7 @@ void safeSleep(double seconds)
     }
 }
 
-void printStackTrace()
+void printStackTrace(void)
 {
     static char cmd[512];
     snprintf(cmd, 512, "/bin/sh -c \"/home/eellis/bin/pstack1 %d\"", getpid());
