@@ -20,6 +20,11 @@ int MPIDI_XPMEM_init_world(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
 
+    /* If the user has disabled XPMEM, don't even try to initialize it. */
+    if (!MPIR_CVAR_CH4_XPMEM_ENABLE) {
+        goto fn_exit;
+    }
+
     MPIR_FUNC_ENTER;
     MPIR_CHKPMEM_DECL(3);
 
