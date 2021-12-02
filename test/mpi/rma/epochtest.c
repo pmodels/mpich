@@ -19,10 +19,10 @@
  *     fence                 fence
  */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "mpitest.h"
 #include "dtpools.h"
 #include "mtest_dtp.h"
 #include <assert.h>

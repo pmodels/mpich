@@ -85,7 +85,7 @@ double TestSyncTime(ArgStruct * p);
 void PrintOptions(void);
 int DetermineLatencyReps(ArgStruct * p);
 
-void PrintOptions()
+void PrintOptions(void)
 {
     printf("\n");
     printf("Usage: netpipe flags\n");
@@ -464,7 +464,7 @@ int main(int argc, char *argv[])
 
 
 /* Return the current time in seconds, using a double precision number. 	 */
-double When()
+double When(void)
 {
     return MPI_Wtime();
 }

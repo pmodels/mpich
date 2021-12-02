@@ -78,7 +78,7 @@ static int test_recv_init(int src_rank, const char *test_name)
     return errs;
 }
 
-static void test_proc_null()
+static void test_proc_null(void)
 {
     MPI_Request r;
     MPI_Status s;

@@ -8,8 +8,8 @@
  *        will occur as the number of processors is increased.
  */
 
-#include "mpi.h"
 #include "mpitest.h"
+#include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

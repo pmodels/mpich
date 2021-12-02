@@ -69,7 +69,6 @@ int test_pers_sendrecv(int id, int iter, int count, int *buff, MPI_Comm comm, in
     if (errs > 0)
         fprintf(stderr, "thread %d: %d errors found in received data\n", id, errs);
 
-  fn_exit:
     return errs;
 }
 
