@@ -43,8 +43,8 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     MPIR_FUNC_ENTER;
 
     /* ensure max alignment for payload */
-    MPIR_Assert((MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE & (MAX_ALIGNMENT - 1)) == 0);
-    MPIR_Assert((sizeof(MPIDI_POSIX_eager_iqueue_cell_t) & (MAX_ALIGNMENT - 1)) == 0);
+    MPIR_Assert((MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE & (MPIDI_POSIX_MIN_ALIGNMENT - 1)) == 0);
+    MPIR_Assert((sizeof(MPIDI_POSIX_eager_iqueue_cell_t) & (MPIDI_POSIX_MIN_ALIGNMENT - 1)) == 0);
 
     size_t size_of_terminals;
     /* Create one terminal for each process with which we will be able to communicate. */

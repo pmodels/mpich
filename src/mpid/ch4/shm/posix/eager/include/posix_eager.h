@@ -10,6 +10,20 @@
 
 #define MPIDI_MAX_POSIX_EAGER_STRING_LEN 64
 
+/* We need try prevent breaking basic datatype in segments, for example, split double
+ * in half. This can easily happen on 32-bit systems where max alignment is 4 and am
+ * header size for MPIDIG_send_data_msg_t is 4. Currently, yaksa cannot handle packing
+ * or unpacking fragments of basic datatype.
+ * Enforcing a bigger payload alignment prevents most of the issues. But it is not
+ * fail-proof. For example, long double may be 12 bytes thus can't fill at even 16-byte
+ * boundary. Similarly, if there is mixed int and double, it still can break the double
+ * in half.
+ * For a complete fix, we need yaksa to add a fallback path to handle fragments of basic
+ * types.
+ * FIXME: once yaksa is fixed, redefine MPIDI_POSIX_MIN_ALIGNMENT to MAX_ALIGNMENT.
+ */
+#define MPIDI_POSIX_MIN_ALIGNMENT 16
+
 typedef int (*MPIDI_POSIX_eager_init_t) (int rank, int size);
 typedef int (*MPIDI_POSIX_eager_finalize_t) (void);
 
