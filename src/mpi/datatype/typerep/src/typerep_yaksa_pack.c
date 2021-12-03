@@ -130,16 +130,19 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
     MPIR_Assert(datatype != MPI_DATATYPE_NULL);
 
     int is_contig = 0;
+    int element_size = -1;
     const void *inbuf_ptr;      /* adjusted by true_lb */
     MPI_Aint total_size = 0;
     if (HANDLE_IS_BUILTIN(datatype)) {
         is_contig = 1;
+        element_size = MPIR_Datatype_get_basic_size(datatype);
         inbuf_ptr = inbuf;
-        total_size = incount * MPIR_Datatype_get_basic_size(datatype);
+        total_size = incount * element_size;
     } else {
         MPIR_Datatype *dtp;
         MPIR_Datatype_get_ptr(datatype, dtp);
         is_contig = dtp->is_contig;
+        element_size = dtp->builtin_element_size;
         inbuf_ptr = MPIR_get_contig_ptr(inbuf, dtp->true_lb);
         total_size = incount * dtp->size;
     }
@@ -148,9 +151,12 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
     MPIR_GPU_query_pointer_attr(inbuf_ptr, &inattr);
     MPIR_GPU_query_pointer_attr(outbuf, &outattr);
 
-    if (is_contig && IS_HOST(inattr) && IS_HOST(outattr)) {
-        *actual_pack_bytes = MPL_MIN(total_size - inoffset, max_pack_bytes);
-        MPIR_Memcpy(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), *actual_pack_bytes);
+    if (is_contig && element_size > 0 && IS_HOST(inattr) && IS_HOST(outattr)) {
+        MPI_Aint real_bytes = MPL_MIN(total_size - inoffset, max_pack_bytes);
+        /* Make sure we never pack partial element */
+        real_bytes -= real_bytes % element_size;
+        MPIR_Memcpy(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), real_bytes);
+        *actual_pack_bytes = real_bytes;
         goto fn_exit;
     }
 
@@ -249,16 +255,19 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
     MPIR_Assert(datatype != MPI_DATATYPE_NULL);
 
     int is_contig = 0;
+    int element_size = -1;
     const void *outbuf_ptr;     /* adjusted by true_lb */
     MPI_Aint total_size = 0;
     if (HANDLE_IS_BUILTIN(datatype)) {
         is_contig = 1;
+        element_size = MPIR_Datatype_get_basic_size(datatype);
         outbuf_ptr = outbuf;
-        total_size = outcount * MPIR_Datatype_get_basic_size(datatype);
+        total_size = outcount * element_size;
     } else {
         MPIR_Datatype *dtp;
         MPIR_Datatype_get_ptr(datatype, dtp);
         is_contig = dtp->is_contig;
+        element_size = dtp->builtin_element_size;
         outbuf_ptr = MPIR_get_contig_ptr(outbuf, dtp->true_lb);
         total_size = outcount * dtp->size;
     }
@@ -269,6 +278,8 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
 
     if (is_contig && IS_HOST(inattr) && IS_HOST(outattr)) {
         *actual_unpack_bytes = MPL_MIN(total_size - outoffset, insize);
+        /* We assume the amount we unpack is multiple of element_size */
+        MPIR_Assert(element_size < 0 || *actual_unpack_bytes % element_size == 0);
         MPIR_Memcpy(MPIR_get_contig_ptr(outbuf_ptr, outoffset), inbuf, *actual_unpack_bytes);
         goto fn_exit;
     }
