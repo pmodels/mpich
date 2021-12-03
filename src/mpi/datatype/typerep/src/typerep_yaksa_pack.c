@@ -53,6 +53,10 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+#define IS_HOST(attr) \
+    ((attr).type == MPL_GPU_POINTER_UNREGISTERED_HOST || \
+    (attr).type == MPL_GPU_POINTER_REGISTERED_HOST)
+
 /* When a returned typerep_req is expected, using the nonblocking yaksa routine and
  * return the request; otherwise use the blocking yaksa routine. */
 static int typerep_do_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
@@ -75,10 +79,7 @@ static int typerep_do_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
     MPIR_GPU_query_pointer_attr(inbuf, &inattr);
     MPIR_GPU_query_pointer_attr(outbuf, &outattr);
 
-    if ((inattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
-         inattr.type == MPL_GPU_POINTER_REGISTERED_HOST) &&
-        (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
-         outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
+    if (IS_HOST(inattr) && IS_HOST(outattr)) {
         MPIR_Memcpy(outbuf, inbuf, num_bytes);
     } else {
         uintptr_t actual_pack_bytes;
@@ -147,11 +148,7 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
     MPIR_GPU_query_pointer_attr(inbuf_ptr, &inattr);
     MPIR_GPU_query_pointer_attr(outbuf, &outattr);
 
-    if (is_contig &&
-        (inattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
-         inattr.type == MPL_GPU_POINTER_REGISTERED_HOST) &&
-        (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
-         outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
+    if (is_contig && IS_HOST(inattr) && IS_HOST(outattr)) {
         *actual_pack_bytes = MPL_MIN(total_size - inoffset, max_pack_bytes);
         MPIR_Memcpy(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), *actual_pack_bytes);
         goto fn_exit;
@@ -270,11 +267,7 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
     MPIR_GPU_query_pointer_attr(inbuf, &inattr);
     MPIR_GPU_query_pointer_attr(outbuf_ptr, &outattr);
 
-    if (is_contig &&
-        (inattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
-         inattr.type == MPL_GPU_POINTER_REGISTERED_HOST) &&
-        (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
-         outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
+    if (is_contig && IS_HOST(inattr) && IS_HOST(outattr)) {
         *actual_unpack_bytes = MPL_MIN(total_size - outoffset, insize);
         MPIR_Memcpy(MPIR_get_contig_ptr(outbuf_ptr, outoffset), inbuf, *actual_unpack_bytes);
         goto fn_exit;
