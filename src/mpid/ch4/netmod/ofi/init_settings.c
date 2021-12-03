@@ -159,6 +159,10 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
             hints->domain_attr->mr_mode |= FI_MR_PROV_KEY;
         }
 #endif
+
+#ifdef FI_MR_ENDPOINT
+        hints->domain_attr->mr_mode |= FI_MR_ENDPOINT;
+#endif
     } else {
         /* In old versions FI_MR_BASIC is equivallent to set
          * FI_MR_VIRT_ADDR, FI_MR_PROV_KEY, and FI_MR_ALLOCATED on.

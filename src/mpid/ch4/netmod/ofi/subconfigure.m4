@@ -67,6 +67,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_mrail="no"
         enable_efa="no"
         enable_netdir="no"
+        enable_cxi="no"
     else
         enable_psm="yes"
         enable_psm2="yes"
@@ -86,6 +87,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_mrail="yes"
         enable_efa="yes"
         enable_netdir="yes"
+        enable_cxi="yes"
     fi
 
     for provider in $netmod_args ; do
@@ -110,6 +112,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             "verbs;ofi_rxm")
                 enable_verbs="yes"
                 enable_rxm="yes"
+                ;;
+            "cxi")
+                enable_cxi="yes"
                 ;;
 
             dnl For these providers, we don't know exactly which capabilities we
@@ -253,6 +258,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 enable_verbs="yes"
                 enable_rxm="yes"
                 ;;
+            "cxi")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_CXI], [1], [Define to use cxi capability set])
+                enable_cxi="yes"
+                ;;
             *)
                 AC_MSG_WARN("Invalid provider $netmod_args")
         esac
@@ -286,6 +295,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             prov_config="$prov_config --enable-mrail=${enable_mrail}"
             prov_config="$prov_config --enable-efa=${enable_efa}"
             prov_config="$prov_config --enable-netdir=${enable_netdir}"
+            prov_config="$prov_config --enable-cxi=${enable_cxi}"
         fi
 
         if test "x${ofi_direct_provider}" != "x" ; then

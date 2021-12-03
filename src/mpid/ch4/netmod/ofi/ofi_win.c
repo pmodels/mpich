@@ -158,7 +158,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
         /* device buffers are not currently supported */
         if (MPIR_GPU_query_pointer_is_dev(base))
             rc = -1;
-        else
+        else {
             MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[ctx_idx].domain,       /* In:  Domain Object */
                                             base,       /* In:  Lower memory address */
                                             len,        /* In:  Length              */
@@ -168,6 +168,10 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
                                             0ULL,       /* In:  flags               */
                                             &MPIDI_OFI_WIN(win).mr,     /* Out: memregion object    */
                                             NULL), rc); /* In:  context             */
+            mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], MPIDI_OFI_WIN(win).mr,
+                                          MPIDI_OFI_WIN(win).ep, MPIDI_OFI_WIN(win).cmpl_cntr);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     } else if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
         /* We may still do native atomics with collective attach, let's load acc_hint */
         load_acc_hint(win);
@@ -907,7 +911,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     /* device buffers are not currently supported */
     if (MPIR_GPU_query_pointer_is_dev(base))
         rc = -1;
-    else
+    else {
         MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[ctx_idx].domain,   /* In:  Domain Object */
                                         base,   /* In:  Lower memory address */
                                         size,   /* In:  Length              */
@@ -917,6 +921,10 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
                                         0ULL,   /* In:  flags               */
                                         &mr,    /* Out: memregion object    */
                                         NULL), rc);     /* In:  context             */
+        mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], MPIDI_OFI_WIN(win).mr,
+                                      MPIDI_OFI_WIN(win).ep, MPIDI_OFI_WIN(win).cmpl_cntr);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     /* Check if any process fails to register. If so, release local MR and force AM path. */
     MPIR_Allreduce(&rc, &allrc, 1, MPI_INT, MPI_MIN, comm_ptr, &errflag);
