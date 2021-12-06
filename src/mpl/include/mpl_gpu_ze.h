@@ -21,5 +21,6 @@ typedef ze_alloc_attr_t MPL_gpu_device_attr;
 /* ZE specific function */
 int MPL_ze_init_device_fds(int *num_fds, int *device_fds);
 void MPL_ze_set_fds(int num_fds, int *fds);
+void MPL_ze_ipc_remove_cache_handle(void *dptr);
 
 #endif /* ifndef MPL_GPU_ZE_H_INCLUDED */
