@@ -16,6 +16,20 @@ int main(int argc, char **argv)
     MPIX_GPU_query_support(MPIX_GPU_SUPPORT_ZE, &ze_support);
     MPIX_GPU_query_support(MPIX_GPU_SUPPORT_HIP, &hip_support);
 
+    if (cuda_support != MPIX_Query_cuda_support()) {
+        printf("MPIX_Query_cuda_support() return disagree with MPIX_GPU_query_support\n");
+        errors++;
+    }
+
+    if (ze_support != MPIX_Query_ze_support()) {
+        printf("MPIX_Query_ze_support() return disagree with MPIX_GPU_query_support\n");
+        errors++;
+    }
+
+    if (hip_support != MPIX_Query_hip_support()) {
+        printf("MPIX_Query_hip_support() return disagree with MPIX_GPU_query_support\n");
+        errors++;
+    }
 #if defined(HAVE_CUDA)
     if (!cuda_support) {
         printf("Expect cuda support but not found!\n");
