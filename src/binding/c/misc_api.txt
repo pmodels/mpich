@@ -171,7 +171,7 @@ MPIX_Query_cuda_support:
     int mpi_errno ATTRIBUTE((unused));
 
     mpi_errno = PMPIX_GPU_query_support(MPIX_GPU_SUPPORT_CUDA, &is_supported);
-    assert(mpi_errno);
+    assert(mpi_errno == MPI_SUCCESS);
 
     return is_supported;
 }
@@ -185,7 +185,7 @@ MPIX_Query_ze_support:
     int mpi_errno ATTRIBUTE((unused));
 
     mpi_errno = PMPIX_GPU_query_support(MPIX_GPU_SUPPORT_ZE, &is_supported);
-    assert(mpi_errno);
+    assert(mpi_errno == MPI_SUCCESS);
 
     return is_supported;
 }
