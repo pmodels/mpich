@@ -404,6 +404,9 @@ else
     fi
 fi
 
+# Make sure we export CC before configuring DTPools, since MPI is
+# needed to build the library.
+export CC
 PAC_CONFIG_SUBDIR_ARGS([dtpools])
 
 # Running C compiler tests
