@@ -1146,6 +1146,7 @@
 /impls/mpich/comm/testlist
 /impls/mpich/mpi_t/collparmt
 /impls/mpich/mpi_t/recvq_events
+/impls/mpich/misc/gpu_query
 /impls/mpich/testlist
 /impls/testlist
 /include/mtest_mpix.h
@@ -1211,7 +1212,6 @@
 /maint/testmerge
 /maint/updatefiles
 /manual/dimsbalanced
-/manual/gpu_query
 /manual/manyconnect
 /manual/mpi_t/mpit_test
 /manual/mpi_t/mpit_test2
