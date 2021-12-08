@@ -51,7 +51,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 }
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__TAG
-#error "MPICH_VCI__TAG not implemented."
 /* A way to allow explicit vci by user, based on (undocumented) convention.
    Embed src_vci and dst_vci inside tag, 5 bits each
    NOTE: this serve as temporary replacement for explicit scheme (until mpi-layer api adds support).
