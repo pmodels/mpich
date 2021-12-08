@@ -156,6 +156,11 @@ MPIX_GPU_query_support:
                     *is_supported = 1;
                 break;
 
+            case MPIX_GPU_SUPPORT_HIP:
+                if (type == MPL_GPU_TYPE_HIP)
+                    *is_supported = 1;
+                break;
+
             default:
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_ARG, "**badgputype");
         }
@@ -171,7 +176,7 @@ MPIX_Query_cuda_support:
     int mpi_errno ATTRIBUTE((unused));
 
     mpi_errno = PMPIX_GPU_query_support(MPIX_GPU_SUPPORT_CUDA, &is_supported);
-    assert(mpi_errno);
+    assert(mpi_errno == MPI_SUCCESS);
 
     return is_supported;
 }
@@ -185,7 +190,21 @@ MPIX_Query_ze_support:
     int mpi_errno ATTRIBUTE((unused));
 
     mpi_errno = PMPIX_GPU_query_support(MPIX_GPU_SUPPORT_ZE, &is_supported);
-    assert(mpi_errno);
+    assert(mpi_errno == MPI_SUCCESS);
+
+    return is_supported;
+}
+
+MPIX_Query_hip_support:
+    .desc: Returns whether HIP (AMD GPU) is supported
+    .impl: direct
+    .skip: global_cs, Errors
+{
+    int is_supported = 0;
+    int mpi_errno ATTRIBUTE((unused));
+
+    mpi_errno = PMPIX_GPU_query_support(MPIX_GPU_SUPPORT_HIP, &is_supported);
+    assert(mpi_errno == MPI_SUCCESS);
 
     return is_supported;
 }
