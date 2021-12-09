@@ -121,6 +121,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
 {
     int i, same_disp, mpi_errno = MPI_SUCCESS;
     uint32_t first;
+    uint64_t local_key = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm *comm_ptr = win->comm_ptr;
     MPIDI_OFI_win_targetinfo_t *winfo;
@@ -129,8 +130,32 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     MPIR_FUNC_ENTER;
 
     if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-        MPIDI_OFI_WIN(win).mr_key = MPIDI_OFI_WIN(win).win_id;
+        if (MPIDIG_WIN(win, info_args).optimized_mr &&
+            MPIDIG_WIN(win, info_args).accumulate_ordering == 0) {
+            /* accumulate_ordering must be set to zero to support creation of optimized
+             * memory region for use with lower-overhead, unordered RMA operations.
+             * Attempting to create an optimized memory region key. Gets the next MR key that's
+             * available to the processes involved in the RMA window. Use the current maximum + 1
+             * to ensure that the key is available for all processes. */
+            mpi_errno = MPIR_Allreduce(&MPIDI_OFI_global.global_max_optimized_mr_key, &local_key, 1,
+                                       MPI_UNSIGNED, MPI_MAX, comm_ptr, &errflag);
+            MPIR_ERR_CHECK(mpi_errno);
+
+            if (local_key + 1 < MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS) {
+                MPIDI_OFI_global.global_max_optimized_mr_key = local_key + 1;
+                MPIDI_OFI_WIN(win).mr_key = local_key;
+            }
+        }
+        /* Assign regular memory registration key if the optimized one is
+         * not requested or exhausted */
+        if (local_key + 1 >= MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS ||
+            !MPIDIG_WIN(win, info_args).optimized_mr) {
+            /* Makes sure that regular mr key does not fall within optimized mr key range */
+            MPIDI_OFI_WIN(win).mr_key =
+                MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS + MPIDI_OFI_WIN(win).win_id;
+        }
     } else {
+        /* Expect provider to assign the key */
         MPIDI_OFI_WIN(win).mr_key = 0;
     }
 
