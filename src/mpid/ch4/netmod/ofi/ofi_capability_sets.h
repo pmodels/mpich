@@ -129,6 +129,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_PSM2       MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_HMEM_PSM2               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_PSM2            MPIDI_OFI_MAX_NUM_AM_BUFFERS
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_PSM2 (0)
 #define MPIDI_OFI_CONTEXT_BITS_PSM2              (20)
 #define MPIDI_OFI_SOURCE_BITS_PSM2               (0)
 #define MPIDI_OFI_TAG_BITS_PSM2                  (31)
@@ -156,6 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_PSM2
 #define MPIDI_OFI_ENABLE_HMEM               MPIDI_OFI_ENABLE_HMEM_PSM2
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_PSM2
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_PSM2
 #define MPIDI_OFI_PROTOCOL_MASK             (0x00E0000000000000ULL)
 #define MPIDI_OFI_CONTEXT_MASK              (0x000FFFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* PSM2 does support immediate data
@@ -192,6 +194,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_SOCKETS       MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_HMEM_SOCKETS               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_SOCKETS            MPIDI_OFI_MAX_NUM_AM_BUFFERS
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_SOCKETS  (0)
 #define MPIDI_OFI_CONTEXT_BITS_SOCKETS              (20)
 #define MPIDI_OFI_SOURCE_BITS_SOCKETS               (0)
 #define MPIDI_OFI_TAG_BITS_SOCKETS                  (31)
@@ -219,6 +222,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_SOCKETS
 #define MPIDI_OFI_ENABLE_HMEM               MPIDI_OFI_ENABLE_HMEM_SOCKETS
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_SOCKETS
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_SOCKETS
 #define MPIDI_OFI_PROTOCOL_MASK             (0x00E0000000000000ULL)
 #define MPIDI_OFI_CONTEXT_MASK              (0x000FFFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* Sockets does support immediate data
@@ -255,6 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_BGQ       MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_HMEM_BGQ               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_BGQ            MPIDI_OFI_MAX_NUM_AM_BUFFERS
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_BGQ  (0)
 #define MPIDI_OFI_CONTEXT_BITS_BGQ              (20)
 #define MPIDI_OFI_SOURCE_BITS_BGQ               (0)
 #define MPIDI_OFI_TAG_BITS_BGQ                  (31)
@@ -282,6 +287,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_BGQ
 #define MPIDI_OFI_ENABLE_HMEM               MPIDI_OFI_ENABLE_HMEM_BGQ
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_BGQ
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_BGQ
 #define MPIDI_OFI_PROTOCOL_MASK             (0x00E0000000000000ULL)
 #define MPIDI_OFI_CONTEXT_MASK              (0x000FFFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* BGQ does support immediate data
@@ -319,6 +325,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_CXI           MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_HMEM_CXI                   MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_CXI                MPIDI_OFI_MAX_NUM_AM_BUFFERS
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_CXI  (0) /* This will be added to the CXI provider as
+                                                         * RMA support is fixed. */
 #define MPIDI_OFI_CONTEXT_BITS_CXI                  (20)
 #define MPIDI_OFI_SOURCE_BITS_CXI                   (0)
 #define MPIDI_OFI_TAG_BITS_CXI                      (20)        /* The CXI provider has a smaller tag space
@@ -393,6 +401,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_RXM          MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_HMEM_RXM                  MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_RXM               MPIDI_OFI_MAX_NUM_AM_BUFFERS
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_RXM (0)
 #define MPIDI_OFI_CONTEXT_BITS_RXM                 (20)
 #define MPIDI_OFI_SOURCE_BITS_RXM                  (0)
 #define MPIDI_OFI_TAG_BITS_RXM                     (31)
@@ -419,6 +428,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK           MPIDI_OFI_ENABLE_PT2PT_NOPACK_RXM
 #define MPIDI_OFI_ENABLE_HMEM                   MPIDI_OFI_ENABLE_HMEM_RXM
 #define MPIDI_OFI_NUM_AM_BUFFERS                MPIDI_OFI_NUM_AM_BUFFERS_RXM
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_RXM
 #define MPIDI_OFI_PROTOCOL_MASK                 (0x00E0000000000000ULL)
 #define MPIDI_OFI_CONTEXT_MASK                  (0x000FFFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK                   (0x0000000000000000ULL) /* RxM does support immediate data
@@ -455,6 +465,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_VERBS_RXM       MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_HMEM_VERBS_RXM               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_VERBS_RXM            MPIDI_OFI_MAX_NUM_AM_BUFFERS
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_VERBS_RXM  (0)
 #define MPIDI_OFI_CONTEXT_BITS_VERBS_RXM              (20)
 #define MPIDI_OFI_SOURCE_BITS_VERBS_RXM               (0)
 #define MPIDI_OFI_TAG_BITS_VERBS_RXM                  (31)
@@ -483,6 +494,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_VERBS_RXM
 #define MPIDI_OFI_ENABLE_HMEM               MPIDI_OFI_ENABLE_HMEM_VERBS_RXM
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_VERBS_RXM
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_VERBS_RXM
 #define MPIDI_OFI_PROTOCOL_MASK             (0x00E0000000000000ULL)
 #define MPIDI_OFI_CONTEXT_MASK              (0x000FFFF000000000ULL)
 #define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* verbs;ofi_rxm does support immediate data
@@ -585,6 +597,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_DEFAULT       MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_HMEM_DEFAULT               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_DEFAULT            MPIDI_OFI_MAX_NUM_AM_BUFFERS
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_DEFAULT  0
 #define MPIDI_OFI_PROTOCOL_MASK_DEFAULT             (0x00E0000000000000ULL)
 #define MPIDI_OFI_CONTEXT_MASK_DEFAULT              (0x000FFFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK_DEFAULT               (0x0000000000000000ULL)     /* We require support for immediate data
@@ -620,6 +633,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_MINIMAL       MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_HMEM_MINIMAL               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_MINIMAL            MPIDI_OFI_MAX_NUM_AM_BUFFERS
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_MINIMAL  0
 #define MPIDI_OFI_PROTOCOL_MASK_MINIMAL             (0xE000000000000000ULL)     /* This will be a problem for providers that require all 64 match bits. */
 #define MPIDI_OFI_CONTEXT_MASK_MINIMAL              (0x0FFFF00000000000ULL)
 #define MPIDI_OFI_SOURCE_MASK_MINIMAL               (0x00000FFFFFF00000ULL)     /* assume that provider does not support immediate data
@@ -658,6 +672,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_global.settings.enable_pt2pt_nopack
 #define MPIDI_OFI_ENABLE_HMEM               MPIDI_OFI_global.settings.enable_hmem
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_global.settings.num_am_buffers
+#define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_global.settings.num_optimized_memory_regions
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_global.settings.context_bits
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_global.settings.source_bits
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_global.settings.tag_bits
