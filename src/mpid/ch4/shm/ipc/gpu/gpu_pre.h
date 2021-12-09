@@ -21,7 +21,6 @@ typedef struct MPIDI_GPU_ipc_handle {
     int node_rank;
     uintptr_t offset;
     int handle_status;
-    uintptr_t mem_id;
 } MPIDI_GPU_ipc_handle_t;
 
 #endif /* GPU_PRE_H_INCLUDED */

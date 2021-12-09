@@ -79,8 +79,9 @@ int MPL_gpu_free(void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_init(void)
+int MPL_gpu_init(MPL_gpu_info_t * info)
 {
+    info->specialized_cache = false;
     return MPL_SUCCESS;
 }
 

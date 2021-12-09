@@ -31,10 +31,6 @@ static int gpu_mem_hook_init();
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
 {
     int ret = MPL_SUCCESS;
-    if (!gpu_initialized) {
-        ret = MPL_gpu_init();
-    }
-
     *dev_cnt = device_count;
     *dev_id = max_dev_id;
     *subdevice_id = 0;
@@ -215,11 +211,13 @@ int MPL_gpu_free(void *ptr)
     goto fn_exit;
 }
 
-int MPL_gpu_init(void)
+int MPL_gpu_init(MPL_gpu_info_t * info)
 {
     int mpl_err = MPL_SUCCESS;
     hipError_t ret = hipGetDeviceCount(&device_count);
     HIP_ERR_CHECK(ret);
+
+    info->specialized_cache = false;
 
     char *visible_devices = getenv("HIP_VISIBLE_DEVICES");
     if (visible_devices) {

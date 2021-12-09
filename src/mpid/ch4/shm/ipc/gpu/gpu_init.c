@@ -42,7 +42,7 @@ static void ipc_handle_free_hook(void *dptr)
 
     MPIR_FUNC_ENTER;
 
-    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
+    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic) {
         mpl_err = MPL_gpu_get_buffer_bounds(dptr, &pbase, &len);
         MPIR_Assert(mpl_err == MPL_SUCCESS);
 
