@@ -97,6 +97,7 @@ int MPL_gpu_free(void *ptr)
 int MPL_gpu_init(MPL_gpu_info_t * info)
 {
     info->enable_ipc = false;
+    info->specialized_cache = false;
     return MPL_SUCCESS;
 }
 

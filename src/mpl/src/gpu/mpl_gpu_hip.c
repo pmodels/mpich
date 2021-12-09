@@ -267,6 +267,7 @@ int MPL_gpu_init(MPL_gpu_info_t * info)
     HIP_ERR_CHECK(ret);
 
     info->enable_ipc = true;
+    info->specialized_cache = false;
 
     char *visible_devices = getenv("HIP_VISIBLE_DEVICES");
     if (visible_devices) {
