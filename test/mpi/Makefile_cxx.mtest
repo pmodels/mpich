@@ -24,7 +24,7 @@ $(top_builddir)/dtpools/src/.libs/libdtpools.la:
 	(cd $(top_builddir)/dtpools && $(MAKE))
 
 testing:
-	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=testlist,testlist.dtp \
+	$(top_srcdir)/runtests -srcdir=$(srcdir) -tests=testlist,testlist.dtp \
 		-mpiexec=${MPIEXEC} -xmlfile=summary.xml
 
 CLEANFILES = summary.xml summary.tap

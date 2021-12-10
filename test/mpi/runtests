@@ -1,4 +1,4 @@
-#! @PERL@
+#!/usr/bin/env perl
 ##
 ## Copyright (C) by Argonne National Laboratory
 ##     See COPYRIGHT in top-level directory
@@ -56,6 +56,9 @@ $g_opt->{memory_multiplier} = 1;  # No of simutaneous jobs
 $g_opt->{cleanup} = 1;            # Whether to remove the compiled programs
 $g_opt->{start_time} = time();    # So we can track accumulative test duration
 $g_opt->{has_gpu_test} = 0;       # will set MPIR_CVAR_ENABLE_GPU for optimizations
+$g_opt->{strict} = 0;             # will skip tests marked as "strict=false"
+$g_opt->{runxfail} = 0;           # will run xfailed tests
+$g_opt->{exeext} = "";
 
 # Total number of tests checked and run
 our $g_total_run = 0;
@@ -66,7 +69,7 @@ our $g_total_seen = 0;
 our $g_num_timeout;
 our $g_num_timeout_thresh = 5;
 
-$mpiexec = "@MPIEXEC@";    # Name of mpiexec program (including path, if necessary)
+$mpiexec = "mpiexec";    # Name of mpiexec program (including path, if necessary)
 # ppnMax is the maximum number of processes per node.  -1 means ignore.
 # ppnArg is the argument to use to mpiexec - format is "string%d"; e.g.,
 # "-ppn %d"
@@ -76,9 +79,6 @@ $ppnMax  = -1;
 # in seconds.  The format is "string%d", e.g., "-t %d" for Cray aprun
 $timelimitArg="";
 #
-$testIsStrict = "@MPI_IS_STRICT@";
-$MPIhasMPIX   = "@MPI_HAS_MPIX@";
-$runxfail     = "@RUN_XFAIL@";
 $np_arg  = "-n";         # Name of argument to specify the number of processes
 $err_count = 0;          # Number of programs that failed.
 $skip_count = 0;         # Number of programs skipped
@@ -225,6 +225,8 @@ foreach $_ (@ARGV) {
     elsif (/--?batchdir=(.*)/) { $batrundir = $1; }
     elsif (/--?batch/) { $batchRun = 1; }
     elsif (/--?timeoutarg=(.*)/) { $timeoutArgPattern = $1; }
+    elsif (/--?strict/) { $g_opt->{strict} = 1; }
+    elsif (/--?runxfail/) { $g_opt->{runxfail} = 1; }
     elsif (/--?xmlfile=(.*)/) {
         $xmlfile   = $1;
         if (! ($xmlfile =~ /^\//)) {
@@ -245,7 +247,6 @@ foreach $_ (@ARGV) {
         print XMLOUT "<?xml-stylesheet href=\"TestResults.xsl\" type=\"text/xsl\" ?>$newline";
         print XMLOUT "<MPITESTRESULTS>$newline";
         print XMLOUT "<DATE>$date</DATE>$newline";
-        print XMLOUT "<MPISOURCE>@MPI_SOURCE@</MPISOURCE>$newline";
     }
     elsif (/--?noxmlclose/) {
         $closeXMLOutput = 0;
@@ -545,21 +546,21 @@ sub RunList {
 
             # Check whether strict is required by MPI but not by the
             # test (use strict=false for tests that use non-standard extensions)
-            if (lc($requiresStrict) eq "false" && lc($testIsStrict) eq "true") {
+            if (lc($requiresStrict) eq "false" && $g_opt->{strict}) {
                 unless (-d $programname) {
                     SkippedTest($programname, $np, $test_opt, $curdir, "non-strict test, strict MPI mode requested");
                 }
                 next;
             }
 
-            if (lc($testIsStrict) eq "true") {
+            if ($g_opt->{strict}) {
                 # Strict MPI testing was requested, so assume that a non-MPICH MPI
                 # implementation is being tested and the "xfail" implementation
                 # assumptions do not hold.
                 delete($test_opt->{xfail});
             }
 
-            if ($test_opt->{xfail} && $runxfail eq "false") {
+            if ($test_opt->{xfail} && !$g_opt->{runxfail}) {
                 # Skip xfail tests if they are not configured. Strict MPI tests that are
                 # marked xfail will still run with --enable-strictmpi.
                 unless (-d $programname) {
@@ -971,6 +972,10 @@ sub AddMPIProgram {
 # Return value is 0 on success, non zero on failure
 sub BuildMPIProgram {
     my ($programname, $test_opt) = @_;
+    # whether we need append '.exe'
+    if ($g_opt->{exeext}) {
+        $programname .= $g_opt->{exeext};
+    }
 
     my $rc = 0;
     if ($verbose) { print STDERR "making $programname\n"; }
@@ -979,7 +984,7 @@ sub BuildMPIProgram {
     } else {
         $test_opt->{need_remove} = 0;
     }
-    my $output = `make $programname@EXEEXT@ 2>&1`;
+    my $output = `make $programname 2>&1`;
     $rc = $?;
     if ($rc > 255) { $rc >>= 8; }
     if (! -x $programname) {
