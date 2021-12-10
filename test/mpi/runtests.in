@@ -495,7 +495,6 @@ sub RunList {
             my $programname = $args[0];
             my $np = "";
             my $requiresStrict = "";
-            my $requiresMPIX   = "";
 
             if ($#args >= 1) { $np = $args[1]; }
             # Process the key=value arguments
@@ -517,9 +516,6 @@ sub RunList {
                     }
                     elsif ($key eq "strict") {
                         $requiresStrict = $value
-                    }
-                    elsif ($key eq "mpix") {
-                        $requiresMPIX = $value
                     }
                     else {
                         print STDERR "Unrecognized key $key in $listfileSource\n";
@@ -568,13 +564,6 @@ sub RunList {
                 # marked xfail will still run with --enable-strictmpi.
                 unless (-d $programname) {
                     SkippedTest($programname, $np, $test_opt, $curdir, "xfail tests disabled");
-                }
-                next;
-            }
-
-            if (lc($requiresMPIX) eq "true" && lc($MPIHasMPIX) eq "no") {
-                unless (-d $programname) {
-                    SkippedTest($programname, $np, $test_opt, $curdir, "tests MPIX extensions, MPIX testing disabled");
                 }
                 next;
             }
