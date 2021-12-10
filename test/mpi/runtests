@@ -59,6 +59,7 @@ $g_opt{has_gpu_test} = 0;       # will set MPIR_CVAR_ENABLE_GPU for optimization
 $g_opt{strict} = 0;             # will skip tests marked as "strict=false"
 $g_opt{runxfail} = 0;           # will run xfailed tests
 $g_opt{exeext} = "";
+$g_opt{mpiexec} = "mpiexec";    # Name of mpiexec program (including path, if necessary)
 
 # Total number of tests checked and run
 our $g_total_run = 0;
@@ -69,7 +70,6 @@ our $g_total_seen = 0;
 our $g_num_timeout;
 our $g_num_timeout_thresh = 5;
 
-$mpiexec = "mpiexec";    # Name of mpiexec program (including path, if necessary)
 # ppnMax is the maximum number of processes per node.  -1 means ignore.
 # ppnArg is the argument to use to mpiexec - format is "string%d"; e.g.,
 # "-ppn %d"
@@ -209,7 +209,7 @@ foreach $_ (@ARGV) {
     if (/--?mpiexec=(.*)/) { 
         # Use mpiexec as given - it may be in the path, and 
         # we don't want to bother to try and find it.
-        $mpiexec = $1; 
+        $g_opt{mpiexec} = $1;
     }
     elsif (/--?np=(\d+)/)   { $np_default = $1; }
     elsif (/--?maxnp=(\d+)/) { $np_max = $1; }
@@ -302,13 +302,6 @@ if ($batchRun) {
         mkpath $batrundir || die "Could not create $batrundir\n";
     }
     open( BATOUT, ">$batrundir/runtests.batch" ) || die "Could not open $batrundir/runtests.batch\n";
-}
-else {
-    # We must have mpiexec
-    if ("$mpiexec" eq "") {
-        print STDERR "No mpiexec found!\n";
-        exit(1);
-    }
 }
 
 #
@@ -769,8 +762,9 @@ sub RunMPIProgram {
         }
     }
 
+    my $cmd = "$g_opt{mpiexec} $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs";
     print STDOUT "Env includes $progEnv\n" if $verbose;
-    print STDOUT "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs\n" if $verbose;
+    print STDOUT "$cmd\n" if $verbose;
     print STDOUT "." if $showProgress;
     # Save and restore the environment if necessary before running mpiexec.
     my %saveEnv;
@@ -786,7 +780,7 @@ sub RunMPIProgram {
         }
     }
     my $start_time = gettimeofday();
-    open ( MPIOUT, "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs 2>&1 |" ) ||
+    open ( MPIOUT, "$cmd 2>&1 |" ) ||
         die "Could not run ./$programname\n";
     if ($test_opt->{envs}) {    
         %ENV = %saveEnv;
@@ -808,7 +802,7 @@ sub RunMPIProgram {
     }
     else {
         if ($verbose) {
-            $inline = "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname\n";
+            $inline = "$cmd\n";
         }
         else {
             $inline = "";
@@ -944,8 +938,9 @@ sub AddMPIProgram {
     }
 
 
+    my $cmd = "$g_opt{mpiexec} $np_arg $np $extraArgs $program_wrapper ./$programname $progArgs";
     print STDOUT "Env includes $progEnv\n" if $verbose;
-    print STDOUT "$mpiexec $np_arg $np $extraArgs $program_wrapper ./$programname $progArgs\n" if $verbose;
+    print STDOUT "$cmd\n" if $verbose;
     print STDOUT "." if $showProgress;
     # Save and restore the environment if necessary before running mpiexec.
     if ($progEnv ne "") {
@@ -962,9 +957,9 @@ sub AddMPIProgram {
     # and ensure that the output goes "into the right place".
     $testCount++;
     rename $programname, "$batrundir/$programname";
-    print BATOUT "echo \"# $mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper $curdir/$programname $progArgs\" > runtests.$testCount.out\n";
+    print BATOUT "echo \"# $cmd\" > runtests.$testCount.out\n";
     # Some programs expect to run in the same directory as the executable
-    print BATOUT "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs >> runtests.$testCount.out 2>&1\n";
+    print BATOUT "$cmd >> runtests.$testCount.out 2>&1\n";
     print BATOUT "echo \$? > runtests.$testCount.status\n";
 }
 
@@ -1101,7 +1096,7 @@ sub TestStatus {
             $found_error = 1;
             $err_count ++;
         }
-        $inline .= "$mpiexec returned a zero status but the program returned a nonzero status\n";
+        $inline .= "$g_opt{mpiexec} returned a zero status but the program returned a nonzero status\n";
     }
     return ($found_error,$inline);
 }
@@ -1153,7 +1148,7 @@ sub TestStatusNoErrors {
             $found_error = 1;
             $err_count ++;
         }
-        $inline .= "$mpiexec returned a zero status but the program required a non-zero status\n";
+        $inline .= "$g_opt{mpiexec} returned a zero status but the program required a non-zero status\n";
     }
     return ($found_error,$inline);
 }
@@ -1185,7 +1180,7 @@ sub TestErrFatal {
             $found_error = 1;
             $err_count ++;
         }
-        $inline .= "$mpiexec returned a zero status but the program returned a nonzero status\n";
+        $inline .= "$g_opt{mpiexec} returned a zero status but the program returned a nonzero status\n";
     }
     return ($found_error,$inline);
 }
