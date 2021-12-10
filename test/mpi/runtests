@@ -517,6 +517,14 @@ sub RunList {
                 }
             }
 
+            # Set a default timeout on tests (3 minutes for now)
+            my $timeout = $defaultTimeLimit;
+            if (defined($test_opt->{timeLimit}) && $test_opt->{timeLimit} =~ /^\d+$/) {
+                $timeout = $test_opt->{timeLimit};
+            }
+            $timeout *= $defaultTimeLimitMultiplier;
+            $test_opt->{_timeout} = $timeout;
+
             if (defined $test_opt->{xfail} and !$test_opt->{xfail}) {
                 print STDERR "\"xfail=\" requires an argument\n";
             }
@@ -676,6 +684,52 @@ sub ProcessImplicitList {
         close PGMS;
     }
 }
+
+sub get_mpiexec_wrapper {
+    my ($np, $test_opt) = @_;
+
+    my $progArgs = join(' ', @{$test_opt->{args}});
+    my $mpiexecArgs = join(' ', @{$test_opt->{mpiexecargs}});
+    if (!$mpiexecArgs and $g_opt{mpiexecargs}) {
+        $mpiexecArgs = $g_opt{mpiexecargs};
+    }
+    my $extraArgs = "";
+
+    #
+    # Handle the ppn (processes per node) option.
+    if ($ppnArg ne "" && $ppnMax > 0) {
+        my $ppnargs = $ppnArg;
+        $nn = $ppnMax;
+        # Some systems require setting the number of processes per node
+        # no greater than the total number of processes (e.g., aprun on Cray)
+        if ($nn > $np) { $nn = $np; }
+        $ppnargs =~ s/\%d/$nn/;
+        $extraArgs .= " " . $ppnargs;
+    }
+
+    my $timeout = $test_opt->{_timeout};
+
+    # For non-MPICH versions of mpiexec, a timeout may require a different
+    # environment variable or command line option (e.g., for Cray aprun,
+    # the option -t <sec> must be given, there is no environment variable
+    # to set the timeout.
+    if (defined($timeoutArgPattern) && $timeoutArgPattern ne "") {
+        my $timeArg = $timeoutArgPattern;
+        $timeoutArg =~ s/<SEC>/$timeout/;
+        $extraArgs .= $timeoutArg
+    }
+
+    #
+    # Handle the timelimit option.
+    if ($timelimitArg ne "" && $timeout> 0) {
+        my $tlargs = $timelimitArg;
+        $tlargs =~ s/\%d/$timeout/;
+        $extraArgs .= " " . $tlargs;
+    }
+
+    return "$g_opt{mpiexec} $np_arg $np $extraArgs $mpiexecArgs $program_wrapper";
+}
+
 # Run the program.  
 # ToDo: Add a way to limit the time that any particular program may run.
 # The arguments are
@@ -685,51 +739,17 @@ sub ProcessImplicitList {
 # return status is 0 and that the output is " No Errors" is used.
 sub RunMPIProgram {
     my ($programname,$np,$test_opt) = @_;
-    my $progArgs = join(' ', @{$test_opt->{args}});
-    my $progEnv = join(' ', @{$test_opt->{envs}});
-    my $mpiexecArgs = join(' ', @{$test_opt->{mpiexecargs}});
-    if (!$mpiexecArgs and $g_opt{mpiexecargs}) {
-        $mpiexecArgs = $g_opt{mpiexecargs};
-    }
 
     my $found_error   = 0;
     my $found_noerror = 0;
     my $inline = "";
-    my $extraArgs = "";
     my $runtime = 0;
 
     &RunPreMsg( $programname, $np, $test_opt, $curdir );
 
     unlink "err";
 
-    # Set a default timeout on tests (3 minutes for now)
-    my $timeout = $defaultTimeLimit;
-    if (defined($test_opt->{timeLimit}) && $test_opt->{timeLimit} =~ /^\d+$/) {
-        $timeout = $test_opt->{timeLimit};
-    }
-    $timeout *= $defaultTimeLimitMultiplier;
-    $test_opt->{_timeout} = $timeout;
-    $ENV{"MPIEXEC_TIMEOUT"} = $timeout;
-
-    # Handle the ppn (processes per node) option.
-    $ppnargs = "";
-    if ($ppnArg ne "" && $ppnMax > 0) {
-        $ppnargs = $ppnArg;
-        $nn = $ppnMax;
-        # Some systems require setting the number of processes per node
-        # no greater than the total number of processes (e.g., aprun on Cray)
-        if ($nn > $np) { $nn = $np; }
-        $ppnargs =~ s/\%d/$nn/;
-        $extraArgs .= " " . $ppnargs;
-    }
-
-    # Handle the timelimit option.
-    if ($timelimitArg ne "" && $timeout> 0) {
-        $tlargs = "";
-        $tlargs = $timelimitArg;
-        $tlargs =~ s/\%d/$timeout/;
-        $extraArgs .= " " . $tlargs;
-    }
+    $ENV{"MPIEXEC_TIMEOUT"} = $test_opt->{_timeout};
 
     # Run the optional setup routine. For example, the timeout tests could
     # be set to a shorter timeout.
@@ -762,7 +782,9 @@ sub RunMPIProgram {
         }
     }
 
-    my $cmd = "$g_opt{mpiexec} $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs";
+    my $wrapper = get_mpiexec_wrapper($np, $test_opt);
+    my $cmd = "$wrapper ./$programname $progArgs";
+    my $progEnv = join(' ', @{$test_opt->{envs}});
     print STDOUT "Env includes $progEnv\n" if $verbose;
     print STDOUT "$cmd\n" if $verbose;
     print STDOUT "." if $showProgress;
@@ -860,7 +882,7 @@ sub RunMPIProgram {
     }
 
     if ($found_error) {
-        &RunTestFailed( $programname, $np, $test_opt, $timeout, $curdir, $inline, $runtime );
+        &RunTestFailed( $programname, $np, $test_opt, $curdir, $inline, $runtime );
     }
     else { 
         &RunTestPassed( $programname, $np, $test_opt, $curdir, $runtime );
@@ -872,9 +894,6 @@ sub RunMPIProgram {
 # into a file, and recording the output status of the run.
 sub AddMPIProgram {
     my ($programname,$np,$test_opt) = @_;
-    my $progArgs = join(' ', @{$test_opt->{args}});
-    my $progEnv = join(' ', @{$test_opt->{envs}});
-    my $mpiexecArgs = join(' ', @{$test_opt->{mpiexecargs}});
 
     if (! -x $programname) {
         print STDERR "Could not find $programname!";
@@ -888,16 +907,7 @@ sub AddMPIProgram {
         return;
     }
 
-    # Set a default timeout on tests (3 minutes for now)
-    my $timeout = $defaultTimeLimit;
-    if (defined($test_opt->{timeLimit}) && $test_opt->{timeLimit} =~ /^\d+$/) {
-        # On some systems, there is no effective time limit on 
-        # individual mpi program runs.  In that case, we may
-        # want to treat these also as "run manually".
-        $timeout = $test_opt->{timeLimit};
-    }
-    $timeout *= $defaultTimeLimitMultiplier;
-    print BATOUT "export MPIEXEC_TIMEOUT=$timeout\n";
+    print BATOUT "export MPIEXEC_TIMEOUT=$test_opt->{_timeout}\n";
     
     # Run the optional setup routine. For example, the timeout tests could
     # be set to a shorter timeout.
@@ -906,39 +916,9 @@ sub AddMPIProgram {
         $test_opt->{init}->();
     }
 
-    # For non-MPICH versions of mpiexec, a timeout may require a different
-    # environment variable or command line option (e.g., for Cray aprun, 
-    # the option -t <sec> must be given, there is no environment variable 
-    # to set the timeout.
-    $extraArgs = "";
-    if (defined($timeoutArgPattern) && $timeoutArgPattern ne "") {
-        my $timeArg = $timeoutArgPattern;
-        $timeoutArg =~ s/<SEC>/$timeout/;
-        $extraArgs .= $timeoutArg
-    }
-
-    # Handle the ppn (processes per node) option.
-    $ppnargs = "";
-    if ($ppnArg ne "" && $ppnMax > 0) {
-        $ppnargs = $ppnArg;
-        $nn = $ppnMax;
-        # Some systems require setting the number of processes per node
-        # no greater than the total number of processes (e.g., aprun on Cray)
-        if ($nn > $np) { $nn = $np; }
-        $ppnargs =~ s/\%d/$nn/;
-        $extraArgs .= " " . $ppnargs;
-    }
-
-    # Handle the timelimit option.
-    if ($timelimitArg ne "" && $timeout> 0) {
-        $tlargs = "";
-        $tlargs = $timelimitArg;
-        $tlargs =~ s/\%d/$timeout/;
-        $extraArgs .= " " . $tlargs;
-    }
-
-
-    my $cmd = "$g_opt{mpiexec} $np_arg $np $extraArgs $program_wrapper ./$programname $progArgs";
+    my $wrapper = get_mpiexec_wrapper($np, $test_opt);
+    my $cmd = "$wrapper ./$programname $progArgs";
+    my $progEnv = join(' ', @{$test_opt->{envs}});
     print STDOUT "Env includes $progEnv\n" if $verbose;
     print STDOUT "$cmd\n" if $verbose;
     print STDOUT "." if $showProgress;
@@ -992,7 +972,7 @@ sub BuildMPIProgram {
         # in the summary file (which is otherwise written by the
         # RunMPIProgram step)
         &RunPreMsg( $programname, $np, $test_opt, $curdir );
-        &RunTestFailed( $programname, $np, $test_opt, $timeout, $curdir, "Failed to build $programname; $output" );
+        &RunTestFailed( $programname, $np, $test_opt, $curdir, "Failed to build $programname; $output" );
         &RunPostMsg( $programname, $np, $test_opt, $curdir );
     }
     return $rc;
@@ -1225,7 +1205,7 @@ sub RunTestPassed {
     }
 }
 sub RunTestFailed {
-    my ($programname, $np, $test_opt, $timeout, $workdir, $output, $runtime) = @_;
+    my ($programname, $np, $test_opt, $workdir, $output, $runtime) = @_;
     my $progArgs = join(' ', @{$test_opt->{args}});
     my $progEnv = join(' ', @{$test_opt->{envs}});
 
@@ -1262,7 +1242,7 @@ sub RunTestFailed {
         print TAPOUT "  Directory: $workdir\n";
         print TAPOUT "  File: $programname\n";
         print TAPOUT "  Num-procs: $np\n";
-        print TAPOUT "  Timeout: $timeout\n";
+        print TAPOUT "  Timeout: $test_opt->{_timeout}\n";
         print TAPOUT "  Date: \"" . localtime() . "\"\n";
 
         # The following would be nice, but it leads to unfortunate formatting in
@@ -1305,7 +1285,7 @@ sub RunTestFailed {
         print JUNITOUT "  Directory: $workdir\n";
         print JUNITOUT "  File: $programname\n";
         print JUNITOUT "  Num-procs: $np\n";
-        print JUNITOUT "  Timeout: $timeout\n";
+        print JUNITOUT "  Timeout: $test_opt->{_timeout}\n";
         print JUNITOUT "  Date: \"" . localtime() . "\"\n";
 
         print JUNITOUT "  ...\n";
