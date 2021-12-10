@@ -50,15 +50,15 @@ use Time::HiRes qw(gettimeofday tv_interval);
 use Fcntl qw(:flock);
 
 # Global variables
-our $g_opt = {};   # global options. TODO: migrate global option vars into the hash
-$g_opt->{memory_total} = 20;      # Total memory in GB
-$g_opt->{memory_multiplier} = 1;  # No of simutaneous jobs
-$g_opt->{cleanup} = 1;            # Whether to remove the compiled programs
-$g_opt->{start_time} = time();    # So we can track accumulative test duration
-$g_opt->{has_gpu_test} = 0;       # will set MPIR_CVAR_ENABLE_GPU for optimizations
-$g_opt->{strict} = 0;             # will skip tests marked as "strict=false"
-$g_opt->{runxfail} = 0;           # will run xfailed tests
-$g_opt->{exeext} = "";
+our %g_opt;   # global options. TODO: migrate global option vars into the hash
+$g_opt{memory_total} = 20;      # Total memory in GB
+$g_opt{memory_multiplier} = 1;  # No of simutaneous jobs
+$g_opt{cleanup} = 1;            # Whether to remove the compiled programs
+$g_opt{start_time} = time();    # So we can track accumulative test duration
+$g_opt{has_gpu_test} = 0;       # will set MPIR_CVAR_ENABLE_GPU for optimizations
+$g_opt{strict} = 0;             # will skip tests marked as "strict=false"
+$g_opt{runxfail} = 0;           # will run xfailed tests
+$g_opt{exeext} = "";
 
 # Total number of tests checked and run
 our $g_total_run = 0;
@@ -162,7 +162,7 @@ if (defined($ENV{"MPITEST_TIMEOUT_MULTIPLIER"})) {
 for my $key ("memory_total", "memory_multiplier", "cleanup") {
     my $k = "MPITEST_".uc($key);
     if (defined($ENV{$k})) {
-        $g_opt->{$key} = $ENV{$k};
+        $g_opt{$key} = $ENV{$k};
     }
 }
 
@@ -199,7 +199,7 @@ if (defined($ENV{'MPITEST_TIMELIMITARG'})) {
     $timelimitArg = $ENV{'MPITEST_TIMELIMITARG'};
 }
 if (defined($ENV{'MPITEST_MPIEXECARG'})) {
-    $g_opt->{mpiexecargs} = $ENV{'MPITEST_MPIEXECARG'};
+    $g_opt{mpiexecargs} = $ENV{'MPITEST_MPIEXECARG'};
 }
 
 #---------------------------------------------------------------------------
@@ -225,8 +225,8 @@ foreach $_ (@ARGV) {
     elsif (/--?batchdir=(.*)/) { $batrundir = $1; }
     elsif (/--?batch/) { $batchRun = 1; }
     elsif (/--?timeoutarg=(.*)/) { $timeoutArgPattern = $1; }
-    elsif (/--?strict/) { $g_opt->{strict} = 1; }
-    elsif (/--?runxfail/) { $g_opt->{runxfail} = 1; }
+    elsif (/--?strict/) { $g_opt{strict} = 1; }
+    elsif (/--?runxfail/) { $g_opt{runxfail} = 1; }
     elsif (/--?xmlfile=(.*)/) {
         $xmlfile   = $1;
         if (! ($xmlfile =~ /^\//)) {
@@ -315,7 +315,7 @@ else {
 # Process any files
 
 if ($listfiles =~ /testlist\.gpu/) {
-    $g_opt->{has_gpu_test} = 1;
+    $g_opt{has_gpu_test} = 1;
 }
 
 if ($listfiles eq "") {
@@ -449,7 +449,7 @@ sub RunList {
             next;
         }
         # add a timestamp to have a quick idea of how long the tests ran
-        my @tm_list = gmtime(time() - $g_opt->{start_time});
+        my @tm_list = gmtime(time() - $g_opt{start_time});
         my $timestamp = sprintf("%02d:%02d:%02d", $tm_list[2], $tm_list[1], $tm_list[0]);
         print "Looking in $curdir/$_f \t[$timestamp]\n" if $debug;
         open( $LIST, "<$listfileSource" ) || die "Could not open $listfileSource\n";
@@ -485,7 +485,7 @@ sub RunList {
             # for examples of using the key=value form
             my @args = split(/\s+/,$_);
             my $test_opt = {args=>[], envs=>[], mpiexecargs=>[]};
-            if ($g_opt->{has_gpu_test}) {
+            if ($g_opt{has_gpu_test}) {
                 if ($_f ne "testlist.gpu") {
                     push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=0";
                 } else {
@@ -546,21 +546,21 @@ sub RunList {
 
             # Check whether strict is required by MPI but not by the
             # test (use strict=false for tests that use non-standard extensions)
-            if (lc($requiresStrict) eq "false" && $g_opt->{strict}) {
+            if (lc($requiresStrict) eq "false" && $g_opt{strict}) {
                 unless (-d $programname) {
                     SkippedTest($programname, $np, $test_opt, $curdir, "non-strict test, strict MPI mode requested");
                 }
                 next;
             }
 
-            if ($g_opt->{strict}) {
+            if ($g_opt{strict}) {
                 # Strict MPI testing was requested, so assume that a non-MPICH MPI
                 # implementation is being tested and the "xfail" implementation
                 # assumptions do not hold.
                 delete($test_opt->{xfail});
             }
 
-            if ($test_opt->{xfail} && !$g_opt->{runxfail}) {
+            if ($test_opt->{xfail} && !$g_opt{runxfail}) {
                 # Skip xfail tests if they are not configured. Strict MPI tests that are
                 # marked xfail will still run with --enable-strictmpi.
                 unless (-d $programname) {
@@ -695,8 +695,8 @@ sub RunMPIProgram {
     my $progArgs = join(' ', @{$test_opt->{args}});
     my $progEnv = join(' ', @{$test_opt->{envs}});
     my $mpiexecArgs = join(' ', @{$test_opt->{mpiexecargs}});
-    if (!$mpiexecArgs and $g_opt->{mpiexecargs}) {
-        $mpiexecArgs = $g_opt->{mpiexecargs};
+    if (!$mpiexecArgs and $g_opt{mpiexecargs}) {
+        $mpiexecArgs = $g_opt{mpiexecargs};
     }
 
     my $found_error   = 0;
@@ -759,10 +759,10 @@ sub RunMPIProgram {
     } elsif ($test_opt->{mem}) {
         # implicit lock by checking memory annotation
         $lockfile="/tmp/runtests-mem.lock";
-        if ($test_opt->{mem} > $g_opt->{memory_total}) {
+        if ($test_opt->{mem} > $g_opt{memory_total}) {
             SkippedTest($programname, $np, $test_opt, $curdir, "xfail due to memory requirement");
             next;
-        } elsif ($test_opt->{mem} * $g_opt->{memory_multiplier} > $g_opt->{memory_total} ) {
+        } elsif ($test_opt->{mem} * $g_opt{memory_multiplier} > $g_opt{memory_total} ) {
             $got_lock = get_lock($lockfile, LOCK_EX);
         } else {
             $got_lock = get_lock($lockfile, LOCK_SH);
@@ -973,8 +973,8 @@ sub AddMPIProgram {
 sub BuildMPIProgram {
     my ($programname, $test_opt) = @_;
     # whether we need append '.exe'
-    if ($g_opt->{exeext}) {
-        $programname .= $g_opt->{exeext};
+    if ($g_opt{exeext}) {
+        $programname .= $g_opt{exeext};
     }
 
     my $rc = 0;
@@ -1026,7 +1026,7 @@ sub CleanUpAfterRun {
         }
     }
     else {
-        if ($test_opt->{need_remove} && $g_opt->{cleanup}) {
+        if ($test_opt->{need_remove} && $g_opt{cleanup}) {
             unlink $programname, "$programname.o";
         }
         $test_opt->{need_remove} = 0;
