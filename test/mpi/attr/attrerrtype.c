@@ -11,22 +11,21 @@
   failure.
 
  */
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
 
-int test_attrs(void);
-void abort_msg(const char *, int);
-int copybomb_fn(MPI_Datatype, int, void *, void *, void *, int *);
-int deletebomb_fn(MPI_Datatype, int, void *, void *);
+#ifdef MULTI_TESTS
+#define run attr_attrerrtype
+int run(const char *arg);
+#endif
 
-int main(int argc, char **argv)
+static int test_attrs(void);
+static void abort_msg(const char *, int);
+static int copybomb_fn(MPI_Datatype, int, void *, void *, void *, int *);
+static int deletebomb_fn(MPI_Datatype, int, void *, void *);
+
+int run(const char *arg)
 {
-    int errs;
-    MTest_Init(&argc, &argv);
-    errs = test_attrs();
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return test_attrs();
 }
 
 /*
@@ -37,8 +36,8 @@ int main(int argc, char **argv)
  * Proposals to specify particular values (e.g., user's value) failed.
  */
 /* Return an error as the value */
-int copybomb_fn(MPI_Datatype oldtype, int keyval, void *extra_state,
-                void *attribute_val_in, void *attribute_val_out, int *flag)
+static int copybomb_fn(MPI_Datatype oldtype, int keyval, void *extra_state,
+                       void *attribute_val_in, void *attribute_val_out, int *flag)
 {
     /* Note that if (sizeof(int) < sizeof(void *), just setting the int
      * part of attribute_val_out may leave some dirty bits
@@ -51,7 +50,7 @@ int copybomb_fn(MPI_Datatype oldtype, int keyval, void *extra_state,
 static int delete_flag = 0;
 static int deleteCalled = 0;
 
-int deletebomb_fn(MPI_Datatype type, int keyval, void *attribute_val, void *extra_state)
+static int deletebomb_fn(MPI_Datatype type, int keyval, void *attribute_val, void *extra_state)
 {
     deleteCalled++;
     if (delete_flag)
@@ -59,13 +58,13 @@ int deletebomb_fn(MPI_Datatype type, int keyval, void *attribute_val, void *extr
     return MPI_ERR_OTHER;
 }
 
-void abort_msg(const char *str, int code)
+static void abort_msg(const char *str, int code)
 {
     fprintf(stderr, "%s, err = %d\n", str, code);
     MPI_Abort(MPI_COMM_WORLD, code);
 }
 
-int test_attrs(void)
+static int test_attrs(void)
 {
     MPI_Datatype dup_type, d2;
     int world_rank, world_size, key_1;

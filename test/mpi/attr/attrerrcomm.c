@@ -11,22 +11,21 @@
   failure.
 
  */
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
 
-int test_communicators(void);
-void abort_msg(const char *, int);
-int copybomb_fn(MPI_Comm, int, void *, void *, void *, int *);
-int deletebomb_fn(MPI_Comm, int, void *, void *);
+#ifdef MULTI_TESTS
+#define run attr_attrerrcomm
+int run(const char *arg);
+#endif
 
-int main(int argc, char **argv)
+static int test_communicators(void);
+static void abort_msg(const char *, int);
+static int copybomb_fn(MPI_Comm, int, void *, void *, void *, int *);
+static int deletebomb_fn(MPI_Comm, int, void *, void *);
+
+int run(const char *arg)
 {
-    int errs;
-    MTest_Init(&argc, &argv);
-    errs = test_communicators();
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return test_communicators();
 }
 
 /*
@@ -37,8 +36,8 @@ int main(int argc, char **argv)
  * Proposals to specify particular values (e.g., user's value) failed.
  */
 /* Return an error as the value */
-int copybomb_fn(MPI_Comm oldcomm, int keyval, void *extra_state,
-                void *attribute_val_in, void *attribute_val_out, int *flag)
+static int copybomb_fn(MPI_Comm oldcomm, int keyval, void *extra_state,
+                       void *attribute_val_in, void *attribute_val_out, int *flag)
 {
     /* Note that if (sizeof(int) < sizeof(void *), just setting the int
      * part of attribute_val_out may leave some dirty bits
@@ -50,20 +49,20 @@ int copybomb_fn(MPI_Comm oldcomm, int keyval, void *extra_state,
 /* Set delete flag to 1 to allow the attribute to be deleted */
 static int delete_flag = 0;
 
-int deletebomb_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
+static int deletebomb_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
 {
     if (delete_flag)
         return MPI_SUCCESS;
     return MPI_ERR_OTHER;
 }
 
-void abort_msg(const char *str, int code)
+static void abort_msg(const char *str, int code)
 {
     fprintf(stderr, "%s, err = %d\n", str, code);
     MPI_Abort(MPI_COMM_WORLD, code);
 }
 
-int test_communicators(void)
+static int test_communicators(void)
 {
     MPI_Comm dup_comm_world, d2;
     int world_rank, world_size, key_1;

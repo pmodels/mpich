@@ -21,3 +21,22 @@
 #
 
 attr/attrt
+attr/attrend
+attr/attric
+attr/attrerr
+attr/attrerrcomm
+attr/attrerrtype
+attr/attrdeleteget
+attr/attr2type
+attr/attrorder
+attr/attrordercomm
+attr/attrordertype
+attr/baseattr2
+attr/baseattrcomm
+attr/fkeyval
+attr/fkeyvalcomm
+attr/keyval_double_free
+attr/keyval_double_free_comm
+attr/keyval_double_free_type
+attr/keyval_double_free_win
+attr/fkeyvaltype
