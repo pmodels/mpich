@@ -372,7 +372,7 @@ else {
         print "TAP formatted results in $tapfullfile\n";
     }
     if ($junitoutput) {
-        my $junitfullfile = get_fullfile($g_opt{tapfile});
+        my $junitfullfile = get_fullfile($g_opt{junitfile});
         print "JUNIT formatted results in $junitfullfile\n";
     }
 }
@@ -720,11 +720,6 @@ sub get_mpiexec_wrapper {
 sub RunMPIProgram {
     my ($programname,$np,$test_opt, $curdir) = @_;
 
-    my $found_error   = 0;
-    my $found_noerror = 0;
-    my $inline = "";
-    my $runtime = 0;
-
     &RunPreMsg( $programname, $np, $test_opt, $curdir );
 
     unlink "err";
@@ -788,74 +783,15 @@ sub RunMPIProgram {
     if ($test_opt->{envs}) {    
         %ENV = %saveEnv;
     }
-    if ($test_opt->{resultTest}) {
-        # Read and process the output
-        my %test_actions = (
-            TestStatus => \&TestStatus,
-            TestStatusNoErrors => \&TestStatusNoErrors,
-            TestErrFatal => \&TestErrFatal,
-        );
+    my $F = get_resultTest($test_opt->{resultTest});
+    my ($found_error, $inline) = $F->($MPIOUT, $programname);
+    if ($g_opt{verbose}) {
+        $inline = "$cmd\n$inline";
+    }
 
-        my $F = $test_actions{$test_opt->{resultTest}};
-        if ($F) {
-            ($found_error, $inline) = $F->($MPIOUT, $programname );
-        } else {
-            die "resultTest $test_opt->{resultTest} not defined!\n";
-        }
-    }
-    else {
-        if ($g_opt{verbose}) {
-            $inline = "$cmd\n";
-        }
-        else {
-            $inline = "";
-        }
-        while (<$MPIOUT>) {
-            print STDOUT $_ if $g_opt{verbose};
-            # Skip FORTRAN STOP
-            if (/FORTRAN STOP/) { next; }
-            $inline .= $_;
-            if (/^\s*No [Ee]rrors\s*$/ && $found_noerror == 0) {
-                $found_noerror = 1;
-            }
-            elsif (/^srun: error: .*: signal: Communication connection failure/) {
-                # skip
-            }
-            elsif (!/^\s*Test Passed\s*$/ && !/requesting checkpoint\s*$/ && !/checkpoint completed\s*$/) {
-                print STDERR "Unexpected output in $programname: $_";
-                if (!$found_error) {
-                    $found_error = 1;
-                    $err_count ++;
-                }
-            }
-        }
-        if ($found_noerror == 0) {
-            print STDERR "Program $programname exited without No Errors\n";
-            if (!$found_error) {
-                $found_error = 1;
-                $err_count ++;
-            }
-        }
-        my $rc = close ($MPIOUT);
-        my $end_time = gettimeofday();  # seconds in floating point
-        $runtime = $end_time - $start_time;
-        print STDOUT "Runtime: $runtime\n" if $g_opt{verbose};
-        if ($rc == 0) {
-            # Only generate a message if we think that the program
-            # passed the test.
-            if (!$found_error) {
-                my $run_status = $?;
-                my $signal_num = $run_status & 127;
-                if ($run_status > 255) { $run_status >>= 8; }
-                print STDERR "Program $programname exited with non-zero status $run_status\n";
-                if ($signal_num != 0) {
-                    print STDERR "Program $programname exited with signal $signal_num\n";
-                }
-                $found_error = 1;
-                $err_count ++;
-            }
-        }
-    }
+    my $end_time = gettimeofday();  # seconds in floating point
+    my $runtime = $end_time - $start_time;
+    print STDOUT "Runtime: $runtime\n" if $g_opt{verbose};
 
     # release lock if needed
     if ($got_lock) {
@@ -1019,6 +955,71 @@ sub FindRunning {
     close PSFD;
 
     return @pids;
+}
+
+# ----------------------------------------------------------------------------
+sub get_resultTest {
+    my $resultTest = shift;
+    if (!$resultTest) {
+        return \&TestNormal;
+    } elsif ($resultTest eq "TestStatus") {
+        return \&TestStatus;
+    } elsif ($resultTest eq "TestStatusNoErrors") {
+        return \&TestStatusNoErrors;
+    } elsif ($resultTest eq "TestErrFatal") {
+        return \&TestErrFatal;
+    } else {
+        die "resultTest $resultTest not defined!\n";
+    }
+}
+
+sub TestNormal {
+    my ($MPIOUT, $programname) = @_;
+    my $found_error = 0;
+    my $found_noerror = 0;
+    my $inline = "";
+    while (<$MPIOUT>) {
+        print STDOUT $_ if $g_opt{verbose};
+        # Skip FORTRAN STOP
+        if (/FORTRAN STOP/) { next; }
+        $inline .= $_;
+        if (/^\s*No [Ee]rrors\s*$/ && $found_noerror == 0) {
+            $found_noerror = 1;
+        }
+        elsif (/^srun: error: .*: signal: Communication connection failure/) {
+            # skip
+        }
+        elsif (!/^\s*Test Passed\s*$/ && !/requesting checkpoint\s*$/ && !/checkpoint completed\s*$/) {
+            print STDERR "Unexpected output in $programname: $_";
+            if (!$found_error) {
+                $found_error = 1;
+                $err_count ++;
+            }
+        }
+    }
+    if ($found_noerror == 0) {
+        print STDERR "Program $programname exited without No Errors\n";
+        if (!$found_error) {
+            $found_error = 1;
+            $err_count ++;
+        }
+    }
+    my $rc = close ($MPIOUT);
+    if ($rc == 0) {
+        # Only generate a message if we think that the program
+        # passed the test.
+        if (!$found_error) {
+            my $run_status = $?;
+            my $signal_num = $run_status & 127;
+            if ($run_status > 255) { $run_status >>= 8; }
+            print STDERR "Program $programname exited with non-zero status $run_status\n";
+            if ($signal_num != 0) {
+                print STDERR "Program $programname exited with signal $signal_num\n";
+            }
+            $found_error = 1;
+            $err_count ++;
+        }
+    }
 }
 # ----------------------------------------------------------------------------
 #
