@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
-#include "stdlib.h"
 #include "dtpools.h"
+
+#ifdef MULTI_TESTS
+#define run attr_fkeyvaltype
+int run(const char *arg);
+#endif
 
 /*
 static char MTestDescrip[] = "Test freeing keyvals while still attached to \
@@ -18,10 +20,8 @@ executed";
 
 
 /* Copy increments the attribute value */
-int copy_fn(MPI_Datatype oldtype, int keyval, void *extra_state,
-            void *attribute_val_in, void *attribute_val_out, int *flag);
-int copy_fn(MPI_Datatype oldtype, int keyval, void *extra_state,
-            void *attribute_val_in, void *attribute_val_out, int *flag)
+static int copy_fn(MPI_Datatype oldtype, int keyval, void *extra_state,
+                   void *attribute_val_in, void *attribute_val_out, int *flag)
 {
     /* Copy the address of the attribute */
     *(void **) attribute_val_out = attribute_val_in;
@@ -34,14 +34,13 @@ int copy_fn(MPI_Datatype oldtype, int keyval, void *extra_state,
 }
 
 /* Delete decrements the attribute value */
-int delete_fn(MPI_Datatype type, int keyval, void *attribute_val, void *extra_state);
-int delete_fn(MPI_Datatype type, int keyval, void *attribute_val, void *extra_state)
+static int delete_fn(MPI_Datatype type, int keyval, void *attribute_val, void *extra_state)
 {
     *(int *) attribute_val = *(int *) attribute_val - 1;
     return MPI_SUCCESS;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int err, errs = 0;
     int attrval;
@@ -54,9 +53,7 @@ int main(int argc, char *argv[])
     DTP_obj_s obj;
     char *basic_type;
 
-    MTest_Init(&argc, &argv);
-
-    MTestArgList *head = MTestArgListCreate(argc, argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
     seed = MTestArgListGetInt(head, "seed");
     testsize = MTestArgListGetInt(head, "testsize");
     count = MTestArgListGetLong(head, "count");
@@ -138,7 +135,5 @@ int main(int argc, char *argv[])
 
     DTP_pool_free(dtp);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

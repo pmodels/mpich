@@ -3,33 +3,33 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpi.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run attr_attr2type
+int run(const char *arg);
+#endif
 
 static int foo_keyval = MPI_KEYVAL_INVALID;
 
-int foo_initialize(void);
-void foo_finalize(void);
+static int foo_initialize(void);
+static void foo_finalize(void);
 
-int foo_copy_attr_function(MPI_Datatype type, int type_keyval,
-                           void *extra_state, void *attribute_val_in,
-                           void *attribute_val_out, int *flag);
-int foo_delete_attr_function(MPI_Datatype type, int type_keyval,
-                             void *attribute_val, void *extra_state);
+static int foo_copy_attr_function(MPI_Datatype type, int type_keyval,
+                                  void *extra_state, void *attribute_val_in,
+                                  void *attribute_val_out, int *flag);
+static int foo_delete_attr_function(MPI_Datatype type, int type_keyval,
+                                    void *attribute_val, void *extra_state);
 static const char *my_func = 0;
 static int verbose = 0;
 static int delete_called = 0;
 static int copy_called = 0;
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Datatype type, duptype;
     int rank;
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -61,15 +61,13 @@ int main(int argc, char *argv[])
         fflush(stdout);
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }
 
-int foo_copy_attr_function(MPI_Datatype type,
-                           int type_keyval,
-                           void *extra_state,
-                           void *attribute_val_in, void *attribute_val_out, int *flag)
+static int foo_copy_attr_function(MPI_Datatype type,
+                                  int type_keyval,
+                                  void *extra_state,
+                                  void *attribute_val_in, void *attribute_val_out, int *flag)
 {
     if (verbose)
         printf("copy fn. called\n");
@@ -80,8 +78,8 @@ int foo_copy_attr_function(MPI_Datatype type,
     return MPI_SUCCESS;
 }
 
-int foo_delete_attr_function(MPI_Datatype type,
-                             int type_keyval, void *attribute_val, void *extra_state)
+static int foo_delete_attr_function(MPI_Datatype type,
+                                    int type_keyval, void *attribute_val, void *extra_state)
 {
     if (verbose)
         printf("delete fn. called in %s\n", my_func);
@@ -90,7 +88,7 @@ int foo_delete_attr_function(MPI_Datatype type,
     return MPI_SUCCESS;
 }
 
-int foo_initialize(void)
+static int foo_initialize(void)
 {
     /* create keyval for use later */
     MPI_Type_create_keyval(foo_copy_attr_function, foo_delete_attr_function, &foo_keyval, NULL);
@@ -100,7 +98,7 @@ int foo_initialize(void)
     return 0;
 }
 
-void foo_finalize(void)
+static void foo_finalize(void)
 {
     /* remove keyval */
     MPI_Type_free_keyval(&foo_keyval);
