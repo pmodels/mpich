@@ -19,3 +19,5 @@
 #
 #         coll/allgatherv4 -lm
 #
+
+attr/attrt
