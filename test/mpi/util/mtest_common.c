@@ -7,6 +7,7 @@
 #include "mtest_common.h"
 #include <assert.h>
 #include <string.h>
+#include <ctype.h>
 
 /* ------------------------------------------------------------------------ */
 /* Utilities related to test environment */
@@ -127,6 +128,47 @@ MTestArgList *MTestArgListCreate(int argc, char *argv[])
         MTestArgListInsert(&head, arg, val);
 
         free(string);
+    }
+
+    return head;
+}
+
+MTestArgList *MTestArgListCreate_arg(const char *arg)
+{
+    int i;
+    char *string = NULL;
+    char *tmp = NULL;
+    char *key = NULL;
+    char *val = NULL;
+
+    MTestArgListEntry *head = NULL;
+
+    if (arg) {
+        const char *s = arg;
+        while (*s) {
+            while (isspace(*s))
+                s++;
+            if (!*s)
+                break;
+            /* extract key and val */
+            assert(s[0] == '-' && s[1] != '-');
+            const char *s2 = s;
+            while (*s2 && !isspace(*s2))
+                s2++;
+
+            string = strndup(s, s2 - s);
+            s = s2;
+
+            tmp = strtok(string, "=");
+            key = strdup(tmp + 1);      /* skip prepending '-' */
+            tmp = strtok(NULL, "=");
+            assert(tmp != NULL);
+            val = strdup(tmp);
+
+            MTestArgListInsert(&head, key, val);
+
+            free(string);
+        }
     }
 
     return head;
