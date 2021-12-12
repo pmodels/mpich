@@ -404,6 +404,9 @@ else
     fi
 fi
 
+# Make sure we export CC before configuring DTPools, since MPI is
+# needed to build the library.
+export CC
 PAC_CONFIG_SUBDIR_ARGS([dtpools])
 
 # Running C compiler tests
@@ -430,6 +433,7 @@ MPI_IS_MPICH=no
 AC_MSG_CHECKING([Is the MPI derived from MPICH])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[return 1 + MPICH;])],
     [MPI_IS_MPICH=yes],[MPI_IS_MPICH=no])
+AC_MSG_RESULT($MPI_IS_MPICH)
 
 # First, determine whether we are/can support the language bindings
 #
