@@ -353,7 +353,7 @@ int MPL_gpu_init(void)
 }
 
 /* Get dev_id for shared_device_fds from regular dev_id */
-MPL_STATIC_INLINE_PREFIX int dev_id_to_shared_dev_id(int dev_id)
+int MPL_gpu_get_root_device(int dev_id)
 {
     return subdevice_map[dev_id];
 }
@@ -648,7 +648,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     }
 
     if (shared_device_fds != NULL) {
-        int shared_dev_id = dev_id_to_shared_dev_id(local_dev_id);
+        int shared_dev_id = MPL_gpu_get_root_device(local_dev_id);
         /* convert dma_buf fd to GEM handle */
         memcpy(&fd, &ze_ipc_handle, sizeof(fd));
         status = fd_to_handle(shared_device_fds[shared_dev_id], fd, &handle);
