@@ -356,6 +356,18 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
             if (!strncmp(info_value, "false", sizeof("false")))
                 win->info_args.same_disp_unit = FALSE;
         }
+
+        /********************************************************/
+        /******* accept (but ignore) a CH4-specific hint ********/
+        /********************************************************/
+        info_flag = 0;
+        MPIR_Info_get_impl(info, "optimized_mr", MPI_MAX_INFO_VAL, info_value, &info_flag);
+        if (info_flag) {
+            if (!strncmp(info_value, "true", sizeof("true")))
+                win->info_args.optimized_mr = TRUE;
+            if (!strncmp(info_value, "false", sizeof("false")))
+                win->info_args.optimized_mr = FALSE;
+        }
     }
 
 
@@ -440,6 +452,12 @@ int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_used)
         mpi_errno = MPIR_Info_set_impl(*info_used, "same_disp_unit", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_used, "same_disp_unit", "false");
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (win->info_args.optimized_mr)
+        mpi_errno = MPIR_Info_set_impl(*info_used, "optimized_mr", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_used, "optimized_mr", "false");
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

@@ -266,6 +266,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     (*win_ptr)->info_args.same_disp_unit = FALSE;
     (*win_ptr)->info_args.alloc_shared_noncontig = 0;
     (*win_ptr)->info_args.alloc_shm = FALSE;
+    (*win_ptr)->info_args.optimized_mr = FALSE;
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
         (*win_ptr)->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         (*win_ptr)->info_args.alloc_shm = TRUE;
