@@ -97,7 +97,6 @@ $g_opt{batchRun} = 0;           # Set to true to batch the execution of the test
                                 # rather than build/run/check for each test)
 $g_opt{batrundir} = ".";        # Set to the directory into which to run the examples
 $g_opt{srcdir} = ".";           # Used to set the source dir for testlist files
-$g_opt{curdir} = ".";           # Used to track the relative current directory
 $g_opt{stopfile} = ".stopfile"; # Touch this file to abort the testing
 
 # Output forms
@@ -294,24 +293,25 @@ if ($g_opt{listfiles} =~ /testlist\.gpu/) {
     $g_opt{has_gpu_test} = 1;
 }
 
+my @all_tests;
 if ($g_opt{listfiles} eq "") {
     if ($g_opt{batchRun}) {
         print STDERR "An implicit list of tests is not permitted in batch mode. See README for more details\n";
         exit(1);
     } 
-    else {
-        &ProcessImplicitList($g_opt{curdir});
-    }
+    LoadImplicitTests(".", \@all_tests);
 }
 elsif ($g_opt{testdirs} ne "") {
     my @all_testdirs = split /,\s*/, $g_opt{testdirs};
     foreach my $_d (@all_testdirs) {
-        &ProcessDir($_d, $g_opt{listfiles}, ".");
+        LoadTests("./$_d", \@all_tests);
     }
 }
 else {
-    &RunList($g_opt{listfiles}, ".");
+    LoadTests(".", \@all_tests);
 }
+
+RunTests(\@all_tests);
 
 if ($xmloutput && !$g_opt{noxmlclose}) { 
     print XMLOUT "</MPITESTRESULTS>$g_opt{newline}";
@@ -376,73 +376,43 @@ else {
         print "JUNIT formatted results in $junitfullfile\n";
     }
 }
-#
+#
 # ---------------------------------------------------------------------------
 # Routines
 # 
-# Enter a new directory and process a list file.  
-#  ProcessDir( directory-name, list-file-name )
-sub ProcessDir {
-    my ($dir, $listfile, $curdir) = @_;
-
-    $dir =~ s/\/$//;
-    $curdir .= "/$dir";
-
-    my $savedir = cwd();
-
-    print "Processing directory $dir\n" if ($g_opt{verbose} || $g_opt{debug});
-    unless(chdir $dir) {
-        die "Error: Cannot find directory $dir";
-    }
-
-    &RunList($listfile, $curdir);
-
-    print "\n" if $g_opt{showprogress}; # Terminate line from progress output
-    chdir $savedir;
-}
-# ---------------------------------------------------------------------------
 # Run the programs listed in the file given as the argument. 
 # This file describes the tests in the format
 #  programname number-of-processes [ key=value ... ]
 # If the second value is not given, the default value is used.
 # 
-sub RunList { 
-    my ($listfile, $curdir) = @_;
-
+sub LoadTests {
+    my ($curdir, $all_tests) = @_;
+    print "Load tests in $curdir\n" if $g_opt{debug};
     # eg: runtests -tests='testlist,testlist.dtp'
-    my @all_listfiles = split /,\s*/, $listfile;
+    my @all_listfiles = split /,\s*/, $g_opt{listfiles};
     foreach my $_f (@all_listfiles){
-        my $listfileSource = $_f;
-        if (! -s "$_f" && -s "$g_opt{srcdir}/$curdir/$_f" ) {
+        die if "$curdir/$_f"=~/attr\/attr/;
+        my $listfileSource = "$curdir/$_f";
+        if (! -s "$listfileSource" && -s "$g_opt{srcdir}/$listfileSource" ) {
             $listfileSource = "$g_opt{srcdir}/$curdir/$_f";
         }
         if (!-f $listfileSource && $_f ne "testlist") {
             # just skip, do not complain missing unless it is "testlist"
             next;
         }
-        # add a timestamp to have a quick idea of how long the tests ran
-        my @tm_list = gmtime(time() - $g_opt{start_time});
-        my $timestamp = sprintf("%02d:%02d:%02d", $tm_list[2], $tm_list[1], $tm_list[0]);
-        print "Looking in $curdir/$_f \t[$timestamp]\n" if $g_opt{debug};
         open my $LIST, "<$listfileSource" || die "Could not open $listfileSource\n";
         while (<$LIST>) {
-            # Check for stop file
-            if (-s $g_opt{stopfile}) {
-                # Exit because we found a stopfile
-                print STDERR "Terminating test because stopfile $g_opt{stopfile} found\n";
-                last;
-            }
-            if ($g_num_timeout >= $g_num_timeout_thresh && $g_num_timeout / $g_total_run > 0.5) {
-                # Too many timeout failures
-                print STDERR "Terminating test because of too many timeout failures\n";
-                last;
-            }
             # Skip comments
             s/#.*//g;
             # Remove any trailing newlines/returns
             s/\r?\n//;
             # Remove any leading whitespace
             s/^\s*//;
+
+            # Skip empty lines
+            if (/^\s*$/) {
+                next;
+            }
             # Some tests require that support routines are built first
             # This is specified with !<dir>:<target>
             if (/^\s*\!([^:]*):(.*)/) {
@@ -451,11 +421,19 @@ sub RunList {
                 `cd $1 && make $2`;
                 next;
             }
+
             # List file entries have the form:
             # program [ np [ name=value ... ] ]
             # See files errhan/testlist, init/testlist, and spawn/testlist
             # for examples of using the key=value form
             my @args = split(/\s+/,$_);
+            my $programname = $args[0];
+
+            if (-d "$curdir/$programname") {
+                LoadTests("$curdir/$programname", $all_tests);
+                next;
+            }
+
             my $test_opt = {args=>[], envs=>[], mpiexecargs=>[]};
             if ($g_opt{has_gpu_test}) {
                 if ($_f ne "testlist.gpu") {
@@ -465,7 +443,6 @@ sub RunList {
                 }
             }
 
-            my $programname = $args[0];
             my $np = "";
             my $requiresStrict = "";
 
@@ -517,23 +494,20 @@ sub RunList {
             $test_opt->{name} = $programname;
             $test_opt->{np} = $np;
             $test_opt->{dir} = $curdir;
+            if ($test_opt->{name} =~/^(\S+)\/(\S+)$/) {
+                # TODO: allow absolute path
+                $test_opt->{dir} .= "/$1";
+                $test_opt->{name} = $2;
+            }
 
             # allows us to accurately output TAP test numbers without disturbing the
             # original totals that have traditionally been reported
-            #
-            # These "unless" blocks are ugly, but permit us to honor skipping
-            # criteria for directories as well without counting directories as tests
-            # in our XML/TAP output.
-            unless (-d $programname) {
-                $g_total_seen++;
-            }
+            $g_total_seen++;
 
             # Check whether strict is required by MPI but not by the
             # test (use strict=false for tests that use non-standard extensions)
             if (lc($requiresStrict) eq "false" && $g_opt{strict}) {
-                unless (-d $programname) {
-                    SkippedTest($test_opt, "non-strict test, strict MPI mode requested");
-                }
+                SkippedTest($test_opt, "non-strict test, strict MPI mode requested");
                 next;
             }
 
@@ -547,55 +521,77 @@ sub RunList {
             if ($test_opt->{xfail} && !$g_opt{runxfail}) {
                 # Skip xfail tests if they are not configured. Strict MPI tests that are
                 # marked xfail will still run with --enable-strictmpi.
-                unless (-d $programname) {
-                    SkippedTest($test_opt, "xfail tests disabled");
-                }
+                SkippedTest($test_opt, "xfail tests disabled");
                 next;
             }
 
-            if (-d $programname) {
-                # If a directory, go into the that directory and 
-                # look for a new list file
-                &ProcessDir($programname, $listfile, $curdir);
-            }
-            else {
-                $g_total_run++;
-                my $save_dir;
-                if ($programname =~/^(\S+)\/(\S+)$/) {
-                    $save_dir = `pwd`;
-                    chomp $save_dir;
-                    $programname = $2;
-                    chdir $1 or warn "Can't chdir $1\n";
-                }
-                if (&BuildMPIProgram($test_opt) == 0) {
-                    if ($g_opt{batchRun} == 1) {
-                        &AddMPIProgram($test_opt);
-                    }
-                    else {
-                        &RunMPIProgram($test_opt);
-                    }
-                }
-                elsif ($test_opt->{xfail} eq '') {
-                    # We expected to run this program, so failure to build
-                    # is an error
-                    $err_count++;
-                }
-                if ($g_opt{batchRun} == 0) {
-                    &CleanUpAfterRun($test_opt);
-                }
-                if ($save_dir) {
-                    chdir $save_dir;
-                }
-            }
+            push @$all_tests, $test_opt;
         }
         close( $LIST );
     }
 }
+
+sub RunTests { 
+    my ($all_tests) = @_;
+
+    my $curdir;
+    my $cwd;
+    foreach my $test_opt (@$all_tests) {
+        # Check for stop file
+        if (-s $g_opt{stopfile}) {
+            # Exit because we found a stopfile
+            print STDERR "Terminating test because stopfile $g_opt{stopfile} found\n";
+            last;
+        }
+
+        # Check for too many TIMEOUTs
+        if ($g_num_timeout >= $g_num_timeout_thresh && $g_num_timeout / $g_total_run > 0.5) {
+            # Too many timeout failures
+            print STDERR "Terminating test because of too many timeout failures\n";
+            last;
+        }
+
+        $g_total_run++;
+        if ($test_opt->{dir} ne $curdir) {
+            $curdir = $test_opt->{dir};
+            if (!$cwd) {
+                $cwd = getcwd();
+            } else {
+                # $curdir is relave to $cwd
+                chdir $cwd or die "Can't chdir $cwd\n";
+            }
+            # add a timestamp to have a quick idea of how long the tests ran
+            my @tm_list = gmtime(time() - $g_opt{start_time});
+            my $timestamp = sprintf("%02d:%02d:%02d", $tm_list[2], $tm_list[1], $tm_list[0]);
+            print "Running tests in $curdir [$timestamp]\n" if $g_opt{debug};
+            chdir $curdir or die "Can't chdir $curdir\n";
+        }
+        if (&BuildMPIProgram($test_opt) == 0) {
+            if ($g_opt{batchRun} == 1) {
+                &AddMPIProgram($test_opt);
+            }
+            else {
+                &RunMPIProgram($test_opt);
+            }
+        }
+        elsif ($test_opt->{xfail} eq '') {
+            # We expected to run this program, so failure to build
+            # is an error
+            $err_count++;
+        }
+        if ($g_opt{batchRun} == 0) {
+            &CleanUpAfterRun($test_opt);
+        }
+    }
+    if ($cwd) {
+        chdir $cwd;
+    }
+}
 #
-# This routine tries to run all of the files in the current
+# This routine tries to load tests from all of the files in the current
 # directory
-sub ProcessImplicitList {
-    my $curdir = shift;
+sub LoadImplicitTests {
+    my ($curdir, $all_tests) = @_;
 
     # The default is to run every file in the current directory.
     # If there are no built programs, build and run every file
@@ -635,7 +631,7 @@ sub ProcessImplicitList {
             if (-x $programname) {
                 $g_total_run++;
                 my $test_opt = {name=>$programname, np=>$g_opt{np_default}, dir=>$curdir, args=>[], envs=>[], mpiexecargs=>[]};
-                &RunMPIProgram($test_opt);
+                push @$all_tests, $test_opt;
             }
         }
         close PGMS;
@@ -657,15 +653,7 @@ sub ProcessImplicitList {
             $g_total_run++;
             my $np = $g_opt{np_default};
             my $test_opt = {name=>$programname, np=>$np, dir=>$curdir};
-            if (&BuildMPIProgram($test_opt) == 0) {
-                &RunMPIProgram($test_opt);
-            }
-            else {
-                # We expected to run this program, so failure to build
-                # is an error
-                $err_count++;
-            }
-            &CleanUpAfterRun($test_opt);
+            push @$all_tests, $test_opt;
         }
         close PGMS;
     }
@@ -1034,6 +1022,7 @@ sub TestNormal {
             $err_count ++;
         }
     }
+    return ($found_error, $inline);
 }
 # ----------------------------------------------------------------------------
 #
