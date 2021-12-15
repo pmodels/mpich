@@ -89,6 +89,7 @@ typedef struct {
     int fd;
     pid_t pid;
     int dev_id;
+    uint64_t mem_id;
 } fd_pid_t;
 
 typedef struct gpu_free_hook {
@@ -782,10 +783,10 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
-    unsigned long shared_handle;
     int fd, handle, status, local_dev_id = -1;
     ze_device_handle_t device;
     ze_ipc_mem_handle_t ze_ipc_handle;
+    fd_pid_t h;
 
     ze_memory_allocation_properties_t ptr_attr = {
         .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
@@ -815,10 +816,6 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
             goto fn_fail;
         }
 
-        shared_handle = shared_dev_id;
-        shared_handle = shared_handle << 32 | handle;
-        memcpy(ipc_handle, &shared_handle, sizeof(shared_handle));
-
         /* Hash (ptr, dev_id, handle) to close later */
         MPL_ze_gem_hash_entry_t *entry = NULL;
         HASH_FIND_PTR(gem_hash, &ptr, entry);
@@ -836,15 +833,18 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
             entry->handle = handle;
             HASH_ADD_PTR(gem_hash, ptr, entry, MPL_MEM_OTHER);
         }
+
+        h.fd = handle;
+        h.dev_id = shared_dev_id;
     } else {
-        fd_pid_t h;
         memcpy(&h.fd, &ze_ipc_handle, sizeof(fd));
-        h.pid = mypid;
-        int global_dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
-        assert(global_dev_id != -1);
-        h.dev_id = global_dev_id;
-        memcpy(ipc_handle, &h, sizeof(fd_pid_t));
+        h.dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
+        assert(h.dev_id != -1);
     }
+
+    h.pid = mypid;
+    h.mem_id = ptr_attr.id;
+    memcpy(ipc_handle, &h, sizeof(fd_pid_t));
 
   fn_exit:
     return mpl_err;
@@ -886,27 +886,23 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
-    unsigned long shared_handle;
-    int fd, handle = 0, status;
+    int fd, status;
     MPL_gpu_device_handle_t dev_handle;
     ze_ipc_mem_handle_t ze_ipc_handle;
 
     memset(&ze_ipc_handle, 0, sizeof(ze_ipc_mem_handle_t));
 
+    fd_pid_t h;
+    memcpy(&h, &ipc_handle, sizeof(fd_pid_t));
+
     if (shared_device_fds != NULL) {
         /* convert GEM handle to fd */
-        memcpy(&shared_handle, &ipc_handle, sizeof(shared_handle));
-        int shared_dev_id = shared_handle >> 32;
-        handle = shared_handle << 32 >> 32;
-
-        status = handle_to_fd(shared_device_fds[shared_dev_id], handle, &fd);
+        status = handle_to_fd(shared_device_fds[h.dev_id], h.fd, &fd);
         if (status) {
             goto fn_fail;
         }
     } else {
         /* pidfd_getfd */
-        fd_pid_t h;
-        memcpy(&h, &ipc_handle, sizeof(fd_pid_t));
         if (h.pid != mypid) {
             int pid_fd = syscall(__NR_pidfd_open, h.pid, 0);
             if (pid_fd == -1) {
