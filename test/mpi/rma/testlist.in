@@ -119,7 +119,6 @@ req_example 4
 req_example_shm 4
 rput_local_comp 2
 racc_local_comp 2
-win_info 4
 linked_list_lockall 4
 pscw_ordering 4
 pscw_ordering_shm 4
