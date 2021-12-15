@@ -136,7 +136,6 @@ noinst_PROGRAMS =          \
     reqops                 \
     req_example            \
     req_example_shm        \
-    win_info               \
     pscw_ordering          \
     pscw_ordering_shm	   \
     mutex_bench            \
