@@ -45,6 +45,8 @@
 
 # Avoid building MPL and hwloc multiple times.
 
+# Fix MPIX_Query_cuda_support.
+
 # Many bug fixes and code clean-ups.
 
 ===============================================================================
