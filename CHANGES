@@ -1,4 +1,34 @@
 ===============================================================================
+                               Changes in 3.4.3
+===============================================================================
+
+# Fix bugs in GPFS ROMIO driver
+
+# Fix bugs in DAOS ROMIO driver
+
+# Fix nemesis shm bug on systems with weak memory consistency
+
+# Fix progress issue in ch4:ucx finalize
+
+# Fix nonblocking collective issue during finalize
+
+# Fix UBSan warnings in 32-bit builds
+
+# Fix predefined datatype handle leaks
+
+# Fix bug in topology-aware communicator creation
+
+# Fix Slurm nodelist parsing
+
+# Fix testcase for out-of-tree configuration
+
+# Fix truncation testcase for possible disconnection error
+
+# Hydra help message improvements
+
+# Add support for DAOS pool and container labels
+
+===============================================================================
                                Changes in 3.4.2
 ===============================================================================
 
