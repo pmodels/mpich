@@ -44,6 +44,7 @@ use strict;
 use File::Path;
 # Use 'mv' instead of 'move' to preserve the source file's permission bits
 use File::Copy qw(mv);
+use IPC::Open2;
 
 # Use high resolution timers
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -53,6 +54,11 @@ use Fcntl qw(:flock);
 
 use Cwd;
 my $g_cwd = getcwd();
+
+my $g_rel_wd;
+if ($g_cwd =~ /\/test\/mpi\/(.+)/) {
+    $g_rel_wd = $1;
+}
 
 my $g_topsrcdir = ".";
 if ($0 =~ /(.*)\/runtests$/) {
@@ -95,6 +101,8 @@ $g_opt{verbose} = 0;            # Set to true to get more output
 $g_opt{debug} = 1;
 $g_opt{showprogress} = 0;       # Set to true to get a "." with each run program.
 $g_opt{newline} = "\r\n";       # Set to \r\n for Windows-friendly, \n for Unix only
+$g_opt{run_mpitests} = 1;       # Set to true to functional tests using run_mpitests
+                                # (i.e., run tests inside a single MPI_Init/Finalize)
 $g_opt{batchRun} = 0;           # Set to true to batch the execution of the tests
                                 # (i.e., run them together, then test output, 
                                 # rather than build/run/check for each test)
@@ -125,11 +133,12 @@ my $g_ok_count = 0;           # Number of programs that succeeded.
 my $g_err_count = 0;          # Number of programs that failed.
 my $g_skip_count = 0;         # Number of programs skipped
 
-# When every tests result in timeout, it means the code has deadlocks or some major issues,
-# waiting for all tests to finish is rather unnecessary. We'll keep a counter for number
-# of timeouts, and abore after too many timeout failure.
-my $g_num_timeout;
-my $g_num_timeout_thresh = 5;
+# Sometime tests fail as timeout or abort. This may be caused by some persistent errors.
+# Especially with timeouts, having too many timeouts is a waste of testing time when it
+# is already clear there are issues. Keep an global counter to prevent too many such
+# failures.
+my $g_num_severe;
+my $g_num_severe_thresh = 5;
 
 my $g_testCount = 0;          # Used with batchRun to count tests.
 
@@ -157,6 +166,10 @@ if ( defined($ENV{"RUNTESTS_SHOWPROGRESS"} ) ) {
 }
 if (defined($ENV{"MPITEST_STOPTEST"})) {
     $g_opt{stopfile} = $ENV{"MPITEST_STOPTEST"};
+}
+
+if (defined($ENV{"MPITEST_RUN_INDIVIDUAL"})) {
+    $g_opt{run_mpitests} = 0;
 }
 
 if (defined($ENV{"MPITEST_TIMEOUT"})) {
@@ -311,7 +324,25 @@ else {
     LoadTests(".", \@all_tests);
 }
 
-RunTests(\@all_tests);
+if ($g_opt{run_mpitests}) {
+    my (@all_mpitests, @all_remaining);
+    my $mpitest_hash = load_all_mpitests_txt();
+    foreach my $test (@all_tests) {
+        my $key = get_mpitest_key($test);
+        if ($mpitest_hash->{$key}) {
+            push @all_mpitests, $test;
+        } else {
+            push @all_remaining, $test
+        }
+    }
+    if (@all_mpitests) {
+        RunTests_bygroup(\@all_mpitests, 1);
+        @all_tests = @all_remaining;
+    }
+}
+
+RunTests_bygroup(\@all_tests, 0);
+
 CloseOutputs();
 
 # Output a summary:
@@ -345,6 +376,29 @@ else {
 # ---------------------------------------------------------------------------
 # Routines
 # 
+sub load_all_mpitests_txt {
+    my %mpitest_hash;
+    my $file = "$g_topsrcdir/maint/all_mpitests.txt";
+    open In, $file or die "Can't load $file\n";
+    while (<In>) {
+        if (/^(\S+)/) {
+            $mpitest_hash{$1} = 1;
+        }
+    }
+    return \%mpitest_hash;
+}
+
+sub get_mpitest_key {
+    my $test_opt = shift;
+    my $key = $test_opt->{dir} . '/' . $test_opt->{name};
+    if ($g_rel_wd) {
+        $key =~ s/^\./$g_rel_wd/;
+    } else {
+        $key =~ s/^\.\///;
+    }
+    return $key;
+}
+
 # Load tests listed in the file given as the argument. 
 # This file describes the tests in the format
 #  programname number-of-processes [ key=value ... ]
@@ -357,15 +411,16 @@ sub LoadTests {
     my @all_listfiles = split /,\s*/, $g_opt{listfiles};
     foreach my $_f (@all_listfiles){
         die if "$curdir/$_f"=~/attr\/attr/;
-        my $listfileSource = "$curdir/$_f";
-        if (! -s "$listfileSource" && -s "$g_opt{srcdir}/$listfileSource" ) {
-            $listfileSource = "$g_opt{srcdir}/$curdir/$_f";
+        my $listfile = "$curdir/$_f";
+        my $listfile_path = $listfile;
+        if (! -s "$listfile_path" && -s "$g_opt{srcdir}/$listfile" ) {
+            $listfile_path = "$g_opt{srcdir}/$listfile";
         }
-        if (!-f $listfileSource && $_f ne "testlist") {
+        if (! -f $listfile_path && $_f ne "testlist") {
             # just skip, do not complain missing unless it is "testlist"
             next;
         }
-        open my $LIST, "<$listfileSource" || die "Could not open $listfileSource\n";
+        open my $LIST, "<$listfile_path" || die "Could not open $listfile_path\n";
         while (<$LIST>) {
             # Skip comments
             s/#.*//g;
@@ -399,7 +454,7 @@ sub LoadTests {
                 next;
             }
 
-            my $test_opt = {args=>[], envs=>[], mpiexecargs=>[]};
+            my $test_opt = {args=>[], envs=>[], mpiexecargs=>[], testlist=>$listfile};
 
             my $np = "";
             my $requiresStrict = "";
@@ -427,7 +482,7 @@ sub LoadTests {
                         $requiresStrict = $value
                     }
                     else {
-                        print STDERR "Unrecognized key $key in $listfileSource\n";
+                        print STDERR "Unrecognized key $key in $listfile_path\n";
                     }
                 }
             }
@@ -499,23 +554,62 @@ sub LoadTests {
     }
 }
 
+sub RunTests_bygroup {
+    my ($all_tests, $use_run_mpitests) = @_;
+    # Group by testlist
+    my %groups;
+    foreach my $test (@$all_tests) {
+        my $testlist = $test->{testlist};
+        if (!$groups{$testlist}) {
+            $groups{$testlist} = [];
+        }
+        push @{$groups{$testlist}}, $test;
+    }
+
+    foreach my $testlist (sort keys %groups) {
+        my $cnt = @{$groups{$testlist}};
+        # add a timestamp to have a quick idea of how long the tests ran
+        my @tm_list = gmtime(time() - $g_opt{start_time});
+        my $timestamp = sprintf("%02d:%02d:%02d", $tm_list[2], $tm_list[1], $tm_list[0]);
+        print "Running tests in $testlist [$cnt tests - $timestamp]\n" if $g_opt{debug};
+
+        my $need_stop;
+        if ($use_run_mpitests) {
+            $need_stop = run_mpitests($groups{$testlist});
+        } else {
+            $need_stop = RunTests($groups{$testlist});
+        }
+        if ($need_stop) {
+            last;
+        }
+    }
+}
+
+sub check_need_stop {
+    # Check for stop file
+    if (-s $g_opt{stopfile}) {
+        # Exit because we found a stopfile
+        print STDERR "Terminating test because stopfile $g_opt{stopfile} found\n";
+        return 1;
+    }
+
+    # Check for too many TIMEOUTs
+    if ($g_num_severe >= $g_num_severe_thresh && $g_num_severe / $g_total_run > 0.5) {
+        print STDERR "Terminating test because of too many severe failures\n";
+        return 1;
+    }
+    return 0;
+}
+
 sub RunTests { 
     my ($all_tests) = @_;
 
+    my $need_stop;
     my $curdir;
     my $cwd;
     foreach my $test_opt (@$all_tests) {
-        # Check for stop file
-        if (-s $g_opt{stopfile}) {
-            # Exit because we found a stopfile
-            print STDERR "Terminating test because stopfile $g_opt{stopfile} found\n";
-            last;
-        }
-
-        # Check for too many TIMEOUTs
-        if ($g_num_timeout >= $g_num_timeout_thresh && $g_num_timeout / $g_total_run > 0.5) {
-            # Too many timeout failures
-            print STDERR "Terminating test because of too many timeout failures\n";
+        if (check_need_stop()) {
+            $need_stop = 1;
             last;
         }
         if ($test_opt->{dir} ne $curdir) {
@@ -526,10 +620,6 @@ sub RunTests {
                 # $curdir is relave to $cwd
                 chdir $cwd or die "Can't chdir $cwd\n";
             }
-            # add a timestamp to have a quick idea of how long the tests ran
-            my @tm_list = gmtime(time() - $g_opt{start_time});
-            my $timestamp = sprintf("%02d:%02d:%02d", $tm_list[2], $tm_list[1], $tm_list[0]);
-            print "Running tests in $curdir [$timestamp]\n" if $g_opt{debug};
             chdir $curdir or die "Can't chdir $curdir\n";
         }
         if (&BuildMPIProgram($test_opt) == 0) {
@@ -547,7 +637,132 @@ sub RunTests {
     if ($cwd) {
         chdir $cwd;
     }
+    return $need_stop;
 }
+
+sub run_mpitests {
+    my ($all_tests) = @_;
+
+    my $need_stop = 0;
+
+    # run_mpitests is located in the same path as runtests
+    my $run = "$g_topsrcdir/run_mpitests";
+    for (my $np = 1; $np <= 10; $np++) {
+        my @tests;
+        foreach my $test_opt (@$all_tests) {
+            if ($test_opt->{np} == $np) {
+                push @tests, $test_opt;
+            }
+        }
+        if (!@tests) {
+            next;
+        }
+        my $num_tests = @tests;
+        my $idx = 0;
+
+        # if run_mpitests aborts unexpectedly, we'll restart and continue here
+        run_mpitests_at_idx:
+        my $flag_aborted = 0;
+
+        my $mpiexec = get_mpiexec_wrapper($np, {});
+        if ($idx == 0) {
+            print("    run_mpitests np=$np, $num_tests tests...\n");
+        } else {
+            print("    run_mpitests np=$np, $num_tests tests, continue at $idx...\n");
+        }
+        my $pid = open2(my $out, my $in, "$mpiexec $run 2>&1");
+        while($idx < $num_tests) {
+            my $test_opt = $tests[$idx];
+            $idx++;
+
+            if (check_need_stop()) {
+                last;
+            }
+
+            my $name = get_mpitest_key($test_opt);
+            my $cmd = $name;
+            if ($test_opt->{args} && @{$test_opt->{args}}) {
+                $cmd .= " " . join(' ', @{$test_opt->{args}});
+            }
+            print "    [$cmd]\n" if $g_opt{verbose};
+
+            RunPreMsg($test_opt);
+            my $start_time = gettimeofday();
+            print $in "$cmd\n";
+
+            my ($ret, @inline);
+            while (<$out>) {
+                print "        $_" if $g_opt{verbose};
+                if (/$name:\s*(\d+|not found)/) {
+                    $ret = $1;
+                    last;
+                } else {
+                    push @inline, $_;
+                }
+            }
+
+            my $end_time = gettimeofday();
+            my $runtime = $end_time - $start_time;
+            if (!defined $ret) {
+                # Something wrong, e.g. segfault, timeout
+                print "run_mpitests exited unexpectedly [$cmd]\n";
+                show_failed_test_detail($test_opt, \@inline);
+                RunTestFailed($test_opt, join('', @inline), $runtime);
+                $flag_aborted = 1;
+                last;
+            } elsif ($ret eq "0" and !@inline) {
+                RunTestPassed($test_opt, $runtime);
+            } elsif ($ret eq "not found") {
+                print "run_mpitests: $cmd not found!\n";
+                RunTestFailed($test_opt, "mpitest $cmd not found!", $runtime);
+            } else {
+                print "run_mpitests: [$cmd] failed, found errors: $ret\n";
+                show_failed_test_detail($test_opt, \@inline);
+                RunTestFailed($test_opt, join('', @inline), $runtime);
+            }
+            RunPostMsg($test_opt);
+        }
+        close($in);
+        close($out);
+        waitpid($pid, 0); # TODO: check $?
+        if ($flag_aborted) {
+            $g_num_severe++;
+            goto run_mpitests_at_idx;
+        }
+    }
+    return $need_stop;
+}
+
+sub show_failed_test_detail {
+    my ($test_opt, $inline) = @_;
+
+    # show detail if not shown already
+    if (!$g_opt{verbose}) {
+        my $name = get_mpitest_key($test_opt);
+        my $cmd = $name;
+        if ($test_opt->{args} && @{$test_opt->{args}}) {
+            $cmd .= " " . join(' ', @{$test_opt->{args}});
+        }
+        print "    Failed test: $cmd\n";
+
+        if ($test_opt->{envs} and @{$test_opt->{envs}}) {
+            foreach my $t (@{$test_opt->{envs}}) {
+                print "        $t\n";
+            }
+        }
+        
+        my $i = 0;
+        foreach my $l (@$inline) {
+            if ($i > 10) {
+                print "...\n";
+                last;
+            }
+            print $l;
+            $i++;
+        }
+    }
+}
+
 #
 # This routine tries to load tests from all of the files in the current
 # directory
@@ -589,7 +804,7 @@ sub LoadImplicitTests {
             if (-d $programname) { next; }  # Ignore directories
             if ($programname eq "runtests") { next; } # Ignore self
             if (-x $programname) {
-                my $test_opt = {name=>$programname, np=>$g_opt{np_default}, dir=>$curdir, args=>[], envs=>[], mpiexecargs=>[]};
+                my $test_opt = {name=>$programname, np=>$g_opt{np_default}, dir=>$curdir, args=>[], envs=>[], mpiexecargs=>[], testlist=>"$g_rel_wd (implicit)"};
                 push @$all_tests, $test_opt;
             }
         }
@@ -645,23 +860,24 @@ sub get_mpiexec_wrapper {
     }
 
     my $timeout = $test_opt->{_timeout};
+    if ($timeout) {
+        # For non-MPICH versions of mpiexec, a timeout may require a different
+        # environment variable or command line option (e.g., for Cray aprun,
+        # the option -t <sec> must be given, there is no environment variable
+        # to set the timeout.
+        if (defined($g_opt{timeoutarg}) && $g_opt{timeoutarg} ne "") {
+            my $timeoutArg = $g_opt{timeoutarg};
+            $timeoutArg =~ s/<SEC>/$timeout/;
+            $extraArgs .= $timeoutArg
+        }
 
-    # For non-MPICH versions of mpiexec, a timeout may require a different
-    # environment variable or command line option (e.g., for Cray aprun,
-    # the option -t <sec> must be given, there is no environment variable
-    # to set the timeout.
-    if (defined($g_opt{timeoutarg}) && $g_opt{timeoutarg} ne "") {
-        my $timeoutArg = $g_opt{timeoutarg};
-        $timeoutArg =~ s/<SEC>/$timeout/;
-        $extraArgs .= $timeoutArg
-    }
-
-    #
-    # Handle the timelimit option.
-    if ($g_opt{timelimitarg} ne "" && $timeout> 0) {
-        my $tlargs = $g_opt{timelimitarg};
-        $tlargs =~ s/\%d/$timeout/;
-        $extraArgs .= " " . $tlargs;
+        #
+        # Handle the timelimit option.
+        if ($g_opt{timelimitarg} ne "" && $timeout> 0) {
+            my $tlargs = $g_opt{timelimitarg};
+            $tlargs =~ s/\%d/$timeout/;
+            $extraArgs .= " " . $tlargs;
+        }
     }
 
     return "$g_opt{mpiexec} $g_opt{np_arg} $np $extraArgs $mpiexecArgs $g_opt{program_wrapper}";
@@ -1257,7 +1473,7 @@ sub RunTestFailed {
     # count # of timeout when tests are configured with sufficient timeLimit
     if ($test_opt->{_timeout} > 60) {
         if ($runtime - $test_opt->{_timeout} >= -10) {
-            $g_num_timeout++;
+            $g_num_severe++;
             # append load information to output
             my $uptime = `uptime`;
             $output .= "\n  uptime:\n$uptime";
