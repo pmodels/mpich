@@ -41,8 +41,9 @@ dnl internal routine, $1 is the extra cflags, hwloc_embedded_dir is m4 macro
 dnl defined to be the path to embedded hwloc.
 AC_DEFUN([PAC_CONFIG_HWLOC_EMBEDDED],[
     PAC_PUSH_FLAG([CFLAGS])
-    CFLAGS="$1"
+    CFLAGS="$USER_CFLAGS $1"
     hwloc_config_args="--enable-embedded-mode --disable-visibility"
+    hwloc_config_args="$hwloc_config_args --disable-gl"
     hwloc_config_args="$hwloc_config_args --disable-libxml2"
     hwloc_config_args="$hwloc_config_args --disable-nvml"
     hwloc_config_args="$hwloc_config_args --disable-cuda"

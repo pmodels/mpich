@@ -62,17 +62,7 @@ static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
 
 int MPIDI_CH3I_Shm_supported(void)
 {
-    int mutex_err;
-    pthread_mutexattr_t attr;
-
-    /* Test for PTHREAD_PROCESS_SHARED support.  Some platforms do not support
-     * this capability even though it is a part of the pthreads core API (e.g.,
-     * FreeBSD does not support this as of version 9.1) */
-    pthread_mutexattr_init(&attr);
-    mutex_err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-    pthread_mutexattr_destroy(&attr);
-
-    return !mutex_err;
+    return MPL_proc_mutex_enabled();
 }
 
 static MPIR_Commops comm_fns = {
