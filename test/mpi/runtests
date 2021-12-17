@@ -58,6 +58,8 @@ if ($0 =~ /(.*)\/runtests$/) {
     $g_topsrcdir = $1;
 }
 
+my $g_starttime = time();
+
 # Global variables
 our %g_opt;   # global options. TODO: migrate global option vars into the hash
 $g_opt{memory_total} = 20;      # Total memory in GB
@@ -357,15 +359,17 @@ if ($g_opt{batchRun}) {
     print "Run that script and then use checktests to summarize the results\n";
 }
 else {
+    my $t = time() - $g_starttime;
+    my $total_runtime = sprintf "total runtime: %d min %d sec", $t / 60, $t % 60;
     if ($err_count) {
-        print "$err_count tests failed out of $g_total_run\n";
+        print "$err_count tests failed out of $g_total_run ($total_runtime)\n";
         if ($xmloutput) {
             my $xmlfullfile = get_fullfile($g_opt{xmlfile});
             print "Details in $xmlfullfile\n";
         }
     }
     else {
-        print " All $g_total_run tests passed!\n";
+        print " All $g_total_run tests passed! ($total_runtime)\n";
     }
     if ($tapoutput) {
         my $tapfullfile = get_fullfile($g_opt{tapfile});
