@@ -49,6 +49,14 @@ use Time::HiRes qw(gettimeofday tv_interval);
 # Import flock constants
 use Fcntl qw(:flock);
 
+use Cwd;
+my $g_cwd = getcwd();
+
+my $g_topsrcdir = ".";
+if ($0 =~ /(.*)\/runtests$/) {
+    $g_topsrcdir = $1;
+}
+
 # Global variables
 our %g_opt;   # global options. TODO: migrate global option vars into the hash
 $g_opt{memory_total} = 20;      # Total memory in GB
