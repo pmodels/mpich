@@ -61,7 +61,7 @@ if ($0 =~ /(.*)\/runtests$/) {
 my $g_starttime = time();
 
 # Global variables
-our %g_opt;   # global options. TODO: migrate global option vars into the hash
+my %g_opt;   # global options. TODO: migrate global option vars into the hash
 $g_opt{memory_total} = 20;      # Total memory in GB
 $g_opt{memory_multiplier} = 1;  # No of simutaneous jobs
 $g_opt{cleanup} = 1;            # Whether to remove the compiled programs
@@ -117,17 +117,17 @@ my $tapoutput;
 my $junitoutput;
 
 # Total number of tests checked and run
-our $g_total_run = 0;
-our $g_total_seen = 0;
+my $g_total_run = 0;
+my $g_total_seen = 0;
 # When every tests result in timeout, it means the code has deadlocks or some major issues,
 # waiting for all tests to finish is rather unnecessary. We'll keep a counter for number
 # of timeouts, and abore after too many timeout failure.
-our $g_num_timeout;
-our $g_num_timeout_thresh = 5;
+my $g_num_timeout;
+my $g_num_timeout_thresh = 5;
 
-my $err_count = 0;          # Number of programs that failed.
-my $skip_count = 0;         # Number of programs skipped
-my $testCount = 0;          # Used with batchRun to count tests.
+my $g_err_count = 0;          # Number of programs that failed.
+my $g_skip_count = 0;         # Number of programs skipped
+my $g_testCount = 0;          # Used with batchRun to count tests.
 
 # Build flags
 
@@ -339,9 +339,9 @@ if ($junitoutput) {
     my $date = `date "+%Y-%m-%d-%H-%M"`;
     $date =~ s/\r?\n//;
     print $JUNITOUTNEW "<testsuites>\n";
-    print $JUNITOUTNEW "  <testsuite failures=\"$err_count\"\n";
+    print $JUNITOUTNEW "  <testsuite failures=\"$g_err_count\"\n";
     print $JUNITOUTNEW "             errors=\"0\"\n";
-    print $JUNITOUTNEW "             skipped=\"$skip_count\"\n";
+    print $JUNITOUTNEW "             skipped=\"$g_skip_count\"\n";
     print $JUNITOUTNEW "             tests=\"$g_total_run\"\n";
     print $JUNITOUTNEW "             date=\"${date}\"\n";
     print $JUNITOUTNEW "             name=\"summary_junit_xml\">\n";
@@ -361,8 +361,8 @@ if ($g_opt{batchRun}) {
 else {
     my $t = time() - $g_starttime;
     my $total_runtime = sprintf "total runtime: %d min %d sec", $t / 60, $t % 60;
-    if ($err_count) {
-        print "$err_count tests failed out of $g_total_run ($total_runtime)\n";
+    if ($g_err_count) {
+        print "$g_err_count tests failed out of $g_total_run ($total_runtime)\n";
         if ($xmloutput) {
             my $xmlfullfile = get_fullfile($g_opt{xmlfile});
             print "Details in $xmlfullfile\n";
@@ -578,11 +578,6 @@ sub RunTests {
                 &RunMPIProgram($test_opt);
             }
         }
-        elsif ($test_opt->{xfail} eq '') {
-            # We expected to run this program, so failure to build
-            # is an error
-            $err_count++;
-        }
         if ($g_opt{batchRun} == 0) {
             &CleanUpAfterRun($test_opt);
         }
@@ -603,7 +598,6 @@ sub LoadImplicitTests {
     # an MPI test.
     my $found_exec = 0;
     my $found_src  = 0;
-    my $err_count = 0;
     open (PGMS, "ls -1 |" ) || die "Cannot list directory\n";
     while (<PGMS>) {
         s/\r?\n//;
@@ -666,8 +660,10 @@ sub LoadImplicitTests {
 sub get_mpiexec_wrapper {
     my ($np, $test_opt) = @_;
 
-    my $mpiexecArgs = join(' ', @{$test_opt->{mpiexecargs}});
-    if (!$mpiexecArgs and $g_opt{mpiexecargs}) {
+    my $mpiexecArgs;
+    if ($test_opt->{mpiexecargs} and @{$test_opt->{mpiexecargs}}) {
+        $mpiexecArgs = join(' ', @{$test_opt->{mpiexecargs}});
+    } elsif ($g_opt{mpiexecargs}) {
         $mpiexecArgs = $g_opt{mpiexecargs};
     }
     my $extraArgs = "";
@@ -856,12 +852,12 @@ sub AddMPIProgram {
     # The approach here is to move the test codes to a single directory from
     # which they can be run; this avoids complex code to change directories
     # and ensure that the output goes "into the right place".
-    $testCount++;
+    $g_testCount++;
     rename $programname, "$g_opt{batrundir}/$programname";
-    print BATOUT "echo \"# $cmd\" > runtests.$testCount.out\n";
+    print BATOUT "echo \"# $cmd\" > runtests.$g_testCount.out\n";
     # Some programs expect to run in the same directory as the executable
-    print BATOUT "$cmd >> runtests.$testCount.out 2>&1\n";
-    print BATOUT "echo \$? > runtests.$testCount.status\n";
+    print BATOUT "$cmd >> runtests.$g_testCount.out 2>&1\n";
+    print BATOUT "echo \$? > runtests.$g_testCount.status\n";
 }
 
 # 
@@ -999,7 +995,6 @@ sub TestNormal {
             print STDERR "Unexpected output in $programname: $_";
             if (!$found_error) {
                 $found_error = 1;
-                $err_count ++;
             }
         }
     }
@@ -1007,7 +1002,6 @@ sub TestNormal {
         print STDERR "Program $programname exited without No Errors\n";
         if (!$found_error) {
             $found_error = 1;
-            $err_count ++;
         }
     }
     my $rc = close ($MPIOUT);
@@ -1023,7 +1017,6 @@ sub TestNormal {
                 print STDERR "Program $programname exited with signal $signal_num\n";
             }
             $found_error = 1;
-            $err_count ++;
         }
     }
     return ($found_error, $inline);
@@ -1050,7 +1043,6 @@ sub TestStatus {
             print STDERR "Unexpected output in $programname: $_";
             if (!$found_error) {
                 $found_error = 1;
-                $err_count ++;
             }
         }
     }
@@ -1064,7 +1056,6 @@ sub TestStatus {
         # This test *requires* non-zero return codes
         if (!$found_error) {
             $found_error = 1;
-            $err_count ++;
         }
         $inline .= "$g_opt{mpiexec} returned a zero status but the program returned a nonzero status\n";
     }
@@ -1095,7 +1086,6 @@ sub TestStatusNoErrors {
             print STDERR "Unexpected output in $programname: $_";
             if (!$found_error) {
                 $found_error = 1;
-                $err_count ++;
             }
         }
     }
@@ -1103,7 +1093,6 @@ sub TestStatusNoErrors {
         print STDERR "Program $programname exited without No Errors\n";
         if (!$found_error) {
             $found_error = 1;
-            $err_count ++;
         }
     }
     my $rc = close ($MPIOUT);
@@ -1116,7 +1105,6 @@ sub TestStatusNoErrors {
         # This test *requires* non-zero return codes
         if (!$found_error) {
             $found_error = 1;
-            $err_count ++;
         }
         $inline .= "$g_opt{mpiexec} returned a zero status but the program required a non-zero status\n";
     }
@@ -1148,7 +1136,6 @@ sub TestErrFatal {
         # This test *requires* non-zero return codes
         if (!$found_error) {
             $found_error = 1;
-            $err_count ++;
         }
         $inline .= "$g_opt{mpiexec} returned a zero status but the program returned a nonzero status\n";
     }
@@ -1303,6 +1290,8 @@ sub RunTestFailed {
         print JUNITOUT "    ]]></${testtag}>\n";
         print JUNITOUT "    </testcase>\n";
     }
+
+    $g_err_count++;
 }
 
 sub SkippedTest {
@@ -1325,7 +1314,7 @@ sub SkippedTest {
         print JUNITOUT "    </testcase>\n";
     }
 
-    $skip_count++;
+    $g_skip_count++;
 }
 
 # ----------------------------------------------------------------------------
