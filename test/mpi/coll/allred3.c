@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run coll_allred3
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test MPI_Allreduce with non-commutative user-defined operations";
@@ -16,7 +18,7 @@ static char MTEST_Descrip[] = "Test MPI_Allreduce with non-commutative user-defi
 /* We make the error count global so that we can easily control the output
    of error information (in particular, limiting it after the first 10
    errors */
-int errs = 0;
+static int errs = 0;
 
 /* This implements a simple matrix-matrix multiply.  This is an associative
    but not commutative operation.  The matrix size is set in matSize;
@@ -27,8 +29,7 @@ int errs = 0;
 #define MAXCOL 256
 static int matSize = 0;         /* Must be < MAXCOL */
 static int max_offset = 0;
-void uop(void *, void *, int *, MPI_Datatype *);
-void uop(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype)
+static void uop(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype)
 {
     const int *cin = (const int *) cinPtr;
     int *cout = (int *) coutPtr;
@@ -147,7 +148,7 @@ static int isIdentity(MPI_Comm comm, int mat[])
     return lerrs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int size;
     int minsize = 2, count;
@@ -155,8 +156,6 @@ int main(int argc, char *argv[])
     int *buf, *bufout;
     MPI_Op op;
     MPI_Datatype mattype;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Op_create(uop, 0, &op);
 
@@ -202,6 +201,5 @@ int main(int argc, char *argv[])
 
     MPI_Op_free(&op);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

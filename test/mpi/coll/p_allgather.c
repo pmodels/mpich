@@ -8,10 +8,12 @@
  * proposed MPI-4 is present in the library and take arguments as expected.  This test
  * does not check for progress or matching issues. */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdio.h>
-#include <stdlib.h>
+
+#ifdef MULTI_TESTS
+#define run coll_p_allgather
+int run(const char *arg);
+#endif
 
 #define NUM_INTS (2)
 
@@ -23,7 +25,7 @@
         }                                                                 \
     } while (0)
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     int i;
@@ -33,8 +35,6 @@ int main(int argc, char **argv)
     MPI_Comm comm;
     int count = 10;
     int j = 0;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -81,6 +81,5 @@ int main(int argc, char **argv)
     free(sendbuf);
     free(recvbuf);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

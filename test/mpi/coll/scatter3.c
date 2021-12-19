@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdlib.h>
-#include <stdio.h>
+
+#ifdef MULTI_TESTS
+#define run coll_scatter3
+int run(const char *arg);
+#endif
 
 /* This example sends contiguous data and receives a vector on some nodes
    and contiguous data on others.  There is some evidence that some
@@ -14,15 +16,13 @@
    test checks for that case
 */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Datatype vec;
     double *vecin, *vecout, ivalue;
     int root, i, n, stride, errs = 0;
     int rank, size;
     MPI_Aint vextent, tmp_lb;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -79,6 +79,6 @@ int main(int argc, char **argv)
     free(vecin);
     free(vecout);
     MPI_Type_free(&vec);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

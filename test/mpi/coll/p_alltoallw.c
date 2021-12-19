@@ -14,17 +14,18 @@
 /* Specify the maximum number of errors to report. */
 #define MAX_ERRORS 10
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdio.h>
-#include <stdlib.h>
+
+#ifdef MULTI_TESTS
+#define run coll_p_alltoallw
+int run(const char *arg);
+#endif
 
 #define MAX_SIZE 64
 
-MPI_Datatype transpose_type(int M, int m, int n, MPI_Datatype type);
-MPI_Datatype submatrix_type(int N, int m, int n, MPI_Datatype type);
-void Transpose(float *localA, float *localB, int M, int N, MPI_Comm comm);
-void Transpose(float *localA, float *localB, int M, int N, MPI_Comm comm)
+static MPI_Datatype transpose_type(int M, int m, int n, MPI_Datatype type);
+static MPI_Datatype submatrix_type(int N, int m, int n, MPI_Datatype type);
+static void Transpose(float *localA, float *localB, int M, int N, MPI_Comm comm)
 /* transpose MxN matrix A that is block distributed (1-D) on
    processes of comm onto block distributed matrix B  */
 {
@@ -109,7 +110,7 @@ void Transpose(float *localA, float *localB, int M, int N, MPI_Comm comm)
 
 /* Define an n x m submatrix in a n x M local matrix (this is the
    destination in the transpose matrix */
-MPI_Datatype submatrix_type(int M, int m, int n, MPI_Datatype type)
+static MPI_Datatype submatrix_type(int M, int m, int n, MPI_Datatype type)
 /* computes a datatype for an mxn submatrix within an MxN matrix
    with entries of type type */
 {
@@ -146,7 +147,7 @@ MPI_Datatype submatrix_type(int M, int m, int n, MPI_Datatype type)
 
 /* Extract an m x n submatrix within an m x N matrix and transpose it.
    Assume storage by rows; the defined datatype accesses by columns */
-MPI_Datatype transpose_type(int N, int m, int n, MPI_Datatype type)
+static MPI_Datatype transpose_type(int N, int m, int n, MPI_Datatype type)
 /* computes a datatype for the transpose of an mxn matrix
    with entries of type type */
 {
@@ -180,14 +181,13 @@ MPI_Datatype transpose_type(int N, int m, int n, MPI_Datatype type)
 
 /* -- CUT HERE -- */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int gM, gN, lm, lmlast, ln, lnlast, i, j, errs = 0;
     int size, rank;
     float *localA, *localB;
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;
 
     MPI_Comm_size(comm, &size);
@@ -263,8 +263,5 @@ int main(int argc, char *argv[])
     free(localA);
     free(localB);
 
-    MTest_Finalize(errs);
-
-
-    return MTestReturnValue(errs);
+    return errs;
 }

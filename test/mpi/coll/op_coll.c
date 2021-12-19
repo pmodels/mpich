@@ -6,10 +6,12 @@
 /* A test of all op-based collectives with support for GPU buffers */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include "mtest_dtp.h"
+
+#ifdef MULTI_TESTS
+#define run coll_op_coll
+int run(const char *arg);
+#endif
 
 #define COUNT (10)
 
@@ -21,15 +23,15 @@
         }                                                                 \
     } while (0)
 
-int *buf;
-int *buf_h;
-int *recvbuf;
-int *recvbuf_h;
-int *recvcounts;
-MPI_Request req;
-mtest_mem_type_e memtype;
+static int *buf;
+static int *buf_h;
+static int *recvbuf;
+static int *recvbuf_h;
+static int *recvcounts;
+static MPI_Request req;
+static mtest_mem_type_e memtype;
 
-void test_op_coll_with_root(int rank, int size, int root);
+static void test_op_coll_with_root(int rank, int size, int root);
 
 static int run_test(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
 {
@@ -61,23 +63,21 @@ static int run_test(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
     return 0;
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
-    MTest_Init(&argc, &argv);
 
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_COLL_NOCOUNT, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_COLL_NOCOUNT, arg);
     while (dtp_args_get_next(&dtp_args)) {
         errs += run_test(dtp_args.u.coll.evenmem, dtp_args.u.coll.oddmem);
     }
     dtp_args_finalize(&dtp_args);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
-void test_op_coll_with_root(int rank, int size, int root)
+static void test_op_coll_with_root(int rank, int size, int root)
 {
     int i, j;
 

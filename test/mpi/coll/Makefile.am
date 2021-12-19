@@ -4,6 +4,7 @@
 ##
 
 include $(top_srcdir)/Makefile_single.mtest
+include Makefile_mpitests.mk
 
 EXTRA_DIST = testlist.in
 
@@ -142,8 +143,6 @@ noinst_PROGRAMS =      \
     ring_neighbor_alltoall \
     allgather_gpu \
     allgatherv_gpu
-
-allgatherv4_LDADD = $(LDADD) -lm
 
 bcast_CPPFLAGS = $(AM_CPPFLAGS)
 bcast_SOURCES = bcast.c
