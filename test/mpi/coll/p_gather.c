@@ -3,14 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdlib.h>
-#include <stdio.h>
+
+#ifdef MULTI_TESTS
+#define run coll_p_gather
+int run(const char *arg);
+#endif
 
 /* Gather data from a vector to contiguous */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Datatype vec;
     MPI_Comm comm;
@@ -21,8 +23,6 @@ int main(int argc, char **argv)
 
     MPI_Request req;
     MPI_Info info;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Info_create(&info);
 
@@ -83,6 +83,5 @@ int main(int argc, char **argv)
 
     MPI_Info_free(&info);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

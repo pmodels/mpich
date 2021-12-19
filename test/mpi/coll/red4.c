@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_red4
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test MPI_Reduce with non-commutative user-define operations and arbitrary root";
@@ -29,8 +31,7 @@ static char MTEST_Descrip[] = "Test MPI_Reduce with non-commutative user-define 
 #define MAXCOL 256
 static int matSize = 0;         /* Must be < MAXCOL */
 
-void uop(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype);
-void uop(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype)
+static void uop(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype)
 {
     const int *cin;
     int *cout;
@@ -179,7 +180,7 @@ static int isPermutedIdentity(MPI_Comm comm, int mat[])
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, root;
@@ -188,8 +189,6 @@ int main(int argc, char *argv[])
     int *buf, *bufout;
     MPI_Op op;
     MPI_Datatype mattype;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Op_create(uop, 0, &op);
 
@@ -247,6 +246,5 @@ int main(int argc, char *argv[])
 
     MPI_Op_free(&op);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

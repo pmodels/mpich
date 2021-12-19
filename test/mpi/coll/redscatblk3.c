@@ -13,12 +13,14 @@
  * Can be called with any number of processors.
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run coll_redscatblk3
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     int *sendbuf, *recvbuf;
@@ -26,7 +28,6 @@ int main(int argc, char **argv)
     MPI_Comm comm;
 
 
-    MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;
 
     MPI_Comm_size(comm, &size);
@@ -81,8 +82,5 @@ int main(int argc, char **argv)
     free(sendbuf);
     free(recvbuf);
 
-    MTest_Finalize(errs);
-
-
-    return MTestReturnValue(errs);
+    return errs;
 }

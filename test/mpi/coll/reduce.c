@@ -4,10 +4,12 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mtest_dtp.h"
+
+#ifdef MULTI_TESTS
+#define run coll_reduce
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "A simple test of Reduce with all choices of root process";
@@ -111,18 +113,16 @@ static int test_reduce(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
-    MTest_Init(&argc, &argv);
 
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_COLL_NOCOUNT, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_COLL_NOCOUNT, arg);
     while (dtp_args_get_next(&dtp_args)) {
         errs += test_reduce(dtp_args.u.coll.evenmem, dtp_args.u.coll.oddmem);
     }
     dtp_args_finalize(&dtp_args);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

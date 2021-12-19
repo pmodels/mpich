@@ -3,16 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdlib.h>
-#include <stdio.h>
+
+#ifdef MULTI_TESTS
+#define run coll_allgatherv3
+int run(const char *arg);
+#endif
 
 /* Test Allgatherv on array of doubles, same as allgatherv2 but without
  * MPI_IN_PLACE. This is the trivial version based on the allgather3
  * test (allgatherv but with constant data sizes) */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     double *vecout, *invec;
     MPI_Comm comm;
@@ -20,8 +22,6 @@ int main(int argc, char **argv)
     int i, errs = 0;
     int rank, size;
     int *displs, *recvcounts;
-
-    MTest_Init(&argc, &argv);
 
     while (MTestGetIntracommGeneral(&comm, minsize, 1)) {
         if (comm == MPI_COMM_NULL)
@@ -61,6 +61,5 @@ int main(int argc, char **argv)
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

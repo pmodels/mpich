@@ -3,14 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include "mpitest.h"
 
-/* Prototypes for picky compilers */
-void SetData(double *, double *, int, int, int, int, int, int);
-int CheckData(double *, int, int, int, int, int, int);
+#ifdef MULTI_TESTS
+#define run coll_scatterv
+int run(const char *arg);
+#endif
+
 /*
    This is an example of using scatterv to send a matrix from one
    process to all others, with the matrix stored in Fortran order.
@@ -22,8 +21,8 @@ int CheckData(double *, int, int, int, int, int, int);
 
  */
 
-void SetData(double *sendbuf, double *recvbuf, int nx, int ny,
-             int myrow, int mycol, int nrow, int ncol)
+static void SetData(double *sendbuf, double *recvbuf, int nx, int ny,
+                    int myrow, int mycol, int nrow, int ncol)
 {
     int coldim, i, j, m, k;
     double *p;
@@ -46,7 +45,8 @@ void SetData(double *sendbuf, double *recvbuf, int nx, int ny,
         recvbuf[i] = -1.0;
 }
 
-int CheckData(double *recvbuf, int nx, int ny, int myrow, int mycol, int nrow, int expect_no_value)
+static int CheckData(double *recvbuf, int nx, int ny, int myrow, int mycol, int nrow,
+                     int expect_no_value)
 {
     int coldim, m, k;
     double *p, val;
@@ -79,7 +79,7 @@ int CheckData(double *recvbuf, int nx, int ny, int myrow, int mycol, int nrow, i
     return errs;
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, size, myrow, mycol, nx, ny, stride, cnt, i, j, errs, errs_in_place;
     double *sendbuf, *recvbuf;
@@ -89,8 +89,6 @@ int main(int argc, char **argv)
     int dims[2], periods[2], coords[2], lcoords[2];
     int *sendcounts;
 
-
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -170,6 +168,6 @@ int main(int argc, char **argv)
     free(scdispls);
     MPI_Type_free(&block);
     MPI_Comm_free(&comm2d);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }
