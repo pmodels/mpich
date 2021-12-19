@@ -3,14 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdlib.h>
-#include <stdio.h>
+
+#ifdef MULTI_TESTS
+#define run coll_gather2
+int run(const char *arg);
+#endif
 
 /* Gather data from a vector to contiguous.  Use IN_PLACE */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Datatype vec;
     double *vecin, *vecout;
@@ -18,8 +20,6 @@ int main(int argc, char **argv)
     int count, minsize = 2;
     int root, i, n, stride, errs = 0;
     int rank, size;
-
-    MTest_Init(&argc, &argv);
 
     while (MTestGetIntracommGeneral(&comm, minsize, 1)) {
         if (comm == MPI_COMM_NULL)
@@ -78,6 +78,5 @@ int main(int argc, char **argv)
         MPI_Gather(NULL, 0, MPI_BYTE, NULL, 0, MPI_BYTE, 0, MPI_COMM_WORLD);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

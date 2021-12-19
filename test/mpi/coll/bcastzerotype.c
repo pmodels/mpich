@@ -3,23 +3,23 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <mpitest.h>
 #include <assert.h>
 
-#include <mpi.h>
-#include <mpitest.h>
+#ifdef MULTI_TESTS
+#define run coll_bcastzerotype
+int run(const char *arg);
+#endif
 
 /* test broadcast behavior with non-zero counts but zero-sized types */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int i, type_size;
     MPI_Datatype type = MPI_DATATYPE_NULL;
     char *buf = NULL;
     int wrank, wsize;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
 
@@ -49,7 +49,6 @@ int main(int argc, char *argv[])
     free(buf);
 
     MPI_Type_free(&type);
-    MTest_Finalize(0);
 
     return 0;
 }
