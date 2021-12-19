@@ -9,14 +9,6 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-
 #include "mtest_dtp.h"
 /* For simplicity, we precalculate solutions in integers. Use "long" type
  * to prevent intermediate overflows, especially during get_pow(). On the
@@ -24,6 +16,11 @@
  * operation are usually consistent.
  */
 #define LONG long long
+
+#ifdef MULTI_TESTS
+#define run coll_allred
+int run(const char *arg);
+#endif
 
 struct int_test {
     int a;
@@ -705,11 +702,9 @@ static int test_allred(mtest_mem_type_e evenmem, mtest_mem_type_e oddmem)
     return errs;
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -720,13 +715,12 @@ int main(int argc, char **argv)
     }
 
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_COLL_COUNT, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_COLL_COUNT, arg);
     while (dtp_args_get_next(&dtp_args)) {
         count = dtp_args.count;
         errs += test_allred(dtp_args.u.coll.evenmem, dtp_args.u.coll.oddmem);
     }
     dtp_args_finalize(&dtp_args);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

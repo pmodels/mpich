@@ -1,17 +1,18 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2011 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* A basic test of persistent broadcast collective operation specified by the
  * propsoed MPI-4 standard.  It only exercises the intracommunicator functionality,
  * and only transmits/receives simple integer types with relatively small counts. */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdlib.h>
-#include <stdio.h>
+
+#ifdef MULTI_TESTS
+#define run coll_p_bcast2
+int run(const char *arg);
+#endif
 
 #define COUNT (10)
 #define PRIME (17)
@@ -24,7 +25,7 @@
         }                                                                 \
     } while (0)
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i;
     int errs = 0;
@@ -32,7 +33,6 @@ int main(int argc, char **argv)
     int *buf = NULL;
     signed char *buf_alias = NULL;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -90,6 +90,5 @@ int main(int argc, char **argv)
     free(buf);
     MPI_Info_free(&info);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
