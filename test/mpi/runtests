@@ -700,6 +700,15 @@ sub run_mpitests {
             }
             print "    [$cmd]\n" if $g_opt{verbose};
 
+            if ($test_opt->{envs} and @{$test_opt->{envs}}) {
+                foreach my $t (@{$test_opt->{envs}}) {
+                    if ($t =~ /([^=]+)=(.*)/) {
+                        print "        $1=$2\n" if $g_opt{verbose};
+                        print $in "$1=$2\n"
+                    }
+                }
+            }
+
             RunPreMsg($test_opt);
             my $start_time = gettimeofday();
             print $in "$cmd\n";
@@ -735,6 +744,15 @@ sub run_mpitests {
                 RunTestFailed($test_opt, join('', @inline), $runtime);
             }
             RunPostMsg($test_opt);
+
+            # reset CVARs
+            if ($test_opt->{envs} and @{$test_opt->{envs}}) {
+                foreach my $t (@{$test_opt->{envs}}) {
+                    if ($t =~ /([^=]+)=(.*)/) {
+                        print $in "$1=\n"
+                    }
+                }
+            }
         }
         close($in);
         close($out);
