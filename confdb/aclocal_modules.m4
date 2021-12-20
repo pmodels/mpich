@@ -24,7 +24,7 @@ AC_DEFUN([PAC_CONFIG_MPL],[
         dnl ---- sub-configure (e.g. hydra, romio) ----
         if test "$FROM_MPICH" = "yes"; then
             mpl_lib="$main_top_builddir/src/mpl/libmpl.la"
-            mpl_includedir='-I$(main_top_builddir)/src/mpl/include -I$(main_top_srcdir)/src/mpl/include'
+            mpl_includedir="-I$main_top_builddir/src/mpl/include -I$main_top_srcdir/src/mpl/include"
         else
             PAC_CONFIG_MPL_EMBEDDED
             mpl_srcdir="mpl_embedded_dir"
