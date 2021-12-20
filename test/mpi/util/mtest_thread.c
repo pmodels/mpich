@@ -95,6 +95,7 @@ int MTest_thread_barrier(int nt)
 {
     volatile int *cntP;
     int err = 0;
+    int num_left;
 
     if (nt < 0)
         nt = nthreads;
@@ -118,9 +119,23 @@ int MTest_thread_barrier(int nt)
     }
     /* Really need a write barrier here */
     *cntP = *cntP - 1;
+    num_left = *cntP;
     err = MTest_thread_unlock(&barrierLock);
     LOCK_ERR_CHECK(err);
-    while (*cntP > 0);
+
+    /* wait for other threads */
+    while (num_left > 0) {
+        err = MTest_thread_lock(&barrierLock);
+        LOCK_ERR_CHECK(err);
+
+        /* TODO: This would be improved with atomic ops instead of using
+         * a mutex. Integrating MPL for portable atomics would be an
+         * improvement. */
+        num_left = *cntP;
+
+        err = MTest_thread_unlock(&barrierLock);
+        LOCK_ERR_CHECK(err);
+    }
 
     return err;
 }
