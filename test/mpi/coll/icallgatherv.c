@@ -22,6 +22,14 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Datatype datatype;
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     MTest_Init(&argc, &argv);
 
     datatype = MPI_INT;
@@ -56,7 +64,7 @@ int main(int argc, char *argv[])
                 for (i = 0; i < count; i++)
                     sbuf[i] = -(i + rank * count);
             }
-            err = MTest_Allgatherv(sbuf, count, datatype,
+            err = MTest_Allgatherv(is_blocking, sbuf, count, datatype,
                                    rbuf, recvcounts, recvdispls, datatype, comm);
             if (err) {
                 errs++;
@@ -80,7 +88,7 @@ int main(int argc, char *argv[])
             for (i = 0; i < count * rsize; i++)
                 rbuf[i] = -1;
             if (leftGroup) {
-                err = MTest_Allgatherv(sbuf, 0, datatype,
+                err = MTest_Allgatherv(is_blocking, sbuf, 0, datatype,
                                        rbuf, recvcounts, recvdispls, datatype, comm);
                 if (err) {
                     errs++;
@@ -96,7 +104,7 @@ int main(int argc, char *argv[])
                     recvcounts[i] = 0;
                     recvdispls[i] = 0;
                 }
-                err = MTest_Allgatherv(sbuf, count, datatype,
+                err = MTest_Allgatherv(is_blocking, sbuf, count, datatype,
                                        rbuf, recvcounts, recvdispls, datatype, comm);
                 if (err) {
                     errs++;

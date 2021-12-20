@@ -26,6 +26,14 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
      * Use subsets of these for tests that do not involve combinations
@@ -64,7 +72,8 @@ int main(int argc, char *argv[])
                 }
             }
 
-            MTest_Alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
+            MTest_Alltoall(is_blocking, sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                           comm);
 
             p = recvbuf;
             for (j = 0; j < size; j++) {

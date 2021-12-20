@@ -25,6 +25,13 @@ int main(int argc, char **argv)
     int size, rank, i, sumval;
     MPI_Comm comm;
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
 
     MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;
@@ -38,7 +45,7 @@ int main(int argc, char **argv)
     for (i = 0; i < size; i++)
         recvcounts[i] = 1;
 
-    MTest_Reduce_scatter(sendbuf, &recvbuf, recvcounts, MPI_INT, MPI_SUM, comm);
+    MTest_Reduce_scatter(is_blocking, sendbuf, &recvbuf, recvcounts, MPI_INT, MPI_SUM, comm);
 
     sumval = size * rank + ((size - 1) * size) / 2;
 /* recvbuf should be size * (rank + i) */
