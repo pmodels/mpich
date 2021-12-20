@@ -99,18 +99,9 @@ int MTest_thread_barrier(int nt)
         return err;
     }
     cntP = &c[phase];
-    err = MTest_thread_unlock(&barrierLock);
-    if (err) {
-        fprintf(stderr, "Unlock failed in barrier!\n");
-        return err;
-    }
 
     /* printf("[%d] cnt = %d, phase = %d\n", pthread_self(), *cntP, phase); */
-    err = MTest_thread_lock(&barrierLock);
-    if (err) {
-        fprintf(stderr, "Lock failed in barrier!\n");
-        return err;
-    }
+
     /* The first thread to enter will reset the counter */
     if (*cntP < 0)
         *cntP = nt;
