@@ -121,6 +121,8 @@ tests:
     neighbor_alltoallw:
         intra-blocking:
             neighb_alltoallw 4
+        persistent:
+            p_neighb_alltoallw 4
     reduce:
         intra-blocking:
             reduce 5
@@ -139,7 +141,6 @@ tests:
             redscat3 8
         persistent:
             p_redscat 4
-            redscat 4
     reduce_scatter_block:
         intra-blocking:
             red_scat_block 4
@@ -155,7 +156,6 @@ tests:
     scan:
         intra-blocking:
             scantst 4
-            op_coll 4
         persistent:
             p_scan 4
     scatter:
