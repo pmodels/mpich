@@ -129,24 +129,6 @@ noinst_PROGRAMS =      \
     uoplong            \
     uoplong_large      \
     uop_equal	       \
-    nballtoall1        \
-    nbredscat          \
-    nbredscat3	       \
-    nbredscatinter     \
-    nbcoll2            \
-    nbicbarrier        \
-    nbicallgather      \
-    nbicallgatherv     \
-    nbicallreduce      \
-    nbicbcast          \
-    nbicalltoall       \
-    nbicalltoallw      \
-    nbicalltoallv      \
-    nbicgather         \
-    nbicgatherv        \
-    nbicreduce         \
-    nbicscatter        \
-    nbicscatterv       \
     neighb_allgather   \
     neighb_allgatherv  \
     neighb_alltoall    \
@@ -160,52 +142,6 @@ noinst_PROGRAMS =      \
     ring_neighbor_alltoall
 
 allgatherv4_LDADD = $(LDADD) -lm
-
-# Generate tests of the nonblocking collectives by reusing the blocking tests.
-nballtoall1_SOURCES = alltoall1.c
-nballtoall1_CPPFLAGS  = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-nbredscat_SOURCES   = redscat.c
-nbredscat_CPPFLAGS     = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-nbredscat3_SOURCES   = redscat3.c
-nbredscat3_CPPFLAGS     = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-nbredscatinter_SOURCES   = redscatinter.c
-nbredscatinter_CPPFLAGS     = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-nbcoll2_SOURCES = coll2.c
-nbcoll2_CPPFLAGS   = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-
-nbicbarrier_SOURCES = icbarrier.c
-nbicbarrier_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-
-nbicallgather_SOURCES = icallgather.c
-nbicallgather_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-nbicallgatherv_SOURCES = icallgatherv.c
-nbicallgatherv_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-
-nbicallreduce_SOURCES = icallreduce.c
-nbicallreduce_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-
-nbicalltoall_SOURCES = icalltoall.c
-nbicalltoall_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-nbicalltoallv_SOURCES = icalltoallv.c
-nbicalltoallv_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-nbicalltoallw_SOURCES = icalltoallw.c
-nbicalltoallw_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-
-nbicbcast_SOURCES = icbcast.c
-nbicbcast_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-
-nbicgather_SOURCES = icgather.c
-nbicgather_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-nbicgatherv_SOURCES = icgatherv.c
-nbicgatherv_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-
-nbicreduce_SOURCES = icreduce.c
-nbicreduce_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-
-nbicscatter_SOURCES = icscatter.c
-nbicscatter_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
-nbicscatterv_SOURCES = icscatterv.c
-nbicscatterv_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
 
 bcast_CPPFLAGS = $(AM_CPPFLAGS)
 bcast_SOURCES = bcast.c
