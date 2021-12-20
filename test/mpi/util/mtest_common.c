@@ -103,29 +103,41 @@ void MTestArgListDestroy(MTestArgList * head)
 }
 
 /*
- * following args are expected to be of the form: -arg=val
+ * following args are expected to be of the form: -arg=val or -arg.
+ * -arg is the same as -arg=1
  */
+
+static void parse_option(char *string, char **key, char **val)
+{
+    char *s_eq = strchr(string, '=');
+    if (s_eq) {
+        *s_eq = '\0';
+        *key = strdup(string + 1);      /* skip prepending '-' */
+        *val = strdup(s_eq + 1);        /* skip the '=' (now '\0') */
+    } else {
+        /* -arg is the same as -arg=1 */
+        *key = strdup(string + 1);
+        *val = strdup("1");
+    }
+}
+
 MTestArgList *MTestArgListCreate(int argc, char *argv[])
 {
     int i;
     char *string = NULL;
     char *tmp = NULL;
-    char *arg = NULL;
+    char *key = NULL;
     char *val = NULL;
 
     MTestArgListEntry *head = NULL;
 
     for (i = 1; i < argc; i++) {
-        /* extract arg and val */
+        /* extract key and val */
         assert(argv[i][0] == '-' && argv[i][1] != '-');
         string = strdup(argv[i]);
-        tmp = strtok(string, "=");
-        arg = strdup(tmp + 1);  /* skip prepending '-' */
-        tmp = strtok(NULL, "=");
-        assert(tmp != NULL);
-        val = strdup(tmp);
+        parse_option(string, &key, &val);
 
-        MTestArgListInsert(&head, arg, val);
+        MTestArgListInsert(&head, key, val);
 
         free(string);
     }
@@ -159,11 +171,7 @@ MTestArgList *MTestArgListCreate_arg(const char *arg)
             string = strndup(s, s2 - s);
             s = s2;
 
-            tmp = strtok(string, "=");
-            key = strdup(tmp + 1);      /* skip prepending '-' */
-            tmp = strtok(NULL, "=");
-            assert(tmp != NULL);
-            val = strdup(tmp);
+            parse_option(string, &key, &val);
 
             MTestArgListInsert(&head, key, val);
 
