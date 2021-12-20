@@ -15,7 +15,6 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "mpicolltest.h"
 #include "mpitest.h"
 
 int main(int argc, char **argv)

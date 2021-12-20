@@ -144,27 +144,27 @@ iallred 2
 # succeeds
 ibarrier 2 timeLimit=30
 
-# run some of the tests, relinked with the nbc_pmpi_adaptor.o file
-nballtoall1 8
-nbcoll2 5
-nbredscat 4
-nbredscat 8
-nbredscat3 8
-nbredscatinter 8
+# run some of the tests with nonblocking option
+alltoall1 8 arg=-nonblocking
+coll2 5 arg=-nonblocking
+redscat 4 arg=-nonblocking
+redscat 8 arg=-nonblocking
+redscat3 8 arg=-nonblocking
+redscatinter 8 arg=-nonblocking
 
-nbicbcast 8
-nbicallreduce 8
-nbicreduce 8
-nbicscatter 8
-nbicgather 8
-nbicallgather 8
-nbicbarrier 8
-nbicallgatherv 8
-nbicgatherv 8
-nbicscatterv 8
-nbicalltoall 8
-nbicalltoallv 8
-nbicalltoallw 8
+icbcast 8 arg=-nonblocking
+icallreduce 8 arg=-nonblocking
+icreduce 8 arg=-nonblocking
+icscatter 8 arg=-nonblocking
+icgather 8 arg=-nonblocking
+icallgather 8 arg=-nonblocking
+icbarrier 8 arg=-nonblocking
+icallgatherv 8 arg=-nonblocking
+icgatherv 8 arg=-nonblocking
+icscatterv 8 arg=-nonblocking
+icalltoall 8 arg=-nonblocking
+icalltoallv 8 arg=-nonblocking
+icalltoallw 8 arg=-nonblocking
 
 neighb_allgather 4
 neighb_allgatherv 4
