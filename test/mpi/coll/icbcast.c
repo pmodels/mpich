@@ -21,6 +21,14 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Datatype datatype;
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     MTest_Init(&argc, &argv);
 
     datatype = MPI_INT;
@@ -45,7 +53,7 @@ int main(int argc, char *argv[])
                     for (i = 0; i < count; i++)
                         buf[i] = -1;
                 }
-                err = MTest_Bcast(buf, count, datatype,
+                err = MTest_Bcast(is_blocking, buf, count, datatype,
                                   (rank == 0) ? MPI_ROOT : MPI_PROC_NULL, comm);
                 if (err) {
                     errs++;
@@ -64,7 +72,7 @@ int main(int argc, char *argv[])
                 /* In the right group */
                 for (i = 0; i < count; i++)
                     buf[i] = -1;
-                err = MTest_Bcast(buf, count, datatype, 0, comm);
+                err = MTest_Bcast(is_blocking, buf, count, datatype, 0, comm);
                 if (err) {
                     errs++;
                     MTestPrintError(err);
