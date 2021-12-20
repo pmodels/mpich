@@ -82,6 +82,12 @@ int MTest_thread_barrier_free(void)
     return MTest_thread_lock_free(&barrierLock);
 }
 
+#define LOCK_ERR_CHECK(err_)                            \
+    if (err_) {                                         \
+        fprintf(stderr, "Lock failed in barrier!\n");   \
+        return err_;                                    \
+    }
+
 /* This is a generic barrier implementation.  To ensure that tests don't
    silently fail, this both prints an error message and returns an error
    result on any failure. */
@@ -94,10 +100,7 @@ int MTest_thread_barrier(int nt)
         nt = nthreads;
     /* Force a write barrier by using lock/unlock */
     err = MTest_thread_lock(&barrierLock);
-    if (err) {
-        fprintf(stderr, "Lock failed in barrier!\n");
-        return err;
-    }
+    LOCK_ERR_CHECK(err);
     cntP = &c[phase];
 
     /* printf("[%d] cnt = %d, phase = %d\n", pthread_self(), *cntP, phase); */
@@ -116,10 +119,7 @@ int MTest_thread_barrier(int nt)
     /* Really need a write barrier here */
     *cntP = *cntP - 1;
     err = MTest_thread_unlock(&barrierLock);
-    if (err) {
-        fprintf(stderr, "Unlock failed in barrier!\n");
-        return err;
-    }
+    LOCK_ERR_CHECK(err);
     while (*cntP > 0);
 
     return err;
