@@ -3,11 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run coll_coll8
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int rank, size, i;
     int data;
@@ -15,7 +18,6 @@ int main(int argc, char **argv)
     int result = -100;
     int correct_result;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -39,6 +41,5 @@ int main(int argc, char **argv)
     if (result != (size - 1))
         errors++;
 
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

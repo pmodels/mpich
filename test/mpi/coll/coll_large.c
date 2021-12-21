@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run coll_coll_large
+int run(const char *arg);
+#endif
 
 /*
   Basic test for collective large APIs.
@@ -17,11 +19,11 @@
 #define MAX_SIZE 1024
 #define MAX_PROC 20
 
-MPI_Comm comm;
-int rank, nprocs;
-int errs;
-int sendbuf[MAX_SIZE];
-int recvbuf[MAX_SIZE];
+static MPI_Comm comm;
+static int rank, nprocs;
+static int errs;
+static int sendbuf[MAX_SIZE];
+static int recvbuf[MAX_SIZE];
 
 static void init_buf(void)
 {
@@ -53,15 +55,13 @@ static void test_alltoallv(void)
     }
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
-    MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;
     MPI_Comm_size(comm, &nprocs);
     MPI_Comm_rank(comm, &rank);
 
     test_alltoallv();
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

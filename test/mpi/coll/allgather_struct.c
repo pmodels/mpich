@@ -3,9 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdlib.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_allgather_struct
+int run(const char *arg);
+#endif
 
 /* Allgather a two-field struct datatype. This test
    may trigger bugs such as when the implementation
@@ -16,7 +19,7 @@ typedef struct {
     long second;
 } int_long_t;
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Comm comm;
     int minsize = 2;
@@ -29,8 +32,6 @@ int main(int argc, char **argv)
     MPI_Datatype types[] = { MPI_INT, MPI_LONG };
     int blocklength[2] = { 1, 1 };
     int_long_t *gathered_objects;
-
-    MTest_Init(&argc, &argv);
 
     while (MTestGetIntracommGeneral(&comm, minsize, 1)) {
 
@@ -69,6 +70,5 @@ int main(int argc, char **argv)
         free(gathered_objects);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

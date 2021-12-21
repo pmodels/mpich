@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include "mpicolltest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_icalltoallv
+int run(const char *arg);
+#endif
 
 /*
   This program tests MPI_Alltoallv by having processor i send different
@@ -22,7 +24,7 @@
   that use point-to-point operations
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Comm comm;
     int *sbuf, *rbuf;
@@ -33,13 +35,12 @@ int main(int argc, char **argv)
 
     int is_blocking = 1;
 
-    MTestArgList *head = MTestArgListCreate(argc, argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
     if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
         is_blocking = 0;
     }
     MTestArgListDestroy(head);
 
-    MTest_Init(&argc, &argv);
     errs = 0;
 
     while (MTestGetIntercomm(&comm, &leftGroup, 4)) {
@@ -103,6 +104,5 @@ int main(int argc, char **argv)
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

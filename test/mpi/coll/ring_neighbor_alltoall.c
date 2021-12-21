@@ -6,14 +6,15 @@
  * Rabenseifner (HLRS), but is a rewrite of the primary logic to make
  * it more suitable for the MPICH test suite. */
 
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
-{
-    MTest_Init(&argc, &argv);
+#ifdef MULTI_TESTS
+#define run coll_ring_neighbor_alltoall
+int run(const char *arg);
+#endif
 
+int run(const char *arg)
+{
     int size;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if (size > 2) {
@@ -41,6 +42,5 @@ int main(int argc, char *argv[])
         errs++;
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "mpitestconf.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_opprod
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test MPI_PROD operations on optional datatypes dupported by MPICH";
@@ -26,7 +28,7 @@ typedef struct {
  * integers or are not required integers (e.g., long long).  MPICH allows
  * these as well.  A strict MPI test should not include this test.
  */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, maxsize, result[6] = { 1, 1, 2, 6, 24, 120 };
@@ -35,8 +37,6 @@ int main(int argc, char *argv[])
     signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
     d_complex dinbuf[3], doutbuf[3];
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -316,6 +316,5 @@ int main(int argc, char *argv[])
     }
 #endif /* HAVE_LONG_LONG */
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

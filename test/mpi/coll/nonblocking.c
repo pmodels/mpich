@@ -8,10 +8,12 @@
  * does not check for progress, matching issues, or sensible output buffer
  * values. */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_nonblocking
+int run(const char *arg);
+#endif
 
 #define NUM_INTS (2)
 
@@ -23,7 +25,7 @@
         }                                                                 \
     } while (0)
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     int i;
@@ -37,8 +39,6 @@ int main(int argc, char **argv)
     MPI_Datatype *types = NULL;
     MPI_Comm comm;
     MPI_Request req;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -204,6 +204,5 @@ int main(int argc, char **argv)
     if (types)
         free(types);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
