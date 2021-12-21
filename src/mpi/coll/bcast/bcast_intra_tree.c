@@ -1,13 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- * Portions of this code were written by Intel Corporation.
- * Copyright (C) 2011-2019 Intel Corporation. Intel provides this material
- * to Argonne National Laboratory subject to Software Grant and Corporate
- * Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -22,7 +15,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
                           int root, MPIR_Comm * comm_ptr, int tree_type,
                           int branching_factor, int is_nb, MPIR_Errflag_t * errflag)
 {
-    int rank, comm_size, src, dst, *p, j, k, lrank = 0, is_contig;
+    int rank, comm_size, src, dst, *p, j, k, lrank, is_contig;
     int parent = -1, num_children = 0, num_req = 0, saved_count = count, is_root = 0;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -65,8 +58,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         if (rank == root) {
             mpi_errno = MPIR_Typerep_pack(buffer, count, datatype, 0, send_buf, nbytes,
                                           &actual_packed_unpacked_bytes);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         count = count * type_size;
         dtype = MPI_BYTE;
@@ -83,10 +75,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         my_tree.children = NULL;
         mpi_errno =
             MPIR_Treealgo_tree_create(rank, comm_size, tree_type, branching_factor, root, &my_tree);
-
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
+        MPIR_ERR_CHECK(mpi_errno);
         num_children = my_tree.num_children;
         parent = my_tree.parent;
     }
@@ -103,14 +92,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         src = parent;
         mpi_errno = MPIC_Recv(send_buf, count, dtype, src,
                               MPIR_BCAST_TAG, comm_ptr, &status, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
         /* check that we received as much as we expected */
         MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
         if (recvd_size != nbytes) {
@@ -138,14 +120,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
                 mpi_errno = MPIC_Isend(send_buf, count, dtype, dst,
                                        MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
             }
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
         }
     } else {
         for (j = 0; j < num_children; j++) {
@@ -159,25 +134,12 @@ int MPIR_Bcast_intra_tree(void *buffer,
                 mpi_errno = MPIC_Isend(send_buf, count, dtype, dst,
                                        MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
             }
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
         }
     }
     if (is_nb) {
         mpi_errno = MPIC_Waitall(num_req, reqs, statuses, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) {
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
     }
 
     if (tree_type != MPIR_TREE_TYPE_KARY)
@@ -187,8 +149,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         if (rank != root) {
             mpi_errno = MPIR_Typerep_unpack(send_buf, nbytes, buffer, saved_count, datatype, 0,
                                             &actual_packed_unpacked_bytes);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 

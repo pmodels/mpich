@@ -357,14 +357,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                      0ULL,      /* In:  flags               */
                                      &huge_send_mrs[i], /* Out: memregion object    */
                                      NULL), mr_reg);    /* In:  context             */
-            if (MPIDI_OFI_global.prov_use[0]->domain_attr->mr_mode == FI_MR_ENDPOINT) {
-                /* Bind the memory region to the endpoint */
-                MPIDI_OFI_CALL(fi_mr_bind(huge_send_mrs[i],
-                                          &MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index
-                                                                (comm, vni_local, i)].ep->fid,
-                                          0ULL), mr_bind);
-                MPIDI_OFI_CALL(fi_mr_enable(huge_send_mrs[i]), mr_enable);
-            }
+            mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], huge_send_mrs[i],
+                                          MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index
+                                                               (comm, vni_local, i)].ep, NULL);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         MPIDI_OFI_REQUEST(sreq, huge.send_mrs) = huge_send_mrs;
         if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {

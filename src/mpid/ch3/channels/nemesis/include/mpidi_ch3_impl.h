@@ -104,20 +104,8 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win **win_ptr);
 #define MPIDI_CH3I_SHM_MUTEX_INIT(win_ptr)                                              \
     do {                                                                                \
         int pt_err;                                                                     \
-        pthread_mutexattr_t attr;                                                       \
-                                                                                        \
-        pt_err = pthread_mutexattr_init(&attr);                                         \
-        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
-                             "**pthread_mutex %s", strerror(pt_err));                   \
-        pt_err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);           \
-        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
-                             "**pthread_mutex %s", strerror(pt_err));                   \
-        pt_err = pthread_mutex_init((win_ptr)->shm_mutex, &attr);                       \
-        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
-                             "**pthread_mutex %s", strerror(pt_err));                   \
-        pt_err = pthread_mutexattr_destroy(&attr);                                      \
-        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
-                             "**pthread_mutex %s", strerror(pt_err));                   \
+        MPL_proc_mutex_create((win_ptr)->shm_mutex, &pt_err);                           \
+        MPIR_ERR_CHECK(pt_err);                                                         \
     } while (0);
 
 #define MPIDI_CH3I_SHM_MUTEX_DESTROY(win_ptr)                                           \

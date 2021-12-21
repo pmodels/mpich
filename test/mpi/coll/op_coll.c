@@ -5,10 +5,10 @@
 
 /* A test of all op-based collectives with support for GPU buffers */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "mpitest.h"
 #include "mtest_dtp.h"
 
 #define COUNT (10)

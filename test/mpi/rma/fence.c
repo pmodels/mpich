@@ -3,12 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
-#include "mpitest.h"
 #include "dtpools.h"
 #include "mtest_dtp.h"
 #include <assert.h>

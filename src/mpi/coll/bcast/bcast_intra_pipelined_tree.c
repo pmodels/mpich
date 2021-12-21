@@ -1,13 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- * Portions of this code were written by Intel Corporation.
- * Copyright (C) 2011-2019 Intel Corporation. Intel provides this material
- * to Argonne National Laboratory subject to Software Grant and Corporate
- * Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -67,8 +60,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
         if (rank == root) {
             mpi_errno = MPIR_Typerep_pack(buffer, count, datatype, 0, sendbuf, nbytes,
                                           &actual_packed_unpacked_bytes);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -83,8 +75,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
     } else {
         mpi_errno =
             MPIR_Treealgo_tree_create(rank, comm_size, tree_type, branching_factor, root, &my_tree);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         num_children = my_tree.num_children;
     }
 
@@ -113,35 +104,20 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                     mpi_errno =
                         MPIC_Irecv((char *) sendbuf + offset, msgsize, MPI_BYTE,
                                    src, MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++]);
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
-
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
                 }
                 offset += msgsize;
             }
 
         } else {
-            /* For small number of chunks, all the recieves can be pre-posted */
+            /* For small number of chunks, all the receives can be pre-posted */
             for (i = 0; i < num_chunks; i++) {
                 msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
                 if (src != -1) {
                     mpi_errno =
                         MPIC_Irecv((char *) sendbuf + offset, msgsize, MPI_BYTE,
                                    src, MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++]);
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
                 }
                 offset += msgsize;
             }
@@ -156,14 +132,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
             /* Wait to receive the chunk before it can be sent to the children */
             if (src != -1) {
                 mpi_errno = MPIC_Wait(reqs[i], errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
                 MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
                 if (recvd_size != msgsize) {
                     if (*errflag == MPIR_ERR_NONE)
@@ -178,14 +147,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
             /* Wait to receive the chunk before it can be sent to the children */
             if (src != -1) {
                 mpi_errno = MPIC_Wait(reqs[i], errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
                 MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
                 if (recvd_size != msgsize) {
                     if (*errflag == MPIR_ERR_NONE)
@@ -202,14 +164,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 mpi_errno =
                     MPIC_Recv((char *) sendbuf + offset, msgsize, MPI_BYTE,
                               src, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
                 if (recvd_size != msgsize) {
                     if (*errflag == MPIR_ERR_NONE)
@@ -240,15 +195,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                         MPIC_Isend((char *) sendbuf + offset, msgsize, MPI_BYTE, dst,
                                    MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
                 }
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
-
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
 
             }
         } else if (num_children) {
@@ -264,14 +211,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                         MPIC_Isend((char *) sendbuf + offset, msgsize, MPI_BYTE, dst,
                                    MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
                 }
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
             }
         }
         offset += msgsize;
@@ -279,22 +219,14 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
 
     if (is_nb) {
         mpi_errno = MPIC_Waitall(num_req, reqs, statuses, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) {
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
     }
 
     if (!is_contig) {
         if (rank != root) {
             mpi_errno = MPIR_Typerep_unpack(sendbuf, nbytes, buffer, count, datatype, 0,
                                             &actual_packed_unpacked_bytes);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
-
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 

@@ -31,7 +31,7 @@ MPI_T_pvar_handle uqsize_handle;
 
 /* The first receive will block waiting for the last send, since messages from
  * a given rank are received in order. */
-static void reversed_tags_test()
+static void reversed_tags_test(void)
 {
     size_t unexpected_recvq_buffer_size;
 
@@ -69,7 +69,7 @@ static void reversed_tags_test()
 /* Rendezvous-based messages will never be unexpected (except for the initial RTS,
  * which has an empty buffer anyhow).
  */
-static void rndv_test()
+static void rndv_test(void)
 {
     size_t unexpected_recvq_buffer_size;
 

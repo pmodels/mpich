@@ -4,7 +4,9 @@
  */
 
 #include "mpitest.h"
+#include "mtest_common.h"
 #include <assert.h>
+#include <string.h>
 
 /* ------------------------------------------------------------------------ */
 /* Utilities related to test environment */
@@ -15,7 +17,7 @@
    It is taking the simplest solution here: default to 2GB, unless user set via
    environment variable -- MPITEST_MAXBUFFER
 */
-MPI_Aint MTestDefaultMaxBufferSize()
+MPI_Aint MTestDefaultMaxBufferSize(void)
 {
     MPI_Aint max_size = 1073741824;
     if (sizeof(void *) == 4) {
@@ -697,7 +699,7 @@ void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_
     }
 }
 
-void MTest_finalize_gpu()
+void MTest_finalize_gpu(void)
 {
 #ifdef HAVE_ZE
     if (ndevices != -1) {

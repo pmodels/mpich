@@ -49,7 +49,6 @@ MTEST_THREAD_RETURN_TYPE thread_fn(void *arg)
     int win_i, win_post_i, win_posts;
     void *buf, *result_buf;
     MPI_Request requests[WINDOW_SIZE];
-    MPI_Status statuses[WINDOW_SIZE];
     double t_start, t_end;
 
     tid = (int) (long) arg;

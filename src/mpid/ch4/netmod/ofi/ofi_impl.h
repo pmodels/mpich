@@ -302,6 +302,27 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_set(int ctx_idx, int val)
 #endif
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_mr_bind(struct fi_info *prov, struct fid_mr *mr,
+                                               struct fid_ep *ep, struct fid_cntr *cntr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (prov->domain_attr->mr_mode == FI_MR_ENDPOINT) {
+        /* Bind the memory region to the endpoint */
+        MPIDI_OFI_CALL(fi_mr_bind(mr, &ep->fid, 0ULL), mr_bind);
+        /* Bind the memory region to the counter */
+        if (cntr != NULL) {
+            MPIDI_OFI_CALL(fi_mr_bind(mr, &cntr->fid, 0ULL), mr_bind);
+        }
+        MPIDI_OFI_CALL(fi_mr_enable(mr), mr_enable);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* Externs:  see util.c for definition */
 #define MPIDI_OFI_LOCAL_MR_KEY 0
 #define MPIDI_OFI_COLL_MR_KEY 1

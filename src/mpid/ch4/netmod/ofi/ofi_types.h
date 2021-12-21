@@ -310,6 +310,7 @@ typedef struct {
     int context_bits;
     int source_bits;
     int tag_bits;
+    int counter_wait_objects;
     int major_version;
     int minor_version;
     int num_am_buffers;
