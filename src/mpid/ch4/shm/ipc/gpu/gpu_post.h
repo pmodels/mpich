@@ -12,7 +12,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD
       category    : CH4
       type        : int
-      default     : 32768
+      default     : 1
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
