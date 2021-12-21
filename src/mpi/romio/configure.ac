@@ -147,6 +147,9 @@ else
     mpl_libdir="-L${with_mpl_prefix}/lib"
     mpl_lib="-l${MPLLIBNAME}"
 fi
+else
+    # we are configuring romio inside mpich, just set mpl_includedir
+    mpl_includedir="-I$main_top_builddir/src/mpl/include -I$main_top_srcdir/src/mpl/include"
 fi
 
 CFLAGS=${CFLAGS:-""}
