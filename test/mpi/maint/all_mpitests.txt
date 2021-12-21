@@ -159,3 +159,4 @@ coll/scatterv
 coll/uop_equal
 coll/coll_large
 coll/ring_neighbor_alltoall
+coll/bcast

@@ -20,8 +20,8 @@ attr/fkeyvaltype::1::1:1024::0
 impls/mpich/misc/type_iov::1 512 17 1018::1:1024:1024:0
 coll/bcast::1 512::4:16:1024:0
 coll/bcast::262144:timeLimit=420 mem=1.2:4:16::0
-coll/bcast_comm_world_only::1 512::10:16:1024:0
-coll/bcast_comm_world_only::262144:timeLimit=360 mem=1.9:10:16::0
+coll/bcast::1 512:arg=-comm_world_only:10:16:1024:0
+coll/bcast::262144:arg=-comm_world_only timeLimit=360 mem=1.9:10:16::0
 cxx/attr/fkeyvaltypex::1::1:1024::0
 cxx/datatype/packsizex::1::1:1024::0
 pt2pt/pingping::1 512 262144 17 1018 65530::2:8:32:0
