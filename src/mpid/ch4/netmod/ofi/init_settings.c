@@ -104,6 +104,11 @@ int MPIDI_OFI_init_hints(struct fi_info *hints)
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS)
         hints->caps |= FI_NAMED_RX_CTX;
 
+#ifdef FI_HMEM
+    if (MPIDI_OFI_ENABLE_HMEM)
+        hints->caps |= FI_HMEM;
+#endif
+
     /* ------------------------------------------------------------------------ */
     /* Set object options to be filtered by getinfo                             */
     /* domain_attr:  domain attribute requirements                              */
@@ -159,6 +164,15 @@ int MPIDI_OFI_init_hints(struct fi_info *hints)
 #ifdef FI_MR_PROV_KEY
         if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             hints->domain_attr->mr_mode |= FI_MR_PROV_KEY;
+        }
+#endif
+
+#ifdef FI_MR_HMEM
+        if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM) {
+            hints->domain_attr->mr_mode |= FI_MR_HMEM;
+            if (MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG) {
+                hints->domain_attr->mr_mode |= FI_MR_LOCAL;
+            }
         }
 #endif
 
@@ -253,6 +267,8 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
     UPDATE_SETTING_BY_CAP(enable_tagged, MPIR_CVAR_CH4_OFI_ENABLE_TAGGED);
     UPDATE_SETTING_BY_CAP(enable_am, MPIR_CVAR_CH4_OFI_ENABLE_AM);
     UPDATE_SETTING_BY_CAP(enable_rma, MPIR_CVAR_CH4_OFI_ENABLE_RMA);
+    UPDATE_SETTING_BY_CAP(enable_hmem, MPIR_CVAR_CH4_OFI_ENABLE_HMEM);
+    UPDATE_SETTING_BY_CAP(enable_mr_hmem, MPIR_CVAR_CH4_OFI_ENABLE_MR_HMEM);
     /* try to enable atomics only when RMA is enabled */
     if (p_settings->enable_rma) {
         UPDATE_SETTING_BY_CAP(enable_atomics, MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS);

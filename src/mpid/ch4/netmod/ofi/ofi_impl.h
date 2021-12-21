@@ -708,6 +708,40 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged
     return rc;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory(char *send_buf, size_t data_sz,
+                                                       int buf_type, int card_num, int ctx_idx,
+                                                       struct fid_mr **mr)
+{
+    struct fi_mr_attr mr_attr = { };
+    struct iovec iov;
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    iov.iov_base = send_buf;
+    iov.iov_len = data_sz;
+    mr_attr.mr_iov = &iov;
+    mr_attr.iov_count = 1;
+    mr_attr.access = FI_REMOTE_READ | FI_REMOTE_WRITE;
+    mr_attr.requested_key = 1;
+#ifdef MPL_HAVE_CUDA
+    mr_attr.iface = (buf_type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_CUDA;
+    mr_attr.device.cuda = (buf_type != MPL_GPU_POINTER_DEV) ? 0 : card_num;
+#elif defined MPL_HAVE_ZE
+    mr_attr.iface = (buf_type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_ZE;
+    mr_attr.device.ze = (buf_type != MPL_GPU_POINTER_DEV) ? 0 : card_num;
+#endif
+    MPIDI_OFI_CALL(fi_mr_regattr
+                   (MPIDI_OFI_global.ctx[ctx_idx].domain, &mr_attr, 0, &(*mr)), mr_regattr);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 #undef CQ_S_LIST
 #undef CQ_S_HEAD
 #undef CQ_S_TAIL

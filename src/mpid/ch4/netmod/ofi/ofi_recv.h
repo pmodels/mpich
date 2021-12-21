@@ -127,10 +127,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     struct fi_msg_tagged msg;
     char *recv_buf;
     bool force_gpu_pack = false;
+    bool register_mem = false;
     int vni_remote = vni_src;
     int vni_local = vni_dst;
     int sender_nic = 0, receiver_nic = 0;
     int ctx_idx = 0;
+    struct fid_mr *mr = NULL;
+    void *desc = NULL;
 
     MPIR_FUNC_ENTER;
 
@@ -177,6 +180,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(recv_buf, &attr);
+
     if (data_sz &&
         (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
          attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
@@ -186,6 +190,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
              * transfer should be applied. */
             force_gpu_pack = true;
             dt_contig = 0;
+        } else {
+            if (MPIDI_OFI_ENABLE_MR_HMEM && dt_contig) {
+                register_mem = true;
+            } else {
+                dt_contig = 0;
+                force_gpu_pack = true;
+            }
+        }
+    } else if (MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG && data_sz && MPIDI_OFI_ENABLE_HMEM &&
+               MPIDI_OFI_ENABLE_MR_HMEM) {
+        if (dt_contig) {
+            register_mem = true;
+        }
+    }
+
+    if (register_mem) {
+        int card_num = MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(&attr));
+        MPIDI_OFI_register_memory(recv_buf, data_sz, attr.type, card_num, ctx_idx, &mr);
+        if (mr != NULL) {
+            desc = fi_mr_desc(mr);
+            struct MPIDI_GPU_RDMA_queue_t *new_mr =
+                MPL_malloc(sizeof(struct MPIDI_GPU_RDMA_queue_t), MPL_MEM_BUFFER);
+            new_mr->mr = mr;
+            DL_APPEND(MPIDI_OFI_global.gdr_mrs, new_mr);
         }
     }
 
@@ -251,7 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                       recv_buf,
                                       data_sz,
-                                      NULL,
+                                      desc,
                                       (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC :
                                       MPIDI_OFI_av_to_phys(addr, sender_nic, vni_local, vni_remote),
                                       match_bits, mask_bits,
