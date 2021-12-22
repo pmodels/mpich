@@ -583,8 +583,16 @@ specified.
 \label{sec:other-tools}
 MPICH also includes a test suite for MPI functionality; this suite may
 be found in the \texttt{mpich/test/mpi} source directory and can be
-run with the command \texttt{make testing}.  This test suite should
-work with any MPI implementation, not just MPICH.
+run with the command \texttt{make testing} after \texttt{make install}.
+This test suite should work with any MPI implementation, not just MPICH.
+To test a pre-installed MPI implementation:
+\begin{small}
+\begin{verbatim}
+    shell$ cd mpich/test/mpi
+    shell$ ./configure --with-mpi=/path/to/mpi
+    shell$ make testing
+\end{verbatim}
+\end{small}
 
 \clearpage
 \appendix
