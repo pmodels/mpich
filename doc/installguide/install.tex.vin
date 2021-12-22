@@ -668,6 +668,15 @@ standard output, along with an XML version of the test results in
 top-level (\texttt{mpich}) directory will run tests of the commands, such as
 \texttt{mpicc} and \texttt{mpiexec}, that are included with MPICH.
 
+The MPICH test suite can be used to test any MPI implementations, not just MPICH.
+To test a pre-installed MPI implementation, there is no need to configure and
+build MPICH. Go to \texttt{test/mpi}` directory and
+
+\begin{verbatim}
+    ./configure --with-mpi=/path/to/mpi
+    make testing
+\end{verbatim}
+
 Other MPI test suites are available from
 \url{http://www.mcs.anl.gov/mpi/mpi-test/tsuite.html}.  As part of the MPICH
 development, we run the MPICH1, MPICH, C++, and Intel test suites every night
