@@ -18,7 +18,9 @@
 # Generate C API interface functions including man page notes and error
   checking using Python scripts.
 
-# Generate Fortran mpi_f08 binding using Python scripts.
+# Generate Fortran (mpif.h, mpi_f08) bindings using Python scripts.
+
+# Generate collective entrance functions and generate per-algorithm tests.
 
 # Support explicit --without-cuda configure option.
 
@@ -28,9 +30,102 @@
 
 # Multi-NIC support in ch4:ofi.
 
-   A full list of changes is available at the following link:
+# Default to ch4:ofi when configure doesn't have a clear choice. Add message
+  block at the end of configure to advise user.
 
-     http://www.mpich.org/static/downloads/4.0a2/shortlog
+# Multiple VCI is fully implemented including the active message fallback paths.
+
+# Extend IPC to support non-contig datatypes.
+
+# Add AMD GPU support using HIP.
+
+# Add generic RNDV callback mechanism with active messages.
+
+# Refactor ch4 dynamic process functions.
+
+# Avoid building MPL and hwloc multiple times.
+
+# Fix MPIX_Query_cuda_support.
+
+# Many bug fixes and code clean-ups.
+
+===============================================================================
+                               Changes in 3.4.3
+===============================================================================
+
+# Fix bugs in GPFS ROMIO driver
+
+# Fix bugs in DAOS ROMIO driver
+
+# Fix nemesis shm bug on systems with weak memory consistency
+
+# Fix progress issue in ch4:ucx finalize
+
+# Fix nonblocking collective issue during finalize
+
+# Fix UBSan warnings in 32-bit builds
+
+# Fix predefined datatype handle leaks
+
+# Fix bug in topology-aware communicator creation
+
+# Fix Slurm nodelist parsing
+
+# Fix testcase for out-of-tree configuration
+
+# Fix truncation testcase for possible disconnection error
+
+# Hydra help message improvements
+
+# Add support for DAOS pool and container labels
+
+===============================================================================
+                               Changes in 3.4.2
+===============================================================================
+
+# Update configure options to support --disable-ze and --disable-cuda
+  to explicitly disable GPU-awareness
+
+# Update embedded hwloc to version 2.4.1. Fixes a build issue on
+  systems with OpenCL.
+
+# Fixes for Argobots thread package support.
+
+# Fixes for the DAOS ROMIO driver (thanks to Intel for contributing)
+
+# Fix additional bugs in GPU-aware nonblocking op collectives
+
+# Fix 'make check' errors with embedded MPL and json-c libraries
+
+# Fix support for GNI provider in ch4:ofi netmod
+
+# Fix bug in dynamic window memory registration with ch4:ofi netmod
+
+# Fix bug in persistent pt2pt when used with MPI_PROC_NULL
+
+# Fix bug in hydra nameserver when freeing published entries
+
+# Fix bugs in GPFS ROMIO driver (thanks to IBM for contributing)
+
+# Fix bug in darray type creation (thanks to IBM for contributing)
+
+# Fix bugs in XPMEM support
+
+# Fix bug in MPI_Comm_spawn_multiple where non-root args were not ignored
+
+===============================================================================
+                               Changes in 3.4.1
+===============================================================================
+
+# Fix bug in GPU memory hooks that caused failures with NCCL
+
+# Fix bug in GPU-aware nonblocking op collectives
+
+# Hide symbols from embedded json-c module
+
+# Removed anonymous struct/union usage in MPL
+
+# Disable Java support in embedded UCX module
 
 ===============================================================================
                                Changes in 3.4

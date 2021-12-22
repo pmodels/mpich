@@ -82,6 +82,12 @@ int MTest_thread_barrier_free(void)
     return MTest_thread_lock_free(&barrierLock);
 }
 
+#define LOCK_ERR_CHECK(err_)                            \
+    if (err_) {                                         \
+        fprintf(stderr, "Lock failed in barrier!\n");   \
+        return err_;                                    \
+    }
+
 /* This is a generic barrier implementation.  To ensure that tests don't
    silently fail, this both prints an error message and returns an error
    result on any failure. */
@@ -89,28 +95,17 @@ int MTest_thread_barrier(int nt)
 {
     volatile int *cntP;
     int err = 0;
+    int num_left;
 
     if (nt < 0)
         nt = nthreads;
     /* Force a write barrier by using lock/unlock */
     err = MTest_thread_lock(&barrierLock);
-    if (err) {
-        fprintf(stderr, "Lock failed in barrier!\n");
-        return err;
-    }
+    LOCK_ERR_CHECK(err);
     cntP = &c[phase];
-    err = MTest_thread_unlock(&barrierLock);
-    if (err) {
-        fprintf(stderr, "Unlock failed in barrier!\n");
-        return err;
-    }
 
     /* printf("[%d] cnt = %d, phase = %d\n", pthread_self(), *cntP, phase); */
-    err = MTest_thread_lock(&barrierLock);
-    if (err) {
-        fprintf(stderr, "Lock failed in barrier!\n");
-        return err;
-    }
+
     /* The first thread to enter will reset the counter */
     if (*cntP < 0)
         *cntP = nt;
@@ -124,12 +119,23 @@ int MTest_thread_barrier(int nt)
     }
     /* Really need a write barrier here */
     *cntP = *cntP - 1;
+    num_left = *cntP;
     err = MTest_thread_unlock(&barrierLock);
-    if (err) {
-        fprintf(stderr, "Unlock failed in barrier!\n");
-        return err;
+    LOCK_ERR_CHECK(err);
+
+    /* wait for other threads */
+    while (num_left > 0) {
+        err = MTest_thread_lock(&barrierLock);
+        LOCK_ERR_CHECK(err);
+
+        /* TODO: This would be improved with atomic ops instead of using
+         * a mutex. Integrating MPL for portable atomics would be an
+         * improvement. */
+        num_left = *cntP;
+
+        err = MTest_thread_unlock(&barrierLock);
+        LOCK_ERR_CHECK(err);
     }
-    while (*cntP > 0);
 
     return err;
 }
