@@ -150,6 +150,13 @@ static bool get_test(const char **name, const char **args, run_fn * fn)
             /* set or reset cvar */
             set_cvar(cmd);
             continue;
+        } else if (strncmp(cmd, "TIMEOUT ", 8) == 0) {
+            /* set timeout */
+            int timeout = atoi(cmd + 8);
+            if (timeout > 0) {
+                alarm(timeout);
+            }
+            continue;
         } else {
             /* a testlist item */
             split_cmd(cmd, name, args);
