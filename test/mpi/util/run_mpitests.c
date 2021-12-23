@@ -57,6 +57,9 @@ int main(int argc, char **argv)
     /* multi_tests are driven by a script via stdin/stdout */
     while (get_test(&name, &args, &fn)) {
         if (fn) {
+            /* reset errhandler in case last test set it to something else */
+            MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+
             int ret = fn(args);
             int toterrs;
             MPI_Reduce(&ret, &toterrs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
