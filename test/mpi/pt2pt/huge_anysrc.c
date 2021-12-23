@@ -8,24 +8,24 @@
  * large message transfers which use wildcard receives.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <memory.h>
-#include <mpi.h>
 #include "mpitest.h"
+#include <memory.h>
+
+#ifdef MULTI_TESTS
+#define run pt2pt_huge_anysrc
+int run(const char *arg);
+#endif
 
 #define N_TRY 32
 #define BLKSIZE (10*1024*1024)
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int size, rank;
     int dest;
     int i;
     char *buff;
     MPI_Request reqs[N_TRY];
-
-    MTest_Init(&argc, &argv);
 
     buff = malloc(N_TRY * BLKSIZE);
     memset(buff, -1, N_TRY * BLKSIZE);
@@ -47,8 +47,6 @@ int main(int argc, char *argv[])
     }
 
     free(buff);
-
-    MTest_Finalize(0);
 
     return 0;
 }

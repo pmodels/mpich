@@ -160,7 +160,7 @@ int run(const char *arg)
     int errs = 0;
 
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_DTP_PT2PT, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_DTP_PT2PT, arg);
     while (dtp_args_get_next(&dtp_args)) {
         errs += sendself(dtp_args.seed, dtp_args.testsize,
                          dtp_args.count, dtp_args.u.pt2pt.recvcnt,

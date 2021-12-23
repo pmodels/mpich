@@ -138,7 +138,7 @@ int run(const char *arg)
     }
 
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_DTP_PT2PT, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_DTP_PT2PT, arg);
     while (dtp_args_get_next(&dtp_args)) {
         for (int source_rank = 0; source_rank < 2; source_rank++) {
             MTestPrintfMsg(1, "Test with source rank = %d\n", source_rank);

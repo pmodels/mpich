@@ -8,24 +8,23 @@
  * sends over multiple different communicators simultaneously
  */
 
-#include <mpi.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_huge_dupcomm
+int run(const char *arg);
+#endif
 
 #define COUNT (4*1024*1024)
 #define NCOMMS 4
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int *buff;
     int size, rank;
     int i;
     MPI_Comm comms[NCOMMS];
     MPI_Request reqs[NCOMMS];
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -54,8 +53,6 @@ int main(int argc, char *argv[])
         MPI_Comm_free(&comms[i]);
 
     free(buff);
-
-    MTest_Finalize(0);
 
     return 0;
 }

@@ -3,19 +3,21 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_pt2pt_large
+int run(const char *arg);
+#endif
 
 /* Basic tests for large pt2pt APIs. It does not actually send large data */
 
 #define SIZE 1024
 
-int rank, nproc;
-int errs;
-int sendbuf[SIZE];
-int recvbuf[SIZE];
+static int rank, nproc;
+static int errs;
+static int sendbuf[SIZE];
+static int recvbuf[SIZE];
 
 static void init_buf(void)
 {
@@ -42,13 +44,11 @@ static void check_buf(void)
 }
 
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Comm comm;
     MPI_Count count = SIZE;
     int tag = 0;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
     MPI_Comm_rank(comm, &rank);
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         printf("Run test with 2 procs!\n");
         return 1;
     }
-
+#if MTEST_HAVE_MIN_MPI_VERSION(4,0)
     init_buf();
     if (rank == 0) {
         MPI_Send_c(sendbuf, count, MPI_INT, 1, tag, comm);
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
         MPI_Recv_c(recvbuf, count, MPI_INT, 0, tag, comm, MPI_STATUS_IGNORE);
     }
     check_buf();
+#endif
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,13 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_bsendalign
+int run(const char *arg);
+#endif
 
 /* Test bsend with a buffer with arbitrary alignment */
 #define BUFSIZE 2000*4
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Status status;
     int a[10], b[10];
@@ -18,7 +21,6 @@ int main(int argc, char *argv[])
     int bl, i, j, rank, size;
     int errs = 0;
 
-    MTest_Init(0, 0);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     for (align = 0; align < 7; align++) {
@@ -66,6 +68,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

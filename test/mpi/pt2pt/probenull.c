@@ -3,22 +3,23 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_probenull
+int run(const char *arg);
+#endif
 
 /*
  * This program checks that MPI_Iprobe and MPI_Probe correctly handle
  * a source of MPI_PROC_NULL
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int flag;
     int errs = 0;
     MPI_Status status;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Iprobe(MPI_PROC_NULL, 10, MPI_COMM_WORLD, &flag, &status);
     if (!flag) {
@@ -48,6 +49,5 @@ int main(int argc, char **argv)
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "mpi.h"
 #include "mpitest.h"
+#include <string.h>
+
+#ifdef MULTI_TESTS
+#define run pt2pt_mprobe
+int run(const char *arg);
+#endif
 
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
@@ -23,7 +25,7 @@
 #define LARGE_DIM 512
 #define LARGE_SZ (LARGE_DIM * LARGE_DIM)
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     int found, completed;
@@ -34,8 +36,6 @@ int main(int argc, char **argv)
     MPI_Request rreq;
     MPI_Status s1, s2;
     MPI_Datatype vectype;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -663,7 +663,5 @@ int main(int argc, char **argv)
     }
 
   epilogue:
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

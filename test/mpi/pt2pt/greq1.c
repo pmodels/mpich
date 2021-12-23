@@ -3,17 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_greq1
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Simple test of generalized requests";
 */
 
 
-int query_fn(void *extra_state, MPI_Status * status);
-int query_fn(void *extra_state, MPI_Status * status)
+static int query_fn(void *extra_state, MPI_Status * status)
 {
     /* Set a default status */
     status->MPI_SOURCE = MPI_UNDEFINED;
@@ -23,8 +25,7 @@ int query_fn(void *extra_state, MPI_Status * status)
     return 0;
 }
 
-int free_fn(void *extra_state);
-int free_fn(void *extra_state)
+static int free_fn(void *extra_state)
 {
     int *b = (int *) extra_state;
     if (b)
@@ -34,8 +35,7 @@ int free_fn(void *extra_state)
     return 0;
 }
 
-int cancel_fn(void *extra_state, int complete);
-int cancel_fn(void *extra_state, int complete)
+static int cancel_fn(void *extra_state, int complete)
 {
     return 0;
 }
@@ -51,14 +51,12 @@ int cancel_fn(void *extra_state, int complete)
  * test or wait to advance the state of a generalized request.
  * Most uses of generalized requests will need to use a separate thread.
  */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int counter, flag;
     MPI_Status status;
     MPI_Request request;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Grequest_start(query_fn, free_fn, cancel_fn, NULL, &request);
 
@@ -82,6 +80,5 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Free routine not called, or not called with extra_data");
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

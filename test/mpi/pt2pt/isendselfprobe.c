@@ -3,11 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run pt2pt_isendselfprobe
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int rank;
     int sendMsg = 123;
@@ -17,8 +20,6 @@ int main(int argc, char *argv[])
     MPI_Status status;
     MPI_Request request;
     int errs = 0;
-
-    MTest_Init(0, 0);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -37,6 +38,6 @@ int main(int argc, char *argv[])
         }
         MPI_Wait(&request, &status);
     }
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

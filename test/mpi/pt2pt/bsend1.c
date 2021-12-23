@@ -3,13 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
-#include "mpitestconf.h"
-#ifdef HAVE_STRING_H
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run pt2pt_bsend1
+int run(const char *arg);
 #endif
 
 /*
@@ -17,7 +16,7 @@
  * process to simplify debugging; in addition, bsend allows send-to-self
  * programs.
  */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Comm comm = MPI_COMM_WORLD;
     int dest = 0, src = 0, tag = 1;
@@ -30,7 +29,6 @@ int main(int argc, char *argv[])
     int errs = 0, rank;
     int bufsize, bsize;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* According to the standard, we must use the PACK_SIZE length of each
@@ -80,7 +78,5 @@ int main(int argc, char *argv[])
 
     free(buf);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

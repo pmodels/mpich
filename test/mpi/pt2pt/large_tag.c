@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpi.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_large_tag
+int run(const char *arg);
+#endif
 
 /* Tests send/receive with large tag values. It mimics the usage of tags in
  * some MPI-based libraries (e.g., PETSc). */
@@ -14,15 +16,13 @@
 #define ITER 5
 #define BUF_COUNT (16)
 
-int recvbuf[BUF_COUNT], sendbuf[BUF_COUNT];
+static int recvbuf[BUF_COUNT], sendbuf[BUF_COUNT];
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int x, size, rank, errs = 0;
     void *tag_ub_val = NULL;
     int tag = 0, flag = 0;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -69,7 +69,5 @@ int main(int argc, char *argv[])
     }
 
   exit:
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

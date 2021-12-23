@@ -3,15 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_bottom
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Use of MPI_BOTTOM in communication";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int rank, size, source, dest, len, ii;
@@ -19,8 +22,6 @@ int main(int argc, char *argv[])
     MPI_Status status;
     MPI_Datatype newtype, oldtype;
     MPI_Aint disp;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Get_address(&ii, &disp);
 
@@ -72,6 +73,5 @@ int main(int argc, char *argv[])
 
     MPI_Type_free(&newtype);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

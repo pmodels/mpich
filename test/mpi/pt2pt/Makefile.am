@@ -62,10 +62,8 @@ noinst_PROGRAMS =  \
     multi_psend_derived  \
     dtype_send		 \
     recv_any		\
-    irecv_any   \
     large_tag \
     pingping  \
-    pingping_barrier  \
     sendrecv1 \
     sendself \
     pt2pt_large \
@@ -74,6 +72,3 @@ noinst_PROGRAMS =  \
     mprobe_self_free \
     pssend \
     pipeline
-
-irecv_any_CPPFLAGS = -DTEST_NB $(AM_CPPFLAGS)
-irecv_any_SOURCES  = recv_any.c
