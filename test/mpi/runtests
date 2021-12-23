@@ -705,6 +705,9 @@ sub run_mpitests {
 
             RunPreMsg($test_opt);
             my $start_time = gettimeofday();
+            if ($test_opt->{_timeout} > 0) {
+                print $in "TIMEOUT $test_opt->{_timeout}\n";
+            }
             print $in "$cmd\n";
 
             my ($ret, @inline);

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <assert.h>
+#include <unistd.h>
 
 #define ARGS_MAX 1024
 int wrank, wsize;
@@ -61,6 +62,7 @@ int main(int argc, char **argv)
             MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 
             int ret = fn(args);
+            alarm(0);   /* cancel timeout */
             int toterrs;
             MPI_Reduce(&ret, &toterrs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
             if (wrank == 0) {
