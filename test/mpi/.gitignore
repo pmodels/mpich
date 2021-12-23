@@ -1283,7 +1283,6 @@
 /pt2pt/mprobe_self_free
 /pt2pt/multi_psend_derived
 /pt2pt/pingping
-/pt2pt/pingping_barrier
 /pt2pt/precv_anysrc
 /pt2pt/precv_anysrc_exp
 /pt2pt/probenull

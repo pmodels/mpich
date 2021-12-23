@@ -160,3 +160,7 @@ coll/uop_equal
 coll/coll_large
 coll/ring_neighbor_alltoall
 coll/bcast
+
+pt2pt/pingping
+pt2pt/sendrecv1
+pt2pt/sendself

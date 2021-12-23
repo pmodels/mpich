@@ -4,12 +4,14 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "dtpools.h"
 #include "mtest_dtp.h"
 #include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run pt2pt_sendself
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test of sending to self (with a preposted receive)";
@@ -153,11 +155,9 @@ static int sendself(int seed, int testsize, int sendcnt, int recvcnt,
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     struct dtp_args dtp_args;
     dtp_args_init(&dtp_args, MTEST_DTP_PT2PT, argc, argv);
@@ -167,7 +167,6 @@ int main(int argc, char *argv[])
                          dtp_args.basic_type, dtp_args.u.pt2pt.sendmem, dtp_args.u.pt2pt.recvmem);
     }
     dtp_args_finalize(&dtp_args);
-    MTest_Finalize(errs);
 
-    return MTestReturnValue(errs);
+    return errs;
 }
