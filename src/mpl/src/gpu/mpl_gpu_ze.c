@@ -83,6 +83,7 @@ typedef struct {
 typedef struct {
     uint64_t mem_id;
     MPL_gpu_ipc_mem_handle_t ipc_handle;
+    int fd;
     void *mapped_ptr;
     size_t mapped_size;
     bool handle_cached;
@@ -120,6 +121,14 @@ static MPL_ze_mapped_buffer_entry_t **mmap_cache_removal = NULL;
 #ifndef __NR_pidfd_getfd
 #define __NR_pidfd_getfd 438    /* System call # on most architectures */
 #endif
+
+typedef struct {
+    void *ptr;
+    uint64_t mem_id;
+    UT_hash_handle hh;
+} MPL_ze_mem_id_entry_t;
+
+static MPL_ze_mem_id_entry_t *mem_id_cache = NULL;
 
 typedef struct {
     int fd;
@@ -841,8 +850,17 @@ int MPL_gpu_finalize(void)
             HASH_ITER(hh, ipc_cache_tracked[i], entry, tmp) {
                 if (entry->mapped_ptr != NULL) {
                     munmap(entry->mapped_ptr, entry->mapped_size);
+                    close(entry->fd);
                 }
                 HASH_DELETE(hh, ipc_cache_tracked[i], entry);
+                MPL_free(entry);
+            }
+        }
+
+        {
+            MPL_ze_mem_id_entry_t *entry = NULL, *tmp = NULL;
+            HASH_ITER(hh, mem_id_cache, entry, tmp) {
+                HASH_DELETE(hh, mem_id_cache, entry);
                 MPL_free(entry);
             }
         }
@@ -899,7 +917,10 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     ze_result_t ret;
     int local_dev_id = -1;
     MPL_ze_ipc_handle_entry_t *cache_entry = NULL;
+    MPL_ze_mem_id_entry_t *memid_entry = NULL;
     uint64_t mem_id = 0;
+    void *pbase = NULL;
+    uintptr_t len;
 
     MPL_gpu_device_attr ptr_attr;
     memset(&ptr_attr, 0, sizeof(MPL_gpu_device_attr));
@@ -913,9 +934,34 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
         goto fn_fail;
     }
 
-    /* Check if ipc_handle is already cached */
+    mpl_err = MPL_gpu_get_buffer_bounds(ptr, &pbase, &len);
+    if (mpl_err != MPL_SUCCESS) {
+        goto fn_fail;
+    }
+
+    /* First check if a removal from the cache is needed */
     if (likely(MPL_gpu_info.specialized_cache)) {
         mem_id = ptr_attr.prop.id;
+        HASH_FIND(hh, mem_id_cache, &pbase, sizeof(void *), memid_entry);
+
+        if (memid_entry && memid_entry->mem_id != mem_id) {
+            HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &memid_entry->mem_id, sizeof(uint64_t),
+                      cache_entry);
+            if (cache_entry) {
+                if (cache_entry->mapped_ptr != NULL) {
+                    munmap(cache_entry->mapped_ptr, cache_entry->mapped_size);
+                }
+                HASH_DELETE(hh, ipc_cache_tracked[local_dev_id], cache_entry);
+                MPL_free(cache_entry);
+                cache_entry = NULL;
+            }
+
+            HASH_DELETE(hh, mem_id_cache, memid_entry);
+            MPL_free(memid_entry);
+            memid_entry = NULL;
+        }
+
+        /* Check if ipc_handle is already cached */
         HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &mem_id, sizeof(uint64_t), cache_entry);
     }
 
@@ -943,13 +989,26 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
                     goto fn_fail;
                 }
 
+                memid_entry = (MPL_ze_mem_id_entry_t *) MPL_malloc(sizeof(MPL_ze_mem_id_entry_t),
+                                                                   MPL_MEM_OTHER);
+
+                if (memid_entry == NULL) {
+                    mpl_err = MPL_ERR_GPU_NOMEM;
+                    goto fn_fail;
+                }
+
                 memset(cache_entry, 0, sizeof(MPL_ze_ipc_handle_entry_t));
+                memset(memid_entry, 0, sizeof(MPL_ze_mem_id_entry_t));
 
                 cache_entry->mem_id = mem_id;
                 cache_entry->handle_cached = true;
                 memcpy(&cache_entry->ipc_handle, ipc_handle, sizeof(MPL_gpu_ipc_mem_handle_t));
                 HASH_ADD(hh, ipc_cache_tracked[local_dev_id], mem_id, sizeof(uint64_t), cache_entry,
                          MPL_MEM_OTHER);
+
+                memid_entry->ptr = pbase;
+                memid_entry->mem_id = mem_id;
+                HASH_ADD(hh, mem_id_cache, ptr, sizeof(void *), memid_entry, MPL_MEM_OTHER);
             }
         }
     }
@@ -996,6 +1055,10 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
         HASH_FIND(hh, ipc_cache_tracked[dev_id], &mem_id, sizeof(uint64_t), cache_entry);
 
         if (cache_entry != NULL) {
+            if (cache_entry->mapped_ptr) {
+                munmap(cache_entry->mapped_ptr, cache_entry->mapped_size);
+                close(cache_entry->fd);
+            }
             HASH_DELETE(hh, ipc_cache_tracked[dev_id], cache_entry);
             MPL_free(cache_entry);
         }
@@ -1509,7 +1572,7 @@ void MPL_ze_set_fds(int num_fds, int *fds)
 void MPL_ze_ipc_remove_cache_handle(void *dptr)
 {
     ze_result_t ret;
-    ze_device_handle_t device;
+    ze_device_handle_t device = NULL;
     int local_dev_id = -1;
     uint64_t mem_id = 0;
     MPL_ze_ipc_handle_entry_t *cache_entry = NULL;
@@ -1764,6 +1827,7 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     uint64_t mem_id, offset, len;
     void *pbase, *base;
     MPL_ze_ipc_handle_entry_t *cache_entry = NULL;
+    MPL_ze_mem_id_entry_t *memid_entry = NULL;
 
     ret = zeMemGetAddressRange(ze_context, dptr, &pbase, &len);
     ZE_ERR_CHECK(ret);
@@ -1776,8 +1840,29 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
         goto fn_fail;
     }
 
-    /* Search cache for mapped base address */
+    /* First check if a removal from the cache is needed */
     if (likely(MPL_gpu_info.specialized_cache)) {
+        HASH_FIND(hh, mem_id_cache, &pbase, sizeof(void *), memid_entry);
+
+        if (memid_entry && memid_entry->mem_id != mem_id) {
+            HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &memid_entry->mem_id, sizeof(uint64_t),
+                      cache_entry);
+            if (cache_entry) {
+                if (cache_entry->mapped_ptr != NULL) {
+                    munmap(cache_entry->mapped_ptr, cache_entry->mapped_size);
+                    close(cache_entry->fd);
+                }
+                HASH_DELETE(hh, ipc_cache_tracked[local_dev_id], cache_entry);
+                MPL_free(cache_entry);
+                cache_entry = NULL;
+            }
+
+            HASH_DELETE(hh, mem_id_cache, memid_entry);
+            MPL_free(memid_entry);
+            memid_entry = NULL;
+        }
+
+        /* Search cache for mapped base address */
         HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &mem_id, sizeof(uint64_t), cache_entry);
     }
 
@@ -1813,14 +1898,28 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
                     goto fn_fail;
                 }
 
+                memid_entry = (MPL_ze_mem_id_entry_t *) MPL_malloc(sizeof(MPL_ze_mem_id_entry_t),
+                                                                   MPL_MEM_OTHER);
+
+                if (memid_entry == NULL) {
+                    mpl_err = MPL_ERR_GPU_NOMEM;
+                    goto fn_fail;
+                }
+
                 memset(cache_entry, 0, sizeof(MPL_ze_ipc_handle_entry_t));
+                memset(memid_entry, 0, sizeof(MPL_ze_mem_id_entry_t));
 
                 cache_entry->mem_id = mem_id;
                 cache_entry->mapped_ptr = base;
                 cache_entry->mapped_size = len;
                 cache_entry->handle_cached = false;
+                cache_entry->fd = fd;
                 HASH_ADD(hh, ipc_cache_tracked[local_dev_id], mem_id, sizeof(uint64_t), cache_entry,
                          MPL_MEM_OTHER);
+
+                memid_entry->ptr = pbase;
+                memid_entry->mem_id = mem_id;
+                HASH_ADD(hh, mem_id_cache, ptr, sizeof(void *), memid_entry, MPL_MEM_OTHER);
             }
         }
     }
