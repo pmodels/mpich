@@ -117,16 +117,18 @@ my $tapoutput;
 my $junitoutput;
 
 # Total number of tests checked and run
-my $g_total_run = 0;
-my $g_total_seen = 0;
+my $g_total_seen = 0;         # $g_ok_count + $g_err_count + $g_skip_count
+my $g_total_run = 0;          # $g_ok_count + $g_err_count
+my $g_ok_count = 0;           # Number of programs that succeeded.
+my $g_err_count = 0;          # Number of programs that failed.
+my $g_skip_count = 0;         # Number of programs skipped
+
 # When every tests result in timeout, it means the code has deadlocks or some major issues,
 # waiting for all tests to finish is rather unnecessary. We'll keep a counter for number
 # of timeouts, and abore after too many timeout failure.
 my $g_num_timeout;
 my $g_num_timeout_thresh = 5;
 
-my $g_err_count = 0;          # Number of programs that failed.
-my $g_skip_count = 0;         # Number of programs skipped
 my $g_testCount = 0;          # Used with batchRun to count tests.
 
 # Build flags
@@ -504,10 +506,6 @@ sub LoadTests {
                 $test_opt->{name} = $2;
             }
 
-            # allows us to accurately output TAP test numbers without disturbing the
-            # original totals that have traditionally been reported
-            $g_total_seen++;
-
             # Check whether strict is required by MPI but not by the
             # test (use strict=false for tests that use non-standard extensions)
             if (lc($requiresStrict) eq "false" && $g_opt{strict}) {
@@ -554,8 +552,6 @@ sub RunTests {
             print STDERR "Terminating test because of too many timeout failures\n";
             last;
         }
-
-        $g_total_run++;
         if ($test_opt->{dir} ne $curdir) {
             $curdir = $test_opt->{dir};
             if (!$cwd) {
@@ -627,7 +623,6 @@ sub LoadImplicitTests {
             if (-d $programname) { next; }  # Ignore directories
             if ($programname eq "runtests") { next; } # Ignore self
             if (-x $programname) {
-                $g_total_run++;
                 my $test_opt = {name=>$programname, np=>$g_opt{np_default}, dir=>$curdir, args=>[], envs=>[], mpiexecargs=>[]};
                 push @$all_tests, $test_opt;
             }
@@ -648,7 +643,6 @@ sub LoadImplicitTests {
             # Skip messages from ls about no files
             if (! -s $programname) { next; }
             $programname =~ s/\.c//;
-            $g_total_run++;
             my $np = $g_opt{np_default};
             my $test_opt = {name=>$programname, np=>$np, dir=>$curdir};
             push @$all_tests, $test_opt;
@@ -1178,12 +1172,16 @@ sub RunTestPassed {
     my $progArgs = join(' ', @{$test_opt->{args}});
     my $progEnv = join(' ', @{$test_opt->{envs}});
 
+    $g_total_seen++;
+    $g_total_run++;
+    $g_ok_count++;
+
     if ($xmloutput) {
         print XMLOUT "<STATUS>pass</STATUS>$g_opt{newline}";
     print XMLOUT "<TIME>$runtime</TIME>$g_opt{newline}";
     }
     if ($tapoutput) {
-        print TAPOUT "ok $g_total_run - $workdir/$programname ${np} # time=$runtime\n";
+        print TAPOUT "ok $g_total_seen - $workdir/$programname ${np} # time=$runtime\n";
     }
     if ($junitoutput) {
         print JUNITOUT "    <testcase name=\"$g_total_run - $workdir/$programname ${np} ${progArgs} ${progEnv}\" time=\"$runtime\"></testcase>\n";
@@ -1196,6 +1194,10 @@ sub RunTestFailed {
     my $workdir = $test_opt->{dir};
     my $progArgs = join(' ', @{$test_opt->{args}});
     my $progEnv = join(' ', @{$test_opt->{envs}});
+
+    $g_total_seen++;
+    $g_total_run++;
+    $g_err_count++;
 
     # count # of timeout when tests are configured with sufficient timeLimit
     if ($test_opt->{_timeout} > 60) {
@@ -1225,7 +1227,7 @@ sub RunTestFailed {
         if ($test_opt->{xfail}) {
             $xfailstr = " # TODO $test_opt->{xfail}";
         }
-        print TAPOUT "not ok $g_total_run - $workdir/$programname ${np}${xfailstr} # time=$runtime\n";
+        print TAPOUT "not ok $g_total_seen - $workdir/$programname ${np}${xfailstr} # time=$runtime\n";
         print TAPOUT "  ---\n";
         print TAPOUT "  Directory: $workdir\n";
         print TAPOUT "  File: $programname\n";
@@ -1290,8 +1292,6 @@ sub RunTestFailed {
         print JUNITOUT "    ]]></${testtag}>\n";
         print JUNITOUT "    </testcase>\n";
     }
-
-    $g_err_count++;
 }
 
 sub SkippedTest {
@@ -1301,6 +1301,9 @@ sub SkippedTest {
     my $workdir = $test_opt->{dir};
     my $progArgs = join(' ', @{$test_opt->{args}});
     my $progEnv = join(' ', @{$test_opt->{envs}});
+
+    $g_total_seen++;
+    $g_skip_count++;
 
     # simply omit from the XML output
 
@@ -1313,8 +1316,6 @@ sub SkippedTest {
         print JUNITOUT "             message=\"$reason\"><![CDATA[ok $g_total_seen - $workdir/$programname $np  # SKIP $reason]]></skipped>\n";
         print JUNITOUT "    </testcase>\n";
     }
-
-    $g_skip_count++;
 }
 
 # ----------------------------------------------------------------------------
