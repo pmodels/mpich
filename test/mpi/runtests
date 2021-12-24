@@ -324,24 +324,7 @@ else {
     LoadTests(".", \@all_tests);
 }
 
-if ($g_opt{run_mpitests}) {
-    my (@all_mpitests, @all_remaining);
-    my $mpitest_hash = load_all_mpitests_txt();
-    foreach my $test (@all_tests) {
-        my $key = get_mpitest_key($test);
-        if ($mpitest_hash->{$key}) {
-            push @all_mpitests, $test;
-        } else {
-            push @all_remaining, $test
-        }
-    }
-    if (@all_mpitests) {
-        RunTests_bygroup(\@all_mpitests, 1);
-        @all_tests = @all_remaining;
-    }
-}
-
-RunTests_bygroup(\@all_tests, 0);
+Run_all_tests(\@all_tests);
 
 CloseOutputs();
 
@@ -554,6 +537,34 @@ sub LoadTests {
     }
 }
 
+sub Run_all_tests {
+    my $all_tests = shift;
+
+    my (@all_mpitests, @all_remaining);
+    if ($g_opt{run_mpitests}) {
+        my $mpitest_hash = load_all_mpitests_txt();
+        foreach my $test (@$all_tests) {
+            my $key = get_mpitest_key($test);
+            if ($mpitest_hash->{$key}) {
+                push @all_mpitests, $test;
+            } else {
+                push @all_remaining, $test
+            }
+        }
+    } else {
+        @all_remaining = @$all_tests;
+    }
+
+    my $need_stop;
+    if (@all_mpitests) {
+        $need_stop = RunTests_bygroup(\@all_mpitests, 1);
+    }
+
+    if (!$need_stop) {
+        RunTests_bygroup(\@all_remaining, 0);
+    }
+}
+
 sub RunTests_bygroup {
     my ($all_tests, $use_run_mpitests) = @_;
     # Group by testlist
@@ -566,6 +577,7 @@ sub RunTests_bygroup {
         push @{$groups{$testlist}}, $test;
     }
 
+    my $need_stop = 0;
     foreach my $testlist (sort keys %groups) {
         my $cnt = @{$groups{$testlist}};
         # add a timestamp to have a quick idea of how long the tests ran
@@ -573,7 +585,6 @@ sub RunTests_bygroup {
         my $timestamp = sprintf("%02d:%02d:%02d", $tm_list[2], $tm_list[1], $tm_list[0]);
         print "Running tests in $testlist [$cnt tests - $timestamp]\n" if $g_opt{debug};
 
-        my $need_stop;
         if ($use_run_mpitests) {
             $need_stop = run_mpitests($groups{$testlist});
         } else {
@@ -583,11 +594,13 @@ sub RunTests_bygroup {
             last;
         }
     }
+
+    return $need_stop;
 }
 
 sub check_need_stop {
     # Check for stop file
-    if (-s $g_opt{stopfile}) {
+    if (-e $g_opt{stopfile}) {
         # Exit because we found a stopfile
         print STDERR "Terminating test because stopfile $g_opt{stopfile} found\n";
         return 1;
@@ -675,8 +688,9 @@ sub run_mpitests {
             my $test_opt = $tests[$idx];
             $idx++;
 
-            if (check_need_stop()) {
-                last;
+            $need_stop = check_need_stop();
+            if ($need_stop) {
+                goto run_mpitests_exit;
             }
 
             my $name = get_mpitest_key($test_opt);
@@ -730,6 +744,7 @@ sub run_mpitests {
             goto run_mpitests_at_idx;
         }
     }
+    run_mpitests_exit:
     return $need_stop;
 }
 
