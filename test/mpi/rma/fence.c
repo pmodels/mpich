@@ -4,24 +4,29 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include <limits.h>
 #include "dtpools.h"
 #include "mtest_dtp.h"
 #include <assert.h>
 
+#ifdef MULTI_TESTS
+#define run rma_fence
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Get with Fence";
 */
 
-int world_rank, world_size;
-struct mtest_obj orig, target;
+#define USE_GET 1
+#define USE_PUT 2
 
-static inline int test(MPI_Comm comm, int rank, int orig_rank, int target_rank,
-                       MPI_Aint count, DTP_pool_s dtp, MPI_Win win)
+static int use_op = USE_GET;
+static struct mtest_obj orig, target;
+
+static int test(MPI_Comm comm, int rank, int orig_rank, int target_rank,
+                MPI_Aint count, DTP_pool_s dtp, MPI_Win win)
 {
     int errs = 0, err;
     MPI_Aint origcount, targetcount;
@@ -34,26 +39,26 @@ static inline int test(MPI_Comm comm, int rank, int orig_rank, int target_rank,
     targetcount = target.dtp_obj.DTP_type_count;
 
     if (rank == target_rank) {
-#if defined(USE_GET)
-        MTest_dtp_init(&target, 0, 1, count);
-#elif defined(USE_PUT)
-        MTest_dtp_init(&target, -1, -1, count);
-#endif
+        if (use_op == USE_GET) {
+            MTest_dtp_init(&target, 0, 1, count);
+        } else {
+            MTest_dtp_init(&target, -1, -1, count);
+        }
 
         /* The target does not need to do anything besides the
          * fence */
         MPI_Win_fence(0, win);
         MPI_Win_fence(0, win);
 
-#if defined(USE_PUT)
-        errs += MTest_dtp_check(&target, 0, 1, count, &orig, errs < 10);
-#endif
+        if (use_op == USE_PUT) {
+            errs += MTest_dtp_check(&target, 0, 1, count, &orig, errs < 10);
+        }
     } else if (rank == orig_rank) {
-#if defined(USE_GET)
-        MTest_dtp_init(&orig, -1, -1, count);
-#elif defined(USE_PUT)
-        MTest_dtp_init(&orig, 0, 1, count);
-#endif
+        if (use_op == USE_GET) {
+            MTest_dtp_init(&orig, -1, -1, count);
+        } else {
+            MTest_dtp_init(&orig, 0, 1, count);
+        }
 
         /* To improve reporting of problems about operations, we
          * change the error handler to errors return */
@@ -71,15 +76,15 @@ static inline int test(MPI_Comm comm, int rank, int orig_rank, int target_rank,
 
         /* This should have the same effect, in terms of
          * transferring data, as a send/recv pair */
-#if defined(USE_GET)
-        err = MPI_Get((char *) orig.buf + orig.dtp_obj.DTP_buf_offset,
-                      origcount, origtype, target_rank,
-                      target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
-#elif defined(USE_PUT)
-        err = MPI_Put((char *) orig.buf + orig.dtp_obj.DTP_buf_offset,
-                      origcount, origtype, target_rank,
-                      target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
-#endif
+        if (use_op == USE_GET) {
+            err = MPI_Get((char *) orig.buf + orig.dtp_obj.DTP_buf_offset,
+                          origcount, origtype, target_rank,
+                          target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
+        } else {
+            err = MPI_Put((char *) orig.buf + orig.dtp_obj.DTP_buf_offset,
+                          origcount, origtype, target_rank,
+                          target.dtp_obj.DTP_buf_offset / extent, targetcount, targettype, win);
+        }
         if (err) {
             errs++;
             if (errs < 10) {
@@ -93,9 +98,9 @@ static inline int test(MPI_Comm comm, int rank, int orig_rank, int target_rank,
                 MTestPrintError(err);
             }
         }
-#if defined(USE_GET)
-        errs += MTest_dtp_check(&orig, 0, 1, count, &target, errs < 10);
-#endif
+        if (use_op == USE_GET) {
+            errs += MTest_dtp_check(&orig, 0, 1, count, &target, errs < 10);
+        }
     } else {
         MPI_Win_fence(0, win);
         MPI_Win_fence(0, win);
@@ -116,13 +121,13 @@ static int fence_test(int seed, int testsize, int count, const char *basic_type,
     MPI_Aint extent, lb;
     MPI_Win win;
 
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
     static char test_desc[200];
     snprintf(test_desc, 200,
-#if defined(USE_GET)
-             "./getfence -seed=%d -testsize=%d -type=%s -count=%d -origmem=%s -targetmem=%s",
-#elif defined(USE_PUT)
-             "./putfence -seed=%d -testsize=%d -type=%s -count=%d -origmem=%s -targetmem=%s",
-#endif
+             "./fence %s -seed=%d -testsize=%d -type=%s -count=%d -origmem=%s -targetmem=%s",
+             (use_op == USE_GET ? "-get" : "-put"),
              seed, testsize, basic_type, count, MTest_memtype_name(origmem),
              MTest_memtype_name(targetmem));
     if (world_rank == 0) {
@@ -198,16 +203,20 @@ static int fence_test(int seed, int testsize, int count, const char *basic_type,
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    if (MTestArgListGetInt_with_default(head, "put", 0)) {
+        use_op = USE_PUT;
+    } else {
+        use_op = USE_GET;
+    }
+    MTestArgListDestroy(head);
 
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_DTP_RMA, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_DTP_RMA, arg);
     while (dtp_args_get_next(&dtp_args)) {
         errs +=
             fence_test(dtp_args.seed, dtp_args.testsize, dtp_args.count, dtp_args.basic_type,
@@ -216,6 +225,5 @@ int main(int argc, char *argv[])
     }
     dtp_args_finalize(&dtp_args);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

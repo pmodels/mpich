@@ -4,6 +4,7 @@
 ##
 
 include $(top_srcdir)/Makefile_single.mtest
+include Makefile_mpitests.mk
 
 EXTRA_DIST = testlist.in
 
@@ -192,17 +193,8 @@ noinst_PROGRAMS =          \
     accfence1              \
     accpscw1               \
     epochtest              \
-    getfence1              \
-    lock_contention_dt     \
-    lock_dt                \
-    lock_dt_flush          \
-    lock_dt_flushlocal     \
-    lockall_dt             \
-    lockall_dt_flush       \
-    lockall_dt_flushall    \
-    lockall_dt_flushlocal  \
-    lockall_dt_flushlocalall \
-    putfence1              \
+    fence                  \
+    lock_x_dt              \
     putpscw1
 
 if BUILD_MPIX_TESTS
@@ -378,51 +370,6 @@ overlap_wins_cas_CPPFLAGS  = -DTEST_CAS $(AM_CPPFLAGS)
 
 get_flushlocal_shm_SOURCES        = get_flushlocal.c
 get_flushlocal_shm_CPPFLAGS       = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-
-accfence1_CPPFLAGS = $(AM_CPPFLAGS)
-accfence1_SOURCES = accfence1.c
-
-accpscw1_CPPFLAGS = $(AM_CPPFLAGS)
-accpscw1_SOURCES = accpscw1.c
-
-epochtest_CPPFLAGS = $(AM_CPPFLAGS)
-epochtest_SOURCES = epochtest.c
-
-getfence1_CPPFLAGS = -DUSE_GET $(AM_CPPFLAGS)
-getfence1_SOURCES = fence.c
-
-putfence1_CPPFLAGS = -DUSE_PUT $(AM_CPPFLAGS)
-putfence1_SOURCES = fence.c
-
-lock_contention_dt_CPPFLAGS = -DMULTI_ORIGIN -DSINGLE_TARGET -DUSE_FLUSH_NONE -DUSE_FLUSH_LOCAL_NONE $(AM_CPPFLAGS)
-lock_contention_dt_SOURCES = lock_x_dt.c
-
-lock_dt_CPPFLAGS = -DSINGLE_ORIGIN -DSINGLE_TARGET -DUSE_FLUSH_NONE -DUSE_FLUSH_LOCAL_NONE $(AM_CPPFLAGS)
-lock_dt_SOURCES = lock_x_dt.c
-
-lock_dt_flush_CPPFLAGS = -DSINGLE_ORIGIN -DSINGLE_TARGET -DUSE_FLUSH -DUSE_FLUSH_LOCAL_NONE $(AM_CPPFLAGS)
-lock_dt_flush_SOURCES = lock_x_dt.c
-
-lock_dt_flushlocal_CPPFLAGS = -DSINGLE_ORIGIN -DSINGLE_TARGET -DUSE_FLUSH_NONE -DUSE_FLUSH_LOCAL $(AM_CPPFLAGS)
-lock_dt_flushlocal_SOURCES = lock_x_dt.c
-
-lockall_dt_CPPFLAGS = -DSINGLE_ORIGIN -DMULTI_TARGET -DUSE_FLUSH_NONE -DUSE_FLUSH_LOCAL_NONE $(AM_CPPFLAGS)
-lockall_dt_SOURCES = lock_x_dt.c
-
-lockall_dt_flush_CPPFLAGS = -DSINGLE_ORIGIN -DMULTI_TARGET -DUSE_FLUSH -DUSE_FLUSH_LOCAL_NONE $(AM_CPPFLAGS)
-lockall_dt_flush_SOURCES = lock_x_dt.c
-
-lockall_dt_flushall_CPPFLAGS = -DSINGLE_ORIGIN -DMULTI_TARGET -DUSE_FLUSH_ALL -DUSE_FLUSH_LOCAL_NONE $(AM_CPPFLAGS)
-lockall_dt_flushall_SOURCES = lock_x_dt.c
-
-lockall_dt_flushlocal_CPPFLAGS = -DSINGLE_ORIGIN -DMULTI_TARGET -DUSE_FLUSH_NONE -DUSE_FLUSH_LOCAL $(AM_CPPFLAGS)
-lockall_dt_flushlocal_SOURCES = lock_x_dt.c
-
-lockall_dt_flushlocalall_CPPFLAGS = -DSINGLE_ORIGIN -DMULTI_TARGET -DUSE_FLUSH_NONE -DUSE_FLUSH_LOCAL_ALL $(AM_CPPFLAGS)
-lockall_dt_flushlocalall_SOURCES = lock_x_dt.c
-
-putpscw1_CPPFLAGS = $(AM_CPPFLAGS)
-putpscw1_SOURCES = putpscw1.c
 
 win_dynamic_acc_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
 win_dynamic_acc_collattach_SOURCES = win_dynamic_acc.c

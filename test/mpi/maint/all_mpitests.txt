@@ -218,3 +218,10 @@ pt2pt/sendrecv2
 pt2pt/sendrecv3
 pt2pt/waitany_null
 pt2pt/waittestnull
+
+rma/accfence1
+rma/accpscw1
+rma/epochtest
+rma/fence
+rma/putpscw1
+rma/lock_x_dt
