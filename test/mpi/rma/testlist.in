@@ -63,7 +63,7 @@ window_creation 2
 window_allocation 4
 window_noncontig_allocation 4
 window_attach 4
-window_attach_collattach 4
+window_attach 4 -arg=-collattach
 contention_put 4
 contention_putget 4
 put_base 2
@@ -85,37 +85,37 @@ win_zero 4
 @largetest@win_large_shm 4
 @largetest@win_large_shm 3
 win_dynamic_acc 4
-win_dynamic_acc_collattach 4
+win_dynamic_acc 4 -collattach
 get_acc_local 1
 linked_list 4
 linked_list_fop 4
 compare_and_swap 4
-fetch_and_op_char 4
-fetch_and_op_short 4
-fetch_and_op_int 4
-fetch_and_op_long 4
-fetch_and_op_double 4
-fetch_and_op_long_double 4
-fetch_and_op_char_hwacc 4
-fetch_and_op_short_hwacc 4
-fetch_and_op_int_hwacc 4
-fetch_and_op_long_hwacc 4
-fetch_and_op_double_hwacc 4
-fetch_and_op_long_double_hwacc 4
-fetch_and_op_char_accop_hwacc 4
-fetch_and_op_short_accop_hwacc 4
-fetch_and_op_int_accop_hwacc 4
-fetch_and_op_long_accop_hwacc 4
-fetch_and_op_double_accop_hwacc 4
-fetch_and_op_long_double_accop_hwacc 4
-get_accumulate_double 4
-get_accumulate_double_derived 4
-get_accumulate_int 4
-get_accumulate_int_derived 4
-get_accumulate_long 4
-get_accumulate_long_derived 4
-get_accumulate_short 4
-get_accumulate_short_derived 4
+fetch_and_op 4 arg=-type=char
+fetch_and_op 4 arg=-type=short
+fetch_and_op 4 arg=-type=int
+fetch_and_op 4 arg=-type=long
+fetch_and_op 4 arg=-type=double
+fetch_and_op 4 arg=-type=long_double
+fetch_and_op 4 arg=-type=char arg=-hwacc
+fetch_and_op 4 arg=-type=short arg=-hwacc
+fetch_and_op 4 arg=-type=int arg=-hwacc
+fetch_and_op 4 arg=-type=long arg=-hwacc
+fetch_and_op 4 arg=-type=double arg=-hwacc
+fetch_and_op 4 arg=-type=long_double arg=-hwacc
+fetch_and_op 4 arg=-type=char arg=-hwacc arg=-accop
+fetch_and_op 4 arg=-type=short arg=-hwacc arg=-accop
+fetch_and_op 4 arg=-type=int arg=-hwacc arg=-accop
+fetch_and_op 4 arg=-type=long arg=-hwacc arg=-accop
+fetch_and_op 4 arg=-type=double arg=-hwacc arg=-accop
+fetch_and_op 4 arg=-type=long_double arg=-hwacc arg=-accop
+get_accumulate 4 arg=-type=double
+get_accumulate 4 arg=-type=double -derived
+get_accumulate 4 arg=-type=int
+get_accumulate 4 arg=-type=int -derived
+get_accumulate 4 arg=-type=long
+get_accumulate 4 arg=-type=long -derived
+get_accumulate 4 arg=-type=short
+get_accumulate 4 arg=-type=short -derived
 flush 4
 reqops 4
 req_example 4
@@ -146,14 +146,14 @@ at_complete 2
 atomic_rmw_fop 3
 atomic_rmw_cas 3
 atomic_rmw_gacc 3
-atomic_get_short_int 3 timeLimit=300
-atomic_get_2int 3 timeLimit=300
-atomic_get_long_int 3 timeLimit=300
-atomic_get_float_int 3 timeLimit=300
-atomic_get_double_int 3 timeLimit=300
-atomic_get_long_double_int 3 timeLimit=300
+atomic_get 3 arg=-pairtype=short timeLimit=300
+atomic_get 3 arg=-pairtype=int timeLimit=300
+atomic_get 3 arg=-pairtype=long timeLimit=300
+atomic_get 3 arg=-pairtype=float timeLimit=300
+atomic_get 3 arg=-pairtype=double timeLimit=300
+atomic_get 3 arg=-pairtype=long_double timeLimit=300
 aint 2
-aint_collattach 2
+aint 2 arg=-collattach
 acc_pairtype 2
 acc_pairtype_shm 2
 manyget 2 timeLimit=300
@@ -168,30 +168,30 @@ win_dynamic_rma_flush_get 2 arg=-count=1 arg=-op=cas
 win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=put
 win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=acc
 win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=gacc
-win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=put
-win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=acc
-win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=gacc
-win_dynamic_rma_flush_get_collattach 2 arg=-count=1 arg=-op=fop
-win_dynamic_rma_flush_get_collattach 2 arg=-count=1 arg=-op=cas
-win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=put
-win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=acc
-win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=gacc
-win_shared_put_flush_load 3
-win_shared_acc_flush_load 3
-win_shared_gacc_flush_load 3
-win_shared_fop_flush_load 3
-win_shared_cas_flush_load 3
-put_flush_get 3
-acc_flush_get 3
-gacc_flush_get 3
-fop_flush_get 3
-cas_flush_get 3
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=put arg=-collattach
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=acc arg=-collattach
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=gacc arg=-collattach
+win_dynamic_rma_flush_get 2 arg=-count=1 arg=-op=fop arg=-collattach
+win_dynamic_rma_flush_get 2 arg=-count=1 arg=-op=cas arg=-collattach
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=put arg=-collattach
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=acc arg=-collattach
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=gacc arg=-collattach
+win_shared_rma_flush_load 3 arg=-op=put
+win_shared_rma_flush_load 3 arg=-op=acc
+win_shared_rma_flush_load 3 arg=-op=gacc
+win_shared_rma_flush_load 3 arg=-op=fop
+win_shared_rma_flush_load 3 arg=-op=cas
+wrma_flush_get 3 arg=-op=put
+wrma_flush_get 3 arg=-op=acc
+wrma_flush_get 3 arg=-op=gacc
+wrma_flush_get 3 arg=-op=fop
+wrma_flush_get 3 arg=-op=cas
 rget_unlock 2
-overlap_wins_put 3
-overlap_wins_acc 3
-overlap_wins_gacc 3
-overlap_wins_fop 3
-overlap_wins_cas 3
+overlap_wins_rma 3 arg=-op=put
+overlap_wins_rma 3 arg=-op=put
+overlap_wins_rma 3 arg=-op=put
+overlap_wins_rma 3 arg=-op=put
+overlap_wins_rma 3 arg=-op=put
 lock_nested 3
 rget_testall 2
 get_flushlocal 4

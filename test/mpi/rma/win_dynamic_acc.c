@@ -3,26 +3,32 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <mpi.h>
 #include "mpitest.h"
+#include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run rma_win_dynamic_acc
+int run(const char *arg);
+#endif
 
 #define ITER_PER_RANK 25
 
-const int verbose = 0;
+static const int verbose = 0;
+static int do_collattach = 0;
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i, rank, nproc;
-    int errors = 0, all_errors = 0;
+    int errors = 0;
     int val = 0, one = 1;
     int iter;
     MPI_Aint *val_ptrs;
     MPI_Win dyn_win;
 
-    MTest_Init(&argc, &argv);
+    /* Processing input arguments */
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    do_collattach = MTestArgListGetInt_with_default(head, "collattach", 0);
+    MTestArgListDestroy(head);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -35,16 +41,16 @@ int main(int argc, char **argv)
     MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, val_ptrs, 1, MPI_AINT, MPI_COMM_WORLD);
 
     MPI_Info info = MPI_INFO_NULL;
-#ifdef USE_INFO_COLL_ATTACH
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "coll_attach", "true");
-#endif
+    if (do_collattach) {
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "coll_attach", "true");
+    }
 
     MPI_Win_create_dynamic(info, MPI_COMM_WORLD, &dyn_win);
 
-#ifdef USE_INFO_COLL_ATTACH
-    MPI_Info_free(&info);
-#endif
+    if (info != MPI_INFO_NULL) {
+        MPI_Info_free(&info);
+    }
 
     MPI_Win_attach(dyn_win, &val, sizeof(int));
 
@@ -67,7 +73,6 @@ int main(int argc, char **argv)
     MPI_Win_free(&dyn_win);
 
     free(val_ptrs);
-    MTest_Finalize(errors);
 
-    return MTestReturnValue(all_errors);
+    return errors;
 }

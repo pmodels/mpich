@@ -3,11 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <mpi.h>
 #include "mpitest.h"
+#include <string.h>
+#include "rma_test_op.h"
+
+#ifdef MULTI_TESTS
+#define run rma_win_dynamic_rma_flush_get
+int run(const char *arg);
+#endif
 
 /* This test checks RMA operations that access to dynamic window with multiple attached regions.
  * It generates separate tests for each RMA operation type accessing to a single remote region,
@@ -20,6 +23,8 @@
 #define ITER 10
 #define MEM_CNT 8192
 #define MAX_RMA_CNT (MEM_CNT * 2)
+
+static int do_collattach = 0;
 
 static DATATYPE mem_region[MAX_RMA_CNT];
 static MPI_Win dyn_win = MPI_WIN_NULL;
@@ -35,52 +40,31 @@ static DATATYPE local_buf[MAX_RMA_CNT], check_buf[MAX_RMA_CNT], result_buf[MAX_R
             fflush(stderr);                           \
         }
 
-enum rma_op {
-    TEST_PUT,
-    TEST_ACC,
-    TEST_GACC,
-    TEST_FOP,
-    TEST_CAS,
-    TEST_NUM_OP
-};
-
-static enum rma_op op = TEST_PUT;
-
-/* Define operation name for error message */
-const char *rma_names[TEST_NUM_OP] = {
-    "Put",
-    "Accumulate",
-    "Get_accumulate",
-    "Fetch_and_op",
-    "Compare_and_swap"
-};
-
 /* Issue functions for different RMA operations */
-static inline void issue_rma_op(int dst, MPI_Aint target_disp)
+static void issue_rma_op(int dst, MPI_Aint target_disp)
 {
-    switch (op) {
-        case TEST_PUT:
+    switch (test_op) {
+        case TEST_OP_PUT:
             MPI_Put(local_buf, rma_cnt, MPI_DATATYPE, dst, target_disp, rma_cnt, MPI_DATATYPE,
                     dyn_win);
             break;
-        case TEST_ACC:
+        case TEST_OP_ACC:
             MPI_Accumulate(local_buf, rma_cnt, MPI_DATATYPE, dst, target_disp, rma_cnt,
                            MPI_DATATYPE, MPI_REPLACE, dyn_win);
             break;
-        case TEST_GACC:
+        case TEST_OP_GACC:
             MPI_Get_accumulate(local_buf, rma_cnt, MPI_DATATYPE, result_buf, rma_cnt, MPI_DATATYPE,
                                dst, target_disp, rma_cnt, MPI_DATATYPE, MPI_REPLACE, dyn_win);
             break;
-        case TEST_FOP:
+        case TEST_OP_FOP:
             MPI_Fetch_and_op(local_buf, result_buf, MPI_DATATYPE, dst, target_disp, MPI_REPLACE,
                              dyn_win);
             break;
-        case TEST_CAS:
+        case TEST_OP_CAS:
             MPI_Compare_and_swap(local_buf, compare_buf, result_buf, MPI_DATATYPE, dst, target_disp,
                                  dyn_win);
             break;
         default:
-            MPI_Abort(MPI_COMM_WORLD, -1);      /* Invalid op */
             break;
     }
 }
@@ -91,7 +75,7 @@ static void set_iteration_data(int x)
     for (i = 0; i < rma_cnt; i++)
         local_buf[i] = rank + i + x;
 
-    if (op == TEST_CAS) {
+    if (test_op == TEST_OP_CAS) {
         /* Need equals to remote window's value */
         if (x == 0)
             compare_buf[0] = 0;
@@ -109,7 +93,7 @@ static int check_iteration_data(int x)
         if (check_buf[i] != rank + i + x) {     /* always replace */
             error_print("rank %d (iter %d) - check %s, got buf[%d] = "
                         DATATYPE_FORMAT ", expected " DATATYPE_FORMAT "\n", rank, x,
-                        rma_names[op], i, check_buf[i], rank + i + x);
+                        get_rma_name(), i, check_buf[i], rank + i + x);
             errs++;
         }
     }
@@ -163,18 +147,18 @@ static void init_window(void)
     MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, mem_ptrs, 2, MPI_AINT, MPI_COMM_WORLD);
 
     MPI_Info info = MPI_INFO_NULL;
-#ifdef USE_INFO_COLL_ATTACH
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "coll_attach", "true");
-#endif
+    if (do_collattach) {
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "coll_attach", "true");
+    }
 
     MPI_Win_create_dynamic(info, MPI_COMM_WORLD, &dyn_win);
     MPI_Win_attach(dyn_win, &mem_region[0], sizeof(DATATYPE) * MEM_CNT);
     MPI_Win_attach(dyn_win, &mem_region[MEM_CNT], sizeof(DATATYPE) * MEM_CNT);
 
-#ifdef USE_INFO_COLL_ATTACH
-    MPI_Info_free(&info);
-#endif
+    if (info != MPI_INFO_NULL) {
+        MPI_Info_free(&info);
+    }
 }
 
 static void destroy_windows(void)
@@ -184,18 +168,18 @@ static void destroy_windows(void)
     MPI_Win_free(&dyn_win);
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
-    int errors = 0, all_errors = 0;
+    int errors = 0;
     char *op_str = NULL;
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* Processing input arguments */
-    MTestArgList *head = MTestArgListCreate(argc, argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    parse_test_op(head);
+    do_collattach = MTestArgListGetInt_with_default(head, "collattach", 0);
     rma_cnt = MTestArgListGetInt(head, "count");
-    op_str = MTestArgListGetString(head, "op");
 
     if (rma_cnt < 0 || rma_cnt >= MAX_RMA_CNT) {
         if (rank == 0)
@@ -205,29 +189,14 @@ int main(int argc, char *argv[])
         goto exit;
     }
 
-    if (!strncmp(op_str, "put", strlen("put"))) {
-        op = TEST_PUT;
-    } else if (!strncmp(op_str, "acc", strlen("acc"))) {
-        op = TEST_ACC;
-    } else if (!strncmp(op_str, "gacc", strlen("gacc"))) {
-        op = TEST_GACC;
-    } else if (!strncmp(op_str, "fop", strlen("fop"))) {
-        op = TEST_FOP;
-    } else if (!strncmp(op_str, "cas", strlen("cas"))) {
-        op = TEST_CAS;
-    } else {
-        if (rank == 0)
-            error_print("Invalid op: op = %s but valid option is one of put,acc,gacc,fop,cas\n",
-                        op_str);
-        errors++;
-        goto exit;
-    }
+    assert_test_op();
 
     MTestArgListDestroy(head);
 
     /* Force cnt be 1 for FOP and CAS */
-    if (op == TEST_FOP || op == TEST_CAS)
+    if (test_op == TEST_OP_FOP || test_op == TEST_OP_CAS) {
         rma_cnt = 1;
+    }
 
     init_window();
     MPI_Barrier(MPI_COMM_WORLD);
@@ -238,6 +207,5 @@ int main(int argc, char *argv[])
     destroy_windows();
 
   exit:
-    MTest_Finalize(errors);
-    return MTestReturnValue(all_errors);
+    return errors;
 }

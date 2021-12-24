@@ -225,3 +225,12 @@ rma/epochtest
 rma/fence
 rma/putpscw1
 rma/lock_x_dt
+rma/atomic_get
+rma/fetch_and_op
+rma/get_accumulate
+rma/wrma_flush_get
+rma/win_shared_rma_flush_load
+rma/overlap_wins_rma
+rma/win_dynamic_rma_flush_get
+rma/win_dynamic_acc
+rma/aint
