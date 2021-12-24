@@ -3,19 +3,20 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
+#include "rma_test_op.h"
+
+#ifdef MULTI_TESTS
+#define run rma_wrma_flush_get
+int run(const char *arg);
+#endif
 
 #define ITER 10000
 #define BUF_CNT 1
-int local_buf[BUF_CNT], result_addr[BUF_CNT], check_addr[BUF_CNT];
-#ifdef TEST_CAS
-int compare_buf[BUF_CNT];
-#endif
+static int local_buf[BUF_CNT], result_addr[BUF_CNT], check_addr[BUF_CNT];
+static int compare_buf[BUF_CNT];
 
-const int verbose = 0;
+static const int verbose = 0;
 
 /* This test checks the remote completion of flush with RMA write-like operations
  * (PUT, ACC, GET_ACC, FOP, CAS), and confirms result by GET issued from another
@@ -26,59 +27,35 @@ const int verbose = 0;
  * 3. P(checker) then issues get to P(target) to check the results.
  */
 
-int rank = -1, nproc = 0;
-int origin = -1, target = -1, checker = -1;
-MPI_Win win = MPI_WIN_NULL;
-int *my_base = NULL;
-
-/* Define operation name for error message */
-#ifdef TEST_PUT
-const char *rma_name = "Put";
-#elif defined(TEST_ACC)
-const char *rma_name = "Accumulate";
-#elif defined(TEST_GACC)
-const char *rma_name = "Get_accumulate";
-#elif defined(TEST_FOP)
-const char *rma_name = "Fetch_and_op";
-#elif defined(TEST_CAS)
-const char *rma_name = "Compare_and_swap";
-#else
-const char *rma_name = "None";
-#endif
+static int rank = -1, nproc = 0;
+static int origin = -1, target = -1, checker = -1;
+static MPI_Win win = MPI_WIN_NULL;
+static int *my_base = NULL;
 
 /* Issue functions for different RMA operations */
-#ifdef TEST_PUT
-static inline void issue_rma_op(int i)
+static void issue_rma_op(int i)
 {
-    MPI_Put(&local_buf[i], 1, MPI_INT, target, i, 1, MPI_INT, win);
+    switch (test_op) {
+        case TEST_OP_PUT:
+            MPI_Put(&local_buf[i], 1, MPI_INT, target, i, 1, MPI_INT, win);
+            break;
+        case TEST_OP_ACC:
+            MPI_Accumulate(&local_buf[i], 1, MPI_INT, target, i, 1, MPI_INT, MPI_REPLACE, win);
+            break;
+        case TEST_OP_GACC:
+            MPI_Get_accumulate(&local_buf[i], 1, MPI_INT, &result_addr[i], 1, MPI_INT, target, i,
+                               1, MPI_INT, MPI_REPLACE, win);
+            break;
+        case TEST_OP_FOP:
+            MPI_Fetch_and_op(&local_buf[i], &result_addr[i], MPI_INT, target, i, MPI_REPLACE, win);
+            break;
+        case TEST_OP_CAS:
+            compare_buf[i] = i; /* always equal to window value, thus swap happens */
+            MPI_Compare_and_swap(&local_buf[i], &compare_buf[i], &result_addr[i], MPI_INT, target,
+                                 i, win);
+            break;
+    };
 }
-#elif defined(TEST_ACC)
-static inline void issue_rma_op(int i)
-{
-    MPI_Accumulate(&local_buf[i], 1, MPI_INT, target, i, 1, MPI_INT, MPI_REPLACE, win);
-}
-#elif defined(TEST_GACC)
-static inline void issue_rma_op(int i)
-{
-    MPI_Get_accumulate(&local_buf[i], 1, MPI_INT, &result_addr[i], 1, MPI_INT, target, i,
-                       1, MPI_INT, MPI_REPLACE, win);
-}
-#elif defined(TEST_FOP)
-static inline void issue_rma_op(int i)
-{
-    MPI_Fetch_and_op(&local_buf[i], &result_addr[i], MPI_INT, target, i, MPI_REPLACE, win);
-}
-#elif defined(TEST_CAS)
-static inline void issue_rma_op(int i)
-{
-    compare_buf[i] = i; /* always equal to window value, thus swap happens */
-    MPI_Compare_and_swap(&local_buf[i], &compare_buf[i], &result_addr[i], MPI_INT, target, i, win);
-}
-#endif
-
-
-/* Local check function for GET-like operations */
-#if defined(TEST_GACC) || defined(TEST_FOP) || defined(TEST_CAS)
 
 /* Check local result buffer for GET-like operations */
 static int check_local_result(int iter)
@@ -89,16 +66,12 @@ static int check_local_result(int iter)
     for (i = 0; i < BUF_CNT; i++) {
         if (result_addr[i] != i) {
             printf("rank %d (iter %d) - check %s, got result_addr[%d] = %d, expected %d\n",
-                   rank, iter, rma_name, i, result_addr[i], i);
+                   rank, iter, get_rma_name(), i, result_addr[i], i);
             errors++;
         }
     }
     return errors;
 }
-
-#else
-#define check_local_result(iter) (0)
-#endif
 
 static int run_test(void)
 {
@@ -150,7 +123,7 @@ static int run_test(void)
             for (i = 0; i < BUF_CNT; i++) {
                 if (check_addr[i] != local_buf[i]) {
                     printf("rank %d (iter %d) - check %s, got check_addr[%d] = %d, expected %d\n",
-                           rank, x, rma_name, i, check_addr[i], local_buf[i]);
+                           rank, x, get_rma_name(), i, check_addr[i], local_buf[i]);
                     errors++;
                 }
             }
@@ -162,13 +135,16 @@ static int run_test(void)
     return errors;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errors = 0;
     int win_size = sizeof(int) * BUF_CNT;
     int win_unit = sizeof(int);
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    parse_test_op(head);
+    MTestArgListDestroy(head);
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
@@ -178,12 +154,8 @@ int main(int argc, char *argv[])
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-#if !defined(TEST_PUT) && !defined(TEST_ACC) && !defined(TEST_GACC) && !defined(TEST_FOP) && !defined(TEST_CAS)
-    if (rank == 0)
-        printf("Error: must specify operation type at compile time\n");
-    MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-#endif
+
+    assert_test_op();
 
     /* Identify origin, target and checker ranks. */
     target = 0;
@@ -202,7 +174,5 @@ int main(int argc, char *argv[])
     if (win != MPI_WIN_NULL)
         MPI_Win_free(&win);
 
-    MTest_Finalize(errors);
-
-    return MTestReturnValue(errors);
+    return errors;
 }
