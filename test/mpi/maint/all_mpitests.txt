@@ -243,8 +243,11 @@ rma/wintest
 rma/transpose3
 rma/nullpscw
 rma/pscw_ordering
+rma/get_flushlocal
 rma/test2
 rma/test2_am
 rma/test3
 rma/test3_am
 rma/mutex_bench
+rma/win_shared_create
+rma/linked_list_bench_lock_shr

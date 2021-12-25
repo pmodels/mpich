@@ -60,10 +60,10 @@ strided_putget_indexed_shared 4
 strided_getacc_indexed 4
 strided_getacc_indexed_shared 4
 window_creation 2
-window_creation 4 -use-win-allocate
-window_creation 4 -use-win-allocate-noncontig
+window_creation 4 arg=-use-win-allocate
+window_creation 4 arg=-use-win-allocate-noncontig
 window_attach 4
-window_attach 4 -arg=-collattach
+window_attach 4 arg=-collattach
 contention_put 4
 contention_putget 4
 put_base 2
@@ -74,8 +74,8 @@ manyrma2 2 timeLimit=500
 manyrma2 2 arg=-use-win-allocate timeLimit=500
 manyrma3 2
 win_shared 4
-win_shared_create_allocshm 4
-win_shared_create_no_allocshm 4
+win_shared_create 4 arg=-use-alloc-shm
+win_shared_create 4
 win_shared_noncontig 4
 win_shared_noncontig_put 4
 win_shared_query 4 arg=-flavor=create
@@ -85,7 +85,7 @@ win_zero 4
 @largetest@win_large_shm 4
 @largetest@win_large_shm 3
 win_dynamic_acc 4
-win_dynamic_acc 4 -collattach
+win_dynamic_acc 4 arg=-collattach
 get_acc_local 1
 linked_list 4
 linked_list_fop 4
@@ -109,30 +109,30 @@ fetch_and_op 4 arg=-type=long arg=-hwacc arg=-accop
 fetch_and_op 4 arg=-type=double arg=-hwacc arg=-accop
 fetch_and_op 4 arg=-type=long_double arg=-hwacc arg=-accop
 get_accumulate 4 arg=-type=double
-get_accumulate 4 arg=-type=double -derived
+get_accumulate 4 arg=-type=double arg=-derived
 get_accumulate 4 arg=-type=int
-get_accumulate 4 arg=-type=int -derived
+get_accumulate 4 arg=-type=int arg=-derived
 get_accumulate 4 arg=-type=long
-get_accumulate 4 arg=-type=long -derived
+get_accumulate 4 arg=-type=long arg=-derived
 get_accumulate 4 arg=-type=short
-get_accumulate 4 arg=-type=short -derived
+get_accumulate 4 arg=-type=short arg=-derived
 flush 4
 reqops 4
 req_example 4
-req_example 4 arg=-alloc-shm
+req_example 4 arg=-use-alloc-shm
 rput_local_comp 2
 racc_local_comp 2
 linked_list_lockall 4
 pscw_ordering 4
-pscw_ordering 4 -use-win-allocate
+pscw_ordering 4 arg=-use-win-allocate
 linked_list_bench_lock_all 4
 linked_list_bench_lock_excl 4
 linked_list_bench_lock_shr 4
-linked_list_bench_lock_shr_nocheck 4
+linked_list_bench_lock_shr 4 -use-mode-nocheck
 mutex_bench 4
-mutex_bench 4 -use-win-shared
-mutex_bench 4 -use-alloc-shm
-mutex_bench 4 -use-alloc-shm -use-contig-rank
+mutex_bench 4 arg=-use-win-shared
+mutex_bench 4 arg=-use-alloc-shm
+mutex_bench 4 arg=-use-alloc-shm arg=-use-contig-rank
 rma_contig 2 arg=-iter=10
 rma_contig 2 arg=-iter=10000
 badrma 2
@@ -155,7 +155,7 @@ atomic_get 3 arg=-pairtype=long_double timeLimit=300
 aint 2
 aint 2 arg=-collattach
 acc_pairtype 2
-acc_pairtype 2 -use-win-allocate
+acc_pairtype 2 arg=-use-win-allocate
 manyget 2 timeLimit=300
 derived_acc_flush_local 3
 large_acc_flush_local 3
@@ -195,7 +195,7 @@ overlap_wins_rma 3 arg=-op=put
 lock_nested 3
 rget_testall 2
 get_flushlocal 4
-get_flushlocal_shm 4
+get_flushlocal 4 arg=-use-win-allocate
 win_shared_query_null 4
 
 ## This test is not strictly correct.  This was meant to test out the

@@ -15,7 +15,7 @@ int run(const char *arg);
 #define N 1000
 #define M 10
 
-static int do_alloc_shm = 0;
+static int use_alloc_shm = 0;
 
 /* This is example 11.21 from the MPI 3.0 spec:
  *
@@ -50,7 +50,7 @@ int run(const char *arg)
     MPI_Info win_info;
 
     MTestArgList *head = MTestArgListCreate_arg(arg);
-    do_alloc_shm = MTestArgListGetInt_with_default(head, "alloc-shm", 0);
+    use_alloc_shm = MTestArgListGetInt_with_default(head, "use-alloc-shm", 0);
     MTestArgListDestroy(head);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -60,7 +60,7 @@ int run(const char *arg)
 
     MPI_Info_create(&win_info);
 
-    if (do_alloc_shm) {
+    if (use_alloc_shm) {
         MPI_Info_set(win_info, "alloc_shm", "true");
     } else {
         MPI_Info_set(win_info, "alloc_shm", "false");

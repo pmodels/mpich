@@ -78,8 +78,7 @@ noinst_PROGRAMS =          \
     win_shared_noncontig   \
     win_shared_noncontig_put \
     win_shared_zerobyte    \
-    win_shared_create_allocshm    \
-    win_shared_create_no_allocshm \
+    win_shared_create      \
     win_shared_query       \
     win_zero               \
     win_large_shm          \
@@ -93,7 +92,6 @@ noinst_PROGRAMS =          \
     linked_list_bench_lock_all  \
     linked_list_bench_lock_excl \
     linked_list_bench_lock_shr  \
-    linked_list_bench_lock_shr_nocheck  \
     fetch_and_op           \
     get_accumulate         \
     flush                  \
@@ -128,7 +126,6 @@ noinst_PROGRAMS =          \
     lock_nested  \
     rget_testall \
     get_flushlocal         \
-    get_flushlocal_shm     \
     win_shared_query_null  \
     accfence1              \
     accpscw1               \
@@ -146,13 +143,3 @@ strided_getacc_indexed_LDADD    = $(LDADD) -lm
 strided_putget_indexed_LDADD    = $(LDADD) -lm
 strided_getacc_indexed_shared_LDADD = $(LDADD) -lm
 strided_putget_indexed_shared_LDADD = $(LDADD) -lm
-
-linked_list_bench_lock_shr_nocheck_SOURCES  = linked_list_bench_lock_shr.c
-linked_list_bench_lock_shr_nocheck_CPPFLAGS = -DUSE_MODE_NOCHECK $(AM_CPPFLAGS)
-
-win_shared_create_allocshm_SOURCES = win_shared_create.c
-win_shared_create_no_allocshm_SOURCES = win_shared_create.c
-win_shared_create_allocshm_CPPFLAGS = -DUSE_INFO_ALLOC_SHM $(AM_CPPFLAGS)
-
-get_flushlocal_shm_SOURCES        = get_flushlocal.c
-get_flushlocal_shm_CPPFLAGS       = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
