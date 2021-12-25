@@ -115,3 +115,4 @@ rma/win_dynamic_rma_flush_get
 rma/win_dynamic_acc
 rma/window_attach
 rma/aint
+rma/mutex_bench

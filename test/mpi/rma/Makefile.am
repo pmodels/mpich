@@ -114,9 +114,6 @@ noinst_PROGRAMS =          \
     pscw_ordering          \
     pscw_ordering_shm	   \
     mutex_bench            \
-    mutex_bench_shared     \
-    mutex_bench_shm        \
-    mutex_bench_shm_ordered\
     rma_contig             \
     badrma                 \
     nb_test                \
@@ -204,14 +201,6 @@ test2_shm_SOURCES                = test2.c
 test2_am_shm_SOURCES             = test2_am.c
 test3_shm_SOURCES                = test3.c
 test3_am_shm_SOURCES             = test3_am.c
-
-mutex_bench_SOURCES              = mutex_bench.c mcs_mutex.c mcs_mutex.h
-mutex_bench_shared_CPPFLAGS      = -DUSE_WIN_SHARED $(AM_CPPFLAGS)
-mutex_bench_shared_SOURCES       = mutex_bench.c mcs_mutex.c mcs_mutex.h
-mutex_bench_shm_CPPFLAGS         = -DUSE_WIN_ALLOC_SHM $(AM_CPPFLAGS)
-mutex_bench_shm_SOURCES          = mutex_bench.c mcs_mutex.c mcs_mutex.h
-mutex_bench_shm_ordered_CPPFLAGS = -DUSE_WIN_ALLOC_SHM -DUSE_CONTIGUOUS_RANK $(AM_CPPFLAGS)
-mutex_bench_shm_ordered_SOURCES  = mutex_bench.c mcs_mutex.c mcs_mutex.h
 
 linked_list_bench_lock_shr_nocheck_SOURCES  = linked_list_bench_lock_shr.c
 linked_list_bench_lock_shr_nocheck_CPPFLAGS = -DUSE_MODE_NOCHECK $(AM_CPPFLAGS)
