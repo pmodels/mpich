@@ -7,15 +7,15 @@ getgroup 4
 transpose1 2
 transpose2 2
 transpose3 2
-transpose3_shm 2
+transpose3 2 arg=-use-win-allocate
 transpose5 2
 transpose6 1
 transpose7 2
 test1 2
 test2 2
-test2_shm 2
+test2 2 arg=-use-win-allocate
 test3 2
-test3_shm 2
+test3 2 arg=-use-win-allocate
 test4 2
 test5 2
 lockcontention 3
@@ -27,13 +27,13 @@ transpose4 2
 fetchandadd 7
 fetchandadd_tree 7
 wintest 2
-wintest_shm 2
+wintest 2 arg=-use-win-allocate
 contig_displ 1
 test1_am 2
 test2_am 2
-test2_am_shm 2
+test2_am 2 arg=-use-win-allocate
 test3_am 2
-test3_am_shm 2
+test3_am 2 arg=-use-win-allocate
 test4_am 2
 test5_am 2
 fetchandadd_am 7
@@ -41,7 +41,7 @@ fetchandadd_tree_am 7
 accfence2_am 4
 test1_dt 2 timeLimit=30
 nullpscw 7
-nullpscw_shm 7
+nullpscw 7 arg=-use-win-allocate
 attrorderwin 1
 wincall 2
 baseattrwin 1
@@ -60,8 +60,8 @@ strided_putget_indexed_shared 4
 strided_getacc_indexed 4
 strided_getacc_indexed_shared 4
 window_creation 2
-window_allocation 4
-window_noncontig_allocation 4
+window_creation 4 -use-win-allocate
+window_creation 4 -use-win-allocate-noncontig
 window_attach 4
 window_attach 4 -arg=-collattach
 contention_put 4
@@ -71,7 +71,7 @@ put_bottom 2
 win_flavors 4
 win_flavors 3
 manyrma2 2 timeLimit=500
-manyrma2_shm 2 timeLimit=500
+manyrma2 2 arg=-use-win-allocate timeLimit=500
 manyrma3 2
 win_shared 4
 win_shared_create_allocshm 4
@@ -119,12 +119,12 @@ get_accumulate 4 arg=-type=short -derived
 flush 4
 reqops 4
 req_example 4
-req_example_shm 4
+req_example 4 arg=-alloc-shm
 rput_local_comp 2
 racc_local_comp 2
 linked_list_lockall 4
 pscw_ordering 4
-pscw_ordering_shm 4
+pscw_ordering 4 -use-win-allocate
 linked_list_bench_lock_all 4
 linked_list_bench_lock_excl 4
 linked_list_bench_lock_shr 4
@@ -155,7 +155,7 @@ atomic_get 3 arg=-pairtype=long_double timeLimit=300
 aint 2
 aint 2 arg=-collattach
 acc_pairtype 2
-acc_pairtype_shm 2
+acc_pairtype 2 -use-win-allocate
 manyget 2 timeLimit=300
 derived_acc_flush_local 3
 large_acc_flush_local 3

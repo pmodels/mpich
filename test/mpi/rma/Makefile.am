@@ -15,9 +15,7 @@ noinst_PROGRAMS =          \
     allocmem               \
     test1                  \
     test2                  \
-    test2_shm              \
     test3                  \
-    test3_shm              \
     test4                  \
     test5                  \
     lockcontention         \
@@ -30,11 +28,9 @@ noinst_PROGRAMS =          \
     put_bottom             \
     locknull               \
     wintest                \
-    wintest_shm            \
     transpose1             \
     transpose2             \
     transpose3             \
-    transpose3_shm         \
     transpose4             \
     transpose5             \
     transpose6             \
@@ -49,9 +45,7 @@ noinst_PROGRAMS =          \
     contig_displ           \
     test1_am               \
     test2_am               \
-    test2_am_shm           \
     test3_am               \
-    test3_am_shm           \
     test4_am               \
     test5_am               \
     fetchandadd_am         \
@@ -63,12 +57,10 @@ noinst_PROGRAMS =          \
     fkeyvalwin             \
     baseattrwin            \
     nullpscw               \
-    nullpscw_shm	   \
     rmanull                \
     rmazero                \
     mixedsync              \
     manyrma2		   \
-    manyrma2_shm           \
     manyrma3		   \
     selfrma                \
     strided_acc_onelock    \
@@ -80,10 +72,7 @@ noinst_PROGRAMS =          \
     strided_getacc_indexed \
     strided_getacc_indexed_shared \
     window_creation        \
-    window_allocation      \
-    window_noncontig_allocation  \
     window_attach                   \
-    window_attach_collattach        \
     win_flavors            \
     win_shared             \
     win_shared_noncontig   \
@@ -95,7 +84,6 @@ noinst_PROGRAMS =          \
     win_zero               \
     win_large_shm          \
     win_dynamic_acc        \
-    win_dynamic_acc_collattach \
     win_dynamic_rma_flush_get             \
     get_acc_local          \
     compare_and_swap       \
@@ -112,9 +100,7 @@ noinst_PROGRAMS =          \
     win_shared_put_flush_get          \
     reqops                 \
     req_example            \
-    req_example_shm        \
     pscw_ordering          \
-    pscw_ordering_shm	   \
     mutex_bench            \
     mutex_bench_shared     \
     mutex_bench_shm        \
@@ -134,7 +120,6 @@ noinst_PROGRAMS =          \
     atomic_rmw_gacc	   \
     atomic_get             \
     acc_pairtype           \
-    acc_pairtype_shm       \
     manyget                \
     derived_acc_flush_local\
     large_acc_flush_local  \
@@ -153,15 +138,8 @@ noinst_PROGRAMS =          \
     epochtest              \
     fence                  \
     lock_x_dt              \
+    aint	           \
     putpscw1
-
-if BUILD_MPIX_TESTS
-noinst_PROGRAMS += aint   \
-                   aint_collattach
-endif
-
-acc_pairtype_shm_SOURCES            = acc_pairtype.c
-acc_pairtype_shm_CPPFLAGS           = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
@@ -171,35 +149,6 @@ strided_getacc_indexed_LDADD    = $(LDADD) -lm
 strided_putget_indexed_LDADD    = $(LDADD) -lm
 strided_getacc_indexed_shared_LDADD = $(LDADD) -lm
 strided_putget_indexed_shared_LDADD = $(LDADD) -lm
-
-window_allocation_SOURCES            = window_creation.c
-window_allocation_CPPFLAGS           = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-
-window_noncontig_allocation_SOURCES  = window_creation.c
-window_noncontig_allocation_CPPFLAGS = -DUSE_WIN_ALLOCATE_NONCONTIG $(AM_CPPFLAGS)
-
-req_example_shm_CPPFLAGS         = -DUSE_WIN_ALLOC_SHM $(AM_CPPFLAGS)
-req_example_shm_SOURCES          = req_example.c
-
-manyrma2_shm_CPPFLAGS            = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-wintest_shm_CPPFLAGS             = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-transpose3_shm_CPPFLAGS          = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-nullpscw_shm_CPPFLAGS            = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-pscw_ordering_shm_CPPFLAGS       = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-test2_shm_CPPFLAGS               = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-test2_am_shm_CPPFLAGS            = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-test3_shm_CPPFLAGS               = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-test3_am_shm_CPPFLAGS            = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-
-manyrma2_shm_SOURCES             = manyrma2.c
-wintest_shm_SOURCES              = wintest.c
-transpose3_shm_SOURCES           = transpose3.c
-nullpscw_shm_SOURCES             = nullpscw.c
-pscw_ordering_shm_SOURCES        = pscw_ordering.c
-test2_shm_SOURCES                = test2.c
-test2_am_shm_SOURCES             = test2_am.c
-test3_shm_SOURCES                = test3.c
-test3_am_shm_SOURCES             = test3_am.c
 
 mutex_bench_SOURCES              = mutex_bench.c mcs_mutex.c mcs_mutex.h
 mutex_bench_shared_CPPFLAGS      = -DUSE_WIN_SHARED $(AM_CPPFLAGS)

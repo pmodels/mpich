@@ -233,4 +233,17 @@ rma/win_shared_rma_flush_load
 rma/overlap_wins_rma
 rma/win_dynamic_rma_flush_get
 rma/win_dynamic_acc
+rma/window_attach
 rma/aint
+rma/req_example
+rma/acc_pairtype
+rma/window_creation
+rma/manyrma2
+rma/wintest
+rma/transpose3
+rma/nullpscw
+rma/pscw_ordering
+rma/test2
+rma/test2_am
+rma/test3
+rma/test3_am

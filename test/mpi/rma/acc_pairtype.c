@@ -6,9 +6,12 @@
 /* This test is going to test when Accumulate operation is working
  * with pair types. */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_acc_pairtype
+int run(const char *arg);
+#endif
 
 #define DATA_SIZE 25
 
@@ -17,7 +20,9 @@ typedef struct long_double_int {
     int b;
 } long_double_int_t;
 
-int main(int argc, char *argv[])
+static int use_win_allocate = 0;
+
+int run(const char *arg)
 {
     MPI_Win win;
     int errs = 0;
@@ -26,7 +31,9 @@ int main(int argc, char *argv[])
     long_double_int_t *tar_buf;
     MPI_Datatype vector_dtp;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    use_win_allocate = MTestArgListGetInt_with_default(head, "use-win-allocate", 0);
+    MTestArgListDestroy(head);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -41,27 +48,27 @@ int main(int argc, char *argv[])
                     &vector_dtp);
     MPI_Type_commit(&vector_dtp);
 
-#ifdef USE_WIN_ALLOCATE
-    MPI_Win_allocate(sizeof(long_double_int_t) * DATA_SIZE, sizeof(long_double_int_t),
-                     MPI_INFO_NULL, MPI_COMM_WORLD, &tar_buf, &win);
-    /* Reset window buffer */
-    MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-    for (i = 0; i < DATA_SIZE; i++) {
-        tar_buf[i].a = 0;
-        tar_buf[i].b = 0;
+    if (use_win_allocate) {
+        MPI_Win_allocate(sizeof(long_double_int_t) * DATA_SIZE, sizeof(long_double_int_t),
+                         MPI_INFO_NULL, MPI_COMM_WORLD, &tar_buf, &win);
+        /* Reset window buffer */
+        MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
+        for (i = 0; i < DATA_SIZE; i++) {
+            tar_buf[i].a = 0;
+            tar_buf[i].b = 0;
+        }
+        MPI_Win_unlock(rank, win);
+        MPI_Barrier(MPI_COMM_WORLD);
+    } else {
+        MPI_Alloc_mem(sizeof(long_double_int_t) * DATA_SIZE, MPI_INFO_NULL, &tar_buf);
+        /* Reset window buffer */
+        for (i = 0; i < DATA_SIZE; i++) {
+            tar_buf[i].a = 0;
+            tar_buf[i].b = 0;
+        }
+        MPI_Win_create(tar_buf, sizeof(long_double_int_t) * DATA_SIZE, sizeof(long_double_int_t),
+                       MPI_INFO_NULL, MPI_COMM_WORLD, &win);
     }
-    MPI_Win_unlock(rank, win);
-    MPI_Barrier(MPI_COMM_WORLD);
-#else
-    MPI_Alloc_mem(sizeof(long_double_int_t) * DATA_SIZE, MPI_INFO_NULL, &tar_buf);
-    /* Reset window buffer */
-    for (i = 0; i < DATA_SIZE; i++) {
-        tar_buf[i].a = 0;
-        tar_buf[i].b = 0;
-    }
-    MPI_Win_create(tar_buf, sizeof(long_double_int_t) * DATA_SIZE, sizeof(long_double_int_t),
-                   MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-#endif
 
     if (rank == 0) {
         MPI_Win_lock(MPI_LOCK_SHARED, 1, 0, win);
@@ -91,10 +98,9 @@ int main(int argc, char *argv[])
     MPI_Type_free(&vector_dtp);
 
     MPI_Free_mem(orig_buf);
-#ifndef USE_WIN_ALLOCATE
-    MPI_Free_mem(tar_buf);
-#endif
+    if (!use_win_allocate) {
+        MPI_Free_mem(tar_buf);
+    }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

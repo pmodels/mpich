@@ -3,9 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_wintest
+int run(const char *arg);
+#endif
 
 /* tests put and get with post/start/complete/test on 2 processes */
 /* Same as test2.c, but uses win_test instead of win_wait */
@@ -13,15 +16,21 @@
 #define SIZE1 10
 #define SIZE2 20
 
-int main(int argc, char *argv[])
+static int use_win_allocate = 0;
+
+int run(const char *arg)
 {
     int rank, destrank, nprocs, A[SIZE2], i;
+    int B[SIZE2];
     MPI_Comm CommDeuce;
     MPI_Group comm_group, group;
     MPI_Win win;
     int errs = 0, flag;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    use_win_allocate = MTestArgListGetInt_with_default(head, "use-win-allocate", 0);
+    MTestArgListDestroy(head);
+
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -36,15 +45,14 @@ int main(int argc, char *argv[])
         MPI_Comm_group(CommDeuce, &comm_group);
 
         if (rank == 0) {
-            int B[SIZE2];
             for (i = 0; i < SIZE2; i++)
                 A[i] = B[i] = i;
-#ifdef USE_WIN_ALLOCATE
-            int *base_ptr = NULL;
-            MPI_Win_allocate(0, 1, MPI_INFO_NULL, CommDeuce, &base_ptr, &win);
-#else
-            MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);
-#endif
+            if (use_win_allocate) {
+                int *base_ptr = NULL;
+                MPI_Win_allocate(0, 1, MPI_INFO_NULL, CommDeuce, &base_ptr, &win);
+            } else {
+                MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);
+            }
             destrank = 1;
             MPI_Group_incl(comm_group, 1, &destrank, &group);
             MPI_Win_start(group, 0, win);
@@ -61,16 +69,19 @@ int main(int argc, char *argv[])
                     errs++;
                 }
         } else {        /* rank=1 */
-#ifdef USE_WIN_ALLOCATE
-            int *B;
-            MPI_Win_allocate(SIZE2 * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &B, &win);
-#else
-            int B[SIZE2];
-            MPI_Win_create(B, SIZE2 * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
-#endif
+            int *use_B = NULL;
+            if (use_win_allocate) {
+                MPI_Win_allocate(SIZE2 * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &use_B,
+                                 &win);
+            } else {
+                use_B = B;
+                MPI_Win_create(use_B, SIZE2 * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce,
+                               &win);
+            }
             MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-            for (i = 0; i < SIZE2; i++)
-                B[i] = (-4) * i;
+            for (i = 0; i < SIZE2; i++) {
+                use_B[i] = (-4) * i;
+            }
             MPI_Win_unlock(rank, win);
 
             destrank = 0;
@@ -81,8 +92,8 @@ int main(int argc, char *argv[])
                 MPI_Win_test(win, &flag);
 
             for (i = 0; i < SIZE1; i++) {
-                if (B[i] != i) {
-                    printf("Put Error: B[i] is %d, should be %d\n", B[i], i);
+                if (use_B[i] != i) {
+                    printf("Put Error: B[i] is %d, should be %d\n", use_B[i], i);
                     errs++;
                 }
             }
@@ -93,6 +104,5 @@ int main(int argc, char *argv[])
         MPI_Win_free(&win);
     }
     MPI_Comm_free(&CommDeuce);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

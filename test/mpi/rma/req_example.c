@@ -3,14 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpi.h>
-#include <stdio.h>
-#include <assert.h>
 #include "mpitest.h"
+#include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run rma_req_example
+int run(const char *arg);
+#endif
 
 #define NSTEPS 100
 #define N 1000
 #define M 10
+
+static int do_alloc_shm = 0;
 
 /* This is example 11.21 from the MPI 3.0 spec:
  *
@@ -23,7 +28,7 @@
 
 /* Use a global variable to inhibit compiler optimizations in the compute
  * function. */
-double junk = 0.0;
+static double junk = 0.0;
 
 static void compute(int step, double *data)
 {
@@ -33,10 +38,10 @@ static void compute(int step, double *data)
         junk += data[i] * (double) step;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int i, rank, nproc;
-    int errors = 0, all_errors = 0;
+    int errors = 0;
     MPI_Win win;
     MPI_Request put_req[M] = { MPI_REQUEST_NULL };
     MPI_Request get_req;
@@ -44,7 +49,10 @@ int main(int argc, char *argv[])
     double data[M][N];          /* M buffers of length N */
     MPI_Info win_info;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    do_alloc_shm = MTestArgListGetInt_with_default(head, "alloc-shm", 0);
+    MTestArgListDestroy(head);
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
@@ -52,11 +60,11 @@ int main(int argc, char *argv[])
 
     MPI_Info_create(&win_info);
 
-#ifdef USE_WIN_ALLOC_SHM
-    MPI_Info_set(win_info, "alloc_shm", "true");
-#else
-    MPI_Info_set(win_info, "alloc_shm", "false");
-#endif
+    if (do_alloc_shm) {
+        MPI_Info_set(win_info, "alloc_shm", "true");
+    } else {
+        MPI_Info_set(win_info, "alloc_shm", "false");
+    }
 
     MPI_Win_allocate(NSTEPS * N * sizeof(double), sizeof(double), win_info,
                      MPI_COMM_WORLD, &baseptr, &win);
@@ -88,7 +96,5 @@ int main(int argc, char *argv[])
 
     MPI_Info_free(&win_info);
 
-    MTest_Finalize(errors);
-
-    return MTestReturnValue(all_errors);
+    return errors;
 }

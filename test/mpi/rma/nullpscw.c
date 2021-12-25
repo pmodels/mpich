@@ -3,24 +3,31 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run rma_nullpscw
+int run(const char *arg);
+#endif
+
+static int use_win_allocate = 0;
+
+int run(const char *arg)
 {
     MPI_Win win;
     MPI_Group group;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    use_win_allocate = MTestArgListGetInt_with_default(head, "use-win-allocate", 0);
+    MTestArgListDestroy(head);
 
-#ifdef USE_WIN_ALLOCATE
-    char *baseptr;
-    MPI_Win_allocate(0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &baseptr, &win);
-#else
-    MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-#endif
+    if (use_win_allocate) {
+        char *baseptr;
+        MPI_Win_allocate(0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &baseptr, &win);
+    } else {
+        MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    }
     MPI_Win_get_group(win, &group);
 
     MPI_Win_post(group, 0, win);
@@ -33,6 +40,5 @@ int main(int argc, char *argv[])
     MPI_Group_free(&group);
     MPI_Win_free(&win);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
