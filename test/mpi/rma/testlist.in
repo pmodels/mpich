@@ -130,9 +130,9 @@ linked_list_bench_lock_excl 4
 linked_list_bench_lock_shr 4
 linked_list_bench_lock_shr_nocheck 4
 mutex_bench 4
-mutex_bench_shared 4
-mutex_bench_shm 4
-mutex_bench_shm_ordered 4
+mutex_bench 4 -use-win-shared
+mutex_bench 4 -use-alloc-shm
+mutex_bench 4 -use-alloc-shm -use-contig-rank
 rma_contig 2 arg=-iter=10
 rma_contig 2 arg=-iter=10000
 badrma 2

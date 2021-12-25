@@ -102,9 +102,6 @@ noinst_PROGRAMS =          \
     req_example            \
     pscw_ordering          \
     mutex_bench            \
-    mutex_bench_shared     \
-    mutex_bench_shm        \
-    mutex_bench_shm_ordered\
     rma_contig             \
     badrma                 \
     nb_test                \
@@ -149,14 +146,6 @@ strided_getacc_indexed_LDADD    = $(LDADD) -lm
 strided_putget_indexed_LDADD    = $(LDADD) -lm
 strided_getacc_indexed_shared_LDADD = $(LDADD) -lm
 strided_putget_indexed_shared_LDADD = $(LDADD) -lm
-
-mutex_bench_SOURCES              = mutex_bench.c mcs_mutex.c mcs_mutex.h
-mutex_bench_shared_CPPFLAGS      = -DUSE_WIN_SHARED $(AM_CPPFLAGS)
-mutex_bench_shared_SOURCES       = mutex_bench.c mcs_mutex.c mcs_mutex.h
-mutex_bench_shm_CPPFLAGS         = -DUSE_WIN_ALLOC_SHM $(AM_CPPFLAGS)
-mutex_bench_shm_SOURCES          = mutex_bench.c mcs_mutex.c mcs_mutex.h
-mutex_bench_shm_ordered_CPPFLAGS = -DUSE_WIN_ALLOC_SHM -DUSE_CONTIGUOUS_RANK $(AM_CPPFLAGS)
-mutex_bench_shm_ordered_SOURCES  = mutex_bench.c mcs_mutex.c mcs_mutex.h
 
 linked_list_bench_lock_shr_nocheck_SOURCES  = linked_list_bench_lock_shr.c
 linked_list_bench_lock_shr_nocheck_CPPFLAGS = -DUSE_MODE_NOCHECK $(AM_CPPFLAGS)

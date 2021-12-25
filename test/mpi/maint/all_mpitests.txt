@@ -247,3 +247,4 @@ rma/test2
 rma/test2_am
 rma/test3
 rma/test3_am
+rma/mutex_bench
