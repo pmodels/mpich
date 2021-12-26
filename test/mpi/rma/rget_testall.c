@@ -3,9 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_rget_testall
+int run(const char *arg);
+#endif
 
 /* This test checks request-based get with MPI_Testall. Both the return value of
  * MPI_Testall and status.MPI_ERROR should be correctly set.
@@ -13,7 +16,7 @@
  * Thanks for Joseph Schuchart reporting this bug in MPICH and contributing
  * the prototype of this test program. */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, size;
     MPI_Win win = MPI_WIN_NULL;
@@ -23,7 +26,6 @@ int main(int argc, char **argv)
     MPI_Request reqs[2];
     MPI_Status stats[2];
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -69,7 +71,5 @@ int main(int argc, char **argv)
 
     MPI_Win_free(&win);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

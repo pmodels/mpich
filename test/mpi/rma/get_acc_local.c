@@ -3,23 +3,23 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 
 #include "mpitest.h"
 
-int errs = 0;
-const int NITER = 1000;
-const int acc_val = 3;
+#ifdef MULTI_TESTS
+#define run rma_get_acc_local
+int run(const char *arg);
+#endif
 
-int main(int argc, char **argv)
+static int errs = 0;
+static const int NITER = 1000;
+static const int acc_val = 3;
+
+int run(const char *arg)
 {
     int rank, nproc;
     int out_val, i, counter = 0;
     MPI_Win win;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -41,7 +41,5 @@ int main(int argc, char **argv)
 
     MPI_Win_free(&win);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

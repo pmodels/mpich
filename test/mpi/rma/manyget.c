@@ -3,20 +3,20 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_manyget
+int run(const char *arg);
+#endif
 
 #define BUFSIZE (128*1024)
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int i, rank, size;
     int *buf;
     MPI_Win win;
-
-    MTest_Init(&argc, &argv);
 
     buf = malloc(BUFSIZE);
     MTEST_VG_MEM_INIT(buf, BUFSIZE);
@@ -45,7 +45,6 @@ int main(int argc, char *argv[])
     MPI_Win_free(&win);
 
     free(buf);
-    MTest_Finalize(0);
 
     return 0;
 }

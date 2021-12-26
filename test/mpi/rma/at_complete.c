@@ -3,26 +3,27 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_at_complete
+int run(const char *arg);
+#endif
 
 #define PUT_SIZE 1
 #define GET_SIZE 100000
 #define WIN_SIZE (PUT_SIZE+GET_SIZE)
 #define LOOP 100
 
-int win_buf[WIN_SIZE], orig_get_buf[GET_SIZE], orig_put_buf[PUT_SIZE];
+static int win_buf[WIN_SIZE], orig_get_buf[GET_SIZE], orig_put_buf[PUT_SIZE];
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Win win;
     int i, k, rank, nproc;
     int orig_rank = 0, dest_rank = 1;
     int errs = 0;
     MPI_Group comm_group, orig_group, dest_group;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -130,6 +131,5 @@ int main(int argc, char **argv)
     MPI_Group_free(&dest_group);
     MPI_Group_free(&comm_group);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

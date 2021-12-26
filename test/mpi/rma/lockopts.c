@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_lockopts
+int run(const char *arg);
+#endif
 
 /* tests passive target RMA on 2 processes. tests the lock-single_op-unlock
    optimization for less common cases:
@@ -14,7 +16,7 @@
    origin datatype derived, target datatype predefined
 
 */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int wrank, nprocs, *srcbuf, *rmabuf, i;
     int memsize;
@@ -22,7 +24,6 @@ int main(int argc, char *argv[])
     MPI_Win win;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
 
@@ -187,6 +188,5 @@ int main(int argc, char *argv[])
     free(srcbuf);
     MPI_Type_free(&vectype);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

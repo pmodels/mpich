@@ -14,12 +14,14 @@
  * input and output buffers are specified using an MPI indexed type.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
-#include <mpi.h>
 #include "mpitest.h"
 #include "squelch.h"
+
+#ifdef MULTI_TESTS
+#define run rma_strided_getacc_indexed_shared
+int run(const char *arg);
+#endif
 
 #define XDIM 8
 #define YDIM 1024
@@ -27,15 +29,13 @@
 #define SUB_YDIM 2
 #define ITERATIONS 10
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, nranks, rank_world, nranks_world;
     int i, j, peer, bufsize, errors;
     double *win_buf, *src_buf, *dst_buf;
     MPI_Win buf_win;
     MPI_Comm shr_comm;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_world);
     MPI_Comm_size(MPI_COMM_WORLD, &nranks_world);
@@ -145,6 +145,5 @@ int main(int argc, char **argv)
     MPI_Free_mem(dst_buf);
     MPI_Comm_free(&shr_comm);
 
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

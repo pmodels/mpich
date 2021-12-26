@@ -3,22 +3,23 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_allocmem
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Simple test that alloc_mem and free_mem work together";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int j, count;
     char *ap;
     int errclass;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
@@ -55,6 +56,5 @@ int main(int argc, char *argv[])
 
     MPI_Info_free(&hints);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

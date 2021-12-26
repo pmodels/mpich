@@ -3,19 +3,22 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_attrorderwin
+int run(const char *arg);
+#endif
 
 /*
 static char MTestDescrip[] = "Test creating and inserting attributes in \
 different orders to ensure that the list management code handles all cases.";
 */
 
-int checkAttrs(MPI_Win win, int n, int key[], int attrval[]);
-int checkNoAttrs(MPI_Win win, int n, int key[]);
+static int checkAttrs(MPI_Win win, int n, int key[], int attrval[]);
+static int checkNoAttrs(MPI_Win win, int n, int key[]);
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int key[3], attrval[3];
@@ -23,8 +26,6 @@ int main(int argc, char *argv[])
     int buf[1];
     MPI_Comm comm;
     MPI_Win win;
-
-    MTest_Init(&argc, &argv);
 
     {
         comm = MPI_COMM_WORLD;
@@ -82,11 +83,10 @@ int main(int argc, char *argv[])
         MPI_Win_free(&win);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
-int checkAttrs(MPI_Win win, int n, int key[], int attrval[])
+static int checkAttrs(MPI_Win win, int n, int key[], int attrval[])
 {
     int errs = 0;
     int i, flag, *val_p;
@@ -105,7 +105,7 @@ int checkAttrs(MPI_Win win, int n, int key[], int attrval[])
     return errs;
 }
 
-int checkNoAttrs(MPI_Win win, int n, int key[])
+static int checkNoAttrs(MPI_Win win, int n, int key[])
 {
     int errs = 0;
     int i, flag, *val_p;

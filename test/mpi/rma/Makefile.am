@@ -134,12 +134,3 @@ noinst_PROGRAMS =          \
     lock_x_dt              \
     aint	           \
     putpscw1
-
-strided_acc_indexed_LDADD       = $(LDADD) -lm
-strided_acc_onelock_LDADD       = $(LDADD) -lm
-strided_acc_subarray_LDADD      = $(LDADD) -lm
-strided_get_indexed_LDADD       = $(LDADD) -lm
-strided_getacc_indexed_LDADD    = $(LDADD) -lm
-strided_putget_indexed_LDADD    = $(LDADD) -lm
-strided_getacc_indexed_shared_LDADD = $(LDADD) -lm
-strided_putget_indexed_shared_LDADD = $(LDADD) -lm

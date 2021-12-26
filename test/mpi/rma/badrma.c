@@ -3,14 +3,17 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_badrma
+int run(const char *arg);
+#endif
 
 #define SIZE 100
 
-MPI_Win win;
-int win_buf[SIZE], origin_buf[SIZE], result_buf[SIZE];
+static MPI_Win win;
+static int win_buf[SIZE], origin_buf[SIZE], result_buf[SIZE];
 
 static int do_test(int origin_count, MPI_Datatype origin_type, int result_count,
                    MPI_Datatype result_type, int target_count, MPI_Datatype target_type)
@@ -68,13 +71,12 @@ static int do_test(int origin_count, MPI_Datatype origin_type, int result_count,
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nprocs, i, j, k;
     int errs = 0;
     MPI_Datatype types[4];
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -144,7 +146,5 @@ int main(int argc, char *argv[])
     MPI_Type_free(&types[0]);
     MPI_Type_free(&types[1]);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

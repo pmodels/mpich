@@ -251,3 +251,92 @@ rma/test3_am
 rma/mutex_bench
 rma/win_shared_create
 rma/linked_list_bench_lock_shr
+rma/strided_acc_indexed -lm
+rma/strided_acc_onelock -lm
+rma/strided_acc_subarray -lm
+rma/strided_get_indexed -lm
+rma/strided_getacc_indexed -lm
+rma/strided_putget_indexed -lm
+rma/strided_getacc_indexed_shared -lm
+rma/strided_putget_indexed_shared -lm
+rma/acc_loc
+rma/acc_ordering
+rma/accfence2
+rma/accfence2_am
+rma/adlb_mimic1
+rma/allocmem
+rma/at_complete
+rma/atomic_rmw_cas
+rma/atomic_rmw_fop
+rma/atomic_rmw_gacc
+rma/attrorderwin
+rma/badrma
+rma/baseattrwin
+rma/compare_and_swap
+rma/contention_put
+rma/contention_putget
+rma/contig_displ
+rma/derived_acc_flush_local
+rma/fence_shm
+rma/fetchandadd
+rma/fetchandadd_am
+rma/fetchandadd_tree
+rma/fetchandadd_tree_am
+rma/fkeyvalwin
+rma/flush
+rma/get_acc_local
+rma/get_struct
+rma/getgroup
+rma/large_acc_flush_local
+rma/large_small_acc
+rma/linked_list
+rma/linked_list_bench_lock_all
+rma/linked_list_bench_lock_excl
+rma/linked_list_fop
+rma/linked_list_lockall
+rma/lock_nested
+rma/lockcontention
+rma/lockcontention2
+rma/lockcontention3
+rma/locknull
+rma/lockopts
+rma/manyget
+rma/manyrma3
+rma/mixedsync
+rma/nb_test
+rma/put_base
+rma/put_bottom
+rma/putfidx
+rma/racc_local_comp
+rma/reqops
+rma/rget_testall
+rma/rget_unlock
+rma/rma_contig
+rma/rmanull
+rma/rmazero
+rma/rput_local_comp
+rma/selfrma
+rma/test1
+rma/test1_am
+rma/test1_dt
+rma/test4
+rma/test4_am
+rma/test5
+rma/test5_am
+rma/transpose1
+rma/transpose2
+rma/transpose4
+rma/transpose5
+rma/transpose6
+rma/transpose7
+rma/win_flavors
+rma/win_large_shm
+rma/win_shared
+rma/win_shared_noncontig
+rma/win_shared_noncontig_put
+rma/win_shared_put_flush_get
+rma/win_shared_query_null
+rma/win_shared_zerobyte
+rma/win_zero
+rma/wincall
+rma/winname

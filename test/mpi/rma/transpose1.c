@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_transpose1
+int run(const char *arg);
+#endif
 
 /* transposes a matrix using put, fence, and derived datatypes. Uses
    vector and hvector (Example 3.32 from MPI 1.1 Standard). Run on
@@ -15,7 +17,7 @@
 #define NROWS 1000
 #define NCOLS 1000
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nprocs, **A, *A_data, i, j;
     MPI_Comm CommDeuce;
@@ -23,7 +25,6 @@ int main(int argc, char *argv[])
     MPI_Datatype column, xpose;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -95,6 +96,6 @@ int main(int argc, char *argv[])
         free(A);
     }
     MPI_Comm_free(&CommDeuce);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

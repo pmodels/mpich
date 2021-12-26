@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_win_shared_query_null
+int run(const char *arg);
+#endif
 
 /*
  * Check return values of MPI_Win_allocate_shared with MPI_PROC_NULL.
@@ -15,7 +17,7 @@
  * Thus, it should return the segment belonging to rank 1.
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, errors = 0;
     int shm_rank, shm_nproc;
@@ -24,8 +26,6 @@ int main(int argc, char **argv)
     int query_disp_unit;
     MPI_Win shm_win;
     MPI_Comm shm_comm;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shm_comm);
@@ -78,7 +78,6 @@ int main(int argc, char **argv)
   exit:
 
     MPI_Comm_free(&shm_comm);
-    MTest_Finalize(errors);
 
-    return MTestReturnValue(errors);
+    return errors;
 }

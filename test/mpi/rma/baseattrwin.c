@@ -3,11 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run rma_baseattrwin
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     void *v;
@@ -18,7 +21,6 @@ int main(int argc, char **argv)
     int disp;
     MPI_Win win;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -67,7 +69,6 @@ int main(int argc, char **argv)
     }
 
     MPI_Win_free(&win);
-    MTest_Finalize(errs);
 
-    return MTestReturnValue(errs);
+    return errs;
 }

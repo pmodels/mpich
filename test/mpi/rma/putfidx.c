@@ -3,20 +3,22 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
 #ifdef HAVE_STDLIB_H
-#include <stdlib.h>
+#endif
+
+#ifdef MULTI_TESTS
+#define run rma_putfidx
+int run(const char *arg);
 #endif
 
 /*
 static char MTEST_Descrip[] = "Put with Fence for an indexed datatype";
 */
 
-int CheckMPIErr(int err);
+static int CheckMPIErr(int err);
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int i, rank, size, source, dest;
@@ -28,8 +30,6 @@ int main(int argc, char *argv[])
     MPI_Datatype originType;
     int counts[2];
     int displs[2];
-
-    MTest_Init(&argc, &argv);
 
     /* Select the communicator and datatypes */
     comm = MPI_COMM_WORLD;
@@ -103,11 +103,10 @@ int main(int argc, char *argv[])
     free(recvBuf);
     free(srcBuf);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
-int CheckMPIErr(int err)
+static int CheckMPIErr(int err)
 {
     int rc = 0;
     if (err != MPI_SUCCESS) {

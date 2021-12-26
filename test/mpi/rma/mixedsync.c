@@ -3,25 +3,26 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run rma_mixedsync
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Mix synchronization types";
 */
 
-void delay(double time);
-void delay(double time)
+static void delay(double time)
 {
     double t1;
     t1 = MPI_Wtime();
     while (MPI_Wtime() - t1 < time);
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int crank, csize, source, dest, loop;
@@ -29,8 +30,6 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Win win;
     int *winbuf;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -218,7 +217,5 @@ int main(int argc, char *argv[])
     free(buf2);
     free(inbuf2);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

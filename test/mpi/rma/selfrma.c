@@ -3,17 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "mpitest.h"
+#include <string.h>
+
+#ifdef MULTI_TESTS
+#define run rma_selfrma
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "RMA to self";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, i, j;
@@ -22,8 +24,6 @@ int main(int argc, char *argv[])
     int *winbuf, count;
     int *sbuf, scount, vcount;
     MPI_Datatype vectype;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -101,7 +101,5 @@ int main(int argc, char *argv[])
     free(sbuf);
     MPI_Type_free(&vectype);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }
