@@ -16,6 +16,7 @@ int run(const char *arg);
 static int do_derived;
 static MPI_Datatype mpi_base_type = MPI_DATATYPE_NULL;
 static int type_size;
+static int rank, nproc;
 
 #define ITER  100
 #define NUM_COUNT 2
@@ -86,12 +87,9 @@ static int get_value(void *buf)
 static void reset_bufs(void *win_ptr, void *res_ptr, void *val_ptr,
                        int value, int count, MPI_Win win)
 {
-    int rank, nproc, i;
+    int i;
 
     MPI_Barrier(MPI_COMM_WORLD);
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
     MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
     memset(win_ptr, 0, type_size * nproc * count);
@@ -99,16 +97,393 @@ static void reset_bufs(void *win_ptr, void *res_ptr, void *val_ptr,
 
     memset(res_ptr, -1, type_size * nproc * count);
 
-    for (i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
         set_value((char *) val_ptr + i * type_size, value);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
+static int test_self_communication(void *win_ptr, void *res_ptr, void *val_ptr,
+                                   int count, MPI_Datatype mpi_type, MPI_Win win)
+{
+    int errors = 0;
+
+    reset_bufs(win_ptr, res_ptr, val_ptr, 1, count, win);
+
+    for (int i = 0; i < ITER; i++) {
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+        MPI_Get_accumulate(val_ptr, count, mpi_type, res_ptr, count, mpi_type,
+                           rank, 0, count, mpi_type, MPI_SUM, win);
+        MPI_Win_unlock(rank, win);
+    }
+
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (int i = 0; i < count; i++) {
+        void *p = (char *) win_ptr + i * type_size;
+        if (cmp_value(p, ITER)) {
+            SQUELCH(printf("%d->%d -- SELF[%d]: expected %d, got %d\n",
+                           rank, rank, i, ITER, get_value(p)););
+            errors++;
+        }
+    }
+    MPI_Win_unlock(rank, win);
+
+    return errors;
+}
+
+static int test_neighbor_communication(void *win_ptr, void *res_ptr, void *val_ptr,
+                                       int count, MPI_Datatype mpi_type, MPI_Win win)
+{
+    int errors = 0;
+
+    reset_bufs(win_ptr, res_ptr, val_ptr, 1, count, win);
+
+    for (int i = 0; i < ITER; i++) {
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, (rank + 1) % nproc, 0, win);
+        MPI_Get_accumulate(val_ptr, count, mpi_type, res_ptr, count, mpi_type,
+                           (rank + 1) % nproc, 0, count, mpi_type, MPI_SUM, win);
+        MPI_Win_unlock((rank + 1) % nproc, win);
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (int i = 0; i < count; i++) {
+        void *p = (char *) win_ptr + i * type_size;
+        if (cmp_value(p, ITER)) {
+            SQUELCH(printf("%d->%d -- NEIGHBOR[%d]: expected %d, got %d\n",
+                           (rank + 1) % nproc, rank, i, ITER, get_value(p)););
+            errors++;
+        }
+    }
+    MPI_Win_unlock(rank, win);
+
+    return errors;
+}
+
+static int test_contention(void *win_ptr, void *res_ptr, void *val_ptr,
+                           int count, MPI_Datatype mpi_type, MPI_Win win)
+{
+    int errors = 0;
+
+    reset_bufs(win_ptr, res_ptr, val_ptr, 1, count, win);
+
+    if (rank != 0) {
+        for (int i = 0; i < ITER; i++) {
+            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
+            MPI_Get_accumulate(val_ptr, count, mpi_type, res_ptr, count, mpi_type,
+                               0, 0, count, mpi_type, MPI_SUM, win);
+            MPI_Win_unlock(0, win);
+        }
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    if (rank == 0 && nproc > 1) {
+        for (int i = 0; i < count; i++) {
+            void *p = (char *) win_ptr + i * type_size;
+            if (cmp_value(p, ITER * (nproc - 1))) {
+                SQUELCH(printf("*->%d - CONTENTION[%d]: expected=%d val=%d\n",
+                               rank, i, ITER * (nproc - 1), get_value(p)););
+                errors++;
+            }
+        }
+    }
+    MPI_Win_unlock(rank, win);
+
+    return errors;
+}
+
+static int test_alltoall_fence(void *win_ptr, void *res_ptr, void *val_ptr,
+                               int count, MPI_Datatype mpi_type, MPI_Win win)
+{
+    int errors = 0;
+
+    reset_bufs(win_ptr, res_ptr, val_ptr, rank, count, win);
+
+    for (int i = 0; i < ITER; i++) {
+        MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
+        for (int j = 0; j < nproc; j++) {
+            void *p = (char *) res_ptr + (j * count) * type_size;
+            MPI_Get_accumulate(val_ptr, count, mpi_type, p, count, mpi_type,
+                               j, rank * count, count, mpi_type, MPI_SUM, win);
+        }
+        MPI_Win_fence(MPI_MODE_NOSUCCEED, win);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        for (int j = 0; j < nproc; j++) {
+            for (int c = 0; c < count; c++) {
+                void *p = (char *) res_ptr + (j * count + c) * type_size;
+                if (cmp_value(p, i * rank)) {
+                    SQUELCH(printf
+                            ("%d->%d -- ALL-TO-ALL (FENCE) [%d]: iter %d, expected result %d, got %d\n",
+                             rank, j, c, i, i * rank, get_value(p)););
+                    errors++;
+                }
+            }
+        }
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (int i = 0; i < nproc; i++) {
+        for (int c = 0; c < count; c++) {
+            void *p = (char *) win_ptr + (i * count + c) * type_size;
+            if (cmp_value(p, ITER * i)) {
+                SQUELCH(printf("%d->%d -- ALL-TO-ALL (FENCE): expected %d, got %d\n",
+                               i, rank, ITER * i, get_value(p)););
+                errors++;
+            }
+        }
+    }
+    MPI_Win_unlock(rank, win);
+
+    return errors;
+}
+
+static int test_alltoall_lockall(void *win_ptr, void *res_ptr, void *val_ptr,
+                                 int count, MPI_Datatype mpi_type, MPI_Win win)
+{
+    int errors = 0;
+
+    reset_bufs(win_ptr, res_ptr, val_ptr, rank, count, win);
+
+    for (int i = 0; i < ITER; i++) {
+        MPI_Win_lock_all(0, win);
+        for (int j = 0; j < nproc; j++) {
+            void *p = (char *) res_ptr + (j * count) * type_size;
+            MPI_Get_accumulate(val_ptr, count, mpi_type, p, count, mpi_type,
+                               j, rank * count, count, mpi_type, MPI_SUM, win);
+        }
+        MPI_Win_unlock_all(win);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        for (int j = 0; j < nproc; j++) {
+            for (int c = 0; c < count; c++) {
+                void *p = (char *) res_ptr + (j * count + c) * type_size;
+                if (cmp_value(p, i * rank)) {
+                    SQUELCH(printf
+                            ("%d->%d -- ALL-TO-ALL (LOCK-ALL) [%d]: iter %d, expected result %d, got %d\n",
+                             rank, j, c, i, i * rank, get_value(p)););
+                    errors++;
+                }
+            }
+        }
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (int i = 0; i < nproc; i++) {
+        for (int c = 0; c < count; c++) {
+            void *p = (char *) win_ptr + (i * count + c) * type_size;
+            if (cmp_value(p, i * ITER)) {
+                SQUELCH(printf("%d->%d -- ALL-TO-ALL (LOCK-ALL): expected %d, got %d\n",
+                               i, rank, ITER * i, get_value(p)););
+                errors++;
+            }
+        }
+    }
+    MPI_Win_unlock(rank, win);
+
+    return errors;
+}
+
+static int test_alltoall_lockall_flush(void *win_ptr, void *res_ptr, void *val_ptr,
+                                       int count, MPI_Datatype mpi_type, MPI_Win win)
+{
+    int errors = 0;
+
+    reset_bufs(win_ptr, res_ptr, val_ptr, rank, count, win);
+
+    for (int i = 0; i < ITER; i++) {
+        MPI_Win_lock_all(0, win);
+        for (int j = 0; j < nproc; j++) {
+            void *p = (char *) res_ptr + (j * count) * type_size;
+            MPI_Get_accumulate(val_ptr, count, mpi_type, p, count, mpi_type,
+                               j, rank * count, count, mpi_type, MPI_SUM, win);
+            MPI_Win_flush(j, win);
+        }
+        MPI_Win_unlock_all(win);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        for (int j = 0; j < nproc; j++) {
+            for (int c = 0; c < count; c++) {
+                void *p = (char *) res_ptr + (j * count + c) * type_size;
+                if (cmp_value(p, i * rank)) {
+                    SQUELCH(printf
+                            ("%d->%d -- ALL-TO-ALL (LOCK-ALL+FLUSH) [%d]: iter %d, expected result %d, got %d\n",
+                             rank, j, c, i, i * rank, get_value(p)););
+                    errors++;
+                }
+            }
+        }
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (int i = 0; i < nproc; i++) {
+        for (int c = 0; c < count; c++) {
+            void *p = (char *) win_ptr + (i * count + c) * type_size;
+            if (cmp_value(p, ITER * i)) {
+                SQUELCH(printf("%d->%d -- ALL-TO-ALL (LOCK-ALL+FLUSH): expected %d, got %d\n",
+                               i, rank, ITER * i, get_value(p)););
+                errors++;
+            }
+        }
+    }
+    MPI_Win_unlock(rank, win);
+    return errors;
+}
+
+static int test_neighbor_noop(void *win_ptr, void *res_ptr, void *val_ptr,
+                              int count, MPI_Datatype mpi_type, MPI_Win win)
+{
+    int errors = 0;
+
+    reset_bufs(win_ptr, res_ptr, val_ptr, 1, count, win);
+
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (int i = 0; i < count * nproc; i++) {
+        set_value((char *) win_ptr + i * type_size, rank);
+    }
+    MPI_Win_unlock(rank, win);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    for (int i = 0; i < ITER; i++) {
+        int target = (rank + 1) % nproc;
+
+        /* Test: origin_buf = NULL */
+        memset(res_ptr, -1, type_size * nproc * count); /* reset result buffer. */
+
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, count, mpi_type, res_ptr, count, mpi_type,
+                           target, 0, count, mpi_type, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (int j = 0; j < count; j++) {
+            void *p = (char *) res_ptr + j * type_size;
+            if (cmp_value(p, target)) {
+                SQUELCH(printf("%d->%d -- NOP(1)[%d]: expected %d, got %d\n",
+                               target, rank, i, target, get_value(p)););
+                errors++;
+            }
+        }
+
+        /* Test: origin_buf = NULL, origin_count = 0 */
+        memset(res_ptr, -1, type_size * nproc * count);
+
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, 0, mpi_type, res_ptr, count, mpi_type,
+                           target, 0, count, mpi_type, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (int j = 0; j < count; j++) {
+            void *p = (char *) res_ptr + j * type_size;
+            if (cmp_value(p, target)) {
+                SQUELCH(printf("%d->%d -- NOP(2)[%d]: expected %d, got %d\n",
+                               target, rank, i, target, get_value(p)););
+                errors++;
+            }
+        }
+
+        /* Test: origin_buf = NULL, origin_count = 0, origin_dtype = NULL */
+        memset(res_ptr, -1, type_size * nproc * count);
+
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, 0, MPI_DATATYPE_NULL, res_ptr, count, mpi_type,
+                           target, 0, count, mpi_type, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (int j = 0; j < count; j++) {
+            void *p = (char *) res_ptr + j * type_size;
+            if (cmp_value(p, target)) {
+                SQUELCH(printf("%d->%d -- NOP(2)[%d]: expected %d, got %d\n",
+                               target, rank, i, target, get_value(p)););
+                errors++;
+            }
+        }
+    }
+
+    return errors;
+}
+
+static int test_self_noop(void *win_ptr, void *res_ptr, void *val_ptr,
+                          int count, MPI_Datatype mpi_type, MPI_Win win)
+{
+    int errors = 0;
+
+    reset_bufs(win_ptr, res_ptr, val_ptr, 1, count, win);
+
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (int i = 0; i < count * nproc; i++) {
+        set_value((char *) win_ptr + i * type_size, rank);
+    }
+    MPI_Win_unlock(rank, win);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    for (int i = 0; i < ITER; i++) {
+        int target = rank;
+
+        /* Test: origin_buf = NULL */
+        memset(res_ptr, -1, type_size * nproc * count);
+
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, count, mpi_type, res_ptr, count, mpi_type,
+                           target, 0, count, mpi_type, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (int j = 0; j < count; j++) {
+            void *p = (char *) res_ptr + j * type_size;
+            if (cmp_value(p, target)) {
+                SQUELCH(printf("%d->%d -- NOP_SELF(1)[%d]: expected %d, got %d\n",
+                               target, rank, i, target, get_value(p)););
+                errors++;
+            }
+        }
+
+        /* Test: origin_buf = NULL, origin_count = 0 */
+        memset(res_ptr, -1, type_size * nproc * count);
+
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, 0, mpi_type, res_ptr, count, mpi_type,
+                           target, 0, count, mpi_type, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (int j = 0; j < count; j++) {
+            void *p = (char *) res_ptr + j * type_size;
+            if (cmp_value(p, target)) {
+                SQUELCH(printf("%d->%d -- NOP_SELF(2)[%d]: expected %d, got %d\n",
+                               target, rank, i, target, get_value(p)););
+                errors++;
+            }
+        }
+
+        /* Test: origin_buf = NULL, origin_count = 0, origin_dtype = NULL */
+        memset(res_ptr, -1, type_size * nproc * count);
+
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, 0, MPI_DATATYPE_NULL, res_ptr, count, mpi_type,
+                           target, 0, count, mpi_type, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (int j = 0; j < count; j++) {
+            void *p = (char *) res_ptr + j * type_size;
+            if (cmp_value(p, target)) {
+                SQUELCH(printf("%d->%d -- NOP_SELF(2)[%d]: expected %d, got %d\n",
+                               target, rank, i, target, get_value(p)););
+                errors++;
+            }
+        }
+    }
+
+    return errors;
+}
+
 int run(const char *arg)
 {
-    int i, rank, nproc;
+    int i;
     int count, errors = 0;
     void *win_ptr, *res_ptr, *val_ptr;
     MPI_Win win;
@@ -157,347 +532,14 @@ int run(const char *arg)
         MPI_Win_create(win_ptr, type_size * nproc * count, type_size,
                        MPI_INFO_NULL, MPI_COMM_WORLD, &win);
 
-        /* Test self communication */
-
-        reset_bufs(win_ptr, res_ptr, val_ptr, 1, count, win);
-
-        for (i = 0; i < ITER; i++) {
-            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-            MPI_Get_accumulate(val_ptr, count, mpi_type, res_ptr, count, mpi_type,
-                               rank, 0, count, mpi_type, MPI_SUM, win);
-            MPI_Win_unlock(rank, win);
-        }
-
-        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-        for (i = 0; i < count; i++) {
-            void *p = (char *) win_ptr + i * type_size;
-            if (cmp_value(p, ITER)) {
-                SQUELCH(printf("%d->%d -- SELF[%d]: expected %d, got %d\n",
-                               rank, rank, i, ITER, get_value(p)););
-                errors++;
-            }
-        }
-        MPI_Win_unlock(rank, win);
-
-        /* Test neighbor communication */
-
-        reset_bufs(win_ptr, res_ptr, val_ptr, 1, count, win);
-
-        for (i = 0; i < ITER; i++) {
-            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, (rank + 1) % nproc, 0, win);
-            MPI_Get_accumulate(val_ptr, count, mpi_type, res_ptr, count, mpi_type,
-                               (rank + 1) % nproc, 0, count, mpi_type, MPI_SUM, win);
-            MPI_Win_unlock((rank + 1) % nproc, win);
-        }
-
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-        for (i = 0; i < count; i++) {
-            void *p = (char *) win_ptr + i * type_size;
-            if (cmp_value(p, ITER)) {
-                SQUELCH(printf("%d->%d -- NEIGHBOR[%d]: expected %d, got %d\n",
-                               (rank + 1) % nproc, rank, i, ITER, get_value(p)););
-                errors++;
-            }
-        }
-        MPI_Win_unlock(rank, win);
-
-        /* Test contention */
-
-        reset_bufs(win_ptr, res_ptr, val_ptr, 1, count, win);
-
-        if (rank != 0) {
-            for (i = 0; i < ITER; i++) {
-                MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
-                MPI_Get_accumulate(val_ptr, count, mpi_type, res_ptr, count, mpi_type,
-                                   0, 0, count, mpi_type, MPI_SUM, win);
-                MPI_Win_unlock(0, win);
-            }
-        }
-
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-        if (rank == 0 && nproc > 1) {
-            for (i = 0; i < count; i++) {
-                void *p = (char *) win_ptr + i * type_size;
-                if (cmp_value(p, ITER * (nproc - 1))) {
-                    SQUELCH(printf("*->%d - CONTENTION[%d]: expected=%d val=%d\n",
-                                   rank, i, ITER * (nproc - 1), get_value(p)););
-                    errors++;
-                }
-            }
-        }
-        MPI_Win_unlock(rank, win);
-
-        /* Test all-to-all communication (fence) */
-
-        reset_bufs(win_ptr, res_ptr, val_ptr, rank, count, win);
-
-        for (i = 0; i < ITER; i++) {
-            int j;
-
-            MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
-            for (j = 0; j < nproc; j++) {
-                void *p = (char *) res_ptr + (j * count) * type_size;
-                MPI_Get_accumulate(val_ptr, count, mpi_type, p, count, mpi_type,
-                                   j, rank * count, count, mpi_type, MPI_SUM, win);
-            }
-            MPI_Win_fence(MPI_MODE_NOSUCCEED, win);
-            MPI_Barrier(MPI_COMM_WORLD);
-
-            for (j = 0; j < nproc; j++) {
-                int c;
-                for (c = 0; c < count; c++) {
-                    void *p = (char *) res_ptr + (j * count + c) * type_size;
-                    if (cmp_value(p, i * rank)) {
-                        SQUELCH(printf
-                                ("%d->%d -- ALL-TO-ALL (FENCE) [%d]: iter %d, expected result %d, got %d\n",
-                                 rank, j, c, i, i * rank, get_value(p)););
-                        errors++;
-                    }
-                }
-            }
-        }
-
-        MPI_Barrier(MPI_COMM_WORLD);
-        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-        for (i = 0; i < nproc; i++) {
-            int c;
-            for (c = 0; c < count; c++) {
-                void *p = (char *) win_ptr + (i * count + c) * type_size;
-                if (cmp_value(p, ITER * i)) {
-                    SQUELCH(printf("%d->%d -- ALL-TO-ALL (FENCE): expected %d, got %d\n",
-                                   i, rank, ITER * i, get_value(p)););
-                    errors++;
-                }
-            }
-        }
-        MPI_Win_unlock(rank, win);
-
-        /* Test all-to-all communication (lock-all) */
-
-        reset_bufs(win_ptr, res_ptr, val_ptr, rank, count, win);
-
-        for (i = 0; i < ITER; i++) {
-            int j;
-
-            MPI_Win_lock_all(0, win);
-            for (j = 0; j < nproc; j++) {
-                void *p = (char *) res_ptr + (j * count) * type_size;
-                MPI_Get_accumulate(val_ptr, count, mpi_type, p, count, mpi_type,
-                                   j, rank * count, count, mpi_type, MPI_SUM, win);
-            }
-            MPI_Win_unlock_all(win);
-            MPI_Barrier(MPI_COMM_WORLD);
-
-            for (j = 0; j < nproc; j++) {
-                int c;
-                for (c = 0; c < count; c++) {
-                    void *p = (char *) res_ptr + (j * count + c) * type_size;
-                    if (cmp_value(p, i * rank)) {
-                        SQUELCH(printf
-                                ("%d->%d -- ALL-TO-ALL (LOCK-ALL) [%d]: iter %d, expected result %d, got %d\n",
-                                 rank, j, c, i, i * rank, get_value(p)););
-                        errors++;
-                    }
-                }
-            }
-        }
-
-        MPI_Barrier(MPI_COMM_WORLD);
-        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-        for (i = 0; i < nproc; i++) {
-            int c;
-            for (c = 0; c < count; c++) {
-                void *p = (char *) win_ptr + (i * count + c) * type_size;
-                if (cmp_value(p, i * ITER)) {
-                    SQUELCH(printf("%d->%d -- ALL-TO-ALL (LOCK-ALL): expected %d, got %d\n",
-                                   i, rank, ITER * i, get_value(p)););
-                    errors++;
-                }
-            }
-        }
-        MPI_Win_unlock(rank, win);
-
-        /* Test all-to-all communication (lock-all+flush) */
-
-        reset_bufs(win_ptr, res_ptr, val_ptr, rank, count, win);
-
-        for (i = 0; i < ITER; i++) {
-            int j;
-
-            MPI_Win_lock_all(0, win);
-            for (j = 0; j < nproc; j++) {
-                void *p = (char *) res_ptr + (j * count) * type_size;
-                MPI_Get_accumulate(val_ptr, count, mpi_type, p, count, mpi_type,
-                                   j, rank * count, count, mpi_type, MPI_SUM, win);
-                MPI_Win_flush(j, win);
-            }
-            MPI_Win_unlock_all(win);
-            MPI_Barrier(MPI_COMM_WORLD);
-
-            for (j = 0; j < nproc; j++) {
-                int c;
-                for (c = 0; c < count; c++) {
-                    void *p = (char *) res_ptr + (j * count + c) * type_size;
-                    if (cmp_value(p, i * rank)) {
-                        SQUELCH(printf
-                                ("%d->%d -- ALL-TO-ALL (LOCK-ALL+FLUSH) [%d]: iter %d, expected result %d, got %d\n",
-                                 rank, j, c, i, i * rank, get_value(p)););
-                        errors++;
-                    }
-                }
-            }
-        }
-
-        MPI_Barrier(MPI_COMM_WORLD);
-        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-        for (i = 0; i < nproc; i++) {
-            int c;
-            for (c = 0; c < count; c++) {
-                void *p = (char *) win_ptr + (i * count + c) * type_size;
-                if (cmp_value(p, ITER * i)) {
-                    SQUELCH(printf("%d->%d -- ALL-TO-ALL (LOCK-ALL+FLUSH): expected %d, got %d\n",
-                                   i, rank, ITER * i, get_value(p)););
-                    errors++;
-                }
-            }
-        }
-        MPI_Win_unlock(rank, win);
-
-        /* Test NO_OP (neighbor communication) */
-
-        reset_bufs(win_ptr, res_ptr, val_ptr, 1, count, win);
-
-        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-        for (i = 0; i < count * nproc; i++) {
-            set_value((char *) win_ptr + i * type_size, rank);
-        }
-        MPI_Win_unlock(rank, win);
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        for (i = 0; i < ITER; i++) {
-            int j, target = (rank + 1) % nproc;
-
-            /* Test: origin_buf = NULL */
-            memset(res_ptr, -1, type_size * nproc * count);     /* reset result buffer. */
-
-            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
-            MPI_Get_accumulate(NULL, count, mpi_type, res_ptr, count, mpi_type,
-                               target, 0, count, mpi_type, MPI_NO_OP, win);
-            MPI_Win_unlock(target, win);
-
-            for (j = 0; j < count; j++) {
-                void *p = (char *) res_ptr + j * type_size;
-                if (cmp_value(p, target)) {
-                    SQUELCH(printf("%d->%d -- NOP(1)[%d]: expected %d, got %d\n",
-                                   target, rank, i, target, get_value(p)););
-                    errors++;
-                }
-            }
-
-            /* Test: origin_buf = NULL, origin_count = 0 */
-            memset(res_ptr, -1, type_size * nproc * count);
-
-            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
-            MPI_Get_accumulate(NULL, 0, mpi_type, res_ptr, count, mpi_type,
-                               target, 0, count, mpi_type, MPI_NO_OP, win);
-            MPI_Win_unlock(target, win);
-
-            for (j = 0; j < count; j++) {
-                void *p = (char *) res_ptr + j * type_size;
-                if (cmp_value(p, target)) {
-                    SQUELCH(printf("%d->%d -- NOP(2)[%d]: expected %d, got %d\n",
-                                   target, rank, i, target, get_value(p)););
-                    errors++;
-                }
-            }
-
-            /* Test: origin_buf = NULL, origin_count = 0, origin_dtype = NULL */
-            memset(res_ptr, -1, type_size * nproc * count);
-
-            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
-            MPI_Get_accumulate(NULL, 0, MPI_DATATYPE_NULL, res_ptr, count, mpi_type,
-                               target, 0, count, mpi_type, MPI_NO_OP, win);
-            MPI_Win_unlock(target, win);
-
-            for (j = 0; j < count; j++) {
-                void *p = (char *) res_ptr + j * type_size;
-                if (cmp_value(p, target)) {
-                    SQUELCH(printf("%d->%d -- NOP(2)[%d]: expected %d, got %d\n",
-                                   target, rank, i, target, get_value(p)););
-                    errors++;
-                }
-            }
-        }
-
-        /* Test NO_OP (self communication) */
-
-        reset_bufs(win_ptr, res_ptr, val_ptr, 1, count, win);
-
-        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-        for (i = 0; i < count * nproc; i++) {
-            set_value((char *) win_ptr + i * type_size, rank);
-        }
-        MPI_Win_unlock(rank, win);
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        for (i = 0; i < ITER; i++) {
-            int j, target = rank;
-
-            /* Test: origin_buf = NULL */
-            memset(res_ptr, -1, type_size * nproc * count);
-
-            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
-            MPI_Get_accumulate(NULL, count, mpi_type, res_ptr, count, mpi_type,
-                               target, 0, count, mpi_type, MPI_NO_OP, win);
-            MPI_Win_unlock(target, win);
-
-            for (j = 0; j < count; j++) {
-                void *p = (char *) res_ptr + j * type_size;
-                if (cmp_value(p, target)) {
-                    SQUELCH(printf("%d->%d -- NOP_SELF(1)[%d]: expected %d, got %d\n",
-                                   target, rank, i, target, get_value(p)););
-                    errors++;
-                }
-            }
-
-            /* Test: origin_buf = NULL, origin_count = 0 */
-            memset(res_ptr, -1, type_size * nproc * count);
-
-            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
-            MPI_Get_accumulate(NULL, 0, mpi_type, res_ptr, count, mpi_type,
-                               target, 0, count, mpi_type, MPI_NO_OP, win);
-            MPI_Win_unlock(target, win);
-
-            for (j = 0; j < count; j++) {
-                void *p = (char *) res_ptr + j * type_size;
-                if (cmp_value(p, target)) {
-                    SQUELCH(printf("%d->%d -- NOP_SELF(2)[%d]: expected %d, got %d\n",
-                                   target, rank, i, target, get_value(p)););
-                    errors++;
-                }
-            }
-
-            /* Test: origin_buf = NULL, origin_count = 0, origin_dtype = NULL */
-            memset(res_ptr, -1, type_size * nproc * count);
-
-            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
-            MPI_Get_accumulate(NULL, 0, MPI_DATATYPE_NULL, res_ptr, count, mpi_type,
-                               target, 0, count, mpi_type, MPI_NO_OP, win);
-            MPI_Win_unlock(target, win);
-
-            for (j = 0; j < count; j++) {
-                void *p = (char *) res_ptr + j * type_size;
-                if (cmp_value(p, target)) {
-                    SQUELCH(printf("%d->%d -- NOP_SELF(2)[%d]: expected %d, got %d\n",
-                                   target, rank, i, target, get_value(p)););
-                    errors++;
-                }
-            }
-        }
+        errors += test_self_communication(win_ptr, res_ptr, val_ptr, count, mpi_type, win);
+        errors += test_neighbor_communication(win_ptr, res_ptr, val_ptr, count, mpi_type, win);
+        errors += test_contention(win_ptr, res_ptr, val_ptr, count, mpi_type, win);
+        errors += test_alltoall_fence(win_ptr, res_ptr, val_ptr, count, mpi_type, win);
+        errors += test_alltoall_lockall(win_ptr, res_ptr, val_ptr, count, mpi_type, win);
+        errors += test_alltoall_lockall_flush(win_ptr, res_ptr, val_ptr, count, mpi_type, win);
+        errors += test_neighbor_noop(win_ptr, res_ptr, val_ptr, count, mpi_type, win);
+        errors += test_self_noop(win_ptr, res_ptr, val_ptr, count, mpi_type, win);
 
         MPI_Win_free(&win);
 
