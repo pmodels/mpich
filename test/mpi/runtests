@@ -460,6 +460,9 @@ sub LoadTests {
                     }
                     elsif ($key eq "env") {
                         push @{$test_opt->{envs}}, $value;
+                        if (!is_runtime_cvar($value)) {
+                            $test_opt->{need_init_envs}++;
+                        }
                     }
                     elsif ($key eq "strict") {
                         $requiresStrict = $value
@@ -545,7 +548,7 @@ sub Run_all_tests {
         my $mpitest_hash = load_all_mpitests_txt();
         foreach my $test (@$all_tests) {
             my $key = get_mpitest_key($test);
-            if ($mpitest_hash->{$key}) {
+            if ($mpitest_hash->{$key} and !$test->{need_init_envs}) {
                 push @all_mpitests, $test;
             } else {
                 push @all_remaining, $test
@@ -1641,6 +1644,20 @@ sub InitQuickTimeout {
 
 # ----------------------------------------------------------------------------
 # util routines
+
+sub is_runtime_cvar {
+    my $t = shift;
+
+    if ($t =~ /^MPIR_CVAR_I?(BARRIER|BCAST|GATHER|SCATTER|ALLGATHER|ALLTOALL|REDUCE|ALLREDUCE|SCAN|EXSCAN|NEIGHBOR)[VW]?_/) {
+        # All collective CVARs can be updated at runtime
+        return 1;
+    } elsif ($t =~ /^MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE/) {
+        # Known CVARs that can be updated at runtime
+        return 1;
+    }
+
+    return 0;
+}
 
 sub get_fullfile {
     my $file = shift;
