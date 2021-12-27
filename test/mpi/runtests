@@ -687,29 +687,7 @@ sub RunMPIProgram {
         $test_opt->{init}->();
     }
 
-    # acquire lock if requested
-    my ($lockfile, $got_lock);
-    if ($test_opt->{lock}) {
-        # explicit lock by setting "lock=[shared|name]" on testline directly
-        my $name = $test_opt->{lock};
-        $lockfile = "/tmp/runtests-$name.lock";
-        if ($name eq "shared") {
-            $got_lock = get_lock($lockfile, LOCK_SH);
-        } else {
-            $got_lock = get_lock($lockfile, LOCK_EX);
-        }
-    } elsif ($test_opt->{mem}) {
-        # implicit lock by checking memory annotation
-        $lockfile="/tmp/runtests-mem.lock";
-        if ($test_opt->{mem} > $g_opt{memory_total}) {
-            SkippedTest($test_opt, "xfail due to memory requirement");
-            next;
-        } elsif ($test_opt->{mem} * $g_opt{memory_multiplier} > $g_opt{memory_total} ) {
-            $got_lock = get_lock($lockfile, LOCK_EX);
-        } else {
-            $got_lock = get_lock($lockfile, LOCK_SH);
-        }
-    }
+    my $lock = test_get_lock($test_opt);
 
     my $wrapper = get_mpiexec_wrapper($np, $test_opt);
     my $progArgs = join(' ', @{$test_opt->{args}});
@@ -747,10 +725,7 @@ sub RunMPIProgram {
     my $runtime = $end_time - $start_time;
     print STDOUT "Runtime: $runtime\n" if $g_opt{verbose};
 
-    # release lock if needed
-    if ($got_lock) {
-        relese_lock($lockfile);
-    }
+    test_release_lock($lock);
 
     if ($found_error) {
         &RunTestFailed($test_opt, $inline, $runtime );
@@ -1393,6 +1368,48 @@ sub get_fullfile {
         return $file;
     } else {
         return $g_cwd . "/" . $file;
+    }
+}
+
+# acquire lock if requested
+sub test_get_lock {
+    my $test_opt = shift;
+
+    my ($lockfile, $got_lock);
+    if ($test_opt->{lock}) {
+        # explicit lock by setting "lock=[shared|name]" on testline directly
+        my $name = $test_opt->{lock};
+        $lockfile = "/tmp/runtests-$name.lock";
+        if ($name eq "shared") {
+            $got_lock = get_lock($lockfile, LOCK_SH);
+        } else {
+            $got_lock = get_lock($lockfile, LOCK_EX);
+        }
+    } elsif ($test_opt->{mem}) {
+        # implicit lock by checking memory annotation
+        $lockfile="/tmp/runtests-mem.lock";
+        if ($test_opt->{mem} > $g_opt{memory_total}) {
+            SkippedTest($test_opt, "xfail due to memory requirement");
+            next;
+        } elsif ($test_opt->{mem} * $g_opt{memory_multiplier} > $g_opt{memory_total} ) {
+            $got_lock = get_lock($lockfile, LOCK_EX);
+        } else {
+            $got_lock = get_lock($lockfile, LOCK_SH);
+        }
+    }
+
+    if ($got_lock) {
+        return $lockfile;
+    } else {
+        return undef
+    }
+}
+
+sub test_release_lock {
+    my $lockfile = shift;
+
+    if ($lockfile) {
+        relese_lock($lockfile);
     }
 }
 
