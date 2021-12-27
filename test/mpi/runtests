@@ -700,6 +700,8 @@ sub run_mpitests {
             }
             print "    [$cmd]\n" if $g_opt{verbose};
 
+            my $lock = test_get_lock($test_opt);
+
             if ($test_opt->{envs} and @{$test_opt->{envs}}) {
                 foreach my $t (@{$test_opt->{envs}}) {
                     if ($t =~ /([^=]+)=(.*)/) {
@@ -726,6 +728,8 @@ sub run_mpitests {
                     push @inline, $_;
                 }
             }
+
+            test_release_lock($lock);
 
             my $end_time = gettimeofday();
             my $runtime = $end_time - $start_time;
