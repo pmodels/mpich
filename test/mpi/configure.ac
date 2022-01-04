@@ -618,9 +618,8 @@ fi
 AC_C_CONST
 AC_C_RESTRICT
 
-# not using libtool for the test suite, so no LT_INIT.  Instead, test here
-# for Library programs
-AC_PROG_RANLIB
+
+# Archiver for building utility libraries
 AM_PROG_AR
 
 # Check for --enable-strict
