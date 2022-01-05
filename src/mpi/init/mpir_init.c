@@ -201,7 +201,13 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     /* Initialize gpu in mpl in order to support shm gpu module initialization
      * inside MPID_Init */
     if (MPIR_CVAR_ENABLE_GPU) {
-        int mpl_errno = MPL_gpu_init();
+        bool specialized_cache =
+            (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_specialized);
+
+        MPL_gpu_info_t info;
+        info.specialized_cache = specialized_cache;
+
+        int mpl_errno = MPL_gpu_init(&info);
 
         /* Disable GPUs if no devices are found */
         if (mpl_errno == MPL_ERR_GPU_NODEVICE) {
@@ -209,6 +215,11 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
             mpl_errno = MPL_SUCCESS;
         }
         MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
+
+        /* If the MPL gpu backend doesn't support specialized cache, fallback to generic. */
+        if (specialized_cache && !info.specialized_cache) {
+            MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE = MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic;
+        }
     }
 
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);

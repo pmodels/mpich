@@ -31,10 +31,6 @@ static int gpu_mem_hook_init();
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
 {
     int ret = MPL_SUCCESS;
-    if (!gpu_initialized) {
-        ret = MPL_gpu_init();
-    }
-
     *dev_cnt = device_count;
     *dev_id = max_dev_id;
     *subdevice_id = 0;
@@ -92,6 +88,11 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
   fn_fail:
     mpl_err = MPL_ERR_GPU_INTERNAL;
     goto fn_exit;
+}
+
+int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
+{
+    return MPL_SUCCESS;
 }
 
 int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void **ptr)
@@ -215,11 +216,13 @@ int MPL_gpu_free(void *ptr)
     goto fn_exit;
 }
 
-int MPL_gpu_init(void)
+int MPL_gpu_init(MPL_gpu_info_t * info)
 {
     int mpl_err = MPL_SUCCESS;
     hipError_t ret = hipGetDeviceCount(&device_count);
     HIP_ERR_CHECK(ret);
+
+    info->specialized_cache = false;
 
     char *visible_devices = getenv("HIP_VISIBLE_DEVICES");
     if (visible_devices) {
@@ -328,6 +331,12 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
   fn_fail:
     mpl_err = MPL_ERR_GPU_INTERNAL;
     goto fn_exit;
+}
+
+int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
+                        MPL_pointer_attr_t * dest_attr, size_t size)
+{
+    return MPL_ERR_GPU_INTERNAL;
 }
 
 static void gpu_free_hooks_cb(void *dptr)
