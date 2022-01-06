@@ -1020,6 +1020,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         /* Release the temporary reference added before the call to
          * attr_free */
         MPIR_Object_release_ref(comm_ptr, &in_use);
+        MPIR_Assertp(in_use == 0);
     }
 
     /* If the attribute delete functions return failure, the
