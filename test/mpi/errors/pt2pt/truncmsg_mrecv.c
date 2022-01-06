@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Unable to allocate communication buffer of size %d\n", LongLen);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-
+#if MTEST_HAVE_MIN_MPI_VERSION(3,0)
     if (testShort) {
         if (rank == source) {
             err = MPI_Send(buf, ShortLen, MPI_INT, dest, 0, MPI_COMM_WORLD);
@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
             errs += checkTruncError(err, "long");
         }
     }
+#endif
 
     free(buf);
     MTest_Finalize(errs);
