@@ -71,8 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     am_hdr.sreq_ptr = sreq;
     am_hdr.flags = flags;
     if (flags & MPIDIG_AM_SEND_FLAGS_SYNC) {
-        int c;
-        MPIR_cc_incr(sreq->cc_ptr, &c); /* expecting SSEND_ACK */
+        MPIR_cc_inc(sreq->cc_ptr);      /* expecting SSEND_ACK */
     }
     MPI_Aint data_sz;
     MPIDI_Datatype_check_size(datatype, count, data_sz);

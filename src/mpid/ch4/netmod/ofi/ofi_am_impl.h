@@ -374,7 +374,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
                                                          MPIDI_OFI_am_send_pipeline_request_t *
                                                          send_req, int vni_src, int vni_dst)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *msg_hdr;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_src, nic);
@@ -404,7 +404,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vni_src, dst_addr);
     msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vni_src, vni_src);
 
-    MPIR_cc_incr(sreq->cc_ptr, &c);
+    MPIR_cc_inc(sreq->cc_ptr);
     send_req->event_id = MPIDI_OFI_EVENT_AM_SEND_PIPELINE;
 
     MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + seg_sz;
