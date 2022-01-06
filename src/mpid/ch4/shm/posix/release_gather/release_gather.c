@@ -136,11 +136,20 @@ cvars:
 #include "topotree.h"
 #include "topotree_util.h"
 
-#define RELEASE_GATHER_FIELD(comm, field)                   \
-    MPIDI_POSIX_COMM(comm, release_gather).field
-
 
 MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type, MPIDI_POSIX_Reduce_tree_type;
+
+static int get_tree_type(const char *tree_type_name)
+{
+    if (0 == strcmp(tree_type_name, "kary"))
+        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
+    else if (0 == strcmp(tree_type_name, "knomial_1"))
+        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KNOMIAL_1;
+    else if (0 == strcmp(tree_type_name, "knomial_2"))
+        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KNOMIAL_2;
+    else
+        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
+}
 
 /* Initialize the release_gather struct to NULL */
 int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr)
@@ -148,25 +157,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr)
     MPIR_FUNC_ENTER;
 
     RELEASE_GATHER_FIELD(comm_ptr, num_collective_calls) = 0;
-
-    if (0 == strcmp(MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE, "kary"))
-        MPIDI_POSIX_Bcast_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE, "knomial_1"))
-        MPIDI_POSIX_Bcast_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE, "knomial_2"))
-        MPIDI_POSIX_Bcast_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KNOMIAL_2;
-    else
-        MPIDI_POSIX_Bcast_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
-
-    if (0 == strcmp(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE, "kary"))
-        MPIDI_POSIX_Reduce_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
-    else if (0 == strcmp(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE, "knomial_1"))
-        MPIDI_POSIX_Reduce_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE, "knomial_2"))
-        MPIDI_POSIX_Reduce_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KNOMIAL_2;
-    else
-        MPIDI_POSIX_Reduce_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
-
     RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
 
     MPIR_FUNC_EXIT;
@@ -202,6 +192,20 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
      * reduce buffer (divided into multiple cells) per rank. */
 
     if (RELEASE_GATHER_FIELD(comm_ptr, is_initialized) == 0) {
+        RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 1;
+        /* CVARs may get updated. Turn them into per-comm settings */
+        RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_type) =
+            get_tree_type(MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE);
+        RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_kval) = MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL;
+        RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size) =
+            MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE;
+        RELEASE_GATHER_FIELD(comm_ptr, bcast_num_cells) = MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS;
+        RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type) =
+            get_tree_type(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE);
+        RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval) = MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL;
+        RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size) =
+            MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE;
+        RELEASE_GATHER_FIELD(comm_ptr, reduce_num_cells) = MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS;
         /* release_gather based collectives have not been used before on this comm */
         initialize_flags = true;
         if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
@@ -245,10 +249,10 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         }
 
         if (initialize_bcast_buf) {
-            memory_to_be_allocated += MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE;
+            memory_to_be_allocated += RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size);
         }
         if (initialize_reduce_buf) {
-            memory_to_be_allocated += (num_ranks * MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE);
+            memory_to_be_allocated += (num_ranks * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
         }
 
         if (rank == 0) {
@@ -290,10 +294,11 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             /* Topology aware trees are created only when the user has specified process binding */
             if (MPIR_hwtopo_is_initialized()) {
                 mpi_errno =
-                    MPIDI_SHM_topology_tree_init(comm_ptr, 0, MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL,
+                    MPIDI_SHM_topology_tree_init(comm_ptr, 0,
+                                                 RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_kval),
                                                  &release_gather_info_ptr->bcast_tree,
                                                  &topotree_fail[0],
-                                                 MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL,
+                                                 RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval),
                                                  &release_gather_info_ptr->reduce_tree,
                                                  &topotree_fail[1], &errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
@@ -322,8 +327,9 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             if (topotree_fail[0] == 1)
                 MPIR_Treealgo_tree_free(&release_gather_info_ptr->bcast_tree);
             mpi_errno =
-                MPIR_Treealgo_tree_create(rank, num_ranks, MPIDI_POSIX_Bcast_tree_type,
-                                          MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL, 0,
+                MPIR_Treealgo_tree_create(rank, num_ranks,
+                                          RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_type),
+                                          RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_kval), 0,
                                           &release_gather_info_ptr->bcast_tree);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
@@ -332,14 +338,16 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             if (topotree_fail[1] == 1)
                 MPIR_Treealgo_tree_free(&release_gather_info_ptr->reduce_tree);
             mpi_errno =
-                MPIR_Treealgo_tree_create(rank, num_ranks, MPIDI_POSIX_Reduce_tree_type,
-                                          MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL, 0,
+                MPIR_Treealgo_tree_create(rank, num_ranks,
+                                          RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type),
+                                          RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval), 0,
                                           &release_gather_info_ptr->reduce_tree);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
 
-        release_gather_info_ptr->gather_state = release_gather_info_ptr->release_state
-            = MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS + MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS;
+        release_gather_info_ptr->gather_state = release_gather_info_ptr->release_state =
+            RELEASE_GATHER_FIELD(comm_ptr, bcast_num_cells) +
+            RELEASE_GATHER_FIELD(comm_ptr, reduce_num_cells);
 
         release_gather_info_ptr->bcast_buf_addr = NULL;
         release_gather_info_ptr->reduce_buf_addr = NULL;
@@ -374,15 +382,13 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     }
 
     if (initialize_bcast_buf) {
-        RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size) =
-            MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE;
         if (rank == 0)
             MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter,
                                         RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size));
 
         /* Allocate the shared memory for bcast buffer */
         mpi_errno =
-            MPIDU_shm_alloc(comm_ptr, MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE,
+            MPIDU_shm_alloc(comm_ptr, RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size),
                             (void **) &(RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr)),
                             &mapfail_flag);
         if (mapfail_flag) {
@@ -397,14 +403,12 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr) =
             MPL_malloc(num_ranks * sizeof(void *), MPL_MEM_COLL);
 
-        RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size) =
-            MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE;
         if (rank == 0)
             MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter,
                                         RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
 
         mpi_errno =
-            MPIDU_shm_alloc(comm_ptr, num_ranks * MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE,
+            MPIDU_shm_alloc(comm_ptr, num_ranks * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size),
                             (void **) &(RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr)),
                             &mapfail_flag);
         if (mapfail_flag) {
@@ -422,7 +426,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 (char *) RELEASE_GATHER_FIELD(comm_ptr,
                                               reduce_buf_addr) +
                 ((*utarray_eltptr(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree.children), i))
-                 * MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE);
+                 * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
         }
     }
 
