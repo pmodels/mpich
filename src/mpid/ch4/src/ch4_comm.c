@@ -192,11 +192,6 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     mpi_errno = MPIDIG_init_comm(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* vci hints defaults */
-    comm->hints[MPIR_COMM_HINT_SENDER_VCI] = MPIDI_VCI_INVALID;
-    comm->hints[MPIR_COMM_HINT_RECEIVER_VCI] = MPIDI_VCI_INVALID;
-    comm->hints[MPIR_COMM_HINT_VCI] = MPIDI_VCI_INVALID;
-
     mpi_errno = MPIDI_NM_mpi_comm_commit_pre_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
