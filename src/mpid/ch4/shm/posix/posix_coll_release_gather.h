@@ -53,7 +53,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     MPI_Aint lb, true_lb, true_extent, extent, type_size;
     void *ori_buffer = buffer;
     MPI_Datatype ori_datatype = datatype;
-    int cellsize = MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE;
 
     /* If there is only one process or no data, return */
     if (count == 0 || (MPIR_Comm_size(comm_ptr) == 1)) {
@@ -105,6 +104,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
             }
         }
     }
+
+    int cellsize = MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE;
 #ifdef HAVE_ERROR_CHECKING
     /* When error checking is enabled, only (cellsize-(2*cacheline_size)) bytes are reserved for data.
      * Initial 2 cacheline_size bytes are reserved to put the amount of data being placed and the
