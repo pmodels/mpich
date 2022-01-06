@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "mpi.h"
+#include <assert.h>
 
 #define TEST_LE 0x1
 #define TEST_BE 0x2
@@ -23,10 +24,22 @@ static void handle_error(int errcode, char *str)
 }
 
 
-
-static void is_little_or_big_endian(const char *datarep, char *c, char *c_le, int len)
+#define MAX_LEN 4
+static void is_little_or_big_endian(FILE * fileh_std, const char *datarep, char *c_le, int len)
 {
-    int i, is_le = 1, is_be = 1;
+    int i, j, is_le = 1, is_be = 1;
+    char c[MAX_LEN];
+
+    assert(len <= MAX_LEN);
+
+    for (j = 0; j < len; j++) {
+        if (feof(fileh_std)) {
+            printf("unexpected eof, aborted\n");
+            return;
+        }
+        fscanf(fileh_std, "%c", &c[j]);
+    }
+
     for (i = 0; i < len; i++) {
         is_le = is_le && (c[i] == c_le[i]);
         is_be = is_be && (c[i] == c_le[len - 1 - i]);
@@ -52,7 +65,7 @@ static void is_little_or_big_endian(const char *datarep, char *c, char *c_le, in
 int main(int argc, char *argv[])
 {
     int sample_i = 123456789, i, j;
-    char sample_i_le[4] = { 0x15, 0xcd, 0x5b, 0x07 }, c[4];
+    char sample_i_le[4] = { 0x15, 0xcd, 0x5b, 0x07 };
     const char *datarep[3] = { "native", "external32", "internal" };
     MPI_File fileh;
     int rank;
@@ -87,14 +100,7 @@ int main(int argc, char *argv[])
         MPI_Barrier(MPI_COMM_WORLD);
         if (rank == 0) {
             fileh_std = fopen(TEST_FILENAME, "r");
-            for (j = 0; j < 4; j++) {
-                if (feof(fileh_std)) {
-                    printf("unexpected eof, aborted\n");
-                    return (-1);
-                }
-                fscanf(fileh_std, "%c", &c[j]);
-            }
-            is_little_or_big_endian(datarep[i], c, sample_i_le, 4);
+            is_little_or_big_endian(fileh_std, datarep[i], sample_i_le, 4);
             fclose(fileh_std);
         }
 
