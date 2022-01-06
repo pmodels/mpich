@@ -208,7 +208,7 @@ MachineTable *MPIE_ReadMachines(const char *arch, int nNeeded, void *data)
     char machinesfile[PATH_MAX];
     char dirname[PATH_MAX];
     const char *path = getenv("MPIEXEC_MACHINES_PATH");
-    MachineTable *mt;
+    MachineTable *mt = NULL;
     size_t len;
     int nFound = 0;
 
@@ -253,19 +253,19 @@ MachineTable *MPIE_ReadMachines(const char *arch, int nNeeded, void *data)
 
     if (!fp) {
         MPL_error_printf("Could not open machines file %s\n", machinesfile);
-        return 0;
+        goto fn_fail;
     }
     mt = (MachineTable *) MPL_malloc(sizeof(MachineTable), MPL_MEM_PM);
     if (!mt) {
         MPL_internal_error_printf("Could not allocate machine table\n");
-        return 0;
+        goto fn_fail;
     }
 
     /* This may be larger than needed if the machines file has
      * fewer entries than nNeeded */
     mt->desc = (MachineDesc *) MPL_malloc(nNeeded * sizeof(MachineDesc), MPL_MEM_PM);
     if (!mt->desc) {
-        return 0;
+        goto fn_fail;
     }
 
     /* Order of fields
@@ -374,7 +374,20 @@ MachineTable *MPIE_ReadMachines(const char *arch, int nNeeded, void *data)
         nNeeded--;
     }
     mt->nHosts = nFound;
+
+  fn_exit:
+    fclose(fp);
     return mt;
+
+  fn_fail:
+    if (mt) {
+        if (mt->desc) {
+            MPL_free(mt->desc);
+        }
+        MPL_free(mt);
+        mt = NULL;
+    }
+    goto fn_exit;
 }
 
 int MPIE_RMProcessArg(int argc, char *argv[], void *extra)
