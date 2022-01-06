@@ -806,6 +806,7 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
                                                                                    req->
                                                                                    areq.target_datatype),
                       0, original, result_data_sz, &actual_pack_bytes);
+    MPIR_Assert(actual_pack_bytes == result_data_sz);
 
     mpi_errno = MPIDIG_compute_acc_op(MPIDIG_REQUEST(rreq, req->areq.data),
                                       MPIDIG_REQUEST(rreq, req->areq.origin_count),

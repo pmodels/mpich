@@ -51,7 +51,7 @@ def load_C_func_list(binding_dir="src/binding", silent=False):
             func_list.append(f)
     func_list.sort(key = lambda f: f['dir'])
 
-    load_mpix_txt()
+    load_mpix_txt("%s/mpix.txt" % binding_dir)
 
     return func_list
 
@@ -93,11 +93,11 @@ def load_mpi_mapping(api_mapping_txt):
                     key, val = RE.m.group(1, 2)
                     G.default_descriptions[key] = val
 
-def load_mpix_txt():
+def load_mpix_txt(mpix_txt):
     G.mpix_symbols = {}
     stage = "functions"
-    if os.path.exists("src/binding/mpix.txt"):
-        with open("src/binding/mpix.txt") as In:
+    if os.path.exists(mpix_txt):
+        with open(mpix_txt, "r") as In:
             for line in In:
                 if RE.match(r'#\s*mpi.h\s+symbols', line):
                     stage = "symbols"

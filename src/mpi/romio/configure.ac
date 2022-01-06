@@ -147,6 +147,10 @@ else
     mpl_libdir="-L${with_mpl_prefix}/lib"
     mpl_lib="-l${MPLLIBNAME}"
 fi
+else
+    # we are configuring romio inside mpich. MPICH should configured MPL already, following
+    # macro will just set mpl_includedir and source mpl/localdefs if any.
+    PAC_CONFIG_MPL
 fi
 
 CFLAGS=${CFLAGS:-""}
