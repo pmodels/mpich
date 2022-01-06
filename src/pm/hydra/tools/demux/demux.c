@@ -10,22 +10,7 @@ int HYDT_dmxu_num_cb_fds = 0;
 struct HYDT_dmxu_callback *HYDT_dmxu_cb_list = NULL;
 struct HYDT_dmxu_fns HYDT_dmxu_fns;
 
-static int got_sigttin = 0;
 static int stdin_valid;
-
-#if defined(SIGTTIN)
-static void signal_cb(int sig)
-{
-    HYDU_FUNC_ENTER();
-
-    if (sig == SIGTTIN)
-        got_sigttin = 1;
-    /* Ignore all other signals */
-
-    HYDU_FUNC_EXIT();
-    return;
-}
-#endif /* SIGTTIN */
 
 HYD_status HYDT_dmx_init(char **demux)
 {
@@ -249,7 +234,7 @@ HYD_status HYDT_dmxi_stdin_valid(int *out)
      */
 
 #if defined(SIGTTIN)
-    status = HYDU_set_signal(SIGTTIN, signal_cb);
+    status = HYDU_set_signal(SIGTTIN, SIG_IGN);
     HYDU_ERR_POP(status, "unable to set SIGTTIN\n");
 #endif /* SIGTTIN */
 
@@ -258,11 +243,6 @@ HYD_status HYDT_dmxi_stdin_valid(int *out)
         *out = 1;
     else
         *out = 0;
-
-#if defined(SIGTTIN)
-    status = HYDU_set_signal(SIGTTIN, SIG_IGN);
-    HYDU_ERR_POP(status, "unable to set SIGTTIN\n");
-#endif /* SIGTTIN */
 
   fn_exit:
     HYDU_FUNC_EXIT();
