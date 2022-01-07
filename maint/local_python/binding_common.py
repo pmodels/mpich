@@ -139,6 +139,10 @@ def get_C_param(param, func, mapping):
         else:
             # MPI_Init, MPI_Init_thread -> char ***argv
             want_star = 3
+    elif kind == "STATUS" and param['length'] is not None:
+        # MPI_{Wait,Test}{all,some}
+        # gcc-11 warns when we pass MPI_STATUSES_IGNORE to MPI_Status statues[]
+        want_star = 1
     elif not want_star:
         if is_pointer_type(param):
             if kind == "STRING_ARRAY":
