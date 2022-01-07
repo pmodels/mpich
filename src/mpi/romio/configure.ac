@@ -1225,149 +1225,44 @@ AS_CASE([$host_os],
 #
 # Check for statfs (many) and specifically f_fstypename field (BSD)
 #
-AC_CHECK_HEADERS(sys/vfs.h sys/param.h sys/mount.h sys/statvfs.h)
-AC_CHECK_FUNCS([statfs])
-AC_MSG_CHECKING([whether struct statfs properly defined])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-    #ifdef HAVE_SYS_VFS_H
-    #include <sys/vfs.h>
-    #endif
-    #ifdef HAVE_SYS_STATVFS_H
-    #include <sys/statvfs.h>
-    #endif
-    #ifdef HAVE_SYS_PARAM_H
-    #include <sys/param.h>
-    #endif
-    #ifdef HAVE_SYS_MOUNT_H
-    #include <sys/mount.h>
-    #endif
-    ]],[[
-    struct statfs f;
-    ]])],
-    pac_cv_have_statfs=yes,pac_cv_have_statfs=no
-)
-AC_MSG_RESULT($pac_cv_have_statfs)
-# At this point, we could check for whether defining
-# __SWORD_TYPE as sizet_t or int/long (size of pointer)
-# would help.  FIXME
-
-if test "$pac_cv_have_statfs" = yes ; then
-    AC_DEFINE(HAVE_STRUCT_STATFS,1,[Define if struct statfs can be compiled])
-fi
-AC_MSG_CHECKING([for f_type member of statfs structure])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-    #ifdef HAVE_SYS_VFS_H
-    #include <sys/vfs.h>
-    #endif
-    #ifdef HAVE_SYS_STATVFS_H
-    #include <sys/statvfs.h>
-    #endif
-    #ifdef HAVE_SYS_PARAM_H
-    #include <sys/param.h>
-    #endif
-    #ifdef HAVE_SYS_MOUNT_H
-    #include <sys/mount.h>
-    #endif
-    #ifdef HAVE_STRING_H
-    #include <string.h>
-    #endif
-    ]],[[
-    struct statfs f;
-    memset(&f, 0, sizeof(f));
-    f.f_type = 0;
-    ]])],
-    pac_cv_have_statfs_f_type=yes,
-    pac_cv_have_statfs_f_type=no
-)
-AC_MSG_RESULT($pac_cv_have_statfs_f_type)
-if test $pac_cv_have_statfs_f_type = yes ; then
-    AC_DEFINE(ROMIO_HAVE_STRUCT_STATFS_WITH_F_TYPE, 1,[Define if statfs has f_type])
-fi
+AC_CHECK_HEADERS(sys/vfs.h sys/param.h sys/mount.h sys/statvfs.h sys/stat.h sys/type.h unistd.h)
+AC_CHECK_FUNCS([statvfs statfs stat])
+# Who would imagine so many different ways to determine "what kind of file system is this?"
+# on old systems we used to check for statfs.f_fsid, but while it can be a file
+# system type identifier it is more commonly used to generate a unique "fsid,inode" tuple
+# struct statvfs.f_basetype  -- Solaris, Irix, AIX
+# struct statfs.f_fstypename -- BSD, NetBSD-3.0+, Darwin
+# struct statfs.f_type       -- Linux
+# struct stat.st_fstype      -- NEC SX4 (!!)
 
 
-AC_MSG_CHECKING([for f_fstypename member of statfs structure])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-    #ifdef HAVE_SYS_VFS_H
-    #include <sys/vfs.h>
-    #endif
-    #ifdef HAVE_SYS_STATVFS_H
-    #include <sys/statvfs.h>
-    #endif
-    #ifdef HAVE_SYS_PARAM_H
-    #include <sys/param.h>
-    #endif
-    #ifdef HAVE_SYS_MOUNT_H
-    #include <sys/mount.h>
-    #endif
-    #ifdef HAVE_STRING_H
-    #include <string.h>
-    #endif
-    ]],[[
-    struct statfs f;
-    memset(&f, 0, sizeof(f));
-    strncmp("nfs", f.f_fstypename, 3);
-    ]])],
-    pac_cv_have_statfs_f_fstypename=yes,
-    pac_cv_have_statfs_f_fstypename=no
-)
-AC_MSG_RESULT($pac_cv_have_statfs_f_fstypename)
-if test $pac_cv_have_statfs_f_fstypename = yes ; then
-    AC_DEFINE(ROMIO_HAVE_STRUCT_STATFS_WITH_F_FSTYPENAME, 1,[Define if statfs has f_fstypename])
-fi
-
-#
-# Check for stat and st_fstype field (NEC SX4)
-#
-AC_CHECK_HEADERS(sys/stat.h sys/types.h unistd.h)
-AC_CHECK_FUNCS(stat,
-    AC_DEFINE(HAVE_STAT, 1, Define if stat function is present)
-    AC_MSG_CHECKING([for st_fstype member of stat structure])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-        #ifdef HAVE_SYS_TYPES_H
-        #include <sys/types.h>
-        #endif
-        #ifdef HAVE_SYS_STAT_H
-        #include <sys/stat.h>
-        #endif
-        #ifdef HAVE_UNISTD_H
-        #include <unistd.h>
-        #endif
-	]],[[
-	struct stat s;
-	s.st_fstype = NULL;
-	]])],
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(ROMIO_HAVE_STRUCT_STAT_WITH_ST_FSTYPE, 1, Define if struct stat has a st_fstype member),
-	AC_MSG_RESULT(no)
-    )
-)
-
-#
-# Check for statvfs and f_basetype field (Solaris, Irix, AIX, etc.)
-#
-AC_CHECK_HEADERS(sys/types.h sys/statvfs.h sys/vfs.h)
-AC_CHECK_FUNCS(statvfs,
-    AC_DEFINE(HAVE_STATVFS, 1, Define if statvfs function is present)
-    AC_MSG_CHECKING([for f_basetype member of statvfs structure])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-        #ifdef HAVE_SYS_TYPES_H
-        #include <sys/types.h>
-        #endif
-        #ifdef HAVE_SYS_VFS_H
-        #include <sys/vfs.h>
-        #endif
-        #ifdef HAVE_SYS_STATVFS_H
-        #include <sys/statvfs.h>
-        #endif
-	]], [[
-	struct statvfs foo;
-	foo.f_basetype[0] = 'a';
-	]])],
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(ROMIO_HAVE_STRUCT_STATVFS_WITH_F_BASETYPE, 1, defined if struct statvfs has a f_basetype member),
-	AC_MSG_RESULT(no)
-    )
-)
+AC_CHECK_MEMBERS([struct statvfs.f_basetype,
+                  struct statfs.f_fstypename,
+                  struct statfs.f_type,
+                  struct stat.st_fstype],[],[],
+             AC_INCLUDES_DEFAULT
+             [#ifdef HAVE_SYS_VFS_H
+              #include <sys/vfs.h>
+              #endif
+              #ifdef HAVE_SYS_PARAM_H
+              #include <sys/param.h>
+              #endif
+              #ifdef HAVE_SYS_MOUNT_H
+              #include <sys/mount.h>
+              #endif
+              #ifdef HAVE_SYS_STATFS_H
+              #include <sys/statfs.h>
+              #endif
+              #ifdef HAVE_SYS_STAT_H
+              #include <sys/stat.h>
+              #endif
+              #ifdef HAVE_SYS_TYPE_H
+              #include <sys/type.h>
+              #endif
+              #ifdef HAVE_UNISTD_H
+              #include <unistd.h>
+              #endif
+              ])
 
 AC_CHECK_TYPE([blksize_t],[],[AC_DEFINE_UNQUOTED([blksize_t],[__blksize_t],[Provide blksize_t if not available]) ], [[
 	       #ifdef HAVE_SYS_TYPES_H
