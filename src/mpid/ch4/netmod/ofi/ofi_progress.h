@@ -87,8 +87,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
     }
 
     if (unlikely(MPIDI_OFI_has_cq_buffered(vni))) {
-        ret = MPIDI_OFI_get_buffered(vni, wc);
-        mpi_errno = MPIDI_OFI_handle_cq_entries(vni, wc, 1);
+        int num = MPIDI_OFI_get_buffered(vni, wc);
+        mpi_errno = MPIDI_OFI_handle_cq_entries(vni, wc, num);
     } else if (likely(1)) {
         for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
             int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
