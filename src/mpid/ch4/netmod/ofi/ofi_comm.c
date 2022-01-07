@@ -194,9 +194,9 @@ int MPIDI_OFI_comm_set_hints(MPIR_Comm * comm, MPIR_Info * info)
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = update_multi_nic_hints(comm);
-    MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = update_nic_preferences(comm);
-    MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
