@@ -1081,7 +1081,7 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
 
     /* MPIC routine uses an internal context id.  The local leads (process 0)
      * exchange data */
-    remote_context_id = -1;
+    remote_context_id = (MPIR_Context_id_t) - 1;
     if (comm_ptr->rank == 0) {
         mpi_errno = MPIC_Sendrecv(&mycontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag,
                                   &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag,
