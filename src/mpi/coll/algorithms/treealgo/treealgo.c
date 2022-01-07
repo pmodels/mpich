@@ -57,7 +57,6 @@ int MPIR_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
         default:
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**treetype", "**treetype %d",
                                  tree_type);
-            break;
     }
 
     MPIR_FUNC_EXIT;

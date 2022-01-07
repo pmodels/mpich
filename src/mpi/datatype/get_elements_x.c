@@ -164,7 +164,6 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
             case MPI_COMBINER_DUP:
             case MPI_COMBINER_RESIZED:
                 return MPIR_Type_get_elements(bytes_p, count, *types);
-                break;
             case MPI_COMBINER_CONTIGUOUS:
             case MPI_COMBINER_VECTOR:
             case MPI_COMBINER_HVECTOR:
@@ -175,7 +174,6 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
                 } else {
                     return MPIR_Type_get_elements(bytes_p, count * counts[0], *types);
                 }
-                break;
             case MPI_COMBINER_INDEXED_BLOCK:
             case MPI_COMBINER_HINDEXED_BLOCK:
                 if (cp->nr_counts == 0) {
@@ -184,7 +182,6 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
                 } else {
                     return MPIR_Type_get_elements(bytes_p, count * counts[0] * counts[1], *types);
                 }
-                break;
             case MPI_COMBINER_INDEXED:
             case MPI_COMBINER_HINDEXED:
                 {
@@ -200,7 +197,6 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
                     }
                     return MPIR_Type_get_elements(bytes_p, count * typecount, *types);
                 }
-                break;
             case MPI_COMBINER_STRUCT:
                 /* In this case we can't simply multiply the count of the next
                  * type by the count of the current type, because we need to
@@ -255,7 +251,6 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
                     }
                     return nr_elements;
                 }
-                break;
             case MPI_COMBINER_DARRAY:
             case MPI_COMBINER_F90_REAL:
             case MPI_COMBINER_F90_COMPLEX:
@@ -267,7 +262,6 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
                 /* --BEGIN ERROR HANDLING-- */
                 MPIR_Assert(0);
                 return -1;
-                break;
                 /* --END ERROR HANDLING-- */
         }
     }
