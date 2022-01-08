@@ -74,20 +74,19 @@ static void checkResults(int loop_k, int *errors)
     }
 }
 
-int main(int argc, char *argv[])
+static int test_atomic_rmw_gacc(void)
 {
     int i, k;
     int errors = 0;
     int my_buf_num = 0;         /* to suppress warning */
     MPI_Datatype origin_dtp, target_dtp;
 
-    MTest_Init(&argc, &argv);
-
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if (size != 3) {
         /* run this test with three processes */
-        goto exit_test;
+        printf("Run this test with three processes.\n");
+        return 1;
     }
 
     MPI_Type_contiguous(OP_COUNT, MPI_INT, &origin_dtp);
@@ -258,7 +257,17 @@ int main(int argc, char *argv[])
     MPI_Type_free(&origin_dtp);
     MPI_Type_free(&target_dtp);
 
-  exit_test:
+    return errors;
+}
+
+int main(int argc, char *argv[])
+{
+    int errors = 0;
+
+    MTest_Init(&argc, &argv);
+
+    errors += test_atomic_rmw_gacc();
+
     MTest_Finalize(errors);
     return MTestReturnValue(errors);
 }
