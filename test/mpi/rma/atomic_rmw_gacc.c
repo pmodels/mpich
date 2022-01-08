@@ -267,6 +267,7 @@ int main(int argc, char *argv[])
     MTest_Init(&argc, &argv);
 
     errors += test_atomic_rmw_gacc();
+    errors += test_atomic_rmw_gacc();
 
     MTest_Finalize(errors);
     return MTestReturnValue(errors);
