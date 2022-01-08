@@ -105,7 +105,7 @@ int MPIDI_CH3_SHM_Finalize(void)
 
 static int delay_shm_mutex_destroy(int rank, MPIR_Win *win_ptr)
 {
-#if 0
+#ifdef DELAY_SHM_MUTEX_DESTROY
     /* On FreeBSD (tested on ver 12.2) destroying the mutex and recreate the mutex,
      * which may result in the same address, the new mutex will not work for inter-
      * process. To work around, we delay the destroy of mutex until finalize. */
