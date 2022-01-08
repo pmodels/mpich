@@ -83,6 +83,8 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen);
 /* Nemesis-provided RMA implementation */
 int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win *win_ptr, int target_rank, MPI_Aint *size, int *disp_unit, void *baseptr);
 int MPIDI_CH3_SHM_Win_free(MPIR_Win **win_ptr);
+int MPIDI_CH3_SHM_Init(void);
+int MPIDI_CH3_SHM_Finalize(void);
 
 /* Shared memory window atomic/accumulate mutex implementation */
 
@@ -111,6 +113,13 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win **win_ptr);
 #define MPIDI_CH3I_SHM_MUTEX_DESTROY(win_ptr)                                           \
     do {                                                                                \
         int pt_err = pthread_mutex_destroy((win_ptr)->shm_mutex);                       \
+        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
+                             "**pthread_mutex %s", strerror(pt_err));                   \
+    } while (0);
+
+#define MPIDI_CH3I_SHM_MUTEX_DESTROY_DIRECT(shm_mutex)                                  \
+    do {                                                                                \
+        int pt_err = pthread_mutex_destroy(shm_mutex);                       \
         MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
                              "**pthread_mutex %s", strerror(pt_err));                   \
     } while (0);
@@ -167,6 +176,14 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win **win_ptr);
 #define MPIDI_CH3I_SHM_MUTEX_DESTROY(win_ptr)                                           \
     do {                                                                                \
         BOOL result = CloseHandle(*((win_ptr)->shm_mutex));                             \
+        if (!result) {                                                                  \
+            HANDLE_WIN_MUTEX_ERROR();                                                   \
+        }                                                                               \
+    } while (0);
+
+#define MPIDI_CH3I_SHM_MUTEX_DESTROY_DIRECT(shm_mutex)                                  \
+    do {                                                                                \
+        BOOL result = CloseHandle(*(shm_mutex));                             \
         if (!result) {                                                                  \
             HANDLE_WIN_MUTEX_ERROR();                                                   \
         }                                                                               \
