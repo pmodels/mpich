@@ -396,11 +396,7 @@ void MPII_Sendq_remember(MPIR_Request * req, int rank, int tag, int context_id)
     p->tag = tag;
     p->rank = rank;
     p->context_id = context_id;
-    p->next = MPIR_Sendq_head;
-    p->prev = NULL;
-    MPIR_Sendq_head = p;
-    if (p->next)
-        p->next->prev = p;
+    DL_PREPEND(MPIR_Sendq_head, p);
     if (MPIR_REQUEST_KIND__SEND == req->kind)
         req->u.send.dbg_next = p;
     else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
@@ -428,13 +424,7 @@ void MPII_Sendq_forget(MPIR_Request * req)
         MPID_THREAD_CS_EXIT(POBJ, lock);
         return;
     }
-    prev = p->prev;
-    if (prev != NULL)
-        prev->next = p->next;
-    else
-        MPIR_Sendq_head = p->next;
-    if (p->next != NULL)
-        p->next->prev = prev;
+    DL_DELETE(MPIR_Sendq_head, p);
     /* Return this element to the pool */
     p->next = pool;
     pool = p;
