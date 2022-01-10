@@ -208,6 +208,9 @@ struct MPIR_Request {
         struct {
             struct MPIR_Debugq *dbg;
         } send;                 /* kind : MPIR_REQUEST_KIND__SEND */
+        struct {
+            struct MPIR_Debugq *dbg;
+        } recv;                 /* kind : MPIR_REQUEST_KIND__RECV */
 #endif                          /* HAVE_DEBUGGER_SUPPORT */
         struct {
 #if defined HAVE_DEBUGGER_SUPPORT
@@ -423,6 +426,8 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
     switch (kind) {
         case MPIR_REQUEST_KIND__SEND:
         case MPIR_REQUEST_KIND__PREQUEST_SEND:
+        case MPIR_REQUEST_KIND__RECV:
+        case MPIR_REQUEST_KIND__MPROBE:
             MPII_REQUEST_CLEAR_DBG(req);
             break;
         case MPIR_REQUEST_KIND__COLL:
@@ -552,11 +557,13 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
             MPL_free(req->u.ureq.greq_fns);
         }
 
-        MPID_Request_destroy_hook(req);
-
         if (req->kind == MPIR_REQUEST_KIND__SEND) {
             MPII_SENDQ_FORGET(req);
+        } else if (req->kind == MPIR_REQUEST_KIND__RECV) {
+            MPII_RECVQ_FORGET(req);
         }
+
+        MPID_Request_destroy_hook(req);
 
         if (need_safety) {
             MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
