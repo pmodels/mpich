@@ -422,6 +422,7 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
 
     switch (kind) {
         case MPIR_REQUEST_KIND__SEND:
+        case MPIR_REQUEST_KIND__PREQUEST_SEND:
             MPII_REQUEST_CLEAR_DBG(req);
             break;
         case MPIR_REQUEST_KIND__COLL:
