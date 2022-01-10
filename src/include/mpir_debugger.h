@@ -15,13 +15,13 @@
 void MPII_Wait_for_debugger(void);
 void MPIR_Debugger_set_aborting(const char *);
 /* internal functions */
-void MPII_Sendq_remember(MPIR_Request *, int, int, int);
-void MPII_Sendq_forget(MPIR_Request *);
+void MPII_Debugq_remember(MPIR_Request *, int, int, int);
+void MPII_Debugq_forget(MPIR_Request *);
 void MPII_CommL_remember(MPIR_Comm *);
 void MPII_CommL_forget(MPIR_Comm *);
 
-#define MPII_SENDQ_REMEMBER(_a,_b,_c,_d) MPII_Sendq_remember(_a,_b,_c,_d)
-#define MPII_SENDQ_FORGET(_a) MPII_Sendq_forget(_a)
+#define MPII_SENDQ_REMEMBER(_a,_b,_c,_d) MPII_Debugq_remember(_a,_b,_c,_d)
+#define MPII_SENDQ_FORGET(_a) MPII_Debugq_forget(_a)
 #define MPII_COMML_REMEMBER(_a) MPII_CommL_remember(_a)
 #define MPII_COMML_FORGET(_a) MPII_CommL_forget(_a)
 #define MPII_REQUEST_CLEAR_DBG(_r)                                      \

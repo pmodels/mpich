@@ -361,13 +361,13 @@ int mqs_image_has_queues(mqs_image * image, const char **message)
 
     /* Send queues use a separate system */
     {
-        mqs_type *sreq_type = dbgr_find_type(image, (char *) "MPIR_Sendq", mqs_lang_c);
+        mqs_type *sreq_type = dbgr_find_type(image, (char *) "MPIR_Debugq", mqs_lang_c);
         if (sreq_type) {
-            i_info->sendq_next_offs = dbgr_field_offset(sreq_type, (char *) "next");
-            i_info->sendq_tag_offs = dbgr_field_offset(sreq_type, (char *) "tag");
-            i_info->sendq_rank_offs = dbgr_field_offset(sreq_type, (char *) "rank");
-            i_info->sendq_context_id_offs = dbgr_field_offset(sreq_type, (char *) "context_id");
-            i_info->sendq_req_offs = dbgr_field_offset(sreq_type, (char *) "sreq");
+            i_info->debugq_next_offs = dbgr_field_offset(sreq_type, (char *) "next");
+            i_info->debugq_tag_offs = dbgr_field_offset(sreq_type, (char *) "tag");
+            i_info->debugq_rank_offs = dbgr_field_offset(sreq_type, (char *) "rank");
+            i_info->debugq_context_id_offs = dbgr_field_offset(sreq_type, (char *) "context_id");
+            i_info->debugq_req_offs = dbgr_field_offset(sreq_type, (char *) "req");
         }
     }
 
@@ -785,15 +785,15 @@ static int fetch_send(mqs_process * proc, mpich_process_info * p_info, mqs_pendi
 
     while (base != 0) {
         /* Check this entry to see if the context matches */
-        int actual_context = fetch_int16(proc, base + i_info->sendq_context_id_offs, p_info);
+        int actual_context = fetch_int16(proc, base + i_info->debugq_context_id_offs, p_info);
 
         if (actual_context == wanted_context) {
             /* Fill in some of the fields */
-            mqs_tword_t target = fetch_int(proc, base + i_info->sendq_rank_offs, p_info);
-            mqs_tword_t tag = fetch_int(proc, base + i_info->sendq_tag_offs, p_info);
+            mqs_tword_t target = fetch_int(proc, base + i_info->debugq_rank_offs, p_info);
+            mqs_tword_t tag = fetch_int(proc, base + i_info->debugq_tag_offs, p_info);
             mqs_tword_t length = 0;
             mqs_taddr_t data = 0;
-            mqs_taddr_t sreq = fetch_pointer(proc, base + i_info->sendq_req_offs, p_info);
+            mqs_taddr_t sreq = fetch_pointer(proc, base + i_info->debugq_req_offs, p_info);
             mqs_tword_t is_complete = fetch_int(proc, sreq + i_info->req_cc_offs, p_info);
             data = fetch_pointer(proc, sreq + i_info->req_user_buf_offs, p_info);
             length = fetch_int(proc, sreq + i_info->req_user_count_offs, p_info);
@@ -802,7 +802,7 @@ static int fetch_send(mqs_process * proc, mpich_process_info * p_info, mqs_pendi
 #ifdef DEBUG_LIST_ITER
             initLogFile();
             fprintf(debugfp, "sendq entry = %p, rank off = %d, tag off = %d, context = %d\n",
-                    base, i_info->sendq_rank_offs, i_info->sendq_tag_offs, actual_context);
+                    base, i_info->debugq_rank_offs, i_info->debugq_tag_offs, actual_context);
 #endif
 
             /* Ok, fill in the results */
@@ -817,11 +817,11 @@ static int fetch_send(mqs_process * proc, mpich_process_info * p_info, mqs_pendi
 
 
             /* Don't forget to step the queue ! */
-            p_info->next_msg = base + i_info->sendq_next_offs;
+            p_info->next_msg = base + i_info->debugq_next_offs;
             return mqs_ok;
         } else {
             /* Try the next one */
-            base = fetch_pointer(proc, base + i_info->sendq_next_offs, p_info);
+            base = fetch_pointer(proc, base + i_info->debugq_next_offs, p_info);
         }
     }
 #if 0

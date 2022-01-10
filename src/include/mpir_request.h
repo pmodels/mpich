@@ -206,12 +206,12 @@ struct MPIR_Request {
         } nbc;                  /* kind : MPIR_REQUEST_KIND__COLL */
 #if defined HAVE_DEBUGGER_SUPPORT
         struct {
-            struct MPIR_Sendq *dbg;
+            struct MPIR_Debugq *dbg;
         } send;                 /* kind : MPIR_REQUEST_KIND__SEND */
 #endif                          /* HAVE_DEBUGGER_SUPPORT */
         struct {
 #if defined HAVE_DEBUGGER_SUPPORT
-            struct MPIR_Sendq *dbg;
+            struct MPIR_Debugq *dbg;
 #endif                          /* HAVE_DEBUGGER_SUPPORT */
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
