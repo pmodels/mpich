@@ -389,7 +389,7 @@ else {
 # ---------------------------------------------------------------------------
 # Routines
 # 
-# Run the programs listed in the file given as the argument. 
+# Load tests listed in the file given as the argument. 
 # This file describes the tests in the format
 #  programname number-of-processes [ key=value ... ]
 # If the second value is not given, the default value is used.
