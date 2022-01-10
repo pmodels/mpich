@@ -333,40 +333,25 @@ void MPIR_Debugger_set_aborting(const char *msg)
 
 /* ------------------------------------------------------------------------- */
 /*
- * Manage the send queue.
+ * Manage the request queues.
  *
- * The send queue is needed only by the debugger.  The communication
- * device has a separate notion of send queue, which are the operations
- * that it needs to complete, independent of whether the user has called
- * MPI_Wait/Test/etc on the request.
- *
- * This implementation uses a simple linked list of user-visible requests
- * (more specifically, requests created with MPI_Isend, MPI_Issend, or
- * MPI_Irsend).
+ * This implementation uses a simple linked list of requests.
  *
  * FIXME: We should exploit this to allow Finalize to report on
  * send requests that were never completed.
  */
 
-/* We need to save the tag and rank since this information may not
-   be included in the request.  Saving the context_id also simplifies
-   matching these entries with a communicator */
-typedef struct MPIR_Debugq {
-    MPIR_Request *req;
-    int tag, rank, context_id;
-    struct MPIR_Debugq *next;
-    struct MPIR_Debugq *prev;
-} MPIR_Debugq;
-
 MPIR_Debugq *MPIR_Sendq_head = 0;
-/* Keep a pool of previous sendq elements to speed allocation of queue
+MPIR_Debugq *MPIR_Recvq_head = 0;
+MPIR_Debugq *MPIR_Unexpq_head = 0;
+/* Keep a pool of previous debugq elements to speed allocation of queue
    elements */
 static MPIR_Debugq *pool = 0;
 
-/* This routine is used to establish a queue of send requests to allow the
-   debugger easier access to the active requests.  Some devices may be able
-   to provide this information without requiring this separate queue. */
-void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id)
+/* This routine is used to establish a queue of requests to allow the
+   debugger easier access to the active requests. */
+void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id,
+                          MPIR_Debugq ** queue)
 {
 #if defined HAVE_DEBUGGER_SUPPORT
     MPIR_Debugq *p;
@@ -389,6 +374,8 @@ void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id)
                 req->u.send.dbg = NULL;
             else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
                 req->u.persist.dbg = NULL;
+            else if (MPIR_REQUEST_KIND__RECV == req->kind)
+                req->u.recv.dbg = NULL;
             goto fn_exit;
         }
     }
@@ -396,19 +383,23 @@ void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id)
     p->tag = tag;
     p->rank = rank;
     p->context_id = context_id;
-    DL_PREPEND(MPIR_Sendq_head, p);
+    DL_PREPEND(*queue, p);
 
-    if (MPIR_REQUEST_KIND__SEND == req->kind)
+    if (MPIR_REQUEST_KIND__SEND == req->kind) {
         req->u.send.dbg = p;
-    else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
+    } else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind) {
         req->u.persist.dbg = p;
+    } else if (MPIR_REQUEST_KIND__RECV == req->kind) {
+        req->u.recv.dbg = p;
+    }
+
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, lock);
     MPID_THREAD_CS_EXIT(POBJ, lock);
 #endif /* HAVE_DEBUGGER_SUPPORT */
 }
 
-void MPII_Debugq_forget(MPIR_Request * req)
+void MPII_Debugq_forget(MPIR_Request * req, MPIR_Debugq ** queue)
 {
 #if defined HAVE_DEBUGGER_SUPPORT
     MPIR_Debugq *p = NULL, *prev = NULL;
@@ -419,13 +410,15 @@ void MPII_Debugq_forget(MPIR_Request * req)
         p = req->u.send.dbg;
     else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
         p = req->u.persist.dbg;
+    else if (MPIR_REQUEST_KIND__RECV == req->kind)
+        p = req->u.recv.dbg;
     if (!p) {
         /* Just ignore it */
         MPID_THREAD_CS_EXIT(VCI, lock);
         MPID_THREAD_CS_EXIT(POBJ, lock);
         return;
     }
-    DL_DELETE(MPIR_Sendq_head, p);
+    DL_DELETE(*queue, p);
     /* Return this element to the pool */
     p->next = pool;
     pool = p;
