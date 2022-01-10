@@ -386,9 +386,9 @@ void MPII_Sendq_remember(MPIR_Request * req, int rank, int tag, int context_id)
         if (!p) {
             /* Just ignore it */
             if (MPIR_REQUEST_KIND__SEND == req->kind)
-                req->u.send.dbg_next = NULL;
+                req->u.send.dbg = NULL;
             else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
-                req->u.persist.dbg_next = NULL;
+                req->u.persist.dbg = NULL;
             goto fn_exit;
         }
     }
@@ -398,9 +398,9 @@ void MPII_Sendq_remember(MPIR_Request * req, int rank, int tag, int context_id)
     p->context_id = context_id;
     DL_PREPEND(MPIR_Sendq_head, p);
     if (MPIR_REQUEST_KIND__SEND == req->kind)
-        req->u.send.dbg_next = p;
+        req->u.send.dbg = p;
     else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
-        req->u.persist.dbg_next = p;
+        req->u.persist.dbg = p;
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, lock);
     MPID_THREAD_CS_EXIT(POBJ, lock);
@@ -415,9 +415,9 @@ void MPII_Sendq_forget(MPIR_Request * req)
     MPID_THREAD_CS_ENTER(VCI, lock);
     MPID_THREAD_CS_ENTER(POBJ, lock);
     if (MPIR_REQUEST_KIND__SEND == req->kind)
-        p = req->u.send.dbg_next;
+        p = req->u.send.dbg;
     else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
-        p = req->u.persist.dbg_next;
+        p = req->u.persist.dbg;
     if (!p) {
         /* Just ignore it */
         MPID_THREAD_CS_EXIT(VCI, lock);
