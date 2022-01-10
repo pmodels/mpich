@@ -795,7 +795,7 @@ int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    return MPIR_Process.num_nodes - 1;
+    *max_id_p = MPIR_Process.num_nodes - 1;
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

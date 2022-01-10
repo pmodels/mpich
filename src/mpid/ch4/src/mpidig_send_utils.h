@@ -13,7 +13,6 @@
 MPL_STATIC_INLINE_PREFIX void MPIDIG_am_send_async_init(MPIR_Request * sreq, MPI_Datatype datatype,
                                                         MPI_Aint data_sz)
 {
-    int c;
     MPIDIG_sreq_async_t *send_async = &MPIDIG_REQUEST(sreq, req->send_async);
     send_async->datatype = datatype;
     send_async->data_sz_left = data_sz;
@@ -21,7 +20,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_am_send_async_init(MPIR_Request * sreq, MPI
     send_async->seg_issued = 0;
     send_async->seg_completed = 0;
     /* hold reference to the sreq and datatype at the start of send operation */
-    MPIR_cc_incr(sreq->cc_ptr, &c);
+    MPIR_cc_inc(sreq->cc_ptr);
     MPIR_Datatype_add_ref_if_not_builtin(send_async->datatype);
 }
 

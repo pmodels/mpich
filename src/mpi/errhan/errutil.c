@@ -1749,6 +1749,7 @@ static void MPIR_Err_stack_init(void)
     int mpi_errno = MPI_SUCCESS;
 
     error_ring_mutex_create(&mpi_errno);
+    MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
     if (MPIR_CVAR_CHOP_ERROR_STACK < 0) {
         MPIR_CVAR_CHOP_ERROR_STACK = 80;
