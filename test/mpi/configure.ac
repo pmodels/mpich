@@ -349,7 +349,6 @@ PAC_GET_EXENAME("mpicc", MPICC_NAME)
 PAC_GET_EXENAME("mpif77", MPIF77_NAME)
 PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
-PAC_GET_EXENAME("mpiexec", MPIEXEC_NAME)
 
 if test -n "$with_mpi" ; then
     if test -z "$MPICC" ; then
@@ -371,9 +370,6 @@ if test -n "$with_mpi" ; then
         CXX=$with_mpi/bin/$MPICXX_NAME
     else
         CXX=$MPICXX
-    fi
-    if test -z "$MPIEXEC" ; then
-        MPIEXEC=$with_mpi/bin/$MPIEXEC_NAME
     fi
 else
     # Try to use mpicc etc names
@@ -402,9 +398,6 @@ else
     fi
     if test "x$MPICXX" != "x" ; then
         CXX=$MPICXX
-    fi
-    if test -z "$MPIEXEC" ; then
-        AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
     fi
 fi
 
@@ -1463,14 +1456,9 @@ AC_PATH_PROG(PERL,perl)
 AC_SUBST(PERL)
 AC_SUBST(otherlangs)
 AC_SUBST(threadsdir)
-AC_SUBST(MPIEXEC)
 AC_SUBST(MAKE)
 if test -z "$MPILIBNAME" ; then MPILIBNAME=mpich ; fi
 AC_SUBST(MPILIBNAME)
-
-# We need either mpiexec or mpirun.  If we don't find them,
-# the user will need to determine how to run a program
-AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
 
 # TODO: use variables such as has_f77 etc. instead of double use $f77dir etc.
 AM_CONDITIONAL([HAS_F77], [test $f77dir = f77])
