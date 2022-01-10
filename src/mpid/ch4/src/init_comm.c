@@ -64,7 +64,7 @@ void MPIDI_destroy_init_comm(MPIR_Comm ** comm_ptr)
         MPIDIU_release_lut(MPIDI_COMM(comm, map).irreg.lut.t);
         MPIDIG_destroy_comm(comm);
         MPIR_Object_release_ref(comm, &in_use);
-        MPIR_Assert(MPIR_Object_get_ref(comm) == 0);
+        MPIR_Assertp(in_use == 0);
         MPII_COMML_FORGET(comm);
         MPIR_Handle_obj_free(&MPIR_Comm_mem, comm);
         *comm_ptr = NULL;

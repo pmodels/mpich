@@ -256,7 +256,6 @@ static int call_errhandler(MPIR_Errhandler * errhandler, int errorcode, int hand
     int mpi_errno = MPI_SUCCESS;
 
     int kind = HANDLE_GET_MPI_KIND(handle);
-    int cxx_kind = 0;
 
     /* Check for predefined error handlers */
     if (!errhandler || errhandler->handle == MPI_ERRORS_ARE_FATAL ||
@@ -295,16 +294,20 @@ static int call_errhandler(MPIR_Errhandler * errhandler, int errorcode, int hand
             break;
 #ifdef HAVE_CXX_BINDING
         case MPIR_LANG__CXX:
-            if (kind == MPIR_COMM) {
-                cxx_kind = 0;
-            } else if (kind == MPIR_WIN) {
-                cxx_kind = 2;
-            } else {
-                MPIR_Assert_error("kind not supported");
+            {
+                int cxx_kind = 0;
+                if (kind == MPIR_COMM) {
+                    cxx_kind = 0;
+                } else if (kind == MPIR_WIN) {
+                    cxx_kind = 2;
+                } else {
+                    MPIR_Assert_error("kind not supported");
+                }
+                MPIR_Process.cxx_call_errfn(cxx_kind, &handle, &errorcode,
+                                            (void (*)(void)) errhandler->
+                                            errfn.C_Comm_Handler_function);
+                break;
             }
-            MPIR_Process.cxx_call_errfn(cxx_kind, &handle, &errorcode,
-                                        (void (*)(void)) errhandler->errfn.C_Comm_Handler_function);
-            break;
 #endif
 #ifdef HAVE_FORTRAN_BINDING
         case MPIR_LANG__FORTRAN90:

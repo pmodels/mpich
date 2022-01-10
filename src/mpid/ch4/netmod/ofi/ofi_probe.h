@@ -88,7 +88,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
                 MPIDI_CH4_REQUEST_FREE(rreq);
 
             goto fn_exit;
-            break;
 
         case MPIDI_OFI_PEEK_FOUND:
             MPIR_Request_extract_status(rreq, status);

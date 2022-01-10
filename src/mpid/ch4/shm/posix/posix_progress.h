@@ -58,7 +58,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vsi, int blocking)
                                                                    attr, NULL);
                 MPIDI_POSIX_eager_recv_commit(&transaction);
                 goto fn_exit;
-                break;
             case MPIDI_POSIX_AM_TYPE__PIPELINE:
                 MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, payload_left,
                                                                    attr | MPIDIG_AM_ATTR__IS_ASYNC,
