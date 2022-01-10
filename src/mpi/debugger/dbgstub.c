@@ -15,13 +15,6 @@ extern MPIR_Request **const MPID_Recvq_posted_head_ptr, **const MPID_Recvq_unexp
 #include "mpi_interface.h"
 
 /* This is from dbginit.c; it is not exported to other files */
-typedef struct MPIR_Debugq {
-    MPIR_Request *req;
-    int tag, rank, context_id;
-    struct MPIR_Debugq *next;
-} MPIR_Debugq;
-extern MPIR_Debugq *MPIR_Sendq_head;
-/* This is from dbginit.c; it is not exported to other files */
 typedef struct MPIR_Comm_list {
     int sequence_number;        /* Used to detect changes in the list */
     MPIR_Comm *head;            /* Head of the list */
