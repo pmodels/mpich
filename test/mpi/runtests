@@ -204,6 +204,9 @@ if (defined($ENV{'MPITEST_PPNMAX'})) {
 if (defined($ENV{'MPITEST_TIMELIMITARG'})) {
     $g_opt{timelimitarg} = $ENV{'MPITEST_TIMELIMITARG'};
 }
+if (defined($ENV{'MPIEXEC'})) {
+    $g_opt{mpiexec} = $ENV{'MPIEXEC'};
+}
 if (defined($ENV{'MPITEST_MPIEXECARG'})) {
     $g_opt{mpiexecargs} = $ENV{'MPITEST_MPIEXECARG'};
 }
