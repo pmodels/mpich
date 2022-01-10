@@ -207,7 +207,7 @@ struct MPIR_Request {
 #if defined HAVE_DEBUGGER_SUPPORT
         struct {
             struct MPIR_Sendq *dbg;
-        } send;                 /* kind : MPID_REQUEST_SEND */
+        } send;                 /* kind : MPIR_REQUEST_KIND__SEND */
 #endif                          /* HAVE_DEBUGGER_SUPPORT */
         struct {
 #if defined HAVE_DEBUGGER_SUPPORT
@@ -216,7 +216,7 @@ struct MPIR_Request {
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
             MPIR_TSP_sched_t sched;
-        } persist;              /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV */
+        } persist;              /* kind : MPIR_REQUEST_KIND__PREQUEST_SEND or MPIR_REQUEST_KIND__PREQUEST_RECV */
         struct {
             struct MPIR_Request *real_request;
             enum MPIR_sched_type sched_type;
