@@ -210,6 +210,10 @@ iallgatherv-inter:
 alltoall-intra:
     brucks
         restrictions: noinplace
+    k_brucks
+        restrictions: noinplace
+        extra_params: k
+        cvar_params: BRUCKS_KVAL
     pairwise
         restrictions: noinplace
     pairwise_sendrecv_replace
