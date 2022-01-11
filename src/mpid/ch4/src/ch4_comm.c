@@ -8,7 +8,6 @@
 #include "ch4_comm.h"
 #include "ch4i_comm.h"
 
-static void register_comm_hints(MPIR_Comm * comm);
 
 int MPID_Comm_reenable_anysource(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
 {
@@ -190,15 +189,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
         }
     }
 
-    register_comm_hints(comm);
-
     mpi_errno = MPIDIG_init_comm(comm);
     MPIR_ERR_CHECK(mpi_errno);
-
-    /* vci hints defaults */
-    comm->hints[MPIR_COMM_HINT_SENDER_VCI] = MPIDI_VCI_INVALID;
-    comm->hints[MPIR_COMM_HINT_RECEIVER_VCI] = MPIDI_VCI_INVALID;
-    comm->hints[MPIR_COMM_HINT_VCI] = MPIDI_VCI_INVALID;
 
     mpi_errno = MPIDI_NM_mpi_comm_commit_pre_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
@@ -645,16 +637,4 @@ int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const ui
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-/* Register CH4-specific hints */
-static void register_comm_hints(MPIR_Comm * comm)
-{
-    /* Non-standard hints for VCI selection. Default value MPIDI_VCI_INVALID (-1) */
-    MPIR_Comm_register_hint(MPIR_COMM_HINT_SENDER_VCI, "sender_vci",
-                            MPIDI_set_comm_hint_sender_vci, MPIR_COMM_HINT_TYPE_INT, 0, -1);
-    MPIR_Comm_register_hint(MPIR_COMM_HINT_RECEIVER_VCI, "receiver_vci",
-                            MPIDI_set_comm_hint_receiver_vci, MPIR_COMM_HINT_TYPE_INT, 0, -1);
-    MPIR_Comm_register_hint(MPIR_COMM_HINT_VCI, "vci",
-                            MPIDI_set_comm_hint_vci, MPIR_COMM_HINT_TYPE_INT, 0, -1);
 }

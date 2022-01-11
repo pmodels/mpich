@@ -300,6 +300,20 @@ static int set_runtime_configurations(void)
 #error "Thread Granularity:  Invalid"
 #endif
 
+/* Register CH4-specific hints */
+static void register_comm_hints(void)
+{
+    /* Non-standard hints for VCI selection. */
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_SENDER_VCI, "sender_vci",
+                            MPIDI_set_comm_hint_sender_vci, MPIR_COMM_HINT_TYPE_INT, 0,
+                            MPIDI_VCI_INVALID);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_RECEIVER_VCI, "receiver_vci",
+                            MPIDI_set_comm_hint_receiver_vci, MPIR_COMM_HINT_TYPE_INT, 0,
+                            MPIDI_VCI_INVALID);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_VCI, "vci", MPIDI_set_comm_hint_vci,
+                            MPIR_COMM_HINT_TYPE_INT, 0, MPIDI_VCI_INVALID);
+}
+
 int MPID_Init(int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -454,6 +468,8 @@ int MPID_Init(int requested, int *provided)
 
     MPIR_Process.attrs.appnum = MPIR_Process.appnum;
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
+
+    register_comm_hints();
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -795,7 +811,7 @@ int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    return MPIR_Process.num_nodes - 1;
+    *max_id_p = MPIR_Process.num_nodes - 1;
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
