@@ -251,6 +251,8 @@ algorithms:
             sched_pairwise_exchange
         intra-blocking:
             brucks
+            k_brucks
+                .MPIR_CVAR_ALLTOALL_BRUCKS_KVAL=2,3,4
             pairwise
             pairwise_sendrecv_replace
             scattered
