@@ -1511,17 +1511,11 @@ static int create_vni_domain(struct fid_domain **p_domain, struct fid_av **p_av,
     struct fi_cntr_attr cntr_attr;
     memset(&cntr_attr, 0, sizeof(cntr_attr));
     cntr_attr.events = FI_CNTR_EVENTS_COMP;
-
-    /* The CXI provider doesn't support FI_WAIT_UNSPEC yet, as there is no support
-     * for fi_cntr_wait().  This will be added in the future, but for now hack
-     * around this to alloc CXI provider to run on the simulator.
-     */
-    if (MPIDI_OFI_global.using_cxi) {
-        cntr_attr.wait_obj = FI_WAIT_NONE;
-    } else {
+    if (MPIDI_OFI_COUNTER_WAIT_OBJECTS) {
         cntr_attr.wait_obj = FI_WAIT_UNSPEC;
+    } else {
+        cntr_attr.wait_obj = FI_WAIT_NONE;
     }
-
     MPIDI_OFI_CALL(fi_cntr_open(domain, &cntr_attr, p_cntr, NULL), openct);
 
   fn_exit:

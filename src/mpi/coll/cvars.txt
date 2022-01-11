@@ -162,7 +162,7 @@ cvars:
     - name        : MPIR_CVAR_BCAST_TREE_KVAL
       category    : COLLECTIVE
       type        : int
-      default     : 3
+      default     : 2
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -177,7 +177,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Tree type for tree based bcast
+        Tree type for tree based ibcast
         kary      - kary tree type
         knomial_1 - knomial_1 tree type
         knomial_2 - knomial_2 tree type
@@ -210,7 +210,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If set to true, MPI_Bcast will pre-post all the receieves.
+        If set to true, MPI_Bcast will pre-post all the receives.
 
     - name        : MPIR_CVAR_BCAST_INTER_ALGORITHM
       category    : COLLECTIVE

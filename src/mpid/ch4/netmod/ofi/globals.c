@@ -48,6 +48,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .context_bits = MPIDI_OFI_CONTEXT_BITS_DEFAULT,
      .source_bits = MPIDI_OFI_SOURCE_BITS_DEFAULT,
      .tag_bits = MPIDI_OFI_TAG_BITS_DEFAULT,
+     .counter_wait_objects = MPIDI_OFI_COUNTER_WAIT_OBJECTS_DEFAULT,
      .major_version = MPIDI_OFI_MAJOR_VERSION_DEFAULT,
      .minor_version = MPIDI_OFI_MINOR_VERSION_DEFAULT}
     ,
@@ -76,6 +77,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .context_bits = MPIDI_OFI_CONTEXT_BITS_MINIMAL,
      .source_bits = MPIDI_OFI_SOURCE_BITS_MINIMAL,
      .tag_bits = MPIDI_OFI_TAG_BITS_MINIMAL,
+     .counter_wait_objects = MPIDI_OFI_COUNTER_WAIT_OBJECTS_MINIMAL,
      .major_version = MPIDI_OFI_MAJOR_VERSION_MINIMAL,
      .minor_version = MPIDI_OFI_MINOR_VERSION_MINIMAL}
     ,
@@ -104,6 +106,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .context_bits = MPIDI_OFI_CONTEXT_BITS_PSM2,
      .source_bits = MPIDI_OFI_SOURCE_BITS_PSM2,
      .tag_bits = MPIDI_OFI_TAG_BITS_PSM2,
+     .counter_wait_objects = MPIDI_OFI_COUNTER_WAIT_OBJECTS_PSM2,
      .major_version = MPIDI_OFI_MAJOR_VERSION_PSM2,
      .minor_version = MPIDI_OFI_MINOR_VERSION_PSM2}
     ,
@@ -132,6 +135,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .context_bits = MPIDI_OFI_CONTEXT_BITS_SOCKETS,
      .source_bits = MPIDI_OFI_SOURCE_BITS_SOCKETS,
      .tag_bits = MPIDI_OFI_TAG_BITS_SOCKETS,
+     .counter_wait_objects = MPIDI_OFI_COUNTER_WAIT_OBJECTS_SOCKETS,
      .major_version = MPIDI_OFI_MAJOR_VERSION_SOCKETS,
      .minor_version = MPIDI_OFI_MINOR_VERSION_SOCKETS}
     ,
@@ -160,10 +164,11 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .context_bits = MPIDI_OFI_CONTEXT_BITS_BGQ,
      .source_bits = MPIDI_OFI_SOURCE_BITS_BGQ,
      .tag_bits = MPIDI_OFI_TAG_BITS_BGQ,
+     .counter_wait_objects = MPIDI_OFI_COUNTER_WAIT_OBJECTS_BGQ,
      .major_version = MPIDI_OFI_MAJOR_VERSION_BGQ,
      .minor_version = MPIDI_OFI_MINOR_VERSION_BGQ}
     ,
-    {   /* cassini */
+    {   /* cxi */
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_CXI,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_CXI,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_CXI,
@@ -188,8 +193,9 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .context_bits = MPIDI_OFI_CONTEXT_BITS_CXI,
      .source_bits = MPIDI_OFI_SOURCE_BITS_CXI,
      .tag_bits = MPIDI_OFI_TAG_BITS_CXI,
-     .major_version = MPIDI_OFI_MAJOR_VERSION_MINIMAL,
-     .minor_version = MPIDI_OFI_MINOR_VERSION_MINIMAL}
+     .counter_wait_objects = MPIDI_OFI_COUNTER_WAIT_OBJECTS_CXI,
+     .major_version = MPIDI_OFI_MAJOR_VERSION_CXI,
+     .minor_version = MPIDI_OFI_MINOR_VERSION_CXI}
     ,
     {   /* VERBS_RXM */
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_VERBS_RXM,
@@ -216,6 +222,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .context_bits = MPIDI_OFI_CONTEXT_BITS_VERBS_RXM,
      .source_bits = MPIDI_OFI_SOURCE_BITS_VERBS_RXM,
      .tag_bits = MPIDI_OFI_TAG_BITS_VERBS_RXM,
+     .counter_wait_objects = MPIDI_OFI_COUNTER_WAIT_OBJECTS_VERBS_RXM,
      .major_version = MPIDI_OFI_MAJOR_VERSION_RXM,
      .minor_version = MPIDI_OFI_MINOR_VERSION_RXM}
     ,
@@ -244,6 +251,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .context_bits = MPIDI_OFI_CONTEXT_BITS_RXM,
      .source_bits = MPIDI_OFI_SOURCE_BITS_RXM,
      .tag_bits = MPIDI_OFI_TAG_BITS_RXM,
+     .counter_wait_objects = MPIDI_OFI_COUNTER_WAIT_OBJECTS_RXM,
      .major_version = MPIDI_OFI_MAJOR_VERSION_RXM,
      .minor_version = MPIDI_OFI_MINOR_VERSION_RXM}
     ,
@@ -271,6 +279,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .context_bits = MPIDI_OFI_CONTEXT_BITS_GNI,
      .source_bits = MPIDI_OFI_SOURCE_BITS_GNI,
      .tag_bits = MPIDI_OFI_TAG_BITS_GNI,
+     .counter_wait_objects = MPIDI_OFI_COUNTER_WAIT_OBJECTS_GNI,
      .major_version = MPIDI_OFI_MAJOR_VERSION_GNI,
      .minor_version = MPIDI_OFI_MINOR_VERSION_GNI}
 };

@@ -3,10 +3,10 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "mpitest.h"
 #include "mtest_dtp.h"
 #include "dtpools.h"
 #include <assert.h>
@@ -72,7 +72,6 @@ int main(int argc, char *argv[])
     int minsize = 2, nmsg, maxmsg;
     int seed, testsize;
     MPI_Aint sendcnt, recvcnt;
-    MPI_Aint maxbufsize;
     MPI_Comm comm;
     DTP_pool_s dtp;
     struct mtest_obj send, recv;
@@ -89,8 +88,6 @@ int main(int argc, char *argv[])
     basic_type = MTestArgListGetString(head, "type");
     sendmem = MTestArgListGetMemType(head, "sendmem");
     recvmem = MTestArgListGetMemType(head, "recvmem");
-
-    maxbufsize = MTestDefaultMaxBufferSize();
 
     err = DTP_pool_create(basic_type, sendcnt, seed, &dtp);
     if (err != DTP_SUCCESS) {

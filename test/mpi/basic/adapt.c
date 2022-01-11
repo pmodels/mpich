@@ -90,7 +90,7 @@ void PrintOptions(void);
 int DetermineLatencyReps(ArgStruct * p);
 int DetermineLatencyReps012(ArgStruct * p);
 
-void PrintOptions()
+void PrintOptions(void)
 {
     printf("\n");
     printf("Usage: adapt flags\n");
