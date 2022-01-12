@@ -11,12 +11,16 @@
 
 #include "mpidi_nem_statistics.h"
 #include "mpidu_init_shm.h"
+#include "mpidi_ch3_impl.h"
 
 int MPID_nem_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIDI_CH3_SHM_Finalize();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* this test is not the right one */
 /*     MPIR_Assert(MPID_nem_queue_empty( MPID_nem_mem_region.RecvQ[MPID_nem_mem_region.rank])); */
