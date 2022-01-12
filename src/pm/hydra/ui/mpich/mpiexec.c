@@ -259,7 +259,7 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "unable to get the inherited env list\n");
 
     status = HYDU_create_proxy_list(HYD_uii_mpx_exec_list, HYD_server_info.node_list,
-                                    &HYD_server_info.pg_list);
+                                    &HYD_server_info.pg_list, HYD_server_info.singleton_port > 0);
     HYDU_ERR_POP(status, "unable to create proxy list\n");
 
     /* calculate the core count used by the PG */

@@ -26,6 +26,8 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->pmi_port = -1;
     user_global->skip_launch_node = -1;
     user_global->gpus_per_proc = HYD_GPUS_PER_PROC_UNSET;
+    user_global->singleton_port = 0;
+    user_global->singleton_pid = 0;
 
     HYDU_init_global_env(&user_global->global_env);
 }
@@ -312,7 +314,7 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
 }
 
 HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                  struct HYD_pg *pg)
+                                  struct HYD_pg *pg, bool is_singleton)
 {
     struct HYD_proxy *proxy = NULL, *last_proxy = NULL, *tmp;
     struct HYD_exec *exec;
@@ -425,25 +427,34 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
         }
     }
 
-    /* find dummy proxies and remove them */
-    while (pg->proxy_list->exec_list == NULL) {
-        tmp = pg->proxy_list->next;
-        pg->proxy_list->next = NULL;
-        HYDU_free_proxy_list(pg->proxy_list);
-        pg->proxy_list = tmp;
-        if (pg->proxy_list == NULL) {
-            status = HYD_FAILURE;
-            HYDU_ERR_POP(status, "Missing executable.\n");
+    if (is_singleton) {
+        proxy = pg->proxy_list;
+        HYDU_ASSERT(proxy && proxy->exec_list == NULL && proxy->next == NULL, status);
+        proxy->proxy_process_count = 1;
+        proxy->node->active_processes = 1;
+    } else {
+        /* find dummy proxies and remove them */
+        while (pg->proxy_list && pg->proxy_list->exec_list == NULL) {
+            tmp = pg->proxy_list->next;
+            pg->proxy_list->next = NULL;
+            HYDU_free_proxy_list(pg->proxy_list);
+            pg->proxy_list = tmp;
         }
-    }
-    for (proxy = pg->proxy_list; proxy->next;) {
-        if (proxy->next->exec_list == NULL) {
-            tmp = proxy->next;
-            proxy->next = proxy->next->next;
-            tmp->next = NULL;
-            HYDU_free_proxy_list(tmp);
-        } else {
-            proxy = proxy->next;
+
+        if (!pg->proxy_list) {
+            status = HYD_FAILURE;
+            HYDU_ERR_POP(status, "Missing executables\n");
+        }
+
+        for (proxy = pg->proxy_list; proxy->next;) {
+            if (proxy->next->exec_list == NULL) {
+                tmp = proxy->next;
+                proxy->next = proxy->next->next;
+                tmp->next = NULL;
+                HYDU_free_proxy_list(tmp);
+            } else {
+                proxy = proxy->next;
+            }
         }
     }
 
