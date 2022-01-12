@@ -475,6 +475,75 @@ static int local_to_global_id(int local_id)
     return ret;
 }
 
+static HYD_status singleton_init(void)
+{
+    HYD_status status = HYD_SUCCESS;
+    int sent, recvd, closed;
+
+    HYD_pmcd_pmip.local.proxy_process_count = 1;
+    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.out, int *, sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.err, int *, sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.pid, int *, sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.exit_status, int *, sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.pmi_rank, int *, sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.pmi_fd, int *, sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.pmi_fd_active, int *, sizeof(int), status);
+
+    HYD_pmcd_pmip.downstream.out[0] = 0;
+    HYD_pmcd_pmip.downstream.err[0] = 0;
+    HYD_pmcd_pmip.downstream.pid[0] = HYD_pmcd_pmip.user_global.singleton_pid;
+    HYD_pmcd_pmip.downstream.exit_status[0] = -1;
+    HYD_pmcd_pmip.downstream.pmi_rank[0] = 0;
+    HYD_pmcd_pmip.downstream.pmi_fd[0] = HYD_FD_UNSET;
+    HYD_pmcd_pmip.downstream.pmi_fd_active[0] = 1;
+
+    int fd;
+    status =
+        HYDU_sock_connect("localhost", HYD_pmcd_pmip.user_global.singleton_port, &fd, 0,
+                          HYD_CONNECT_DELAY);
+    HYDU_ERR_POP(status, "unable to connect to singleton process\n");
+
+    char msg[1024];
+    strcpy(msg, "cmd=singinit authtype=none\n");
+    status = HYDU_sock_write(fd, msg, strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send msg to singleton process\n");
+    status = HYDU_sock_read(fd, msg, 1024, &recvd, &closed, HYDU_SOCK_COMM_NONE);
+    HYDU_ERR_POP(status, "unable to read msg from singleton process\n");
+    MPL_snprintf(msg, 1024, "cmd=singinit_info versionok=yes stdio=no kvsname=%s\n",
+                 HYD_pmcd_pmip.local.kvs->kvsname);
+    status = HYDU_sock_write(fd, msg, strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send msg to singleton process\n");
+
+    status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, NULL, pmi_cb);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+    /* Send the PID list upstream */
+    struct HYD_pmcd_hdr hdr;
+    HYD_pmcd_init_header(&hdr);
+    hdr.cmd = PID_LIST;
+    status =
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
+                        HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send PID_LIST command upstream\n");
+    HYDU_ASSERT(!closed, status);
+
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
+                             HYD_pmcd_pmip.downstream.pid,
+                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent,
+                             &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send PID list upstream\n");
+    HYDU_ASSERT(!closed, status);
+
+    /* skip HYDT_dmx_register_fd */
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status launch_procs(void)
 {
     int i, j, process_id, dummy;
@@ -902,8 +971,13 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         status = procinfo(fd);
         HYDU_ERR_POP(status, "error parsing process info\n");
 
-        status = launch_procs();
-        HYDU_ERR_POP(status, "launch_procs returned error\n");
+        if (HYD_pmcd_pmip.user_global.singleton_port > 0) {
+            status = singleton_init();
+            HYDU_ERR_POP(status, "singleton_init returned error\n");
+        } else {
+            status = launch_procs();
+            HYDU_ERR_POP(status, "launch_procs returned error\n");
+        }
     } else if (hdr.cmd == PMI_RESPONSE) {
         status = handle_pmi_response(fd, hdr);
         HYDU_ERR_POP(status, "unable to handle PMI response\n");

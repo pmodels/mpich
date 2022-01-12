@@ -27,6 +27,9 @@ void HYD_uiu_init_params(void)
     HYD_server_info.localhost = NULL;
     HYD_server_info.time_start = time(NULL);
 
+    HYD_server_info.singleton_port = 0;
+    HYD_server_info.singleton_pid = 0;
+
     HYD_server_info.stdout_cb = NULL;
     HYD_server_info.stderr_cb = NULL;
 
