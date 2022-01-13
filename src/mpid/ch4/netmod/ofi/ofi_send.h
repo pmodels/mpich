@@ -256,6 +256,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             /* Cache the mrs for closing during Finalize() */
             struct MPIDI_GPU_RDMA_queue_t *new_mr =
                 MPL_malloc(sizeof(struct MPIDI_GPU_RDMA_queue_t), MPL_MEM_BUFFER);
+            MPIR_ERR_CHKANDJUMP1(new_mr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                                 "GPU RDMA MR alloc");
             new_mr->mr = mr;
             DL_APPEND(MPIDI_OFI_global.gdr_mrs, new_mr);
         }
