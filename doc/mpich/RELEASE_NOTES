@@ -1,6 +1,6 @@
-----------------------------------------------------------------------
-MPICH DROP 42 - Release Notes
-----------------------------------------------------------------------
+-------------------------------------------------------------------------------
+MPICH DROP 45 - Release Notes
+-------------------------------------------------------------------------------
 
 CONTENTS:
 --------
@@ -9,39 +9,47 @@ CONTENTS:
 3. RPM PACKAGE DETAILS
 4. DISCLAIMER AND LEGAL INFORMATION
 
-----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 1. OVERVIEW
-----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 This is an evaluation release of mpich provided by Intel Corporation.
 
-----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 2. NEW FEATURES
-----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-* Added support for GPU-to-GPU Interprocess Communication (IPC) for builtin datatypes.
+* Disable GPU IPC and the GPU low-latency transfer path by default due to
+  incompatibility with implicit scaling
 
-* MPICH now checks to ensure a NIC is up before attempting to use it.
+* Add support for GPU RDMA for providers with FI_HMEM support
 
-----------------------------------------------------------------------
+* Add support for low-latency path for small message transfers using GPU
+  buffers
+
+-------------------------------------------------------------------------------
 2.1 DETAILS
-----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 *
 
-----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 2.2 KNOWN ISSUES
-----------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-* In some cases with collective algorithms executing on the same node, a crash
-  occurs. This bug still exists in Drop 42 but has been fixed for the next Drop.
+* Message transfers using multi-NIC striping fail with MPI_THREAD_MULTIPLE
 
-* With the ATS build, we observed data corruption for a test that sends
-  1 MB data with derived datatypes, where the data is GPU-allocated. The
-  issue is due to a known bug in the graphics layer that affects unaligned
-  device memory copying. We expect this problem to occur with other
-  relatively large data sizes as well. The fix for this bug is under
-  progress.
+* Allowing compute engines as subdevices when defining ZE_AFFINITY_MASK is not
+  currently supported. EngineInstancedSubDevices=0 is set in the modulefiles to
+  ensure this feature is disabled.
+
+* GPU IPC and the GPU low-latency transfer path are incompatible with implicit
+  scaling. In order to enable these features and disable implicit scaling, the
+  following must be performed:
+
+    unset EnableWalkerPartition
+    unset EnableImplicitScaling
+    export MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD=1
 
 -------------------------------------------------------------------------------
 3. RPM PACKAGE DETAILS
