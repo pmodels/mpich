@@ -389,6 +389,7 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 
         MPIDIG_enqueue_request(rreq, &MPIDI_global.per_vci[local_vci].unexp_list,
                                MPIDIG_PT2PT_UNEXP);
+        MPII_UNEXPQ_REMEMBER(rreq, hdr->src_rank, hdr->tag, hdr->context_id);
     } else {
         /* matched path */
         MPIDIG_REQUEST(rreq, req->remote_vci) = remote_vci;

@@ -287,6 +287,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype
         mpi_errno = MPIDI_imrecv(buf, count, datatype, message);
     }
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPII_RECVQ_REMEMBER(message, message->status.MPI_SOURCE, message->status.MPI_TAG,
+                        message->comm->recvcontext_id);
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -314,6 +318,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPII_RECVQ_REMEMBER(*request, rank, tag, comm->recvcontext_id);
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
