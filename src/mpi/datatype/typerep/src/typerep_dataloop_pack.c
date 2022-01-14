@@ -9,24 +9,28 @@
 #include "typerep_internal.h"
 
 int MPIR_Typerep_icopy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
-                       MPIR_Typerep_req * typereq_req)
+                       MPIR_Typerep_req * typereq_req, uint32_t flags)
 {
     MPIR_FUNC_ENTER;
 
-    MPIR_Memcpy(outbuf, inbuf, num_bytes);
+    if (flags & MPIR_TYPEREP_FLAG_STREAM) {
+        MPIR_Memcpy_stream(outbuf, inbuf, num_bytes);
+    } else {
+        MPIR_Memcpy(outbuf, inbuf, num_bytes);
+    }
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
 
-int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes)
+int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes, uint32_t flags)
 {
-    return MPIR_Typerep_icopy(outbuf, inbuf, num_bytes, NULL);
+    return MPIR_Typerep_icopy(outbuf, inbuf, num_bytes, NULL, flags);
 }
 
 int MPIR_Typerep_ipack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
                        MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
-                       MPI_Aint * actual_pack_bytes, MPIR_Typerep_req * typereq_req)
+                       MPI_Aint * actual_pack_bytes, MPIR_Typerep_req * typereq_req, uint32_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Segment *segp;
@@ -83,16 +87,17 @@ int MPIR_Typerep_ipack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatyp
 
 int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
                       MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
-                      MPI_Aint * actual_pack_bytes)
+                      MPI_Aint * actual_pack_bytes, uint32_t flags)
 {
     return MPIR_Typerep_ipack(inbuf, incount, datatype, inoffset, outbuf, max_pack_bytes,
-                              actual_pack_bytes, NULL);
+                              actual_pack_bytes, NULL, flags);
 }
 
 
 int MPIR_Typerep_iunpack(const void *inbuf, MPI_Aint insize,
                          void *outbuf, MPI_Aint outcount, MPI_Datatype datatype, MPI_Aint outoffset,
-                         MPI_Aint * actual_unpack_bytes, MPIR_Typerep_req * typereq_req)
+                         MPI_Aint * actual_unpack_bytes, MPIR_Typerep_req * typereq_req,
+                         uint32_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Segment *segp;
@@ -150,10 +155,10 @@ int MPIR_Typerep_iunpack(const void *inbuf, MPI_Aint insize,
 
 int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize,
                         void *outbuf, MPI_Aint outcount, MPI_Datatype datatype, MPI_Aint outoffset,
-                        MPI_Aint * actual_unpack_bytes)
+                        MPI_Aint * actual_unpack_bytes, uint32_t flags)
 {
     return MPIR_Typerep_iunpack(inbuf, insize, outbuf, outcount, datatype, outoffset,
-                                actual_unpack_bytes, NULL);
+                                actual_unpack_bytes, NULL, flags);
 }
 
 int MPIR_Typerep_wait(MPIR_Typerep_req typereq_req)

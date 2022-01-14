@@ -113,13 +113,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                               datatype, root, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recv_bytes);
-                MPIR_Typerep_copy(bcast_data_addr, &recv_bytes, sizeof(int));
+                MPIR_Typerep_copy(bcast_data_addr, &recv_bytes, sizeof(int),
+                                  MPIR_TYPEREP_FLAG_NONE);
                 /* It is necessary to copy the errflag as well to handle the case when non-root
                  * becomes temporary root as part of compositions (or smp aware colls). These temp
                  * roots might expect same data as other ranks but different from the actual root.
                  * So only datasize mismatch handling is not sufficient */
                 MPIR_Typerep_copy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, errflag,
-                                  sizeof(MPIR_Errflag_t));
+                                  sizeof(MPIR_Errflag_t), MPIR_TYPEREP_FLAG_NONE);
                 if ((int) recv_bytes != count) {
                     /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
                     *errflag = MPIR_ERR_OTHER;
@@ -139,13 +140,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
             /* When error checking is enabled, place the datasize in shm_buf first, followed by the
              * errflag, followed by the actual data with an offset of (2*cacheline_size) bytes from
              * the starting address */
-            MPIR_Typerep_copy(bcast_data_addr, &count, sizeof(int));
+            MPIR_Typerep_copy(bcast_data_addr, &count, sizeof(int), MPIR_TYPEREP_FLAG_NONE);
             /* It is necessary to copy the errflag as well to handle the case when non-root
              * becomes root as part of compositions (or smp aware colls). These roots might
              * expect same data as other ranks but different from the actual root. So only
              * datasize mismatch handling is not sufficient */
             MPIR_Typerep_copy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, errflag,
-                              sizeof(MPIR_Errflag_t));
+                              sizeof(MPIR_Errflag_t), MPIR_TYPEREP_FLAG_NONE);
             mpi_errno =
                 MPIR_Localcopy(local_buf, count, datatype,
                                (char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
@@ -205,9 +206,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
              * expecting. Also, the errflag is copied out. In case of mismatch mpi_errno is set.
              * Actual data starts after (2*cacheline_size) bytes */
             int recv_bytes, recv_errflag;
-            MPIR_Typerep_copy(&recv_bytes, bcast_data_addr, sizeof(int));
+            MPIR_Typerep_copy(&recv_bytes, bcast_data_addr, sizeof(int), MPIR_TYPEREP_FLAG_NONE);
             MPIR_Typerep_copy(&recv_errflag, (char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN,
-                              sizeof(int));
+                              sizeof(int), MPIR_TYPEREP_FLAG_NONE);
             if (recv_bytes != count || recv_errflag != MPI_SUCCESS) {
                 /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
                 *errflag = MPIR_ERR_OTHER;

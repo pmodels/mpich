@@ -37,7 +37,7 @@ int MPII_Typerep_op_fallback(void *source_buf, MPI_Aint source_count, MPI_Dataty
             void *src_ptr = MPL_malloc(source_dtp_extent * source_count, MPL_MEM_OTHER);
             MPI_Aint unpack_size;
             MPIR_Typerep_unpack(source_buf, source_dtp_size * source_count, src_ptr,
-                                source_count, source_dtp, 0, &unpack_size);
+                                source_count, source_dtp, 0, &unpack_size, MPIR_TYPEREP_REQ_NULL);
             source_buf = src_ptr;
             source_unpacked = true;
         }

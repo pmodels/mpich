@@ -326,7 +326,8 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     MPI_Aint actual_pack_bytes;
     MPIR_Typerep_pack(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
                       sreq->dev.msg_offset, pack_buffer + buf_offset,
-                      sreq->dev.msgsize - sreq->dev.msg_offset, &actual_pack_bytes);
+                      sreq->dev.msgsize - sreq->dev.msg_offset, &actual_pack_bytes,
+                      MPIR_TYPEREP_FLAG_NONE);
     MPIR_Assert(actual_pack_bytes == sreq->dev.msgsize - sreq->dev.msg_offset);
 
     START_COMM();

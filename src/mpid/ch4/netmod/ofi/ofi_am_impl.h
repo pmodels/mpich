@@ -352,7 +352,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     }
 
     MPI_Aint packed_size;
-    mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, p_am_data, data_sz, &packed_size);
+    mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, p_am_data, data_sz, &packed_size,
+                                  MPIR_TYPEREP_FLAG_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(packed_size == data_sz);
 
@@ -411,7 +412,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     MPIR_Memcpy(send_req->am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
     MPI_Aint packed_size;
     mpi_errno = MPIR_Typerep_pack(buf, count, datatype, offset,
-                                  send_req->am_data, seg_sz, &packed_size);
+                                  send_req->am_data, seg_sz, &packed_size, MPIR_TYPEREP_FLAG_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(packed_size == seg_sz);
 
@@ -763,7 +764,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
          * step when we work on ZCOPY protocol support. Basically, if the src buf and datatype needs
          * packing, we should not be doing RDMA read. */
         MPIR_gpu_malloc_host((void **) &send_buf, data_sz);
-        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last);
+        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last,
+                                      MPIR_TYPEREP_FLAG_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(data_sz == last);
 
