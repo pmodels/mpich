@@ -337,6 +337,7 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
 	}
 
     MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+    MPII_UNEXPQ_FORGET(matching_cur_rreq);
 	rreq = matching_cur_rreq;
 
         MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
@@ -396,6 +397,7 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
                     }
                     MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
                     MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
+                    MPII_UNEXPQ_FORGET(rreq);
 
                     rreq->comm = comm;
                     MPIR_Comm_add_ref(comm);
@@ -428,6 +430,7 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
                     }
                     MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
                     MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
+                    MPII_UNEXPQ_FORGET(rreq);
 
                     rreq->comm                 = comm;
                     MPIR_Comm_add_ref(comm);
@@ -510,6 +513,7 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 			recvq_unexpected_tail = prev_rreq;
 		    }
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+            MPII_UNEXPQ_FORGET(rreq);
 
             if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_EAGER_MSG)
                 MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
@@ -546,6 +550,7 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
                         recvq_unexpected_tail = prev_rreq;
                     }
                     MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                    MPII_UNEXPQ_FORGET(rreq);
 
                     if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_EAGER_MSG)
                         MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
@@ -794,6 +799,7 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 				   found=FALSE;goto lock_exit );
         MPIR_Assert(mpi_errno == 0);
         rreq->dev.recv_pending_count = 1;
+        MPII_UNEXPQ_REMEMBER(rreq, match->parts.rank, match->parts.tag, match->parts.context_id);
         /* Reset the error bits if we unset it earlier. */
         if (error_bit_masked) MPIR_TAG_SET_ERROR_BIT(match->parts.tag);
         if (proc_failure_bit_masked) MPIR_TAG_SET_PROC_FAILURE_BIT(match->parts.tag);
