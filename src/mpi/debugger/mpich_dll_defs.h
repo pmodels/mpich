@@ -47,6 +47,8 @@ typedef struct {
     int debugq_tag_offs;
     int debugq_rank_offs;
     int debugq_context_id_offs;
+    int debugq_user_buf_offs;
+    int debugq_user_count_offs;
     int debugq_req_offs;
 } mpich_image_info;
 

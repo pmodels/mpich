@@ -350,8 +350,8 @@ static MPIR_Debugq *pool = 0;
 
 /* This routine is used to establish a queue of requests to allow the
    debugger easier access to the active requests. */
-void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id,
-                          MPIR_Debugq ** queue)
+void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id, const void *buf,
+                          MPI_Aint count, MPIR_Debugq ** queue)
 {
 #if defined HAVE_DEBUGGER_SUPPORT
     MPIR_Debugq *p;
@@ -383,6 +383,8 @@ void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id,
     p->tag = tag;
     p->rank = rank;
     p->context_id = context_id;
+    p->buf = buf;
+    p->count = count;
     DL_PREPEND(*queue, p);
 
     if (MPIR_REQUEST_KIND__SEND == req->kind) {
