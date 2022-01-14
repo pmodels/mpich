@@ -159,7 +159,11 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
         MPI_Aint real_bytes = MPL_MIN(total_size - inoffset, max_pack_bytes);
         /* Make sure we never pack partial element */
         real_bytes -= real_bytes % element_size;
-        MPIR_Memcpy(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), real_bytes);
+        if (flags & MPIR_TYPEREP_FLAG_STREAM) {
+            MPIR_Memcpy_stream(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), real_bytes);
+        } else {
+            MPIR_Memcpy(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), real_bytes);
+        }
         *actual_pack_bytes = real_bytes;
         goto fn_exit;
     }
