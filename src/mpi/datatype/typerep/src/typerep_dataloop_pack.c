@@ -13,7 +13,11 @@ int MPIR_Typerep_icopy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
 {
     MPIR_FUNC_ENTER;
 
-    MPIR_Memcpy(outbuf, inbuf, num_bytes);
+    if (flags & MPIR_TYPEREP_FLAG_STREAM) {
+        MPIR_Memcpy_stream(outbuf, inbuf, num_bytes);
+    } else {
+        MPIR_Memcpy(outbuf, inbuf, num_bytes);
+    }
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
