@@ -105,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
 
     MPI_Aint actual_pack_bytes;
     mpi_errno = MPIR_Typerep_pack(origin_addr, origin_count, origin_datatype, 0, buffer, size,
-                                  &actual_pack_bytes);
+                                  &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(actual_pack_bytes == size);
 

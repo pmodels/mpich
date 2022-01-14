@@ -505,7 +505,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
             MPI_Aint actual_pack_bytes;
             MPIR_Typerep_pack(buf, count, datatype, *msg_offset,
                            (char *)cell_ptr->payload + sizeof(MPIDI_CH3_Pkt_t),
-                           msgsize - *msg_offset, &actual_pack_bytes);
+                           msgsize - *msg_offset, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
             MPIR_Assert(actual_pack_bytes == msgsize - *msg_offset);
 
             MPL_atomic_release_store_int(&pbox->flag, 1);
@@ -560,7 +560,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
 
     MPI_Aint actual_pack_bytes;
     MPIR_Typerep_pack(buf, count, datatype, *msg_offset, (char *)el->payload + buf_offset,
-                   max_pack_bytes, &actual_pack_bytes);
+                   max_pack_bytes, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
     datalen = buf_offset + actual_pack_bytes;
     *msg_offset += actual_pack_bytes;
 
@@ -645,7 +645,7 @@ MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
 
     MPI_Aint actual_pack_bytes;
     MPIR_Typerep_pack(buf, count, datatype, *msg_offset, (char *)el->payload,
-                   max_pack_bytes, &actual_pack_bytes);
+                   max_pack_bytes, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
     datalen = actual_pack_bytes;
     *msg_offset += actual_pack_bytes;
     
