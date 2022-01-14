@@ -87,7 +87,7 @@ int MPIDU_genq_shmem_pool_create_unsafe(uintptr_t cell_size, uintptr_t cells_per
         (MPIDU_genq_shmem_queue_u *) ((char *) pool_obj->slab + total_cells_size);
 
     rc = MPIDU_genq_shmem_queue_init(&pool_obj->free_queues[rank],
-                                     MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC);
+                                     MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPMC);
     MPIR_ERR_CHECK(rc);
 
     rc = cell_block_alloc(pool_obj, rank);
