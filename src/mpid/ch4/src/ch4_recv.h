@@ -267,25 +267,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
                                         MPI_Datatype datatype, MPIR_Request * message,
                                         MPI_Status * status, MPIR_Request ** rreq)
 {
-    int mpi_errno;
-    MPIR_FUNC_ENTER;
-
-    MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
-    message->kind = MPIR_REQUEST_KIND__RECV;
-
-    if (message->comm && MPIDI_is_self_comm(message->comm)) {
-        mpi_errno = MPIDI_Self_imrecv(buf, count, datatype, message, rreq);
-    } else {
-        *rreq = message;
-        mpi_errno = MPIDI_imrecv(buf, count, datatype, message);
-    }
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPID_Imrecv(buf, count, datatype, message, rreq);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
