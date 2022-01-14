@@ -244,6 +244,10 @@ int dbgrI_field_offset(mqs_type * type, char *name)
                     off = ((char *) &c.rank - (char *) &c);
                 } else if (strcmp(name, "context_id") == 0) {
                     off = ((char *) &c.context_id - (char *) &c);
+                } else if (strcmp(name, "buf") == 0) {
+                    off = ((char *) &c.buf - (char *) &c);
+                } else if (strcmp(name, "count") == 0) {
+                    off = ((char *) &c.count - (char *) &c);
                 } else if (strcmp(name, "req") == 0) {
                     off = ((char *) &c.req - (char *) &c);
                 } else {
