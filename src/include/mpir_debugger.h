@@ -13,12 +13,12 @@
 
 #ifdef HAVE_DEBUGGER_SUPPORT
 void MPII_Wait_for_debugger(void);
-void MPIR_Debugger_set_aborting(const char *);
+void MPIR_Debugger_set_aborting(const char *msg);
 /* internal functions */
-void MPII_Debugq_remember(MPIR_Request *, int, int, int);
-void MPII_Debugq_forget(MPIR_Request *);
-void MPII_CommL_remember(MPIR_Comm *);
-void MPII_CommL_forget(MPIR_Comm *);
+void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id);
+void MPII_Debugq_forget(MPIR_Request * req);
+void MPII_CommL_remember(MPIR_Comm * comm);
+void MPII_CommL_forget(MPIR_Comm * comm);
 
 #define MPII_SENDQ_REMEMBER(_a,_b,_c,_d) MPII_Debugq_remember(_a,_b,_c,_d)
 #define MPII_SENDQ_FORGET(_a) MPII_Debugq_forget(_a)
