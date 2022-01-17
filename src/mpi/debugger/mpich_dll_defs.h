@@ -33,14 +33,7 @@ typedef struct {
     /* Fields in MPIR_Request (including structures within the request) */
     int req_status_offs;
     int req_cc_offs;
-    int req_dev_offs;
-    int req_tag_offs;
-    int req_rank_offs;
-    int req_context_id_offs;
-    int req_user_buf_offs;
-    int req_user_count_offs;
     int req_datatype_offs;
-    int req_next_offs;
 
     /* Fields in MPIR_Debugq */
     int debugq_next_offs;
