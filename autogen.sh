@@ -71,6 +71,8 @@ do_quick=no
 for arg in "$@" ; do
     if test $arg = "-quick"; then
         do_quick=yes
+        do_hwloc=no
+        do_json=no
         do_izem=no
         do_ofi=no
         do_ucx=no
@@ -79,6 +81,12 @@ for arg in "$@" ; do
         do_hydra=yes
         do_hydra2=no
         do_romio=no
+
+        if test -e 'modules.tar.gz' -a ! -e 'modules/PREBUILT' ; then
+            echo_n "Untaring modules.tar.gz... "
+            tar xf modules.tar.gz
+            echo "done"
+        fi
     fi
 done
 
