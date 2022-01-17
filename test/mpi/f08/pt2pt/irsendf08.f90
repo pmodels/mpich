@@ -33,7 +33,7 @@
       use mpi_f08
       type(MPI_Comm) comm
       integer errs
-      integer rank, size, ierr, next, prev, tag, count, index, i
+      integer rank, size, ierr, next, prev, tag, count, index, completed, i
       integer TEST_SIZE
       type(MPI_Comm) dupcom
       parameter (TEST_SIZE=2000)
@@ -79,14 +79,16 @@
          call MPI_Irsend(send_buf, count, MPI_REAL, next, tag, &
       &                   comm, requests(2), ierr)
 !
-         index = -1
-         do while (index .ne. 1)
-              call MPI_Waitany(2, requests, index, statuses(1), ierr)
+         completed = 0
+         do while (completed .lt. 2)
+            call MPI_Waitany(2, requests, index, statuses(1),ierr)
+            if (index .eq. 1) then
+                call rq_check( requests(1), 1, 'irsend and irecv' )
+                call msg_check( recv_buf, next, tag, count, statuses(1), &
+      &                         TEST_SIZE, 'irsend and irecv', errs )
+            end if
+            completed = completed + 1
          end do
-         call rq_check( requests(1), 1, 'irsend and irecv' )
-!
-         call msg_check( recv_buf, next, tag, count, statuses(1), &
-      &           TEST_SIZE, 'irsend and irecv', errs )
 !
       else if (prev .eq. 0) then
 !
