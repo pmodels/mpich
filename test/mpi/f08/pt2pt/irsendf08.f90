@@ -82,6 +82,9 @@
          completed = 0
          do while (completed .lt. 2)
             call MPI_Waitany(2, requests, index, statuses(1),ierr)
+            if (index .lt. 1 .or. index .gt. 2) then
+                print *, "Invalid index in MPI_Waitany:", index
+            end if
             if (index .eq. 1) then
                 call rq_check( requests(1), 1, 'irsend and irecv' )
                 call msg_check( recv_buf, next, tag, count, statuses(1), &
