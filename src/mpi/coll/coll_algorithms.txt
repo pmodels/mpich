@@ -325,6 +325,9 @@ allreduce-intra:
     tree
         extra_params: tree_type, k, chunk_size, buffer_per_child
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
+    recexch
+        extra_params: k, single_phase_recv
+        cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
 allreduce-inter:
     reduce_exchange_bcast
 iallreduce-intra:

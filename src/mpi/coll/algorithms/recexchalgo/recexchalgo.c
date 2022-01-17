@@ -17,6 +17,14 @@ int MPII_Recexchalgo_init(void)
 int MPII_Recexchalgo_comm_init(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
+    int i = 0;
+
+    for (i = 0; i < MAX_RADIX - 1; i++) {
+        comm->coll.nbrs_defined[i] = 0;
+        comm->coll.step1_recvfrom[i] = NULL;
+        comm->coll.step2_nbrs[i] = NULL;
+    }
+    comm->coll.recexch_allreduce_nbr_buffer = NULL;
 
     return mpi_errno;
 }
@@ -25,6 +33,25 @@ int MPII_Recexchalgo_comm_init(MPIR_Comm * comm)
 int MPII_Recexchalgo_comm_cleanup(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    int i = 0, j = 0;
+
+    for (i = 0; i < MAX_RADIX - 1; i++) {
+        /* free the memory */
+        if (comm->coll.step2_nbrs[i]) {
+            for (j = 0; j < comm->coll.step2_nphases[i]; j++)
+                MPL_free(comm->coll.step2_nbrs[i][j]);
+            MPL_free(comm->coll.step2_nbrs[i]);
+        }
+        if (comm->coll.step1_recvfrom[i])
+            MPL_free(comm->coll.step1_recvfrom[i]);
+    }
+
+    if (comm->coll.recexch_allreduce_nbr_buffer) {
+        for (j = 0; j < 2 * (MAX_RADIX - 1); j++)
+            MPL_free(comm->coll.recexch_allreduce_nbr_buffer[j]);
+        MPL_free(comm->coll.recexch_allreduce_nbr_buffer);
+    }
 
     return mpi_errno;
 }
