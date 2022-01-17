@@ -84,6 +84,9 @@
             call MPI_Waitsome(2, requests, outcount, &
       &                        indices, statuses, ierr)
             do i = 1,outcount
+               if (indices(i) .lt. 1 .or. indices(i) .gt. 2) then
+                    print *, "Invalid index in array_of_indices of MPI_Waitsome:", indices(i)
+               end if
                if (indices(i) .eq. 2) then
                   call msg_check( recv_buf, next, tag, count, &
       &                 statuses(i), TEST_SIZE, 'waitsome', errs )
