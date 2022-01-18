@@ -576,6 +576,7 @@ autoreconf_amdir() {
         _patch_libtool $_dir/confdb/ltmain.sh  intel-compiler.patch
         _patch_libtool $_dir/confdb/libtool.m4 sys_lib_dlsearch_path_spec.patch
         _patch_libtool $_dir/confdb/libtool.m4 big-sur.patch
+        _patch_libtool $_dir/confdb/libtool.m4 hpc-sdk.patch
         if test "$do_fortran" = "yes" ; then
             _patch_libtool $_dir/confdb/libtool.m4 darwin-ifort.patch
             _patch_libtool $_dir/confdb/libtool.m4 oracle-fort.patch
