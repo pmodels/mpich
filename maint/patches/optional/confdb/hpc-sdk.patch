@@ -1,0 +1,50 @@
+--- a/m4/libtool.m4
++++ b/m4/libtool.m4
+@@ -4400,8 +4400,8 @@ m4_if([$1], [CXX], [
+            _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
+            _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
+            ;;
+-         pgCC* | pgcpp*)
+-           # Portland Group C++ compiler
++         pgCC* | pgcpp* | pgc\+\+* |  nvc\+\+*)
++           # NVIDIA HPC C++ compiler
+            _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
+            _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
+            _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
+@@ -4737,9 +4737,8 @@ m4_if([$1], [CXX], [
+        _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
+        _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
+        ;;
+-      pgcc* | pgf77* | pgf90* | pgf95* | pgfortran*)
+-        # Portland Group compilers (*not* the Pentium gcc compiler,
+-       # which looks to be a dead project)
++      pgcc* | pgf77* | pgf90* | pgf95* | pgfortran* | nvc | nvfortran*)
++      # NVIDIA HPC Compilers
+        _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
+        _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
+        _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
+@@ -4779,7 +4778,7 @@ m4_if([$1], [CXX], [
+          _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
+          _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
+          ;;
+-       *Portland\ Group*)
++       *Portland\ Group* | *NVIDIA\ Compilers* | *PGI\ Compilers*)
+          _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
+          _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
+          _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
+@@ -5207,12 +5206,12 @@ _LT_EOF
+        tmp_addflag=' $pic_flag'
+        tmp_sharedflag='-shared'
+        case $cc_basename,$host_cpu in
+-        pgcc*)                         # Portland Group C compiler
++        pgcc* | nvc)                   # NVIDIA HPC C++ Compiler
+          _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
+          tmp_addflag=' $pic_flag'
+          ;;
+-       pgf77* | pgf90* | pgf95* | pgfortran*)
+-                                       # Portland Group f77 and f90 compilers
++       pgf77* | pgf90* | pgf95* | pgfortran* | nvfortran*)
++                                       # NVIDIA HPC Fortran Compilers
+          _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
+          tmp_addflag=' $pic_flag -Mnomain' ;;
+        ecc*,ia64* | icc*,ia64*)        # Intel C compiler on ia64
