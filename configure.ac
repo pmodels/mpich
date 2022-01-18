@@ -2759,10 +2759,6 @@ AC_CHECK_ALIGNOF(long long)
 AC_CHECK_ALIGNOF(long double)
 AC_CHECK_ALIGNOF(short)
 AC_CHECK_ALIGNOF(int)
-AC_CHECK_ALIGNOF(int8_t)
-AC_CHECK_ALIGNOF(int16_t)
-AC_CHECK_ALIGNOF(int32_t)
-AC_CHECK_ALIGNOF(int64_t)
 AC_CHECK_ALIGNOF(bool)
 AC_CHECK_ALIGNOF(wchar_t)
 
@@ -2773,50 +2769,44 @@ AC_DEFINE(HAVE_SYS_BITYPES_H,1,[Define if sys/bitypes.h exists])])
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
 
-# Check for types
-AC_TYPE_INT8_T
-AC_TYPE_INT16_T
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
+AC_CHECK_SIZEOF(int8_t)
+AC_CHECK_SIZEOF(int16_t)
+AC_CHECK_SIZEOF(int32_t)
+AC_CHECK_SIZEOF(int64_t)
 
-# Temporary issue in autoconf integer type checking (remove when
-# autoconf fixes this or provides a workaround for it)
-if test "$ac_cv_c_int8_t" != no ; then
+AC_CHECK_SIZEOF(uint8_t)
+AC_CHECK_SIZEOF(uint16_t)
+AC_CHECK_SIZEOF(uint32_t)
+AC_CHECK_SIZEOF(uint64_t)
+
+AC_CHECK_ALIGNOF(int8_t)
+AC_CHECK_ALIGNOF(int16_t)
+AC_CHECK_ALIGNOF(int32_t)
+AC_CHECK_ALIGNOF(int64_t)
+
+if test "$ac_cv_sizeof_int8_t" -eq 1 ; then
     AC_DEFINE(HAVE_INT8_T,1,[Define if int8_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_int16_t" != no ; then
+if test "$ac_cv_sizeof_int16_t" -eq 2 ; then
     AC_DEFINE(HAVE_INT16_T,1,[Define if int16_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_int32_t" != no ; then
+if test "$ac_cv_sizeof_int32_t" -eq 4 ; then
     AC_DEFINE(HAVE_INT32_T,1,[Define if int32_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_int64_t" != no ; then
+if test "$ac_cv_sizeof_int64_t" -eq 8 ; then
     AC_DEFINE(HAVE_INT64_T,1,[Define if int64_t is supported by the C compiler])
 fi
 
-# The following make these definitions:
-#   define _UINT<n>_T 1
-# if uint<n>_t is available.  E.g., define _UINT8_T as 1 if uint8_t is available
-# if not available, define uint<n>_t as the related C type, e.g.,
-#   define uint8_t unsigned char
-#
-AC_TYPE_UINT8_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-
-# Temporary issue in autoconf integer type checking (remove when
-# autoconf fixes this or provides a workaround for it)
-if test "$ac_cv_c_uint8_t" != no ; then
+if test "$ac_cv_sizeof_uint8_t" -eq 1 ; then
     AC_DEFINE(HAVE_UINT8_T,1,[Define if uint8_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_uint16_t" != no ; then
+if test "$ac_cv_sizeof_uint16_t" -eq 2 ; then
     AC_DEFINE(HAVE_UINT16_T,1,[Define if uint16_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_uint32_t" != no ; then
+if test "$ac_cv_sizeof_uint32_t" -eq 4 ; then
     AC_DEFINE(HAVE_UINT32_T,1,[Define if uint32_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_uint64_t" != no ; then
+if test "$ac_cv_sizeof_uint64_t" -eq 8 ; then
     AC_DEFINE(HAVE_UINT64_T,1,[Define if uint64_t is supported by the C compiler])
 fi
 
