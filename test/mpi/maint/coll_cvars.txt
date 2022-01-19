@@ -313,6 +313,8 @@ algorithms:
             sched_recursive_doubling
             tsp_recexch
                 .MPIR_CVAR_IBARRIER_RECEXCH_KVAL=2,3,4,8
+            tsp_k_dissemination
+                .MPIR_CVAR_IBARRIER_DISSEM_KVAL=2,3,4,8
     bcast:
         inter-blocking:
             remote_send_local_bcast
