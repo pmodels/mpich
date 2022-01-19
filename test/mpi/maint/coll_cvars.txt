@@ -312,6 +312,7 @@ algorithms:
         intra-nonblocking:
             sched_recursive_doubling
             tsp_recexch
+                .MPIR_CVAR_IBARRIER_RECEXCH_KVAL=2,3,4,8
     bcast:
         inter-blocking:
             remote_send_local_bcast

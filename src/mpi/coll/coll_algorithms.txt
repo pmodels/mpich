@@ -46,6 +46,9 @@ barrier-inter:
     bcast
 ibarrier-intra:
     sched_recursive_doubling
+    tsp_recexch
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
 ibarrier-inter:
     sched_bcast
 
