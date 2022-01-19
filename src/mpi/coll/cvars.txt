@@ -56,6 +56,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_recursive_doubling - Force recursive doubling algorithm
+        tsp_recexch - Force generic transport based recursive exchange algorithm
 
     - name        : MPIR_CVAR_IBARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
