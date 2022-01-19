@@ -149,6 +149,9 @@ iscatterv-inter:
 
 allgather-intra:
     brucks
+    k_brucks
+        extra_params: k
+        cvar_params: BRUCKS_KVAL
     recursive_doubling
         restrictions: power-of-two
     ring
