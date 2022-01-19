@@ -12,6 +12,7 @@ void *MPII_Create_container(struct json_object *obj);
 
 typedef enum {
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_intra_brucks,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_intra_k_brucks,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_intra_recursive_doubling,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_intra_ring,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_inter_local_gather_remote_bcast,
@@ -296,6 +297,11 @@ typedef struct {
                 int recv_pre_posted;
             } intra_pipelined_tree;
         } bcast;
+        struct {
+            struct {
+                int k;
+            } intra_k_brucks;
+        } allgather;
         struct {
             struct {
                 int k;
