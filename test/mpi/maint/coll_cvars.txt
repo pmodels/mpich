@@ -180,6 +180,8 @@ algorithms:
             sched_local_gather_remote_bcast
         intra-blocking:
             brucks
+            k_brucks
+                .MPIR_CVAR_ALLGATHER_BRUCKS_KVAL=2,3,4
             recursive_doubling
             ring
         intra-nonblocking:
