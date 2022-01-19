@@ -242,7 +242,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
 
     /* Print chunking information */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Reduce shmgr pipeline info: segsize=%d count="
+                                             "Reduce shmgr pipeline info: segsize=%lu count="
                                              MPI_AINT_FMT_DEC_SPEC " num_chunks="
                                              MPI_AINT_FMT_DEC_SPEC " chunk_size_floor="
                                              MPI_AINT_FMT_DEC_SPEC " chunk_size_ceil="
@@ -349,7 +349,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
 
     /* Print chunking information */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Reduce shmgr pipeline info: segsize=%d count="
+                                             "Reduce shmgr pipeline info: segsize=%lu count="
                                              MPI_AINT_FMT_DEC_SPEC " num_chunks="
                                              MPI_AINT_FMT_DEC_SPEC " chunk_size_floor="
                                              MPI_AINT_FMT_DEC_SPEC " chunk_size_ceil="
