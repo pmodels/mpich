@@ -746,6 +746,9 @@ PAC_ARG_CACHING
 # it may influence the output of the other tests
 PAC_ARG_STRICT
 
+# To link C objects with Fortran main program may require -fPIE option
+PAC_C_CHECK_fPIE_OK
+
 # -----------------------------------------------------------------------------
 # First check that we have a clean build if we are doing a VPATH build
 PAC_VPATH_CHECK(src/include/mpi.h src/env/mpicc,lib)
