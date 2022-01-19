@@ -707,26 +707,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged_entry *wc)
 {
-    int rc = 0;
+    int num = 0;
 
-    if (1) {
+    while (num < MPIDI_OFI_NUM_CQ_ENTRIES) {
         /* If the static list isn't empty, do so first */
         if (CQ_S_HEAD != CQ_S_TAIL) {
-            wc[0] = CQ_S_LIST[CQ_S_TAIL];
+            wc[num] = CQ_S_LIST[CQ_S_TAIL];
             CQ_S_TAIL = (CQ_S_TAIL + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
         }
         /* If there's anything in the dynamic list, it goes second. */
         else if (CQ_D_HEAD != NULL) {
             MPIDI_OFI_cq_list_t *cq_list_entry = CQ_D_HEAD;
             LL_DELETE(CQ_D_HEAD, CQ_D_TAIL, cq_list_entry);
-            wc[0] = cq_list_entry->cq_entry;
+            wc[num] = cq_list_entry->cq_entry;
             MPL_free(cq_list_entry);
+        } else {
+            break;
         }
 
-        rc = 1;
+        num++;
     }
 
-    return rc;
+    return num;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory(char *send_buf, size_t data_sz,

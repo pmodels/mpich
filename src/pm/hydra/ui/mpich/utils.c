@@ -1471,6 +1471,28 @@ static HYD_status skip_launch_node_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void pmi_args_help_fn(void)
+{
+    printf("\n");
+    printf("-pmi-args port default_interface default_key pid:\n");
+    printf("   Supply pmi-args when mpiexec is launched from singleton init.\n");
+    printf("   Both port for mpiexec to connect back to the singleton process\n");
+    printf("   and the pid of the singleton process are required. The interface\n");
+    printf("   name and authentication key are ignored for now.\n");
+}
+
+static HYD_status pmi_args_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_server_info.singleton_port = atoi((*argv)[0]);
+    HYD_server_info.singleton_pid = atoi((*argv)[3]);
+
+    (*argv) += 4;
+
+    return status;
+}
+
 static void gpus_per_proc_help_fn(void)
 {
     printf("\n");
@@ -1880,6 +1902,9 @@ static struct HYD_arg_match_table match_table[] = {
     {"skip-launch-node", skip_launch_node_fn, skip_launch_node_help_fn},
     {"gpus-per-proc", gpus_per_proc_fn, gpus_per_proc_help_fn},
     {"g", gpus_per_proc_fn, gpus_per_proc_help_fn},
+
+    /* Singleton init */
+    {"pmi_args", pmi_args_fn, pmi_args_help_fn},
 
     {"\0", NULL, NULL}
 };

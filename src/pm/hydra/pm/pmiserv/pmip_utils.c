@@ -115,6 +115,28 @@ static HYD_status gpus_per_proc_fn(char *arg, char ***argv)
     return status;
 }
 
+static HYD_status singleton_port_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_pmcd_pmip.user_global.singleton_port = atoi(**argv);
+
+    (*argv)++;
+
+    return status;
+}
+
+static HYD_status singleton_pid_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_pmcd_pmip.user_global.singleton_pid = atoi(**argv);
+
+    (*argv)++;
+
+    return status;
+}
+
 static HYD_status rmk_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -590,6 +612,8 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"usize", usize_fn, NULL},
     {"pmi-port", pmi_port_fn, NULL},
     {"gpus-per-proc", gpus_per_proc_fn, NULL},
+    {"singleton-port", singleton_port_fn, NULL},
+    {"singleton-pid", singleton_pid_fn, NULL},
     {"rmk", rmk_fn, NULL},
     {"launcher", launcher_fn, NULL},
     {"launcher-exec", launcher_exec_fn, NULL},

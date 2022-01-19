@@ -404,6 +404,8 @@ struct HYD_user_global {
     int pmi_port;
     int skip_launch_node;
     int gpus_per_proc;
+    int singleton_port;
+    int singleton_pid;
 
     struct HYD_env_global global_env;
 };
@@ -503,7 +505,7 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
 HYD_status HYDU_alloc_exec(struct HYD_exec **exec);
 void HYDU_free_exec_list(struct HYD_exec *exec_list);
 HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                  struct HYD_pg *pg);
+                                  struct HYD_pg *pg, bool is_singleton);
 HYD_status HYDU_correct_wdir(char **wdir);
 
 /* args */

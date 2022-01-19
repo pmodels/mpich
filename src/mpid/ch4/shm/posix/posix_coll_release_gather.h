@@ -53,7 +53,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     MPI_Aint lb, true_lb, true_extent, extent, type_size;
     void *ori_buffer = buffer;
     MPI_Datatype ori_datatype = datatype;
-    int cellsize = MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE;
 
     /* If there is only one process or no data, return */
     if (count == 0 || (MPIR_Comm_size(comm_ptr) == 1)) {
@@ -100,11 +99,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
                 /* Root packs the data before sending, for non contiguous datatypes */
                 mpi_errno =
                     MPIR_Typerep_pack(ori_buffer, ori_count, ori_datatype, 0, buffer, count,
-                                      &actual_packed_unpacked_bytes);
+                                      &actual_packed_unpacked_bytes, MPIR_TYPEREP_FLAG_NONE);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
             }
         }
     }
+
+    int cellsize = MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE;
 #ifdef HAVE_ERROR_CHECKING
     /* When error checking is enabled, only (cellsize-(2*cacheline_size)) bytes are reserved for data.
      * Initial 2 cacheline_size bytes are reserved to put the amount of data being placed and the
@@ -150,7 +151,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
             /* Non-root unpack the data if expecting non-contiguous datatypes */
             mpi_errno =
                 MPIR_Typerep_unpack(buffer, count, ori_buffer, ori_count, ori_datatype, 0,
-                                    &actual_packed_unpacked_bytes);
+                                    &actual_packed_unpacked_bytes, MPIR_TYPEREP_FLAG_NONE);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
         }
         MPL_free(buffer);

@@ -23,8 +23,14 @@ AC_DEFUN([PAC_CONFIG_MPL],[
     ], [
         dnl ---- sub-configure (e.g. hydra, romio) ----
         if test "$FROM_MPICH" = "yes"; then
-            mpl_lib="$main_top_builddir/src/mpl/libmpl.la"
-            mpl_includedir='-I$(main_top_builddir)/src/mpl/include -I$(main_top_srcdir)/src/mpl/include'
+            dnl skip ROMIO since mpich already links libmpl.la
+            m4_if(AC_PACKAGE_NAME, [ROMIO], [], [
+                mpl_lib="$main_top_builddir/src/mpl/libmpl.la"
+            ])
+            mpl_includedir="-I$main_top_builddir/src/mpl/include -I$main_top_srcdir/src/mpl/include"
+            # source variables that are configured by MPL
+            AC_MSG_NOTICE([sourcing $main_top_srcdir/src/mpl/localdefs])
+            . $main_top_builddir/src/mpl/localdefs
         else
             PAC_CONFIG_MPL_EMBEDDED
             mpl_srcdir="mpl_embedded_dir"
@@ -78,9 +84,13 @@ AC_DEFUN([PAC_CONFIG_HWLOC],[
     if test "$with_hwloc" = "embedded" ; then
         m4_if(hwloc_embedded_dir, [modules/hwloc], [
             dnl ---- the main MPICH configure ----
-            PAC_CONFIG_HWLOC_EMBEDDED([$VISIBILITY_CFLAGS])
-            hwlocsrcdir="${main_top_builddir}/modules/hwloc"
-            hwloclib="${main_top_builddir}/modules/hwloc/hwloc/libhwloc_embedded.la"
+            hwloclib="modules/hwloc/hwloc/libhwloc_embedded.la"
+            if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$hwloclib"; then
+                hwlocsrcdir=""
+            else
+                hwlocsrcdir="${main_top_builddir}/modules/hwloc"
+                PAC_CONFIG_HWLOC_EMBEDDED([$VISIBILITY_CFLAGS])
+            fi
             PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/hwloc/include],[CPPFLAGS])
             PAC_APPEND_FLAG([-I${main_top_builddir}/modules/hwloc/include],[CPPFLAGS])
 

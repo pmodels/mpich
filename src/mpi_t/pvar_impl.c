@@ -238,7 +238,6 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
                     /* Code should never come here */
                     mpi_errno = MPI_ERR_INTERN;
                     goto fn_fail;
-                    break;
             }
         } else {
             /* A running SUM with callback. Read its current value into handle */
@@ -277,7 +276,6 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
                     /* Code should never come here */
                     mpi_errno = MPI_ERR_INTERN;
                     goto fn_fail;
-                    break;
             }
         }
     } else if (MPIR_T_pvar_is_sum(handle) && !MPIR_T_pvar_is_started(handle)) {
@@ -312,7 +310,6 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
                     /* Code should never come here */
                     mpi_errno = MPI_ERR_INTERN;
                     goto fn_fail;
-                    break;
             }
         } else {
             /* For remaining handles, their current value are in the handle */
@@ -333,7 +330,6 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
                     /* Code should never come here */
                     mpi_errno = MPI_ERR_INTERN;
                     goto fn_fail;
-                    break;
             }
         }
     } else {
@@ -536,7 +532,6 @@ int MPIR_T_pvar_stop_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
                 /* Code should never come here */
                 mpi_errno = MPI_ERR_INTERN;
                 goto fn_fail;
-                break;
         }
 
     } else if (MPIR_T_pvar_is_watermark(handle)) {

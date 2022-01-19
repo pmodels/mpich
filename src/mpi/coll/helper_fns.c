@@ -403,7 +403,8 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
                             MPL_MEM_BUFFER);
 
         mpi_errno =
-            MPIR_Typerep_pack(buf, count, datatype, 0, tmpbuf, tmpbuf_size, &actual_pack_bytes);
+            MPIR_Typerep_pack(buf, count, datatype, 0, tmpbuf, tmpbuf_size, &actual_pack_bytes,
+                              MPIR_TYPEREP_FLAG_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

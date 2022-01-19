@@ -889,6 +889,9 @@ for option in $enable_fast ; do
         ;;
         alwaysinline) # No op in MPICH. See mpl/configure.ac
         ;;
+        avx)
+        enable_fast_avx_instr=yes
+        ;;
         all|yes)
         enable_fast_ndebug=yes
         enable_fast_opts=O2
@@ -896,6 +899,7 @@ for option in $enable_fast ; do
         none|no)
         enable_fast_ndebug=no
         enable_fast_opts=O0
+        enable_fast_avx_instr=no
         ;;
         *)
 	IFS="$save_IFS"
@@ -930,6 +934,37 @@ fi
 if test -z "$enable_fast_no_strict_alignment" ; then
     # we need observe strict alignment to pass ubsan check
     AC_DEFINE(NEEDS_STRICT_ALIGNMENT,1,[Define if strict alignment memory access is required])
+fi
+
+if test "$enable_fast_avx_instr" = "yes" ; then
+    AC_CACHE_CHECK([whether -mavx is supported], pac_cv_found_avx,
+                   [PAC_C_CHECK_COMPILER_OPTION([-mavx],pac_cv_found_avx=yes,pac_cv_found_avx=no)],
+                   pac_cv_found_avx=no,pac_cv_found_avx=yes)
+    if test "$pac_cv_found_avx" = "yes" ; then
+        PAC_APPEND_FLAG([-mavx],[CFLAGS])
+
+        AC_CACHE_CHECK([whether _mm256_stream_si256 is supported], pac_cv_found__mm256_stream_si256,[
+                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                       #include <immintrin.h>
+
+                                       int main(int argc, char **argv) {
+                                           char source[1024], dest[1024];
+                                           for (int i = 0; i < 1024; i++) source[i] = 'a';
+
+                                           __m256i ymm0 = _mm256_loadu_si256((__m256i const *) source);
+                                           _mm256_stream_si256((__m256i *) dest, ymm0);
+
+                                           if (dest[0] == source[0]) return 0;
+                                           else return 1;
+                                       }
+                                       ]])], pac_cv_found__mm256_stream_si256="yes",
+                                       pac_cv_found__mm256_stream_si256="no",
+                                       pac_cv_found__mm256_stream_si256="unknown")
+                        ])
+    fi
+    if test "$pac_cv_found__mm256_stream_si256" = "yes" ; then
+        AC_DEFINE(HAVE_MM256_STREAM_SI256,1,[Define if 256 bit streaming memcpy is available])
+    fi
 fi
 
 # error-checking
@@ -1048,10 +1083,14 @@ PAC_CHECK_HEADER_LIB_EXPLICIT([zm],[lock/zm_ticket.h],[$ZMLIBNAME],[zm_ticket_in
 if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; then
     if test "$with_zm" = "embedded" ; then
         if test -e "${use_top_srcdir}/modules/izem" ; then
-            zm_subdir_args="--enable-embedded"
-            PAC_CONFIG_SUBDIR_ARGS([modules/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
-            zmsrcdir="${main_top_builddir}/modules/izem"
-            zmlib="${main_top_builddir}/modules/izem/src/lib${ZMLIBNAME}.la"
+            zmlib="modules/izem/src/lib${ZMLIBNAME}.la"
+            if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$zmlib"; then
+                zmsrcdir=""
+            else
+                zm_subdir_args="--enable-embedded"
+                PAC_CONFIG_SUBDIR_ARGS([modules/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
+                zmsrcdir="${main_top_builddir}/modules/izem"
+            fi
             PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/izem/src/include],[CPPFLAGS])
             PAC_APPEND_FLAG([-I${main_top_builddir}/modules/izem/src/include],[CPPFLAGS])
         else
@@ -1068,12 +1107,16 @@ AC_SUBST([jsonsrcdir])
 jsonlib=""
 AC_SUBST([jsonlib])
 
-PAC_PUSH_ALL_FLAGS()
-PAC_RESET_ALL_FLAGS()
-PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--enable-embedded --disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
-PAC_POP_ALL_FLAGS()
-jsonsrcdir="${main_top_builddir}/modules/json-c"
-jsonlib="${main_top_builddir}/modules/json-c/libjson-c.la"
+jsonlib="modules/json-c/libjson-c.la"
+if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$jsonlib"; then
+    jsonsrcdir=""
+else
+    PAC_PUSH_ALL_FLAGS()
+    PAC_RESET_ALL_FLAGS()
+    PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--enable-embedded --disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
+    PAC_POP_ALL_FLAGS()
+    jsonsrcdir="${main_top_builddir}/modules/json-c"
+fi
 PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
 PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
 
@@ -2759,10 +2802,6 @@ AC_CHECK_ALIGNOF(long long)
 AC_CHECK_ALIGNOF(long double)
 AC_CHECK_ALIGNOF(short)
 AC_CHECK_ALIGNOF(int)
-AC_CHECK_ALIGNOF(int8_t)
-AC_CHECK_ALIGNOF(int16_t)
-AC_CHECK_ALIGNOF(int32_t)
-AC_CHECK_ALIGNOF(int64_t)
 AC_CHECK_ALIGNOF(bool)
 AC_CHECK_ALIGNOF(wchar_t)
 
@@ -2773,50 +2812,44 @@ AC_DEFINE(HAVE_SYS_BITYPES_H,1,[Define if sys/bitypes.h exists])])
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
 
-# Check for types
-AC_TYPE_INT8_T
-AC_TYPE_INT16_T
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
+AC_CHECK_SIZEOF(int8_t)
+AC_CHECK_SIZEOF(int16_t)
+AC_CHECK_SIZEOF(int32_t)
+AC_CHECK_SIZEOF(int64_t)
 
-# Temporary issue in autoconf integer type checking (remove when
-# autoconf fixes this or provides a workaround for it)
-if test "$ac_cv_c_int8_t" != no ; then
+AC_CHECK_SIZEOF(uint8_t)
+AC_CHECK_SIZEOF(uint16_t)
+AC_CHECK_SIZEOF(uint32_t)
+AC_CHECK_SIZEOF(uint64_t)
+
+AC_CHECK_ALIGNOF(int8_t)
+AC_CHECK_ALIGNOF(int16_t)
+AC_CHECK_ALIGNOF(int32_t)
+AC_CHECK_ALIGNOF(int64_t)
+
+if test "$ac_cv_sizeof_int8_t" -eq 1 ; then
     AC_DEFINE(HAVE_INT8_T,1,[Define if int8_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_int16_t" != no ; then
+if test "$ac_cv_sizeof_int16_t" -eq 2 ; then
     AC_DEFINE(HAVE_INT16_T,1,[Define if int16_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_int32_t" != no ; then
+if test "$ac_cv_sizeof_int32_t" -eq 4 ; then
     AC_DEFINE(HAVE_INT32_T,1,[Define if int32_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_int64_t" != no ; then
+if test "$ac_cv_sizeof_int64_t" -eq 8 ; then
     AC_DEFINE(HAVE_INT64_T,1,[Define if int64_t is supported by the C compiler])
 fi
 
-# The following make these definitions:
-#   define _UINT<n>_T 1
-# if uint<n>_t is available.  E.g., define _UINT8_T as 1 if uint8_t is available
-# if not available, define uint<n>_t as the related C type, e.g.,
-#   define uint8_t unsigned char
-#
-AC_TYPE_UINT8_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-
-# Temporary issue in autoconf integer type checking (remove when
-# autoconf fixes this or provides a workaround for it)
-if test "$ac_cv_c_uint8_t" != no ; then
+if test "$ac_cv_sizeof_uint8_t" -eq 1 ; then
     AC_DEFINE(HAVE_UINT8_T,1,[Define if uint8_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_uint16_t" != no ; then
+if test "$ac_cv_sizeof_uint16_t" -eq 2 ; then
     AC_DEFINE(HAVE_UINT16_T,1,[Define if uint16_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_uint32_t" != no ; then
+if test "$ac_cv_sizeof_uint32_t" -eq 4 ; then
     AC_DEFINE(HAVE_UINT32_T,1,[Define if uint32_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_uint64_t" != no ; then
+if test "$ac_cv_sizeof_uint64_t" -eq 8 ; then
     AC_DEFINE(HAVE_UINT64_T,1,[Define if uint64_t is supported by the C compiler])
 fi
 
@@ -3874,9 +3907,12 @@ m4_map([PAC_SUBCFG_CONFIGURE_SUBSYS], [PAC_SUBCFG_MODULE_LIST])
 
 # now configure any actual recursively configures subsystems, such as ROMIO and
 # hydra, or older components that haven't been updated to a subconfigure.m4 yet
+PAC_PUSH_ALL_FLAGS()
+PAC_RESET_ALL_FLAGS()
 for subsys in $devsubsystems $subsystems ; do
     PAC_CONFIG_SUBDIR([$subsys],[],[AC_MSG_ERROR([$subsys configure failed])])
 done
+PAC_POP_ALL_FLAGS()
 if test "$DEBUG_SUBDIR_CACHE" = yes -a "$enable_echo" != yes ; then
     set +x
 fi

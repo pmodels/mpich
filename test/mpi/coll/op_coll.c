@@ -16,7 +16,7 @@
 #define my_assert(cond_)                                                  \
     do {                                                                  \
         if (!(cond_)) {                                                   \
-            fprintf(stderr, "assertion (%s) failed, aborting\n", #cond_); \
+            printf("assertion (%s) failed at line %d, aborting\n", #cond_, __LINE__); \
             MPI_Abort(MPI_COMM_WORLD, 1);                                 \
         }                                                                 \
     } while (0)

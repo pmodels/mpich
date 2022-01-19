@@ -11,6 +11,9 @@ extern MPL_shm_hnd_t shm_limit_handle;
 extern MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type,
     MPIDI_POSIX_Reduce_tree_type;
 
+#define RELEASE_GATHER_FIELD(comm, field)                   \
+    MPIDI_POSIX_COMM(comm, release_gather).field
+
 /* Blocking wait implementation */
 /* "acquire" makes sure no writes/reads are reordered before this load */
 #define MPIDI_POSIX_RELEASE_GATHER_WAIT_WHILE_LESS_THAN(ptr, value)                           \
@@ -41,12 +44,12 @@ extern MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type,
     (buf * MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE)
 #define MPIDI_POSIX_RELEASE_GATHER_REDUCE_DATA_ADDR(rank, buf)                         \
     (((char *) release_gather_info_ptr->reduce_buf_addr) +  \
-    (rank * MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE) + \
+    (rank * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size)) + \
     (buf * MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE))
 #define MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE \
-    (MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS)
+    (RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size) / RELEASE_GATHER_FIELD(comm_ptr, bcast_num_cells))
 #define MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE \
-    (MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS)
+    (RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size) / RELEASE_GATHER_FIELD(comm_ptr, reduce_num_cells))
 
 int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr);
 int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
@@ -79,15 +82,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
      * buffers can be used to pipeline the copying in and out of shared memory, and data is not
      * overwritten */
     const int relaxation =
-        (operation ==
-         MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) ? MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS - 1 : 0;
+        (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) ?
+        RELEASE_GATHER_FIELD(comm_ptr, reduce_num_cells) - 1 : 0;
 
     rank = MPIR_Comm_rank(comm_ptr);
     release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
     release_gather_info_ptr->release_state++;
 
     if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
-        segment = release_gather_info_ptr->release_state % MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS;
+        segment = release_gather_info_ptr->release_state %
+            RELEASE_GATHER_FIELD(comm_ptr, bcast_num_cells);
         bcast_data_addr = MPIDI_POSIX_RELEASE_GATHER_BCAST_DATA_ADDR(segment);
 
         if (root != 0) {
@@ -109,13 +113,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                               datatype, root, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recv_bytes);
-                MPIR_Typerep_copy(bcast_data_addr, &recv_bytes, sizeof(int));
+                MPIR_Typerep_copy(bcast_data_addr, &recv_bytes, sizeof(int),
+                                  MPIR_TYPEREP_FLAG_NONE);
                 /* It is necessary to copy the errflag as well to handle the case when non-root
                  * becomes temporary root as part of compositions (or smp aware colls). These temp
                  * roots might expect same data as other ranks but different from the actual root.
                  * So only datasize mismatch handling is not sufficient */
                 MPIR_Typerep_copy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, errflag,
-                                  sizeof(MPIR_Errflag_t));
+                                  sizeof(MPIR_Errflag_t), MPIR_TYPEREP_FLAG_NONE);
                 if ((int) recv_bytes != count) {
                     /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
                     *errflag = MPIR_ERR_OTHER;
@@ -135,13 +140,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
             /* When error checking is enabled, place the datasize in shm_buf first, followed by the
              * errflag, followed by the actual data with an offset of (2*cacheline_size) bytes from
              * the starting address */
-            MPIR_Typerep_copy(bcast_data_addr, &count, sizeof(int));
+            MPIR_Typerep_copy(bcast_data_addr, &count, sizeof(int), MPIR_TYPEREP_FLAG_NONE);
             /* It is necessary to copy the errflag as well to handle the case when non-root
              * becomes root as part of compositions (or smp aware colls). These roots might
              * expect same data as other ranks but different from the actual root. So only
              * datasize mismatch handling is not sufficient */
             MPIR_Typerep_copy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, errflag,
-                              sizeof(MPIR_Errflag_t));
+                              sizeof(MPIR_Errflag_t), MPIR_TYPEREP_FLAG_NONE);
             mpi_errno =
                 MPIR_Localcopy(local_buf, count, datatype,
                                (char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
@@ -156,7 +161,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
 
     if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE) {
         /* For allreduce, ranks directly copy the data from the reduce buffer of rank 0 */
-        segment = release_gather_info_ptr->release_state % MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS;
+        segment = release_gather_info_ptr->release_state %
+            RELEASE_GATHER_FIELD(comm_ptr, reduce_num_cells);
         bcast_data_addr = MPIDI_POSIX_RELEASE_GATHER_REDUCE_DATA_ADDR(0, segment);
     }
 
@@ -200,9 +206,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
              * expecting. Also, the errflag is copied out. In case of mismatch mpi_errno is set.
              * Actual data starts after (2*cacheline_size) bytes */
             int recv_bytes, recv_errflag;
-            MPIR_Typerep_copy(&recv_bytes, bcast_data_addr, sizeof(int));
+            MPIR_Typerep_copy(&recv_bytes, bcast_data_addr, sizeof(int), MPIR_TYPEREP_FLAG_NONE);
             MPIR_Typerep_copy(&recv_errflag, (char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN,
-                              sizeof(int));
+                              sizeof(int), MPIR_TYPEREP_FLAG_NONE);
             if (recv_bytes != count || recv_errflag != MPI_SUCCESS) {
                 /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
                 *errflag = MPIR_ERR_OTHER;
@@ -256,8 +262,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
      * buffers can be used to pipeline the copying in and out of shared memory, and data is not
      * overwritten */
     const int relaxation =
-        (operation ==
-         MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) ? MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS - 1 : 0;
+        (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) ?
+        RELEASE_GATHER_FIELD(comm_ptr, bcast_num_cells) - 1 : 0;
     uint64_t min_gather, child_gather_flag;
     UT_array *children;
     void *temp_recvbuf = NULL;
@@ -269,7 +275,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
 
     release_gather_info_ptr->gather_state++;
     min_gather = release_gather_info_ptr->gather_state;
-    segment = release_gather_info_ptr->gather_state % MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS;
+    segment = release_gather_info_ptr->gather_state %
+        RELEASE_GATHER_FIELD(comm_ptr, reduce_num_cells);
 
     if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE ||
         operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE) {
