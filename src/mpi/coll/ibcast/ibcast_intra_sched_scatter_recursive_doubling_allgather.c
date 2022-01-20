@@ -69,7 +69,7 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
 #ifdef HAVE_ERROR_CHECKING
     /* This algorithm can currently handle only power of 2 cases,
      * non-power of 2 is still experimental */
-    MPIR_Assert(MPL_is_pof2(comm_size, NULL));
+    MPIR_Assert(MPL_is_pof2(comm_size));
 #endif /* HAVE_ERROR_CHECKING */
 
     if (HANDLE_IS_BUILTIN(datatype)) {

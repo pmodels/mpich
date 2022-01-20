@@ -41,10 +41,8 @@ static inline int MPL_pof2(int number)
     }
 }
 
-/* Returns non-zero if val is a power of two.  If ceil_pof2 is non-NULL, it sets
-   *ceil_pof2 to the power of two that is just larger than or equal to val.
-   That is, it rounds up to the nearest power of two. */
-static inline int MPL_is_pof2(int val, int *ceil_pof2)
+/* Returns non-zero if val is a power of two. */
+static inline int MPL_is_pof2(int val)
 {
     int pof2 = 1;
 
