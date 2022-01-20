@@ -228,6 +228,7 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **invalidcollid: Invalid collective ID used.
 **sockaddrfailed: MPL_get_sockaddr failed
 
+**nosupport: Algorithm selected is not supported. Please choose another algorithm
 **nomembind: hwloc_set_area_membind() is not available
 **invalidmembind: Invalid bind object identifier.
 **invalidmembind %d: cannot bind memory to object (%d). \
