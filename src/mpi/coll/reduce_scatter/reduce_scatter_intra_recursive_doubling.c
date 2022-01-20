@@ -56,9 +56,10 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
     }
 
     /* slightly retask pof2 to mean pof2 equal or greater, not always greater as it is above */
-    pof2 = 1;
-    while (pof2 < comm_size)
+    pof2 = MPL_pof2(comm_size);
+    if (pof2 < comm_size) {
         pof2 <<= 1;
+    }
 
     /* need to allocate temporary buffer to receive incoming data */
     MPIR_CHKLMEM_MALLOC(tmp_recvbuf, void *, total_count * (MPL_MAX(true_extent, extent)),
