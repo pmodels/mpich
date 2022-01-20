@@ -805,7 +805,8 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
                       MPIDIG_REQUEST(rreq, req->areq.target_count), MPIDIG_REQUEST(rreq,
                                                                                    req->
                                                                                    areq.target_datatype),
-                      0, original, result_data_sz, &actual_pack_bytes);
+                      0, original, result_data_sz, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+    MPIR_Assert(actual_pack_bytes == result_data_sz);
 
     mpi_errno = MPIDIG_compute_acc_op(MPIDIG_REQUEST(rreq, req->areq.data),
                                       MPIDIG_REQUEST(rreq, req->areq.origin_count),
@@ -1061,10 +1062,13 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
 
     if (MPIR_Compare_equal((void *) MPIDIG_REQUEST(rreq, buffer), compare_addr,
                            MPIDIG_REQUEST(rreq, datatype))) {
-        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, buffer), data_sz);
-        MPIR_Typerep_copy((void *) MPIDIG_REQUEST(rreq, buffer), origin_addr, data_sz);
+        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, buffer), data_sz,
+                          MPIR_TYPEREP_FLAG_NONE);
+        MPIR_Typerep_copy((void *) MPIDIG_REQUEST(rreq, buffer), origin_addr, data_sz,
+                          MPIR_TYPEREP_FLAG_NONE);
     } else {
-        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, buffer), data_sz);
+        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, buffer), data_sz,
+                          MPIR_TYPEREP_FLAG_NONE);
     }
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD

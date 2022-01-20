@@ -59,10 +59,12 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
         MPI_Aint actual_unpack_bytes;
         if (typereq_req) {
             MPIR_Typerep_iunpack(MPIR_get_contig_ptr(sendbuf, sendtype_true_lb), copy_sz, recvbuf,
-                                 recvcount, recvtype, 0, &actual_unpack_bytes, typereq_req);
+                                 recvcount, recvtype, 0, &actual_unpack_bytes, typereq_req,
+                                 MPIR_TYPEREP_FLAG_NONE);
         } else {
             MPIR_Typerep_unpack(MPIR_get_contig_ptr(sendbuf, sendtype_true_lb), copy_sz, recvbuf,
-                                recvcount, recvtype, 0, &actual_unpack_bytes);
+                                recvcount, recvtype, 0, &actual_unpack_bytes,
+                                MPIR_TYPEREP_FLAG_NONE);
         }
         MPIR_ERR_CHKANDJUMP(actual_unpack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
                             "**dtypemismatch");
@@ -71,11 +73,11 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
         if (typereq_req) {
             MPIR_Typerep_ipack(sendbuf, sendcount, sendtype, 0,
                                MPIR_get_contig_ptr(recvbuf, recvtype_true_lb), copy_sz,
-                               &actual_pack_bytes, typereq_req);
+                               &actual_pack_bytes, typereq_req, MPIR_TYPEREP_FLAG_NONE);
         } else {
             MPIR_Typerep_pack(sendbuf, sendcount, sendtype, 0,
                               MPIR_get_contig_ptr(recvbuf, recvtype_true_lb), copy_sz,
-                              &actual_pack_bytes);
+                              &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
         }
         MPIR_ERR_CHKANDJUMP(actual_pack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
                             "**dtypemismatch");
@@ -109,14 +111,14 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
 
             MPI_Aint actual_pack_bytes;
             MPIR_Typerep_pack(sendbuf, sendcount, sendtype, sfirst, buf,
-                              max_pack_bytes, &actual_pack_bytes);
+                              max_pack_bytes, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
             MPIR_Assert(actual_pack_bytes > 0);
 
             sfirst += actual_pack_bytes;
 
             MPI_Aint actual_unpack_bytes;
             MPIR_Typerep_unpack(buf, actual_pack_bytes, recvbuf, recvcount, recvtype,
-                                rfirst, &actual_unpack_bytes);
+                                rfirst, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
             MPIR_Assert(actual_unpack_bytes > 0);
 
             rfirst += actual_unpack_bytes;

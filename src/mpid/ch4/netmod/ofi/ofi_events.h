@@ -85,7 +85,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
                             MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf),
                             MPIDI_OFI_REQUEST(rreq, noncontig.pack.count),
                             MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), 0,
-                            &actual_unpack_bytes);
+                            &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
         MPIDI_OFI_gpu_free_pack_buffer(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
         if (actual_unpack_bytes != (MPI_Aint) count) {
             rreq->status.MPI_ERROR =

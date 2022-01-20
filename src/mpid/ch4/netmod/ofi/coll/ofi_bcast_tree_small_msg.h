@@ -70,7 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_small_msg(void *buf
         sendbuf = MPL_malloc(data_sz * count, MPL_MEM_COLL);
         if (myrank == root) {
             mpi_errno = MPIR_Typerep_pack(buffer, count, datatype, 0, sendbuf, data_sz * count,
-                                          &actual_packed_unpacked_bytes);
+                                          &actual_packed_unpacked_bytes, MPIR_TYPEREP_FLAG_NONE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
@@ -290,7 +290,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_small_msg(void *buf
     if (!is_contig) {
         if (myrank != root) {
             mpi_errno = MPIR_Typerep_unpack(sendbuf, data_sz * count, buffer, count, datatype, 0,
-                                            &actual_packed_unpacked_bytes);
+                                            &actual_packed_unpacked_bytes, MPIR_TYPEREP_FLAG_NONE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 

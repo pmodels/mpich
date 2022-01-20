@@ -352,7 +352,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     }
 
     MPI_Aint packed_size;
-    mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, p_am_data, data_sz, &packed_size);
+    mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, p_am_data, data_sz, &packed_size,
+                                  MPIR_TYPEREP_FLAG_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(packed_size == data_sz);
 
@@ -374,7 +375,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
                                                          MPIDI_OFI_am_send_pipeline_request_t *
                                                          send_req, int vni_src, int vni_dst)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *msg_hdr;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_src, nic);
@@ -404,14 +405,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vni_src, dst_addr);
     msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vni_src, vni_src);
 
-    MPIR_cc_incr(sreq->cc_ptr, &c);
+    MPIR_cc_inc(sreq->cc_ptr);
     send_req->event_id = MPIDI_OFI_EVENT_AM_SEND_PIPELINE;
 
     MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + seg_sz;
     MPIR_Memcpy(send_req->am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
     MPI_Aint packed_size;
     mpi_errno = MPIR_Typerep_pack(buf, count, datatype, offset,
-                                  send_req->am_data, seg_sz, &packed_size);
+                                  send_req->am_data, seg_sz, &packed_size, MPIR_TYPEREP_FLAG_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(packed_size == seg_sz);
 
@@ -763,7 +764,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
          * step when we work on ZCOPY protocol support. Basically, if the src buf and datatype needs
          * packing, we should not be doing RDMA read. */
         MPIDI_OFI_gpu_malloc_pack_buffer((void **) &send_buf, data_sz);
-        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last);
+        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last,
+                                      MPIR_TYPEREP_FLAG_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(data_sz == last);
 

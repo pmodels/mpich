@@ -78,10 +78,13 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPIR_Op ** p_o
 
 int MPIR_Op_create_large_impl(MPI_User_function_c * user_fn, int commute, MPIR_Op ** p_op_ptr)
 {
-    int mpi_errno = MPIR_Op_create_impl((void *) user_fn, commute, p_op_ptr);
+    int mpi_errno = MPIR_Op_create_impl(NULL, commute, p_op_ptr);
     if (mpi_errno == MPI_SUCCESS) {
         (*p_op_ptr)->kind =
             commute ? MPIR_OP_KIND__USER_LARGE : MPIR_OP_KIND__USER_NONCOMMUTE_LARGE;
+        (*p_op_ptr)->function.c_large_function = (void (*)(const void *, void *,
+                                                           const MPI_Count *,
+                                                           const MPI_Datatype *)) user_fn;
     }
     return mpi_errno;
 }

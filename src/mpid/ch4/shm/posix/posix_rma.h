@@ -63,8 +63,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
     MPIR_ERR_CHKANDJUMP(packed_buf == NULL, mpi_errno, MPI_ERR_NO_MEM, "**nomem");
 
     MPI_Aint actual_pack_bytes;
-    mpi_errno = MPIR_Typerep_pack(origin_addr, origin_count, origin_datatype, 0,
-                                  packed_buf, total_len, &actual_pack_bytes);
+    mpi_errno = MPIR_Typerep_pack(origin_addr, origin_count, origin_datatype, 0, packed_buf,
+                                  total_len, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(actual_pack_bytes == total_len);
 
@@ -479,9 +479,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     }
 
-    MPIR_Typerep_copy(result_addr, target_addr, dtype_sz);
+    MPIR_Typerep_copy(result_addr, target_addr, dtype_sz, MPIR_TYPEREP_FLAG_NONE);
     if (MPIR_Compare_equal(compare_addr, target_addr, datatype)) {
-        MPIR_Typerep_copy(target_addr, origin_addr, dtype_sz);
+        MPIR_Typerep_copy(target_addr, origin_addr, dtype_sz, MPIR_TYPEREP_FLAG_NONE);
     }
 
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
@@ -649,7 +649,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     }
 
-    MPIR_Typerep_copy(result_addr, target_addr, dtype_sz);
+    MPIR_Typerep_copy(result_addr, target_addr, dtype_sz, MPIR_TYPEREP_FLAG_NONE);
 
     if (op != MPI_NO_OP) {
         /* We need to make sure op is valid here.

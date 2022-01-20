@@ -84,6 +84,12 @@ extern "C" {
         memcpy((dst), (src), (len));            \
     } while (0)
 
+#define MPIR_Memcpy_stream(dst, src, len)       \
+    do {                                        \
+        CHECK_MEMCPY((dst),(src),(len));        \
+        MPL_Memcpy_stream((dst), (src), (len)); \
+    } while (0)
+
 /* Memory allocation macros. See document. */
 
 /* Standard macro for generating error codes.  We set the error to be

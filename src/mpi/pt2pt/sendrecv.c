@@ -111,7 +111,8 @@ int MPIR_Sendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                    "temporary send buffer", MPL_MEM_BUFFER);
 
         mpi_errno =
-            MPIR_Typerep_pack(buf, count, datatype, 0, tmpbuf, tmpbuf_size, &actual_pack_bytes);
+            MPIR_Typerep_pack(buf, count, datatype, 0, tmpbuf, tmpbuf_size, &actual_pack_bytes,
+                              MPIR_TYPEREP_FLAG_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -254,7 +255,7 @@ int MPIR_Isendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype
         }
 
         mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, tmpbuf, tmpbuf_size,
-                                      &actual_pack_bytes);
+                                      &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(tmpbuf_size == actual_pack_bytes);
     }

@@ -539,10 +539,10 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     /* Create the proxy list */
     if (pg->user_node_list) {
-        status = HYDU_create_proxy_list(exec_list, pg->user_node_list, pg);
+        status = HYDU_create_proxy_list(exec_list, pg->user_node_list, pg, false);
         HYDU_ERR_POP(status, "error creating proxy list\n");
     } else {
-        status = HYDU_create_proxy_list(exec_list, HYD_server_info.node_list, pg);
+        status = HYDU_create_proxy_list(exec_list, HYD_server_info.node_list, pg, false);
         HYDU_ERR_POP(status, "error creating proxy list\n");
     }
     HYDU_free_exec_list(exec_list);

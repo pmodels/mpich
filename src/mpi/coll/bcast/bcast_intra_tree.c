@@ -57,7 +57,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
             mpi_errno = MPIR_Typerep_pack(buffer, count, datatype, 0, send_buf, nbytes,
-                                          &actual_packed_unpacked_bytes);
+                                          &actual_packed_unpacked_bytes, MPIR_TYPEREP_FLAG_NONE);
             MPIR_ERR_CHECK(mpi_errno);
         }
         count = count * type_size;
@@ -148,7 +148,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
     if (!is_contig) {
         if (rank != root) {
             mpi_errno = MPIR_Typerep_unpack(send_buf, nbytes, buffer, saved_count, datatype, 0,
-                                            &actual_packed_unpacked_bytes);
+                                            &actual_packed_unpacked_bytes, MPIR_TYPEREP_FLAG_NONE);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

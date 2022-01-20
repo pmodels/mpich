@@ -72,7 +72,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_copy_from_unexp_req(MPIR_Request * req, void
         if (!dt_contig) {
             MPI_Aint actual_unpack_bytes;
             MPIR_Typerep_unpack(MPIDIG_REQUEST(req, buffer), nbytes, user_buf, user_count,
-                                user_datatype, 0, &actual_unpack_bytes);
+                                user_datatype, 0, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
             if (actual_unpack_bytes != nbytes) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                                  __FUNCTION__, __LINE__,
@@ -85,7 +85,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_copy_from_unexp_req(MPIR_Request * req, void
              * the absolute address of the buffer (e.g. buf == MPI_BOTTOM).
              */
             char *addr = MPIR_get_contig_ptr(user_buf, dt_true_lb);
-            MPIR_Typerep_copy(addr, MPIDIG_REQUEST(req, buffer), nbytes);
+            MPIR_Typerep_copy(addr, MPIDIG_REQUEST(req, buffer), nbytes, MPIR_TYPEREP_FLAG_NONE);
         }
     }
 

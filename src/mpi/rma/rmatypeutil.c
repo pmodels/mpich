@@ -29,11 +29,9 @@ int MPIR_Type_is_rma_atomic(MPI_Datatype type)
                 MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
                 MPIR_OP_TYPE_GROUP(BYTE_EXTRA)
                 return TRUE;
-            break;
 #undef MPIR_OP_TYPE_MACRO
         default:
             return FALSE;
-            break;
     }
 }
 
@@ -61,7 +59,6 @@ int MPIR_Compare_equal(const void *a, const void *b, MPI_Datatype type)
 #undef MPIR_OP_TYPE_MACRO
         default:
             return FALSE;
-            break;
     }
 
     return FALSE;

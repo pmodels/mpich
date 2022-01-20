@@ -59,7 +59,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
         MPIR_CHKLMEM_MALLOC(sendbuf, void *, nbytes, mpi_errno, "sendbuf", MPL_MEM_BUFFER);
         if (rank == root) {
             mpi_errno = MPIR_Typerep_pack(buffer, count, datatype, 0, sendbuf, nbytes,
-                                          &actual_packed_unpacked_bytes);
+                                          &actual_packed_unpacked_bytes, MPIR_TYPEREP_FLAG_NONE);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -225,7 +225,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
     if (!is_contig) {
         if (rank != root) {
             mpi_errno = MPIR_Typerep_unpack(sendbuf, nbytes, buffer, count, datatype, 0,
-                                            &actual_packed_unpacked_bytes);
+                                            &actual_packed_unpacked_bytes, MPIR_TYPEREP_FLAG_NONE);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
