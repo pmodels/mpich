@@ -44,17 +44,19 @@ static inline int MPL_pof2(int number)
 /* Returns non-zero if val is a power of two. */
 static inline int MPL_is_pof2(int val)
 {
+#ifndef MPL_HAVE_BUILTIN_POPCOUNT
     int pof2 = 1;
 
     while (pof2 < val)
         pof2 *= 2;
-    if (ceil_pof2)
-        *ceil_pof2 = pof2;
 
     if (pof2 == val)
         return 1;
     else
         return 0;
+#else
+    return __builtin_popcount((unsigned int) val) == 1;
+#endif
 }
 
 /* Routing to calculate base^exp for integers */
