@@ -7,7 +7,7 @@ from local_python import MPI_API_Global as G
 from local_python import RE
 import re
 
-def get_kind_map(lang, is_large=False):
+def get_kind_map(lang, is_large=False, special=None):
     if lang.upper() == 'C':
         if is_large:
             return G.MAPS['BIG_C_KIND_MAP']
@@ -15,9 +15,15 @@ def get_kind_map(lang, is_large=False):
             return G.MAPS['SMALL_C_KIND_MAP']
     elif lang.upper() == 'F08':
         if is_large:
-            return G.MAPS['BIG_F08_KIND_MAP']
+            if special and special == "C_BUFFER as AINT":
+                return G.MAPS['BIG_F08_AINT_KIND_MAP']
+            else:
+                return G.MAPS['BIG_F08_KIND_MAP']
         else:
-            return G.MAPS['SMALL_F08_KIND_MAP']
+            if special and special == "C_BUFFER as AINT":
+                return G.MAPS['SMALL_F08_AINT_KIND_MAP']
+            else:
+                return G.MAPS['SMALL_F08_KIND_MAP']
     elif lang.upper() == 'F90':
         return G.MAPS['SMALL_F90_KIND_MAP']
     elif lang.upper() == "LIS":

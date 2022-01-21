@@ -100,6 +100,10 @@ def main():
             dump_mpi_c_interface_nobuf(func, False)
             if func['_need_large']:
                 dump_mpi_c_interface_nobuf(func, True)
+            if '_has_C_BUFFER' in func:
+                dump_mpi_c_interface_nobuf(func, False, "C_BUFFER as AINT")
+                if func['_need_large']:
+                    dump_mpi_c_interface_nobuf(func, True, "C_BUFFER as AINT")
     dump_interface_module_close("mpi_c_interface_nobuf")
     f = "%s/mpi_c_interface_nobuf.f90" % f08_dir
     dump_f90_file(f, G.out)
@@ -124,6 +128,12 @@ def main():
         if func['_need_large']:
             G.out.append("")
             dump_mpi_f08(func, True)
+        if '_has_C_BUFFER' in func:
+            G.out.append("")
+            dump_mpi_f08(func, False, "C_BUFFER as AINT")
+            if func['_need_large']:
+                G.out.append("")
+                dump_mpi_f08(func, True, "C_BUFFER as AINT")
         G.out.append("DEDENT")
         G.out.append("END INTERFACE %s" % func_name)
     G.out.append("")

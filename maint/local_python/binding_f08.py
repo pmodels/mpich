@@ -9,29 +9,28 @@ from local_python import RE
 
 import re
 
-def get_cdesc_name(func, is_large):
+def append_interface_suffix(name, is_large, special):
+    if is_large:
+        name += "_large"
+    if special and special == "C_BUFFER as AINT":
+        name += "_aint"
+    return name
+
+def get_cdesc_name(func, is_large, special=None):
     name = re.sub(r'^MPIX?_', 'MPIR_', func['name'] + "_cdesc")
-    if is_large:
-        name += "_large"
-    return name
+    return append_interface_suffix(name, is_large, special)
 
-def get_f08_c_name(func, is_large):
+def get_f08_c_name(func, is_large, special=None):
     name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_c')
-    if is_large:
-        name += "_large"
-    return name
+    return append_interface_suffix(name, is_large, special)
 
-def get_f08ts_name(func, is_large):
+def get_f08ts_name(func, is_large, special=None):
     name = func['name'] + "_f08ts"
-    if is_large:
-        name += "_large"
-    return name
+    return append_interface_suffix(name, is_large, special)
 
-def get_f08_name(func, is_large):
+def get_f08_name(func, is_large, special=None):
     name = func['name'] + "_f08"
-    if is_large:
-        name += "_large"
-    return name
+    return append_interface_suffix(name, is_large, special)
 
 def dump_f08_wrappers_c(func, is_large):
     c_mapping = get_kind_map('C', is_large)
@@ -751,8 +750,8 @@ def dump_mpi_c_interface_cdesc(func, is_large):
     name = get_cdesc_name(func, is_large)
     dump_interface_function(func, name, name, is_large)
 
-def dump_mpi_c_interface_nobuf(func, is_large):
-    name = get_f08_c_name(func, is_large)
+def dump_mpi_c_interface_nobuf(func, is_large, special=None):
+    name = get_f08_c_name(func, is_large, special)
     if RE.match(r'mpi_(comm|type|win)_(set|get)_attr', func['name'], re.IGNORECASE):
         # use C wrapper functions exposed by C binding
         c_name = re.sub(r'MPIX?_', r'MPII_', func['name'])
@@ -764,11 +763,11 @@ def dump_mpi_c_interface_nobuf(func, is_large):
     else:
         # uses PMPI c binding directly
         c_name = 'P' + get_function_name(func, is_large)
-    dump_interface_function(func, name, c_name, is_large)
+    dump_interface_function(func, name, c_name, is_large, special)
 
-def dump_interface_function(func, name, c_name, is_large):
+def dump_interface_function(func, name, c_name, is_large, special=None):
     c_mapping = get_kind_map('C', is_large)
-    f08_mapping = get_kind_map('F08', is_large)
+    f08_mapping = get_kind_map('F08', is_large, special)
 
     uses = {}
     f_param_list = []
@@ -828,8 +827,8 @@ def dump_interface_function(func, name, c_name, is_large):
     G.out.append("END FUNCTION %s" % name)
 
 # dump the interface block in `mpi_f08.f90`
-def dump_mpi_f08(func, is_large):
-    f08_mapping = get_kind_map('F08', is_large)
+def dump_mpi_f08(func, is_large, special=None):
+    f08_mapping = get_kind_map('F08', is_large, special)
 
     uses = {}
     f_param_list = []
@@ -850,9 +849,9 @@ def dump_mpi_f08(func, is_large):
 
     # ----
     if need_cdesc(func):
-        name = get_f08ts_name(func, is_large)
+        name = get_f08ts_name(func, is_large, special)
     else:
-        name = get_f08_name(func, is_large)
+        name = get_f08_name(func, is_large, special)
     if 'return' not in func:
         dump_fortran_line("SUBROUTINE %s(%s)" % (name, ', '.join(f_param_list)))
     else:
@@ -1302,7 +1301,9 @@ def process_func_parameters(func):
     for p in func['parameters']:
         if p['kind'] == 'BUFFER':
             func['_need_cdesc'] = True
-            return
+        elif p['kind'] == 'C_BUFFER':
+            # F08 require generice interface for both TYPE(C_PTR) and INTEGER(MPI_ADDRESS_KIND)
+            func['_has_C_BUFFER'] = True
 
 def check_func_directives(func):
     if 'dir' in func and func['dir'] == "mpit":
@@ -1442,6 +1443,8 @@ def get_F_c_interface_decl(func, p, f_mapping, c_mapping):
         elif p['kind'] == 'ATTRIBUTE_VAL':
             return "%s, %s :: %s" % (t_f, intent, p['name'])
         elif RE.match(r'MPI_(Fint|Aint|Count|Offset)', t_c):
+            return "%s, %s :: %s" % (t_f, intent, p['name'])
+        elif p['kind'] == 'C_BUFFER' and re.match(r'INTEGER', t_f, re.IGNORECASE):
             return "%s, %s :: %s" % (t_f, intent, p['name'])
     else: # intent(in)
         if t_f == 'PROCEDURE':
