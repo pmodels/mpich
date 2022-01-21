@@ -26,6 +26,7 @@ def main():
         # FIXME: until romio interface is generated
         func_list.extend(get_mpiio_func_list())
     func_list.extend(get_type_create_f90_func_list())
+    func_list.append(G.FUNCS['mpi_f_sync_reg'])
 
     skip_large_list = []
     # skip File large count functions because it is not implemented yet
@@ -87,8 +88,6 @@ def main():
             dump_mpi_c_interface_cdesc(func, False)
             if func['_need_large']:
                 dump_mpi_c_interface_cdesc(func, True)
-    f_sync_reg = {'name':"MPI_F_sync_reg", 'parameters':[{'name':"buf", 'kind':"BUFFER", 't':'', 'large_only':None, 'param_direction':"in"}]}
-    dump_mpi_c_interface_cdesc(f_sync_reg, False)
     dump_interface_module_close("mpi_c_interface_cdesc")
     f = "%s/mpi_c_interface_cdesc.f90" % f08_dir
     dump_f90_file(f, G.out)
