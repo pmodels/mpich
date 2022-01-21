@@ -2841,11 +2841,12 @@ for type in short int long float double \
     eval len=\$ac_cv_sizeof_$type
     if test -z "$len" ; then
         AC_MSG_ERROR([Configure was unable to determine the size of $type ; if cross compiling,
-use the environment variables CROSS_SIZEOF_typename, e.g., CROSS_SIZEOF_SHORT,
-or use the --with-cross=file configure option to specify a file containing
-Bourne (sh) shell assignments to CROSS_SIZEOF_typename for all datatype
-types.  The program maint/getcross.c can be compiled and run on the target
-system; this program outputs an appropriate file for the --with-cross option])
+use the --with-cross=file configure option to specify a file containing
+Bourne (sh) shell assignments to sizeof values for all datatype types.
+The Perl script maint/gen_cross.pl can be run on the target
+system to generate an appropriate file for the --with-cross option. You
+may also run the script on local system and use the generated file as
+template and manually set the correct values.])
     fi
 done
 
