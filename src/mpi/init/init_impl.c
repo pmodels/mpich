@@ -166,7 +166,7 @@ int MPIR_Session_get_info_impl(MPIR_Session * session_ptr, MPIR_Info ** info_p_p
     /* Multiple session may run in threads concurrently, so significant work is needed to support
      * per-session MPI_THREAD_SINGLE */
     /* TODO: support per-session MPI_THREAD_SINGLE and optimize */
-    mpi_errno = MPIR_Info_set_impl(*info_p_p, "mpi_thread_support_level", "MPI_THREAD_MULTIPLE");
+    mpi_errno = MPIR_Info_set_impl(*info_p_p, "thread_level", "MPI_THREAD_MULTIPLE");
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
