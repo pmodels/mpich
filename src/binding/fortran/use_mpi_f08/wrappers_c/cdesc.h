@@ -34,6 +34,5 @@ extern int MPIR_Comm_spawn_multiple_c(int count, char *array_of_commands_f, char
                                       int root, MPI_Comm comm, MPI_Comm * intercomm,
                                       int *array_of_errcodes, int commands_elem_len,
                                       int argv_elem_len);
-extern int MPIR_F_sync_reg_cdesc(CFI_cdesc_t * buf);
 
 #endif /* CDESC_H_INCLUDED */

@@ -138,15 +138,19 @@ def dump_f08_wrappers_c(func, is_large):
         G.out.append("#else")
     G.out.append("INDENT");
     G.out.append("int err = MPI_SUCCESS;")
-    for l in vardecl_list:
-        G.out.append(l)
-    G.out.append("")
-    for l in code_list:
-        G.out.append(l)
-    G.out.append("err = %s(%s);" % (get_function_name(func, is_large), ', '.join(c_arg_list)))
-    G.out.append("")
-    for l in end_list:
-        G.out.append(l)
+    if re.match(r'MPI_F_sync_reg', func['name'], re.IGNORECASE):
+        # dummy
+        pass
+    else:
+        for l in vardecl_list:
+            G.out.append(l)
+        G.out.append("")
+        for l in code_list:
+            G.out.append(l)
+        G.out.append("err = %s(%s);" % (get_function_name(func, is_large), ', '.join(c_arg_list)))
+        G.out.append("")
+        for l in end_list:
+            G.out.append(l)
     G.out.append("return err;")
     G.out.append("DEDENT")
     if re.match(r'MPI_File_', func['name']):
