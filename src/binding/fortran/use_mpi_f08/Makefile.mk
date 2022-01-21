@@ -53,8 +53,6 @@ BUILT_SOURCES += $(f08_module_files)
 CLEANFILES += $(f08_module_files)
 
 mpi_fc_sources += \
-	src/binding/fortran/use_mpi_f08/wrappers_f/f_sync_reg_f08ts.f90 \
-	src/binding/fortran/use_mpi_f08/wrappers_f/pf_sync_reg_f08ts.f90 \
 	src/binding/fortran/use_mpi_f08/wrappers_f/f08ts.f90 \
 	src/binding/fortran/use_mpi_f08/wrappers_f/pf08ts.f90
 
