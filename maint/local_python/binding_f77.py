@@ -41,6 +41,8 @@ def dump_f77_c_func(func):
         need_ATTR_AINT = True
     elif re.match(r'MPI.*_(DUP|DELETE|COPY)_FN|MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
         is_custom_fn = True
+    elif re.match(r'MPI_F_sync_reg', func['name'], re.IGNORECASE):
+        is_custom_fn = True
     
     if len(func['parameters']) > 0:
         last_p = func['parameters'][-1]
@@ -537,6 +539,8 @@ def dump_f77_c_func(func):
             G.out.append("*%s = MPI_SUCCESS;" % err)
         elif re.match(r'MPI.*_NULL_DELETE_FN', func['name'], re.IGNORECASE):
             G.out.append("*%s = MPI_SUCCESS;" % err)
+        elif re.match(r'MPI_F_sync_reg', func['name'], re.IGNORECASE):
+            G.out.append("*ierr = MPI_SUCCESS;")
         else:
             raise Exception("Unhandled dummy function - %s" % func['name'])
 
