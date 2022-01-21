@@ -12,6 +12,38 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_GENQ_SHMEM_POOL_FREE_QUEUE_SENDER_SIDE
+      category    : CH4
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        The genq shmem code allocates pools of cells on each process and, when needed, a cell is
+        removed from the pool and passed to another process. This can happen by either removing a
+        cell from the pool of the sending process or from the pool of the receiving process. This
+        CVAR determines which pool to use. If true, the cell will come from the sender-side. If
+        false, the cell will com from the receiver-side.
+
+        There are specific advantages of using receiver-side cells when combined with the "avx" fast
+        configure option, which allows MPICH to use AVX streaming copy intrintrinsics, when
+        available, to avoid polluting the cache of the sender with the data being copied to the
+        receiver. Using receiver-side cells does have the trade-off of requiring an MPMC lock for
+        the free queue rather than an MPSC lock, which is used for sender-side cells. Initial
+        performance analysis shows that using the MPMC lock in this case had no significant
+        performance loss.
+
+        By default, the queue will continue to use sender-side queues until the performance impact
+        is verified.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #define RESIZE_TO_MAX_ALIGN(x) \
     ((((x) / MAX_ALIGNMENT) + !!((x) % MAX_ALIGNMENT)) * MAX_ALIGNMENT)
 
@@ -31,6 +63,11 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int block_idx)
     /* init cell headers */
     int idx = block_idx * pool->cells_per_proc;
     for (int i = 0; i < pool->cells_per_proc; i++) {
+        /* Have the "host" process for each cell zero-out the cell contents to force the first-touch
+         * policy to make the pages resident to that process. */
+        memset((char *) pool->cell_header_base + (idx + i) * pool->cell_alloc_size, 0,
+               pool->cell_alloc_size);
+
         pool->cell_headers[i] =
             (MPIDU_genqi_shmem_cell_header_s *) ((char *) pool->cell_header_base
                                                  + (idx + i) * pool->cell_alloc_size);
@@ -86,8 +123,12 @@ int MPIDU_genq_shmem_pool_create_unsafe(uintptr_t cell_size, uintptr_t cells_per
     pool_obj->free_queues =
         (MPIDU_genq_shmem_queue_u *) ((char *) pool_obj->slab + total_cells_size);
 
+    /* If using sender-side queuing, use an MPSC lock. If using recevier-side queuing, an MPMC lock
+     * is needed. */
     rc = MPIDU_genq_shmem_queue_init(&pool_obj->free_queues[rank],
-                                     MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC);
+                                     MPIR_CVAR_GENQ_SHMEM_POOL_FREE_QUEUE_SENDER_SIDE ?
+                                     MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC :
+                                     MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPMC);
     MPIR_ERR_CHECK(rc);
 
     rc = cell_block_alloc(pool_obj, rank);
