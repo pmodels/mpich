@@ -90,10 +90,10 @@ void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affi
     int err = MPL_SUCCESS, pthread_err;
     int proc_idx, set_size = 0;
     cpu_set_t cpuset;
-    __CPU_ZERO_S(sizeof(cpu_set_t), &cpuset);
+    CPU_ZERO_S(sizeof(cpu_set_t), &cpuset);
 
     for (proc_idx = 0; proc_idx < affinity_size; proc_idx++)
-        __CPU_SET_S(affinity_arr[proc_idx], sizeof(cpu_set_t), &cpuset);
+        CPU_SET_S(affinity_arr[proc_idx], sizeof(cpu_set_t), &cpuset);
 
     if ((pthread_err = pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset)) != 0) {
         err = MPL_ERR_THREAD;
@@ -106,7 +106,7 @@ void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affi
     }
 
     for (proc_idx = 0; proc_idx < affinity_size; proc_idx++) {
-        if (__CPU_ISSET_S(affinity_arr[proc_idx], sizeof(cpu_set_t), &cpuset))
+        if (CPU_ISSET_S(affinity_arr[proc_idx], sizeof(cpu_set_t), &cpuset))
             set_size++;
     }
     if (set_size != affinity_size) {
