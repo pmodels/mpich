@@ -86,10 +86,13 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
         hints->caps |= FI_ATOMICS;      /* Atomics capabilities    */
     }
 
-    if (MPIDI_OFI_ENABLE_TAGGED) {
-        hints->caps |= FI_TAGGED;       /* Tag matching interface  */
+    if (MPIDI_OFI_ENABLE_DATA) {
         hints->caps |= FI_DIRECTED_RECV;        /* Match source address    */
         hints->domain_attr->cq_data_size = MPIDI_OFI_MIN_CQ_DATA_SIZE;  /* Minimum size for completion data entry */
+    }
+
+    if (MPIDI_OFI_ENABLE_TAGGED) {
+        hints->caps |= FI_TAGGED;       /* Tag matching interface  */
     }
 
     if (MPIDI_OFI_ENABLE_AM) {
@@ -284,16 +287,13 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
 {
     int score = 0;
 
+    CHECK_CAP(enable_data, prov->domain_attr->cq_data_size < MPIDI_OFI_MIN_CQ_DATA_SIZE);
+
     /* From the fi_getinfo manpage: "FI_TAGGED implies the ability to send and receive
      * tagged messages." Therefore no need to specify FI_SEND|FI_RECV.  Moreover FI_SEND
      * and FI_RECV are mutually exclusive, so they should never be set both at the same
      * time. */
-    /* This capability set also requires the ability to receive data in the completion
-     * queue object (at least 32 bits). Previously, this was a separate capability set,
-     * but as more and more providers supported this feature, the decision was made to
-     * require it. */
-    CHECK_CAP(enable_tagged, !(prov->caps & FI_TAGGED) ||
-              prov->domain_attr->cq_data_size < MPIDI_OFI_MIN_CQ_DATA_SIZE);
+    CHECK_CAP(enable_tagged, !(prov->caps & FI_TAGGED));
 
     CHECK_CAP(enable_am, (prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV));
 
@@ -337,10 +337,10 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
                                   prov->domain_attr->mr_mode & (FI_MR_PROV_KEY | FI_MR_BASIC));
     UPDATE_SETTING_BY_INFO_DIRECT(enable_mr_allocated,
                                   prov->domain_attr->mr_mode & (FI_MR_ALLOCATED | FI_MR_BASIC));
-    UPDATE_SETTING_BY_INFO(enable_tagged,
-                           (prov->caps & FI_TAGGED) &&
-                           (prov->caps & FI_DIRECTED_RECV) &&
-                           (prov->domain_attr->cq_data_size >= MPIDI_OFI_MIN_CQ_DATA_SIZE));
+    UPDATE_SETTING_BY_INFO_DIRECT(enable_data,
+                                  (prov->caps & FI_DIRECTED_RECV) &&
+                                  prov->domain_attr->cq_data_size >= MPIDI_OFI_MIN_CQ_DATA_SIZE);
+    UPDATE_SETTING_BY_INFO(enable_tagged, prov->caps & FI_TAGGED);
     UPDATE_SETTING_BY_INFO(enable_am,
                            (prov->caps & (FI_MSG | FI_MULTI_RECV)) == (FI_MSG | FI_MULTI_RECV));
     UPDATE_SETTING_BY_INFO(enable_rma, prov->caps & FI_RMA);

@@ -28,6 +28,16 @@ cvars:
       description : >-
         Skip IPv6 providers.
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_DATA
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Enable immediate data fields in OFI to transmit source rank outside of the match bits
+
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE
       category    : CH4_OFI
       type        : int
@@ -722,17 +732,23 @@ static int flush_send(int dst, int nic, int vni, MPIDI_OFI_dynamic_process_reque
 
     fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, dst), nic, vni, vni);
     static int data = 0;
-    uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
+    uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0,
                                                  MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
 
     /* Use the same direct send method as used in establishing dynamic processes */
     req->done = 0;
     req->event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
-    MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(NULL, vni,
-                                                                                   nic)].tx,
-                                      &data, 4, NULL, 0, addr, match_bits, &req->context), vni,
-                         tsenddata, FALSE);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
+    if (MPIDI_OFI_ENABLE_DATA) {
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                          &data, 4, NULL, 0, addr, match_bits, &req->context),
+                             vni, tsenddata, FALSE);
+    } else {
+        MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                      &data, 4, NULL, addr, match_bits, &req->context),
+                             vni, tsend, FALSE);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -747,7 +763,7 @@ static int flush_recv(int src, int nic, int vni, MPIDI_OFI_dynamic_process_reque
 
     fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, src), nic, vni, vni);
     uint64_t mask_bits = 0;
-    uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID,
+    uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0,
                                                  MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
 
     /* Use the same direct recv method as used in establishing dynamic processes */
@@ -1390,6 +1406,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "libfabric provider: %s - %s\n",
             MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name,
             MPIDI_OFI_global.prov_use[0]->fabric_attr->name);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_DATA: %d\n", MPIDI_OFI_ENABLE_DATA);
     fprintf(stdout, "MPIDI_OFI_ENABLE_AV_TABLE: %d\n", MPIDI_OFI_ENABLE_AV_TABLE);
     fprintf(stdout, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d\n",
             MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);

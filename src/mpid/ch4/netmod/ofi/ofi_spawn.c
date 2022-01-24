@@ -26,15 +26,21 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     req.done = 0;
     req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
     uint64_t match_bits;
-    match_bits = MPIDI_OFI_init_sendtag(0, tag, MPIDI_OFI_DYNPROC_SEND);
+    match_bits = MPIDI_OFI_init_sendtag(0, 0, tag, MPIDI_OFI_DYNPROC_SEND);
 
     MPL_time_t time_start, time_now;
     double time_gap;
     MPL_wtime(&time_start);
-    MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                      buf, size, NULL /* desc */ , 0,
+    if (MPIDI_OFI_ENABLE_DATA) {
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                          buf, size, NULL /* desc */ , 0,
+                                          remote_addr, match_bits, (void *) &req.context),
+                             vni, tsenddata, FALSE /* eagain */);
+    } else {
+        MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx, buf, size, NULL /* desc */ ,
                                       remote_addr, match_bits, (void *) &req.context),
-                         vni, tsenddata, FALSE /* eagain */);
+                             vni, tsend, FALSE /* eagain */);
+    }
     do {
         mpi_errno = MPIDI_OFI_progress_uninlined(vni);
         // mpi_errno = MPID_Progress_test(NULL);
@@ -82,7 +88,7 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
     uint64_t match_bits = 0;
     uint64_t mask_bits = 0;
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, 0, tag);
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, 0, MPI_ANY_SOURCE, tag);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);

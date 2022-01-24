@@ -33,15 +33,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
         MPIDI_OFI_multx_receiver_nic_index(comm, comm->context_id, comm->rank, dst_rank, tag);
     ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, sender_nic);
 
-    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
-    MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                        buf,
-                                        data_sz,
-                                        cq_data,
-                                        MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
-                                                             vni_remote),
-                                        match_bits),
-                         vni_local, tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
+    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, dst_rank, tag, 0);
+    fi_addr_t dest_addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local, vni_remote);
+    if (MPIDI_OFI_ENABLE_DATA) {
+        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                            buf, data_sz, cq_data, dest_addr, match_bits),
+                             vni_local, tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
+    } else {
+        MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                        buf, data_sz, dest_addr, match_bits),
+                             vni_local, tinject, comm->hints[MPIR_COMM_HINT_EAGAIN]);
+    }
     MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -97,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, MPIDI_OFI_REQUEST(sreq, nic_num));
 
     /* everything fits in the IOV array */
-    flags = FI_COMPLETION | FI_REMOTE_CQ_DATA;
+    flags = FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_NOPACK;
 
     size = num_contig * sizeof(struct iovec) + sizeof(*(MPIDI_OFI_REQUEST(sreq, noncontig.nopack)));
@@ -119,7 +121,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.tag = match_bits;
     msg.ignore = 0ULL;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
-    msg.data = cq_data;
+    msg.data = MPIDI_OFI_ENABLE_DATA ? cq_data : 0;
     msg.addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local, vni_remote);
 
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[ctx_idx].tx,
@@ -176,7 +178,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         type = 0;
     }
 
-    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, type);
+    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, dst_rank, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
@@ -198,7 +200,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         ackreq->event_id = MPIDI_OFI_EVENT_SSEND_ACK;
         ackreq->signal_req = sreq;
         MPIR_cc_inc(sreq->cc_ptr);
-        ssend_match = MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, tag);
+        ssend_match =
+            MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, dst_rank, tag);
         ssend_match |= MPIDI_OFI_SYNC_SEND_ACK;
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(comm, vni_local, receiver_nic)].rx,  /* endpoint    */
                                       NULL,     /* recvbuf     */
@@ -258,24 +261,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = NULL;
     }
 
+    fi_addr_t dest_addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local, vni_remote);
     if (data_sz <= MPIDI_OFI_global.max_buffered_send) {
-        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                            send_buf,
-                                            data_sz,
-                                            cq_data,
-                                            MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
-                                                                 vni_remote), match_bits),
-                             vni_local, tinjectdata, FALSE /* eagain */);
+        if (MPIDI_OFI_ENABLE_DATA) {
+            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                                send_buf, data_sz, cq_data, dest_addr, match_bits),
+                                 vni_local, tinjectdata, FALSE /* eagain */);
+        } else {
+            MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                            send_buf, data_sz, dest_addr, match_bits),
+                                 vni_local, tinject, FALSE /* eagain */);
+        }
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
         MPIDI_OFI_send_event(vni_src, NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
     } else if (!is_huge_send) {
-        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                          send_buf, data_sz, NULL /* desc */ ,
-                                          cq_data,
-                                          MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local,
-                                                               vni_remote), match_bits,
-                                          (void *) &(MPIDI_OFI_REQUEST(sreq, context))), vni_local,
-                             tsenddata, FALSE /* eagain */);
+        if (MPIDI_OFI_ENABLE_DATA) {
+            MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                              send_buf, data_sz, NULL, cq_data, dest_addr,
+                                              match_bits,
+                                              (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
+                                 vni_local, tsenddata, FALSE /* eagain */);
+        } else {
+            MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                          send_buf, data_sz, NULL, dest_addr, match_bits,
+                                          (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
+                                 vni_local, tsend, FALSE /* eagain */);
+        }
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
     } else if (unlikely(1)) {
         int num_nics = MPIDI_OFI_global.num_nics;

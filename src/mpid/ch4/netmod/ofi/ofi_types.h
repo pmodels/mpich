@@ -288,6 +288,7 @@ typedef union {
 } MPIDI_OFI_cacheline_mutex_t;
 
 typedef struct {
+    unsigned enable_data:1;
     unsigned enable_av_table:1;
     unsigned enable_scalable_endpoints:1;
     unsigned enable_shared_contexts:1;
