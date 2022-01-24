@@ -133,6 +133,24 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
             }
             break;
 
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_tree:
+            {
+                json_object_object_foreach(obj, key, val) {
+                    ckey = MPL_strdup_no_spaces(key);
+                    if (!strncmp(ckey, "buffer_per_child=", strlen("buffer_per_child=")))
+                        cnt->u.allreduce.intra_tree.buffer_per_child =
+                            atoi(ckey + strlen("buffer_per_child="));
+                    else if (!strncmp(ckey, "k=", strlen("k=")))
+                        cnt->u.allreduce.intra_tree.k = atoi(ckey + strlen("k="));
+                    else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
+                        cnt->u.allreduce.intra_tree.tree_type = atoi(ckey + strlen("tree_type="));
+                    else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
+                        cnt->u.allreduce.intra_tree.chunk_size = atoi(ckey + strlen("chunk_size="));
+                    MPL_free(ckey);
+                }
+            }
+            break;
+
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_scatterv_recexch_allgatherv:
             {
                 json_object_object_foreach(obj, key, val) {
@@ -184,6 +202,7 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
             }
             break;
 
+
         default:
             /* Algorithm does not have parameters */
             break;
@@ -226,6 +245,8 @@ void *MPII_Create_container(struct json_object *obj)
                 MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_reduce_scatter_allgather;
         else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_intra_smp"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_smp;
+        else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_intra_tree"))
+            cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_tree;
         else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_inter_reduce_exchange_bcast"))
             cnt->id =
                 MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_inter_reduce_exchange_bcast;
