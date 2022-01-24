@@ -226,6 +226,10 @@ algorithms:
             smp
             recursive_doubling
             reduce_scatter_allgather
+	    tree
+                .MPIR_CVAR_ALLREDUCE_TREE_TYPE=knomial_1,knomial_2,kary
+                .MPIR_CVAR_ALLREDUCE_TREE_KVAL=2,3,4
+                .MPIR_CVAR_ALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096,8192
             posix:release_gather
                 .MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072
                 .MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=16384

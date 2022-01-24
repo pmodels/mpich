@@ -1186,19 +1186,57 @@ cvars:
         smp                      - Force smp algorithm
         recursive_doubling       - Force recursive doubling algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
+        tree                     - Force pipelined tree algorithm
 
     - name        : MPIR_CVAR_ALLREDUCE_TREE_TYPE
       category    : COLLECTIVE
       type        : string
-      default     : kary
+      default     : knomial_1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Tree type for tree based allreduce
+        knomial_1 is default as it supports both commutative and non-commutative reduce operations
         kary      - kary tree type
         knomial_1 - knomial_1 tree type (tree grows starting from the left of the root)
         knomial_2 - knomial_2 tree type (tree grows starting from the right of the root)
+
+    - name        : MPIR_CVAR_ALLREDUCE_TREE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Indicates the branching factor for kary or knomial trees.
+
+    - name        : MPIR_CVAR_ALLREDUCE_TREE_PIPELINE_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum chunk size (in bytes) for pipelining in tree based
+        allreduce. Default value is 0, that is, no pipelining by default
+
+    - name        : MPIR_CVAR_ALLREDUCE_TREE_BUFFER_PER_CHILD
+      category    : COLLECTIVE
+      type        : boolean
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, a rank in tree_kary and tree_knomial algorithms will allocate
+        a dedicated buffer for every child it receives data from. This would mean more
+        memory consumption but it would allow preposting of the receives and hence reduce
+        the number of unexpected messages. If set to false, there is only one buffer that is
+        used to receive the data from all the children. The receives are therefore serialized,
+        that is, only one receive can be posted at a time.
 
     - name        : MPIR_CVAR_ALLREDUCE_TREE_KVAL
       category    : COLLECTIVE
