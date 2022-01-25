@@ -162,6 +162,9 @@ int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr)
     RELEASE_GATHER_FIELD(comm_ptr, num_collective_calls) = 0;
     RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
 
+    NB_RELEASE_GATHER_FIELD(comm_ptr, num_collective_calls) = 0;
+    NB_RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
+
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
