@@ -6,6 +6,18 @@
 #include "cdesc.h"
 #include <string.h>
 
+int MPIR_F08_MPI_IN_PLACE MPICH_API_PUBLIC;
+int MPIR_F08_MPI_BOTTOM MPICH_API_PUBLIC;
+
+/* MPI_F08_STATUS_IGNORE and MPI_F08_STATUSES_IGNORE are required by MPI-3.0.
+ * the obj variables are linked in mpi_f08_link_constants module via bind(c).
+ */
+MPI_F08_status MPIR_F08_MPI_STATUS_IGNORE_OBJ MPICH_API_PUBLIC;
+MPI_F08_status MPIR_F08_MPI_STATUSES_IGNORE_OBJ[1] MPICH_API_PUBLIC;
+
+MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC = &MPIR_F08_MPI_STATUS_IGNORE_OBJ;
+MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC = &MPIR_F08_MPI_STATUSES_IGNORE_OBJ[0];
+
 /*
   Convert an array of strings in Fortran Format to an array of strings in C format (i.e., char* a[]).
 
@@ -92,4 +104,39 @@ extern int MPIR_Fortran_array_of_string_f2c(const char *strs_f, char ***strs_c, 
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+void *MPIR_F08_get_MPI_STATUS_IGNORE(void)
+{
+    return (void *) MPI_STATUS_IGNORE;
+}
+
+void *MPIR_F08_get_MPI_STATUSES_IGNORE(void)
+{
+    return (void *) MPI_STATUSES_IGNORE;
+}
+
+void *MPIR_F08_get_MPI_ARGV_NULL(void)
+{
+    return (void *) MPI_ARGV_NULL;
+}
+
+void *MPIR_F08_get_MPI_ARGVS_NULL(void)
+{
+    return (void *) MPI_ARGVS_NULL;
+}
+
+void *MPIR_F08_get_MPI_ERRCODES_IGNORE(void)
+{
+    return (void *) MPI_ERRCODES_IGNORE;
+}
+
+void *MPIR_F08_get_MPI_UNWEIGHTED(void)
+{
+    return (void *) MPI_UNWEIGHTED;
+}
+
+void *MPIR_F08_get_MPI_WEIGHTS_EMPTY(void)
+{
+    return (void *) MPI_WEIGHTS_EMPTY;
 }

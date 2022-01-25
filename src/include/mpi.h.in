@@ -792,14 +792,9 @@ typedef struct {
 #define MPI_F_TAG 3
 #define MPI_F_ERROR 4
 
-extern MPI_F08_status MPIR_F08_MPI_STATUS_IGNORE_OBJ MPICH_API_PUBLIC;
-extern MPI_F08_status MPIR_F08_MPI_STATUSES_IGNORE_OBJ[1] MPICH_API_PUBLIC;
-extern int MPIR_F08_MPI_IN_PLACE MPICH_API_PUBLIC;
-extern int MPIR_F08_MPI_BOTTOM MPICH_API_PUBLIC;
-
-/* Pointers to above objects */
-extern MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
+/* Provided in libmpifort.so */
+extern MPI_F08_status *MPI_F08_STATUS_IGNORE;
+extern MPI_F08_status *MPI_F08_STATUSES_IGNORE;
 
 /* For supported thread levels */
 #define MPI_THREAD_SINGLE 0
