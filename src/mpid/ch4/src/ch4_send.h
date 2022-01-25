@@ -9,6 +9,8 @@
 #include "ch4_impl.h"
 #include "ch4_proc.h"
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_check_global_progress(void);
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend(const void *buf,
                                          MPI_Aint count,
                                          MPI_Datatype datatype,
@@ -47,6 +49,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend(const void *buf,
 #endif
     MPIR_ERR_CHECK(mpi_errno);
 #endif
+
+    MPIDI_check_global_progress();
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -98,6 +102,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll(const void *buf,
 #endif
     MPIR_ERR_CHECK(mpi_errno);
 #endif
+
+    MPIDI_check_global_progress();
 
   fn_exit:
     MPIR_FUNC_EXIT;
