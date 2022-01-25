@@ -89,12 +89,10 @@ dnl 4. Determine MPI features
 dnl
 dnl
 dnl Special environment variables
-dnl To let other scripts and in particular the configure in test/mpi
+dnl To let other scripts, e.g. configure in hydra and romio, 
 dnl know that they are being invoked from within the MPICH configure,
 dnl the following environment variables are set and exported:
 dnl    FROM_MPICH
-dnl    MPICH_ENABLE_FC
-dnl    MPICH_ENABLE_CXX
 dnl
 dnl Note that no executable statements are allowed (and any are silently
 dnl dropped) before AC_INIT.
@@ -4009,15 +4007,6 @@ AC_SUBST(MPI_MAX_ERROR_STRING)
 MPIU_DLL_SPEC_DEF="#define MPIU_DLL_SPEC"
 AC_SUBST(MPIU_DLL_SPEC_DEF)
 
-dnl We can configure the test directory after the rest of the configure
-dnl steps because it does not depend on them.
-# set and export values that the test/mpi configure will reference to ensure
-# that the correct decisions are made since this configure happens before the
-# MPICH library is built.
-MPICH_ENABLE_CXX=$enable_cxx
-MPICH_ENABLE_FC=$enable_fc
-export MPICH_ENABLE_CXX
-export MPICH_ENABLE_FC
 AM_CONDITIONAL([BUILD_CXX_BINDING],[test "$enable_cxx" = "yes"])
 AM_CONDITIONAL([BUILD_F77_BINDING],[test "$enable_f77" = "yes"])
 dnl FIXME DJG this has been moved to the f90 bindings subconfigure.m4 for now

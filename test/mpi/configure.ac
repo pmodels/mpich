@@ -508,10 +508,6 @@ PAC_PROG_MAKE
 MPILIBLOC=""
 AC_SUBST(MPILIBLOC)
 
-# more variables that must be marked precious for proper re-configure operation
-AC_ARG_VAR([MPICH_ENABLE_FC],["yes" if the enclosing MPICH build supports modern Fortran])
-AC_ARG_VAR([MPICH_ENABLE_CXX],["yes" if the enclosing MPICH build supports C++])
-
 namepub_tests="#"
 if test "$enable_namepub" = "yes" ; then
     namepub_tests=""
