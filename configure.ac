@@ -1931,51 +1931,6 @@ information to configure with the FCFLAGS environment variable.])
 
 fi
 
-# FC requires F77 as well.  If the user disabled f77, do not run the
-# next test; instead, drop into the warning message
-# Set a default value for fc works with f77.  This value is
-# set to no *only* if fc was selected but was not compatible with f77
-fc_with_f77=yes
-if test "$enable_fc" = "yes" -a "$enable_f77" = yes ; then
-    enable_fc=no
-    if test "$FC" != "no" ; then
-	# If we allow multiple weak symbols, we should test a name
-	# that does not contain an underscore.  The Fortran binding uses
-	# this rule for enabling multiple weak symbols:
-	# if defined(USE_WEAK_SYMBOLS) && !defined(USE_ONLY_MPI_NAMES) &&
-	#    defined(HAVE_MULTIPLE_PRAGMA_WEAK) &&
-	#    defined(F77_NAME_LOWER_2USCORE)
-	#
-	testRoutine="t1_2"
-	if test "$pac_cv_prog_c_multiple_weak_symbols" = "yes" -a \
-               "$enable_weak_symbols" = "yes" -a \
-	       "$pac_cv_prog_f77_name_mangle" = "lower doubleunderscore" ; then
-	    testRoutine="t12"
-        fi
-        PAC_FC_AND_F77_COMPATIBLE(fc_with_f77=yes,fc_with_f77=no,$testRoutine)
-        if test "$fc_with_f77" != yes ; then
-	    enable_fc=no
-	    AC_MSG_ERROR([The selected Fortran 90 compiler $FC does not work with the selected Fortran 77 compiler $F77.  Use the environment variables FC and F77 respectively to select compatible Fortran compilers.  The check here tests to see if a main program compiled with the Fortran 90 compiler can link with a subroutine compiled with the Fortran 77 compiler.])
-        elif test "$fc_with_f77" = "yes" ; then
-            # If we got here, there is a Fortran 90 compiler that we can use
-            enable_fc=yes
-        fi
-    elif test "$pac_cv_prog_fc_works" = no; then
-        AC_MSG_WARN([Use --disable-fc to keep configure from searching for a Fortran 90 compiler])
-    fi
-
-    if test "$enable_fc" = "yes"; then
-        if test "$FC" = "no" -o "$FC" = ""; then
-            # No Fortran 90 compiler found; abort
-            AC_MSG_ERROR([No Fortran 90 compiler found. If you don't need
-            to build any Fortran 90 programs, you can disable Fortran 90
-            support using --disable-fc. If you do want to build Fortran 90
-            programs, you need to install a Fortran 90 compiler such as
-            gfortran or ifort before you can proceed.])
-        fi
-    fi
-fi
-
 if test "$enable_fc" = "yes" -a "$enable_f77" != "yes" ; then
    # Fortran 90 support requires compatible Fortran 77 support
    AC_MSG_ERROR([
