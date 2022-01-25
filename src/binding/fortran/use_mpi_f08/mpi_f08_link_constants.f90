@@ -24,13 +24,6 @@ implicit none
 type(MPI_Status), bind(C, name="MPIR_F08_MPI_STATUS_IGNORE_OBJ"), target :: MPI_STATUS_IGNORE
 type(MPI_Status), dimension(1), bind(C, name="MPIR_F08_MPI_STATUSES_IGNORE_OBJ"), target :: MPI_STATUSES_IGNORE
 
-type(c_ptr), bind(C, name="MPIR_C_MPI_STATUS_IGNORE") :: MPIR_C_MPI_STATUS_IGNORE
-type(c_ptr), bind(C, name="MPIR_C_MPI_STATUSES_IGNORE") :: MPIR_C_MPI_STATUSES_IGNORE
-
-! Though these two variables are required by MPI-3 Standard, they are not used in MPICH
-type(c_ptr), bind(C, name="MPI_F08_STATUS_IGNORE")   :: MPI_F08_STATUS_IGNORE   ! Point to MPI_STATUS_IGNORE
-type(c_ptr), bind(C, name="MPI_F08_STATUSES_IGNORE") :: MPI_F08_STATUSES_IGNORE ! Point to MPI_STATUSES_IGNORE
-
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
@@ -41,9 +34,6 @@ type(c_ptr), bind(C, name="MPI_F08_STATUSES_IGNORE") :: MPI_F08_STATUSES_IGNORE 
 character(len=1), dimension(1), target :: MPI_ARGV_NULL
 character(len=1), dimension(1,1), target :: MPI_ARGVS_NULL
 
-type(c_ptr), bind(C, name="MPIR_C_MPI_ARGV_NULL") :: MPIR_C_MPI_ARGV_NULL
-type(c_ptr), bind(C, name="MPIR_C_MPI_ARGVS_NULL") :: MPIR_C_MPI_ARGVS_NULL
-
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
@@ -51,7 +41,6 @@ type(c_ptr), bind(C, name="MPIR_C_MPI_ARGVS_NULL") :: MPIR_C_MPI_ARGVS_NULL
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 integer, dimension(1), target :: MPI_ERRCODES_IGNORE
-type(c_ptr), bind(C, name="MPIR_C_MPI_ERRCODES_IGNORE") :: MPIR_C_MPI_ERRCODES_IGNORE
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -63,9 +52,6 @@ type(c_ptr), bind(C, name="MPIR_C_MPI_ERRCODES_IGNORE") :: MPIR_C_MPI_ERRCODES_I
 
 integer, dimension(1), target :: MPI_UNWEIGHTED
 integer, dimension(1), target :: MPI_WEIGHTS_EMPTY
-
-type(c_ptr), protected, bind(C, name="MPIR_C_MPI_UNWEIGHTED")    :: MPIR_C_MPI_UNWEIGHTED
-type(c_ptr), protected, bind(C, name="MPIR_C_MPI_WEIGHTS_EMPTY") :: MPIR_C_MPI_WEIGHTS_EMPTY
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
@@ -82,5 +68,58 @@ integer(c_int), bind(C, name="MPIR_F08_MPI_IN_PLACE"), target :: MPI_IN_PLACE
 ! Buffer Address Constants
 ! A.1.1 p. 663
 integer(c_int), bind(C, name="MPIR_F08_MPI_BOTTOM"), target :: MPI_BOTTOM
+
+INTERFACE
+
+FUNCTION MPIR_F08_get_MPI_STATUS_IGNORE_c() &
+    bind (C, name="MPIR_F08_get_MPI_STATUS_IGNORE") result(p)
+    USE, intrinsic :: iso_c_binding, ONLY : c_ptr
+    IMPLICIT NONE
+    TYPE(c_ptr) :: p
+END FUNCTION
+
+FUNCTION MPIR_F08_get_MPI_STATUSES_IGNORE_c() &
+    bind (C, name="MPIR_F08_get_MPI_STATUSES_IGNORE") result(p)
+    USE, intrinsic :: iso_c_binding, ONLY : c_ptr
+    IMPLICIT NONE
+    TYPE(c_ptr) :: p
+END FUNCTION
+
+FUNCTION MPIR_F08_get_MPI_ARGV_NULL_c() &
+    bind (C, name="MPIR_F08_get_MPI_ARGV_NULL") result(p)
+    USE, intrinsic :: iso_c_binding, ONLY : c_ptr
+    IMPLICIT NONE
+    TYPE(c_ptr) :: p
+END FUNCTION
+
+FUNCTION MPIR_F08_get_MPI_ARGVS_NULL_c() &
+    bind (C, name="MPIR_F08_get_MPI_ARGVS_NULL") result(p)
+    USE, intrinsic :: iso_c_binding, ONLY : c_ptr
+    IMPLICIT NONE
+    TYPE(c_ptr) :: p
+END FUNCTION
+
+FUNCTION MPIR_F08_get_MPI_ERRCODES_IGNORE_c() &
+    bind (C, name="MPIR_F08_get_MPI_ERRCODES_IGNORE") result(p)
+    USE, intrinsic :: iso_c_binding, ONLY : c_ptr
+    IMPLICIT NONE
+    TYPE(c_ptr) :: p
+END FUNCTION
+
+FUNCTION MPIR_F08_get_MPI_UNWEIGHTED_c() &
+    bind (C, name="MPIR_F08_get_MPI_UNWEIGHTED") result(p)
+    USE, intrinsic :: iso_c_binding, ONLY : c_ptr
+    IMPLICIT NONE
+    TYPE(c_ptr) :: p
+END FUNCTION
+
+FUNCTION MPIR_F08_get_MPI_WEIGHTS_EMPTY_c() &
+    bind (C, name="MPIR_F08_get_MPI_WEIGHTS_EMPTY") result(p)
+    USE, intrinsic :: iso_c_binding, ONLY : c_ptr
+    IMPLICIT NONE
+    TYPE(c_ptr) :: p
+END FUNCTION
+
+END INTERFACE
 
 end module mpi_f08_link_constants

@@ -6,6 +6,7 @@
 #ifndef CDESC_H_INCLUDED
 #define CDESC_H_INCLUDED
 
+#include "mpichconf.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ISO_Fortran_binding.h>
@@ -16,11 +17,8 @@
 #define MPIO_Request MPI_Request
 #endif
 
-extern MPI_Status *MPIR_C_MPI_STATUS_IGNORE;
-extern MPI_Status *MPIR_C_MPI_STATUSES_IGNORE;
-extern char **MPIR_C_MPI_ARGV_NULL;
-extern char ***MPIR_C_MPI_ARGVS_NULL;
-extern int *MPIR_C_MPI_ERRCODES_IGNORE;
+extern int MPIR_F08_MPI_IN_PLACE;
+extern int MPIR_F08_MPI_BOTTOM;
 
 extern int cdesc_create_datatype(CFI_cdesc_t * cdesc, MPI_Aint oldcount, MPI_Datatype oldtype,
                                  MPI_Datatype * newtype);
@@ -35,5 +33,13 @@ extern int MPIR_Comm_spawn_multiple_c(int count, char *array_of_commands_f, char
                                       int *array_of_errcodes, int commands_elem_len,
                                       int argv_elem_len);
 extern int MPIR_F_sync_reg_cdesc(CFI_cdesc_t * buf);
+
+void *MPIR_F08_get_MPI_STATUS_IGNORE(void);
+void *MPIR_F08_get_MPI_STATUSES_IGNORE(void);
+void *MPIR_F08_get_MPI_ARGV_NULL(void);
+void *MPIR_F08_get_MPI_ARGVS_NULL(void);
+void *MPIR_F08_get_MPI_ERRCODES_IGNORE(void);
+void *MPIR_F08_get_MPI_UNWEIGHTED(void);
+void *MPIR_F08_get_MPI_WEIGHTS_EMPTY(void);
 
 #endif /* CDESC_H_INCLUDED */
