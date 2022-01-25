@@ -436,13 +436,16 @@ AC_ARG_ENABLE(check-compiler-flags,
                        options, xxxFLAGS, MPICH_xxxFLAGS. Default is on.]),,
 		       enable_check_compiler_flags=yes)
 
-dnl We enable f77 and fc if we can find compilers for them.
-dnl In addition, we check whether f77 and fc can work together.
+dnl Whether to disable the Fortran bindings. By default, we'll probe and build all supported
+dnl interfaces including mpif.h, use mpi, and use_mpi_f08.
 AC_ARG_ENABLE(fortran,
-[  --enable-fortran=option - Control the level of Fortran support in the MPICH implementation.
-	yes|all   - Enable all available Fortran implementations (F77, F90+)
-	no|none   - No Fortran support
-],,[enable_fortran=all])
+        AS_HELP_STRING([--disable-fortran], [Whether to disable Fortran bindings]),,[enable_fortran=yes])
+
+AC_ARG_ENABLE(f77,
+        AS_HELP_STRING([--disable-f77], [Whether to disable "include 'mpif.h'" interface]),,[enable_f77=yes])
+
+AC_ARG_ENABLE(f90,
+        AS_HELP_STRING([--disable-f90], [Whether to disable "use mpi" interface]),,[enable_f90=yes])
 
 AC_ARG_ENABLE(f08,
         AS_HELP_STRING([--disable-f08], [Whether to disable "use mpi_f08" interface]),,[enable_f08=yes])
@@ -690,26 +693,16 @@ dnl lead to weird AM_CONDITIONAL errors and potentially other problems.
 #
 # NOTE: we are skipping overriding CXX as some modules (e.g. ucx) may depend on CXX
 #
-AS_IF([test "x$enable_f77" = "xno"],[F77=no])
-AS_IF([test "x$enable_fc"  = "xno"],[FC=no])
 
 # suppress default "-g -O2" from AC_PROG_CXX
 : ${CXXFLAGS=""}
 AC_PROG_CXX
 
-enable_f77=no
-enable_fc=no
-case "$enable_fortran" in
-    yes|all)
-            enable_f77=yes
-            enable_fc=yes
-            ;;
-    no|none)
-            ;;
-    *)
-            AC_MSG_WARN([Unknown value $option for --enable-fortran])
-            ;;
-esac
+if test "$enable_fortran" = "no" ; then
+    enable_f77=no
+    enable_f90=no
+    enable_f08=no
+fi
 
 # Python 3 is needed to generate Fortran bindings
 PAC_CHECK_PYTHON
@@ -719,24 +712,14 @@ if test "$enable_fortran" != "no" ; then
     : ${FCFLAGS=""}
     AC_PROG_FC
 
-    # HACK, use $FC as F77. We should remove all the F77 usages.
-    if test "$enable_fc" = "yes" ; then
-        F77=$FC
-        if test ! -z "$FCFLAGS" ; then
-            FFLAGS=$FCFLAGS
-        fi
-    fi
+    F77=$FC
 
-    # This needs to come after we've potentially set F77=$FC. Otherwise, we could
-    # override the user's Fortran compiler selection when only specifying FC at configure
-    # time, as is allowed.
-    # suppress default "-g -O2" from AC_PROG_F77
-    : ${FFLAGS=""}
+    FFLAGS=$FCFLAGS
     AC_PROG_F77
 
 fi
 
-AM_CONDITIONAL([INSTALL_MPIF77],[test "$enable_fc" = "yes" -a "$F77" != "$FC" -a "$FFLAGS" != "$FCFLAGS"])
+AM_CONDITIONAL([INSTALL_MPIF77],[false])
 
 # compute canonical system types
 AC_CANONICAL_BUILD
@@ -1788,7 +1771,7 @@ AC_DEFINE_UNQUOTED(ENABLE_PVAR_MULTINIC,$status_multinic_pvars,
 # Handle default choices for the Fortran compilers
 # Note that these have already been set above
 
-if test "$enable_fc" = "yes"; then
+if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
     if test "$FC" = "" -o "$FC" = "no"; then
         # No Fortran compiler found; abort
         AC_MSG_ERROR([No Fortran compiler found. If you don't need to
@@ -1931,7 +1914,7 @@ information to configure with the FCFLAGS environment variable.])
 
 fi
 
-if test "$enable_fc" = "yes" -a "$enable_f77" != "yes" ; then
+if test "$enable_f90" = "yes" -a "$enable_f77" != "yes" ; then
    # Fortran 90 support requires compatible Fortran 77 support
    AC_MSG_ERROR([
 Fortran 90 support requires compatible Fortran 77 support.
@@ -1940,8 +1923,6 @@ do not use configure option --disable-fortran, and set the environment
 variable F77 to the name of the Fortran 90 compiler, or \$FC.
 If you do not want any Fortran support, use configure options
 --disable-fortran.])
-   # We should probably do the compatibility test as well
-   enable_f77=yes
 fi
 
 # ----------------------------------------------------------------------------
@@ -2024,21 +2005,15 @@ fi
 fi],
 main_top_srcdir=$main_top_srcdir
 enable_f77=$enable_f77
-enable_fc=$enable_fc
 has_exclaim=$has_exclaim
 has_fort_real8=$pac_cv_fort_real8
 includebuild_dir=$includebuild_dir
 libbuild_dir=$libbuild_dir
 bashWorks=$bashWorks)
 
-if test "$enable_fc" = "yes" ; then
-    if test "$enable_f77" != "yes" ; then
-        AC_MSG_WARN([Fortran 90 requires Fortran 77])
-        enable_fc=no
-    else
-        bindingsubsystems="$bindingsubsystems src/binding/fortran/use_mpi"
-        bindings="$bindings f90"
-    fi
+if test "$enable_f90" = "yes" ; then
+    bindingsubsystems="$bindingsubsystems src/binding/fortran/use_mpi"
+    bindings="$bindings f90"
 fi
 
 if test "$enable_f08" = "yes" ; then
@@ -2072,7 +2047,7 @@ MPI_F08_NAME=mpi_f08
 MPI_C_INTERFACE_TYPES_NAME=mpi_c_interface_types
 MPI_C_INTERFACE_CDESC_NAME=mpi_c_interface_cdesc
 
-if test "$enable_fc" = "yes" ; then
+if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
     # determine shared library flags for FC
     fc_shlib_conf=src/env/fc_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([FC],[$fc_shlib_conf])
@@ -3090,8 +3065,7 @@ if test "$enable_f77" = yes ; then
         ])
 	AC_LANG_POP([Fortran])
 	WTIME_DOUBLE_TYPE="DOUBLE PRECISION"
-	# Save a copy of the original mpi_base.f90 file
-	if test "$enable_fc" = "yes" -a "$pac_cv_fort90_real8" = "yes" ; then
+	if test "$pac_cv_fort90_real8" = "yes" ; then
 	    WTIME_DOUBLE_TYPE="REAL*8"
         fi
 	# WTIME_DOUBLE_TYPE is substituted into mpi_base.f90
@@ -3107,12 +3081,9 @@ if test "$enable_f77" = yes ; then
     # Note, however, that zero value are (in all practical case) invalid
     # for Fortran 90, and indicate a failure.  Test and fail if Fortran 90
     # enabled.
-    if test "$enable_fc" = "yes" ; then
+    if test "$enable_f90" = "yes" ; then
         if test "$ADDRESS_KIND" -le 0 -o "$OFFSET_KIND" -le 0 ; then
 	    AC_MSG_ERROR([Unable to determine Fortran 90 integer kinds for MPI types.  If you do not need Fortran 90, add --disable-fc to the configure options.])
-	    # If the above is converted to a warning, you need to change
-	    # enable_fc and remote f90 from the bindings
-	    enable_fc=no
         fi
     fi
     AC_SUBST(ADDRESS_KIND)
@@ -3416,7 +3387,7 @@ AC_SUBST(MPI_OFFSET_TYPEDEF)
 if test -z "$FORTRAN_MPI_OFFSET" ; then
     FORTRAN_MPI_OFFSET=INTEGER
 fi
-if test "$enable_f77" = yes -a "$enable_fc" = yes ; then
+if test "$enable_f77" = yes -a "$enable_f90" = yes ; then
     AC_LANG_PUSH([Fortran 77])
     AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 77])
     AC_COMPILE_IFELSE([
@@ -3965,7 +3936,7 @@ AC_SUBST(MPIU_DLL_SPEC_DEF)
 AM_CONDITIONAL([BUILD_CXX_BINDING],[test "$enable_cxx" = "yes"])
 AM_CONDITIONAL([BUILD_F77_BINDING],[test "$enable_f77" = "yes"])
 dnl FIXME DJG this has been moved to the f90 bindings subconfigure.m4 for now
-dnl AM_CONDITIONAL([BUILD_FC_BINDING],[test "$enable_fc" = "yes"])
+dnl AM_CONDITIONAL([BUILD_FC_BINDING],[test "$enable_f90" = "yes"])
 # MPI_SRCDIR gives the test/mpi configure the location of the source
 # files for an MPI implementation
 if test -n "$ac_abs_srcdir" ; then
