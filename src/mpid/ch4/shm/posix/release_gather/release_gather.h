@@ -14,6 +14,9 @@ extern MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type,
 #define RELEASE_GATHER_FIELD(comm, field)                   \
     MPIDI_POSIX_COMM(comm, release_gather).field
 
+#define NB_RELEASE_GATHER_FIELD(comm, field)                   \
+    MPIDI_POSIX_COMM(comm, nb_release_gather).field
+
 /* Blocking wait implementation */
 /* "acquire" makes sure no writes/reads are reordered before this load */
 #define MPIDI_POSIX_RELEASE_GATHER_WAIT_WHILE_LESS_THAN(ptr, value)                           \
