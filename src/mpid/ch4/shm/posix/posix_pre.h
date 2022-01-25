@@ -36,8 +36,10 @@ extern char MPIDI_POSIX_coll_generic_json[];
 /* These structs are populated with dummy variables because empty structs are not supported in all
  * compilers: https://stackoverflow.com/a/755339/491687 */
 typedef struct {
-    MPIDI_POSIX_release_gather_comm_t release_gather;
     void *csel_comm;
+    MPIDI_POSIX_release_gather_comm_t release_gather, nb_release_gather;
+    int nb_bcast_seq_no;        /* Seq number of the release-gather based nonblocking bcast call */
+    int nb_reduce_seq_no;       /* Seq number of the release-gather based nonblocking reduce call */
 } MPIDI_POSIX_comm_t;
 
 typedef struct {
