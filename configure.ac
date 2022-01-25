@@ -446,6 +446,9 @@ AC_ARG_ENABLE(fortran,
 	no|none   - No Fortran support
 ],,[enable_fortran=all])
 
+AC_ARG_ENABLE(f08,
+        AS_HELP_STRING([--disable-f08], [Whether to disable "use mpi_f08" interface]),,[enable_f08=yes])
+
 AC_ARG_ENABLE(cxx,
 	AS_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
 
@@ -2037,19 +2040,15 @@ if test "$enable_fc" = "yes" ; then
     fi
 fi
 
-f08_works=no
-if test "$enable_fc" = "yes" ; then
-    PAC_FC_2008_SUPPORT([f08_works=yes],[f08_works=no])
+if test "$enable_f08" = "yes" ; then
+    PAC_FC_2008_SUPPORT([:],[enable_f08=no])
 fi
-AM_CONDITIONAL([BUILD_F08_BINDING], [test "$f08_works" = "yes"])
+AM_CONDITIONAL([BUILD_F08_BINDING], [test "$enable_f08" = "yes"])
 
-if test "$f08_works" = "yes" ; then
-    status_f08_works=1
+if test "$enable_f08" = "yes" ; then
     bindings="$bindings f08"
-else
-    status_f08_works=0
+    AC_DEFINE(HAVE_F08_BINDING, 1, [Define to 1 if we have Fortran 2008 binding])
 fi
-AC_DEFINE_UNQUOTED(HAVE_F08_BINDING, $status_f08_works, [Define to 1 to enable Fortran 2008 binding])
 
 # Set defaults for these values so that the Makefile in src/bindings/f90
 # is valid even if fc is not enabled (this is necessary for the
@@ -4149,7 +4148,7 @@ if test "X$enable_shared" = "Xyes" ; then
     )
 fi
 
-if test "X$f08_works" = "Xyes"; then
+if test "$enable_f08" = "yes"; then
     AS_CASE([$MPI_AINT],
         [short],       [F08_C_AINT="c_short"],
         [int],         [F08_C_AINT="c_int"],
@@ -4190,7 +4189,7 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
-if test "$f08_works" = "yes" ; then
+if test "$enable_f08" = "yes" ; then
     PAC_CHECK_PYTHON
     PAC_FC_CHECK_REAL128
     cmd="$PYTHON $srcdir/maint/gen_binding_f08.py"
