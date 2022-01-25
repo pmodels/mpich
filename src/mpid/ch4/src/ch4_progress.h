@@ -336,4 +336,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
     goto fn_exit;
 }
 
+/* Call this function in places where we normally skip progress, such as MPID_Isend */
+MPL_STATIC_INLINE_PREFIX void MPIDI_check_global_progress(void)
+{
+    global_vci_poll_count++;
+    if ((global_vci_poll_count & MPIDI_CH4_PROG_POLL_MASK) == 0) {
+        MPID_Progress_test(NULL);
+    }
+}
+
 #endif /* CH4_PROGRESS_H_INCLUDED */
