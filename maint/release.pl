@@ -288,5 +288,13 @@ run_cmd("tar -czvf hydra-${version}.tar.gz hydra-${version}");
 run_cmd("cp -a hydra-${version}.tar.gz ${root}/");
 print("done\n\n");
 
+# Create the testsuite tarball
+print("===> Creating the final mpich-testsuite tarball... ");
+my $target = "mpich-testsuite-$version";
+run_cmd("cp -a ${expdir}/test/mpi $target");
+run_cmd("tar -czvf $target.tar.gz $target");
+run_cmd("cp -a $target.tar.gz ${root}/");
+print("done\n\n");
+
 # make sure we are outside of the tempdir so that the CLEANUP logic can run
 chdir("${tdir}/..");
