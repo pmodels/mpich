@@ -2,23 +2,18 @@
 ! Copyright (C) by Argonne National Laboratory
 !     See COPYRIGHT in top-level directory
 !
-
-! This file created from test/mpi/f77/pt2pt/psendf.f with f77tof90
 !
 ! This program is based on the allpair.f test from the MPICH-1 test
 ! (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 ! fsset@corelli.lerc.nasa.gov (Scott Townsend)
 
       program psend
-      use mpi
-      integer ierr, errs, comm
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer ierr, errs
       logical mtestGetIntraComm
-      logical verbose
-      common /flags/ verbose
 
       errs = 0
-      verbose = .false.
-!      verbose = .true.
       call MTest_Init( ierr )
 
       do while ( mtestGetIntraComm( comm, 2, .false. ) )
@@ -31,20 +26,18 @@
       end
 !
       subroutine test_pair_psend( comm, errs )
-      use mpi
-      integer comm, errs
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer errs
+
       integer rank, size, ierr, next, prev, tag, count, i
       integer TEST_SIZE
       parameter (TEST_SIZE=2000)
-      integer status(MPI_STATUS_SIZE)
-      integer statuses(MPI_STATUS_SIZE,2), requests(2)
+
+      type(MPI_Status) status
+      type(MPI_Status) statuses(2)
+      type(MPI_Request) requests(2)
       real send_buf(TEST_SIZE), recv_buf(TEST_SIZE)
-      logical verbose
-      common /flags/ verbose
-!
-      if (verbose) then
-         print *, ' Persistent send and recv'
-      endif
 !
       call mpi_comm_rank( comm, rank, ierr )
       call mpi_comm_size( comm, size, ierr )
@@ -72,7 +65,7 @@
          call MPI_Startall(2, requests, ierr)
          call MPI_Waitall(2, requests, statuses, ierr)
 !
-         call msg_check( recv_buf, next, tag, count, statuses(1,2), &
+         call msg_check( recv_buf, next, tag, count, statuses(2), &
       &        TEST_SIZE, 'persistent send/recv', errs )
 !
          call MPI_Request_free(requests(1), ierr)
