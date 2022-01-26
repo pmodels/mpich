@@ -3,15 +3,14 @@
 !     See COPYRIGHT in top-level directory
 !
 
-! This file created from test/mpi/f77/pt2pt/pssendf.f with f77tof90
-!
 ! This program is based on the allpair.f test from the MPICH-1 test
 ! (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 ! fsset@corelli.lerc.nasa.gov (Scott Townsend)
 
       program pssend
-      use mpi
-      integer ierr, errs, comm
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer ierr, errs
       logical mtestGetIntraComm
       logical verbose
       common /flags/ verbose
@@ -31,14 +30,16 @@
       end
 !
       subroutine test_pair_pssend( comm, errs )
-      use mpi
-      integer comm, errs
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer errs
       integer rank, size, ierr, next, prev, tag, count, index, i
       integer outcount, indices(2)
       integer TEST_SIZE
       parameter (TEST_SIZE=2000)
-      integer statuses(MPI_STATUS_SIZE,2), requests(2)
-      integer status(MPI_STATUS_SIZE)
+      type(MPI_Status) statuses(2)
+      type(MPI_Request) requests(2)
+      type(MPI_Status) status
       logical flag
       real send_buf(TEST_SIZE), recv_buf(TEST_SIZE)
       logical verbose
@@ -81,7 +82,7 @@
             do i = 1,outcount
                if (indices(i) .eq. 1) then
                   call msg_check( recv_buf, next, tag, count, &
-      &                 statuses(1,i), TEST_SIZE, 'testsome', errs )
+      &                 statuses(i), TEST_SIZE, 'testsome', errs )
                   index = 1
                end if
             end do
@@ -98,10 +99,10 @@
 !
          flag = .FALSE.
          do while (.not. flag)
-            call MPI_Testany(1, requests(1), index, flag, &
-      &                       statuses(1,1), ierr)
+            call MPI_Testany(1, requests(1:1), index, flag, &
+      &                       statuses(1), ierr)
          end do
-         call msg_check( recv_buf, prev, tag, count, statuses(1,1), &
+         call msg_check( recv_buf, prev, tag, count, statuses(1), &
       &           TEST_SIZE, 'testany', errs )
 
          do i = 1,count

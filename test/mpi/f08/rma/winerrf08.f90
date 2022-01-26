@@ -116,8 +116,9 @@
        end
 !
        subroutine myerrhanfunc( win, errcode )
-       use mpi
-       integer win, errcode
+       use mpi_f08
+       type(MPI_Win) win
+       integer errcode
        integer rlen, ierr
        integer callcount, codesSeen(3)
        character*(MPI_MAX_ERROR_STRING) errstring

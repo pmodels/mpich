@@ -3,15 +3,15 @@
 !     See COPYRIGHT in top-level directory
 !
 
-! This file created from test/mpi/f77/pt2pt/rsendf.f with f77tof90
 !
 ! This program is based on the allpair.f test from the MPICH-1 test
 ! (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 ! fsset@corelli.lerc.nasa.gov (Scott Townsend)
 
       program rsend
-      use mpi
-      integer ierr, errs, comm
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer ierr, errs
       logical mtestGetIntraComm
       logical verbose
       common /flags/ verbose
@@ -31,12 +31,14 @@
       end
 !
       subroutine test_pair_rsend( comm, errs )
-      use mpi
-      integer comm, errs
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer errs
       integer rank, size, ierr, next, prev, tag, count, i
       integer TEST_SIZE
       parameter (TEST_SIZE=2000)
-      integer status(MPI_STATUS_SIZE), requests(1)
+      type(MPI_Status) status
+      type(MPI_Request) requests(1)
       real send_buf(TEST_SIZE), recv_buf(TEST_SIZE)
       logical verbose
       common /flags/ verbose
@@ -71,15 +73,15 @@
 !
          call MPI_Probe(MPI_ANY_SOURCE, tag, comm, status, ierr)
 !
-         if (status(MPI_SOURCE) .ne. next) then
+         if (status%MPI_SOURCE .ne. next) then
             print *, 'Rsend: Incorrect source, expected', next, &
-      &               ', got', status(MPI_SOURCE)
+      &               ', got', status%MPI_SOURCE
             errs = errs + 1
          end if
 !
-         if (status(MPI_TAG) .ne. tag) then
+         if (status%MPI_TAG .ne. tag) then
             print *, 'Rsend: Incorrect tag, expected', tag, &
-      &               ', got', status(MPI_TAG)
+      &               ', got', status%MPI_TAG
             errs = errs + 1
          end if
 !
