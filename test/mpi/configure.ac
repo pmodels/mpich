@@ -254,6 +254,11 @@ AC_ARG_ENABLE(xfail,
 		[Run tests marked for expected failure])],,
 	[enable_xfail=no])
 
+AC_ARG_ENABLE(collalgo-tests,
+        [AS_HELP_STRING([--enable-collalgo-tests],
+                [Run extended collective algorithm tests])],,
+        [enable_collalgo_tests=yes])
+
 AC_ARG_ENABLE(gpu-tests-only,
         [AS_HELP_STRING([--enable-gpu-tests-only],
                 [Run only GPU tests])],,
@@ -269,12 +274,14 @@ AC_ARG_WITH(dtpools-datatypes,
 
 # parse args for typegen.sh script
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
-
-PAC_CHECK_PYTHON
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
-#Test collectives algorithms with CVARs
-cmd="$PYTHON $srcdir/maint/gen_coll_cvar.py"
-AC_CONFIG_COMMANDS([collcvartests],[$cmd_gen_coll],[cmd_gen_coll="$cmd"])
+
+if test $enable_collalgo_tests = "yes" ; then
+    PAC_CHECK_PYTHON
+    #Test collectives algorithms with CVARs
+    cmd="$PYTHON $srcdir/maint/gen_coll_cvar.py"
+    AC_CONFIG_COMMANDS([collcvartests],[$cmd_gen_coll],[cmd_gen_coll="$cmd"])
+fi
 
 AC_ARG_WITH(mpi,
 	[AS_HELP_STRING([--with-mpi=dir],
