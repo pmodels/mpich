@@ -558,19 +558,6 @@ else
 fi
 AC_SUBST(ENABLE_QMPI)
 
-AC_ARG_ENABLE([two-level-namespace],
-              [AS_HELP_STRING([--enable-two-level-namespace],
-                              [(Darwin only) Build shared libraries and programs
-                               built with the mpicc/mpifort/etc. compiler
-                               wrappers with '-Wl,-commons,use_dylibs' and
-                               without '-Wl,-flat_namespace'.  This may make the
-                               MPICH installation and MPI programs more
-                               compatible with other libraries.  Only enable
-                               this option if you really know what these linker
-                               options imply.])],
-              [],
-              [enable_two_level_namespace=no])
-
 AC_ARG_ENABLE(multi-aliases,
 	AS_HELP_STRING([--enable-multi-aliases],
 		[Multiple aliasing to support multiple fortran compilers (default)]),,
@@ -4087,108 +4074,6 @@ AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h f
 
 if test "$USE_PMI2_API" = "yes" ; then
    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
-fi
-
-########################################################################
-
-# cause libtool script to be built now so that we can use it to test one last
-# linking issue on Darwin
-LT_OUTPUT
-
-if test "X$enable_shared" = "Xyes" ; then
-    # see ticket #1590 for some more background on these Darwin linking issues
-    AS_CASE([$host],
-        [*-*-darwin*],
-        [
-
-        # The linker on Darwin does not allow common symbols, thus libtool
-        # adds the -fno-common option by default for shared libraries.
-        # However, the common symbols defined in different shared libraries
-        # and object files still can not be treated as the same symbol.
-        # For example:
-        # with gfortran, the same common block in the shared libraries and
-        # the object files will have different memory locations separately;
-        # with ifort, the same common block in different shared libraries
-        # will get the same memory location but still get a different location
-        # in the object file.
-
-        # The -Wl,-commons,use_dylibs option asks linker to check dylibs for
-        # definitions and use them to replace tentative definitions(commons)
-        # from object files, thus it solves the issue of the common symbol
-        # mismatch between the object file and the dylibs (i.e., by setting
-        # the address of a common symbol to the place located in the first
-        # dylib that is linked with the object file and contains this symbol).
-        # It needs to be added only in the linking stage for the final
-        # executable file.
-
-        # On the other hand, the -flat-namespace option allows linker to
-        # unify the same common symbols in different dylibs. It needs to be
-        # added in linking stage for both the shared library and the final
-        # executable file.
-
-        # In Fortran programs, we implement global definitions such as MPI_BOTTOM
-        # as common symbols. We check the address of the user input and translate it
-        # to the C global definition if it is equal to the internal pre-stored address
-        # in the Fortran binding layer. Without -flat-namespace, we may get different
-        # addresses and thus treat the predefined constant as a normal buffer.
-
-        # Although gfortran works fine by only adding -flat-namespace, and
-        # ifort works by only adding -Wl,-commons,use_dylibs, we should add
-        # both options here as a generic solution to make sure everything safe.
-
-        # sanity check that -Wl,-flat_namespace works on darwin, unless the user
-        # asked us not to add it
-        if test "X$enable_two_level_namespace" = "Xno"; then
-            # TODO, move this into a PAC macro with real autoconf caching
-            pac_cv_wl_flat_namespace_works=no
-            AC_MSG_CHECKING([if the C compiler accepts -Wl,-flat_namespace])
-            PAC_PUSH_FLAG([LDFLAGS])
-            PAC_APPEND_FLAG([-Wl,-flat_namespace],[LDFLAGS])
-            AC_LINK_IFELSE([AC_LANG_PROGRAM([],[int i;])],
-                           [AC_MSG_RESULT([yes])
-                            pac_cv_wl_flat_namespace_works=yes],
-                           [AC_MSG_RESULT([no])])
-            PAC_POP_FLAG([LDFLAGS])
-
-            # Technically we may not be able to use the same form of the argument
-            # for all three compilers (CC/CXX/FC).  But we only think this is
-            # necessary for Darwin for now, so this unconditional, single-var
-            # approximation will work for now.
-            if test "X$pac_cv_wl_flat_namespace_works" = "Xyes" ; then
-                PAC_APPEND_FLAG([-Wl,-flat_namespace], [LDFLAGS])
-                PAC_APPEND_FLAG([-Wl,-flat_namespace], [WRAPPER_LDFLAGS])
-            fi
-        fi
-
-        # We only need to bother with -Wl,-commons,-use_dylibs if we are
-        # building fortran bindings (no common block usage in our C libs).
-        if test "X$enable_f77" = "Xyes" ; then
-            # TODO, move this into a PAC macro with real autoconf caching
-            pac_cv_wl_commons_use_dylibs_works=no
-            AC_MSG_CHECKING([if the F77 compiler accepts -Wl,-commons,use_dylibs])
-            AC_LANG_PUSH([Fortran 77])
-            PAC_PUSH_FLAG([LDFLAGS])
-            PAC_APPEND_FLAG([-Wl,-commons,use_dylibs], [LDFLAGS])
-            AC_LINK_IFELSE([AC_LANG_PROGRAM([],[      INTEGER i])],
-                           [AC_MSG_RESULT([yes])
-                            pac_cv_wl_commons_use_dylibs_works=yes],
-                           [AC_MSG_RESULT([no])])
-            PAC_POP_FLAG([LDFLAGS])
-            AC_LANG_POP([Fortran 77])
-
-            # Add the flag to the WRAPPER_LDFLAGS, since this common block issue
-            # is really only a problem for dynamically linked user programs.
-            #
-            # Technically we may not be able to use the same form of the argument
-            # for all four compilers (CC/CXX/F77/FC).  But we only think this is
-            # necessary for Darwin for now, so this unconditional, single-var
-            # approximation will work for now.
-            if test "X$pac_cv_wl_commons_use_dylibs_works" = "Xyes" ; then
-                PAC_APPEND_FLAG([-Wl,-commons,use_dylibs], [WRAPPER_LDFLAGS])
-            fi
-        fi
-        ]
-    )
 fi
 
 if test "X$f08_works" = "Xyes"; then
