@@ -4,6 +4,7 @@
 !
 
 ! This file created from test/mpi/f77/pt2pt/utilsf.f with f77tof90
+! Then manually adapted for use mpi_f08
 
 !------------------------------------------------------------------------------
 !
@@ -12,18 +13,19 @@
 !------------------------------------------------------------------------------
       subroutine msg_check( recv_buf, source, tag, count, status, n, &
       &                      name, errs )
-      use mpi
+      use mpi_f08
       integer n, errs
       real    recv_buf(n)
-      integer source, tag, count, rank, status(MPI_STATUS_SIZE)
+      integer source, tag, count, rank
+      type(MPI_Status) status
       character*(*) name
       logical foundError
 
       integer ierr, recv_src, recv_tag, recv_count
 
       foundError = .false.
-      recv_src = status(MPI_SOURCE)
-      recv_tag = status(MPI_TAG)
+      recv_src = status%MPI_SOURCE
+      recv_tag = status%MPI_TAG
       call MPI_Comm_rank( MPI_COMM_WORLD, rank, ierr )
       call MPI_Get_count(status, MPI_REAL, recv_count, ierr)
 
@@ -56,8 +58,9 @@
 !
 !------------------------------------------------------------------------------
       subroutine rq_check( requests, n, msg )
-      use mpi
-      integer n, requests(n)
+      use mpi_f08
+      integer n
+      type(MPI_Request) requests(n)
       character*(*) msg
       integer i
 !
@@ -105,7 +108,6 @@
 !
 !------------------------------------------------------------------------------
       subroutine verify_test_data( buf, count, n, name, errs )
-      use mpi
       integer n, errs
       real buf(n)
       character *(*) name

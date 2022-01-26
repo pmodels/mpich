@@ -118,8 +118,9 @@
 !
       subroutine mycopyfn( oldcomm, keyval, extrastate, valin, valout, &
       &                     flag, ierr )
-      use mpi
-      integer oldcomm, keyval, ierr
+      use mpi_f08
+      type(MPI_Comm) oldcomm
+      integer keyval, ierr
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val
 
       logical flag
@@ -139,8 +140,9 @@
       end
 !
       subroutine mydelfn( comm, keyval, val, extrastate, ierr )
-      use mpi
-      integer comm, keyval, ierr
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer keyval, ierr
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val
 
       integer callcount, delcount
