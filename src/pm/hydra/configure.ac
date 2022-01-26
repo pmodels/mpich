@@ -26,6 +26,7 @@ AM_PROG_CC_C_O
 # also needed by hwloc in embedded mode, must also come early for expansion
 # ordering reasons
 AC_USE_SYSTEM_EXTENSIONS
+PAC_C_NO_COMMON
 
 AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive -Werror foreign 1.12.3 subdir-objects])
 
