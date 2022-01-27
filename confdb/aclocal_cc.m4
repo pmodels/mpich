@@ -1599,7 +1599,7 @@ AC_DEFUN([PAC_ARG_ATOMIC_PRIMITIVES], [
      ],,with_mpl_atomic_primitives=auto)])
 
 dnl
-dnl Check whether C compiler accepts -fno-common, if yes, add to CFLAGS.
+dnl On macos, check whether C compiler accepts -fno-common, if yes, add to CFLAGS.
 dnl
 dnl NOTE: standard C does not need common symbols. Use of common symbols
 dnl may bring issues on some systems, e.g. macos building static libraries.
@@ -1609,8 +1609,12 @@ dnl In the past we have added unnecessary initializers to global variables
 dnl to force not to generate common symbols. This macro obviates those fixes.
 dnl
 AC_DEFUN([PAC_C_NO_COMMON],[
-    # TODO: check if -fno-common is the default and skip
-    PAC_C_CHECK_COMPILER_OPTION([-fno-common],
-        [PAC_APPEND_FLAG([-fno-common], [CFLAGS])],
-        [:])
+    # Add -fno-common on macos to bypass its bad handling of common symbols
+    case $host in
+        *-*-darwin*)
+            PAC_C_CHECK_COMPILER_OPTION([-fno-common],
+                [PAC_APPEND_FLAG([-fno-common], [CFLAGS])],
+                [:])
+            ;;
+    esac
 ])
