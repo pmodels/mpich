@@ -643,6 +643,7 @@ fi
 PAC_POP_FLAG([CFLAGS])
 
 AC_USE_SYSTEM_EXTENSIONS
+PAC_C_NO_COMMON
 
 dnl now that autoconf and core compilers are setup, init automake and libtool
 dnl
