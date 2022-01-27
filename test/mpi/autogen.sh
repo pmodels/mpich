@@ -4,6 +4,35 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+echo_n() {
+    # "echo -n" isn't portable, must portably implement with printf
+    printf "%s" "$*"
+}
+
+PYTHON=
+check_python3() {
+    echo_n "Checking for Python 3... "
+    PYTHON=
+    if test 3 = `python -c 'import sys; print(sys.version_info[0])'`; then
+        PYTHON=python
+    fi
+
+    if test -z "$PYTHON" -a 3 = `python3 -c 'import sys; print(sys.version_info[0])'`; then
+        PYTHON=python3
+    fi
+
+    if test -z "$PYTHON" ; then
+        echo "not found"
+        exit 1
+    else
+        echo "$PYTHON"
+    fi
+}
+
+check_python3
+echo "Generating collective cvar tests"
+$PYTHON maint/gen_coll_cvar.py
+
 check_copy() {
     name=$1
     orig=$2

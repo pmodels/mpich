@@ -252,13 +252,6 @@ AC_ARG_WITH(dtpools-datatypes,
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
 
-if test $enable_collalgo_tests = "yes" ; then
-    PAC_CHECK_PYTHON
-    #Test collectives algorithms with CVARs
-    cmd="$PYTHON $srcdir/maint/gen_coll_cvar.py"
-    AC_CONFIG_COMMANDS([collcvartests],[$cmd_gen_coll],[cmd_gen_coll="$cmd"])
-fi
-
 AC_ARG_WITH(mpi,
         [AC_HELP_STRING([--with-mpi=dir],
                 [Use the selected MPI; compilation scripts for mpicc,
@@ -739,13 +732,16 @@ PAC_POP_FLAG([LDFLAGS])
 PAC_POP_FLAG([LIBS])
 
 # setup which tests "make testing" will run
-TESTLIST=testlist,testlist.cvar
+TESTLIST=testlist
 TESTDIRS=
 if test $have_gpu = "yes" ; then
     TESTLIST="${TESTLIST},testlist.gpu"
 fi
 if test $enable_dtpools = "yes" ; then
     TESTLIST="${TESTLIST},testlist.dtp"
+fi
+if test $enable_collalgo_tests = "yes" ; then
+    TESTLIST="${TESTLIST},testlist.cvar"
 fi
 # handle --enable-gpu-tests-only
 if test $have_gpu = "no" -a $enable_gpu_tests_only = "yes" ; then
