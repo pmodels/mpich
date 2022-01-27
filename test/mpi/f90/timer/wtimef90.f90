@@ -13,7 +13,7 @@
           integer err
           double precision time1
 
-          call mpi_init(err)
+          call mtest_init(err)
 
           time1 = mpi_wtime()
           time1 = time1 + mpi_wtick()

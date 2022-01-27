@@ -13,7 +13,7 @@
           complex c
 
           errs = 0
-          call mpi_init(ierr)
+          call mtest_init(ierr)
           size1 = storage_size(errs) / 8
           call mpi_type_size( MPI_INTEGER, size2, ierr )
           if (size1 .ne. size2) then
@@ -49,10 +49,6 @@
              print *, "real array size is ", size2, " storage_size claims ", size1
           endif
 
-          if (errs .gt. 0) then
-             print *, ' Found ', errs, ' errors'
-          else
-             print *, ' No Errors'
-          endif
+          call mtest_finalize( errs )
 
         end program main
