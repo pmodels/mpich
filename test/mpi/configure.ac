@@ -133,14 +133,6 @@ AC_ARG_ENABLE([dtpools],
               [AS_HELP_STRING([--disable-dtpools],[Disable dtpools tests])],,
               [enable_dtpools=yes])
 
-if test "x${enable_dtpools}" = "xyes"; then
-    DTP_SWITCH="ON"
-else
-    DTP_SWITCH="OFF"
-fi
-
-AC_SUBST(DTP_SWITCH)
-
 # runtests options
 RUNTESTS_OPTS=
 AC_SUBST(RUNTESTS_OPTS)
@@ -746,13 +738,24 @@ PAC_POP_FLAG([CPPFLAGS])
 PAC_POP_FLAG([LDFLAGS])
 PAC_POP_FLAG([LIBS])
 
-AM_CONDITIONAL([HAVE_GPU], [test $have_gpu = "yes"])
-# GPU only tests
+# setup which tests "make testing" will run
+TESTLIST=testlist,testlist.cvar
+TESTDIRS=
+if test $have_gpu = "yes" ; then
+    TESTLIST="${TESTLIST},testlist.gpu"
+fi
+if test $enable_dtpools = "yes" ; then
+    TESTLIST="${TESTLIST},testlist.dtp"
+fi
+# handle --enable-gpu-tests-only
 if test $have_gpu = "no" -a $enable_gpu_tests_only = "yes" ; then
     AC_MSG_ERROR([GPU only test configuration requires GPU library (CUDA or LevelZero)])
+elif test $enable_gpu_tests_only = "yes" ; then
+    TESTDIRS=coll,pt2pt,rma
+    TESTLIST=testlist.gpu
 fi
-AM_CONDITIONAL([GPU_ONLY], [test $enable_gpu_tests_only = "yes"])
-# End of GPU libs Check
+AC_SUBST([TESTDIRS])
+AC_SUBST([TESTLIST])
 
 # for tests that require large mem
 largetest="#"
