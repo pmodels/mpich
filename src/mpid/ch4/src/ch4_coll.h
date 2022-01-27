@@ -41,6 +41,20 @@ cvars:
         2 NM + SHM without the explicit send-recv
         3 NM only
 
+    - name        : MPIR_CVAR_ALLREDUCE_COMPOSITION
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Select composition (inter_node + intra_node) for Allreduce
+        0 Auto selection
+        1 NM + SHM with reduce + bcast
+        2 NM only composition
+        3 SHM only composition
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -231,9 +245,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                                            MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                            MPIR_Errflag_t * errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void *sendbuf,
+                                                                      void *recvbuf, MPI_Aint count,
+                                                                      MPI_Datatype datatype,
+                                                                      MPI_Op op, MPIR_Comm * comm,
+                                                                      MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
@@ -248,8 +264,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
         .u.allreduce.datatype = datatype,
         .u.allreduce.op = op,
     };
-
-    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -282,11 +296,78 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                            MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                            MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int is_commutative = -1;
+
+    MPIR_FUNC_ENTER;
+
+    is_commutative = MPIR_Op_is_commutative(op);
+
+    switch (MPIR_CVAR_ALLREDUCE_COMPOSITION) {
+        case 1:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
+                                           (comm->hierarchy_kind ==
+                                            MPIR_COMM_HIERARCHY_KIND__PARENT) &&
+                                           is_commutative, mpi_errno,
+                                           "Allreduce composition alpha cannot be applied.\n");
+            mpi_errno =
+                MPIDI_Allreduce_intra_composition_alpha(sendbuf, recvbuf, count, datatype, op, comm,
+                                                        errflag);
+            break;
+        case 2:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           comm->comm_kind == MPIR_COMM_KIND__INTRACOMM, mpi_errno,
+                                           "Allreduce composition beta cannot be applied.\n");
+            mpi_errno =
+                MPIDI_Allreduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op, comm,
+                                                       errflag);
+            break;
+        case 3:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
+                                           (comm->node_comm != NULL) &&
+                                           (MPIR_Comm_size(comm) ==
+                                            MPIR_Comm_size(comm->node_comm)), mpi_errno,
+                                           "Allreduce composition gamma cannot be applied.\n");
+            mpi_errno =
+                MPIDI_Allreduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op, comm,
+                                                        errflag);
+            break;
+        default:
+            mpi_errno =
+                MPIDI_Allreduce_allcomm_composition_json(sendbuf, recvbuf, count, datatype, op,
+                                                         comm, errflag);
+            break;
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+        mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+    else
+        mpi_errno =
+            MPIDI_Allreduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op, comm,
+                                                   errflag);
+
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
+
 
 MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendcount,
                                             MPI_Datatype sendtype, void *recvbuf,
