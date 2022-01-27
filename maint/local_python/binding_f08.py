@@ -495,7 +495,7 @@ def dump_f08_wrappers_f(func, is_large):
             if RE.match(r'MPI_(Wait|Test)some', func['name'], re.IGNORECASE):
                 convert_list_post.append("%s(1:outcount) = %s(1:outcount) + 1" % (p['name'], arg_2))
             else:
-                raise Exception("Unexpected in process_array: %s" % func['name'])
+                raise Exception("Unexpected function encountered in process_array: %s" % func['name'])
         elif RE.match(r'allocate:(.+)', p['_array_convert']):
             # The length variable name
             is_MPI_VAL = (RE.m.group(1) == 'MPI_VAL')
