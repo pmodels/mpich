@@ -315,6 +315,9 @@ allreduce-intra:
     recursive_doubling
     reduce_scatter_allgather
         restrictions: size-ge-pof2, builtin-op
+    tree
+        extra_params: tree_type, k, chunk_size, buffer_per_child
+        cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
 allreduce-inter:
     reduce_exchange_bcast
 iallreduce-intra:
