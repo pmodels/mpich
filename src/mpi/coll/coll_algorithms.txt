@@ -338,6 +338,8 @@ allreduce-intra:
     recexch
         extra_params: k, single_phase_recv
         cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
+    ring
+        restrictions: commutative
 allreduce-inter:
     reduce_exchange_bcast
 iallreduce-intra:
