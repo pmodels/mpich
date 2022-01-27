@@ -27,7 +27,7 @@
       logical   flag
       errs = 0
 
-      call mpi_init( ierr )
+      call mtest_init( ierr )
 
 !
 ! Test passing a Fortran MPI object to C
