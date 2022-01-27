@@ -310,6 +310,14 @@ def dump_f08_wrappers_f(func, is_large):
             convert_list_post.append("%s = (%s /= 0)" % (p['name'], arg))
         return (arg, arg)
 
+    def process_index(p):
+        arg = "%s_c" % p['name']
+        if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
+            convert_list_pre.append("%s = %s - 1" % (arg, p['name']))
+        if p['param_direction'] == 'out' or p['param_direction'] == 'inout':
+            convert_list_post.append("%s = %s + 1" % (p['name'], arg))
+        return (arg, arg)
+
     def process_string(p):
         arg = "%s_c" % p['name']
 
@@ -481,6 +489,13 @@ def dump_f08_wrappers_f(func, is_large):
                 convert_list_pre.append("%s = merge(1, 0, %s)" % (arg_2, p['name']))
             if RE.match(r'out|inout', p['param_direction']):
                 convert_list_post.append("%s = (%s /= 0)" % (p['name'], arg_2))
+        elif p['_array_convert'] == "INDEX":
+            arg_1 = "%s_c" % p['name']
+            arg_2 = "%s_c" % p['name']
+            if RE.match(r'MPI_(Wait|Test)some', func['name'], re.IGNORECASE):
+                convert_list_post.append("%s(1:outcount) = %s(1:outcount) + 1" % (p['name'], arg_2))
+            else:
+                raise Exception("Unexpected function encountered in process_array: %s" % func['name'])
         elif RE.match(r'allocate:(.+)', p['_array_convert']):
             # The length variable name
             is_MPI_VAL = (RE.m.group(1) == 'MPI_VAL')
@@ -625,6 +640,8 @@ def dump_f08_wrappers_f(func, is_large):
                     (arg_1, arg_2) = process_array(p)
             elif p['kind'] == "LOGICAL" or p['kind'] == "LOGICAL_BOOLEAN":
                 (arg_1, arg_2) = process_logical(p)
+            elif p['kind'] == "INDEX" and re.match(r'MPI_(Test|Wait)any', func['name'], re.IGNORECASE):
+                (arg_1, arg_2) = process_index(p)
             elif f08_mapping[p['kind']] == "PROCEDURE":
                 (arg_1, arg_2) = process_procedure(p)
             elif p['kind'] == 'FILE':
@@ -1522,6 +1539,9 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
             c_type = "c_" + t[0].upper() + t[1:].lower()
             p['_array_convert'] = "MPI_VAL"
             return "INTEGER(%s) :: %s_c(%s)" % (c_type, p['name'], length)
+        elif p['kind'] == "INDEX" and re.match(r'MPI_(Test|Wait)some', func['name'], re.IGNORECASE):
+            p['_array_convert'] = "INDEX"
+            return "INTEGER(c_int) :: %s_c(%s)" % (p['name'], length)
         elif p['kind'] == "LOGICAL":
             p['_array_convert'] = "LOGICAL"
             return "INTEGER(c_int) :: %s_c(%s)" % (p['name'], length)
