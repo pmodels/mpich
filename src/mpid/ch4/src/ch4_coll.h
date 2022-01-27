@@ -10,7 +10,28 @@
 #include "ch4_proc.h"
 #include "ch4_coll_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_BARRIER_COMPOSITION
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Select composition (inter_node + intra_node) for Barrier
+        0 Auto selection
+        1 NM + SHM
+        2 NM only
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_allcomm_composition_json(MPIR_Comm * comm,
+                                                                    MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
@@ -19,8 +40,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
         .coll_type = MPIR_CSEL_COLL_TYPE__BARRIER,
         .comm_ptr = comm,
     };
-
-    MPIR_FUNC_ENTER;
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
@@ -42,6 +61,48 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+
+    switch (MPIR_CVAR_BARRIER_COMPOSITION) {
+        case 1:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
+                                           (comm->hierarchy_kind ==
+                                            MPIR_COMM_HIERARCHY_KIND__PARENT), mpi_errno,
+                                           "Barrier composition alpha cannot be applied.\n");
+            mpi_errno = MPIDI_Barrier_intra_composition_alpha(comm, errflag);
+            break;
+        case 2:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           comm->comm_kind == MPIR_COMM_KIND__INTRACOMM, mpi_errno,
+                                           "Barrier composition beta cannot be applied.\n");
+            mpi_errno = MPIDI_Barrier_intra_composition_beta(comm, errflag);
+            break;
+        default:
+            mpi_errno = MPIDI_Barrier_allcomm_composition_json(comm, errflag);
+            break;
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+        mpi_errno = MPIR_Barrier_impl(comm, errflag);
+    else
+        mpi_errno = MPIDI_Barrier_intra_composition_beta(comm, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
