@@ -66,11 +66,7 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_halving(const void *sendbuf
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(s);
 
-    pof2 = 1;
-    while (pof2 <= comm_size)
-        pof2 <<= 1;
-    pof2 >>= 1;
-
+    pof2 = MPL_pof2(comm_size);
     rem = comm_size - pof2;
 
     /* In the non-power-of-two case, all even-numbered
