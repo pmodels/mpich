@@ -1513,6 +1513,36 @@ fi
 ])
 
 dnl
+dnl Will AC_DEFINE([HAVE_BUILTIN_CLZ]) if the compiler supports __builtin_clz.
+dnl
+AC_DEFUN([PAC_C_BUILTIN_CLZ],[
+    AC_MSG_CHECKING([if C compiler supports __builtin_clz])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([],[[
+        return __builtin_clz(0)
+    ]])], [
+        AC_DEFINE([HAVE_BUILTIN_CLZ], [1], [Define to 1 if the compiler supports __builtin_clz.])
+        AC_MSG_RESULT([yes])
+    ], [
+        AC_MSG_RESULT([no])
+    ])
+])
+
+dnl
+dnl Will AC_DEFINE([HAVE_BUILTIN_POPCOUNT]) if the compiler supports __builtin_clz.
+dnl
+AC_DEFUN([PAC_C_BUILTIN_POPCOUNT],[
+    AC_MSG_CHECKING([if C compiler supports __builtin_popcount])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([],[[
+        return __builtin_popcount(0)
+    ]])], [
+        AC_DEFINE([HAVE_BUILTIN_POPCOUNT], [1], [Define to 1 if the compiler supports __builtin_popcount.])
+        AC_MSG_RESULT([yes])
+    ], [
+        AC_MSG_RESULT([no])
+    ])
+])
+
+dnl
 dnl PAC_C_STATIC_ASSERT - Test whether C11 _Static_assert is supported
 dnl
 dnl will AC_DEFINE([HAVE_C11__STATIC_ASSERT]) if C11 _Static_assert is supported.

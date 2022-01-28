@@ -30,7 +30,7 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
                                  MPI_Datatype recvtype,
                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-    int comm_size, i, pof2;
+    int comm_size, i;
     MPI_Aint sendtype_extent, recvtype_extent;
     int mpi_errno = MPI_SUCCESS, src, dst, rank;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -56,17 +56,12 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Is comm_size a power-of-two? */
-    i = 1;
-    while (i < comm_size)
-        i *= 2;
-    if (i == comm_size)
-        pof2 = 1;
-    else
-        pof2 = 0;
+    int is_pof2;
+    is_pof2 = MPL_is_pof2(comm_size);
 
     /* Do the pairwise exchanges */
     for (i = 1; i < comm_size; i++) {
-        if (pof2 == 1) {
+        if (is_pof2) {
             /* use exclusive-or algorithm */
             src = dst = rank ^ i;
         } else {
