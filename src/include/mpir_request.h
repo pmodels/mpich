@@ -204,18 +204,7 @@ struct MPIR_Request {
             MPIR_Errflag_t errflag;
             MPII_Coll_req_t coll;
         } nbc;                  /* kind : MPIR_REQUEST_KIND__COLL */
-#if defined HAVE_DEBUGGER_SUPPORT
         struct {
-            struct MPIR_Debugq *dbg;
-        } send;                 /* kind : MPIR_REQUEST_KIND__SEND */
-        struct {
-            struct MPIR_Debugq *dbg;
-        } recv;                 /* kind : MPIR_REQUEST_KIND__RECV */
-#endif                          /* HAVE_DEBUGGER_SUPPORT */
-        struct {
-#if defined HAVE_DEBUGGER_SUPPORT
-            struct MPIR_Debugq *dbg;
-#endif                          /* HAVE_DEBUGGER_SUPPORT */
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
             MPIR_TSP_sched_t sched;
@@ -235,6 +224,12 @@ struct MPIR_Request {
             MPIR_Win *win;
         } rma;                  /* kind : MPIR_REQUEST_KIND__RMA */
     } u;
+
+#if defined HAVE_DEBUGGER_SUPPORT
+    struct MPIR_Debugq *send;
+    struct MPIR_Debugq *recv;
+    struct MPIR_Debugq *unexp;
+#endif                          /* HAVE_DEBUGGER_SUPPORT */
 
     struct MPIR_Request *next, *prev;
 
@@ -424,12 +419,6 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
     req->comm = NULL;
 
     switch (kind) {
-        case MPIR_REQUEST_KIND__SEND:
-        case MPIR_REQUEST_KIND__PREQUEST_SEND:
-        case MPIR_REQUEST_KIND__RECV:
-        case MPIR_REQUEST_KIND__MPROBE:
-            MPII_REQUEST_CLEAR_DBG(req);
-            break;
         case MPIR_REQUEST_KIND__COLL:
             req->u.nbc.errflag = MPIR_ERR_NONE;
             req->u.nbc.coll.host_sendbuf = NULL;
@@ -443,6 +432,7 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
         default:
             break;
     }
+    MPII_REQUEST_CLEAR_DBG(req);
 
     MPID_Request_create_hook(req);
 
