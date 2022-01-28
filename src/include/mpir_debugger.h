@@ -42,15 +42,9 @@ void MPII_CommL_forget(MPIR_Comm * comm);
 #define MPII_COMML_REMEMBER(_a) MPII_CommL_remember(_a)
 #define MPII_COMML_FORGET(_a) MPII_CommL_forget(_a)
 #define MPII_REQUEST_CLEAR_DBG(_r)                                      \
-    if ((_r)->kind == MPIR_REQUEST_KIND__SEND) {                        \
-        ((_r)->u.send.dbg = NULL);                                      \
-    } else if ((_r)->kind == MPIR_REQUEST_KIND__PREQUEST_SEND) {        \
-        ((_r)->u.persist.dbg = NULL);                                   \
-    } else if ((_r)->kind == MPIR_REQUEST_KIND__RECV || (_r)->kind == MPIR_REQUEST_KIND__MPROBE) { \
-        ((_r)->u.recv.dbg = NULL);                                      \
-    } else {                                                            \
-        MPIR_Assert(0);                                                 \
-    }
+    (_r)->send = NULL;                                                  \
+    (_r)->recv = NULL;                                                  \
+    (_r)->unexp = NULL;
 
 #else
 static inline void MPII_Wait_for_debugger(void)

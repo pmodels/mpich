@@ -370,12 +370,13 @@ void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id,
         p = (MPIR_Debugq *) MPL_malloc(sizeof(MPIR_Debugq), MPL_MEM_DEBUG);
         if (!p) {
             /* Just ignore it */
-            if (MPIR_REQUEST_KIND__SEND == req->kind)
-                req->u.send.dbg = NULL;
-            else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
-                req->u.persist.dbg = NULL;
-            else if (MPIR_REQUEST_KIND__RECV == req->kind)
-                req->u.recv.dbg = NULL;
+            if (queue == &MPIR_Sendq_head) {
+                req->send = NULL;
+            } else if (queue == &MPIR_Recvq_head) {
+                req->recv = NULL;
+            } else {
+                req->unexp = NULL;
+            }
             goto fn_exit;
         }
     }
@@ -387,12 +388,12 @@ void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id,
     p->count = count;
     DL_PREPEND(*queue, p);
 
-    if (MPIR_REQUEST_KIND__SEND == req->kind) {
-        req->u.send.dbg = p;
-    } else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind) {
-        req->u.persist.dbg = p;
-    } else if (MPIR_REQUEST_KIND__RECV == req->kind) {
-        req->u.recv.dbg = p;
+    if (queue == &MPIR_Sendq_head) {
+        req->send = p;
+    } else if (queue == &MPIR_Recvq_head) {
+        req->recv = p;
+    } else {
+        req->unexp = p;
     }
 
   fn_exit:
@@ -408,12 +409,13 @@ void MPII_Debugq_forget(MPIR_Request * req, MPIR_Debugq ** queue)
 
     MPID_THREAD_CS_ENTER(VCI, lock);
     MPID_THREAD_CS_ENTER(POBJ, lock);
-    if (MPIR_REQUEST_KIND__SEND == req->kind)
-        p = req->u.send.dbg;
-    else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
-        p = req->u.persist.dbg;
-    else if (MPIR_REQUEST_KIND__RECV == req->kind)
-        p = req->u.recv.dbg;
+    if (queue == &MPIR_Sendq_head) {
+        p = req->send;
+    } else if (queue == &MPIR_Recvq_head) {
+        p = req->recv;
+    } else {
+        p = req->unexp;
+    }
     if (!p) {
         /* Just ignore it */
         MPID_THREAD_CS_EXIT(VCI, lock);
