@@ -149,6 +149,9 @@ iscatterv-inter:
 
 allgather-intra:
     brucks
+    k_brucks
+        extra_params: k
+        cvar_params: BRUCKS_KVAL
     recursive_doubling
         restrictions: power-of-two
     ring
@@ -210,6 +213,10 @@ iallgatherv-inter:
 alltoall-intra:
     brucks
         restrictions: noinplace
+    k_brucks
+        restrictions: noinplace
+        extra_params: k
+        cvar_params: BRUCKS_KVAL
     pairwise
         restrictions: noinplace
     pairwise_sendrecv_replace
