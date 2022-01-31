@@ -1516,7 +1516,6 @@
 /rma/wintest
 /rma/wintest_shm
 /rma/win_zero
-/runtests
 /spawn/concurrent_spawns
 /spawn/disconnect
 /spawn/disconnect2
