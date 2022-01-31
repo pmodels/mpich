@@ -3,10 +3,65 @@
  *     See COPYRIGHT in top-level directory
  */
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_NUM_MULTI_LEADS
+      category    : COLLECTIVE
+      type        : int
+      default     : 4
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Number of leader ranks per node to be used for multi-leaders based collective algorithms
+
+    - name        : MPIR_CVAR_ALLREDUCE_SHM_PER_LEADER
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Shared memory region per node-leader for multi-leaders based composition for MPI_Allreduce (in bytes)
+        If it is undefined by the user, it is set to the message size of the first call to the algorithm.
+        Max shared memory size is limited to 4MB.
+
+    - name        : MPIR_CVAR_ALLREDUCE_CACHE_PER_LEADER
+      category    : COLLECTIVE
+      type        : int
+      default     : 512
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Amount of data reduced in allreduce delta composition's reduce local step (in bytes). Smaller msg size
+        per leader avoids cache misses and improves performance. Experiments indicate 512 to be the best value.
+
+    - name        : MPIR_CVAR_ALLREDUCE_LOCAL_COPY_OFFSETS
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        number of offsets in the allreduce delta composition's local copy
+        The value of 2 performed the best in our 2 NIC test cases.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #ifndef CH4_COLL_IMPL_H_INCLUDED
 #define CH4_COLL_IMPL_H_INCLUDED
 
 #include "ch4_csel_container.h"
+#include "ch4_comm.h"
+#include "algo_common.h"
+
+#define MPIR_ALLREDUCE_SHM_PER_LEADER_MAX 4194304
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag)
@@ -323,6 +378,220 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void 
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* Multi-leaders based composition. Have num_leaders per node, which reduce the data within
+ * sub-node_comm. It is followed by intra_node reduce and inter_node allreduce on the piece of data
+ * the leader is responsible for. A shared memory buffer is allocated per leader. If size of
+ * message exceeds this shm buffer, the message is chunked.
+ * Constraints: For a comm, all nodes should have same number of ranks per node, op should be
+ * commutative.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void *sendbuf,
+                                                                     void *recvbuf, int count,
+                                                                     MPI_Datatype datatype,
+                                                                     MPI_Op op,
+                                                                     int num_leads,
+                                                                     MPIR_Comm * comm_ptr,
+                                                                     MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS, coll_ret = MPI_SUCCESS;
+    bool mapfail_flag = false;
+    char *shm_addr;
+    int my_leader_rank = -1, iter;
+    MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
+    int offset = 0, is_contig, i;
+    MPI_Aint lb, true_extent, extent;
+    int num_offsets = MPIR_CVAR_ALLREDUCE_LOCAL_COPY_OFFSETS;
+    int local_copy_rank = MPIR_Comm_rank(comm_ptr->node_comm);
+    int local_copy_offset = 0;
+    int local_copy_group = 0;
+    int shm_size_per_lead = MPIR_CVAR_ALLREDUCE_SHM_PER_LEADER;
+
+    MPIR_Type_get_extent_impl(datatype, &lb, &extent);
+    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
+    extent = MPL_MAX(extent, true_extent);
+
+    MPIR_Datatype_is_contig(datatype, &is_contig);
+
+    if (sendbuf == MPI_IN_PLACE)
+        sendbuf = recvbuf;
+
+    if (MPIDI_COMM(comm_ptr, sub_node_comm) == NULL) {
+        /* Create multi-leaders comm in a lazily */
+        coll_ret = MPIDI_Comm_create_multi_leader_subcomms(comm_ptr, num_leads);
+        if (coll_ret)
+            MPIR_ERR_ADD(mpi_errno, coll_ret);
+    }
+
+    /* Allocate the shared memory buffer per node, if it is not already done */
+    if (MPIDI_COMM(comm_ptr, allreduce_comp_info->shm_addr) == NULL) {
+        /* Determine the shm_size_per_lead */
+        /* If user didn't set anything, set shm_size_per_lead according to the first call */
+        /* since CVAR is set only once this check should only happen once during the course of
+         * execution. */
+        if (shm_size_per_lead == -1) {
+            shm_size_per_lead = count * sizeof(datatype);
+        }
+        /* Do not create shm_size_per_lead buffers greater than 4MB. */
+        if (shm_size_per_lead > MPIR_ALLREDUCE_SHM_PER_LEADER_MAX) {
+            shm_size_per_lead = MPIR_ALLREDUCE_SHM_PER_LEADER_MAX;
+        }
+        MPIDI_COMM(comm_ptr, shm_size_per_lead) = shm_size_per_lead;
+
+        coll_ret = MPIDU_shm_alloc(comm_ptr->node_comm, num_leads * shm_size_per_lead,
+                                   (void **) &MPIDI_COMM_ALLREDUCE(comm_ptr, shm_addr),
+                                   &mapfail_flag);
+        if (coll_ret || mapfail_flag)
+            MPIR_ERR_ADD(mpi_errno, coll_ret);
+    }
+
+    /* Store the address of shared buffer into a local variable */
+    shm_addr = MPIDI_COMM_ALLREDUCE(comm_ptr, shm_addr);
+    /* Retrieve the shm_size_per_lead for subsequent calls */
+    shm_size_per_lead = MPIDI_COMM(comm_ptr, shm_size_per_lead);
+
+    if (MPIDI_COMM(comm_ptr, intra_node_leads_comm) != NULL) {
+        my_leader_rank = MPIR_Comm_rank(MPIDI_COMM(comm_ptr, intra_node_leads_comm));
+    }
+
+    /* Calculate chunking information. Extent handles contiguous and non-contiguous datatypes both */
+    MPIR_Algo_calculate_pipeline_chunk_info(shm_size_per_lead,
+                                            extent, count, &num_chunks,
+                                            &chunk_size_floor, &chunk_size_ceil);
+
+    for (iter = 0; iter < num_chunks; iter++) {
+        int chunk_count = (iter == 0) ? chunk_size_floor : chunk_size_ceil;
+        int per_leader_count = chunk_count / num_leads;
+        if (my_leader_rank == (num_leads - 1)) {
+            /* If chunk_count is not perfectly divisible by num_leaders. The last leader gets the
+             * leftover count as well */
+            per_leader_count = ((chunk_count / num_leads) + (chunk_count % num_leads));
+        }
+
+        /* Step 0: Barrier to make sure the shm_buffer can be reused after the previous call */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        coll_ret = MPIDI_SHM_mpi_barrier(comm_ptr->node_comm, errflag);
+#else
+        coll_ret = MPIDI_NM_mpi_barrier(comm_ptr->node_comm, errflag);
+#endif
+        if (coll_ret)
+            MPIR_ERR_ADD(mpi_errno, coll_ret);
+
+        /* Step 1: Leaders perform reduce on is intra_node_sub_communicator. Reduced data is
+         * available in the leader's shared buffer */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        coll_ret =
+            MPIDI_SHM_mpi_reduce((char *) sendbuf + offset * extent,
+                                 (char *) shm_addr + my_leader_rank * shm_size_per_lead,
+                                 chunk_count, datatype, op, 0, MPIDI_COMM(comm_ptr, sub_node_comm),
+                                 errflag);
+#else
+        coll_ret =
+            MPIDI_NM_mpi_reduce((char *) sendbuf + offset * extent,
+                                (char *) shm_addr + my_leader_rank * shm_size_per_lead, chunk_count,
+                                datatype, op, 0, MPIDI_COMM(comm_ptr, sub_node_comm), errflag);
+#endif
+        if (coll_ret)
+            MPIR_ERR_ADD(mpi_errno, coll_ret);
+
+        /* Step 2: Barrier to make sure all the leaders have data reduced into is respective shm
+         * buffers. */
+        if (MPIDI_COMM(comm_ptr, intra_node_leads_comm) != NULL) {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            coll_ret = MPIDI_SHM_mpi_barrier(MPIDI_COMM(comm_ptr, intra_node_leads_comm), errflag);
+#else
+            coll_ret = MPIDI_NM_mpi_barrier(MPIDI_COMM(comm_ptr, intra_node_leads_comm), errflag);
+#endif
+            if (coll_ret)
+                MPIR_ERR_ADD(mpi_errno, coll_ret);
+        }
+
+        /* Step 3: Each leader is responsible to reduce a portion of the data (chunk_count/num_leads),
+         * from shm_buffer of every leader into shm_buffer of leader 0 */
+        if (MPIDI_COMM(comm_ptr, intra_node_leads_comm) != NULL) {
+
+            int j;
+            MPI_Aint cache_tile_size, cache_chunk_count;
+            int leader_offset = my_leader_rank * (chunk_count / num_leads) * extent;
+            cache_tile_size = MPIR_CVAR_ALLREDUCE_CACHE_PER_LEADER;
+            MPI_Aint cache_chunk_size_floor = 0, cache_chunk_size_ceil = 0;
+
+            /* The reduce local is executed for cache_tile_size sized chunks by all the leaders. So
+             * each leader finishes reduce on one cache_tile_size sized chunk and moves to the next
+             * chunk till it reduces a total of per_leader_count bytes data. */
+            MPIR_Algo_calculate_pipeline_chunk_info(cache_tile_size,
+                                                    extent, per_leader_count, &cache_chunk_count,
+                                                    &cache_chunk_size_floor,
+                                                    &cache_chunk_size_ceil);
+            for (j = 0; j < cache_chunk_count; j++) {
+                for (i = 1; i < num_leads; i++) {
+                    coll_ret =
+                        MPIR_Reduce_local((char *) shm_addr +
+                                          (i * shm_size_per_lead + leader_offset +
+                                           j * cache_tile_size),
+                                          (char *) shm_addr + leader_offset +
+                                          (j * cache_tile_size),
+                                          (j ==
+                                           (cache_chunk_count -
+                                            1)) ? cache_chunk_size_floor : cache_chunk_size_ceil,
+                                          datatype, op);
+                    if (coll_ret)
+                        MPIR_ERR_ADD(mpi_errno, coll_ret);
+                }
+            }
+        }
+
+        /* Step 4: Inter-node Allreduce on all the inter_node_multi_leader_comm. Each leader is
+         * responsible for (chunk_count/num_leads) data */
+        if (MPIDI_COMM(comm_ptr, inter_node_leads_comm != NULL)) {
+            coll_ret = MPIDI_NM_mpi_allreduce(MPI_IN_PLACE, (char *) shm_addr +
+                                              my_leader_rank * ((chunk_count / num_leads) * extent),
+                                              per_leader_count, datatype, op, MPIDI_COMM(comm_ptr,
+                                                                                         inter_node_leads_comm),
+                                              errflag);
+            if (coll_ret)
+                MPIR_ERR_ADD(mpi_errno, coll_ret);
+        }
+
+        /* Step 5: Barrier to make sure non-leaders wait for leaders to finish reducing the data
+         * from other nodes */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        coll_ret = MPIDI_SHM_mpi_barrier(comm_ptr->node_comm, errflag);
+#else
+        coll_ret = MPIDI_NM_mpi_barrier(comm_ptr->node_comm, errflag);
+#endif
+        if (coll_ret)
+            MPIR_ERR_ADD(mpi_errno, coll_ret);
+
+        /* Step 6: Copy data from shm buffer into the recvbuf buffer */
+        /* TODO: Do not use offsets for single NIC runs, it shows a slowdown of 0.95x with 2 offsets.
+         * Implementing the discrimation in number of offsets depending on number of NICs will be
+         * possible when MPICH has a function to tell how many NICs we are using.
+         * For now we are using 2 offsets with single NIC too since we do not see impact on overall
+         * performance of the composition. This only works when chunk count perfectly divides by
+         * number of offsets. */
+
+        if ((chunk_count % num_offsets) != 0)
+            num_offsets = 1;
+
+        local_copy_offset = chunk_count * extent / num_offsets;
+        local_copy_group = (local_copy_rank / num_offsets);
+        for (i = 0; i < num_offsets; i++) {
+            coll_ret =
+                MPIR_Localcopy(shm_addr +
+                               ((local_copy_group + i) % num_offsets) * local_copy_offset,
+                               chunk_count / num_offsets, datatype,
+                               (char *) recvbuf + offset * extent +
+                               ((local_copy_group + i) % num_offsets) * local_copy_offset,
+                               chunk_count / num_offsets, datatype);
+            if (coll_ret)
+                MPIR_ERR_ADD(mpi_errno, coll_ret);
+        }
+        offset += chunk_count;
+    }
+
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *sendbuf,
