@@ -10,75 +10,75 @@
 # mpi_err_xxx integer-value short-name
 # where "integer-value" is the same as in mpi.h (eventually, we should
 # generate this automatically).
-MPI_SUCCESS          0      **success
+MPI_SUCCESS          **success
 # Communication argument parameters
-MPI_ERR_BUFFER       1      **buffer
-MPI_ERR_COUNT        2      **count
-MPI_ERR_TYPE         3      **dtype
-MPI_ERR_TAG          4      **tag
-MPI_ERR_COMM         5      **comm
-MPI_ERR_RANK         6      **rank
-MPI_ERR_ROOT         7      **root
-MPI_ERR_TRUNCATE    14      **truncate
+MPI_ERR_BUFFER       **buffer
+MPI_ERR_COUNT        **count
+MPI_ERR_TYPE         **dtype
+MPI_ERR_TAG          **tag
+MPI_ERR_COMM         **comm
+MPI_ERR_RANK         **rank
+MPI_ERR_ROOT         **root
+MPI_ERR_TRUNCATE     **truncate
 # MPI Objects (other than COMM) 
-MPI_ERR_GROUP        8      **group
-MPI_ERR_OP           9      **op
-MPI_ERR_REQUEST     19      **request
+MPI_ERR_GROUP        **group
+MPI_ERR_OP           **op
+MPI_ERR_REQUEST      **request
 # Special topology argument parameters 
-MPI_ERR_TOPOLOGY    10      **topology
-MPI_ERR_DIMS        11      **dims
+MPI_ERR_TOPOLOGY     **topology
+MPI_ERR_DIMS         **dims
 # All other arguments.  This is a class with many kinds 
-MPI_ERR_ARG         12      **arg
+MPI_ERR_ARG          **arg
 # Other errors that are not simply an invalid argument
-MPI_ERR_OTHER       15      **other
-MPI_ERR_UNKNOWN     13      **unknown
-MPI_ERR_INTERN      16      **intern
+MPI_ERR_OTHER        **other
+MPI_ERR_UNKNOWN      **unknown
+MPI_ERR_INTERN       **intern
 # Multiple completion has two special error classes 
-MPI_ERR_IN_STATUS   17      **instatus
-MPI_ERR_PENDING     18      **pending
-MPIX_ERR_PROC_FAILED_PENDING 19 **failure_pending
+MPI_ERR_IN_STATUS    **instatus
+MPI_ERR_PENDING      **pending
+MPIX_ERR_PROC_FAILED_PENDING **failure_pending
 # New MPI-2 Error classes 
-MPI_ERR_FILE        27      **file
-MPI_ERR_ACCESS      20      **fileaccess
-MPI_ERR_AMODE       21      **fileamode
-MPI_ERR_BAD_FILE    22      **filename
-MPI_ERR_FILE_EXISTS 25      **fileexist
-MPI_ERR_FILE_IN_USE 26      **fileinuse
-MPI_ERR_NO_SPACE    36      **filenospace
-MPI_ERR_NO_SUCH_FILE 37     **filenoexist
-MPI_ERR_IO          32      **io
-MPI_ERR_READ_ONLY   40      **filerdonly
-MPI_ERR_CONVERSION  23      **conversion
-MPI_ERR_DUP_DATAREP 24      **datarepused
-MPI_ERR_UNSUPPORTED_DATAREP   43  **datarepunsupported
+MPI_ERR_FILE         **file
+MPI_ERR_ACCESS       **fileaccess
+MPI_ERR_AMODE        **fileamode
+MPI_ERR_BAD_FILE     **filename
+MPI_ERR_FILE_EXISTS  **fileexist
+MPI_ERR_FILE_IN_USE  **fileinuse
+MPI_ERR_NO_SPACE     **filenospace
+MPI_ERR_NO_SUCH_FILE **filenoexist
+MPI_ERR_IO           **io
+MPI_ERR_READ_ONLY    **filerdonly
+MPI_ERR_CONVERSION   **conversion
+MPI_ERR_DUP_DATAREP  **datarepused
+MPI_ERR_UNSUPPORTED_DATAREP   **datarepunsupported
 # MPI_ERR_INFO is NOT defined in the MPI-2 standard.  I believe that
 # this is an oversight 
-MPI_ERR_INFO        28      **info
-MPI_ERR_INFO_KEY    29      **infokey
-MPI_ERR_INFO_VALUE  30      **infoval
-MPI_ERR_INFO_NOKEY  31      **infonokey
-MPI_ERR_NAME        33      **nameservice
-MPI_ERR_NO_MEM      34      **allocmem
-MPI_ERR_NOT_SAME    35      **notsame
-MPI_ERR_PORT        38      **port
-MPI_ERR_QUOTA       39      **filequota
-MPI_ERR_SERVICE     41      **servicename
-MPI_ERR_SPAWN       42      **spawn
-MPI_ERR_UNSUPPORTED_OPERATION 44 **fileopunsupported
-MPI_ERR_WIN         45      **win
-MPI_ERR_BASE        46      **base
-MPI_ERR_LOCKTYPE    47      **locktype
-MPI_ERR_KEYVAL      48      **keyval
-MPI_ERR_RMA_CONFLICT 49     **rmaconflict
-MPI_ERR_RMA_SYNC    50      **rmasync
-MPI_ERR_SIZE        51      **rmasize
-MPI_ERR_DISP        52      **rmadisp
-MPI_ERR_ASSERT      53      **assert
-MPIX_ERR_PROC_FAILED 54     **proc_failed
-MPI_ERR_RMA_RANGE   55      **rmarange
-MPI_ERR_RMA_ATTACH  56      **rmaattach
-MPI_ERR_RMA_SHARED  57      **rmashared
-MPI_ERR_RMA_FLAVOR  58      **rmaflavor
-MPIX_ERR_REVOKED    59      **revoked
-MPIX_ERR_EAGAIN     60      **eagain
-MPIX_ERR_NOREQ      61      **nomemreq
+MPI_ERR_INFO         **info
+MPI_ERR_INFO_KEY     **infokey
+MPI_ERR_INFO_VALUE   **infoval
+MPI_ERR_INFO_NOKEY   **infonokey
+MPI_ERR_NAME         **nameservice
+MPI_ERR_NO_MEM       **allocmem
+MPI_ERR_NOT_SAME     **notsame
+MPI_ERR_PORT         **port
+MPI_ERR_QUOTA        **filequota
+MPI_ERR_SERVICE      **servicename
+MPI_ERR_SPAWN        **spawn
+MPI_ERR_UNSUPPORTED_OPERATION **fileopunsupported
+MPI_ERR_WIN          **win
+MPI_ERR_BASE         **base
+MPI_ERR_LOCKTYPE     **locktype
+MPI_ERR_KEYVAL       **keyval
+MPI_ERR_RMA_CONFLICT **rmaconflict
+MPI_ERR_RMA_SYNC     **rmasync
+MPI_ERR_SIZE         **rmasize
+MPI_ERR_DISP         **rmadisp
+MPI_ERR_ASSERT       **assert
+MPIX_ERR_PROC_FAILED **proc_failed
+MPI_ERR_RMA_RANGE    **rmarange
+MPI_ERR_RMA_ATTACH   **rmaattach
+MPI_ERR_RMA_SHARED   **rmashared
+MPI_ERR_RMA_FLAVOR   **rmaflavor
+MPIX_ERR_REVOKED     **revoked
+MPIX_ERR_EAGAIN      **eagain
+MPIX_ERR_NOREQ       **nomemreq
