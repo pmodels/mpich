@@ -45,8 +45,10 @@ foreach my $k ("envvarparse", "cvar_val"){
 }
 
 # Check for special args
-@files = ();
-%skipFiles = ();
+my $mpi_h = "src/include/mpi.h.in";
+my $baseerrnames_txt = "src/mpi/errhan/baseerrnames.txt";
+my @files = ();
+my %skipFiles = ();
 my @errnameFiles = ();
 $outfile = "";
 foreach $arg (@ARGV) {
@@ -113,6 +115,30 @@ if ($build_test_pgm && -d "test/mpi/errhan") {
     print TESTFD "{\n    int err;\n    MPI_Init( 0, 0 );\n";
 }
 
+# Load mpi.h for error class constants
+my %mpi_h_constants;
+$mpi_h_constants{"MPI_SUCCESS"} = 0;
+if (open In, $mpi_h) {
+    while (<In>) {
+        if (/^#define\s+((MPICH|MPI|MPI_T|MPIX)_ERR_\w+)\s+(.+)/) {
+            my ($key, $t) = ($1, $3);
+            if ($t=~/^(\d+)/) {
+                $mpi_h_constants{$key} = $1;
+            } elsif ($t=~/MPICH_ERR_FIRST_MPIX\s*\+\s*(\d+)/) {
+                $mpi_h_constants{$key} = $mpi_h_constants{MPICH_ERR_FIRST_MPIX} + $1;
+            }
+        }
+    }
+    close In;
+} else {
+    die "Unable to read $mpi_h\n";
+}
+
+my $max_err_class = $mpi_h_constants{MPICH_ERR_LAST_MPIX};
+if (!$max_err_class) {
+    die "Failed to load MPICH_ERR_LAST_MPIX from $mpi_h\n";
+}
+
 # Process the definitions
 foreach $file (@files) {
     print "$file\n" if $showfiles;
@@ -126,6 +152,28 @@ foreach my $sourcefile (@errnameFiles) {
     #print STDERR "processing $sourcefile for error names\n";
     &ReadErrnamesFile( $sourcefile );
 }
+
+# Load baseerrnames.txt
+my @class_msgs;
+if (open In, $baseerrnames_txt) {
+    while (<In>) {
+        if (/^(MPI\w+)\s+(\*\*\w+)/) {
+            my ($name, $shortmsg) = ($1, $2, $3);
+            my $id = $mpi_h_constants{$name};
+            if (defined $id) {
+                $generic_msgs{$shortmsg}++;
+                $generic_loc{$shortmsg} = ":baseerrnames.txt";
+                $class_msgs[$id] = $shortmsg;
+            } else {
+                die "error class $name not found in mpi.h\n";
+            }
+        }
+    }
+    close In;
+} else {
+    die "Unable to read $baseerrnames_txt\n";
+}
+
 
 # Create the output files from the input that we've read
 &CreateErrmsgsHeader( $OUTFD );
@@ -193,46 +241,15 @@ typedef struct msgpair {
 sub CreateErrMsgMapping {
     my $OUTFD = $_[0];
 
-    # Create a mapping of MPI error classes to the specific error
-    # message by index into generic_err_msgs.  This reads the file
-    # baseerrnames, looks up the generic message, and maps the MPI error
-    # class to the corresponding index.
-    # We must do this here because we must ensure that all MPI error
-    # classes have been added to the generic messages
-    @class_msgs = ();
-    open (FD, "<$rootdir/src/mpi/errhan/baseerrnames.txt" ) || 
-	die "Could not open $rootdir/src/mpi/errhan/baseerrnames.txt\n";
-    while (<FD>) {
-	s/#.*$//;
-	my ($mpiname,$num,$shortmsg) = split(/\s\s*/);
-	if (!defined($shortmsg)) {
-	    # In case there is no short message entry (!)
-	    $shortmsg = "";
-	}
-	if ($shortmsg ne "")
-	{
-	    if ($shortmsg =~ /\%/)
-	    {
-		print STDERR "Warning: generic message $shortmsg in baseerrnames.txt contains format control\n";
-	    }
-
-	    $generic_msgs{$shortmsg}++;
-	    $generic_loc{$shortmsg} = ":baseerrnames.txt";
-
-	    $class_msgs[$num] = "$shortmsg";
-	}
-    }
-    close (FD);
-
     # For the case of classes only, output the strings for the class 
     # messages
     print $OUTFD "#if MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__CLASS\n";
     print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $#class_msgs+1\n";
     print $OUTFD "static const char *classToMsg[] = {\n";
-    for (my $i=0; $i<=$#class_msgs; $i++) {
+    for (my $i=0; $i<=$max_err_class; $i++) {
 	my $shortname = $class_msgs[$i];
-	my $msg       = $longnames{$shortname};
-	print $OUTFD "\"$msg\", /* $i  $class_msgs[$i] */\n";
+        my $msg       = $longnames{$shortname};
+        print $OUTFD "\"$msg\", /* $i  $class_msgs[$i] */\n";
     }
     print $OUTFD "0 }; \n";
     print $OUTFD "#endif /* MSG_CLASS */\n";
@@ -246,8 +263,18 @@ sub CreateErrMsgMapping {
     print $OUTFD "/* The names are in sorted order, allowing the use of a simple\
   linear search or bisection algorithm to find the message corresponding to\
   a particular message */\n";
+    my @sorted_generic_msgs = sort keys %generic_msgs;
+
+    # add a dummy UNKNOWN entry in the front.
+    # NOTE: assume all other generic message are lowercase so "UNKNOWN" will
+    #       be ordered first. This is critical because FindGenericMsgIndex assumes
+    #       this ordering!
+    unshift @sorted_generic_msgs, "**UNKNOWN";
+    $generic_loc{"**UNKNOWN"} = ":[NONE]";
+    $longnames{"**UNKNOWN"} = "Unknown error class";
+
     my $num = 0;
-    foreach my $key (sort keys %generic_msgs)
+    foreach my $key (@sorted_generic_msgs)
     {
 	$longvalue = "\"\0\"";
 	if (!defined($longnames{$key}))
@@ -333,12 +360,17 @@ sub CreateErrMsgMapping {
     print $OUTFD "#endif\n\n";
 
     print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS\n";
-    $maxval = $#class_msgs + 1;
+    $maxval = $max_err_class + 1;
     print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $maxval\n";
     print $OUTFD "static int class_to_index[] = {\n";
-    for (my $i=0; $i<=$#class_msgs; $i++) {
-	print $OUTFD "$short_to_num{$class_msgs[$i]}";
-	print $OUTFD "," if ($i < $#class_msgs);
+    for (my $i=0; $i<=$max_err_class; $i++) {
+        my $idx = $short_to_num{$class_msgs[$i]};
+        if (!$idx) {
+            # 0 is the "**UNKNOWN" entry
+            $idx = 0;
+        }
+        print $OUTFD "$idx";
+	print $OUTFD "," if ($i < $max_err_class);
 	print $OUTFD "\n" if !(($i + 1) % 10);
     }
     print $OUTFD "};\n";
