@@ -59,7 +59,7 @@ int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype data
         MPIR_ERR_CHECK(mpi_errno);
     } else {    /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */
 
-        if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPL_is_pof2(comm_size, NULL))) {
+        if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPL_is_pof2(comm_size))) {
             mpi_errno =
                 MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(buffer, count,
                                                                              datatype, root,
@@ -678,7 +678,7 @@ int MPIR_Ireduce_scatter_intra_sched_auto(const void *sendbuf, void *recvbuf,
             }
         }
 
-        if (MPL_is_pof2(comm_size, NULL) && is_block_regular) {
+        if (MPL_is_pof2(comm_size) && is_block_regular) {
             /* noncommutative, pof2 size, and block regular */
             mpi_errno =
                 MPIR_Ireduce_scatter_intra_sched_noncommutative(sendbuf, recvbuf, recvcounts,
@@ -744,7 +744,7 @@ int MPIR_Ireduce_scatter_block_intra_sched_auto(const void *sendbuf, void *recvb
         MPIR_ERR_CHECK(mpi_errno);
     } else {    /* (!is_commutative) */
 
-        if (MPL_is_pof2(comm_size, NULL)) {
+        if (MPL_is_pof2(comm_size)) {
             /* noncommutative, pof2 size */
             mpi_errno =
                 MPIR_Ireduce_scatter_block_intra_sched_noncommutative(sendbuf, recvbuf, recvcount,

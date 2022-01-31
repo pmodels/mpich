@@ -49,7 +49,7 @@ int MPIR_Ialltoall_intra_sched_pairwise(const void *sendbuf, MPI_Aint sendcount,
                                 recvcount, recvtype, s);
     MPIR_ERR_CHECK(mpi_errno);
 
-    is_pof2 = MPL_is_pof2(comm_size, NULL);
+    is_pof2 = MPL_is_pof2(comm_size);
 
     /* Do the pairwise exchanges */
     for (i = 1; i < comm_size; i++) {

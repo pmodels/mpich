@@ -29,7 +29,6 @@ int MPIR_Reduce_scatter_intra_noncommutative(const void *sendbuf, void *recvbuf,
     int mpi_errno_ret = MPI_SUCCESS;
     int comm_size = comm_ptr->local_size;
     int rank = comm_ptr->rank;
-    int pof2;
     int log2_comm_size;
     int i, k;
     int recv_offset, send_offset;
@@ -43,22 +42,17 @@ int MPIR_Reduce_scatter_intra_noncommutative(const void *sendbuf, void *recvbuf,
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
-    pof2 = 1;
-    log2_comm_size = 0;
-    while (pof2 < comm_size) {
-        pof2 <<= 1;
-        ++log2_comm_size;
-    }
-
 #ifdef HAVE_ERROR_CHECKING
     /* begin error checking */
-    MPIR_Assert(pof2 == comm_size);     /* FIXME this version only works for power of 2 procs */
+    MPIR_Assert(MPL_is_pof2(comm_size));        /* FIXME this version only works for power of 2 procs */
 
     for (i = 0; i < (comm_size - 1); ++i) {
         MPIR_Assert(recvcounts[i] == recvcounts[i + 1]);
     }
     /* end error checking */
 #endif
+
+    log2_comm_size = MPL_log2(comm_size);
 
     /* size of a block (count of datatype per block, NOT bytes per block) */
     block_size = recvcounts[0];

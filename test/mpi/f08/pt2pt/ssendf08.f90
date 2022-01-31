@@ -3,15 +3,15 @@
 !     See COPYRIGHT in top-level directory
 !
 
-! This file created from test/mpi/f77/pt2pt/ssendf.f with f77tof90
 !
 ! This program is based on the allpair.f test from the MPICH-1 test
 ! (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 ! fsset@corelli.lerc.nasa.gov (Scott Townsend)
 
       program ssend
-      use mpi
-      integer ierr, errs, comm
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer ierr, errs
       logical mtestGetIntraComm
       logical verbose
       common /flags/ verbose
@@ -31,12 +31,13 @@
       end
 !
       subroutine test_pair_ssend( comm, errs )
-      use mpi
-      integer comm, errs
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer errs
       integer rank, size, ierr, next, prev, tag, count, i
       integer TEST_SIZE
       parameter (TEST_SIZE=2000)
-      integer status(MPI_STATUS_SIZE)
+      type(MPI_Status) status
       logical flag
       real send_buf(TEST_SIZE), recv_buf(TEST_SIZE)
       logical verbose
@@ -69,8 +70,8 @@
 !
          if (flag) then
             print *, 'Ssend: Iprobe succeeded! source', &
-      &               status(MPI_SOURCE), &
-      &               ', tag', status(MPI_TAG)
+      &               status%MPI_SOURCE, &
+      &               ', tag', status%MPI_TAG
             errs = errs + 1
          end if
 !
@@ -82,15 +83,15 @@
       &                      comm, flag, status, ierr)
          end do
 !
-         if (status(MPI_SOURCE) .ne. next) then
+         if (status%MPI_SOURCE .ne. next) then
             print *, 'Ssend: Incorrect source, expected', next, &
-      &               ', got', status(MPI_SOURCE)
+      &               ', got', status%MPI_SOURCE
             errs = errs + 1
          end if
 !
-         if (status(MPI_TAG) .ne. tag) then
+         if (status%MPI_TAG .ne. tag) then
             print *, 'Ssend: Incorrect tag, expected', tag, &
-      &               ', got', status(MPI_TAG)
+      &               ', got', status%MPI_TAG
             errs = errs + 1
          end if
 !

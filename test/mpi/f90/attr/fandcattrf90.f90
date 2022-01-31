@@ -22,7 +22,7 @@
       delcount  = 0
 
       errs      = 0
-      call mpi_init(ierr)
+      call mtest_init(ierr)
       commextra = 1001
       call mpi_comm_create_keyval( mycopyfn, mydelfn,                     &
      &                             fcomm2_keyval, commextra, ierr )

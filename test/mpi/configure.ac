@@ -40,7 +40,7 @@ AC_CONFIG_MACRO_DIR([confdb])
 dnl
 echo "RUNNING CONFIGURE FOR MPI TESTS"
 
-AM_INIT_AUTOMAKE([-Wall -Werror -Wno-portability-recursive foreign 1.12.3 silent-rules subdir-objects])
+AM_INIT_AUTOMAKE([-Wall -Werror -Wno-portability-recursive foreign 1.12.3 silent-rules subdir-objects no-dist])
 AM_MAINTAINER_MODE([enable])
 
 # Non-verbose make by default

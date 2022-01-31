@@ -55,7 +55,7 @@ static void flatlist_node_grow(ADIOI_Flatlist_node * flat, int idx)
     }
 }
 
-void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type);
+static void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type);
 /* flatten datatype and add it to Flatlist */
 ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 {
@@ -200,9 +200,10 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #endif
 #ifdef MPIIMPL_HAVE_MPI_COMBINER_SUBARRAY
         case MPI_COMBINER_SUBARRAY:
-            {
+            if (ints[0] > 0) {
                 int dims = ints[0];
                 MPI_Datatype stype;
+
 #ifdef FLATTEN_DEBUG
                 DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_SUBARRAY\n");
 #endif
@@ -220,9 +221,10 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #endif
 #ifdef MPIIMPL_HAVE_MPI_COMBINER_DARRAY
         case MPI_COMBINER_DARRAY:
-            {
+            if (ints[2] > 0) {
                 int dims = ints[2];
                 MPI_Datatype dtype;
+
 #ifdef FLATTEN_DEBUG
                 DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_DARRAY\n");
 #endif
@@ -256,6 +258,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_CONTIGUOUS\n");
 #endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -308,6 +313,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_VECTOR\n");
 #endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -371,10 +379,15 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
             break;
 
         case MPI_COMBINER_HVECTOR:
+#if MPI_VERSION < 3
         case MPI_COMBINER_HVECTOR_INTEGER:
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_HVECTOR_INTEGER\n");
 #endif
+#endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -440,6 +453,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_INDEXED\n");
 #endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -542,6 +558,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_INDEXED_BLOCK\n");
 #endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -628,10 +647,15 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
             break;
 
         case MPI_COMBINER_HINDEXED:
+#if MPI_VERSION < 3
         case MPI_COMBINER_HINDEXED_INTEGER:
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_HINDEXED_INTEGER\n");
 #endif
+#endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -715,10 +739,15 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
             break;
 
         case MPI_COMBINER_STRUCT:
+#if MPI_VERSION < 3
         case MPI_COMBINER_STRUCT_INTEGER:
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_STRUCT_INTEGER\n");
 #endif
+#endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             for (n = 0; n < top_count; n++) {
                 MPI_Type_get_envelope(types[n], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
@@ -732,17 +761,13 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 /* simplest case, current type is basic or contiguous types */
                     /* By using ADIO_Offset we preserve +/- sign and
                      * avoid >2G integer arithmetic problems */
-                    if (ints[1 + n] > 0 || types[n] == MPI_LB || types[n] == MPI_UB) {
+                    if (ints[1 + n] > 0) {
                         ADIO_Offset blocklength = ints[1 + n];
                         j = *curr_index;
                         flatlist_node_grow(flat, j);
                         flat->indices[j] = st_offset + adds[n];
                         MPI_Type_size_x(types[n], &old_size);
                         flat->blocklens[j] = blocklength * old_size;
-                        if (types[n] == MPI_LB)
-                            flat->lb_idx = j;
-                        if (types[n] == MPI_UB)
-                            flat->ub_idx = j;
 #ifdef FLATTEN_DEBUG
                         DBG_FPRINTF(stderr,
                                     "ADIOI_Flatten:: simple adds[%#X] " MPI_AINT_FMT_HEX_SPEC
@@ -1002,7 +1027,9 @@ MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count * curr_
 
         case MPI_COMBINER_VECTOR:
         case MPI_COMBINER_HVECTOR:
+#if MPI_VERSION < 3
         case MPI_COMBINER_HVECTOR_INTEGER:
+#endif
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -1036,7 +1063,9 @@ MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count * curr_
 
         case MPI_COMBINER_INDEXED:
         case MPI_COMBINER_HINDEXED:
+#if MPI_VERSION < 3
         case MPI_COMBINER_HINDEXED_INTEGER:
+#endif
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -1102,7 +1131,9 @@ MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count * curr_
             break;
 
         case MPI_COMBINER_STRUCT:
+#if MPI_VERSION < 3
         case MPI_COMBINER_STRUCT_INTEGER:
+#endif
             top_count = ints[0];
             count = 0;
             for (n = 0; n < top_count; n++) {
@@ -1183,7 +1214,7 @@ MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count * curr_
  * went in, the flattened representation should no longer have zero-length
  * blocks except for UB and LB markers.
  */
-void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
+static void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
 {
     int i, j, opt_blocks;
     ADIO_Offset *opt_blocklens;
