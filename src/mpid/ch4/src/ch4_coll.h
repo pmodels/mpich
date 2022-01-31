@@ -54,6 +54,7 @@ cvars:
         1 NM + SHM with reduce + bcast
         2 NM only composition
         3 SHM only composition
+        4 Multi leaders based inter node + intra node composition
 
     - name        : MPIR_CVAR_ALLGATHER_COMPOSITION
       category    : COLLECTIVE
