@@ -4,6 +4,8 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+use strict;
+
 # (Tested with -w; 10/5/04)
 # 
 # Find the parse.sub routine.
@@ -16,23 +18,22 @@ if ( ! -s "maint/parse.sub" ) {
 	$maintdir = $program;
 	$rootdir  = $program;
 	$rootdir  =~ s/\/maint//g;
-	print "Rootdir = $rootdir\n" if $debug;
     }
 }
 require "$maintdir/parse.sub";
 
-$debug = 0;
-$careful = 0;        # Set careful to 1 to flag unused messages
-$carefulFilename = "";
-$showfiles = 0;
-$quiet = 0;
-$build_test_pgm = 1;
+my $debug = 0;
+my $careful = 0;        # Set careful to 1 to flag unused messages
+my $carefulFilename = "";
+my $showfiles = 0;
+my $quiet = 0;
+my $build_test_pgm = 1;
 # FIXME: checkErrClass should be set to 1; currently set to zero
 # to permit autogen.sh to complete
-$checkErrClass = 1;
+my $checkErrClass = 1;
 
 # Strict is used to control checking of error message strings.
-$gStrict = 0;
+my $gStrict = 0;
 if (defined($ENV{"DEBUG_STRICT"})) { $gStrict = 1; }
 
 our (%generic_msgs, %generic_loc, %specific_msgs, %specific_loc);
@@ -50,8 +51,8 @@ my $baseerrnames_txt = "src/mpi/errhan/baseerrnames.txt";
 my @files = ();
 my %skipFiles = ();
 my @errnameFiles = ();
-$outfile = "";
-foreach $arg (@ARGV) {
+my $outfile = "";
+foreach my $arg (@ARGV) {
     if ($arg =~ /^--?showfiles/) { $showfiles = 1; }
     elsif( $arg =~ /^--?debug/) { $debug = 1; }
     elsif( $arg =~ /^--?quiet/) { $quiet = 1; }
@@ -69,7 +70,7 @@ foreach $arg (@ARGV) {
 	if (-d $arg) {
 	    # Add all .c files from directory $arg to the list of files 
 	    # to process (this lets us shorten the arg list)
-	    @files = (@files, &ExpandDir( $arg ));
+	    ExpandDir(\@files, $arg);
 	}
 	else {
             # errname files are treated differently
@@ -84,15 +85,17 @@ foreach $arg (@ARGV) {
 }
 # End of argument processing
 
+print "Rootdir = $rootdir\n" if $debug;
+
 # Setup the basic file for errnames - Now determined in ExpandDirs
 #@errnameFiles = ( "$rootdir/src/mpi/errhan/errnames.txt" );
 
+my $OUTFD;
 if ($outfile ne "") {
-    $OUTFD = "MyOutFile";
     open( $OUTFD, ">$outfile" ) or die "Could not open $outfile\n";
 }
 else {
-    $OUTFD = STDOUT;
+    $OUTFD = *STDOUT;
 }
 # Setup before processing the files
 if ($build_test_pgm && -d "test/mpi/errhan") {
@@ -140,7 +143,8 @@ if (!$max_err_class) {
 }
 
 # Process the definitions
-foreach $file (@files) {
+my (%generic_msgs, %generic_loc, %specific_msgs, %specific_loc);
+foreach my $file (@files) {
     print "$file\n" if $showfiles;
     &ProcessFile( $file );
 }
@@ -148,6 +152,8 @@ foreach $file (@files) {
 #
 # Create the hash %longnames that maps the short names to the long names,
 # $longnames{shortname} => longname, by reading the errnames.txt files
+#
+my (%longnames, %longnamesDefined);
 foreach my $sourcefile (@errnameFiles) {
     #print STDERR "processing $sourcefile for error names\n";
     &ReadErrnamesFile( $sourcefile );
@@ -176,6 +182,7 @@ if (open In, $baseerrnames_txt) {
 
 
 # Create the output files from the input that we've read
+my (%longnamesUsed, %short_to_num);
 &CreateErrmsgsHeader( $OUTFD );
 &CreateErrMsgMapping( $OUTFD );
 
@@ -187,15 +194,14 @@ if ($build_test_pgm && -d "test/mpi/errhan") {
 #
 # Generate a list of unused keys
 if ($careful) {
-    my $OUTFD = STDERR;
+    my $OUTFD = *STDERR;
     if ($carefulFilename ne "") {
-	$OUTFD = "ERRFD";
 	open $OUTFD, ">$carefulFilename" or die "Cannot open $carefulFilename";
     }
-    foreach $shortname (keys(%longnames)) {
+    foreach my $shortname (keys(%longnames)) {
 	if (!defined($longnamesUsed{$shortname}) ||
 	    $longnamesUsed{$shortname} < 1) {
-	    $loc = $longnamesDefined{$shortname};
+	    my $loc = $longnamesDefined{$shortname};
 	    print $OUTFD "Name $shortname is defined in $loc but never used\n";
 	}
     }
@@ -211,7 +217,7 @@ if ($careful) {
 # text.
 # This is a temporary routine; the exact output form will be defined later
 sub CreateErrmsgsHeader {
-    $FD = $_[0];
+    my $FD = $_[0];
     print $FD "/*\
  * Copyright (C) by Argonne National Laboratory\
  *     See COPYRIGHT in top-level directory\
@@ -276,15 +282,14 @@ sub CreateErrMsgMapping {
     my $num = 0;
     foreach my $key (@sorted_generic_msgs)
     {
-	$longvalue = "\"\0\"";
+	my $longvalue = "\"\0\"";
 	if (!defined($longnames{$key}))
 	{
-	    $seenfile = $generic_loc{$key};
+	    my $seenfile = $generic_loc{$key};
 	    if ($key =~ /^\*\*/) {
 		# If the message begins with text, assume that it is a 
 		# literal message
 		print STDERR "Shortname $key for generic messages has no expansion (first seen in file $seenfile)\n";
-		print STDERR "(Add expansion to $sourcefile)\n";
 	    }
 	    next;
 	}
@@ -324,9 +329,9 @@ sub CreateErrMsgMapping {
     $num = 0;
     # Now output the instance specific messages
     print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__GENERIC\n";
-    foreach $key (sort keys %specific_msgs)
+    foreach my $key (sort keys %specific_msgs)
     {
-	$longvalue = "\"\0\"";
+	my $longvalue = "\"\0\"";
 
 	if (!defined($longnames{$key}))
 	{
@@ -360,7 +365,7 @@ sub CreateErrMsgMapping {
     print $OUTFD "#endif\n\n";
 
     print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS\n";
-    $maxval = $max_err_class + 1;
+    my $maxval = $max_err_class + 1;
     print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $maxval\n";
     print $OUTFD "static int class_to_index[] = {\n    ";
     for (my $i=0; $i<=$max_err_class; $i++) {
@@ -380,9 +385,10 @@ sub CreateErrMsgMapping {
 # Add a call to test this message for the error message.
 # Handle both the generic and specific messages
 #
+my (%test_generic_msg, %test_specific_msg);
 sub AddTestCall {
 
-    my $genericArgLoc = $_[0];
+    my ($filename, $genericArgLoc, @msg_args) = @_;
     
     my $last_errcode = "MPI_SUCCESS";  # $_[0];
     my $fatal_flag   = "MPIR_ERR_RECOVERABLE"; # $_[1];
@@ -390,9 +396,11 @@ sub AddTestCall {
     my $linenum      = "__LINE__"; # $_[3];
     my $errclass     = "MPI_ERR_OTHER"; # $_[4];
 
-    my $generic_msg = $_[$genericArgLoc+1];
-    my $specific_msg = $_[$genericArgLoc+2];
-    if ($#_ < $genericArgLoc+2) { $specific_msg = "0"; }
+    my $generic_msg = $msg_args[$genericArgLoc];
+    my $specific_msg = $msg_args[$genericArgLoc+1];
+    if (!defined $specific_msg) {
+        $specific_msg = "0";
+    }
 
     # Ensure that the last_errcode, class and fatal flag are specified.  There are a few places where these are variables.
     if (!($last_errcode =~ /MPI_ERR_/) )
@@ -550,7 +558,7 @@ sub AddTestCall {
 		print STDERR "Unrecognized format type $type for $fullformat in $filename\n";
 	    }
 	}   
-	$actargs = $#_ - $genericArgLoc - 2;
+	my $actargs = $#msg_args - $genericArgLoc - 1;
 	if ($actargs != $narg)
 	{
 	    print STDERR "Error: Format $fullformat provides $narg arguments but call has $actargs in $filename\n";
@@ -651,8 +659,8 @@ sub ReadErrnamesFile {
 #       and the same for hash specific_loc{msg}.
 #   The last two are used to provide better error reporting.
 #
-$filename = "";    # Make global so that other routines can echo filename
-%KnownErrRoutines;
+my %KnownErrRoutines;
+my %bad_syntax_in_file;
 
 sub ProcessFile
 { 
@@ -660,18 +668,18 @@ sub ProcessFile
         load_KnownErrRoutines();
     }
 
-    # Leave filename global for AddTest
-    $filename = $_[0];
+    my $filename = $_[0];
     my $linecount = 0;
-    open (FD, "<$filename" ) or die "Could not open $filename\n";
+    my $remainder;
+    open (my $FD, "<$filename" ) or die "Could not open $filename\n";
 
-    while (<FD>) {
+    while (<$FD>) {
 	$linecount++;
 	# Skip code that is marked as ignore (e.g., for
 	# macros that are used to simplify the use of MPIR_Err_create_code
 	# (such macros must also be recognized and processed)
 	if (/\/\*\s+--BEGIN ERROR MACROS--\s+\*\//) {
-	    while (<FD>) {
+	    while (<$FD>) {
 		$linecount++;
 		if (/\/\*\s+--END ERROR MACROS--\s+\*\//) { last; }
 	    }
@@ -679,7 +687,7 @@ sub ProcessFile
 	    next;
 	}
 	# Next, remove any comments
-	$_ = StripComments( FD, $_ );
+	$_ = StripComments($FD, $_ );
 	# Skip the definition of the function
 	if (/int\s+MPI[OUR]_Err_create_code/) { $remainder = ""; next; }
 	while (/(MPI[OUR]_Err[A-Za-z0-9_]+)\s*(\(.*)$/i) {
@@ -697,11 +705,12 @@ sub ProcessFile
 	    my ($genericArgLoc,$hasLine,$hasSpecific,$onlyIndirect,$errClassLoc) = 
 		split(/:/,$KnownErrRoutines{$routineName});
 
-	    ($leader, $remainder, @args ) = &GetSubArgs( FD, $arglist );
+            my ($leader, @args);
+	    ($leader, $remainder, @args ) = &GetSubArgs($FD, $arglist );
 	    # Discard leader 
 	    if ($debug) {
 		print "Line begins with $leader\n";   # Use $leader to keep -w happy
-		foreach $arg (@args) {
+		foreach my $arg (@args) {
 		    print "|$arg|\n";
 		}
 	    }
@@ -826,7 +835,7 @@ sub ProcessFile
 	    }
 
 	    if ($build_test_pgm) {
-		&AddTestCall( $genericArgLoc, @args )
+		&AddTestCall($filename, $genericArgLoc, @args )
 	    }
 
 	    if ($generic_msg =~ /^\"(.*)\"$/) {
@@ -851,17 +860,16 @@ sub ProcessFile
             $_ = $remainder;
         }
     }		
-    close FD;
+    close $FD;
 }
 
 # Get all of the .c files from the named directory, including any subdirs
 # Also, add any errnames.txt files to the errnamesFiles arrays
 sub ExpandDir {
-    my $dir = $_[0];
+    my ($files, $dir) = @_;
     my @otherdirs = ();
-    my @files = ();
     opendir DIR, "$dir";
-    while ($filename = readdir DIR) {
+    while (my $filename = readdir DIR) {
 	if ($filename =~ /^\./) {
 	    next;
 	}
@@ -872,7 +880,7 @@ sub ExpandDir {
 	    # Test for both Unix- and Windows-style directory separators
 	    if (!defined($skipFiles{"$dir/$filename"}) &&
 		!defined($skipFiles{"$dir\\$filename"})) {
-		$files[$#files + 1] = "$dir/$filename";
+                push @$files, "$dir/$filename";
 	    }
 	}
 	elsif ($filename eq "errnames.txt") {
@@ -882,10 +890,9 @@ sub ExpandDir {
     closedir DIR;
     # (almost) tail recurse on otherdirs (we've closed the directory handle,
     # so we don't need to worry about it anymore)
-    foreach $dir (@otherdirs) {
-	@files = (@files, &ExpandDir( $dir ) );
+    foreach my $dir (@otherdirs) {
+        ExpandDir($files, $dir);
     }
-    return @files;
 }
 
 sub load_KnownErrRoutines {
