@@ -1011,7 +1011,11 @@ done
 ## Check for the location of autotools
 ########################################################################
 
-fn_check_autotools
+if test "$do_quick" = "no" ; then
+    fn_check_autotools
+else
+    set_autotools
+fi
 fn_check_bash_find_patch_xargs
 check_python3
 
