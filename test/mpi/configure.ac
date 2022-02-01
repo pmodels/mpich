@@ -741,7 +741,7 @@ if test $enable_dtpools = "yes" ; then
     TESTLIST="${TESTLIST},testlist.dtp"
 fi
 if test $enable_collalgo_tests = "yes" ; then
-    TESTLIST="${TESTLIST},testlist.cvar"
+    TESTLIST="${TESTLIST},testlist.collalgo"
 fi
 # handle --enable-gpu-tests-only
 if test $have_gpu = "no" -a $enable_gpu_tests_only = "yes" ; then
