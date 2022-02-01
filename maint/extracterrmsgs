@@ -249,9 +249,9 @@ sub CreateErrMsgMapping {
     for (my $i=0; $i<=$max_err_class; $i++) {
 	my $shortname = $class_msgs[$i];
         my $msg       = $longnames{$shortname};
-        print $OUTFD "\"$msg\", /* $i  $class_msgs[$i] */\n";
+        print $OUTFD "    \"$msg\", /* $i  $class_msgs[$i] */\n";
     }
-    print $OUTFD "0 }; \n";
+    print $OUTFD "    NULL\n};\n";
     print $OUTFD "#endif /* MSG_CLASS */\n";
 
     # Now, output each short,long key
@@ -314,7 +314,7 @@ sub CreateErrMsgMapping {
     my $sentinal2 = "0xcb0bfa11";
     print $OUTFD "static const msgpair generic_err_msgs[] = {\n";
     for (my $i = 0; $i < $num; $i ++) {
-	print $OUTFD "{ $sentinal1, short_gen$i, long_gen$i, $sentinal2 }";
+	print $OUTFD "    { $sentinal1, short_gen$i, long_gen$i, $sentinal2 }";
 	print $OUTFD "," if ($i < $num - 1);
 	print $OUTFD "\n";
     }
@@ -352,7 +352,7 @@ sub CreateErrMsgMapping {
     print $OUTFD "\nstatic const int specific_msgs_len = $num;\n";
     print $OUTFD "static const msgpair specific_err_msgs[] = {\n";
     for (my $i = 0; $i < $num ; $i ++) {
-	print $OUTFD "{ $sentinal1, short_spc$i, long_spc$i, $sentinal2 }";
+	print $OUTFD "    { $sentinal1, short_spc$i, long_spc$i, $sentinal2 }";
 	print $OUTFD "," if ($i < $num - 1);
 	print $OUTFD "\n";
     }
@@ -362,7 +362,7 @@ sub CreateErrMsgMapping {
     print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS\n";
     $maxval = $max_err_class + 1;
     print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $maxval\n";
-    print $OUTFD "static int class_to_index[] = {\n";
+    print $OUTFD "static int class_to_index[] = {\n    ";
     for (my $i=0; $i<=$max_err_class; $i++) {
         my $idx = $short_to_num{$class_msgs[$i]};
         if (!$idx) {
@@ -371,9 +371,9 @@ sub CreateErrMsgMapping {
         }
         print $OUTFD "$idx";
 	print $OUTFD "," if ($i < $max_err_class);
-	print $OUTFD "\n" if !(($i + 1) % 10);
+	print $OUTFD "\n    " if !(($i + 1) % 10);
     }
-    print $OUTFD "};\n";
+    print $OUTFD "\n};\n";
     print $OUTFD "#endif\n";
 }
 #
