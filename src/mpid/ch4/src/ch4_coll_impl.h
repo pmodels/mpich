@@ -642,14 +642,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void 
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void *sendbuf,
-                                                                     MPI_Aint sendcount,
-                                                                     MPI_Datatype sendtype,
-                                                                     void *recvbuf,
-                                                                     MPI_Aint recvcount,
-                                                                     MPI_Datatype recvtype,
-                                                                     MPIR_Comm * comm_ptr,
-                                                                     MPIR_Errflag_t * errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_beta(const void *sendbuf,
+                                                                    MPI_Aint sendcount,
+                                                                    MPI_Datatype sendtype,
+                                                                    void *recvbuf,
+                                                                    MPI_Aint recvcount,
+                                                                    MPI_Datatype recvtype,
+                                                                    MPIR_Comm * comm_ptr,
+                                                                    MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 

@@ -55,6 +55,19 @@ cvars:
         2 NM only composition
         3 SHM only composition
 
+    - name        : MPIR_CVAR_ALLGATHER_COMPOSITION
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Select composition (inter_node + intra_node) for Allgather
+        0 Auto selection
+        1 Multi leaders based inter node + intra node composition
+        2 NM only composition
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -369,10 +382,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
 }
 
 
-MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendcount,
-                                            MPI_Datatype sendtype, void *recvbuf,
-                                            MPI_Aint recvcount, MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void *sendbuf,
+                                                                      MPI_Aint sendcount,
+                                                                      MPI_Datatype sendtype,
+                                                                      void *recvbuf,
+                                                                      MPI_Aint recvcount,
+                                                                      MPI_Datatype recvtype,
+                                                                      MPIR_Comm * comm,
+                                                                      MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
@@ -389,8 +406,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
         .u.allgather.recvtype = recvtype,
     };
 
-    MPIR_FUNC_ENTER;
-
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
@@ -402,11 +417,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha:
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_beta:
             mpi_errno =
-                MPIDI_Allgather_intra_composition_alpha(sendbuf, sendcount, sendtype,
-                                                        recvbuf, recvcount, recvtype,
-                                                        comm, errflag);
+                MPIDI_Allgather_intra_composition_beta(sendbuf, sendcount, sendtype,
+                                                       recvbuf, recvcount, recvtype, comm, errflag);
             break;
         default:
             MPIR_Assert(0);
@@ -415,7 +429,51 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendcount,
+                                            MPI_Datatype sendtype, void *recvbuf,
+                                            MPI_Aint recvcount, MPI_Datatype recvtype,
+                                            MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    switch (MPIR_CVAR_ALLGATHER_COMPOSITION) {
+        case 2:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           comm->comm_kind == MPIR_COMM_KIND__INTRACOMM, mpi_errno,
+                                           "Allgather composition beta cannot be applied.\n");
+            mpi_errno =
+                MPIDI_Allgather_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf,
+                                                       recvcount, recvtype, comm, errflag);
+            break;
+        default:
+            mpi_errno = MPIDI_Allgather_allcomm_composition_json(sendbuf, sendcount, sendtype,
+                                                                 recvbuf, recvcount, recvtype, comm,
+                                                                 errflag);
+            break;
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+        mpi_errno =
+            MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
+                                errflag);
+    else
+        mpi_errno =
+            MPIDI_Allgather_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                                   recvtype, comm, errflag);
+
+  fn_exit:
+    MPIR_FUNC_ENTER;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
