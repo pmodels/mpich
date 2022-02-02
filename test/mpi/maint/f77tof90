@@ -131,10 +131,14 @@ sub ConvertToF90 {
     print OUTF "! This file created from $infile with f77tof90\n";
     my $lastline = "";
     my $firstline = 1;
+    my $scope = ""; # program or subroutine
     while (<INF>) {
 	if (/\r/) { $newline = "\r\n"; }
 	# Remove any end-of-line characters
 	s/[\r\n]*//g;
+        if (/^\s*(program|subroutine)\s*(\w+)/i) {
+            $scope = lc($1) . " " . lc($2);
+        }
         # The implicit none must not come before the use mpi statement,
 	# but in F77, it must come before the include mpif.h statement.
 	# Rather than try and fix this, rely on the F77 versions to 
@@ -143,7 +147,12 @@ sub ConvertToF90 {
             next;
         }
 	if (/^(\s*)include\s+[\'\"]mpif\.h/) {
-	    $_ = "$1use mpi";
+            my $sp = $1;
+            if ($scope =~ /subroutine (mpi_\w+)/) {
+                $_ = $sp . "use mpi, skip_$1 => $1";
+            } else {
+                $_ = $sp . "use mpi";
+            }
 	}
 	# Allow the insertion of Fortran 90 only statements, such as
 	# interface definitions
