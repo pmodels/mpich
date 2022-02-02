@@ -151,6 +151,9 @@ static void *create_container(struct json_object *obj)
         else if (!strcmp(ckey, "composition=MPIDI_Allgather_intra_composition_alpha"))
             cnt->id =
                 MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Allgather_intra_composition_beta"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_beta;
         else if (!strcmp(ckey, "composition=MPIDI_Allgatherv_intra_composition_alpha"))
             cnt->id =
                 MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgatherv_intra_composition_alpha;
