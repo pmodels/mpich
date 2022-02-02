@@ -554,6 +554,10 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
 
         MPID_Request_destroy_hook(req);
 
+        if (req->kind == MPIR_REQUEST_KIND__SEND) {
+            MPII_SENDQ_FORGET(req);
+        }
+
         if (need_safety) {
             MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
             MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req, /* not info */ FALSE);
@@ -608,11 +612,6 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_completion_processing_fastpath(MPI_Req
 
     MPIR_Assert(request_ptr->kind == MPIR_REQUEST_KIND__SEND ||
                 request_ptr->kind == MPIR_REQUEST_KIND__RECV);
-
-    if (request_ptr->kind == MPIR_REQUEST_KIND__SEND) {
-        /* FIXME: are Ibsend requests added to the send queue? */
-        MPII_SENDQ_FORGET(request_ptr);
-    }
 
     /* the completion path for SEND and RECV is the same at this time, modulo
      * the SENDQ hook above */
