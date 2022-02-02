@@ -1209,6 +1209,7 @@ cvars:
         recursive_doubling       - Force recursive doubling algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
         tree                     - Force pipelined tree algorithm
+        recexch                  - Force generic transport recursive exchange algorithm
 
     - name        : MPIR_CVAR_ALLREDUCE_TREE_TYPE
       category    : COLLECTIVE
@@ -1259,6 +1260,27 @@ cvars:
         the number of unexpected messages. If set to false, there is only one buffer that is
         used to receive the data from all the children. The receives are therefore serialized,
         that is, only one receive can be posted at a time.
+
+    - name        : MPIR_CVAR_ALLREDUCE_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for recursive exchange based allreduce
+
+    - name        : MPIR_CVAR_ALLREDUCE_RECEXCH_SINGLE_PHASE_RECV
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This CVAR controls whether the recv is posted for one phase or two phases
+        in recexch algos. By default, we post the recvs for 2 phases.
 
     - name        : MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
