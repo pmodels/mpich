@@ -13,31 +13,31 @@
 # We also allow the file name to be modified to help out Windows, since
 # programs in a project need to have distinct names
 #
+use strict;
 use warnings;
 
-$indir = $ARGV[0];
-$outdir = $ARGV[1];
-$makeTemplate = $ARGV[2];
-$makeAppend   = $ARGV[3];
-$convertToFreeForm    = 1;
-$convertToNewComments = 1;
+my ($indir, $outdir, $makeTemplate, $makeAppend) = @ARGV;
+my $convertToFreeForm    = 1;
+my $convertToNewComments = 1;
 # Including a newline variable allows us to handle Unix and DOS source files
-$newline = "\n";
+my $newline = "\n";
 
-%replaceInclude = ( 'iodisp' => 'integer (kind=MPI_OFFSET_KIND) disp',
-		    'ioaint' => 'integer (kind=MPI_ADDRESS_KIND) aint',
-		    'iooffset' => 'integer (kind=MPI_OFFSET_KIND) offset',
-		    'type1aint' => 'integer (kind=MPI_ADDRESS_KIND) aint', 
-		    'typeaints' => 'integer (kind=MPI_ADDRESS_KIND) aint, aintv(max_asizev)', 
-		    'attr1aints' => 'integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val',
-		    'attraints' => 'integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val',
-		    'addsize' => 'integer (kind=MPI_ADDRESS_KIND) asize',
-                    'add1size' => 'integer (kind=MPI_ADDRESS_KIND) asize',
-	    );
+my %replaceInclude = (
+    'iodisp' => 'integer (kind=MPI_OFFSET_KIND) disp',
+    'ioaint' => 'integer (kind=MPI_ADDRESS_KIND) aint',
+    'iooffset' => 'integer (kind=MPI_OFFSET_KIND) offset',
+    'type1aint' => 'integer (kind=MPI_ADDRESS_KIND) aint', 
+    'typeaints' => 'integer (kind=MPI_ADDRESS_KIND) aint, aintv(max_asizev)', 
+    'attr1aints' => 'integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val',
+    'attraints' => 'integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val',
+    'addsize' => 'integer (kind=MPI_ADDRESS_KIND) asize',
+    'add1size' => 'integer (kind=MPI_ADDRESS_KIND) asize',
+);
 
-%excludePrograms = ();
-$debugReplace = 0;
-$reportSkipped = 1;
+my %excludePrograms = ();
+my $debugReplace = 0;
+my $reportSkipped = 1;
+
 # --------------------------------------------------------------------------
 # Check the input arguments
 if ($indir eq "" || $outdir eq "") {
@@ -58,11 +58,10 @@ if (! -d $outdir) {
 # --------------------------------------------------------------------------
 opendir( DIR, "$indir" );
 my @filelist = ();
-while ($file = readdir(DIR)) {
+while (my $file = readdir(DIR)) {
     # Extract the extension
     if ($file =~ /^(.*)\.([^\.]*)$/) {
-	$name = $1;
-	$ext  = $2;
+        my ($name, $ext) = ($1, $2);
 	# Special handling for C files, if any
 	if ($ext eq "c") {
 	    my $name90 = $name;
@@ -130,7 +129,7 @@ sub ConvertToF90 {
     open (OUTF, ">$outfile" ) || die "Could not open $outfile\n";
 
     print OUTF "! This file created from $infile with f77tof90\n";
-    my $lastLine = "";
+    my $lastline = "";
     my $firstline = 1;
     while (<INF>) {
 	if (/\r/) { $newline = "\r\n"; }
@@ -188,7 +187,7 @@ sub ConvertToF90 {
 	# convert to free-form input by holding one line back.
 	if ($convertToFreeForm) {
 	    if (/^     \S(.*)/) {
-		$leftover = $1;
+		my $leftover = $1;
 		# This line contains a continuation marker
 		# Add a continuation marker to the previous line if
 		# it doesn't already have one
