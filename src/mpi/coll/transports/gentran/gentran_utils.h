@@ -17,7 +17,7 @@ void MPII_Genutil_vtx_copy(void *_dst, const void *_src);
 
 /* vertex destructor, required by utarray */
 void MPII_Genutil_vtx_dtor(void *_elt);
-
+void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems);
 /* Function to add incoming vertices of a vertex.  This vertex sets
  * the incoming vertices to vtx and also adds vtx to the outgoing
  * vertex list of the vertives in in_vtcs.  NOTE: This function should
@@ -33,5 +33,4 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 
 /* Hook to make progress on nonblocking collective operations  */
 int MPII_Genutil_progress_hook(int *);
-
 #endif /* GENTRAN_UTILS_H_INCLUDED */

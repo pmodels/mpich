@@ -128,4 +128,7 @@ int MPIR_TSP_sched_sink(MPIR_TSP_sched_t sched, int *vtx_id);
 /* Transport function to schedule a fence */
 int MPIR_TSP_sched_fence(MPIR_TSP_sched_t sched);
 
+/* Transport function to optimize a schedule */
+int MPIR_TSP_sched_optimize(MPIR_TSP_sched_t * sched);
+
 #endif /* TSP_IMPL_H_INCLUDED */
