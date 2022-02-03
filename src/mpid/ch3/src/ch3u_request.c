@@ -120,7 +120,6 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
     else
     {
 	intptr_t data_sz;
-	int i, iov_data_copied;
 	
 	MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,"low density.  using SRBuf.");
 	    
@@ -141,29 +140,21 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 	    /* --END ERROR HANDLING-- */
 	}
 
-	iov_data_copied = 0;
-	for (i = 0; i < *iov_n; i++) {
-	    MPIR_Memcpy((char*) sreq->dev.tmpbuf + iov_data_copied,
-		   iov[i].iov_base, iov[i].iov_len);
-	    iov_data_copied += iov[i].iov_len;
-	}
-	sreq->dev.msg_offset = last;
-
         MPI_Aint max_pack_bytes;
         MPI_Aint actual_pack_bytes;
 
-        if (data_sz > sreq->dev.tmpbuf_sz - iov_data_copied)
-            max_pack_bytes = sreq->dev.tmpbuf_sz - iov_data_copied;
+        if (data_sz > sreq->dev.tmpbuf_sz)
+            max_pack_bytes = sreq->dev.tmpbuf_sz;
         else
-            max_pack_bytes = sreq->dev.msgsize - sreq->dev.msg_offset;
+            max_pack_bytes = data_sz;
 
         MPIR_Typerep_pack(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
-                       sreq->dev.msg_offset, (char*) sreq->dev.tmpbuf + iov_data_copied,
+                       sreq->dev.msg_offset, (char*) sreq->dev.tmpbuf,
                        max_pack_bytes, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
         last = sreq->dev.msg_offset + actual_pack_bytes;
 
 	iov[0].iov_base = (void *)sreq->dev.tmpbuf;
-	iov[0].iov_len = actual_pack_bytes + iov_data_copied;
+	iov[0].iov_len = actual_pack_bytes;
 	*iov_n = 1;
 	if (last == sreq->dev.msgsize)
 	{
