@@ -9,7 +9,7 @@
 static inline void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched,
                                          int remove);
 
-static inline void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
+void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
 {
     int i;
 
@@ -197,6 +197,7 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                     vtx_record_completion(vtxp, sched, 0);
                 }
                 break;
+
             case MPII_GENUTIL_VTX_KIND__SELECTIVE_SINK:{
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
@@ -205,6 +206,7 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                     vtx_record_completion(vtxp, sched, 0);
                 }
                 break;
+
             case MPII_GENUTIL_VTX_KIND__SINK:{
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST, "  --> GENTRAN transport (sink) performed"));
@@ -486,6 +488,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
     int mpi_errno = MPI_SUCCESS;
     int i;
     vtx_t *vtxp, *vtxp_tmp;
+    int *eltptr = NULL;
 
     MPIR_FUNC_ENTER;
 
@@ -508,12 +511,28 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
             *made_progress = TRUE;
 
         /* Go over all the vertices and issue ready vertices */
-        vtx_t *vtx = ut_type_array(&sched->vtcs, vtx_t *);
-        for (i = 0; i < sched->total_vtcs; i++, vtx++) {
-            mpi_errno = vtx_issue(i, vtx, sched);
-            MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**other");
-        }
+        if (sched->is_persistent && utarray_len(sched->start_vtcs)) {
+            for (i = 0; i < utarray_len(sched->start_vtcs); i++) {
+                MPIR_ERR_CHKANDJUMP(!(utarray_eltptr(sched->start_vtcs, i)), mpi_errno,
+                                    MPI_ERR_OTHER, "**nomem");
 
+                eltptr = (int *) utarray_eltptr(sched->start_vtcs, i);
+                MPIR_ERR_CHKANDJUMP(!eltptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+                int vtx_id = *eltptr;
+
+                MPIR_ERR_CHKANDJUMP(!(utarray_eltptr(&sched->vtcs, vtx_id)), mpi_errno,
+                                    MPI_ERR_OTHER, "**nomem");
+                mpi_errno =
+                    vtx_issue(vtx_id, (vtx_t *) utarray_eltptr(&sched->vtcs, vtx_id), sched);
+                MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**other");
+            }
+        } else {
+            vtx_t *vtx = ut_type_array(&sched->vtcs, vtx_t *);
+            for (i = 0; i < sched->total_vtcs; i++, vtx++) {
+                mpi_errno = vtx_issue(i, vtx, sched);
+                MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**other");
+            }
+        }
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                         (MPL_DBG_FDEST,
                          "completed traversal of vtcs, sched->total_vtcs: %d, sched->completed_vtcs: %d",

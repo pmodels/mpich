@@ -6,6 +6,7 @@
 #include "mpiimpl.h"
 #include "tsp_impl.h"
 #include "gentran_impl.h"
+#include "gentran_utils.h"
 
 /* UT_icd helper structure for vtx_t utarray */
 UT_icd vtx_t_icd = {
@@ -36,6 +37,7 @@ int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
     utarray_init(&sched->vtcs, &vtx_t_icd);
 
     utarray_init(&sched->buffers, &ut_ptr_icd);
+    utarray_new(sched->start_vtcs, &ut_int_icd, MPL_MEM_COLL);
     utarray_init(&sched->generic_types, &vtx_type_t_icd);
 
     sched->issued_head = NULL;
@@ -120,6 +122,7 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
 
     utarray_done(&sched->vtcs);
     utarray_done(&sched->buffers);
+    utarray_free(sched->start_vtcs);
     utarray_done(&sched->generic_types);
     MPL_free(sched);
 
@@ -651,6 +654,109 @@ int MPIR_TSP_sched_reset(MPIR_TSP_sched_t s)
                 break;
         }
     }
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_TSP_sched_optimize(MPIR_TSP_sched_t * sched1)
+{
+    int mpi_errno = MPI_SUCCESS;
+    vtx_t *vtcs, *vtx;
+    int i, nrecvs = 0;
+    int *recvs;
+    int max_irecvs;
+    MPII_Genutil_sched_t *sched = (MPII_Genutil_sched_t *) sched1;
+
+    MPIR_CHKLMEM_DECL(1);
+
+    MPIR_FUNC_ENTER;
+
+    vtcs = vtx = ut_type_array(&sched->vtcs, vtx_t *);
+
+    /* find all the roots */
+    for (i = 0; i < sched->total_vtcs; i++, vtx++) {
+        MPIR_Assert(vtx);
+        if (vtx->num_dependencies == 0) {
+            utarray_push_back(sched->start_vtcs, &i, MPL_MEM_COLL);
+        }
+    }
+
+    /* prevent posting too many receives at once */
+    if (MPIR_CVAR_TSP_MAX_IRECVS > 0) {
+        int changed = 0;
+        max_irecvs = MPIR_CVAR_TSP_MAX_IRECVS;
+
+        MPIR_CHKLMEM_MALLOC(recvs, int *, sizeof(int) * max_irecvs,
+                            mpi_errno, "recvs array", MPL_MEM_COLL);
+
+        /* check roots first */
+        nrecvs = 0;
+        for (i = 0; i < utarray_len(sched->start_vtcs); i++) {
+            int vtx_id = *(int *) utarray_eltptr(sched->start_vtcs, i);
+            vtx = vtcs + vtx_id;
+            if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IRECV ||
+                vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IRECV_STATUS) {
+                if (nrecvs >= max_irecvs) {
+                    vtx_t *v;
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST, "reduce the number of irecv for vertex %d", i));
+                    v = vtcs + recvs[nrecvs % max_irecvs];
+                    vtx_extend_utarray(&v->out_vtcs, 1, &vtx_id);
+                    if (vtx->vtx_state != MPII_GENUTIL_VTX_STATE__COMPLETE) {
+                        vtx->num_dependencies++;
+                        vtx->pending_dependencies++;
+                    }
+                    changed = 1;
+                }
+                recvs[nrecvs % max_irecvs] = vtx_id;
+                nrecvs++;
+            }
+        }
+
+        /* if roots is reduced, rebuild the roots */
+        if (changed) {
+            utarray_clear(sched->start_vtcs);
+            vtx = ut_type_array(&sched->vtcs, vtx_t *);
+            for (i = 0; i < sched->total_vtcs; i++, vtx++) {
+                if (vtx->num_dependencies == 0) {
+                    utarray_push_back(sched->start_vtcs, &i, MPL_MEM_COLL);
+                }
+            }
+        }
+
+        vtx = vtcs;
+        for (i = 0; i < sched->total_vtcs; i++, vtx++) {
+            UT_array *out_vtcs = &vtx->out_vtcs;
+            int j;
+            nrecvs = 0;
+            for (j = 0; j < utarray_len(out_vtcs); j++) {
+                int outvtx_id = ut_int_array(out_vtcs)[j];
+                vtx_t *ovtx = vtcs + outvtx_id;
+                if (ovtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IRECV ||
+                    ovtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IRECV_STATUS) {
+                    if (nrecvs >= max_irecvs) {
+                        vtx_t *v;
+                        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                        (MPL_DBG_FDEST, "reduce the number of irecv for vertex %d",
+                                         i));
+                        v = vtcs + recvs[nrecvs % max_irecvs];
+                        vtx_extend_utarray(&v->out_vtcs, 1, &outvtx_id);
+                        if (ovtx->vtx_state != MPII_GENUTIL_VTX_STATE__COMPLETE) {
+                            ovtx->num_dependencies++;
+                            ovtx->pending_dependencies++;
+                        }
+                    }
+                    recvs[nrecvs % max_irecvs] = outvtx_id;
+                    nrecvs++;
+                }
+            }
+        }
+    }
+
+    MPIR_CHKLMEM_FREEALL();
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
