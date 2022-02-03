@@ -498,6 +498,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibarrier(MPIR_Comm * comm, MPIR_Reque
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+{
+    int ret;
+
+    MPIR_FUNC_ENTER;
+
+    ret = MPIDI_POSIX_mpi_ibarrier_sched(comm, sched);
+
+    MPIR_FUNC_EXIT;
+    return ret;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibcast(void *buffer, MPI_Aint count,
                                                   MPI_Datatype datatype, int root, MPIR_Comm * comm,
                                                   MPIR_Request ** req)
@@ -507,6 +519,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibcast(void *buffer, MPI_Aint count,
     MPIR_FUNC_ENTER;
 
     ret = MPIDI_POSIX_mpi_ibcast(buffer, count, datatype, root, comm, req);
+
+    MPIR_FUNC_EXIT;
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibcast_sched(void *buffer, MPI_Aint count,
+                                                        MPI_Datatype datatype, int root,
+                                                        MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+{
+    int ret;
+
+    MPIR_FUNC_ENTER;
+
+    ret = MPIDI_POSIX_mpi_ibcast_sched(buffer, count, datatype, root, comm, sched);
 
     MPIR_FUNC_EXIT;
     return ret;
