@@ -9,7 +9,25 @@
 
 #include "mpiimpl.h"
 #include "algo_common.h"
-#include "nb_release_gather.h"
+#include "nb_bcast_release_gather.h"
+#include "nb_reduce_release_gather.h"
+
+/*=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_POSIX_NUM_NB_COLLS_THRESHOLD
+      category    : COLLECTIVE
+      type        : int
+      default     : 5
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Use posix optimized non-blocking collectives (release_gather) only when the total number
+        of Ibcast and Ireduce calls on the node level communicator is more than this threshold
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 /* Intra-node Ibcast is implemented as a release step followed by gather step in release_gather
  * framework. The actual data movement happens in release step. Gather step makes sure that
@@ -22,9 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_ibcast_release_gather(void *buffer, int
                                                                MPIR_Comm * comm_ptr,
                                                                MPIR_TSP_sched_t sched)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_IBCAST_RELEASE_GATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_IBCAST_RELEASE_GATHER);
-
+    MPIR_FUNC_ENTER;
     int mpi_errno = MPI_SUCCESS;
 
     MPIDI_POSIX_COMM(comm_ptr, nb_release_gather).num_collective_calls++;
@@ -45,7 +61,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_ibcast_release_gather(void *buffer, int
         MPIDI_POSIX_nb_release_gather_ibcast_impl(buffer, count, datatype, root, comm_ptr, sched);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_IBCAST_RELEASE_GATHER);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 
   fn_fail:
