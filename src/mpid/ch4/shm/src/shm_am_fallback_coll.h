@@ -300,11 +300,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibarrier(MPIR_Comm * comm_ptr, MPIR_R
     return MPIR_Ibarrier_impl(comm_ptr, req);
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibarrier_sched(MPIR_Comm * comm_ptr,
+                                                          MPIR_TSP_sched_t sched)
+{
+    enum MPIR_sched_type sched_type;
+    return MPIR_Ibarrier_sched_impl(comm_ptr, false, sched, &sched);
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibcast(void *buffer, MPI_Aint count,
                                                   MPI_Datatype datatype, int root,
                                                   MPIR_Comm * comm_ptr, MPIR_Request ** req)
 {
     return MPIR_Ibcast_impl(buffer, count, datatype, root, comm_ptr, req);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibcast_sched(void *buffer, MPI_Aint count,
+                                                        MPI_Datatype datatype, int root,
+                                                        MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+{
+    enum MPIR_sched_type sched_type;
+    return MPIR_Ibcast_sched_impl(buffer, count, datatype, root, comm, false, sched, &sched_type);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iallgather(const void *sendbuf, MPI_Aint sendcount,
