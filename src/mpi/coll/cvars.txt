@@ -269,6 +269,18 @@ cvars:
         nb                      - Force nonblocking algorithm
         remote_send_local_bcast - Force remote-send-local-bcast algorithm
 
+    - name        : MPIR_CVAR_BCAST_PERSISTENT_OPT
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to false, MPI_Bcast persistent API will not use
+        optimizations for DAG.
+
+
     - name        : MPIR_CVAR_IBCAST_TREE_KVAL
       category    : COLLECTIVE
       type        : int
