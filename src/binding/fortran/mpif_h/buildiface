@@ -350,8 +350,8 @@ if ($write_mpif) {
     }
     #
     # Finally, the special symbols
-    print MPIFFD "       INTEGER MPI_BOTTOM, MPI_IN_PLACE, MPI_UNWEIGHTED\n";
-    print MPIFFD "       INTEGER MPI_WEIGHTS_EMPTY\n";
+    print MPIFFD "       INTEGER MPI_BOTTOM, MPI_IN_PLACE, MPI_UNWEIGHTED(1)\n";
+    print MPIFFD "       INTEGER MPI_WEIGHTS_EMPTY(1)\n";
 
     # And the external names.  This are necessary to
     # ensure that these are passed as routines, not implicitly-defined

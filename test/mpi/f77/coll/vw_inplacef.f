@@ -12,6 +12,7 @@ C
        integer MAX_SIZE
        parameter (MAX_SIZE=1024)
        integer rbuf(MAX_SIZE)
+       integer scounts(1), sdispls(1), stypes(1)
        integer rdispls(MAX_SIZE), rcounts(MAX_SIZE), rtypes(MAX_SIZE)
        integer ierr, errs
        integer comm, root
@@ -48,6 +49,9 @@ C
           endif
        enddo
 
+       scounts(1) = 0
+       sdispls(1) = 0
+       stypes(1) = MPI_DATATYPE_NULL
        do i=1,MAX_SIZE
            rbuf(i) = -1
        enddo
@@ -58,7 +62,7 @@ C
                rbuf(rdispls(i)+j+1) = 100 * rank + 10 * (i-1) + j
            enddo
        enddo
-       call mpi_alltoallv( MPI_IN_PLACE, 0, 0, MPI_DATATYPE_NULL,
+       call mpi_alltoallv( MPI_IN_PLACE, scounts, sdispls, stypes(1),
      $                     rbuf, rcounts, rdispls, MPI_INTEGER,
      $                     comm, ierr )
        do i=1,size
@@ -87,7 +91,7 @@ C          Alltoallw's displs[] are in bytes not in type extents.
      $                                        + 10 * (i-1) + j
            enddo
        enddo
-       call mpi_alltoallw( MPI_IN_PLACE, 0, 0, MPI_DATATYPE_NULL,
+       call mpi_alltoallw( MPI_IN_PLACE, scounts, sdispls, stypes,
      $                     rbuf, rcounts, rdispls, rtypes,
      $                     comm, ierr )
        do i=1,size
