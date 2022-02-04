@@ -349,6 +349,7 @@ PAC_GET_EXENAME("mpicc", MPICC_NAME)
 PAC_GET_EXENAME("mpif77", MPIF77_NAME)
 PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
+PAC_GET_EXENAME("mpiexec", MPIEXEC_NAME)
 
 if test -n "$with_mpi" ; then
     if test -z "$MPICC" ; then
@@ -370,6 +371,9 @@ if test -n "$with_mpi" ; then
         CXX=$with_mpi/bin/$MPICXX_NAME
     else
         CXX=$MPICXX
+    fi
+    if test -z "$MPIEXEC" ; then
+        MPIEXEC=$with_mpi/bin/$MPIEXEC_NAME
     fi
 else
     # Try to use mpicc etc names
@@ -399,7 +403,12 @@ else
     if test "x$MPICXX" != "x" ; then
         CXX=$MPICXX
     fi
+    if test -z "$MPIEXEC" ; then
+        AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME mpiexec)
+    fi
 fi
+dnl MPIEXEC is used in the Makefile testing target.
+AC_SUBST([MPIEXEC])
 
 # Make sure we export CC before configuring DTPools, since MPI is
 # needed to build the library.

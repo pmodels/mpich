@@ -281,6 +281,10 @@ foreach $_ (@ARGV) {
     }
 }
 
+if (!$g_opt{mpiexec}) {
+    die "Missing mpiexec. Did you supplied empty MPIEXEC environment or empty --mpiexec= option?\n";
+}
+
 # Perform any post argument processing
 
 $g_opt{srcdir} = Cwd::abs_path($g_opt{srcdir});
