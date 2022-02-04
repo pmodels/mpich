@@ -16,6 +16,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <limits.h>
 
 #if defined MPL_HAVE_CTYPE_H
 #include <ctype.h>
