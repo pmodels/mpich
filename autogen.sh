@@ -530,7 +530,11 @@ fn_gen_coll() {
 fn_gen_binding_c() {
     set_PYTHON
     echo_n "generating MPI C functions..."
-    $PYTHON maint/gen_binding_c.py
+    if test "$do_quick" = "no" ; then
+        $PYTHON maint/gen_binding_c.py
+    else
+        $PYTHON maint/gen_binding_c.py -single-source
+    fi
     echo "done"
 }
 
@@ -1007,7 +1011,11 @@ done
 ## Check for the location of autotools
 ########################################################################
 
-fn_check_autotools
+if test "$do_quick" = "no" ; then
+    fn_check_autotools
+else
+    set_autotools
+fi
 fn_check_bash_find_patch_xargs
 check_python3
 
