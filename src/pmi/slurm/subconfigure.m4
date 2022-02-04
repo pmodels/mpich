@@ -14,6 +14,18 @@ if test "x$pmi_name" = "xslurm" ; then
                   PAC_PREPEND_FLAG([-lpmi], [WRAPPER_LIBS])],
                  [AC_MSG_ERROR([could not find the Slurm libpmi.  Configure aborted])])
 fi
+
+if test "x$pmi_name" = "xslurm/pmi2" ; then
+    # sets CPPFLAGS and LDFLAGS
+    PAC_SET_HEADER_LIB_PATH([slurm])
+
+    AC_CHECK_HEADER([slurm/pmi2.h], [], [AC_MSG_ERROR([could not find slurm/pmi2.h.  Configure aborted])])
+    AC_CHECK_LIB([pmi2], [PMI2_Init],
+                 [PAC_PREPEND_FLAG([-lpmi2],[LIBS])
+                  PAC_PREPEND_FLAG([-lpmi2], [WRAPPER_LIBS])],
+                 [AC_MSG_ERROR([could not find the Slurm libpmi2.  Configure aborted])])
+    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
+fi
 ])dnl end BODY macro
 
 [#] end of __file__
