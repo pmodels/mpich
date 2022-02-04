@@ -417,7 +417,6 @@ Makefile.am-stamp
 /src/binding/fortran/use_mpi/mpi_base.f90.new
 /src/binding/fortran/use_mpi/mpif.h
 /src/binding/fortran/use_mpi/Makefile.sm
-/src/binding/fortran/use_mpi/mpi.f90
 /src/binding/fortran/use_mpi/mpi_t1.f90
 /src/binding/fortran/use_mpi/mpimod.pcl
 /src/binding/fortran/use_mpi/mpi_sizeofs.f90

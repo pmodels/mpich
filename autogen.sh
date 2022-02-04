@@ -48,7 +48,7 @@ do_fortran=yes  # if no, skips patching libtool for Fortran
 do_errmsgs=yes
 do_getcvars=yes
 do_f77=yes
-do_f90=yes
+do_f90=no  # we generate f90 binding in configure
 do_f08=yes
 do_cxx=yes
 do_build_configure=yes
@@ -492,10 +492,7 @@ fn_f77() {
 
 fn_f90() {
     echo_n "Building Fortran 90 interface... "
-    # Remove any copy of mpi_base.f90 (this is used to handle the
-    # Double precision vs. Real*8 option
-    rm -f src/binding/fortran/use_mpi/mpi_base.f90.orig
-    ( cd src/binding/fortran/use_mpi && chmod a+x ./buildiface && ./buildiface )
+    $PYTHON maint/gen_binding_f90.py
     echo "done"
 }
 
@@ -503,7 +500,7 @@ fn_f08() {
     echo_n "Building Fortran 08 interface... "
     # Top-level files
     ( cd src/binding/fortran/use_mpi_f08 && chmod a+x ./buildiface && ./buildiface )
-    # generate src/binding/fortran/use_mpi_f08/wrappers_c/...
+    # in configure: $PYTHON maint/gen_binding_f08.py [options]
     echo "done"
 }
 

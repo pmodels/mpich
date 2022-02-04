@@ -10,8 +10,8 @@ C
       integer i, ans, size, rank, color, comm, newcomm
       integer maxSize, displ
       parameter (maxSize=128)
-      integer scounts(maxSize), sdispls(maxSize), stypes(maxSize)
-      integer rcounts(maxSize), rdispls(maxSize), rtypes(maxSize)
+      integer scounts(maxSize), sdispls(maxSize), stype
+      integer rcounts(maxSize), rdispls(maxSize), rtype
       integer sbuf(maxSize), rbuf(maxSize)
 
       errs = 0
@@ -39,15 +39,15 @@ C integers instead of bytes
          do i=1, size
             scounts(i) = 1
             sdispls(i) = (i-1)
-            stypes(i)  = MPI_INTEGER
             sbuf(i) = rank * size + i
             rcounts(i) = 1
             rdispls(i) = (i-1)
-            rtypes(i)  = MPI_INTEGER
             rbuf(i) = -1
          enddo
-         call mpi_alltoallv( sbuf, scounts, sdispls, stypes,
-     &        rbuf, rcounts, rdispls, rtypes, comm, ierr )     
+         stype = MPI_INTEGER
+         rtype = MPI_INTEGER
+         call mpi_alltoallv( sbuf, scounts, sdispls, stype,
+     &        rbuf, rcounts, rdispls, rtype, comm, ierr )
 C
 C check rbuf(i) = data from the ith location of the ith send buf, or
 C       rbuf(i) = (i-1) * size + i   
@@ -65,13 +65,13 @@ C
          do i=1, size
             scounts(i) = 0
             sdispls(i) = 0
-            stypes(i)  = MPI_INTEGER
             sbuf(i) = -1
             rcounts(i) = 0
             rdispls(i) = 0
-            rtypes(i)  = MPI_INTEGER
             rbuf(i) = -1
          enddo
+         stype = MPI_INTEGER
+         rtype = MPI_INTEGER
 
 C
 C     Note that the arrays are 1-origin
@@ -99,8 +99,8 @@ C     Note that the arrays are 1-origin
             displ             = displ + 1
          endif
 
-         call mpi_alltoallv( sbuf, scounts, sdispls, stypes,
-     &        rbuf, rcounts, rdispls, rtypes, comm, ierr )
+         call mpi_alltoallv( sbuf, scounts, sdispls, stype,
+     &        rbuf, rcounts, rdispls, rtype, comm, ierr )
 C
 C   Check the neighbor values are correctly moved
 C
