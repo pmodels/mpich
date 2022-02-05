@@ -14,6 +14,7 @@ mpi_core_sources += \
     src/mpi/coll/ibcast/ibcast_intra_sched_smp.c                                  \
     src/mpi/coll/ibcast/ibcast_inter_sched_flat.c                                 \
     src/mpi/coll/ibcast/ibcast_tsp_scatterv_allgatherv.c \
+    src/mpi/coll/ibcast/ibcast_tsp_scatterv_ring_allgatherv.c \
     src/mpi/coll/ibcast/ibcast_tsp_tree.c 					  \
     src/mpi/coll/ibcast/ibcast_utils.c
 
