@@ -158,7 +158,7 @@ def dump_mpir_impl_h(f):
         print("", file=Out)
         print("#endif /* MPIR_IMPL_H_INCLUDED */", file=Out)
 
-def get_qmpi_decl_from_func_decl(func_decl):
+def get_qmpi_decl_from_func_decl(func_decl, kind=""):
     if RE.match(r'(.*) (MPIX?_\w+)\((.*?)\)(.*)', func_decl):
         T, name, args, tail = RE.m.group(1,2,3,4)
     else:
@@ -169,11 +169,12 @@ def get_qmpi_decl_from_func_decl(func_decl):
     else:
         t = "%s Q%s(QMPI_Context context, int tool_id, %s)" % (T, name, args)
 
-    while RE.search(r'MPICH_ATTR_POINTER_WITH_TYPE_TAG\((\d+),(\d+)\)(.*)', tail):
-        i1, i2, tail = RE.m.group(1, 2, 3)
-        t += " MPICH_ATTR_POINTER_WITH_TYPE_TAG(%d,%d)" % (int(i1) + 2, int(i2) + 2)
+    if kind == 'proto':
+        while RE.search(r'MPICH_ATTR_POINTER_WITH_TYPE_TAG\((\d+),(\d+)\)(.*)', tail):
+            i1, i2, tail = RE.m.group(1, 2, 3)
+            t += " MPICH_ATTR_POINTER_WITH_TYPE_TAG(%d,%d)" % (int(i1) + 2, int(i2) + 2)
 
-    t += " MPICH_API_PUBLIC"
+        t += " MPICH_API_PUBLIC"
 
     return t
 
@@ -291,7 +292,7 @@ def dump_mpi_proto_h(f):
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
             if need_skip_qmpi(m.group(1)):
                 continue
-            func_decl = get_qmpi_decl_from_func_decl(func_decl)
+            func_decl = get_qmpi_decl_from_func_decl(func_decl, 'proto')
             dump_proto_line(func_decl, Out)
 
         print("", file=Out)
