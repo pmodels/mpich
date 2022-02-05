@@ -62,8 +62,7 @@ def dump_mpi_c(func, is_large=False):
         dump_function_internal(func, kind="normal")
     G.out.append("")
 
-    dump_manpage(func)
-    G.out.append("")
+    # NOTE: dump_manpage is now called inside dump_qmpi_wrappers
 
     # Create the MPI and QMPI wrapper functions that will call the above, "real" version of the
     # function in the MPII prefix
@@ -768,6 +767,10 @@ def dump_qmpi_wrappers(func, is_large):
     dump_line_with_break("    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[%s_T]%s);" % (func_name.upper(), parameters));
     G.out.append("}")
     G.out.append("#else /* ENABLE_QMPI */")
+
+    dump_manpage(func)
+    G.out.append("")
+
     dump_line_with_break(func_decl)
     G.out.append("{")
     if func_name == "MPI_Pcontrol":
