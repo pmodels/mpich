@@ -38,6 +38,9 @@ include pm/Makefile.mk
 include mpiexec/Makefile.mk
 include proxy/Makefile.mk
 include nameserver/Makefile.mk
+if hydra_bss_persist
+include persist_server/Makefile.mk
+endif
 
 # External subdirs should be built first, as we might depend on them
 SUBDIRS = ${external_subdirs} .
