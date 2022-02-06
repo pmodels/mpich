@@ -9,4 +9,3 @@ include tools/topo/Makefile.mk
 include tools/bootstrap/Makefile.mk
 include tools/demux/Makefile.mk
 include tools/debugger/Makefile.mk
-include tools/nameserver/Makefile.mk
