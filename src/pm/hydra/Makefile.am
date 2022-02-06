@@ -36,6 +36,7 @@ include utils/Makefile.mk
 include tools/Makefile.mk
 include pm/Makefile.mk
 include mpiexec/Makefile.mk
+include proxy/Makefile.mk
 
 # External subdirs should be built first, as we might depend on them
 SUBDIRS = ${external_subdirs} .

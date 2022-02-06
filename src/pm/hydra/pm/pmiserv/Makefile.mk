@@ -3,21 +3,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-AM_CPPFLAGS += -I$(top_srcdir)/pm/utils
-
-bin_PROGRAMS += hydra_pmi_proxy
-
-hydra_pmi_proxy_SOURCES = pm/pmiserv/pmip.c \
-    pm/pmiserv/pmip_cb.c \
-    pm/pmiserv/pmip_utils.c \
-    pm/pmiserv/pmip_pmi_v1.c \
-    pm/pmiserv/pmip_pmi_v2.c \
-    pm/pmiserv/common.c \
-    pm/pmiserv/pmi_v2_common.c
-hydra_pmi_proxy_CFLAGS = $(AM_CFLAGS)
-hydra_pmi_proxy_LDFLAGS = $(external_ldflags) -L$(top_builddir)
-hydra_pmi_proxy_LDADD = -lhydra $(external_libs)
-hydra_pmi_proxy_DEPENDENCIES = libhydra.la
+AM_CPPFLAGS += -I$(top_srcdir)/pm/utils -I$(top_srcdir)/pm/pmiserv
 
 libpm_la_SOURCES += pm/pmiserv/pmiserv_pmi.c \
     pm/pmiserv/pmiserv_pmi_v1.c \
