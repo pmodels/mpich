@@ -4,7 +4,7 @@
  */
 
 #include "hydra.h"
-#include "common.h"
+#include "pmiserv_common.h"
 #include "topo.h"
 
 void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr)
