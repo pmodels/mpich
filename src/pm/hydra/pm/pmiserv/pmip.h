@@ -7,7 +7,7 @@
 #define PMIP_H_INCLUDED
 
 #include "hydra.h"
-#include "common.h"
+#include "pmiserv_common.h"
 
 struct HYD_pmcd_pmip_map {
     int left;
