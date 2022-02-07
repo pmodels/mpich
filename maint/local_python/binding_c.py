@@ -835,7 +835,8 @@ def dump_manpage(func, out):
                 p['desc'] = G.default_descriptions[p['kind']]
             else:
                 p['desc'] = p['name']
-        p['desc'] += " (%s)" % (lis_type)
+        if not re.search(r'\)$', p['desc']):
+            p['desc'] += " (%s)" % (lis_type)
 
     input_list, output_list, inout_list = [], [], []
     for p in func['c_parameters']:
