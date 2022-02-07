@@ -218,7 +218,7 @@ print("done\n");
 print("===> Creating configure in the main codebase... ");
 chdir($expdir);
 {
-    my $cmd = "./autogen.sh";
+    my $cmd = "./autogen.sh --with-doc";
     $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
     $cmd .= " --with-automake=$with_automake" if $with_automake;
     run_cmd($cmd);
