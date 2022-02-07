@@ -559,17 +559,15 @@ fi
 AC_SUBST(ENABLE_QMPI)
 
 AC_ARG_ENABLE([two-level-namespace],
-              [AS_HELP_STRING([--enable-two-level-namespace],
-                              [(Darwin only) Build shared libraries and programs
-                               built with the mpicc/mpifort/etc. compiler
-                               wrappers with '-Wl,-commons,use_dylibs' and
-                               without '-Wl,-flat_namespace'.  This may make the
-                               MPICH installation and MPI programs more
-                               compatible with other libraries.  Only enable
-                               this option if you really know what these linker
-                               options imply.])],
+              [AS_HELP_STRING([--disable-two-level-namespace],
+                              [(Darwin only) Add `-Wl,-flat_namespace` to
+                               mpicc/mpifort/etc. compiler wrappers.
+                               This may fix some issues due to not resolving
+                               MPI constants, such as MPI_IN_PLACE.
+                               Try disable this option if you encounter these issues
+                               on Mac OS.])],
               [],
-              [enable_two_level_namespace=no])
+              [enable_two_level_namespace=yes])
 
 AC_ARG_ENABLE(multi-aliases,
 	AS_HELP_STRING([--enable-multi-aliases],
@@ -643,6 +641,7 @@ fi
 PAC_POP_FLAG([CFLAGS])
 
 AC_USE_SYSTEM_EXTENSIONS
+PAC_C_NO_COMMON
 
 dnl now that autoconf and core compilers are setup, init automake and libtool
 dnl
@@ -650,7 +649,7 @@ dnl We would like to pass -Werror, but we are cheating in the "examples/"
 dnl directory and overriding the user-flags like CFLAGS, which automake-1.12
 dnl warns about.  Long-term we may need to use a hand-written Makefile.in or
 dnl something else in this special dir.
-AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive foreign 1.12.3 silent-rules subdir-objects])
+AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive foreign 1.12.3 silent-rules subdir-objects no-dist])
 AM_MAINTAINER_MODE([enable])
 
 AM_PROG_AR

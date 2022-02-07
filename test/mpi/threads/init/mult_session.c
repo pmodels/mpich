@@ -90,7 +90,7 @@ static bool library_foo_init(int thread_idx, MPI_Session * p_session, MPI_Comm *
 
     /* check we got thread support level foo library needs */
     MPI_Info tinfo = MPI_INFO_NULL;
-    const char mt_key[] = "mpi_thread_support_level";
+    const char mt_key[] = "thread_level";
     const char mt_value[] = "MPI_THREAD_MULTIPLE";
     rc = MPI_Session_get_info(*p_session, &tinfo);
     if (rc != MPI_SUCCESS) {

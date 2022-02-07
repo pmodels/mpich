@@ -3,15 +3,14 @@
 !     See COPYRIGHT in top-level directory
 !
 
-! This file created from test/mpi/f77/pt2pt/irsendf.f with f77tof90
-!
 ! This program is based on the allpair.f test from the MPICH-1 test
 ! (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 ! fsset@corelli.lerc.nasa.gov (Scott Townsend)
 
       program isend
-      use mpi
-      integer ierr, errs, comm
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer ierr, errs
       logical mtestGetIntraComm
       logical verbose
       common /flags/ verbose
@@ -31,14 +30,16 @@
       end
 !
       subroutine test_pair_irsend( comm, errs )
-      use mpi
-      integer comm, errs
-      integer rank, size, ierr, next, prev, tag, count, index, i
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer errs
+      integer rank, size, ierr, next, prev, tag, count, index, completed, i
       integer TEST_SIZE
-      integer dupcom
+      type(MPI_Comm) dupcom
       parameter (TEST_SIZE=2000)
-      integer status(MPI_STATUS_SIZE), requests(2)
-      integer statuses(MPI_STATUS_SIZE,2)
+      type(MPI_Status) status
+      type(MPI_Request) requests(2)
+      type(MPI_Status) statuses(2)
       logical flag
       real send_buf(TEST_SIZE), recv_buf(TEST_SIZE)
       logical verbose
@@ -78,15 +79,19 @@
          call MPI_Irsend(send_buf, count, MPI_REAL, next, tag, &
       &                   comm, requests(2), ierr)
 !
-         index = -1
-         do while (index .ne. 1)
-            call MPI_Waitany(2, requests, index, statuses, ierr)
+         completed = 0
+         do while (completed .lt. 2)
+            call MPI_Waitany(2, requests, index, statuses(1),ierr)
+            if (index .lt. 1 .or. index .gt. 2) then
+                print *, "Invalid index in MPI_Waitany:", index
+            end if
+            if (index .eq. 1) then
+                call rq_check( requests(1), 1, 'irsend and irecv' )
+                call msg_check( recv_buf, next, tag, count, statuses(1), &
+      &                         TEST_SIZE, 'irsend and irecv', errs )
+            end if
+            completed = completed + 1
          end do
-!
-         call rq_check( requests(1), 1, 'irsend and irecv' )
-!
-         call msg_check( recv_buf, next, tag, count, statuses, &
-      &           TEST_SIZE, 'irsend and irecv', errs )
 !
       else if (prev .eq. 0) then
 !

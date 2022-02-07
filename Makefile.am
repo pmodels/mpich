@@ -627,6 +627,11 @@ include $(top_srcdir)/doc/Makefile.mk
 # -local targets
 install-data-local: $(INSTALL_DATA_LOCAL_TARGETS)
 
+# the dist target created by automake won't work. Direct user to use release.pl
+dist:
+	@echo "To create release tarball, use:" ; \
+	echo "    maint/release.pl --branch=[git_ref_to_use] --version=[version] --git-repo=[path_to_git_repository]"
+
 
 # sometimes helpful when debugging macros to see the preprocessed output.
 # Also using '-CC' because comments provide useful landmarks

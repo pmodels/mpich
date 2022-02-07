@@ -110,7 +110,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
         /* supposedly...
          * smp+doubling good for pof2
          * reg+ring better for non-pof2 */
-        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm_ptr->local_size, NULL)) {
+        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm_ptr->local_size)) {
             /* medium-sized msg and pof2 np */
 
             /* perform the intranode broadcast on the root's node */

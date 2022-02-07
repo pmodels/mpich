@@ -3,15 +3,15 @@
 !     See COPYRIGHT in top-level directory
 !
 
-! This file created from test/mpi/f77/pt2pt/issendf.f with f77tof90
 !
 ! This program is based on the allpair.f test from the MPICH-1 test
 ! (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 ! fsset@corelli.lerc.nasa.gov (Scott Townsend)
 
       program issend
-      use mpi
-      integer ierr, errs, comm
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer ierr, errs
       logical mtestGetIntraComm
       logical verbose
       common /flags/ verbose
@@ -31,13 +31,15 @@
       end
 !
       subroutine test_pair_issend( comm, errs )
-      use mpi
-      integer comm, errs
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer errs
       integer rank, size, ierr, next, prev, tag, count, index
       integer TEST_SIZE
       parameter (TEST_SIZE=2000)
-      integer status(MPI_STATUS_SIZE), requests(2)
-      integer statuses(MPI_STATUS_SIZE,2)
+      type(MPI_Status) status
+      type(MPI_Request) requests(2)
+      type(MPI_Status) statuses(2)
       logical flag
       real send_buf(TEST_SIZE), recv_buf(TEST_SIZE)
       logical verbose
@@ -79,7 +81,7 @@
 !
          call rq_check( requests, 2, 'issend and irecv (testall)' )
 !
-         call msg_check( recv_buf, next, tag, count, statuses(1,1), &
+         call msg_check( recv_buf, next, tag, count, statuses(1), &
       &           TEST_SIZE, 'issend and recv (testall)', errs )
 !
       else if (prev .eq. 0) then
@@ -96,8 +98,9 @@
 !
          flag = .FALSE.
          do while (.not. flag)
-            call MPI_Testany(1, requests(1), index, flag, &
-      &                       statuses(1,1), ierr)
+!           MPI_Testany expects an array of requests, therefore we give it the size 1 slice requests(1:1) instead of requests(1)
+            call MPI_Testany(1, requests(1:1), index, flag, &
+      &                       statuses(1), ierr)
          end do
 !
          call rq_check( requests, 1, 'issend and recv (testany)' )

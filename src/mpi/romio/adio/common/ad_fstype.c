@@ -421,28 +421,42 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
     /* --END ERROR HANDLING-- */
 
     switch (file_id) {
+#ifdef ROMIO_NFS
         case NFS_SUPER_MAGIC:
             *fstype = ADIO_NFS;
             return;
+#endif
+#ifdef ROMIO_XFS
         case XFS_SUPER_MAGIC:
         case EXFS_SUPER_MAGIC:
             *fstype = ADIO_XFS;
             return;
+#endif
+#ifdef ROMIO_GPFS
         case GPFS_SUPER_MAGIC:
             *fstype = ADIO_GPFS;
             return;
+#endif
+#ifdef ROMIO_LUSTRE
         case LL_SUPER_MAGIC:
             *fstype = ADIO_LUSTRE;
             return;
+#endif
+#ifdef ROMIO_DAOS
         case DAOS_SUPER_MAGIC:
             *fstype = ADIO_DAOS;
             return;
+#endif
+#ifdef ROMIO_PANFS
         case PAN_KERNEL_FS_CLIENT_SUPER_MAGIC:
             *fstype = ADIO_PANFS;
             return;
+#endif
+#ifdef ROMIO_PVFS2
         case PVFS2_SUPER_MAGIC:
             *fstype = ADIO_PVFS2;
             return;
+#endif
         default:
             /* UFS support if we don't know what else to use */
             *fstype = ADIO_UFS;

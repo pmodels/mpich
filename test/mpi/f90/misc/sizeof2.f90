@@ -13,7 +13,7 @@
           complex c
 
           errs = 0
-          call mpi_init(ierr)
+          call mtest_init(ierr)
           call mpi_sizeof( errs, size1, ierr )
           call mpi_type_size( MPI_INTEGER, size2, ierr )
           if (size1 .ne. size2) then

@@ -54,7 +54,6 @@ int MPII_init_tag_ub(void);
 
 void MPII_init_windows(void);
 void MPII_init_binding_cxx(void);
-void MPII_init_binding_f08(void);
 void MPII_pre_init_dbg_logging(int *argc, char ***argv);
 void MPII_init_dbg_logging(void);
 

@@ -1,11 +1,15 @@
 MPICH Test Suite
 
-This test suite is a *supplement* to other test suites, including the
-original MPICH testsuite, the Intel testsuite, and the IBM MPI test suite
-(or test suites derived from that test, including the MPI C++ tests).
+This test suite is the main test suite used by MPICH. However, it is designed
+to be usable to test any MPI implementations.
 
-Building the Test Suite
+Using the Test Suite
 =======================
+The simple version:
+
+./configure
+make testing
+
 In many cases, configure will find the MPI implementation
 automatically.  In some cases, it will need some help.  For example:
 

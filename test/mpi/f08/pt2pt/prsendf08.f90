@@ -3,15 +3,14 @@
 !     See COPYRIGHT in top-level directory
 !
 
-! This file created from test/mpi/f77/pt2pt/prsendf.f with f77tof90
-!
 ! This program is based on the allpair.f test from the MPICH-1 test
 ! (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 ! fsset@corelli.lerc.nasa.gov (Scott Townsend)
 
       program prsend
-      use mpi
-      integer ierr, errs, comm
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer ierr, errs
       logical mtestGetIntraComm
       logical verbose
       common /flags/ verbose
@@ -31,17 +30,20 @@
       end
 !
       subroutine test_pair_prsend( comm, errs )
-      use mpi
-      integer comm, errs
+      use mpi_f08
+      type(MPI_Comm) comm
+      integer errs
       integer rank, size, ierr, next, prev, tag, count, index, i
       integer outcount, indices(2)
       integer TEST_SIZE
       parameter (TEST_SIZE=2000)
-      integer statuses(MPI_STATUS_SIZE,2), requests(2)
-      integer status(MPI_STATUS_SIZE)
+      type(MPI_Status) statuses(2)
+      type(MPI_Request) requests(2)
+      type(MPI_Status) status
       logical flag
       real send_buf(TEST_SIZE), recv_buf(TEST_SIZE)
       logical verbose
+      integer completed
       common /flags/ verbose
 !
       if (verbose) then
@@ -77,17 +79,19 @@
 !
          call MPI_Startall(2, requests, ierr)
 !
-         index = -1
-!
-         do while (index .ne. 2)
+         completed = 0
+         do while (completed .lt. 2)
             call MPI_Waitsome(2, requests, outcount, &
       &                        indices, statuses, ierr)
             do i = 1,outcount
+               if (indices(i) .lt. 1 .or. indices(i) .gt. 2) then
+                    print *, "Invalid index in array_of_indices of MPI_Waitsome:", indices(i)
+               end if
                if (indices(i) .eq. 2) then
                   call msg_check( recv_buf, next, tag, count, &
-      &                 statuses(1,i), TEST_SIZE, 'waitsome', errs )
-                  index = 2
+      &                 statuses(i), TEST_SIZE, 'waitsome', errs )
                end if
+               completed = completed + 1
             end do
          end do
 !

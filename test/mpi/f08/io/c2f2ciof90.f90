@@ -6,7 +6,7 @@
 ! Test just the MPI-IO FILE object
       program main
       use mpi_f08
-      integer errs, toterrs, ierr
+      integer errs, ierr
       integer wrank
       type(MPI_Group) wgroup
       integer fsize, frank
@@ -18,7 +18,7 @@
 
       errs = 0
 
-      call mpi_init( ierr )
+      call mtest_init( ierr )
 
       call mpi_comm_rank( MPI_COMM_WORLD, wrank, ierr )
       call  mpi_comm_group( MPI_COMM_WORLD, wgroup, ierr )
@@ -44,18 +44,8 @@
       call mpi_group_free( group, ierr )
       call mpi_group_free( wgroup, ierr )
       call mpi_file_close( file, ierr )
-!
-! Summarize the errors
-!
-      call mpi_allreduce( errs, toterrs, 1, MPI_INTEGER, MPI_SUM, &
-      &     MPI_COMM_WORLD, ierr )
-      if (wrank .eq. 0) then
-         if (toterrs .eq. 0) then
-            print *, ' No Errors'
-         else
-            print *, ' Found ', toterrs, ' errors'
-         endif
-      endif
+
+      call mtest_finalize( errs )
 
       end
 
