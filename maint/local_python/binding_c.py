@@ -824,9 +824,25 @@ def dump_profiling(func):
     G.out.append("")
 
 def dump_manpage(func, out):
-    out.append("/*@")
-    out.append("   %s - %s" % (get_function_name(func, func['_is_large']), func['desc']))
+    out.append("/*D")
+    out.append("   %s - %s" % (get_function_name(func, False), func['desc']))
     out.append("")
+
+    # Synopsis
+    out.append("Synopsis:")
+    func_decl = get_declare_function(func, False)
+    tlist = split_line_with_break(func_decl, '', 80)
+    out.append(".vb")
+    out.extend(tlist)
+    out.append(".ve")
+    if func['_has_poly']:
+        func_decl = get_declare_function(func, True)
+        tlist = split_line_with_break(func_decl, '', 80)
+        out.append(".vb")
+        out.extend(tlist)
+        out.append(".ve")
+    out.append("")
+
     lis_map = G.MAPS['LIS_KIND_MAP']
     for p in func['c_parameters']:
         lis_type = lis_map[p['kind']]
@@ -894,14 +910,7 @@ def dump_manpage(func, out):
         out.append("")
     if 'seealso' in func:
         out.append(".seealso: %s" % func['seealso'])
-    out.append("@*/")
-    out.append("")
-
-    # Follow the comment with actual function prototype
-    func_decl = get_declare_function(func, func['_is_large'])
-    tlist = split_line_with_break(func_decl, '', 100)
-    out.extend(tlist)
-    out.append("{}")
+    out.append("D*/")
     out.append("")
 
 def dump_manpage_list(list, header, out):

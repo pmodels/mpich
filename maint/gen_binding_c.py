@@ -55,10 +55,10 @@ def main():
         # Note: set func['_has_poly'] = False to skip embiggenning
         func['_has_poly'] = function_has_POLY_parameters(func)
         dump_mpi_c(func, False)
-        dump_manpage(func, manpage_out)
         if func['_has_poly']:
             dump_mpi_c(func, True)
-            dump_manpage(func, manpage_out)
+
+        dump_manpage(func, manpage_out)
 
         if 'output-mansrc' in G.opts:
             f = get_mansrc_file_path(func, c_dir + '/mansrc')
