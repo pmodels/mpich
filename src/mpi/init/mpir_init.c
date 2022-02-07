@@ -293,6 +293,16 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
 
   fn_exit:
     if (is_world_model) {
+        if (!MPIR_Process.comm_world) {
+            mpi_errno = MPIR_init_comm_world();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+
+        if (!MPIR_Process.comm_self) {
+            mpi_errno = MPIR_init_comm_self();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+
         MPII_world_set_initilized();
 
         mpi_errno = MPII_init_async();

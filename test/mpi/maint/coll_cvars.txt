@@ -184,6 +184,8 @@ algorithms:
             sched_local_gather_remote_bcast
         intra-blocking:
             brucks
+            k_brucks
+                .MPIR_CVAR_ALLGATHER_BRUCKS_KVAL=2,3,4
             recursive_doubling
             ring
         intra-nonblocking:
@@ -230,6 +232,9 @@ algorithms:
                 .MPIR_CVAR_ALLREDUCE_TREE_TYPE=knomial_1,knomial_2,kary
                 .MPIR_CVAR_ALLREDUCE_TREE_KVAL=2,3,4
                 .MPIR_CVAR_ALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096,8192
+            recexch
+                .MPIR_CVAR_ALLREDUCE_RECEXCH_KVAL=2,3,4,5,9
+                .MPIR_CVAR_ALLREDUCE_RECEXCH_SINGLE_PHASE_RECV=0,1
             posix:release_gather
                 .MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072
                 .MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=16384
@@ -271,6 +276,8 @@ algorithms:
             sched_pairwise_exchange
         intra-blocking:
             brucks
+            k_brucks
+                .MPIR_CVAR_ALLTOALL_BRUCKS_KVAL=2,3,4
             pairwise
             pairwise_sendrecv_replace
             scattered
@@ -328,6 +335,10 @@ algorithms:
                 .MPIR_CVAR_BARRIER_TREE_KVAL=2,3,4,8 
         intra-nonblocking:
             sched_recursive_doubling
+            tsp_recexch
+                .MPIR_CVAR_IBARRIER_RECEXCH_KVAL=2,3,4,8
+            tsp_k_dissemination
+                .MPIR_CVAR_IBARRIER_DISSEM_KVAL=2,3,4,8
     bcast:
         inter-blocking:
             remote_send_local_bcast

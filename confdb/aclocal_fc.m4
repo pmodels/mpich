@@ -1210,3 +1210,60 @@ AC_DEFUN([PAC_FC_CHECK_REAL128],[
     AC_MSG_RESULT([$pac_fc_has_real128])
     AC_LANG_POP(Fortran)
 ])
+
+dnl
+dnl PAC_FC_CHECK_IGNORE_TKR check directives to ignore type-kind-rank checks
+dnl set pac_fc_ignore_tkr to a type if supported, otherwise, no.
+dnl
+AC_DEFUN([PAC_FC_CHECK_IGNORE_TKR],[
+    AC_LANG_PUSH(Fortran)
+    AC_MSG_CHECKING([directives for Fortran compiler to ignore TKR check])
+    pac_fc_ignore_tkr=no
+    for a in gcc dec pragma dir ibm assumed; do
+        case $a in
+            gcc)
+                # gfortran since 4.9
+                decl='!GCC$ ATTRIBUTES NO_ARG_CHECK :: buf'
+                ;;
+            dec)
+                # ifort
+                decl='!DEC$ ATTRIBUTES NO_ARG_CHECK :: buf'
+                ;;
+            pragma)
+                # sunfort
+                decl='!$PRAGMA IGNORE_TKR buf'
+                ;;
+            dir)
+                # flang
+                decl='!DIR$ IGNORE_TKR buf'
+                ;;
+            ibm)
+                # ibm
+                decl='!IBM* IGNORE_TKR buf'
+                ;;
+            assumed)
+                decl='TYPE(*), DIMENSION(..) :: buf'
+                ;;
+        esac
+
+        AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+            program main
+                IMPLICIT NONE
+                INTERFACE
+                  SUBROUTINE FUNC_A(buf)
+                    REAL buf
+                    $decl
+                  END SUBROUTINE
+                END INTERFACE
+
+                INTEGER A(10)
+                CALL FUNC_A(A)
+            end
+        ])],[pac_fc_ignore_tkr=$a],[])
+        if test $pac_fc_ignore_tkr != no ; then
+            break
+        fi
+    done
+    AC_MSG_RESULT([$pac_fc_ignore_tkr])
+    AC_LANG_POP(Fortran)
+])

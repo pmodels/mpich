@@ -200,6 +200,11 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     mpi_errno = MPII_TSP_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* initialize algorithms */
+    mpi_errno = MPII_Recexchalgo_comm_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
     mpi_errno = MPIR_Csel_prune(MPIR_Csel_root, comm, &comm->csel_comm);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -226,6 +231,11 @@ int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
     /* cleanup transport data */
     mpi_errno = MPII_TSP_comm_cleanup(comm);
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* initialize algorithms */
+    mpi_errno = MPII_Recexchalgo_comm_cleanup(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     return mpi_errno;

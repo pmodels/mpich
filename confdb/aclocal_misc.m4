@@ -8,8 +8,9 @@ AC_DEFUN([PAC_CHECK_PYTHON],[
         PYTHON=python
     elif test 3 = `python3 -c "$python_one_liner"`; then
         PYTHON=python3
-    else
-        AC_MSG_ERROR([Python 3 is required but not found])
     fi
     AC_MSG_RESULT($PYTHON)
+    if test -z "$PYTHON" ; then
+        AC_MSG_WARN([Python 3 not found! Bindings need to be generated before configure.])
+    fi
 ])

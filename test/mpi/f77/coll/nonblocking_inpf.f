@@ -12,6 +12,7 @@ C
        integer MAX_SIZE
        parameter (MAX_SIZE=1024)
        integer rbuf(MAX_SIZE)
+       integer sdispls(1), scounts(1), stypes(1)
        integer rdispls(MAX_SIZE), rcounts(MAX_SIZE), rtypes(MAX_SIZE)
        integer comm, rank, size, req
        integer sumval, ierr, errs
@@ -53,7 +54,10 @@ C
                rbuf(rdispls(i)+j+1) = 100 * rank + 10 * (i-1) + j
            enddo
        enddo
-       call mpi_ialltoallv( MPI_IN_PLACE, 0, 0, MPI_DATATYPE_NULL,
+       sdispls(1) = 0
+       scounts(1) = 0
+       stypes(1) = MPI_DATATYPE_NULL
+       call mpi_ialltoallv( MPI_IN_PLACE, scounts, sdispls, stypes(1),
      .                       rbuf, rcounts, rdispls, MPI_INTEGER,
      .                       comm, req, ierr )
        call mpi_wait( req, MPI_STATUS_IGNORE, ierr )
@@ -82,7 +86,7 @@ C
      .                                        + 10 * (i-1) + j
            enddo
        enddo
-       call mpi_ialltoallw( MPI_IN_PLACE, 0, 0, MPI_DATATYPE_NULL,
+       call mpi_ialltoallw( MPI_IN_PLACE, scounts, sdispls, stypes,
      .                       rbuf, rcounts, rdispls, rtypes,
      .                       comm, req, ierr )
        call mpi_wait( req, MPI_STATUS_IGNORE, ierr )

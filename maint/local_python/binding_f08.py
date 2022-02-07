@@ -138,15 +138,19 @@ def dump_f08_wrappers_c(func, is_large):
         G.out.append("#else")
     G.out.append("INDENT");
     G.out.append("int err = MPI_SUCCESS;")
-    for l in vardecl_list:
-        G.out.append(l)
-    G.out.append("")
-    for l in code_list:
-        G.out.append(l)
-    G.out.append("err = %s(%s);" % (get_function_name(func, is_large), ', '.join(c_arg_list)))
-    G.out.append("")
-    for l in end_list:
-        G.out.append(l)
+    if re.match(r'MPI_F_sync_reg', func['name'], re.IGNORECASE):
+        # dummy
+        pass
+    else:
+        for l in vardecl_list:
+            G.out.append(l)
+        G.out.append("")
+        for l in code_list:
+            G.out.append(l)
+        G.out.append("err = %s(%s);" % (get_function_name(func, is_large), ', '.join(c_arg_list)))
+        G.out.append("")
+        for l in end_list:
+            G.out.append(l)
     G.out.append("return err;")
     G.out.append("DEDENT")
     if re.match(r'MPI_File_', func['name']):
@@ -984,16 +988,14 @@ def dump_fortran_line(s):
     G.out.extend(tlist)
 
 # ---- mpi_f08_types.f90 -------------------------
-G.f08_handle_list = ["Comm", "Datatype", "Errhandler", "File", "Group", "Info", "Op", "Request", "Win", "Message", "Session"]
 G.f08_sizeof_list = ["character", "logical", "xint8", "xint16", "xint32", "xint64", "xreal32", "xreal64", "xreal128", "xcomplex32", "xcomplex64", "xcomplex128"]
 
 def dump_mpi_f08_types():
-    status_fields = ["count_lo", "count_hi_and_cancelled", "MPI_SOURCE", "MPI_TAG", "MPI_ERROR"]
     def dump_status_type():
         # Status need be consistent with mpi.h
         G.out.append("")
         G.out.append("TYPE, bind(C) :: MPI_Status")
-        for field in status_fields:
+        for field in G.status_fields:
             G.out.append("    INTEGER :: %s" % field)
         G.out.append("END TYPE MPI_Status")
         G.out.append("")
@@ -1030,9 +1032,9 @@ def dump_mpi_f08_types():
                 if idx < 2:
                     return "%s(%d)" % (name, idx + 1)
                 else:
-                    return "%s(%s)" % (name, status_fields[idx])
+                    return "%s(%s)" % (name, G.status_fields[idx])
             else:
-                return "%s%%%s" % (name, status_fields[idx])
+                return "%s%%%s" % (name, G.status_fields[idx])
 
         # body of the status conversion routines
         def dump_convert(in_type, in_name, out_type, out_name, res):
@@ -1110,7 +1112,7 @@ def dump_mpi_f08_types():
             dump_convert_mpi("c", "f08", prefix)
 
     def dump_handle_types():
-        for a in G.f08_handle_list:
+        for a in G.handle_list:
             G.out.append("")
             G.out.append("TYPE, bind(C) :: MPI_%s" % a)
             G.out.append("    INTEGER :: MPI_VAL")
@@ -1124,13 +1126,13 @@ def dump_mpi_f08_types():
                 op_sym = "/="
             G.out.append("")
             G.out.append("INTERFACE operator(%s)" % op_sym)
-            for a in G.f08_handle_list:
+            for a in G.handle_list:
                 G.out.append("    module procedure MPI_%s_%s" % (a, op))
                 G.out.append("    module procedure MPI_%s_f08_%s_f" % (a, op))
                 G.out.append("    module procedure MPI_%s_f_%s_f08" % (a, op))
             G.out.append("END INTERFACE")
             G.out.append("")
-            for a in G.f08_handle_list:
+            for a in G.handle_list:
                 G.out.append("private :: MPI_%s_%s" % (a, op))
                 G.out.append("private :: MPI_%s_f08_%s_f" % (a, op))
                 G.out.append("private :: MPI_%s_f_%s_f08" % (a, op))
@@ -1138,7 +1140,7 @@ def dump_mpi_f08_types():
     def dump_handle_routines():
         for op in ["eq", "neq"]:
             G.out.append("")
-            for a in G.f08_handle_list:
+            for a in G.handle_list:
                 # e.g. MPI_Comm_eq
                 G.out.append("")
                 G.out.append("FUNCTION MPI_%s_%s(x, y) result(res)" % (a, op))
@@ -1164,7 +1166,7 @@ def dump_mpi_f08_types():
                         G.out.append("    res = (f08%MPI_VAL /= f)")
                     G.out.append("END FUNCTION %s" % func_name)
         # e.g. MPI_Comm_f2c
-        for a in G.f08_handle_list:
+        for a in G.handle_list:
             if a == "File":
                 continue
             for p in [("f", "c"), ("c", "f")]:
