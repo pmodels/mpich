@@ -84,6 +84,22 @@ def get_func_file_path(func, root_dir):
 
     return file_path
 
+def get_mansrc_file_path(func, root_dir):
+    file_path = None
+    dir_path = root_dir
+    if 'file' in func:
+        file_path = dir_path + '/' + func['file'] + ".txt"
+    elif RE.match(r'MPI_T_(\w+)', func['name'], re.IGNORECASE):
+        name = RE.m.group(1)
+        file_path = dir_path + '/' + name.lower() + ".txt"
+    elif RE.match(r'MPIX?_(\w+)', func['name'], re.IGNORECASE):
+        name = RE.m.group(1)
+        file_path = dir_path + '/' + name.lower() + ".txt"
+    else:
+        raise Exception("Error in function name pattern: %s\n" % func['name'])
+
+    return file_path
+
 def dump_c_file(f, lines):
     print("  --> [%s]" % f)
     with open(f, "w") as Out:
@@ -94,14 +110,7 @@ def dump_c_file(f, lines):
             # stripping the newline for consistency
             l = l.rstrip()
             # handle special directives etc.
-            if RE.match(r'\[ERR CODES\]', l):
-                # man page error codes
-                print(".N Errors", file=Out)
-                print(".N MPI_SUCCESS\n", file=Out)
-                for err in sorted (G.err_codes.keys()):
-                    print(".N %s" % (err), file=Out)
-                print(".N MPI_ERR_OTHER\n", file=Out)
-            elif RE.match(r'(INDENT|DEDENT)', l):
+            if RE.match(r'(INDENT|DEDENT)', l):
                 # indentations
                 a = RE.m.group(1)
                 if a == "INDENT":
@@ -136,6 +145,15 @@ def dump_Makefile_mk(f):
                 print("    %s \\" % f, file=Out)
             else:
                 print("    %s" % f, file=Out)
+
+        n = len(G.doc3_src_txt)
+        if n > 0:
+            print("doc3_src_txt += \\", file=Out)
+            for i, f in enumerate(G.doc3_src_txt):
+                if i < n - 1:
+                    print("    %s \\" % f, file=Out)
+                else:
+                    print("    %s" % f, file=Out)
 
 def dump_mpir_impl_h(f):
     def dump_mpix_symbols():
@@ -769,7 +787,6 @@ def dump_qmpi_wrappers(func, is_large):
     G.out.append("}")
     G.out.append("#else /* ENABLE_QMPI */")
 
-    dump_manpage(func)
     G.out.append("")
 
     dump_line_with_break(func_decl)
@@ -806,10 +823,10 @@ def dump_profiling(func):
     G.out.append("#endif /* MPICH_MPI_FROM_PMPI */")
     G.out.append("")
 
-def dump_manpage(func):
-    G.out.append("/*@")
-    G.out.append("   %s - %s" % (get_function_name(func, func['_is_large']), func['desc']))
-    G.out.append("")
+def dump_manpage(func, out):
+    out.append("/*@")
+    out.append("   %s - %s" % (get_function_name(func, func['_is_large']), func['desc']))
+    out.append("")
     lis_map = G.MAPS['LIS_KIND_MAP']
     for p in func['c_parameters']:
         lis_type = lis_map[p['kind']]
@@ -828,28 +845,28 @@ def dump_manpage(func):
             inout_list.append(p)
         else:
             input_list.append(p)
-    dump_manpage_list(input_list, "Input Parameters")
-    dump_manpage_list(inout_list, "Input/Output Parameters")
-    dump_manpage_list(output_list, "Output Parameters")
+    dump_manpage_list(input_list, "Input Parameters", out)
+    dump_manpage_list(inout_list, "Input/Output Parameters", out)
+    dump_manpage_list(output_list, "Output Parameters", out)
 
     # Add the custom notes (specified in e.g. pt2pt_api.txt) as is.
     if 'notes' in func:
         for l in func['notes']:
-            G.out.append(l)
-        G.out.append("")
+            out.append(l)
+        out.append("")
 
     if 'replace' in func:
         if RE.match(r'\s*(deprecated|removed)', func['replace'], re.IGNORECASE):
-            G.out.append(".N %s" % RE.m.group(1).capitalize())
+            out.append(".N %s" % RE.m.group(1).capitalize())
         else:
             print("Missing reasons in %s .replace" % func['name'], file=sys.stderr)
 
         if RE.search(r'with\s+(\w+)', func['replace']):
-            G.out.append("   The replacement for this routine is '%s'." % RE.m.group(1))
-        G.out.append("")
+            out.append("   The replacement for this routine is '%s'." % RE.m.group(1))
+        out.append("")
 
     for note in func['_docnotes']:
-        G.out.append(".N %s" % note)
+        out.append(".N %s" % note)
         if note == "Fortran":
             has = {}
             for p in func['c_parameters']:
@@ -859,30 +876,41 @@ def dump_manpage(func):
                     else:
                         has['FortranStatus'] = 1
             for k in has:
-                G.out.append(".N %s" % k)
-        G.out.append("")
+                out.append(".N %s" % k)
+        out.append("")
 
     if 'notes2' in func:
         for l in func['notes2']:
-            G.out.append(l)
-        G.out.append("")
+            out.append(l)
+        out.append("")
 
     if '_skip_err_codes' not in func:
-        G.out.append("[ERR CODES]")
-    G.out.append("")
+        out.append(".N Errors")
+        out.append(".N MPI_SUCCESS")
+        for err in sorted (G.err_codes.keys()):
+            out.append(".N %s" % (err))
+        out.append(".N MPI_ERR_OTHER")
+        out.append("")
     if 'seealso' in func:
-        G.out.append(".seealso: %s" % func['seealso'])
-    G.out.append("@*/")
-    G.out.append("")
+        out.append(".seealso: %s" % func['seealso'])
+    out.append("@*/")
+    out.append("")
 
-def dump_manpage_list(list, header):
+    # Follow the comment with actual function prototype
+    func_decl = get_declare_function(func, func['_is_large'])
+    tlist = split_line_with_break(func_decl, '', 100)
+    out.extend(tlist)
+    out.append("{}")
+    out.append("")
+
+def dump_manpage_list(list, header, out):
     count = len(list)
     if count == 0:
         return
-    G.out.append("%s:" % header)
+    out.append("%s:" % header)
     if count == 1:
         p = list[0]
-        G.out.append(". %s - %s" % (p['name'], p['desc']))
+        out.append(". %s - %s" % (p['name'], p['desc']))
     else:
         for i, p in enumerate(list):
             lead = "."
@@ -890,8 +918,8 @@ def dump_manpage_list(list, header):
                 lead = "+"
             elif i == count - 1:
                 lead = "-"
-            G.out.append("%s %s - %s" % (lead, p['name'], p['desc']))
-    G.out.append("")
+            out.append("%s %s - %s" % (lead, p['name'], p['desc']))
+    out.append("")
 
 def get_function_internal_prototype(func_decl):
     func_decl = re.sub(r'MPI(X?)_([a-zA-Z0-9_]*\()', r'internal\1_\2', func_decl, 1)
