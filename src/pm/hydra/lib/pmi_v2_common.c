@@ -5,7 +5,6 @@
 
 #include "hydra.h"
 #include "bsci.h"
-#include "pmiserv_pmi.h"
 #include "pmi_v2_common.h"
 
 HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, char *args[], char *key,
