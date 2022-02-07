@@ -10,9 +10,7 @@ hydra_pmi_proxy_SOURCES = \
     proxy/pmip_cb.c \
     proxy/pmip_utils.c \
     proxy/pmip_pmi_v1.c \
-    proxy/pmip_pmi_v2.c \
-    pm/pmiserv/common.c \
-    pm/pmiserv/pmi_v2_common.c
+    proxy/pmip_pmi_v2.c
 
 hydra_pmi_proxy_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/proxy
 hydra_pmi_proxy_LDFLAGS = $(external_ldflags) -L$(top_builddir)

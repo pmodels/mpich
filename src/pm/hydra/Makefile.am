@@ -33,7 +33,6 @@ libhydra_la_SOURCES =
 
 # The below directories contribute to libhydra
 include lib/Makefile.mk
-include pm/Makefile.mk
 include mpiexec/Makefile.mk
 include proxy/Makefile.mk
 include nameserver/Makefile.mk
