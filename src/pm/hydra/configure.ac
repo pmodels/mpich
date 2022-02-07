@@ -620,7 +620,7 @@ fi
 
 # Final output
 AC_CONFIG_FILES([Makefile
-	tools/bootstrap/src/bsci_init.c
+	lib/tools/bootstrap/src/bsci_init.c
 	hydra-doxygen.cfg
 ])
 AC_OUTPUT
