@@ -483,7 +483,16 @@ AC_ARG_WITH(device,
 	with_device=ch4)
 
 AC_ARG_WITH(pmi,
-	AS_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
+	AS_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH. The following options are supported. By default, MPICH will select the PMI supported by the configured process manager.])
+        Internal
+            simple      - Simple PMI 1
+            pmi2/simple - Simple PMI 2
+        External
+            cray        - Cray PMI 2
+            slurm       - Slurm PMI 1
+            slurm/pmi2  - Slurm PMI 2
+            pmix        - PMIx
+        ,,
 	with_pmi=default)
 
 AC_ARG_WITH(pm,
