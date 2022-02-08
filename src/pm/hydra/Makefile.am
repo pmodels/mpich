@@ -102,7 +102,7 @@ htmldoc:
 	test -d $(top_builddir)/www/www1 || $(MKDIR_P) $(top_builddir)/www/www1
 	test -d $(top_builddir)/www/www3 || $(MKDIR_P) $(top_builddir)/www/www3
 	$(MAKE) $(AM_MAKEFLAGS) htmldoc-local
-htmldoc-local: $(doc1_src_txt:.txt=.man1-phony)
+htmldoc-local: $(doc1_src_txt:.txt=.html1-phony)
 
 # created by confdb/aclocal_cache.m4
 DISTCLEANFILES += config.system
