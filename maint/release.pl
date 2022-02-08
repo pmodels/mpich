@@ -286,7 +286,7 @@ print("===> Creating the final hydra tarball... ");
 run_cmd("cp -a ${expdir}/src/pm/hydra hydra-${version}");
 run_cmd("tar -czvf hydra-${version}.tar.gz hydra-${version}");
 run_cmd("cp -a hydra-${version}.tar.gz ${root}/");
-print("done\n\n");
+print("done\n");
 
 # Create the testsuite tarball
 print("===> Creating the final mpich-testsuite tarball... ");
