@@ -12,8 +12,6 @@ use strict;
 # Root for the pages
 my $WWWRoot=`pwd`;
 chop $WWWRoot;
-# Base address (installation address)
-my $URLBase;
 # End of line character (\r\n is DOS-friendly)
 my $eol = "\r\n";
 # Number of columns in table of names
@@ -24,11 +22,8 @@ foreach $a (@ARGV) {
     if ($a =~ /-?-wwwroot=(.*)/) {
 	$WWWRoot = $1;
     }
-    elsif ($a =~ /-?-urlbase=(.*)/) {
-	$URLBase = $1;
-    }
     elsif ($a =~ /-?help/) {
-	print STDOUT "createhtmlindex [ -wwwroot=directory ] [ -urlbase=base ]\n\n";
+	print STDOUT "createhtmlindex [ -wwwroot=directory ]\n\n";
 	print STDOUT "Build the www index pages for MPICH.\n";
 	print STDOUT "This must be run in the root of an MPICH tree; it may\n";
         print STDOUT "be run in a VPATH directory after configuring.\n";
@@ -50,16 +45,7 @@ print OUTFD "<H2>MPI Commands</H2>$eol";
 &AddDirectoryContents( "www", "www1" );
 
 print OUTFD "<H2>MPI Routines and Constants</H2>$eol";
-if (-f "www/www3/mpi.cit") {
-    &createRedirects("www/www3", "mpi.cit");
-}
-else {
-    print STDERR "Could not find mapping file\n";
-}
 &AddDirectoryContents( "www", "www3" );
-
-#print OUTFD "<H2>MPE Routines</H2>$eol";
-#&AddDirectoryContents( "www", "www4" );
 
 &AddTrailer( );
 
@@ -82,15 +68,6 @@ open( OUTFD, ">$WWWRoot/www/www3/index.htm" ) ||
 &AddTrailer( );
 close( OUTFD );
 
-# open( OUTFD, ">$WWWRoot/www/www4/index.htm" ) ||
-#     die "Cannot open $WWWRoot/www/www4/index.htm\n";
-
-# &AddHeader( "Web pages for MPE Routines" );
-# &AddDirectoryContents( "www/www4", "." );
-# &AddTrailer( );
-# close( OUTFD );
-
-
 0;
 # ---------------------------------------------------------------------------
 # Support routines.
@@ -108,36 +85,6 @@ sub AddHeader {
 
 sub AddTrailer {
     print OUTFD "</BODY>$eol</HTML>$eol";
-}
-
-# For the items (mostly MPI constants) that are within a single web page,
-# create a redirect page for them.  This allows us to point to a location
-# on the page, rather than just a page which is what a file link would
-# accomplish
-sub createRedirects {
-    my ($rootdir, $mapfile) = @_;
-    open( MAPFD, "<$rootdir/$mapfile" ) || die "Cannot open map file $mapfile\n";
-    while (<MAPFD>) {
-	my @fields = split(/\+/);
-	my $name = $fields[1];
-	my $url  = $fields[8];
-	if ($url =~ /(.*)\/([^\/]*)\.([HTMLhtml]*)#(.*)/) {
-	    my $rooturl  = $1;
-	    my $basefile = $2;
-	    my $ext      = $3;
-	    my $anchor   = $4;
-	    if ($basefile ne $anchor) {
-		open(RFD, ">$rootdir/$anchor.htm") || die "Cannot open redirect file $anchor.htm\n";
-		print RFD "<html><head><meta http-equiv=\"refresh\" content=\"0; url=$basefile.$ext#$anchor\" /></head></html>\n";
-		close RFD;
-	    }
-	}
-	else {
-	    print STDERR "Could not decode $url\n";
-	}
-
-    }
-    close MAPFD;
 }
 
 # Take all .htm and .html files and add them to the OUTFD file.
