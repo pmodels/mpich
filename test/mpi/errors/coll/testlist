@@ -7,17 +7,17 @@ nb_rerr 2
 reduce_local 1
 bcastlength 4
 ibcastlength 4
-reducelength 4
-ireducelength 4
-allreducelength 4
-iallreducelength 4
-reduceop 4
-ireduceop 4
-gatherlength 4
-igatherlength 4
-scatterlength 4
-iscatterlength 4
-allgatherlength 4
-iallgatherlength 4
-alltoalllength 4
+reducelength 4 xfail=ticket3655
+ireducelength 4 xfail=ticket3655
+allreducelength 4 xfail=ticket3655
+iallreducelength 4 xfail=ticket3655
+reduceop 4 xfail=ticket3655
+ireduceop 4 xfail=ticket3655
+gatherlength 4 xfail=ticket3655
+igatherlength 4 xfail=ticket3655
+scatterlength 4 xfail=ticket3655
+iscatterlength 4 xfail=ticket3655
+allgatherlength 4 xfail=ticket3655
+iallgatherlength 4 xfail=ticket3655
+alltoalllength 4 xfail=ticket3655
 
