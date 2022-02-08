@@ -144,7 +144,6 @@ if (!$branch || !$version) {
 }
 
 check_package("doctext");
-check_package("txt2man");
 check_package("git");
 check_package("latex");
 check_package("autoconf");
