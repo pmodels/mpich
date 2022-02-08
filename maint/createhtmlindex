@@ -35,23 +35,26 @@ foreach $a (@ARGV) {
     }
 }
 
-# Create the main index
+# ---- Create the main index ----
 open( OUTFD, ">$WWWRoot/www/index.html" ) ||
     die "Cannot open $WWWRoot/www/index.html\n";
 
-&AddHeader( "Web pages for MPI" );
+&AddHeader( "Man pages for MPI" );
 
 print OUTFD "<H2>MPI Commands</H2>$eol";
 &AddDirectoryContents( "www", "www1" );
 
-print OUTFD "<H2>MPI Routines and Constants</H2>$eol";
+print OUTFD "<H2>MPI Routines</H2>$eol";
 &AddDirectoryContents( "www", "www3" );
+
+print OUTFD "<H2>MPI Constants</H2>$eol";
+&AddDirectoryConstants( "www", "www3/Constants.html" );
 
 &AddTrailer( );
 
 close( OUTFD );
 
-# Create the sectional indices
+# ---- Create the www1 index ----
 open( OUTFD, ">$WWWRoot/www/www1/index.htm" ) ||
     die "Cannot open $WWWRoot/www/www1/index.htm\n";
 
@@ -60,11 +63,18 @@ open( OUTFD, ">$WWWRoot/www/www1/index.htm" ) ||
 &AddTrailer( );
 close( OUTFD );
 
+# ---- Create the www3 index ----
 open( OUTFD, ">$WWWRoot/www/www3/index.htm" ) ||
     die "Cannot open $WWWRoot/www/www3/index.htm\n";
 
-&AddHeader( "Web pages for MPI Routines and Constants" );
+&AddHeader( "Man pages for MPI Routines and Constants" );
 &AddDirectoryContents( "www/www3", "." );
+print OUTFD "<H2>MPI Routines</H2>$eol";
+&AddDirectoryContents( "www/www3", "." );
+
+print OUTFD "<H2>MPI Constants</H2>$eol";
+&AddDirectoryConstants( "www/www3", "Constants.html" );
+
 &AddTrailer( );
 close( OUTFD );
 
@@ -87,63 +97,69 @@ sub AddTrailer {
     print OUTFD "</BODY>$eol</HTML>$eol";
 }
 
+# Create a table of indexes for MPI Constants. Each link points to an
+# anchor within Constants.html. We assume each anchor is in a expected
+# format.
+#
+sub AddDirectoryConstants {
+    my ($rootdir, $file) = @_;
+    my %links;
+    open In, "$rootdir/$file" or die "Can't open $rootdir/$file\n";
+    while (<In>) {
+        if (/<a name="(.+?)"><\/a>/) {
+            $links{$1} = "$file#$1";
+        }
+    }
+    MakeHTMLTable(\%links);
+}
+
 # Take all .htm and .html files and add them to the OUTFD file.
 # This works in two steps:
-# 1. Read and sort the contents of the directory into the array
-# @HTMLFiles
+# 1. Read the contents of the directory into the %links
 # 2. Use the routine MakeHTMLTable to create a table with a given
 # number of columns, adding the links within the columns
 # Look in $1/$2 for files, but make links relative to $2
+#
 sub AddDirectoryContents {
-    my $rootdir = $_[0];
-    my $dirname = $_[1];
+    my ($rootdir, $dirname) = @_;
 
-    # 1 Read the files
-    my @HTMLFiles = ();
+    my %links;
     opendir DIR, "$rootdir/$dirname";
 
     my $prefixname;
-    if ($dirname eq ".") {
-	$prefixname = "";
-    }
-    else {
+    if ($dirname ne ".") {
 	$prefixname = "$dirname/";
     }
     while (my $filename = readdir DIR) {
-	if ($filename =~ /index\.html?/) { next; }
-	if ($filename =~ /.*\.html?$/) {
-	    $HTMLFiles[$#HTMLFiles+1] = "$prefixname$filename";
+	if ($filename =~ /(index|Constants)\.html?/) {
+            next;
+        } elsif ($filename =~ /(\w+)\.html?$/) {
+            $links{$1} = "$prefixname$filename";
 	}
     }
     closedir DIR;
 
-    @HTMLFiles = sort( @HTMLFiles );
-
-    # Format the table
-    &MakeHTMLTable(\@HTMLFiles);
+    MakeHTMLTable(\%links);
 }
-# MakeHTMLTable takes an array of items and turns them into a table with
+
+# MakeHTMLTable takes an hash of items and turns them into a table with
 # $TableCols columns.
 #
 sub MakeHTMLTable {
-    my ($HTMLFiles) = @_;
-    my $nvals = @$HTMLFiles;
+    my ($links) = @_;
+    my @keys = sort keys %$links;
+    my $nvals = @keys;
 
     my $nrows = int ( ($nvals + $TableCols - 1) / $TableCols );
     print OUTFD "<TABLE>$eol";
     for (my $j=0; $j<$nrows; $j++) {
 	print OUTFD "<TR>";
 	for (my $e=0; $e<$TableCols; $e++) {
-	    my $filename = $HTMLFiles->[$j + $e * $nrows];
-	    my $linkname = $filename;
-	    $linkname =~ s/\.html?//;
-	    $linkname =~ s/.*\///;
+	    my $linkname = $keys[$j + $e * $nrows];
+	    my $filename = $links->{$linkname};
             my $line;
-	    if ($filename ne "") {
+	    if ($filename) {
 		$line = "<A HREF=\"$filename\">$linkname</A>";
-	    }
-	    else {
-		$line = "";
 	    }
 	    print OUTFD "<TD>$line</TD>$eol";
 	}
