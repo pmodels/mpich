@@ -474,7 +474,7 @@ mandoc:
 	test -d $(mandoc_path1) || $(MKDIR_P) $(mandoc_path1)
 	test -d $(mandoc_path3) || $(MKDIR_P) $(mandoc_path3)
 	$(MAKE) $(AM_MAKEFLAGS) mandoc-local
-mandoc-local: $(mpi_sources:.c=.man-phony) $(doc1_src_txt:.txt=.man1-phony) \
+mandoc-local: $(doc1_src_txt:.txt=.man1-phony) \
 	$(doc3_src_txt:.txt=.man3-phony)
 	for subdir in $(MANDOC_SUBDIRS) - ; do \
 	    if test "x$$subdir" = "x-" ; then break ; fi ; \
@@ -504,7 +504,7 @@ htmldoc:
 	rm -f $(htmldoc_path3)/mpi.cit
 	$(MAKE) $(AM_MAKEFLAGS) htmldoc-local
 
-htmldoc-local: $(mpi_sources:.c=.html-phony) $(doc1_src_txt:.txt=.html1-phony) \
+htmldoc-local: $(doc1_src_txt:.txt=.html1-phony) \
 	$(doc3_src_txt:.txt=.html3-phony)
 	for subdir in $(HTMLDOC_SUBDIRS) - ; do \
 	    if test "x$$subdir" = "x-" ; then break ; fi ; \
