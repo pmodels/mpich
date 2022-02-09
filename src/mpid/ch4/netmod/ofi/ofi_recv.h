@@ -207,6 +207,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         int card_num = MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(&attr));
         MPIDI_OFI_register_memory(recv_buf, data_sz, attr.type, card_num, ctx_idx, &mr);
         if (mr != NULL) {
+            mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], mr,
+                                          MPIDI_OFI_global.ctx[ctx_idx].ep, NULL);
+            MPIR_ERR_CHECK(mpi_errno);
             desc = fi_mr_desc(mr);
             struct MPIDI_GPU_RDMA_queue_t *new_mr =
                 MPL_malloc(sizeof(struct MPIDI_GPU_RDMA_queue_t), MPL_MEM_BUFFER);
