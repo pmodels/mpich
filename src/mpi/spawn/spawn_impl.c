@@ -173,8 +173,9 @@ int MPIR_Comm_spawn_impl(const char *command, char *argv[], int maxprocs, MPIR_I
                          int root, MPIR_Comm * comm_ptr, MPIR_Comm ** p_intercomm_ptr,
                          int array_of_errcodes[])
 {
-    return MPID_Comm_spawn_multiple(1, (char **) &command, &argv, &maxprocs, &info_ptr, root,
-                                    comm_ptr, p_intercomm_ptr, array_of_errcodes);
+    return MPID_Comm_spawn_multiple(1, (char **) &command, &argv, &maxprocs,
+                                    info_ptr ? &info_ptr : NULL, root, comm_ptr, p_intercomm_ptr,
+                                    array_of_errcodes);
 }
 
 int MPIR_Comm_spawn_multiple_impl(int count, char *array_of_commands[], char **array_of_argv[],
