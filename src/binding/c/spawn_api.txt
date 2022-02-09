@@ -41,7 +41,7 @@ MPI_Comm_spawn:
 }
 { -- handle_ptr -- info
     MPIR_Info *info_ptr = NULL;
-    if (comm_ptr->rank == root) {
+    if (comm_ptr->rank == root && info != MPI_INFO_NULL) {
         MPIR_Info_get_ptr(info, info_ptr);
     }
 }
@@ -59,7 +59,11 @@ MPI_Comm_spawn_multiple:
     if (comm_ptr->rank == root) {
         array_of_info_ptrs = MPL_malloc(count * sizeof(MPIR_Info *), MPL_MEM_OTHER);
         for (int i = 0; i < count; i++) {
-            MPIR_Info_get_ptr(array_of_info[i], array_of_info_ptrs[i]);
+            if (array_of_info[i] != MPI_INFO_NULL) {
+                MPIR_Info_get_ptr(array_of_info[i], array_of_info_ptrs[i]);
+            } else {
+                array_of_info_ptrs[i] = NULL;
+            }
         }
     }
 }
