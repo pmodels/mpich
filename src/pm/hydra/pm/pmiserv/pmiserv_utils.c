@@ -254,7 +254,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     struct HYD_env *env;
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
-    struct HYD_node *node;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     char *mapping = NULL, *map;
     struct HYD_string_stash stash, exec_stash;
