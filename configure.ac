@@ -1970,15 +1970,12 @@ if test "$enable_f77" = "yes" ; then
     # of different types (e.g., for MPI_Send)
     PAC_PROG_F77_MISMATCHED_ARGS(addarg,yes)
     if test "X$addarg" != "X" ; then
-        # We could add the names of all of the MPI routines that
-        # accept different types.  Instead, we fail cleanly.
-        # Some Fortran compilers allow you to turn off checking for
-        # mismatched arguments for *all* routines.  Adding an argument
-	# that turns off checking for *everything* is not something that
-	# configure should do - if the user wants this, they can follow
-	# the instructions in the following error message.
-        AC_MSG_ERROR([The Fortran compiler $FC does not accept programs that call the same routine with arguments of different types without the option $addarg.  Rerun configure with FCFLAGS=$addarg])
+        # Code using mpif.h interface will likely need this flag to compile.
+        # Code with `use mpi` or `use mpi_f08` do not need this flag.
+        # Add the flag to mpif77 wrappers.
+        WRAPPER_EXTRA_F77_FLAGS="$addarg"
     fi
+    AC_SUBST(WRAPPER_EXTRA_F77_FLAGS)
 
     bindings="$bindings f77"
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
