@@ -1,0 +1,27 @@
+#! /usr/bin/env perl
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
+# This script renames man/man3/Constants.3 into man/man3/mpiconsts.3
+# to avoid collision with other packages. Then it creates alias man
+# pages for individual constants.
+
+use strict;
+
+if (!-e "man/man3/Constants.3") {
+    die "man/man3/Constants.3 not found.\n";
+}
+
+rename "man/man3/Constants.3", "man/man3/mpiconsts.3";
+
+open In, "man/man3/mpiconsts.3" or die "Can't open man/man3/mpiconsts.3\n";
+while (<In>) {
+    if (/^\.B\s+(MPIX?_\w+)/) {
+        open Out, "> man/man3/$1.3" or die "Can't create man/man3/$1.3\n";
+        print Out ".so man3/mpiconsts.3\n";
+        close Out;
+    }
+}
+close In;
