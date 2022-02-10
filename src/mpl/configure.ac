@@ -158,6 +158,7 @@ AC_ARG_ENABLE(fast,
 # only alwaysinline option is valid but still need break down multiple options
 # transferred from MPICH separated by commas
 enable_fast_alwaysinline=no
+enable_fast_avx_instr=no
 save_IFS="$IFS"
 IFS=","
 for option in $enable_fast ; do
@@ -167,6 +168,9 @@ for option in $enable_fast ; do
         ;;
         all|yes)
         enable_fast_alwaysinline=yes
+        ;;
+        avx)
+        enable_fast_avx_instr=yes
         ;;
         *) # do not change default value (no) for other fast options
         ;;
@@ -602,6 +606,7 @@ AC_MSG_NOTICE([Timer type selected is $timer_type])
 AC_CHECK_HEADERS(sched.h)
 AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(x86intrin.h)
 AC_CHECK_FUNCS(sched_yield yield usleep sleep select)
 
 if test "$ac_cv_func_usleep" = "yes" ; then
@@ -1135,6 +1140,64 @@ if test "X${pac_have_ze}" = "Xyes" ; then
     AC_CHECK_LIB(dl, dlopen, [], AC_MSG_ERROR([dlopen not found.  MPL ZE support requires libdl.]))
 fi
 AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
+
+if test "$enable_fast_avx_instr" = "yes" ; then
+    AC_CACHE_CHECK([whether -mavx512f is supported], pac_cv_found_avx512f,
+                   [PAC_C_CHECK_COMPILER_OPTION([-mavx512f],pac_cv_found_avx512f=yes,pac_cv_found_avx512f=no)],
+                   pac_cv_found_avx512f=no,pac_cv_found_avx512f=yes)
+    if test "$pac_cv_found_avx512f" = "yes" ; then
+        PAC_APPEND_FLAG([-mavx512f],[CFLAGS])
+
+        AC_CACHE_CHECK([whether _mm512_storeu_si512 is supported], pac_cv_found___mm512_storeu_si512,[
+                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                       #include <x86intrin.h>
+
+                                       int main(int argc, char **argv) {
+                                           char source[1024], dest[1024];
+                                           for (int i = 0; i < 1024; i++) source[i] = 'a';
+
+                                           _mm512_storeu_si512((__m512i *) dest, _mm512_loadu_si512((__m512i const *) source));
+
+                                           if (dest[0] == source[0]) return 0;
+                                           else return 1;
+                                       }
+                                       ]])], pac_cv_found___mm512_storeu_si512="yes",
+                                       pac_cv_found___mm512_storeu_si512="no",
+                                       pac_cv_found___mm512_storeu_si512="unknown")
+                        ])
+    fi
+    if test "$pac_cv_found___mm512_storeu_si512" = "yes" ; then
+        AC_DEFINE(HAVE_MM512_STOREU_SI512,1,[Define if avx512f is available])
+    fi
+
+    AC_CACHE_CHECK([whether -mavx is supported], pac_cv_found_avx,
+                   [PAC_C_CHECK_COMPILER_OPTION([-mavx],pac_cv_found_avx=yes,pac_cv_found_avx=no)],
+                   pac_cv_found_avx=no,pac_cv_found_avx=yes)
+    if test "$pac_cv_found_avx" = "yes" ; then
+        PAC_APPEND_FLAG([-mavx],[CFLAGS])
+
+        AC_CACHE_CHECK([whether _mm256_storeu_si256 is supported], pac_cv_found___mm256_storeu_si256,[
+                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                       #include <x86intrin.h>
+
+                                       int main(int argc, char **argv) {
+                                           char source[1024], dest[1024];
+                                           for (int i = 0; i < 1024; i++) source[i] = 'a';
+
+                                           _mm256_storeu_si256((__m256i *) dest, _mm256_loadu_si256((__m256i const *) source));
+
+                                           if (dest[0] == source[0]) return 0;
+                                           else return 1;
+                                       }
+                                       ]])], pac_cv_found___mm256_storeu_si256="yes",
+                                       pac_cv_found___mm256_storeu_si256="no",
+                                       pac_cv_found___mm256_storeu_si256="unknown")
+                        ])
+    fi
+    if test "$pac_cv_found___mm256_storeu_si256" = "yes" ; then
+        AC_DEFINE(HAVE_MM256_STOREU_SI256,1,[Define if avx is available])
+    fi
+fi
 
 
 # Check HIP availability
