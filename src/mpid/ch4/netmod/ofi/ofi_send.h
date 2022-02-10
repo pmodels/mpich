@@ -221,51 +221,35 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
     send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
-    MPIR_GPU_query_pointer_attr(send_buf, &attr);
 
-    if (data_sz &&
-        (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
-         attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
-        if (!MPIDI_OFI_ENABLE_HMEM) {
+    /* TODO: start gpu-rdma for larger data sizes; need to change the size threshold */
+    if (MPIDI_OFI_ENABLE_HMEM && data_sz) {
+        if (MPIDI_OFI_ENABLE_MR_HMEM) {
+            if (dt_contig) {
+                register_mem = true;
+            }
+        }
+    }
+    if ((!MPIDI_OFI_ENABLE_HMEM || !dt_contig) && data_sz) {
+        MPIR_GPU_query_pointer_attr(send_buf, &attr);
+
+        if (data_sz &&
+            (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
+             attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
             /* Force packing of GPU buffer in host memory */
             /* FIXME: at this point, GPU data takes host-buffer staging
              * path for the whole chunk. For large memory size, pipeline
              * transfer should be applied. */
             force_gpu_pack = true;
-        } else {
-            if (MPIDI_OFI_ENABLE_MR_HMEM && dt_contig) {
-                register_mem = true;
-            } else {
-                dt_contig = 0;
-                force_gpu_pack = true;
-            }
-        }
-    } else if (MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG && data_sz && MPIDI_OFI_ENABLE_HMEM &&
-               MPIDI_OFI_ENABLE_MR_HMEM) {
-        if (dt_contig) {
-            register_mem = true;
         }
     }
-
     if (register_mem) {
-        /* OFI does not support tiles yet, need to pass the root device. */
-        int card_num = MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(&attr));
-        MPIDI_OFI_register_memory(send_buf, data_sz, attr.type, card_num, ctx_idx, &mr);
+        MPIDI_OFI_register_memory(send_buf, data_sz, attr, ctx_idx, &mr);
         if (mr != NULL) {
-            mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], mr,
-                                          MPIDI_OFI_global.ctx[ctx_idx].ep, NULL);
-            MPIR_ERR_CHECK(mpi_errno);
             desc = fi_mr_desc(mr);
-            /* Cache the mrs for closing during Finalize() */
-            struct MPIDI_GPU_RDMA_queue_t *new_mr =
-                MPL_malloc(sizeof(struct MPIDI_GPU_RDMA_queue_t), MPL_MEM_BUFFER);
-            MPIR_ERR_CHKANDJUMP1(new_mr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                                 "GPU RDMA MR alloc");
-            new_mr->mr = mr;
-            DL_APPEND(MPIDI_OFI_global.gdr_mrs, new_mr);
         }
-
     }
+
     if ((!dt_contig || force_gpu_pack) && data_sz) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && !force_gpu_pack &&
             ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping) ||
@@ -487,8 +471,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                                           dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag);
                 goto fn_exit;
             }
-        } else if (MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG && data_sz && MPIDI_OFI_ENABLE_HMEM &&
-                   MPIDI_OFI_ENABLE_MR_HMEM) {
+        } else if (MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG && data_sz && MPIDI_OFI_ENABLE_HMEM) {
             mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
                                               context_offset, addr, vni_src, vni_dst, request,
                                               dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag);
