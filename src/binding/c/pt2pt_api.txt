@@ -50,7 +50,7 @@ MPI_Bsend_init:
                                 MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
 
     /* return the handle of the request to the user */
     MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
@@ -245,7 +245,7 @@ MPI_Irsend:
                             MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
 
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for irsend, lower-level access is
@@ -265,7 +265,7 @@ MPI_Isend:
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
 
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for isend, lower-level access is
@@ -284,7 +284,7 @@ MPI_Issend:
                             MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
 
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for issend, lower-level access is
@@ -477,7 +477,7 @@ MPI_Send_init:
                                MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
 
     /* return the handle of the request to the user */
     MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);

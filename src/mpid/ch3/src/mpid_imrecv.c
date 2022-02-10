@@ -28,6 +28,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
     rreq->dev.user_buf = buf;
     rreq->dev.user_count = count;
     rreq->dev.datatype = datatype;
+    MPII_RECVQ_REMEMBER(rreq, rreq->status.MPI_SOURCE, rreq->status.MPI_TAG, rreq->comm->recvcontext_id, buf, count);
 
 #ifdef ENABLE_COMM_OVERRIDES
     MPIDI_Comm_get_vc(comm, rreq->status.MPI_SOURCE, &vc);
