@@ -1738,7 +1738,6 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
 int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
                         MPL_pointer_attr_t * dest_attr, size_t size)
 {
-#ifdef MPL_HAVE_X86INTRIN_H
     int mpl_err = MPL_SUCCESS;
     char *d = (char *) dest;
     const char *s = (const char *) src;
@@ -1758,7 +1757,7 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
         if (mpl_err != MPL_SUCCESS)
             goto fn_fail;
     }
-
+#if defined(MPL_HAVE_MM512_STOREU_SI512)
     while (n >= 64) {
         _mm512_storeu_si512((__m512i *) d, _mm512_loadu_si512((__m512i const *) s));
         d += 64;
@@ -1771,6 +1770,16 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
         s += 32;
         n -= 32;
     }
+#elif defined(MPL_HAVE_MM256_STOREU_SI256)
+    while (n >= 32) {
+        _mm256_storeu_si256((__m256i *) d, _mm256_loadu_si256((__m256i const *) s));
+        d += 32;
+        s += 32;
+        n -= 32;
+    }
+#else
+    goto fallback;
+#endif
     if (n & 16) {
         _mm_storeu_si128((__m128i *) d, _mm_loadu_si128((__m128i const *) s));
         d += 16;
@@ -1798,11 +1807,14 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
     if (n == 1) {
         *(char *) d = *(char *) s;
     }
+    goto fn_exit;
+
+  fallback:
+    memcpy(d, s, n);
 
   fn_exit:
     return mpl_err;
   fn_fail:
-#endif
     return MPL_ERR_GPU_INTERNAL;
 }
 
