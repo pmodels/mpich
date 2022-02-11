@@ -1,4 +1,33 @@
 dnl
+dnl Check PIE cflags and use it whenever we are linking C objects with Fortran.
+dnl
+dnl To link C objects with Fortran compiler, the objects often require to be
+dnl PIE objects. Some compiler may produce non-PIE objects unless explicit
+dnl option is given, for example, clang under -O2. Note that this is
+dnl unnecessary when compiler is configured to set PIE by default, such as
+dnl gcc on Debian/Ubuntu systems. Setting -fPIE during config test on such
+dnl system should not make a difference.
+dnl
+AC_DEFUN([PAC_C_CHECK_fPIE_OK], [
+    PAC_C_CHECK_COMPILER_OPTION([-fPIE], [fPIE_OK=yes], [fPIE_OK=no])
+])
+
+AC_DEFUN([PAC_LANG_PUSH_C_PIE], [
+    AC_LANG_PUSH([C])
+    if test "$fPIE_OK" = "yes" ; then
+        PAC_PUSH_FLAG(CFLAGS)
+        CFLAGS="$CFLAGS -fPIE"
+    fi
+])
+
+AC_DEFUN([PAC_LANG_POP_C_PIE], [
+    if test "$fPIE_OK" = "yes" ; then
+        PAC_POP_FLAG(CFLAGS)
+    fi
+    AC_LANG_POP([C])
+])
+
+dnl
 dnl/*D
 dnl PAC_PROG_F77_NAME_MANGLE - Determine how the Fortran compiler mangles
 dnl names 
@@ -78,7 +107,7 @@ dnl
 # it may be that the programs have to be linked with the Fortran compiler,
 # not the C compiler.  Try reversing the language used for the test
 if test  "$pac_found" != "yes" ; then
-    AC_LANG_PUSH([C])
+    PAC_LANG_PUSH_C_PIE
     for call in "" __stdcall ; do
         for sym in my_name_ my_name__ my_name MY_NAME MY_name MY_name_ NONE ; do
             AC_COMPILE_IFELSE([
@@ -101,7 +130,7 @@ if test  "$pac_found" != "yes" ; then
         done
         test "$pac_found" = "yes" && break
     done
-    AC_LANG_POP([C])
+    PAC_LANG_POP_C_PIE
 fi
 if test "$pac_found" = "yes" ; then
     case ${sym} in
@@ -285,6 +314,7 @@ AC_DEFINE_UNQUOTED(PAC_TYPE_NAME,$PAC_CV_NAME,[Define size of PAC_TYPE_NAME])
 undefine([PAC_TYPE_NAME])
 undefine([PAC_CV_NAME])
 ])
+
 dnl
 dnl This version uses a Fortran program to link programs.
 dnl This is necessary because some compilers provide shared libraries
@@ -306,7 +336,7 @@ dnl     ifelse([$2],[],
 dnl         [AC_MSG_WARN([No value provided for size of $1 when cross-compiling])],
 dnl         [eval PAC_CV_NAME=$2])
 dnl fi
-AC_LANG_PUSH([C])
+PAC_LANG_PUSH_C_PIE
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
 #include <stdio.h>
@@ -359,7 +389,7 @@ int cisize_(char *i1p, char *i2p) {
 ],[
     AC_MSG_WARN([Unable to compile the C routine for finding the size of a $1])
 ])
-AC_LANG_POP([C])
+PAC_LANG_POP_C_PIE
 ])
 dnl Endof ac_cache_check
 if test "$PAC_CV_NAME" = "-9999" ; then
@@ -807,7 +837,7 @@ pac_linkwithC=no
 
 dnl Use F77 as a linker to compile a Fortran main and C subprogram.
 if test "$pac_linkwithC" != "yes" ; then
-    AC_LANG_PUSH([C])
+    PAC_LANG_PUSH_C_PIE
     AC_COMPILE_IFELSE([],[
         PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
         saved_LIBS="$LIBS"
@@ -821,7 +851,7 @@ if test "$pac_linkwithC" != "yes" ; then
         LIBS="$saved_LIBS"
         rm -f pac_conftest.$OBJEXT
     ])
-    AC_LANG_POP([C])
+    PAC_LANG_POP_C_PIE
 fi
 
 dnl Use C as a linker and FLIBS to compile a Fortran main and C subprogram.
@@ -925,7 +955,7 @@ esac
 AC_CACHE_CHECK([for libraries to link Fortran main with C stdio routines],
 pac_cv_prog_f77_and_c_stdio_libs,[
 pac_cv_prog_f77_and_c_stdio_libs=unknown
-AC_LANG_PUSH([C])
+PAC_LANG_PUSH_C_PIE
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
 #include <stdio.h>
@@ -958,7 +988,7 @@ int $confname(int a) {
     LIBS="$saved_LIBS"
     rm -f pac_conftest.$OBJEXT
 ])
-AC_LANG_POP([C])
+PAC_LANG_POP_C_PIE
 ])
 dnl Endof ac_cache_check
 if test "$pac_cv_prog_f77_and_c_stdio_libs" != "none" \
@@ -1060,7 +1090,7 @@ pac_linkwithC=no
 
 dnl Use F77 as a linker to compile a Fortran main and C subprogram.
 if test "$pac_linkwithC" != "yes" ; then
-    AC_LANG_PUSH([C])
+    PAC_LANG_PUSH_C_PIE
     AC_COMPILE_IFELSE([],[
         PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
         saved_LIBS="$LIBS"
@@ -1076,7 +1106,7 @@ if test "$pac_linkwithC" != "yes" ; then
             rm -f pac_conftest.$OBJEXT
         fi
     ])
-    AC_LANG_POP([C])
+    PAC_LANG_POP_C_PIE
 fi
 
 dnl Use C as a linker and FLIBS to compile a Fortran main and C subprogram.
@@ -1313,7 +1343,7 @@ pac_mpi_fint="$1"
 AC_MSG_CHECKING([for values of Fortran logicals])
 AC_CACHE_VAL(pac_cv_prog_f77_true_false_value,[
 pac_cv_prog_f77_true_false_value=""
-AC_LANG_PUSH([C])
+PAC_LANG_PUSH_C_PIE
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
 #include <stdio.h>
@@ -1362,7 +1392,7 @@ void ftest_( $pac_mpi_fint *itrue, $pac_mpi_fint *ifalse )
     LIBS="$saved_LIBS"
     rm -f pac_conftest.$OBJEXT
 ])
-AC_LANG_POP([C])
+PAC_LANG_POP_C_PIE
 ])
 dnl Endof ac_cache_val
 if test "X$pac_cv_prog_f77_true_false_value" != "X" ; then

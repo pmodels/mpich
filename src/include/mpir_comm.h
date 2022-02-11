@@ -10,6 +10,9 @@
 #include "../mpid/common/hcoll/hcollpre.h"
 #endif
 
+/* Maximum radix up to which the nbrs from
+ * recursive exchange algorithm will be stored in the communicator */
+#define MAX_RADIX 8
 /*E
   MPIR_Comm_kind_t - Name the two types of communicators
   E*/
@@ -219,6 +222,15 @@ struct MPIR_Comm {
         int pof2;               /* Nearest (smaller than or equal to) power of 2
                                  * to the number of ranks in the communicator.
                                  * To be used during collective communication */
+        int pofk[MAX_RADIX - 1];
+        int k[MAX_RADIX - 1];
+        int step1_sendto[MAX_RADIX - 1];
+        int step1_nrecvs[MAX_RADIX - 1];
+        int *step1_recvfrom[MAX_RADIX - 1];
+        int step2_nphases[MAX_RADIX - 1];
+        int **step2_nbrs[MAX_RADIX - 1];
+        int nbrs_defined[MAX_RADIX - 1];
+        void **recexch_allreduce_nbr_buffer;
     } coll;
 
     void *csel_comm;            /* collective selector handle */

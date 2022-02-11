@@ -37,10 +37,10 @@ if test -z "${device_args}" ; then
   AS_CASE([$host_os],
   [linux*],[
     dnl attempt to choose a netmod from the installed libraries
-    if test $have_ucx = "yes" -a $have_libfabric = "no" ; then
+    if test $pac_have_ucx = "yes" -a $pac_have_libfabric = "no" ; then
         pac_ch4_choice="ucx-have-ucx"
         ch4_netmods=ucx
-    elif test $have_ucx = "no" -a $have_libfabric = "yes" ; then
+    elif test $pac_have_ucx = "no" -a $pac_have_libfabric = "yes" ; then
         pac_ch4_choice="ofi-have-libfabric"
         ch4_netmods=ofi
     else

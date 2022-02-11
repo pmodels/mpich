@@ -141,6 +141,10 @@ fi
 
 AC_SUBST(DTP_SWITCH)
 
+# runtests options
+RUNTESTS_OPTS=
+AC_SUBST(RUNTESTS_OPTS)
+
 AC_ARG_ENABLE(cxx,
         [AC_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
 
@@ -400,9 +404,11 @@ else
         CXX=$MPICXX
     fi
     if test -z "$MPIEXEC" ; then
-        AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
+        AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME mpiexec)
     fi
 fi
+dnl MPIEXEC is used in the Makefile testing target.
+AC_SUBST([MPIEXEC])
 
 # Make sure we export CC before configuring DTPools, since MPI is
 # needed to build the library.
@@ -491,11 +497,9 @@ AC_SUBST(ckpointdir)
 
 #
 # Only run xfail tests if enabled
-RUN_XFAIL=false
 if test "$enable_xfail" = "yes" ; then
-    RUN_XFAIL=true
+    RUNTESTS_OPTS="$RUNTESTS_OPTS -runxfail"
 fi
-AC_SUBST(RUN_XFAIL)
 
 PAC_LOAD_BASE_CACHE
 PAC_VPATH_CHECK()
@@ -552,10 +556,8 @@ if test "$enable_checkfaults" = "yes" ; then
 fi
 AC_SUBST(faultsdir)
 #
-MPI_IS_STRICT=false
-AC_SUBST(MPI_IS_STRICT)
 if test "$enable_strictmpi" = "yes" ; then
-    MPI_IS_STRICT=true
+    RUNTESTS_OPTS="$RUNTESTS_OPTS -strict"
     AC_DEFINE(USE_STRICT_MPI,1,[Define if only operations defined in MPI should be tested])
 fi
 #
@@ -1257,6 +1259,25 @@ if test "$enable_fc" = yes ; then
     AC_LANG_POP([Fortran])
 fi
 
+if test "$f90dir" = "f90" ; then
+    AC_MSG_CHECKING([that mpi module contains choice buffer routines])
+    AC_LANG_PUSH([Fortran])
+    AC_COMPILE_IFELSE([
+        AC_LANG_SOURCE([
+            program main
+            use mpi, skip_mpi_send => mpi_send
+            end
+        ])
+    ],[
+        AC_MSG_RESULT(yes)
+    ],[
+        AC_MSG_RESULT(no)
+        # patch f90/profile tests
+        find "$srcdir/f90/profile" -name "*.f90" -exec sed -i "s/use mpi, skip_.*/use mpi/" {} \;
+    ])
+    AC_LANG_POP([Fortran])
+fi
+
 f08dir="#"
 AC_SUBST(f08dir)
 if test "$enable_f08" = "yes" ; then
@@ -1463,19 +1484,9 @@ AC_PATH_PROG(PERL,perl)
 AC_SUBST(PERL)
 AC_SUBST(otherlangs)
 AC_SUBST(threadsdir)
-AC_SUBST(MPIEXEC)
 AC_SUBST(MAKE)
 if test -z "$MPILIBNAME" ; then MPILIBNAME=mpich ; fi
 AC_SUBST(MPILIBNAME)
-dnl MPI_SOURCE may be set as an environment variable giving the location
-dnl of the MPI implementation.  This is used only in runtests to include
-dnl the location of the source of the MPI implementation into the XML
-dnl summary file
-AC_SUBST(MPI_SOURCE)
-
-# We need either mpiexec or mpirun.  If we don't find them,
-# the user will need to determine how to run a program
-AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
 
 # TODO: use variables such as has_f77 etc. instead of double use $f77dir etc.
 AM_CONDITIONAL([HAS_F77], [test $f77dir = f77])
@@ -1492,7 +1503,6 @@ AC_CONFIG_COMMANDS([chmod],[
 dnl Note that this format for AC_OUTPUT can cause problems for autoconf
 dnl run under cygwin
 AC_OUTPUT(maint/testmerge \
-          runtests \
           checktests \
           Makefile \
           basic/Makefile \

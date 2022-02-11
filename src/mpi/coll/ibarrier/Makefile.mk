@@ -9,4 +9,6 @@
 
 mpi_core_sources +=                                      \
     src/mpi/coll/ibarrier/ibarrier_intra_sched_recursive_doubling.c  \
-    src/mpi/coll/ibarrier/ibarrier_inter_sched_bcast.c
+    src/mpi/coll/ibarrier/ibarrier_inter_sched_bcast.c \
+    src/mpi/coll/ibarrier/ibarrier_intra_tsp_recexch.c \
+    src/mpi/coll/ibarrier/ibarrier_intra_tsp_dissem.c

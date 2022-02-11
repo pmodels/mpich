@@ -8,7 +8,7 @@
 !      STATUS_IGNORE, STATUSES_IGNORE
        integer si(mpi_status_size), ssi(mpi_status_size,1)
 !      BOTTOM, IN_PLACE, UNWEIGHTED, WEIGHTED, ERRCODES_IGNORE
-       integer bt, ip, uw, we, ecsi(1)
+       integer bt, ip, uw(1), we(1), ecsi(1)
 !      ARGVS_NULL, ARGV_NULL
        character*1 asn(1,1), an(1)
        common /MPIFCMB5/ uw

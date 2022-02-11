@@ -10,6 +10,9 @@ from local_python import RE
 import glob
 
 def main():
+    # currently support: -single-source
+    G.parse_cmdline()
+
     binding_dir = G.get_srcdir_path("src/binding")
     c_dir = "src/binding/c"
     func_list = load_C_func_list(binding_dir)
@@ -31,8 +34,17 @@ def main():
         G.mpi_declares.append(get_declare_function(func, False, "proto"))
 
     # -- Generating code --
-    for func in func_list:
+    G.out = []
+    # internal function to dump G.out into filepath
+    def dump_out(file_path):
+        G.check_write_path(file_path)
+        dump_c_file(file_path, G.out)
+        # add to mpi_sources for dump_Makefile_mk()
+        G.mpi_sources.append(file_path)
         G.out = []
+
+    # ----
+    for func in func_list:
         G.err_codes = {}
 
         # dumps the code to G.out array
@@ -44,13 +56,14 @@ def main():
         else:
             dump_mpi_c(func, False)
 
-        file_path = get_func_file_path(func, c_dir)
-        G.check_write_path(file_path)
-        dump_c_file(file_path, G.out)
+        if 'single-source' not in G.opts:
+            # dump individual functions in separate source files
+            dump_out(get_func_file_path(func, c_dir))
+    if 'single-source' in G.opts:
+        # otherwise, dump all functions in binding.c
+        dump_out(c_dir + "/c_binding.c")
 
-        # add to mpi_sources for dump_Makefile_mk()
-        G.mpi_sources.append(file_path)
-
+    # -- Dump other files --
     G.check_write_path(c_dir)
     G.check_write_path("src/include")
     G.check_write_path("src/mpi_t")
