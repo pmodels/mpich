@@ -17,12 +17,19 @@ struct HYD_ui_mpich_info_s {
         ASCENDING = 1,
         DESCENDING = 2
     } sort_order;
+
+    char *config_file;
+    int reading_config_file;
+    int hostname_propagation;
 };
 
 extern struct HYD_ui_mpich_info_s HYD_ui_mpich_info;
+extern struct HYD_arg_match_table HYD_mpiexec_match_table[];
 
 HYD_status HYD_uii_mpx_get_parameters(char **t_argv);
+HYD_status HYD_uii_get_current_exec(struct HYD_exec **exec);
 
 extern struct HYD_exec *HYD_uii_mpx_exec_list;
+
 
 #endif /* MPIEXEC_H_INCLUDED */
