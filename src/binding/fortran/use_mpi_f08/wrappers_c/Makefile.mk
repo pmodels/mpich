@@ -9,7 +9,6 @@ mpi_fc_sources += \
 	src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.c \
 	src/binding/fortran/use_mpi_f08/wrappers_c/comm_spawn_c.c \
 	src/binding/fortran/use_mpi_f08/wrappers_c/comm_spawn_multiple_c.c \
-	src/binding/fortran/use_mpi_f08/wrappers_c/f_sync_reg_c.c \
 	src/binding/fortran/use_mpi_f08/wrappers_c/utils.c
 
 AM_CPPFLAGS += -I${main_top_srcdir}/src/binding/fortran/use_mpi_f08/wrappers_c -Isrc/binding/fortran/use_mpi_f08/wrappers_c

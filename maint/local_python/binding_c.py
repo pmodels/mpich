@@ -62,8 +62,7 @@ def dump_mpi_c(func, is_large=False):
         dump_function_internal(func, kind="normal")
     G.out.append("")
 
-    dump_manpage(func)
-    G.out.append("")
+    # NOTE: dump_manpage is now called inside dump_qmpi_wrappers
 
     # Create the MPI and QMPI wrapper functions that will call the above, "real" version of the
     # function in the MPII prefix
@@ -159,7 +158,7 @@ def dump_mpir_impl_h(f):
         print("", file=Out)
         print("#endif /* MPIR_IMPL_H_INCLUDED */", file=Out)
 
-def get_qmpi_decl_from_func_decl(func_decl):
+def get_qmpi_decl_from_func_decl(func_decl, kind=""):
     if RE.match(r'(.*) (MPIX?_\w+)\((.*?)\)(.*)', func_decl):
         T, name, args, tail = RE.m.group(1,2,3,4)
     else:
@@ -170,11 +169,12 @@ def get_qmpi_decl_from_func_decl(func_decl):
     else:
         t = "%s Q%s(QMPI_Context context, int tool_id, %s)" % (T, name, args)
 
-    while RE.search(r'MPICH_ATTR_POINTER_WITH_TYPE_TAG\((\d+),(\d+)\)(.*)', tail):
-        i1, i2, tail = RE.m.group(1, 2, 3)
-        t += " MPICH_ATTR_POINTER_WITH_TYPE_TAG(%d,%d)" % (int(i1) + 2, int(i2) + 2)
+    if kind == 'proto':
+        while RE.search(r'MPICH_ATTR_POINTER_WITH_TYPE_TAG\((\d+),(\d+)\)(.*)', tail):
+            i1, i2, tail = RE.m.group(1, 2, 3)
+            t += " MPICH_ATTR_POINTER_WITH_TYPE_TAG(%d,%d)" % (int(i1) + 2, int(i2) + 2)
 
-    t += " MPICH_API_PUBLIC"
+        t += " MPICH_API_PUBLIC"
 
     return t
 
@@ -292,7 +292,7 @@ def dump_mpi_proto_h(f):
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
             if need_skip_qmpi(m.group(1)):
                 continue
-            func_decl = get_qmpi_decl_from_func_decl(func_decl)
+            func_decl = get_qmpi_decl_from_func_decl(func_decl, 'proto')
             dump_proto_line(func_decl, Out)
 
         print("", file=Out)
@@ -768,6 +768,10 @@ def dump_qmpi_wrappers(func, is_large):
     dump_line_with_break("    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[%s_T]%s);" % (func_name.upper(), parameters));
     G.out.append("}")
     G.out.append("#else /* ENABLE_QMPI */")
+
+    dump_manpage(func)
+    G.out.append("")
+
     dump_line_with_break(func_decl)
     G.out.append("{")
     if func_name == "MPI_Pcontrol":

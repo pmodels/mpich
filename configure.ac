@@ -446,6 +446,9 @@ AC_ARG_ENABLE(fortran,
 	no|none   - No Fortran support
 ],,[enable_fortran=all])
 
+AC_ARG_ENABLE(f08,
+        AS_HELP_STRING([--disable-f08], [Whether to disable "use mpi_f08" interface]),,[enable_f08=yes])
+
 AC_ARG_ENABLE(cxx,
 	AS_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
 
@@ -559,17 +562,15 @@ fi
 AC_SUBST(ENABLE_QMPI)
 
 AC_ARG_ENABLE([two-level-namespace],
-              [AS_HELP_STRING([--enable-two-level-namespace],
-                              [(Darwin only) Build shared libraries and programs
-                               built with the mpicc/mpifort/etc. compiler
-                               wrappers with '-Wl,-commons,use_dylibs' and
-                               without '-Wl,-flat_namespace'.  This may make the
-                               MPICH installation and MPI programs more
-                               compatible with other libraries.  Only enable
-                               this option if you really know what these linker
-                               options imply.])],
+              [AS_HELP_STRING([--disable-two-level-namespace],
+                              [(Darwin only) Add `-Wl,-flat_namespace` to
+                               mpicc/mpifort/etc. compiler wrappers.
+                               This may fix some issues due to not resolving
+                               MPI constants, such as MPI_IN_PLACE.
+                               Try disable this option if you encounter these issues
+                               on Mac OS.])],
               [],
-              [enable_two_level_namespace=no])
+              [enable_two_level_namespace=yes])
 
 AC_ARG_ENABLE(multi-aliases,
 	AS_HELP_STRING([--enable-multi-aliases],
@@ -643,6 +644,7 @@ fi
 PAC_POP_FLAG([CFLAGS])
 
 AC_USE_SYSTEM_EXTENSIONS
+PAC_C_NO_COMMON
 
 dnl now that autoconf and core compilers are setup, init automake and libtool
 dnl
@@ -2037,19 +2039,15 @@ if test "$enable_fc" = "yes" ; then
     fi
 fi
 
-f08_works=no
-if test "$enable_fc" = "yes" ; then
-    PAC_FC_2008_SUPPORT([f08_works=yes],[f08_works=no])
+if test "$enable_f08" = "yes" ; then
+    PAC_FC_2008_SUPPORT([:],[enable_f08=no])
 fi
-AM_CONDITIONAL([BUILD_F08_BINDING], [test "$f08_works" = "yes"])
+AM_CONDITIONAL([BUILD_F08_BINDING], [test "$enable_f08" = "yes"])
 
-if test "$f08_works" = "yes" ; then
-    status_f08_works=1
+if test "$enable_f08" = "yes" ; then
     bindings="$bindings f08"
-else
-    status_f08_works=0
+    AC_DEFINE(HAVE_F08_BINDING, 1, [Define to 1 if we have Fortran 2008 binding])
 fi
-AC_DEFINE_UNQUOTED(HAVE_F08_BINDING, $status_f08_works, [Define to 1 to enable Fortran 2008 binding])
 
 # Set defaults for these values so that the Makefile in src/bindings/f90
 # is valid even if fc is not enabled (this is necessary for the
@@ -2759,10 +2757,6 @@ AC_CHECK_ALIGNOF(long long)
 AC_CHECK_ALIGNOF(long double)
 AC_CHECK_ALIGNOF(short)
 AC_CHECK_ALIGNOF(int)
-AC_CHECK_ALIGNOF(int8_t)
-AC_CHECK_ALIGNOF(int16_t)
-AC_CHECK_ALIGNOF(int32_t)
-AC_CHECK_ALIGNOF(int64_t)
 AC_CHECK_ALIGNOF(bool)
 AC_CHECK_ALIGNOF(wchar_t)
 
@@ -2773,50 +2767,44 @@ AC_DEFINE(HAVE_SYS_BITYPES_H,1,[Define if sys/bitypes.h exists])])
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
 
-# Check for types
-AC_TYPE_INT8_T
-AC_TYPE_INT16_T
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
+AC_CHECK_SIZEOF(int8_t)
+AC_CHECK_SIZEOF(int16_t)
+AC_CHECK_SIZEOF(int32_t)
+AC_CHECK_SIZEOF(int64_t)
 
-# Temporary issue in autoconf integer type checking (remove when
-# autoconf fixes this or provides a workaround for it)
-if test "$ac_cv_c_int8_t" != no ; then
+AC_CHECK_SIZEOF(uint8_t)
+AC_CHECK_SIZEOF(uint16_t)
+AC_CHECK_SIZEOF(uint32_t)
+AC_CHECK_SIZEOF(uint64_t)
+
+AC_CHECK_ALIGNOF(int8_t)
+AC_CHECK_ALIGNOF(int16_t)
+AC_CHECK_ALIGNOF(int32_t)
+AC_CHECK_ALIGNOF(int64_t)
+
+if test "$ac_cv_sizeof_int8_t" -eq 1 ; then
     AC_DEFINE(HAVE_INT8_T,1,[Define if int8_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_int16_t" != no ; then
+if test "$ac_cv_sizeof_int16_t" -eq 2 ; then
     AC_DEFINE(HAVE_INT16_T,1,[Define if int16_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_int32_t" != no ; then
+if test "$ac_cv_sizeof_int32_t" -eq 4 ; then
     AC_DEFINE(HAVE_INT32_T,1,[Define if int32_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_int64_t" != no ; then
+if test "$ac_cv_sizeof_int64_t" -eq 8 ; then
     AC_DEFINE(HAVE_INT64_T,1,[Define if int64_t is supported by the C compiler])
 fi
 
-# The following make these definitions:
-#   define _UINT<n>_T 1
-# if uint<n>_t is available.  E.g., define _UINT8_T as 1 if uint8_t is available
-# if not available, define uint<n>_t as the related C type, e.g.,
-#   define uint8_t unsigned char
-#
-AC_TYPE_UINT8_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-
-# Temporary issue in autoconf integer type checking (remove when
-# autoconf fixes this or provides a workaround for it)
-if test "$ac_cv_c_uint8_t" != no ; then
+if test "$ac_cv_sizeof_uint8_t" -eq 1 ; then
     AC_DEFINE(HAVE_UINT8_T,1,[Define if uint8_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_uint16_t" != no ; then
+if test "$ac_cv_sizeof_uint16_t" -eq 2 ; then
     AC_DEFINE(HAVE_UINT16_T,1,[Define if uint16_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_uint32_t" != no ; then
+if test "$ac_cv_sizeof_uint32_t" -eq 4 ; then
     AC_DEFINE(HAVE_UINT32_T,1,[Define if uint32_t is supported by the C compiler])
 fi
-if test "$ac_cv_c_uint64_t" != no ; then
+if test "$ac_cv_sizeof_uint64_t" -eq 8 ; then
     AC_DEFINE(HAVE_UINT64_T,1,[Define if uint64_t is supported by the C compiler])
 fi
 
@@ -4159,7 +4147,7 @@ if test "X$enable_shared" = "Xyes" ; then
     )
 fi
 
-if test "X$f08_works" = "Xyes"; then
+if test "$enable_f08" = "yes"; then
     AS_CASE([$MPI_AINT],
         [short],       [F08_C_AINT="c_short"],
         [int],         [F08_C_AINT="c_int"],
@@ -4200,7 +4188,7 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
-if test "$f08_works" = "yes" ; then
+if test "$enable_f08" = "yes" ; then
     PAC_CHECK_PYTHON
     PAC_FC_CHECK_REAL128
     cmd="$PYTHON $srcdir/maint/gen_binding_f08.py"
