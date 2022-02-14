@@ -11,7 +11,6 @@
 
 static int hostname_propagation = -1;
 static char *config_file = NULL;
-static char **config_argv = NULL;
 static int reading_config_file = 0;
 static struct HYD_arg_match_table match_table[];
 
@@ -329,6 +328,7 @@ static HYD_status mfile_fn(char *arg, char ***argv)
                         "duplicate host file setting\n");
 
     if (strcmp(**argv, "HYDRA_USE_LOCALHOST")) {
+        HYD_server_info.node_list = NULL;
         status = HYDU_parse_hostfile(**argv, &HYD_server_info.node_list, HYDU_process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     } else {
@@ -1566,6 +1566,7 @@ static HYD_status set_default_values(void)
     }
 
     if (HYD_server_info.node_list == NULL && MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
+        HYD_server_info.node_list = NULL;
         status = HYDU_parse_hostfile(tmp, &HYD_server_info.node_list, HYDU_process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
@@ -1629,9 +1630,10 @@ static HYD_status set_default_values(void)
     goto fn_exit;
 }
 
-static HYD_status process_config_token(char *token, int newline, struct HYD_node **node_list)
+static HYD_status process_config_token(char *token, int newline, void *data)
 {
     static int idx = 0;
+    char **config_argv = data;
 
     if (idx && newline && strcmp(config_argv[idx - 1], ":")) {
         /* If this is a newline, but not the first one, and the
@@ -1641,6 +1643,7 @@ static HYD_status process_config_token(char *token, int newline, struct HYD_node
     }
 
     config_argv[idx++] = MPL_strdup(token);
+    assert(idx < HYD_NUM_TMP_STRINGS);
     config_argv[idx] = NULL;
 
     return HYD_SUCCESS;
@@ -1757,10 +1760,10 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 
   config_file_check_exit:
     if (config_file) {
-        HYDU_ASSERT(config_argv == NULL, status);
+        char **config_argv;
         HYDU_MALLOC_OR_JUMP(config_argv, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
 
-        status = HYDU_parse_hostfile(config_file, NULL, process_config_token);
+        status = HYDU_parse_hostfile(config_file, config_argv, process_config_token);
         HYDU_ERR_POP(status, "error parsing config file\n");
 
         reading_config_file = 1;
