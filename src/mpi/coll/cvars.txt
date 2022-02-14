@@ -20,6 +20,7 @@ cvars:
         nb            - Force nonblocking algorithm
         smp           - Force smp algorithm
         dissemination - Force dissemination algorithm
+        k_dissemination - Force high radix dissemination algorithm
 
     - name        : MPIR_CVAR_BARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -33,6 +34,16 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         bcast - Force bcast algorithm
         nb    - Force nonblocking algorithm
+
+    - name        : MPIR_CVAR_BARRIER_DISSEM_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for dissemination exchange based barrier algorithm
 
     - name        : MPIR_CVAR_IBARRIER_RECEXCH_KVAL
       category    : COLLECTIVE

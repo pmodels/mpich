@@ -42,6 +42,9 @@
 
 barrier-intra:
     dissemination
+    k_dissemination
+        extra_params: k
+        cvar_params: DISSEM_KVAL
     smp
         restrictions: parent-comm
 barrier-inter:
