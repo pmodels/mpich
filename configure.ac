@@ -1780,6 +1780,11 @@ if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
         programs, you need to install a Fortran compiler such as gfortran
         or ifort before you can proceed.])
     fi
+
+    # Determine the extension for Fortran 90 files (it isn't always .f90)
+    PAC_FC_EXT
+    FCEXT=$ac_fc_srcext
+    AC_SUBST(FCEXT)
 fi
 
 if test "$enable_f77" = yes ; then
@@ -2067,10 +2072,6 @@ if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
             FC="no"
         fi
     fi
-
-    # Determine the extension for Fortran 90 files (it isn't always .f90)
-    FCEXT=$ac_fc_srcext
-    AC_SUBST(FCEXT)
 
     if test "$FC" = "no" ; then
         if test "$fc_rejected" = "yes" ; then
