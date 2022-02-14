@@ -514,11 +514,10 @@ HYD_status HYDU_parse_array(char ***argv, struct HYD_arg_match_table *match_tabl
 HYD_status HYDU_set_str(char *arg, char **var, const char *val);
 HYD_status HYDU_set_int(char *arg, int *var, int val);
 char *HYDU_getcwd(void);
-HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **node_list);
+HYD_status HYDU_process_mfile_token(char *token, int newline, void *data);
 char *HYDU_get_abs_wd(const char *wd);
-HYD_status HYDU_parse_hostfile(const char *hostfile, struct HYD_node **node_list,
-                               HYD_status(*process_token) (char *token, int newline,
-                                                           struct HYD_node ** node_list));
+HYD_status HYDU_parse_hostfile(const char *hostfile, void *data,
+                               HYD_status(*process_token) (char *token, int newline, void *data));
 char *HYDU_find_full_path(const char *execname);
 HYD_status HYDU_send_strlist(int fd, char **strlist);
 
