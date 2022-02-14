@@ -309,6 +309,8 @@ algorithms:
             sched_bcast
         intra-blocking:
             dissemination
+            k_dissemination
+                .MPIR_CVAR_BARRIER_DISSEM_KVAL=2,3,4,8
         intra-nonblocking:
             sched_recursive_doubling
             tsp_recexch
