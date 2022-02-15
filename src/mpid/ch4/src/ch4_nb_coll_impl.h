@@ -47,10 +47,43 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Ibcast_intra_composition_ ## NAME(void *buffe
     goto fn_exit;                                                                                        \
 }
 
+#define MPIDI_IBARRIER_FUNC_DECL(NAME)                                                                       \
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ibarrier_sched_intra_composition_ ## NAME(MPIR_Comm * comm,               \
+                                                                             MPIR_TSP_sched_t sched,       \
+                                                                             bool is_persist);               \
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ibarrier_intra_composition_ ## NAME(MPIR_Comm * comm,                     \
+                                                                       MPIR_Request ** req)                  \
+{                                                                                                            \
+    int mpi_errno = MPI_SUCCESS;                                                                             \
+    MPIR_TSP_sched_t sched;                                                                                 \
+                                                                                                             \
+    *req = NULL;                                                                                             \
+                                                                                                             \
+    /* generate the schedule */                                                                              \
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);                                                         \
+    MPIR_ERR_CHECK(mpi_errno);                                                                               \
+                                                                                                             \
+    mpi_errno =                                                                                              \
+        MPIDI_Ibarrier_sched_intra_composition_ ## NAME(comm, sched, false);  \
+    MPIR_ERR_CHECK(mpi_errno);                                                                               \
+                                                                                                             \
+    /* start and register the schedule */                                                                    \
+    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);                                                      \
+    MPIR_ERR_CHECK(mpi_errno);                                                                               \
+                                                                                                             \
+  fn_exit:                                                                                                   \
+    return mpi_errno;                                                                                        \
+  fn_fail:                                                                                                   \
+    goto fn_exit;                                                                                            \
+}
+
 /* *INDENT-OFF* */
 MPIDI_IBCAST_FUNC_DECL(alpha)
 MPIDI_IBCAST_FUNC_DECL(beta)
 MPIDI_IBCAST_FUNC_DECL(gamma)
+
+MPIDI_IBARRIER_FUNC_DECL(alpha)
+MPIDI_IBARRIER_FUNC_DECL(beta)
 /* *INDENT-ON* */
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Ibcast_sched_intra_composition_alpha(void *buffer,
@@ -535,4 +568,97 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Ibcast_sched_intra_composition_gamma(void *bu
   fn_fail:
     goto fn_exit;
 }
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ibarrier_sched_intra_composition_alpha(MPIR_Comm * comm,
+                                                                          MPIR_TSP_sched_t sched,
+                                                                          bool is_persist)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+    int curr_vtx_id = -1, prev_vtx_id = -1;
+    MPIR_TSP_sched_t nm_sub_sched, shm_sub_sched_0, shm_sub_sched_1;
+    int n_incoming = 0;
+
+    /* do the intranode barrier on all nodes */
+    if (comm->node_comm != NULL) {
+        mpi_errno_ret = MPIR_TSP_sched_create(&shm_sub_sched_0, is_persist);
+        if (mpi_errno_ret)
+            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno_ret = MPIDI_SHM_mpi_ibarrier_sched(comm->node_comm, shm_sub_sched_0);
+#else
+        mpi_errno_ret = MPIDI_NM_mpi_ibarrier_sched(comm->node_comm, shm_sub_sched_0);
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+        if (mpi_errno_ret)
+            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+        /* Create the SHM sub-schedule vertex */
+        mpi_errno_ret =
+            MPIR_TSP_sched_sub_sched(sched, shm_sub_sched_0, n_incoming, &prev_vtx_id,
+                                     &curr_vtx_id);
+        if (mpi_errno_ret)
+            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+        n_incoming = 1;
+        prev_vtx_id = curr_vtx_id;
+    }
+
+    /* do the barrier across roots of all nodes */
+    if (comm->node_roots_comm != NULL) {
+        mpi_errno_ret = MPIR_TSP_sched_create(&nm_sub_sched, is_persist);
+        if (mpi_errno_ret)
+            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+        mpi_errno_ret = MPIDI_NM_mpi_ibarrier_sched(comm->node_roots_comm, nm_sub_sched);
+        if (mpi_errno_ret)
+            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+        /* Create the SHM sub-schedule vertex */
+        mpi_errno_ret =
+            MPIR_TSP_sched_sub_sched(sched, nm_sub_sched, n_incoming, &prev_vtx_id, &curr_vtx_id);
+        if (mpi_errno_ret)
+            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+        n_incoming = 1;
+        prev_vtx_id = curr_vtx_id;
+    }
+
+    /* release the local processes on each node by doing a barrier */
+    if (comm->node_comm != NULL) {
+        mpi_errno_ret = MPIR_TSP_sched_create(&shm_sub_sched_1, is_persist);
+        if (mpi_errno_ret)
+            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno_ret = MPIDI_SHM_mpi_ibarrier_sched(comm->node_comm, shm_sub_sched_1);
+#else
+        mpi_errno_ret = MPIDI_NM_mpi_ibarrier_sched(comm->node_comm, shm_sub_sched_1);
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+
+        if (mpi_errno_ret)
+            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+        /* Create the SHM sub-schedule vertex */
+        mpi_errno_ret =
+            MPIR_TSP_sched_sub_sched(sched, shm_sub_sched_1, n_incoming, &prev_vtx_id,
+                                     &curr_vtx_id);
+        if (mpi_errno_ret)
+            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+    }
+
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ibarrier_sched_intra_composition_beta(MPIR_Comm * comm,
+                                                                         MPIR_TSP_sched_t sched,
+                                                                         bool is_persist)
+{
+    int mpi_errno_ret = MPI_SUCCESS;
+
+    mpi_errno_ret = MPIDI_NM_mpi_ibarrier_sched(comm, &sched);
+
+    return mpi_errno_ret;
+}
+
 #endif /* CH4_NB_COLL_IMPL_H_INCLUDED */
