@@ -1034,7 +1034,7 @@ int PMI2_Nameserv_lookup(const char service_name[], const PMI2U_Info * info_ptr,
     PMI2U_ERR_CHKANDJUMP1(rc, pmi2_errno, PMI2_ERR_OTHER, "**pmi2_nameservlookup",
                           "**pmi2_nameservlookup %s", errmsg ? errmsg : "unknown");
 
-    found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &found_port, &plen);
+    found = getval(cmd.pairs, cmd.nPairs, PORT_KEY, &found_port, &plen);
     PMI2U_ERR_CHKANDJUMP1(!found, pmi2_errno, PMI2_ERR_OTHER, "**pmi2_nameservlookup",
                           "**pmi2_nameservlookup %s", "not found");
     MPL_strncpy(port, found_port, portLen);
