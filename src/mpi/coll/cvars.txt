@@ -21,6 +21,7 @@ cvars:
         smp           - Force smp algorithm
         dissemination - Force dissemination algorithm
         k_dissemination - Force high radix dissemination algorithm
+        recexch       - Force recursive exchange algorithm
 
     - name        : MPIR_CVAR_BARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -44,6 +45,27 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         k value for dissemination exchange based barrier algorithm
+
+    - name        : MPIR_CVAR_BARRIER_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for recursive exchange based allreduce based barrier
+
+    - name        : MPIR_CVAR_BARRIER_RECEXCH_SINGLE_PHASE_RECV
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This CVAR controls whether the recv is posted for one phase or two phases
+        in recexch algos. By default, we post the recvs for 2 phases.
 
     - name        : MPIR_CVAR_IBARRIER_RECEXCH_KVAL
       category    : COLLECTIVE
