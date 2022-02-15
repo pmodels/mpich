@@ -18,93 +18,9 @@ struct HYD_exec *HYD_uii_mpx_exec_list = NULL;
 struct HYD_ui_info_s HYD_ui_info;
 struct HYD_ui_mpich_info_s HYD_ui_mpich_info;
 
-static void signal_cb(int signum)
-{
-    struct HYD_cmd cmd;
-    static int sigint_count = 0;
-    int sent, closed;
-
-    HYDU_FUNC_ENTER();
-
-    cmd.type = HYD_SIGNAL;
-    cmd.signum = signum;
-
-    /* SIGINT is a partially special signal. The first time we see it,
-     * we will send it to the processes. The next time, we will treat
-     * it as a SIGKILL (user convenience to force kill processes). */
-    if (signum == SIGINT && ++sigint_count > 1)
-        cmd.type = HYD_CLEANUP;
-    else if (signum == SIGINT) {
-        /* First Ctrl-C */
-        HYDU_dump(stdout, "Sending Ctrl-C to processes as requested\n");
-        HYDU_dump(stdout, "Press Ctrl-C again to force abort\n");
-    } else if (signum == SIGCHLD) {
-        cmd.type = HYD_SIGCHLD;
-    }
-
-    HYDU_sock_write(HYD_server_info.cmd_pipe[1], &cmd, sizeof(cmd), &sent, &closed,
-                    HYDU_SOCK_COMM_MSGWAIT);
-
-    HYDU_FUNC_EXIT();
-    return;
-}
-
-#define ordered(n1, n2) \
-    (((HYD_ui_mpich_info.sort_order == ASCENDING) && ((n1)->core_count <= (n2)->core_count)) || \
-     ((HYD_ui_mpich_info.sort_order == DESCENDING) && ((n1)->core_count >= (n2)->core_count)))
-
-static int compar(const void *_n1, const void *_n2)
-{
-    struct HYD_node *n1, *n2;
-    int ret;
-
-    n1 = *((struct HYD_node **) _n1);
-    n2 = *((struct HYD_node **) _n2);
-
-    if (n1->core_count == n2->core_count)
-        ret = 0;
-    else if (n1->core_count < n2->core_count)
-        ret = -1;
-    else
-        ret = 1;
-
-    if (HYD_ui_mpich_info.sort_order == DESCENDING)
-        ret *= -1;
-
-    return ret;
-}
-
-static HYD_status qsort_node_list(void)
-{
-    struct HYD_node **node_list, *node, *new_list, *r1;
-    int count, i;
-    HYD_status status = HYD_SUCCESS;
-
-    for (count = 0, node = HYD_server_info.node_list; node; node = node->next, count++)
-        /* skip */ ;
-
-    HYDU_MALLOC_OR_JUMP(node_list, struct HYD_node **, count * sizeof(struct HYD_node *), status);
-    for (i = 0, node = HYD_server_info.node_list; node; node = node->next, i++)
-        node_list[i] = node;
-
-    qsort((void *) node_list, (size_t) count, sizeof(struct HYD_node *), compar);
-
-    r1 = new_list = node_list[0];
-    for (i = 1; i < count; i++) {
-        r1->next = node_list[i];
-        r1 = r1->next;
-        r1->next = NULL;
-    }
-    HYD_server_info.node_list = new_list;
-
-    MPL_free(node_list);
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
+static void signal_cb(int signum);
+static HYD_status qsort_node_list(void);
+static void HYD_ui_mpich_debug_print(void);
 
 int main(int argc, char **argv)
 {
@@ -399,7 +315,97 @@ HYD_status HYD_uii_get_current_exec(struct HYD_exec **exec)
     goto fn_exit;
 }
 
-void HYD_ui_mpich_debug_print(void)
+/* ---- internal routines ---- */
+
+static void signal_cb(int signum)
+{
+    struct HYD_cmd cmd;
+    static int sigint_count = 0;
+    int sent, closed;
+
+    HYDU_FUNC_ENTER();
+
+    cmd.type = HYD_SIGNAL;
+    cmd.signum = signum;
+
+    /* SIGINT is a partially special signal. The first time we see it,
+     * we will send it to the processes. The next time, we will treat
+     * it as a SIGKILL (user convenience to force kill processes). */
+    if (signum == SIGINT && ++sigint_count > 1)
+        cmd.type = HYD_CLEANUP;
+    else if (signum == SIGINT) {
+        /* First Ctrl-C */
+        HYDU_dump(stdout, "Sending Ctrl-C to processes as requested\n");
+        HYDU_dump(stdout, "Press Ctrl-C again to force abort\n");
+    } else if (signum == SIGCHLD) {
+        cmd.type = HYD_SIGCHLD;
+    }
+
+    HYDU_sock_write(HYD_server_info.cmd_pipe[1], &cmd, sizeof(cmd), &sent, &closed,
+                    HYDU_SOCK_COMM_MSGWAIT);
+
+    HYDU_FUNC_EXIT();
+    return;
+}
+
+#define ordered(n1, n2) \
+    (((HYD_ui_mpich_info.sort_order == ASCENDING) && ((n1)->core_count <= (n2)->core_count)) || \
+     ((HYD_ui_mpich_info.sort_order == DESCENDING) && ((n1)->core_count >= (n2)->core_count)))
+
+static int compar(const void *_n1, const void *_n2)
+{
+    struct HYD_node *n1, *n2;
+    int ret;
+
+    n1 = *((struct HYD_node **) _n1);
+    n2 = *((struct HYD_node **) _n2);
+
+    if (n1->core_count == n2->core_count)
+        ret = 0;
+    else if (n1->core_count < n2->core_count)
+        ret = -1;
+    else
+        ret = 1;
+
+    if (HYD_ui_mpich_info.sort_order == DESCENDING)
+        ret *= -1;
+
+    return ret;
+}
+
+static HYD_status qsort_node_list(void)
+{
+    struct HYD_node **node_list, *node, *new_list, *r1;
+    int count, i;
+    HYD_status status = HYD_SUCCESS;
+
+    for (count = 0, node = HYD_server_info.node_list; node; node = node->next, count++)
+        /* skip */ ;
+
+    HYDU_MALLOC_OR_JUMP(node_list, struct HYD_node **, count * sizeof(struct HYD_node *), status);
+    for (i = 0, node = HYD_server_info.node_list; node; node = node->next, i++)
+        node_list[i] = node;
+
+    qsort((void *) node_list, (size_t) count, sizeof(struct HYD_node *), compar);
+
+    r1 = new_list = node_list[0];
+    for (i = 1; i < count; i++) {
+        r1->next = node_list[i];
+        r1 = r1->next;
+        r1->next = NULL;
+    }
+    HYD_server_info.node_list = new_list;
+
+    MPL_free(node_list);
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static void HYD_ui_mpich_debug_print(void)
 {
     for (struct HYD_node * node = HYD_server_info.node_list; node; node = node->next) {
         HYDU_dump_noprefix(stdout, "host: %s\n", node->hostname);
