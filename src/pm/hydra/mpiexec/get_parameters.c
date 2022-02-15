@@ -9,10 +9,23 @@
 #include "ui.h"
 #include "uiu.h"
 
+/* The order of loading options:
+ *     * set default sentinel values
+ *     * command line
+ *     * config file
+ *     * environment
+ *     * reset sentinels to default
+ *
+ * Because the latter should not override the former, we use sentinel values
+ * to tell whether an options is already set.
+ */
+
 static void init_ui_mpich_info(void);
-static HYD_status set_default_values(void);
+static HYD_status check_environment(void);
+static void set_default_values(void);
 static HYD_status process_config_token(char *token, int newline, void *data);
 static HYD_status parse_args(char **t_argv, int reading_config_file);
+static HYD_status post_process(void);
 
 HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 {
@@ -119,8 +132,13 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     }
     MPL_free(post);
 
-    status = set_default_values();
-    HYDU_ERR_POP(status, "setting default values failed\n");
+    status = check_environment();
+    HYDU_ERR_POP(status, "checking environment variables\n");
+
+    set_default_values();
+
+    status = post_process();
+    HYDU_ERR_POP(status, "post processing\n");
 
     /* Preset common environment options for disabling STDIO buffering
      * in Fortran */
@@ -147,82 +165,22 @@ static void init_ui_mpich_info(void)
     HYD_ui_mpich_info.hostname_propagation = -1;
 }
 
-static HYD_status set_default_values(void)
+static void set_default_values(void)
 {
-    char *tmp;
-    struct HYD_exec *exec;
-    HYD_status status = HYD_SUCCESS;
-
-    for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        status = HYDU_correct_wdir(&exec->wdir);
-        HYDU_ERR_POP(status, "unable to correct wdir\n");
-    }
-
     if (HYD_ui_mpich_info.print_all_exitcodes == -1)
         HYD_ui_mpich_info.print_all_exitcodes = 0;
 
     if (HYD_server_info.enable_profiling == -1)
         HYD_server_info.enable_profiling = 0;
 
-    if (HYD_server_info.user_global.debug == -1 &&
-        MPL_env2bool("HYDRA_DEBUG", &HYD_server_info.user_global.debug) == 0)
+    if (HYD_server_info.user_global.debug == -1)
         HYD_server_info.user_global.debug = 0;
 
-    if (HYD_server_info.user_global.topo_debug == -1 &&
-        MPL_env2bool("HYDRA_TOPO_DEBUG", &HYD_server_info.user_global.topo_debug) == 0)
+    if (HYD_server_info.user_global.topo_debug == -1)
         HYD_server_info.user_global.topo_debug = 0;
-
-    /* don't clobber existing iface values from the command line */
-    if (HYD_server_info.user_global.iface == NULL) {
-        if (MPL_env2str("HYDRA_IFACE", (const char **) &tmp) != 0)
-            HYD_server_info.user_global.iface = MPL_strdup(tmp);
-        tmp = NULL;
-    }
-
-    if (HYD_server_info.node_list == NULL && MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
-        HYD_server_info.node_list = NULL;
-        status = HYDU_parse_hostfile(tmp, &HYD_server_info.node_list, HYDU_process_mfile_token);
-        HYDU_ERR_POP(status, "error parsing hostfile\n");
-    }
-
-    /* Check environment for setting the inherited environment */
-    if (HYD_server_info.user_global.global_env.prop == NULL &&
-        MPL_env2str("HYDRA_ENV", (const char **) &tmp))
-        HYD_server_info.user_global.global_env.prop =
-            !strcmp(tmp, "all") ? MPL_strdup("all") : MPL_strdup("none");
 
     if (HYD_server_info.user_global.auto_cleanup == -1)
         HYD_server_info.user_global.auto_cleanup = 1;
-
-    /* If hostname propagation is not set on the command-line, check
-     * for the environment variable */
-    if (HYD_ui_mpich_info.hostname_propagation == -1) {
-        if (-1 ==
-            MPL_env2bool("HYDRA_HOSTNAME_PROPAGATION", &HYD_ui_mpich_info.hostname_propagation)) {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "unable to parse hostname propagation\n");
-        }
-    }
-
-    /* If an interface is provided, set that */
-    if (HYD_server_info.user_global.iface) {
-        if (HYD_ui_mpich_info.hostname_propagation == 1) {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "cannot set iface and force hostname propagation");
-        }
-
-        HYDU_append_env_to_list("MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE",
-                                HYD_server_info.user_global.iface,
-                                &HYD_server_info.user_global.global_env.system);
-
-        /* Disable hostname propagation */
-        HYD_ui_mpich_info.hostname_propagation = 0;
-    }
-
-    /* If hostname propagation is requested (or not set), set the
-     * environment variable for doing that */
-    if (HYD_ui_mpich_info.hostname_propagation || HYD_ui_mpich_info.hostname_propagation == -1)
-        HYD_server_info.iface_ip_env_name = MPL_strdup("MPIR_CVAR_CH3_INTERFACE_HOSTNAME");
 
     /* Default universe size if the user did not specify anything is
      * INFINITE */
@@ -237,6 +195,51 @@ static HYD_status set_default_values(void)
 
     if (HYD_server_info.user_global.gpus_per_proc == HYD_GPUS_PER_PROC_UNSET)
         HYD_server_info.user_global.gpus_per_proc = HYD_GPUS_PER_PROC_AUTO;
+}
+
+/* In case a boolean environment value is unparsable (not 1|0|yes|no|true|false|on|off),
+ * raise error. */
+#define ENV2BOOL(name, var_ptr) \
+    do { \
+        if (-1 == MPL_env2bool(name, var_ptr)) { \
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unable to parse %s\n", name); \
+        } \
+    } while (0)
+
+static HYD_status check_environment(void)
+{
+    char *tmp;
+    HYD_status status = HYD_SUCCESS;
+
+    if (HYD_server_info.user_global.debug == -1)
+        ENV2BOOL("HYDRA_DEBUG", &HYD_server_info.user_global.debug);
+
+    if (HYD_server_info.user_global.topo_debug == -1)
+        ENV2BOOL("HYDRA_TOPO_DEBUG", &HYD_server_info.user_global.topo_debug);
+
+    /* don't clobber existing iface values from the command line */
+    if (HYD_server_info.user_global.iface == NULL) {
+        if (MPL_env2str("HYDRA_IFACE", (const char **) &tmp) != 0)
+            HYD_server_info.user_global.iface = MPL_strdup(tmp);
+        tmp = NULL;
+    }
+
+    if (HYD_server_info.node_list == NULL && MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
+        status = HYDU_parse_hostfile(tmp, &HYD_server_info.node_list, HYDU_process_mfile_token);
+        HYDU_ERR_POP(status, "error parsing hostfile\n");
+    }
+
+    /* Check environment for setting the inherited environment */
+    if (HYD_server_info.user_global.global_env.prop == NULL &&
+        MPL_env2str("HYDRA_ENV", (const char **) &tmp))
+        HYD_server_info.user_global.global_env.prop =
+            !strcmp(tmp, "all") ? MPL_strdup("all") : MPL_strdup("none");
+
+    /* If hostname propagation is not set on the command-line, check
+     * for the environment variable */
+    if (HYD_ui_mpich_info.hostname_propagation == -1) {
+        ENV2BOOL("HYDRA_HOSTNAME_PROPAGATION", &HYD_ui_mpich_info.hostname_propagation);
+    }
 
   fn_exit:
     return status;
@@ -306,6 +309,39 @@ static HYD_status parse_args(char **t_argv, int reading_config_file)
 
   fn_exit:
     HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status post_process(void)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    for (struct HYD_exec * exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
+        status = HYDU_correct_wdir(&exec->wdir);
+        HYDU_ERR_POP(status, "unable to correct wdir\n");
+    }
+
+    /* If an interface is provided, set that */
+    if (HYD_server_info.user_global.iface) {
+        if (HYD_ui_mpich_info.hostname_propagation == 1) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "cannot set iface and force hostname propagation");
+        }
+
+        HYDU_append_env_to_list("MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE",
+                                HYD_server_info.user_global.iface,
+                                &HYD_server_info.user_global.global_env.system);
+    } else {
+        /* If hostname propagation is requested (or not set), set the
+         * environment variable for doing that */
+        if (HYD_ui_mpich_info.hostname_propagation || HYD_ui_mpich_info.hostname_propagation == -1)
+            HYD_server_info.iface_ip_env_name = MPL_strdup("MPIR_CVAR_CH3_INTERFACE_HOSTNAME");
+    }
+
+  fn_exit:
     return status;
 
   fn_fail:
