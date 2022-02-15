@@ -25,66 +25,6 @@
    children */
 #define PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
 
-/* FIXME: We can avoid these two routines if we define PMI as using 
-   MPI info values */
-/* Turn a SINGLE MPI_Info into an array of PMI_keyvals (return the pointer
-   to the array of PMI keyvals) */
-static int  mpi_to_pmi_keyvals( MPIR_Info *info_ptr, PMI_keyval_t **kv_ptr,
-				int *nkeys_ptr )
-{
-    char key[MPI_MAX_INFO_KEY];
-    PMI_keyval_t *kv = 0;
-    int          i, nkeys = 0, vallen, flag, mpi_errno=MPI_SUCCESS;
-
-    if (!info_ptr || info_ptr->handle == MPI_INFO_NULL) {
-	goto fn_exit;
-    }
-
-    MPIR_Info_get_nkeys_impl( info_ptr, &nkeys );
-    if (nkeys == 0) {
-	goto fn_exit;
-    }
-    kv = (PMI_keyval_t *)MPL_malloc( nkeys * sizeof(PMI_keyval_t), MPL_MEM_DYNAMIC );
-    if (!kv) { MPIR_ERR_POP(mpi_errno); }
-
-    for (i=0; i<nkeys; i++) {
-	mpi_errno = MPIR_Info_get_nthkey_impl( info_ptr, i, key );
-	if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
-	MPIR_Info_get_valuelen_impl( info_ptr, key, &vallen, &flag );
-        MPIR_ERR_CHKANDJUMP1(!flag, mpi_errno, MPI_ERR_OTHER,"**infonokey", "**infonokey %s", key);
-
-	kv[i].key = MPL_strdup(key);
-	kv[i].val = MPL_malloc( vallen + 1, MPL_MEM_DYNAMIC );
-	if (!kv[i].key || !kv[i].val) { 
-	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
-	}
-	MPIR_Info_get_impl( info_ptr, key, vallen+1, kv[i].val, &flag );
-        MPIR_ERR_CHKANDJUMP1(!flag, mpi_errno, MPI_ERR_OTHER,"**infonokey", "**infonokey %s", key);
-	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TERSE,(MPL_DBG_FDEST,"key: <%s>, value: <%s>\n", kv[i].key, kv[i].val));
-    }
-
- fn_fail:
- fn_exit:
-    *kv_ptr    = kv;
-    *nkeys_ptr = nkeys;
-    return mpi_errno;
-}
-/* Free the entire array of PMI keyvals */
-static void free_pmi_keyvals(PMI_keyval_t **kv, int size, int *counts)
-{
-    int i,j;
-
-    for (i=0; i<size; i++)
-    {
-	for (j=0; j<counts[i]; j++)
-	{
-            MPL_free((char *)kv[i][j].key);
-            MPL_free(kv[i][j].val);
-	}
-        MPL_free(kv[i]);
-    }
-}
-
 /*
  * MPIDI_CH3_Comm_spawn_multiple()
  */
@@ -95,13 +35,11 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                   **intercomm, int *errcodes) 
 {
     char port_name[MPI_MAX_PORT_NAME];
-    int *info_keyval_sizes=0, i, mpi_errno=MPI_SUCCESS;
-    PMI_keyval_t **info_keyval_vectors=0, preput_keyval_vector;
-    int *pmi_errcodes = 0, pmi_errno;
+    int i, mpi_errno=MPI_SUCCESS;
+    int *pmi_errcodes = 0;
     int total_num_processes, should_accept = 1;
 
     MPIR_FUNC_ENTER;
-
 
     if (comm_ptr->rank == root) {
 	/* create an array for the pmi error codes */
@@ -126,105 +64,12 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	/* --END ERROR HANDLING-- */
 
 	/* Spawn the processes */
-#ifdef USE_PMI2_API
-        MPIR_Assert(count > 0);
-        {
-            int *argcs = MPL_malloc(count*sizeof(int), MPL_MEM_DYNAMIC);
-            struct MPIR_Info preput;
-            struct MPIR_Info *preput_p[1] = { &preput };
+        MPIR_PMI_KEYVAL_t preput;
+        preput.key = PARENT_PORT_KVSKEY;
+        preput.val = port_name;
 
-            MPIR_Assert(argcs);
-            /*
-            info_keyval_sizes = MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
-            */
-
-            /* FIXME cheating on constness */
-            preput.key = (char *)PARENT_PORT_KVSKEY;
-            preput.value = port_name;
-            preput.next = NULL;
-
-            /* compute argcs array */
-            for (i = 0; i < count; ++i) {
-                argcs[i] = 0;
-                if (argvs != NULL && argvs[i] != NULL) {
-                    while (argvs[i][argcs[i]]) {
-                        ++argcs[i];
-                    }
-                }
-
-                /* a fib for now */
-                /*
-                info_keyval_sizes[i] = 0;
-                */
-            }
-            /* XXX DJG don't need this, PMI API is thread-safe? */
-            /*MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);*/
-            /* release the global CS for spawn PMI calls */
-            MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            pmi_errno = PMI2_Job_Spawn(count, (const char **)commands,
-                                       argcs, (const char ***)argvs,
-                                       maxprocs,
-                                       info_keyval_sizes, (const MPIR_Info **)info_ptrs,
-                                       1, (const struct MPIR_Info **)preput_p,
-                                       NULL, 0,
-                                       /*jobId, jobIdSize,*/ /* XXX DJG job stuff? */
-                                       pmi_errcodes);
-            MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            /*MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);*/
-            MPL_free(argcs);
-            if (pmi_errno != PMI2_SUCCESS) {
-                MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
-                     "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
-            }
-        }
-#else
-        /* FIXME: This is *really* awkward.  We should either
-           Fix on MPI-style info data structures for PMI (avoid unnecessary
-           duplication) or add an MPIU_Info_getall(...) that creates
-           the necessary arrays of key/value pairs */
-
-        /* convert the infos into PMI keyvals */
-        info_keyval_sizes   = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
-        info_keyval_vectors = 
-            (PMI_keyval_t**) MPL_malloc(count * sizeof(PMI_keyval_t*), MPL_MEM_DYNAMIC);
-        if (!info_keyval_sizes || !info_keyval_vectors) { 
-            MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
-        }
-
-        if (!info_ptrs) {
-            for (i=0; i<count; i++) {
-                info_keyval_vectors[i] = 0;
-                info_keyval_sizes[i]   = 0;
-            }
-        }
-        else {
-            for (i=0; i<count; i++) {
-                mpi_errno = mpi_to_pmi_keyvals( info_ptrs[i], 
-                                                &info_keyval_vectors[i],
-                                                &info_keyval_sizes[i] );
-                if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
-            }
-        }
-
-        preput_keyval_vector.key = PARENT_PORT_KVSKEY;
-        preput_keyval_vector.val = port_name;
-
-
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
-        pmi_errno = PMI_Spawn_multiple(count, (const char **)
-                                       commands, 
-                                       (const char ***) argvs,
-                                       maxprocs, info_keyval_sizes,
-                                       (const PMI_keyval_t **)
-                                       info_keyval_vectors, 1, 
-                                       &preput_keyval_vector,
-                                       pmi_errcodes);
-	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
-        if (pmi_errno != PMI_SUCCESS) {
-	    MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
-		 "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
-        }
-#endif
+        mpi_errno = MPIR_pmi_spawn_multiple(count, commands, argvs, maxprocs, info_ptrs, 1, &preput, pmi_errcodes);
+        MPIR_ERR_CHECK(mpi_errno);
 
 	if (errcodes != MPI_ERRCODES_IGNORE) {
 	    for (i=0; i<total_num_processes; i++) {
@@ -274,11 +119,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     }
 
  fn_exit:
-    if (info_keyval_vectors) {
-	free_pmi_keyvals(info_keyval_vectors, count, info_keyval_sizes);
-	MPL_free(info_keyval_sizes);
-	MPL_free(info_keyval_vectors);
-    }
     MPL_free(pmi_errcodes);
     MPIR_FUNC_EXIT;
     return mpi_errno;
