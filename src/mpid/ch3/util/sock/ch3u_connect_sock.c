@@ -163,7 +163,7 @@ int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
        we might prefer for connections to simply point at the single process
        group to which the remote process belong */
 #ifdef USE_PMI2_API
-    id_sz = MPID_MAX_JOBID_LEN;
+    id_sz = MPIDI_MAX_JOBID_LEN;
 #else
     pmi_errno = PMI_KVS_Get_name_length_max(&id_sz);
     MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno,MPI_ERR_OTHER, 
