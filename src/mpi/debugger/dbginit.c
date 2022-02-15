@@ -405,7 +405,7 @@ void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id,
 void MPII_Debugq_forget(MPIR_Request * req, MPIR_Debugq ** queue)
 {
 #if defined HAVE_DEBUGGER_SUPPORT
-    MPIR_Debugq *p = NULL, *prev = NULL;
+    MPIR_Debugq *p = NULL;
 
     MPID_THREAD_CS_ENTER(VCI, lock);
     MPID_THREAD_CS_ENTER(POBJ, lock);
