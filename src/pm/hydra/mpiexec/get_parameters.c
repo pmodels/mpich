@@ -158,6 +158,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 static void init_ui_mpich_info(void)
 {
     HYD_ui_mpich_info.ppn = -1;
+    HYD_ui_mpich_info.timeout = -1;
     HYD_ui_mpich_info.print_all_exitcodes = -1;
     HYD_ui_mpich_info.sort_order = NONE;
     HYD_ui_mpich_info.config_file = NULL;
@@ -239,6 +240,26 @@ static HYD_status check_environment(void)
      * for the environment variable */
     if (HYD_ui_mpich_info.hostname_propagation == -1) {
         ENV2BOOL("HYDRA_HOSTNAME_PROPAGATION", &HYD_ui_mpich_info.hostname_propagation);
+    }
+
+    if (HYD_ui_mpich_info.timeout == -1) {
+        MPL_env2int("MPIEXEC_TIMEOUT", &HYD_ui_mpich_info.timeout);
+    }
+
+    /* Check if the user wants us to use a port within a certain
+     * range. */
+    if (MPL_env2str("MPIR_CVAR_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPIR_PARAM_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPICH_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPIR_CVAR_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPIR_CVAR_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPIR_PARAM_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPIR_PARAM_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPICH_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPICH_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &HYD_server_info.port_range)) {
+        HYD_server_info.port_range = MPL_strdup(HYD_server_info.port_range);
     }
 
   fn_exit:
