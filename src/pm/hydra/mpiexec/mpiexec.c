@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int exit_status = 0, i, timeout, user_provided_host_list, global_core_count;
+    int exit_status = 0, i, user_provided_host_list, global_core_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -202,10 +202,6 @@ int main(int argc, char **argv)
         }
     }
 
-    if (HYD_server_info.user_global.debug)
-        for (node = HYD_server_info.node_list; node; node = node->next)
-            HYDU_dump_noprefix(stdout, "host: %s\n", node->hostname);
-
     /* Reset the host list to use only the number of processes per
      * node as specified by the ppn option. */
     if (HYD_ui_mpich_info.ppn != -1) {
@@ -289,29 +285,10 @@ int main(int argc, char **argv)
         }
     }
 
-    if (HYD_server_info.user_global.debug)
+    if (HYD_server_info.user_global.debug) {
+        HYD_ui_mpich_debug_print();
         HYD_uiu_print_params();
-
-    if (MPL_env2int("MPIEXEC_TIMEOUT", &timeout) == 0)
-        timeout = -1;   /* Infinite timeout */
-
-    if (HYD_server_info.user_global.debug)
-        HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", timeout);
-
-    /* Check if the user wants us to use a port within a certain
-     * range. */
-    if (MPL_env2str("MPIR_CVAR_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_PARAM_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPICH_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_CVAR_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_CVAR_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_PARAM_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_PARAM_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPICH_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPICH_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &HYD_server_info.port_range))
-        HYD_server_info.port_range = MPL_strdup(HYD_server_info.port_range);
+    }
 
     /* Add the stdout/stderr callback handlers */
     HYD_server_info.stdout_cb = HYD_uiu_stdout_cb;
@@ -326,7 +303,7 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "process manager returned error launching processes\n");
 
     /* Wait for their completion */
-    status = HYD_pmci_wait_for_completion(timeout);
+    status = HYD_pmci_wait_for_completion(HYD_ui_mpich_info.timeout);
     HYDU_ERR_POP(status, "process manager error waiting for completion\n");
 
     /* Check for the exit status for all the processes */
@@ -420,4 +397,13 @@ HYD_status HYD_uii_get_current_exec(struct HYD_exec **exec)
 
   fn_fail:
     goto fn_exit;
+}
+
+void HYD_ui_mpich_debug_print(void)
+{
+    for (struct HYD_node * node = HYD_server_info.node_list; node; node = node->next) {
+        HYDU_dump_noprefix(stdout, "host: %s\n", node->hostname);
+    }
+
+    HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", HYD_ui_mpich_info.timeout);
 }

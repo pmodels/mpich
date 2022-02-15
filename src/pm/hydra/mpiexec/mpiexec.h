@@ -10,6 +10,7 @@
 
 struct HYD_ui_mpich_info_s {
     int ppn;
+    int timeout;
     int print_all_exitcodes;
 
     enum HYD_sort_order {
