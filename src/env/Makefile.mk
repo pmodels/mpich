@@ -58,7 +58,6 @@ DISTCLEANFILES += $(top_builddir)/src/env/cc_shlib.conf  \
 
 wrapper_doc_src = src/env/mpicc.txt \
                   src/env/mpicxx.txt \
-                  src/env/mpifort.txt \
-                  src/env/mpiexec.txt
+                  src/env/mpifort.txt
 doc1_src_txt += $(wrapper_doc_src)
 EXTRA_DIST += $(wrapper_doc_src)
