@@ -9,6 +9,134 @@
 #include "ui.h"
 #include "uiu.h"
 
+static void init_ui_mpich_info(void);
+static HYD_status set_default_values(void);
+static HYD_status process_config_token(char *token, int newline, void *data);
+static HYD_status parse_args(char **t_argv, int reading_config_file);
+
+HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
+{
+    int ret;
+    size_t len;
+    char **argv = t_argv;
+    char *progname = *argv;
+    char *post, *loc, *tmp[HYD_NUM_TMP_STRINGS], *conf_file;
+    const char *home, *env_file;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYD_uiu_init_params();
+    init_ui_mpich_info();
+
+    argv++;
+    status = parse_args(argv, 0);
+    HYDU_ERR_POP(status, "unable to parse user arguments\n");
+
+    if (HYD_ui_mpich_info.config_file == NULL) {
+        /* Check if there's a config file location in the environment */
+        ret = MPL_env2str("HYDRA_CONFIG_FILE", &env_file);
+        if (ret) {
+            ret = open(env_file, O_RDONLY);
+            if (ret >= 0) {
+                close(ret);
+                HYD_ui_mpich_info.config_file = MPL_strdup(env_file);
+                goto config_file_check_exit;
+            }
+        }
+
+        /* Check if there's a config file in the home directory */
+        ret = MPL_env2str("HOME", &home);
+        if (ret) {
+            len = strlen(home) + strlen("/.mpiexec.hydra.conf") + 1;
+
+            HYDU_MALLOC_OR_JUMP(conf_file, char *, len, status);
+            MPL_snprintf(conf_file, len, "%s/.mpiexec.hydra.conf", home);
+
+            ret = open(conf_file, O_RDONLY);
+            if (ret < 0) {
+                MPL_free(conf_file);
+            } else {
+                close(ret);
+                HYD_ui_mpich_info.config_file = conf_file;
+                goto config_file_check_exit;
+            }
+        }
+
+        /* Check if there's a config file in the hard-coded location */
+        conf_file = MPL_strdup(HYDRA_CONF_FILE);
+        HYDU_ERR_CHKANDJUMP(status, NULL == conf_file, HYD_INTERNAL_ERROR, "strdup failed\n");
+        ret = open(conf_file, O_RDONLY);
+        if (ret < 0) {
+            MPL_free(conf_file);
+        } else {
+            close(ret);
+            HYD_ui_mpich_info.config_file = conf_file;
+            goto config_file_check_exit;
+        }
+    }
+
+  config_file_check_exit:
+    if (HYD_ui_mpich_info.config_file) {
+        char **config_argv;
+        HYDU_MALLOC_OR_JUMP(config_argv, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
+
+        status =
+            HYDU_parse_hostfile(HYD_ui_mpich_info.config_file, config_argv, process_config_token);
+        HYDU_ERR_POP(status, "error parsing config file\n");
+
+        status = parse_args(config_argv, 1);
+        HYDU_ERR_POP(status, "error parsing config args\n");
+
+        MPL_free(HYD_ui_mpich_info.config_file);
+        HYD_ui_mpich_info.config_file = NULL;
+    }
+
+    /* Get the base path */
+    /* Find the last '/' in the executable name */
+    post = MPL_strdup(progname);
+    HYDU_ERR_CHKANDJUMP(status, NULL == post, HYD_INTERNAL_ERROR, "strdup failed\n");
+    loc = strrchr(post, '/');
+    if (!loc) { /* If there is no path */
+        HYD_server_info.base_path = NULL;
+        status = HYDU_find_in_path(progname, &HYD_server_info.base_path);
+        HYDU_ERR_POP(status, "error while searching for executable in the user path\n");
+    } else {    /* There is a path */
+        *(++loc) = 0;
+
+        /* Check if its absolute or relative */
+        if (post[0] != '/') {   /* relative */
+            tmp[0] = HYDU_getcwd();
+            tmp[1] = MPL_strdup("/");
+            tmp[2] = MPL_strdup(post);
+            tmp[3] = NULL;
+            status = HYDU_str_alloc_and_join(tmp, &HYD_server_info.base_path);
+            HYDU_ERR_POP(status, "unable to join strings\n");
+            HYDU_free_strlist(tmp);
+        } else {        /* absolute */
+            HYD_server_info.base_path = MPL_strdup(post);
+        }
+    }
+    MPL_free(post);
+
+    status = set_default_values();
+    HYDU_ERR_POP(status, "setting default values failed\n");
+
+    /* Preset common environment options for disabling STDIO buffering
+     * in Fortran */
+    HYDU_append_env_to_list("GFORTRAN_UNBUFFERED_PRECONNECTED", "y",
+                            &HYD_server_info.user_global.global_env.system);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+/* ---- internal routines ---- */
+
 static void init_ui_mpich_info(void)
 {
     HYD_ui_mpich_info.ppn = -1;
@@ -175,127 +303,6 @@ static HYD_status parse_args(char **t_argv, int reading_config_file)
             exec->exec[i + 1] = NULL;
         } while (++argv && *argv);
     } while (1);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
-{
-    int ret;
-    size_t len;
-    char **argv = t_argv;
-    char *progname = *argv;
-    char *post, *loc, *tmp[HYD_NUM_TMP_STRINGS], *conf_file;
-    const char *home, *env_file;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYD_uiu_init_params();
-    init_ui_mpich_info();
-
-    argv++;
-    status = parse_args(argv, 0);
-    HYDU_ERR_POP(status, "unable to parse user arguments\n");
-
-    if (HYD_ui_mpich_info.config_file == NULL) {
-        /* Check if there's a config file location in the environment */
-        ret = MPL_env2str("HYDRA_CONFIG_FILE", &env_file);
-        if (ret) {
-            ret = open(env_file, O_RDONLY);
-            if (ret >= 0) {
-                close(ret);
-                HYD_ui_mpich_info.config_file = MPL_strdup(env_file);
-                goto config_file_check_exit;
-            }
-        }
-
-        /* Check if there's a config file in the home directory */
-        ret = MPL_env2str("HOME", &home);
-        if (ret) {
-            len = strlen(home) + strlen("/.mpiexec.hydra.conf") + 1;
-
-            HYDU_MALLOC_OR_JUMP(conf_file, char *, len, status);
-            MPL_snprintf(conf_file, len, "%s/.mpiexec.hydra.conf", home);
-
-            ret = open(conf_file, O_RDONLY);
-            if (ret < 0) {
-                MPL_free(conf_file);
-            } else {
-                close(ret);
-                HYD_ui_mpich_info.config_file = conf_file;
-                goto config_file_check_exit;
-            }
-        }
-
-        /* Check if there's a config file in the hard-coded location */
-        conf_file = MPL_strdup(HYDRA_CONF_FILE);
-        HYDU_ERR_CHKANDJUMP(status, NULL == conf_file, HYD_INTERNAL_ERROR, "strdup failed\n");
-        ret = open(conf_file, O_RDONLY);
-        if (ret < 0) {
-            MPL_free(conf_file);
-        } else {
-            close(ret);
-            HYD_ui_mpich_info.config_file = conf_file;
-            goto config_file_check_exit;
-        }
-    }
-
-  config_file_check_exit:
-    if (HYD_ui_mpich_info.config_file) {
-        char **config_argv;
-        HYDU_MALLOC_OR_JUMP(config_argv, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
-
-        status =
-            HYDU_parse_hostfile(HYD_ui_mpich_info.config_file, config_argv, process_config_token);
-        HYDU_ERR_POP(status, "error parsing config file\n");
-
-        status = parse_args(config_argv, 1);
-        HYDU_ERR_POP(status, "error parsing config args\n");
-
-        MPL_free(HYD_ui_mpich_info.config_file);
-        HYD_ui_mpich_info.config_file = NULL;
-    }
-
-    /* Get the base path */
-    /* Find the last '/' in the executable name */
-    post = MPL_strdup(progname);
-    HYDU_ERR_CHKANDJUMP(status, NULL == post, HYD_INTERNAL_ERROR, "strdup failed\n");
-    loc = strrchr(post, '/');
-    if (!loc) { /* If there is no path */
-        HYD_server_info.base_path = NULL;
-        status = HYDU_find_in_path(progname, &HYD_server_info.base_path);
-        HYDU_ERR_POP(status, "error while searching for executable in the user path\n");
-    } else {    /* There is a path */
-        *(++loc) = 0;
-
-        /* Check if its absolute or relative */
-        if (post[0] != '/') {   /* relative */
-            tmp[0] = HYDU_getcwd();
-            tmp[1] = MPL_strdup("/");
-            tmp[2] = MPL_strdup(post);
-            tmp[3] = NULL;
-            status = HYDU_str_alloc_and_join(tmp, &HYD_server_info.base_path);
-            HYDU_ERR_POP(status, "unable to join strings\n");
-            HYDU_free_strlist(tmp);
-        } else {        /* absolute */
-            HYD_server_info.base_path = MPL_strdup(post);
-        }
-    }
-    MPL_free(post);
-
-    status = set_default_values();
-    HYDU_ERR_POP(status, "setting default values failed\n");
-
-    /* Preset common environment options for disabling STDIO buffering
-     * in Fortran */
-    HYDU_append_env_to_list("GFORTRAN_UNBUFFERED_PRECONNECTED", "y",
-                            &HYD_server_info.user_global.global_env.system);
 
   fn_exit:
     HYDU_FUNC_EXIT();
