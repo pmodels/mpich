@@ -878,6 +878,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_ibarrier(MPIR_Comm * comm, MPIR_Req
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_ibarrier_sched(MPIR_Comm * comm,
+                                                            MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_TSP_Ibarrier_sched_intra_tsp_auto(comm, sched);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_ibcast(void *buffer, MPI_Aint count,
                                                     MPI_Datatype datatype, int root,
                                                     MPIR_Comm * comm, MPIR_Request ** req)
