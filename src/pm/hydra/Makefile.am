@@ -14,7 +14,11 @@ noinst_HEADERS =
 DISTCLEANFILES =
 EXTRA_DIST =
 SUFFIXES =
-doc1_src_txt =
+doc1_src_txt = \
+    mansrc/mpiexec.txt \
+    mansrc/hydra_pmi_proxy.txt \
+    mansrc/hydra_nameserver.txt \
+    mansrc/hydra_persist.txt
 
 ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include $(external_includes)
