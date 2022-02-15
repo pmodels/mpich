@@ -25,11 +25,9 @@ struct HYD_ui_mpich_info_s {
 
 extern struct HYD_ui_mpich_info_s HYD_ui_mpich_info;
 extern struct HYD_arg_match_table HYD_mpiexec_match_table[];
+extern struct HYD_exec *HYD_uii_mpx_exec_list;
 
 HYD_status HYD_uii_mpx_get_parameters(char **t_argv);
 HYD_status HYD_uii_get_current_exec(struct HYD_exec **exec);
-
-extern struct HYD_exec *HYD_uii_mpx_exec_list;
-
 
 #endif /* MPIEXEC_H_INCLUDED */

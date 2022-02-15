@@ -400,3 +400,24 @@ int main(int argc, char **argv)
   fn_fail:
     goto fn_exit;
 }
+
+HYD_status HYD_uii_get_current_exec(struct HYD_exec **exec)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (HYD_uii_mpx_exec_list == NULL) {
+        status = HYDU_alloc_exec(&HYD_uii_mpx_exec_list);
+        HYDU_ERR_POP(status, "unable to allocate exec\n");
+        HYD_uii_mpx_exec_list->appnum = 0;
+    }
+
+    *exec = HYD_uii_mpx_exec_list;
+    while ((*exec)->next)
+        *exec = (*exec)->next;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
