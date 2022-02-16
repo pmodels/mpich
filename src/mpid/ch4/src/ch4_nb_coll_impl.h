@@ -77,6 +77,45 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Ibarrier_intra_composition_ ## NAME(MPIR_Comm
     goto fn_exit;                                                                                            \
 }
 
+#define MPIDI_IREDUCE_FUNC_DECL(NAME)                                                                       \
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ireduce_sched_intra_composition_ ## NAME(const void *sendbuf,            \
+                                                                            void *recvbuf, MPI_Aint count,       \
+                                                                            MPI_Datatype datatype,          \
+                                                                            MPI_Op op, int root,            \
+                                                                            MPIR_Comm * comm,               \
+                                                                            MPIR_TSP_sched_t sched,       \
+                                                                            bool is_persist);               \
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ireduce_intra_composition_ ## NAME(const void *sendbuf,                  \
+                                                                      void *recvbuf, MPI_Aint count,             \
+                                                                      MPI_Datatype datatype,                \
+                                                                      MPI_Op op, int root,                  \
+                                                                      MPIR_Comm * comm,                     \
+                                                                      MPIR_Request ** req)                  \
+{                                                                                                           \
+    int mpi_errno = MPI_SUCCESS;                                                                            \
+    MPIR_TSP_sched_t sched;                                                                                \
+                                                                                                            \
+    *req = NULL;                                                                                            \
+                                                                                                            \
+    /* generate the schedule */                                                                             \
+    mpi_errno = MPIR_TSP_sched_create(sched, false);                                                        \
+    MPIR_ERR_CHECK(mpi_errno);                                                                              \
+                                                                                                            \
+    mpi_errno =                                                                                             \
+        MPIDI_Ireduce_sched_intra_composition_ ## NAME(sendbuf, recvbuf, count, datatype, op, root, comm,   \
+                                                       sched, false);                                       \
+    MPIR_ERR_CHECK(mpi_errno);                                                                              \
+                                                                                                            \
+    /* start and register the schedule */                                                                   \
+    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);                                                     \
+    MPIR_ERR_CHECK(mpi_errno);                                                                              \
+                                                                                                            \
+  fn_exit:                                                                                                  \
+    return mpi_errno;                                                                                       \
+  fn_fail:                                                                                                  \
+    goto fn_exit;                                                                                           \
+}
+
 /* *INDENT-OFF* */
 MPIDI_IBCAST_FUNC_DECL(alpha)
 MPIDI_IBCAST_FUNC_DECL(beta)
@@ -84,6 +123,10 @@ MPIDI_IBCAST_FUNC_DECL(gamma)
 
 MPIDI_IBARRIER_FUNC_DECL(alpha)
 MPIDI_IBARRIER_FUNC_DECL(beta)
+
+MPIDI_IREDUCE_FUNC_DECL(alpha)
+MPIDI_IREDUCE_FUNC_DECL(beta)
+MPIDI_IREDUCE_FUNC_DECL(gamma)
 /* *INDENT-ON* */
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Ibcast_sched_intra_composition_alpha(void *buffer,
@@ -659,6 +702,421 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Ibarrier_sched_intra_composition_beta(MPIR_Co
     mpi_errno_ret = MPIDI_NM_mpi_ibarrier_sched(comm, &sched);
 
     return mpi_errno_ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ireduce_sched_intra_composition_alpha(const void *sendbuf,
+                                                                         void *recvbuf,
+                                                                         MPI_Aint count,
+                                                                         MPI_Datatype datatype,
+                                                                         MPI_Op op, int root,
+                                                                         MPIR_Comm * comm,
+                                                                         MPIR_TSP_sched_t sched,
+                                                                         bool is_persist)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+    MPI_Aint true_lb = 0;
+    MPI_Aint true_extent = 0;
+    MPI_Aint extent;
+    const void *inter_sendbuf;
+    void *ori_recvbuf = recvbuf;
+    int tag, i, vtx_id;
+    MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil, offset = 0;
+    int *nm_vtx_id, prev_vtx_id = -1;
+    int dependence_arr[2] = { 0, 0 };
+    int window_val = MPIR_CVAR_IREDUCE_COMPOSITION_WINDOW_SIZE;
+    MPIR_TSP_sched_t nm_sub_sched, shm_sub_sched;
+
+    if (count == 0)
+        return mpi_errno;
+
+    MPIR_CHKLMEM_DECL(1);
+
+    MPIR_Datatype_get_extent_macro(datatype, extent);
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+    extent = MPL_MAX(extent, true_extent);
+
+    if (MPIR_CVAR_IREDUCE_COMPOSITION_PIPELINE_CHUNK_SIZE < 1) {
+        /* Disable pipelining */
+        num_chunks = 1;
+        chunk_size_floor = count;
+        chunk_size_ceil = count;
+    } else {
+        MPIR_Algo_calculate_pipeline_chunk_info(MPIR_CVAR_IREDUCE_COMPOSITION_PIPELINE_CHUNK_SIZE,
+                                                extent, count, &num_chunks, &chunk_size_floor,
+                                                &chunk_size_ceil);
+    }
+
+    MPIR_CHKLMEM_MALLOC(nm_vtx_id, int *, num_chunks * sizeof(int), mpi_errno, "nm_vtx_ids",
+                        MPL_MEM_COLL);
+
+    /* Create a temporary buffer on local roots of all nodes,
+     * except for root if it is also a local root */
+    if (comm->node_roots_comm != NULL && comm->rank != root) {
+        recvbuf = MPIR_TSP_sched_malloc(count * extent, sched);
+        /* adjust for potential negative lower bound in datatype */
+        recvbuf = (void *) ((char *) recvbuf - true_lb);
+    }
+    /* Split a large message into multiple chunks. Create a tree consisting of vertices coming from
+     * NM_Ireduce, SHM_Ireduce, send, and recv for each chunk. These are vertical dependencies. For
+     * horizontal dependencies, there is sliding window among NM vertices of different chunks. SHM
+     * vertices of different chunks have linear dependencies (window_size = 1) */
+    for (i = 0; i < num_chunks; ++i) {
+        MPI_Aint chunk_count = (i == 0) ? chunk_size_floor : chunk_size_ceil;
+        int n_incoming = 0;
+
+        /* intranode reduce on all nodes */
+        if (comm->node_comm != NULL) {
+            //shm_sub_sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
+            //MPIR_ERR_CHKANDJUMP(!shm_sub_sched, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            mpi_errno_ret = MPIR_TSP_sched_create(&shm_sub_sched, is_persist);
+            if (mpi_errno_ret)
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            mpi_errno_ret =
+                MPIDI_SHM_mpi_ireduce_sched((char *) sendbuf + offset * extent,
+                                            (char *) recvbuf + offset * extent,
+                                            chunk_count, datatype, op, 0, comm->node_comm,
+                                            shm_sub_sched);
+#else
+            mpi_errno_ret =
+                MPIDI_NM_mpi_ireduce_sched((char *) sendbuf + offset * extent,
+                                           (char *) recvbuf + offset * extent,
+                                           chunk_count, datatype, op, 0, comm->node_comm,
+                                           shm_sub_sched);
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+            if (mpi_errno_ret) {
+                /* for communication errors, just record the error but continue */
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+            }
+            if (i > 0) {
+                /* Create dependence from SHM sub-schedule vertex of prev chunk to SHM sub-schedule
+                 * vertex of current chunk */
+                dependence_arr[0] = prev_vtx_id;
+                n_incoming = 1;
+            }
+
+            /* Create the SHM sub-schedule vertex */
+            mpi_errno_ret =
+                MPIR_TSP_sched_sub_sched(sched, shm_sub_sched, n_incoming, dependence_arr,
+                                         &prev_vtx_id);
+            if (mpi_errno_ret)
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+            n_incoming = 1;
+            dependence_arr[0] = prev_vtx_id;
+
+            /* recvbuf becomes the sendbuf for internode reduce */
+            inter_sendbuf = recvbuf;
+
+        } else {
+            inter_sendbuf = (sendbuf == MPI_IN_PLACE) ? recvbuf : sendbuf;
+        }
+        /* internode reduce with rank 0 in node_roots_comm as the root */
+        if (comm->node_roots_comm != NULL) {
+            /*nm_sub_sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
+             * MPIR_ERR_CHKANDJUMP(!nm_sub_sched, mpi_errno, MPI_ERR_OTHER, "**nomem"); */
+            mpi_errno_ret = MPIR_TSP_sched_create(nm_sub_sched, is_persist);
+            if (mpi_errno_ret)
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+            mpi_errno_ret =
+                MPIDI_NM_mpi_ireduce_sched(comm->node_roots_comm->rank ==
+                                           0 ? MPI_IN_PLACE : (char *) inter_sendbuf +
+                                           offset * extent, (char *) recvbuf + offset * extent,
+                                           chunk_count, datatype, op, 0, comm->node_roots_comm,
+                                           nm_sub_sched);
+
+            if (mpi_errno_ret) {
+                /* for communication errors, just record the error but continue */
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+            }
+            if (i > window_val - 1) {
+                /* Create dependence from NM sub-schedule vertex of chunk i to NM sub-schedule vertex
+                 * of chunk (i+window_size) */
+                dependence_arr[n_incoming] = nm_vtx_id[i - window_val];
+                n_incoming++;
+            }
+
+            /* Create the NM sub-schedule vertex */
+            mpi_errno_ret =
+                MPIR_TSP_sched_sub_sched(sched, nm_sub_sched, n_incoming, dependence_arr,
+                                         &nm_vtx_id[i]);
+            if (mpi_errno_ret)
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+            n_incoming = 1;
+            dependence_arr[0] = nm_vtx_id[i];
+        }
+
+        /* Send data to root via point-to-point message if root is not rank 0 in comm */
+        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (root != 0) {
+            if (comm->rank == 0) {
+                mpi_errno_ret =
+                    MPIR_TSP_sched_isend((char *) recvbuf + offset * extent, chunk_count, datatype,
+                                         root, tag, comm, sched, n_incoming, dependence_arr,
+                                         &vtx_id);
+            } else if (comm->rank == root) {
+                mpi_errno_ret =
+                    MPIR_TSP_sched_irecv((char *) ori_recvbuf + offset * extent, chunk_count,
+                                         datatype, 0, tag, comm, sched, n_incoming, dependence_arr,
+                                         &vtx_id);
+            }
+            if (mpi_errno_ret) {
+                /* for communication errors, just record the error but continue */
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+            }
+
+        }
+
+        offset += chunk_count;
+    }
+    MPIR_ERR_CHKANDJUMP(!sched, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ireduce_sched_intra_composition_beta(const void *sendbuf,
+                                                                        void *recvbuf,
+                                                                        MPI_Aint count,
+                                                                        MPI_Datatype datatype,
+                                                                        MPI_Op op, int root,
+                                                                        MPIR_Comm * comm,
+                                                                        MPIR_TSP_sched_t sched,
+                                                                        bool is_persist)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+    MPI_Aint true_lb = 0;
+    MPI_Aint true_extent = 0;
+    MPI_Aint extent = 0;
+    MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil, offset = 0;
+    void *tmp_buf = NULL;
+    int *nm_vtx_id, prev_vtx_id = -1, i;
+    int dependence_arr[2] = { 0, 0 };
+    int window_val = MPIR_CVAR_IREDUCE_COMPOSITION_WINDOW_SIZE;
+    MPIR_TSP_sched_t nm_sub_sched, shm_sub_sched;
+
+    MPIR_CHKLMEM_DECL(1);
+
+    MPIR_Datatype_get_extent_macro(datatype, extent);
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+    extent = MPL_MAX(extent, true_extent);
+
+    if (MPIR_CVAR_IREDUCE_COMPOSITION_PIPELINE_CHUNK_SIZE < 1) {
+        /* Disable pipelining */
+        num_chunks = 1;
+        chunk_size_floor = count;
+        chunk_size_ceil = count;
+    } else {
+        MPIR_Algo_calculate_pipeline_chunk_info(MPIR_CVAR_IREDUCE_COMPOSITION_PIPELINE_CHUNK_SIZE,
+                                                extent, count, &num_chunks, &chunk_size_floor,
+                                                &chunk_size_ceil);
+    }
+
+    MPIR_CHKLMEM_MALLOC(nm_vtx_id, int *, num_chunks * sizeof(int), mpi_errno, "nm_vtx_ids",
+                        MPL_MEM_COLL);
+
+    /* Create a temporary buffer on local roots of all nodes */
+    if (comm->node_roots_comm != NULL) {
+        tmp_buf = MPIR_TSP_sched_malloc(count * extent, sched);
+
+        /* adjust for potential negative lower bound in datatype */
+        tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+    }
+    /* Split a large message into multiple chunks. Create a tree consisting of vertices coming the
+     * NM_Ireduce and SHM_Ireduce for each chunk. These are vertical dependencies. For
+     * horizontal dependencies, there is sliding window among NM vertices of different chunks. SHM
+     * vertices of different chunks have linear dependencies (window_size = 1) */
+    for (i = 0; i < num_chunks; ++i) {
+        MPI_Aint chunk_count = (i == 0) ? chunk_size_floor : chunk_size_ceil;
+        int n_incoming = 0;
+
+        /* do the intranode reduce on all nodes other than the root's node */
+        if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) == -1) {
+            /*shm_sub_sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
+             * MPIR_ERR_CHKANDJUMP(!shm_sub_sched, mpi_errno, MPI_ERR_OTHER, "**nomem"); */
+            mpi_errno_ret = MPIR_TSP_sched_create(&shm_sub_sched, is_persist);
+            if (mpi_errno_ret)
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            mpi_errno_ret =
+                MPIDI_SHM_mpi_ireduce_sched((char *) sendbuf + offset * extent,
+                                            (char *) tmp_buf + offset * extent, chunk_count,
+                                            datatype, op, 0, comm->node_comm, shm_sub_sched);
+#else
+            mpi_errno_ret =
+                MPIDI_NM_mpi_ireduce_sched((char *) sendbuf + offset * extent,
+                                           (char *) tmp_buf + offset * extent, chunk_count,
+                                           datatype, op, 0, comm->node_comm, shm_sub_sched);
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+            if (mpi_errno_ret) {
+                /* for communication errors, just record the error but continue */
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+            }
+            if (i > 0) {
+                /* Create dependence from SHM sub-schedule vertex of prev chunk to SHM sub-schedule
+                 * vertex of current chunk */
+                dependence_arr[0] = prev_vtx_id;
+                n_incoming = 1;
+            }
+
+            /* Create the SHM sub-schedule vertex */
+            mpi_errno_ret =
+                MPIR_TSP_sched_sub_sched(sched, shm_sub_sched, n_incoming, dependence_arr,
+                                         &prev_vtx_id);
+            if (mpi_errno_ret)
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+            n_incoming = 1;
+            dependence_arr[0] = prev_vtx_id;
+        }
+        /* do the internode reduce to the root's node */
+        if (comm->node_roots_comm != NULL) {
+            /*nm_sub_sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
+             * MPIR_ERR_CHKANDJUMP(!nm_sub_sched, mpi_errno, MPI_ERR_OTHER, "**nomem"); */
+            mpi_errno_ret = MPIR_TSP_sched_create(&nm_sub_sched, is_persist);
+            if (mpi_errno_ret)
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+            if (comm->node_roots_comm->rank != MPIR_Get_internode_rank(comm, root)) {
+                /* I am not on root's node.  Use tmp_buf if we
+                 * participated in the first reduce, otherwise use sendbuf */
+                const void *buf = (comm->node_comm == NULL ? sendbuf : tmp_buf);
+                mpi_errno_ret =
+                    MPIDI_NM_mpi_ireduce_sched((char *) buf + offset * extent, NULL, chunk_count,
+                                               datatype, op, MPIR_Get_internode_rank(comm, root),
+                                               comm->node_roots_comm, nm_sub_sched);
+                if (mpi_errno_ret) {
+                    /* for communication errors, just record the error but continue */
+                    MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+                }
+            } else {    /* I am on root's node. I have not participated in the earlier reduce. */
+                if (comm->rank != root) {
+                    /* I am not the root though. I don't have a valid recvbuf.
+                     * Use tmp_buf as recvbuf. */
+                    mpi_errno_ret =
+                        MPIDI_NM_mpi_ireduce_sched((char *) sendbuf + offset * extent,
+                                                   (char *) tmp_buf + offset * extent, chunk_count,
+                                                   datatype, op, MPIR_Get_internode_rank(comm,
+                                                                                         root),
+                                                   comm->node_roots_comm, nm_sub_sched);
+
+                    if (mpi_errno_ret) {
+                        /* for communication errors, just record the error but continue */
+                        MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+                    }
+
+                    /* point sendbuf at tmp_buf to make final intranode reduce easy */
+                    sendbuf = tmp_buf;
+                } else {
+                    /* I am the root. in_place is automatically handled. */
+                    mpi_errno_ret =
+                        MPIDI_NM_mpi_ireduce_sched((char *) sendbuf + offset * extent,
+                                                   (char *) recvbuf + offset * extent, chunk_count,
+                                                   datatype, op, MPIR_Get_internode_rank(comm,
+                                                                                         root),
+                                                   comm->node_roots_comm, nm_sub_sched);
+                    if (mpi_errno_ret) {
+                        /* for communication errors, just record the error but continue */
+                        MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+                    }
+                }
+            }
+            if (i > window_val - 1) {
+                /* Create dependence from NM sub-schedule vertex of chunk i to NM sub-schedule vertex
+                 * of chunk (i+window_size) */
+                dependence_arr[n_incoming] = nm_vtx_id[i - window_val];
+                n_incoming++;
+            }
+            /* Create the NM sub-schedule vertex */
+            mpi_errno_ret =
+                MPIR_TSP_sched_sub_sched(sched, nm_sub_sched, n_incoming, dependence_arr,
+                                         &nm_vtx_id[i]);
+            if (mpi_errno_ret)
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+            n_incoming = 1;
+            dependence_arr[0] = nm_vtx_id[i];
+        }
+
+        /* do the intranode reduce on the root's node */
+        if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) != -1) {
+            /*shm_sub_sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
+             * MPIR_ERR_CHKANDJUMP(!shm_sub_sched, mpi_errno, MPI_ERR_OTHER, "**nomem"); */
+            mpi_errno_ret = MPIR_TSP_sched_create(&shm_sub_sched, is_persist);
+            if (mpi_errno_ret)
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+            if (comm->node_roots_comm != NULL && comm->rank == root) {
+                /* set sendbuf to MPI_IM_PLACE to make final intranode reduce easy. */
+                sendbuf = MPI_IN_PLACE;
+            } else {
+                sendbuf = (char *) sendbuf + offset * extent;
+            }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            mpi_errno_ret =
+                MPIDI_SHM_mpi_ireduce_sched(sendbuf, (char *) recvbuf + offset * extent,
+                                            chunk_count, datatype, op, MPIR_Get_intranode_rank(comm,
+                                                                                               root),
+                                            comm->node_comm, shm_sub_sched);
+#else
+            mpi_errno_ret =
+                MPIDI_NM_mpi_ireduce_sched(sendbuf, (char *) recvbuf + offset * extent, chunk_count,
+                                           datatype, op, MPIR_Get_intranode_rank(comm, root),
+                                           comm->node_comm, shm_sub_sched);
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+            if (mpi_errno_ret) {
+                /* for communication errors, just record the error but continue */
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+            }
+            /* Create the SHM sub-schedule vertex */
+            mpi_errno_ret =
+                MPIR_TSP_sched_sub_sched(sched, shm_sub_sched, n_incoming, dependence_arr,
+                                         &prev_vtx_id);
+            if (mpi_errno_ret)
+                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+        }
+
+        offset += chunk_count;
+    }
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ireduce_sched_intra_composition_gamma(const void *sendbuf,
+                                                                         void *recvbuf,
+                                                                         MPI_Aint count,
+                                                                         MPI_Datatype datatype,
+                                                                         MPI_Op op, int root,
+                                                                         MPIR_Comm * comm,
+                                                                         MPIR_TSP_sched_t sched,
+                                                                         bool is_persist)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+
+    mpi_errno_ret =
+        MPIDI_NM_mpi_ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm, sched);
+
+    if (mpi_errno_ret)
+        MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+
+    return mpi_errno;
 }
 
 #endif /* CH4_NB_COLL_IMPL_H_INCLUDED */

@@ -147,6 +147,44 @@ cvars:
         1 NM + SHM.
         2 NM only.
 
+    - name        : MPIR_CVAR_IREDUCE_COMPOSITION
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Select composition (inter_node + intra_node) for Ireduce with gentran scheduler only.
+        0 Auto selection
+        1 NM + SHM with send-recv between rank 0 and root.
+        2 NM + SHM without the send-recv.
+        3 NM only.
+
+    - name        : MPIR_CVAR_IREDUCE_COMPOSITION_PIPELINE_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 4096
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Message is split into chunks of the selected size at the composition level (in bytes).
+        Reduction of several chunks is pipelined. Set value to 0 to disable pipelining. This CVAR is
+        to be used with MPIR_CVAR_IREDUCE_COMPOSITION = {1, 2}
+
+    - name        : MPIR_CVAR_IREDUCE_COMPOSITION_WINDOW_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 4
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Sliding window size in Ireduce compositions. To be used with CVARs
+        MPIR_CVAR_IREDUCE_COMPOSITION={1,2}. Inter-node sub-schedule of chunk (i+window_size)
+        depends on inter-node sub-schedule of chunk i.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -1950,18 +1988,188 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter(const void *sendbuf, void *rec
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ireduce_allcomm_composition_json(const void *sendbuf,
+                                                                    void *recvbuf, MPI_Aint count,
+                                                                    MPI_Datatype datatype,
+                                                                    MPI_Op op, int root,
+                                                                    MPIR_Comm * comm,
+                                                                    MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__IREDUCE,
+        .comm_ptr = comm,
+        .u.ireduce.sendbuf = sendbuf,
+        .u.ireduce.recvbuf = recvbuf,
+        .u.ireduce.count = count,
+        .u.ireduce.datatype = datatype,
+        .u.ireduce.op = op,
+        .u.ireduce.root = root,
+    };
+
+    const MPIDI_Csel_container_s *cnt = NULL;
+    cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
+
+    if (cnt == NULL) {
+        mpi_errno = MPIR_Ireduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm, req);
+        goto fn_exit;
+    }
+
+    switch (cnt->id) {
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ireduce_intra_composition_alpha:    /* Gentran scheduler (NM + SHM) */
+            mpi_errno =
+                MPIDI_Ireduce_intra_composition_alpha(sendbuf, recvbuf, count, datatype, op,
+                                                      root, comm, req);
+            break;
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ireduce_intra_composition_beta:     /* Gentran scheduler (NM + SHM) */
+            mpi_errno =
+                MPIDI_Ireduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op,
+                                                     root, comm, req);
+            break;
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ireduce_intra_composition_gamma:    /* Gentran scheduler (NM only) */
+            mpi_errno =
+                MPIDI_Ireduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op,
+                                                      root, comm, req);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPID_Ireduce(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                           MPI_Datatype datatype, MPI_Op op, int root,
                                           MPIR_Comm * comm, MPIR_Request ** req)
 {
-    int ret;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_NM_mpi_ireduce(sendbuf, recvbuf, count, datatype, op, root, comm, req);
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
+        /*int vci_idx = MPIDI_get_coll_vci(comm);
+         * int pool_idx = MPIDI_get_obj_pool_idx(vci_idx);
+         * *(req) = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__COLL, pool_idx);
+         * MPIR_Datatype_add_ref_if_not_builtin(datatype);
+         * MPIR_Op_add_ref_if_not_builtin(op);
+         * MPIDI_workq_ireduce_enqueue(vci_idx, sendbuf, recvbuf, count, datatype, op,
+         * root, comm, *req);
+         * mpi_errno = MPI_SUCCESS; */
+    } else {
+        switch (MPIR_CVAR_IREDUCE_COMPOSITION) {
+            case 1:    /* Gentran scheduler (NM + SHM) */
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                               comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+                                               comm->hierarchy_kind ==
+                                               MPIR_COMM_HIERARCHY_KIND__PARENT &&
+                                               MPIR_Op_is_commutative(op), mpi_errno,
+                                               "Ireduce composition alpha cannot be applied.\n");
+                mpi_errno =
+                    MPIDI_Ireduce_intra_composition_alpha(sendbuf, recvbuf, count, datatype, op,
+                                                          root, comm, req);
+                break;
+            case 2:    /* Gentran scheduler (NM + SHM) */
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                               comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+                                               comm->hierarchy_kind ==
+                                               MPIR_COMM_HIERARCHY_KIND__PARENT &&
+                                               MPIR_Op_is_commutative(op), mpi_errno,
+                                               "Ireduce composition beta cannot be applied.\n");
+                mpi_errno =
+                    MPIDI_Ireduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op,
+                                                         root, comm, req);
+                break;
+            case 3:    /* Gentran scheduler (NM only) */
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                               comm->comm_kind == MPIR_COMM_KIND__INTRACOMM,
+                                               mpi_errno,
+                                               "Ireduce composition gamma cannot be applied.\n");
+                mpi_errno =
+                    MPIDI_Ireduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op,
+                                                          root, comm, req);
+                break;
+            default:
+                mpi_errno =
+                    MPIDI_Ireduce_allcomm_composition_json(sendbuf, recvbuf, count, datatype, op,
+                                                           root, comm, req);
+                break;
+        }
+    }
 
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+        mpi_errno = MPIR_Ireduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm, req);
+    else
+        mpi_errno = MPIDI_Ireduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op,
+                                                          root, comm, req);
+
+  fn_exit:
     MPIR_FUNC_EXIT;
-    return ret;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ireduce_sched_intra_composition_json(const void *sendbuf,
+                                                                        void *recvbuf,
+                                                                        MPI_Aint count,
+                                                                        MPI_Datatype datatype,
+                                                                        MPI_Op op, int root,
+                                                                        MPIR_Comm * comm,
+                                                                        MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE,
+        .comm_ptr = comm,
+        .u.reduce.sendbuf = sendbuf,
+        .u.reduce.recvbuf = recvbuf,
+        .u.reduce.count = count,
+        .u.reduce.datatype = datatype,
+        .u.reduce.op = op,
+        .u.reduce.root = root,
+    };
+
+    const MPIDI_Csel_container_s *cnt = NULL;
+    cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
+
+    /* inter-comms */
+    MPIR_Assert(cnt != NULL);
+
+    switch (cnt->id) {
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ireduce_intra_composition_alpha:    /* Gentran scheduler */
+            mpi_errno =
+                MPIDI_Ireduce_sched_intra_composition_alpha(sendbuf, recvbuf, count, datatype,
+                                                            op, root, comm, sched, true);
+            break;
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ireduce_intra_composition_beta:     /* Gentran scheduler */
+            mpi_errno =
+                MPIDI_Ireduce_sched_intra_composition_beta(sendbuf, recvbuf, count, datatype,
+                                                           op, root, comm, sched, true);
+            break;
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ireduce_intra_composition_gamma:    /* Gentran scheduler */
+            mpi_errno =
+                MPIDI_Ireduce_sched_intra_composition_gamma(sendbuf, recvbuf, count, datatype,
+                                                            op, root, comm, sched, true);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iscan(const void *sendbuf, void *recvbuf, MPI_Aint count,
