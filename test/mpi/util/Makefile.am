@@ -3,10 +3,16 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-AM_CPPFLAGS = -I$(srcdir)/../include -I../include -I$(srcdir)/../dtpools/include @cuda_CPPFLAGS@ @ze_CPPFLAGS@ @hip_CPPFLAGS@
+AM_CPPFLAGS = -I$(srcdir)/../include -I../include -I$(srcdir)/../dtpools/include
 
 noinst_LTLIBRARIES = libmtest.la
 libmtest_la_SOURCES = mtest.c mtest_common.c
+# All GPU code is currently in mtest_common.c, so all flags and
+# libraries can go here. Any program that links with libmtest.la will
+# get the right dependencies via libtool.
+libmtest_la_LIBADD = @cuda_LIBS@ @ze_LIBS@ @hip_LIBS@
+libmtest_la_LDFLAGS = @cuda_LDFLAGS@ @ze_LDFLAGS@ @hip_LDFLAGS@
+libmtest_la_CPPFLAGS = $(AM_CPPFLAGS) @cuda_CPPFLAGS@ @ze_CPPFLAGS@ @hip_CPPFLAGS@
 
 noinst_LTLIBRARIES += libdtypes.la
 libdtypes_la_SOURCES = dtypes.c
