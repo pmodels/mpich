@@ -34,35 +34,29 @@ program main
             print *, "rank 0 sends ", sint
         endif
 
-        block
+        call mpi_isend(sint, 1, MPI_INTEGER, 1, 567, MPI_COMM_WORLD, request, ierr);
+        if (ierr .ne. MPI_SUCCESS) then
+           print *,"PE ",rank,": ",name,": mpi_isend exited in error (",ierr,")"
+           errs = errs + 1
+        endif
 
-            call mpi_isend(sint, 1, MPI_INTEGER, 1, 567, MPI_COMM_WORLD, request, ierr);
-            if (ierr .ne. MPI_SUCCESS) then
-                print *,"PE ",rank,": ",name,": mpi_isend exited in error (",ierr,")"
-                errs = errs + 1
-            endif
-
-            call mpi_wait(request, status, ierr)
-            if (ierr .ne. MPI_SUCCESS) then
-                print *,"PE ",rank,": ",name,": mpi_wait exited in error (",ierr,")"
-                errs = errs + 1
-            endif
-        end block
+        call mpi_wait(request, status, ierr)
+        if (ierr .ne. MPI_SUCCESS) then
+           print *,"PE ",rank,": ",name,": mpi_wait exited in error (",ierr,")"
+           errs = errs + 1
+        endif
     else
-        block
+       call mpi_irecv(sint, 1, MPI_INTEGER, 0, 567, MPI_COMM_WORLD, request, ierr);
+       if (ierr .ne. MPI_SUCCESS) then
+          print *,"PE ",rank,": ",name,"mpi_irecv exited in error (",ierr,")"
+          errs = errs + 1
+       endif
 
-            call mpi_irecv(sint, 1, MPI_INTEGER, 0, 567, MPI_COMM_WORLD, request, ierr);
-            if (ierr .ne. MPI_SUCCESS) then
-                print *,"PE ",rank,": ",name,"mpi_irecv exited in error (",ierr,")"
-                errs = errs + 1
-            endif
-
-            call mpi_wait(request, status, ierr)
-            if (ierr .ne. MPI_SUCCESS) then
-                print *,"PE ",rank,": ",name,": mpi_wait exited in error (",ierr,")"
-                errs = errs + 1
-            endif
-        end block
+       call mpi_wait(request, status, ierr)
+       if (ierr .ne. MPI_SUCCESS) then
+          print *,"PE ",rank,": ",name,": mpi_wait exited in error (",ierr,")"
+          errs = errs + 1
+       endif
 
         if (verbose) print *, "rank 1 receives ",sint
         if (sint .eq. 789) then
