@@ -98,7 +98,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Ireduce_intra_composition_ ## NAME(const void
     *req = NULL;                                                                                            \
                                                                                                             \
     /* generate the schedule */                                                                             \
-    mpi_errno = MPIR_TSP_sched_create(sched, false);                                                        \
+    mpi_errno = MPIR_TSP_sched_create(&sched, false);                                                        \
     MPIR_ERR_CHECK(mpi_errno);                                                                              \
                                                                                                             \
     mpi_errno =                                                                                             \
@@ -817,7 +817,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Ireduce_sched_intra_composition_alpha(const v
         if (comm->node_roots_comm != NULL) {
             /*nm_sub_sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
              * MPIR_ERR_CHKANDJUMP(!nm_sub_sched, mpi_errno, MPI_ERR_OTHER, "**nomem"); */
-            mpi_errno_ret = MPIR_TSP_sched_create(nm_sub_sched, is_persist);
+            mpi_errno_ret = MPIR_TSP_sched_create(&nm_sub_sched, is_persist);
             if (mpi_errno_ret)
                 MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
 

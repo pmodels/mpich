@@ -375,6 +375,9 @@ Native API:
   mpi_ireduce : int
       NM*: sendbuf, recvbuf, count, datatype, op, root, comm_ptr, req_p
      SHM*: sendbuf, recvbuf, count, datatype, op, root, comm_ptr, req_p
+  mpi_ireduce_sched : int
+      NM*: sendbuf, recvbuf, count, datatype, op, root, comm_ptr, sched
+     SHM*: sendbuf, recvbuf, count, datatype, op, root, comm_ptr, sched
   mpi_iscan : int
       NM*: sendbuf, recvbuf, count, datatype, op, comm, req_p
      SHM*: sendbuf, recvbuf, count, datatype, op, comm, req_p

@@ -800,6 +800,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce(const void *sendbuf, void *rec
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce_sched(const void *sendbuf, void *recvbuf,
+                                                        MPI_Aint count, MPI_Datatype datatype,
+                                                        MPI_Op op, int root, MPIR_Comm * comm,
+                                                        MPIR_TSP_sched_t sched)
+{
+    int mpi_errno;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno =
+        MPIR_TSP_Ireduce_sched_intra_tsp_auto(sendbuf, recvbuf, count, datatype, op, root, comm,
+                                              sched);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscan(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                                 MPIR_Request ** req)

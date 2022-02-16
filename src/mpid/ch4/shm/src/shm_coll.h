@@ -737,6 +737,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ireduce(const void *sendbuf, void *re
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ireduce_sched(const void *sendbuf, void *recvbuf,
+                                                         MPI_Aint count, MPI_Datatype datatype,
+                                                         MPI_Op op, int root, MPIR_Comm * comm_ptr,
+                                                         MPIR_TSP_sched_t sched)
+{
+    int ret;
+
+    MPIR_FUNC_ENTER;
+
+    ret =
+        MPIDI_POSIX_mpi_ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, sched);
+
+    MPIR_FUNC_EXIT;
+    return ret;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iscan(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                                  MPI_Datatype datatype, MPI_Op op,
                                                  MPIR_Comm * comm, MPIR_Request ** req)

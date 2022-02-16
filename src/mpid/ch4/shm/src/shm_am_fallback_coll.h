@@ -440,6 +440,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ireduce(const void *sendbuf, void *re
     return MPIR_Ireduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, req);
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ireduce_sched(const void *sendbuf, void *recvbuf,
+                                                         MPI_Aint count, MPI_Datatype datatype,
+                                                         MPI_Op op, int root, MPIR_Comm * comm_ptr,
+                                                         MPIR_TSP_sched_t sched)
+{
+    enum MPIR_sched_type sched_type;
+    return MPIR_Ireduce_sched_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, false,
+                                   sched, &sched_type);
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iscan(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                                  MPI_Datatype datatype, MPI_Op op,
                                                  MPIR_Comm * comm_ptr, MPIR_Request ** req)
