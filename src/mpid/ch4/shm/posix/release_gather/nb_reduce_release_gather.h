@@ -362,8 +362,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
     MPIDI_POSIX_per_call_ireduce_info_t *data;
     int i;
     MPI_Aint num_chunks, chunk_count_floor, chunk_count_ceil;
-    MPI_Aint true_extent, type_size, lb, extent;
-    int offset = 0, is_contig;
+    MPI_Aint true_extent, type_size, lb, extent, offset = 0;
+    int is_contig;
 
     /* Register the vertices */
     reserve_buf_type_id = MPIR_TSP_sched_new_type(sched, MPIDI_POSIX_NB_RG_rank0_hold_buf_issue,
@@ -418,7 +418,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
      * into. Then, there is a dependence from first vertex of previous chunk to first vertex of next
      * chunk. */
     for (i = 0; i < num_chunks; i++) {
-        int chunk_count = (i == 0) ? chunk_count_floor : chunk_count_ceil;
+        MPI_Aint chunk_count = (i == 0) ? chunk_count_floor : chunk_count_ceil;
         int n_incoming = 0;
         data = (MPIDI_POSIX_per_call_ireduce_info_t *)
             MPIR_TSP_sched_malloc(sizeof(MPIDI_POSIX_per_call_ireduce_info_t), sched);

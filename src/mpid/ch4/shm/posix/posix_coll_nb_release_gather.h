@@ -81,7 +81,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_ibcast_release_gather(void *buffer, int
  * reduction and copying out of previous cells (pipelining).
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_ireduce_release_gather(const void *sendbuf,
-                                                                void *recvbuf, int count,
+                                                                void *recvbuf, MPI_Aint count,
                                                                 MPI_Datatype datatype,
                                                                 MPI_Op op, int root,
                                                                 MPIR_Comm * comm_ptr,
