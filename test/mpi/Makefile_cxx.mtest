@@ -9,9 +9,8 @@
 ##
 ## see Makefile_common.mtest for a description why this file exists, but for C++
 
-AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include @cuda_CPPFLAGS@ @ze_CPPFLAGS@ @hip_CPPFLAGS@
-AM_LDFLAGS = @cuda_LDFLAGS@ @ze_LDFLAGS@ @hip_LDFLAGS@
-LDADD = $(top_builddir)/util/libmtest_cxx.la @cuda_LIBS@ @ze_LIBS@ @hip_LIBS@
+AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
+LDADD = $(top_builddir)/util/libmtest_cxx.la
 
 # Add libdtpools support
 AM_CPPFLAGS += -I$(top_srcdir)/dtpools/include
