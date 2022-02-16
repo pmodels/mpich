@@ -33,8 +33,11 @@ def main():
         mapping = G.MAPS['SMALL_C_KIND_MAP']
         G.mpi_declares.append(get_declare_function(func, False, "proto"))
 
+    G.check_write_path(c_dir + '/mansrc/')
+
     # -- Generating code --
     G.out = []
+    G.doc3_src_txt = []
     # internal function to dump G.out into filepath
     def dump_out(file_path):
         G.check_write_path(file_path)
@@ -46,15 +49,23 @@ def main():
     # ----
     for func in func_list:
         G.err_codes = {}
+        manpage_out = []
 
         # dumps the code to G.out array
         # Note: set func['_has_poly'] = False to skip embiggenning
         func['_has_poly'] = function_has_POLY_parameters(func)
+        dump_mpi_c(func, False)
         if func['_has_poly']:
-            dump_mpi_c(func, False)
             dump_mpi_c(func, True)
-        else:
-            dump_mpi_c(func, False)
+
+        dump_manpage(func, manpage_out)
+
+        if 'output-mansrc' in G.opts:
+            f = get_mansrc_file_path(func, c_dir + '/mansrc')
+            with open(f, "w") as Out:
+                for l in manpage_out:
+                    print(l.rstrip(), file=Out)
+            G.doc3_src_txt.append(f)
 
         if 'single-source' not in G.opts:
             # dump individual functions in separate source files
@@ -64,7 +75,6 @@ def main():
         dump_out(c_dir + "/c_binding.c")
 
     # -- Dump other files --
-    G.check_write_path(c_dir)
     G.check_write_path("src/include")
     G.check_write_path("src/mpi_t")
     G.check_write_path("src/include/mpi_proto.h")
