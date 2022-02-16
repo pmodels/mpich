@@ -3,7 +3,7 @@ dnl This configure is used ONLY to determine the Fortran 90 features
 dnl that are needed to implement the create_type_xxx routines.
 
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
-AM_CONDITIONAL([BUILD_FC_BINDING],[test "X$enable_fc" = "Xyes"])
+AM_CONDITIONAL([BUILD_FC_BINDING],[test "$enable_f90" = "yes"])
 ])
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[

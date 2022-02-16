@@ -43,7 +43,10 @@ int MPIR_Ineighbor_alltoallv_allcomm_sched_linear(const void *sendbuf, const MPI
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    for (l = 0; l < indegree; ++l) {
+    /* need reverse the order to ensure matching when the graph is from MPI_Cart_create and
+     * the n-th dimension is periodic and the size is 1 or 2.
+     * ref. ineighbor_alltoall_allcomm_sched_linear.c */
+    for (l = indegree - 1; l >= 0; l--) {
         char *rb = ((char *) recvbuf) + rdispls[l] * recvtype_extent;
         mpi_errno = MPIR_Sched_recv(rb, recvcounts[l], recvtype, srcs[l], comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);

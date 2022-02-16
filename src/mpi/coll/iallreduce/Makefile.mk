@@ -17,4 +17,5 @@ mpi_core_sources +=                                         \
     src/mpi/coll/iallreduce/iallreduce_tsp_recexch.c \
     src/mpi/coll/iallreduce/iallreduce_tsp_recexch_reduce_scatter_recexch_allgatherv.c \
     src/mpi/coll/iallreduce/iallreduce_tsp_ring.c \
-    src/mpi/coll/iallreduce/iallreduce_tsp_tree.c
+    src/mpi/coll/iallreduce/iallreduce_tsp_tree.c \
+    src/mpi/coll/iallreduce/iallreduce_tsp_auto.c
