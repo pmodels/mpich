@@ -19,6 +19,11 @@ struct HYD_ui_mpich_info_s {
         DESCENDING = 2
     } sort_order;
 
+    int output_from;
+    char *prepend_pattern;
+    char *outfile_pattern;
+    char *errfile_pattern;
+
     char *config_file;
     int reading_config_file;
     int hostname_propagation;

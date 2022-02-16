@@ -6,7 +6,6 @@
 #include "hydra_server.h"
 #include "hydra.h"
 #include "mpiexec.h"
-#include "ui.h"
 #include "uiu.h"
 
 /* This file defines HYD_mpiexec_match_table, which includes all the
@@ -428,12 +427,12 @@ static HYD_status output_from_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    if (HYD_ui_mpich_info.reading_config_file && HYD_ui_info.output_from != -1) {
+    if (HYD_ui_mpich_info.reading_config_file && HYD_ui_mpich_info.output_from != -1) {
         /* global variable already set; ignore */
         goto fn_exit;
     }
 
-    status = HYDU_set_int(arg, &HYD_ui_info.output_from, atoi(**argv));
+    status = HYDU_set_int(arg, &HYD_ui_mpich_info.output_from, atoi(**argv));
     HYDU_ERR_POP(status, "error setting output_from\n");
 
   fn_exit:
@@ -454,12 +453,12 @@ static HYD_status prepend_rank_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    if (HYD_ui_mpich_info.reading_config_file && HYD_ui_info.prepend_pattern) {
+    if (HYD_ui_mpich_info.reading_config_file && HYD_ui_mpich_info.prepend_pattern) {
         /* global variable already set; ignore */
         goto fn_exit;
     }
 
-    status = HYDU_set_str(arg, &HYD_ui_info.prepend_pattern, "[%r] ");
+    status = HYDU_set_str(arg, &HYD_ui_mpich_info.prepend_pattern, "[%r] ");
     HYDU_ERR_POP(status, "error setting prepend_rank field\n");
 
   fn_exit:
@@ -491,12 +490,12 @@ static HYD_status prepend_pattern_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    if (HYD_ui_mpich_info.reading_config_file && HYD_ui_info.prepend_pattern) {
+    if (HYD_ui_mpich_info.reading_config_file && HYD_ui_mpich_info.prepend_pattern) {
         /* global variable already set; ignore */
         goto fn_exit;
     }
 
-    status = HYDU_set_str(arg, &HYD_ui_info.prepend_pattern, **argv);
+    status = HYDU_set_str(arg, &HYD_ui_mpich_info.prepend_pattern, **argv);
     HYDU_ERR_POP(status, "error setting prepend pattern\n");
 
   fn_exit:
@@ -518,12 +517,12 @@ static HYD_status outfile_pattern_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    if (HYD_ui_mpich_info.reading_config_file && HYD_ui_info.outfile_pattern) {
+    if (HYD_ui_mpich_info.reading_config_file && HYD_ui_mpich_info.outfile_pattern) {
         /* global variable already set; ignore */
         goto fn_exit;
     }
 
-    status = HYDU_set_str(arg, &HYD_ui_info.outfile_pattern, **argv);
+    status = HYDU_set_str(arg, &HYD_ui_mpich_info.outfile_pattern, **argv);
     HYDU_ERR_POP(status, "error setting outfile pattern\n");
 
   fn_exit:
@@ -545,12 +544,12 @@ static HYD_status errfile_pattern_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    if (HYD_ui_mpich_info.reading_config_file && HYD_ui_info.errfile_pattern) {
+    if (HYD_ui_mpich_info.reading_config_file && HYD_ui_mpich_info.errfile_pattern) {
         /* global variable already set; ignore */
         goto fn_exit;
     }
 
-    status = HYDU_set_str(arg, &HYD_ui_info.errfile_pattern, **argv);
+    status = HYDU_set_str(arg, &HYD_ui_mpich_info.errfile_pattern, **argv);
     HYDU_ERR_POP(status, "error setting errfile pattern\n");
 
   fn_exit:

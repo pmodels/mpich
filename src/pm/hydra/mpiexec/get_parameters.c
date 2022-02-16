@@ -6,7 +6,6 @@
 #include "hydra_server.h"
 #include "hydra.h"
 #include "mpiexec.h"
-#include "ui.h"
 #include "uiu.h"
 
 /* The order of loading options:
@@ -161,6 +160,10 @@ static void init_ui_mpich_info(void)
     HYD_ui_mpich_info.timeout = -1;
     HYD_ui_mpich_info.print_all_exitcodes = -1;
     HYD_ui_mpich_info.sort_order = NONE;
+    HYD_ui_mpich_info.output_from = -1;
+    HYD_ui_mpich_info.prepend_pattern = NULL;
+    HYD_ui_mpich_info.outfile_pattern = NULL;
+    HYD_ui_mpich_info.errfile_pattern = NULL;
     HYD_ui_mpich_info.config_file = NULL;
     HYD_ui_mpich_info.reading_config_file = 0;
     HYD_ui_mpich_info.hostname_propagation = -1;
