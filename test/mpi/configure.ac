@@ -508,10 +508,6 @@ PAC_PROG_MAKE
 MPILIBLOC=""
 AC_SUBST(MPILIBLOC)
 
-# more variables that must be marked precious for proper re-configure operation
-AC_ARG_VAR([MPICH_ENABLE_FC],["yes" if the enclosing MPICH build supports modern Fortran])
-AC_ARG_VAR([MPICH_ENABLE_CXX],["yes" if the enclosing MPICH build supports C++])
-
 namepub_tests="#"
 if test "$enable_namepub" = "yes" ; then
     namepub_tests=""
@@ -1037,26 +1033,6 @@ EOF
     # This test needs both the base c and fortran compilers
     AC_LANG_FORTRAN77
     PAC_PROG_F77_NAME_MANGLE
-
-    # Check that the Fortran compiler will allow us to pass arguments
-    # of different types (e.g., for MPI_Send)
-    # Any strict Fortran compiler will require that the arguments be
-    # the same type - currently, the NAG Fortran compiler (nagfor) is known
-    # to enforce this.
-    # We could set the FFLAGS/FCFLAGS values with the option that disables
-    # this check (if we found one), but because that may affect other tests,
-    # instead we tell the user and exit.
-    PAC_PROG_F77_MISMATCHED_ARGS(addarg,yes)
-    if test "X$addarg" != "X" ; then
-        # We could add the names of all of the MPI routines that
-        # accept different types.  Instead, we fail cleanly.
-        # Some Fortran compilers allow you to turn off checking for
-        # mismatched arguments for *all* routines.  Adding an argument
-        # that turns off checking for *everything* is not something that
-        # configure should do - if the user wants this, they can follow
-        # the instructions in the following error message.
-        AC_MSG_ERROR([The Fortran compiler $F77 does not accept programs that call the same routine with arguments of different types without the option $addarg.  Rerun configure with FFLAGS=$addarg])
-    fi
 
     # Check whether we need -lU77 to get iargc and getarg, which
     # are used for a few of the tests in spawn (U77 was needed with

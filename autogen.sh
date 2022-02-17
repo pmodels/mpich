@@ -401,25 +401,8 @@ fn_errmsgs() {
         mv .tmp src/mpi/errhan/defmsg.h
     fi
     if [ ! -s src/mpi/errhan/defmsg.h ] ; then
-        echo_n "Creating a dummy defmsg.h file... "
-        cat > src/mpi/errhan/defmsg.h <<EOF
-typedef struct { const unsigned int sentinal1; const char *short_name, *long_name; const unsigned int sentinal2; } msgpair;
-static const int generic_msgs_len = 0;
-static msgpair generic_err_msgs[] = { {0xacebad03, 0, "no error catalog", 0xcb0bfa11}, };
-static const int specific_msgs_len = 0;
-static msgpair specific_err_msgs[] = {  {0xacebad03,0,0,0xcb0bfa11}, };
-#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__NONE
-#define MPIR_MAX_ERROR_CLASS_INDEX 54
-static int class_to_index[] = {
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0 };
-#endif
-EOF
-        echo "done"
+        error "Unable to extract error messages"
+        exit 1
     fi
 }
 

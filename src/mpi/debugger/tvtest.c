@@ -241,17 +241,20 @@ int showQueues(int nComm, int expected)
         mqs_next_communicator(&process);
     }
 
+    int ret = 0;
     if (nFound < expected) {
         fprintf(stderr, "Error: expected to find %d queue entries but only saw %d\n", expected,
                 nFound);
+        ret = 1;
     }
     if (nCommFound < nComm) {
         fprintf(stderr, "Error: expected to find %d comms but only saw %d\n", nComm, nCommFound);
+        ret = 1;
     }
 
     fflush(stdout);
     fflush(stderr);
-    return 0;
+    return ret;
 }
 
 

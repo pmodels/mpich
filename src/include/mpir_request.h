@@ -204,19 +204,11 @@ struct MPIR_Request {
             MPIR_Errflag_t errflag;
             MPII_Coll_req_t coll;
         } nbc;                  /* kind : MPIR_REQUEST_KIND__COLL */
-#if defined HAVE_DEBUGGER_SUPPORT
         struct {
-            struct MPIR_Sendq *dbg_next;
-        } send;                 /* kind : MPID_REQUEST_SEND */
-#endif                          /* HAVE_DEBUGGER_SUPPORT */
-        struct {
-#if defined HAVE_DEBUGGER_SUPPORT
-            struct MPIR_Sendq *dbg_next;
-#endif                          /* HAVE_DEBUGGER_SUPPORT */
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
             MPIR_TSP_sched_t sched;
-        } persist;              /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV */
+        } persist;              /* kind : MPIR_REQUEST_KIND__PREQUEST_SEND or MPIR_REQUEST_KIND__PREQUEST_RECV */
         struct {
             struct MPIR_Request *real_request;
             enum MPIR_sched_type sched_type;
@@ -232,6 +224,12 @@ struct MPIR_Request {
             MPIR_Win *win;
         } rma;                  /* kind : MPIR_REQUEST_KIND__RMA */
     } u;
+
+#if defined HAVE_DEBUGGER_SUPPORT
+    struct MPIR_Debugq *send;
+    struct MPIR_Debugq *recv;
+    struct MPIR_Debugq *unexp;
+#endif                          /* HAVE_DEBUGGER_SUPPORT */
 
     struct MPIR_Request *next, *prev;
 
@@ -421,9 +419,6 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
     req->comm = NULL;
 
     switch (kind) {
-        case MPIR_REQUEST_KIND__SEND:
-            MPII_REQUEST_CLEAR_DBG(req);
-            break;
         case MPIR_REQUEST_KIND__COLL:
             req->u.nbc.errflag = MPIR_ERR_NONE;
             req->u.nbc.coll.host_sendbuf = NULL;
@@ -437,6 +432,7 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
         default:
             break;
     }
+    MPII_REQUEST_CLEAR_DBG(req);
 
     MPID_Request_create_hook(req);
 
@@ -551,6 +547,12 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
             MPL_free(req->u.ureq.greq_fns);
         }
 
+        if (req->kind == MPIR_REQUEST_KIND__SEND) {
+            MPII_SENDQ_FORGET(req);
+        } else if (req->kind == MPIR_REQUEST_KIND__RECV) {
+            MPII_RECVQ_FORGET(req);
+        }
+
         MPID_Request_destroy_hook(req);
 
         if (need_safety) {
@@ -607,11 +609,6 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_completion_processing_fastpath(MPI_Req
 
     MPIR_Assert(request_ptr->kind == MPIR_REQUEST_KIND__SEND ||
                 request_ptr->kind == MPIR_REQUEST_KIND__RECV);
-
-    if (request_ptr->kind == MPIR_REQUEST_KIND__SEND) {
-        /* FIXME: are Ibsend requests added to the send queue? */
-        MPII_SENDQ_FORGET(request_ptr);
-    }
 
     /* the completion path for SEND and RECV is the same at this time, modulo
      * the SENDQ hook above */
