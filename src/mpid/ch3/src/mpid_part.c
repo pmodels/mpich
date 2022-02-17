@@ -5,7 +5,7 @@
 
 #include "mpidimpl.h"
 
-int MPID_Psend_init(void *buf, int partitions, MPI_Count count, MPI_Datatype datatype,
+int MPID_Psend_init(const void *buf, int partitions, MPI_Count count, MPI_Datatype datatype,
                     int dest, int tag, MPIR_Comm *comm, MPIR_Info *info,
                     MPIR_Request **request )
 {
