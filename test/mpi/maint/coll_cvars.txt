@@ -131,6 +131,7 @@ tests:
             reduce 10
             red3 10
             red4 10
+	    nonblocking 10
         persistent:
             p_red 5
     reduce_scatter:
@@ -357,7 +358,6 @@ algorithms:
             tsp_ring
                 .MPIR_CVAR_IBCAST_RING_CHUNK_SIZE=4096
 	    posix:release_gather
-		.MPIR_CVAR_IBCAST_COMPOSITION=1,2,3
     exscan:
         intra-blocking:
             recursive_doubling
@@ -446,6 +446,12 @@ algorithms:
                 .MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096
             tsp_ring
                 .MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE=4096
+	    posix:release_gather
+		.MPIR_CVAR_IREDUCE_COMPOSITION=1
+		.MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=16384,32768
+                .MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS=2,4
+                .MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL=4,8
+                .MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE=knomial_1,knomial_2
     reduce_scatter:
         inter-blocking:
             remote_reduce_local_scatter
