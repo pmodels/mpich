@@ -249,7 +249,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 {
     int i, inherited_env_count, user_env_count, system_env_count, exec_count;
-    int proxy_count, total_filler_processes, total_core_count;
+    int proxy_count, total_core_count;
     int pmi_id, *filler_pmi_ids = NULL, *nonfiller_pmi_ids = NULL;
     struct HYD_env *env;
     struct HYD_proxy *proxy;
@@ -270,10 +270,8 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     }
 
     /* Create the arguments list for each proxy */
-    total_filler_processes = 0;
     proxy_count = 0;
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        total_filler_processes += proxy->filler_processes;
         proxy_count++;
     }
 
