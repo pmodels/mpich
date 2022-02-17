@@ -126,8 +126,8 @@ Native API:
       NM*: rreq
      SHM*: rreq
   mpi_psend_init : int
-      NM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
-     SHM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
+      NM: buf, partitions, count, datatype, rank, tag, comm, info, av, req_p
+     SHM: buf, partitions, count, datatype, rank, tag, comm, info, av, req_p
   mpi_precv_init : int
       NM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
      SHM: buf-2, partitions, count, datatype, rank, tag, comm, info, av, req_p
