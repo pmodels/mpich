@@ -147,7 +147,6 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
         amountOfDataReqestedByTargetAgg[i] = 0;
     }
 
-    int totalAmountDataReceived = 0;
     MPI_Request *mpiSizeToSendRequest =
         (MPI_Request *) ADIOI_Malloc(numTargetAggs * sizeof(MPI_Request));
     MPI_Request *mpiRecvDataRequest =
@@ -415,7 +414,6 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
                         &irecv, &mpiWaitAnyStatusFromSourceProcs);
             totalDataReceivedThisRound +=
                 dataSizeGottenThisRoundPerProc[mpiRequestMapPerProc[irecv]];
-            totalAmountDataReceived += dataSizeGottenThisRoundPerProc[mpiRequestMapPerProc[irecv]];
 
 #ifdef p2pcontigtrace
             printf
