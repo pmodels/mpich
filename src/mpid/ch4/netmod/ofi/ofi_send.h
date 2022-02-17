@@ -222,8 +222,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
 
-    /* TODO: start gpu-rdma for larger data sizes; need to change the size threshold */
-    if (MPIDI_OFI_ENABLE_HMEM && data_sz) {
+    if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
         if (MPIDI_OFI_ENABLE_MR_HMEM) {
             if (dt_contig) {
                 register_mem = true;
@@ -301,7 +300,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = NULL;
     }
 
-    if (data_sz <= MPIDI_OFI_global.max_buffered_send && !MPIDI_OFI_ENABLE_MR_HMEM) {
+    if (data_sz <= MPIDI_OFI_global.max_buffered_send &&
+        data_sz < MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                             send_buf,
                                             data_sz,

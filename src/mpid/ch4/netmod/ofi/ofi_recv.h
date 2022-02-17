@@ -180,7 +180,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
 
-    if (MPIDI_OFI_ENABLE_HMEM && data_sz) {
+    if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
         if (MPIDI_OFI_ENABLE_MR_HMEM) {
             if (dt_contig) {
                 register_mem = true;

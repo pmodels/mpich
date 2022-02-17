@@ -472,6 +472,16 @@ cvars:
       description : >-
         If true, need to register the host buffer to use GPU direct RDMA.
 
+    - name        : MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD
+      category    : CH4_OFI
+      type        : int
+      default     : 262144
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        This is the threshold to start using GPU direct RDMA.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
