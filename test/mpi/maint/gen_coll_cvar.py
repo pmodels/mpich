@@ -20,7 +20,7 @@ class RE:
 
 def main():
     (tests, algos, algo_params) = load_config("coll_cvars.txt")
-    testlist_cvar = "coll/testlist.cvar"
+    testlist_cvar = "coll/testlist.collalgo"
     print("  --> [%s]" % testlist_cvar)
     with open(testlist_cvar, "w") as Out:
         for (key, testlist) in tests.items():
