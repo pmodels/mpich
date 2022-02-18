@@ -133,14 +133,6 @@ AC_ARG_ENABLE([dtpools],
               [AS_HELP_STRING([--disable-dtpools],[Disable dtpools tests])],,
               [enable_dtpools=yes])
 
-if test "x${enable_dtpools}" = "xyes"; then
-    DTP_SWITCH="ON"
-else
-    DTP_SWITCH="OFF"
-fi
-
-AC_SUBST(DTP_SWITCH)
-
 # runtests options
 RUNTESTS_OPTS=
 AC_SUBST(RUNTESTS_OPTS)
@@ -238,6 +230,11 @@ AC_ARG_ENABLE(xfail,
                 [Run tests marked for expected failure])],,
         [enable_xfail=no])
 
+AC_ARG_ENABLE(collalgo-tests,
+        [AS_HELP_STRING([--enable-collalgo-tests],
+                [Run extended collective algorithm tests])],,
+        [enable_collalgo_tests=yes])
+
 AC_ARG_ENABLE(gpu-tests-only,
         [AS_HELP_STRING([--enable-gpu-tests-only],
                 [Run only GPU tests])],,
@@ -253,12 +250,7 @@ AC_ARG_WITH(dtpools-datatypes,
 
 # parse args for typegen.sh script
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
-
-PAC_CHECK_PYTHON
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
-#Test collectives algorithms with CVARs
-cmd="$PYTHON $srcdir/maint/gen_coll_cvar.py"
-AC_CONFIG_COMMANDS([collcvartests],[$cmd_gen_coll],[cmd_gen_coll="$cmd"])
 
 AC_ARG_WITH(mpi,
         [AC_HELP_STRING([--with-mpi=dir],
@@ -739,13 +731,27 @@ PAC_POP_FLAG([CPPFLAGS])
 PAC_POP_FLAG([LDFLAGS])
 PAC_POP_FLAG([LIBS])
 
-AM_CONDITIONAL([HAVE_GPU], [test $have_gpu = "yes"])
-# GPU only tests
+# setup which tests "make testing" will run
+TESTLIST=testlist
+TESTDIRS=
+if test $have_gpu = "yes" ; then
+    TESTLIST="${TESTLIST},testlist.gpu"
+fi
+if test $enable_dtpools = "yes" ; then
+    TESTLIST="${TESTLIST},testlist.dtp"
+fi
+if test $enable_collalgo_tests = "yes" ; then
+    TESTLIST="${TESTLIST},testlist.collalgo"
+fi
+# handle --enable-gpu-tests-only
 if test $have_gpu = "no" -a $enable_gpu_tests_only = "yes" ; then
     AC_MSG_ERROR([GPU only test configuration requires GPU library (CUDA or LevelZero)])
+elif test $enable_gpu_tests_only = "yes" ; then
+    TESTDIRS=coll,pt2pt,rma
+    TESTLIST=testlist.gpu
 fi
-AM_CONDITIONAL([GPU_ONLY], [test $enable_gpu_tests_only = "yes"])
-# End of GPU libs Check
+AC_SUBST([TESTDIRS])
+AC_SUBST([TESTLIST])
 
 # for tests that require large mem
 largetest="#"
