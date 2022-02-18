@@ -10,7 +10,7 @@
 #include "mpidig_part_utils.h"
 
 void MPIDIG_precv_matched(MPIR_Request * part_req);
-int MPIDIG_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
+int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count,
                           MPI_Datatype datatype, int dest, int tag,
                           MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request);
 int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
