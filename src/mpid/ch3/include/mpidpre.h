@@ -726,7 +726,7 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
 int MPID_Cancel_send(MPIR_Request *);
 int MPID_Cancel_recv(MPIR_Request *);
 
-int MPID_Psend_init(void *buf, int partitions, MPI_Count count, MPI_Datatype datatype,
+int MPID_Psend_init(const void *buf, int partitions, MPI_Count count, MPI_Datatype datatype,
                     int dest, int tag, MPIR_Comm *comm, MPIR_Info *info,
                     MPIR_Request **request );
 int MPID_Precv_init(void *buf, int partitions, MPI_Count count, MPI_Datatype datatype,
