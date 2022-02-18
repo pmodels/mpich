@@ -79,6 +79,8 @@ AC_DEFUN([PAC_CONFIG_HWLOC],[
     if test "$pac_have_hwloc" = "no" -a "$with_hwloc" != "no"; then
         with_hwloc=embedded
         pac_have_hwloc=yes
+        # make sure subsystems such as hydra will use embedded hwloc consistently
+        subsys_config_args="$subsys_config_args --with-hwloc=embedded"
     fi
 
     if test "$with_hwloc" = "embedded" ; then
