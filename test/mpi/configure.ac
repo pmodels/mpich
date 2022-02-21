@@ -257,7 +257,7 @@ AC_ARG_ENABLE(xfail,
 AC_ARG_ENABLE(collalgo-tests,
         [AS_HELP_STRING([--enable-collalgo-tests],
                 [Run extended collective algorithm tests])],,
-        [enable_collalgo_tests=no])
+        [enable_collalgo_tests=yes])
 
 AC_ARG_ENABLE(gpu-tests-only,
         [AS_HELP_STRING([--enable-gpu-tests-only],
@@ -276,7 +276,7 @@ AC_ARG_WITH(dtpools-datatypes,
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
 
-if test $enable_collalgo_tests != "no" ; then
+if test $enable_collalgo_tests = "yes" ; then
     PAC_CHECK_PYTHON
     #Test collectives algorithms with CVARs
     cmd="$PYTHON $srcdir/maint/gen_coll_cvar.py"

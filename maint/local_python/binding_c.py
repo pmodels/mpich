@@ -2041,7 +2041,9 @@ def dump_validate_userbuffer_neighbor_vw(func, kind, buf, ct, dt, disp):
     ct += '[i]'
     if RE.search(r'-w$', kind):
         dt += '[i]'
+        dump_if_open("%s > 0" % ct)
         dump_validate_datatype(func, dt)
+        dump_if_close()
     G.out.append("MPIR_ERRTEST_COUNT(%s, mpi_errno);" % ct)
     G.out.append("if (%s[i] == 0) {" % disp)
     G.out.append("    MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (buf, ct, dt))
@@ -2160,7 +2162,9 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
         ct += '[i]'
         if RE.search(r'-w$', kind):
             dt += '[i]'
+            dump_if_open("%s > 0" % ct)
             dump_validate_datatype(func, dt)
+            dump_if_close()
 
     #  -- test wrong MPI_IN_PLACE
     SEND = "SEND"
