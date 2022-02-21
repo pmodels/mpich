@@ -9,7 +9,7 @@
 
 void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr)
 {
-    hdr->cmd = INVALID_CMD;
+    hdr->cmd = CMD_INVALID;
     hdr->buflen = -1;
     hdr->pid = -1;
     hdr->pmi_version = -1;

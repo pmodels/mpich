@@ -35,7 +35,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYD_STRING_SPIT(stash, buf, status);
 
     HYD_pmcd_init_header(&hdr);
-    hdr.cmd = PMI_CMD;
+    hdr.cmd = CMD_PMI;
     hdr.pid = fd;
     hdr.buflen = strlen(buf);
     hdr.pmi_version = 2;
