@@ -165,8 +165,6 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
 
 static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 {
-    int full_command, buflen, cmdlen;
-    char *bufptr, lenptr[7];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -192,8 +190,9 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
      * other PMs might rely on the "incorrect order of commands".
      */
 
+    int full_command, buflen;
     /* Parse the string and if a full command is found, make sure that
-     * bufptr points to the last byte of the command */
+     * buflen is the length of the buffer and NUL-terminated if necessary */
     full_command = 0;
     if (!strncmp(sptr, "cmd=", strlen("cmd=")) || !strncmp(sptr, "mcmd=", strlen("mcmd="))) {
         /* PMI-1 format command; read the rest of it */
@@ -201,18 +200,23 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 
         if (!strncmp(sptr, "cmd=", strlen("cmd="))) {
             /* A newline marks the end of the command */
+            char *bufptr;
             for (bufptr = sptr; bufptr < sptr + pmi_storage_len; bufptr++) {
                 if (*bufptr == '\n') {
                     full_command = 1;
+                    *bufptr = '\0';
+                    buflen = bufptr - sptr + 1;
                     break;
                 }
             }
         } else {        /* multi commands */
+            char *bufptr;
             for (bufptr = sptr; bufptr < sptr + pmi_storage_len - strlen("endcmd\n") + 1; bufptr++) {
-                if (bufptr[0] == 'e' && bufptr[1] == 'n' && bufptr[2] == 'd' &&
-                    bufptr[3] == 'c' && bufptr[4] == 'm' && bufptr[5] == 'd' && bufptr[6] == '\n') {
+                if (strncmp(bufptr, "endcmd\n", 7) == 0) {
                     full_command = 1;
                     bufptr += strlen("endcmd\n") - 1;
+                    *bufptr = '\0';
+                    buflen = bufptr - sptr + 1;
                     break;
                 }
             }
@@ -221,24 +225,24 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
         *pmi_version = 2;
 
         /* We already made sure we had at least 6 bytes */
+        char lenptr[7];
         memcpy(lenptr, sptr, 6);
         lenptr[6] = 0;
-        cmdlen = atoi(lenptr);
+        int cmdlen = atoi(lenptr);
 
         if (pmi_storage_len >= cmdlen + 6) {
             full_command = 1;
-            bufptr = sptr + 6 + cmdlen - 1;
+            char *bufptr = sptr + 6 + cmdlen - 1;
+            *bufptr = '\0';
+            buflen = bufptr - sptr + 1;
         }
     }
 
     if (full_command) {
         /* We have a full command */
-        buflen = bufptr - sptr + 1;
-        HYDU_MALLOC_OR_JUMP(*buf, char *, buflen, status);
-        memcpy(*buf, sptr, buflen);
+        *buf = sptr;
         sptr += buflen;
         pmi_storage_len -= buflen;
-        (*buf)[buflen - 1] = '\0';
 
         if (pmi_storage_len == 0)
             sptr = pmi_storage;
@@ -258,9 +262,6 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
@@ -359,7 +360,6 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         HYD_pmcd_pmip.downstream.pmi_fd_active[pid] = 1;
 
     status = handle_pmi_cmd(fd, buf, hdr);
-    MPL_free(buf);
     HYDU_ERR_POP(status, "unable to handle PMI command\n");
 
     if (repeat)
