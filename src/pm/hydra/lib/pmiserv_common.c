@@ -9,14 +9,9 @@
 
 void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr)
 {
+    memset(hdr, 0, sizeof(struct HYD_pmcd_hdr));
     hdr->cmd = CMD_INVALID;
     hdr->buflen = -1;
-    hdr->pid = -1;
-    hdr->pmi_version = -1;
-    hdr->pgid = -1;
-    hdr->proxy_id = -1;
-    hdr->rank = -1;
-    hdr->signum = -1;
 }
 
 HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cmd, char *args[])

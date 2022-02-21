@@ -47,9 +47,9 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
 
         HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
-        hdr.pgid = HYD_pmcd_pmip.local.pgid;
-        hdr.proxy_id = HYD_pmcd_pmip.local.id;
-        hdr.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
+        hdr.u.io.pgid = HYD_pmcd_pmip.local.pgid;
+        hdr.u.io.proxy_id = HYD_pmcd_pmip.local.id;
+        hdr.u.io.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
         hdr.buflen = recvd;
 
         {
@@ -102,7 +102,7 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
 
     HYDU_FUNC_ENTER();
 
-    if (hdr.pmi_version == 1)
+    if (hdr.u.pmi.pmi_version == 1)
         HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
     else
         HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
@@ -111,7 +111,7 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
     for (int i = 0; i < MAX_PMI_ARGS; i++)
         args[i] = NULL;
 
-    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
+    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.u.pmi.pmi_version, &pmi_cmd, args);
     HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
     if (HYD_pmcd_pmip.user_global.debug) {
@@ -135,7 +135,7 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
 
     /* We don't understand the command; forward it upstream */
     hdr.cmd = CMD_PMI;
-    hdr.pid = fd;
+    hdr.u.pmi.pid = fd;
     hdr.buflen = strlen(buf);
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
@@ -331,7 +331,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                 HYD_pmcd_pmip_send_signal(SIGUSR1);
 
                 hdr.cmd = CMD_PROCESS_TERMINATED;
-                hdr.pid = HYD_pmcd_pmip.downstream.pmi_rank[pid];
+                /* global rank for the terminated process */
+                hdr.u.data = HYD_pmcd_pmip.downstream.pmi_rank[pid];
                 status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr),
                                          &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
                 HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
@@ -345,7 +346,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     }
 
   check_cmd:
-    status = check_pmi_cmd(&buf, &hdr.pmi_version, &repeat);
+    status = check_pmi_cmd(&buf, &hdr.u.pmi.pmi_version, &repeat);
     HYDU_ERR_POP(status, "error checking the PMI command\n");
 
     if (buf == NULL)
@@ -391,11 +392,13 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
 
     buf[hdr.buflen] = 0;
 
+    int pmi_version = hdr.u.pmi.pmi_version;
+    int pmi_rank = hdr.u.pmi.pid;
     HYDU_MALLOC_OR_JUMP(args, char **, MAX_PMI_INTERNAL_ARGS * sizeof(char *), status);
     for (i = 0; i < MAX_PMI_INTERNAL_ARGS; i++)
         args[i] = NULL;
 
-    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
+    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, pmi_version, &pmi_cmd, args);
     HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
     h = HYD_pmcd_pmip_pmi_handle;
@@ -412,7 +415,7 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
         HYDU_dump(stdout, "we don't understand the response %s; forwarding downstream\n", pmi_cmd);
     }
 
-    status = HYDU_sock_write(hdr.pid, buf, hdr.buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_write(pmi_rank, buf, hdr.buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to forward PMI response to MPI process\n");
 
     if (HYD_pmcd_pmip.user_global.auto_cleanup) {
@@ -984,9 +987,10 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         status = handle_pmi_response(fd, hdr);
         HYDU_ERR_POP(status, "unable to handle PMI response\n");
     } else if (hdr.cmd == CMD_SIGNAL) {
+        int signum = hdr.u.data;
         /* FIXME: This code needs to change from sending the signal to
          * a PMI-2 notification message. */
-        HYD_pmcd_pmip_send_signal(hdr.signum);
+        HYD_pmcd_pmip_send_signal(signum);
     } else if (hdr.cmd == CMD_STDIN) {
         int count;
 

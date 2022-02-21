@@ -170,7 +170,7 @@ HYD_status HYD_pmcd_pmiserv_send_signal(struct HYD_proxy *proxy, int signum)
 
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_SIGNAL;
-    hdr.signum = signum;
+    hdr.u.data = signum;
 
     status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed,
                              HYDU_SOCK_COMM_MSGWAIT);
@@ -281,7 +281,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         buf[hdr.buflen] = 0;
 
-        status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.pid, buf, hdr.pmi_version);
+        status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.u.pmi.pid, buf, hdr.u.pmi.pmi_version);
         HYDU_ERR_POP(status, "unable to process PMI command\n");
 
         MPL_free(buf);
@@ -293,9 +293,13 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ASSERT(!closed, status);
 
         if (hdr.cmd == CMD_STDOUT)
-            status = HYD_server_info.stdout_cb(hdr.pgid, hdr.proxy_id, hdr.rank, buf, hdr.buflen);
+            status =
+                HYD_server_info.stdout_cb(hdr.u.io.pgid, hdr.u.io.proxy_id, hdr.u.io.rank, buf,
+                                          hdr.buflen);
         else
-            status = HYD_server_info.stderr_cb(hdr.pgid, hdr.proxy_id, hdr.rank, buf, hdr.buflen);
+            status =
+                HYD_server_info.stderr_cb(hdr.u.io.pgid, hdr.u.io.proxy_id, hdr.u.io.rank, buf,
+                                          hdr.buflen);
         HYDU_ERR_POP(status, "error in the UI defined callback\n");
 
         MPL_free(buf);
@@ -327,6 +331,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         MPL_free(buf);
     } else if (hdr.cmd == CMD_PROCESS_TERMINATED) {
+        int terminated_rank = hdr.u.data;
         if (HYD_server_info.user_global.auto_cleanup == 0) {
             /* Update the map of the alive processes */
             pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
@@ -336,7 +341,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 /* This is the first dead process */
                 MPL_free(pg_scratch->dead_processes);
                 HYDU_MALLOC_OR_JUMP(pg_scratch->dead_processes, char *, PMI_MAXVALLEN, status);
-                MPL_snprintf(pg_scratch->dead_processes, PMI_MAXVALLEN, "%d", hdr.pid);
+                MPL_snprintf(pg_scratch->dead_processes, PMI_MAXVALLEN, "%d", terminated_rank);
             } else {
                 /* FIXME: If the list of dead processes does not fit
                  * inside a single value length, set it as a
@@ -360,7 +365,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 HYDU_ASSERT(segment != NULL, status);
                 do {
                     value = strtol(segment, NULL, 10);
-                    if (value == hdr.pid) {
+                    if (value == terminated_rank) {
                         included = 1;
                         break;
                     }
@@ -371,7 +376,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 if (!included) {
                     HYDU_MALLOC_OR_JUMP(str, char *, PMI_MAXVALLEN, status);
 
-                    MPL_snprintf(str, PMI_MAXVALLEN, "%s,%d", pg_scratch->dead_processes, hdr.pid);
+                    MPL_snprintf(str, PMI_MAXVALLEN, "%s,%d", pg_scratch->dead_processes,
+                                 terminated_rank);
                 } else {
                     str = current_list;
                 }

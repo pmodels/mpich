@@ -53,23 +53,27 @@ enum HYD_pmcd_cmd {
     CMD_PROCESS_TERMINATED
 };
 
-struct HYD_pmcd_hdr {
-    enum HYD_pmcd_cmd cmd;
-
-    /* Generic */
-    int buflen;
-
-    /* PMI_CMD */
+/* PMI_CMD */
+struct HYD_hdr_pmi {
     int pid;                    /* ID of the requesting process */
     int pmi_version;            /* PMI version */
+};
 
-    /* STDOUT/STDERR */
+/* STDOUT/STDERR */
+struct HYD_hdr_io {
     int pgid;
     int proxy_id;
     int rank;
+};
 
-    /* SIGNAL */
-    int signum;
+struct HYD_pmcd_hdr {
+    enum HYD_pmcd_cmd cmd;
+    int buflen;
+    union {
+        int data;               /* for commands with a single integer data */
+        struct HYD_hdr_pmi pmi;
+        struct HYD_hdr_io io;
+    } u;
 };
 
 struct HYD_pmcd_token {
