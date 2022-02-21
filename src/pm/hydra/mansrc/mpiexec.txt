@@ -48,6 +48,14 @@ The MPI standard specifies the following arguments and their meanings\:
          
    MPICH-Specific Arguments:
    
+   MPICH implements a few process managers. Here we list a general set of
+   arguments that many of the implementations support. More detailed options
+   that are supported by a particular implementation, e.g. hydra, are
+   available via\:
+.vb
+    mpiexec -h
+.ve
+
    Many of the implementations of process managers in MPICH support the
    following arguments to 'mpiexec'\:
 
@@ -92,17 +100,6 @@ The MPI standard specifies the following arguments and their meanings\:
   10000 and 10100, use '10000:10100'.  
 . MPICH_PORT_RANGE - Has the same meaning as 'MPIEXEC_PORT_RANGE' and 
   is used if 'MPIEXEC_PORT_RANGE' is not set.
-. MPIEXEC_PREFIX_DEFAULT - If this environment variable is set, output
-  to standard output is prefixed by the rank in 'MPI_COMM_WORLD' of the 
-  process and output to standard error is prefixed by the rank and the 
-  text '(err)'; both are followed by an angle bracket ('>').  If
-  this variable is not set, there is no prefix.
-. MPIEXEC_PREFIX_STDOUT - Set the prefix used for lines sent to standard
-  output.  A '%d' is replaced with the rank in 'MPI_COMM_WORLD'; a '%w' is 
-  replaced with an indication of which 'MPI_COMM_WORLD' in MPI jobs that
-  involve multiple 'MPI_COMM_WORLD's (e.g., ones that use 'MPI_Comm_spawn' or
-  'MPI_Comm_connect').
-- MPIEXEC_PREFIX_STDERR - Like 'MPIEXEC_PREFIX_STDOUT', but for standard error.
 
    Return Status:
    'mpiexec' returns the maximum of the exit status values of all of the
