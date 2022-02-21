@@ -34,25 +34,27 @@ struct HYD_pmcd_init_hdr {
     int proxy_id;
 };
 
+/* The set of commands supported */
+enum HYD_pmcd_cmd {
+    CMD_INVALID = 0,            /* for sanity testing */
+
+    /* UI to proxy commands */
+    CMD_PROC_INFO,
+    CMD_PMI_RESPONSE,
+    CMD_SIGNAL,
+    CMD_STDIN,
+
+    /* Proxy to UI commands */
+    CMD_PID_LIST,
+    CMD_EXIT_STATUS,
+    CMD_PMI,
+    CMD_STDOUT,
+    CMD_STDERR,
+    CMD_PROCESS_TERMINATED
+};
+
 struct HYD_pmcd_hdr {
-    /* The set of commands supported */
-    enum HYD_pmcd_cmd {
-        INVALID_CMD = 0,        /* for sanity testing */
-
-        /* UI to proxy commands */
-        PROC_INFO,
-        PMI_RESPONSE,
-        SIGNAL,
-        STDIN,
-
-        /* Proxy to UI commands */
-        PID_LIST,
-        EXIT_STATUS,
-        PMI_CMD,
-        STDOUT,
-        STDERR,
-        PROCESS_TERMINATED
-    } cmd;
+    enum HYD_pmcd_cmd cmd;
 
     /* Generic */
     int buflen;

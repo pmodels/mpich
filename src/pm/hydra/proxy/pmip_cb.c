@@ -33,13 +33,13 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
     if (recvd) {
         if (stdfd == STDOUT_FILENO) {
             HYD_pmcd_init_header(&hdr);
-            hdr.cmd = STDOUT;
+            hdr.cmd = CMD_STDOUT;
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
                 if (HYD_pmcd_pmip.downstream.out[i] == fd)
                     break;
         } else {
             HYD_pmcd_init_header(&hdr);
-            hdr.cmd = STDERR;
+            hdr.cmd = CMD_STDERR;
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
                 if (HYD_pmcd_pmip.downstream.err[i] == fd)
                     break;
@@ -134,7 +134,7 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
     }
 
     /* We don't understand the command; forward it upstream */
-    hdr.cmd = PMI_CMD;
+    hdr.cmd = CMD_PMI;
     hdr.pid = fd;
     hdr.buflen = strlen(buf);
     status =
@@ -330,7 +330,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                  * SIGUSR1 signal to a PMI-2 notification message. */
                 HYD_pmcd_pmip_send_signal(SIGUSR1);
 
-                hdr.cmd = PROCESS_TERMINATED;
+                hdr.cmd = CMD_PROCESS_TERMINATED;
                 hdr.pid = HYD_pmcd_pmip.downstream.pmi_rank[pid];
                 status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr),
                                          &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
@@ -522,7 +522,7 @@ static HYD_status singleton_init(void)
     /* Send the PID list upstream */
     struct HYD_pmcd_hdr hdr;
     HYD_pmcd_init_header(&hdr);
-    hdr.cmd = PID_LIST;
+    hdr.cmd = CMD_PID_LIST;
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
                         HYDU_SOCK_COMM_MSGWAIT);
@@ -821,7 +821,7 @@ static HYD_status launch_procs(void)
 
     /* Send the PID list upstream */
     HYD_pmcd_init_header(&hdr);
-    hdr.cmd = PID_LIST;
+    hdr.cmd = CMD_PID_LIST;
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
                         HYDU_SOCK_COMM_MSGWAIT);
@@ -969,7 +969,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ERR_POP(status, "error reading command from launcher\n");
     HYDU_ASSERT(!closed, status);
 
-    if (hdr.cmd == PROC_INFO) {
+    if (hdr.cmd == CMD_PROC_INFO) {
         status = procinfo(fd);
         HYDU_ERR_POP(status, "error parsing process info\n");
 
@@ -980,14 +980,14 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
             status = launch_procs();
             HYDU_ERR_POP(status, "launch_procs returned error\n");
         }
-    } else if (hdr.cmd == PMI_RESPONSE) {
+    } else if (hdr.cmd == CMD_PMI_RESPONSE) {
         status = handle_pmi_response(fd, hdr);
         HYDU_ERR_POP(status, "unable to handle PMI response\n");
-    } else if (hdr.cmd == SIGNAL) {
+    } else if (hdr.cmd == CMD_SIGNAL) {
         /* FIXME: This code needs to change from sending the signal to
          * a PMI-2 notification message. */
         HYD_pmcd_pmip_send_signal(hdr.signum);
-    } else if (hdr.cmd == STDIN) {
+    } else if (hdr.cmd == CMD_STDIN) {
         int count;
 
         if (hdr.buflen) {
