@@ -4,6 +4,8 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+use strict;
+
 # (Tested with -w; 10/5/04)
 # 
 # Find the parse.sub routine.
@@ -16,23 +18,22 @@ if ( ! -s "maint/parse.sub" ) {
 	$maintdir = $program;
 	$rootdir  = $program;
 	$rootdir  =~ s/\/maint//g;
-	print "Rootdir = $rootdir\n" if $debug;
     }
 }
 require "$maintdir/parse.sub";
 
-$debug = 0;
-$careful = 0;        # Set careful to 1 to flag unused messages
-$carefulFilename = "";
-$showfiles = 0;
-$quiet = 0;
-$build_test_pgm = 1;
+my $debug = 0;
+my $careful = 0;        # Set careful to 1 to flag unused messages
+my $carefulFilename = "";
+my $showfiles = 0;
+my $quiet = 0;
+my $build_test_pgm = 1;
 # FIXME: checkErrClass should be set to 1; currently set to zero
 # to permit autogen.sh to complete
-$checkErrClass = 1;
+my $checkErrClass = 1;
 
 # Strict is used to control checking of error message strings.
-$gStrict = 0;
+my $gStrict = 0;
 if (defined($ENV{"DEBUG_STRICT"})) { $gStrict = 1; }
 
 our (%generic_msgs, %generic_loc, %specific_msgs, %specific_loc);
@@ -45,11 +46,13 @@ foreach my $k ("envvarparse", "cvar_val"){
 }
 
 # Check for special args
-@files = ();
-%skipFiles = ();
+my $mpi_h = "src/include/mpi.h.in";
+my $baseerrnames_txt = "src/mpi/errhan/baseerrnames.txt";
+my @files = ();
+my %skipFiles = ();
 my @errnameFiles = ();
-$outfile = "";
-foreach $arg (@ARGV) {
+my $outfile = "";
+foreach my $arg (@ARGV) {
     if ($arg =~ /^--?showfiles/) { $showfiles = 1; }
     elsif( $arg =~ /^--?debug/) { $debug = 1; }
     elsif( $arg =~ /^--?quiet/) { $quiet = 1; }
@@ -67,7 +70,7 @@ foreach $arg (@ARGV) {
 	if (-d $arg) {
 	    # Add all .c files from directory $arg to the list of files 
 	    # to process (this lets us shorten the arg list)
-	    @files = (@files, &ExpandDir( $arg ));
+	    ExpandDir(\@files, $arg);
 	}
 	else {
             # errname files are treated differently
@@ -82,15 +85,17 @@ foreach $arg (@ARGV) {
 }
 # End of argument processing
 
+print "Rootdir = $rootdir\n" if $debug;
+
 # Setup the basic file for errnames - Now determined in ExpandDirs
 #@errnameFiles = ( "$rootdir/src/mpi/errhan/errnames.txt" );
 
+my $OUTFD;
 if ($outfile ne "") {
-    $OUTFD = "MyOutFile";
     open( $OUTFD, ">$outfile" ) or die "Could not open $outfile\n";
 }
 else {
-    $OUTFD = STDOUT;
+    $OUTFD = *STDOUT;
 }
 # Setup before processing the files
 if ($build_test_pgm && -d "test/mpi/errhan") {
@@ -113,8 +118,33 @@ if ($build_test_pgm && -d "test/mpi/errhan") {
     print TESTFD "{\n    int err;\n    MPI_Init( 0, 0 );\n";
 }
 
+# Load mpi.h for error class constants
+my %mpi_h_constants;
+$mpi_h_constants{"MPI_SUCCESS"} = 0;
+if (open In, $mpi_h) {
+    while (<In>) {
+        if (/^#define\s+((MPICH|MPI|MPI_T|MPIX)_ERR_\w+)\s+(.+)/) {
+            my ($key, $t) = ($1, $3);
+            if ($t=~/^(\d+)/) {
+                $mpi_h_constants{$key} = $1;
+            } elsif ($t=~/MPICH_ERR_FIRST_MPIX\s*\+\s*(\d+)/) {
+                $mpi_h_constants{$key} = $mpi_h_constants{MPICH_ERR_FIRST_MPIX} + $1;
+            }
+        }
+    }
+    close In;
+} else {
+    die "Unable to read $mpi_h\n";
+}
+
+my $max_err_class = $mpi_h_constants{MPICH_ERR_LAST_MPIX};
+if (!$max_err_class) {
+    die "Failed to load MPICH_ERR_LAST_MPIX from $mpi_h\n";
+}
+
 # Process the definitions
-foreach $file (@files) {
+my (%generic_msgs, %generic_loc, %specific_msgs, %specific_loc);
+foreach my $file (@files) {
     print "$file\n" if $showfiles;
     &ProcessFile( $file );
 }
@@ -122,12 +152,37 @@ foreach $file (@files) {
 #
 # Create the hash %longnames that maps the short names to the long names,
 # $longnames{shortname} => longname, by reading the errnames.txt files
+#
+my (%longnames, %longnamesDefined);
 foreach my $sourcefile (@errnameFiles) {
     #print STDERR "processing $sourcefile for error names\n";
     &ReadErrnamesFile( $sourcefile );
 }
 
+# Load baseerrnames.txt
+my @class_msgs;
+if (open In, $baseerrnames_txt) {
+    while (<In>) {
+        if (/^(MPI\w+)\s+(\*\*\w+)/) {
+            my ($name, $shortmsg) = ($1, $2, $3);
+            my $id = $mpi_h_constants{$name};
+            if (defined $id) {
+                $generic_msgs{$shortmsg}++;
+                $generic_loc{$shortmsg} = ":baseerrnames.txt";
+                $class_msgs[$id] = $shortmsg;
+            } else {
+                die "error class $name not found in mpi.h\n";
+            }
+        }
+    }
+    close In;
+} else {
+    die "Unable to read $baseerrnames_txt\n";
+}
+
+
 # Create the output files from the input that we've read
+my (%longnamesUsed, %short_to_num);
 &CreateErrmsgsHeader( $OUTFD );
 &CreateErrMsgMapping( $OUTFD );
 
@@ -139,15 +194,14 @@ if ($build_test_pgm && -d "test/mpi/errhan") {
 #
 # Generate a list of unused keys
 if ($careful) {
-    my $OUTFD = STDERR;
+    my $OUTFD = *STDERR;
     if ($carefulFilename ne "") {
-	$OUTFD = "ERRFD";
 	open $OUTFD, ">$carefulFilename" or die "Cannot open $carefulFilename";
     }
-    foreach $shortname (keys(%longnames)) {
+    foreach my $shortname (keys(%longnames)) {
 	if (!defined($longnamesUsed{$shortname}) ||
 	    $longnamesUsed{$shortname} < 1) {
-	    $loc = $longnamesDefined{$shortname};
+	    my $loc = $longnamesDefined{$shortname};
 	    print $OUTFD "Name $shortname is defined in $loc but never used\n";
 	}
     }
@@ -163,7 +217,7 @@ if ($careful) {
 # text.
 # This is a temporary routine; the exact output form will be defined later
 sub CreateErrmsgsHeader {
-    $FD = $_[0];
+    my $FD = $_[0];
     print $FD "/*\
  * Copyright (C) by Argonne National Laboratory\
  *     See COPYRIGHT in top-level directory\
@@ -193,48 +247,17 @@ typedef struct msgpair {
 sub CreateErrMsgMapping {
     my $OUTFD = $_[0];
 
-    # Create a mapping of MPI error classes to the specific error
-    # message by index into generic_err_msgs.  This reads the file
-    # baseerrnames, looks up the generic message, and maps the MPI error
-    # class to the corresponding index.
-    # We must do this here because we must ensure that all MPI error
-    # classes have been added to the generic messages
-    @class_msgs = ();
-    open (FD, "<$rootdir/src/mpi/errhan/baseerrnames.txt" ) || 
-	die "Could not open $rootdir/src/mpi/errhan/baseerrnames.txt\n";
-    while (<FD>) {
-	s/#.*$//;
-	my ($mpiname,$num,$shortmsg) = split(/\s\s*/);
-	if (!defined($shortmsg)) {
-	    # In case there is no short message entry (!)
-	    $shortmsg = "";
-	}
-	if ($shortmsg ne "")
-	{
-	    if ($shortmsg =~ /\%/)
-	    {
-		print STDERR "Warning: generic message $shortmsg in baseerrnames.txt contains format control\n";
-	    }
-
-	    $generic_msgs{$shortmsg}++;
-	    $generic_loc{$shortmsg} = ":baseerrnames.txt";
-
-	    $class_msgs[$num] = "$shortmsg";
-	}
-    }
-    close (FD);
-
     # For the case of classes only, output the strings for the class 
     # messages
     print $OUTFD "#if MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__CLASS\n";
     print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $#class_msgs+1\n";
     print $OUTFD "static const char *classToMsg[] = {\n";
-    for (my $i=0; $i<=$#class_msgs; $i++) {
+    for (my $i=0; $i<=$max_err_class; $i++) {
 	my $shortname = $class_msgs[$i];
-	my $msg       = $longnames{$shortname};
-	print $OUTFD "\"$msg\", /* $i  $class_msgs[$i] */\n";
+        my $msg       = $longnames{$shortname};
+        print $OUTFD "    \"$msg\", /* $i  $class_msgs[$i] */\n";
     }
-    print $OUTFD "0 }; \n";
+    print $OUTFD "    NULL\n};\n";
     print $OUTFD "#endif /* MSG_CLASS */\n";
 
     # Now, output each short,long key
@@ -246,18 +269,27 @@ sub CreateErrMsgMapping {
     print $OUTFD "/* The names are in sorted order, allowing the use of a simple\
   linear search or bisection algorithm to find the message corresponding to\
   a particular message */\n";
+    my @sorted_generic_msgs = sort keys %generic_msgs;
+
+    # add a dummy UNKNOWN entry in the front.
+    # NOTE: assume all other generic message are lowercase so "UNKNOWN" will
+    #       be ordered first. This is critical because FindGenericMsgIndex assumes
+    #       this ordering!
+    unshift @sorted_generic_msgs, "**UNKNOWN";
+    $generic_loc{"**UNKNOWN"} = ":[NONE]";
+    $longnames{"**UNKNOWN"} = "Unknown error class";
+
     my $num = 0;
-    foreach my $key (sort keys %generic_msgs)
+    foreach my $key (@sorted_generic_msgs)
     {
-	$longvalue = "\"\0\"";
+	my $longvalue = "\"\0\"";
 	if (!defined($longnames{$key}))
 	{
-	    $seenfile = $generic_loc{$key};
+	    my $seenfile = $generic_loc{$key};
 	    if ($key =~ /^\*\*/) {
 		# If the message begins with text, assume that it is a 
 		# literal message
 		print STDERR "Shortname $key for generic messages has no expansion (first seen in file $seenfile)\n";
-		print STDERR "(Add expansion to $sourcefile)\n";
 	    }
 	    next;
 	}
@@ -287,7 +319,7 @@ sub CreateErrMsgMapping {
     my $sentinal2 = "0xcb0bfa11";
     print $OUTFD "static const msgpair generic_err_msgs[] = {\n";
     for (my $i = 0; $i < $num; $i ++) {
-	print $OUTFD "{ $sentinal1, short_gen$i, long_gen$i, $sentinal2 }";
+	print $OUTFD "    { $sentinal1, short_gen$i, long_gen$i, $sentinal2 }";
 	print $OUTFD "," if ($i < $num - 1);
 	print $OUTFD "\n";
     }
@@ -297,9 +329,9 @@ sub CreateErrMsgMapping {
     $num = 0;
     # Now output the instance specific messages
     print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__GENERIC\n";
-    foreach $key (sort keys %specific_msgs)
+    foreach my $key (sort keys %specific_msgs)
     {
-	$longvalue = "\"\0\"";
+	my $longvalue = "\"\0\"";
 
 	if (!defined($longnames{$key}))
 	{
@@ -325,7 +357,7 @@ sub CreateErrMsgMapping {
     print $OUTFD "\nstatic const int specific_msgs_len = $num;\n";
     print $OUTFD "static const msgpair specific_err_msgs[] = {\n";
     for (my $i = 0; $i < $num ; $i ++) {
-	print $OUTFD "{ $sentinal1, short_spc$i, long_spc$i, $sentinal2 }";
+	print $OUTFD "    { $sentinal1, short_spc$i, long_spc$i, $sentinal2 }";
 	print $OUTFD "," if ($i < $num - 1);
 	print $OUTFD "\n";
     }
@@ -333,24 +365,30 @@ sub CreateErrMsgMapping {
     print $OUTFD "#endif\n\n";
 
     print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS\n";
-    $maxval = $#class_msgs + 1;
+    my $maxval = $max_err_class + 1;
     print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $maxval\n";
-    print $OUTFD "static int class_to_index[] = {\n";
-    for (my $i=0; $i<=$#class_msgs; $i++) {
-	print $OUTFD "$short_to_num{$class_msgs[$i]}";
-	print $OUTFD "," if ($i < $#class_msgs);
-	print $OUTFD "\n" if !(($i + 1) % 10);
+    print $OUTFD "static int class_to_index[] = {\n    ";
+    for (my $i=0; $i<=$max_err_class; $i++) {
+        my $idx = $short_to_num{$class_msgs[$i]};
+        if (!$idx) {
+            # 0 is the "**UNKNOWN" entry
+            $idx = 0;
+        }
+        print $OUTFD "$idx";
+	print $OUTFD "," if ($i < $max_err_class);
+	print $OUTFD "\n    " if !(($i + 1) % 10);
     }
-    print $OUTFD "};\n";
+    print $OUTFD "\n};\n";
     print $OUTFD "#endif\n";
 }
 #
 # Add a call to test this message for the error message.
 # Handle both the generic and specific messages
 #
+my (%test_generic_msg, %test_specific_msg);
 sub AddTestCall {
 
-    my $genericArgLoc = $_[0];
+    my ($filename, $genericArgLoc, @msg_args) = @_;
     
     my $last_errcode = "MPI_SUCCESS";  # $_[0];
     my $fatal_flag   = "MPIR_ERR_RECOVERABLE"; # $_[1];
@@ -358,9 +396,11 @@ sub AddTestCall {
     my $linenum      = "__LINE__"; # $_[3];
     my $errclass     = "MPI_ERR_OTHER"; # $_[4];
 
-    my $generic_msg = $_[$genericArgLoc+1];
-    my $specific_msg = $_[$genericArgLoc+2];
-    if ($#_ < $genericArgLoc+2) { $specific_msg = "0"; }
+    my $generic_msg = $msg_args[$genericArgLoc];
+    my $specific_msg = $msg_args[$genericArgLoc+1];
+    if (!defined $specific_msg) {
+        $specific_msg = "0";
+    }
 
     # Ensure that the last_errcode, class and fatal flag are specified.  There are a few places where these are variables.
     if (!($last_errcode =~ /MPI_ERR_/) )
@@ -518,7 +558,7 @@ sub AddTestCall {
 		print STDERR "Unrecognized format type $type for $fullformat in $filename\n";
 	    }
 	}   
-	$actargs = $#_ - $genericArgLoc - 2;
+	my $actargs = $#msg_args - $genericArgLoc - 1;
 	if ($actargs != $narg)
 	{
 	    print STDERR "Error: Format $fullformat provides $narg arguments but call has $actargs in $filename\n";
@@ -619,21 +659,27 @@ sub ReadErrnamesFile {
 #       and the same for hash specific_loc{msg}.
 #   The last two are used to provide better error reporting.
 #
-$filename = "";    # Make global so that other routines can echo filename
+my %KnownErrRoutines;
+my %bad_syntax_in_file;
+
 sub ProcessFile
 { 
-    # Leave filename global for AddTest
-    $filename = $_[0];
-    my $linecount = 0;
-    open (FD, "<$filename" ) or die "Could not open $filename\n";
+    if (!%KnownErrRoutines) {
+        load_KnownErrRoutines();
+    }
 
-    while (<FD>) {
+    my $filename = $_[0];
+    my $linecount = 0;
+    my $remainder;
+    open (my $FD, "<$filename" ) or die "Could not open $filename\n";
+
+    while (<$FD>) {
 	$linecount++;
 	# Skip code that is marked as ignore (e.g., for
 	# macros that are used to simplify the use of MPIR_Err_create_code
 	# (such macros must also be recognized and processed)
 	if (/\/\*\s+--BEGIN ERROR MACROS--\s+\*\//) {
-	    while (<FD>) {
+	    while (<$FD>) {
 		$linecount++;
 		if (/\/\*\s+--END ERROR MACROS--\s+\*\//) { last; }
 	    }
@@ -641,77 +687,16 @@ sub ProcessFile
 	    next;
 	}
 	# Next, remove any comments
-	$_ = StripComments( FD, $_ );
+	$_ = StripComments($FD, $_ );
 	# Skip the definition of the function
 	if (/int\s+MPI[OUR]_Err_create_code/) { $remainder = ""; next; }
-	# Match the known routines and macros.
-	# Then check that the arguments match if there is a 
-	# specific string (number of args matches the number present)
-        # MPIR_ERR_CHK(FATAL)?ANDJUMP[1-4]?(cond,code,class,gmsg[,smsg,args])
-        # MPIR_ERR_SET(FATAL)?ANDJUMP[1-4]?(code,class,gmsg[,smsg,args])
-	# MPIR_ERR_CHK(FATAL)?ANDSTMT[1-4]?(cond,code,class,stmt,gmsg[,smsg,args])
-	# MPIR_ERR_SET(FATAL)?ANDSTMT[1-4]?(code,class,stmt,gmsg[,smsg,args])
-	# Value is a tuple of:
-	#  the count of args where the generic msg begins (starting from 0)
-	#  location of __LINE__ (-1 for none)
-	#  specific msg arg required (0 for no, > 0 for yes)
-	#  is the generic message an indirect from errnames.txt (1=yes 0=no)
-	#  location of the error class
-	%KnownErrRoutines = ( 'MPIR_Err_create_code'      => '5:3:1:1:4', 
-			      'MPIO_Err_create_code'      => '5:3:1:0:-1', 
-			      'MPIR_ERR_SET'              => '2:-1:0:1:1',
-			      'MPIR_ERR_SETSIMPLE'        => '2:-1:0:1:1',
-			      'MPIR_ERR_SET1'             => '2:-1:1:1:1',
-			      'MPIR_ERR_SET2'             => '2:-1:2:1:1',
-			      'MPIR_ERR_SETANDSTMT'       => '3:-1:0:1:1',
-			      'MPIR_ERR_SETANDSTMT1'      => '3:-1:1:1:1', 
-			      'MPIR_ERR_SETANDSTMT2'      => '3:-1:1:1:1', 
-			      'MPIR_ERR_SETANDSTMT3'      => '3:-1:1:1:1', 
-			      'MPIR_ERR_SETANDSTMT4'      => '3:-1:1:1:1', 
-			      'MPIR_ERR_SETANDJUMP'       => '2:-1:0:1:1',
-			      'MPIR_ERR_SETANDJUMP1'      => '2:-1:1:1:1', 
-			      'MPIR_ERR_SETANDJUMP2'      => '2:-1:1:1:1', 
-			      'MPIR_ERR_SETANDJUMP3'      => '2:-1:1:1:1', 
-			      'MPIR_ERR_SETANDJUMP4'      => '2:-1:1:1:1', 
-			      'MPIR_ERR_CHKANDSTMT'       => '4:-1:0:1:2', 
-			      'MPIR_ERR_CHKANDSTMT1'      => '4:-1:1:1:2', 
-			      'MPIR_ERR_CHKANDSTMT2'      => '4:-1:1:1:2', 
-			      'MPIR_ERR_CHKANDSTMT3'      => '4:-1:1:1:2', 
-			      'MPIR_ERR_CHKANDSTMT4'      => '4:-1:1:1:2', 
-			      'MPIR_ERR_CHKANDJUMP'       => '3:-1:0:1:2',
-			      'MPIR_ERR_CHKANDJUMP1'      => '3:-1:1:1:2',
-			      'MPIR_ERR_CHKANDJUMP2'      => '3:-1:1:1:2',
-			      'MPIR_ERR_CHKANDJUMP3'      => '3:-1:1:1:2',
-			      'MPIR_ERR_CHKANDJUMP4'      => '3:-1:1:1:2',
-			      'MPIR_ERR_SETFATAL'         => '2:-1:0:1:1',
-			      'MPIR_ERR_SETFATALSIMPLE'   => '2:-1:0:1:1',
-			      'MPIR_ERR_SETFATAL1'        => '2:-1:1:1:1',
-			      'MPIR_ERR_SETFATAL2'        => '2:-1:2:1:1',
-			      'MPIR_ERR_SETFATALANDSTMT'  => '3:-1:0:1:1',
-			      'MPIR_ERR_SETFATALANDSTMT1' => '3:-1:1:1:1', 
-			      'MPIR_ERR_SETFATALANDSTMT2' => '3:-1:1:1:1', 
-			      'MPIR_ERR_SETFATALANDSTMT3' => '3:-1:1:1:1', 
-			      'MPIR_ERR_SETFATALANDSTMT4' => '3:-1:1:1:1', 
-			      'MPIR_ERR_SETFATALANDJUMP'  => '2:-1:0:1:1',
-			      'MPIR_ERR_SETFATALANDJUMP1' => '2:-1:1:1:1', 
-			      'MPIR_ERR_SETFATALANDJUMP2' => '2:-1:1:1:1', 
-			      'MPIR_ERR_SETFATALANDJUMP3' => '2:-1:1:1:1', 
-			      'MPIR_ERR_SETFATALANDJUMP4' => '2:-1:1:1:1', 
-			      'MPIR_ERR_CHKFATALANDSTMT'  => '4:-1:0:1:2', 
-			      'MPIR_ERR_CHKFATALANDSTMT1' => '4:-1:1:1:2', 
-			      'MPIR_ERR_CHKFATALANDSTMT2' => '4:-1:1:1:2', 
-			      'MPIR_ERR_CHKFATALANDSTMT3' => '4:-1:1:1:2', 
-			      'MPIR_ERR_CHKFATALANDSTMT4' => '4:-1:1:1:2', 
-			      'MPIR_ERR_CHKFATALANDJUMP'  => '3:-1:0:1:2',
-			      'MPIR_ERR_CHKFATALANDJUMP1' => '3:-1:1:1:2',
-			      'MPIR_ERR_CHKFATALANDJUMP2' => '3:-1:1:1:2',
-			      'MPIR_ERR_CHKFATALANDJUMP3' => '3:-1:1:1:2',
-			      'MPIR_ERR_CHKFATALANDJUMP4' => '3:-1:1:1:2',
-			      'MPIR_ERRTEST_VALID_HANDLE' => '4:-1:0:1:3',
-			      );
-	while (/(MPI[OUR]_E[A-Za-z0-9_]+)\s*(\(.*)$/) {
+	while (/(MPI[OUR]_Err[A-Za-z0-9_]+)\s*(\(.*)$/i) {
 	    my $routineName = $1;
 	    my $arglist     = $2;
+            if ($routineName =~ /MPIR_ERR_(CHECK|POP|ADD|GET_CLASS|COLL_CHECKANDCONT|is_fatal)/i) {
+                # skip known false positives
+                next;
+            }
 	    if (!defined($KnownErrRoutines{$routineName})) {
 		print "Skipping $routineName\n" if $debug;
 		last;
@@ -720,11 +705,12 @@ sub ProcessFile
 	    my ($genericArgLoc,$hasLine,$hasSpecific,$onlyIndirect,$errClassLoc) = 
 		split(/:/,$KnownErrRoutines{$routineName});
 
-	    ($leader, $remainder, @args ) = &GetSubArgs( FD, $arglist );
+            my ($leader, @args);
+	    ($leader, $remainder, @args ) = &GetSubArgs($FD, $arglist );
 	    # Discard leader 
 	    if ($debug) {
 		print "Line begins with $leader\n";   # Use $leader to keep -w happy
-		foreach $arg (@args) {
+		foreach my $arg (@args) {
 		    print "|$arg|\n";
 		}
 	    }
@@ -849,7 +835,7 @@ sub ProcessFile
 	    }
 
 	    if ($build_test_pgm) {
-		&AddTestCall( $genericArgLoc, @args )
+		&AddTestCall($filename, $genericArgLoc, @args )
 	    }
 
 	    if ($generic_msg =~ /^\"(.*)\"$/) {
@@ -874,17 +860,16 @@ sub ProcessFile
             $_ = $remainder;
         }
     }		
-    close FD;
+    close $FD;
 }
 
 # Get all of the .c files from the named directory, including any subdirs
 # Also, add any errnames.txt files to the errnamesFiles arrays
 sub ExpandDir {
-    my $dir = $_[0];
+    my ($files, $dir) = @_;
     my @otherdirs = ();
-    my @files = ();
     opendir DIR, "$dir";
-    while ($filename = readdir DIR) {
+    while (my $filename = readdir DIR) {
 	if ($filename =~ /^\./) {
 	    next;
 	}
@@ -895,7 +880,7 @@ sub ExpandDir {
 	    # Test for both Unix- and Windows-style directory separators
 	    if (!defined($skipFiles{"$dir/$filename"}) &&
 		!defined($skipFiles{"$dir\\$filename"})) {
-		$files[$#files + 1] = "$dir/$filename";
+                push @$files, "$dir/$filename";
 	    }
 	}
 	elsif ($filename eq "errnames.txt") {
@@ -905,13 +890,79 @@ sub ExpandDir {
     closedir DIR;
     # (almost) tail recurse on otherdirs (we've closed the directory handle,
     # so we don't need to worry about it anymore)
-    foreach $dir (@otherdirs) {
-	@files = (@files, &ExpandDir( $dir ) );
+    foreach my $dir (@otherdirs) {
+        ExpandDir($files, $dir);
     }
-    return @files;
 }
 
-
+sub load_KnownErrRoutines {
+    # Match the known routines and macros.
+    # Then check that the arguments match if there is a
+    # specific string (number of args matches the number present)
+    # MPIR_ERR_CHK(FATAL)?ANDJUMP[1-4]?(cond,code,class,gmsg[,smsg,args])
+    # MPIR_ERR_SET(FATAL)?ANDJUMP[1-4]?(code,class,gmsg[,smsg,args])
+    # MPIR_ERR_CHK(FATAL)?ANDSTMT[1-4]?(cond,code,class,stmt,gmsg[,smsg,args])
+    # MPIR_ERR_SET(FATAL)?ANDSTMT[1-4]?(code,class,stmt,gmsg[,smsg,args])
+    # Value is a tuple of:
+    #  the count of args where the generic msg begins (starting from 0)
+    #  location of __LINE__ (-1 for none)
+    #  specific msg arg required (0 for no, > 0 for yes)
+    #  is the generic message an indirect from errnames.txt (1=yes 0=no)
+    #  location of the error class
+    %KnownErrRoutines = (
+        'MPIR_Err_create_code'      => '5:3:1:1:4',
+        'MPIO_Err_create_code'      => '5:3:1:0:-1',
+        'MPIR_ERR_SET'              => '2:-1:0:1:1',
+        'MPIR_ERR_SETSIMPLE'        => '2:-1:0:1:1',
+        'MPIR_ERR_SET1'             => '2:-1:1:1:1',
+        'MPIR_ERR_SET2'             => '2:-1:2:1:1',
+        'MPIR_ERR_SETANDSTMT'       => '3:-1:0:1:1',
+        'MPIR_ERR_SETANDSTMT1'      => '3:-1:1:1:1',
+        'MPIR_ERR_SETANDSTMT2'      => '3:-1:1:1:1',
+        'MPIR_ERR_SETANDSTMT3'      => '3:-1:1:1:1',
+        'MPIR_ERR_SETANDSTMT4'      => '3:-1:1:1:1',
+        'MPIR_ERR_SETANDJUMP'       => '2:-1:0:1:1',
+        'MPIR_ERR_SETANDJUMP1'      => '2:-1:1:1:1',
+        'MPIR_ERR_SETANDJUMP2'      => '2:-1:1:1:1',
+        'MPIR_ERR_SETANDJUMP3'      => '2:-1:1:1:1',
+        'MPIR_ERR_SETANDJUMP4'      => '2:-1:1:1:1',
+        'MPIR_ERR_CHKANDSTMT'       => '4:-1:0:1:2',
+        'MPIR_ERR_CHKANDSTMT1'      => '4:-1:1:1:2',
+        'MPIR_ERR_CHKANDSTMT2'      => '4:-1:1:1:2',
+        'MPIR_ERR_CHKANDSTMT3'      => '4:-1:1:1:2',
+        'MPIR_ERR_CHKANDSTMT4'      => '4:-1:1:1:2',
+        'MPIR_ERR_CHKANDJUMP'       => '3:-1:0:1:2',
+        'MPIR_ERR_CHKANDJUMP1'      => '3:-1:1:1:2',
+        'MPIR_ERR_CHKANDJUMP2'      => '3:-1:1:1:2',
+        'MPIR_ERR_CHKANDJUMP3'      => '3:-1:1:1:2',
+        'MPIR_ERR_CHKANDJUMP4'      => '3:-1:1:1:2',
+        'MPIR_ERR_SETFATAL'         => '2:-1:0:1:1',
+        'MPIR_ERR_SETFATALSIMPLE'   => '2:-1:0:1:1',
+        'MPIR_ERR_SETFATAL1'        => '2:-1:1:1:1',
+        'MPIR_ERR_SETFATAL2'        => '2:-1:2:1:1',
+        'MPIR_ERR_SETFATALANDSTMT'  => '3:-1:0:1:1',
+        'MPIR_ERR_SETFATALANDSTMT1' => '3:-1:1:1:1',
+        'MPIR_ERR_SETFATALANDSTMT2' => '3:-1:1:1:1',
+        'MPIR_ERR_SETFATALANDSTMT3' => '3:-1:1:1:1',
+        'MPIR_ERR_SETFATALANDSTMT4' => '3:-1:1:1:1',
+        'MPIR_ERR_SETFATALANDJUMP'  => '2:-1:0:1:1',
+        'MPIR_ERR_SETFATALANDJUMP1' => '2:-1:1:1:1',
+        'MPIR_ERR_SETFATALANDJUMP2' => '2:-1:1:1:1',
+        'MPIR_ERR_SETFATALANDJUMP3' => '2:-1:1:1:1',
+        'MPIR_ERR_SETFATALANDJUMP4' => '2:-1:1:1:1',
+        'MPIR_ERR_CHKFATALANDSTMT'  => '4:-1:0:1:2',
+        'MPIR_ERR_CHKFATALANDSTMT1' => '4:-1:1:1:2',
+        'MPIR_ERR_CHKFATALANDSTMT2' => '4:-1:1:1:2',
+        'MPIR_ERR_CHKFATALANDSTMT3' => '4:-1:1:1:2',
+        'MPIR_ERR_CHKFATALANDSTMT4' => '4:-1:1:1:2',
+        'MPIR_ERR_CHKFATALANDJUMP'  => '3:-1:0:1:2',
+        'MPIR_ERR_CHKFATALANDJUMP1' => '3:-1:1:1:2',
+        'MPIR_ERR_CHKFATALANDJUMP2' => '3:-1:1:1:2',
+        'MPIR_ERR_CHKFATALANDJUMP3' => '3:-1:1:1:2',
+        'MPIR_ERR_CHKFATALANDJUMP4' => '3:-1:1:1:2',
+        'MPIR_ERRTEST_VALID_HANDLE' => '4:-1:0:1:3',
+    );
+}
 
 #
 # Other todos:

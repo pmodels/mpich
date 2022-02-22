@@ -343,6 +343,11 @@ if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
     final_libs="${final_libs} @LIBS@ @WRAPPER_LIBS@"
 fi
 
+extra_f77_flags="@WRAPPER_EXTRA_F77_FLAGS@"
+if test "mpif77" = ${0##*/} -a -n "$extra_f77_flags" ; then
+    final_fcflags="${final_fcflags} $extra_f77_flags"
+fi
+
 # A temporary statement to invoke the compiler
 # Place the -L before any args in case there are any mpi libraries in there.
 # Eventually, we'll want to move this after any non-MPI implementation

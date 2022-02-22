@@ -9,8 +9,9 @@
 /* Routine to schedule a scatter followed by recursive exchange based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count,
                                                     MPI_Datatype datatype, int root,
-                                                    MPIR_Comm * comm, int scatterv_k,
-                                                    int allgatherv_k, MPIR_TSP_sched_t sched)
+                                                    MPIR_Comm * comm, int allgatherv_algo,
+                                                    int scatterv_k, int allgatherv_k,
+                                                    MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -168,12 +169,18 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     mpi_errno = MPIR_TSP_sched_fence(sched);    /* wait for scatter to complete */
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
-    /* Schedule Allgatherv */
-    mpi_errno =
-        MPIR_TSP_Iallgatherv_sched_intra_recexch(MPI_IN_PLACE, cnts[rank], MPI_BYTE, tmp_buf, cnts,
-                                                 displs, MPI_BYTE, comm, 0, allgatherv_k, sched);
+    if (allgatherv_algo == MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_ring)
+        /* Schedule Allgatherv ring */
+        mpi_errno =
+            MPIR_TSP_Iallgatherv_sched_intra_ring(MPI_IN_PLACE, cnts[rank], MPI_BYTE, tmp_buf,
+                                                  cnts, displs, MPI_BYTE, comm, sched);
+    else
+        /* Schedule Allgatherv recexch */
+        mpi_errno =
+            MPIR_TSP_Iallgatherv_sched_intra_recexch(MPI_IN_PLACE, cnts[rank], MPI_BYTE, tmp_buf,
+                                                     cnts, displs, MPI_BYTE, comm, 0, allgatherv_k,
+                                                     sched);
     MPIR_ERR_CHECK(mpi_errno);
-
 
     if (!is_contig) {
         if (rank != root) {

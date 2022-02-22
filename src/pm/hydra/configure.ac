@@ -520,7 +520,7 @@ for option in $enable_g ; do
         mem)
 		AC_DEFINE(USE_MEMORY_TRACING,1,[Define if memory tracing is enabled])
 		;;
-        all)
+        yes|all)
 		PAC_APPEND_FLAG(-g, CFLAGS)
 		AC_DEFINE(USE_MEMORY_TRACING,1,[Define if memory tracing is enabled])
 		AC_DEFINE(PMI_KEY_CHECK,1,[Define if we should check for PMI key collisions])

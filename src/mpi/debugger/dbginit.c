@@ -171,8 +171,8 @@ static int MPIR_FreeProctable(void *);
 */
 
 /* Forward references */
-static void SendqInit(void);
-static int SendqFreePool(void *);
+static void DebugqInit(void);
+static int DebugqFreePool(void *);
 
 static MPID_Thread_mutex_t lock;
 
@@ -286,8 +286,8 @@ void MPII_Wait_for_debugger(void)
     /* After we exit the MPIR_Breakpoint routine, the debugger may have
      * set variables such as MPIR_being_debugged */
 
-    /* Initialize the sendq support */
-    SendqInit();
+    /* Initialize the request queue support */
+    DebugqInit();
 
     if (getenv("MPIEXEC_DEBUG")) {
         while (!MPIR_debug_gate);
@@ -333,43 +333,28 @@ void MPIR_Debugger_set_aborting(const char *msg)
 
 /* ------------------------------------------------------------------------- */
 /*
- * Manage the send queue.
+ * Manage the request queues.
  *
- * The send queue is needed only by the debugger.  The communication
- * device has a separate notion of send queue, which are the operations
- * that it needs to complete, independent of whether the user has called
- * MPI_Wait/Test/etc on the request.
- *
- * This implementation uses a simple linked list of user-visible requests
- * (more specifically, requests created with MPI_Isend, MPI_Issend, or
- * MPI_Irsend).
+ * This implementation uses a simple linked list of requests.
  *
  * FIXME: We should exploit this to allow Finalize to report on
  * send requests that were never completed.
  */
 
-/* We need to save the tag and rank since this information may not
-   be included in the request.  Saving the context_id also simplifies
-   matching these entries with a communicator */
-typedef struct MPIR_Sendq {
-    MPIR_Request *sreq;
-    int tag, rank, context_id;
-    struct MPIR_Sendq *next;
-    struct MPIR_Sendq *prev;
-} MPIR_Sendq;
-
-MPIR_Sendq *MPIR_Sendq_head = 0;
-/* Keep a pool of previous sendq elements to speed allocation of queue
+MPIR_Debugq *MPIR_Sendq_head = 0;
+MPIR_Debugq *MPIR_Recvq_head = 0;
+MPIR_Debugq *MPIR_Unexpq_head = 0;
+/* Keep a pool of previous debugq elements to speed allocation of queue
    elements */
-static MPIR_Sendq *pool = 0;
+static MPIR_Debugq *pool = 0;
 
-/* This routine is used to establish a queue of send requests to allow the
-   debugger easier access to the active requests.  Some devices may be able
-   to provide this information without requiring this separate queue. */
-void MPII_Sendq_remember(MPIR_Request * req, int rank, int tag, int context_id)
+/* This routine is used to establish a queue of requests to allow the
+   debugger easier access to the active requests. */
+void MPII_Debugq_remember(MPIR_Request * req, int rank, int tag, int context_id, const void *buf,
+                          MPI_Aint count, MPIR_Debugq ** queue)
 {
 #if defined HAVE_DEBUGGER_SUPPORT
-    MPIR_Sendq *p;
+    MPIR_Debugq *p;
 
     /* Builtin requests are always completed, simply return. */
     if (HANDLE_IS_BUILTIN(req->handle)) {
@@ -382,59 +367,62 @@ void MPII_Sendq_remember(MPIR_Request * req, int rank, int tag, int context_id)
         p = pool;
         pool = p->next;
     } else {
-        p = (MPIR_Sendq *) MPL_malloc(sizeof(MPIR_Sendq), MPL_MEM_DEBUG);
+        p = (MPIR_Debugq *) MPL_malloc(sizeof(MPIR_Debugq), MPL_MEM_DEBUG);
         if (!p) {
             /* Just ignore it */
-            if (MPIR_REQUEST_KIND__SEND == req->kind)
-                req->u.send.dbg_next = NULL;
-            else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
-                req->u.persist.dbg_next = NULL;
+            if (queue == &MPIR_Sendq_head) {
+                req->send = NULL;
+            } else if (queue == &MPIR_Recvq_head) {
+                req->recv = NULL;
+            } else {
+                req->unexp = NULL;
+            }
             goto fn_exit;
         }
     }
-    p->sreq = req;
+    p->req = req;
     p->tag = tag;
     p->rank = rank;
     p->context_id = context_id;
-    p->next = MPIR_Sendq_head;
-    p->prev = NULL;
-    MPIR_Sendq_head = p;
-    if (p->next)
-        p->next->prev = p;
-    if (MPIR_REQUEST_KIND__SEND == req->kind)
-        req->u.send.dbg_next = p;
-    else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
-        req->u.persist.dbg_next = p;
+    p->buf = buf;
+    p->count = count;
+    DL_PREPEND(*queue, p);
+
+    if (queue == &MPIR_Sendq_head) {
+        req->send = p;
+    } else if (queue == &MPIR_Recvq_head) {
+        req->recv = p;
+    } else {
+        req->unexp = p;
+    }
+
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, lock);
     MPID_THREAD_CS_EXIT(POBJ, lock);
 #endif /* HAVE_DEBUGGER_SUPPORT */
 }
 
-void MPII_Sendq_forget(MPIR_Request * req)
+void MPII_Debugq_forget(MPIR_Request * req, MPIR_Debugq ** queue)
 {
 #if defined HAVE_DEBUGGER_SUPPORT
-    MPIR_Sendq *p = NULL, *prev = NULL;
+    MPIR_Debugq *p = NULL;
 
     MPID_THREAD_CS_ENTER(VCI, lock);
     MPID_THREAD_CS_ENTER(POBJ, lock);
-    if (MPIR_REQUEST_KIND__SEND == req->kind)
-        p = req->u.send.dbg_next;
-    else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
-        p = req->u.persist.dbg_next;
+    if (queue == &MPIR_Sendq_head) {
+        p = req->send;
+    } else if (queue == &MPIR_Recvq_head) {
+        p = req->recv;
+    } else {
+        p = req->unexp;
+    }
     if (!p) {
         /* Just ignore it */
         MPID_THREAD_CS_EXIT(VCI, lock);
         MPID_THREAD_CS_EXIT(POBJ, lock);
         return;
     }
-    prev = p->prev;
-    if (prev != NULL)
-        prev->next = p->next;
-    else
-        MPIR_Sendq_head = p->next;
-    if (p->next != NULL)
-        p->next->prev = prev;
+    DL_DELETE(*queue, p);
     /* Return this element to the pool */
     p->next = pool;
     pool = p;
@@ -443,9 +431,9 @@ void MPII_Sendq_forget(MPIR_Request * req)
 #endif /* HAVE_DEBUGGER_SUPPORT */
 }
 
-static int SendqFreePool(void *d)
+static int DebugqFreePool(void *d)
 {
-    MPIR_Sendq *p;
+    MPIR_Debugq *p;
 
     /* Free the pool */
     p = pool;
@@ -464,14 +452,14 @@ static int SendqFreePool(void *d)
     return 0;
 }
 
-static void SendqInit(void)
+static void DebugqInit(void)
 {
     int i;
-    MPIR_Sendq *p;
+    MPIR_Debugq *p;
 
     /* Preallocated a few send requests */
     for (i = 0; i < 10; i++) {
-        p = (MPIR_Sendq *) MPL_malloc(sizeof(MPIR_Sendq), MPL_MEM_DEBUG);
+        p = (MPIR_Debugq *) MPL_malloc(sizeof(MPIR_Debugq), MPL_MEM_DEBUG);
         if (!p) {
             /* Just ignore it */
             break;
@@ -481,7 +469,7 @@ static void SendqInit(void)
     }
 
     /* Make sure the pool is deleted */
-    MPIR_Add_finalize(SendqFreePool, 0, 0);
+    MPIR_Add_finalize(DebugqFreePool, 0, 0);
 }
 
 /* Manage the known communicators */
