@@ -7,7 +7,7 @@
 #include "ofi_impl.h"
 #include "ofi_noinline.h"
 
-int MPIDI_OFI_mpi_psend_init(void *buf, int partitions, MPI_Aint count,
+int MPIDI_OFI_mpi_psend_init(const void *buf, int partitions, MPI_Aint count,
                              MPI_Datatype datatype, int dest, int tag,
                              MPIR_Comm * comm, MPIR_Info * info,
                              MPIDI_av_entry_t * av, MPIR_Request ** request)

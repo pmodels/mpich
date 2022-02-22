@@ -65,6 +65,7 @@ do_test=yes
 do_hydra=yes
 do_hydra2=yes
 do_romio=yes
+do_doc=no
 
 do_quick=no
 # Check -quick option. When enabled, skip as much as we can.
@@ -510,11 +511,14 @@ fn_gen_coll() {
 fn_gen_binding_c() {
     set_PYTHON
     echo_n "generating MPI C functions..."
-    if test "$do_quick" = "no" ; then
-        $PYTHON maint/gen_binding_c.py
-    else
-        $PYTHON maint/gen_binding_c.py -single-source
+    _opt=
+    if test "$do_quick" = "yes"; then
+        _opt="$_opt -single-source"
     fi
+    if test "$do_doc" = "yes"; then
+        _opt="$_opt -output-mansrc"
+    fi
+    $PYTHON maint/gen_binding_c.py $_opt
     echo "done"
 }
 

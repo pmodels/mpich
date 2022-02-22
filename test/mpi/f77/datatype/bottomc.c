@@ -65,10 +65,10 @@ void c_routine_(MPI_Fint * ftype, int *errs)
         MPI_Recv(buf, 6, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
         if (buf[0] != 5)
-            *errs++;
+            (*errs)++;
         for (i = 1; i < 6; i++)
             if (buf[i] != i)
-                *errs++;
+                (*errs)++;
     }
 
     MPI_Type_free(&newtype);

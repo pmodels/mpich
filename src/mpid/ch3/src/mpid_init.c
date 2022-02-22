@@ -5,8 +5,6 @@
 
 #include "mpidimpl.h"
 
-#define MAX_JOBID_LEN 1024
-
 #if defined(HAVE_LIMITS_H)
 #include <limits.h>
 #endif

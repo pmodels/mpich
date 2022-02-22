@@ -4,7 +4,6 @@
  */
 
 #include "mpidi_ch3_impl.h"
-#include "pmi.h"
 #include "mpidu_sock.h"
 #include "utlist.h"
 
