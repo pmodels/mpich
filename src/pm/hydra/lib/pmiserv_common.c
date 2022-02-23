@@ -7,6 +7,17 @@
 #include "pmiserv_common.h"
 #include "topo.h"
 
+/* There are two types of wire protocols:
+ *   1. direct HDR protocols, used between mpiexec and proxies. It's
+ *      a direct struct HYD_pmcd_hdr followed with a potential payload.
+ *   2. PMI wire protocols, text string based. There are two versions:
+ *      * PMI-1: cmd=xxx attr1=xxx ... attrn=xxx\n
+ *      * PMI-2: length cmd=xxx;attr1=xxx;...;attrn=xxx;
+ *               , where length is a 6-character decimal number.
+ *
+ * This file provides utilitis for handling these wire protocols.
+ */
+
 void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr)
 {
     memset(hdr, 0, sizeof(struct HYD_pmcd_hdr));
