@@ -36,6 +36,17 @@ MPL_COMPILER_TLS int global_vci_poll_count;
 int global_vci_poll_count = 0;
 #endif
 
+/* ** HACK **
+ * Hack to workaround an Intel compiler bug on macOS. Touching
+ * global_vci_poll_count in this file forces the compiler to allocate
+ * it as TLS. See https://github.com/pmodels/mpich/issues/3437.
+ */
+int _dummy_touch_tls(void);
+int _dummy_touch_tls(void)
+{
+    return global_vci_poll_count;
+}
+
 /* PVAR */
 unsigned PVAR_LEVEL_posted_recvq_length ATTRIBUTE((unused));
 unsigned PVAR_LEVEL_unexpected_recvq_length ATTRIBUTE((unused));
