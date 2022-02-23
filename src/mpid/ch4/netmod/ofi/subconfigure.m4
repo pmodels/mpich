@@ -51,6 +51,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     if test "$no_providers" = "no" ; then
         enable_psm="no"
         enable_psm2="no"
+        enable_psm3="no"
         enable_sockets="no"
         enable_verbs="no"
         enable_usnic="no"
@@ -71,6 +72,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     else
         enable_psm="yes"
         enable_psm2="yes"
+        enable_psm3="yes"
         enable_sockets="yes"
         enable_verbs="yes"
         enable_usnic="yes"
@@ -99,6 +101,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 ;;
             "psm2" | "opa")
                 enable_psm2="yes"
+                ;;
+            "psm3")
+                enable_psm3="yes"
                 ;;
             "sockets")
                 enable_sockets="yes"
@@ -189,6 +194,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_PSM2], [1], [Define to use PSM2 capability set])
                 enable_psm2="yes"
                 ;;
+            "psm3")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_PSM3], [1], [Define to use PSM3 capability set])
+                enable_psm3="yes"
+                ;;
             "sockets")
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_SOCKETS], [1], [Define to use sockets capability set])
                 enable_sockets="yes"
@@ -273,12 +282,13 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     if test "$with_libfabric" = "embedded" ; then
         ofi_embedded="yes"
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an embedded libfabric])
-        ofi_subdir_args="--enable-embedded --disable-psm3"
+        ofi_subdir_args="--enable-embedded"
 
         prov_config=""
         if test "x${netmod_args}" != "x" ; then
             prov_config="$prov_config --enable-psm=${enable_psm}"
             prov_config="$prov_config --enable-psm2=${enable_psm2}"
+            prov_config="$prov_config --enable-psm3=${enable_psm3}"
             prov_config="$prov_config --enable-sockets=${enable_sockets}"
             prov_config="$prov_config --enable-verbs=${enable_verbs}"
             prov_config="$prov_config --enable-usnic=${enable_usnic}"
