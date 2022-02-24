@@ -25,46 +25,50 @@ void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr)
     hdr->buflen = -1;
 }
 
-HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cmd, char *args[])
+void HYD_pmcd_pmi_dump(struct PMIU_cmd *pmicmd)
 {
-    char *str1 = NULL, *cmd, *buf;
-    const char *delim;
-    int i;
-    HYD_status status = HYD_SUCCESS;
+    char *buf = NULL;
+    int buflen = 0;
 
+    PMIU_cmd_output(pmicmd, &buf, &buflen);
+    HYDU_dump_noprefix(stdout, "%s", buf);
+}
+
+HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *hdr, int debug)
+{
+    HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
 
-    /* Make a copy of the original buffer */
-    buf = MPL_strdup(obuf);
-    HYDU_ERR_CHKANDJUMP(status, NULL == buf, HYD_INTERNAL_ERROR, "%s", "");
-    if (buf[strlen(obuf) - 1] == '\n')
-        buf[strlen(obuf) - 1] = '\0';
+    char *buf = NULL;
+    int buflen = 0;
 
-    if (pmi_version == 1) {
-        if (!strncmp(buf, "cmd=", strlen("cmd=")))
-            delim = " ";
-        else
-            delim = "\n";
-    } else {    /* PMI-v2 */
-        delim = ";";
+    int pmi_errno = PMIU_cmd_output(pmi, &buf, &buflen);
+    HYDU_ASSERT(!pmi_errno, status);
+
+    if (debug) {
+        if (hdr) {
+            HYDU_dump(stdout, "Sending internal PMI command:\n");
+        } else {
+            HYDU_dump(stdout, "Sending PMI command:\n");
+        }
+        HYDU_dump_noprefix(stdout, "    %s\n", buf);
     }
 
-    cmd = strtok(buf, delim);
-    for (i = 0;; i++) {
-        args[i] = strtok(NULL, delim);
-        if (args[i] == NULL)
-            break;
-        args[i] = MPL_strdup(args[i]);
+    int sent = 0, closed;
+    if (hdr) {
+        hdr->buflen = buflen;
+        hdr->u.pmi.pmi_version = pmi->version;
+
+        status = HYDU_sock_write(fd, hdr, sizeof(*hdr), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "unable to send hdr\n");
+        HYDU_ASSERT(!closed, status);
     }
 
-    /* Search for the PMI command in our table */
-    status = HYDU_strsplit(cmd, &str1, pmi_cmd, '=');
-    HYDU_ERR_POP(status, "string split returned error\n");
-    HYDU_ERR_CHKANDJUMP(status, NULL == *pmi_cmd, HYD_INTERNAL_ERROR, "%s", "");
+    status = HYDU_sock_write(fd, buf, buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send PMI message\n");
+    HYDU_ASSERT(!closed, status);
 
   fn_exit:
-    MPL_free(buf);
-    MPL_free(str1);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -72,58 +76,7 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cm
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct PMIU_token **tokens, int *count)
-{
-    int i, j;
-    char *arg;
-    HYD_status status = HYD_SUCCESS;
-
-    for (i = 0; args[i]; i++);
-    *count = i;
-    HYDU_MALLOC_OR_JUMP(*tokens, struct PMIU_token *, *count * sizeof(struct PMIU_token), status);
-
-    for (i = 0; args[i]; i++) {
-        arg = MPL_strdup(args[i]);
-        HYDU_ERR_CHKANDJUMP(status, NULL == arg, HYD_INTERNAL_ERROR, "strdup failed\n");
-        (*tokens)[i].key = arg;
-        for (j = 0; arg[j] && arg[j] != '='; j++);
-        if (!arg[j]) {
-            (*tokens)[i].val = NULL;
-        } else {
-            arg[j] = 0;
-            (*tokens)[i].val = &arg[++j];
-        }
-    }
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-void HYD_pmcd_pmi_free_tokens(struct PMIU_token *tokens, int token_count)
-{
-    int i;
-
-    for (i = 0; i < token_count; i++)
-        MPL_free(tokens[i].key);
-    MPL_free(tokens);
-}
-
-char *HYD_pmcd_pmi_find_token_keyval(struct PMIU_token *tokens, int count, const char *key)
-{
-    int i;
-
-    for (i = 0; i < count; i++) {
-        if (!strcmp(tokens[i].key, key))
-            return (char *) tokens[i].val;
-    }
-
-    return NULL;
-}
-
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs ** kvs, int pgid)
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid)
 {
     HYD_status status = HYD_SUCCESS;
     char hostname[MAX_HOSTNAME_LEN - 40];       /* Remove space taken up by the integers and other
@@ -175,7 +128,8 @@ void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list)
     HYDU_FUNC_EXIT();
 }
 
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs, int *ret)
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_pmcd_pmi_kvs *kvs,
+                                int *ret)
 {
     struct HYD_pmcd_pmi_kvs_pair *key_pair;
     HYD_status status = HYD_SUCCESS;
