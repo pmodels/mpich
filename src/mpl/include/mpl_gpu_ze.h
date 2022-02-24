@@ -16,7 +16,24 @@ typedef struct {
 typedef ze_ipc_mem_handle_t MPL_gpu_ipc_mem_handle_t;
 typedef ze_device_handle_t MPL_gpu_device_handle_t;
 typedef ze_alloc_attr_t MPL_gpu_device_attr;
+
+typedef struct MPL_cmdlist_pool {
+    ze_command_list_handle_t cmdList;
+    int dev;
+    int engine;
+    struct MPL_cmdlist_pool *next, *prev;
+} MPL_cmdlist_pool_t;
+
+typedef struct {
+    ze_event_handle_t event;
+    MPL_cmdlist_pool_t *cmdList;
+} MPL_gpu_request;
+
 #define MPL_GPU_DEVICE_INVALID NULL
+
+#define MPL_GPU_ZE_COMPUTE_ENGINE_TYPE                 0
+#define MPL_GPU_ZE_MAIN_COPY_ENGINE_TYPE               1
+#define MPL_GPU_ZE_LINK_COPY_ENGINE_TYPE               2
 
 /* ZE specific function */
 int MPL_ze_init_device_fds(int *num_fds, int *device_fds);
