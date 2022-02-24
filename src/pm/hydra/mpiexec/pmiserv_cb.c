@@ -13,11 +13,8 @@
 #include "pmiserv_common.h"
 #include "pmiserv_pmi.h"
 
-static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_version)
+static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int buflen, int pmi_version)
 {
-    char **args = NULL, *cmd = NULL;
-    struct HYD_pmcd_pmi_handle *h;
-    int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -30,11 +27,8 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
     if (HYD_server_info.user_global.debug)
         HYDU_dump(stdout, "[pgid: %d] got PMI command: %s\n", pgid, buf);
 
-    HYDU_MALLOC_OR_JUMP(args, char **, MAX_PMI_ARGS * sizeof(char *), status);
-    for (i = 0; i < MAX_PMI_ARGS; i++)
-        args[i] = NULL;
-
-    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, pmi_version, &cmd, args);
+    struct PMIU_cmd pmi;
+    status = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
     HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
 #if defined ENABLE_PROFILING
@@ -42,10 +36,11 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
         HYD_server_info.num_pmi_calls++;
 #endif /* ENABLE_PROFILING */
 
+    struct HYD_pmcd_pmi_handle *h;
     h = HYD_pmcd_pmi_handle;
     while (h->handler) {
-        if (!strcmp(cmd, h->cmd)) {
-            status = h->handler(fd, pid, pgid, args);
+        if (!strcmp(pmi.cmd, h->cmd)) {
+            status = h->handler(fd, pid, pgid, &pmi);
             HYDU_ERR_POP(status, "PMI handler returned error\n");
             break;
         }
@@ -54,15 +49,11 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
     if (!h->handler) {
         /* We don't understand the command */
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "Unrecognized PMI command: %s | cleaning up processes\n", cmd);
+                            "Unrecognized PMI %d command: %s | cleaning up processes\n",
+                            pmi_version, pmi.cmd);
     }
 
   fn_exit:
-    MPL_free(cmd);
-    if (args) {
-        HYDU_free_strlist(args);
-        MPL_free(args);
-    }
     HYDU_FUNC_EXIT();
     return status;
 
@@ -281,7 +272,9 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         buf[hdr.buflen] = 0;
 
-        status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.u.pmi.pid, buf, hdr.u.pmi.pmi_version);
+        status =
+            handle_pmi_cmd(fd, proxy->pg->pgid, hdr.u.pmi.pid, buf, hdr.buflen,
+                           hdr.u.pmi.pmi_version);
         HYDU_ERR_POP(status, "unable to process PMI command\n");
 
         MPL_free(buf);

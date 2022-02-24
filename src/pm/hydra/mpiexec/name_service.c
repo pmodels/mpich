@@ -7,14 +7,14 @@
 #include "pmiserv_pmi.h"
 #include "pmiserv_utils.h"
 
-static HYD_status builtin_publish(char *name, char *port, int *success);
-static HYD_status builtin_unpublish(char *name, int *success);
-static HYD_status builtin_lookup(char *name, char **value);
-static HYD_status server_publish(char *name, char *port, int *success);
-static HYD_status server_unpublish(char *name, int *success);
-static HYD_status server_lookup(char *name, char **value);
+static HYD_status builtin_publish(const char *name, const char *port, int *success);
+static HYD_status builtin_unpublish(const char *name, int *success);
+static HYD_status builtin_lookup(const char *name, const char **value);
+static HYD_status server_publish(const char *name, const char *port, int *success);
+static HYD_status server_unpublish(const char *name, int *success);
+static HYD_status server_lookup(const char *name, const char **value);
 
-HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
+HYD_status HYD_pmcd_pmi_publish(const char *name, const char *port, int *success)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -30,7 +30,7 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
     return status;
 }
 
-HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
+HYD_status HYD_pmcd_pmi_unpublish(const char *name, int *success)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -46,7 +46,7 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
     return status;
 }
 
-HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
+HYD_status HYD_pmcd_pmi_lookup(const char *name, const char **value)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -99,7 +99,7 @@ static HYD_status builtin_free_publish(struct builtin_publish *publish)
     return status;
 }
 
-static HYD_status builtin_publish(char *name, char *port, int *success)
+static HYD_status builtin_publish(const char *name, const char *port, int *success)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -139,7 +139,7 @@ static HYD_status builtin_publish(char *name, char *port, int *success)
     goto fn_exit;
 }
 
-static HYD_status builtin_unpublish(char *name, int *success)
+static HYD_status builtin_unpublish(const char *name, int *success)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -183,7 +183,7 @@ static HYD_status builtin_unpublish(char *name, int *success)
     return status;
 }
 
-static HYD_status builtin_lookup(char *name, char **value)
+static HYD_status builtin_lookup(const char *name, const char **value)
 {
     HYDU_FUNC_ENTER();
 
@@ -202,7 +202,7 @@ static HYD_status builtin_lookup(char *name, char **value)
 
 /* ---- internal routines using name server ---- */
 
-static HYD_status server_publish(char *name, char *port, int *success)
+static HYD_status server_publish(const char *name, const char *port, int *success)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -266,7 +266,7 @@ static HYD_status server_publish(char *name, char *port, int *success)
     goto fn_exit;
 }
 
-static HYD_status server_unpublish(char *name, int *success)
+static HYD_status server_unpublish(const char *name, int *success)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -329,7 +329,7 @@ static HYD_status server_unpublish(char *name, int *success)
     goto fn_exit;
 }
 
-static HYD_status server_lookup(char *name, char **value)
+static HYD_status server_lookup(const char *name, const char **value)
 {
     HYD_status status = HYD_SUCCESS;
 
