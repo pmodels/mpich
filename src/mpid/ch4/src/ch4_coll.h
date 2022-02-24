@@ -285,6 +285,37 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_Allreduce_fill_multi_leads_info(MPIR_Comm * comm)
+{
+    int node_comm_size = 0, num_nodes;
+    bool node_balanced = false;
+
+    if (MPIDI_COMM(comm, allreduce_comp_info) == NULL) {
+        /* If multi-leads allreduce is enabled and the info object is not yet set */
+        MPIDI_COMM(comm, allreduce_comp_info) =
+            MPL_malloc(sizeof(MPIDI_Multileads_comp_info_t), MPL_MEM_OTHER);
+        MPIR_Assert(MPIDI_COMM(comm, allreduce_comp_info));
+        MPIDI_COMM_ALLREDUCE(comm, use_multi_leads) = -1;
+        MPIDI_COMM_ALLREDUCE(comm, shm_addr) = NULL;
+        MPIDI_COMM(comm, shm_size_per_lead) = 1;
+    }
+    /* Find if the comm meets the constraints and store that info in the data structure */
+    if (MPIDI_COMM_ALLREDUCE(comm, use_multi_leads) == -1) {
+        if (comm->node_comm)
+            node_comm_size = MPIR_Comm_size(comm->node_comm);
+        /* Get number of nodes it spans over and if it has equal number of ranks per node */
+        MPII_Comm_is_node_balanced(comm, &num_nodes, &node_balanced);
+        MPIDI_COMM(comm, spanned_num_nodes) = num_nodes;
+
+        if (num_nodes > 1 && node_comm_size > 1 && node_balanced) {
+            MPIDI_COMM_ALLREDUCE(comm, use_multi_leads) = 1;
+        } else {
+            MPIDI_COMM_ALLREDUCE(comm, use_multi_leads) = 0;
+        }
+    }
+
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void *sendbuf,
                                                                       void *recvbuf, MPI_Aint count,
                                                                       MPI_Datatype datatype,
