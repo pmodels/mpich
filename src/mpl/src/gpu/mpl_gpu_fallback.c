@@ -137,6 +137,17 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
     return MPL_ERR_GPU_INTERNAL;
 }
 
+int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
+                    MPL_gpu_engine_type_t engine_type, MPL_gpu_request * req, bool commit)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_test(MPL_gpu_request * req, int *completed)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}
+
 int MPL_gpu_launch_hostfn(int stream, MPL_gpu_hostfn fn, void *data)
 {
     return -1;
