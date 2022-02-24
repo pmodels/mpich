@@ -24,7 +24,7 @@
 #define CACHE_PUT_KEYVAL_MAXLEN  (MAX_PMI_ARGS - 1)
 
 static struct {
-    char *keyval[CACHE_PUT_KEYVAL_MAXLEN + 1];
+    struct PMIU_token tokens[CACHE_PUT_KEYVAL_MAXLEN + 1];
     int keyval_len;
 } cache_put;
 
@@ -38,91 +38,23 @@ static struct cache_elem *cache_get = NULL, *hash_get = NULL;
 
 static int num_elems = 0;
 
-static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, char *args[])
+static HYD_status send_cmd_upstream(struct PMIU_cmd *pmi, int fd)
 {
-    int i, j, sent, closed;
-    char **tmp, *buf;
     struct HYD_pmcd_hdr hdr;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /* We need two slots for each argument (one for the argument
-     * itself and one for a space character), one slot for the
-     * command, and one for the NULL character at the end. */
-    HYDU_MALLOC_OR_JUMP(tmp, char **, (2 * num_args + 2) * sizeof(char *), status);
-
-    j = 0;
-    tmp[j++] = MPL_strdup(start);
-    for (i = 0; i < num_args; i++) {
-        tmp[j++] = MPL_strdup(args[i]);
-        if (args[i + 1])
-            tmp[j++] = MPL_strdup(" ");
-    }
-    tmp[j] = NULL;
-
-    status = HYDU_str_alloc_and_join(tmp, &buf);
-    HYDU_ERR_POP(status, "unable to join strings\n");
-    HYDU_free_strlist(tmp);
-    MPL_free(tmp);
-
-    HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PMI;
     hdr.u.pmi.pid = fd;
-    hdr.buflen = strlen(buf);
-    hdr.u.pmi.pmi_version = 1;
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
-                        HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
-    HYDU_ASSERT(!closed, status);
-
-    debug("forwarding command (%s) upstream\n", buf);
-
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed,
-                             HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
-    HYDU_ASSERT(!closed, status);
-
-    MPL_free(buf);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
+    return HYD_pmcd_pmi_send(HYD_pmcd_pmip.upstream.control, pmi, &hdr,
+                             HYD_pmcd_pmip.user_global.debug);
 }
 
-static HYD_status send_cmd_downstream(int fd, const char *cmd)
+static HYD_status send_cmd_downstream(int fd, struct PMIU_cmd *pmi)
 {
-    int sent, closed;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    debug("PMI response: %s", cmd);
-
-    status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "error writing PMI line\n");
-    /* FIXME: We cannot abort when we are not able to send data
-     * downstream. The upper layer needs to handle this based on
-     * whether we want to abort or not.*/
-    HYDU_ASSERT(!closed, status);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
+    return HYD_pmcd_pmi_send(fd, pmi, NULL, HYD_pmcd_pmip.user_global.debug);
 }
 
 static HYD_status cache_put_flush(int fd)
 {
-    int i;
     HYD_status status = HYD_SUCCESS;
-
     HYDU_FUNC_ENTER();
 
     if (cache_put.keyval_len == 0)
@@ -130,11 +62,24 @@ static HYD_status cache_put_flush(int fd)
 
     debug("flushing %d put command(s) out\n", cache_put.keyval_len);
 
-    status = send_cmd_upstream("cmd=put ", fd, cache_put.keyval_len, cache_put.keyval);
+    struct PMIU_cmd pmi;
+    PMIU_cmd_init(&pmi, 1, "put");
+    HYDU_ASSERT(pmi.num_tokens < MAX_PMI_ARGS, status);
+    for (int i = 0; i < cache_put.keyval_len; i++) {
+        PMIU_cmd_add_str(&pmi, cache_put.tokens[i].key, cache_put.tokens[i].val);
+    }
+
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "forwarding command upstream:\n");
+        HYD_pmcd_pmi_dump(&pmi);
+    }
+    status = send_cmd_upstream(&pmi, fd);
     HYDU_ERR_POP(status, "error sending command upstream\n");
 
-    for (i = 0; i < cache_put.keyval_len; i++)
-        MPL_free(cache_put.keyval[i]);
+    for (int i = 0; i < cache_put.keyval_len; i++) {
+        MPL_free(cache_put.tokens[i].key);
+        MPL_free(cache_put.tokens[i].val);
+    }
     cache_put.keyval_len = 0;
 
   fn_exit:
@@ -145,37 +90,46 @@ static HYD_status cache_put_flush(int fd)
     goto fn_exit;
 }
 
-static HYD_status fn_init(int fd, char *args[])
+static HYD_status fn_init(int fd, struct PMIU_cmd *pmi)
 {
-    int pmi_version, pmi_subversion, i;
-    char *tmp = NULL;
+    int pmi_version, pmi_subversion;
+    const char *tmp = NULL;
     static int global_init = 1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    strtok(args[0], "=");
-    pmi_version = strtol(strtok(NULL, "="), NULL, 10);
-    strtok(args[1], "=");
-    pmi_subversion = strtol(strtok(NULL, "="), NULL, 10);
+    tmp = PMIU_cmd_find_keyval(pmi, "pmi_version");
+    HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find pmi_version token\n");
+    pmi_version = atoi(tmp);
 
-    if (pmi_version == 1 && pmi_subversion <= 1)
-        tmp = MPL_strdup("cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n");
-    else if (pmi_version == 2 && pmi_subversion == 0)
-        tmp = MPL_strdup("cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n");
-    else        /* PMI version mismatch */
+    tmp = PMIU_cmd_find_keyval(pmi, "pmi_subversion");
+    HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find pmi_subversion token\n");
+    pmi_subversion = atoi(tmp);
+
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 1, "response_to_init");
+    if (pmi_version == 1 && pmi_subversion <= 1) {
+        PMIU_cmd_add_str(&pmi_response, "pmi_version", "1");
+        PMIU_cmd_add_str(&pmi_response, "pmi_subversion", "1");
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
+    } else if (pmi_version == 2 && pmi_subversion == 0) {
+        PMIU_cmd_add_str(&pmi_response, "pmi_version", "2");
+        PMIU_cmd_add_str(&pmi_response, "pmi_subversion", "0");
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
+    } else {    /* PMI version mismatch */
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
+    }
 
-    status = send_cmd_downstream(fd, tmp);
+    status = send_cmd_downstream(fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    MPL_free(tmp);
 
     /* initialize some structures; these are initialized exactly once,
      * even if the init command is sent once from each process. */
     if (global_init) {
-        for (i = 0; i < CACHE_PUT_KEYVAL_MAXLEN + 1; i++)
-            cache_put.keyval[i] = NULL;
         cache_put.keyval_len = 0;
         global_init = 0;
     }
@@ -188,21 +142,15 @@ static HYD_status fn_init(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_initack(int fd, char *args[])
+static HYD_status fn_initack(int fd, struct PMIU_cmd *pmi)
 {
     int id, i;
-    char *val, *cmd;
-    struct PMIU_token *tokens;
-    int token_count;
-    struct HYD_string_stash stash;
+    const char *val;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
-
-    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "pmiid");
+    val = PMIU_cmd_find_keyval(pmi, "pmiid");
     HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR, "unable to find pmiid token\n");
     id = atoi(val);
 
@@ -216,26 +164,24 @@ static HYD_status fn_initack(int fd, char *args[])
     }
     HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=initack\ncmd=set size="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count),
-                     status);
+    struct PMIU_cmd pmi_response;
 
-    HYD_STRING_STASH(stash, MPL_strdup("\ncmd=set rank="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(id), status);
-
-    HYD_STRING_STASH(stash, MPL_strdup("\ncmd=set debug="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(HYD_pmcd_pmip.user_global.debug), status);
-    HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
-
-    HYD_STRING_SPIT(stash, cmd, status);
-
-    status = send_cmd_downstream(fd, cmd);
+    PMIU_cmd_init(&pmi_response, 1, "initack");
+    status = send_cmd_downstream(fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    MPL_free(cmd);
+
+    int size = HYD_pmcd_pmip.system_global.global_process_count;
+    int rank = id;
+    int debug = HYD_pmcd_pmip.user_global.debug;
+    PMIU_cmd_init(&pmi_response, 1, "set");
+    PMIU_cmd_add_int(&pmi_response, "size", size);
+    PMIU_cmd_add_int(&pmi_response, "rank", rank);
+    PMIU_cmd_add_int(&pmi_response, "debug", debug);
+
+    status = send_cmd_downstream(fd, &pmi_response);
+    HYDU_ERR_POP(status, "error sending PMI response\n");
 
   fn_exit:
-    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -243,28 +189,20 @@ static HYD_status fn_initack(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_maxes(int fd, char *args[])
+static HYD_status fn_get_maxes(int fd, struct PMIU_cmd *pmi)
 {
-    struct HYD_string_stash stash;
-    char *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=maxes kvsname_max="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(PMI_MAXKVSLEN), status);
-    HYD_STRING_STASH(stash, MPL_strdup(" keylen_max="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(PMI_MAXKEYLEN), status);
-    HYD_STRING_STASH(stash, MPL_strdup(" vallen_max="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(PMI_MAXVALLEN), status);
-    HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 1, "maxes");
+    PMIU_cmd_add_int(&pmi_response, "kvsname_max", PMI_MAXKVSLEN);
+    PMIU_cmd_add_int(&pmi_response, "keylen_max", PMI_MAXKEYLEN);
+    PMIU_cmd_add_int(&pmi_response, "vallen_max", PMI_MAXVALLEN);
 
-    HYD_STRING_SPIT(stash, cmd, status);
-
-    status = send_cmd_downstream(fd, cmd);
+    status = send_cmd_downstream(fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    MPL_free(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -274,12 +212,10 @@ static HYD_status fn_get_maxes(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_appnum(int fd, char *args[])
+static HYD_status fn_get_appnum(int fd, struct PMIU_cmd *pmi)
 {
     int i, idx;
     struct HYD_exec *exec;
-    struct HYD_string_stash stash;
-    char *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -298,16 +234,12 @@ static HYD_status fn_get_appnum(int fd, char *args[])
             break;
     }
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=appnum appnum="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(exec->appnum), status);
-    HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 1, "appnum");
+    PMIU_cmd_add_int(&pmi_response, "appnum", exec->appnum);
 
-    HYD_STRING_SPIT(stash, cmd, status);
-
-    status = send_cmd_downstream(fd, cmd);
+    status = send_cmd_downstream(fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    MPL_free(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -317,24 +249,18 @@ static HYD_status fn_get_appnum(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_my_kvsname(int fd, char *args[])
+static HYD_status fn_get_my_kvsname(int fd, struct PMIU_cmd *pmi)
 {
-    struct HYD_string_stash stash;
-    char *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=my_kvsname kvsname="), status);
-    HYD_STRING_STASH(stash, MPL_strdup(HYD_pmcd_pmip.local.kvs->kvsname), status);
-    HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 1, "my_kvsname");
+    PMIU_cmd_add_str(&pmi_response, "kvsname", HYD_pmcd_pmip.local.kvs->kvsname);
 
-    HYD_STRING_SPIT(stash, cmd, status);
-
-    status = send_cmd_downstream(fd, cmd);
+    status = send_cmd_downstream(fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    MPL_free(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -344,31 +270,27 @@ static HYD_status fn_get_my_kvsname(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_usize(int fd, char *args[])
+static HYD_status fn_get_usize(int fd, struct PMIU_cmd *pmi)
 {
-    struct HYD_string_stash stash;
-    char *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=universe_size size="), status);
-    if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_SYSTEM)
-        HYD_STRING_STASH(stash,
-                         HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_core_map.global_count),
-                         status);
-    else if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_INFINITE)
-        HYD_STRING_STASH(stash, HYDU_int_to_str(-1), status);
-    else
-        HYD_STRING_STASH(stash, HYDU_int_to_str(HYD_pmcd_pmip.user_global.usize), status);
-    HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
+    int universe_size;
+    if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_SYSTEM) {
+        universe_size = HYD_pmcd_pmip.system_global.global_core_map.global_count;
+    } else if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_INFINITE) {
+        universe_size = -1;
+    } else {
+        universe_size = HYD_pmcd_pmip.user_global.usize;
+    }
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 1, "universe_size");
+    PMIU_cmd_add_int(&pmi_response, "size", universe_size);
 
-    status = send_cmd_downstream(fd, cmd);
+    status = send_cmd_downstream(fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    MPL_free(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -378,64 +300,56 @@ static HYD_status fn_get_usize(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get(int fd, char *args[])
+static HYD_status fn_get(int fd, struct PMIU_cmd *pmi)
 {
-    struct HYD_string_stash stash;
-    char *cmd, *key;
-    struct PMIU_token *tokens;
-    int token_count;
+    const char *key;
     struct cache_elem *found = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
-
-    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
+    key = PMIU_cmd_find_keyval(pmi, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find token: key\n");
 
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 1, "get_result");
+
     if (!strcmp(key, "PMI_process_mapping")) {
-        HYD_STRING_STASH_INIT(stash);
-        HYD_STRING_STASH(stash, MPL_strdup("cmd=get_result rc=0 msg=success value="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(HYD_pmcd_pmip.system_global.pmi_process_mapping),
-                         status);
-        HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
+        PMIU_cmd_add_str(&pmi_response, "msg", "success");
+        PMIU_cmd_add_str(&pmi_response, "value", HYD_pmcd_pmip.system_global.pmi_process_mapping);
 
-        HYD_STRING_SPIT(stash, cmd, status);
-
-        status = send_cmd_downstream(fd, cmd);
+        status = send_cmd_downstream(fd, &pmi_response);
         HYDU_ERR_POP(status, "error sending PMI response\n");
-        MPL_free(cmd);
     } else if (!strcmp(key, "PMI_hwloc_xmlfile")) {
-        status = HYD_pmip_get_hwloc_xmlfile_resp_v1(&cmd);
-        HYDU_ERR_POP(status, "error getting topology info\n");
-        status = send_cmd_downstream(fd, cmd);
+        const char *xmlfile = HYD_pmip_get_hwloc_xmlfile();
+
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
+        PMIU_cmd_add_str(&pmi_response, "msg", "success");
+        if (xmlfile) {
+            PMIU_cmd_add_str(&pmi_response, "value", xmlfile);
+        } else {
+            PMIU_cmd_add_str(&pmi_response, "value", "unavailable");
+        }
+
+        status = send_cmd_downstream(fd, &pmi_response);
         HYDU_ERR_POP(status, "error sending PMI response\n");
-        MPL_free(cmd);
     } else {
         HASH_FIND_STR(hash_get, key, found);
         if (found) {
-            HYD_STRING_STASH_INIT(stash);
-            HYD_STRING_STASH(stash, MPL_strdup("cmd=get_result rc="), status);
-            HYD_STRING_STASH(stash, MPL_strdup("0 msg=success value="), status);
-            HYD_STRING_STASH(stash, MPL_strdup(found->val), status);
-            HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
+            PMIU_cmd_add_str(&pmi_response, "rc", "0");
+            PMIU_cmd_add_str(&pmi_response, "msg", "success");
+            PMIU_cmd_add_str(&pmi_response, "value", found->val);
 
-            HYD_STRING_SPIT(stash, cmd, status);
-
-            status = send_cmd_downstream(fd, cmd);
+            status = send_cmd_downstream(fd, &pmi_response);
             HYDU_ERR_POP(status, "error sending PMI response\n");
-            MPL_free(cmd);
         } else {
             /* if we can't find the key locally, ask upstream */
-            status = send_cmd_upstream("cmd=get ", fd, token_count, args);
-            HYDU_ERR_POP(status, "error sending command upstream\n");
+            status = send_cmd_upstream(pmi, fd);
         }
     }
 
   fn_exit:
-    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -443,47 +357,39 @@ static HYD_status fn_get(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_put(int fd, char *args[])
+static HYD_status fn_put(int fd, struct PMIU_cmd *pmi)
 {
-    struct HYD_string_stash stash;
-    char *cmd;
-    char *key, *val;
-    struct PMIU_token *tokens;
-    int token_count;
+    const char *key, *val;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
-
-    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
+    key = PMIU_cmd_find_keyval(pmi, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find token: key\n");
 
-    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "value");
+    val = PMIU_cmd_find_keyval(pmi, "value");
     if (val == NULL)
         val = MPL_strdup("");
     HYDU_ERR_CHKANDJUMP(status, NULL == val, HYD_INTERNAL_ERROR, "strdup failed\n");
 
     /* add to the cache */
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup(key), status);
-    HYD_STRING_STASH(stash, MPL_strdup("="), status);
-    HYD_STRING_STASH(stash, MPL_strdup(val), status);
-
-    HYD_STRING_SPIT(stash, cmd, status);
-
-    cache_put.keyval[cache_put.keyval_len++] = cmd;
-    debug("cached command: %s\n", cmd);
+    int i = cache_put.keyval_len++;
+    cache_put.tokens[i].key = MPL_strdup(key);
+    cache_put.tokens[i].val = MPL_strdup(val);
+    debug("cached command: %s=%s\n", key, val);
 
     if (cache_put.keyval_len >= CACHE_PUT_KEYVAL_MAXLEN)
         cache_put_flush(fd);
 
-    status = send_cmd_downstream(fd, "cmd=put_result rc=0 msg=success\n");
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 1, "put_result");
+    PMIU_cmd_add_str(&pmi_response, "rc", "0");
+    PMIU_cmd_add_str(&pmi_response, "msg", "success");
+
+    status = send_cmd_downstream(fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
 
   fn_exit:
-    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -491,38 +397,36 @@ static HYD_status fn_put(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_keyval_cache(int fd, char *args[])
+static HYD_status fn_keyval_cache(int fd, struct PMIU_cmd *pmi)
 {
-    struct PMIU_token *tokens;
-    int token_count, i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+    /* FIXME: leak of abstraction of the pmi object */
 
     /* allocate a larger space for the cached keyvals, copy over the
      * older keyvals and add the new ones in */
     HASH_CLEAR(hh, hash_get);
     HYDU_REALLOC_OR_JUMP(cache_get, struct cache_elem *,
-                         (sizeof(struct cache_elem) * (num_elems + token_count)), status);
+                         (sizeof(struct cache_elem) * (num_elems + pmi->num_tokens)), status);
+
+    int i;
     for (i = 0; i < num_elems; i++) {
         struct cache_elem *elem = cache_get + i;
         HASH_ADD_STR(hash_get, key, elem, MPL_MEM_PM);
     }
-    for (; i < num_elems + token_count; i++) {
+    for (; i < num_elems + pmi->num_tokens; i++) {
         struct cache_elem *elem = cache_get + i;
-        elem->key = MPL_strdup(tokens[i - num_elems].key);
+        elem->key = MPL_strdup(pmi->tokens[i - num_elems].key);
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->key, HYD_INTERNAL_ERROR, "%s", "");
-        elem->val = MPL_strdup(tokens[i - num_elems].val);
+        elem->val = MPL_strdup(pmi->tokens[i - num_elems].val);
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->val, HYD_INTERNAL_ERROR, "%s", "");
         HASH_ADD_STR(hash_get, key, elem, MPL_MEM_PM);
     }
-    num_elems += token_count;
+    num_elems += pmi->num_tokens;
 
   fn_exit:
-    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -530,7 +434,7 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_barrier_in(int fd, char *args[])
+static HYD_status fn_barrier_in(int fd, struct PMIU_cmd *pmi)
 {
     static int barrier_count = 0;
     HYD_status status = HYD_SUCCESS;
@@ -543,7 +447,7 @@ static HYD_status fn_barrier_in(int fd, char *args[])
 
         cache_put_flush(fd);
 
-        status = send_cmd_upstream("cmd=barrier_in", fd, 0, args);
+        status = send_cmd_upstream(pmi, fd);
         HYDU_ERR_POP(status, "error sending command upstream\n");
     }
 
@@ -555,22 +459,20 @@ static HYD_status fn_barrier_in(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_barrier_out(int fd, char *args[])
+static HYD_status fn_barrier_out(int fd, struct PMIU_cmd *pmi)
 {
-    char *cmd;
     int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    cmd = MPL_strdup("cmd=barrier_out\n");
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 1, "barrier_out");
 
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-        status = send_cmd_downstream(HYD_pmcd_pmip.downstream.pmi_fd[i], cmd);
+        status = send_cmd_downstream(HYD_pmcd_pmip.downstream.pmi_fd[i], &pmi_response);
         HYDU_ERR_POP(status, "error sending PMI response\n");
     }
-
-    MPL_free(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -580,20 +482,19 @@ static HYD_status fn_barrier_out(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_finalize(int fd, char *args[])
+static HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi)
 {
-    char *cmd;
     int i;
     static int finalize_count = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    cmd = MPL_strdup("cmd=finalize_ack\n");
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 1, "finalize_ack");
 
-    status = send_cmd_downstream(fd, cmd);
+    status = send_cmd_downstream(fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    MPL_free(cmd);
 
     status = HYDT_dmx_deregister_fd(fd);
     HYDU_ERR_POP(status, "unable to deregister fd\n");
