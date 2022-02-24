@@ -512,6 +512,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier(MPIR_Comm * comm_ptr, MPIR_Re
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_TSP_sched_t s)
+{
+    int mpi_errno;
+    enum MPIR_sched_type sched_type;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIR_Ibarrier_sched_impl(comm, false, s, &sched_type);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast(void *buffer, MPI_Aint count,
                                                  MPI_Datatype datatype, int root,
                                                  MPIR_Comm * comm_ptr, MPIR_Request ** req)
@@ -520,6 +532,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast(void *buffer, MPI_Aint count,
     MPIR_FUNC_ENTER;
 
     mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, root, comm_ptr, req);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, MPI_Aint count,
+                                                       MPI_Datatype datatype, int root,
+                                                       MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s)
+{
+    int mpi_errno;
+    enum MPIR_sched_type sched_type;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno =
+        MPIR_Ibcast_sched_impl(buffer, count, datatype, root, comm_ptr, false, s, &sched_type);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

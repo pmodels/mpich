@@ -330,9 +330,15 @@ Native API:
   mpi_ibarrier : int
       NM*: comm, req_p
      SHM*: comm, req_p
+  mpi_ibarrier_sched : int
+      NM*: comm, sched
+     SHM*: comm, sched
   mpi_ibcast : int
       NM*: buffer, count, datatype, root, comm, req_p
      SHM*: buffer, count, datatype, root, comm, req_p
+  mpi_ibcast_sched : int
+      NM*: buffer, count, datatype, root, comm, sched
+     SHM*: buffer, count, datatype, root, comm, sched
   mpi_iallgather : int
       NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, req_p
      SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, req_p
@@ -469,6 +475,7 @@ PARAM:
     remote_upids: char *
     req: MPIR_Request *
     req_p: MPIR_Request **
+    sched: MPIR_TSP_sched_t
     result_addr: void *
     result_count: int
     result_datatype: MPI_Datatype

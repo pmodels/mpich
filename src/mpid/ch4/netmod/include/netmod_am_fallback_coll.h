@@ -293,11 +293,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier(MPIR_Comm * comm_ptr, MPIR_Re
     return MPIR_Ibarrier_impl(comm_ptr, req);
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s)
+{
+    return MPIR_TSP_Ibarrier_sched_intra_tsp_auto(comm_ptr, s);
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast(void *buffer, MPI_Aint count,
                                                  MPI_Datatype datatype, int root,
                                                  MPIR_Comm * comm_ptr, MPIR_Request ** req)
 {
     return MPIR_Ibcast_impl(buffer, count, datatype, root, comm_ptr, req);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, MPI_Aint count,
+                                                       MPI_Datatype datatype, int root,
+                                                       MPIR_Comm * comm, MPIR_TSP_sched_t s)
+{
+    return MPIR_TSP_Ibcast_sched_intra_tsp_auto(buffer, count, datatype, root, comm, s);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallgather(const void *sendbuf, MPI_Aint sendcount,
