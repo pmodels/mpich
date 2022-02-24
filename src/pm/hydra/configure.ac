@@ -356,17 +356,6 @@ AM_CONDITIONAL([hydra_pm_pmiserv], [test $hydra_pm = "pmiserv"])
 
 
 #########################################################################
-# Check what UI we should use
-#########################################################################
-AC_ARG_WITH(hydra-ui, [  --with-hydra-ui=name - User Interface (mpich)],
-		[ hydra_ui=$withval ],
-		[ hydra_ui=mpich ])
-AC_MSG_CHECKING(user interface)
-AC_MSG_RESULT($hydra_ui)
-AC_SUBST(hydra_ui)
-AM_CONDITIONAL([hydra_ui_mpich], [test $hydra_ui = "mpich"])
-
-#########################################################################
 # Processor Topology
 #########################################################################
 AC_ARG_WITH(hydra-topolib, [  --with-hydra-topolib=name - Processor Topology Library (hwloc)],
@@ -631,7 +620,7 @@ fi
 
 # Final output
 AC_CONFIG_FILES([Makefile
-	tools/bootstrap/src/bsci_init.c
+	lib/tools/bootstrap/src/bsci_init.c
 	hydra-doxygen.cfg
 ])
 AC_OUTPUT

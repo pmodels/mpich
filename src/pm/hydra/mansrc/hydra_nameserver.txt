@@ -1,0 +1,15 @@
+/*D
+hydra_nameserver - program to support MPI's name publishing features with hydra
+
+Description:
+    Hydra is the default name service for MPI\'s name publishing features
+    (MPI_PUBLISH_NAME/MPI_LOOKUP_NAME). For programs launched by separate
+    hydra instances, a separate nameserver mechanism need be launched in
+    order for the name publishing to work across multiple process managers.
+
+    This can be achieved with hydra_nameserver. For example\:
+.vb
+    shell@myhost1$ hydra_nameserver &
+    shell@myhost1$ mpiexec -hosts myhost1,myhost2 -n 4 -nameserver myhost1 ./a.out
+.ve
+D*/

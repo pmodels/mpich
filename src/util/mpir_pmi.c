@@ -886,8 +886,55 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
 #elif defined(USE_PMI2_API)
-    /* not supported yet */
-    MPIR_Assert(0);
+    struct MPIR_Info preput;
+    struct MPIR_Info *preput_p[1] = { &preput };
+    int *argcs = MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
+    int *info_keyval_sizes = MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
+    MPIR_Assert(argcs);
+    MPIR_Assert(info_keyval_sizes);
+
+    /* compute argcs array */
+    for (int i = 0; i < count; ++i) {
+        argcs[i] = 0;
+        if (argvs != NULL && argvs[i] != NULL) {
+            while (argvs[i][argcs[i]]) {
+                ++argcs[i];
+            }
+        }
+    }
+
+    /* FIXME cheating on constness */
+    preput.key = (char *) preput_keyvals->key;
+    preput.value = preput_keyvals->val;
+    preput.next = NULL;
+
+    /* determine info sizes */
+    if (!info_ptrs) {
+        for (int i = 0; i < count; i++) {
+            info_keyval_sizes[i] = 0;
+        }
+    } else {
+        for (int i = 0; i < count; i++) {
+            if (info_ptrs[i] != NULL) {
+                MPIR_Info_get_nkeys_impl(info_ptrs[i], &info_keyval_sizes[i]);
+                info_ptrs[i] = info_ptrs[i]->next;      /* skip empty MPIR_Info struct */
+            } else {
+                info_keyval_sizes[i] = 0;
+            }
+        }
+    }
+
+    pmi_errno = PMI2_Job_Spawn(count, (const char **) commands,
+                               argcs, (const char ***) argvs,
+                               maxprocs,
+                               info_keyval_sizes, (const MPIR_Info **) info_ptrs,
+                               1, (const struct MPIR_Info **) preput_p, NULL, 0, pmi_errcodes);
+    MPL_free(argcs);
+    MPL_free(info_keyval_sizes);
+    if (pmi_errno != PMI2_SUCCESS) {
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
+                             "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
+    }
 #elif defined(USE_PMIX_API)
     /* not supported yet */
     MPIR_Assert(0);

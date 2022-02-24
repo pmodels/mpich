@@ -27,6 +27,7 @@ if BUILD_PM_HYDRA
 SUBDIRS += src/pm/hydra
 DIST_SUBDIRS += src/pm/hydra
 MANDOC_SUBDIRS += src/pm/hydra
+HTMLDOC_SUBDIRS += src/pm/hydra
 endif BUILD_PM_HYDRA
 
 # has its own full automake setup, not Makefile.mk
