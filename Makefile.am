@@ -191,9 +191,11 @@ EXTRA_DIST += README.vin
 testing:
 	( cd test && $(MAKE) $(AM_MAKEFLAGS) testing )
 
+testconfig:
+	( cd test && $(MAKE) $(AM_MAKEFLAGS) mpi/Makefile )
+
 test-clean:
 	( cd test && $(MAKE) $(AM_MAKEFLAGS) clean )
-CLEAN_LOCAL_TARGETS += test-clean
 
 ## FIXME: this should live in src/env/Makefile.mk. Moving it there
 ## will not cause a problem, but it will break the build if another
