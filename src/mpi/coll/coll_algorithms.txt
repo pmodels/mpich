@@ -41,7 +41,6 @@
 #         Some algorithm use another algorithm or use a different function name.
 
 barrier-intra:
-    dissemination
     k_dissemination
         extra_params: k
         cvar_params: DISSEM_KVAL

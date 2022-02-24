@@ -9,7 +9,6 @@
 
 mpi_core_sources +=										\
     src/mpi/coll/barrier/barrier_allcomm_nb.c	\
-    src/mpi/coll/barrier/barrier_intra_dissemination.c	\
     src/mpi/coll/barrier/barrier_intra_k_dissemination.c	\
     src/mpi/coll/barrier/barrier_intra_recexch.c	\
     src/mpi/coll/barrier/barrier_intra_smp.c				\

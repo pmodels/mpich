@@ -19,7 +19,6 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         nb            - Force nonblocking algorithm
         smp           - Force smp algorithm
-        dissemination - Force dissemination algorithm
         k_dissemination - Force high radix dissemination algorithm
         recexch       - Force recursive exchange algorithm
 
