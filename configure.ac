@@ -2651,6 +2651,9 @@ if test "$pac_cv_cc_has___func__" != "yes" ; then
             pac_cv_cc_has___FUNCTION__=yes, pac_cv_cc_has___FUNCTION__=no)
     ])
 fi
+if test "$pac_cv_cc_vendor" = "icx" ; then
+    AC_DEFINE(CHAR_PTR_IS_ADDRESS,1,[Define if conversion of void * to MPI_Aint is supported])
+fi
 
 # ----------------------------------------------------------------------------
 # Check on support for long double and long long types.  Do this before the
