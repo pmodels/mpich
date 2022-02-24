@@ -421,7 +421,9 @@
             },
             "comm_hierarchy=any":
             {
-                "algorithm=MPIR_Barrier_intra_dissemination":{}
+                "algorithm=MPIR_Barrier_intra_k_dissemination":{
+                  "k=2": {}
+                }
             }
         },
         "comm_type=inter":
