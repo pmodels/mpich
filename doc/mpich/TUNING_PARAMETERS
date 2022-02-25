@@ -1,0 +1,14 @@
+This document discusses some of the new features added to the MPICH-based MPI
+implementation for the Aurora computer and the environment variables (CVARs)
+that the user can set to modify its behavior. MPICH is configured to use
+sensible default values for all the environment variables to provide overall
+good performance. However, users can change those defaults values to better tune
+their applications. This report provides documentation on how those CVARS work
+and the possible values that they can take. This documentation also provides
+information about per-communicator info hints that MPICH utilizes to make
+runtime decisions at a finer granularity.
+
+Notice that performance of the application depends on how ranks are mapped to
+the cores of the processor. For information on how to specify process-core
+binding with mpirun, information is provided here:
+https://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager#Process-core_Binding.
