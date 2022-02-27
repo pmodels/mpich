@@ -429,128 +429,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_publish_name(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
-{
-    const char *val;
-    char *name = NULL, *port = NULL;
-    int success = 0;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if ((val = PMIU_cmd_find_keyval(pmi, "service")) == NULL)
-        HYDU_ERR_POP(status, "cannot find token: service\n");
-    name = MPL_strdup(val);
-
-    if ((val = PMIU_cmd_find_keyval(pmi, "port")) == NULL)
-        HYDU_ERR_POP(status, "cannot find token: port\n");
-    port = MPL_strdup(val);
-
-    status = HYD_pmcd_pmi_publish(name, port, &success);
-    HYDU_ERR_POP(status, "error publishing service\n");
-
-    struct PMIU_cmd pmi_response;
-    PMIU_cmd_init_static(&pmi_response, 1, "publish_result");
-    if (success) {
-        PMIU_cmd_add_str(&pmi_response, "info", "ok");
-        PMIU_cmd_add_str(&pmi_response, "rc", "0");
-        PMIU_cmd_add_str(&pmi_response, "msg", "success");
-    } else {
-        PMIU_cmd_add_str(&pmi_response, "info", "ok");
-        PMIU_cmd_add_str(&pmi_response, "rc", "1");
-        PMIU_cmd_add_str(&pmi_response, "msg", "key_already_present");
-    }
-
-    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
-    HYDU_ERR_POP(status, "send command failed\n");
-
-  fn_exit:
-    if (name)
-        MPL_free(name);
-    if (port)
-        MPL_free(port);
-
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status fn_unpublish_name(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
-{
-    const char *name;
-    int success = 0;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if ((name = PMIU_cmd_find_keyval(pmi, "service")) == NULL)
-        HYDU_ERR_POP(status, "cannot find token: service\n");
-
-    status = HYD_pmcd_pmi_unpublish(name, &success);
-    HYDU_ERR_POP(status, "error unpublishing service\n");
-
-    struct PMIU_cmd pmi_response;
-    PMIU_cmd_init_static(&pmi_response, 1, "unpublish_result");
-    if (success) {
-        PMIU_cmd_add_str(&pmi_response, "info", "ok");
-        PMIU_cmd_add_str(&pmi_response, "rc", "0");
-        PMIU_cmd_add_str(&pmi_response, "msg", "success");
-    } else {
-        PMIU_cmd_add_str(&pmi_response, "info", "ok");
-        PMIU_cmd_add_str(&pmi_response, "rc", "1");
-        PMIU_cmd_add_str(&pmi_response, "msg", "service_not_found");
-    }
-
-    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
-    HYDU_ERR_POP(status, "send command failed\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status fn_lookup_name(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
-{
-    const char *name, *value = NULL;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if ((name = PMIU_cmd_find_keyval(pmi, "service")) == NULL)
-        HYDU_ERR_POP(status, "cannot find token: service\n");
-
-    status = HYD_pmcd_pmi_lookup(name, &value);
-    HYDU_ERR_POP(status, "error while looking up service\n");
-
-    struct PMIU_cmd pmi_response;
-    PMIU_cmd_init_static(&pmi_response, 1, "lookup_result");
-    if (value) {
-        PMIU_cmd_add_str(&pmi_response, "port", value);
-        PMIU_cmd_add_str(&pmi_response, "rc", "0");
-        PMIU_cmd_add_str(&pmi_response, "msg", "success");
-    } else {
-        PMIU_cmd_add_str(&pmi_response, "rc", "1");
-        PMIU_cmd_add_str(&pmi_response, "msg", "service_not_found");
-    }
-
-    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
-    HYDU_ERR_POP(status, "send command failed\n");
-
-  fn_exit:
-    if (value)
-        MPL_free(value);
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status fn_abort(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     /* set a default exit code of 1 */
@@ -584,9 +462,6 @@ static struct HYD_pmcd_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"put", fn_put},
     {"get", fn_get},
     {"spawn", fn_spawn},
-    {"publish_name", fn_publish_name},
-    {"unpublish_name", fn_unpublish_name},
-    {"lookup_name", fn_lookup_name},
     {"abort", fn_abort},
     {"\0", NULL}
 };
