@@ -36,7 +36,9 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int bufle
         HYD_server_info.num_pmi_calls++;
 #endif /* ENABLE_PROFILING */
 
-    if (strcmp(pmi.cmd, "publish_name") == 0 || strcmp(pmi.cmd, "name-publish") == 0) {
+    if (strcmp(pmi.cmd, "spawn") == 0) {
+        status = HYD_pmiserv_spawn(fd, pid, pgid, &pmi);
+    } else if (strcmp(pmi.cmd, "publish_name") == 0 || strcmp(pmi.cmd, "name-publish") == 0) {
         status = HYD_pmiserv_publish(fd, pid, pgid, &pmi);
     } else if (strcmp(pmi.cmd, "unpublish_name") == 0 || strcmp(pmi.cmd, "name-unpublish") == 0) {
         status = HYD_pmiserv_unpublish(fd, pid, pgid, &pmi);
