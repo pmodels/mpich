@@ -76,7 +76,7 @@ HYD_status HYD_pmiserv_bcast_keyvals(int fd, int pid)
                     HYDU_ERR_POP(status, "error writing PMI line\n");
                 }
 
-                PMIU_cmd_init(&pmi, 1, "keyval_cache");
+                PMIU_cmd_init_static(&pmi, 1, "keyval_cache");
                 arg_count = 1;
             }
         }
