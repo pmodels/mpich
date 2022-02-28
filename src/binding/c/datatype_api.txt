@@ -78,7 +78,6 @@ MPI_Get_elements:
 
 MPI_Get_elements_x:
     .desc: Returns the number of basic elements
-    .skip: initcheck
     .skip: global_cs
 {
     MPI_Count byte_count = MPIR_STATUS_GET_COUNT(*status);
@@ -167,7 +166,6 @@ MPI_Status_set_elements:
 
 MPI_Status_set_elements_x:
     .desc: Set the number of elements in a status
-    .skip: initcheck
 
 MPI_Type_commit:
     .desc: Commits the datatype
@@ -262,7 +260,7 @@ MPI_Type_get_extent:
 
 MPI_Type_get_extent_x:
     .desc: Get the lower bound and extent as MPI_Count values for a datatype
-    .skip: initcheck
+    .skip: global_cs
 
 MPI_Type_get_true_extent:
     .desc: Get the true lower bound and extent for a datatype
@@ -271,7 +269,7 @@ MPI_Type_get_true_extent:
 
 MPI_Type_get_true_extent_x:
     .desc: Get the true lower bound and extent as MPI_Count values for a datatype
-    .skip: initcheck
+    .skip: global_cs
 
 MPI_Type_size:
     .desc: Return the number of bytes occupied by entries in the datatype
@@ -280,7 +278,7 @@ MPI_Type_size:
 
 MPI_Type_size_x:
     .desc: Return the number of bytes occupied by entries in the datatype
-    .skip: initcheck
+    .skip: global_cs
 
 MPI_Type_set_name:
     .desc: set datatype name
