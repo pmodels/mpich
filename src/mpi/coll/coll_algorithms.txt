@@ -41,7 +41,12 @@
 #         Some algorithm use another algorithm or use a different function name.
 
 barrier-intra:
-    dissemination
+    k_dissemination
+        extra_params: k
+        cvar_params: DISSEM_KVAL
+    recexch
+        extra_params: k, single_phase_recv
+        cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     smp
         restrictions: parent-comm
 barrier-inter:

@@ -46,8 +46,6 @@ AC_SUBST(WRAPPER_LIBS)
 # let confdb macro know that we are using WRAPPER FLAGS
 m4_define([use_wrapper_flags], [1])
 
-PAC_ARG_STRICT
-
 # Look for perl.  The absolute path of perl is required in hydra-doxygen.cfg.
 AC_PATH_PROG(PERL,perl)
 

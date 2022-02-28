@@ -3851,12 +3851,9 @@ m4_map([PAC_SUBCFG_CONFIGURE_SUBSYS], [PAC_SUBCFG_MODULE_LIST])
 
 # now configure any actual recursively configures subsystems, such as ROMIO and
 # hydra, or older components that haven't been updated to a subconfigure.m4 yet
-PAC_PUSH_ALL_FLAGS()
-PAC_RESET_ALL_FLAGS()
 for subsys in $devsubsystems $subsystems ; do
-    PAC_CONFIG_SUBDIR([$subsys],[],[AC_MSG_ERROR([$subsys configure failed])])
+    PAC_CONFIG_SUBDIR_ARGS([$subsys],[$subsys_config_args],[],[AC_MSG_ERROR([$subsys configure failed])])
 done
-PAC_POP_ALL_FLAGS()
 if test "$DEBUG_SUBDIR_CACHE" = yes -a "$enable_echo" != yes ; then
     set +x
 fi
