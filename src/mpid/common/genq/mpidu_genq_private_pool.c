@@ -263,7 +263,7 @@ int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell
     } else if (block->num_used_cells == 0) {
         /* Avoid frequent re-allocation by preserving the last block.
          * All blocks will be freed when the pool is destroyed */
-        if (pool_obj->num_blocks > 1) {
+        if (pool_obj->max_num_blocks == 0 && pool_obj->num_blocks > 1) {
             remove_free_blocks(pool_obj, block);
             DL_DELETE(pool_obj->cell_blocks, block);
             cell_block_free(pool_obj, block);
