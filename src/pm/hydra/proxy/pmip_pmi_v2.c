@@ -10,8 +10,6 @@
 #include "topo.h"
 #include "pmi_v2_common.h"
 
-static HYD_status fn_info_getnodeattr(int fd, struct PMIU_cmd *pmi);
-
 static struct HYD_pmcd_pmi_v2_reqs *pending_reqs = NULL;
 
 static HYD_status send_cmd_upstream(struct PMIU_cmd *pmi, int fd)
@@ -77,7 +75,7 @@ static HYD_status poke_progress(const char *key)
     goto fn_exit;
 }
 
-static HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi)
 {
     int id, i;
     const char *rank_str;
@@ -133,7 +131,7 @@ static HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_job_getid(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_job_getid(int fd, struct PMIU_cmd *pmi)
 {
     const char *thrid;
     HYD_status status = HYD_SUCCESS;
@@ -161,7 +159,7 @@ static HYD_status fn_job_getid(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_info_putnodeattr(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_info_putnodeattr(int fd, struct PMIU_cmd *pmi)
 {
     const char *key, *val, *thrid;
     int ret;
@@ -208,7 +206,7 @@ static HYD_status fn_info_putnodeattr(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_info_getnodeattr(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_info_getnodeattr(int fd, struct PMIU_cmd *pmi)
 {
     int found;
     struct HYD_pmcd_pmi_kvs_pair *run;
@@ -274,7 +272,7 @@ static HYD_status fn_info_getnodeattr(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_info_getjobattr(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_info_getjobattr(int fd, struct PMIU_cmd *pmi)
 {
     const char *key, *thrid;
     HYD_status status = HYD_SUCCESS;
@@ -327,46 +325,3 @@ static HYD_status fn_info_getjobattr(int fd, struct PMIU_cmd *pmi)
   fn_fail:
     goto fn_exit;
 }
-
-static HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi)
-{
-    const char *thrid;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
-
-    struct PMIU_cmd pmi_response;
-    PMIU_cmd_init_static(&pmi_response, 2, "finalize-response");
-    if (thrid) {
-        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-    }
-    PMIU_cmd_add_str(&pmi_response, "rc", "0");
-
-    status = send_cmd_downstream(fd, &pmi_response);
-    HYDU_ERR_POP(status, "error sending command downstream\n");
-
-    status = HYDT_dmx_deregister_fd(fd);
-    HYDU_ERR_POP(status, "unable to deregister fd\n");
-    close(fd);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static struct HYD_pmcd_pmip_pmi_handle pmi_v2_handle_fns_foo[] = {
-    {"fullinit", fn_fullinit},
-    {"job-getid", fn_job_getid},
-    {"info-putnodeattr", fn_info_putnodeattr},
-    {"info-getnodeattr", fn_info_getnodeattr},
-    {"info-getjobattr", fn_info_getjobattr},
-    {"finalize", fn_finalize},
-    {"\0", NULL}
-};
-
-struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_v2 = pmi_v2_handle_fns_foo;
