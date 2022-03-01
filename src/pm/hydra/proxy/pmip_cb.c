@@ -93,25 +93,25 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, struct HYD_pmcd_hdr hdr)
+static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (hdr.u.pmi.pmi_version == 1)
+    if (pmi_version == 1)
         HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
     else
         HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
 
-    char *cmd = PMIU_wire_get_cmd(buf, hdr.buflen, hdr.u.pmi.pmi_version);
+    char *cmd = PMIU_wire_get_cmd(buf, buflen, pmi_version);
 
     struct HYD_pmcd_pmip_pmi_handle *h;
     h = HYD_pmcd_pmip_pmi_handle;
     while (h->handler) {
         if (strcmp(cmd, h->cmd) == 0) {
             struct PMIU_cmd pmi;
-            status = PMIU_cmd_parse(buf, buflen, hdr.u.pmi.pmi_version, &pmi);
+            status = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
             HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
             if (HYD_pmcd_pmip.user_global.debug) {
@@ -134,18 +134,19 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, struct HYD_pmcd_
     /* We don't understand the command; forward it upstream */
     int sent, closed;
 
+    struct HYD_pmcd_hdr hdr;
+    HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PMI;
+    hdr.u.pmi.pmi_version = pmi_version;
     hdr.u.pmi.pid = fd;
-    hdr.buflen = strlen(buf);
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
-                        HYDU_SOCK_COMM_MSGWAIT);
+    hdr.buflen = buflen;
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
+                             HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
     HYDU_ASSERT(!closed, status);
 
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed,
-                        HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, buflen, &sent, &closed,
+                             HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
     HYDU_ASSERT(!closed, status);
 
@@ -262,12 +263,9 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL;
     int closed, repeat, sent, linelen, pid = -1;
-    struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    HYD_pmcd_init_header(&hdr);
 
     /* Try to find the PMI FD */
     for (int i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
@@ -324,6 +322,9 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                  * SIGUSR1 signal to a PMI-2 notification message. */
                 HYD_pmcd_pmip_send_signal(SIGUSR1);
 
+                struct HYD_pmcd_hdr hdr;
+                HYD_pmcd_init_header(&hdr);
+
                 hdr.cmd = CMD_PROCESS_TERMINATED;
                 /* global rank for the terminated process */
                 hdr.u.data = HYD_pmcd_pmip.downstream.pmi_rank[pid];
@@ -340,8 +341,9 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     }
 
     int buflen;
+    int pmi_version;
   check_cmd:
-    status = check_pmi_cmd(&buf, &buflen, &hdr.u.pmi.pmi_version, &repeat);
+    status = check_pmi_cmd(&buf, &buflen, &pmi_version, &repeat);
     HYDU_ERR_POP(status, "error checking the PMI command\n");
 
     if (buf == NULL)
@@ -355,7 +357,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     if (pid != -1 && !HYD_pmcd_pmip.downstream.pmi_fd_active[pid])
         HYD_pmcd_pmip.downstream.pmi_fd_active[pid] = 1;
 
-    status = handle_pmi_cmd(fd, buf, buflen, hdr);
+    status = handle_pmi_cmd(fd, buf, buflen, pmi_version);
     HYDU_ERR_POP(status, "unable to handle PMI command\n");
 
     if (repeat)
