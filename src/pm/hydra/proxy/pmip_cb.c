@@ -101,7 +101,7 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
 
     struct HYD_pmcd_pmip_pmi_handle pmi_handle_fns[] = {
         {"init", fn_init},
-        {"initack", fn_initack},
+        {"initack", fn_fullinit},
         {"get_maxes", fn_get_maxes},
         {"get_appnum", fn_get_appnum},
         {"get_my_kvsname", fn_get_my_kvsname},
