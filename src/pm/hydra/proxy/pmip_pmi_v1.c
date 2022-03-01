@@ -38,6 +38,16 @@ static struct cache_elem *cache_get = NULL, *hash_get = NULL;
 
 static int num_elems = 0;
 
+static void internal_finalize(void)
+{
+    HASH_CLEAR(hh, hash_get);
+    for (int i = 0; i < num_elems; i++) {
+        MPL_free((cache_get + i)->key);
+        MPL_free((cache_get + i)->val);
+    }
+    MPL_free(cache_get);
+}
+
 static HYD_status send_cmd_upstream(struct PMIU_cmd *pmi, int fd)
 {
     struct HYD_pmcd_hdr hdr;
@@ -90,7 +100,7 @@ static HYD_status cache_put_flush(int fd)
     goto fn_exit;
 }
 
-static HYD_status fn_init(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_init(int fd, struct PMIU_cmd *pmi)
 {
     int pmi_version, pmi_subversion;
     const char *tmp = NULL;
@@ -142,7 +152,7 @@ static HYD_status fn_init(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_initack(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_initack(int fd, struct PMIU_cmd *pmi)
 {
     int id, i;
     const char *val;
@@ -189,7 +199,7 @@ static HYD_status fn_initack(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_get_maxes(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_get_maxes(int fd, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -212,7 +222,7 @@ static HYD_status fn_get_maxes(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_get_appnum(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_get_appnum(int fd, struct PMIU_cmd *pmi)
 {
     int i, idx;
     struct HYD_exec *exec;
@@ -249,7 +259,7 @@ static HYD_status fn_get_appnum(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_get_my_kvsname(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_get_my_kvsname(int fd, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -270,7 +280,7 @@ static HYD_status fn_get_my_kvsname(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_get_usize(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_get_usize(int fd, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -300,7 +310,7 @@ static HYD_status fn_get_usize(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_get(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_get(int fd, struct PMIU_cmd *pmi)
 {
     const char *key;
     struct cache_elem *found = NULL;
@@ -357,7 +367,7 @@ static HYD_status fn_get(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_put(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_put(int fd, struct PMIU_cmd *pmi)
 {
     const char *key, *val;
     HYD_status status = HYD_SUCCESS;
@@ -397,7 +407,7 @@ static HYD_status fn_put(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_keyval_cache(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_keyval_cache(int fd, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -434,7 +444,7 @@ static HYD_status fn_keyval_cache(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_barrier_in(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_barrier_in(int fd, struct PMIU_cmd *pmi)
 {
     static int barrier_count = 0;
     HYD_status status = HYD_SUCCESS;
@@ -459,7 +469,7 @@ static HYD_status fn_barrier_in(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_barrier_out(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_barrier_out(int fd, struct PMIU_cmd *pmi)
 {
     int i;
     HYD_status status = HYD_SUCCESS;
@@ -482,7 +492,7 @@ static HYD_status fn_barrier_out(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-static HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi)
 {
     int i;
     static int finalize_count = 0;
@@ -491,7 +501,18 @@ static HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi)
     HYDU_FUNC_ENTER();
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init_static(&pmi_response, 1, "finalize_ack");
+    if (pmi->pmi_version == 1) {
+        PMIU_cmd_init_static(&pmi_response, 1, "finalize_ack");
+    } else {
+        const char *thrid;
+        thrid = PMIU_cmd_find_keyval(pmi, "thrid");
+
+        PMIU_cmd_init_static(&pmi_response, 2, "finalize-response");
+        if (thrid) {
+            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
+        }
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
+    }
 
     status = send_cmd_downstream(fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
@@ -504,12 +525,7 @@ static HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi)
 
     if (finalize_count == HYD_pmcd_pmip.local.proxy_process_count) {
         /* All processes have finalized */
-        HASH_CLEAR(hh, hash_get);
-        for (i = 0; i < num_elems; i++) {
-            MPL_free((cache_get + i)->key);
-            MPL_free((cache_get + i)->val);
-        }
-        MPL_free(cache_get);
+        internal_finalize();
     }
 
   fn_exit:
@@ -519,21 +535,3 @@ static HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi)
   fn_fail:
     goto fn_exit;
 }
-
-static struct HYD_pmcd_pmip_pmi_handle pmi_v1_handle_fns_foo[] = {
-    {"init", fn_init},
-    {"initack", fn_initack},
-    {"get_maxes", fn_get_maxes},
-    {"get_appnum", fn_get_appnum},
-    {"get_my_kvsname", fn_get_my_kvsname},
-    {"get_universe_size", fn_get_usize},
-    {"get", fn_get},
-    {"put", fn_put},
-    {"keyval_cache", fn_keyval_cache},
-    {"barrier_in", fn_barrier_in},
-    {"barrier_out", fn_barrier_out},
-    {"finalize", fn_finalize},
-    {"\0", NULL}
-};
-
-struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_v1 = pmi_v1_handle_fns_foo;
