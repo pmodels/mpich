@@ -1143,7 +1143,7 @@ def dump_mpi_f08_types():
             for a in G.handle_list:
                 # e.g. MPI_Comm_eq
                 G.out.append("")
-                G.out.append("FUNCTION MPI_%s_%s(x, y) result(res)" % (a, op))
+                G.out.append("elemental FUNCTION MPI_%s_%s(x, y) result(res)" % (a, op))
                 G.out.append("    TYPE(MPI_%s), INTENT(in) :: x, y" % a)
                 G.out.append("    LOGICAL :: res")
                 if op == "eq":
@@ -1156,7 +1156,7 @@ def dump_mpi_f08_types():
                 for p in [("f08", "f"), ("f", "f08")]:
                     func_name = "MPI_%s_%s_%s_%s" % (a, p[0], op, p[1])
                     G.out.append("")
-                    G.out.append("FUNCTION %s(%s, %s) result(res)" % (func_name, p[0], p[1]))
+                    G.out.append("elemental FUNCTION %s(%s, %s) result(res)" % (func_name, p[0], p[1]))
                     G.out.append("    TYPE(MPI_%s), INTENT(in) :: f08" % a)
                     G.out.append("    INTEGER, INTENT(in) :: f")
                     G.out.append("    LOGICAL :: res")
