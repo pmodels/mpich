@@ -544,31 +544,39 @@ def dump_mpir(name, blocking_type):
 
 # ----
 def dump_fallback(algo):
-    cond_list = []
-    for a in algo['restrictions'].replace(" ","").split(','):
-        if a == "inplace":
-            cond_list.append("sendbuf == MPI_IN_PLACE")
-        elif a == "noinplace":
-            cond_list.append("sendbuf != MPI_IN_PLACE")
-        elif a == "power-of-two":
-            cond_list.append("comm_ptr->local_size == comm_ptr->coll.pof2")
-        elif a == "size-ge-pof2":
-            cond_list.append("count >= comm_ptr->coll.pof2")
-        elif a == "commutative":
-            cond_list.append("MPIR_Op_is_commutative(op)")
-        elif a== "builtin-op":
-            cond_list.append("HANDLE_IS_BUILTIN(op)")
-        elif a == "parent-comm":
-            cond_list.append("MPIR_Comm_is_parent_comm(comm_ptr)")
-        elif a == "node-consecutive":
-            cond_list.append("MPII_Comm_is_node_consecutive(comm_ptr)")
-        elif a == "displs-ordered":
-            # assume it's allgatherv
-            cond_list.append("MPII_Iallgatherv_is_displs_ordered(comm_ptr->local_size, recvcounts, displs)")
-        else:
-            raise Exception("Unsupported restrictions - %s" % a)
+    if re.search(r'[^\w\-, ]', algo['restrictions']):
+        # assume it is the literal condition string
+        cond_str = algo['restrictions']
+    else:
+        # assume it is a comma separated restriction (word) list
+        cond_list = []
+        for a in algo['restrictions'].replace(" ","").split(','):
+            if a == "inplace":
+                cond_list.append("sendbuf == MPI_IN_PLACE")
+            elif a == "noinplace":
+                cond_list.append("sendbuf != MPI_IN_PLACE")
+            elif a == "power-of-two":
+                cond_list.append("comm_ptr->local_size == comm_ptr->coll.pof2")
+            elif a == "size-ge-pof2":
+                cond_list.append("count >= comm_ptr->coll.pof2")
+            elif a == "commutative":
+                cond_list.append("MPIR_Op_is_commutative(op)")
+            elif a== "builtin-op":
+                cond_list.append("HANDLE_IS_BUILTIN(op)")
+            elif a == "parent-comm":
+                cond_list.append("MPIR_Comm_is_parent_comm(comm_ptr)")
+            elif a == "node-consecutive":
+                cond_list.append("MPII_Comm_is_node_consecutive(comm_ptr)")
+            elif a == "displs-ordered":
+                # assume it's allgatherv
+                cond_list.append("MPII_Iallgatherv_is_displs_ordered(comm_ptr->local_size, recvcounts, displs)")
+            else:
+                raise Exception("Unsupported restrictions - %s" % a)
+        cond_str = ' && '.join(cond_list)
+
     (func_name, commkind) = algo['func-commkind'].split('-')
-    G.out.append("MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, %s, mpi_errno," % ' && '.join(cond_list))
+
+    G.out.append("MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, %s, mpi_errno," % cond_str)
     G.out.append("                               \"%s %s cannot be applied.\\n\");" % (func_name.capitalize(), algo['name']))
 
 # ----
