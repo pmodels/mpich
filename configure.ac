@@ -486,21 +486,6 @@ AC_ARG_WITH(device,
 	AS_HELP_STRING([--with-device=name], [Specify the communication device for MPICH]),,
 	with_device=ch4)
 
-AC_ARG_WITH(pmi,
-	AS_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
-	with_pmi=default)
-
-AC_ARG_WITH(pm,
-	AS_HELP_STRING([--with-pm=name],
-		[Specify the process manager for MPICH.  "no" or "none" are
-                 valid values.  Multiple process managers may be specified as
-                 long as they all use the same pmi interface by separating them
-                 with colons.  The mpiexec for the first named process manager
-                 will be installed.  Example: "--with-pm=hydra:gforker"
-                 builds the two process managers hydra, and gforker;
-                 only the mpiexec from hydra is installed into the bin
-                 directory.]),,with_pm=default)
-
 AC_ARG_ENABLE(threads,
 [  --enable-threads=level - Control the level of thread support in the
                            MPICH implementation.  The following levels
@@ -1482,6 +1467,21 @@ fi
 # ---------------------------------------------------------------------------
 # Configuring pmi and pm
 #
+
+AC_ARG_WITH(pmi,
+	AS_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
+	with_pmi=default)
+
+AC_ARG_WITH(pm,
+	AS_HELP_STRING([--with-pm=name],
+		[Specify the process manager for MPICH.  "no" or "none" are
+                 valid values.  Multiple process managers may be specified as
+                 long as they all use the same pmi interface by separating them
+                 with colons.  The mpiexec for the first named process manager
+                 will be installed.  Example: "--with-pm=hydra:gforker"
+                 builds the two process managers hydra, and gforker;
+                 only the mpiexec from hydra is installed into the bin
+                 directory.]),,with_pm=default)
 
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmix, pmix.h, pmix, PMIx_Init)
 if test "$pac_have_pmix" = "yes" ; then
