@@ -37,6 +37,18 @@ cvars:
         trigger_tree_small_blocking - Force triggered ops based blocking small message algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 
+    - name        : MPIR_CVAR_IBCAST_OFI_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      default     : auto
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select algorithm for intra-node ibcast
+        mpir                        - Fallback to MPIR collectives
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
+
     - name        : MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -51,6 +63,31 @@ cvars:
         trigger_tree_rma            - Force triggered ops based RMA Tree
         trigger_tree_pipelined      - Force triggered ops based Pipelined Tree
         trigger_tree_small_message  - Force triggered ops based blocking small message algorithm
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
+
+    - name        : MPIR_CVAR_IALLREDUCE_OFI_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      default     : auto
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select iallreduce algorithm
+        mpir                        - Fallback to MPIR collectives
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
+
+    - name        : MPIR_CVAR_IBARRIER_OFI_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      group       : MPIR_CVAR_GROUP_COLL_ALGO
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select algorithm for intra-node allreduce
+        mpir                        - Fallback to MPIR collectives
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 
     - name        : MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM
@@ -1014,30 +1051,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast(void *buffer, MPI_Aint count,
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, MPI_Aint count,
-                                                       MPI_Datatype datatype, int root,
-                                                       MPIR_Comm * comm, MPIR_TSP_sched_t sched)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    mpi_errno = MPIR_TSP_Ibcast_sched_intra_tsp_auto(buffer, count, datatype, root, comm, sched);
-
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_TSP_sched_t sched)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    mpi_errno = MPIR_TSP_Ibarrier_sched_intra_tsp_auto(comm, sched);
-
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallgather(const void *sendbuf, MPI_Aint sendcount,
                                                      MPI_Datatype sendtype, void *recvbuf,
                                                      MPI_Aint recvcount, MPI_Datatype recvtype,
@@ -1269,5 +1282,239 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscatterv(const void *sendbuf,
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_ibarrier_sched_json(MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__IBARRIER,
+        .comm_ptr = comm,
+    };
+    const MPIDI_OFI_csel_container_s *cnt = NULL;
+
+    cnt = MPIR_Csel_search(MPIDI_OFI_COMM(comm).csel_comm, coll_sig);
+
+    if (cnt == NULL)
+        goto fallback;
+
+    switch (cnt->id) {
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibarrier_sched_intra_tsp_auto:
+            goto fallback;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_TSP_Ibarrier_sched_intra_tsp_auto(comm, sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    switch (MPIR_CVAR_IBARRIER_OFI_INTRA_ALGORITHM) {
+        case MPIR_CVAR_IBARRIER_OFI_INTRA_ALGORITHM_auto:
+            mpi_errno = MPIDI_OFI_ibarrier_sched_json(comm, sched);
+            break;
+        case MPIR_CVAR_IBARRIER_OFI_INTRA_ALGORITHM_mpir:
+            goto fallback;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_TSP_Ibarrier_sched_intra_tsp_auto(comm, sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_ibcast_sched_json(void *buffer, int count,
+                                                         MPI_Datatype datatype, int root,
+                                                         MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__IBCAST,
+        .comm_ptr = comm,
+        .u.ibcast.buffer = buffer,
+        .u.ibcast.count = count,
+        .u.ibcast.datatype = datatype,
+        .u.ibcast.root = root,
+    };
+    const MPIDI_OFI_csel_container_s *cnt = NULL;
+
+    cnt = MPIR_Csel_search(MPIDI_OFI_COMM(comm).csel_comm, coll_sig);
+
+    if (cnt == NULL)
+        goto fallback;
+
+    /* TODO: Container validation check and synchronization would come here. Synchronization is required for Triggered ops only */
+    switch (cnt->id) {
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_sched_intra_tsp_auto:
+            goto fallback;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_TSP_Ibcast_sched_intra_tsp_auto(buffer, count, datatype, root, comm, sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, MPI_Aint count,
+                                                       MPI_Datatype datatype, int root,
+                                                       MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    switch (MPIR_CVAR_IBCAST_OFI_INTRA_ALGORITHM) {
+        case MPIR_CVAR_IBCAST_OFI_INTRA_ALGORITHM_auto:
+            mpi_errno = MPIDI_OFI_ibcast_sched_json(buffer, count, datatype, root, comm, sched);
+            break;
+        case MPIR_CVAR_IBCAST_OFI_INTRA_ALGORITHM_mpir:
+            goto fallback;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_TSP_Ibcast_sched_intra_tsp_auto(buffer, count, datatype, root, comm, sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce_sched(const void *sendbuf, void *recvbuf,
+                                                        int count, MPI_Datatype datatype, MPI_Op op,
+                                                        int root, MPIR_Comm * comm,
+                                                        MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+    mpi_errno =
+        MPIR_TSP_Ireduce_sched_intra_tsp_auto(sendbuf, recvbuf, count, datatype, op, root,
+                                              comm, sched);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_iallreduce_sched_json(const void *sendbuf, void *recvbuf,
+                                                             int count, MPI_Datatype datatype,
+                                                             MPI_Op op, MPIR_Comm * comm,
+                                                             MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__IALLREDUCE,
+        .comm_ptr = comm,
+        .u.iallreduce.sendbuf = sendbuf,
+        .u.iallreduce.recvbuf = recvbuf,
+        .u.iallreduce.count = count,
+        .u.iallreduce.datatype = datatype,
+        .u.iallreduce.op = op,
+    };
+    const MPIDI_OFI_csel_container_s *cnt = NULL;
+
+    cnt = MPIR_Csel_search(MPIDI_OFI_COMM(comm).csel_comm, coll_sig);
+
+    if (cnt == NULL)
+        goto fallback;
+
+    switch (cnt->id) {
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_sched_intra_tsp_auto:
+            goto fallback;
+        default:
+            MPIR_Assert(0);
+            break;
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno =
+        MPIR_TSP_Iallreduce_sched_intra_tsp_auto(sendbuf, recvbuf, count, datatype, op,
+                                                 comm, sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallreduce_sched(const void *sendbuf, void *recvbuf,
+                                                           int count, MPI_Datatype datatype,
+                                                           MPI_Op op, MPIR_Comm * comm,
+                                                           MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    switch (MPIR_CVAR_IALLREDUCE_OFI_INTRA_ALGORITHM) {
+        case MPIR_CVAR_IALLREDUCE_OFI_INTRA_ALGORITHM_auto:
+            mpi_errno =
+                MPIDI_OFI_iallreduce_sched_json(sendbuf, recvbuf, count, datatype, op, comm, sched);
+            break;
+        case MPIR_CVAR_IALLREDUCE_OFI_INTRA_ALGORITHM_mpir:
+            goto fallback;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno =
+        MPIR_TSP_Iallreduce_sched_intra_tsp_auto(sendbuf, recvbuf, count, datatype, op,
+                                                 comm, sched);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 
 #endif /* OFI_COLL_H_INCLUDED */
