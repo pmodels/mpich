@@ -6,6 +6,8 @@
 #include "mpidimpl.h"
 #include "posix_noinline.h"
 #include "release_gather.h"
+#include "nb_bcast_release_gather.h"
+#include "nb_reduce_release_gather.h"
 
 int MPIDI_POSIX_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
@@ -17,6 +19,9 @@ int MPIDI_POSIX_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
         mpi_errno = MPIDI_POSIX_mpi_release_gather_comm_init_null(comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
+
+    MPIDI_POSIX_COMM(comm, nb_bcast_seq_no) = 0;
+    MPIDI_POSIX_COMM(comm, nb_reduce_seq_no) = 0;
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -60,6 +65,7 @@ int MPIDI_POSIX_mpi_comm_free_hook(MPIR_Comm * comm)
     /* Release_gather primitives based collective algorithm works for Intra-comms only */
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         mpi_errno = MPIDI_POSIX_mpi_release_gather_comm_free(comm);
+        mpi_errno = MPIDI_POSIX_nb_release_gather_comm_free(comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
