@@ -14,13 +14,16 @@ extern MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type,
 #define RELEASE_GATHER_FIELD(comm, field)                   \
     MPIDI_POSIX_COMM(comm, release_gather).field
 
+#define NB_RELEASE_GATHER_FIELD(comm, field)                   \
+    MPIDI_POSIX_COMM(comm, nb_release_gather).field
+
 /* Blocking wait implementation */
 /* "acquire" makes sure no writes/reads are reordered before this load */
 #define MPIDI_POSIX_RELEASE_GATHER_WAIT_WHILE_LESS_THAN(ptr, value)                           \
     do {                                                           \
         int spin_count = 0;                                        \
         while (MPL_atomic_acquire_load_uint64(ptr) < (value))    { \
-            if (++spin_count >= 10000) {                           \
+            if (++spin_count >= MPIR_CVAR_POSIX_POLL_FREQUENCY) {    \
                 /* Call progress only after waiting for a while */ \
                 MPID_Progress_test(NULL);                              \
                 spin_count = 0;                                    \
