@@ -1479,6 +1479,10 @@ else
     # Make device_name available to subdirs
 fi
 
+# ---------------------------------------------------------------------------
+# Configuring pmi and pm
+#
+
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmix, pmix.h, pmix, PMIx_Init)
 if test "$pac_have_pmix" = "yes" ; then
     # disable built-in PMI and process managers
@@ -1631,6 +1635,38 @@ for this_pm_name in $pm_names ; do
     fi
 done
 
+# Step 4: complete external pmi setup
+#
+case "$pmi_name" in
+  slurm)
+    PAC_SET_HEADER_LIB_PATH([slurm])
+    AC_CHECK_HEADER([slurm/pmi.h], [], [AC_MSG_ERROR([could not find slurm/pmi.h.  Configure aborted])])
+    # FIXME: what if user choose pmi2?
+    AC_CHECK_LIB([pmi], [PMI_Init],
+                [PAC_PREPEND_FLAG([-lpmi],[LIBS])
+                PAC_PREPEND_FLAG([-lpmi], [WRAPPER_LIBS])],
+                [AC_MSG_ERROR([could not find the Slurm libpmi.  Configure aborted])])
+    ;;
+  cray)  
+    # set CPPFLAGS and LDFLAGS
+    PAC_PREPEND_FLAG([$CRAY_PMI_INCLUDE_OPTS], [CPPFLAGS])
+    PAC_PREPEND_FLAG([$CRAY_PMI_POST_LINK_OPTS], [LDFLAGS])
+
+    AC_CHECK_HEADER([pmi.h], [], [AC_MSG_ERROR([could not find pmi.h.  Configure aborted])])
+    AC_CHECK_LIB([pmi], [PMI_Init], [], [AC_MSG_ERROR([could not find the cray libpmi.  Configure aborted])])
+
+    AC_DEFINE(USE_PMI2_API, 1, [Define if Cray PMI API must be used])
+    PAC_APPEND_FLAG([-lpmi], [WRAPPER_LIBS])
+    ;;
+  bgq)
+    # This is a hack to include the pmi.h header. The OFI/BGQ provider
+    # includes PMI functions, but no header file.
+    PAC_PREPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
+    AC_DEFINE([NO_PMI_SPAWN_MULTIPLE], 1, [The PMI library does not have PMI_Spawn_multiple.])
+    ;;
+esac
+
+# ---------------------------------------------------------------------------
 # Check for whether the compiler defines a symbol that contains the
 # function name. The MPICH code uses this for debugging purposes.
 
