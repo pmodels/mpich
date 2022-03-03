@@ -6,8 +6,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
-AM_CONDITIONAL([BUILD_PMI_PMI2_SIMPLE],[test "x$pmi_name" = "xpmi2/simple"])
-
 AM_COND_IF([BUILD_PMI_PMI2_SIMPLE],[
 if test "$enable_pmiport" != "no" ; then
    enable_pmiport=yes
