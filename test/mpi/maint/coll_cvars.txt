@@ -328,11 +328,15 @@ algorithms:
         inter-nonblocking:
             sched_bcast
         intra-blocking:
-            dissemination
-	    ofi:trigger_tree_tagged
+            k_dissemination
+                .MPIR_CVAR_BARRIER_DISSEM_KVAL=2,3,4,8
+            recexch
+                .MPIR_CVAR_BARRIER_RECEXCH_KVAL=2,3,4,8
+                .MPIR_CVAR_BARRIER_RECEXCH_SINGLE_PHASE_RECV=0,1
+            ofi:trigger_tree_tagged
                 .MPIR_CVAR_CH4_OFI_ENABLE_TRIGGERED=1
                 .MPIR_CVAR_BARRIER_TREE_TYPE=kary,knomial_1,knomial_2
-                .MPIR_CVAR_BARRIER_TREE_KVAL=2,3,4,8 
+                .MPIR_CVAR_BARRIER_TREE_KVAL=2,3,4,8
         intra-nonblocking:
             sched_recursive_doubling
             tsp_recexch

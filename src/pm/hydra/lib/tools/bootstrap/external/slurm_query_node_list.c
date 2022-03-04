@@ -466,12 +466,14 @@ HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
 
     HYDU_FUNC_ENTER();
 
-    if (MPL_env2str("SLURM_NODELIST", (const char **) &list) == 0) {
+    if (MPL_env2str("SLURM_JOB_NODELIST", (const char **) &list) == 0 ||
+        MPL_env2str("SLURM_NODELIST", (const char **) &list) == 0) {
         *node_list = NULL;
         goto fn_exit;
     }
 
-    if (MPL_env2str("SLURM_NNODES", (const char **) &dummy) == 0) {
+    if (MPL_env2str("SLURM_JOB_NUM_NODES", (const char **) &dummy) == 0 ||
+        MPL_env2str("SLURM_NNODES", (const char **) &dummy) == 0) {
         *node_list = NULL;
         goto fn_exit;
     }

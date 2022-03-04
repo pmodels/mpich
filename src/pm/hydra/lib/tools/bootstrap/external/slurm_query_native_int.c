@@ -15,9 +15,10 @@ HYD_status HYDT_bscd_slurm_query_native_int(int *ret)
 
     *ret = 1;
 
-    if (!HYDTI_bscd_env_is_avail("SLURM_NODELIST"))
+    if (!HYDTI_bscd_env_is_avail("SLURM_JOB_NODELIST") &&
+        !HYDTI_bscd_env_is_avail("SLURM_NODELIST"))
         *ret = 0;
-    if (!HYDTI_bscd_env_is_avail("SLURM_NNODES"))
+    if (!HYDTI_bscd_env_is_avail("SLURM_JOB_NUM_NODES") && !HYDTI_bscd_env_is_avail("SLURM_NNODES"))
         *ret = 0;
     if (!HYDTI_bscd_env_is_avail("SLURM_TASKS_PER_NODE"))
         *ret = 0;

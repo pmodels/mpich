@@ -471,12 +471,7 @@ dnl had trouble with gcc 2.95.3 accepting -std=c89 but then trying to
 dnl compile program with a invalid set of options 
 dnl (-D __STRICT_ANSI__-trigraphs)
 AC_DEFUN([PAC_CC_STRICT],[
-PAC_CC_VENDOR()
-export enable_strict_done
-if test "$enable_strict_done" != "yes" ; then
-    # make sure we don't add the below flags multiple times
-    enable_strict_done=yes
-
+    PAC_CC_VENDOR()
     # Some comments on strict warning options.
     # These were added to improve portability
     #   -Wstack-usage=262144 -- 32 bit FreeBSD did not like the mprobe test
@@ -695,7 +690,6 @@ if test "$enable_strict_done" != "yes" ; then
         PAC_POP_FLAG([CFLAGS])
     done
     pac_cc_strict_flags=$accepted_flags
-fi
 ])
 
 dnl/*D
