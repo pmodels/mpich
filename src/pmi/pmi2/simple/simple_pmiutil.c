@@ -10,7 +10,7 @@
    the PMI interface itself.  Reading and writing on pipes, signals, and parsing
    key=value messages
 */
-#include "mpichconf.h"
+#include "pmi_config.h"
 #include "pmi2compat.h"
 #include "mpl.h"
 

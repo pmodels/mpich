@@ -6,8 +6,6 @@
 #ifndef SIMPLE_PMIUTIL_H_INCLUDED
 #define SIMPLE_PMIUTIL_H_INCLUDED
 
-#include "mpichconf.h"
-
 /* maximum sizes for arrays */
 #define PMI2U_MAXLINE 1024
 #define PMI2U_IDSIZE    32

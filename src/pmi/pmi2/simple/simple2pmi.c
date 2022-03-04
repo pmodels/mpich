@@ -3,12 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#include "pmi_config.h"
+
 #include "pmi2compat.h"
 #include "simple2pmi.h"
 #include "simple_pmiutil.h"
 #include "pmi2.h"
 #include "mpl.h"
-
 
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
@@ -27,16 +28,11 @@
 #include <sys/socket.h>
 #endif
 
-#ifdef USE_PMI_PORT
 #ifndef MAXHOSTNAME
 #define MAXHOSTNAME 256
 #endif
-#endif
 
 #define PMII_EXIT_CODE -1
-
-#define PMI_VERSION    2
-#define PMI_SUBVERSION 0
 
 #define MAX_INT_STR_LEN 11      /* number of digits in MAX_UINT + 1 */
 
