@@ -1672,8 +1672,18 @@ AM_CONDITIONAL([PRIMARY_PM_REMSHELL],[test "X$first_pm_name" = "Xremshell"])
 
 # ---- $with_pmilib ----
 
-AM_CONDITIONAL([BUILD_PMI_SIMPLE], [test "$with_pmilib" = "mpich" -a "$with_pmi" = "pmi1"])
-AM_CONDITIONAL([BUILD_PMI_PMI2_SIMPLE], [test "$with_pmilib" = "mpich" -a "$with_pmi" = "pmi2"])
+pmisrcdir=""
+AC_SUBST([pmisrcdir])
+pmilib=""
+AC_SUBST([pmilib])
+
+if test "$with_pmilib" = "mpich" ; then
+    pmisrcdir="src/pmi"
+    pmilib="src/pmi/libpmi.la"
+    PAC_CONFIG_SUBDIR_ARGS([src/pmi], [--enable-embedded])
+    PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
+    PAC_APPEND_FLAG([-I${main_top_builddir}/src/pmi/include], [CPPFLAGS])
+fi
 
 case "$with_pmilib" in
   mpich)

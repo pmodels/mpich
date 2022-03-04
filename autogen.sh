@@ -65,6 +65,7 @@ do_test=yes
 do_hydra=yes
 do_hydra2=yes
 do_romio=yes
+do_pmi=yes
 do_doc=no
 
 do_quick=no
@@ -95,7 +96,7 @@ done
 MAKE=${MAKE-make}
 
 # amdirs are the directories that make use of autoreconf
-amdirs=". src/mpl"
+amdirs=". src/mpl src/pmi"
 
 autoreconf_args="-if"
 export autoreconf_args
@@ -208,6 +209,10 @@ set_externals() {
             externals="${externals} src/mpi/romio"
         fi
 
+        if [ "yes" = "$do_pmi" ] ; then
+            externals="${externals} src/pmi"
+        fi
+
         if [ "yes" = "$do_hwloc" ] ; then
             check_submodule_presence modules/hwloc
             externals="${externals} modules/hwloc"
@@ -297,6 +302,13 @@ fn_copy_confdb_etc() {
 
     confdb_dirs=
     confdb_dirs="${confdb_dirs} src/mpl/confdb"
+    if test "$do_pmi" = "yes" ; then
+        confdb_dirs="${confdb_dirs} src/pmi/confdb"
+        if test "$do_quick" = "no" ; then
+            sync_external src/mpl src/pmi/mpl
+            confdb_dirs="${confdb_dirs} src/pmi/mpl/confdb"
+        fi
+    fi
     if test "$do_romio" = "yes" ; then
         confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
         if test "$do_quick" = "no" ; then
@@ -337,6 +349,7 @@ fn_copy_confdb_etc() {
         cp -pPR maint/version.m4 src/pm/hydra/version.m4
         cp -pPR maint/version.m4 src/pm/hydra2/version.m4
         cp -pPR maint/version.m4 src/mpi/romio/version.m4
+        cp -pPR maint/version.m4 src/pmi/version.m4
         cp -pPR maint/version.m4 test/mpi/version.m4
     fi
 

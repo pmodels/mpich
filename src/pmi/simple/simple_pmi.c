@@ -16,10 +16,7 @@
  */
 /***************************************************************************/
 
-#include "mpichconf.h"
-
-#define PMI_VERSION    1
-#define PMI_SUBVERSION 1
+#include "pmi_config.h"
 
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
@@ -52,7 +49,12 @@
 
 #include "pmi.h"
 #include "simple_pmiutil.h"
+
+#ifdef HAVE_MPI_H
 #include "mpi.h"        /* to get MPI_MAX_PORT_NAME */
+#else
+#define MPI_MAX_PORT_NAME 256
+#endif
 
 /*
    These are global variable used *ONLY* in this file, and are hence
@@ -847,7 +849,13 @@ static int GetResponse(const char request[], const char expectedCmd[], int check
 /* ----------------------------------------------------------------------- */
 
 
-#ifdef USE_PMI_PORT
+#ifndef USE_PMI_PORT
+static int PMIi_InitIfSingleton(void)
+{
+    return PMI_FAIL;
+}
+
+#else
 /*
  * This code allows a program to contact a host/port for the PMI socket.
  */
