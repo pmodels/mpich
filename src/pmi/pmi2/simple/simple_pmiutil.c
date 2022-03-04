@@ -11,8 +11,8 @@
    key=value messages
 */
 #include "mpichconf.h"
-
 #include "pmi2compat.h"
+#include "mpl.h"
 
 #include <stdio.h>
 #ifdef HAVE_STDLIB_H
