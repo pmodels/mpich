@@ -217,6 +217,17 @@ void MPIR_pmi_abort(int exit_code, const char *error_msg)
 #endif
 }
 
+/* This function is currently unused in MPICH because we always call
+ * PMI functions from a single thread or within a critical section.
+ */
+int MPIR_pmi_set_threaded(int is_threaded)
+{
+#if defined(USE_PMI2_API)
+    PMI2_Set_threaded(is_threaded);
+#endif
+    return MPI_SUCCESS;
+}
+
 /* getters for internal constants */
 int MPIR_pmi_max_key_size(void)
 {
