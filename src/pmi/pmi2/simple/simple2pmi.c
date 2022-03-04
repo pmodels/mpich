@@ -421,9 +421,9 @@ int PMI2_Job_Spawn(int count, const char *cmds[],
                    int argcs[], const char **argvs[],
                    const int maxprocs[],
                    const int info_keyval_sizes[],
-                   const struct MPIR_Info *info_keyval_vectors[],
+                   const PMI2_keyval_t * info_keyval_vectors[],
                    int preput_keyval_size,
-                   const struct MPIR_Info *preput_keyval_vector[],
+                   const PMI2_keyval_t preput_keyval_vector[],
                    char jobId[], int jobIdSize, int errors[])
 {
     int i, rc, spawncnt, total_num_processes, num_errcodes_found;
@@ -486,8 +486,8 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
 
     init_kv_strdup_int(pairs_p[npairs++], "preputcount", preput_keyval_size);
     for (i = 0; i < preput_keyval_size; ++i) {
-        init_kv_strdup_intsuffix(pairs_p[npairs++], "ppkey", i, preput_keyval_vector[i]->key);
-        init_kv_strdup_intsuffix(pairs_p[npairs++], "ppval", i, preput_keyval_vector[i]->value);
+        init_kv_strdup_intsuffix(pairs_p[npairs++], "ppkey", i, preput_keyval_vector[i].key);
+        init_kv_strdup_intsuffix(pairs_p[npairs++], "ppval", i, preput_keyval_vector[i].val);
     }
 
     for (spawncnt = 0; spawncnt < count; ++spawncnt) {
@@ -507,7 +507,7 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
                 init_kv_strdup_intsuffix(pairs_p[npairs++], "infokey", i,
                                          info_keyval_vectors[spawncnt][i].key);
                 init_kv_strdup_intsuffix(pairs_p[npairs++], "infoval", i,
-                                         info_keyval_vectors[spawncnt][i].value);
+                                         info_keyval_vectors[spawncnt][i].val);
             }
         }
     }
@@ -983,7 +983,8 @@ int PMI2_Info_GetJobAttrIntArray(const char name[], int array[], int arraylen, i
     goto fn_exit;
 }
 
-int PMI2_Nameserv_publish(const char service_name[], const PMI2U_Info * info_ptr, const char port[])
+int PMI2_Nameserv_publish(const char service_name[], const PMI2_keyval_t * info_ptr,
+                          const char port[])
 {
     int pmi2_errno = PMI2_SUCCESS;
     PMI2_Command cmd = { 0 };
@@ -1012,7 +1013,7 @@ int PMI2_Nameserv_publish(const char service_name[], const PMI2U_Info * info_ptr
 }
 
 
-int PMI2_Nameserv_lookup(const char service_name[], const PMI2U_Info * info_ptr,
+int PMI2_Nameserv_lookup(const char service_name[], const PMI2_keyval_t * info_ptr,
                          char port[], int portLen)
 {
     int pmi2_errno = PMI2_SUCCESS;
@@ -1047,7 +1048,7 @@ int PMI2_Nameserv_lookup(const char service_name[], const PMI2U_Info * info_ptr,
     goto fn_exit;
 }
 
-int PMI2_Nameserv_unpublish(const char service_name[], const PMI2U_Info * info_ptr)
+int PMI2_Nameserv_unpublish(const char service_name[], const PMI2_keyval_t * info_ptr)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int found;
