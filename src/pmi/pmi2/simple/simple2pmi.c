@@ -1264,16 +1264,15 @@ static int parse_keyval(char **cmdptr, int *len, char **key, char **val, int *va
 static int create_keyval(PMI2_Keyvalpair ** kv, const char *key, const char *val, int vallen)
 {
     int pmi2_errno = PMI2_SUCCESS;
-    char *key_p;
-    char *value_p;
-    PMI2U_CHKPMEM_DECL(3);
+    char *key_p = NULL;
+    char *value_p = NULL;
 
-    PMI2U_CHKPMEM_MALLOC(*kv, PMI2_Keyvalpair *, sizeof(PMI2_Keyvalpair), pmi2_errno, "pair");
+    PMI2U_CHK_MALLOC(*kv, PMI2_Keyvalpair *, sizeof(PMI2_Keyvalpair), pmi2_errno, "pair");
 
-    PMI2U_CHKPMEM_MALLOC(key_p, char *, strlen(key) + 1, pmi2_errno, "key");
+    PMI2U_CHK_MALLOC(key_p, char *, strlen(key) + 1, pmi2_errno, "key");
     MPL_strncpy(key_p, key, PMI2_MAX_KEYLEN + 1);
 
-    PMI2U_CHKPMEM_MALLOC(value_p, char *, vallen + 1, pmi2_errno, "value");
+    PMI2U_CHK_MALLOC(value_p, char *, vallen + 1, pmi2_errno, "value");
     PMI2U_Memcpy(value_p, val, vallen);
     value_p[vallen] = '\0';
 
@@ -1283,10 +1282,11 @@ static int create_keyval(PMI2_Keyvalpair ** kv, const char *key, const char *val
     (*kv)->isCopy = TRUE;
 
   fn_exit:
-    PMI2U_CHKPMEM_COMMIT();
     return pmi2_errno;
   fn_fail:
-    PMI2U_CHKPMEM_REAP();
+    PMI2U_Free(*kv);
+    PMI2U_Free(key_p);
+    PMI2U_Free(value_p);
     goto fn_exit;
 }
 
@@ -1616,13 +1616,12 @@ int PMIi_WriteSimpleCommandStr(int fd, PMI2_Command * resp, const char cmd[], ..
 {
     int pmi2_errno = PMI2_SUCCESS;
     va_list ap;
-    PMI2_Keyvalpair *pairs;
-    PMI2_Keyvalpair **pairs_p;
+    PMI2_Keyvalpair *pairs = NULL;
+    PMI2_Keyvalpair **pairs_p = NULL;
     int npairs;
     int i;
     const char *key;
     const char *val;
-    PMI2U_CHKLMEM_DECL(2);
 
     npairs = 0;
     va_start(ap, cmd);
@@ -1633,10 +1632,10 @@ int PMIi_WriteSimpleCommandStr(int fd, PMI2_Command * resp, const char cmd[], ..
     }
     va_end(ap);
 
-    PMI2U_CHKLMEM_MALLOC(pairs, PMI2_Keyvalpair *, sizeof(PMI2_Keyvalpair) * npairs, pmi2_errno,
-                         "pairs");
-    PMI2U_CHKLMEM_MALLOC(pairs_p, PMI2_Keyvalpair **, sizeof(PMI2_Keyvalpair *) * npairs,
-                         pmi2_errno, "pairs_p");
+    PMI2U_CHK_MALLOC(pairs, PMI2_Keyvalpair *, sizeof(PMI2_Keyvalpair) * npairs, pmi2_errno,
+                     "pairs");
+    PMI2U_CHK_MALLOC(pairs_p, PMI2_Keyvalpair **, sizeof(PMI2_Keyvalpair *) * npairs,
+                     pmi2_errno, "pairs_p");
 
     i = 0;
     va_start(ap, cmd);
@@ -1659,7 +1658,8 @@ int PMIi_WriteSimpleCommandStr(int fd, PMI2_Command * resp, const char cmd[], ..
         PMI2U_ERR_POP(pmi2_errno);
 
   fn_exit:
-    PMI2U_CHKLMEM_FREEALL();
+    PMI2U_Free(pairs);
+    PMI2U_Free(pairs_p);
     return pmi2_errno;
   fn_fail:
     goto fn_exit;
