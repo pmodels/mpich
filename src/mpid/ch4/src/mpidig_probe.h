@@ -57,6 +57,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
                             MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
+        MPII_UNEXPQ_FORGET(unexp_req);
         *flag = 1;
         *message = unexp_req;
 

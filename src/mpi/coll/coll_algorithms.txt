@@ -41,7 +41,12 @@
 #         Some algorithm use another algorithm or use a different function name.
 
 barrier-intra:
-    dissemination
+    k_dissemination
+        extra_params: k
+        cvar_params: DISSEM_KVAL
+    recexch
+        extra_params: k, single_phase_recv
+        cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     smp
         restrictions: parent-comm
 barrier-inter:
@@ -81,8 +86,11 @@ ibcast-intra:
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE
     tsp_scatterv_recexch_allgatherv
         func_name: scatterv_allgatherv
-        extra_params: scatterv_k, allgatherv_k
-        cvar_params: SCATTERV_KVAL, ALLGATHERV_RECEXCH_KVAL
+        extra_params: allgatherv_algo=MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_recexch_doubling, scatterv_k, allgatherv_k
+        cvar_params: -, SCATTERV_KVAL, ALLGATHERV_RECEXCH_KVAL
+    tsp_scatterv_ring_allgatherv
+        extra_params: scatterv_k
+        cvar_params:  SCATTERV_KVAL
     tsp_ring
         func_name: tree
         extra_params: tree_type=MPIR_TREE_TYPE_KARY, k=1, chunk_size

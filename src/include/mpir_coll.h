@@ -53,4 +53,16 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status statuses[],
 int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
                       MPI_Op op);
 
+int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
+
+/* TSP auto */
+int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                             MPI_Datatype datatype, MPI_Op op,
+                                             MPIR_Comm * comm, MPIR_TSP_sched_t sched);
+int MPIR_TSP_Ibcast_sched_intra_tsp_auto(void *buffer, int count, MPI_Datatype datatype, int root,
+                                         MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched);
+int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, MPIR_TSP_sched_t sched);
+int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, int count,
+                                          MPI_Datatype datatype, MPI_Op op, int root,
+                                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched);
 #endif /* MPIR_COLL_H_INCLUDED */

@@ -149,8 +149,6 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
     MPID_Progress_poke();
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__SEND:
-            MPII_SENDQ_FORGET(request_ptr);
-            break;
         case MPIR_REQUEST_KIND__RECV:
             break;
         case MPIR_REQUEST_KIND__PREQUEST_SEND:

@@ -133,14 +133,6 @@ AC_ARG_ENABLE([dtpools],
               [AS_HELP_STRING([--disable-dtpools],[Disable dtpools tests])],,
               [enable_dtpools=yes])
 
-if test "x${enable_dtpools}" = "xyes"; then
-    DTP_SWITCH="ON"
-else
-    DTP_SWITCH="OFF"
-fi
-
-AC_SUBST(DTP_SWITCH)
-
 # runtests options
 RUNTESTS_OPTS=
 AC_SUBST(RUNTESTS_OPTS)
@@ -238,6 +230,11 @@ AC_ARG_ENABLE(xfail,
                 [Run tests marked for expected failure])],,
         [enable_xfail=no])
 
+AC_ARG_ENABLE(collalgo-tests,
+        [AS_HELP_STRING([--enable-collalgo-tests],
+                [Run extended collective algorithm tests])],,
+        [enable_collalgo_tests=yes])
+
 AC_ARG_ENABLE(gpu-tests-only,
         [AS_HELP_STRING([--enable-gpu-tests-only],
                 [Run only GPU tests])],,
@@ -253,12 +250,7 @@ AC_ARG_WITH(dtpools-datatypes,
 
 # parse args for typegen.sh script
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
-
-PAC_CHECK_PYTHON
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
-#Test collectives algorithms with CVARs
-cmd="$PYTHON $srcdir/maint/gen_coll_cvar.py"
-AC_CONFIG_COMMANDS([collcvartests],[$cmd_gen_coll],[cmd_gen_coll="$cmd"])
 
 AC_ARG_WITH(mpi,
         [AC_HELP_STRING([--with-mpi=dir],
@@ -508,10 +500,6 @@ PAC_PROG_MAKE
 MPILIBLOC=""
 AC_SUBST(MPILIBLOC)
 
-# more variables that must be marked precious for proper re-configure operation
-AC_ARG_VAR([MPICH_ENABLE_FC],["yes" if the enclosing MPICH build supports modern Fortran])
-AC_ARG_VAR([MPICH_ENABLE_CXX],["yes" if the enclosing MPICH build supports C++])
-
 namepub_tests="#"
 if test "$enable_namepub" = "yes" ; then
     namepub_tests=""
@@ -743,13 +731,27 @@ PAC_POP_FLAG([CPPFLAGS])
 PAC_POP_FLAG([LDFLAGS])
 PAC_POP_FLAG([LIBS])
 
-AM_CONDITIONAL([HAVE_GPU], [test $have_gpu = "yes"])
-# GPU only tests
+# setup which tests "make testing" will run
+TESTLIST=testlist
+TESTDIRS=
+if test $have_gpu = "yes" ; then
+    TESTLIST="${TESTLIST},testlist.gpu"
+fi
+if test $enable_dtpools = "yes" ; then
+    TESTLIST="${TESTLIST},testlist.dtp"
+fi
+if test $enable_collalgo_tests = "yes" ; then
+    TESTLIST="${TESTLIST},testlist.collalgo"
+fi
+# handle --enable-gpu-tests-only
 if test $have_gpu = "no" -a $enable_gpu_tests_only = "yes" ; then
     AC_MSG_ERROR([GPU only test configuration requires GPU library (CUDA or LevelZero)])
+elif test $enable_gpu_tests_only = "yes" ; then
+    TESTDIRS=coll,pt2pt,rma
+    TESTLIST=testlist.gpu
 fi
-AM_CONDITIONAL([GPU_ONLY], [test $enable_gpu_tests_only = "yes"])
-# End of GPU libs Check
+AC_SUBST([TESTDIRS])
+AC_SUBST([TESTLIST])
 
 # for tests that require large mem
 largetest="#"
@@ -1037,26 +1039,6 @@ EOF
     # This test needs both the base c and fortran compilers
     AC_LANG_FORTRAN77
     PAC_PROG_F77_NAME_MANGLE
-
-    # Check that the Fortran compiler will allow us to pass arguments
-    # of different types (e.g., for MPI_Send)
-    # Any strict Fortran compiler will require that the arguments be
-    # the same type - currently, the NAG Fortran compiler (nagfor) is known
-    # to enforce this.
-    # We could set the FFLAGS/FCFLAGS values with the option that disables
-    # this check (if we found one), but because that may affect other tests,
-    # instead we tell the user and exit.
-    PAC_PROG_F77_MISMATCHED_ARGS(addarg,yes)
-    if test "X$addarg" != "X" ; then
-        # We could add the names of all of the MPI routines that
-        # accept different types.  Instead, we fail cleanly.
-        # Some Fortran compilers allow you to turn off checking for
-        # mismatched arguments for *all* routines.  Adding an argument
-        # that turns off checking for *everything* is not something that
-        # configure should do - if the user wants this, they can follow
-        # the instructions in the following error message.
-        AC_MSG_ERROR([The Fortran compiler $F77 does not accept programs that call the same routine with arguments of different types without the option $addarg.  Rerun configure with FFLAGS=$addarg])
-    fi
 
     # Check whether we need -lU77 to get iargc and getarg, which
     # are used for a few of the tests in spawn (U77 was needed with

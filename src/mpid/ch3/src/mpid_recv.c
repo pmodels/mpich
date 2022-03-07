@@ -177,6 +177,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
     {
 	MPL_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,
 		       "request allocated, handle=0x%08x", rreq->handle);
+        MPII_RECVQ_REMEMBER(rreq, rank, tag, comm->recvcontext_id, buf, count);
     }
     else
     {

@@ -56,12 +56,7 @@ void MPII_init_request(void)
     MPIR_Status_set_procnull(&req->status);
 }
 
-/* Complete a request, saving the status data if necessary.
-   If debugger information is being provided for pending (user-initiated)
-   send operations, the macros MPII_SENDQ_FORGET will be defined to
-   call the routine MPII_Sendq_forget; otherwise that macro will be a no-op.
-   The implementation of the MPIR_Sendq_xxx is in src/mpi/debugger/dbginit.c .
-*/
+/* Complete a request, saving the status data if necessary. */
 int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -72,7 +67,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
             {
                 MPIR_Status_set_cancel_bit(status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
                 mpi_errno = request_ptr->status.MPI_ERROR;
-                MPII_SENDQ_FORGET(request_ptr);
                 break;
             }
         case MPIR_REQUEST_KIND__COLL:

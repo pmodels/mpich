@@ -65,6 +65,7 @@ do_test=yes
 do_hydra=yes
 do_hydra2=yes
 do_romio=yes
+do_doc=no
 
 do_quick=no
 # Check -quick option. When enabled, skip as much as we can.
@@ -401,25 +402,8 @@ fn_errmsgs() {
         mv .tmp src/mpi/errhan/defmsg.h
     fi
     if [ ! -s src/mpi/errhan/defmsg.h ] ; then
-        echo_n "Creating a dummy defmsg.h file... "
-        cat > src/mpi/errhan/defmsg.h <<EOF
-typedef struct { const unsigned int sentinal1; const char *short_name, *long_name; const unsigned int sentinal2; } msgpair;
-static const int generic_msgs_len = 0;
-static msgpair generic_err_msgs[] = { {0xacebad03, 0, "no error catalog", 0xcb0bfa11}, };
-static const int specific_msgs_len = 0;
-static msgpair specific_err_msgs[] = {  {0xacebad03,0,0,0xcb0bfa11}, };
-#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__NONE
-#define MPIR_MAX_ERROR_CLASS_INDEX 54
-static int class_to_index[] = {
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0 };
-#endif
-EOF
-        echo "done"
+        error "Unable to extract error messages"
+        exit 1
     fi
 }
 
@@ -527,11 +511,14 @@ fn_gen_coll() {
 fn_gen_binding_c() {
     set_PYTHON
     echo_n "generating MPI C functions..."
-    if test "$do_quick" = "no" ; then
-        $PYTHON maint/gen_binding_c.py
-    else
-        $PYTHON maint/gen_binding_c.py -single-source
+    _opt=
+    if test "$do_quick" = "yes"; then
+        _opt="$_opt -single-source"
     fi
+    if test "$do_doc" = "yes"; then
+        _opt="$_opt -output-mansrc"
+    fi
+    $PYTHON maint/gen_binding_c.py $_opt
     echo "done"
 }
 

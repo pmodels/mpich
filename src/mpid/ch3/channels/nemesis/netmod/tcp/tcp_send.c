@@ -700,6 +700,8 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *heade
 
     iov_offset = iov_n;
 
+    /* Set iov_n to remaining capacity. It will be set to actual num of iovs loaded on output. */
+    iov_n = MPL_IOV_LIMIT - iov_offset;
     mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &iov[iov_offset], &iov_n);
     MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|loadsendiov");
 

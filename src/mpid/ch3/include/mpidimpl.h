@@ -1006,6 +1006,7 @@ int MPIDI_CH3I_Port_destroy(int port_name_tag);
   --------------------------*/
 
 #define MPIDI_MAX_KVS_VALUE_LEN    4096
+#define MPIDI_MAX_JOBID_LEN        1024
 
 /* ------------------------------------------------------------------------- */
 /* mpirma.h (in src/mpi/rma?) */

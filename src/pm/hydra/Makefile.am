@@ -14,7 +14,11 @@ noinst_HEADERS =
 DISTCLEANFILES =
 EXTRA_DIST =
 SUFFIXES =
-doc1_src_txt =
+doc1_src_txt = \
+    mansrc/mpiexec.txt \
+    mansrc/hydra_pmi_proxy.txt \
+    mansrc/hydra_nameserver.txt \
+    mansrc/hydra_persist.txt
 
 ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include $(external_includes)
@@ -28,10 +32,13 @@ noinst_LTLIBRARIES = libhydra.la
 libhydra_la_SOURCES =
 
 # The below directories contribute to libhydra
-include utils/Makefile.mk
-include tools/Makefile.mk
-include pm/Makefile.mk
-include ui/Makefile.mk
+include lib/Makefile.mk
+include mpiexec/Makefile.mk
+include proxy/Makefile.mk
+include nameserver/Makefile.mk
+if hydra_bss_persist
+include persist_server/Makefile.mk
+endif
 
 # External subdirs should be built first, as we might depend on them
 SUBDIRS = ${external_subdirs} .
@@ -102,7 +109,7 @@ htmldoc:
 	test -d $(top_builddir)/www/www1 || $(MKDIR_P) $(top_builddir)/www/www1
 	test -d $(top_builddir)/www/www3 || $(MKDIR_P) $(top_builddir)/www/www3
 	$(MAKE) $(AM_MAKEFLAGS) htmldoc-local
-htmldoc-local: $(doc1_src_txt:.txt=.man1-phony)
+htmldoc-local: $(doc1_src_txt:.txt=.html1-phony)
 
 # created by confdb/aclocal_cache.m4
 DISTCLEANFILES += config.system

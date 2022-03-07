@@ -46,8 +46,6 @@ AC_SUBST(WRAPPER_LIBS)
 # let confdb macro know that we are using WRAPPER FLAGS
 m4_define([use_wrapper_flags], [1])
 
-PAC_ARG_STRICT
-
 # Look for perl.  The absolute path of perl is required in hydra-doxygen.cfg.
 AC_PATH_PROG(PERL,perl)
 
@@ -356,17 +354,6 @@ AM_CONDITIONAL([hydra_pm_pmiserv], [test $hydra_pm = "pmiserv"])
 
 
 #########################################################################
-# Check what UI we should use
-#########################################################################
-AC_ARG_WITH(hydra-ui, [  --with-hydra-ui=name - User Interface (mpich)],
-		[ hydra_ui=$withval ],
-		[ hydra_ui=mpich ])
-AC_MSG_CHECKING(user interface)
-AC_MSG_RESULT($hydra_ui)
-AC_SUBST(hydra_ui)
-AM_CONDITIONAL([hydra_ui_mpich], [test $hydra_ui = "mpich"])
-
-#########################################################################
 # Processor Topology
 #########################################################################
 AC_ARG_WITH(hydra-topolib, [  --with-hydra-topolib=name - Processor Topology Library (hwloc)],
@@ -520,7 +507,7 @@ for option in $enable_g ; do
         mem)
 		AC_DEFINE(USE_MEMORY_TRACING,1,[Define if memory tracing is enabled])
 		;;
-        all)
+        yes|all)
 		PAC_APPEND_FLAG(-g, CFLAGS)
 		AC_DEFINE(USE_MEMORY_TRACING,1,[Define if memory tracing is enabled])
 		AC_DEFINE(PMI_KEY_CHECK,1,[Define if we should check for PMI key collisions])
@@ -631,7 +618,7 @@ fi
 
 # Final output
 AC_CONFIG_FILES([Makefile
-	tools/bootstrap/src/bsci_init.c
+	lib/tools/bootstrap/src/bsci_init.c
 	hydra-doxygen.cfg
 ])
 AC_OUTPUT

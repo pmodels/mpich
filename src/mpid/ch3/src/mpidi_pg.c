@@ -10,8 +10,6 @@
 #include "pmi.h"
 #endif
 
-#define MAX_JOBID_LEN 1024
-
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -739,12 +737,12 @@ int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
 #ifdef USE_PMI2_API
     int mpi_errno = MPI_SUCCESS;
     
-    pg->connData = (char *)MPL_malloc(MAX_JOBID_LEN, MPL_MEM_STRINGS);
+    pg->connData = (char *)MPL_malloc(MPIDI_MAX_JOBID_LEN, MPL_MEM_STRINGS);
     if (pg->connData == NULL) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
     }
     
-    mpi_errno = PMI2_Job_GetId(pg->connData, MAX_JOBID_LEN);
+    mpi_errno = PMI2_Job_GetId(pg->connData, MPIDI_MAX_JOBID_LEN);
     MPIR_ERR_CHECK(mpi_errno);
 #else
     int pmi_errno, kvs_name_sz;
