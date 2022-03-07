@@ -23,7 +23,7 @@ AM_CPPFLAGS += @mpl_includedir@
 libpmi_la_LIBADD = @mpl_lib@
 
 libpmi_la_SOURCES = \
-    simple/simple_pmi.c \
-    simple/simple_pmiutil.c \
-    pmi2/simple/simple2pmi.c \
-    pmi2/simple/simple_pmiutil.c
+    src/pmi_v1.c \
+    src/pmi_v2.c \
+    src/pmi_util.c \
+    src/pmi2_util.c

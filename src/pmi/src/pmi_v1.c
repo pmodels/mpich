@@ -48,7 +48,7 @@
 #define DBG_PRINTF(args)
 
 #include "pmi.h"
-#include "simple_pmiutil.h"
+#include "pmi_util.h"
 
 #ifdef HAVE_MPI_H
 #include "mpi.h"        /* to get MPI_MAX_PORT_NAME */

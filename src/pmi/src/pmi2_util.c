@@ -28,7 +28,7 @@
 #include <errno.h>
 
 #include "pmi2.h"
-#include "simple_pmiutil.h"
+#include "pmi2_util.h"
 
 #define MAXVALLEN 1024
 #define MAXKEYLEN   32

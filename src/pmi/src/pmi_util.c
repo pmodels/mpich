@@ -29,7 +29,7 @@
 #include "mpl.h"
 
 #include "pmi.h"
-#include "simple_pmiutil.h"
+#include "pmi_util.h"
 
 #define MAXVALLEN 1024
 #define MAXKEYLEN   32
