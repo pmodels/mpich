@@ -49,7 +49,6 @@ static int PMI2_size = 1;
 static int PMI2_rank = 0;
 
 static int PMI2_is_threaded = 0;        /* Set this to true to require thread safety */
-static int PMI2_debug_init = 0; /* Set this to true to debug the init */
 
 int PMI2_pmiverbose = 0;        /* Set this to true to print PMI debugging info */
 
@@ -122,10 +121,6 @@ static int getvalint(PMI2_Keyvalpair * const pairs[], int npairs, const char *ke
 static int getvalptr(PMI2_Keyvalpair * const pairs[], int npairs, const char *key, void *val);
 static int getvalbool(PMI2_Keyvalpair * const pairs[], int npairs, const char *key, int *val);
 
-static int accept_one_connection(int list_sock);
-static int GetResponse(const char request[], const char expectedCmd[], int checkRc);
-
-static void dump_PMI2_Command(FILE * file, PMI2_Command * cmd);
 static void dump_PMI2_Keyvalpair(FILE * file, PMI2_Keyvalpair * kv);
 
 
@@ -1045,12 +1040,9 @@ int PMI2_Nameserv_lookup(const char service_name[], const PMI2_keyval_t * info_p
 int PMI2_Nameserv_unpublish(const char service_name[], const PMI2_keyval_t * info_ptr)
 {
     int pmi2_errno = PMI2_SUCCESS;
-    int found;
     int rc;
     PMI2_Command cmd = { 0 };
-    int plen;
     const char *errmsg;
-    const char *found_port;
 
     pmi2_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMEUNPUBLISH_CMD,
                                             NAME_KEY, service_name, INFOKEYCOUNT_KEY, "0", NULL);
@@ -1797,20 +1789,6 @@ static int PMII_Connect_to_pm(char *hostname, int portnum)
  * (This is the usual init sequence).
  *
  */
-/* ------------------------------------------------------------------------- */
-/* This is a special routine used to re-initialize PMI when it is in
-   the singleton init case.  That is, the executable was started without
-   mpiexec, and PMI2_Init returned as if there was only one process.
-
-   Note that PMI routines should not call PMII_singinit; they should
-   call PMIi_InitIfSingleton(), which both connects to the process manager
-   and sets up the initial KVS connection entry.
-*/
-
-static int PMII_singinit(void)
-{
-    return 0;
-}
 
 /* Promote PMI to a fully initialized version if it was started as
    a singleton init */
@@ -1818,30 +1796,6 @@ static int PMIi_InitIfSingleton(void)
 {
     return 0;
 }
-
-static int accept_one_connection(int list_sock)
-{
-    int gotit, new_sock;
-    MPL_sockaddr_t addr;
-    socklen_t len;
-
-    len = sizeof(addr);
-    gotit = 0;
-    while (!gotit) {
-        new_sock = accept(list_sock, (struct sockaddr *) &addr, &len);
-        if (new_sock == -1) {
-            if (errno == EINTR) /* interrupted? If so, try again */
-                continue;
-            else {
-                PMI2U_printf(1, "accept failed in accept_one_connection\n");
-                exit(-1);
-            }
-        } else
-            gotit = 1;
-    }
-    return (new_sock);
-}
-
 
 /* Get the FD to use for PMI operations.  If a port is used, rather than
    a pre-established FD (i.e., via pipe), this routine will handle the
@@ -1899,40 +1853,10 @@ static int getPMIFD(void)
     goto fn_exit;
 }
 
-/* ----------------------------------------------------------------------- */
-/*
- * This function is used to request information from the server and check
- * that the response uses the expected command name.  On a successful
- * return from this routine, additional PMI2U_getval calls may be used
- * to access information about the returned value.
- *
- * If checkRc is true, this routine also checks that the rc value returned
- * was 0.  If not, it uses the "msg" value to report on the reason for
- * the failure.
- */
-static int GetResponse(const char request[], const char expectedCmd[], int checkRc)
-{
-    int err = 0;
-
-    return err;
-}
-
-
 static void dump_PMI2_Keyvalpair(FILE * file, PMI2_Keyvalpair * kv)
 {
     fprintf(file, "  key      = %s\n", kv->key);
     fprintf(file, "  value    = %s\n", kv->value);
     fprintf(file, "  valueLen = %d\n", kv->valueLen);
     fprintf(file, "  isCopy   = %s\n", kv->isCopy ? "TRUE" : "FALSE");
-}
-
-static void dump_PMI2_Command(FILE * file, PMI2_Command * cmd)
-{
-    int i;
-
-    fprintf(file, "cmd    = %s\n", cmd->command);
-    fprintf(file, "nPairs = %d\n", cmd->nPairs);
-
-    for (i = 0; i < cmd->nPairs; ++i)
-        dump_PMI2_Keyvalpair(file, cmd->pairs[i]);
 }
