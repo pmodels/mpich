@@ -6,6 +6,7 @@
 #include "pmi_config.h"
 
 #include "pmi2compat.h"
+#include "pmi_util.h"
 #include "pmi2_util.h"
 #include "pmi2.h"
 #include "mpl.h"
@@ -280,7 +281,7 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 {
     int pmi2_errno = PMI2_SUCCESS;
     char *p;
-    char buf[PMI2U_MAXLINE], cmdline[PMI2U_MAXLINE];
+    char buf[PMIU_MAXLINE], cmdline[PMIU_MAXLINE];
     char *jobid;
     char *pmiid;
     int ret;
@@ -295,7 +296,7 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
      * unbuffered (user explicitly set?) */
     /* setvbuf(stdout,0,_IONBF,0); */
     setbuf(stdout, NULL);
-    /* PMI2U_printf(1, "PMI2_INIT\n"); */
+    /* PMIU_printf(1, "PMI2_INIT\n"); */
 
     /* Get the value of PMI2_DEBUG from the environment if possible, since
      * we may have set it to help debug the setup process */
@@ -322,29 +323,29 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 
     /* do initial PMI1 init */
     ret =
-        MPL_snprintf(buf, PMI2U_MAXLINE, "cmd=init pmi_version=%d pmi_subversion=%d\n", PMI_VERSION,
+        MPL_snprintf(buf, PMIU_MAXLINE, "cmd=init pmi_version=%d pmi_subversion=%d\n", PMI_VERSION,
                      PMI_SUBVERSION);
     PMI2U_ERR_CHKANDJUMP1(ret < 0, pmi2_errno, PMI2_ERR_OTHER, "**intern", "**intern %s",
                           "failed to generate init line");
 
-    ret = PMI2U_writeline(PMI2_fd, buf);
+    ret = PMIU_writeline(PMI2_fd, buf);
     PMI2U_ERR_CHKANDJUMP(ret < 0, pmi2_errno, PMI2_ERR_OTHER, "**pmi2_init_send");
 
-    ret = PMI2U_readline(PMI2_fd, buf, PMI2U_MAXLINE);
+    ret = PMIU_readline(PMI2_fd, buf, PMIU_MAXLINE);
     PMI2U_ERR_CHKANDJUMP1(ret < 0, pmi2_errno, PMI2_ERR_OTHER, "**pmi2_initack",
                           "**pmi2_initack %s", strerror(errno));
 
-    PMI2U_parse_keyvals(buf);
+    PMIU_parse_keyvals(buf);
     cmdline[0] = 0;
-    PMI2U_getval("cmd", cmdline, PMI2U_MAXLINE);
-    PMI2U_ERR_CHKANDJUMP(strncmp(cmdline, "response_to_init", PMI2U_MAXLINE) != 0, pmi2_errno,
+    PMIU_getval("cmd", cmdline, PMIU_MAXLINE);
+    PMI2U_ERR_CHKANDJUMP(strncmp(cmdline, "response_to_init", PMIU_MAXLINE) != 0, pmi2_errno,
                          PMI2_ERR_OTHER, "**bad_cmd");
 
-    PMI2U_getval("rc", buf, PMI2U_MAXLINE);
-    if (strncmp(buf, "0", PMI2U_MAXLINE) != 0) {
-        char buf1[PMI2U_MAXLINE];
-        PMI2U_getval("pmi_version", buf, PMI2U_MAXLINE);
-        PMI2U_getval("pmi_subversion", buf1, PMI2U_MAXLINE);
+    PMIU_getval("rc", buf, PMIU_MAXLINE);
+    if (strncmp(buf, "0", PMIU_MAXLINE) != 0) {
+        char buf1[PMIU_MAXLINE];
+        PMIU_getval("pmi_version", buf, PMIU_MAXLINE);
+        PMIU_getval("pmi_subversion", buf1, PMIU_MAXLINE);
         PMI2U_ERR_SETANDJUMP4(pmi2_errno, PMI2_ERR_OTHER, "**pmi2_version",
                               "**pmi2_version %s %s %d %d", buf, buf1, PMI_VERSION, PMI_SUBVERSION);
     }
@@ -485,7 +486,7 @@ PMI_API_PUBLIC int PMI2_Initialized(void)
 
 PMI_API_PUBLIC int PMI2_Abort(int flag, const char msg[])
 {
-    PMI2U_printf(1, "aborting job:\n%s\n", msg);
+    PMIU_printf(1, "aborting job:\n%s\n", msg);
 
     /* ignoring return code, because we're exiting anyway */
     PMIi_WriteSimpleCommandStr(PMI2_fd, NULL, ABORT_CMD, ISWORLD_KEY, flag ? TRUE_VAL : FALSE_VAL,
@@ -509,7 +510,7 @@ PMI_API_PUBLIC
     int found;
     const char *jid;
     int jidlen;
-    char tempbuf[PMI2U_MAXLINE];
+    char tempbuf[PMIU_MAXLINE];
     char *lead, *lag;
     int spawn_rc;
     const char *errmsg = NULL;
@@ -618,24 +619,10 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
         MPL_strncpy(jobId, jid, jobIdSize);
     }
 
-    if (PMI2U_getval("errcodes", tempbuf, PMI2U_MAXLINE)) {
-        num_errcodes_found = 0;
-        lag = &tempbuf[0];
-        do {
-            lead = strchr(lag, ',');
-            if (lead)
-                *lead = '\0';
-            errors[num_errcodes_found++] = atoi(lag);
-            lag = lead + 1;     /* move past the null char */
-            PMI2U_Assert(num_errcodes_found <= total_num_processes);
-        } while (lead != NULL);
-        PMI2U_Assert(num_errcodes_found == total_num_processes);
-    } else {
-        /* gforker doesn't return errcodes, so we'll just pretend that means
-         * that it was going to send all `0's. */
-        for (i = 0; i < total_num_processes; ++i) {
-            errors[i] = 0;
-        }
+    /* PMI2 does not return error codes, so we'll just pretend that means
+     * that it was going to send all `0's. */
+    for (i = 0; i < total_num_processes; ++i) {
+        errors[i] = 0;
     }
 
   fn_fail:
@@ -1796,13 +1783,13 @@ static int PMII_Connect_to_pm(char *hostname, int portnum)
 
     ret = MPL_get_sockaddr(hostname, &addr);
     if (ret) {
-        PMI2U_printf(1, "Unable to get host entry for %s\n", hostname);
+        PMIU_printf(1, "Unable to get host entry for %s\n", hostname);
         return -1;
     }
 
     fd = MPL_socket();
     if (fd < 0) {
-        PMI2U_printf(1, "Unable to get AF_INET socket\n");
+        PMIU_printf(1, "Unable to get AF_INET socket\n");
         return -1;
     }
 
@@ -1815,7 +1802,7 @@ static int PMII_Connect_to_pm(char *hostname, int portnum)
     if (ret) {
         switch (errno) {
             case ECONNREFUSED:
-                PMI2U_printf(1, "connect failed with connection refused\n");
+                PMIU_printf(1, "connect failed with connection refused\n");
                 /* (close socket, get new socket, try again) */
                 if (q_wait)
                     close(fd);
@@ -1828,11 +1815,11 @@ static int PMII_Connect_to_pm(char *hostname, int portnum)
                 break;
 
             case ETIMEDOUT:    /* timed out */
-                PMI2U_printf(1, "connect failed with timeout\n");
+                PMIU_printf(1, "connect failed with timeout\n");
                 return -1;
 
             default:
-                PMI2U_printf(1, "connect failed with errno %d\n", errno);
+                PMIU_printf(1, "connect failed with errno %d\n", errno);
                 return -1;
         }
     }

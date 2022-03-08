@@ -3,23 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef SIMPLE_PMIUTIL_H_INCLUDED
-#define SIMPLE_PMIUTIL_H_INCLUDED
-
-/* maximum sizes for arrays */
-#define PMI2U_MAXLINE 1024
-#define PMI2U_IDSIZE    32
-
-/* prototypes for PMIU routines */
-void PMI2U_Set_rank(int PMI_rank);
-void PMI2U_SetServer(void);
-void PMI2U_printf(int print_flag, const char *fmt, ...);
-int PMI2U_readline(int fd, char *buf, int max);
-int PMI2U_writeline(int fd, char *buf);
-int PMI2U_parse_keyvals(char *st);
-void PMI2U_dump_keyvals(void);
-char *PMI2U_getval(const char *keystr, char *valstr, int vallen);
-void PMI2U_chgval(const char *keystr, char *valstr);
+#ifndef PMI2_UTIL_H_INCLUDED
+#define PMI2_UTIL_H_INCLUDED
 
 extern int PMI2_pmiverbose;     /* Set this to true to print PMI debugging info */
 #define printf_d(x...)  do { if (PMI2_pmiverbose) printf(x); } while (0)
@@ -141,4 +126,4 @@ extern int PMI2_pmiverbose;     /* Set this to true to print PMI debugging info 
         (ptr_) = realloc_tmp_;                                                                  \
     } while (0)
 
-#endif /* SIMPLE_PMIUTIL_H_INCLUDED */
+#endif /* PMI2_UTIL_H_INCLUDED */

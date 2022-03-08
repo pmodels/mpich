@@ -25,5 +25,4 @@ libpmi_la_LIBADD = @mpl_lib@
 libpmi_la_SOURCES = \
     src/pmi_v1.c \
     src/pmi_v2.c \
-    src/pmi_util.c \
-    src/pmi2_util.c
+    src/pmi_util.c
