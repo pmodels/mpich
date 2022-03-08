@@ -179,41 +179,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
-    MPIR_GPU_query_pointer_attr(recv_buf, &attr);
 
-    if (data_sz &&
-        (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
-         attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
-        if (!MPIDI_OFI_ENABLE_HMEM) {
+    if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
+        if (MPIDI_OFI_ENABLE_MR_HMEM) {
+            if (dt_contig) {
+                register_mem = true;
+            }
+        }
+    }
+    if ((!MPIDI_OFI_ENABLE_HMEM || !dt_contig) && data_sz) {
+        MPIR_GPU_query_pointer_attr(recv_buf, &attr);
+
+        if (data_sz &&
+            (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
+             attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
             /* FIXME: at this point, GPU data takes host-buffer staging
              * path for the whole chunk. For large memory size, pipeline
              * transfer should be applied. */
             force_gpu_pack = true;
-        } else {
-            if (MPIDI_OFI_ENABLE_MR_HMEM && dt_contig) {
-                register_mem = true;
-            } else {
-                force_gpu_pack = true;
-            }
-        }
-    } else if (MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG && data_sz && MPIDI_OFI_ENABLE_HMEM &&
-               MPIDI_OFI_ENABLE_MR_HMEM) {
-        if (dt_contig) {
-            register_mem = true;
         }
     }
 
     if (register_mem) {
-        int card_num = MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(&attr));
-        MPIDI_OFI_register_memory(recv_buf, data_sz, attr.type, card_num, ctx_idx, &mr);
+        MPIDI_OFI_register_memory(recv_buf, data_sz, attr, ctx_idx, &mr);
         if (mr != NULL) {
             desc = fi_mr_desc(mr);
-            struct MPIDI_GPU_RDMA_queue_t *new_mr =
-                MPL_malloc(sizeof(struct MPIDI_GPU_RDMA_queue_t), MPL_MEM_BUFFER);
-            MPIR_ERR_CHKANDJUMP1(new_mr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                                 "GPU RDMA MR alloc");
-            new_mr->mr = mr;
-            DL_APPEND(MPIDI_OFI_global.gdr_mrs, new_mr);
         }
     }
 

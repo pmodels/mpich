@@ -732,7 +732,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory(char *send_buf, size_t data_sz,
-                                                       int buf_type, int card_num, int ctx_idx,
+                                                       MPL_pointer_attr_t attr, int ctx_idx,
                                                        struct fid_mr **mr)
 {
     struct fi_mr_attr mr_attr = { };
@@ -748,14 +748,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory(char *send_buf, size_t da
     mr_attr.access = FI_REMOTE_READ | FI_REMOTE_WRITE;
     mr_attr.requested_key = 1;
 #ifdef MPL_HAVE_CUDA
-    mr_attr.iface = (buf_type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_CUDA;
-    mr_attr.device.cuda = (buf_type != MPL_GPU_POINTER_DEV) ? 0 : card_num;
+    mr_attr.iface = (attr.type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_CUDA;
+    /* OFI does not support tiles yet, need to pass the root device. */
+    mr_attr.device.cuda =
+        (attr.type !=
+         MPL_GPU_POINTER_DEV) ? 0 : MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(&attr));
 #elif defined MPL_HAVE_ZE
-    mr_attr.iface = (buf_type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_ZE;
-    mr_attr.device.ze = (buf_type != MPL_GPU_POINTER_DEV) ? 0 : card_num;
+    mr_attr.iface = (attr.type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_ZE;
+    mr_attr.device.ze =
+        (attr.type !=
+         MPL_GPU_POINTER_DEV) ? 0 : MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(&attr));
 #endif
     MPIDI_OFI_CALL(fi_mr_regattr
                    (MPIDI_OFI_global.ctx[ctx_idx].domain, &mr_attr, 0, &(*mr)), mr_regattr);
+
+    if (*mr != NULL) {
+        mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], *mr,
+                                      MPIDI_OFI_global.ctx[ctx_idx].ep, NULL);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* Cache the mrs for closing during Finalize() */
+        struct MPIDI_GPU_RDMA_queue_t *new_mr =
+            MPL_malloc(sizeof(struct MPIDI_GPU_RDMA_queue_t), MPL_MEM_BUFFER);
+        MPIR_ERR_CHKANDJUMP1(new_mr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                             "GPU RDMA MR alloc");
+        new_mr->mr = *mr;
+        DL_APPEND(MPIDI_OFI_global.gdr_mrs, new_mr);
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
