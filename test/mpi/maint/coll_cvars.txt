@@ -183,6 +183,8 @@ algorithms:
         inter-nonblocking:
             sched_local_gather_remote_bcast
         intra-blocking:
+            composition:1
+            composition:2
             brucks
             k_brucks
                 .MPIR_CVAR_ALLGATHER_BRUCKS_KVAL=2,3,4
@@ -225,6 +227,9 @@ algorithms:
         inter-nonblocking:
             sched_remote_reduce_local_bcast
         intra-blocking:
+            composition:1
+            composition:2
+            composition:3
             smp
             recursive_doubling
             reduce_scatter_allgather
@@ -275,6 +280,8 @@ algorithms:
         inter-nonblocking:
             sched_pairwise_exchange
         intra-blocking:
+            composition:1
+            composition:2
             brucks
             k_brucks
                 .MPIR_CVAR_ALLTOALL_BRUCKS_KVAL=2,3,4
@@ -328,6 +335,8 @@ algorithms:
         inter-nonblocking:
             sched_bcast
         intra-blocking:
+            composition:1
+            composition:2
             k_dissemination
                 .MPIR_CVAR_BARRIER_DISSEM_KVAL=2,3,4,8
             recexch
@@ -349,6 +358,9 @@ algorithms:
         inter-nonblocking:
             sched_flat
         intra-blocking:
+            composition:1
+            composition:2
+            composition:3
             binomial
             smp
             scatter_recursive_doubling_allgather
@@ -463,6 +475,9 @@ algorithms:
         inter-nonblocking:
             sched_local_reduce_remote_send
         intra-blocking:
+            composition:1
+            composition:2
+            composition:3
             binomial
             smp
             reduce_scatter_gather
