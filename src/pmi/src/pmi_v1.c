@@ -22,10 +22,6 @@
 #include "mpl.h"        /* Get ATTRIBUTE, some base functions */
 #include "pmi.h"
 
-/* Temporary debug definitions */
-/* #define DBG_PRINTF(args) printf args ; fflush(stdout) */
-#define DBG_PRINTF(args)
-
 #ifdef HAVE_MPI_H
 #include "mpi.h"        /* to get MPI_MAX_PORT_NAME */
 #else
@@ -1013,11 +1009,6 @@ static int PMII_Set_from_port(int fd, int id)
     PMIU_getval("debug", cmd, PMIU_MAXLINE);
     PMI_debug = atoi(cmd);
 
-    if (PMI_debug) {
-        DBG_PRINTF(("end of handshake, rank = %d, size = %d\n", PMI_rank, PMI_size));
-        DBG_PRINTF(("Completed init\n"));
-    }
-
     return PMI_SUCCESS;
 }
 
@@ -1291,9 +1282,6 @@ static int getPMIFD(int *notset)
         }
         *ph = 0;
 
-        if (PMI_debug) {
-            DBG_PRINTF(("Connecting to %s\n", p));
-        }
         if (*pn == ':') {
             portnum = atoi(pn + 1);
             /* FIXME: Check for valid integer after : */
