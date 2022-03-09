@@ -18,37 +18,13 @@
 
 #include "pmi_config.h"
 
-#include <stdio.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#ifdef USE_PMI_PORT
-#ifndef MAXHOSTNAME
-#define MAXHOSTNAME 256
-#endif
-#endif
-/* This should be moved to pmiu for shutdown */
-#if defined(HAVE_SYS_SOCKET_H)
-#include <sys/socket.h>
-#endif
-
+#include "pmi_util.h"
 #include "mpl.h"        /* Get ATTRIBUTE, some base functions */
+#include "pmi.h"
 
 /* Temporary debug definitions */
 /* #define DBG_PRINTF(args) printf args ; fflush(stdout) */
 #define DBG_PRINTF(args)
-
-#include "pmi.h"
-#include "pmi_util.h"
 
 #ifdef HAVE_MPI_H
 #include "mpi.h"        /* to get MPI_MAX_PORT_NAME */
