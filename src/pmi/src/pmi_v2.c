@@ -281,8 +281,7 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 
     /* Get the fd for PMI commands; if none, we're a singleton */
     pmi_errno = getPMIFD();
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
 
     if (PMI2_fd == -1) {
         /* Singleton init: Process not started with mpiexec,
@@ -300,15 +299,14 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     ret =
         MPL_snprintf(buf, PMIU_MAXLINE, "cmd=init pmi_version=%d pmi_subversion=%d\n", PMI_VERSION,
                      PMI_SUBVERSION);
-    PMIU_ERR_CHKANDJUMP1(ret < 0, pmi_errno, PMI2_ERR_OTHER, "**intern", "**intern %s",
-                         "failed to generate init line");
+    PMIU_ERR_CHKANDJUMP1(ret < 0, pmi_errno, PMI2_ERR_OTHER,
+                         "**intern %s", "failed to generate init line");
 
     ret = PMIU_writeline(PMI2_fd, buf);
     PMIU_ERR_CHKANDJUMP(ret < 0, pmi_errno, PMI2_ERR_OTHER, "**pmi2_init_send");
 
     ret = PMIU_readline(PMI2_fd, buf, PMIU_MAXLINE);
-    PMIU_ERR_CHKANDJUMP1(ret < 0, pmi_errno, PMI2_ERR_OTHER, "**pmi2_initack",
-                         "**pmi2_initack %s", strerror(errno));
+    PMIU_ERR_CHKANDJUMP1(ret < 0, pmi_errno, PMI2_ERR_OTHER, "**pmi2_initack %s", strerror(errno));
 
     PMIU_parse_keyvals(buf);
     cmdline[0] = 0;
@@ -321,7 +319,7 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
         char buf1[PMIU_MAXLINE];
         PMIU_getval("pmi_version", buf, PMIU_MAXLINE);
         PMIU_getval("pmi_subversion", buf1, PMIU_MAXLINE);
-        PMIU_ERR_SETANDJUMP4(pmi_errno, PMI2_ERR_OTHER, "**pmi2_version",
+        PMIU_ERR_SETANDJUMP4(pmi_errno, PMI2_ERR_OTHER,
                              "**pmi2_version %s %s %d %d", buf, buf1, PMI_VERSION, PMI_SUBVERSION);
     }
 
@@ -363,17 +361,15 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 
 
         pmi_errno = PMIi_WriteSimpleCommand(PMI2_fd, 0, FULLINIT_CMD, pairs_p, npairs); /* don't pass in thread id for init */
-        if (pmi_errno)
-            PMIU_ERR_POP(pmi_errno);
+        PMIU_ERR_POP(pmi_errno);
 
         /* Read auth-response */
         /* Send auth-response-complete */
 
         /* Read fullinit-response */
         pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, FULLINITRESP_CMD, &rc, &errmsg);
-        if (pmi_errno)
-            PMIU_ERR_POP(pmi_errno);
-        PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_fullinit",
+        PMIU_ERR_POP(pmi_errno);
+        PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                              "**pmi2_fullinit %s", errmsg ? errmsg : "unknown");
 
         found = getvalint(cmd.pairs, cmd.nPairs, PMIVERSION_KEY, &version);
@@ -429,12 +425,10 @@ PMI_API_PUBLIC int PMI2_Finalize(void)
 
     if (PMI2_initialized > SINGLETON_INIT_BUT_NO_PM) {
         pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, FINALIZE_CMD, NULL);
-        if (pmi_errno)
-            PMIU_ERR_POP(pmi_errno);
+        PMIU_ERR_POP(pmi_errno);
         pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, FINALIZERESP_CMD, &rc, &errmsg);
-        if (pmi_errno)
-            PMIU_ERR_POP(pmi_errno);
-        PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_finalize",
+        PMIU_ERR_POP(pmi_errno);
+        PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                              "**pmi2_finalize %s", errmsg ? errmsg : "unknown");
         PMIU_Free(cmd.command);
         freepairs(cmd.pairs, cmd.nPairs);
@@ -573,8 +567,7 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
     PMIU_Assert(npairs == total_pairs);
 
     pmi_errno = PMIi_WriteSimpleCommand(PMI2_fd, &resp_cmd, "spawn", pairs_p, npairs);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
 
     freepairs(pairs_p, npairs);
     pairs_p = NULL;
@@ -620,12 +613,10 @@ PMI_API_PUBLIC int PMI2_Job_GetId(char jobid[], int jobid_size)
     PMI2_Command cmd = { 0 };
 
     pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, JOBGETID_CMD, NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, JOBGETIDRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_jobgetid", "**pmi2_jobgetid %s",
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_jobgetid %s",
                          errmsg ? errmsg : "unknown");
 
     found = getval(cmd.pairs, cmd.nPairs, JOBID_KEY, &jid, &jidlen);
@@ -652,12 +643,10 @@ PMI_API_PUBLIC int PMI2_Job_Connect(const char jobid[], PMI2_Connect_comm_t * co
     const char *errmsg;
 
     pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, JOBCONNECT_CMD, JOBID_KEY, jobid, NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, JOBCONNECTRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_jobconnect",
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_jobconnect %s", errmsg ? errmsg : "unknown");
 
     found = getvalbool(cmd.pairs, cmd.nPairs, KVSCOPY_KEY, &kvscopy);
@@ -684,12 +673,10 @@ PMI_API_PUBLIC int PMI2_Job_Disconnect(const char jobid[])
 
     pmi_errno =
         PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, JOBDISCONNECT_CMD, JOBID_KEY, jobid, NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, JOBDISCONNECTRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_jobdisconnect",
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_jobdisconnect %s", errmsg ? errmsg : "unknown");
 
   fn_exit:
@@ -709,13 +696,11 @@ PMI_API_PUBLIC int PMI2_KVS_Put(const char key[], const char value[])
 
     pmi_errno =
         PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, KVSPUT_CMD, KEY_KEY, key, VALUE_KEY, value, NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, KVSPUTRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_kvsput", "**pmi2_kvsput %s",
-                         errmsg ? errmsg : "unknown");
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
+                         "**pmi2_kvsput %s", errmsg ? errmsg : "unknown");
 
   fn_exit:
     PMIU_Free(cmd.command);
@@ -733,13 +718,11 @@ PMI_API_PUBLIC int PMI2_KVS_Fence(void)
     const char *errmsg;
 
     pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, KVSFENCE_CMD, NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, KVSFENCERESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_kvsfence", "**pmi2_kvsfence %s",
-                         errmsg ? errmsg : "unknown");
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
+                         "**pmi2_kvsfence %s", errmsg ? errmsg : "unknown");
 
   fn_exit:
     PMIU_Free(cmd.command);
@@ -766,19 +749,16 @@ PMI_API_PUBLIC
     MPL_snprintf(src_pmi_id_str, sizeof(src_pmi_id_str), "%d", src_pmi_id);
 
     pmi_errno = PMIi_InitIfSingleton();
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
 
     pmi_errno =
         PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, KVSGET_CMD, JOBID_KEY, jobid, SRCID_KEY,
                                    src_pmi_id_str, KEY_KEY, key, NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, KVSGETRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_kvsget", "**pmi2_kvsget %s",
-                         errmsg ? errmsg : "unknown");
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
+                         "**pmi2_kvsget %s", errmsg ? errmsg : "unknown");
 
     found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, &keyfound);
     PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
@@ -812,18 +792,15 @@ PMI_API_PUBLIC
     const char *errmsg;
 
     pmi_errno = PMIi_InitIfSingleton();
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
 
     pmi_errno =
         PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, GETNODEATTR_CMD, KEY_KEY, name, WAIT_KEY,
                                    waitfor ? "TRUE" : "FALSE", NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, GETNODEATTRRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_getnodeattr",
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_getnodeattr %s", errmsg ? errmsg : "unknown");
 
     found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, flag);
@@ -858,18 +835,15 @@ PMI_API_PUBLIC
     const char *valptr;
 
     pmi_errno = PMIi_InitIfSingleton();
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
 
     pmi_errno =
         PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, GETNODEATTR_CMD, KEY_KEY, name, WAIT_KEY, "FALSE",
                                    NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, GETNODEATTRRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_getnodeattr",
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_getnodeattr %s", errmsg ? errmsg : "unknown");
 
     found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, flag);
@@ -881,14 +855,14 @@ PMI_API_PUBLIC
         valptr = kvsvalue;
         i = 0;
         rc = sscanf(valptr, "%d", &array[i]);
-        PMIU_ERR_CHKANDJUMP1(rc != 1, pmi_errno, PMI2_ERR_OTHER, "**intern", "**intern %s",
-                             "unable to parse intarray");
+        PMIU_ERR_CHKANDJUMP1(rc != 1, pmi_errno, PMI2_ERR_OTHER,
+                             "**intern %s", "unable to parse intarray");
         ++i;
         while ((valptr = strchr(valptr, ',')) && i < arraylen) {
             ++valptr;   /* skip over the ',' */
             rc = sscanf(valptr, "%d", &array[i]);
-            PMIU_ERR_CHKANDJUMP1(rc != 1, pmi_errno, PMI2_ERR_OTHER, "**intern", "**intern %s",
-                                 "unable to parse intarray");
+            PMIU_ERR_CHKANDJUMP1(rc != 1, pmi_errno, PMI2_ERR_OTHER,
+                                 "**intern %s", "unable to parse intarray");
             ++i;
         }
 
@@ -913,12 +887,10 @@ PMI_API_PUBLIC int PMI2_Info_PutNodeAttr(const char name[], const char value[])
     pmi_errno =
         PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, PUTNODEATTR_CMD, KEY_KEY, name, VALUE_KEY, value,
                                    NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, PUTNODEATTRRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_putnodeattr",
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_putnodeattr %s", errmsg ? errmsg : "unknown");
 
   fn_exit:
@@ -940,16 +912,13 @@ PMI_API_PUBLIC int PMI2_Info_GetJobAttr(const char name[], char value[], int val
     const char *errmsg;
 
     pmi_errno = PMIi_InitIfSingleton();
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
 
     pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, GETJOBATTR_CMD, KEY_KEY, name, NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, GETJOBATTRRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_getjobattr",
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_getjobattr %s", errmsg ? errmsg : "unknown");
 
     found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, flag);
@@ -985,16 +954,13 @@ PMI_API_PUBLIC
     const char *valptr;
 
     pmi_errno = PMIi_InitIfSingleton();
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
 
     pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, GETJOBATTR_CMD, KEY_KEY, name, NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, GETJOBATTRRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_getjobattr",
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_getjobattr %s", errmsg ? errmsg : "unknown");
 
     found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, flag);
@@ -1006,14 +972,14 @@ PMI_API_PUBLIC
         valptr = kvsvalue;
         i = 0;
         rc = sscanf(valptr, "%d", &array[i]);
-        PMIU_ERR_CHKANDJUMP1(rc != 1, pmi_errno, PMI2_ERR_OTHER, "**intern", "**intern %s",
-                             "unable to parse intarray");
+        PMIU_ERR_CHKANDJUMP1(rc != 1, pmi_errno, PMI2_ERR_OTHER,
+                             "**intern %s", "unable to parse intarray");
         ++i;
         while ((valptr = strchr(valptr, ',')) && i < arraylen) {
             ++valptr;   /* skip over the ',' */
             rc = sscanf(valptr, "%d", &array[i]);
-            PMIU_ERR_CHKANDJUMP1(rc != 1, pmi_errno, PMI2_ERR_OTHER, "**intern", "**intern %s",
-                                 "unable to parse intarray");
+            PMIU_ERR_CHKANDJUMP1(rc != 1, pmi_errno, PMI2_ERR_OTHER,
+                                 "**intern %s", "unable to parse intarray");
             ++i;
         }
 
@@ -1041,12 +1007,10 @@ PMI_API_PUBLIC
     pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMEPUBLISH_CMD,
                                            NAME_KEY, service_name, PORT_KEY, port,
                                            INFOKEYCOUNT_KEY, "0", NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, NAMEPUBLISHRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_nameservpublish",
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_nameservpublish %s", errmsg ? errmsg : "unknown");
 
 
@@ -1074,16 +1038,14 @@ PMI_API_PUBLIC
     /* ignoring infos for now */
     pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMELOOKUP_CMD,
                                            NAME_KEY, service_name, INFOKEYCOUNT_KEY, "0", NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, NAMELOOKUPRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_nameservlookup",
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_nameservlookup %s", errmsg ? errmsg : "unknown");
 
     found = getval(cmd.pairs, cmd.nPairs, PORT_KEY, &found_port, &plen);
-    PMIU_ERR_CHKANDJUMP1(!found, pmi_errno, PMI2_ERR_OTHER, "**pmi2_nameservlookup",
+    PMIU_ERR_CHKANDJUMP1(!found, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_nameservlookup %s", "not found");
     MPL_strncpy(port, found_port, portLen);
 
@@ -1105,12 +1067,10 @@ PMI_API_PUBLIC
 
     pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMEUNPUBLISH_CMD,
                                            NAME_KEY, service_name, INFOKEYCOUNT_KEY, "0", NULL);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
     pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, NAMEUNPUBLISHRESP_CMD, &rc, &errmsg);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_nameservunpublish",
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_nameservunpublish %s", errmsg ? errmsg : "unknown");
 
   fn_exit:
@@ -1318,12 +1278,13 @@ static int create_keyval(PMI2_Keyvalpair ** kv, const char *key, const char *val
     char *key_p = NULL;
     char *value_p = NULL;
 
-    PMIU_CHK_MALLOC(*kv, PMI2_Keyvalpair *, sizeof(PMI2_Keyvalpair), pmi_errno, "pair");
+    PMIU_CHK_MALLOC(*kv, PMI2_Keyvalpair *, sizeof(PMI2_Keyvalpair),
+                    pmi_errno, PMI2_ERR_NOMEM, "pair");
 
-    PMIU_CHK_MALLOC(key_p, char *, strlen(key) + 1, pmi_errno, "key");
+    PMIU_CHK_MALLOC(key_p, char *, strlen(key) + 1, pmi_errno, PMI2_ERR_NOMEM, "key");
     MPL_strncpy(key_p, key, PMI2_MAX_KEYLEN + 1);
 
-    PMIU_CHK_MALLOC(value_p, char *, vallen + 1, pmi_errno, "value");
+    PMIU_CHK_MALLOC(value_p, char *, vallen + 1, pmi_errno, PMI2_ERR_NOMEM, "value");
     PMIU_Memcpy(value_p, val, vallen);
     value_p[vallen] = '\0';
 
@@ -1387,8 +1348,8 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
                 nbytes = read(fd, &cmd_len_str[offset], PMII_COMMANDLEN_SIZE - offset);
             } while (nbytes == -1 && errno == EINTR);
 
-            PMIU_ERR_CHKANDJUMP1(nbytes <= 0, pmi_errno, PMI2_ERR_OTHER, "**read", "**read %s",
-                                 strerror(errno));
+            PMIU_ERR_CHKANDJUMP1(nbytes <= 0, pmi_errno, PMI2_ERR_OTHER,
+                                 "**read %s", strerror(errno));
 
             offset += nbytes;
         }
@@ -1398,7 +1359,7 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
 
         cmd_buf = PMIU_Malloc(cmd_len + 1);
         if (!cmd_buf) {
-            PMIU_CHKMEM_SETERR(pmi_errno, cmd_len + 1, "cmd_buf");
+            PMIU_CHKMEM_SETERR(pmi_errno, PMI2_ERR_NOMEM, cmd_len + 1, "cmd_buf");
             goto fn_exit;
         }
 
@@ -1411,8 +1372,8 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
                 nbytes = read(fd, &cmd_buf[offset], cmd_len - offset);
             } while (nbytes == -1 && errno == EINTR);
 
-            PMIU_ERR_CHKANDJUMP1(nbytes <= 0, pmi_errno, PMI2_ERR_OTHER, "**read", "**read %s",
-                                 strerror(errno));
+            PMIU_ERR_CHKANDJUMP1(nbytes <= 0, pmi_errno, PMI2_ERR_OTHER,
+                                 "**read %s", strerror(errno));
 
             offset += nbytes;
         }
@@ -1443,15 +1404,14 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
         c = cmd_buf;
         remaining_len = cmd_len;
         pmi_errno = parse_keyval(&c, &remaining_len, &key, &val, &vallen);
-        if (pmi_errno)
-            PMIU_ERR_POP(pmi_errno);
+        PMIU_ERR_POP(pmi_errno);
 
         PMIU_ERR_CHKANDJUMP(strncmp(key, "cmd", PMI2_MAX_KEYLEN) != 0, pmi_errno, PMI2_ERR_OTHER,
                             "**bad_cmd");
 
         command = PMIU_Malloc(vallen + 1);
         if (!command) {
-            PMIU_CHKMEM_SETERR(pmi_errno, vallen + 1, "command");
+            PMIU_CHKMEM_SETERR(pmi_errno, PMI2_ERR_NOMEM, vallen + 1, "command");
             goto fn_exit;
         }
         PMIU_Memcpy(command, val, vallen);
@@ -1461,7 +1421,8 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
 
         pairs = PMIU_Malloc(sizeof(PMI2_Keyvalpair *) * nPairs);
         if (!pairs) {
-            PMIU_CHKMEM_SETERR(pmi_errno, sizeof(PMI2_Keyvalpair *) * nPairs, "pairs");
+            PMIU_CHKMEM_SETERR(pmi_errno, PMI2_ERR_NOMEM, sizeof(PMI2_Keyvalpair *) * nPairs,
+                               "pairs");
             goto fn_exit;
         }
 
@@ -1470,12 +1431,10 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
             PMI2_Keyvalpair *pair;
 
             pmi_errno = parse_keyval(&c, &remaining_len, &key, &val, &vallen);
-            if (pmi_errno)
-                PMIU_ERR_POP(pmi_errno);
+            PMIU_ERR_POP(pmi_errno);
 
             pmi_errno = create_keyval(&pair, key, val, vallen);
-            if (pmi_errno)
-                PMIU_ERR_POP(pmi_errno);
+            PMIU_ERR_POP(pmi_errno);
 
             pairs[pair_index] = pair;
             ++pair_index;
@@ -1523,8 +1482,7 @@ int PMIi_ReadCommandExp(int fd, PMI2_Command * cmd, const char *exp, int *rc, co
     int msglen;
 
     pmi_errno = PMIi_ReadCommand(fd, cmd);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
 
     PMIU_ERR_CHKANDJUMP(strncmp(cmd->command, exp, strlen(exp)) != 0, pmi_errno, PMI2_ERR_OTHER,
                         "**bad_cmd");
@@ -1569,14 +1527,14 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
     PMIU_ERR_CHKANDJUMP(strlen(cmd) > PMI2_MAX_VALLEN, pmi_errno, PMI2_ERR_OTHER, "**cmd_too_long");
 
     ret = MPL_snprintf(c, remaining_len, "cmd=%s;", cmd);
-    PMIU_ERR_CHKANDJUMP1(ret >= remaining_len, pmi_errno, PMI2_ERR_OTHER, "**intern",
+    PMIU_ERR_CHKANDJUMP1(ret >= remaining_len, pmi_errno, PMI2_ERR_OTHER,
                          "**intern %s", "Ran out of room for command");
     c += ret;
     remaining_len -= ret;
 
     if (PMI2_is_threaded && resp) {
         ret = MPL_snprintf(c, remaining_len, "thrid=%p;", resp);
-        PMIU_ERR_CHKANDJUMP1(ret >= remaining_len, pmi_errno, PMI2_ERR_OTHER, "**intern",
+        PMIU_ERR_CHKANDJUMP1(ret >= remaining_len, pmi_errno, PMI2_ERR_OTHER,
                              "**intern %s", "Ran out of room for command");
         c += ret;
         remaining_len -= ret;
@@ -1587,7 +1545,7 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
         PMIU_ERR_CHKANDJUMP(strlen(pairs[pair_index]->key) > PMI2_MAX_KEYLEN, pmi_errno,
                             PMI2_ERR_OTHER, "**key_too_long");
         ret = MPL_snprintf(c, remaining_len, "%s=", pairs[pair_index]->key);
-        PMIU_ERR_CHKANDJUMP1(ret >= remaining_len, pmi_errno, PMI2_ERR_OTHER, "**intern",
+        PMIU_ERR_CHKANDJUMP1(ret >= remaining_len, pmi_errno, PMI2_ERR_OTHER,
                              "**intern %s", "Ran out of room for command");
         c += ret;
         remaining_len -= ret;
@@ -1615,7 +1573,7 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
     /* prepend the buffer length stripping off the trailing '\0' */
     cmdlen = PMII_MAX_COMMAND_LEN - remaining_len;
     ret = MPL_snprintf(cmdlenbuf, sizeof(cmdlenbuf), "%d", cmdlen);
-    PMIU_ERR_CHKANDJUMP1(ret >= PMII_COMMANDLEN_SIZE, pmi_errno, PMI2_ERR_OTHER, "**intern",
+    PMIU_ERR_CHKANDJUMP1(ret >= PMII_COMMANDLEN_SIZE, pmi_errno, PMI2_ERR_OTHER,
                          "**intern %s", "Command length won't fit in length buffer");
 
     PMIU_Memcpy(cmdbuf, cmdlenbuf, ret);
@@ -1643,8 +1601,7 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
             nbytes = write(fd, &cmdbuf[offset], cmdlen + PMII_COMMANDLEN_SIZE - offset);
         } while (nbytes == -1 && errno == EINTR);
 
-        PMIU_ERR_CHKANDJUMP1(nbytes <= 0, pmi_errno, PMI2_ERR_OTHER, "**write", "**write %s",
-                             strerror(errno));
+        PMIU_ERR_CHKANDJUMP1(nbytes <= 0, pmi_errno, PMI2_ERR_OTHER, "**write %s", strerror(errno));
 
         offset += nbytes;
     } while (offset < cmdlen + PMII_COMMANDLEN_SIZE);
@@ -1682,9 +1639,10 @@ int PMIi_WriteSimpleCommandStr(int fd, PMI2_Command * resp, const char cmd[], ..
     }
     va_end(ap);
 
-    PMIU_CHK_MALLOC(pairs, PMI2_Keyvalpair *, sizeof(PMI2_Keyvalpair) * npairs, pmi_errno, "pairs");
+    PMIU_CHK_MALLOC(pairs, PMI2_Keyvalpair *, sizeof(PMI2_Keyvalpair) * npairs,
+                    pmi_errno, PMI2_ERR_NOMEM, "pairs");
     PMIU_CHK_MALLOC(pairs_p, PMI2_Keyvalpair **, sizeof(PMI2_Keyvalpair *) * npairs,
-                    pmi_errno, "pairs_p");
+                    pmi_errno, PMI2_ERR_NOMEM, "pairs_p");
 
     i = 0;
     va_start(ap, cmd);
@@ -1703,8 +1661,7 @@ int PMIi_WriteSimpleCommandStr(int fd, PMI2_Command * resp, const char cmd[], ..
     va_end(ap);
 
     pmi_errno = PMIi_WriteSimpleCommand(fd, resp, cmd, pairs_p, npairs);
-    if (pmi_errno)
-        PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_POP(pmi_errno);
 
   fn_exit:
     PMIU_Free(pairs);
@@ -1889,8 +1846,7 @@ static int getPMIFD(void)
         }
         *ph = 0;
 
-        PMIU_ERR_CHKANDJUMP1(*pn != ':', pmi_errno, PMI2_ERR_OTHER, "**pmi2_port",
-                             "**pmi2_port %s", p);
+        PMIU_ERR_CHKANDJUMP1(*pn != ':', pmi_errno, PMI2_ERR_OTHER, "**pmi2_port %s", p);
 
         portnum = atoi(pn + 1);
         /* FIXME: Check for valid integer after : */
@@ -1898,7 +1854,7 @@ static int getPMIFD(void)
          * the process manager. The handshake below is used
          * to setup the initial values */
         PMI2_fd = PMII_Connect_to_pm(hostname, portnum);
-        PMIU_ERR_CHKANDJUMP2(PMI2_fd < 0, pmi_errno, PMI2_ERR_OTHER, "**connect_to_pm",
+        PMIU_ERR_CHKANDJUMP2(PMI2_fd < 0, pmi_errno, PMI2_ERR_OTHER,
                              "**connect_to_pm %s %d", hostname, portnum);
     }
 
