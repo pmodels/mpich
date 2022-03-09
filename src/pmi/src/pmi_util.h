@@ -10,7 +10,20 @@
 #define PMIU_MAXLINE 1024
 #define PMIU_IDSIZE    32
 
-/* we don't have access to MPIR_Assert and friends here in the PMI code */
+#include <stdio.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+
 #if defined(HAVE_ASSERT_H)
 #include <assert.h>
 #define PMIU_Assert(expr) assert(expr)
@@ -22,6 +35,13 @@
 #include <arpa/inet.h>
 #endif /* HAVE_ARPA_INET_H */
 
+#if defined(HAVE_SYS_SOCKET_H)
+#include <sys/socket.h>
+#endif
+
+#ifndef MAXHOSTNAME
+#define MAXHOSTNAME 256
+#endif
 
 /* prototypes for PMIU routines */
 void PMIU_Set_rank(int PMI_rank);

@@ -6,29 +6,8 @@
 #include "pmi_config.h"
 
 #include "pmi_util.h"
-#include "pmi2.h"
 #include "mpl.h"
-
-#include <stdio.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#if defined(HAVE_SYS_SOCKET_H)
-#include <sys/socket.h>
-#endif
-
-#ifndef MAXHOSTNAME
-#define MAXHOSTNAME 256
-#endif
+#include "pmi2.h"
 
 #define PMII_EXIT_CODE -1
 
