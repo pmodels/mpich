@@ -34,6 +34,8 @@
 #define MAXVALLEN 1024
 #define MAXKEYLEN   32
 
+int PMIU_verbose = 0;           /* Set this to true to print PMI debugging info */
+
 /* These are not the keyvals in the keyval space that is part of the
    PMI specification.
    They are just part of this implementation's internal utilities.
