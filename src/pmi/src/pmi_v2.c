@@ -16,70 +16,6 @@
 #define PMII_COMMANDLEN_SIZE 6
 #define PMII_MAX_COMMAND_LEN (64*1024)
 
-static const char FULLINIT_CMD[] = "fullinit";
-static const char FULLINITRESP_CMD[] = "fullinit-response";
-static const char FINALIZE_CMD[] = "finalize";
-static const char FINALIZERESP_CMD[] = "finalize-response";
-static const char ABORT_CMD[] = "abort";
-static const char JOBGETID_CMD[] = "job-getid";
-static const char JOBGETIDRESP_CMD[] = "job-getid-response";
-static const char JOBCONNECT_CMD[] = "job-connect";
-static const char JOBCONNECTRESP_CMD[] = "job-connect-response";
-static const char JOBDISCONNECT_CMD[] = "job-disconnect";
-static const char JOBDISCONNECTRESP_CMD[] = "job-disconnect-response";
-static const char KVSPUT_CMD[] = "kvs-put";
-static const char KVSPUTRESP_CMD[] = "kvs-put-response";
-static const char KVSFENCE_CMD[] = "kvs-fence";
-static const char KVSFENCERESP_CMD[] = "kvs-fence-response";
-static const char KVSGET_CMD[] = "kvs-get";
-static const char KVSGETRESP_CMD[] = "kvs-get-response";
-static const char GETNODEATTR_CMD[] = "info-getnodeattr";
-static const char GETNODEATTRRESP_CMD[] = "info-getnodeattr-response";
-static const char PUTNODEATTR_CMD[] = "info-putnodeattr";
-static const char PUTNODEATTRRESP_CMD[] = "info-putnodeattr-response";
-static const char GETJOBATTR_CMD[] = "info-getjobattr";
-static const char GETJOBATTRRESP_CMD[] = "info-getjobattr-response";
-static const char NAMEPUBLISH_CMD[] = "name-publish";
-static const char NAMEPUBLISHRESP_CMD[] = "name-publish-response";
-static const char NAMEUNPUBLISH_CMD[] = "name-unpublish";
-static const char NAMEUNPUBLISHRESP_CMD[] = "name-unpublish-response";
-static const char NAMELOOKUP_CMD[] = "name-lookup";
-static const char NAMELOOKUPRESP_CMD[] = "name-lookup-response";
-
-
-static const char PMIJOBID_KEY[] = "pmijobid";
-static const char PMIRANK_KEY[] = "pmirank";
-static const char SRCID_KEY[] = "srcid";
-static const char THREADED_KEY[] = "threaded";
-static const char RC_KEY[] = "rc";
-static const char ERRMSG_KEY[] = "errmsg";
-static const char PMIVERSION_KEY[] = "pmi-version";
-static const char PMISUBVER_KEY[] = "pmi-subversion";
-static const char RANK_KEY[] = "rank";
-static const char SIZE_KEY[] = "size";
-static const char APPNUM_KEY[] = "appnum";
-static const char SPAWNERJOBID_KEY[] = "spawner-jobid";
-static const char DEBUGGED_KEY[] = "debugged";
-static const char PMIVERBOSE_KEY[] = "pmiverbose";
-static const char ISWORLD_KEY[] = "isworld";
-static const char MSG_KEY[] = "msg";
-static const char JOBID_KEY[] = "jobid";
-static const char KVSCOPY_KEY[] = "kvscopy";
-static const char KEY_KEY[] = "key";
-static const char VALUE_KEY[] = "value";
-static const char FOUND_KEY[] = "found";
-static const char WAIT_KEY[] = "wait";
-static const char NAME_KEY[] = "name";
-static const char PORT_KEY[] = "port";
-static const char THRID_KEY[] = "thrid";
-static const char INFOKEYCOUNT_KEY[] = "infokeycount";
-static const char INFOKEY_KEY[] = "infokey%d";
-static const char INFOVAL_KEY[] = "infoval%d";
-
-static const char TRUE_VAL[] = "TRUE";
-static const char FALSE_VAL[] = "FALSE";
-
-
 /* Local types */
 
 /* Parse commands are in this structure.  Fields in this structure are
@@ -352,54 +288,54 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 
         jobid = getenv("PMI_JOBID");
         if (jobid) {
-            init_kv_str(&pairs[npairs], PMIJOBID_KEY, jobid);
+            init_kv_str(&pairs[npairs], "pmijobid", jobid);
             ++npairs;
         }
 
         pmiid = getenv("PMI_ID");
         if (pmiid) {
-            init_kv_str(&pairs[npairs], PMIRANK_KEY, pmiid);
+            init_kv_str(&pairs[npairs], "pmirank", pmiid);
             ++npairs;
         } else {
             pmiid = getenv("PMI_RANK");
             if (pmiid) {
-                init_kv_str(&pairs[npairs], PMIRANK_KEY, pmiid);
+                init_kv_str(&pairs[npairs], "pmirank", pmiid);
                 ++npairs;
             }
         }
 
-        init_kv_str(&pairs[npairs], THREADED_KEY, PMI2_is_threaded ? "TRUE" : "FALSE");
+        init_kv_str(&pairs[npairs], "threaded", PMI2_is_threaded ? "TRUE" : "FALSE");
         ++npairs;
 
 
-        pmi_errno = PMIi_WriteSimpleCommand(PMI2_fd, 0, FULLINIT_CMD, pairs_p, npairs); /* don't pass in thread id for init */
+        pmi_errno = PMIi_WriteSimpleCommand(PMI2_fd, 0, "fullinit", pairs_p, npairs);   /* don't pass in thread id for init */
         PMIU_ERR_POP(pmi_errno);
 
         /* Read auth-response */
         /* Send auth-response-complete */
 
         /* Read fullinit-response */
-        pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, FULLINITRESP_CMD, &rc, &errmsg);
+        pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "fullinit-response", &rc, &errmsg);
         PMIU_ERR_POP(pmi_errno);
         PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                              "**pmi2_fullinit %s", errmsg ? errmsg : "unknown");
 
-        found = getvalint(cmd.pairs, cmd.nPairs, PMIVERSION_KEY, &version);
+        found = getvalint(cmd.pairs, cmd.nPairs, "pmi-version", &version);
         PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
-        found = getvalint(cmd.pairs, cmd.nPairs, PMISUBVER_KEY, &subver);
+        found = getvalint(cmd.pairs, cmd.nPairs, "pmi-subversion", &subver);
         PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
-        found = getvalint(cmd.pairs, cmd.nPairs, RANK_KEY, rank);
+        found = getvalint(cmd.pairs, cmd.nPairs, "rank", rank);
         PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
-        found = getvalint(cmd.pairs, cmd.nPairs, SIZE_KEY, size);
+        found = getvalint(cmd.pairs, cmd.nPairs, "size", size);
         PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
-        found = getvalint(cmd.pairs, cmd.nPairs, APPNUM_KEY, appnum);
+        found = getvalint(cmd.pairs, cmd.nPairs, "appnum", appnum);
         PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
-        found = getval(cmd.pairs, cmd.nPairs, SPAWNERJOBID_KEY, &spawner_jobid, &spawner_jobid_len);
+        found = getval(cmd.pairs, cmd.nPairs, "spawner-jobid", &spawner_jobid, &spawner_jobid_len);
         PMIU_ERR_CHKANDJUMP(found == -1, pmi_errno, PMI2_ERR_OTHER, "**intern");
         if (found)
             *spawned = PMIU_TRUE;
@@ -407,11 +343,11 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
             *spawned = PMIU_FALSE;
 
         debugged = 0;
-        found = getvalbool(cmd.pairs, cmd.nPairs, DEBUGGED_KEY, &debugged);
+        found = getvalbool(cmd.pairs, cmd.nPairs, "debugged", &debugged);
         PMIU_ERR_CHKANDJUMP(found == -1, pmi_errno, PMI2_ERR_OTHER, "**intern");
         PMI2_debug |= debugged;
 
-        found = getvalbool(cmd.pairs, cmd.nPairs, PMIVERBOSE_KEY, &PMIU_verbose);
+        found = getvalbool(cmd.pairs, cmd.nPairs, "pmiverbose", &PMIU_verbose);
         PMIU_ERR_CHKANDJUMP(found == -1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
         PMIU_Free(cmd.command);
@@ -436,9 +372,9 @@ PMI_API_PUBLIC int PMI2_Finalize(void)
     PMI2_Command cmd = { 0 };
 
     if (PMI2_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, FINALIZE_CMD, NULL);
+        pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "finalize", NULL);
         PMIU_ERR_POP(pmi_errno);
-        pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, FINALIZERESP_CMD, &rc, &errmsg);
+        pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "finalize-response", &rc, &errmsg);
         PMIU_ERR_POP(pmi_errno);
         PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                              "**pmi2_finalize %s", errmsg ? errmsg : "unknown");
@@ -470,8 +406,8 @@ PMI_API_PUBLIC int PMI2_Abort(int flag, const char msg[])
     PMIU_printf(1, "aborting job:\n%s\n", msg);
 
     /* ignoring return code, because we're exiting anyway */
-    PMIi_WriteSimpleCommandStr(PMI2_fd, NULL, ABORT_CMD, ISWORLD_KEY, flag ? TRUE_VAL : FALSE_VAL,
-                               MSG_KEY, msg, NULL);
+    PMIi_WriteSimpleCommandStr(PMI2_fd, NULL, "abort", "isworld", flag ? "TRUE" : "FALSE",
+                               "msg", msg, NULL);
 
     PMIU_Exit(PMII_EXIT_CODE);
     return PMI2_SUCCESS;
@@ -592,7 +528,7 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
     PMIU_Assert(errors != NULL);
 
     if (jobId && jobIdSize) {
-        found = getval(resp_cmd.pairs, resp_cmd.nPairs, JOBID_KEY, &jid, &jidlen);
+        found = getval(resp_cmd.pairs, resp_cmd.nPairs, "jobid", &jid, &jidlen);
         PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
         MPL_strncpy(jobId, jid, jobIdSize);
     }
@@ -622,14 +558,14 @@ PMI_API_PUBLIC int PMI2_Job_GetId(char jobid[], int jobid_size)
     const char *errmsg;
     PMI2_Command cmd = { 0 };
 
-    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, JOBGETID_CMD, NULL);
+    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "job-getid", NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, JOBGETIDRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "job-getid-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER, "**pmi2_jobgetid %s",
                          errmsg ? errmsg : "unknown");
 
-    found = getval(cmd.pairs, cmd.nPairs, JOBID_KEY, &jid, &jidlen);
+    found = getval(cmd.pairs, cmd.nPairs, "jobid", &jid, &jidlen);
     PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
     MPL_strncpy(jobid, jid, jobid_size);
@@ -652,14 +588,14 @@ PMI_API_PUBLIC int PMI2_Job_Connect(const char jobid[], PMI2_Connect_comm_t * co
     int rc;
     const char *errmsg;
 
-    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, JOBCONNECT_CMD, JOBID_KEY, jobid, NULL);
+    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "job-connect", "jobid", jobid, NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, JOBCONNECTRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "job-connect-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_jobconnect %s", errmsg ? errmsg : "unknown");
 
-    found = getvalbool(cmd.pairs, cmd.nPairs, KVSCOPY_KEY, &kvscopy);
+    found = getvalbool(cmd.pairs, cmd.nPairs, "kvscopy", &kvscopy);
     PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
     PMIU_ERR_CHKANDJUMP(kvscopy, pmi_errno, PMI2_ERR_OTHER, "**notimpl");
@@ -681,10 +617,9 @@ PMI_API_PUBLIC int PMI2_Job_Disconnect(const char jobid[])
     int rc;
     const char *errmsg;
 
-    pmi_errno =
-        PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, JOBDISCONNECT_CMD, JOBID_KEY, jobid, NULL);
+    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "job-disconnect", "jobid", jobid, NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, JOBDISCONNECTRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "job-disconnect-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_jobdisconnect %s", errmsg ? errmsg : "unknown");
@@ -705,9 +640,9 @@ PMI_API_PUBLIC int PMI2_KVS_Put(const char key[], const char value[])
     const char *errmsg;
 
     pmi_errno =
-        PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, KVSPUT_CMD, KEY_KEY, key, VALUE_KEY, value, NULL);
+        PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "kvs-put", "key", key, "value", value, NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, KVSPUTRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "kvs-put-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_kvsput %s", errmsg ? errmsg : "unknown");
@@ -727,9 +662,9 @@ PMI_API_PUBLIC int PMI2_KVS_Fence(void)
     int rc;
     const char *errmsg;
 
-    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, KVSFENCE_CMD, NULL);
+    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "kvs-fence", NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, KVSFENCERESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "kvs-fence-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_kvsfence %s", errmsg ? errmsg : "unknown");
@@ -762,19 +697,19 @@ PMI_API_PUBLIC
     PMIU_ERR_POP(pmi_errno);
 
     pmi_errno =
-        PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, KVSGET_CMD, JOBID_KEY, jobid, SRCID_KEY,
-                                   src_pmi_id_str, KEY_KEY, key, NULL);
+        PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "kvs-get", "jobid", jobid, "srcid",
+                                   src_pmi_id_str, "key", key, NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, KVSGETRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "kvs-get-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_kvsget %s", errmsg ? errmsg : "unknown");
 
-    found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, &keyfound);
+    found = getvalbool(cmd.pairs, cmd.nPairs, "found", &keyfound);
     PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
     PMIU_ERR_CHKANDJUMP(!keyfound, pmi_errno, PMI2_ERR_OTHER, "**pmi2_kvsget_notfound");
 
-    found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &kvsvalue, &kvsvallen);
+    found = getval(cmd.pairs, cmd.nPairs, "value", &kvsvalue, &kvsvallen);
     PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
     ret = MPL_strncpy(value, kvsvalue, maxValue);
@@ -805,18 +740,18 @@ PMI_API_PUBLIC
     PMIU_ERR_POP(pmi_errno);
 
     pmi_errno =
-        PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, GETNODEATTR_CMD, KEY_KEY, name, WAIT_KEY,
+        PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "info-getnodeattr", "key", name, "wait",
                                    waitfor ? "TRUE" : "FALSE", NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, GETNODEATTRRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "info-getnodeattr-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_getnodeattr %s", errmsg ? errmsg : "unknown");
 
-    found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, flag);
+    found = getvalbool(cmd.pairs, cmd.nPairs, "found", flag);
     PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
     if (*flag) {
-        found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &kvsvalue, &kvsvallen);
+        found = getval(cmd.pairs, cmd.nPairs, "value", &kvsvalue, &kvsvallen);
         PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
         MPL_strncpy(value, kvsvalue, valuelen);
@@ -848,18 +783,18 @@ PMI_API_PUBLIC
     PMIU_ERR_POP(pmi_errno);
 
     pmi_errno =
-        PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, GETNODEATTR_CMD, KEY_KEY, name, WAIT_KEY, "FALSE",
+        PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "info-getnodeattr", "key", name, "wait", "FALSE",
                                    NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, GETNODEATTRRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "info-getnodeattr-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_getnodeattr %s", errmsg ? errmsg : "unknown");
 
-    found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, flag);
+    found = getvalbool(cmd.pairs, cmd.nPairs, "found", flag);
     PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
     if (*flag) {
-        found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &kvsvalue, &kvsvallen);
+        found = getval(cmd.pairs, cmd.nPairs, "value", &kvsvalue, &kvsvallen);
         PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
         valptr = kvsvalue;
@@ -895,10 +830,10 @@ PMI_API_PUBLIC int PMI2_Info_PutNodeAttr(const char name[], const char value[])
     const char *errmsg;
 
     pmi_errno =
-        PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, PUTNODEATTR_CMD, KEY_KEY, name, VALUE_KEY, value,
+        PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "info-putnodeattr", "key", name, "value", value,
                                    NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, PUTNODEATTRRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "info-putnodeattr-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_putnodeattr %s", errmsg ? errmsg : "unknown");
@@ -924,18 +859,18 @@ PMI_API_PUBLIC int PMI2_Info_GetJobAttr(const char name[], char value[], int val
     pmi_errno = PMIi_InitIfSingleton();
     PMIU_ERR_POP(pmi_errno);
 
-    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, GETJOBATTR_CMD, KEY_KEY, name, NULL);
+    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "info-getjobattr", "key", name, NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, GETJOBATTRRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "info-getjobattr-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_getjobattr %s", errmsg ? errmsg : "unknown");
 
-    found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, flag);
+    found = getvalbool(cmd.pairs, cmd.nPairs, "found", flag);
     PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
     if (*flag) {
-        found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &kvsvalue, &kvsvallen);
+        found = getval(cmd.pairs, cmd.nPairs, "value", &kvsvalue, &kvsvallen);
         PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
         MPL_strncpy(value, kvsvalue, valuelen);
@@ -966,17 +901,17 @@ PMI_API_PUBLIC
     pmi_errno = PMIi_InitIfSingleton();
     PMIU_ERR_POP(pmi_errno);
 
-    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, GETJOBATTR_CMD, KEY_KEY, name, NULL);
+    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "info-getjobattr", "key", name, NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, GETJOBATTRRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "info-getjobattr-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_getjobattr %s", errmsg ? errmsg : "unknown");
 
-    found = getvalbool(cmd.pairs, cmd.nPairs, FOUND_KEY, flag);
+    found = getvalbool(cmd.pairs, cmd.nPairs, "found", flag);
     PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
     if (*flag) {
-        found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &kvsvalue, &kvsvallen);
+        found = getval(cmd.pairs, cmd.nPairs, "value", &kvsvalue, &kvsvallen);
         PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
         valptr = kvsvalue;
@@ -1014,11 +949,11 @@ PMI_API_PUBLIC
     const char *errmsg;
 
     /* ignoring infokey functionality for now */
-    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMEPUBLISH_CMD,
-                                           NAME_KEY, service_name, PORT_KEY, port,
-                                           INFOKEYCOUNT_KEY, "0", NULL);
+    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "name-publish",
+                                           "name", service_name, "port", port,
+                                           "infokeycount", "0", NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, NAMEPUBLISHRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "name-publish-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_nameservpublish %s", errmsg ? errmsg : "unknown");
@@ -1046,15 +981,15 @@ PMI_API_PUBLIC
     const char *found_port;
 
     /* ignoring infos for now */
-    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMELOOKUP_CMD,
-                                           NAME_KEY, service_name, INFOKEYCOUNT_KEY, "0", NULL);
+    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "name-lookup",
+                                           "name", service_name, "infokeycount", "0", NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, NAMELOOKUPRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "name-lookup-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_nameservlookup %s", errmsg ? errmsg : "unknown");
 
-    found = getval(cmd.pairs, cmd.nPairs, PORT_KEY, &found_port, &plen);
+    found = getval(cmd.pairs, cmd.nPairs, "port", &found_port, &plen);
     PMIU_ERR_CHKANDJUMP1(!found, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_nameservlookup %s", "not found");
     MPL_strncpy(port, found_port, portLen);
@@ -1075,10 +1010,10 @@ PMI_API_PUBLIC
     PMI2_Command cmd = { 0 };
     const char *errmsg;
 
-    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMEUNPUBLISH_CMD,
-                                           NAME_KEY, service_name, INFOKEYCOUNT_KEY, "0", NULL);
+    pmi_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, "name-unpublish",
+                                           "name", service_name, "infokeycount", "0", NULL);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, NAMEUNPUBLISHRESP_CMD, &rc, &errmsg);
+    pmi_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, "name-unpublish-response", &rc, &errmsg);
     PMIU_ERR_POP(pmi_errno);
     PMIU_ERR_CHKANDJUMP1(rc, pmi_errno, PMI2_ERR_OTHER,
                          "**pmi2_nameservunpublish %s", errmsg ? errmsg : "unknown");
@@ -1454,7 +1389,7 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
             ++pair_index;
         }
 
-        found = getvalptr(pairs, nPairs, THRID_KEY, &target_cmd);
+        found = getvalptr(pairs, nPairs, "thrid", &target_cmd);
         if (!found)     /* if there's no thrid specified, assume it's for you */
             target_cmd = cmd;
         else if (PMI2_debug && SEARCH_REMOVE(target_cmd) == 0) {
@@ -1505,10 +1440,10 @@ int PMIi_ReadCommandExp(int fd, PMI2_Command * cmd, const char *exp, int *rc, co
     PMIU_ERR_CHKANDJUMP(strncmp(cmd->command, exp, strlen(exp)) != 0, pmi_errno, PMI2_ERR_OTHER,
                         "**bad_cmd");
 
-    found = getvalint(cmd->pairs, cmd->nPairs, RC_KEY, rc);
+    found = getvalint(cmd->pairs, cmd->nPairs, "rc", rc);
     PMIU_ERR_CHKANDJUMP(found != 1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
-    found = getval(cmd->pairs, cmd->nPairs, ERRMSG_KEY, errmsg, &msglen);
+    found = getval(cmd->pairs, cmd->nPairs, "errmsg", errmsg, &msglen);
     PMIU_ERR_CHKANDJUMP(found == -1, pmi_errno, PMI2_ERR_OTHER, "**intern");
 
     if (!found)
