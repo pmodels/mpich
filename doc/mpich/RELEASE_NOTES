@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
-MPICH DROP 46 - Release Notes
+MPICH DROP 47 - Release Notes
 -------------------------------------------------------------------------------
 
 CONTENTS:
@@ -19,8 +19,13 @@ This is an evaluation release of mpich provided by Intel Corporation.
 2. NEW FEATURES
 -------------------------------------------------------------------------------
 
-* Added PSM3 provider for JLSE Arcticus and DevEP systems.
-* Added TCP provider binaries with DAOS support for Dudley/Taranis systems.
+* Added support for switch based collectives.
+* Added support to bypass Yaksa for transferring and copying contiguous buffers.
+* Added support to GPU offload based collectives.
+* Optimized GPU pipelining for PVC.
+* Optimized performance of small message broadcast with GPU buffers.
+* Fixed bugs caused by use of multi_nic_pref_nic communicator info hint when used
+  with MPI_THREAD_MULTIPLE.
 
 -------------------------------------------------------------------------------
 2.1 DETAILS
