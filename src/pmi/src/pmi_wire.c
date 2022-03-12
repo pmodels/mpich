@@ -542,6 +542,7 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
 
     PMIU_CS_ENTER;
 
+    pmicmd->buf = NULL;
     while (pmicmd->buf == NULL) {
         char *recvbuf;
         PMIU_CHK_MALLOC(recvbuf, char *, PMIU_MAXLINE, pmi_errno, PMIU_ERR_NOMEM, "recvbuf");

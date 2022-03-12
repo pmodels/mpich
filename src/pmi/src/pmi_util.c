@@ -123,6 +123,9 @@ int PMIU_readline(int fd, char *buf, int maxlen)
     static char readbuf[MAX_READLINE];
     static char *nextChar = 0, *lastChar = 0;   /* lastChar is really one past
                                                  * last char */
+    int pmi_version = 0;
+    int pmi2_cmd_len = 0;
+
     static int lastfd = -1;
     ssize_t n;
     int curlen;
@@ -169,8 +172,27 @@ int PMIU_readline(int fd, char *buf, int maxlen)
         ch = *nextChar++;
         *p++ = ch;
         curlen++;
-        if (ch == '\n')
-            break;
+        if (curlen == 7) {
+            if (strncmp(buf, "cmd=", 4) == 0) {
+                pmi_version = 1;
+            } else {
+                pmi_version = 2;
+
+                char len_str[7];
+                memcpy(len_str, buf, 6);
+                len_str[6] = '\0';
+                pmi2_cmd_len = atoi(len_str);
+            }
+        }
+        if (pmi_version == 1) {
+            if (ch == '\n') {
+                break;
+            }
+        } else if (pmi_version == 2) {
+            if (curlen == pmi2_cmd_len + 6 + 1) {
+                break;
+            }
+        }
     }
 
     /* We null terminate the string for convenience in printing */
