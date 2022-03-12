@@ -19,9 +19,10 @@
 #include "pmi_config.h"
 
 #include "pmi_util.h"
-#include "mpl.h"        /* Get ATTRIBUTE, some base functions */
+#include "mpl.h"
 #include "pmi.h"
 #include "pmi_wire.h"
+#include "pmi_common.h"
 
 #ifdef HAVE_MPI_H
 #include "mpi.h"        /* to get MPI_MAX_PORT_NAME */
@@ -30,27 +31,6 @@
 #endif
 
 #define USE_WIRE_VER  PMII_WIRE_V1
-/*
-   These are global variable used *ONLY* in this file, and are hence
-   declared static.
- */
-
-
-static int PMI_fd = -1;
-static int PMI_size = 1;
-static int PMI_rank = 0;
-
-/* Set PMI_initialized to 1 for singleton init but no process manager
-   to help.  Initialized to 2 for normal initialization.  Initialized
-   to values higher than 2 when singleton_init by a process manager.
-   All values higher than 1 involve a PM in some way.
-*/
-typedef enum { PMI_UNINITIALIZED = 0,
-    SINGLETON_INIT_BUT_NO_PM = 1,
-    NORMAL_INIT_WITH_PM,
-    SINGLETON_INIT_WITH_PM
-} PMIState;
-static PMIState PMI_initialized = PMI_UNINITIALIZED;
 
 /* ALL GLOBAL VARIABLES MUST BE INITIALIZED TO AVOID POLLUTING THE
    LIBRARY WITH COMMON SYMBOLS */
@@ -58,7 +38,6 @@ static int PMI_kvsname_max = 0;
 static int PMI_keylen_max = 0;
 static int PMI_vallen_max = 0;
 
-static int PMI_debug = 0;
 static int PMI_debug_init = 0;  /* Set this to true to debug the init
                                  * handshakes */
 static int PMI_spawned = 0;
