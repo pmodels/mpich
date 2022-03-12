@@ -240,6 +240,26 @@ void PMIU_cmd_init(struct PMIU_cmd *pmicmd, int version, const char *cmd)
     pmicmd->num_tokens = 0;
 }
 
+void PMIU_cmd_free_buf(struct PMIU_cmd *pmicmd)
+{
+    MPL_free(pmicmd->buf);
+    pmicmd->buf = NULL;
+}
+
+static void transfer_pmi(struct PMIU_cmd *from, struct PMIU_cmd *to)
+{
+    to->buf = from->buf;
+    to->len = from->len;
+    to->version = from->version;
+    to->cmd = from->cmd;
+    to->num_tokens = from->num_tokens;
+    for (int i = 0; i < to->num_tokens; i++) {
+        to->tokens[i] = from->tokens[i];
+    }
+
+    from->buf = NULL;
+}
+
 void PMIU_cmd_add_str(struct PMIU_cmd *pmicmd, const char *key, const char *val)
 {
     if (val) {
@@ -258,29 +278,57 @@ void PMIU_cmd_add_token(struct PMIU_cmd *pmicmd, const char *token_str)
     pmicmd->num_tokens++;
 }
 
+/* The following construction routine may need buffer. When needed, we'll
+ * allocate pmicmd->buf with size of MAX_PMI_ARGS * MAX_TOKEN_BUF_SIZE. The
+ * corresponding token will use pmicmd->buf + i * MAX_TOKEN_BUF_SIZE.
+ *
+ * We only use the buffer to construct the pmicmd object before PMIU_cmd_send.
+ * The buffer will be freed by PMIU_cmd_send.
+ */
+#define MAX_TOKEN_BUF_SIZE 50   /* We only use it for e.g. "%d", "%p", etc.
+                                 * The longest may be "infokey%d" */
+#define PMII_PMI_ALLOC(pmicmd) do { \
+    if (pmicmd->buf == NULL) { \
+        pmicmd->buf = MPL_malloc(MAX_PMI_ARGS * MAX_TOKEN_BUF_SIZE, MPL_MEM_OTHER); \
+        PMIU_Assert(pmicmd->buf); \
+    } \
+} while (0)
+
+#define PMII_PMI_TOKEN_BUF(pmicmd, i) ((char *) pmicmd->buf + i * MAX_TOKEN_BUF_SIZE)
+
 void PMIU_cmd_add_substr(struct PMIU_cmd *pmicmd, const char *key, int idx, const char *val)
 {
-    /* use static tmp buffer to avoid memory allocations. */
     /* FIXME: add assertions to ensure key fits in the static space. */
-    static char tmp[MAX_PMI_ARGS][50];
 
     int i = pmicmd->num_tokens;
-    snprintf(tmp[i], 50, key, idx);
-    pmicmd->tokens[i].key = tmp[i];
+    PMII_PMI_ALLOC(pmicmd);
+    char *s = PMII_PMI_TOKEN_BUF(pmicmd, i);
+    snprintf(s, MAX_TOKEN_BUF_SIZE, key, idx);
+    pmicmd->tokens[i].key = s;
     pmicmd->tokens[i].val = val;
     pmicmd->num_tokens++;
 }
 
 void PMIU_cmd_add_int(struct PMIU_cmd *pmicmd, const char *key, int val)
 {
-    /* use static tmp buffer to avoid memory allocations.
-     * Just make sure each buffer is sufficient to hold max value of a 64-bit int */
-    static char tmp[MAX_PMI_ARGS][50];
-
     int i = pmicmd->num_tokens;
-    snprintf(tmp[i], 50, "%d", val);
+    PMII_PMI_ALLOC(pmicmd);
+    char *s = PMII_PMI_TOKEN_BUF(pmicmd, i);
+    snprintf(s, MAX_TOKEN_BUF_SIZE, "%d", val);
     pmicmd->tokens[i].key = key;
-    pmicmd->tokens[i].val = tmp[i];
+    pmicmd->tokens[i].val = s;
+    pmicmd->num_tokens++;
+}
+
+/* Used internally in PMIU_cmd_send to add thrid for PMI-v2 */
+static void pmi_add_thrid(struct PMIU_cmd *pmicmd)
+{
+    int i = pmicmd->num_tokens;
+    PMII_PMI_ALLOC(pmicmd);
+    char *s = PMII_PMI_TOKEN_BUF(pmicmd, i);
+    snprintf(s, MAX_TOKEN_BUF_SIZE, "%p", pmicmd);
+    pmicmd->tokens[i].key = "thrid";
+    pmicmd->tokens[i].val = s;
     pmicmd->num_tokens++;
 }
 
@@ -492,22 +540,40 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
 {
     int pmi_errno = PMIU_SUCCESS;
 
-    /* The buffer need persist until next read. */
-    /* FIXME: this is a hack with implicit restrictions */
-    static char recvbuf[PMIU_MAXLINE];
-    int n;
+    PMIU_CS_ENTER;
 
-    n = PMIU_readline(fd, recvbuf, PMIU_MAXLINE);
-    PMIU_ERR_CHKANDJUMP(n <= 0, pmi_errno, PMIU_FAIL, "readline failed\n");
+    while (pmicmd->buf == NULL) {
+        char *recvbuf;
+        PMIU_CHK_MALLOC(recvbuf, char *, PMIU_MAXLINE, pmi_errno, PMIU_ERR_NOMEM, "recvbuf");
 
-    if (strncmp(recvbuf, "cmd=", 4) == 0) {
-        pmi_errno = PMIU_cmd_parse(recvbuf, strlen(recvbuf), PMII_WIRE_V1, pmicmd);
-    } else {
-        pmi_errno = PMIU_cmd_parse(recvbuf, strlen(recvbuf), PMII_WIRE_V2, pmicmd);
+        int n;
+        n = PMIU_readline(fd, recvbuf, PMIU_MAXLINE);
+        PMIU_ERR_CHKANDJUMP(n <= 0, pmi_errno, PMIU_FAIL, "readline failed\n");
+
+        if (strncmp(recvbuf, "cmd=", 4) == 0) {
+            pmi_errno = PMIU_cmd_parse(recvbuf, strlen(recvbuf), PMII_WIRE_V1, pmicmd);
+        } else {
+            pmi_errno = PMIU_cmd_parse(recvbuf, strlen(recvbuf), PMII_WIRE_V2, pmicmd);
+        }
+        PMIU_ERR_POP(pmi_errno);
+
+        const char *thrid;
+        thrid = PMIU_cmd_find_keyval(pmicmd, "thrid");
+        if (thrid) {
+            struct PMIU_cmd *cmd_pmi;
+            int rc;
+            rc = sscanf(thrid, "%p", &cmd_pmi);
+            PMIU_ERR_CHKANDJUMP1(rc != 1, pmi_errno, PMIU_FAIL, "bad thrid (%s)\n", thrid);
+
+            if (cmd_pmi != pmicmd) {
+                /* transfer and reset pmicmd->buf to NULL */
+                transfer_pmi(pmicmd, cmd_pmi);
+            }
+        }
     }
-    PMIU_ERR_POP(pmi_errno);
 
   fn_exit:
+    PMIU_CS_EXIT;
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -516,6 +582,8 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
 int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
 {
     int pmi_errno = PMIU_SUCCESS;
+
+    PMIU_CS_ENTER;
 
     char *buf = NULL;
     int buflen = 0;
@@ -526,14 +594,21 @@ int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
         output_pmi_v1_mcmd(pmicmd, &buf, &buflen);
     } else {
         /* PMII_WIRE_V2 */
+        if (PMIU_is_threaded) {
+            pmi_add_thrid(pmicmd);
+        }
         output_pmi_v2(pmicmd, &buf, &buflen);
     }
 
     pmi_errno = PMIU_writeline(fd, buf);
     PMIU_ERR_POP(pmi_errno);
 
+    /* free the potential buffer that are used for constructing tokens */
+    PMIU_cmd_free_buf(pmicmd);
+
   fn_exit:
     MPL_free(buf);
+    PMIU_CS_EXIT;
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -542,22 +617,22 @@ int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
 /*
  * This function is used to request information from the server and check
  * that the response uses the expected command name.  On a successful
- * return from this routine, the response is parsed into the pmi object.
+ * return from this routine, the response is parsed into the pmicmd object.
  * It can be queried for attributes.
  */
-int PMII_pmi_get_response(int fd, struct PMII_pmi *pmi, const char *expectedCmd)
+int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd, const char *expectedCmd)
 {
     int pmi_errno = PMIU_SUCCESS;
 
-    pmi_errno = PMII_pmi_send(fd, pmi);
+    pmi_errno = PMIU_cmd_send(fd, pmicmd);
     PMIU_ERR_POP(pmi_errno);
 
-    pmi_errno = PMII_pmi_read(fd, pmi);
+    pmi_errno = PMIU_cmd_read(fd, pmicmd);
     PMIU_ERR_POP(pmi_errno);
 
-    if (strcmp(expectedCmd, pmi->cmd) != 0) {
+    if (strcmp(expectedCmd, pmicmd->cmd) != 0) {
         PMIU_ERR_SETANDJUMP2(pmi_errno, PMIU_FAIL,
-                             "expecting cmd=%s, got %s\n", expectedCmd, pmi->cmd);
+                             "expecting cmd=%s, got %s\n", expectedCmd, pmicmd->cmd);
     }
 
   fn_exit:
