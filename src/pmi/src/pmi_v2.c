@@ -14,7 +14,6 @@
 
 #define MAX_INT_STR_LEN 11      /* number of digits in MAX_UINT + 1 */
 
-#define PMII_COMMANDLEN_SIZE 6
 #define PMII_MAX_COMMAND_LEN (64*1024)
 
 #define PMI2_CHK_RC_ERRMSG(pmicmd) do { \
@@ -29,29 +28,6 @@
 
 #define USE_WIRE_VER  PMII_WIRE_V2
 
-/* Local types */
-
-/* Parse commands are in this structure.  Fields in this structure are
-   dynamically allocated as necessary */
-typedef struct PMI2_Keyvalpair {
-    const char *key;
-    const char *value;
-    int valueLen;               /* Length of a value (values may contain nulls, so
-                                 * we need this) */
-    int isCopy;                 /* The value is a copy (and will need to be freed)
-                                 * if this is true, otherwise,
-                                 * it is a null-terminated string in the original
-                                 * buffer */
-} PMI2_Keyvalpair;
-
-typedef struct PMI2_Command {
-    int nPairs;                 /* Number of key=value pairs */
-    char *command;              /* Overall command buffer */
-    PMI2_Keyvalpair **pairs;    /* Array of pointers to pairs */
-    int complete;
-} PMI2_Command;
-
-
 typedef enum { PMI2_UNINITIALIZED = 0,
     SINGLETON_INIT_BUT_NO_PM = 1,
     NORMAL_INIT_WITH_PM,
@@ -64,133 +40,8 @@ static int PMI2_fd = -1;
 static int PMI2_size = 1;
 static int PMI2_rank = 0;
 
-static int PMI2_is_threaded = 0;        /* Set this to true to require thread safety */
-
-#ifdef HAVE_THREADS
-static MPL_thread_mutex_t mutex;
-static int blocked = PMIU_FALSE;
-static MPL_thread_cond_t cond;
-#endif
-
-/* XXX DJG the "const"s on both of these functions and the Keyvalpair
- * struct are wrong in the isCopy==TRUE case! */
-/* init_kv_str -- fills in keyvalpair.  val is required to be a
-   null-terminated string.  isCopy is set to FALSE, so caller must
-   free key and val memory, if necessary.
-*/
-static void init_kv_str(PMI2_Keyvalpair * kv, const char key[], const char val[])
-{
-    kv->key = key;
-    kv->value = val;
-    kv->valueLen = strlen(val);
-    kv->isCopy = PMIU_FALSE;
-}
-
-/* same as init_kv_str, but strdup's the key and val first, and sets isCopy=TRUE */
-static void init_kv_strdup(PMI2_Keyvalpair * kv, const char key[], const char val[])
-{
-    /* XXX DJG could be slightly more efficient */
-    init_kv_str(kv, PMIU_Strdup(key), PMIU_Strdup(val));
-    kv->isCopy = PMIU_TRUE;
-}
-
-/* same as init_kv_strdup, but converts val into a string first */
-/* XXX DJG could be slightly more efficient */
-static void init_kv_strdup_int(PMI2_Keyvalpair * kv, const char key[], int val)
-{
-    char tmpbuf[32] = { 0 };
-    int rc = PMI2_SUCCESS;
-
-    rc = MPL_snprintf(tmpbuf, sizeof(tmpbuf), "%d", val);
-    PMIU_Assert(rc >= 0);
-    init_kv_strdup(kv, key, tmpbuf);
-}
-
-/* initializes the key with ("%s%d", key_prefix, suffix), uses a string value */
-/* XXX DJG could be slightly more efficient */
-static void init_kv_strdup_intsuffix(PMI2_Keyvalpair * kv, const char key_prefix[], int suffix,
-                                     const char val[])
-{
-    char tmpbuf[256 /*XXX HACK */ ] = { 0 };
-    int rc = PMI2_SUCCESS;
-
-    rc = MPL_snprintf(tmpbuf, sizeof(tmpbuf), "%s%d", key_prefix, suffix);
-    PMIU_Assert(rc >= 0);
-    init_kv_strdup(kv, tmpbuf, val);
-}
-
-
 static int getPMIFD(void);
-static int PMIi_ReadCommandExp(int fd, PMI2_Command * cmd, const char *exp, int *rc,
-                               const char **errmsg);
-static int PMIi_ReadCommand(int fd, PMI2_Command * cmd);
-
-static int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
-                                   PMI2_Keyvalpair * pairs[], int npairs);
-static int PMIi_WriteSimpleCommandStr(int fd, PMI2_Command * resp, const char cmd[], ...);
 static int PMIi_InitIfSingleton(void);
-
-static int getval(PMI2_Keyvalpair * const pairs[], int npairs, const char *key, const char **value,
-                  int *vallen);
-static int getvalint(PMI2_Keyvalpair * const pairs[], int npairs, const char *key, int *val);
-static int getvalptr(PMI2_Keyvalpair * const pairs[], int npairs, const char *key, void *val);
-static int getvalbool(PMI2_Keyvalpair * const pairs[], int npairs, const char *key, int *val);
-
-static void dump_PMI2_Keyvalpair(FILE * file, PMI2_Keyvalpair * kv);
-
-
-typedef struct pending_item {
-    struct pending_item *next;
-    PMI2_Command *cmd;
-} pending_item_t;
-
-pending_item_t *pendingq_head = NULL;
-pending_item_t *pendingq_tail = NULL;
-
-static inline void ENQUEUE(PMI2_Command * cmd)
-{
-    pending_item_t *pi = PMIU_Malloc(sizeof(pending_item_t));
-
-    pi->next = NULL;
-    pi->cmd = cmd;
-
-    if (pendingq_head == NULL) {
-        pendingq_head = pendingq_tail = pi;
-    } else {
-        pendingq_tail->next = pi;
-        pendingq_tail = pi;
-    }
-}
-
-static inline int SEARCH_REMOVE(PMI2_Command * cmd)
-{
-    pending_item_t *pi, *prev;
-
-    pi = pendingq_head;
-    if (pi->cmd == cmd) {
-        pendingq_head = pi->next;
-        if (pendingq_head == NULL)
-            pendingq_tail = NULL;
-        PMIU_Free(pi);
-        return 1;
-    }
-    prev = pi;
-    pi = pi->next;
-
-    for (; pi; pi = pi->next) {
-        if (pi->cmd == cmd) {
-            prev->next = pi->next;
-            if (prev->next == NULL)
-                pendingq_tail = prev;
-            PMIU_Free(pi);
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-
 
 /* ------------------------------------------------------------------------- */
 /* PMI API Routines */
@@ -204,7 +55,7 @@ PMI_API_PUBLIC int PMI2_Set_threaded(int is_threaded)
     return PMI2_SUCCESS;
 
 #else
-    PMI2_is_threaded = is_threaded;
+    PMIU_is_threaded = is_threaded;
     return PMI2_SUCCESS;
 
 #endif
@@ -214,13 +65,7 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 {
     int pmi_errno = PMI2_SUCCESS;
 
-#if HAVE_THREADS
-    int ret;
-    MPL_thread_mutex_create(&mutex, &ret);
-    PMIU_Assert(!ret);
-    MPL_thread_cond_create(&cond, &ret);
-    PMIU_Assert(!ret);
-#endif
+    PMIU_thread_init();
 
     /* FIXME: Why is setvbuf commented out? */
     /* FIXME: What if the output should be fully buffered (directed to file)?
@@ -283,7 +128,7 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 
     PMIU_cmd_add_str(&pmicmd, "pmijobid", jobid);
     PMIU_cmd_add_str(&pmicmd, "pmirank", pmiid);
-    PMIU_cmd_add_str(&pmicmd, "threaded", PMI2_is_threaded ? "TRUE" : "FALSE");
+    PMIU_cmd_add_str(&pmicmd, "threaded", PMIU_is_threaded ? "TRUE" : "FALSE");
 
     pmi_errno = PMIU_cmd_get_response(PMI2_fd, &pmicmd, "fullinit-response");
     PMIU_ERR_POP(pmi_errno);
@@ -1000,12 +845,4 @@ static int getPMIFD(void)
     return pmi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-static void dump_PMI2_Keyvalpair(FILE * file, PMI2_Keyvalpair * kv)
-{
-    fprintf(file, "  key      = %s\n", kv->key);
-    fprintf(file, "  value    = %s\n", kv->value);
-    fprintf(file, "  valueLen = %d\n", kv->valueLen);
-    fprintf(file, "  isCopy   = %s\n", kv->isCopy ? "TRUE" : "FALSE");
 }
