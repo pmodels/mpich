@@ -48,6 +48,8 @@ void PMIU_cmd_add_bool(struct PMIU_cmd *pmicmd, const char *key, int val);
 /* for spawn, add keyval with keys such as "argv%d" */
 void PMIU_cmd_add_substr(struct PMIU_cmd *pmicmd, const char *key, int i, const char *val);
 
+void PMIU_cmd_free_buf(struct PMIU_cmd *pmicmd);
+
 const char *PMIU_cmd_find_keyval(struct PMIU_cmd *pmicmd, const char *key);
 int PMIU_cmd_get_intval_with_default(struct PMIU_cmd *pmicmd, const char *key, int dfltval);
 
@@ -96,6 +98,6 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd);
 int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd);
 
 /* send a PMI command to fd and get a PMI response with expected cmd */
-int PMII_pmi_get_response(int fd, struct PMII_pmi *pmi, const char *expectedCmd);
+int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd, const char *expectedCmd);
 
 #endif

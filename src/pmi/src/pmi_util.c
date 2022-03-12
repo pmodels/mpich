@@ -34,6 +34,9 @@
 #define MAXVALLEN 1024
 #define MAXKEYLEN   32
 
+int PMIU_is_threaded = 0;
+MPL_thread_mutex_t PMIU_mutex;
+
 int PMIU_verbose = 0;           /* Set this to true to print PMI debugging info */
 
 /* These are not the keyvals in the keyval space that is part of the
@@ -51,6 +54,13 @@ static int PMIU_keyval_tab_idx = 0;
 /* This is used to prepend printed output.  Set the initial value to
    "unset" */
 static char PMIU_print_id[PMIU_IDSIZE] = "unset";
+
+void PMIU_thread_init(void)
+{
+    int ret;
+    MPL_thread_mutex_create(&PMIU_mutex, &ret);
+    PMIU_Assert(ret == 0);
+}
 
 void PMIU_Set_rank(int PMI_rank)
 {

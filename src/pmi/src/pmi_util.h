@@ -6,6 +6,8 @@
 #ifndef SIMPLE_PMIUTIL_H_INCLUDED
 #define SIMPLE_PMIUTIL_H_INCLUDED
 
+#include "mpl.h"
+
 /* maximum sizes for arrays */
 #define PMIU_MAXLINE 1024
 #define PMIU_IDSIZE    32
@@ -203,5 +205,28 @@ extern int PMIU_verbose;        /* Set this to true to print PMI debugging info 
                                   "**nomem2","**nomem2 %d %s",(size_),PMIU_QUOTE(ptr_));       \
         (ptr_) = realloc_tmp_;                                                                  \
     } while (0)
+
+extern int PMIU_is_threaded;
+extern MPL_thread_mutex_t PMIU_mutex;
+
+void PMIU_thread_init(void);
+void PMIU_cs_enter(void);
+void PMIU_cs_exit(void);
+
+#define PMIU_CS_ENTER do { \
+    if (PMIU_is_threaded) { \
+        int err; \
+        MPL_thread_mutex_lock(&PMIU_mutex, &err, MPL_THREAD_PRIO_HIGH); \
+        PMIU_Assert(err == 0); \
+    } \
+} while (0)
+
+#define PMIU_CS_EXIT do { \
+    if (PMIU_is_threaded) { \
+        int err; \
+        MPL_thread_mutex_unlock(&PMIU_mutex, &err); \
+        PMIU_Assert(err == 0); \
+    } \
+} while (0)
 
 #endif /* SIMPLE_PMIUTIL_H_INCLUDED */
