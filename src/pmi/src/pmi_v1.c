@@ -30,6 +30,8 @@
 #define MPI_MAX_PORT_NAME 256
 #endif
 
+#include <sys/socket.h>
+
 #define USE_WIRE_VER  PMII_WIRE_V1
 
 /* ALL GLOBAL VARIABLES MUST BE INITIALIZED TO AVOID POLLUTING THE
@@ -751,31 +753,6 @@ static int PMIi_InitIfSingleton(void)
 /*
  * This code allows a program to contact a host/port for the PMI socket.
  */
-#include <errno.h>
-#if defined(HAVE_SYS_TYPES_H)
-#include <sys/types.h>
-#endif
-#include <sys/param.h>
-#include <sys/socket.h>
-
-/* sockaddr_in (Internet) */
-#include <netinet/in.h>
-/* TCP_NODELAY */
-#include <netinet/tcp.h>
-
-/* sockaddr_un (Unix) */
-#include <sys/un.h>
-
-/* defs of gethostbyname */
-#include <netdb.h>
-
-/* fcntl, F_GET/SETFL */
-#include <fcntl.h>
-
-/* This is really IP!? */
-#ifndef TCP
-#define TCP 0
-#endif
 
 /* stub for connecting to a specified host/port instead of using a
    specified fd inherited from a parent process */

@@ -642,35 +642,6 @@ PMI_API_PUBLIC int PMI2_Nameserv_unpublish(const char service_name[],
     goto fn_exit;
 }
 
-/*
- * This code allows a program to contact a host/port for the PMI socket.
- */
-#include <errno.h>
-#if defined(HAVE_SYS_TYPES_H)
-#include <sys/types.h>
-#endif
-#include <sys/param.h>
-#include <sys/socket.h>
-
-/* sockaddr_in (Internet) */
-#include <netinet/in.h>
-/* TCP_NODELAY */
-#include <netinet/tcp.h>
-
-/* sockaddr_un (Unix) */
-#include <sys/un.h>
-
-/* defs of gethostbyname */
-#include <netdb.h>
-
-/* fcntl, F_GET/SETFL */
-#include <fcntl.h>
-
-/* This is really IP!? */
-#ifndef TCP
-#define TCP 0
-#endif
-
 /* stub for connecting to a specified host/port instead of using a
    specified fd inherited from a parent process */
 static int PMII_Connect_to_pm(char *hostname, int portnum)
