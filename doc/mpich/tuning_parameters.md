@@ -654,6 +654,11 @@ MPICH now supports GPU-to-GPU Interprocess Communication (IPC) with builtin data
 
 * `MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE`: Selects an implementation for ZE shareable IPC handle, it can be drmfd (the default) which uses device fd-based shareable IPC handle, or pidfd, which uses an implementation based on pidfd_getfd syscall (only available after Linux kernel 5.6.0)
 
+To enable GPU Direct RDMA support for pt2pt communication, use the following CVARs:
+* `MPIR_CVAR_CH4_OFI_ENABLE_HMEM`: This CVAR with a value of `1` enables inter-node GPU Direct RDMA communication.
+* `MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD`: This is the message size threshold for using GPU Direct RDMA. The default value of this CVAR is 256KB. Messages  >= 256KB will go through GPU Direct RDMA.
+* `MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG`: This CVAR with a value of `0` disables memory registration for host to host communication when GPU RDMA is enabled.
+
 In some circumstances, one may want to disable the GPU support:
 
 * `MPIR_CVAR_ENABLE_GPU`: The default value of this CVAR is 1. Set to 0 to disable GPU support including GPU initialization.
