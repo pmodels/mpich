@@ -64,6 +64,16 @@ void PMIU_chgval(const char *keystr, char *valstr);
 #define PMIU_TRUE 1
 #define PMIU_FALSE 0
 
+/* We assume the following error codes are the same as PMI and PMI2 equivalent,
+ * i.e. PMIU_SUCCESS == PMI_SUCCESS == PMI2_SUCCESS
+ *
+ * FIXME: add some mechanism to ensure this.
+ */
+
+#define PMIU_SUCCESS   0
+#define PMIU_FAIL     -1
+#define PMIU_ERR_NOMEM 2
+
 extern int PMIU_verbose;        /* Set this to true to print PMI debugging info */
 #define printf_d(x...)  do { if (PMIU_verbose) printf(x); } while (0)
 
