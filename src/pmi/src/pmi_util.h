@@ -50,6 +50,7 @@ void PMIU_Set_rank(int PMI_rank);
 void PMIU_SetServer(void);
 void PMIU_printf(int print_flag, const char *fmt, ...);
 int PMIU_readline(int fd, char *buf, int max);
+int PMIU_write(int fd, char *buf, int buflen);
 int PMIU_writeline(int fd, char *buf);
 int PMIU_parse_keyvals(char *st);
 void PMIU_dump_keyvals(void);

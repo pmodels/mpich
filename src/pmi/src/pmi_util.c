@@ -202,6 +202,30 @@ int PMIU_readline(int fd, char *buf, int maxlen)
     return curlen - 1;
 }
 
+int PMIU_write(int fd, char *buf, int buflen)
+{
+    char *p = buf;
+    ssize_t rem = buflen;
+    ssize_t n;
+
+    while (rem > 0) {
+        do {
+            n = write(fd, p, rem);
+        } while (n == -1 && errno == EINTR);
+
+        if (n < 0) {
+            PMIU_printf(1, "PMIU_write error; fd=%d buf=:%s:\n", fd, buf);
+            perror("system msg for write_line failure ");
+            return PMI_FAIL;
+        }
+
+        rem -= n;
+        p += n;
+    };
+
+    return PMI_SUCCESS;
+}
+
 int PMIU_writeline(int fd, char *buf)
 {
     ssize_t size, n;
