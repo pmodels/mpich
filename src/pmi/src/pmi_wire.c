@@ -601,7 +601,7 @@ int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
         output_pmi_v2(pmicmd, &buf, &buflen);
     }
 
-    pmi_errno = PMIU_writeline(fd, buf);
+    pmi_errno = PMIU_write(fd, buf, buflen);
     PMIU_ERR_POP(pmi_errno);
 
     /* free the potential buffer that are used for constructing tokens */
