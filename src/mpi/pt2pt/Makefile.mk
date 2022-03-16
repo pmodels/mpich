@@ -5,4 +5,5 @@
 
 mpi_core_sources += \
     src/mpi/pt2pt/sendrecv.c \
+    src/mpi/pt2pt/stream.c \
     src/mpi/pt2pt/bsendutil.c

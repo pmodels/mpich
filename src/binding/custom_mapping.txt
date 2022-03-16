@@ -3,28 +3,35 @@
 
 LIS_KIND_MAP:
     GPU_TYPE: integer
+    GPU_STREAM: integer(kind=cuda_stream_kind)
     GREQUEST_CLASS: None
 
 SMALL_F90_KIND_MAP:
     GPU_TYPE: INTEGER
+    GPU_STREAM: integer(kind=cuda_stream_kind)
     GREQUEST_CLASS: INTEGER
 
 BIG_F90_KIND_MAP:
     GPU_TYPE: INTEGER
+    GPU_STREAM: integer(kind=cuda_stream_kind)
     GREQUEST_CLASS: INTEGER
 
 SMALL_F08_KIND_MAP:
     GPU_TYPE: INTEGER
+    GPU_STREAM: integer(kind=cuda_stream_kind)
     GREQUEST_CLASS: INTEGER
 
 BIG_F08_KIND_MAP:
     GPU_TYPE: INTEGER
+    GPU_STREAM: integer(kind=cuda_stream_kind)
     GREQUEST_CLASS: INTEGER
 
 SMALL_C_KIND_MAP:
     GPU_TYPE: int
+    GPU_STREAM: void
     GREQUEST_CLASS: MPIX_Grequest_class
 
 BIG_C_KIND_MAP:
     GPU_TYPE: int
+    GPU_STREAM: void
     GREQUEST_CLASS: MPIX_Grequest_class

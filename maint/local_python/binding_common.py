@@ -187,6 +187,8 @@ def is_pointer_type(param):
         return 1
     elif RE.match(r'(ATTRIBUTE_VAL\w*|(C_)?BUFFER\d?|EXTRA_STATE\d*|TOOL_MPI_OBJ|(POLY)?FUNCTION\w*)$', param['kind']):
         return 1
+    elif RE.match(r'(GPU_STREAM)$', param['kind']):
+        return 1
     elif param['param_direction'] != 'in':
         return 1
     elif param['length']:

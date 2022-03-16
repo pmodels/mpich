@@ -548,3 +548,24 @@ MPI_Isendrecv:
 
 MPI_Isendrecv_replace:
     .desc: Starts a nonblocking send and receive with a single buffer
+
+MPIX_Send_enqueue:
+    .desc: Enqueue a send operation on a gpu stream
+    buf: BUFFER, constant=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    stream: GPU_STREAM, [gpu stream to enqueue on]
+
+MPIX_Recv_enqueue:
+    .desc: Enqueue a send operation on a gpu stream
+    buf: BUFFER, direction=out, [initial address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    datatype: DATATYPE, [datatype of each receive buffer element]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    status: STATUS, direction=out
+    stream: GPU_STREAM, [gpu stream to enqueue on]

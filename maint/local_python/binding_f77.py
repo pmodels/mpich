@@ -1120,6 +1120,8 @@ def check_func_directives(func):
         func['_skip_fortran'] = 1
     elif RE.match(r'mpix_grequest_', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
+    elif RE.match(r'mpix_(Send|Recv)_enqueue', func['name'], re.IGNORECASE):
+        func['_skip_fortran'] = 1
     elif RE.match(r'mpi_\w+_(f|f08|c)2(f|f08|c)$', func['name'], re.IGNORECASE):
         # implemented in mpi_f08_types.f90
         func['_skip_fortran'] = 1
