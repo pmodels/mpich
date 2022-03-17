@@ -4183,6 +4183,12 @@ if test "$enable_f08" = "yes" ; then
     fi
 fi
 
+case "$host_os" in
+    freebsd*)
+        AC_DEFINE(DELAY_SHM_MUTEX_DESTROY, 1, [Define to workaround interprocess mutex issue on FreeBSD])
+        ;;
+esac
+
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
 dnl directory
 AC_CONFIG_FILES([Makefile \

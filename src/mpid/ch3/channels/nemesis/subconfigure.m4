@@ -98,12 +98,6 @@ This turns off error checking and timing collection],,enable_fast=no)
 AC_CHECK_HEADERS(signal.h)
 AC_CHECK_FUNCS(signal)
 
-case "$host_os" in
-    freebsd*)
-        AC_DEFINE(DELAY_SHM_MUTEX_DESTROY, 1, [Define to workaround interprocess mutex issue on FreeBSD])
-        ;;
-esac
-
 nemesis_nets_dirs=""
 nemesis_nets_strings=""
 nemesis_nets_array=""   
