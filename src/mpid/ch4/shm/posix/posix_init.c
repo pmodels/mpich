@@ -39,6 +39,7 @@ cvars:
 #include "posix_csel_container.h"
 #include "mpidu_genq.h"
 
+#include "utarray.h"
 #include <strings.h>    /* for strncasecmp */
 
 extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
@@ -185,6 +186,24 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
 
 static int posix_world_initialized;
 
+/* FreeBSD work around: only destroy inter-process mutex at finalize */
+struct shm_mutex_entry {
+    int rank;
+    MPL_proc_mutex_t *shm_mutex_ptr;
+};
+
+static UT_icd shm_mutex_icd = { sizeof(struct shm_mutex_entry), NULL, NULL, NULL };
+
+static UT_array *shm_mutex_free_list;
+
+void MPIDI_POSIX_delay_shm_mutex_destroy(int rank, MPL_proc_mutex_t * shm_mutex_ptr)
+{
+    struct shm_mutex_entry entry;
+    entry.rank = rank;
+    entry.shm_mutex_ptr = shm_mutex_ptr;
+    utarray_push_back(shm_mutex_free_list, &entry, MPL_MEM_OTHER);
+}
+
 int MPIDI_POSIX_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -197,6 +216,8 @@ int MPIDI_POSIX_init_world(void)
 
     mpi_errno = MPIDI_POSIX_coll_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
+
+    utarray_new(shm_mutex_free_list, &shm_mutex_icd, MPL_MEM_OTHER);
 
     posix_world_initialized = 1;
 
@@ -217,6 +238,17 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
 
         mpi_errno = MPIDI_POSIX_coll_finalize();
         MPIR_ERR_CHECK(mpi_errno);
+
+        struct shm_mutex_entry *p;
+        for (p = (struct shm_mutex_entry *) utarray_front(shm_mutex_free_list); p != NULL;
+             p = (struct shm_mutex_entry *) utarray_next(shm_mutex_free_list, p)) {
+            if (p->rank == 0) {
+                MPIDI_POSIX_RMA_MUTEX_DESTROY(p->shm_mutex_ptr);
+            }
+            mpi_errno = MPIDU_shm_free(p->shm_mutex_ptr);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        utarray_free(shm_mutex_free_list);
     }
 
     for (int vsi = 0; vsi < MPIDI_CH4_MAX_VCIS; vsi++) {
