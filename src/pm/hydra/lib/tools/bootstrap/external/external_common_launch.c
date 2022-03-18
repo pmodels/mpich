@@ -98,7 +98,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
                                          int *control_fd)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
-    int *pid, *fd_list, *dummy;
+    int *fd_list, *dummy;
     int sockpair[2];
     struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS] = { NULL }, *path = NULL, *extra_arg_list = NULL, *extra_arg;
@@ -173,17 +173,12 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
      * actual launcher */
     MPL_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
 
-    /* pid_list might already have some PIDs */
     num_hosts = 0;
     for (proxy = proxy_list; proxy; proxy = proxy->next)
         num_hosts++;
 
     /* Increase pid list to accommodate these new pids */
-    HYDU_MALLOC_OR_JUMP(pid, int *, (HYD_bscu_pid_count + num_hosts) * sizeof(int), status);
-    for (i = 0; i < HYD_bscu_pid_count; i++)
-        pid[i] = HYD_bscu_pid_list[i];
-    MPL_free(HYD_bscu_pid_list);
-    HYD_bscu_pid_list = pid;
+    HYDT_bscu_pid_list_grow(num_hosts);
 
     /* Increase fd list to accommodate these new fds */
     HYDU_MALLOC_OR_JUMP(fd_list, int *, (HYD_bscu_fd_count + (2 * num_hosts) + 1) * sizeof(int),
@@ -289,8 +284,9 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         /* The stdin pointer is a dummy value. We don't just pass it
          * NULL, as older versions of ssh seem to freak out when no
          * stdin socket is provided. */
-        status = HYDU_create_process(targs + offset, env, dummy, &fd_stdout, &fd_stderr,
-                                     &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
+        int pid;
+        status = HYDU_create_process(targs + offset, env, dummy, &fd_stdout, &fd_stderr, &pid, -1);
+        HYDT_bscu_pid_list_push(proxy, pid);
         HYDU_ERR_POP(status, "create process returned error\n");
 
         /* Reset the exec string to the original value */
