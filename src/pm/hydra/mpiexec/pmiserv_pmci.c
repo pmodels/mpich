@@ -8,6 +8,7 @@
 #include "pmci.h"
 #include "pmiserv_pmi.h"
 #include "bsci.h"
+#include "bscu.h"
 #include "pmiserv.h"
 #include "pmiserv_utils.h"
 
@@ -35,6 +36,25 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
 
         exit(1);
+    } else if (cmd.type == HYD_SIGCHLD) {
+        pid_t pid;
+        int ret;
+        while (1) {
+            pid = waitpid(-1, &ret, WNOHANG);
+            if (pid <= 0) {
+                break;
+            }
+            struct HYD_proxy_pid *p;
+            p = HYDT_bscu_pid_list_find(pid);
+            if (p) {
+                p->pid = -1;
+                if (p->proxy) {
+                    if (p->proxy->control_fd == HYD_FD_UNSET) {
+                        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Launch proxy failed.\n");
+                    }
+                }
+            }
+        }
     } else if (cmd.type == HYD_SIGNAL) {
         for (pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
             for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {

@@ -12,6 +12,7 @@
 struct HYD_cmd {
     enum {
         HYD_CLEANUP,
+        HYD_SIGCHLD,
         HYD_SIGNAL
     } type;
 
