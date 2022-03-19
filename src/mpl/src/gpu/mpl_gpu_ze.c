@@ -112,6 +112,8 @@ static int gpu_ze_init_driver(void)
         /* Check if the driver supports a gpu */
         for (d = 0; d < global_ze_device_count; ++d) {
             ze_device_properties_t device_properties;
+            device_properties.stype = ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES;
+            device_properties.pNext = NULL;
             ret = zeDeviceGetProperties(global_ze_devices_handle[d], &device_properties);
             ZE_ERR_CHECK(ret);
 
