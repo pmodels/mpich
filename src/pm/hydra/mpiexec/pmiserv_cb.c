@@ -10,6 +10,7 @@
 #include "debugger.h"
 #include "pmiserv.h"
 #include "pmiserv_utils.h"
+#include "pmiserv_common.h"
 #include "pmiserv_pmi.h"
 
 static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_version)
@@ -441,9 +442,18 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
     pgid = ((int) (size_t) userp);
 
     /* Read the proxy ID */
-    status = HYDU_sock_read(fd, &proxy_id, sizeof(int), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "sock read returned error\n");
-    HYDU_ASSERT(!closed, status);
+    struct HYD_pmcd_init_hdr init_hdr;
+    status =
+        HYDU_sock_read(fd, &init_hdr, sizeof(init_hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    if (status != HYD_SUCCESS || strcmp(init_hdr.signature, "HYD") != 0) {
+        /* Ignore random connections (e.g. port scanner) */
+        status = HYDT_dmx_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to register fd\n");
+
+        close(fd);
+        goto fn_exit;
+    }
+    proxy_id = init_hdr.proxy_id;
 
     /* Find the process group */
     for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
