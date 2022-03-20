@@ -196,58 +196,6 @@ AC_DEFINE(MPID_NEM_INLINE,1,[Define to turn on the inlining optimizations in Nem
 AC_DEFINE(PREFETCH_CELL,1,[Define to turn on the prefetching optimization in Nemesis code])     
 AC_DEFINE(USE_FASTBOX,1,[Define to use the fastboxes in Nemesis code])  
 
-# We may need this only for tcp and related netmodules
-# Check for h_addr or h_addr_list
-AC_CACHE_CHECK([whether struct hostent contains h_addr_list], pac_cv_have_haddr_list,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-        #include <netdb.h>
-        ]],[[
-        struct hostent hp;hp.h_addr_list[0]=0;
-        ]])], pac_cv_have_haddr_list=yes,pac_cv_have_haddr_list=no)
-])
-if test "$pac_cv_have_haddr_list" = "yes" ; then
-    AC_DEFINE(HAVE_H_ADDR_LIST,1,[Define if struct hostent contains h_addr_list])
-fi
-
-# If we need the socket code, see if we can use struct ifconf
-# sys/socket.h is needed on Solaris
-AC_CACHE_CHECK([whether we can use struct ifconf], pac_cv_have_struct_ifconf,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-        #include <sys/types.h>
-        #ifdef HAVE_SYS_SOCKET_H
-        #include <sys/socket.h>
-        #endif
-        #include <net/if.h>
-        ]],[[
-        struct ifconf conftest; int s; s = sizeof(conftest);
-        ]])], pac_cv_have_struct_ifconf=yes,pac_cv_have_struct_ifconf=no)
-])
-
-# Intentionally not testing whether _SVID_SOURCE or _POSIX_C_SOURCE affects
-# ifconf availability.  Making those sort of modifications at this stage
-# invalidates nearly all of our previous tests, since those macros fundamentally
-# change many features of the compiler on most platforms.  See ticket #1568.
-
-if test "$pac_cv_have_struct_ifconf" = "yes" ; then
-    AC_DEFINE(HAVE_STRUCT_IFCONF,1,[Define if struct ifconf can be used])
-fi
-
-AC_CACHE_CHECK([whether we can use struct ifreq], pac_cv_have_struct_ifreq,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-        #include <sys/types.h>
-        #ifdef HAVE_SYS_SOCKET_H
-        #include <sys/socket.h>
-        #endif
-        #include <net/if.h>
-        ]],[[
-        struct ifreq conftest; int s; s = sizeof(conftest);
-        ]])], pac_cv_have_struct_ifreq=yes,pac_cv_have_struct_ifreq=no)
-])
-
-if test "$pac_cv_have_struct_ifreq" = "yes" ; then
-    AC_DEFINE(HAVE_STRUCT_IFREQ,1,[Define if struct ifreq can be used])
-fi
-
 # allow the user to select different local LMT implementations
 AC_ARG_WITH(nemesis-local-lmt, [--with-nemesis-local-lmt=method - specify an implementation for local large message transfers (LMT).  Method is one of: 'default', 'shm_copy', or 'none'.  'default' is the same as 'shm_copy'.],,with_nemesis_local_lmt=default)
 case "$with_nemesis_local_lmt" in

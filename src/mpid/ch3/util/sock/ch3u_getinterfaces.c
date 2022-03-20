@@ -3,24 +3,7 @@
  *     See COPYRIGHT in top-level directory
  */
 
-/* We need to include the conf file first so that we can use
-   the _SVID_SOURCE if needed before any file includes features.h 
-   on GNU systems */
 #include "mpichconf.h"
-
-
-#ifdef USE_NOPOSIX_FOR_IFCONF
-/* This is a very special case.  Allow the use of some extensions for 
-   just the rest of this file so that we can get the ifconf structure */
-#undef _POSIX_C_SOURCE
-#endif
-
-#ifdef USE_SVIDSOURCE_FOR_IFCONF
-/* This is a very special case.  Allow the use of some extensions for just
-   the rest of this file so that we can get the ifconf structure */
-#define _SVID_SOURCE
-#endif
-
 #include "mpidi_ch3_impl.h"
 
 #include <stdlib.h>
