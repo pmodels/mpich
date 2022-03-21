@@ -367,4 +367,10 @@ hipError_t hipFree(void *dptr)
     result = sys_hipFree(dptr);
     return result;
 }
+
+int MPL_gpu_launch_hostfn(hipStream_t stream, MPL_gpu_hostfn fn, void *data)
+{
+    return -1;
+}
+
 #endif /* MPL_HAVE_HIP */
