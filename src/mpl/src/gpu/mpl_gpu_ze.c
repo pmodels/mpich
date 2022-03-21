@@ -367,4 +367,9 @@ int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
     return MPL_SUCCESS;
 }
 
+int MPL_gpu_launch_hostfn(int stream, MPL_gpu_hostfn fn, void *data)
+{
+    return -1;
+}
+
 #endif /* MPL_HAVE_ZE */

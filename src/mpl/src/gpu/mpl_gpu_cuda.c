@@ -409,3 +409,10 @@ cudaError_t CUDARTAPI cudaFree(void *dptr)
     result = sys_cudaFree(dptr);
     return result;
 }
+
+int MPL_gpu_launch_hostfn(cudaStream_t stream, MPL_gpu_hostfn fn, void *data)
+{
+    cudaError_t result;
+    result = cudaLaunchHostFunc(stream, fn, data);
+    return result;
+}
