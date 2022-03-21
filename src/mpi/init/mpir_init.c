@@ -224,6 +224,21 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* The current default mechanism of MPIR Process Acquisition Interface is to
+     * break on MPIR_Breakpoint in mpiexec.hydra. Adding a PMI call that need
+     * response from mpiexec will hold the MPI process to provide opportunity for
+     * debugger to attach. Currently, the only effective call is PMI_Barrier.
+     */
+    /* NOTE: potentially we already calls PMI barrier during device business
+     * card exchange. But there may be optimizations that make it not true.
+     * We are adding a separate PMI barrier call here to ensure the debugger
+     * mechanism. And it is also cleaner. If init latency is a concern, we may
+     * add a config option to skip it. But focus on optimize PMI Barrier may
+     * be a better effort.
+     */
+    mpi_errno = MPIR_pmi_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+
     bool need_init_builtin_comms = true;
 #ifdef ENABLE_LOCAL_SESSION_INIT
     need_init_builtin_comms = is_world_model;
