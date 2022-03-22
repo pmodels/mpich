@@ -43,8 +43,8 @@ This is an evaluation release of mpich provided by Intel Corporation.
   scaling. In order to enable these features and disable implicit scaling, the
   following must be performed:
 
-    unset EnableWalkerPartition
-    unset EnableImplicitScaling
+    export EnableWalkerPartition=0
+    export EnableImplicitScaling=0
     export MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD=1
 
 -------------------------------------------------------------------------------
