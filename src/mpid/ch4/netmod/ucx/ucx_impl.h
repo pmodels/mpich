@@ -120,7 +120,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_vci_to_vni(int vci)
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_vni(int flag, MPIR_Comm * comm_ptr,
                                                int src_rank, int dst_rank, int tag)
 {
-    return MPIDI_get_vci(flag, comm_ptr, src_rank, dst_rank, tag) % MPIDI_UCX_global.num_vnis;
+    int vni;
+    return MPIDI_get_vci(flag, comm_ptr, src_rank, dst_rank, tag);
+    MPIR_Assert(vni < MPIDI_UCX_global.num_vnis);
+    return vni;
 }
 
 /* for rma, we need ensure rkey is consistent with the per-vni ep,
