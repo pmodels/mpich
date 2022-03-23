@@ -11,12 +11,13 @@
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                              int rank, int tag, MPIR_Comm * comm,
-                                             int context_offset, MPIDI_av_entry_t * av,
+                                             int attr, MPIDI_av_entry_t * av,
                                              MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int need_unlock = 0;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     mpi_errno = MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -98,12 +99,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv(void *buf,
                                          int rank,
                                          int tag,
                                          MPIR_Comm * comm,
-                                         int context_offset, MPIDI_av_entry_t * av,
-                                         MPIR_Request ** req)
+                                         int attr, MPIDI_av_entry_t * av, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     *(req) = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, 0, 1);
@@ -214,10 +215,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
                                        int rank,
                                        int tag,
                                        MPIR_Comm * comm,
-                                       int context_offset, MPI_Status * status,
-                                       MPIR_Request ** request)
+                                       int attr, MPI_Status * status, MPIR_Request ** request)
 {
-    return MPID_Irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+    return MPID_Irecv(buf, count, datatype, rank, tag, comm, attr, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
@@ -225,12 +225,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
                                             MPI_Datatype datatype,
                                             int rank,
                                             int tag,
-                                            MPIR_Comm * comm, int context_offset,
-                                            MPIR_Request ** request)
+                                            MPIR_Comm * comm, int attr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
     MPIR_FUNC_ENTER;
+
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     MPIDI_CH4_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__PREQUEST_RECV, 0, 1);
@@ -303,18 +304,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
                                         MPI_Datatype datatype,
                                         int rank,
                                         int tag,
-                                        MPIR_Comm * comm, int context_offset,
-                                        MPIR_Request ** request)
+                                        MPIR_Comm * comm, int attr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     if (MPIDI_is_self_comm(comm)) {
-        mpi_errno =
-            MPIDI_Self_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+        mpi_errno = MPIDI_Self_irecv(buf, count, datatype, rank, tag, comm, attr, request);
     } else {
         MPIDI_av_entry_t *av = (rank == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, rank));
-        mpi_errno = MPIDI_irecv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
+        mpi_errno = MPIDI_irecv(buf, count, datatype, rank, tag, comm, attr, av, request);
     }
 
     MPIR_ERR_CHECK(mpi_errno);

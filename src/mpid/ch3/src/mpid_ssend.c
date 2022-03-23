@@ -8,7 +8,7 @@
 /*
  * MPID_Ssend()
  */
-int MPID_Ssend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
+int MPID_Ssend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int attr,
 	       MPIR_Request ** request)
 {
     intptr_t data_sz;
@@ -25,6 +25,7 @@ int MPID_Ssend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
 
     MPIR_FUNC_ENTER;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
               "rank=%d, tag=%d, context=%d", 
               rank, tag, comm->context_id + context_offset));

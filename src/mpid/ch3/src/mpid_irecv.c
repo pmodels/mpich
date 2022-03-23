@@ -6,7 +6,7 @@
 #include "mpidimpl.h"
 
 int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
-	       MPIR_Comm * comm, int context_offset,
+	       MPIR_Comm * comm, int attr,
                MPIR_Request ** request)
 {
     MPIR_Request * rreq = NULL;
@@ -15,6 +15,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 
     MPIR_FUNC_ENTER;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 			"rank=%d, tag=%d, context=%d", 
 			rank, tag, comm->recvcontext_id + context_offset));

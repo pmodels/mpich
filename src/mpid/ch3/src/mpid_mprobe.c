@@ -5,12 +5,13 @@
 
 #include "mpidimpl.h"
 
-int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
+int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int attr,
                 MPIR_Request **message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Progress_state progress_state;
     int found = FALSE;
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int context_id = comm->recvcontext_id + context_offset;
 
     *message = NULL;
