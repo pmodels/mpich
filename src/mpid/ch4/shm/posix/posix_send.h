@@ -24,11 +24,12 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint count,
                                                    MPI_Datatype datatype, int rank, int tag,
-                                                   MPIR_Comm * comm, int context_offset,
+                                                   MPIR_Comm * comm, int attr,
                                                    MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vsi_src, vsi_dst;
     MPIDI_POSIX_SEND_VSIS(vsi_src, vsi_dst);
 
@@ -42,13 +43,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_isend_coll(const void *buf, MPI_Aint count,
                                                     MPI_Datatype datatype, int rank, int tag,
-                                                    MPIR_Comm * comm, int context_offset,
+                                                    MPIR_Comm * comm, int attr,
                                                     MPIDI_av_entry_t * addr,
                                                     MPIR_Request ** request,
                                                     MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vsi_src, vsi_dst;
     MPIDI_POSIX_SEND_VSIS(vsi_src, vsi_dst);
 
@@ -62,12 +64,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_isend_coll(const void *buf, MPI_Aint co
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_issend(const void *buf, MPI_Aint count,
                                                     MPI_Datatype datatype, int rank, int tag,
-                                                    MPIR_Comm * comm, int context_offset,
+                                                    MPIR_Comm * comm, int attr,
                                                     MPIDI_av_entry_t * addr,
                                                     MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vsi_src, vsi_dst;
     MPIDI_POSIX_SEND_VSIS(vsi_src, vsi_dst);
 

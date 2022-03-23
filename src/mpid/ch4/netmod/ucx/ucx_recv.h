@@ -192,12 +192,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
-                                                MPIR_Comm * comm, int context_offset,
+                                                MPIR_Comm * comm, int attr,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request,
                                                 MPIR_Request * partner)
 {
     int mpi_errno;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vni_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag);
 
     MPIR_FUNC_ENTER;
