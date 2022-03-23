@@ -49,14 +49,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_irecv(void *buf,
                                                    MPI_Datatype datatype,
                                                    int rank,
                                                    int tag,
-                                                   MPIR_Comm * comm, int context_offset,
+                                                   MPIR_Comm * comm, int attr,
                                                    MPIR_Request ** request)
 {
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vsi = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vsi).lock);
     int mpi_errno = MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
                                      vsi, request, 1, NULL);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vsi).lock);
+
     MPIDI_POSIX_recv_posted_hook(*request, rank, comm);
     return mpi_errno;
 }

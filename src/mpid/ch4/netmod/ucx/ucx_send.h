@@ -106,15 +106,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, int rank, int tag,
-                                                 MPIR_Comm * comm, int context_offset,
+                                                 MPIR_Comm * comm, int attr,
                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request,
                                                  MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vni_src = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
     int vni_dst = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
 
     switch (*errflag) {
@@ -141,14 +144,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
-                                                MPIR_Comm * comm, int context_offset,
+                                                MPIR_Comm * comm, int attr,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIR_FUNC_ENTER;
+
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vni_src = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
     int vni_dst = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
-
-    MPIR_FUNC_ENTER;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
     mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
@@ -164,14 +168,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf,
                                                  MPI_Datatype datatype,
                                                  int rank,
                                                  int tag,
-                                                 MPIR_Comm * comm, int context_offset,
+                                                 MPIR_Comm * comm, int attr,
                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno;
-    int vni_src = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
-    int vni_dst = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
 
     MPIR_FUNC_ENTER;
+
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
+    int vni_src = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
+    int vni_dst = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
     mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
