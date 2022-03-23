@@ -12,12 +12,12 @@
 int MPIDI_Self_init(void);
 int MPIDI_Self_finalize(void);
 int MPIDI_Self_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
-                     MPIR_Comm * comm, int context_offset, MPIR_Request ** request);
+                     MPIR_Comm * comm, int attr, MPIR_Request ** request);
 int MPIDI_Self_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
-                     MPIR_Comm * comm, int context_offset, MPIR_Request ** request);
-int MPIDI_Self_iprobe(int rank, int tag, MPIR_Comm * comm, int context_offset,
+                     MPIR_Comm * comm, int attr, MPIR_Request ** request);
+int MPIDI_Self_iprobe(int rank, int tag, MPIR_Comm * comm, int attr,
                       int *flag, MPI_Status * status);
-int MPIDI_Self_improbe(int rank, int tag, MPIR_Comm * comm, int context_offset,
+int MPIDI_Self_improbe(int rank, int tag, MPIR_Comm * comm, int attr,
                        int *flag, MPIR_Request ** message, MPI_Status * status);
 int MPIDI_Self_imrecv(char *buf, MPI_Aint count, MPI_Datatype datatype,
                       MPIR_Request * message, MPIR_Request ** request);
