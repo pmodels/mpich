@@ -8,4 +8,5 @@ include $(top_srcdir)/Makefile_cuda.mtest
 LDADD += -lm
 
 noinst_PROGRAMS = \
-    saxpy
+    saxpy \
+    stream
