@@ -305,12 +305,20 @@ int MPIDI_POSIX_mpi_win_free_hook(MPIR_Win * win)
         /* all outstanding RMAs should complete before free. */
         MPIR_Assert(!posix_win->outstanding_reqs_head && !posix_win->outstanding_reqs_tail);
 
+#ifdef DELAY_SHM_MUTEX_DESTROY
+        /* On FreeBSD (tested on ver 12.2) destroying a mutex and create a new one may result
+         * in the same address and the new mutex will not work for inter-process. To work
+         * around, we delay the destroying of inter-process mutex until finalize.
+         */
+        MPIDI_POSIX_delay_shm_mutex_destroy(win->comm_ptr->rank, posix_win->shm_mutex_ptr);
+#else
         /* destroy and detach shared mutex */
         if (win->comm_ptr->rank == 0)
             MPIDI_POSIX_RMA_MUTEX_DESTROY(posix_win->shm_mutex_ptr);
 
         mpi_errno = MPIDU_shm_free(posix_win->shm_mutex_ptr);
         MPIR_ERR_CHECK(mpi_errno);
+#endif
     }
 
   fn_exit:
