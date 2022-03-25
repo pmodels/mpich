@@ -11,3 +11,20 @@ MPIX_Stream_comm_create:
     comm: COMMUNICATOR, [communicator]
     stream: STREAM, [stream object]
     newcomm: COMMUNICATOR, direction=out, [new stream-associated communicator]
+
+MPIX_Send_enqueue:
+    buf: BUFFER, constant=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+
+MPIX_Recv_enqueue:
+    buf: BUFFER, direction=out, [initial address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    datatype: DATATYPE, [datatype of each receive buffer element]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    status: STATUS, direction=out

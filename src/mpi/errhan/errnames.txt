@@ -957,6 +957,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **cannotfreestream:The stream is still in use, cannot be freed.
 **missinggpustream:Info hint 'type' is set, but info hint 'value' is missing.
 **invalidgpustream:Info hint 'type' is set, but info hint 'value' is invalid.
+**notgpustream:The communicator does not have a local gpu stream attached.
 
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
