@@ -590,6 +590,8 @@ def process_func_parameters(func):
                 p['can_be_null'] = "MPI_INFO_NULL"
             elif kind == "REQUEST" and RE.match(r'mpi_(wait|test|request_get_status|parrived)', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_REQUEST_NULL"
+            elif kind == "STREAM" and RE.match(r'mpix?_stream_comm_create', func_name, re.IGNORECASE):
+                p['can_be_null'] = "MPIX_STREAM_NULL"
         elif kind == "RANK" and name == "root":
             validation_list.insert(0, {'kind': "ROOT", 'name': name})
         elif RE.match(r'(COUNT|TAG)$', kind):
@@ -1574,7 +1576,7 @@ def get_fn_fail_create_code(func):
     mapping = get_kind_map('C', func['_is_large'])
 
     (fmts, args, err_fmts) = ([], [], [])
-    fmt_codes = {'RANK': "i", 'TAG': "t", 'COMMUNICATOR': "C", 'ASSERT': "A", 'DATATYPE': "D", 'ERRHANDLER': "E", 'FILE': "F", 'GROUP': "G", 'INFO': "I", 'OPERATION': "O", 'REQUEST': "R", 'WINDOW': "W", 'SESSION': "S", 'KEYVAL': "K", "GREQUEST_CLASS": "x"}
+    fmt_codes = {'RANK': "i", 'TAG': "t", 'COMMUNICATOR': "C", 'ASSERT': "A", 'DATATYPE': "D", 'ERRHANDLER': "E", 'FILE': "F", 'GROUP': "G", 'INFO': "I", 'OPERATION': "O", 'REQUEST': "R", 'WINDOW': "W", 'SESSION': "S", 'KEYVAL': "K", "GREQUEST_CLASS": "x", "STREAM": "x"}
     for p in func['c_parameters']:
         kind = p['kind']
         name = p['name']
