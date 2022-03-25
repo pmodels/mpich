@@ -6,3 +6,8 @@ MPIX_Stream_create:
 
 MPIX_Stream_free:
     stream: STREAM, direction=inout, [stream object]
+
+MPIX_Stream_comm_create:
+    comm: COMMUNICATOR, [communicator]
+    stream: STREAM, [stream object]
+    newcomm: COMMUNICATOR, direction=out, [new stream-associated communicator]
