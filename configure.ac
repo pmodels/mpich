@@ -1500,10 +1500,12 @@ AC_ARG_WITH(pm,
 
 case "$with_pmi" in
   slurm)
+    with_pmi=pmi2
     with_pmilib=slurm
     with_pm=no
     ;;
   cray)
+    with_pmi=pmi1
     with_pmilib=cray
     with_pm=no
     ;;
@@ -1528,6 +1530,9 @@ esac
 
 case "$with_pmilib" in
   slurm)
+    if test "$with_pmi" = "pmi2" ; then
+        AC_DEFINE([USE_PMI2_SLURM], 1, [Define if using Slurm])
+    fi
     with_pm=no
     ;;
   cray)
