@@ -1,0 +1,8 @@
+# vim: set ft=c:
+
+MPIX_Stream_create:
+    info: INFO, [info argument]
+    stream: STREAM, direction=out, [stream object created]
+
+MPIX_Stream_free:
+    stream: STREAM, direction=inout, [stream object]

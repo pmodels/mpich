@@ -163,7 +163,8 @@ const char *MPIR_Handle_get_kind_str(int kind)
             mpiu_name_case_(REQUEST);
             mpiu_name_case_(VCONN);
             mpiu_name_case_(GREQ_CLASS);
-            mpiu_name_case_(INTERNAL);
+            mpiu_name_case_(SESSION);
+            mpiu_name_case_(STREAM);
         default:
             return "unknown";
     }

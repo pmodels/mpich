@@ -38,6 +38,7 @@ integer,parameter :: c_Errhandler = c_int
 integer,parameter :: c_Request    = c_int
 integer,parameter :: c_Message    = c_int
 integer,parameter :: c_Session    = c_int
+integer,parameter :: c_Stream     = c_int
 integer,parameter :: c_File       = c_intptr_t
 
 !================================================

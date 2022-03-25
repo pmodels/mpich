@@ -1538,7 +1538,7 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
         elif p['kind'] == 'STATUS':
             p['_array_convert'] = "STATUS"
             return "TYPE(c_Status), TARGET :: %s_c(%s)" % (p['name'], length)
-        elif RE.match(r'(REQUEST|DATATYPE|INFO)', p['kind']):
+        elif RE.match(r'(REQUEST|DATATYPE|INFO|STREAM)', p['kind']):
             t = RE.m.group(1)
             c_type = "c_" + t[0].upper() + t[1:].lower()
             p['_array_convert'] = "MPI_VAL"

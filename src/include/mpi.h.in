@@ -94,6 +94,7 @@ extern "C" {
 #define MPI_ERRHANDLER_NULL ((MPI_Errhandler)0x14000000)
 #define MPI_MESSAGE_NULL   ((MPI_Message)0x2c000000)
 #define MPI_MESSAGE_NO_PROC ((MPI_Message)0x6c000000)
+#define MPIX_STREAM_NULL   ((MPIX_Stream)0x3c000000)
 
 /* Results of the compare operations. */
 #define MPI_IDENT     0
@@ -455,6 +456,9 @@ typedef int MPI_Message;
 
 /* Generalized requests extensions */
 typedef int MPIX_Grequest_class;
+
+/* MPI stream objects */
+typedef int MPIX_Stream;
 
 /* MPI Attribute copy and delete functions */
 typedef int (MPI_Copy_function) ( MPI_Comm, int, void *, void *, void *, int * );
@@ -933,8 +937,9 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPIX_ERR_REVOKED              MPICH_ERR_FIRST_MPIX+3 /* The communication object has been revoked */
 #define MPIX_ERR_EAGAIN               MPICH_ERR_FIRST_MPIX+4 /* Operation could not be issued */
 #define MPIX_ERR_NOREQ                MPICH_ERR_FIRST_MPIX+5 /* Cannot allocate request */
+#define MPIX_ERR_STREAM               MPICH_ERR_FIRST_MPIX+6 /* Invalid stream */
 
-#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+5
+#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+6
 
 
 /* End of MPI's error classes */
