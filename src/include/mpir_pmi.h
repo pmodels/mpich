@@ -14,8 +14,11 @@
 
 #ifdef USE_PMI1_API
 #include <pmi.h>
+
 #elif defined(USE_PMI2_API)
 #include <pmi2.h>
+#define PMI_keyval_t PMI2_keyval_t
+
 #elif defined(USE_PMIX_API)
 #include <pmix.h>
 #endif
@@ -37,6 +40,7 @@ typedef struct MPIR_PMI_KEYVAL {
 int MPIR_pmi_init(void);
 void MPIR_pmi_finalize(void);
 void MPIR_pmi_abort(int exit_code, const char *error_msg);
+int MPIR_pmi_set_threaded(int is_threaded);
 
 /* PMI getters for private fields */
 int MPIR_pmi_max_key_size(void);

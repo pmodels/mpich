@@ -217,6 +217,17 @@ void MPIR_pmi_abort(int exit_code, const char *error_msg)
 #endif
 }
 
+/* This function is currently unused in MPICH because we always call
+ * PMI functions from a single thread or within a critical section.
+ */
+int MPIR_pmi_set_threaded(int is_threaded)
+{
+#if defined(USE_PMI2_API)
+    PMI2_Set_threaded(is_threaded);
+#endif
+    return MPI_SUCCESS;
+}
+
 /* getters for internal constants */
 int MPIR_pmi_max_key_size(void)
 {
@@ -852,7 +863,7 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
 
-#ifdef USE_PMI1_API
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
     int *info_keyval_sizes = NULL;
     PMI_keyval_t **info_keyval_vectors = NULL;
 
@@ -875,7 +886,9 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
+#endif
 
+#ifdef USE_PMI1_API
     pmi_errno = PMI_Spawn_multiple(count, (const char **) commands, (const char ***) argvs,
                                    maxprocs,
                                    info_keyval_sizes,
@@ -886,12 +899,8 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
 #elif defined(USE_PMI2_API)
-    struct MPIR_Info preput;
-    struct MPIR_Info *preput_p[1] = { &preput };
     int *argcs = MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
-    int *info_keyval_sizes = MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
     MPIR_Assert(argcs);
-    MPIR_Assert(info_keyval_sizes);
 
     /* compute argcs array */
     for (int i = 0; i < count; ++i) {
@@ -903,45 +912,23 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
         }
     }
 
-    /* FIXME cheating on constness */
-    preput.key = (char *) preput_keyvals->key;
-    preput.value = preput_keyvals->val;
-    preput.next = NULL;
-
-    /* determine info sizes */
-    if (!info_ptrs) {
-        for (int i = 0; i < count; i++) {
-            info_keyval_sizes[i] = 0;
-        }
-    } else {
-        for (int i = 0; i < count; i++) {
-            if (info_ptrs[i] != NULL) {
-                MPIR_Info_get_nkeys_impl(info_ptrs[i], &info_keyval_sizes[i]);
-                info_ptrs[i] = info_ptrs[i]->next;      /* skip empty MPIR_Info struct */
-            } else {
-                info_keyval_sizes[i] = 0;
-            }
-        }
-    }
-
     pmi_errno = PMI2_Job_Spawn(count, (const char **) commands,
                                argcs, (const char ***) argvs,
                                maxprocs,
-                               info_keyval_sizes, (const MPIR_Info **) info_ptrs,
-                               1, (const struct MPIR_Info **) preput_p, NULL, 0, pmi_errcodes);
+                               info_keyval_sizes,
+                               (const PMI_keyval_t **) info_keyval_vectors,
+                               num_preput_keyval, (const PMI_keyval_t *) preput_keyvals,
+                               NULL, 0, pmi_errcodes);
     MPL_free(argcs);
-    MPL_free(info_keyval_sizes);
-    if (pmi_errno != PMI2_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
-                             "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
-    }
+    MPIR_ERR_CHKANDJUMP1(mpi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
 #elif defined(USE_PMIX_API)
     /* not supported yet */
     MPIR_Assert(0);
 #endif
 
   fn_exit:
-#ifdef USE_PMI1_API
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
     if (info_keyval_vectors) {
         free_pmi_keyvals(info_keyval_vectors, count, info_keyval_sizes);
         MPL_free(info_keyval_vectors);
