@@ -25,6 +25,10 @@ void MPIR_stream_comm_init(MPIR_Comm * comm)
 void MPIR_stream_comm_free(MPIR_Comm * comm)
 {
     if (comm->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
+        if (comm->stream_comm.single.stream) {
+            int cnt;
+            MPIR_Object_release_ref_always(comm->stream_comm.single.stream, &cnt);
+        }
         MPL_free(comm->stream_comm.single.vci_table);
     } else if (comm->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
         MPL_free(comm->stream_comm.multiplex.local_streams);
@@ -88,6 +92,42 @@ int MPIR_Stream_free_impl(MPIR_Stream * stream_ptr)
         mpi_errno = MPID_Deallocate_vci(stream_ptr->vci);
     }
     MPIR_Handle_obj_free(&MPIR_Stream_mem, stream_ptr);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Stream_comm_create_impl(MPIR_Comm * comm_ptr, MPIR_Stream * stream_ptr,
+                                 MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    int vci, *vci_table;
+    if (stream_ptr) {
+        vci = stream_ptr->vci;
+    } else {
+        vci = 0;
+    }
+    vci_table = MPL_malloc(comm_ptr->local_size * sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!vci_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    MPIR_Errflag_t errflag;
+    errflag = MPIR_ERR_NONE;
+    mpi_errno = MPIR_Allgather_impl(&vci, 1, MPI_INT, vci_table, 1, MPI_INT, comm_ptr, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    (*newcomm_ptr)->stream_comm_type = MPIR_STREAM_COMM_SINGLE;
+    (*newcomm_ptr)->stream_comm.single.stream = stream_ptr;
+    (*newcomm_ptr)->stream_comm.single.vci_table = vci_table;
+
+    if (stream_ptr) {
+        MPIR_Object_add_ref_always(stream_ptr);
+    }
 
   fn_exit:
     return mpi_errno;
