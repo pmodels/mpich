@@ -4,14 +4,7 @@
  */
 
 #include "mpidi_ch3_impl.h"
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
-#include "pmi.h"
-#endif
-
 #include "mpidu_sock.h"
-
 #include "ch3usock.h"
 
 /* Private packet types used only within this file */
@@ -150,29 +143,14 @@ int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Connection_t * conn = NULL;
-    int id_sz;
-    int pmi_errno;
     MPIR_CHKPMEM_DECL(2);
 
     MPIR_FUNC_ENTER;
 
     MPIR_CHKPMEM_MALLOC(conn,MPIDI_CH3I_Connection_t*,
 			sizeof(MPIDI_CH3I_Connection_t),mpi_errno,"conn", MPL_MEM_DYNAMIC);
+    conn->pg_id = NULL;
 
-    /* FIXME: This size is unchanging, so get it only once (at most); 
-       we might prefer for connections to simply point at the single process
-       group to which the remote process belong */
-#ifdef USE_PMI2_API
-    id_sz = MPIDI_MAX_JOBID_LEN;
-#else
-    pmi_errno = PMI_KVS_Get_name_length_max(&id_sz);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno,MPI_ERR_OTHER, 
-			     "**pmi_get_id_length_max",
-			     "**pmi_get_id_length_max %d", pmi_errno);
-#endif
-    MPIR_CHKPMEM_MALLOC(conn->pg_id,char*,id_sz + 1,mpi_errno,"conn->pg_id", MPL_MEM_DYNAMIC);
-    conn->pg_id[0] = 0;           /* Be careful about pg_id in case a later 
-				     error */
     *connp = conn;
 
   fn_exit:
@@ -667,6 +645,8 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
 	MPIR_Assert( conn->state == CONN_STATE_OPEN_LRECV_PKT);
 	MPL_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_OPEN_LRECV_DATA);
 	conn->state = CONN_STATE_OPEN_LRECV_DATA;
+        conn->pg_id = MPL_malloc(openpkt->pg_id_len, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(conn->pg_id == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
 	mpi_errno = MPIDI_CH3I_Sock_post_read(conn->sock, conn->pg_id,
 					 openpkt->pg_id_len, 
 					 openpkt->pg_id_len, NULL);   

@@ -31,7 +31,6 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include <string.h>
 #include <libcr.h>
 #include <stdio.h>
-#include "pmi.h"
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -210,50 +209,25 @@ int MPIDI_nem_ckpt_finalize(void)
 static int reinit_pmi(void)
 {
     int ret;
-    int has_parent = 0;
-    int pg_rank, pg_size;
-    int kvs_name_sz, pg_id_sz;
     
-
     MPIR_FUNC_ENTER;
 
     /* Init pmi and do some sanity checks */
-    ret = PMI_Init(&has_parent);
+    ret = MPIR_pmi_init();
     CHECK_ERR(ret, "pmi_init");
 
-    ret = PMI_Get_rank(&pg_rank);
-    CHECK_ERR(ret, "pmi_get_rank");
-
-    ret = PMI_Get_size(&pg_size);
-    CHECK_ERR(ret, "pmi_get_size");
-
-    CHECK_ERR(pg_size != MPIDI_Process.my_pg->size, "pg size differs after restart");
-    CHECK_ERR(pg_rank != MPIDI_Process.my_pg_rank, "pg rank differs after restart");
+    CHECK_ERR(MPIR_Process.size != MPIDI_Process.my_pg->size, "pg size differs after restart");
+    CHECK_ERR(MPIR_Process.rank != MPIDI_Process.my_pg_rank, "pg rank differs after restart");
 
     /* get new pg_id */
     ret = PMI_KVS_Get_name_length_max(&pg_id_sz);
     CHECK_ERR(ret, "pmi_get_id_length_max");
     
     MPL_free(MPIDI_Process.my_pg->id);
-   
-    MPIDI_Process.my_pg->id = MPL_malloc(pg_id_sz + 1, MPL_MEM_ADDRESS);
-    CHECK_ERR(MPIDI_Process.my_pg->id == NULL, "malloc failed");
+    MPIDI_Process.my_pg->id = MPL_strdup(MPIR_pmi_job_id());
 
-    ret = PMI_KVS_Get_my_name(MPIDI_Process.my_pg->id, pg_id_sz);
-    CHECK_ERR(ret, "pmi_kvs_get_my_name");
-
-    /* get new kvsname */
-    ret = PMI_KVS_Get_name_length_max(&kvs_name_sz);
-    CHECK_ERR(ret, "PMI_KVS_Get_name_length_max");
-    
     MPL_free(MPIDI_Process.my_pg->connData);
-   
-    MPIDI_Process.my_pg->connData = MPL_malloc(kvs_name_sz + 1, MPL_MEM_ADDRESS);
-    CHECK_ERR(MPIDI_Process.my_pg->connData == NULL, "malloc failed");
-
-    ret = PMI_KVS_Get_my_name(MPIDI_Process.my_pg->connData, kvs_name_sz);
-    CHECK_ERR(ret, "PMI_Get_my_name");
-
+    MPIDI_Process.my_pg->connData = MPL_strdup(MPIR_pmi_job_id());
     
     MPIR_FUNC_EXIT;
     return 0;
