@@ -7,7 +7,9 @@
 
 #include "tcp_impl.h"
 #include "socksm.h"
-#ifdef USE_PMI2_API
+#ifdef USE_PMI2_SLURM
+#include "slurm/pmi2.h"
+#elif defined(USE_PMI2_API)
 #include "pmi2.h"
 #else
 #include "pmi.h"

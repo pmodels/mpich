@@ -1530,9 +1530,6 @@ esac
 
 case "$with_pmilib" in
   slurm)
-    if test "$with_pmi" = "pmi2" ; then
-        AC_DEFINE([USE_PMI2_SLURM], 1, [Define if using Slurm])
-    fi
     with_pm=no
     ;;
   cray)
@@ -1701,12 +1698,21 @@ case "$with_pmilib" in
     ;;
   slurm)
     PAC_SET_HEADER_LIB_PATH([slurm])
-    AC_CHECK_HEADER([slurm/pmi.h], [], [AC_MSG_ERROR([could not find slurm/pmi.h.  Configure aborted])])
-    # FIXME: what if user choose pmi2?
-    AC_CHECK_LIB([pmi], [PMI_Init],
-                [PAC_PREPEND_FLAG([-lpmi],[LIBS])
-                PAC_PREPEND_FLAG([-lpmi], [WRAPPER_LIBS])],
-                [AC_MSG_ERROR([could not find the Slurm libpmi.  Configure aborted])])
+    if test "$with_pmi" = "pmi1" ; then
+        AC_CHECK_HEADER([slurm/pmi.h], [], [AC_MSG_ERROR([could not find slurm/pmi.h.  Configure aborted])])
+        AC_CHECK_LIB([pmi], [PMI_Init],
+                    [PAC_PREPEND_FLAG([-lpmi],[LIBS])
+                     PAC_PREPEND_FLAG([-lpmi], [WRAPPER_LIBS])],
+                    [AC_MSG_ERROR([could not find the Slurm libpmi.  Configure aborted])])
+        AC_DEFINE([USE_PMI1_SLURM], 1, [Define if using Slurm PMI 1])
+    elif test "$with_pmi" = "pmi2" ; then
+        AC_CHECK_HEADER([slurm/pmi2.h], [], [AC_MSG_ERROR([could not find slurm/pmi2.h.  Configure aborted])])
+        AC_CHECK_LIB([pmi2], [PMI2_Init],
+                    [PAC_PREPEND_FLAG([-lpmi2],[LIBS])
+                     PAC_PREPEND_FLAG([-lpmi2], [WRAPPER_LIBS])],
+                    [AC_MSG_ERROR([could not find the Slurm libpmi2.  Configure aborted])])
+        AC_DEFINE([USE_PMI2_SLURM], 1, [Define if using Slurm PMI 2])
+    fi
     ;;
   cray)  
     # set CPPFLAGS and LDFLAGS
