@@ -1470,7 +1470,7 @@ fi
 
 AC_ARG_WITH(pmi,
 	AS_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
-	with_pmi=default)
+	with_pmi=pmi1)
 
 AC_ARG_WITH(pmilib,
 	AS_HELP_STRING([--with-pmilib=name],
@@ -1483,7 +1483,7 @@ AC_ARG_WITH(pmilib,
                    pmix  - use PMIx library. Use --with-pmix=path to configure
                            PMIx library path.
                 ]),,
-	with_pmilib=default)
+	with_pmilib=mpich)
 
 AC_ARG_WITH(pm,
 	AS_HELP_STRING([--with-pm=name],
@@ -1500,7 +1500,7 @@ AC_ARG_WITH(pm,
 
 case "$with_pmi" in
   slurm)
-    with_pmi=pmi2
+    with_pmi=pmi1
     with_pmilib=slurm
     with_pm=no
     ;;
@@ -1548,25 +1548,6 @@ if test "$pac_have_pmix" = "yes" ; then
     with_pm=no
 fi
 
-if test "$with_pmi" = "default" ; then
-    case "$with_pmilib" in
-      slurm|cray)
-        with_pmi=pmi2
-        ;;
-      *)
-        with_pmi=pmi1
-        ;;
-    esac
-fi
-
-if test "$with_pmilib" = "default" ; then
-    with_pmilib=mpich
-fi
-
-if test "$with_pm" = "default" ; then
-    with_pm=hydra
-fi
-
 # --- $with_pmi ----
 
 case "$with_pmi" in
@@ -1594,12 +1575,6 @@ if test "$MPID_NO_PM" = yes ; then
     # This is used to change with_pm=default to with_pm=no in the case
     # where the device does not want a PM
     with_pm=no
-fi
-if test -z "$with_pm" ; then
-    with_pm="no"
-fi
-if test "$with_pmi" = "uni" -a "$with_pm" = "default" ; then
-    with_pm="no"
 fi
 if test "$with_pm" = "default" -o "$with_pm" = "yes" ; then
    if test ! -z "$MPID_DEFAULT_PM" ; then
@@ -1682,7 +1657,7 @@ AC_SUBST([pmilib])
 case "$with_pmilib" in
   mpich|install)
     if test "$with_pmi" != "pmi1" -a "$with_pmi" != "pmi2" ; then
-        AC_MSG_ERROR([pmilib=%with_pmilib is incompatible with $with_pmi]);
+        AC_MSG_ERROR([pmilib=$with_pmilib is incompatible with $with_pmi]);
     fi
     pmisrcdir="src/pmi"
     pmilib="src/pmi/libpmi.la"
