@@ -477,7 +477,7 @@ AC_SUBST(comm_overlap)
 # The multi-thread tests can be disabled by --disable-threads
 threadsdir="threads"
 if test "$enable_threads" = "no"; then
-    threadsdir="#threads"
+    threadsdir=""
 fi
 #
 # Only run the checkpointing tests if enabled
@@ -658,6 +658,9 @@ PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSy
 cuda_CPPFLAGS=""
 cuda_LDFLAGS=""
 cuda_LIBS=""
+cudadir=
+AC_SUBST(cudadir)
+AC_ARG_VAR([NVCC], [nvcc compiler to use])
 if test "X${pac_have_cuda}" = "Xyes" ; then
     AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
     have_gpu="yes"
@@ -668,8 +671,13 @@ if test "X${pac_have_cuda}" = "Xyes" ; then
         else
             cuda_LDFLAGS="-L${with_cuda}/lib"
         fi
+        AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found], [$with_cuda/bin:$PATH])
+    else
+        AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found])
     fi
     cuda_LIBS="-lcudart"
+
+    cudadir="cuda"
 fi
 AM_CONDITIONAL([HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
 AC_SUBST([cuda_CPPFLAGS])
@@ -1661,6 +1669,7 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/comm/testlist \
           impls/mpich/threads/Makefile \
           impls/mpich/threads/pt2pt/Makefile \
+          impls/mpich/cuda/Makefile \
           impls/mpich/misc/Makefile \
           )
 
