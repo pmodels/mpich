@@ -2428,12 +2428,21 @@ if test "$enable_cxx" = "yes" ; then
     # so that it may be used in #if statements without adding to
     # the CPP name space
     AC_SUBST(FORTRAN_BINDING)
+fi
 
+# we install mpicxx as long as CXX is defined. In the case of enable_cxx=no,
+# it is essentially the same as mpicc with CXX compiler.
+if test -n "$CXX" ; then
     # determine shared library flags for CXX
     cxx_shlib_conf=src/env/cxx_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([CXX],[$cxx_shlib_conf])
     AC_SUBST_FILE([cxx_shlib_conf])
+
+    if test "$enable_cxx" != yes; then
+        MPICXXLIBNAME="$MPILIBNAME"
+    fi
 fi
+AM_CONDITIONAL([INSTALL_MPICXX],[test -n "$CXX"])
 
 if test "$enable_cxx" = yes; then
     # Check if $MPI_DEFAULT_CXXOPTS is valid with $CXX
