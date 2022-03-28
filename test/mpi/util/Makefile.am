@@ -24,6 +24,9 @@ if HAS_CXX
 ## to emit a rule for building mtest_cxx.o from mtest_cxx.cxx
 noinst_LTLIBRARIES += libmtest_cxx.la
 libmtest_cxx_la_SOURCES = mtest_cxx.cxx mtest_common.c
+libmtest_cxx_la_LIBADD = @cuda_LIBS@ @ze_LIBS@ @hip_LIBS@
+libmtest_cxx_la_LDFLAGS = @cuda_LDFLAGS@ @ze_LDFLAGS@ @hip_LDFLAGS@
+libmtest_cxx_la_CPPFLAGS = $(AM_CPPFLAGS) @cuda_CPPFLAGS@ @ze_CPPFLAGS@ @hip_CPPFLAGS@
 
 endif
 
