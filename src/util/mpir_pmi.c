@@ -889,6 +889,11 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
 #endif
 
 #ifdef USE_PMI1_API
+#ifdef NO_PMI_SPAWN_MULTIPLE
+    /* legacy bgq system does not have PMI_Spawn_multiple */
+    MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", 0);
+#else
     pmi_errno = PMI_Spawn_multiple(count, (const char **) commands, (const char ***) argvs,
                                    maxprocs,
                                    info_keyval_sizes,
@@ -898,6 +903,7 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
 
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
+#endif
 #elif defined(USE_PMI2_API)
     int *argcs = MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
     MPIR_Assert(argcs);
