@@ -52,15 +52,14 @@ static int PMI2_fd = -1;
 static int PMI2_size = 1;
 static int PMI2_rank = 0;
 
+static int PMI2_is_threaded = 0;        /* Set this to true to require thread safety */
 static int PMI2_debug_init = 0; /* Set this to true to debug the init */
 
 int PMI2_pmiverbose = 0;        /* Set this to true to print PMI debugging info */
 
-#ifdef MPICH_IS_THREADED
 static MPL_thread_mutex_t mutex;
 static int blocked = FALSE;
 static MPL_thread_cond_t cond;
-#endif
 
 /* XXX DJG the "const"s on both of these functions and the Keyvalpair
  * struct are wrong in the isCopy==TRUE case! */
@@ -190,6 +189,13 @@ static inline int SEARCH_REMOVE(PMI2_Command * cmd)
 /* ------------------------------------------------------------------------- */
 /* PMI API Routines */
 /* ------------------------------------------------------------------------- */
+int PMI2_Set_threaded(int is_threaded)
+{
+    PMI2_is_threaded = is_threaded;
+
+    return PMI2_SUCCESS;
+}
+
 int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 {
     int pmi2_errno = PMI2_SUCCESS;
@@ -268,7 +274,6 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
         PMI2_Keyvalpair pairs[3];
         PMI2_Keyvalpair *pairs_p[] = { pairs, pairs + 1, pairs + 2 };
         int npairs = 0;
-        int isThreaded = 0;
         const char *errmsg;
         int rc;
         int found;
@@ -297,14 +302,7 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
             }
         }
 
-#ifdef MPICH_IS_THREADED
-        MPIR_THREAD_CHECK_BEGIN;
-        {
-            isThreaded = 1;
-        }
-        MPIR_THREAD_CHECK_END;
-#endif
-        init_kv_str(&pairs[npairs], THREADED_KEY, isThreaded ? "TRUE" : "FALSE");
+        init_kv_str(&pairs[npairs], THREADED_KEY, PMI2_is_threaded ? "TRUE" : "FALSE");
         ++npairs;
 
 
@@ -421,9 +419,9 @@ int PMI2_Job_Spawn(int count, const char *cmds[],
                    int argcs[], const char **argvs[],
                    const int maxprocs[],
                    const int info_keyval_sizes[],
-                   const struct MPIR_Info *info_keyval_vectors[],
+                   const PMI2_keyval_t * info_keyval_vectors[],
                    int preput_keyval_size,
-                   const struct MPIR_Info *preput_keyval_vector[],
+                   const PMI2_keyval_t preput_keyval_vector[],
                    char jobId[], int jobIdSize, int errors[])
 {
     int i, rc, spawncnt, total_num_processes, num_errcodes_found;
@@ -486,8 +484,8 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
 
     init_kv_strdup_int(pairs_p[npairs++], "preputcount", preput_keyval_size);
     for (i = 0; i < preput_keyval_size; ++i) {
-        init_kv_strdup_intsuffix(pairs_p[npairs++], "ppkey", i, preput_keyval_vector[i]->key);
-        init_kv_strdup_intsuffix(pairs_p[npairs++], "ppval", i, preput_keyval_vector[i]->value);
+        init_kv_strdup_intsuffix(pairs_p[npairs++], "ppkey", i, preput_keyval_vector[i].key);
+        init_kv_strdup_intsuffix(pairs_p[npairs++], "ppval", i, preput_keyval_vector[i].val);
     }
 
     for (spawncnt = 0; spawncnt < count; ++spawncnt) {
@@ -507,7 +505,7 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
                 init_kv_strdup_intsuffix(pairs_p[npairs++], "infokey", i,
                                          info_keyval_vectors[spawncnt][i].key);
                 init_kv_strdup_intsuffix(pairs_p[npairs++], "infoval", i,
-                                         info_keyval_vectors[spawncnt][i].value);
+                                         info_keyval_vectors[spawncnt][i].val);
             }
         }
     }
@@ -983,7 +981,8 @@ int PMI2_Info_GetJobAttrIntArray(const char name[], int array[], int arraylen, i
     goto fn_exit;
 }
 
-int PMI2_Nameserv_publish(const char service_name[], const PMI2U_Info * info_ptr, const char port[])
+int PMI2_Nameserv_publish(const char service_name[], const PMI2_keyval_t * info_ptr,
+                          const char port[])
 {
     int pmi2_errno = PMI2_SUCCESS;
     PMI2_Command cmd = { 0 };
@@ -1012,7 +1011,7 @@ int PMI2_Nameserv_publish(const char service_name[], const PMI2U_Info * info_ptr
 }
 
 
-int PMI2_Nameserv_lookup(const char service_name[], const PMI2U_Info * info_ptr,
+int PMI2_Nameserv_lookup(const char service_name[], const PMI2_keyval_t * info_ptr,
                          char port[], int portLen)
 {
     int pmi2_errno = PMI2_SUCCESS;
@@ -1047,7 +1046,7 @@ int PMI2_Nameserv_lookup(const char service_name[], const PMI2U_Info * info_ptr,
     goto fn_exit;
 }
 
-int PMI2_Nameserv_unpublish(const char service_name[], const PMI2U_Info * info_ptr)
+int PMI2_Nameserv_unpublish(const char service_name[], const PMI2_keyval_t * info_ptr)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int found;
@@ -1317,9 +1316,7 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
 
     memset(cmd_len_str, 0, sizeof(cmd_len_str));
 
-#ifdef MPICH_IS_THREADED
-    MPIR_THREAD_CHECK_BEGIN;
-    {
+    if (PMI2_is_threaded) {
         MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
 
         while (blocked && !cmd->complete)
@@ -1333,8 +1330,6 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
         blocked = TRUE;
         MPL_thread_mutex_unlock(&mutex, &err);
     }
-    MPIR_THREAD_CHECK_END;
-#endif
 
     do {
 
@@ -1453,26 +1448,17 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
         target_cmd->command = command;
         target_cmd->nPairs = nPairs;
         target_cmd->pairs = pairs;
-#ifdef MPICH_IS_THREADED
         target_cmd->complete = TRUE;
-#endif
 
         PMI2U_Free(cmd_buf);
     } while (!cmd->complete);
 
-#ifdef MPICH_IS_THREADED
-    MPIR_THREAD_CHECK_BEGIN;
-    {
+    if (PMI2_is_threaded) {
         MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
         blocked = FALSE;
         MPL_thread_cond_broadcast(&cond, &err);
         MPL_thread_mutex_unlock(&mutex, &err);
     }
-    MPIR_THREAD_CHECK_END;
-#endif
-
-
-
 
   fn_exit:
     return pmi2_errno;
@@ -1542,17 +1528,13 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
     c += ret;
     remaining_len -= ret;
 
-#ifdef MPICH_IS_THREADED
-    MPIR_THREAD_CHECK_BEGIN;
-    if (resp) {
+    if (PMI2_is_threaded && resp) {
         ret = MPL_snprintf(c, remaining_len, "thrid=%p;", resp);
         PMI2U_ERR_CHKANDJUMP1(ret >= remaining_len, pmi2_errno, PMI2_ERR_OTHER, "**intern",
                               "**intern %s", "Ran out of room for command");
         c += ret;
         remaining_len -= ret;
     }
-    MPIR_THREAD_CHECK_END;
-#endif
 
     for (pair_index = 0; pair_index < npairs; ++pair_index) {
         /* write key= */
@@ -1596,9 +1578,7 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
     printf_d("PMI sending: %s\n", cmdbuf);
 
 
-#ifdef MPICH_IS_THREADED
-    MPIR_THREAD_CHECK_BEGIN;
-    {
+    if (PMI2_is_threaded) {
         MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
 
         while (blocked)
@@ -1607,8 +1587,6 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
         blocked = TRUE;
         MPL_thread_mutex_unlock(&mutex, &err);
     }
-    MPIR_THREAD_CHECK_END;
-#endif
 
     if (PMI2_debug)
         ENQUEUE(resp);
@@ -1624,16 +1602,13 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
 
         offset += nbytes;
     } while (offset < cmdlen + PMII_COMMANDLEN_SIZE);
-#ifdef MPICH_IS_THREADED
-    MPIR_THREAD_CHECK_BEGIN;
-    {
+
+    if (PMI2_is_threaded) {
         MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
         blocked = FALSE;
         MPL_thread_cond_broadcast(&cond, &err);
         MPL_thread_mutex_unlock(&mutex, &err);
     }
-    MPIR_THREAD_CHECK_END;
-#endif
 
   fn_exit:
     return pmi2_errno;
