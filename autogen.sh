@@ -125,7 +125,10 @@ ProgHomeDir() {
 # checking and patching submodules
 check_submodule_presence() {
     if test ! -f "$SRCROOTDIR/$1/configure.ac"; then
-        error "Submodule $1 is not checked out"
+        error "Submodule $1 is not checked out."
+        error "if you just git cloned this repository, run"
+        error "    git submodule update --init"
+        error "to checkout the submodules."
         exit 1
     fi
 }
@@ -190,9 +193,6 @@ externals=
 set_externals() {
     if test -z "$externals" ; then
         #TODO: if necessary, run: git submodule update --init
-
-        # hwloc is always required
-        check_submodule_presence modules/hwloc
 
         # external packages that require autogen.sh to be run for each of them
         externals="test/mpi"
