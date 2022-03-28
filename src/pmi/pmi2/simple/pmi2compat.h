@@ -17,4 +17,7 @@
 #define PMI2U_Exit MPL_exit
 #define PMI2U_Memcpy memcpy
 
+#define TRUE 1
+#define FALSE 0
+
 #endif /* PMI2COMPAT_H_INCLUDED */

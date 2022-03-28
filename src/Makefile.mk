@@ -16,4 +16,3 @@ include $(top_srcdir)/src/mpi_t/Makefile.mk
 include $(top_srcdir)/src/nameserv/Makefile.mk
 include $(top_srcdir)/src/packaging/Makefile.mk
 include $(top_srcdir)/src/pm/Makefile.mk
-include $(top_srcdir)/src/pmi/Makefile.mk

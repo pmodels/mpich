@@ -7,30 +7,8 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 dnl _BODY handles the former role of configure in the subsystem
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
-# the pm_names variable is set by the top level configure
-build_remshell=no
-for pm_name in $pm_names ; do
-    if test "X$pm_name" = "Xremshell" ; then
-        build_remshell=yes
-    fi
-done
-AM_CONDITIONAL([BUILD_PM_REMSHELL],[test "X$build_remshell" = "Xyes"])
-
-# first_pm_name is set by the top level configure
-AM_CONDITIONAL([PRIMARY_PM_REMSHELL],[test "X$first_pm_name" = "Xremshell"])
-
 AM_COND_IF([BUILD_PM_REMSHELL],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR src/pm/remshell])
-
-# Check that we are using the simple PMI implementation
-# (Selecting multiple PMs may require incompatible PMI implementations 
-# (e.g., remshell and SMPD).
-if test -z "$PM_REQUIRES_PMI" ; then
-    PM_REQUIRES_PMI=simple
-elif test "$PM_REQUIRES_PMI" != "simple" ; then
-    echo "remshell requires the simple PMI implementation; $PM_REQUIRES_PMI has already been selected"
-    exit 1
-fi
 
 # tell src/pm/util to configure itself
 build_pm_util=yes

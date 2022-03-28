@@ -6,8 +6,6 @@
 #ifndef SIMPLE_PMIUTIL_H_INCLUDED
 #define SIMPLE_PMIUTIL_H_INCLUDED
 
-#include "mpichconf.h"
-
 /* maximum sizes for arrays */
 #define PMI2U_MAXLINE 1024
 #define PMI2U_IDSIZE    32
@@ -114,66 +112,12 @@ extern int PMI2_pmiverbose;     /* Set this to true to print PMI debugging info 
 #define PMI2U_CHKMEM_SETERR(rc_, nbytes_, name_) rc_ = PMI2_ERR_NOMEM
 #endif
 
-
-#define PMI2U_CHKLMEM_DECL(n_)                                  \
-    void *(pmi2u_chklmem_stk_[n_]) = {0};                       \
-    int pmi2u_chklmem_stk_sp_=0;                                \
-    PMI2U_AssertDeclValue(const int pmi2u_chklmem_stk_sz_,n_)
-
-#define PMI2U_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) do {        \
-        pointer_ = (type_)PMI2U_Malloc(nbytes_);                                        \
-        if (pointer_) {                                                                 \
-            PMI2U_Assert(pmi2u_chklmem_stk_sp_<pmi2u_chklmem_stk_sz_);                  \
-            pmi2u_chklmem_stk_[pmi2u_chklmem_stk_sp_++] = pointer_;                     \
-        } else {                                                                        \
-            PMI2U_CHKMEM_SETERR(rc_,nbytes_,name_);                                     \
-            stmt_;                                                                      \
-        }                                                                               \
-    } while (0)
-#define PMI2U_CHKLMEM_FREEALL()                                         \
-    while (pmi2u_chklmem_stk_sp_ > 0) {                                 \
-        PMI2U_Free(pmi2u_chklmem_stk_[--pmi2u_chklmem_stk_sp_]); }
-
-#define PMI2U_CHKLMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
-    PMI2U_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
-#define PMI2U_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_) \
-    PMI2U_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
-
-/* Persistent memory that we may want to recover if something goes wrong */
-#define PMI2U_CHKPMEM_DECL(n_)                                  \
-    void *(pmi2u_chkpmem_stk_[n_]) = {0};                       \
-    int pmi2u_chkpmem_stk_sp_=0;                                \
-    PMI2U_AssertDeclValue(const int pmi2u_chkpmem_stk_sz_,n_)
-#define PMI2U_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) do {        \
-        pointer_ = (type_)PMI2U_Malloc(nbytes_);                                        \
-        if (pointer_) {                                                                 \
-            PMI2U_Assert(pmi2u_chkpmem_stk_sp_<pmi2u_chkpmem_stk_sz_);                  \
-            pmi2u_chkpmem_stk_[pmi2u_chkpmem_stk_sp_++] = pointer_;                     \
-        } else {                                                                        \
-            PMI2U_CHKMEM_SETERR(rc_,nbytes_,name_);                                     \
-            stmt_;                                                                      \
-        }                                                                               \
-    } while (0)
-#define PMI2U_CHKPMEM_REGISTER(pointer_) do {                           \
-        PMI2U_Assert(pmi2u_chkpmem_stk_sp_<pmi2u_chkpmem_stk_sz_);      \
-        pmi2u_chkpmem_stk_[pmi2u_chkpmem_stk_sp_++] = pointer_;         \
-    } while (0)
-#define PMI2U_CHKPMEM_REAP()                                            \
-    while (pmi2u_chkpmem_stk_sp_ > 0) {                                 \
-        PMI2U_Free(pmi2u_chkpmem_stk_[--pmi2u_chkpmem_stk_sp_]); }
-#define PMI2U_CHKPMEM_COMMIT() pmi2u_chkpmem_stk_sp_ = 0
-#define PMI2U_CHKPMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_)          \
-    PMI2U_CHKPMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
-#define PMI2U_CHKPMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)           \
-    PMI2U_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
-
-/* A special version for routines that only allocate one item */
-#define PMI2U_CHKPMEM_MALLOC1(pointer_,type_,nbytes_,rc_,name_,stmt_) do {      \
-        pointer_ = (type_)PMI2U_Malloc(nbytes_);                                \
-        if (!(pointer_)) {                                                      \
-            PMI2U_CHKMEM_SETERR(rc_,nbytes_,name_);                             \
-            stmt_;                                                              \
-        }                                                                       \
+#define PMI2U_CHK_MALLOC(pointer_,type_,nbytes_,rc_,name_) do { \
+        pointer_ = (type_)PMI2U_Malloc(nbytes_); \
+        if (!pointer_) { \
+            PMI2U_CHKMEM_SETERR(rc_,nbytes_,name_); \
+            goto fn_fail; \
+        } \
     } while (0)
 
 /* Provides a easy way to use realloc safely and avoid the temptation to use
