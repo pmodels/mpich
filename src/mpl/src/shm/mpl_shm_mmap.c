@@ -70,10 +70,10 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
         char *chosen_fname = NULL;
 
         chosen_fname = dev_shm_fname;
-        lhnd = mkstemp(chosen_fname);
+        lhnd = MPL_mkstemp(chosen_fname);
         if (lhnd == -1) {
             chosen_fname = tmp_fname;
-            lhnd = mkstemp(chosen_fname);
+            lhnd = MPL_mkstemp(chosen_fname);
             if (lhnd == -1) {
                 rc = MPL_ERR_SHM_INTERN;
                 goto fn_fail;

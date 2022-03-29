@@ -570,7 +570,7 @@ Environment variables\n\
     return 0;
 }
 
-#if defined (MPL_HAVE_MKSTEMP) && defined (MPL_HAVE_FDOPEN)
+#ifdef MPL_HAVE_FDOPEN
 
 /* creates a temporary file in the same directory the user specified
  * for the log file */
@@ -594,7 +594,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
 
     MPL_strncpy(basename, temp_pattern, sizeof(temp_pattern));
 
-    fd = mkstemp(temp_filename);
+    fd = MPL_mkstemp(temp_filename);
     if (fd == -1)
         goto fn_fail;
 
