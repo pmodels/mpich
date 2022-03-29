@@ -180,14 +180,14 @@ static inline int SEARCH_REMOVE(PMI2_Command * cmd)
 /* ------------------------------------------------------------------------- */
 /* PMI API Routines */
 /* ------------------------------------------------------------------------- */
-int PMI2_Set_threaded(int is_threaded)
+PMI_API_PUBLIC int PMI2_Set_threaded(int is_threaded)
 {
     PMI2_is_threaded = is_threaded;
 
     return PMI2_SUCCESS;
 }
 
-int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
+PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 {
     int pmi2_errno = PMI2_SUCCESS;
     char *p;
@@ -355,7 +355,7 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     goto fn_exit;
 }
 
-int PMI2_Finalize(void)
+PMI_API_PUBLIC int PMI2_Finalize(void)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int rc;
@@ -385,7 +385,7 @@ int PMI2_Finalize(void)
     goto fn_exit;
 }
 
-int PMI2_Initialized(void)
+PMI_API_PUBLIC int PMI2_Initialized(void)
 {
     /* Turn this into a logical value (1 or 0) .  This allows us
      * to use PMI2_initialized to distinguish between initialized with
@@ -394,7 +394,7 @@ int PMI2_Initialized(void)
     return PMI2_initialized != 0;
 }
 
-int PMI2_Abort(int flag, const char msg[])
+PMI_API_PUBLIC int PMI2_Abort(int flag, const char msg[])
 {
     PMI2U_printf(1, "aborting job:\n%s\n", msg);
 
@@ -406,14 +406,15 @@ int PMI2_Abort(int flag, const char msg[])
     return PMI2_SUCCESS;
 }
 
-int PMI2_Job_Spawn(int count, const char *cmds[],
-                   int argcs[], const char **argvs[],
-                   const int maxprocs[],
-                   const int info_keyval_sizes[],
-                   const PMI2_keyval_t * info_keyval_vectors[],
-                   int preput_keyval_size,
-                   const PMI2_keyval_t preput_keyval_vector[],
-                   char jobId[], int jobIdSize, int errors[])
+PMI_API_PUBLIC
+    int PMI2_Job_Spawn(int count, const char *cmds[],
+                       int argcs[], const char **argvs[],
+                       const int maxprocs[],
+                       const int info_keyval_sizes[],
+                       const PMI2_keyval_t * info_keyval_vectors[],
+                       int preput_keyval_size,
+                       const PMI2_keyval_t preput_keyval_vector[],
+                       char jobId[], int jobIdSize, int errors[])
 {
     int i, rc, spawncnt, total_num_processes, num_errcodes_found;
     int found;
@@ -557,7 +558,7 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
     return pmi2_errno;
 }
 
-int PMI2_Job_GetId(char jobid[], int jobid_size)
+PMI_API_PUBLIC int PMI2_Job_GetId(char jobid[], int jobid_size)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int found;
@@ -590,7 +591,7 @@ int PMI2_Job_GetId(char jobid[], int jobid_size)
     goto fn_exit;
 }
 
-int PMI2_Job_Connect(const char jobid[], PMI2_Connect_comm_t * conn)
+PMI_API_PUBLIC int PMI2_Job_Connect(const char jobid[], PMI2_Connect_comm_t * conn)
 {
     int pmi2_errno = PMI2_SUCCESS;
     PMI2_Command cmd = { 0 };
@@ -623,7 +624,7 @@ int PMI2_Job_Connect(const char jobid[], PMI2_Connect_comm_t * conn)
     goto fn_exit;
 }
 
-int PMI2_Job_Disconnect(const char jobid[])
+PMI_API_PUBLIC int PMI2_Job_Disconnect(const char jobid[])
 {
     int pmi2_errno = PMI2_SUCCESS;
     PMI2_Command cmd = { 0 };
@@ -648,7 +649,7 @@ int PMI2_Job_Disconnect(const char jobid[])
     goto fn_exit;
 }
 
-int PMI2_KVS_Put(const char key[], const char value[])
+PMI_API_PUBLIC int PMI2_KVS_Put(const char key[], const char value[])
 {
     int pmi2_errno = PMI2_SUCCESS;
     PMI2_Command cmd = { 0 };
@@ -673,7 +674,7 @@ int PMI2_KVS_Put(const char key[], const char value[])
     goto fn_exit;
 }
 
-int PMI2_KVS_Fence(void)
+PMI_API_PUBLIC int PMI2_KVS_Fence(void)
 {
     int pmi2_errno = PMI2_SUCCESS;
     PMI2_Command cmd = { 0 };
@@ -697,8 +698,9 @@ int PMI2_KVS_Fence(void)
     goto fn_exit;
 }
 
-int PMI2_KVS_Get(const char *jobid, int src_pmi_id, const char key[], char value[], int maxValue,
-                 int *valLen)
+PMI_API_PUBLIC
+    int PMI2_KVS_Get(const char *jobid, int src_pmi_id, const char key[], char value[],
+                     int maxValue, int *valLen)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int found, keyfound;
@@ -747,7 +749,8 @@ int PMI2_KVS_Get(const char *jobid, int src_pmi_id, const char key[], char value
     goto fn_exit;
 }
 
-int PMI2_Info_GetNodeAttr(const char name[], char value[], int valuelen, int *flag, int waitfor)
+PMI_API_PUBLIC
+    int PMI2_Info_GetNodeAttr(const char name[], char value[], int valuelen, int *flag, int waitfor)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int found;
@@ -789,8 +792,9 @@ int PMI2_Info_GetNodeAttr(const char name[], char value[], int valuelen, int *fl
     goto fn_exit;
 }
 
-int PMI2_Info_GetNodeAttrIntArray(const char name[], int array[], int arraylen, int *outlen,
-                                  int *flag)
+PMI_API_PUBLIC
+    int PMI2_Info_GetNodeAttrIntArray(const char name[], int array[], int arraylen, int *outlen,
+                                      int *flag)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int found;
@@ -848,7 +852,7 @@ int PMI2_Info_GetNodeAttrIntArray(const char name[], int array[], int arraylen, 
     goto fn_exit;
 }
 
-int PMI2_Info_PutNodeAttr(const char name[], const char value[])
+PMI_API_PUBLIC int PMI2_Info_PutNodeAttr(const char name[], const char value[])
 {
     int pmi2_errno = PMI2_SUCCESS;
     PMI2_Command cmd = { 0 };
@@ -874,7 +878,7 @@ int PMI2_Info_PutNodeAttr(const char name[], const char value[])
     goto fn_exit;
 }
 
-int PMI2_Info_GetJobAttr(const char name[], char value[], int valuelen, int *flag)
+PMI_API_PUBLIC int PMI2_Info_GetJobAttr(const char name[], char value[], int valuelen, int *flag)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int found;
@@ -915,8 +919,9 @@ int PMI2_Info_GetJobAttr(const char name[], char value[], int valuelen, int *fla
     goto fn_exit;
 }
 
-int PMI2_Info_GetJobAttrIntArray(const char name[], int array[], int arraylen, int *outlen,
-                                 int *flag)
+PMI_API_PUBLIC
+    int PMI2_Info_GetJobAttrIntArray(const char name[], int array[], int arraylen, int *outlen,
+                                     int *flag)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int found;
@@ -972,8 +977,9 @@ int PMI2_Info_GetJobAttrIntArray(const char name[], int array[], int arraylen, i
     goto fn_exit;
 }
 
-int PMI2_Nameserv_publish(const char service_name[], const PMI2_keyval_t * info_ptr,
-                          const char port[])
+PMI_API_PUBLIC
+    int PMI2_Nameserv_publish(const char service_name[], const PMI2_keyval_t * info_ptr,
+                              const char port[])
 {
     int pmi2_errno = PMI2_SUCCESS;
     PMI2_Command cmd = { 0 };
@@ -1002,8 +1008,9 @@ int PMI2_Nameserv_publish(const char service_name[], const PMI2_keyval_t * info_
 }
 
 
-int PMI2_Nameserv_lookup(const char service_name[], const PMI2_keyval_t * info_ptr,
-                         char port[], int portLen)
+PMI_API_PUBLIC
+    int PMI2_Nameserv_lookup(const char service_name[], const PMI2_keyval_t * info_ptr,
+                             char port[], int portLen)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int found;
@@ -1037,7 +1044,8 @@ int PMI2_Nameserv_lookup(const char service_name[], const PMI2_keyval_t * info_p
     goto fn_exit;
 }
 
-int PMI2_Nameserv_unpublish(const char service_name[], const PMI2_keyval_t * info_ptr)
+PMI_API_PUBLIC
+    int PMI2_Nameserv_unpublish(const char service_name[], const PMI2_keyval_t * info_ptr)
 {
     int pmi2_errno = PMI2_SUCCESS;
     int rc;
