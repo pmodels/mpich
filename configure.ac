@@ -3804,11 +3804,6 @@ fi
 # ----------------------------------------------------------------------------
 # Look for some non-posix, but commonly provided functions
 # ----------------------------------------------------------------------------
-# mkstemp() is a better replacement for mktemp()
-AC_CHECK_FUNCS(mkstemp)
-if test "$ac_cv_func_mkstemp" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],mkstemp)
-fi
 # putenv() sets environment variable
 AC_CHECK_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then
