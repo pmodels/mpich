@@ -34,6 +34,23 @@ AC_ARG_ENABLE([embedded],
     [enable_embedded=no])
 AM_CONDITIONAL([EMBEDDED_MODE], [test "$enable_embedded" = "yes"])
 
+if test "$enable_embedded" = "yes" ; then
+    AC_DEFINE([EMBEDDED_MODE], 1, [define if build in embedded mode])
+fi
+
+PAC_CHECK_VISIBILITY
+if test -n "$VISIBILITY_CFLAGS" ; then
+    CFLAGS="$CFLAGS $VISIBILITY_CFLAGS"
+fi
+
+AH_BOTTOM([
+#if defined(HAVE_VISIBILITY) && !defined(EMBEDDED_MODE)
+#define PMI_API_PUBLIC __attribute__((visibility ("default")))
+#else
+#define PMI_API_PUBLIC
+#endif
+])
+
 # MPL
 m4_define([mpl_embedded_dir],[mpl])
 
