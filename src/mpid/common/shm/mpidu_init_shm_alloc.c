@@ -19,10 +19,6 @@
 #include <sys/shm.h>
 #endif
 
-#if defined(HAVE_MKSTEMP) && defined(NEEDS_MKSTEMP_DECL)
-extern int mkstemp(char *t);
-#endif
-
 typedef struct memory_list {
     void *ptr;
     MPIDU_shm_seg_t *memory;
