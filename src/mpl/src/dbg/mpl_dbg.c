@@ -18,10 +18,6 @@
 #include <errno.h>
 #endif
 
-#if defined(MPL_HAVE_MKSTEMP) && defined(MPL_NEEDS_MKSTEMP_DECL)
-extern int mkstemp(char *t);
-#endif
-
 #if defined(MPL_HAVE_FDOPEN) && defined(MPL_NEEDS_FDOPEN_DECL)
 extern FILE *fdopen(int fd, const char *mode);
 #endif
