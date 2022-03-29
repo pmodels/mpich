@@ -1677,19 +1677,22 @@ AC_SUBST([pmisrcdir])
 pmilib=""
 AC_SUBST([pmilib])
 
-if test "$with_pmilib" = "mpich" ; then
-    pmisrcdir="src/pmi"
-    pmilib="src/pmi/libpmi.la"
-    PAC_CONFIG_SUBDIR_ARGS([src/pmi], [--enable-embedded])
-    PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
-    PAC_APPEND_FLAG([-I${main_top_builddir}/src/pmi/include], [CPPFLAGS])
-fi
-
 case "$with_pmilib" in
-  mpich)
+  mpich|install)
     if test "$with_pmi" != "pmi1" -a "$with_pmi" != "pmi2" ; then
         AC_MSG_ERROR([pmilib=%with_pmilib is incompatible with $with_pmi]);
     fi
+    pmisrcdir="src/pmi"
+    pmilib="src/pmi/libpmi.la"
+
+    pmi_subdir_args=""
+    if test "$with_pmilib" != "install" ; then
+        pmi_subdir_args="--enable-embedded"
+    fi
+    PAC_CONFIG_SUBDIR_ARGS([src/pmi], [$pmi_subdir_args])
+
+    PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
+    PAC_APPEND_FLAG([-I${main_top_builddir}/src/pmi/include], [CPPFLAGS])
     ;;
   slurm)
     PAC_SET_HEADER_LIB_PATH([slurm])
