@@ -15,10 +15,6 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include <sys/mman.h>
 #endif
 
-#if defined (MPL_HAVE_MKSTEMP) && defined (MPL_NEEDS_MKSTEMP_DECL)
-extern int mkstemp(char *template);
-#endif
-
 inline int MPLI_shm_lhnd_close(MPL_shm_hnd_t hnd)
 {
     MPLI_shm_lhnd_t lhnd = MPLI_SHM_LHND_INVALID;

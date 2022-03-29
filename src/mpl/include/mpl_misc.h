@@ -13,4 +13,8 @@
 /* Returns the number of processors currently available in the system */
 int MPL_get_nprocs(void);
 
+#if defined (MPL_HAVE_MKSTEMP) && defined (MPL_NEEDS_MKSTEMP_DECL)
+int mkstemp(char *template);
+#endif
+
 #endif /* MPL_MISC_H_INCLUDED */
