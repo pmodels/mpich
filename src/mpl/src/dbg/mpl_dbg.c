@@ -615,48 +615,6 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
     goto fn_exit;
 }
 
-#elif defined(MPL_HAVE__MKTEMP_S) && defined(MPL_HAVE_FOPEN_S)
-
-/* creates a temporary file in the same directory the user specified
- * for the log file */
-static int dbg_open_tmpfile(FILE ** dbg_fp)
-{
-    int mpl_errno = MPL_SUCCESS;
-    const char temp_pattern[] = "templogXXXXXX";
-    int fd;
-    char *basename;
-    int ret;
-    errno_t ret_errno;
-
-    ret = MPL_strncpy(temp_filename, file_pattern, MAXPATHLEN);
-    if (ret)
-        goto fn_fail;
-
-    find_basename(temp_filename, &basename);
-
-    /* make sure there's enough room in temp_filename to store temp_pattern */
-    if (basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern))
-        goto fn_fail;
-
-    MPL_strncpy(basename, temp_pattern, sizeof(temp_pattern));
-
-    ret_errno = _mktemp_s(temp_filename, MAXPATHLEN);
-    if (ret_errno != 0)
-        goto fn_fail;
-
-    ret_errno = fopen_s(dbg_fp, temp_filename, "a+");
-    if (ret_errno != 0)
-        goto fn_fail;
-
-  fn_exit:
-    return mpl_errno;
-  fn_fail:
-    MPL_error_printf("Could not open log file %s\n", temp_filename);
-    dbg_initialized = DBG_ERROR;
-    mpl_errno = MPL_ERR_DBG_INTERN;
-    goto fn_exit;
-}
-
 #else
 
 /* creates a temporary file in some directory, which may not be where
