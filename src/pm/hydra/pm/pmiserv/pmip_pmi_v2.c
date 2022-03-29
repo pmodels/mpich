@@ -172,7 +172,17 @@ static HYD_status fn_fullinit(int fd, char *args[])
             break;
         }
     }
+    int idx = i;
     HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
+
+    /* find executable information */
+    i = 0;
+    struct HYD_exec *exec;
+    for (exec = HYD_pmcd_pmip.exec_list; exec; exec = exec->next) {
+        i += exec->proc_count;
+        if (idx < i)
+            break;
+    }
 
     HYD_STRING_STASH_INIT(stash);
     HYD_STRING_STASH(stash,
@@ -183,7 +193,8 @@ static HYD_status fn_fullinit(int fd, char *args[])
     HYD_STRING_STASH(stash, MPL_strdup(";size="), status);
     HYD_STRING_STASH(stash, HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count),
                      status);
-    HYD_STRING_STASH(stash, MPL_strdup(";appnum=0"), status);
+    HYD_STRING_STASH(stash, MPL_strdup(";appnum="), status);
+    HYD_STRING_STASH(stash, HYDU_int_to_str(exec->appnum), status);
     if (HYD_pmcd_pmip.local.spawner_kvsname) {
         HYD_STRING_STASH(stash, MPL_strdup(";spawner-jobid="), status);
         HYD_STRING_STASH(stash, MPL_strdup(HYD_pmcd_pmip.local.spawner_kvsname), status);

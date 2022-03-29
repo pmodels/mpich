@@ -14,7 +14,7 @@ include $(top_srcdir)/Makefile_common.mtest
 AM_CPPFLAGS += -DMTEST_USE_THREAD
 
 ## then add rules/vars for mtest_thread.o
-LDADD += $(top_builddir)/util/mtest_thread.$(OBJEXT) @threadlib@
+LDADD += $(top_builddir)/util/libmtest_thread.la @threadlib@
 
-$(top_builddir)/util/mtest_thread.$(OBJEXT): $(top_srcdir)/util/mtest_thread.c
-	(cd $(top_builddir)/util && $(MAKE) mtest_thread.$(OBJEXT))
+$(top_builddir)/util/libmtest_thread.la:
+	(cd $(top_builddir)/util && $(MAKE) libmtest_thread.la)

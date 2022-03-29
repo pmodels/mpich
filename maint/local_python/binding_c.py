@@ -2249,6 +2249,14 @@ def dump_validate_op(op, dt, is_coll):
     if dt:
         G.out.append("} else {")
         G.out.append("    mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(%s)) (%s);" % (op, dt))
+        # check predefined datatype and replace with basic_type if necessary
+        G.out.append("    if (mpi_errno != MPI_SUCCESS) {")
+        G.out.append("        MPI_Datatype alt_dt = MPIR_Op_get_alt_datatype(%s, %s);" % (op, dt))
+        G.out.append("        if (alt_dt != MPI_DATATYPE_NULL) {")
+        G.out.append("            %s = alt_dt;" % dt)
+        G.out.append("            mpi_errno = MPI_SUCCESS;")
+        G.out.append("        }")
+        G.out.append("    }")
     G.out.append("}")
     dump_error_check("")
 
