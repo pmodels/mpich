@@ -106,7 +106,7 @@ static int update_nic_preferences(MPIR_Comm * comm)
             mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPI_INT,
                                                     MPIDI_OFI_COMM(comm).pref_nic,
                                                     comm->remote_size, MPI_INT, comm, &errflag);
-            MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
