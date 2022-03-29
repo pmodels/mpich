@@ -1,4 +1,29 @@
 ===============================================================================
+                               Changes in 4.0.2
+===============================================================================
+
+# Fix CUDA configuration logic in yaksa
+
+# Fix support for dynamic process functionality with PMI2 clients
+
+# Fix non-zero appnum bug in PMI2 server in Hydra
+
+# Fix MPI_Op support for types created with MPI_Type_create_f90_xxx
+
+# Fix building ch4 with Intel compilers on macOS
+
+# Fix Level Zero properties initialization in MPL. Thanks to Brice
+  Videau for the report and patch.
+
+# Use standard names for CPU affinity functions with POSIX
+  threads. Fixes building against Musl libc. Thanks to Mosè Giordano for
+  the report and patch.
+
+# Add elemental to eq/neq operators in Fortran 2008 binding
+
+# Workaround for inter-process mutex bug on FreeBSD
+
+===============================================================================
                                Changes in 4.0.1
 ===============================================================================
 
