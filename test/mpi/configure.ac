@@ -1418,7 +1418,7 @@ if test "$enable_romio" != no -a "$mpi_io_works" = yes ; then
 fi
 AC_SUBST(iodir)
 
-impldir="#"
+impldir=""
 #
 # Check for implementation to enable implementation-specific options
 if test $enable_strictmpi != "yes" ; then
@@ -1427,6 +1427,26 @@ if test $enable_strictmpi != "yes" ; then
     fi
 fi
 AC_SUBST(impldir)
+
+pmidir=""
+PAC_PUSH_FLAG([LIBS])
+LIBS="$LIBS -lpmi"
+AC_MSG_CHECKING([that we have pmi library])
+AC_LINK_IFELSE([
+    AC_LANG_PROGRAM([#include "pmi.h"], [
+        int has_parent;
+        PMI_Init(&has_parent);
+        PMI_Finalize();
+    ])
+],[
+    AC_MSG_RESULT(yes)
+    pmidir=pmi
+],[
+    AC_MSG_RESULT(no)
+])
+PAC_POP_FLAG([LIBS])
+AC_SUBST(pmidir)
+
 #
 # MPI_INTEGER16 is mentioned in only one place in MPI 2.1, and some
 # implementations may have missed it.  Check to see if it is available in
@@ -1662,6 +1682,7 @@ AC_OUTPUT(maint/testmerge \
           impls/Makefile \
           impls/hydra/Makefile \
           impls/hydra/proc_binding.sh \
+          impls/pmi/Makefile \
           impls/mpich/Makefile \
           impls/mpich/testlist \
           impls/mpich/mpi_t/Makefile \
