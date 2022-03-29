@@ -19,7 +19,7 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
             int was_enabled_striping = MPIDI_OFI_COMM(comm).enable_striping;
 
             /* Check if we should use striping */
-            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] == 1) {
+            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1) {
                 /* If the user specified a particular NIC, don't use striping. */
                 MPIDI_OFI_COMM(comm).enable_striping = 0;
             } else if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING] != -1)
@@ -42,7 +42,7 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
             int was_enabled_hashing = MPIDI_OFI_COMM(comm).enable_hashing;
 
             /* Check if we should use hashing */
-            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] == 1) {
+            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1) {
                 /* If the user specified a particular NIC, don't use hashing.  */
                 MPIDI_OFI_COMM(comm).enable_hashing = 0;
             } else if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING] != -1)
