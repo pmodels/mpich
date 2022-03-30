@@ -2377,13 +2377,11 @@ AC_LANG([C])
 # subsystems to build
 # ----------------------------------------------------------------------------
 
-# Look for perl.  Perl is used *only* in the tests of the commands such as
-# mpiexec, mpicc, etc, in test/commands, and in some of the utility
-# programs for processing log files .  If perl is not found,
-# MPICH may still be built and used.
-# We need the full path to perl since we'll use it as the interpreter for
-# a shell script.
-AC_PATH_PROG(PERL,perl)
+# Look for perl.  Perl is needed in configure MPL (confdb/cmd_prefix_config_h.pl).
+AC_PATH_PROG(PERL,perl,[no])
+if test "$PERL" = "no" ; then
+    AC_MSG_ERROR([Perl is required but not found.])
+fi
 
 # Check for the killall program; this can be used in some of the tests
 # in test/commands

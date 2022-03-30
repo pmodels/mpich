@@ -43,6 +43,8 @@ shared memory), Hydra process management) of MPICH up and running.
 
     - REQUIRED: This tar file mpich-%VERSION%.tar.gz
 
+    - REQUIRED: Perl
+
     - REQUIRED: A C compiler (C99 support is required. See
       https://wiki.mpich.org/mpich/index.php/Shifting_toward_C99)
 
@@ -57,6 +59,8 @@ shared memory), Hydra process management) of MPICH up and running.
       Fortran applications, you can disable this support using
       --disable-fortran (configuring MPICH is described in step 1(d)
       below).
+
+    - OPTIONAL: Python 3. Python 3 is needed to generate Fortran bindings.
 
     Also, you need to know what shell you are using since different shell
     has different command syntax. Command "echo $SHELL" prints out the
