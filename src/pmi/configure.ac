@@ -34,7 +34,26 @@ AC_ARG_ENABLE([embedded],
     [enable_embedded=no])
 AM_CONDITIONAL([EMBEDDED_MODE], [test "$enable_embedded" = "yes"])
 
+if test "$enable_embedded" = "yes" ; then
+    AC_DEFINE([EMBEDDED_MODE], 1, [define if build in embedded mode])
+fi
+
+PAC_CHECK_VISIBILITY
+if test -n "$VISIBILITY_CFLAGS" ; then
+    CFLAGS="$CFLAGS $VISIBILITY_CFLAGS"
+fi
+
+AH_BOTTOM([
+#if defined(HAVE_VISIBILITY) && !defined(EMBEDDED_MODE)
+#define PMI_API_PUBLIC __attribute__((visibility ("default")))
+#else
+#define PMI_API_PUBLIC
+#endif
+])
+
 # MPL
+m4_define([mpl_embedded_dir],[mpl])
+
 mpl_srcdir=
 AC_SUBST([mpl_srcdir])
 mpl_includedir=
@@ -42,16 +61,10 @@ AC_SUBST([mpl_includedir])
 mpl_lib=
 AC_SUBST([mpl_lib])
 
-if test "$FROM_MPICH" = "yes" ; then
-    m4_define([PAC_SKIP_MPL_LIB], [yes])
-    PAC_CONFIG_MPL
-else
-    mpl_srcdir="mpl"
-    mpl_subdir_args="--disable-versioning --enable-embedded"
-    PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-    mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
-    mpl_lib="mpl/libmpl.la"
+if test "$enable_embedded" = "yes" ; then
+    pac_skip_mpl_lib=yes
 fi
+PAC_CONFIG_MPL
 
 # check "mpi.h" for MPI_MAX_PORT_NAME
 if test "$FROM_MPICH" = "yes" ; then
