@@ -23,9 +23,9 @@ if BUILD_FC_BINDING
 bin_SCRIPTS += src/env/mpifort
 endif BUILD_FC_BINDING
 
-if BUILD_CXX_BINDING
+if INSTALL_MPICXX
 bin_SCRIPTS += src/env/mpicxx
-endif BUILD_CXX_BINDING
+endif INSTALL_MPICXX
 
 # create a local copy of the compiler wrapper that will actually be installed
 if BUILD_BASH_SCRIPTS
