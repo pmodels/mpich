@@ -58,13 +58,18 @@ D*/
 #define PMI2_ERR_INVALID_SIZE       13
 #define PMI2_ERR_OTHER              14
 
-/* This is here to allow spawn multiple functions to compile.  This
-   needs to be removed once those functions are fixed for pmi2 */
-    typedef struct PMI_keyval_t {
+/*S
+PMI2_keyval_t - keyval structure used by PMI2_Spawn_multiple
+
+Fields:
++ key - name of the key
+- val - value of the key
+
+S*/
+    typedef struct PMI2_keyval_t {
         char *key;
         char *val;
-    } PMI_keyval_t;
-
+    } PMI2_keyval_t;
 
 /*@
   PMI2_Connect_comm_t - connection structure used when connecting to other jobs
@@ -99,8 +104,6 @@ D*/
         int isMain;
     } PMI2_Connect_comm_t;
 
-    struct MPIR_Info;
-
 /*@
   PMI2_Init - initialize the Process Manager Interface
 
@@ -132,6 +135,19 @@ D*/
 
 @*/
     int PMI2_Finalize(void);
+
+/*@
+  PMI2_Set_threaded - set whether the PMI will be called from multiple threads
+
+  Return values:
+  Returns 'MPI_SUCCESS' on success and an MPI error code on failure.
+
+  Notes:
+  The default is to assume all PMI is issued from a single thread. Use this
+  function to set is_threaded to TRUE before calling PMI from multiple threads.
+
+@*/
+    int PMI2_Set_threaded(int is_threaded);
 
 /*@
   PMI2_Initialized - check if PMI has been initialized
@@ -197,9 +213,9 @@ D*/
                        int argcs[], const char **argvs[],
                        const int maxprocs[],
                        const int info_keyval_sizes[],
-                       const struct MPIR_Info *info_keyval_vectors[],
+                       const PMI2_keyval_t * info_keyval_vectors[],
                        int preput_keyval_size,
-                       const struct MPIR_Info *preput_keyval_vector[],
+                       const PMI2_keyval_t preput_keyval_vector[],
                        char jobId[], int jobIdSize, int errors[]);
 
 
@@ -508,7 +524,7 @@ D*/
   Returns 'MPI_SUCCESS' on success and an MPI error code on failure.
 
 @*/
-    int PMI2_Nameserv_publish(const char service_name[], const struct MPIR_Info *info_ptr,
+    int PMI2_Nameserv_publish(const char service_name[], const PMI2_keyval_t * info_ptr,
                               const char port[]);
 
 /*@
@@ -526,7 +542,7 @@ D*/
   Returns 'MPI_SUCCESS' on success and an MPI error code on failure.
 
 @*/
-    int PMI2_Nameserv_lookup(const char service_name[], const struct MPIR_Info *info_ptr,
+    int PMI2_Nameserv_lookup(const char service_name[], const PMI2_keyval_t * info_ptr,
                              char port[], int portLen);
 /*@
   PMI2_Nameserv_unpublish - unpublish a name
@@ -539,7 +555,7 @@ D*/
   Returns 'MPI_SUCCESS' on success and an MPI error code on failure.
 
 @*/
-    int PMI2_Nameserv_unpublish(const char service_name[], const struct MPIR_Info *info_ptr);
+    int PMI2_Nameserv_unpublish(const char service_name[], const PMI2_keyval_t * info_ptr);
 
 
 

@@ -2722,6 +2722,14 @@ AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(long double)
 AC_CHECK_SIZEOF(void *)
 
+# Let's not continue if we cannot detect these basic types
+for type in char int void_p ; do
+    eval len=\$ac_cv_sizeof_$type
+    if test "$len" = "0" ; then
+        AC_MSG_ERROR([Could not get size of "$type".])
+    fi
+done
+
 AC_CHECK_HEADERS([stddef.h])
 AC_CHECK_SIZEOF(wchar_t, 0, [
 #ifdef HAVE_STDDEF_H

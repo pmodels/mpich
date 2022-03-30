@@ -167,22 +167,6 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #define S_PUSH_MULTIPLE(sp, ep0, ep1) GENERIC_S_PUSH_MULTIPLE (sp, ep0, ep1, next)
 #define S_POP(sp, ep) GENERIC_S_POP (sp, ep, next)
 
-/* interface utilities */
-/*S
-  MPIDI_CH3I_nem_tcp_ifaddr_t - Structure to hold an Internet address.
-
-+ len - Length of the address.  4 for IPv4, 16 for IPv6.
-- ifaddr - Address bytes (as bytes, not characters)
-
-S*/
-typedef struct MPIDI_CH3I_nem_tcp_ifaddr_t {
-    unsigned int len;
-    int type;
-    unsigned char ifaddr[16];
-} MPIDI_CH3I_nem_tcp_ifaddr_t;
-int MPIDI_GetIPInterface(MPIDI_CH3I_nem_tcp_ifaddr_t * ifaddr, int *found);
-int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t * ifaddr, int *found);
-
 /* Keys for business cards */
 #define MPIDI_CH3I_PORT_KEY "port"
 #define MPIDI_CH3I_HOST_DESCRIPTION_KEY "description"
