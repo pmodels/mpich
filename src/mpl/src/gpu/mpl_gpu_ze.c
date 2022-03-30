@@ -189,6 +189,15 @@ static pFnzexMemOpenIpcHandles zexMemOpenIpcHandles = NULL;
 /* *INDENT-ON* */
 
 /* Backend-specific functions */
+/* *INDENT-OFF* */
+typedef ze_result_t (*pFnzexDriverImportExternalPointer)(ze_driver_handle_t, void *, size_t);
+typedef ze_result_t (*pFnzexDriverReleaseImportedPointer)(ze_driver_handle_t, void *);
+typedef ze_result_t (*pFnzexDriverGetHostPointerBaseAddress)(ze_driver_handle_t, void *, void **);
+static pFnzexDriverImportExternalPointer zexDriverImportExternalPointer = NULL;
+static pFnzexDriverReleaseImportedPointer zexDriverReleaseImportedPointer = NULL;
+static pFnzexDriverGetHostPointerBaseAddress zexDriverGetHostPointerBaseAddress = NULL;
+/* *INDENT-ON* */
+
 static int gpu_ze_init_driver(void);
 static int fd_to_handle(int dev_fd, int fd, int *handle);
 static int handle_to_fd(int dev_fd, int handle, int *fd);
@@ -1065,6 +1074,23 @@ static int gpu_ze_init_driver(void)
             }
         }
     }
+
+    /* driver extension */
+    /* Get pointers to host pointer interfaces */
+    ret =
+        zeDriverGetExtensionFunctionAddress(ze_driver_handle, "zexDriverImportExternalPointer",
+                                            (void **) &zexDriverImportExternalPointer);
+    ZE_ERR_CHECK(ret);
+
+    ret =
+        zeDriverGetExtensionFunctionAddress(ze_driver_handle, "zexDriverReleaseImportedPointer",
+                                            (void **) &zexDriverReleaseImportedPointer);
+    ZE_ERR_CHECK(ret);
+
+    ret =
+        zeDriverGetExtensionFunctionAddress(ze_driver_handle, "zexDriverGetHostPointerBaseAddress",
+                                            (void **) &zexDriverGetHostPointerBaseAddress);
+    ZE_ERR_CHECK(ret);
 
   fn_exit:
     MPL_free(all_drivers);
@@ -1949,12 +1975,36 @@ int MPL_gpu_free_host(void *ptr)
 
 int MPL_gpu_register_host(const void *ptr, size_t size)
 {
-    return MPL_SUCCESS;
+    int mpl_err = MPL_SUCCESS;
+    ze_result_t ret;
+
+    assert(zexDriverImportExternalPointer);
+    ret = zexDriverImportExternalPointer(ze_driver_handle, (void *) ptr, size);
+    assert(ret == ZE_RESULT_SUCCESS);
+    ZE_ERR_CHECK(ret);
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 int MPL_gpu_unregister_host(const void *ptr)
 {
-    return MPL_SUCCESS;
+    int mpl_err = MPL_SUCCESS;
+    ze_result_t ret;
+
+    assert(zexDriverReleaseImportedPointer);
+    ret = zexDriverReleaseImportedPointer(ze_driver_handle, (void *) ptr);
+    assert(ret == ZE_RESULT_SUCCESS);
+    ZE_ERR_CHECK(ret);
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr)
