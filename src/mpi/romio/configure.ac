@@ -149,9 +149,9 @@ if test "$FROM_MPICH" = "no" ; then
         mpl_lib="-l${MPLLIBNAME}"
     fi
 else
-    # we are configuring romio inside mpich. MPICH should configured MPL already, following
-    # macro will just set mpl_includedir and source mpl/localdefs if any.
-    m4_define([PAC_SKIP_MPL_LIB], [yes])
+    # we are configuring romio inside mpich. MPICH should configured MPL already,
+    # just set mpl_includedir and source mpl/localdefs if any.
+    pac_skip_mpl_lib=yes
     PAC_CONFIG_MPL
 fi
 
