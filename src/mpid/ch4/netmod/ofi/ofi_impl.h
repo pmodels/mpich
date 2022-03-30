@@ -608,10 +608,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_sender_nic_index(MPIR_Comm * comm,
 {
     int nic_idx = 0;
 
-    /* TODO - If there is a communicator specific mapping, that should be checked/used here. */
-    /* TODO - We should use the per-communicator value for the maximum number of NICs in this
-     *        calculation once we have a per-communicator value for it. */
-    if (MPIDI_OFI_COMM(comm).enable_hashing) {
+    if (MPIDI_OFI_COMM(comm).pref_nic) {
+        nic_idx = MPIDI_OFI_COMM(comm).pref_nic[comm->rank];
+    } else if (MPIDI_OFI_COMM(comm).enable_hashing) {
+        /* TODO - We should use the per-communicator value for the maximum number of NICs in this
+         *        calculation once we have a per-communicator value for it. */
         nic_idx = ((unsigned int) (MPIR_CONTEXT_READ_FIELD(PREFIX, ctxid_in_effect) +
                                    receiver_rank + tag)) % MPIDI_OFI_global.num_nics;
     }
@@ -634,10 +635,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm
 {
     int nic_idx = 0;
 
-    /* TODO - If there is a communicator specific mapping, that should be checked/used here. */
-    /* TODO - We should use the per-communicator value for the maximum number of NICs in this
-     *        calculation once we have a per-communicator value for it. */
-    if (MPIDI_OFI_COMM(comm).enable_hashing) {
+    if (MPIDI_OFI_COMM(comm).pref_nic) {
+        nic_idx = MPIDI_OFI_COMM(comm).pref_nic[comm->rank];
+    } else if (MPIDI_OFI_COMM(comm).enable_hashing) {
+        /* TODO - We should use the per-communicator value for the maximum number of NICs in this
+         *        calculation once we have a per-communicator value for it. */
         nic_idx = ((unsigned int) (MPIR_CONTEXT_READ_FIELD(PREFIX, ctxid_in_effect) +
                                    sender_rank + tag)) % MPIDI_OFI_global.num_nics;
     }
