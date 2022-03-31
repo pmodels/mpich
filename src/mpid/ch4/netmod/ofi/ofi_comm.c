@@ -103,9 +103,11 @@ static int update_nic_preferences(MPIR_Comm * comm)
             }
 
             MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+            /* Collect the NIC IDs set for the other ranks. We always expect to receive a single
+             * NIC id from each rank, i.e., one MPI_INT. */
             mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPI_INT,
                                                     MPIDI_OFI_COMM(comm).pref_nic,
-                                                    comm->remote_size, MPI_INT, comm, &errflag);
+                                                    1, MPI_INT, comm, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
