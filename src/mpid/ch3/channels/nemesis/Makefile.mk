@@ -28,6 +28,5 @@ noinst_HEADERS +=							\
 include $(top_srcdir)/src/mpid/ch3/channels/nemesis/src/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/channels/nemesis/netmod/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/channels/nemesis/utils/monitor/Makefile.mk
-include $(top_srcdir)/src/mpid/ch3/channels/nemesis/utils/replacements/Makefile.mk
 
 endif BUILD_CH3_NEMESIS
