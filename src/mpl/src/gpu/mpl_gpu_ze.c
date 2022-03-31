@@ -28,6 +28,8 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include "uthash.h"
 #include "utlist.h"
 
+#define MPL_GPU_ZE_EVENT_POOL_SIZE 10240        /* Size of the local event pool */
+
 static int gpu_initialized = 0;
 static uint32_t max_dev_id;     /* Does not include subdevices */
 static uint32_t device_count;
@@ -93,6 +95,8 @@ static MPL_ze_ipc_handle_entry_t **ipc_cache_tracked = NULL;
 static MPL_ze_mapped_buffer_entry_t **ipc_cache_mapped = NULL;
 static MPL_ze_mapped_buffer_entry_t **ipc_cache_removal = NULL;
 static MPL_ze_mapped_buffer_entry_t **mmap_cache_removal = NULL;
+
+static ze_event_pool_handle_t local_event_pool; /* One local event pool for communicating with all neighbors */
 
 typedef struct {
     void *ptr;
@@ -329,6 +333,84 @@ int MPL_gpu_init_device_mappings(int max_devid, int max_subdevid)
     return mpl_err;
   fn_fail:
     goto fn_exit;
+}
+
+static int create_event_pool(void)
+{
+    int mpl_err = MPL_SUCCESS;
+    ze_result_t ret;
+
+    ze_event_pool_desc_t eventPoolDesc = {
+        ZE_STRUCTURE_TYPE_EVENT_POOL_DESC,
+        NULL,
+        ZE_EVENT_POOL_FLAG_IPC, /* all events in pool are visible to other processes */
+        MPL_GPU_ZE_EVENT_POOL_SIZE
+    };
+    ret = zeEventPoolCreate(ze_context, &eventPoolDesc, 0, NULL, &local_event_pool);
+    if (ret) {
+        mpl_err = MPL_ERR_GPU_EVENTPOOL_NOT_CREATED;
+        goto fn_fail;
+    }
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPL_ze_ipc_event_pool_handle_create(MPL_gpu_ipc_event_pool_handle_t * ipc_event_pool_handle)
+{
+    int mpl_err = MPL_SUCCESS;
+    ze_result_t ret;
+    ze_ipc_event_pool_handle_t ze_ipc_event_pool_handle;
+
+    ret = zeEventPoolGetIpcHandle(local_event_pool, &ze_ipc_event_pool_handle);
+    ZE_ERR_CHECK(ret);
+
+    memcpy(ipc_event_pool_handle, &ze_ipc_event_pool_handle, sizeof(ze_ipc_event_pool_handle));
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+int MPL_ze_ipc_event_pool_handle_open(MPL_gpu_ipc_event_pool_handle_t gpu_ipc_event_pool_handle,
+                                      ze_event_pool_handle_t * mapped_event_pool_handle)
+{
+    int mpl_err = MPL_SUCCESS;
+    ze_result_t ret;
+
+    /* This function does not take any device parameter. It tries to open the handle on the remote device.
+     * So the remote device must be visible. This is an L0 issue and needs to be fixed. */
+    ret = zeEventPoolOpenIpcHandle(ze_context, gpu_ipc_event_pool_handle, mapped_event_pool_handle);
+    ZE_ERR_CHECK(ret);
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+int MPL_ze_ipc_event_pool_handle_close(ze_event_pool_handle_t mapped_event_pool_handle)
+{
+    int mpl_err = MPL_SUCCESS;
+    ze_result_t ret;
+
+    ret = zeEventPoolCloseIpcHandle(mapped_event_pool_handle);
+    ZE_ERR_CHECK(ret);
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+int MPL_ze_ipc_event_pool_handle_size(void)
+{
+    return ZE_MAX_IPC_HANDLE_SIZE;
 }
 
 int MPL_gpu_init(MPL_gpu_info_t * info)
@@ -739,6 +821,9 @@ static int gpu_ze_init_driver(void)
     pool_desc.count = MPL_ZE_EVENT_POOL_SIZE;
     ret = zeEventPoolCreate(ze_context, &pool_desc, 0, NULL, &eventPool);
     ZE_ERR_CHECK(ret);
+
+
+    create_event_pool();
 
   fn_exit:
     MPL_free(all_drivers);
