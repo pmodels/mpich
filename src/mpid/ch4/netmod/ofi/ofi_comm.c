@@ -172,8 +172,6 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 
     MPIR_FUNC_ENTER;
 
-    MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
-
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
@@ -188,6 +186,8 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
         (MPIDI_OFI_COMM(comm).enable_striping != 0 ? 1 : 0);
     MPIDI_OFI_global.num_comms_enabled_hashing -=
         (MPIDI_OFI_COMM(comm).enable_hashing != 0 ? 1 : 0);
+
+    MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
