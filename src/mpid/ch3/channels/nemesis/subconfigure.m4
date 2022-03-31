@@ -176,11 +176,6 @@ if test "${with_papi}" != "no" ; then
 #    AC_CHECK_LIB(perfctr, perfctr_info, , [AC_MSG_ERROR(['perfctr library not found.  Did you specify --with-papi=?'])])
 fi
 
-# handle missing mkstemp, or missing mkstemp declaration
-AC_CHECK_FUNCS(mkstemp)
-AC_CHECK_FUNCS(rand)
-AC_CHECK_FUNCS(srand)
-
 # Check for available shared memory functions
 #PAC_ARG_SHARED_MEMORY
 #if test "$with_shared_memory" != "mmap" -a "$with_shared_memory" != "sysv"; then
