@@ -323,8 +323,23 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
     int mpl_err = MPL_SUCCESS;
     CUresult curet;
 
+    /* get the device where the pointer is located */
+    int device;
+    struct cudaPointerAttributes attr;
+    cudaPointerGetAttributes(&attr, ptr);
+    device = attr.device;
+
+    /* set the device to query the address range, otherwise the driver
+     * might return CUDA_ERROR_NOT_FOUND */
+    int device_save;
+    cudaGetDevice(&device_save);
+    cudaSetDevice(device);
+
     curet = cuMemGetAddressRange((CUdeviceptr *) pbase, (size_t *) len, (CUdeviceptr) ptr);
     CU_ERR_CHECK(curet);
+
+    /* set device back to saved value */
+    cudaSetDevice(device_save);
 
   fn_exit:
     return mpl_err;
