@@ -262,6 +262,8 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIDI_OFI_global.num_comms_enabled_hashing -=
         (MPIDI_OFI_COMM(comm).enable_hashing != 0 ? 1 : 0);
 
+    MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
