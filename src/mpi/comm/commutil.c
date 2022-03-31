@@ -904,13 +904,13 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     }
     MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
 
-    if (info) {
-        MPII_Comm_set_hints(newcomm_ptr, info);
-    }
-
     newcomm_ptr->tainted = comm_ptr->tainted;
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (info) {
+        MPII_Comm_set_hints(newcomm_ptr, info);
+    }
 
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
