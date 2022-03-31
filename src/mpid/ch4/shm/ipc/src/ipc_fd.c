@@ -1,6 +1,7 @@
 #include "mpidimpl.h"
 #include "mpidu_init_shm.h"
 #include "ipc_noinline.h"
+#include "ipc_fd.h"
 #include "ipc_types.h"
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -41,6 +42,8 @@ int MPIDI_FD_mpi_finalize_hook(void)
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
+
+    MPL_free(neigh_ipc_event_pool_handle);
 
   fn_exit:
     return mpi_errno;
@@ -128,6 +131,63 @@ static int MPIDI_IPC_mpi_ze_fd_setup(void)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static int MPIDI_IPC_mpi_ze_ipc_event_pool_setup(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+#if defined(MPL_HAVE_ZE)
+    int mpl_err = MPL_SUCCESS;
+    int send_fd = -1, recv_fd = -1;
+
+    MPIDI_GPU_ipc_event_pool_handle_t ipc_event_pool_handle;
+    mpl_err = MPIDI_GPU_ipc_event_pool_handle_create(&ipc_event_pool_handle);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                        "**gpu_ipc_event_pool_handle_create");
+
+    neigh_ipc_event_pool_handle =
+        (MPIDI_GPU_ipc_event_pool_handle_t *) MPL_malloc(sizeof(MPIDI_GPU_ipc_event_pool_handle_t) *
+                                                         MPIR_Process.local_size, MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!neigh_ipc_event_pool_handle, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+
+    mpi_errno = MPIDU_Init_shm_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    memcpy(&send_fd, ipc_event_pool_handle.gpu_ipc_event_pool_handle.data, sizeof(int));
+    /* Exchange the event pool handles; the handles will be opened as needed */
+    for (int i = 0; i < MPIR_Process.local_size; i++) {
+        if (i != MPIR_Process.local_rank) {
+            mpi_errno =
+                MPIDI_IPC_mpi_fd_send(i, send_fd,
+                                      ipc_event_pool_handle.gpu_ipc_event_pool_handle.data +
+                                      sizeof(int),
+                                      MPIDI_GPU_ipc_event_pool_handle_size() - sizeof(int));
+            MPIR_ERR_CHECK(mpi_errno);
+
+            mpi_errno =
+                MPIDI_IPC_mpi_fd_recv(i, &recv_fd,
+                                      neigh_ipc_event_pool_handle[i].
+                                      gpu_ipc_event_pool_handle.data + sizeof(int),
+                                      MPIDI_GPU_ipc_event_pool_handle_size() - sizeof(int), 0);
+            MPIR_ERR_CHECK(mpi_errno);
+
+            memcpy(neigh_ipc_event_pool_handle[i].gpu_ipc_event_pool_handle.data, &recv_fd,
+                   sizeof(int));
+
+        }
+    }
+
+    mpi_errno = MPIDU_Init_shm_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+
 }
 
 int MPIDI_IPC_mpi_socks_init(void)
@@ -261,6 +321,10 @@ int MPIDI_IPC_mpi_socks_init(void)
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
+
+
+    mpi_errno = MPIDI_IPC_mpi_ze_ipc_event_pool_setup();
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
