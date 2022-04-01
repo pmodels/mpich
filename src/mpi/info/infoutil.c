@@ -48,9 +48,15 @@ int MPIR_Info_free_impl(MPIR_Info * info_ptr)
     return MPI_SUCCESS;
 }
 
-/* Allocate and initialize an MPIR_Info object.
- *
- * Returns MPICH error codes */
+/* Allocate and initialize an MPIR_Info object. */
+
+static void info_init(MPIR_Info * info_ptr)
+{
+    info_ptr->next = NULL;
+    info_ptr->key = NULL;
+    info_ptr->value = NULL;
+}
+
 int MPIR_Info_alloc(MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -58,9 +64,7 @@ int MPIR_Info_alloc(MPIR_Info ** info_p_p)
     MPIR_ERR_CHKANDJUMP1(!*info_p_p, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPI_Info");
 
     MPIR_Object_set_ref(*info_p_p, 0);
-    (*info_p_p)->next = NULL;
-    (*info_p_p)->key = NULL;
-    (*info_p_p)->value = NULL;
+    info_init(*info_p_p);
 
   fn_fail:
     return mpi_errno;
@@ -70,6 +74,7 @@ int MPIR_Info_alloc(MPIR_Info ** info_p_p)
  * finalization by MPI_Info_create_env().  This routine must be thread-safe. */
 void MPIR_Info_setup_env(MPIR_Info * info_ptr)
 {
+    info_init(info_ptr);
     /* FIXME: Currently this info object is left empty, we need to add data to
      * this as defined by the standard. */
     (void) info_ptr;
