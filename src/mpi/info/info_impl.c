@@ -5,6 +5,18 @@
 
 #include "mpiimpl.h"
 
+const char *MPIR_Info_lookup(MPIR_Info * info_ptr, const char *key)
+{
+    MPIR_Info *curr_ptr = info_ptr->next;
+    while (curr_ptr) {
+        if (strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY) == 0) {
+            return curr_ptr->value;
+        }
+        curr_ptr = curr_ptr->next;
+    }
+    return NULL;
+}
+
 /* All the MPIR_Info routines may be called before initialization or after finalization of MPI. */
 int MPIR_Info_delete_impl(MPIR_Info * info_ptr, const char *key)
 {
