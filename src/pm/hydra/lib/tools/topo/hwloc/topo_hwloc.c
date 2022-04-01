@@ -571,7 +571,9 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
 
     HYDU_FUNC_ENTER();
 
-    HYDU_ASSERT(binding, status);
+    if (hwloc_initialized) {
+        goto fn_exit;
+    }
 
     hwloc_topology_init(&topology);
     hwloc_topology_set_io_types_filter(topology, HWLOC_TYPE_FILTER_KEEP_ALL);
@@ -581,36 +583,38 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
 
     hwloc_initialized = 1;
 
-    /* bindings that don't require mapping */
-    if (!strncmp(binding, "user:", strlen("user:"))) {
-        status = handle_user_binding(binding + strlen("user:"));
-        HYDU_ERR_POP(status, "error binding to %s\n", binding);
-        goto fn_exit;
-    } else if (!strcmp(binding, "rr")) {
-        status = handle_rr_binding();
-        HYDU_ERR_POP(status, "error binding to %s\n", binding);
-        goto fn_exit;
-    }
+    if (binding) {
+        /* bindings that don't require mapping */
+        if (!strncmp(binding, "user:", strlen("user:"))) {
+            status = handle_user_binding(binding + strlen("user:"));
+            HYDU_ERR_POP(status, "error binding to %s\n", binding);
+            goto fn_exit;
+        } else if (!strcmp(binding, "rr")) {
+            status = handle_rr_binding();
+            HYDU_ERR_POP(status, "error binding to %s\n", binding);
+            goto fn_exit;
+        }
 
-    status = handle_bitmap_binding(binding, mapping ? mapping : binding);
-    HYDU_ERR_POP(status, "error binding with bind \"%s\" and map \"%s\"\n", binding,
-                 mapping ? mapping : "NULL");
+        status = handle_bitmap_binding(binding, mapping ? mapping : binding);
+        HYDU_ERR_POP(status, "error binding with bind \"%s\" and map \"%s\"\n", binding,
+                     mapping ? mapping : "NULL");
 
 
-    /* Memory binding options */
-    if (membind == NULL)
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_DEFAULT;
-    else if (!strcmp(membind, "firsttouch"))
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_FIRSTTOUCH;
-    else if (!strcmp(membind, "nexttouch"))
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_NEXTTOUCH;
-    else if (!strncmp(membind, "bind:", strlen("bind:"))) {
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_BIND;
-    } else if (!strncmp(membind, "interleave:", strlen("interleave:"))) {
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_INTERLEAVE;
-    } else {
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "unrecognized membind policy \"%s\"\n", membind);
+        /* Memory binding options */
+        if (membind == NULL)
+            HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_DEFAULT;
+        else if (!strcmp(membind, "firsttouch"))
+            HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_FIRSTTOUCH;
+        else if (!strcmp(membind, "nexttouch"))
+            HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_NEXTTOUCH;
+        else if (!strncmp(membind, "bind:", strlen("bind:"))) {
+            HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_BIND;
+        } else if (!strncmp(membind, "interleave:", strlen("interleave:"))) {
+            HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_INTERLEAVE;
+        } else {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "unrecognized membind policy \"%s\"\n", membind);
+        }
     }
 
   fn_exit:
