@@ -1,3 +1,5 @@
+# MPICH Tuning Parameters
+
 This document discusses some of the new features added to the MPICH-based MPI
 implementation for the Aurora computer and the environment variables (CVARs)
 that the user can set to modify its behavior. MPICH is configured to use
@@ -16,16 +18,16 @@ https://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager#Process-c
 This following section of this document provides information about threading
 optimizations (Section 1).
 
-**1. Multi-threading**
+## 1. Multi-threading
 
-MPI provides four different threading modes: MPI_THREAD_SINGLE,
-MPI_THREAD_FUNNELED, MPI_THREAD_SERIALIZED, and MPI_THREAD_MULTIPLE.
+MPI provides four different threading modes: `MPI_THREAD_SINGLE`,
+`MPI_THREAD_FUNNELED`, `MPI_THREAD_SERIALIZED`, and `MPI_THREAD_MULTIPLE`.
 MPI_THREAD_MULTIPLE is the most advanced threading mode and the focus of this
 Section. With this mode, an application runs with several threads, and any
 thread can make calls to MPI at any time. Thus, the MPI library needs to protect
 access to its internal data structures appropriately. It also tries to exploit
 concurrency by taking advantage of the availability of multiple hardware
-contexts in the network card, which we call VCIs (Virtual Communication
+contexts in the network card, which we call `VCIs` (Virtual Communication
 Interfaces).
 
 MPICH provides two threading synchronization strategies. One strategy is to use
@@ -55,7 +57,7 @@ If configuration is done with --enable-ch4-mt=runtime, user can select a
 threading mode at runtime using the environment MPIR_CVAR_CH4_MT_MODEL
 (described below in Section 1.1).
 
-**1.1 CVARs (Environment Variables)**
+### 1.1 CVARs (Environment Variables)
 
 MPICH users can use the CVAR MPIR_CVAR_CH4_MT_MODEL to select at runtime among
 the threading synchronization models, `global`, `direct`, or `lockless`. If the
@@ -81,7 +83,7 @@ global progress is turned on by default but can be turned off by setting
 `MPIR_CVAR_CH4_GLOBAL_PROGRESS=0`, which can improve performance under the use
 of multiple VCIs. However, caution should be taken as it can result in a deadlock.
 
-**1.2 Communicator Info Hints**
+### 1.2 Communicator Info Hints
 
 When selecting the fine-grain modes (`direct` or `lockless`), messages sent
 using different communicators can be sent/received using different VCIs.
