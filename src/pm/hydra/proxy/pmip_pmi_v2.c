@@ -438,6 +438,11 @@ static HYD_status fn_info_getjobattr(int fd, char *args[])
 
         send_cmd_downstream(fd, cmd);
         MPL_free(cmd);
+    } else if (!strcmp(key, "PMI_hwloc_xmlfile")) {
+        status = HYD_pmip_get_hwloc_xmlfile_resp_v2(thrid, &cmd);
+        HYDU_ERR_POP(status, "error getting topology info\n");
+        send_cmd_downstream(fd, cmd);
+        MPL_free(cmd);
     } else {
         status = send_cmd_upstream("cmd=info-getjobattr;", fd, args);
         HYDU_ERR_POP(status, "error sending command upstream\n");

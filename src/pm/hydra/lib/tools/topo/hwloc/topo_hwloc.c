@@ -579,6 +579,22 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
     hwloc_topology_set_io_types_filter(topology, HWLOC_TYPE_FILTER_KEEP_ALL);
     hwloc_topology_load(topology);
 
+    /* share topology with processes on the node via XML file */
+    char *xmlenv = getenv("HWLOC_XMLFILE");
+    if (xmlenv == NULL) {
+        char topofile[] = "/tmp/hydra_hwloc_xmlfile_XXXXXX";
+        int xmlfd = MPL_mkstemp(topofile);
+        if (xmlfd != -1) {
+            if (HYDT_topo_info.debug) {
+                HYDU_dump(stdout, "created hwloc xml file %s\n", topofile);
+            }
+            hwloc_topology_export_xml(topology, topofile, 0);
+            HYDT_topo_hwloc_info.xml_topology_file = MPL_strdup(topofile);
+        } else if (HYDT_topo_info.debug) {
+            HYDU_dump(stdout, "hwloc xml file creation failed\n");
+        }
+    }
+
     HYDT_topo_hwloc_info.total_num_pus = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
 
     hwloc_initialized = 1;
@@ -673,8 +689,17 @@ HYD_status HYDT_topo_hwloc_finalize(void)
 
     HYDU_FUNC_ENTER();
 
-    if (hwloc_initialized)
+    if (hwloc_initialized) {
         hwloc_topology_destroy(topology);
+
+        if (HYDT_topo_hwloc_info.xml_topology_file != NULL) {
+            unlink(HYDT_topo_hwloc_info.xml_topology_file);
+            if (HYDT_topo_info.debug) {
+                HYDU_dump(stdout, "removed file %s\n", HYDT_topo_hwloc_info.xml_topology_file);
+            }
+            MPL_free(HYDT_topo_hwloc_info.xml_topology_file);
+        }
+    }
 
     HYDU_FUNC_EXIT();
     return status;
