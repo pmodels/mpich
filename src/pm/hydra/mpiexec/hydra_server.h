@@ -36,8 +36,6 @@ struct HYD_pg {
 
     /* scratch space for the PM */
     void *pg_scratch;
-
-    struct HYD_pg *next;
 };
 
 struct HYD_server_info_s {
@@ -60,9 +58,6 @@ struct HYD_server_info_s {
     /* All of the available nodes */
     struct HYD_node *node_list;
 
-    /* Process groups */
-    struct HYD_pg pg_list;
-
     /* Hash for fast proxy lookup */
     struct HYD_proxy *proxy_hash;
 
@@ -77,9 +72,10 @@ struct HYD_server_info_s {
 
 extern struct HYD_server_info_s HYD_server_info;
 
-void HYDU_init_pg(struct HYD_pg *pg, int pgid);
-HYD_status HYDU_alloc_pg(struct HYD_pg **pg, int pgid);
-void HYDU_free_pg_list(struct HYD_pg *pg_list);
+void HYDU_init_pg(void);
+int HYDU_alloc_pg(void);
+void HYDU_free_pg_list(void);
+int HYDU_pg_max_id(void);
 struct HYD_pg *HYDU_get_pg(int pgid);
 
 #endif /* HYDRA_SERVER_H_INCLUDED */

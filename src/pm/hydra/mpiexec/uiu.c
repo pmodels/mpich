@@ -36,10 +36,7 @@ void HYD_uiu_init_params(void)
 
     HYD_server_info.node_list = NULL;
 
-    HYDU_init_pg(&HYD_server_info.pg_list, 0);
-
-    HYD_server_info.pg_list.pgid = 0;
-    HYD_server_info.pg_list.next = NULL;
+    HYDU_init_pg();
 
 #if defined ENABLE_PROFILING
     HYD_server_info.enable_profiling = -1;
@@ -61,8 +58,7 @@ void HYD_uiu_free_params(void)
     MPL_free(HYD_server_info.nameserver);
     MPL_free(HYD_server_info.localhost);
     HYDU_free_node_list(HYD_server_info.node_list);
-    HYDU_free_proxy_list(HYD_server_info.pg_list.proxy_list);
-    HYDU_free_pg_list(HYD_server_info.pg_list.next);
+    HYDU_free_pg_list();
     MPL_free(HYD_ui_mpich_info.prepend_pattern);
     MPL_free(HYD_ui_mpich_info.outfile_pattern);
     MPL_free(HYD_ui_mpich_info.errfile_pattern);
@@ -198,9 +194,7 @@ static HYD_status resolve_pattern_string(const char *pattern, char **str, int pg
                                  (int) (time(NULL) - HYD_server_info.time_start));
                     break;
                 case 'h':
-                    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
-                        if (pg->pgid == pgid)
-                            break;
+                    pg = HYDU_get_pg(pgid);
                     HYDU_ASSERT(pg, status);
 
                     for (proxy = pg->proxy_list; proxy; proxy = proxy->next)

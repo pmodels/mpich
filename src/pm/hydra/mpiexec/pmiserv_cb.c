@@ -156,13 +156,13 @@ static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
 
 HYD_status HYD_pmcd_pmiserv_cleanup_all_pgs(void)
 {
-    struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
+    for (int i = 0; i < HYDU_pg_max_id(); i++) {
+        struct HYD_pg *pg = HYDU_get_pg(i);
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
             status = cleanup_proxy(proxy);
             HYDU_ERR_POP(status, "unable to cleanup proxy\n");
@@ -240,6 +240,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         pg = HYDU_get_pg(proxy->pgid);
 
         /* Check if all the PIDs have been received */
+        pg = HYDU_get_pg(0);
         for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next)
             if (tproxy->pid == NULL)
                 goto fn_exit;
@@ -404,8 +405,9 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 pg_scratch->dead_processes = str;
             }
 
-            for (pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
-                for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
+            for (int i = 0; i < HYDU_pg_max_id(); i++) {
+                struct HYD_pg *tmp_pg = HYDU_get_pg(i);
+                for (tproxy = tmp_pg->proxy_list; tproxy; tproxy = tproxy->next) {
                     if (tproxy->control_fd == HYD_FD_UNSET || tproxy->control_fd == HYD_FD_CLOSED)
                         continue;
 
@@ -482,9 +484,7 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
     proxy_id = init_hdr.proxy_id;
 
     /* Find the process group */
-    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
-        if (pg->pgid == pgid)
-            break;
+    pg = HYDU_get_pg(pgid);
     if (!pg)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n", pgid);
 
@@ -552,9 +552,7 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
     pgid = ((int) (size_t) userp);
 
     /* Find the process group */
-    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
-        if (pg->pgid == pgid)
-            break;
+    pg = HYDU_get_pg(pgid);
     if (!pg)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n", pgid);
 

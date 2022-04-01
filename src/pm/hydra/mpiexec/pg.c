@@ -4,65 +4,58 @@
  */
 
 #include "hydra_server.h"
+#include "utarray.h"
 
-void HYDU_init_pg(struct HYD_pg *pg, int pgid)
+UT_array *pg_list;
+
+void HYDU_init_pg(void)
 {
-    pg->pgid = pgid;
-    pg->is_active = true;
-    pg->proxy_list = NULL;
-    pg->proxy_count = 0;
-    pg->pg_process_count = 0;
-    pg->barrier_count = 0;
-    pg->spawner_pg = NULL;
-    pg->user_node_list = NULL;
-    pg->pg_core_count = 0;
-    pg->pg_scratch = NULL;
-    pg->next = NULL;
+    static UT_icd pg_icd = { sizeof(struct HYD_pg), NULL, NULL, NULL };
+    utarray_new(pg_list, &pg_icd, MPL_MEM_OTHER);
+
+    int pgid = HYDU_alloc_pg();
+    assert(pgid == 0);
 }
 
-HYD_status HYDU_alloc_pg(struct HYD_pg **pg, int pgid)
+int HYDU_alloc_pg(void)
 {
-    HYD_status status = HYD_SUCCESS;
-
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC_OR_JUMP(*pg, struct HYD_pg *, sizeof(struct HYD_pg), status);
-    HYDU_init_pg(*pg, pgid);
+    int pgid = utarray_len(pg_list);
+    utarray_extend_back(pg_list, 1);
+    struct HYD_pg *pg = (struct HYD_pg *) utarray_eltptr(pg_list, pgid);
+    pg->pgid = pgid;
+    pg->is_active = true;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
+    return pgid;
 }
 
-void HYDU_free_pg_list(struct HYD_pg *pg_list)
+void HYDU_free_pg_list(void)
 {
-    struct HYD_pg *pg, *tpg;
+    struct HYD_pg *pg = NULL;
 
-    pg = pg_list;
-    while (pg) {
-        tpg = pg->next;
-
+    while (pg = (struct HYD_pg *) utarray_next(pg_list, pg)) {
         if (pg->proxy_list)
             HYDU_free_proxy_list(pg->proxy_list);
 
         if (pg->user_node_list)
             HYDU_free_node_list(pg->user_node_list);
-
-        MPL_free(pg);
-
-        pg = tpg;
     }
+
+    utarray_free(pg_list);
+}
+
+int HYDU_pg_max_id(void)
+{
+    return utarray_len(pg_list);
 }
 
 struct HYD_pg *HYDU_get_pg(int pgid)
 {
-    for (struct HYD_pg * pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
-        if (pg->pgid == pgid) {
-            return pg;
-        }
+    if (pgid >= 0 && pgid < utarray_len(pg_list)) {
+        return (struct HYD_pg *) utarray_eltptr(pg_list, pgid);
+    } else {
+        return NULL;
     }
-    return NULL;
 }

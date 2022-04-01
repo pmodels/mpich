@@ -129,16 +129,16 @@ static HYD_status allocate_spawn_pg(int fd)
     HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
 
+    int pgid;
+    pgid = HYDU_alloc_pg();
+    HYDU_ASSERT(pgid > 0, status);
+
     struct HYD_pg *pg;
-    for (pg = &HYD_server_info.pg_list; pg->next; pg = pg->next);
+    pg = HYDU_get_pg(pgid);
 
-    status = HYDU_alloc_pg(&pg->next, pg->pgid + 1);
-    HYDU_ERR_POP(status, "unable to allocate process group\n");
-
-    status = HYD_pmcd_pmi_alloc_pg_scratch(pg->next);
+    status = HYD_pmcd_pmi_alloc_pg_scratch(pg);
     HYDU_ERR_POP(status, "unable to allocate pg scratch space\n");
 
-    pg = pg->next;
     spawn_pg = pg;
 
     struct HYD_proxy *proxy;
@@ -279,9 +279,6 @@ static HYD_status do_spawn(void)
     HYDU_ERR_POP(status, "unable to create PMI port\n");
     if (HYD_server_info.user_global.debug)
         HYDU_dump(stdout, "Got a control port string of %s\n", control_port);
-
-    /* Go to the last PG */
-    for (pg = &HYD_server_info.pg_list; pg->next; pg = pg->next);
 
     status = HYD_pmcd_pmi_fill_in_proxy_args(&proxy_stash, control_port, pgid);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
