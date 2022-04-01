@@ -502,6 +502,7 @@ static HYD_status singleton_init(void)
         HYDU_sock_connect("localhost", HYD_pmcd_pmip.user_global.singleton_port, &fd, 0,
                           HYD_CONNECT_DELAY);
     HYDU_ERR_POP(status, "unable to connect to singleton process\n");
+    HYD_pmcd_pmip.downstream.pmi_fd[0] = fd;
 
     char msg[1024];
     strcpy(msg, "cmd=singinit authtype=none\n");
