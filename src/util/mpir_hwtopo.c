@@ -200,6 +200,18 @@ int MPII_hwtopo_init(void)
 #ifdef HAVE_HWLOC
     bindset = hwloc_bitmap_alloc();
     hwloc_topology_init(&hwloc_topology);
+    char *xmlfile = MPIR_pmi_get_hwloc_xmlfile();
+    if (xmlfile != NULL) {
+        int rc;
+        rc = hwloc_topology_set_xml(hwloc_topology, xmlfile);
+        if (rc == 0) {
+            /* To have hwloc still actually call OS-specific hooks, the
+             * HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
+             * file is really the underlying system. */
+            hwloc_topology_set_flags(hwloc_topology, HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM);
+        }
+    }
+
     hwloc_topology_set_io_types_filter(hwloc_topology, HWLOC_TYPE_FILTER_KEEP_ALL);
     if (!hwloc_topology_load(hwloc_topology))
         bindset_is_valid =
