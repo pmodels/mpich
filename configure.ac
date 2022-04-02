@@ -1423,7 +1423,6 @@ fi
 # This goes here because we need the top_srcdir
 if test "$enable_romio" = "yes" ; then
    if test -d $use_top_srcdir/src/mpi/romio ; then
-       subsystems="$subsystems src/mpi/romio"
        AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
 
        # make it possible to "#include" mpio.h at build time
@@ -1443,6 +1442,7 @@ if test "$enable_romio" = "yes" ; then
        if test ! -d lib ; then mkdir lib ; fi
        # tell mpi.h to include mpio.h
        PAC_HAVE_ROMIO
+       PAC_CONFIG_SUBDIR_ARGS([src/mpi/romio],[$subsys_config_args],[],[AC_MSG_ERROR([src/mpi/romio configure failed])])
    else
        AC_MSG_WARN([ROMIO src directory is not available])
    fi
