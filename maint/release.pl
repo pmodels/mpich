@@ -298,6 +298,13 @@ run_cmd("tar -czvf hydra-${version}.tar.gz hydra-${version}");
 run_cmd("cp -a hydra-${version}.tar.gz ${root}/");
 print("done\n");
 
+# Create the pmi tarball
+print("===> Creating the final libpmi tarball... ");
+run_cmd("cp -a ${expdir}/src/pmi libpmi-${version}");
+run_cmd("tar -czvf libpmi-${version}.tar.gz libpmi-${version}");
+run_cmd("cp -a libpmi-${version}.tar.gz ${root}/");
+print("done\n");
+
 # Create the testsuite tarball
 print("===> Creating the final mpich-testsuite tarball... ");
 my $target = "mpich-testsuite-$version";
