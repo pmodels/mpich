@@ -368,3 +368,14 @@ MPIX_Comm_agree:
 
     After MPIX_Comm_agree raised an error of class MPI_ERR_PROC_FAILED, a subse-quent call to MPIX_Comm_failure_ack on comm acknowledges the failure of every MPI process that didn't contribute to the computation offlag.
 */
+
+MPIX_Comm_get_failed:
+    comm: COMMUNICATOR, [communicator]
+    failedgrp: GROUP, direction=out, [group of failed processes]
+    .desc: This local operation returns the group of processes that are locally known to have failed.
+/*
+    Notes:
+    The returned failedgrp can be empty, that is, equal to MPI_GROUP_EMPTY.
+
+    For any two groups obtained from calls to this routine at the same MPI process with the same comm, the smaller group is a prefix of the larger group, that is, the same failed process will have the same rank in the returned failedgrp.
+*/
