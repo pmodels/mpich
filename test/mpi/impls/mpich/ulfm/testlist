@@ -1,0 +1,1 @@
+get_failed 3 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors timeLimit=10
