@@ -1,1 +1,2 @@
 sendrecv_vci_hint 2
+multinic_infohints 2 env=MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_STRIPING=0 env=MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_HASHING=0
