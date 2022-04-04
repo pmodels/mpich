@@ -486,21 +486,6 @@ AC_ARG_WITH(device,
 	AS_HELP_STRING([--with-device=name], [Specify the communication device for MPICH]),,
 	with_device=ch4)
 
-AC_ARG_WITH(pmi,
-	AS_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
-	with_pmi=default)
-
-AC_ARG_WITH(pm,
-	AS_HELP_STRING([--with-pm=name],
-		[Specify the process manager for MPICH.  "no" or "none" are
-                 valid values.  Multiple process managers may be specified as
-                 long as they all use the same pmi interface by separating them
-                 with colons.  The mpiexec for the first named process manager
-                 will be installed.  Example: "--with-pm=hydra:gforker"
-                 builds the two process managers hydra, and gforker;
-                 only the mpiexec from hydra is installed into the bin
-                 directory.]),,with_pm=default)
-
 AC_ARG_ENABLE(threads,
 [  --enable-threads=level - Control the level of thread support in the
                            MPICH implementation.  The following levels
@@ -1438,7 +1423,6 @@ fi
 # This goes here because we need the top_srcdir
 if test "$enable_romio" = "yes" ; then
    if test -d $use_top_srcdir/src/mpi/romio ; then
-       subsystems="$subsystems src/mpi/romio"
        AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
 
        # make it possible to "#include" mpio.h at build time
@@ -1458,6 +1442,7 @@ if test "$enable_romio" = "yes" ; then
        if test ! -d lib ; then mkdir lib ; fi
        # tell mpi.h to include mpio.h
        PAC_HAVE_ROMIO
+       PAC_CONFIG_SUBDIR_ARGS([src/mpi/romio],[],[],[AC_MSG_ERROR([src/mpi/romio configure failed])])
    else
        AC_MSG_WARN([ROMIO src directory is not available])
    fi
@@ -1479,18 +1464,123 @@ else
     # Make device_name available to subdirs
 fi
 
+# ---------------------------------------------------------------------------
+# Configuring pmi, pmilib, and pm
+#
+
+AC_ARG_WITH(pmi,
+	AS_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
+	with_pmi=default)
+
+AC_ARG_WITH(pmilib,
+	AS_HELP_STRING([--with-pmilib=name],
+                [Specify the PMI library. Accepted options are:
+                   mpich - use MPICH PMI library (default).
+                   slurm - use Slurm PMI library. Use --with-slurm=path to configure
+                           Slurm library path.
+                   cray  - use Cray PMI library. Use --with-craypmi=path to configure
+                           Cray PMI library path.
+                   pmix  - use PMIx library. Use --with-pmix=path to configure
+                           PMIx library path.
+                ]),,
+	with_pmilib=default)
+
+AC_ARG_WITH(pm,
+	AS_HELP_STRING([--with-pm=name],
+		[Specify the process manager for MPICH.  "no" or "none" are
+                 valid values.  Multiple process managers may be specified as
+                 long as they all use the same pmi interface by separating them
+                 with colons.  The mpiexec for the first named process manager
+                 will be installed.  Example: "--with-pm=hydra:gforker"
+                 builds the two process managers hydra, and gforker;
+                 only the mpiexec from hydra is installed into the bin
+                 directory.]),,with_pm=default)
+
+# --- check and normalize the options ----
+
+case "$with_pmi" in
+  slurm)
+    with_pmilib=slurm
+    with_pm=no
+    ;;
+  cray)
+    with_pmilib=cray
+    with_pm=no
+    ;;
+  pmix)
+    with_pmi=pmix
+    with_pmilib=pmix
+    with_pm=no
+    ;;
+  bgq)
+    with_pmi=pmi1
+    with_pmilib=no
+    ;;
+  simple)
+    with_pmi=pmi1
+    with_pmilib=mpich
+    ;;
+  pmi2/simple)
+    with_pmi=pmi2
+    with_pmilib=mpich
+    ;;
+esac
+
+case "$with_pmilib" in
+  slurm)
+    with_pm=no
+    ;;
+  cray)
+    with_pm=no
+    ;;
+  pmix)
+    with_pmi=pmix
+    with_pm=no
+    ;;
+esac
+
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmix, pmix.h, pmix, PMIx_Init)
 if test "$pac_have_pmix" = "yes" ; then
-    # disable built-in PMI and process managers
-    with_pmi="no"
-    with_pm="no"
+    with_pmi=pmix
+    with_pmilib=pmix
+    with_pm=no
+fi
+
+if test "$with_pmi" = "default" ; then
+    case "$with_pmilib" in
+      slurm|cray)
+        with_pmi=pmi2
+        ;;
+      *)
+        with_pmi=pmi1
+        ;;
+    esac
+fi
+
+if test "$with_pmilib" = "default" ; then
+    with_pmilib=mpich
+fi
+
+if test "$with_pm" = "default" ; then
+    with_pm=hydra
+fi
+
+# --- $with_pmi ----
+
+case "$with_pmi" in
+  pmi2)  
+    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
+    ;;
+  pmix)  
     if test "${device_name}" != "ch4" ; then
         AC_MSG_ERROR([$device_name does not support PMIx])
     fi
     AC_DEFINE(USE_PMIX_API, 1, [Define if PMIx API must be used])
-fi
+    ;;
+esac
 
-# with-pm
+# --- $with_pm ----
+
 if test "$with_pm" = "none" ; then
     # add "none" as synonym for "no" to agree with older erroneous docs
     with_pm="no"
@@ -1525,55 +1615,45 @@ else
 fi
 #
 hasError=no
-# We need to be careful about PM's that have either conflicting
-# requirements (e.g., different PMI implementations) or different
-# optional features (e.g., MPID_PM_NAMESERVER).
-# In addition, we need to interleave the setup of the PMI and PM
-# modules.  The order is as follows:
-#
-# For each PM, execute the mpichprereq script for that pm (if present).
-# This script provides information about the PM, including which PMI
-# implementations are supported.
-#
-# Then, for the selected PMI, the setup script (if any) is run.  This is
-# necessary because the setup of the PM may require information discovered
-# or provided duing the PMI setup step.
-#
-# Finally, for each PM, the setup script is executed.
-#
-# Step 1: invoke the mpichprereq for each PM
+
 for pm_name in $pm_names ; do
     if test -z "$first_pm_name" ; then
        first_pm_name=$pm_name
        export first_pm_name
     fi
-    if test ! -d $use_top_srcdir/src/pm/$pm_name ; then
-        AC_MSG_WARN([$use_top_srcdir/src/pm/$pm_name does not exist. PM is unknown])
-	hasError=yes
-    elif test ! -x $use_top_srcdir/src/pm/$pm_name/configure -a \
-              ! -f $use_top_srcdir/src/pm/$pm_name/subconfigure.m4 ; then
-        if test -s $use_top_srcdir/src/pm/$pm_name/configure ; then
-	    AC_MSG_WARN([The configure in $use_top_srcdir/src/pm/$pm_name exists but is not executable])
-        else
-            AC_MSG_WARN([pm $pm_name has no configure or subconfigure.m4])
+
+    case "$pm_name" in
+      gforker)
+        build_gforker=yes
+        if test "$with_pmi" != "pmi1" ; then
+            AC_MSG_ERROR([$pm_name requires PMI-v1, but $with_pmi was chosen.])
         fi
-        pm_name=""
+        ;;
+      remshell)
+        build_refshell=yes
+        if test "$with_pmi" != "pmi1" ; then
+            AC_MSG_ERROR([$pm_name requires PMI-v1, but $with_pmi was chosen.])
+        fi
+        ;;
+      hydra)
+        if test "$with_pmi" = "pmix" ; then
+            AC_MSG_ERROR([$pm_name does not support $with_pmi.])
+        fi
+        subsystems="$subsystems src/pm/hydra"
+        ;;
+      hydra2)
+        if test "$with_pmi" = "pmix" ; then
+            AC_MSG_ERROR([$pm_name does not support $with_pmi.])
+        fi
+        subsystems="$subsystems src/pm/hydra2"
+        ;;
+      *)
+        AC_MSG_WARN([PM $pm_name is unknown])
 	hasError=yes
-    else
-	nameserver=$MPID_PM_NAMESERVER
-        if test -f $use_top_srcdir/src/pm/$pm_name/mpichprereq ; then
-	    echo sourcing $use_top_srcdir/src/pm/$pm_name/mpichprereq
-	    . $use_top_srcdir/src/pm/$pm_name/mpichprereq
-	fi
-	# Check for a change; if found, we'll take the default
-	if test "$MPID_PM_NAMESERVER" != "$nameserver" ; then
-            if test "$first_pm_name" != "$pm_name" ; then
-	        # Reject suggestion (use the default, common mode)
-		MPID_PM_NAMESERVER=""
-	    fi
-	fi
-    fi
+        ;;
+    esac
 done
+
 if test "$hasError" != no ; then
     AC_MSG_ERROR([Aborting configure because an error was seen in the selection of process managers])
 fi
@@ -1582,55 +1662,72 @@ fi
 pm_name=$first_pm_name
 AC_SUBST(pm_name)
 
-# Step 2:
-# Once we've selected the process manager (or managers), we can
-# check that we have a compatible PMI implementation.
-# with-pmi
-if test "$with_pmi" != "no" ; then
-    if test "$with_pmi" = "default" -o "$with_pmi" = "yes" ; then
-        if test -n "$PM_REQUIRES_PMI" ; then
-	    with_pmi=$PM_REQUIRES_PMI
-        else
-            with_pmi=simple
-        fi
-    elif test -n "$PM_REQUIRES_PMI" ; then
-        # Test for compatibility between pm and pmi choices
-        if test "$PM_REQUIRES_PMI" != "$with_pmi" ; then
-	    AC_MSG_ERROR([The PM chosen ($with_pm) requires the PMI implementation $PM_REQUIRES_PMI but $with_pmi was selected as the PMI implementation.])
-        fi
-    fi
-    pmi_name=$with_pmi
+dnl
+dnl gforker and remshell does not use separate configure. 
+dnl
+AM_CONDITIONAL([BUILD_PM_GFORKER],[test "X$build_gforker" = "Xyes"])
+AM_CONDITIONAL([BUILD_PM_REMSHELL],[test "X$build_refshell" = "Xyes"])
+AM_CONDITIONAL([PRIMARY_PM_GFORKER],[test "X$first_pm_name" = "Xgforker"])
+AM_CONDITIONAL([PRIMARY_PM_REMSHELL],[test "X$first_pm_name" = "Xremshell"])
 
-    if test ! -d $use_top_srcdir/src/pmi/$pmi_name ; then
-        AC_MSG_WARN([$use_top_srcdir/src/pmi/$pmi_name does not exist. PMI is unknown])
-    elif test ! -x $use_top_srcdir/src/pmi/$pmi_name/configure ; then
-        if test ! -f $use_top_srcdir/src/pmi/$pmi_name/subconfigure.m4 ; then
-            AC_MSG_WARN([pmi $pmi_name has no configure or subconfigure.m4])
-            pmi_name=""
-        fi
-    else
-        # only add to subsystems if a full configure is present
-        subsystems="$subsystems src/pmi/$pmi_name"
-    fi
-fi
+# ---- $with_pmilib ----
 
-# Step 3: complete pm setup.
-# Note that checks for errors have already been performed, so this
-# loop does not need to perform any extra error checks.
-# Note that this uses this_pm_name because pm_name must be the *first*
-# of the PM names
-for this_pm_name in $pm_names ; do
-    # only add the PM to the subsystems if it has a full configure to be
-    # executed
-    if test -f $use_top_srcdir/src/pm/$this_pm_name/configure ; then
-        subsystems="$subsystems src/pm/$this_pm_name"
-    fi
-    if test -f $use_top_srcdir/src/pm/$this_pm_name/setup_pm ; then
-	echo sourcing $use_top_srcdir/src/pm/$this_pm_name/setup_pm
-	. $use_top_srcdir/src/pm/$this_pm_name/setup_pm
-    fi
-done
+pmisrcdir=""
+AC_SUBST([pmisrcdir])
+pmilib=""
+AC_SUBST([pmilib])
 
+case "$with_pmilib" in
+  mpich|install)
+    if test "$with_pmi" != "pmi1" -a "$with_pmi" != "pmi2" ; then
+        AC_MSG_ERROR([pmilib=%with_pmilib is incompatible with $with_pmi]);
+    fi
+    pmisrcdir="src/pmi"
+    pmilib="src/pmi/libpmi.la"
+
+    pmi_subdir_args=""
+    if test "$with_pmilib" != "install" ; then
+        pmi_subdir_args="--enable-embedded"
+    fi
+    PAC_CONFIG_SUBDIR_ARGS([src/pmi], [$pmi_subdir_args])
+
+    PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
+    PAC_APPEND_FLAG([-I${main_top_builddir}/src/pmi/include], [CPPFLAGS])
+    ;;
+  slurm)
+    PAC_SET_HEADER_LIB_PATH([slurm])
+    AC_CHECK_HEADER([slurm/pmi.h], [], [AC_MSG_ERROR([could not find slurm/pmi.h.  Configure aborted])])
+    # FIXME: what if user choose pmi2?
+    AC_CHECK_LIB([pmi], [PMI_Init],
+                [PAC_PREPEND_FLAG([-lpmi],[LIBS])
+                PAC_PREPEND_FLAG([-lpmi], [WRAPPER_LIBS])],
+                [AC_MSG_ERROR([could not find the Slurm libpmi.  Configure aborted])])
+    ;;
+  cray)  
+    # set CPPFLAGS and LDFLAGS
+    PAC_PREPEND_FLAG([$CRAY_PMI_INCLUDE_OPTS], [CPPFLAGS])
+    PAC_PREPEND_FLAG([$CRAY_PMI_POST_LINK_OPTS], [LDFLAGS])
+
+    AC_CHECK_HEADER([pmi.h], [], [AC_MSG_ERROR([could not find pmi.h.  Configure aborted])])
+    AC_CHECK_LIB([pmi], [PMI_Init], [], [AC_MSG_ERROR([could not find the cray libpmi.  Configure aborted])])
+
+    PAC_APPEND_FLAG([-lpmi], [WRAPPER_LIBS])
+    ;;
+  bgq)
+    # This is a hack to include the pmi.h header. The OFI/BGQ provider
+    # includes PMI functions, but no header file.
+    PAC_PREPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
+    AC_DEFINE([NO_PMI_SPAWN_MULTIPLE], 1, [The PMI library does not have PMI_Spawn_multiple.])
+    ;;
+  pmix)
+    # taken care of by PAC_CHECK_HEADER_LIB_EXPLICIT
+    ;;
+  *)
+    AC_MSG_ERROR([pmilib $with_pmilib not supported.])
+    ;;
+esac
+
+# ---------------------------------------------------------------------------
 # Check for whether the compiler defines a symbol that contains the
 # function name. The MPICH code uses this for debugging purposes.
 
@@ -2334,12 +2431,21 @@ if test "$enable_cxx" = "yes" ; then
     # so that it may be used in #if statements without adding to
     # the CPP name space
     AC_SUBST(FORTRAN_BINDING)
+fi
 
+# we install mpicxx as long as CXX is defined. In the case of enable_cxx=no,
+# it is essentially the same as mpicc with CXX compiler.
+if test -n "$CXX" ; then
     # determine shared library flags for CXX
     cxx_shlib_conf=src/env/cxx_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([CXX],[$cxx_shlib_conf])
     AC_SUBST_FILE([cxx_shlib_conf])
+
+    if test "$enable_cxx" != yes; then
+        MPICXXLIBNAME="$MPILIBNAME"
+    fi
 fi
+AM_CONDITIONAL([INSTALL_MPICXX],[test -n "$CXX"])
 
 if test "$enable_cxx" = yes; then
     # Check if $MPI_DEFAULT_CXXOPTS is valid with $CXX
@@ -2367,13 +2473,11 @@ AC_LANG([C])
 # subsystems to build
 # ----------------------------------------------------------------------------
 
-# Look for perl.  Perl is used *only* in the tests of the commands such as
-# mpiexec, mpicc, etc, in test/commands, and in some of the utility
-# programs for processing log files .  If perl is not found,
-# MPICH may still be built and used.
-# We need the full path to perl since we'll use it as the interpreter for
-# a shell script.
-AC_PATH_PROG(PERL,perl)
+# Look for perl.  Perl is needed in configure MPL (confdb/cmd_prefix_config_h.pl).
+AC_PATH_PROG(PERL,perl,[no])
+if test "$PERL" = "no" ; then
+    AC_MSG_ERROR([Perl is required but not found.])
+fi
 
 # Check for the killall program; this can be used in some of the tests
 # in test/commands
@@ -3703,11 +3807,6 @@ fi
 # ----------------------------------------------------------------------------
 # Look for some non-posix, but commonly provided functions
 # ----------------------------------------------------------------------------
-# mkstemp() is a better replacement for mktemp()
-AC_CHECK_FUNCS(mkstemp)
-if test "$ac_cv_func_mkstemp" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],mkstemp)
-fi
 # putenv() sets environment variable
 AC_CHECK_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then
@@ -4025,10 +4124,6 @@ AC_CONFIG_COMMANDS([chmod],[chmod a+x test/commands/cmdtests])
 
 
 AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h file has been included])
-
-if test "$USE_PMI2_API" = "yes" ; then
-   AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
-fi
 
 ########################################################################
 

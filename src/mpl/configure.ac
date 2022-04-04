@@ -1011,6 +1011,8 @@ fi
 AC_CHECK_FUNCS(mkstemp)
 if test "$ac_cv_func_mkstemp" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],mkstemp)
+else
+    AC_MSG_WARN([The mkstemp function is not provided in the standard library. Using a possibly insecure replacement function.])
 fi
 # fdopen() converts from an fd to a FILE*
 AC_CHECK_FUNCS(fdopen)
