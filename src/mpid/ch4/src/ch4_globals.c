@@ -145,31 +145,6 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
     return 0;
 }
 
-int MPIDI_check_for_failed_procs(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    /* FIXME: Currently this only handles failed processes in
-     * comm_world.  We need to fix hydra to include the pgid along
-     * with the rank, then we need to create the failed group from
-     * something bigger than comm_world. */
-
-    char *failed_procs_string = MPIR_pmi_get_failed_procs();
-
-    if (failed_procs_string) {
-        MPL_free(failed_procs_string);
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST,
-                         "Received proc fail notification: %s", failed_procs_string));
-
-        /* FIXME: handle ULFM failed groups here */
-    }
-
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}
-
 MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 
 #ifdef MPL_USE_DBG_LOGGING
