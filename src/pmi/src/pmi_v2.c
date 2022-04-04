@@ -73,8 +73,6 @@ static const char NAME_KEY[] = "name";
 static const char PORT_KEY[] = "port";
 static const char THRID_KEY[] = "thrid";
 static const char INFOKEYCOUNT_KEY[] = "infokeycount";
-static const char INFOKEY_KEY[] = "infokey%d";
-static const char INFOVAL_KEY[] = "infoval%d";
 
 static const char TRUE_VAL[] = "TRUE";
 static const char FALSE_VAL[] = "FALSE";
@@ -148,7 +146,7 @@ static void init_kv_strdup(PMI2_Keyvalpair * kv, const char key[], const char va
 static void init_kv_strdup_int(PMI2_Keyvalpair * kv, const char key[], int val)
 {
     char tmpbuf[32] = { 0 };
-    int rc = PMI2_SUCCESS;
+    int rc ATTRIBUTE((unused)) = PMI2_SUCCESS;
 
     rc = MPL_snprintf(tmpbuf, sizeof(tmpbuf), "%d", val);
     PMIU_Assert(rc >= 0);
@@ -161,7 +159,7 @@ static void init_kv_strdup_intsuffix(PMI2_Keyvalpair * kv, const char key_prefix
                                      const char val[])
 {
     char tmpbuf[256 /*XXX HACK */ ] = { 0 };
-    int rc = PMI2_SUCCESS;
+    int rc ATTRIBUTE((unused)) = PMI2_SUCCESS;
 
     rc = MPL_snprintf(tmpbuf, sizeof(tmpbuf), "%s%d", key_prefix, suffix);
     PMIU_Assert(rc >= 0);
@@ -475,12 +473,10 @@ PMI_API_PUBLIC
                        const PMI2_keyval_t preput_keyval_vector[],
                        char jobId[], int jobIdSize, int errors[])
 {
-    int i, rc, spawncnt, total_num_processes, num_errcodes_found;
+    int i, rc, spawncnt, total_num_processes;
     int found;
     const char *jid;
     int jidlen;
-    char tempbuf[PMIU_MAXLINE];
-    char *lead, *lag;
     int spawn_rc;
     const char *errmsg = NULL;
     PMI2_Command resp_cmd = { 0 };
