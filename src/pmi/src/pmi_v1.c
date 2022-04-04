@@ -18,37 +18,9 @@
 
 #include "pmi_config.h"
 
-#include <stdio.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#ifdef USE_PMI_PORT
-#ifndef MAXHOSTNAME
-#define MAXHOSTNAME 256
-#endif
-#endif
-/* This should be moved to pmiu for shutdown */
-#if defined(HAVE_SYS_SOCKET_H)
-#include <sys/socket.h>
-#endif
-
+#include "pmi_util.h"
 #include "mpl.h"        /* Get ATTRIBUTE, some base functions */
-
-/* Temporary debug definitions */
-/* #define DBG_PRINTF(args) printf args ; fflush(stdout) */
-#define DBG_PRINTF(args)
-
 #include "pmi.h"
-#include "simple_pmiutil.h"
 
 #ifdef HAVE_MPI_H
 #include "mpi.h"        /* to get MPI_MAX_PORT_NAME */
@@ -1037,11 +1009,6 @@ static int PMII_Set_from_port(int fd, int id)
     PMIU_getval("debug", cmd, PMIU_MAXLINE);
     PMI_debug = atoi(cmd);
 
-    if (PMI_debug) {
-        DBG_PRINTF(("end of handshake, rank = %d, size = %d\n", PMI_rank, PMI_size));
-        DBG_PRINTF(("Completed init\n"));
-    }
-
     return PMI_SUCCESS;
 }
 
@@ -1315,9 +1282,6 @@ static int getPMIFD(int *notset)
         }
         *ph = 0;
 
-        if (PMI_debug) {
-            DBG_PRINTF(("Connecting to %s\n", p));
-        }
         if (*pn == ':') {
             portnum = atoi(pn + 1);
             /* FIXME: Check for valid integer after : */
