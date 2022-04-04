@@ -155,6 +155,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPIR_Typerep_init();
     MPII_thread_mutex_create();
     MPII_init_request();
+    MPIR_ulfm_init();
     MPII_hwtopo_init();
     MPII_nettopo_init();
     MPII_init_windows();
@@ -380,6 +381,7 @@ int MPII_Finalize(MPIR_Session * session_ptr)
 
     MPII_hwtopo_finalize();
     MPII_nettopo_finalize();
+    MPIR_ulfm_finalize();
 
     /* Users did not call MPI_T_init_thread(), so we free memories allocated to
      * MPIR_T during MPI_Init here. Otherwise, free them in MPI_T_finalize() */

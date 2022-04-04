@@ -3,7 +3,7 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpiimpl.h"
+#include "mpidimpl.h"
 #include "utarray.h"
 
 /* MPIR_Comm_get_failed_impl -
@@ -18,7 +18,9 @@
 /* NOTE: we need maintain the order of failed_procs as the show up. We do it here because
  *       it isn't fair to require PMI to do it.
  */
+static MPID_Thread_mutex_t failed_procs_mutex;
 static UT_array *failed_procs;
+MPL_atomic_int_t MPIR_failed_procs_count = MPL_ATOMIC_INT_T_INITIALIZER(0);
 
 static void add_failed_proc(int rank)
 {
@@ -68,25 +70,44 @@ static void parse_failed_procs_string(char *failed_procs_string)
     }
 }
 
+void MPIR_ulfm_init(void)
+{
+    int err;
+    MPID_Thread_mutex_create(&failed_procs_mutex, &err);
+    MPIR_Assert(err == 0);
+}
+
+void MPIR_ulfm_finalize(void)
+{
+    int err;
+    MPID_Thread_mutex_destroy(&failed_procs_mutex, &err);
+    MPIR_Assert(err == 0);
+}
+
+void MPIR_update_failed_procs(void)
+{
+    MPID_THREAD_CS_ENTER(VCI, failed_procs_mutex);
+    char *failed_procs_string = MPIR_pmi_get_failed_procs();
+
+    if (failed_procs_string && failed_procs_string[0] != '\0') {
+        parse_failed_procs_string(failed_procs_string);
+        MPL_free(failed_procs_string);
+    }
+    MPL_atomic_relaxed_store_int(&MPIR_failed_procs_count, utarray_len(failed_procs));
+    MPID_THREAD_CS_EXIT(VCI, failed_procs_mutex);
+}
+
 int MPIR_Comm_get_failed_impl(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    char *failed_procs_string = MPIR_pmi_get_failed_procs();
+    MPIR_update_failed_procs();
 
-    if (!failed_procs_string) {
+    int n = MPL_atomic_relaxed_load_int(&MPIR_failed_procs_count);
+    if (n == 0) {
         *failed_group_ptr = MPIR_Group_empty;
-    } else if (failed_procs_string[0] == '\0') {
-        *failed_group_ptr = MPIR_Group_empty;
-        MPL_free(failed_procs_string);
-    } else {
-        parse_failed_procs_string(failed_procs_string);
-        MPL_free(failed_procs_string);
-
-        /* create failed_group */
-        int n = utarray_len(failed_procs);
-
+    } else if (n > 0) {
         MPIR_Group *new_group;
         mpi_errno = MPIR_Group_create(n, &new_group);
         MPIR_ERR_CHECK(mpi_errno);
