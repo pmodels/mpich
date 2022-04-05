@@ -317,11 +317,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
     MPIDI_PROGRESS_YIELD();
 
 #else
+    int count = 0;
     state->progress_made = 0;
     while (1) {
         mpi_errno = MPIDI_progress_test(state, 1);
         MPIR_ERR_CHECK(mpi_errno);
-        if (state->progress_made) {
+        /* break out to MPIR-layer to check for request completion or fault tolerance */
+        /* NOTE: 100 is chosen arbitrarily */
+        count++;
+        if (state->progress_made || count > 100) {
             break;
         }
         MPIDI_PROGRESS_YIELD();
