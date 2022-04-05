@@ -24,9 +24,9 @@ AC_DEFUN([PAC_CONFIG_MPL],[
         dnl ---- sub-configure (e.g. hydra, romio) ----
         if test "$FROM_MPICH" = "yes"; then
             dnl skip ROMIO since mpich already links libmpl.la
-            m4_if(AC_PACKAGE_NAME, [ROMIO], [], [
+            if test "$pac_skip_mpl_lib" != "yes" ; then
                 mpl_lib="$main_top_builddir/src/mpl/libmpl.la"
-            ])
+            fi
             mpl_includedir="-I$main_top_builddir/src/mpl/include -I$main_top_srcdir/src/mpl/include"
             # source variables that are configured by MPL
             AC_MSG_NOTICE([sourcing $main_top_srcdir/src/mpl/localdefs])

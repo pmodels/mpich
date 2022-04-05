@@ -477,7 +477,7 @@ AC_SUBST(comm_overlap)
 # The multi-thread tests can be disabled by --disable-threads
 threadsdir="threads"
 if test "$enable_threads" = "no"; then
-    threadsdir="#threads"
+    threadsdir=""
 fi
 #
 # Only run the checkpointing tests if enabled
@@ -658,6 +658,9 @@ PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSy
 cuda_CPPFLAGS=""
 cuda_LDFLAGS=""
 cuda_LIBS=""
+cudadir=
+AC_SUBST(cudadir)
+AC_ARG_VAR([NVCC], [nvcc compiler to use])
 if test "X${pac_have_cuda}" = "Xyes" ; then
     AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
     have_gpu="yes"
@@ -668,8 +671,13 @@ if test "X${pac_have_cuda}" = "Xyes" ; then
         else
             cuda_LDFLAGS="-L${with_cuda}/lib"
         fi
+        AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found], [$with_cuda/bin:$PATH])
+    else
+        AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found])
     fi
     cuda_LIBS="-lcudart"
+
+    cudadir="cuda"
 fi
 AM_CONDITIONAL([HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
 AC_SUBST([cuda_CPPFLAGS])
@@ -1410,7 +1418,7 @@ if test "$enable_romio" != no -a "$mpi_io_works" = yes ; then
 fi
 AC_SUBST(iodir)
 
-impldir="#"
+impldir=""
 #
 # Check for implementation to enable implementation-specific options
 if test $enable_strictmpi != "yes" ; then
@@ -1419,6 +1427,26 @@ if test $enable_strictmpi != "yes" ; then
     fi
 fi
 AC_SUBST(impldir)
+
+pmidir=""
+PAC_PUSH_FLAG([LIBS])
+LIBS="$LIBS -lpmi"
+AC_MSG_CHECKING([that we have pmi library])
+AC_LINK_IFELSE([
+    AC_LANG_PROGRAM([#include "pmi.h"], [
+        int has_parent;
+        PMI_Init(&has_parent);
+        PMI_Finalize();
+    ])
+],[
+    AC_MSG_RESULT(yes)
+    pmidir=pmi
+],[
+    AC_MSG_RESULT(no)
+])
+PAC_POP_FLAG([LIBS])
+AC_SUBST(pmidir)
+
 #
 # MPI_INTEGER16 is mentioned in only one place in MPI 2.1, and some
 # implementations may have missed it.  Check to see if it is available in
@@ -1654,6 +1682,7 @@ AC_OUTPUT(maint/testmerge \
           impls/Makefile \
           impls/hydra/Makefile \
           impls/hydra/proc_binding.sh \
+          impls/pmi/Makefile \
           impls/mpich/Makefile \
           impls/mpich/testlist \
           impls/mpich/mpi_t/Makefile \
@@ -1661,6 +1690,7 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/comm/testlist \
           impls/mpich/threads/Makefile \
           impls/mpich/threads/pt2pt/Makefile \
+          impls/mpich/cuda/Makefile \
           impls/mpich/misc/Makefile \
           )
 

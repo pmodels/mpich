@@ -3,4 +3,9 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-include $(top_srcdir)/src/pmi/pmi2/simple/Makefile.mk
+include $(top_srcdir)/Makefile_cuda.mtest
+
+LDADD += -lm
+
+noinst_PROGRAMS = \
+    saxpy

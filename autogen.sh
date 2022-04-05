@@ -65,6 +65,7 @@ do_test=yes
 do_hydra=yes
 do_hydra2=yes
 do_romio=yes
+do_pmi=yes
 do_doc=no
 
 do_quick=no
@@ -95,7 +96,7 @@ done
 MAKE=${MAKE-make}
 
 # amdirs are the directories that make use of autoreconf
-amdirs=". src/mpl"
+amdirs=". src/mpl src/pmi"
 
 autoreconf_args="-if"
 export autoreconf_args
@@ -124,7 +125,10 @@ ProgHomeDir() {
 # checking and patching submodules
 check_submodule_presence() {
     if test ! -f "$SRCROOTDIR/$1/configure.ac"; then
-        error "Submodule $1 is not checked out"
+        error "Submodule $1 is not checked out."
+        error "if you just git cloned this repository, run"
+        error "    git submodule update --init"
+        error "to checkout the submodules."
         exit 1
     fi
 }
@@ -190,9 +194,6 @@ set_externals() {
     if test -z "$externals" ; then
         #TODO: if necessary, run: git submodule update --init
 
-        # hwloc is always required
-        check_submodule_presence modules/hwloc
-
         # external packages that require autogen.sh to be run for each of them
         externals="test/mpi"
 
@@ -206,6 +207,10 @@ set_externals() {
 
         if [ "yes" = "$do_romio" ] ; then
             externals="${externals} src/mpi/romio"
+        fi
+
+        if [ "yes" = "$do_pmi" ] ; then
+            externals="${externals} src/pmi"
         fi
 
         if [ "yes" = "$do_hwloc" ] ; then
@@ -297,6 +302,13 @@ fn_copy_confdb_etc() {
 
     confdb_dirs=
     confdb_dirs="${confdb_dirs} src/mpl/confdb"
+    if test "$do_pmi" = "yes" ; then
+        confdb_dirs="${confdb_dirs} src/pmi/confdb"
+        if test "$do_quick" = "no" ; then
+            sync_external src/mpl src/pmi/mpl
+            confdb_dirs="${confdb_dirs} src/pmi/mpl/confdb"
+        fi
+    fi
     if test "$do_romio" = "yes" ; then
         confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
         if test "$do_quick" = "no" ; then
@@ -337,6 +349,7 @@ fn_copy_confdb_etc() {
         cp -pPR maint/version.m4 src/pm/hydra/version.m4
         cp -pPR maint/version.m4 src/pm/hydra2/version.m4
         cp -pPR maint/version.m4 src/mpi/romio/version.m4
+        cp -pPR maint/version.m4 src/pmi/version.m4
         cp -pPR maint/version.m4 test/mpi/version.m4
     fi
 
