@@ -305,12 +305,6 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
          * active" (which means that this is an MPI application).
          */
         if (pid != -1 && HYD_pmcd_pmip.downstream.pmi_fd_active[pid]) {
-            /* If this is not a forced cleanup, store a temporary
-             * erroneous exit status. In case the application does not
-             * return a non-zero exit status, we will use this. */
-            if (HYD_pmcd_pmip.downstream.forced_cleanup == 0)
-                HYD_pmcd_pmip.downstream.exit_status[pid] = 1;
-
             /* Deregister failed socket */
             status = HYDT_dmx_deregister_fd(fd);
             HYDU_ERR_POP(status, "unable to deregister fd\n");
