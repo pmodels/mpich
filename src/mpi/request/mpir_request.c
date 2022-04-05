@@ -237,15 +237,22 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
     return mpi_errno;
 }
 
-int MPIR_Request_handle_proc_failed(MPIR_Request * request_ptr)
+void MPIR_Request_handle_proc_failed(MPIR_Request * request_ptr)
 {
     if (request_ptr->kind == MPIR_REQUEST_KIND__RECV) {
-        /* We only handle receive request at the moment. */
-        MPID_Cancel_recv(request_ptr);
-        MPIR_STATUS_SET_CANCEL_BIT(request_ptr->status, FALSE);
+        int r = request_ptr->u.recv.source_world_rank;
+        if (r >= 0 && MPIR_check_proc_failed(r)) {
+            MPID_Cancel_recv(request_ptr);
+            MPIR_STATUS_SET_CANCEL_BIT(request_ptr->status, FALSE);
+            MPIR_ERR_SET(request_ptr->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
+        }
+    } else if (request_ptr->kind == MPIR_REQUEST_KIND__SEND) {
+        int r = request_ptr->u.send.dest_world_rank;
+        if (r >= 0 && MPIR_check_proc_failed(r)) {
+            MPID_Cancel_send(request_ptr);
+            MPIR_ERR_SET(request_ptr->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
+        }
     }
-    MPIR_ERR_SET(request_ptr->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
-    return request_ptr->status.MPI_ERROR;
 }
 
 /* This routine is for obtaining the error code of an existing request.

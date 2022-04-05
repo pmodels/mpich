@@ -645,7 +645,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_is_anysrc_mismatched(MPIR_Request * re
 }
 
 /* This routine handle the request when its associated process failed. */
-int MPIR_Request_handle_proc_failed(MPIR_Request * request_ptr);
+void MPIR_Request_handle_proc_failed(MPIR_Request * request_ptr);
 
 /* The following routines perform the callouts to the user routines registered
    as part of a generalized request.  They handle any language binding issues
