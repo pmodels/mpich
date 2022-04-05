@@ -97,6 +97,17 @@ void MPIR_update_failed_procs(void)
     MPID_THREAD_CS_EXIT(VCI, failed_procs_mutex);
 }
 
+bool MPIR_check_proc_failed(int world_rank)
+{
+    for (int i = 0; i < utarray_len(failed_procs); i++) {
+        int *p = (int *) utarray_eltptr(failed_procs, i);
+        if (*p == world_rank) {
+            return true;
+        }
+    }
+    return false;
+}
+
 int MPIR_Comm_get_failed_impl(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
