@@ -27,8 +27,6 @@ void HYD_pmcd_pmip_send_signal(int sig)
             kill(HYD_pmcd_pmip.downstream.pid[i], sig);
 #endif
         }
-
-    HYD_pmcd_pmip.downstream.forced_cleanup = 1;
 }
 
 static HYD_status control_port_fn(char *arg, char ***argv)
