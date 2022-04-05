@@ -87,6 +87,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
 	MPIR_Assert (sreq != NULL);
 	MPIR_Object_set_ref (sreq, 2);
 
+        sreq->u.send.dest_world_rank = MPI_PROC_NULL;
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
 	sreq->dev.iov[0].iov_base = (char *) &sreq->dev.pending_pkt;
 	sreq->dev.iov[0].iov_len = hdr_sz;

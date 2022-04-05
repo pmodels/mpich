@@ -169,6 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     MPIR_Request *sreq = *request;
+    sreq->u.send.dest_world_rank = MPIDIU_rank_to_lpid(dst_rank, comm);
 
     bool is_huge_send = false;
     MPI_Aint huge_thresh;

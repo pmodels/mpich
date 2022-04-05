@@ -18,6 +18,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
 
     /* promote the request object to be a "real" recv request */
     message->kind = MPIR_REQUEST_KIND__RECV;
+    message->u.recv.source_world_rank = MPI_PROC_NULL;
 
     *rreqp = rreq = message;
 

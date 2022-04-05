@@ -52,6 +52,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2, vsi_src, vsi_dst);
     MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *request = sreq;
+    sreq->u.send.dest_world_rank = MPIDIU_rank_to_lpid(rank, comm);
     sreq->comm = comm;
     MPIR_Comm_add_ref(comm);
     MPIDIG_REQUEST(sreq, buffer) = (void *) buf;

@@ -109,6 +109,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv(void *buf,
     *(req) = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, 0, 1);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    (*req)->u.recv.source_world_rank = MPI_PROC_NULL;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIDI_workq_pt2pt_enqueue(IRECV, NULL /*send_buf */ , buf, count, datatype,
                               rank, tag, comm, context_offset, av,
@@ -156,6 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv(void *buf,
     MPIR_Request *request = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, 0, 1);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_ERR_CHKANDSTMT(request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    request->u.recv.source_world_rank = MPI_PROC_NULL;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIDI_workq_pt2pt_enqueue(IMRECV, NULL /*send_buf */ , buf, count, datatype,
                               0 /*rank */ , 0 /*tag */ , NULL /*comm */ ,
@@ -279,6 +281,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype
 
     MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     message->kind = MPIR_REQUEST_KIND__RECV;
+    message->u.recv.source_world_rank = MPI_PROC_NULL;
 
     if (message->comm && MPIDI_is_self_comm(message->comm)) {
         mpi_errno = MPIDI_Self_imrecv(buf, count, datatype, message, rreqp);

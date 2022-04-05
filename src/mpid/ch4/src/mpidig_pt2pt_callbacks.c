@@ -227,6 +227,7 @@ static int create_unexp_rreq(int rank, int tag, MPIR_Context_id_t context_id,
 
     MPIR_Request *rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2, local_vci, remote_vci);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    rreq->u.recv.source_world_rank = MPI_PROC_NULL;
 
     *req = rreq;
 

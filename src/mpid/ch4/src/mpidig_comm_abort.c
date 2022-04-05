@@ -48,6 +48,7 @@ int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code)
         sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2, 0, 0);
         MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
+        sreq->u.send.dest_world_rank = MPI_PROC_NULL;
         /* FIXME: only NM? */
         mpi_errno = MPIDI_NM_am_isend(dest, comm, MPIDIG_COMM_ABORT, &am_hdr,
                                       sizeof(am_hdr), NULL, 0, MPI_INT, 0, 0, sreq);

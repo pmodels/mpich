@@ -88,6 +88,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     if (req == NULL) {
         req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst, 2);
         MPIR_ERR_CHKANDSTMT(req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        req->u.recv.source_world_rank = (rank >= 0) ? MPIDIU_rank_to_lpid(rank, comm) : rank;
     } else {
         MPIR_Request_add_ref(req);
     }

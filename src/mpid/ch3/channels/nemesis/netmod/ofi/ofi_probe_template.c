@@ -43,6 +43,7 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (struct MPIDI_VC * vc,
     if (rreq_ptr) {
         MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_create_req(&rreq, 1));
         rreq->kind = MPIR_REQUEST_KIND__RECV;
+        rreq->u.recv.source_world_rank = MPI_PROC_NULL;
 
         *rreq_ptr = rreq;
         rreq->comm = comm;

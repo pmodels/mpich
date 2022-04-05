@@ -262,6 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     } else if (alloc_req) {
         rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2, vci, -1);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        rreq->u.recv.source_world_rank = (rank >= 0) ? MPIDIU_rank_to_lpid(rank, comm) : rank;
         rreq->comm = comm;
         MPIR_Comm_add_ref(comm);
     } else {

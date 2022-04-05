@@ -200,6 +200,13 @@ struct MPIR_Request {
         struct {
             struct MPIR_Grequest_fns *greq_fns;
         } ureq;                 /* kind : MPIR_REQUEST_KIND__GREQUEST */
+        /* ch4 store pt2pt partner rank for fault-tolerance check */
+        struct {
+            int dest_world_rank;
+        } send;                 /* kind : MPIR_REQUEST_KIND__SEND */
+        struct {
+            int source_world_rank;
+        } recv;                 /* kind : MPIR_REQUEST_KIND__RECV */
         struct {
             MPIR_Errflag_t errflag;
             MPII_Coll_req_t coll;
