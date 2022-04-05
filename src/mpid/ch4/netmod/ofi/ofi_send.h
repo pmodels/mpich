@@ -551,6 +551,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
     /* Sends cannot be cancelled */
+    /* But at least complete the request (so e.g. ssend won't hang) */
+    MPIDIU_request_complete(sreq);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
