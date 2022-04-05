@@ -19,7 +19,7 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
             int was_enabled_striping = MPIDI_OFI_COMM(comm).enable_striping;
 
             /* Check if we should use striping */
-            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] == 1) {
+            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1) {
                 /* If the user specified a particular NIC, don't use striping. */
                 MPIDI_OFI_COMM(comm).enable_striping = 0;
             } else if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING] != -1)
@@ -42,7 +42,7 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
             int was_enabled_hashing = MPIDI_OFI_COMM(comm).enable_hashing;
 
             /* Check if we should use hashing */
-            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] == 1) {
+            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1) {
                 /* If the user specified a particular NIC, don't use hashing.  */
                 MPIDI_OFI_COMM(comm).enable_hashing = 0;
             } else if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING] != -1)
@@ -103,10 +103,12 @@ static int update_nic_preferences(MPIR_Comm * comm)
             }
 
             MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+            /* Collect the NIC IDs set for the other ranks. We always expect to receive a single
+             * NIC id from each rank, i.e., one MPI_INT. */
             mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPI_INT,
                                                     MPIDI_OFI_COMM(comm).pref_nic,
-                                                    comm->remote_size, MPI_INT, comm, &errflag);
-            MPIR_ERR_POP(mpi_errno);
+                                                    1, MPI_INT, comm, &errflag);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -259,6 +261,8 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
         (MPIDI_OFI_COMM(comm).enable_striping != 0 ? 1 : 0);
     MPIDI_OFI_global.num_comms_enabled_hashing -=
         (MPIDI_OFI_COMM(comm).enable_hashing != 0 ? 1 : 0);
+
+    MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
 
   fn_exit:
     MPIR_FUNC_EXIT;
