@@ -1215,7 +1215,10 @@ static int PMIi_InitIfSingleton(void)
 
     /* FIXME: We need to support a distinct kvsname for each
      * process group */
-    PMI_KVS_Put(singinit_kvsname, cached_singinit_key, cached_singinit_val);
+    if (cached_singinit_inuse) {
+        /* if we cached a key-value put, push it up to the server */
+        PMI_KVS_Put(singinit_kvsname, cached_singinit_key, cached_singinit_val);
+    }
 
     return PMI_SUCCESS;
 }
