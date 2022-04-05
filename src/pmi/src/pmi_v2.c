@@ -475,12 +475,10 @@ PMI_API_PUBLIC
                        const PMI2_keyval_t preput_keyval_vector[],
                        char jobId[], int jobIdSize, int errors[])
 {
-    int i, rc, spawncnt, total_num_processes, num_errcodes_found;
+    int i, rc, spawncnt, total_num_processes;
     int found;
     const char *jid;
     int jidlen;
-    char tempbuf[PMIU_MAXLINE];
-    char *lead, *lag;
     int spawn_rc;
     const char *errmsg = NULL;
     PMI2_Command resp_cmd = { 0 };
