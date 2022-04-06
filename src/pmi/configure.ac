@@ -51,6 +51,19 @@ AH_BOTTOM([
 #endif
 ])
 
+AC_ARG_WITH([thread-package],
+    AS_HELP_STRING([--with-thread-package], [whether to enable threads]))
+
+case "$with_thread_package" in
+    no|none)
+        :
+        ;;
+    *)
+        AC_DEFINE([HAVE_THREADS], 1, [Define if MPL supports threads])
+        ;;
+esac
+
+
 # MPL
 m4_define([mpl_embedded_dir],[mpl])
 
