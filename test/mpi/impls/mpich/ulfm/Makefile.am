@@ -9,6 +9,4 @@ EXTRA_DIST = testlist
 
 noinst_PROGRAMS = \
     get_failed \
-    recvdead \
-    irecvdead
-
+    recvdead

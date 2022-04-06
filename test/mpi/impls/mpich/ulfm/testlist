@@ -1,3 +1,3 @@
 get_failed 3 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors timeLimit=10
-recvdead   2 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors timeLimit=10
-irecvdead  2 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors timeLimit=10
+recvdead   2 -arg=-op=recv mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors timeLimit=10
+recvdead   2 -arg=-op=irecv mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors timeLimit=10
