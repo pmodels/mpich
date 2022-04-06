@@ -28,6 +28,12 @@ struct HYD_pmcd_pmi_kvs {
     struct HYD_pmcd_pmi_kvs_pair *tail;
 };
 
+/* init header proxy send to server upon connection */
+struct HYD_pmcd_init_hdr {
+    char signature[4]; /* HYD\0 */ ;
+    int proxy_id;
+};
+
 struct HYD_pmcd_hdr {
     /* The set of commands supported */
     enum HYD_pmcd_cmd {
