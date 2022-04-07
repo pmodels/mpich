@@ -18,6 +18,9 @@
 #elif defined(USE_PMI2_SLURM)
 #include <slurm/pmi2.h>
 
+#elif defined(USE_PMI2_CRAY)
+#include <pmi2.h>
+
 #elif defined(USE_PMI1_API)
 #include <pmi.h>
 

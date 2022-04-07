@@ -1533,6 +1533,9 @@ case "$with_pmilib" in
     with_pm=no
     ;;
   cray)
+    if test "$with_pmi" = "pmi1" ; then
+        AC_MSG_ERROR([Cray PMI only support PMI-2. Please reconfigure with --with-pmi=pmi2 --with-pmilib=cray])
+    fi
     with_pm=no
     ;;
   pmix)
@@ -1698,6 +1701,9 @@ case "$with_pmilib" in
     AC_CHECK_LIB([pmi], [PMI_Init], [], [AC_MSG_ERROR([could not find the cray libpmi.  Configure aborted])])
 
     PAC_APPEND_FLAG([-lpmi], [WRAPPER_LIBS])
+    if test "$with_pmi" = "pmi2" ; then
+        AC_DEFINE([USE_PMI2_CRAY], 1, [Define if using CRAY PMI 2])
+    fi
     ;;
   bgq)
     # This is a hack to include the pmi.h header. The OFI/BGQ provider

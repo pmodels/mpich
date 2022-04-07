@@ -72,6 +72,11 @@ cvars:
 #define INFO_TYPE_KEY(kv) (kv).key
 #define INFO_TYPE_VAL(kv) (kv).value
 
+#elif defined(USE_PMI2_CRAY)
+#define INFO_TYPE PMI_keyval_t
+#define INFO_TYPE_KEY(kv) (kv).key
+#define INFO_TYPE_VAL(kv) (kv).val
+
 #elif defined(USE_PMI1_API)
 #define INFO_TYPE PMI_keyval_t
 #define INFO_TYPE_KEY(kv) (kv).key
@@ -239,7 +244,7 @@ void MPIR_pmi_abort(int exit_code, const char *error_msg)
  */
 int MPIR_pmi_set_threaded(int is_threaded)
 {
-#if defined(USE_PMI2_API) && !defined(USE_PMI2_SLURM)
+#if defined(USE_PMI2_API) && !defined(USE_PMI2_SLURM) && !defined(USE_PMI2_CRAY)
     PMI2_Set_threaded(is_threaded);
 #endif
     return MPI_SUCCESS;
