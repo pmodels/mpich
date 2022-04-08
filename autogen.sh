@@ -68,6 +68,8 @@ do_romio=yes
 do_pmi=yes
 do_doc=no
 
+yaksa_depth=
+
 do_quick=no
 # Check -quick option. When enabled, skip as much as we can.
 for arg in "$@" ; do
@@ -599,7 +601,11 @@ autogen_external() {
     if [ -d "$_dir" -o -L "$_dir" ] ; then
         echo "------------------------------------------------------------------------"
         echo "running third-party initialization in $_dir"
-        (cd $_dir && ./autogen.sh) || exit 1
+        if test "$_dir" = "modules/yaksa" -a -n "$yaksa_depth" ; then
+            (cd $_dir && ./autogen.sh --pup-max-nesting=$yaksa_depth) || exit 1
+        else
+            (cd $_dir && ./autogen.sh) || exit 1
+        fi
     else
         error "external directory $_dir missing"
         exit 1
@@ -915,6 +921,11 @@ for arg in "$@" ; do
 		no|NO|false|FALSE|0) do_atver_check=no ;;
 		*) warn "unknown option: $arg."
             esac
+            ;;
+
+	-yaksa-depth=*)
+            val=`echo X$arg | sed -e 's/^X-yaksa-depth=//'`
+            yaksa_depth=$val
             ;;
 
 	-do=*|--do=*)
