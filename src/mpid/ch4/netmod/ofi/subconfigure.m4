@@ -282,7 +282,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     if test "$with_libfabric" = "embedded" ; then
         ofi_embedded="yes"
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an embedded libfabric])
-        ofi_subdir_args="--enable-embedded --disable-psm3"
+        ofi_subdir_args="--enable-embedded"
 
         prov_config=""
         if test "x${netmod_args}" != "x" ; then
