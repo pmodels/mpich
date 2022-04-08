@@ -1505,7 +1505,7 @@ case "$with_pmi" in
     with_pm=no
     ;;
   cray)
-    with_pmi=pmi1
+    with_pmi=pmi2
     with_pmilib=cray
     with_pm=no
     ;;
