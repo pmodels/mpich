@@ -609,11 +609,27 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
+        struct MPIR_Comm *multi_leads_comm;
+        /* sub communicators related for multi-leaders based implementation */
+        struct MPIR_Comm *inter_node_leads_comm, *sub_node_comm, *intra_node_leads_comm;
+        int spanned_num_nodes;  /* comm spans over these number of nodes */
+        /* Pointers to store info of multi-leaders based compositions */
+        struct MPIDI_Multileads_comp_info_t *allreduce_comp_info;
+        int shm_size_per_lead;
+
         void *csel_comm;        /* collective selection handle */
     } ch4;
 } MPIDI_Devcomm_t;
+
+typedef struct MPIDI_Multileads_comp_info_t {
+    int use_multi_leads;        /* if multi-leaders based composition can be used for comm */
+    void *shm_addr;
+} MPIDI_Multileads_comp_info_t;
+
 #define MPIDIG_COMM(comm,field) ((comm)->dev.ch4.am).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
+#define MPIDI_COMM_ALLREDUCE(comm,field) ((comm)->dev.ch4.allreduce_comp_info)->field
+
 
 typedef struct {
     union {

@@ -189,6 +189,13 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
         }
     }
 
+    MPIDI_COMM(comm, multi_leads_comm) = NULL;
+    MPIDI_COMM(comm, inter_node_leads_comm) = NULL;
+    MPIDI_COMM(comm, sub_node_comm) = NULL;
+    MPIDI_COMM(comm, intra_node_leads_comm) = NULL;
+    MPIDI_COMM(comm, spanned_num_nodes) = -1;
+    MPIDI_COMM(comm, allreduce_comp_info) = NULL;
+
     mpi_errno = MPIDIG_init_comm(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -244,6 +251,37 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
+
+    if (MPIDI_COMM(comm, multi_leads_comm) != NULL) {
+        MPIR_Comm_release(MPIDI_COMM(comm, multi_leads_comm));
+    }
+
+    if (MPIDI_COMM(comm, inter_node_leads_comm) != NULL) {
+        MPIR_Comm_release(MPIDI_COMM(comm, inter_node_leads_comm));
+    }
+
+    if (MPIDI_COMM(comm, sub_node_comm) != NULL) {
+        MPIR_Comm_release(MPIDI_COMM(comm, sub_node_comm));
+    }
+
+    if (MPIDI_COMM(comm, intra_node_leads_comm) != NULL) {
+        MPIR_Comm_release(MPIDI_COMM(comm, intra_node_leads_comm));
+    }
+
+
+    if (MPIDI_COMM(comm, allreduce_comp_info) != NULL) {
+        /* Destroy the associated shared memory region used by multi-leads Allreduce */
+        if (MPIDI_COMM_ALLREDUCE(comm, shm_addr) != NULL) {
+            mpi_errno = MPIDU_shm_free(MPIDI_COMM_ALLREDUCE(comm, shm_addr));
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
+        }
+        MPL_free(MPIDI_COMM(comm, allreduce_comp_info));
+    }
+
+
+
     /* release ref to avts */
     switch (MPIDI_COMM(comm, map).mode) {
         case MPIDI_RANK_MAP_NONE:
@@ -631,6 +669,60 @@ int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const ui
                          MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid,
                          MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid));
     }
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* Example: Ranks 0-3 on node 0 and 4-7 on node 1. Num_leaders = 2 */
+/* This function creates 3 kinds of communicators -
+ * 1. Inter-node sub-comms. A comm out of first leaders from each node, next comm out of second
+ *    leaders from each node and so on. (Example: (0,4), (2,6))
+ * 2. Intra-node sub-communicators. A leader and its followers. (Example: (0,1), (2,3), (4,5), (6,7))
+ * 3. Intra-node sub-comm consisting of all the leaders on that node. (Example: (0,2), (4,6))
+ */
+int MPIDI_Comm_create_multi_leader_subcomms(MPIR_Comm * comm, int num_leaders)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int is_leader_color = MPI_UNDEFINED;
+    int sub_node_comm_size;
+
+    MPIR_FUNC_ENTER;
+
+    sub_node_comm_size = MPIR_Comm_size(comm->node_comm) / num_leaders;
+    /* If node_comm_size is same as number of leaders, each rank should be a leader */
+    if (MPIR_Comm_size(comm->node_comm) == num_leaders)
+        is_leader_color = MPIR_Comm_rank(comm->node_comm);
+    else if (MPIR_Comm_rank(comm->node_comm) % sub_node_comm_size == 0)
+        is_leader_color = MPIR_Comm_rank(comm->node_comm) / sub_node_comm_size;
+
+    /* Create the inter-node leaders sub comms */
+    mpi_errno = MPIR_Comm_split_impl(comm, is_leader_color, MPIR_Comm_rank(comm->node_comm),
+                                     &(MPIDI_COMM(comm, inter_node_leads_comm)));
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    /* Create the intra-node sub comms */
+    mpi_errno =
+        MPIR_Comm_split_impl(comm->node_comm, MPIR_Comm_rank(comm->node_comm) / sub_node_comm_size,
+                             MPIR_Comm_rank(comm->node_comm), &(MPIDI_COMM(comm, sub_node_comm)));
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (MPIR_Comm_rank(comm->node_comm) % sub_node_comm_size == 0)
+        is_leader_color = 1;
+    else
+        is_leader_color = MPI_UNDEFINED;
+
+    /* Create an intra-node comm consisting of all leader ranks on that node */
+    mpi_errno = MPIR_Comm_split_impl(comm->node_comm, is_leader_color,
+                                     MPIR_Comm_rank(comm->node_comm),
+                                     &(MPIDI_COMM(comm, intra_node_leads_comm)));
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_EXIT;

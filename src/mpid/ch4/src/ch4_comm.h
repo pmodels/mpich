@@ -15,6 +15,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_sender_vci(MPIR_Comm * comm, in
 MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_receiver_vci(MPIR_Comm * comm, int type,
                                                               int value);
 MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_vci(MPIR_Comm * comm, int type, int value);
+int MPIDI_Comm_create_multi_leader_subcomms(MPIR_Comm * comm, int num_leads);
 
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm)
 {

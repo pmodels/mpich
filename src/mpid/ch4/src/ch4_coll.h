@@ -54,6 +54,7 @@ cvars:
         1 NM + SHM with reduce + bcast
         2 NM only composition
         3 SHM only composition
+        4 Multi leaders based inter node + intra node composition
 
     - name        : MPIR_CVAR_ALLGATHER_COMPOSITION
       category    : COLLECTIVE
@@ -285,6 +286,37 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_Allreduce_fill_multi_leads_info(MPIR_Comm * comm)
+{
+    int node_comm_size = 0, num_nodes;
+    bool node_balanced = false;
+
+    if (MPIDI_COMM(comm, allreduce_comp_info) == NULL) {
+        /* If multi-leads allreduce is enabled and the info object is not yet set */
+        MPIDI_COMM(comm, allreduce_comp_info) =
+            MPL_malloc(sizeof(MPIDI_Multileads_comp_info_t), MPL_MEM_OTHER);
+        MPIR_Assert(MPIDI_COMM(comm, allreduce_comp_info));
+        MPIDI_COMM_ALLREDUCE(comm, use_multi_leads) = -1;
+        MPIDI_COMM_ALLREDUCE(comm, shm_addr) = NULL;
+        MPIDI_COMM(comm, shm_size_per_lead) = 1;
+    }
+    /* Find if the comm meets the constraints and store that info in the data structure */
+    if (MPIDI_COMM_ALLREDUCE(comm, use_multi_leads) == -1) {
+        if (comm->node_comm)
+            node_comm_size = MPIR_Comm_size(comm->node_comm);
+        /* Get number of nodes it spans over and if it has equal number of ranks per node */
+        MPII_Comm_is_node_balanced(comm, &num_nodes, &node_balanced);
+        MPIDI_COMM(comm, spanned_num_nodes) = num_nodes;
+
+        if (num_nodes > 1 && node_comm_size > 1 && node_balanced) {
+            MPIDI_COMM_ALLREDUCE(comm, use_multi_leads) = 1;
+        } else {
+            MPIDI_COMM_ALLREDUCE(comm, use_multi_leads) = 0;
+        }
+    }
+
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void *sendbuf,
                                                                       void *recvbuf, MPI_Aint count,
                                                                       MPI_Datatype datatype,
@@ -293,6 +325,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
+    int num_leads = 0, node_comm_size = 0;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLREDUCE,
@@ -329,6 +362,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
                 MPIDI_Allreduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op,
                                                         comm, errflag);
             break;
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_delta:
+            if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+                MPIDI_Allreduce_fill_multi_leads_info(comm);
+                if (comm->node_comm)
+                    node_comm_size = MPIR_Comm_size(comm->node_comm);
+                /* Reset number of leaders, so that (node_comm_size % num_leads) is zero. The new number of
+                 * leaders must lie within a range +/- <num> from the leaders specified, or every rank is made
+                 * as a leader. Currently we use range <num> as 15. */
+                num_leads =
+                    MPL_round_closest_multiple(node_comm_size, MPIR_CVAR_NUM_MULTI_LEADS, 15);
+            }
+            /* make sure that the algo can be run */
+            if (MPIDI_COMM_ALLREDUCE(comm, use_multi_leads) == 1 &&
+                comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+                count >= num_leads && MPIR_Op_is_commutative(op)) {
+                mpi_errno =
+                    MPIDI_Allreduce_intra_composition_delta(sendbuf, recvbuf, count, datatype, op,
+                                                            num_leads, comm, errflag);
+            } else
+                mpi_errno =
+                    MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+            break;
         default:
             MPIR_Assert(0);
     }
@@ -347,6 +402,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative = -1;
+    int num_leads = 0, node_comm_size = 0;
 
     MPIR_FUNC_ENTER;
 
@@ -383,6 +439,32 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
                 MPIDI_Allreduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op, comm,
                                                         errflag);
             break;
+        case 4:
+            if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+                MPIDI_Allreduce_fill_multi_leads_info(comm);
+                if (comm->node_comm)
+                    node_comm_size = MPIR_Comm_size(comm->node_comm);
+                /* Reset number of leaders, so that (node_comm_size % num_leads) is zero. The new number of
+                 * leaders must lie within a range +/- <num> from the leaders specified, or every rank is made
+                 * as a leader. Currently we use range <num> as 15. */
+                num_leads =
+                    MPL_round_closest_multiple(node_comm_size, MPIR_CVAR_NUM_MULTI_LEADS, 15);
+            }
+
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, comm->comm_kind == MPIR_COMM_KIND__INTRACOMM
+                                           && MPIDI_COMM_ALLREDUCE(comm, use_multi_leads) == 1 &&
+                                           count >= num_leads && is_commutative, mpi_errno,
+                                           "Allreduce composition delta cannot be applied.\n");
+            /* Multi-leaders based composition can only be used if the comm is spanned over more than
+             * 1 node, has equal number of ranks on each node, count is more than number of leaders and
+             * the operation is commutative. This composition is beneficial for large messages.
+             */
+
+            mpi_errno =
+                MPIDI_Allreduce_intra_composition_delta(sendbuf, recvbuf, count, datatype, op,
+                                                        num_leads, comm, errflag);
+            break;
+
         default:
             mpi_errno =
                 MPIDI_Allreduce_allcomm_composition_json(sendbuf, recvbuf, count, datatype, op,
