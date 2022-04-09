@@ -226,6 +226,7 @@ algorithms:
             composition:1
             composition:2
             composition:3
+            composition:4
             smp
             recursive_doubling
             reduce_scatter_allgather
