@@ -7,7 +7,6 @@
 # managers that use utility code from this directory
 common_pm_includes = \
     -I${top_builddir}/src/include -I${top_srcdir}/src/include \
-    -I${top_builddir}/src/pmi/simple -I${top_srcdir}/src/pmi/simple \
     -I${top_builddir}/src/pm/util -I${top_srcdir}/src/pm/util
 
 if BUILD_PM_UTIL
