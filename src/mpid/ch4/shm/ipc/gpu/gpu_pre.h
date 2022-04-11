@@ -23,4 +23,9 @@ typedef struct MPIDI_GPU_ipc_handle {
     int handle_status;
 } MPIDI_GPU_ipc_handle_t;
 
+typedef struct MPIDI_GPU_ipc_event_pool_handle {
+    MPL_gpu_ipc_event_pool_handle_t gpu_ipc_event_pool_handle;
+    MPL_gpu_event_pool_handle_t mapped_event_pool_handle;
+} MPIDI_GPU_ipc_event_pool_handle_t;
+
 #endif /* GPU_PRE_H_INCLUDED */
