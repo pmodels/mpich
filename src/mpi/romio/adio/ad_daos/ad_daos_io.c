@@ -169,15 +169,14 @@ int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status * status)
     int ret;
     bool flag;
 
-    /* MSC - MPICH hangs if we just test with NOWAIT.. */
-    ret = daos_event_test(&aio_req->daos_event, DAOS_EQ_WAIT, &flag);
+    ret = daos_event_test(&aio_req->daos_event, DAOS_EQ_NOWAIT, &flag);
     if (ret != 0)
         return MPI_UNDEFINED;
 
     if (flag)
         MPI_Grequest_complete(aio_req->req);
     else
-        return MPI_UNDEFINED;
+        return ret;
 
     if (aio_req->daos_event.ev_error != 0)
         ret = ADIOI_DAOS_err("ADIOI_DAOS_aio_poll_fn", "DAOS Event Error", __LINE__, ret);
