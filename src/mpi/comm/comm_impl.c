@@ -756,7 +756,7 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
 
     if (*p_newcom_ptr) {
         if (info_ptr) {
-            MPII_Comm_set_hints(*p_newcom_ptr, info_ptr);
+            MPII_Comm_set_hints(*p_newcom_ptr, info_ptr, true);
         }
 
         if (errhan_ptr) {
@@ -943,7 +943,7 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPII_Comm_set_hints(comm_ptr, info_ptr);
+    mpi_errno = MPII_Comm_set_hints(comm_ptr, info_ptr, false);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
