@@ -8,7 +8,7 @@
 #include "pmiserv_utils.h"
 
 struct HYD_pmcd_pmi_v2_reqs {
-    int fd;
+    struct HYD_proxy *proxy;
     int pid;
     int pgid;
     struct PMIU_cmd *pmi;
@@ -20,22 +20,19 @@ struct HYD_pmcd_pmi_v2_reqs {
 
 static struct HYD_pmcd_pmi_v2_reqs *pending_reqs = NULL;
 
-static bool check_epoch_reached(struct HYD_pg *pg, int fd, int pid);
-static HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid,
+static bool check_epoch_reached(struct HYD_pg *pg, int pid);
+static HYD_status HYD_pmcd_pmi_v2_queue_req(struct HYD_proxy *proxy, int pid, int pgid,
                                             struct PMIU_cmd *pmi, const char *key);
 static HYD_status check_pending_reqs(const char *key);
 
 static const bool is_static = true;
 
-HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, bool sync)
+HYD_status HYD_pmiserv_kvs_get(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi,
+                               bool sync)
 {
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;
     HYDU_FUNC_ENTER();
-
-    struct HYD_proxy *proxy;
-    proxy = HYD_pmcd_pmi_find_proxy(fd);
-    HYDU_ASSERT(proxy, status);
 
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -73,8 +70,8 @@ HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, 
         /* check whether all proxies have arrived at the same epoch or enqueue
          * the "get". A "put" (from another proxy) will poke the progress.
          */
-        if (!check_epoch_reached(pg, fd, pid)) {
-            status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, pmi, key);
+        if (!check_epoch_reached(pg, pid)) {
+            status = HYD_pmcd_pmi_v2_queue_req(proxy, pid, pgid, pmi, key);
             HYDU_ERR_POP(status, "unable to queue request\n");
             goto fn_exit;
         }
@@ -92,7 +89,7 @@ HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, 
     }
     HYDU_ASSERT(!pmi_errno, status);
 
-    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(proxy, pid, &pmi_response);
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
   fn_exit:
@@ -103,7 +100,7 @@ HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, 
     goto fn_exit;
 }
 
-HYD_status HYD_pmiserv_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
+HYD_status HYD_pmiserv_kvs_put(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;
@@ -112,10 +109,6 @@ HYD_status HYD_pmiserv_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     const char *kvsname, *key, *val;
     pmi_errno = PMIU_msg_get_query_put(pmi, &kvsname, &key, &val);
     HYDU_ASSERT(!pmi_errno, status);
-
-    struct HYD_proxy *proxy;
-    proxy = HYD_pmcd_pmi_find_proxy(fd);
-    HYDU_ASSERT(proxy, status);
 
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -130,7 +123,7 @@ HYD_status HYD_pmiserv_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
     HYDU_ASSERT(!pmi_errno, status);
 
-    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(proxy, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
     status = check_pending_reqs(key);
@@ -144,14 +137,10 @@ HYD_status HYD_pmiserv_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 }
 
 /* NOTE: this is an aggregate put from proxy with multiple key=val pairs */
-HYD_status HYD_pmiserv_kvs_mput(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
+HYD_status HYD_pmiserv_kvs_mput(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
-
-    struct HYD_proxy *proxy;
-    proxy = HYD_pmcd_pmi_find_proxy(fd);
-    HYDU_ASSERT(proxy, status);
 
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -173,9 +162,8 @@ HYD_status HYD_pmiserv_kvs_mput(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-HYD_status HYD_pmiserv_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
+HYD_status HYD_pmiserv_kvs_fence(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi)
 {
-    struct HYD_proxy *proxy;
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     int pmi_errno;
@@ -184,29 +172,26 @@ HYD_status HYD_pmiserv_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi
 
     HYDU_FUNC_ENTER();
 
-    proxy = HYD_pmcd_pmi_find_proxy(fd);
-    HYDU_ASSERT(proxy, status);
-
     pg = PMISERV_pg_by_id(proxy->pgid);
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     int cur_epoch = -1;
     /* Try to find the epoch point of this process */
-    for (i = 0; i < pg->pg_process_count; i++)
-        if (pg_scratch->ecount[i].fd == fd && pg_scratch->ecount[i].pid == pid) {
+    for (i = 0; i < pg->pg_process_count; i++) {
+        if (pg_scratch->ecount[i].pid == pid) {
             pg_scratch->ecount[i].epoch++;
             cur_epoch = pg_scratch->ecount[i].epoch;
             break;
         }
+    }
 
     if (i == pg->pg_process_count) {
         /* couldn't find the current process; find a NULL entry */
 
         for (i = 0; i < pg->pg_process_count; i++)
-            if (pg_scratch->ecount[i].fd == HYD_FD_UNSET)
+            if (pg_scratch->ecount[i].epoch == -1)
                 break;
 
-        pg_scratch->ecount[i].fd = fd;
         pg_scratch->ecount[i].pid = pid;
         pg_scratch->ecount[i].epoch = 0;
         cur_epoch = pg_scratch->ecount[i].epoch;
@@ -216,7 +201,7 @@ HYD_status HYD_pmiserv_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi
     pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
     HYDU_ASSERT(!pmi_errno, status);
 
-    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(proxy, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
     if (cur_epoch == pg_scratch->epoch) {
@@ -259,7 +244,6 @@ HYD_status HYD_pmiserv_epoch_init(struct HYD_pg *pg)
     /* initialize as sentinels. The first kvs-fence will fill the entry.
      * Subsequent kvs-fence will increment the epoch. */
     for (int i = 0; i < pg->pg_process_count; i++) {
-        pg_scratch->ecount[i].fd = HYD_FD_UNSET;
         pg_scratch->ecount[i].pid = -1;
         pg_scratch->ecount[i].epoch = -1;
     }
@@ -281,14 +265,14 @@ HYD_status HYD_pmiserv_epoch_free(struct HYD_pg *pg)
     return HYD_SUCCESS;
 }
 
-static bool check_epoch_reached(struct HYD_pg *pg, int fd, int pid)
+static bool check_epoch_reached(struct HYD_pg *pg, int pid)
 {
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     int idx = -1;
     for (int i = 0; i < pg->pg_process_count; i++) {
-        if (pg_scratch->ecount[i].fd == fd && pg_scratch->ecount[i].pid == pid) {
+        if (pg_scratch->ecount[i].pid == pid) {
             idx = i;
             break;
         }
@@ -304,7 +288,7 @@ static bool check_epoch_reached(struct HYD_pg *pg, int fd, int pid)
     return true;
 }
 
-static HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid,
+static HYD_status HYD_pmcd_pmi_v2_queue_req(struct HYD_proxy *proxy, int pid, int pgid,
                                             struct PMIU_cmd *pmi, const char *key)
 {
     struct HYD_pmcd_pmi_v2_reqs *req, *tmp;
@@ -312,7 +296,7 @@ static HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid,
 
     HYDU_MALLOC_OR_JUMP(req, struct HYD_pmcd_pmi_v2_reqs *, sizeof(struct HYD_pmcd_pmi_v2_reqs),
                         status);
-    req->fd = fd;
+    req->proxy = proxy;
     req->pid = pid;
     req->pgid = pgid;
     req->prev = NULL;
@@ -377,7 +361,7 @@ static HYD_status check_pending_reqs(const char *key)
                 list_tail = req;
             }
         } else {
-            status = HYD_pmiserv_kvs_get(req->fd, req->pid, req->pgid, req->pmi, true);
+            status = HYD_pmiserv_kvs_get(req->proxy, req->pid, req->pgid, req->pmi, true);
             HYDU_ERR_POP(status, "kvs_get returned error\n");
 
             /* Free the dequeued request */

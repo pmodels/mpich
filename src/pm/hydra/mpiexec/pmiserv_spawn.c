@@ -26,7 +26,7 @@ static HYD_status parse_info_hosts(const char *host_str, struct HYD_pg *pg);
 
 static const bool is_static = true;
 
-HYD_status HYD_pmiserv_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
+HYD_status HYD_pmiserv_spawn(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;
@@ -99,11 +99,11 @@ HYD_status HYD_pmiserv_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
     HYDU_ASSERT(!pmi_errno, status);
 
-    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(proxy, pid, &pmi_response);
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
     /* Cache the pre-initialized keyvals on the new proxies */
-    HYD_pmiserv_bcast_keyvals(fd, pid);
+    HYD_pmiserv_bcast_keyvals(proxy, pid);
 
   fn_exit:
     if (need_free) {
