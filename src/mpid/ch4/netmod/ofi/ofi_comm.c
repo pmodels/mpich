@@ -151,13 +151,6 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 
     mpi_errno = update_multi_nic_hints(comm);
     MPIR_ERR_CHECK(mpi_errno);
-    /* When setting up built in communicators, there won't be any way to do collectives yet. We also
-     * won't have any info hints to propagate so there won't be any preferences that need to be
-     * communicated. */
-    if (comm != MPIR_Process.comm_world) {
-        mpi_errno = update_nic_preferences(comm);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -172,8 +165,19 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 
     MPIR_FUNC_ENTER;
 
+    /* When setting up built in communicators, there won't be any way to do collectives yet. We also
+     * won't have any info hints to propagate so there won't be any preferences that need to be
+     * communicated. */
+    if (comm != MPIR_Process.comm_world) {
+        mpi_errno = update_nic_preferences(comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
