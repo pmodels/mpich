@@ -6,7 +6,7 @@
 #include "hydra_server.h"
 #include "utarray.h"
 
-UT_array *pg_list;
+static UT_array *pg_list;
 
 static void pg_dtor(void *_elt)
 {
@@ -21,21 +21,21 @@ static void pg_dtor(void *_elt)
         HYD_pmcd_pmi_free_pg_scratch(pg);
 }
 
-void HYDU_init_pg(void)
+void PMISERV_pg_init(void)
 {
     static UT_icd pg_icd = { sizeof(struct HYD_pg), NULL, NULL, pg_dtor };
     utarray_new(pg_list, &pg_icd, MPL_MEM_OTHER);
 
-    int pgid = HYDU_alloc_pg();
+    int pgid = PMISERV_pg_alloc();
     assert(pgid == 0);
 }
 
-int HYDU_alloc_pg(void)
+int PMISERV_pg_alloc(void)
 {
     HYDU_FUNC_ENTER();
 
     int pgid = utarray_len(pg_list);
-    utarray_extend_back(pg_list, 1);
+    utarray_extend_back(pg_list, MPL_MEM_OTHER);
     struct HYD_pg *pg = (struct HYD_pg *) utarray_eltptr(pg_list, pgid);
     pg->pgid = pgid;
     pg->is_active = true;
@@ -44,17 +44,17 @@ int HYDU_alloc_pg(void)
     return pgid;
 }
 
-void HYDU_free_pg_list(void)
+void PMISERV_pg_finalize(void)
 {
     utarray_free(pg_list);
 }
 
-int HYDU_pg_max_id(void)
+int PMISERV_pg_max_id(void)
 {
     return utarray_len(pg_list);
 }
 
-struct HYD_pg *HYDU_get_pg(int pgid)
+struct HYD_pg *PMISERV_pg_by_id(int pgid)
 {
     if (pgid >= 0 && pgid < utarray_len(pg_list)) {
         return (struct HYD_pg *) utarray_eltptr(pg_list, pgid);

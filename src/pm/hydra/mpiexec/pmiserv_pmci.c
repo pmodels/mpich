@@ -55,8 +55,8 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
             }
         }
     } else if (cmd.type == HYD_SIGNAL) {
-        for (int i = 0; i < HYDU_pg_max_id(); i++) {
-            struct HYD_pg *pg = HYDU_get_pg(i);
+        for (int i = 0; i < PMISERV_pg_max_id(); i++) {
+            struct HYD_pg *pg = PMISERV_pg_by_id(i);
             for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
                 status = HYD_pmcd_pmiserv_send_signal(proxy, cmd.signum);
                 HYDU_ERR_POP(status, "unable to send signal downstream\n");
@@ -89,7 +89,7 @@ HYD_status HYD_pmci_launch_procs(void)
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     struct HYD_pg *pg;
-    pg = HYDU_get_pg(0);
+    pg = PMISERV_pg_by_id(0);
     status = HYD_pmcd_pmi_alloc_pg_scratch(pg);
     HYDU_ERR_POP(status, "error allocating pg scratch space\n");
 
@@ -156,10 +156,10 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
 
     /* We first wait for the exit statuses to arrive till the timeout
      * period */
-    for (int i = 0; i < HYDU_pg_max_id(); i++) {
+    for (int i = 0; i < PMISERV_pg_max_id(); i++) {
         /* NOTE: avoid grab pg pointer because we use dynamic array for pg_list,
          *       the pg pointer may not be persistent during the event loop */
-        while (HYDU_get_pg(i)->is_active) {
+        while (PMISERV_pg_by_id(i)->is_active) {
             gettimeofday(&now, NULL);
             time_elapsed = (now.tv_sec - start.tv_sec);
             time_left = timeout;

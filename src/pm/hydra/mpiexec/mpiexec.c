@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     status = HYDU_set_signal(SIGCHLD, signal_cb);
     HYDU_ERR_POP(status, "unable to set SIGCHLD\n");
 
-    HYDU_init_pg();
+    PMISERV_pg_init();
 
     /* Get user preferences */
     status = HYD_uii_mpx_get_parameters(argv);
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
     }
 
     struct HYD_pg *pg;
-    pg = HYDU_get_pg(0);
+    pg = PMISERV_pg_by_id(0);
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
 
     /* Free the mpiexec params */
     HYD_uiu_free_params();
-    HYDU_free_pg_list();
+    PMISERV_pg_finalize();
     HYDU_free_exec_list(HYD_uii_mpx_exec_list);
     HYDU_sock_finalize();
 
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
 
 static int get_exit_status(int pgid)
 {
-    struct HYD_pg *pg = HYDU_get_pg(pgid);
+    struct HYD_pg *pg = PMISERV_pg_by_id(pgid);
     /* Check for the exit status for all the processes */
     if (HYD_ui_mpich_info.print_all_exitcodes)
         HYDU_dump(stdout, "Exit codes: ");

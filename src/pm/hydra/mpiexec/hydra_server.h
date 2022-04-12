@@ -72,11 +72,11 @@ struct HYD_server_info_s {
 
 extern struct HYD_server_info_s HYD_server_info;
 
-void HYDU_init_pg(void);
-int HYDU_alloc_pg(void);
-void HYDU_free_pg_list(void);
-int HYDU_pg_max_id(void);
-struct HYD_pg *HYDU_get_pg(int pgid);
+void PMISERV_pg_init(void);
+int PMISERV_pg_alloc(void);
+void PMISERV_pg_finalize(void);
+int PMISERV_pg_max_id(void);
+struct HYD_pg *PMISERV_pg_by_id(int pgid);
 
 HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg);
 HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg);

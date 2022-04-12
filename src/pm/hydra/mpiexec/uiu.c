@@ -118,7 +118,7 @@ void HYD_uiu_print_params(void)
     HYDU_dump_noprefix(stdout, "    Proxy information:\n");
     HYDU_dump_noprefix(stdout, "    *********************\n");
     i = 1;
-    for (proxy = HYDU_get_pg(0)->proxy_list; proxy; proxy = proxy->next) {
+    for (proxy = PMISERV_pg_by_id(0)->proxy_list; proxy; proxy = proxy->next) {
         HYDU_dump_noprefix(stdout, "      [%d] proxy: %s (%d cores)\n", i++,
                            proxy->node->hostname, proxy->node->core_count);
         HYDU_dump_noprefix(stdout, "      Exec list: ");
@@ -191,7 +191,7 @@ static HYD_status resolve_pattern_string(const char *pattern, char **str, int pg
                                  (int) (time(NULL) - HYD_server_info.time_start));
                     break;
                 case 'h':
-                    pg = HYDU_get_pg(pgid);
+                    pg = PMISERV_pg_by_id(pgid);
                     HYDU_ASSERT(pg, status);
 
                     for (proxy = pg->proxy_list; proxy; proxy = proxy->next)

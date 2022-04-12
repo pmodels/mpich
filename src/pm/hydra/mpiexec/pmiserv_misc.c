@@ -21,7 +21,7 @@ HYD_status HYD_pmiserv_barrier(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     HYDU_ASSERT(proxy, status);
 
     struct HYD_pg *pg;
-    pg = HYDU_get_pg(proxy->pgid);
+    pg = PMISERV_pg_by_id(proxy->pgid);
 
     pg->barrier_count++;
     if (pg->barrier_count == pg->proxy_count) {

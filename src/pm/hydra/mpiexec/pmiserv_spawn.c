@@ -130,11 +130,11 @@ static HYD_status allocate_spawn_pg(int fd)
     HYDU_FUNC_ENTER();
 
     int pgid;
-    pgid = HYDU_alloc_pg();
+    pgid = PMISERV_pg_alloc();
     HYDU_ASSERT(pgid > 0, status);
 
     struct HYD_pg *pg;
-    pg = HYDU_get_pg(pgid);
+    pg = PMISERV_pg_by_id(pgid);
 
     status = HYD_pmcd_pmi_alloc_pg_scratch(pg);
     HYDU_ERR_POP(status, "unable to allocate pg scratch space\n");
@@ -145,7 +145,7 @@ static HYD_status allocate_spawn_pg(int fd)
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
 
-    pg->spawner_pg = HYDU_get_pg(proxy->pgid);
+    pg->spawner_pg = PMISERV_pg_by_id(proxy->pgid);
 
   fn_exit:
     return status;

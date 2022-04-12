@@ -39,7 +39,7 @@ HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, 
 
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    pg = HYDU_get_pg(proxy->pgid);
+    pg = PMISERV_pg_by_id(proxy->pgid);
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     const char *kvsname;
@@ -119,7 +119,7 @@ HYD_status HYD_pmiserv_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    pg = HYDU_get_pg(proxy->pgid);
+    pg = PMISERV_pg_by_id(proxy->pgid);
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     int ret;
@@ -155,7 +155,7 @@ HYD_status HYD_pmiserv_kvs_mput(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    pg = HYDU_get_pg(proxy->pgid);
+    pg = PMISERV_pg_by_id(proxy->pgid);
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     /* FIXME: leak of pmi's abstraction */
@@ -187,7 +187,7 @@ HYD_status HYD_pmiserv_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
 
-    pg = HYDU_get_pg(proxy->pgid);
+    pg = PMISERV_pg_by_id(proxy->pgid);
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     int cur_epoch = -1;

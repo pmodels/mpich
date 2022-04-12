@@ -86,7 +86,7 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int bufle
 static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
 {
     struct HYD_proxy *tproxy;
-    struct HYD_pg *pg = HYDU_get_pg(proxy->pgid);
+    struct HYD_pg *pg = PMISERV_pg_by_id(proxy->pgid);
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
 
@@ -161,8 +161,8 @@ HYD_status HYD_pmcd_pmiserv_cleanup_all_pgs(void)
 
     HYDU_FUNC_ENTER();
 
-    for (int i = 0; i < HYDU_pg_max_id(); i++) {
-        struct HYD_pg *pg = HYDU_get_pg(i);
+    for (int i = 0; i < PMISERV_pg_max_id(); i++) {
+        struct HYD_pg *pg = PMISERV_pg_by_id(i);
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
             status = cleanup_proxy(proxy);
             HYDU_ERR_POP(status, "unable to cleanup proxy\n");
@@ -237,10 +237,9 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         }
 
         struct HYD_pg *pg;
-        pg = HYDU_get_pg(proxy->pgid);
+        pg = PMISERV_pg_by_id(proxy->pgid);
 
         /* Check if all the PIDs have been received */
-        pg = HYDU_get_pg(0);
         for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next)
             if (tproxy->pid == NULL)
                 goto fn_exit;
@@ -354,7 +353,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         int terminated_rank = hdr.u.data;
         if (HYD_server_info.user_global.auto_cleanup == 0) {
             /* Update the map of the alive processes */
-            struct HYD_pg *pg = HYDU_get_pg(proxy->pgid);
+            struct HYD_pg *pg = PMISERV_pg_by_id(proxy->pgid);
             pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
             pg_scratch->dead_process_count++;
 
@@ -405,8 +404,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 pg_scratch->dead_processes = str;
             }
 
-            for (int i = 0; i < HYDU_pg_max_id(); i++) {
-                struct HYD_pg *tmp_pg = HYDU_get_pg(i);
+            for (int i = 0; i < PMISERV_pg_max_id(); i++) {
+                struct HYD_pg *tmp_pg = PMISERV_pg_by_id(i);
                 for (tproxy = tmp_pg->proxy_list; tproxy; tproxy = tproxy->next) {
                     if (tproxy->control_fd == HYD_FD_UNSET || tproxy->control_fd == HYD_FD_CLOSED)
                         continue;
@@ -484,7 +483,7 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
     proxy_id = init_hdr.proxy_id;
 
     /* Find the process group */
-    pg = HYDU_get_pg(pgid);
+    pg = PMISERV_pg_by_id(pgid);
     if (!pg)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n", pgid);
 
@@ -552,7 +551,7 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
     pgid = ((int) (size_t) userp);
 
     /* Find the process group */
-    pg = HYDU_get_pg(pgid);
+    pg = PMISERV_pg_by_id(pgid);
     if (!pg)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n", pgid);
 

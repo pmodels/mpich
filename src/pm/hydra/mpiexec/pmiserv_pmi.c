@@ -49,7 +49,7 @@ HYD_status HYD_pmiserv_bcast_keyvals(int fd, int pid)
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
 
-    pg = HYDU_get_pg(proxy->pgid);
+    pg = PMISERV_pg_by_id(proxy->pgid);
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     /* find the number of keyvals */
