@@ -126,7 +126,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
 
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                         (MPL_DBG_FDEST,
-                         "displs[recv_rank:%d]:%d, cnts[recv_rank:%d, displs[send_rank:%d]:%d, cnts[send_rank:%d]:%d]:%d ",
+                         "displs[recv_rank:%d]:%ld, cnts[recv_rank:%d, displs[send_rank:%ld]:%d, cnts[send_rank:%ld]:%d]:%ld ",
                          recv_rank, displs[recv_rank], recv_rank, cnts[recv_rank], send_rank,
                          displs[send_rank], send_rank, cnts[send_rank]));
     }
