@@ -1255,6 +1255,7 @@ cvars:
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
         tree                     - Force pipelined tree algorithm
         recexch                  - Force generic transport recursive exchange algorithm
+        ring                     - Force ring algorithm
 
     - name        : MPIR_CVAR_ALLREDUCE_TREE_TYPE
       category    : COLLECTIVE

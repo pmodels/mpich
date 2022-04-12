@@ -230,6 +230,7 @@ algorithms:
             composition:1
             composition:2
             composition:3
+            composition:4
             smp
             recursive_doubling
             reduce_scatter_allgather
@@ -240,6 +241,7 @@ algorithms:
             recexch
                 .MPIR_CVAR_ALLREDUCE_RECEXCH_KVAL=2,3,4,5,9
                 .MPIR_CVAR_ALLREDUCE_RECEXCH_SINGLE_PHASE_RECV=0,1
+            ring
             posix:release_gather
                 .MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072
                 .MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=16384

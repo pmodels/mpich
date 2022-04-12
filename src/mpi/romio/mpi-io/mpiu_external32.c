@@ -124,7 +124,7 @@ int MPIU_datatype_full_size(MPI_Datatype datatype, MPI_Aint * size)
     if (error_code != MPI_SUCCESS)
         goto fn_exit;
 
-    *size = true_extent;
+    *size = true_lb + true_extent;
   fn_exit:
     return error_code;
 }

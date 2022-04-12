@@ -1190,3 +1190,50 @@ int MPII_compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info
   fn_fail:
     goto fn_exit;
 }
+
+/* Returns true if the communicator is node-aware and the number of processes in all the nodes are
+ * same */
+int MPII_Comm_is_node_balanced(MPIR_Comm * comm, int *num_nodes, bool * node_balanced)
+{
+    int i = 0;
+    int mpi_errno = MPI_SUCCESS;
+    int *ranks_per_node;
+    *num_nodes = 0;
+
+    MPIR_CHKPMEM_DECL(1);
+
+    if (!MPIR_Comm_is_parent_comm(comm)) {
+        *node_balanced = false;
+        goto fn_exit;
+    }
+
+    /* Find maximum value in the internode_table */
+    for (i = 0; i < comm->local_size; i++) {
+        if (comm->internode_table[i] > *num_nodes) {
+            *num_nodes = comm->internode_table[i];
+        }
+    }
+    /* number of nodes is max_node_id + 1 */
+    (*num_nodes)++;
+
+    MPIR_CHKPMEM_CALLOC(ranks_per_node, int *,
+                        *num_nodes * sizeof(int), mpi_errno, "ranks per node", MPL_MEM_OTHER);
+
+    for (i = 0; i < comm->local_size; i++) {
+        ranks_per_node[comm->internode_table[i]]++;
+    }
+
+    for (i = 1; i < *num_nodes; i++) {
+        if (ranks_per_node[i - 1] != ranks_per_node[i]) {
+            *node_balanced = false;
+            goto fn_exit;
+        }
+    }
+
+    *node_balanced = true;
+  fn_exit:
+    MPIR_CHKPMEM_REAP();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
