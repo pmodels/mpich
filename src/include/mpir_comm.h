@@ -391,7 +391,7 @@ int MPII_Comm_create_map(int local_n,
                          int *local_mapping,
                          int *remote_mapping, MPIR_Comm * mapping_comm, MPIR_Comm * newcomm);
 
-int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info);
+int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info, bool in_comm_create);
 int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info);
 int MPII_Comm_check_hints(MPIR_Comm * comm_ptr);
 
