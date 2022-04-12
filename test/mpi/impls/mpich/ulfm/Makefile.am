@@ -5,7 +5,7 @@
 
 include $(top_srcdir)/Makefile_single.mtest
 
-EXTRA_DIST = testlist.in
+EXTRA_DIST = testlist
 
-static_subdirs = mpi_t comm misc ulfm
-SUBDIRS      = $(static_subdirs) $(threadsdir) $(cudadir)
+noinst_PROGRAMS = \
+    get_failed

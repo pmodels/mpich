@@ -112,6 +112,35 @@ static inline int MPL_mirror_permutation(unsigned int x, int bits)
     return retval;
 }
 
+/* Round denominator to the closest integer to divide numerator completely. Rounded value lies
+ * within +/- range of denominator*/
+static inline int MPL_round_closest_multiple(int numerator, int denominator, int range)
+{
+    /* increase and decrease denominator until it divides numerator completely. Break if it takes
+     * more than range iterations and return numerator */
+    int iter = 1;
+    int increased_val = denominator, decreased_val = denominator;
+
+    if (numerator % denominator == 0)
+        return denominator;
+
+    while (true) {
+        increased_val += 1;
+        if (decreased_val > 1)
+            decreased_val -= 1;
+
+        if (numerator % decreased_val == 0)
+            return decreased_val;
+        else if (numerator % increased_val == 0)
+            return increased_val;
+        else if (iter >= range)
+            return numerator;
+
+        iter += 1;
+    }
+}
+
+
 /* *INDENT-ON* */
 #if defined(__cplusplus)
 }

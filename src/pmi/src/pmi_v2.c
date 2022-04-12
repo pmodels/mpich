@@ -115,9 +115,11 @@ static int PMI2_rank = 0;
 
 static int PMI2_is_threaded = 0;        /* Set this to true to require thread safety */
 
+#ifdef HAVE_THREADS
 static MPL_thread_mutex_t mutex;
 static int blocked = PMIU_FALSE;
 static MPL_thread_cond_t cond;
+#endif
 
 /* XXX DJG the "const"s on both of these functions and the Keyvalpair
  * struct are wrong in the isCopy==TRUE case! */
@@ -245,9 +247,17 @@ static inline int SEARCH_REMOVE(PMI2_Command * cmd)
 /* ------------------------------------------------------------------------- */
 PMI_API_PUBLIC int PMI2_Set_threaded(int is_threaded)
 {
-    PMI2_is_threaded = is_threaded;
-
+#ifndef HAVE_THREADS
+    if (is_threaded) {
+        return PMI2_FAIL;
+    }
     return PMI2_SUCCESS;
+
+#else
+    PMI2_is_threaded = is_threaded;
+    return PMI2_SUCCESS;
+
+#endif
 }
 
 PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
@@ -259,10 +269,12 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     char *pmiid;
     int ret;
 
+#if HAVE_THREADS
     MPL_thread_mutex_create(&mutex, &ret);
     PMIU_Assert(!ret);
     MPL_thread_cond_create(&cond, &ret);
     PMIU_Assert(!ret);
+#endif
 
     /* FIXME: Why is setvbuf commented out? */
     /* FIXME: What if the output should be fully buffered (directed to file)?
@@ -1321,6 +1333,7 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
     memset(cmd_len_str, 0, sizeof(cmd_len_str));
 
     if (PMI2_is_threaded) {
+#ifdef HAVE_THREADS
         MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
 
         while (blocked && !cmd->complete)
@@ -1333,6 +1346,9 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
 
         blocked = PMIU_TRUE;
         MPL_thread_mutex_unlock(&mutex, &err);
+#else
+        PMIU_Assert(0);
+#endif
     }
 
     do {
@@ -1456,10 +1472,14 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
     } while (!cmd->complete);
 
     if (PMI2_is_threaded) {
+#ifdef HAVE_THREADS
         MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
         blocked = PMIU_FALSE;
         MPL_thread_cond_broadcast(&cond, &err);
         MPL_thread_mutex_unlock(&mutex, &err);
+#else
+        PMIU_Assert(0);
+#endif
     }
 
   fn_exit:
@@ -1579,6 +1599,7 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
 
 
     if (PMI2_is_threaded) {
+#ifdef HAVE_THREADS
         MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
 
         while (blocked)
@@ -1586,6 +1607,9 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
 
         blocked = PMIU_TRUE;
         MPL_thread_mutex_unlock(&mutex, &err);
+#else
+        PMIU_Assert(0);
+#endif
     }
 
     if (PMI2_debug)
@@ -1603,10 +1627,14 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
     } while (offset < cmdlen + PMII_COMMANDLEN_SIZE);
 
     if (PMI2_is_threaded) {
+#ifdef HAVE_THREADS
         MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
         blocked = PMIU_FALSE;
         MPL_thread_cond_broadcast(&cond, &err);
         MPL_thread_mutex_unlock(&mutex, &err);
+#else
+        PMIU_Assert(0);
+#endif
     }
 
   fn_exit:
