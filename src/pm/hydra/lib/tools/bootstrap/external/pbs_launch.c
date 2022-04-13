@@ -34,10 +34,10 @@ static HYD_status find_pbs_node_id(const char *hostname, int *node_id)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
-                                      int *control_fd)
+HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
+                                      int use_rmk, int *control_fd)
 {
-    int proxy_count, i, args_count, err, hostid;
+    int i, args_count, err, hostid;
     struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
@@ -51,24 +51,21 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
         HYDU_ERR_POP(status, "error querying PBS node list\n");
     }
 
-    proxy_count = 0;
-    for (proxy = proxy_list; proxy; proxy = proxy->next)
-        proxy_count++;
-
     /* Duplicate the args in local copy, targs */
     for (args_count = 0; args[args_count]; args_count++)
         targs[args_count] = MPL_strdup(args[args_count]);
 
-    HYDU_MALLOC_OR_JUMP(HYDT_bscd_pbs_sys->task_id, tm_task_id *, proxy_count * sizeof(tm_task_id),
+    HYDU_MALLOC_OR_JUMP(HYDT_bscd_pbs_sys->task_id, tm_task_id *, num_hosts * sizeof(tm_task_id),
                         status);
     HYDU_MALLOC_OR_JUMP(HYDT_bscd_pbs_sys->spawn_events, tm_event_t *,
-                        proxy_count * sizeof(tm_event_t), status);
+                        num_hosts * sizeof(tm_event_t), status);
 
     /* Spawn a process on each allocated node through tm_spawn() which
      * returns a taskID for the process + a eventID for the
      * spawning. */
     hostid = 0;
-    for (i = 0, proxy = proxy_list; proxy; proxy = proxy->next, i++) {
+    for (i = 0; i < num_hosts; i++) {
+        proxy = proxy_list + i;
         if (pbs_node_list) {
             status = find_pbs_node_id(proxy->node->hostname, &hostid);
             HYDU_ERR_POP(status, "error finding PBS node ID for host %s\n", proxy->node->hostname);

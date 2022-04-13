@@ -272,7 +272,8 @@ static HYD_status do_spawn(void)
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, HYD_FALSE, NULL);
+    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, pg->proxy_count,
+                                    HYD_FALSE, NULL);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
   fn_exit:
