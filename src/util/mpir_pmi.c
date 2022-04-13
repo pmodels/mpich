@@ -67,6 +67,28 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+#ifdef USE_PMI2_SLURM
+#define INFO_TYPE PMI2U_Info
+#define INFO_TYPE_KEY(kv) (kv).key
+#define INFO_TYPE_VAL(kv) (kv).value
+
+#elif defined(USE_PMI2_CRAY)
+#define INFO_TYPE PMI_keyval_t
+#define INFO_TYPE_KEY(kv) (kv).key
+#define INFO_TYPE_VAL(kv) (kv).val
+
+#elif defined(USE_PMI1_API)
+#define INFO_TYPE PMI_keyval_t
+#define INFO_TYPE_KEY(kv) (kv).key
+#define INFO_TYPE_VAL(kv) (kv).val
+
+#else
+#define INFO_TYPE PMI2_keyval_t
+#define INFO_TYPE_KEY(kv) (kv).key
+#define INFO_TYPE_VAL(kv) (kv).val
+
+#endif
+
 static int build_nodemap(int *nodemap, int sz, int *p_max_node_id);
 static int build_locality(void);
 
@@ -222,7 +244,7 @@ void MPIR_pmi_abort(int exit_code, const char *error_msg)
  */
 int MPIR_pmi_set_threaded(int is_threaded)
 {
-#if defined(USE_PMI2_API)
+#if defined(USE_PMI2_API) && !defined(USE_PMI2_SLURM) && !defined(USE_PMI2_CRAY)
     PMI2_Set_threaded(is_threaded);
 #endif
     return MPI_SUCCESS;
@@ -849,9 +871,8 @@ char *MPIR_pmi_get_failed_procs(void)
 
 /* static functions only for MPIR_pmi_spawn_multiple */
 #if defined(USE_PMI1_API) || defined(USE_PMI2_API)
-/* PMI_keyval_t is only defined in PMI1 or PMI2 */
-static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr);
-static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts);
+static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, INFO_TYPE ** kv_ptr, int *nkeys_ptr);
+static void free_pmi_keyvals(INFO_TYPE ** kv, int size, int *counts);
 #endif
 
 /* NOTE: MPIR_pmi_spawn_multiple is to be called by a single root spawning process */
@@ -864,14 +885,20 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
     int pmi_errno;
 
 #if defined(USE_PMI1_API) || defined(USE_PMI2_API)
+
     int *info_keyval_sizes = NULL;
-    PMI_keyval_t **info_keyval_vectors = NULL;
+    INFO_TYPE **info_keyval_vectors = NULL;
+#if defined(USE_PMI2_SLURM)
+    const INFO_TYPE **preput_vector = NULL;
+    INFO_TYPE *preput_vector_array = NULL;
+#else
+    INFO_TYPE *preput_vector = NULL;
+#endif
 
     info_keyval_sizes = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_BUFFER);
     MPIR_ERR_CHKANDJUMP(!info_keyval_sizes, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    info_keyval_vectors =
-        (PMI_keyval_t **) MPL_malloc(count * sizeof(PMI_keyval_t *), MPL_MEM_BUFFER);
+    info_keyval_vectors = (INFO_TYPE **) MPL_malloc(count * sizeof(INFO_TYPE *), MPL_MEM_BUFFER);
     MPIR_ERR_CHKANDJUMP(!info_keyval_vectors, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     if (!info_ptrs) {
@@ -886,6 +913,27 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
+
+    if (num_preput_keyval > 0) {
+#if defined(USE_PMI2_SLURM)
+        preput_vector = MPL_malloc(num_preput_keyval * sizeof(INFO_TYPE *), MPL_MEM_BUFFER);
+        MPIR_ERR_CHKANDJUMP(!preput_vector, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        preput_vector_array = MPL_malloc(num_preput_keyval * sizeof(INFO_TYPE), MPL_MEM_BUFFER);
+        MPIR_ERR_CHKANDJUMP(!preput_vector_array, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        for (int i = 0; i < num_preput_keyval; i++) {
+            INFO_TYPE_KEY(preput_vector_array[i]) = (char *) preput_keyvals[i].key;
+            INFO_TYPE_VAL(preput_vector_array[i]) = preput_keyvals[i].val;
+            preput_vector[i] = &preput_vector_array[i];
+        }
+#else
+        preput_vector = MPL_malloc(num_preput_keyval * sizeof(INFO_TYPE), MPL_MEM_BUFFER);
+        MPIR_ERR_CHKANDJUMP(!preput_vector, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        for (int i = 0; i < num_preput_keyval; i++) {
+            INFO_TYPE_KEY(preput_vector[i]) = preput_keyvals[i].key;
+            INFO_TYPE_VAL(preput_vector[i]) = preput_keyvals[i].val;
+        }
+#endif
+    }
 #endif
 
 #ifdef USE_PMI1_API
@@ -897,9 +945,8 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
     pmi_errno = PMI_Spawn_multiple(count, (const char **) commands, (const char ***) argvs,
                                    maxprocs,
                                    info_keyval_sizes,
-                                   (const PMI_keyval_t **) info_keyval_vectors,
-                                   num_preput_keyval, (PMI_keyval_t *) preput_keyvals,
-                                   pmi_errcodes);
+                                   (const INFO_TYPE **) info_keyval_vectors,
+                                   num_preput_keyval, preput_vector, pmi_errcodes);
 
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
@@ -922,9 +969,8 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
                                argcs, (const char ***) argvs,
                                maxprocs,
                                info_keyval_sizes,
-                               (const PMI_keyval_t **) info_keyval_vectors,
-                               num_preput_keyval, (const PMI_keyval_t *) preput_keyvals,
-                               NULL, 0, pmi_errcodes);
+                               (const INFO_TYPE **) info_keyval_vectors,
+                               num_preput_keyval, preput_vector, NULL, 0, pmi_errcodes);
     MPL_free(argcs);
     MPIR_ERR_CHKANDJUMP1(mpi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
@@ -941,6 +987,14 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
     }
 
     MPL_free(info_keyval_sizes);
+    if (num_preput_keyval > 0) {
+#if defined(USE_PMI2_SLURM)
+        MPL_free(preput_vector_array);
+        MPL_free(preput_vector);
+#else
+        MPL_free(preput_vector);
+#endif
+    }
 #endif
 
     return mpi_errno;
@@ -1256,10 +1310,10 @@ static void decode(int size, const char *src, char *dest)
 
 /* static functions used in MPIR_pmi_spawn_multiple */
 #if defined(USE_PMI1_API) || defined(USE_PMI2_API)
-static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr)
+static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, INFO_TYPE ** kv_ptr, int *nkeys_ptr)
 {
     char key[MPI_MAX_INFO_KEY];
-    PMI_keyval_t *kv = 0;
+    INFO_TYPE *kv = 0;
     int nkeys = 0, vallen, flag, mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
@@ -1272,15 +1326,19 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int 
     if (nkeys == 0)
         goto fn_exit;
 
-    kv = (PMI_keyval_t *) MPL_malloc(nkeys * sizeof(PMI_keyval_t), MPL_MEM_BUFFER);
+    kv = (INFO_TYPE *) MPL_malloc(nkeys * sizeof(INFO_TYPE), MPL_MEM_BUFFER);
 
     for (int i = 0; i < nkeys; i++) {
         mpi_errno = MPIR_Info_get_nthkey_impl(info_ptr, i, key);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Info_get_valuelen_impl(info_ptr, key, &vallen, &flag);
-        kv[i].key = MPL_strdup(key);
-        kv[i].val = (char *) MPL_malloc(vallen + 1, MPL_MEM_BUFFER);
-        MPIR_Info_get_impl(info_ptr, key, vallen + 1, kv[i].val, &flag);
+
+        char *s_val;
+        s_val = (char *) MPL_malloc(vallen + 1, MPL_MEM_BUFFER);
+        MPIR_Info_get_impl(info_ptr, key, vallen + 1, s_val, &flag);
+
+        INFO_TYPE_KEY(kv[i]) = MPL_strdup(key);
+        INFO_TYPE_VAL(kv[i]) = s_val;
     }
 
   fn_exit:
@@ -1293,14 +1351,14 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int 
     goto fn_exit;
 }
 
-static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
+static void free_pmi_keyvals(INFO_TYPE ** kv, int size, int *counts)
 {
     MPIR_FUNC_ENTER;
 
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < counts[i]; j++) {
-            MPL_free((char *) kv[i][j].key);
-            MPL_free(kv[i][j].val);
+            MPL_free(INFO_TYPE_KEY(kv[i][j]));
+            MPL_free(INFO_TYPE_VAL(kv[i][j]));
         }
         MPL_free(kv[i]);
     }

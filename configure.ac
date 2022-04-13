@@ -1470,7 +1470,7 @@ fi
 
 AC_ARG_WITH(pmi,
 	AS_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
-	with_pmi=default)
+	with_pmi=pmi1)
 
 AC_ARG_WITH(pmilib,
 	AS_HELP_STRING([--with-pmilib=name],
@@ -1483,7 +1483,7 @@ AC_ARG_WITH(pmilib,
                    pmix  - use PMIx library. Use --with-pmix=path to configure
                            PMIx library path.
                 ]),,
-	with_pmilib=default)
+	with_pmilib=mpich)
 
 AC_ARG_WITH(pm,
 	AS_HELP_STRING([--with-pm=name],
@@ -1500,10 +1500,12 @@ AC_ARG_WITH(pm,
 
 case "$with_pmi" in
   slurm)
+    with_pmi=pmi1
     with_pmilib=slurm
     with_pm=no
     ;;
   cray)
+    with_pmi=pmi2
     with_pmilib=cray
     with_pm=no
     ;;
@@ -1531,6 +1533,9 @@ case "$with_pmilib" in
     with_pm=no
     ;;
   cray)
+    if test "$with_pmi" = "pmi1" ; then
+        AC_MSG_ERROR([Cray PMI only support PMI-2. Please reconfigure with --with-pmi=pmi2 --with-pmilib=cray])
+    fi
     with_pm=no
     ;;
   pmix)
@@ -1544,25 +1549,6 @@ if test "$pac_have_pmix" = "yes" ; then
     with_pmi=pmix
     with_pmilib=pmix
     with_pm=no
-fi
-
-if test "$with_pmi" = "default" ; then
-    case "$with_pmilib" in
-      slurm|cray)
-        with_pmi=pmi2
-        ;;
-      *)
-        with_pmi=pmi1
-        ;;
-    esac
-fi
-
-if test "$with_pmilib" = "default" ; then
-    with_pmilib=mpich
-fi
-
-if test "$with_pm" = "default" ; then
-    with_pm=hydra
 fi
 
 # --- $with_pmi ----
@@ -1592,12 +1578,6 @@ if test "$MPID_NO_PM" = yes ; then
     # This is used to change with_pm=default to with_pm=no in the case
     # where the device does not want a PM
     with_pm=no
-fi
-if test -z "$with_pm" ; then
-    with_pm="no"
-fi
-if test "$with_pmi" = "uni" -a "$with_pm" = "default" ; then
-    with_pm="no"
 fi
 if test "$with_pm" = "default" -o "$with_pm" = "yes" ; then
    if test ! -z "$MPID_DEFAULT_PM" ; then
@@ -1680,7 +1660,7 @@ AC_SUBST([pmilib])
 case "$with_pmilib" in
   mpich|install)
     if test "$with_pmi" != "pmi1" -a "$with_pmi" != "pmi2" ; then
-        AC_MSG_ERROR([pmilib=%with_pmilib is incompatible with $with_pmi]);
+        AC_MSG_ERROR([pmilib=$with_pmilib is incompatible with $with_pmi]);
     fi
     pmisrcdir="src/pmi"
     pmilib="src/pmi/libpmi.la"
@@ -1696,12 +1676,21 @@ case "$with_pmilib" in
     ;;
   slurm)
     PAC_SET_HEADER_LIB_PATH([slurm])
-    AC_CHECK_HEADER([slurm/pmi.h], [], [AC_MSG_ERROR([could not find slurm/pmi.h.  Configure aborted])])
-    # FIXME: what if user choose pmi2?
-    AC_CHECK_LIB([pmi], [PMI_Init],
-                [PAC_PREPEND_FLAG([-lpmi],[LIBS])
-                PAC_PREPEND_FLAG([-lpmi], [WRAPPER_LIBS])],
-                [AC_MSG_ERROR([could not find the Slurm libpmi.  Configure aborted])])
+    if test "$with_pmi" = "pmi1" ; then
+        AC_CHECK_HEADER([slurm/pmi.h], [], [AC_MSG_ERROR([could not find slurm/pmi.h.  Configure aborted])])
+        AC_CHECK_LIB([pmi], [PMI_Init],
+                    [PAC_PREPEND_FLAG([-lpmi],[LIBS])
+                     PAC_PREPEND_FLAG([-lpmi], [WRAPPER_LIBS])],
+                    [AC_MSG_ERROR([could not find the Slurm libpmi.  Configure aborted])])
+        AC_DEFINE([USE_PMI1_SLURM], 1, [Define if using Slurm PMI 1])
+    elif test "$with_pmi" = "pmi2" ; then
+        AC_CHECK_HEADER([slurm/pmi2.h], [], [AC_MSG_ERROR([could not find slurm/pmi2.h.  Configure aborted])])
+        AC_CHECK_LIB([pmi2], [PMI2_Init],
+                    [PAC_PREPEND_FLAG([-lpmi2],[LIBS])
+                     PAC_PREPEND_FLAG([-lpmi2], [WRAPPER_LIBS])],
+                    [AC_MSG_ERROR([could not find the Slurm libpmi2.  Configure aborted])])
+        AC_DEFINE([USE_PMI2_SLURM], 1, [Define if using Slurm PMI 2])
+    fi
     ;;
   cray)  
     # set CPPFLAGS and LDFLAGS
@@ -1712,6 +1701,9 @@ case "$with_pmilib" in
     AC_CHECK_LIB([pmi], [PMI_Init], [], [AC_MSG_ERROR([could not find the cray libpmi.  Configure aborted])])
 
     PAC_APPEND_FLAG([-lpmi], [WRAPPER_LIBS])
+    if test "$with_pmi" = "pmi2" ; then
+        AC_DEFINE([USE_PMI2_CRAY], 1, [Define if using CRAY PMI 2])
+    fi
     ;;
   bgq)
     # This is a hack to include the pmi.h header. The OFI/BGQ provider
