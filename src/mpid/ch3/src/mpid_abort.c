@@ -5,12 +5,6 @@
 
 #include "mpidimpl.h"
 
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
-#include "pmi.h"
-#endif
-
 /* FIXME: This routine *or* MPI_Abort should provide abort callbacks,
    similar to the support in MPI_Finalize */
 
@@ -70,16 +64,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
         abort();
     }
 
-    /* FIXME: What is the scope for PMI_Abort?  Shouldn't it be one or more
-       process groups?  Shouldn't abort of a communicator abort either the
-       process groups of the communicator or only the current process?
-       Should PMI_Abort have a parameter for which of these two cases to
-       perform? */
-#ifdef USE_PMI2_API
-    PMI2_Abort(TRUE, error_msg);
-#else
-    PMI_Abort(exit_code, error_msg);
-#endif
+    MPIR_pmi_abort(exit_code, error_msg);
 
     /* pmi_abort should not return but if it does, exit here.  If it does,
        add the function exit code before calling the final exit.  */

@@ -27,7 +27,7 @@ cvars:
 */
 int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
-    int ret, fi_version, i, len, pmi_errno;
+    int ret, fi_version, i, len;
     int mpi_errno = MPI_SUCCESS;
     info_t *hints, *prov_tagged, *prov_use;
     cq_attr_t cq_attr;
