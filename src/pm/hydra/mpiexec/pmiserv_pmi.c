@@ -17,16 +17,16 @@ HYD_status HYD_pmcd_pmi_finalize(void)
     return status;
 }
 
-HYD_status HYD_pmiserv_pmi_reply(struct HYD_proxy * proxy, int pid, struct PMIU_cmd * pmi)
+HYD_status HYD_pmiserv_pmi_reply(struct HYD_proxy * proxy, int process_fd, struct PMIU_cmd * pmi)
 {
     struct HYD_pmcd_hdr hdr;
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PMI_RESPONSE;
-    hdr.u.pmi.pid = pid;
+    hdr.u.pmi.process_fd = process_fd;
     return HYD_pmcd_pmi_send(proxy->control_fd, pmi, &hdr, HYD_server_info.user_global.debug);
 }
 
-HYD_status HYD_pmiserv_bcast_keyvals(struct HYD_proxy * proxy, int pid)
+HYD_status HYD_pmiserv_bcast_keyvals(struct HYD_proxy * proxy, int process_fd)
 {
     int keyval_count, arg_count, j;
     struct HYD_pmcd_pmi_kvs_pair *run;
@@ -60,7 +60,7 @@ HYD_status HYD_pmiserv_bcast_keyvals(struct HYD_proxy * proxy, int pid)
             if (arg_count >= MAX_PMI_ARGS) {
                 pg_scratch->keyval_dist_count += (arg_count - 1);
                 for (int i = 0; i < pg->proxy_count; i++) {
-                    status = HYD_pmiserv_pmi_reply(&pg->proxy_list[i], pid, &pmi);
+                    status = HYD_pmiserv_pmi_reply(&pg->proxy_list[i], process_fd, &pmi);
                     HYDU_ERR_POP(status, "error writing PMI line\n");
                 }
 
@@ -72,7 +72,7 @@ HYD_status HYD_pmiserv_bcast_keyvals(struct HYD_proxy * proxy, int pid)
         if (arg_count > 1) {
             pg_scratch->keyval_dist_count += (arg_count - 1);
             for (int i = 0; i < pg->proxy_count; i++) {
-                status = HYD_pmiserv_pmi_reply(&pg->proxy_list[i], pid, &pmi);
+                status = HYD_pmiserv_pmi_reply(&pg->proxy_list[i], process_fd, &pmi);
                 HYDU_ERR_POP(status, "error writing PMI line\n");
             }
         }

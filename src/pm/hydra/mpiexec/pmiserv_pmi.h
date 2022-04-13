@@ -17,7 +17,7 @@ struct HYD_pmcd_pmi_pg_scratch {
     int epoch;
     int fence_count;
     struct HYD_pmcd_pmi_ecount {
-        int pid;
+        int process_fd;
         int epoch;
     } *ecount;
 
@@ -33,24 +33,33 @@ struct HYD_pmcd_pmi_pg_scratch {
 
 HYD_status HYD_pmcd_pmi_finalize(void);
 
-HYD_status HYD_pmiserv_pmi_reply(struct HYD_proxy *proxy, int pid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_pmi_reply(struct HYD_proxy *proxy, int process_fd, struct PMIU_cmd *pmi);
 
-HYD_status HYD_pmiserv_bcast_keyvals(struct HYD_proxy *proxy, int pid);
+HYD_status HYD_pmiserv_bcast_keyvals(struct HYD_proxy *proxy, int process_fd);
 HYD_status HYD_pmiserv_epoch_init(struct HYD_pg *pg);
 HYD_status HYD_pmiserv_epoch_free(struct HYD_pg *pg);
 
-HYD_status HYD_pmiserv_kvs_get(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi,
-                               bool sync);
-HYD_status HYD_pmiserv_kvs_put(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi);
-HYD_status HYD_pmiserv_kvs_mput(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi);
-HYD_status HYD_pmiserv_kvs_fence(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_kvs_get(struct HYD_proxy *proxy, int process_fd, int pgid,
+                               struct PMIU_cmd *pmi, bool sync);
+HYD_status HYD_pmiserv_kvs_put(struct HYD_proxy *proxy, int process_fd, int pgid,
+                               struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_kvs_mput(struct HYD_proxy *proxy, int process_fd, int pgid,
+                                struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_kvs_fence(struct HYD_proxy *proxy, int process_fd, int pgid,
+                                 struct PMIU_cmd *pmi);
 
-HYD_status HYD_pmiserv_barrier(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi);
-HYD_status HYD_pmiserv_abort(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_barrier(struct HYD_proxy *proxy, int process_fd, int pgid,
+                               struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_abort(struct HYD_proxy *proxy, int process_fd, int pgid,
+                             struct PMIU_cmd *pmi);
 
-HYD_status HYD_pmiserv_spawn(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi);
-HYD_status HYD_pmiserv_publish(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi);
-HYD_status HYD_pmiserv_unpublish(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi);
-HYD_status HYD_pmiserv_lookup(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_spawn(struct HYD_proxy *proxy, int process_fd, int pgid,
+                             struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_publish(struct HYD_proxy *proxy, int process_fd, int pgid,
+                               struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_unpublish(struct HYD_proxy *proxy, int process_fd, int pgid,
+                                 struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_lookup(struct HYD_proxy *proxy, int process_fd, int pgid,
+                              struct PMIU_cmd *pmi);
 
 #endif /* PMISERV_PMI_H_INCLUDED */
