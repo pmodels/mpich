@@ -471,11 +471,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                                           dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag);
                 goto fn_exit;
             }
-        } else if (MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG && data_sz && MPIDI_OFI_ENABLE_HMEM) {
-            mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
-                                              context_offset, addr, vni_src, vni_dst, request,
-                                              dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag);
-            goto fn_exit;
         }
 
         mpi_errno = MPIDI_OFI_send_lightweight(send_buf, data_sz, cq_data, dst_rank, tag, comm,
