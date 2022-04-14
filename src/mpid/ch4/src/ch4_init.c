@@ -82,7 +82,17 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        Sets the number of VCIs that user needs (should be a subset of MPIDI_CH4_MAX_VCIS).
+        Sets the number of VCIs to be implicitly used (should be a subset of MPIDI_CH4_MAX_VCIS).
+
+    - name        : MPIR_CVAR_CH4_RESERVE_VCIS
+      category    : CH4
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Sets the number of VCIs that user can explicitly allocate (should be a subset of MPIDI_CH4_MAX_VCIS).
 
     - name        : MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE
       category    : COLLECTIVE
