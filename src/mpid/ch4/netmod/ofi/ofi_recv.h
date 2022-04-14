@@ -145,6 +145,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vni_dst);
         }
         rreq = *request;
+        rreq->u.recv.source_world_rank = (rank >= 0) ? MPIDIU_rank_to_lpid(rank, comm) : rank;
 
         /* Need to set the source to UNDEFINED for anysource matching */
         rreq->status.MPI_SOURCE = MPI_UNDEFINED;

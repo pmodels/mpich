@@ -712,6 +712,12 @@ int MPIDI_OFI_post_init(void)
     MPIDI_OFI_global.num_vnis = tmp_num_vnis;
     MPIDI_OFI_global.num_nics = tmp_num_nics;
     MPIR_ERR_CHECK(mpi_errno);
+    if (errflag) {
+        /* This could happen if one of the process exit/fails before Allreduce
+         * finish on this process (fault-tolerance)
+         */
+        num_nics = 1;
+    }
 
     /* If the user did not ask to fallback to fewer NICs, throw an error if someone is missing a
      * NIC. */

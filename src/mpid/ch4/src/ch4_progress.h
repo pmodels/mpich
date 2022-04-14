@@ -126,10 +126,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state, in
     MPIR_FUNC_ENTER;
 
 #ifdef HAVE_SIGNAL
+    /* Signal handler updates sigusr1_count when PM send us SIGUSR1 */
     if (MPIDI_global.sigusr1_count > MPIDI_global.my_sigusr1_count) {
         MPIDI_global.my_sigusr1_count = MPIDI_global.sigusr1_count;
-        mpi_errno = MPIDI_check_for_failed_procs();
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_update_failed_procs();
     }
 #endif
 
@@ -317,11 +317,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
     MPIDI_PROGRESS_YIELD();
 
 #else
+    int count = 0;
     state->progress_made = 0;
     while (1) {
         mpi_errno = MPIDI_progress_test(state, 1);
         MPIR_ERR_CHECK(mpi_errno);
-        if (state->progress_made) {
+        /* break out to MPIR-layer to check for request completion or fault tolerance */
+        /* NOTE: 100 is chosen arbitrarily */
+        count++;
+        if (state->progress_made || count > 100) {
             break;
         }
         MPIDI_PROGRESS_YIELD();

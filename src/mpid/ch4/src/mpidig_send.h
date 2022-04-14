@@ -60,6 +60,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     } else {
         MPIDIG_request_init(sreq, MPIR_REQUEST_KIND__SEND);
     }
+    sreq->u.send.dest_world_rank = MPIDIU_rank_to_lpid(rank, comm);
     sreq->comm = comm;
     MPIR_Comm_add_ref(comm);
 

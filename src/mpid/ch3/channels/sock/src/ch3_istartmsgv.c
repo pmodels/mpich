@@ -19,6 +19,7 @@ static MPIR_Request *create_request(struct iovec * iov, int iov_count, int iov_o
     /* --END ERROR HANDLING-- */
     MPIR_Object_set_ref(sreq, 2);
 
+    sreq->u.send.dest_world_rank = MPI_PROC_NULL;
     for (i = 0; i < iov_count; i++) {
         sreq->dev.iov[i] = iov[i];
     }
@@ -140,6 +141,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, struct iovec * iov, int n_iov, MPIR_Re
                 if (sreq == NULL) {
                     MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
                 }
+                sreq->u.send.dest_world_rank = MPI_PROC_NULL;
                 MPIR_cc_set(&(sreq->cc), 0);
                 sreq->status.MPI_ERROR = MPIR_Err_create_code(rc,
                                                               MPIR_ERR_RECOVERABLE, __func__,
@@ -196,6 +198,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, struct iovec * iov, int n_iov, MPIR_Re
         if (sreq == NULL) {
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
         }
+        sreq->u.send.dest_world_rank = MPI_PROC_NULL;
         MPIR_cc_set(&(sreq->cc), 0);
         sreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS,
                                                       MPIR_ERR_RECOVERABLE, __func__, __LINE__,

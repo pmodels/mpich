@@ -277,6 +277,7 @@ extern MPIDI_Process_t MPIDI_Process;
     (sreq_)->dev.user_count = count;				\
     (sreq_)->dev.datatype = datatype;				\
     (sreq_)->dev.iov_count	   = 0;                         \
+    (sreq_)->u.send.dest_world_rank = MPI_PROC_NULL; \
 }
 
 /* This is the receive request version of MPIDI_Request_create_sreq */
@@ -285,6 +286,7 @@ extern MPIDI_Process_t MPIDI_Process;
     (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);           \
     MPIR_Object_set_ref((rreq_), 2);				\
     (rreq_)->dev.partner_request   = NULL;                         \
+    (rreq_)->u.recv.source_world_rank = MPI_PROC_NULL; \
 }
 
 #define MPIDI_REQUEST_MSG_MASK (0x3 << MPIDI_REQUEST_MSG_SHIFT)

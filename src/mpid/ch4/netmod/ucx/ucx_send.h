@@ -85,6 +85,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     if (ucp_request) {
         if (req == NULL) {
             req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, vni_src, 2);
+            req->u.send.dest_world_rank = MPIDIU_rank_to_lpid(rank, comm);
         } else {
             MPIR_Request_add_ref(req);
         }

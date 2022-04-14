@@ -47,32 +47,11 @@ int MPIR_Sendrecv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sen
         }
     }
 
-    if (!MPIR_Request_is_complete(sreq) || !MPIR_Request_is_complete(rreq)) {
-        MPID_Progress_state progress_state;
-
-        MPID_Progress_start(&progress_state);
-        while (!MPIR_Request_is_complete(sreq) || !MPIR_Request_is_complete(rreq)) {
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            if (mpi_errno != MPI_SUCCESS) {
-                /* --BEGIN ERROR HANDLING-- */
-                MPID_Progress_end(&progress_state);
-                goto fn_fail;
-                /* --END ERROR HANDLING-- */
-            }
-
-            if (unlikely(MPIR_Request_is_anysrc_mismatched(rreq))) {
-                /* --BEGIN ERROR HANDLING-- */
-                mpi_errno = MPIR_Request_handle_proc_failed(rreq);
-                if (!MPIR_Request_is_complete(sreq)) {
-                    MPID_Cancel_send(sreq);
-                    MPIR_STATUS_SET_CANCEL_BIT(sreq->status, FALSE);
-                }
-                goto fn_fail;
-                /* --END ERROR HANDLING-- */
-            }
-        }
-        MPID_Progress_end(&progress_state);
-    }
+    MPIR_Request *reqs[2];
+    reqs[0] = sreq;
+    reqs[1] = rreq;
+    mpi_errno = MPID_Waitall(2, reqs, MPI_STATUSES_IGNORE, MPIR_REQUESTS_PROPERTY__NO_NULL);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = rreq->status.MPI_ERROR;
     MPIR_Request_extract_status(rreq, status);

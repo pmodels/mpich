@@ -136,6 +136,7 @@ int MPIDI_Self_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
         sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
         ENQUEUE_SELF_SEND(sreq, buf, count, datatype, tag, comm->context_id);
         MPII_UNEXPQ_REMEMBER(sreq, rank, tag, comm->context_id);
+        sreq->u.send.dest_world_rank = MPI_PROC_NULL;
         sreq->comm = comm;
         MPIR_Comm_add_ref(comm);
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
@@ -156,6 +157,7 @@ int MPIDI_Self_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SELF_MUTEX);
 
     rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+    rreq->u.recv.source_world_rank = MPI_PROC_NULL;
 
     DEQUEUE_SELF_SEND(sreq, tag, comm->context_id);
     if (sreq) {
@@ -251,6 +253,7 @@ int MPIDI_Self_imrecv(char *buf, MPI_Aint count, MPI_Datatype datatype,
     MPIR_Request *sreq = message->dev.ch4.self.match_req;
     MPIR_Request *rreq = message;
     rreq->kind = MPIR_REQUEST_KIND__RECV;
+    rreq->u.recv.source_world_rank = MPI_PROC_NULL;
     SELF_COPY(sreq->dev.ch4.self.buf,
               sreq->dev.ch4.self.count,
               sreq->dev.ch4.self.datatype,

@@ -25,6 +25,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend(const void *buf,
     *(req) = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, 0, 1);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    (*req)->u.send.dest_world_rank = MPI_PROC_NULL;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIDI_workq_pt2pt_enqueue(ISEND, buf, NULL /*recv_buf */ , count, datatype,
                               rank, tag, comm, context_offset, av,
@@ -74,6 +75,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll(const void *buf,
     *(req) = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, 0, 1);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    (*req)->u.send.dest_world_rank = MPI_PROC_NULL;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIDI_workq_csend_enqueue(ICSEND, buf, count, datatype, rank, tag, comm,
                               context_offset, av, *req, errflag);
@@ -123,6 +125,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend(const void *buf,
     *(req) = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, 0, 1);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    (*req)->u.send.dest_world_rank = MPI_PROC_NULL;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIDI_workq_pt2pt_enqueue(SSEND, buf, NULL /*recv_buf */ , count, datatype,
                               rank, tag, comm, context_offset, av,

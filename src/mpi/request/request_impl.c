@@ -879,13 +879,18 @@ int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progre
 {
     int mpi_errno = MPI_SUCCESS;
 
-    while (!MPIR_Request_is_complete(request_ptr)) {
+    if (MPIR_Request_is_complete(request_ptr)) {
+        goto fn_exit;
+    }
+    while (1) {
         mpi_errno = MPID_Progress_wait(state);
         MPIR_ERR_CHECK(mpi_errno);
 
-        if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
-            mpi_errno = MPIR_Request_handle_proc_failed(request_ptr);
-            goto fn_fail;
+        if (MPIR_Request_is_complete(request_ptr)) {
+            goto fn_exit;
+        }
+        if (MPL_atomic_relaxed_load_int(&MPIR_failed_procs_count) > 0) {
+            MPIR_Request_handle_proc_failed(request_ptr);
         }
     }
 
@@ -960,6 +965,20 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
     goto fn_exit;
 }
 
+static void waitall_check_proc_failed(int count, MPIR_Request * request_ptrs[])
+{
+    /* use num to avoid excessive checking in waitall */
+    static int num = 0;
+    num++;
+    if (num > count && MPL_atomic_relaxed_load_int(&MPIR_failed_procs_count) > 0) {
+        for (int i = 0; i < count; ++i) {
+            if (request_ptrs[i] && !MPIR_Request_is_complete(request_ptrs[i])) {
+                MPIR_Request_handle_proc_failed(request_ptrs[i]);
+            }
+        }
+    }
+}
+
 /* -- Waitall -- */
 /* MPID_Waitall call MPIR_Waitall_state with initialized progress state */
 int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
@@ -972,6 +991,7 @@ int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status arra
             while (!MPIR_Request_is_complete(request_ptrs[i])) {
                 mpi_errno = MPID_Progress_wait(state);
                 MPIR_ERR_CHECK(mpi_errno);
+                waitall_check_proc_failed(count, request_ptrs);
             }
         }
     } else {
@@ -986,6 +1006,7 @@ int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status arra
 
                 mpi_errno = MPID_Progress_wait(state);
                 MPIR_ERR_CHECK(mpi_errno);
+                waitall_check_proc_failed(count, request_ptrs);
             }
         }
     }

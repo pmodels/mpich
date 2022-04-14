@@ -169,6 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     MPIR_Request *sreq = *request;
+    sreq->u.send.dest_world_rank = MPIDIU_rank_to_lpid(dst_rank, comm);
 
     bool is_huge_send = false;
     MPI_Aint huge_thresh;
@@ -551,6 +552,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
     /* Sends cannot be cancelled */
+    /* But at least complete the request (so e.g. ssend won't hang) */
+    MPIDIU_request_complete(sreq);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

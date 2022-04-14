@@ -359,6 +359,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
     MPIR_Assert(sreq != NULL);
     MPIR_Object_set_ref(sreq, 2);
 
+    sreq->u.send.dest_world_rank = MPI_PROC_NULL;
     sreq->dev.OnDataAvail = 0;
     sreq->ch.vc = vc;
     sreq->dev.iov_offset = 0;
@@ -441,6 +442,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t * vc, void *hdr, intptr_t hdr
     MPIR_Assert(sreq != NULL);
     MPIR_Object_set_ref(sreq, 2);
 
+    sreq->u.send.dest_world_rank = MPI_PROC_NULL;
     sreq->dev.OnDataAvail = 0;
     sreq->ch.vc = vc;
     sreq->dev.iov_offset = 0;
