@@ -205,12 +205,16 @@ int main(int argc, char **argv)
         pid = waitpid(-1, &ret_status, 0);
 
         /* Find the pid and mark it as complete. */
-        if (pid > 0)
-            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+        if (pid > 0) {
+            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
                 if (HYD_pmcd_pmip.downstream.pid[i] == pid) {
-                    HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
+                    if (HYD_pmcd_pmip.downstream.exit_status[i] == PMIP_EXIT_STATUS_UNSET) {
+                        HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
+                    }
                     done++;
                 }
+            }
+        }
 
         /* If no more processes are pending, break out */
         if (done == HYD_pmcd_pmip.local.proxy_process_count)
