@@ -414,16 +414,17 @@ int MPID_Init(int requested, int *provided)
 
     /* Initialize multiple VCIs */
     /* TODO: add checks to ensure MPIDI_vci_t is padded or aligned to MPL_CACHELINE_SIZE */
-    MPIDI_global.n_vcis = 1;
-    if (MPIR_CVAR_CH4_NUM_VCIS > 1) {
-        MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
-        /* There are configured maxes that we need observe. */
-        /* TODO: check them at configure time to avoid discrepancy */
-        MPIR_Assert(MPIDI_global.n_vcis <= MPIDI_CH4_MAX_VCIS);
-        MPIR_Assert(MPIDI_global.n_vcis <= MPIR_REQUEST_NUM_POOLS);
-    }
+    MPIR_Assert(MPIR_CVAR_CH4_NUM_VCIS >= 1);   /* number of vcis used in implicit vci hashing */
+    MPIR_Assert(MPIR_CVAR_CH4_RESERVE_VCIS >= 0);       /* maximum number of vcis can be reserved */
 
-    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+    MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
+    MPIDI_global.n_total_vcis = MPIDI_global.n_vcis + MPIR_CVAR_CH4_RESERVE_VCIS;
+    MPIDI_global.n_reserved_vcis = 0;
+
+    MPIR_Assert(MPIDI_global.n_total_vcis <= MPIDI_CH4_MAX_VCIS);
+    MPIR_Assert(MPIDI_global.n_total_vcis <= MPIR_REQUEST_NUM_POOLS);
+
+    for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
         int err;
         MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
@@ -549,7 +550,7 @@ int MPID_Finalize(void)
         MPIR_Assert(err == 0);
     }
 
-    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+    for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
         int err;
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
