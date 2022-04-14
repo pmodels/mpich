@@ -518,6 +518,40 @@ int MPID_InitCompleted(void)
     goto fn_exit;
 }
 
+int MPID_Allocate_vci(int *vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *vci = 0;
+#if MPIDI_CH4_MAX_VCIS == 1
+    MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**ch4nostream");
+#else
+
+    if (MPIDI_global.n_vcis + MPIDI_global.n_reserved_vcis >= MPIDI_global.n_total_vcis) {
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**outofstream");
+    } else {
+        MPIDI_global.n_reserved_vcis++;
+        for (int i = MPIDI_global.n_vcis; i < MPIDI_global.n_total_vcis; i++) {
+            if (!MPIDI_VCI(i).allocated) {
+                MPIDI_VCI(i).allocated = true;
+                *vci = i;
+                break;
+            }
+        }
+    }
+#endif
+    return mpi_errno;
+}
+
+int MPID_Deallocate_vci(int vci)
+{
+    MPIR_Assert(vci < MPIDI_global.n_total_vcis && vci >= MPIDI_global.n_vcis);
+    MPIR_Assert(MPIDI_VCI(vci).allocated);
+    MPIDI_VCI(vci).allocated = false;
+    MPIDI_global.n_reserved_vcis--;
+    return MPI_SUCCESS;
+}
+
 int MPID_Finalize(void)
 {
     int mpi_errno;
