@@ -98,6 +98,10 @@ int MPII_Coll_finalize(void);
 /* functions for supporting GPU buffers in reduce collectives */
 void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_Aint count,
                                  MPI_Datatype datatype, void **host_sendbuf, void **host_recvbuf);
+void MPIR_Coll_host_buffer_gpu_alloc(const void *sendbuf, const void *recvbuf, MPI_Aint count,
+                                     MPI_Datatype datatype, void **host_sendbuf,
+                                     void **host_recvbuf, MPL_pointer_attr_t send_attr,
+                                     MPL_pointer_attr_t recv_attr);
 void MPIR_Coll_host_buffer_free(void *host_sendbuf, void *host_recvbuf);
 void MPIR_Coll_host_buffer_swap_back(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
                                      MPI_Aint count, MPI_Datatype datatype, MPIR_Request * request);

@@ -267,6 +267,30 @@ void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_A
     }
 }
 
+void MPIR_Coll_host_buffer_gpu_alloc(const void *sendbuf, const void *recvbuf, MPI_Aint count,
+                                     MPI_Datatype datatype, void **host_sendbuf,
+                                     void **host_recvbuf, MPL_pointer_attr_t send_attr,
+                                     MPL_pointer_attr_t recv_attr)
+{
+    void *tmp;
+    if (sendbuf != MPI_IN_PLACE) {
+        tmp = MPIR_gpu_host_swap_gpu(sendbuf, count, datatype, send_attr);
+        *host_sendbuf = tmp;
+    } else {
+        *host_sendbuf = NULL;
+    }
+
+    if (recvbuf == NULL) {
+        *host_recvbuf = NULL;
+    } else if (sendbuf == MPI_IN_PLACE) {
+        tmp = MPIR_gpu_host_swap_gpu(recvbuf, count, datatype, recv_attr);
+        *host_recvbuf = tmp;
+    } else {
+        tmp = MPIR_gpu_host_alloc(recvbuf, count, datatype);
+        *host_recvbuf = tmp;
+    }
+}
+
 void MPIR_Coll_host_buffer_free(void *host_sendbuf, void *host_recvbuf)
 {
     MPL_free(host_sendbuf);

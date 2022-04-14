@@ -51,6 +51,26 @@ cvars:
         number of offsets in the allreduce delta composition's local copy
         The value of 2 performed the best in our 2 NIC test cases.
 
+    - name        : MPIR_CVAR_ALLREDUCE_GPU_SWAP_MSG_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 1048576
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        For message sizes smaller than this threshold, data will be swapped from device to host.
+
+    - name        : MPIR_CVAR_BCAST_GPU_SWAP_MSG_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 1048576
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+       	For message sizes smaller than this threshold, data will be swapped from device to host.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -129,11 +149,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
 {
     int mpi_errno = MPI_SUCCESS;
     int coll_ret = MPI_SUCCESS;
+    void *host_buffer = NULL;
+    void *saved_buffer = buffer;
+    MPL_pointer_attr_t attr;
+    MPI_Aint type_size;
 
 #ifdef HAVE_ERROR_CHECKING
     MPI_Status status;
-    MPI_Aint nbytes, type_size, recvd_size;
+    MPI_Aint nbytes, recvd_size;
 #endif
+
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (comm->node_roots_comm == NULL && comm->rank == root) {
         coll_ret = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm->node_comm, errflag);
@@ -185,6 +211,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
         }
 #endif
     }
+    MPIR_GPU_query_pointer_attr(buffer, &attr);
+
+    if (attr.type == MPL_GPU_POINTER_DEV && count * type_size <= MPIR_CVAR_BCAST_GPU_SWAP_MSG_SIZE) {
+        host_buffer = MPIR_gpu_host_swap_gpu(buffer, count, datatype, attr);
+        if (host_buffer != NULL) {
+            buffer = host_buffer;
+        }
+    }
 
     if (comm->node_roots_comm != NULL) {
         coll_ret =
@@ -204,6 +238,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
             MPIR_ERR_ADD(mpi_errno, coll_ret);
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
+    if (host_buffer != NULL && comm->rank != root) {
+        buffer = saved_buffer;
+        MPIR_gpu_swap_back_gpu(host_buffer, buffer, count, datatype, attr);
+    } else if (host_buffer != NULL && comm->rank == root) {
+        MPIR_gpu_host_free(host_buffer, count, datatype);
+    }
 
     return mpi_errno;
 }
@@ -215,6 +255,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, MP
 {
     int mpi_errno = MPI_SUCCESS;
     int coll_ret = MPI_SUCCESS;
+    void *host_buffer = NULL;
+    void *saved_buffer = buffer;
+    MPL_pointer_attr_t attr;
+    MPI_Aint type_size;
+
+    MPIR_GPU_query_pointer_attr(buffer, &attr);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+
+    if (attr.type == MPL_GPU_POINTER_DEV && count * type_size <= MPIR_CVAR_BCAST_GPU_SWAP_MSG_SIZE) {
+        host_buffer = MPIR_gpu_host_swap_gpu(buffer, count, datatype, attr);
+        if (host_buffer != NULL) {
+            buffer = host_buffer;
+        }
+    }
 
     if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) > 0) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -250,6 +304,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, MP
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
+    if (host_buffer != NULL && comm->rank != root) {
+        buffer = saved_buffer;
+        MPIR_gpu_swap_back_gpu(host_buffer, buffer, count, datatype, attr);
+    } else if (host_buffer != NULL && comm->rank == root) {
+        MPIR_gpu_host_free(host_buffer, count, datatype);
+    }
+
     return mpi_errno;
 }
 
@@ -259,9 +320,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, M
                                                                  MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    void *host_buffer = NULL;
+    void *saved_buffer = buffer;
+    MPL_pointer_attr_t attr;
+    MPI_Aint type_size;
+
+    MPIR_GPU_query_pointer_attr(buffer, &attr);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+
+    if (attr.type == MPL_GPU_POINTER_DEV && count * type_size <= MPIR_CVAR_BCAST_GPU_SWAP_MSG_SIZE) {
+        host_buffer = MPIR_gpu_host_swap_gpu(buffer, count, datatype, attr);
+        if (host_buffer != NULL) {
+            buffer = host_buffer;
+        }
+    }
 
     mpi_errno = MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (host_buffer != NULL && comm->rank != root) {
+        buffer = saved_buffer;
+        MPIR_gpu_swap_back_gpu(host_buffer, buffer, count, datatype, attr);
+    } else if (host_buffer != NULL && comm->rank == root) {
+        MPIR_gpu_host_free(host_buffer, count, datatype);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -278,6 +360,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
 {
     int mpi_errno = MPI_SUCCESS;
     int coll_ret = MPI_SUCCESS;
+    void *in_recvbuf = recvbuf;
+    void *host_sendbuf = NULL;
+    void *host_recvbuf = NULL;
+    MPL_pointer_attr_t send_attr;
+    MPL_pointer_attr_t recv_attr;
+    MPI_Aint type_size;
+
+    MPIR_GPU_query_pointer_attr(sendbuf, &send_attr);
+    MPIR_GPU_query_pointer_attr(recvbuf, &recv_attr);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+
+    if ((send_attr.type == MPL_GPU_POINTER_DEV || recv_attr.type == MPL_GPU_POINTER_DEV) &&
+        (count * type_size <= MPIR_CVAR_ALLREDUCE_GPU_SWAP_MSG_SIZE)) {
+        MPIR_Coll_host_buffer_gpu_alloc(sendbuf, recvbuf, count, datatype, &host_sendbuf,
+                                        &host_recvbuf, send_attr, recv_attr);
+        if (host_sendbuf != NULL)
+            sendbuf = host_sendbuf;
+        if (host_recvbuf != NULL)
+            recvbuf = host_recvbuf;
+    }
 
     if (comm->node_comm != NULL) {
         if ((sendbuf == MPI_IN_PLACE) && (comm->node_comm->rank != 0)) {
@@ -337,7 +439,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
 #endif
     }
 
+    if (host_recvbuf != NULL) {
+        recvbuf = in_recvbuf;
+        mpi_errno = MPIR_Localcopy_gpu(host_recvbuf, count, datatype, NULL,
+                                       recvbuf, count, datatype, &recv_attr,
+                                       MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, true);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);
+    }
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *sendbuf,
@@ -348,9 +462,38 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
                                                                     MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    void *in_recvbuf = recvbuf;
+    void *host_sendbuf = NULL;
+    void *host_recvbuf = NULL;
+    MPL_pointer_attr_t send_attr;
+    MPL_pointer_attr_t recv_attr;
+    MPI_Aint type_size;
+
+    MPIR_GPU_query_pointer_attr(sendbuf, &send_attr);
+    MPIR_GPU_query_pointer_attr(recvbuf, &recv_attr);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+
+    if ((send_attr.type == MPL_GPU_POINTER_DEV || recv_attr.type == MPL_GPU_POINTER_DEV) &&
+        (count * type_size <= MPIR_CVAR_ALLREDUCE_GPU_SWAP_MSG_SIZE)) {
+        MPIR_Coll_host_buffer_gpu_alloc(sendbuf, recvbuf, count, datatype, &host_sendbuf,
+                                        &host_recvbuf, send_attr, recv_attr);
+        if (host_sendbuf != NULL)
+            sendbuf = host_sendbuf;
+        if (host_recvbuf != NULL)
+            recvbuf = host_recvbuf;
+    }
 
     mpi_errno = MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (host_recvbuf != NULL) {
+        recvbuf = in_recvbuf;
+        mpi_errno = MPIR_Localcopy_gpu(host_recvbuf, count, datatype, NULL,
+                                       recvbuf, count, datatype, &recv_attr,
+                                       MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, true);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -366,13 +509,41 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void 
                                                                      MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    void *in_recvbuf = recvbuf;
+    void *host_sendbuf = NULL;
+    void *host_recvbuf = NULL;
+    MPL_pointer_attr_t send_attr;
+    MPL_pointer_attr_t recv_attr;
+    MPI_Aint type_size;
 
+    MPIR_GPU_query_pointer_attr(sendbuf, &send_attr);
+    MPIR_GPU_query_pointer_attr(recvbuf, &recv_attr);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+
+    if ((send_attr.type == MPL_GPU_POINTER_DEV || recv_attr.type == MPL_GPU_POINTER_DEV) &&
+        (type_size * count <= MPIR_CVAR_ALLREDUCE_GPU_SWAP_MSG_SIZE)) {
+        MPIR_Coll_host_buffer_gpu_alloc(sendbuf, recvbuf, count, datatype, &host_sendbuf,
+                                        &host_recvbuf, send_attr, recv_attr);
+        if (host_sendbuf != NULL)
+            sendbuf = host_sendbuf;
+        if (host_recvbuf != NULL)
+            recvbuf = host_recvbuf;
+    }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 #else
     mpi_errno = MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 #endif
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (host_recvbuf != NULL) {
+        recvbuf = in_recvbuf;
+        mpi_errno = MPIR_Localcopy_gpu(host_recvbuf, count, datatype, NULL,
+                                       recvbuf, count, datatype, &recv_attr,
+                                       MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, true);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);
+    }
 
   fn_exit:
     return mpi_errno;
