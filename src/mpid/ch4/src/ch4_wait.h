@@ -68,7 +68,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** re
         }
         if (!found) {
             state->vci[idx++] = vci;
-            MPIR_Assert(vci < MPIDI_global.n_vcis);
+            MPIR_Assert(vci < MPIDI_global.n_total_vcis);
         }
     }
     state->vci_count = idx;
