@@ -104,4 +104,7 @@ void MPIR_Info_setup_env(MPIR_Info * info_ptr);
 int MPIR_Info_push(MPIR_Info * info_ptr, const char *key, const char *val);
 const char *MPIR_Info_lookup(MPIR_Info * info_ptr, const char *key);
 
+/* utility to decode hex info value */
+int MPIR_Info_decode_hex(const char *str, void *buf, int len);
+
 #endif /* MPIR_INFO_H_INCLUDED */
