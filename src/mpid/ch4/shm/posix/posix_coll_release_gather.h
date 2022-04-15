@@ -118,14 +118,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
      * half a datatype in one chunk, but that is fine */
     MPIR_Algo_calculate_pipeline_chunk_info(cellsize, 1, count * type_size, &num_chunks,
                                             &chunk_count_floor, &chunk_count_ceil);
-    /* Print chunking information */
-/* *INDENT-OFF* */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Bcast shmgr pipeline info: segsize=%d\
-                                             count=" MPI_AINT_FMT_DEC_SPEC " num_chunks=" MPI_AINT_FMT_DEC_SPEC " chunk_count_floor=" MPI_AINT_FMT_DEC_SPEC "\
-                                             chunk_count_ceil=" MPI_AINT_FMT_DEC_SPEC " \n",
-                                             cellsize, count * type_size, num_chunks,
-                                             chunk_count_floor, chunk_count_ceil));
-/* *INDENT-ON* */
 
     /* Do pipelined release-gather */
     for (i = 0; i < num_chunks; i++) {
@@ -240,16 +232,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
                                             MPL_MAX(extent, type_size), count, &num_chunks,
                                             &chunk_size_floor, &chunk_size_ceil);
 
-    /* Print chunking information */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Reduce shmgr pipeline info: segsize=%d count="
-                                             MPI_AINT_FMT_DEC_SPEC " num_chunks="
-                                             MPI_AINT_FMT_DEC_SPEC " chunk_size_floor="
-                                             MPI_AINT_FMT_DEC_SPEC " chunk_size_ceil="
-                                             MPI_AINT_FMT_DEC_SPEC " \n",
-                                             MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE, count,
-                                             num_chunks, chunk_size_floor, chunk_size_ceil));
-
     /* Do pipelined release-gather */
     for (i = 0; i < num_chunks; i++) {
         MPI_Aint chunk_count = (i == 0) ? chunk_size_floor : chunk_size_ceil;
@@ -346,16 +328,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     MPIR_Algo_calculate_pipeline_chunk_info(MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE,
                                             MPL_MAX(extent, type_size), count, &num_chunks,
                                             &chunk_size_floor, &chunk_size_ceil);
-
-    /* Print chunking information */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Reduce shmgr pipeline info: segsize=%d count="
-                                             MPI_AINT_FMT_DEC_SPEC " num_chunks="
-                                             MPI_AINT_FMT_DEC_SPEC " chunk_size_floor="
-                                             MPI_AINT_FMT_DEC_SPEC " chunk_size_ceil="
-                                             MPI_AINT_FMT_DEC_SPEC " \n",
-                                             MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE, count,
-                                             num_chunks, chunk_size_floor, chunk_size_ceil));
 
     /* Do pipelined release-gather */
     for (i = 0; i < num_chunks; i++) {

@@ -404,14 +404,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
                                             extent, count, &num_chunks,
                                             &chunk_count_floor, &chunk_count_ceil);
 
-    /* Print chunking information */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Ireduce shmgr pipeline info: segsize=%d count=%ld "
-                                             "num_chunks=%ld chunk_count_floor=%ld chunk_size_ceil=%ld"
-                                             "\n", MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE,
-                                             count, num_chunks, chunk_count_floor,
-                                             chunk_count_ceil));
-
     /* Do pipelined release-gather */
     /* A schedule gets created in the form of a forest, where each tree has 7 vertices (to perform
      * release_gather) and number of trees is same as number of chunks the message is divided
