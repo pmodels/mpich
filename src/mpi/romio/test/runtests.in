@@ -396,6 +396,12 @@ MakeExe syshints
 echo '**** Testing syshints ****'
 $mpirun -np 1 ./syshints $srcdir/test_hintfile
 CleanExe syshints
+#
+OutTime
+MakeExe fstype_prefix
+echo '**** Testing fstype_prefix ****'
+$mpirun -np 2 ./fstype_prefix
+#
 
 #
 if [ @NOF77@ = 0 ] ; then 

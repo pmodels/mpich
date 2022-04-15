@@ -619,10 +619,8 @@ int ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
                          ADIOI_Fns ** ops, int *error_code)
 {
     int myerrcode, file_system, min_code, max_code;
-    char *tmp;
     int i, known_fstype = 0;
     static char myname[] = "ADIO_RESOLVEFILETYPE";
-    char *p;
     *ops = 0;
 
     file_system = -1;
