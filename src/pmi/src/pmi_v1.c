@@ -64,7 +64,8 @@ static char cached_singinit_val[PMIU_MAXLINE];
 #define MAX_SINGINIT_KVSNAME 256
 static char singinit_kvsname[MAX_SINGINIT_KVSNAME];
 
-/******************************** Group functions *************************/
+static int expect_pmi_cmd(const char *key);
+static int GetResponse_set_int(const char *key, int *val_out);
 
 PMI_API_PUBLIC int PMI_Init(int *spawned)
 {
@@ -141,12 +142,8 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
     if ((p = getenv("PMI_TOTALVIEW")))
         PMI_totalview = atoi(p);
     if (PMI_totalview) {
-        struct PMIU_cmd pmicmd;
-        pmi_errno = PMIU_cmd_read(PMI_fd, &pmicmd);
+        pmi_errno = expect_pmi_cmd("tv_ready");
         PMIU_ERR_POP(pmi_errno);
-        PMIU_ERR_CHKANDJUMP1(strcmp(pmicmd.cmd, "tv_ready") != 0,
-                             pmi_errno, PMI_FAIL, "expecting cmd=tv_ready, got %s\n", pmicmd.cmd);
-        PMIU_cmd_free_buf(&pmicmd);
     }
 #endif
 
@@ -220,26 +217,25 @@ PMI_API_PUBLIC int PMI_Get_universe_size(int *size)
 {
     int pmi_errno = PMI_SUCCESS;
 
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "get_universe_size");
     /* Connect to the PM if we haven't already */
     if (PMIi_InitIfSingleton() != 0)
         return PMI_FAIL;
 
     if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        struct PMIU_cmd pmicmd;
-        PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "get_universe_size");
-
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "universe_size");
         PMIU_ERR_POP(pmi_errno);
 
         PMII_PMI_GET_INTVAL(&pmicmd, "size", *size);
 
-        PMIU_cmd_free_buf(&pmicmd);
     } else {
         /* FIXME: do we require PM or not? */
         *size = 1;
     }
 
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -249,21 +245,20 @@ PMI_API_PUBLIC int PMI_Get_appnum(int *appnum)
 {
     int pmi_errno = PMI_SUCCESS;
 
-    if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        struct PMIU_cmd pmicmd;
-        PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "get_appnum");
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "get_appnum");
 
+    if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "appnum");
         PMIU_ERR_POP(pmi_errno);
 
         PMII_PMI_GET_INTVAL(&pmicmd, "appnum", *appnum);
-
-        PMIU_cmd_free_buf(&pmicmd);
     } else {
         *appnum = -1;
     }
 
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -273,17 +268,16 @@ PMI_API_PUBLIC int PMI_Barrier(void)
 {
     int pmi_errno = PMI_SUCCESS;
 
-    if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        struct PMIU_cmd pmicmd;
-        PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "barrier_in");
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "barrier_in");
 
+    if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "barrier_out");
         PMIU_ERR_POP(pmi_errno);
-
-        PMIU_cmd_free_buf(&pmicmd);
     }
 
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -294,20 +288,18 @@ PMI_API_PUBLIC int PMI_Finalize(void)
 {
     int pmi_errno = PMI_SUCCESS;
 
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "finalize");
     if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        struct PMIU_cmd pmicmd;
-        PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "finalize");
-
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "finalize_ack");
         PMIU_ERR_POP(pmi_errno);
-
-        PMIU_cmd_free_buf(&pmicmd);
 
         shutdown(PMI_fd, SHUT_RDWR);
         close(PMI_fd);
     }
 
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -338,6 +330,9 @@ PMI_API_PUBLIC int PMI_KVS_Get_my_name(char kvsname[], int length)
 {
     int pmi_errno = PMI_SUCCESS;
 
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "get_my_kvsname");
+
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
         /* Return a dummy name */
         /* FIXME: We need to support a distinct kvsname for each
@@ -345,9 +340,6 @@ PMI_API_PUBLIC int PMI_KVS_Get_my_name(char kvsname[], int length)
         MPL_snprintf(kvsname, length, "singinit_kvs_%d_0", (int) getpid());
         goto fn_exit;
     }
-
-    struct PMIU_cmd pmicmd;
-    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "get_my_kvsname");
 
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "my_kvsname");
     PMIU_ERR_POP(pmi_errno);
@@ -357,9 +349,8 @@ PMI_API_PUBLIC int PMI_KVS_Get_my_name(char kvsname[], int length)
 
     MPL_strncpy(kvsname, tmp_kvsname, length);
 
-    PMIU_cmd_free_buf(&pmicmd);
-
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -393,6 +384,9 @@ PMI_API_PUBLIC int PMI_KVS_Put(const char kvsname[], const char key[], const cha
 {
     int pmi_errno = PMI_SUCCESS;
 
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "put");
+
     /* This is a special hack to support singleton initialization */
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
         int rc;
@@ -408,9 +402,6 @@ PMI_API_PUBLIC int PMI_KVS_Put(const char kvsname[], const char key[], const cha
         return PMI_SUCCESS;
     }
 
-    struct PMIU_cmd pmicmd;
-    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "put");
-
     PMIU_cmd_add_str(&pmicmd, "kvsname", kvsname);
     PMIU_cmd_add_str(&pmicmd, "key", key);
     PMIU_cmd_add_str(&pmicmd, "value", value);
@@ -422,9 +413,8 @@ PMI_API_PUBLIC int PMI_KVS_Put(const char kvsname[], const char key[], const cha
     PMII_PMI_GET_INTVAL(&pmicmd, "rc", rc);
     PMIU_ERR_CHKANDJUMP1(rc != 0, pmi_errno, PMI_FAIL, "PMI put error, rc = %d", rc);
 
-    PMIU_cmd_free_buf(&pmicmd);
-
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -441,7 +431,9 @@ PMI_API_PUBLIC int PMI_KVS_Commit(const char kvsname[]ATTRIBUTE((unused)))
 PMI_API_PUBLIC int PMI_KVS_Get(const char kvsname[], const char key[], char value[], int length)
 {
     int pmi_errno = PMI_SUCCESS;
+
     struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "get");
 
     /* Connect to the PM if we haven't already.  This is needed in case
      * we're doing an MPI_Comm_join or MPI_Comm_connect/accept from
@@ -450,7 +442,6 @@ PMI_API_PUBLIC int PMI_KVS_Get(const char kvsname[], const char key[], char valu
     if (PMIi_InitIfSingleton() != 0)
         return PMI_FAIL;
 
-    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "get");
     PMIU_cmd_add_str(&pmicmd, "kvsname", kvsname);
     PMIU_cmd_add_str(&pmicmd, "key", key);
 
@@ -466,9 +457,8 @@ PMI_API_PUBLIC int PMI_KVS_Get(const char kvsname[], const char key[], char valu
 
     MPL_strncpy(value, tmp_val, length);
 
-    PMIU_cmd_free_buf(&pmicmd);
-
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -480,9 +470,9 @@ PMI_API_PUBLIC int PMI_Publish_name(const char service_name[], const char port[]
 {
     int pmi_errno = PMI_SUCCESS;
 
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "publish_name");
     if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        struct PMIU_cmd pmicmd;
-        PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "publish_name");
         PMIU_cmd_add_str(&pmicmd, "service", service_name);
         PMIU_cmd_add_str(&pmicmd, "port", port);
 
@@ -496,13 +486,12 @@ PMI_API_PUBLIC int PMI_Publish_name(const char service_name[], const char port[]
             PMII_PMI_GET_STRVAL(&pmicmd, "msg", msg);
             PMIU_ERR_SETANDJUMP1(pmi_errno, PMI_FAIL, "publish_name failed: reason = %s", msg);
         }
-
-        PMIU_cmd_free_buf(&pmicmd);
     } else {
         PMIU_ERR_SETANDJUMP(pmi_errno, PMI_FAIL, "PMI_Publish_name called before init\n");
     }
 
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -512,9 +501,9 @@ PMI_API_PUBLIC int PMI_Unpublish_name(const char service_name[])
 {
     int pmi_errno = PMI_SUCCESS;
 
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "unpublish_name");
     if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        struct PMIU_cmd pmicmd;
-        PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "unpublish_name");
         PMIU_cmd_add_str(&pmicmd, "service", service_name);
 
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "unpublish_result");
@@ -527,13 +516,12 @@ PMI_API_PUBLIC int PMI_Unpublish_name(const char service_name[])
             PMII_PMI_GET_STRVAL(&pmicmd, "msg", msg);
             PMIU_ERR_SETANDJUMP1(pmi_errno, PMI_FAIL, "unpublish_name failed: reason = %s", msg);
         }
-
-        PMIU_cmd_free_buf(&pmicmd);
     } else {
         PMIU_ERR_SETANDJUMP(pmi_errno, PMI_FAIL, "PMI_Unpublish_name called before init\n");
     }
 
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -543,9 +531,10 @@ PMI_API_PUBLIC int PMI_Lookup_name(const char service_name[], char port[])
 {
     int pmi_errno = PMI_SUCCESS;
 
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "lookup_name");
+
     if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        struct PMIU_cmd pmicmd;
-        PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "lookup_name");
         PMIU_cmd_add_str(&pmicmd, "service", service_name);
 
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "lookup_result");
@@ -564,12 +553,12 @@ PMI_API_PUBLIC int PMI_Lookup_name(const char service_name[], char port[])
 
         MPL_strncpy(port, tmp_port, MPI_MAX_PORT_NAME);
 
-        PMIU_cmd_free_buf(&pmicmd);
     } else {
         PMIU_ERR_SETANDJUMP(pmi_errno, PMI_FAIL, "PMI_Lookup_name called before init\n");
     }
 
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -679,9 +668,10 @@ PMI_API_PUBLIC
 static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
 {
     int pmi_errno = PMI_SUCCESS;
-    struct PMIU_cmd pmicmd;
 
+    struct PMIU_cmd pmicmd;
     PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "init");
+
     PMIU_cmd_add_int(&pmicmd, "pmi_version", PMI_VERSION);
     PMIU_cmd_add_int(&pmicmd, "pmi_subversion", PMI_SUBVERSION);
 
@@ -706,9 +696,8 @@ static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
     PMII_PMI_GET_INTVAL(&pmicmd, "keylen_max", *keylen_max);
     PMII_PMI_GET_INTVAL(&pmicmd, "vallen_max", *vallen_max);
 
-    PMIU_cmd_free_buf(&pmicmd);
-
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     /* FIXME: is abort the right behavior? */
@@ -732,9 +721,8 @@ static int GetResponse_set_int(const char *key, int *val_out)
 
     PMII_PMI_GET_INTVAL(&pmicmd, key, *val_out);
 
-    PMIU_cmd_free_buf(&pmicmd);
-
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -814,21 +802,19 @@ static int PMII_Set_from_port(int id)
 {
     int pmi_errno = PMI_SUCCESS;
 
-    /* We start by sending a startup message to the server */
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "initack");
 
+    /* We start by sending a startup message to the server */
     if (PMI_debug) {
         PMIU_printf(1, "Writing initack to destination fd %d\n", PMI_fd);
     }
     /* Handshake and initialize from a port */
 
-    struct PMIU_cmd pmicmd;
-    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "initack");
     PMIU_cmd_add_int(&pmicmd, "pmiid", id);
 
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "initack");
     PMIU_ERR_POP(pmi_errno);
-
-    PMIU_cmd_free_buf(&pmicmd);
 
     /* Read, in order, size, rank, and debug.  Eventually, we'll want
      * the handshake to include a version number */
@@ -841,6 +827,7 @@ static int PMII_Set_from_port(int id)
     PMIU_ERR_POP(pmi_errno);
 
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -910,6 +897,9 @@ static int PMII_singinit(void)
     char port_c[8];
     unsigned short port;
 
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, NULL);
+
     /* Create a socket on which to allow an mpiexec to connect back to
      * us */
     singinit_listen_sock = MPL_socket();
@@ -961,7 +951,6 @@ static int PMII_singinit(void)
                             "Failed to establish singleton init connection\n");
 
         /* Execute the singleton init protocol */
-        struct PMIU_cmd pmicmd;
         PMIU_cmd_read(PMI_fd, &pmicmd);
         PMIU_ERR_CHKANDJUMP1(strcmp(pmicmd.cmd, "singinit") != 0,
                              pmi_errno, PMI_FAIL, "unexpected command from PM: %s\n", pmicmd.cmd);
@@ -1003,11 +992,10 @@ static int PMII_singinit(void)
             dup2(stderr_sock, 2);
         }
         PMIU_printf(PMI_debug_init, "Done with singinit handshake\n");
-
-        PMIU_cmd_free_buf(&pmicmd);
     }
 
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -1143,4 +1131,21 @@ static int getPMIFD(int *notset)
 
     /* Singleton init case - its ok to return success with no fd set */
     return PMI_SUCCESS;
+}
+
+static int expect_pmi_cmd(const char *key)
+{
+    int pmi_errno = PMI_SUCCESS;
+
+    struct PMIU_cmd pmicmd;
+    pmi_errno = PMIU_cmd_read(PMI_fd, &pmicmd);
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_ERR_CHKANDJUMP2(strcmp(pmicmd.cmd, key) != 0,
+                         pmi_errno, PMI_FAIL, "expecting cmd=%s, got %s\n", key, pmicmd.cmd);
+
+  fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
+    return pmi_errno;
+  fn_fail:
+    goto fn_exit;
 }
