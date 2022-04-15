@@ -32,7 +32,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_recv_posted_hook(MPIR_Request * reques
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_imrecv(void *buf, MPI_Aint count,
                                                     MPI_Datatype datatype, MPIR_Request * message)
 {
-    return MPIDIG_mpi_imrecv(buf, count, datatype, message);
+    int mpi_errno = MPI_SUCCESS;
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    int vci = MPIDI_Request_get_vci(message);
+#endif
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    mpi_errno = MPIDIG_mpi_imrecv(buf, count, datatype, message);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_irecv(void *buf,
@@ -44,8 +53,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_irecv(void *buf,
                                                    MPIR_Request ** request)
 {
     int vsi = MPIDI_POSIX_get_vsi(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vsi).lock);
     int mpi_errno = MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
                                      vsi, request, 1, NULL);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vsi).lock);
     MPIDI_POSIX_recv_posted_hook(*request, rank, comm);
     return mpi_errno;
 }
