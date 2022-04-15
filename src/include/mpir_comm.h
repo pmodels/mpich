@@ -253,8 +253,8 @@ struct MPIR_Comm {
         } single;
         struct {
             struct MPIR_Stream **local_streams;
-            int *vci_displs;
-            int *vci_table;
+            MPI_Aint *vci_displs;       /* comm size + 1 */
+            int *vci_table;     /* comm size */
         } multiplex;
     } stream_comm;
 
