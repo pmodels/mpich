@@ -54,6 +54,8 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 {
     int pmi_errno = PMI2_SUCCESS;
 
+    struct PMIU_cmd pmicmd = { 0 };
+
     PMIU_thread_init();
 
     /* FIXME: Why is setvbuf commented out? */
@@ -87,7 +89,6 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     }
 
     /* do initial PMI1 init */
-    struct PMIU_cmd pmicmd;
     PMIU_cmd_init(&pmicmd, PMII_WIRE_V1, "init");
     PMIU_cmd_add_int(&pmicmd, "pmi_version", PMI_VERSION);
     PMIU_cmd_add_int(&pmicmd, "pmi_subversion", PMI_SUBVERSION);
@@ -142,6 +143,7 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     }
 
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -151,10 +153,10 @@ PMI_API_PUBLIC int PMI2_Finalize(void)
 {
     int pmi_errno = PMI2_SUCCESS;
 
-    if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        struct PMIU_cmd pmicmd;
-        PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "finalize");
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "finalize");
 
+    if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "finalize-response");
         PMIU_ERR_POP(pmi_errno);
         PMI2_CHK_RC_ERRMSG(&pmicmd);
@@ -164,6 +166,7 @@ PMI_API_PUBLIC int PMI2_Finalize(void)
     }
 
   fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;
