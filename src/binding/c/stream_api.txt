@@ -12,6 +12,12 @@ MPIX_Stream_comm_create:
     stream: STREAM, [stream object]
     newcomm: COMMUNICATOR, direction=out, [new stream-associated communicator]
 
+MPIX_Stream_comm_create_multiplex:
+    comm: COMMUNICATOR, [communicator]
+    count: ARRAY_LENGTH_NNI, [list length]
+    array_of_streams: STREAM, length=count, [stream object array]
+    newcomm: COMMUNICATOR, direction=out, [new stream-associated communicator]
+
 MPIX_Send_enqueue:
     buf: BUFFER, constant=True, [initial address of send buffer]
     count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]

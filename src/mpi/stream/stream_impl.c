@@ -80,6 +80,15 @@ void MPIR_stream_comm_free(MPIR_Comm * comm)
         }
         MPL_free(comm->stream_comm.single.vci_table);
     } else if (comm->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
+        int rank = comm->rank;
+        int num_local_streams = comm->stream_comm.multiplex.vci_displs[rank + 1] -
+            comm->stream_comm.multiplex.vci_displs[rank];
+        for (int i = 0; i < num_local_streams; i++) {
+            if (comm->stream_comm.multiplex.local_streams[i]) {
+                int cnt;
+                MPIR_Object_release_ref_always(comm->stream_comm.multiplex.local_streams[i], &cnt);
+            }
+        }
         MPL_free(comm->stream_comm.multiplex.local_streams);
         MPL_free(comm->stream_comm.multiplex.vci_displs);
         MPL_free(comm->stream_comm.multiplex.vci_table);
@@ -180,6 +189,85 @@ int MPIR_Stream_comm_create_impl(MPIR_Comm * comm_ptr, MPIR_Stream * stream_ptr,
     if (stream_ptr) {
         MPIR_Object_add_ref_always(stream_ptr);
     }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Stream_comm_create_multiplex_impl(MPIR_Comm * comm_ptr,
+                                           int num_streams, MPIX_Stream streams[],
+                                           MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* if user offers 0 streams, use default MPIX_STREAM_NULL */
+    MPIX_Stream stream_default = MPIX_STREAM_NULL;
+    if (num_streams == 0) {
+        num_streams = 1;
+        streams = &stream_default;
+    }
+
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPI_Aint *num_table;
+    num_table = MPL_malloc(comm_ptr->local_size * sizeof(MPI_Aint), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!num_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    MPI_Aint *displs;
+    /* note: we allocate (size + 1) so the counts can be calculated from displs table */
+    displs = MPL_malloc((comm_ptr->local_size + 1) * sizeof(MPI_Aint), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!displs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPI_Aint num_tmp = num_streams;
+    mpi_errno = MPIR_Allgather_impl(&num_tmp, 1, MPI_AINT,
+                                    num_table, 1, MPI_AINT, comm_ptr, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPI_Aint num_total = 0;
+    for (int i = 0; i < comm_ptr->local_size; i++) {
+        displs[i] = num_total;
+        num_total += num_table[i];
+    }
+    displs[comm_ptr->local_size] = num_total;
+
+    int *vci_table;
+    vci_table = MPL_malloc(num_total * sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!vci_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    MPIR_Stream **local_streams;
+    local_streams = MPL_malloc(num_streams * sizeof(MPIR_Stream *), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!local_streams, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    int *local_vcis;
+    local_vcis = MPL_malloc(num_streams * sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!local_vcis, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    for (int i = 0; i < num_streams; i++) {
+        MPIR_Stream *stream_ptr;
+        MPIR_Stream_get_ptr(streams[i], stream_ptr);
+        if (stream_ptr) {
+            MPIR_Object_add_ref_always(stream_ptr);
+        }
+        local_streams[i] = stream_ptr;
+        local_vcis[i] = stream_ptr ? stream_ptr->vci : 0;
+    }
+
+    errflag = MPIR_ERR_NONE;
+    mpi_errno = MPIR_Allgatherv_impl(local_vcis, num_streams, MPI_INT,
+                                     vci_table, num_table, displs, MPI_INT, comm_ptr, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    (*newcomm_ptr)->stream_comm_type = MPIR_STREAM_COMM_MULTIPLEX;
+    (*newcomm_ptr)->stream_comm.multiplex.local_streams = local_streams;
+    (*newcomm_ptr)->stream_comm.multiplex.vci_displs = displs;
+    (*newcomm_ptr)->stream_comm.multiplex.vci_table = vci_table;
+
+    MPL_free(local_vcis);
+    MPL_free(num_table);
 
   fn_exit:
     return mpi_errno;
