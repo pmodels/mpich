@@ -57,12 +57,6 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
     /* calculate chunking information for pipelining */
     MPIR_Algo_calculate_pipeline_chunk_info(chunk_size, type_size, count, &num_chunks,
                                             &chunk_size_floor, &chunk_size_ceil);
-    /* print chunking information */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Allreduce pipeline info: chunk_size=%d count=%ld num_chunks=%ld chunk_size_floor=%ld chunk_size_ceil=%ld ",
-                                             chunk_size, count, num_chunks,
-                                             chunk_size_floor, chunk_size_ceil));
-
 
     if (!is_commutative) {
         /* because kary and knomial_2 trees cannot handle non-commutative operations */
