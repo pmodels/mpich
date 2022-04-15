@@ -50,9 +50,8 @@ static inline int MPIR_Algo_calculate_pipeline_chunk_info(MPI_Aint chunk_size, M
         *segsize_floor = maxelems;
     *num_segments = (count + *segsize_ceil - 1) / (*segsize_ceil);
 
-    MPIR_FUNC_EXIT;
-
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
