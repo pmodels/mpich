@@ -106,12 +106,6 @@ Native API:
   mpi_isend : int
       NM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p
      SHM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p
-  isend_coll : int
-      NM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p, errflag
-     SHM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p, errflag
-  mpi_issend : int
-      NM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p
-     SHM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p
   mpi_cancel_send : int
       NM*: sreq
      SHM*: sreq
