@@ -198,7 +198,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
 {
     int mpi_errno;
 
-    int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag);
+    int vni_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag);
 
     MPIR_FUNC_ENTER;
 

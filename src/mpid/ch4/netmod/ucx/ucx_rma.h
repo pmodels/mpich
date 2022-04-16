@@ -218,14 +218,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
     }
 
     if (origin_contig && target_contig) {
-        int vni = MPIDI_UCX_get_win_vni(win);
+        int vni = MPIDI_UCX_WIN(win).vni;
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         mpi_errno =
             MPIDI_UCX_contig_put(MPIR_get_contig_ptr(origin_addr, origin_true_lb), origin_bytes,
                                  target_rank, target_disp, target_true_lb, win, addr, reqptr, vni);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
     } else if (target_contig) {
-        int vni = MPIDI_UCX_get_win_vni(win);
+        int vni = MPIDI_UCX_WIN(win).vni;
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         mpi_errno = MPIDI_UCX_noncontig_put(origin_addr, origin_count, origin_datatype, target_rank,
                                             target_bytes, target_disp, target_true_lb, win, addr,
@@ -279,7 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
     }
 
     if (origin_contig && target_contig) {
-        int vni = MPIDI_UCX_get_win_vni(win);
+        int vni = MPIDI_UCX_WIN(win).vni;
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         mpi_errno =
             MPIDI_UCX_contig_get(MPIR_get_contig_ptr(origin_addr, origin_true_lb), origin_bytes,
