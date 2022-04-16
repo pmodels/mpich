@@ -284,8 +284,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             vni_dst_ = 0; \
         } else { \
             /* NOTE: hashing is based on target rank */ \
-            vni_src_ = MPIDI_OFI_get_vni(SRC_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
-            vni_dst_ = MPIDI_OFI_get_vni(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
+            vni_src_ = MPIDI_get_vci(SRC_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
+            vni_dst_ = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
         } \
     } while (0)
 

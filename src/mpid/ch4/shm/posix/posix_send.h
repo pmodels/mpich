@@ -18,8 +18,8 @@
 
 #define MPIDI_POSIX_SEND_VSIS(vsi_src_, vsi_dst_) \
     do { \
-        vsi_src_ = MPIDI_POSIX_get_vsi(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
-        vsi_dst_ = MPIDI_POSIX_get_vsi(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+        vsi_src_ = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+        vsi_dst_ = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
     } while (0)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint count,
