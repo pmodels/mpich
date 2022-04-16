@@ -113,8 +113,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
-    int vni_src = MPIDI_UCX_get_vni(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
-    int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
+    int vni_src = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
+    int vni_dst = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
 
     switch (*errflag) {
@@ -145,8 +145,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno;
-    int vni_src = MPIDI_UCX_get_vni(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
-    int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
+    int vni_src = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
+    int vni_dst = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
 
     MPIR_FUNC_ENTER;
 
@@ -168,8 +168,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf,
                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno;
-    int vni_src = MPIDI_UCX_get_vni(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
-    int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
+    int vni_src = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
+    int vni_dst = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
 
     MPIR_FUNC_ENTER;
 
