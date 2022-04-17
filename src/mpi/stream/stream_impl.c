@@ -17,6 +17,22 @@ MPIR_Object_alloc_t MPIR_Stream_mem = { 0, 0, 0, 0, 0, 0, MPIR_STREAM,
     NULL, {0}
 };
 
+void MPIR_stream_comm_init(MPIR_Comm * comm)
+{
+    comm->stream_comm_type = MPIR_STREAM_COMM_NONE;
+}
+
+void MPIR_stream_comm_free(MPIR_Comm * comm)
+{
+    if (comm->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
+        MPL_free(comm->stream_comm.single.vci_table);
+    } else if (comm->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
+        MPL_free(comm->stream_comm.multiplex.local_streams);
+        MPL_free(comm->stream_comm.multiplex.vci_displs);
+        MPL_free(comm->stream_comm.multiplex.vci_table);
+    }
+}
+
 int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
