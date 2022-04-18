@@ -110,21 +110,21 @@ int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info, bool in_comm_cre
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Info *curr_info;
-    LL_FOREACH(info, curr_info) {
-        if (curr_info->key == NULL)
+    for (int i = 0; i < next_comm_hint_index; i++) {
+        if (!MPIR_comm_hint_list[i].key) {
             continue;
-        for (int i = 0; i < next_comm_hint_index; i++) {
-            if (MPIR_comm_hint_list[i].key &&
-                strcmp(curr_info->key, MPIR_comm_hint_list[i].key) == 0) {
-                int val;
-                int ret = parse_string_value(curr_info->value, MPIR_comm_hint_list[i].type, &val);
-                if (ret == 0) {
-                    if (MPIR_comm_hint_list[i].fn) {
-                        MPIR_comm_hint_list[i].fn(comm_ptr, i, val);
-                    } else {
-                        comm_ptr->hints[i] = val;
-                    }
+        }
+
+        const char *str_val;
+        str_val = MPIR_Info_lookup(info, MPIR_comm_hint_list[i].key);
+        if (str_val) {
+            int val;
+            int rc = parse_string_value(str_val, MPIR_comm_hint_list[i].type, &val);
+            if (rc == 0) {
+                if (MPIR_comm_hint_list[i].fn) {
+                    MPIR_comm_hint_list[i].fn(comm_ptr, i, val);
+                } else {
+                    comm_ptr->hints[i] = val;
                 }
             }
         }

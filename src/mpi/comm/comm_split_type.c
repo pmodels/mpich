@@ -95,18 +95,6 @@ int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcom
     goto fn_exit;
 }
 
-static const char *info_get_key(MPIR_Info * info_ptr, const char *key)
-{
-    MPIR_Info *curr_ptr = info_ptr->next;
-    while (curr_ptr) {
-        if (strcmp(curr_ptr->key, key) == 0) {
-            return curr_ptr->value;
-        }
-        curr_ptr = curr_ptr->next;
-    }
-    return NULL;
-}
-
 int MPIR_Comm_split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
                                    MPIR_Comm ** newcomm_ptr)
 {
@@ -115,7 +103,7 @@ int MPIR_Comm_split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * in
     const char *resource_type = NULL;
 
     if (info_ptr != NULL) {
-        resource_type = info_get_key(info_ptr, "mpi_hw_resource_type");
+        resource_type = MPIR_Info_lookup(info_ptr, "mpi_hw_resource_type");
     }
 
     if (!resource_type) {
