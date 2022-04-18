@@ -16,6 +16,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AM_PROG_AR
 
 AC_PROG_CC
+AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
 PAC_C_NO_COMMON
@@ -109,54 +110,9 @@ fi
 AC_CHECK_FUNCS(strncasecmp)
 
 if test "$enable_pmiport" = "yes" ; then
-    # Check for the necessary includes and functions
-    missing_headers=no
-    AC_CHECK_HEADERS([	\
-	sys/types.h	\
-	sys/param.h	\
-	sys/socket.h	\
-	netinet/in.h	\
-	netinet/tcp.h	\
-	sys/un.h	\
-	netdb.h		\
-	],,missing_headers=yes )
-    missing_functions=no
-    AC_SEARCH_LIBS(socket,socket,,[missing_functions=yes])
-    AC_SEARCH_LIBS(gethostbyname,nsl,,[missing_functions=yes])
-    AC_SEARCH_LIBS(setsockopt,,,[missing_functions=yes])
-
-    if test "$missing_functions" = "no" ; then
-        AC_DEFINE(USE_PMI_PORT,1,[Define if access to PMI information through a port rather than just an fd is allowed])
-    else
-        AC_MSG_ERROR([Cannot build simple PMI with support for an IP port because of missing functions])
-    fi
+    AC_DEFINE(USE_PMI_PORT,1,[Define if access to PMI information through a port rather than just an fd is allowed])
 fi
 
-# Check for socklen_t .  If undefined, define it as int
-# (note the conditional inclusion of sys/socket.h)
-AC_CACHE_CHECK([whether socklen_t is defined (in sys/socket.h if present)], pac_cv_have_socklen_t,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-        #include <sys/types.h>
-        #ifdef HAVE_SYS_SOCKET_H
-        #include <sys/socket.h>
-        #endif
-
-        typedef struct { double a; int b; } socklen_t;
-        ]],[[
-        socklen_t a;a.a=1.0;
-        ]])],pac_cv_have_socklen_t=no,pac_cv_have_socklen_t=yes)
-])
-if test "$pac_cv_have_socklen_t" = no ; then
-    AC_DEFINE(socklen_t,int,[Define if socklen_t is not defined])
-fi
-# Check for h_addr or h_addr_list
-AC_CACHE_CHECK([whether struct hostent contains h_addr_list], pac_cv_have_haddr_list,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],[[struct hostent hp;hp.h_addr_list[0]=0;]])],
-        pac_cv_have_haddr_list=yes,pac_cv_have_haddr_list=no)
-])
-if test "$pac_cv_have_haddr_list" = "yes" ; then
-    AC_DEFINE(HAVE_H_ADDR_LIST,1,[Define if struct hostent contains h_addr_list])
-fi
 PAC_C_GNU_ATTRIBUTE
 
 AC_CONFIG_FILES([Makefile])
