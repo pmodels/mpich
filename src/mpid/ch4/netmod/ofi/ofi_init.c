@@ -462,16 +462,6 @@ cvars:
       description : >-
         If true, need to register the buffer to use GPU direct RDMA.
 
-    - name        : MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG
-      category    : CH4_OFI
-      type        : int
-      default     : 1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If true, need to register the host buffer to use GPU direct RDMA.
-
     - name        : MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD
       category    : CH4_OFI
       type        : int
