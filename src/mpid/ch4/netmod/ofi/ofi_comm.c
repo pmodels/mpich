@@ -9,6 +9,8 @@
 #include "ofi_noinline.h"
 #include "coll/ofi_triggered.h"
 
+#define HAS_PREF_NIC(comm) comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1
+
 static int update_multi_nic_hints(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -19,7 +21,7 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
             int was_enabled_striping = MPIDI_OFI_COMM(comm).enable_striping;
 
             /* Check if we should use striping */
-            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1) {
+            if (HAS_PREF_NIC(comm)) {
                 /* If the user specified a particular NIC, don't use striping. */
                 MPIDI_OFI_COMM(comm).enable_striping = 0;
             } else if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING] != -1)
@@ -42,7 +44,7 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
             int was_enabled_hashing = MPIDI_OFI_COMM(comm).enable_hashing;
 
             /* Check if we should use hashing */
-            if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1) {
+            if (HAS_PREF_NIC(comm)) {
                 /* If the user specified a particular NIC, don't use hashing.  */
                 MPIDI_OFI_COMM(comm).enable_hashing = 0;
             } else if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING] != -1)
@@ -154,13 +156,6 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 
     mpi_errno = update_multi_nic_hints(comm);
     MPIR_ERR_CHECK(mpi_errno);
-    /* When setting up built in communicators, there won't be any way to do collectives yet. We also
-     * won't have any info hints to propagate so there won't be any preferences that need to be
-     * communicated. */
-    if (comm != MPIR_Process.comm_world) {
-        mpi_errno = update_nic_preferences(comm);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -175,11 +170,17 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 
     MPIR_FUNC_ENTER;
 
-    MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
     mpi_errno =
         MPIR_Csel_prune(MPIDI_global.nm.ofi.csel_root, comm, &MPIDI_OFI_COMM(comm).csel_comm);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+    /* When setting up built in communicators, there won't be any way to do collectives yet. We also
+     * won't have any info hints to propagate so there won't be any preferences that need to be
+     * communicated. */
+    if (comm != MPIR_Process.comm_world) {
+        mpi_errno = update_nic_preferences(comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;

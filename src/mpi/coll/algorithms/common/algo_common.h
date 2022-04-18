@@ -50,9 +50,17 @@ static inline int MPIR_Algo_calculate_pipeline_chunk_info(MPI_Aint chunk_size, M
         *segsize_floor = maxelems;
     *num_segments = (count + *segsize_ceil - 1) / (*segsize_ceil);
 
-    MPIR_FUNC_EXIT;
-
   fn_exit:
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                    (MPL_DBG_FDEST,
+                     "pipeline info: segsize=" MPI_AINT_FMT_DEC_SPEC
+                     " count=" MPI_AINT_FMT_DEC_SPEC
+                     " num_chunks=" MPI_AINT_FMT_DEC_SPEC
+                     " chunk_count_floor=" MPI_AINT_FMT_DEC_SPEC
+                     " chunk_count_ceil=" MPI_AINT_FMT_DEC_SPEC " \n",
+                     chunk_size, count, *num_segments, *segsize_floor, *segsize_ceil));
+
+    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 

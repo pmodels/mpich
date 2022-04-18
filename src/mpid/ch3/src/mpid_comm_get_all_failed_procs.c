@@ -4,11 +4,6 @@
  */
 
 #include "mpidimpl.h"
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
-#include "pmi.h"
-#endif
 
 /* Generates a bitarray based on orig_comm where all procs in group are marked with 1 */
 static void group_to_bitarray(MPIR_Group *group, MPIR_Comm *orig_comm, int **bitarray, int *bitarray_size) {
