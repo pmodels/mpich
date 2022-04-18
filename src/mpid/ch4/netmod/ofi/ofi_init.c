@@ -1150,8 +1150,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     }
 
     if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM) {
-        MPIDI_GPU_RDMA_queue_t *queue_mr;
-        DL_FOREACH(MPIDI_OFI_global.gdr_mrs, queue_mr) {
+        MPIDI_GPU_RDMA_queue_t *queue_mr, *tmp;
+        DL_FOREACH_SAFE(MPIDI_OFI_global.gdr_mrs, queue_mr, tmp) {
             if (queue_mr->mr) {
                 struct fid_mr *mr = (struct fid_mr *) queue_mr->mr;
                 if (mr != NULL) {
