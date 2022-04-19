@@ -39,7 +39,6 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.downstream.exit_status = NULL;
     HYD_pmcd_pmip.downstream.pmi_rank = NULL;
     HYD_pmcd_pmip.downstream.pmi_fd = NULL;
-    HYD_pmcd_pmip.downstream.forced_cleanup = 0;
 
     HYD_pmcd_pmip.local.id = -1;
     HYD_pmcd_pmip.local.pgid = -1;
@@ -206,23 +205,16 @@ int main(int argc, char **argv)
         pid = waitpid(-1, &ret_status, 0);
 
         /* Find the pid and mark it as complete. */
-        if (pid > 0)
-            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+        if (pid > 0) {
+            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
                 if (HYD_pmcd_pmip.downstream.pid[i] == pid) {
-                    if (HYD_pmcd_pmip.downstream.forced_cleanup) {
-                        /* If it is a forced cleanup, the exit status
-                         * is either already set or we have to ignore
-                         * it */
-                        if (HYD_pmcd_pmip.downstream.exit_status[i] == -1)
-                            HYD_pmcd_pmip.downstream.exit_status[i] = 0;
-                        else
-                            HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
-                    } else {
+                    if (HYD_pmcd_pmip.downstream.exit_status[i] == PMIP_EXIT_STATUS_UNSET) {
                         HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
                     }
-
                     done++;
                 }
+            }
+        }
 
         /* If no more processes are pending, break out */
         if (done == HYD_pmcd_pmip.local.proxy_process_count)
