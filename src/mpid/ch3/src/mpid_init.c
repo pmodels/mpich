@@ -265,6 +265,19 @@ int MPID_InitCompleted( void )
     /* --END ERROR HANDLING-- */
 }
 
+int MPID_Allocate_vci(int *vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+    *vci = 0;
+    MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**ch3nostream");
+    return mpi_errno;
+}
+
+int MPID_Deallocate_vci(int vci)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
 /*
  * Initialize the process group structure by using PMI calls.
  * This routine initializes PMI and uses PMI calls to setup the 

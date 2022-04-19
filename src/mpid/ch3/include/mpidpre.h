@@ -532,6 +532,9 @@ int MPID_Init(int required, int *provided);
 
 int MPID_InitCompleted( void );
 
+int MPID_Allocate_vci(int *vci);
+int MPID_Deallocate_vci(int vci);
+
 int MPID_Finalize(void);
 
 int MPID_Abort( MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );

@@ -50,7 +50,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
 #if MPIDI_CH4_MAX_VCIS == 1
     return 0;
 #else
-    return MPIDI_get_vci(flag, comm_ptr, src_rank, dst_rank, tag) % MPIDI_OFI_global.num_vnis;
+    int vni = MPIDI_get_vci(flag, comm_ptr, src_rank, dst_rank, tag);
+    MPIR_Assert(vni < MPIDI_OFI_global.num_vnis);
+    return vni;
 #endif
 }
 

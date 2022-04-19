@@ -8,29 +8,6 @@
 #include "mpidu_bc.h"
 #include <ucp/api/ucp.h>
 
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-categories :
-    - name : CH4_UCX
-      description : A category for CH4 UCX netmod variables
-
-cvars:
-    - name        : MPIR_CVAR_CH4_UCX_MAX_VNIS
-      category    : CH4_UCX
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If set to positive, this CVAR specifies the maximum number of CH4 VNIs
-        that UCX netmod exposes. If set to 0 (the default) or bigger than
-        MPIR_CVAR_CH4_NUM_VCIS, the number of exposed VNIs is set to MPIR_CVAR_CH4_NUM_VCIS.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
-
 static void request_init_callback(void *request);
 
 static void request_init_callback(void *request)
@@ -43,18 +20,8 @@ static void request_init_callback(void *request)
 
 static void init_num_vnis(void)
 {
-    int num_vnis = 1;
-    if (MPIR_CVAR_CH4_UCX_MAX_VNIS == 0 || MPIR_CVAR_CH4_UCX_MAX_VNIS > MPIDI_global.n_vcis) {
-        num_vnis = MPIDI_global.n_vcis;
-    } else {
-        num_vnis = MPIR_CVAR_CH4_UCX_MAX_VNIS;
-    }
-
-    /* for best performance, we ensure 1-to-1 vci/vni mapping. ref: MPIDI_OFI_vci_to_vni */
-    /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. override MPIDI_global.n_vcis */
-    MPIR_Assert(num_vnis == MPIDI_global.n_vcis);
-
-    MPIDI_UCX_global.num_vnis = num_vnis;
+    /* TODO: check capabilities, abort if we can't support the requested number of vnis. */
+    MPIDI_UCX_global.num_vnis = MPIDI_global.n_total_vcis;
 }
 
 static int init_worker(int vni)
