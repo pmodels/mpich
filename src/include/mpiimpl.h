@@ -202,6 +202,7 @@ typedef struct MPIR_Stream MPIR_Stream;
 /*****************************************************************************/
 
 #include "mpir_thread.h"        /* come first as mutexes are often depended on, e.g. request */
+#include "mpir_err.h"
 #include "mpir_attr.h"
 #include "mpir_group.h"
 #include "mpir_comm.h"
@@ -211,7 +212,6 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_coll.h"
 #include "mpir_csel.h"
 #include "mpir_func.h"
-#include "mpir_err.h"
 #include "mpir_nbc.h"
 #include "mpir_bsend.h"
 #include "mpir_process.h"

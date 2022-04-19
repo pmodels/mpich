@@ -300,6 +300,35 @@ static inline int MPIR_Comm_release(MPIR_Comm * comm_ptr)
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src_rank, int dst_rank,
+                                                       int src_index, int dst_index, int *attr_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_ERR_CHKANDJUMP(comm->stream_comm_type != MPIR_STREAM_COMM_MULTIPLEX,
+                        mpi_errno, MPI_ERR_OTHER, "**streamcomm_notmult");
+
+    MPI_Aint *displs = comm->stream_comm.multiplex.vci_displs;
+
+    MPIR_ERR_CHKANDJUMP(displs[src_rank] + src_index >= displs[src_rank + 1],
+                        mpi_errno, MPI_ERR_OTHER, "**streamcomm_srcidx");
+    MPIR_ERR_CHKANDJUMP(displs[dst_rank] + dst_index >= displs[dst_rank + 1],
+                        mpi_errno, MPI_ERR_OTHER, "**streamcomm_dstidx");
+
+    int src_vci = comm->stream_comm.multiplex.vci_table[displs[src_rank] + src_index];
+    int dst_vci = comm->stream_comm.multiplex.vci_table[displs[src_rank] + dst_index];
+
+    int attr = MPIR_CONTEXT_INTRA_PT2PT;
+    MPIR_PT2PT_ATTR_SET_VCIS(attr, src_vci, dst_vci);
+
+    *attr_out = attr;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 
 /* MPIR_Comm_release_always is the same as MPIR_Comm_release except it uses
    MPIR_Comm_release_ref_always instead.
