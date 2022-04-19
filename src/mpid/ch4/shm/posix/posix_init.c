@@ -150,7 +150,7 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
 
     MPIDI_POSIX_global.local_rank_0 = local_rank_0;
 
-    MPIDI_POSIX_global.num_vsis = MPIDI_global.n_vcis;
+    MPIDI_POSIX_global.num_vsis = MPIDI_global.n_total_vcis;
     /* This is used to track messages that the eager submodule was not ready to send. */
     for (int vsi = 0; vsi < MPIDI_CH4_MAX_VCIS; vsi++) {
         mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE,

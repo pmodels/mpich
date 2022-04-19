@@ -14,6 +14,8 @@
 
 int MPID_Init(int, int *);
 int MPID_InitCompleted(void);
+int MPID_Allocate_vci(int *vci);
+int MPID_Deallocate_vci(int vci);
 MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Cancel_send(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Comm_disconnect(MPIR_Comm *);

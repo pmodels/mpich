@@ -950,6 +950,11 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **set_thread_affinity:Failed to set the async thread affinity
 **set_thread_affinity %d:Failed to set the async thread affinity to the logical processor [%d]
 
+## MPIX_Stream
+**ch3nostream:Stream is not supported in ch3.
+**ch4nostream:No streams available. Configure --enable-thread-cs=per-vci and --with-ch4-max-vcis=# to enable streams.
+**outofstream:No streams available. Use MPIR_CVAR_CH4_RESERVE_VCIS to reserve the number of streams can be allocated.
+
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
 # for extracterrmsgs) (still to do: move the undefined names here)

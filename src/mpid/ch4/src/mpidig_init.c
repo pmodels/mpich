@@ -132,7 +132,7 @@ int MPIDIG_am_init(void)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
+    for (int vci = 0; vci < MPIDI_global.n_total_vcis; vci++) {
         MPIDI_global.per_vci[vci].posted_list = NULL;
         MPIDI_global.per_vci[vci].unexp_list = NULL;
 
@@ -236,7 +236,7 @@ void MPIDIG_am_finalize(void)
     MPIR_FUNC_ENTER;
 
     MPIDIU_map_destroy(MPIDI_global.win_map);
-    for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
+    for (int vci = 0; vci < MPIDI_global.n_total_vcis; vci++) {
         MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.per_vci[vci].request_pool);
         MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.per_vci[vci].unexp_pack_buf_pool);
     }
