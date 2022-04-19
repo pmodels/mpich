@@ -22,6 +22,16 @@
         } else if ((comm)->stream_comm_type == MPIR_STREAM_COMM_SINGLE) { \
             vci_src = (comm)->stream_comm.single.vci_table[src_rank]; \
             vci_dst = (comm)->stream_comm.single.vci_table[dst_rank]; \
+        } else if ((comm)->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) { \
+            if (MPIR_PT2PT_ATTR_HAS_VCI(attr)) { \
+                vci_src = MPIR_PT2PT_ATTR_SRC_VCI(attr); \
+                vci_dst = MPIR_PT2PT_ATTR_DST_VCI(attr); \
+            } else { \
+                int src_displ = (comm)->stream_comm.multiplex.vci_displs[src_rank]; \
+                int dst_displ = (comm)->stream_comm.multiplex.vci_displs[dst_rank]; \
+                vci_src = (comm)->stream_comm.multiplex.vci_table[src_displ]; \
+                vci_dst = (comm)->stream_comm.multiplex.vci_table[dst_displ]; \
+            } \
         } else { \
             MPIR_Assert(0); \
             vci_src = 0; \

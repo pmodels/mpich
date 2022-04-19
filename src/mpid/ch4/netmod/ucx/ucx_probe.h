@@ -11,7 +11,7 @@
 #define MPIDI_UCX_PROBE_VNIS(vni_dst_) \
     do { \
         int vni_src_tmp; \
-        MPIDI_EXPLICIT_VCIS(comm, 0, source, comm->rank, vni_src_tmp, vni_dst_); \
+        MPIDI_EXPLICIT_VCIS(comm, attr, source, comm->rank, vni_src_tmp, vni_dst_); \
         if (vni_src_tmp == 0 && vni_dst_ == 0) { \
             vni_dst_ = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, source, comm->rank, tag); \
         } \
