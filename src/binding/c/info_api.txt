@@ -79,3 +79,9 @@ MPI_Info_create_env:
             integer info, ierr
         .ve
 */
+
+MPIX_Info_set_hex:
+    info: INFO, direction=in, [info object]
+    key: STRING, constant=True, [key]
+    value: BUFFER, constant=True, [value]
+    value_size: INFO_VALUE_LENGTH, [size of value]
