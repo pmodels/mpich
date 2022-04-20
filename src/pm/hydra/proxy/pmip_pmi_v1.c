@@ -407,6 +407,12 @@ static HYD_status fn_get(int fd, char *args[])
         status = send_cmd_downstream(fd, cmd);
         HYDU_ERR_POP(status, "error sending PMI response\n");
         MPL_free(cmd);
+    } else if (!strcmp(key, "PMI_hwloc_xmlfile")) {
+        status = HYD_pmip_get_hwloc_xmlfile_resp_v1(&cmd);
+        HYDU_ERR_POP(status, "error getting topology info\n");
+        status = send_cmd_downstream(fd, cmd);
+        HYDU_ERR_POP(status, "error sending PMI response\n");
+        MPL_free(cmd);
     } else {
         HASH_FIND_STR(hash_get, key, found);
         if (found) {

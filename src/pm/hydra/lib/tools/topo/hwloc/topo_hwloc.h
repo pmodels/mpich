@@ -15,6 +15,7 @@ struct HYDT_topo_hwloc_info {
     hwloc_membind_policy_t membind;
     int user_binding;
     int total_num_pus;
+    char *xml_topology_file;
 };
 extern struct HYDT_topo_hwloc_info HYDT_topo_hwloc_info;
 

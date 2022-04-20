@@ -318,13 +318,8 @@ static int init_pg(int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
        return errors if the routines are in fact used */
     if (usePMI) {
 	/*
-	 * Initialize the process management interface (PMI), 
-	 * and get rank and size information about our process group
+	 * rank and size information about our process group
 	 */
-
-        mpi_errno = MPIR_pmi_init();
-        MPIR_ERR_CHECK(mpi_errno);
-
         *has_parent = MPIR_Process.has_parent;
         pg_rank = MPIR_Process.rank;
         pg_size = MPIR_Process.size;

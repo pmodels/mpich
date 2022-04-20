@@ -55,6 +55,7 @@ int MPIR_pmi_set_threaded(int is_threaded);
 int MPIR_pmi_max_key_size(void);
 int MPIR_pmi_max_val_size(void);
 const char *MPIR_pmi_job_id(void);
+char *MPIR_pmi_get_hwloc_xmlfile(void);
 
 /* PMI wrapper utilities */
 
