@@ -9,6 +9,55 @@
 #define MPIR_STREAM_PREALLOC 8
 #endif
 
+#define GPU_STREAM_USE_SINGLE_VCI
+
+#ifdef GPU_STREAM_USE_SINGLE_VCI
+static int gpu_stream_vci = 0;
+static int gpu_stream_count = 0;
+
+static int allocate_vci(int *vci, bool is_gpu_stream)
+{
+    if (is_gpu_stream) {
+        int mpi_errno = MPI_SUCCESS;
+        if (!gpu_stream_vci) {
+            mpi_errno = MPID_Allocate_vci(&gpu_stream_vci);
+        }
+        gpu_stream_count++;
+        *vci = gpu_stream_vci;
+        return mpi_errno;
+    } else {
+        return MPID_Allocate_vci(vci);
+    }
+}
+
+static int deallocate_vci(int vci)
+{
+    if (vci == gpu_stream_vci) {
+        gpu_stream_count--;
+        if (gpu_stream_count == 0) {
+            gpu_stream_vci = 0;
+            return MPID_Deallocate_vci(vci);
+        } else {
+            return MPI_SUCCESS;
+        }
+    } else {
+        return MPID_Deallocate_vci(vci);
+    }
+}
+
+#else
+static int allocate_vci(int *vci, bool is_gpu_stream)
+{
+    return MPID_Allocate_vci(vci);
+}
+
+static int deallocate_vci(int *vci)
+{
+    return MPID_Deallocate_vci(vci);
+}
+
+#endif
+
 MPIR_Stream MPIR_Stream_direct[MPIR_STREAM_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Stream_mem = { 0, 0, 0, 0, 0, 0, MPIR_STREAM,
@@ -71,7 +120,7 @@ int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
         stream_ptr->type = MPIR_STREAM_GENERAL;
     }
 
-    mpi_errno = MPID_Allocate_vci(&stream_ptr->vci);
+    mpi_errno = allocate_vci(&stream_ptr->vci, stream_ptr->type == MPIR_STREAM_GPU);
     MPIR_ERR_CHECK(mpi_errno);
 
     *p_stream_ptr = stream_ptr;
@@ -92,7 +141,7 @@ int MPIR_Stream_free_impl(MPIR_Stream * stream_ptr)
     MPIR_ERR_CHKANDJUMP(ref_cnt != 0, mpi_errno, MPI_ERR_OTHER, "**cannotfreestream");
 
     if (stream_ptr->vci) {
-        mpi_errno = MPID_Deallocate_vci(stream_ptr->vci);
+        mpi_errno = deallocate_vci(stream_ptr->vci);
     }
     MPIR_Handle_obj_free(&MPIR_Stream_mem, stream_ptr);
 
