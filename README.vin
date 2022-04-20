@@ -1,10 +1,9 @@
 			MPICH Release %VERSION%
 
 MPICH is a high-performance and widely portable implementation of the
-MPI-3.1 standard from the Argonne National Laboratory.  This release
-has all MPI 3.1 functions and features required by the standard with
-the exception of support for the "external32" portable I/O format and
-user-defined data representations for I/O.
+MPI-4.0 standard from the Argonne National Laboratory.  This release
+has all MPI 4.0 functions and features required by the standard with
+the exception of support for user-defined data representations for I/O.
 
 This README file should contain enough information to get you started
 with MPICH. More extensive installation and user guides can be found
@@ -96,9 +95,8 @@ shared memory), Hydra process management) of MPICH up and running.
       ./configure --prefix=/home/<USERNAME>/mpich-install 2>&1 | tee c.txt
 
     The configure will try to determine the best device (the internal
-    network modules) based on system environment. It will abort when it
-    can't decide which is the best choice. Supply the device option to
-    proceed. E.g.
+    network modules) based on system environment. You may also supply
+    a device configuration. E.g.
 
       ./configure --prefix=... --with-device=ch4:ofi |...
 
@@ -533,19 +531,20 @@ to "error" instead of the default "warn" by using:
 GPU support
 ***********
 
-GPU support is automatically enabled if CUDA or ZE runtime is detected
-during configure. To specify where CUDA or ZE is installed, use:
+GPU support is automatically enabled if CUDA, ZE, or HIP runtime is
+detected during configure. To specify where your GPU runtime is
+installed, use:
 
-  --with-cuda=<path>  or --with-ze=<path>
+  --with-cuda=<path>  or --with-ze=<path> or --with-hip=<path>
 
 If the lib/ and include/ are not in the same path, both can be specified
 separately, for example:
 
   --with-cuda-include= and --with-cuda-lib=
 
-In addition, if CUDA or ZE support can be explicitly disabled by using:
+In addition, GPU support can be explicitly disabled by using:
 
-  --without-cuda  or  --without-ze
+  --without-cuda  or  --without-ze or --without-hip
 
 If desirable, GPU support can be disabled during runtime by setting
 environment variable MPIR_CVAR_ENABLE_GPU=0. This may help avoid the GPU

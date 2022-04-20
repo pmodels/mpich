@@ -106,32 +106,35 @@ static int get_string_value(char *s, int type, int val)
  * If the hint is registered with callback function, it can be used for customization
  * at both creation time and run-time.
  */
-int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
+int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info, bool in_comm_creation)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Info *curr_info;
-    LL_FOREACH(info, curr_info) {
-        if (curr_info->key == NULL)
+    for (int i = 0; i < next_comm_hint_index; i++) {
+        if (!MPIR_comm_hint_list[i].key) {
             continue;
-        for (int i = 0; i < next_comm_hint_index; i++) {
-            if (MPIR_comm_hint_list[i].key &&
-                strcmp(curr_info->key, MPIR_comm_hint_list[i].key) == 0) {
-                int val;
-                int ret = parse_string_value(curr_info->value, MPIR_comm_hint_list[i].type, &val);
-                if (ret == 0) {
-                    if (MPIR_comm_hint_list[i].fn) {
-                        MPIR_comm_hint_list[i].fn(comm_ptr, i, val);
-                    } else {
-                        comm_ptr->hints[i] = val;
-                    }
+        }
+
+        const char *str_val;
+        str_val = MPIR_Info_lookup(info, MPIR_comm_hint_list[i].key);
+        if (str_val) {
+            int val;
+            int rc = parse_string_value(str_val, MPIR_comm_hint_list[i].type, &val);
+            if (rc == 0) {
+                if (MPIR_comm_hint_list[i].fn) {
+                    MPIR_comm_hint_list[i].fn(comm_ptr, i, val);
+                } else {
+                    comm_ptr->hints[i] = val;
                 }
             }
         }
     }
 
-    mpi_errno = MPID_Comm_set_hints(comm_ptr, info);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* Device can process hints during commit stage if in_comm_creation */
+    if (!in_comm_creation) {
+        mpi_errno = MPID_Comm_set_hints(comm_ptr, info);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     /* FIXME: run collective to ensure hints consistency */
   fn_exit:
@@ -904,13 +907,13 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     }
     MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
 
+    if (info) {
+        MPII_Comm_set_hints(newcomm_ptr, info, true);
+    }
+
     newcomm_ptr->tainted = comm_ptr->tainted;
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
-
-    if (info) {
-        MPII_Comm_set_hints(newcomm_ptr, info);
-    }
 
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
@@ -975,7 +978,7 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** out
     MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
 
     if (info) {
-        MPII_Comm_set_hints(newcomm_ptr, info);
+        MPII_Comm_set_hints(newcomm_ptr, info, true);
     }
 
     /* Start with no attributes on this communicator */

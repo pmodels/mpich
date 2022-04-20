@@ -83,9 +83,6 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
     MPIR_Object_set_ref(info_ptr, 1);
     /* Add data to MPI_INFO_ENV. */
     MPIR_Info_setup_env(info_ptr);
-    info_ptr->next = NULL;
-    info_ptr->key = NULL;
-    info_ptr->value = NULL;
 
     /* Set the number of tag bits. The device may override this value. */
     MPIR_Process.tag_bits = MPIR_TAG_BITS_DEFAULT;

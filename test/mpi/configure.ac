@@ -1249,6 +1249,8 @@ if test "$enable_fc" = yes ; then
     AC_LANG_POP([Fortran])
 fi
 
+f90profile=
+AC_SUBST(f90profile)
 if test "$f90dir" = "f90" ; then
     AC_MSG_CHECKING([that mpi module contains choice buffer routines])
     AC_LANG_PUSH([Fortran])
@@ -1260,10 +1262,9 @@ if test "$f90dir" = "f90" ; then
         ])
     ],[
         AC_MSG_RESULT(yes)
+        f90profile="profile"
     ],[
         AC_MSG_RESULT(no)
-        # patch f90/profile tests
-        find "$srcdir/f90/profile" -name "*.f90" -exec sed -i "s/use mpi, skip_.*/use mpi/" {} \;
     ])
     AC_LANG_POP([Fortran])
 fi

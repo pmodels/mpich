@@ -12,7 +12,16 @@
 #define USE_PMI1_API
 #endif
 
-#ifdef USE_PMI1_API
+#if defined(USE_PMI1_SLURM)
+#include <slurm/pmi.h>
+
+#elif defined(USE_PMI2_SLURM)
+#include <slurm/pmi2.h>
+
+#elif defined(USE_PMI2_CRAY)
+#include <pmi2.h>
+
+#elif defined(USE_PMI1_API)
 #include <pmi.h>
 
 #elif defined(USE_PMI2_API)

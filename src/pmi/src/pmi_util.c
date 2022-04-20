@@ -34,6 +34,9 @@
 #define MAXVALLEN 1024
 #define MAXKEYLEN   32
 
+int PMIU_is_threaded = 0;
+MPL_thread_mutex_t PMIU_mutex;
+
 int PMIU_verbose = 0;           /* Set this to true to print PMI debugging info */
 
 /* These are not the keyvals in the keyval space that is part of the
@@ -51,6 +54,13 @@ static int PMIU_keyval_tab_idx = 0;
 /* This is used to prepend printed output.  Set the initial value to
    "unset" */
 static char PMIU_print_id[PMIU_IDSIZE] = "unset";
+
+void PMIU_thread_init(void)
+{
+    int ret;
+    MPL_thread_mutex_create(&PMIU_mutex, &ret);
+    PMIU_Assert(ret == 0);
+}
 
 void PMIU_Set_rank(int PMI_rank)
 {
@@ -113,6 +123,9 @@ int PMIU_readline(int fd, char *buf, int maxlen)
     static char readbuf[MAX_READLINE];
     static char *nextChar = 0, *lastChar = 0;   /* lastChar is really one past
                                                  * last char */
+    int pmi_version = 0;
+    int pmi2_cmd_len = 0;
+
     static int lastfd = -1;
     ssize_t n;
     int curlen;
@@ -159,8 +172,27 @@ int PMIU_readline(int fd, char *buf, int maxlen)
         ch = *nextChar++;
         *p++ = ch;
         curlen++;
-        if (ch == '\n')
-            break;
+        if (curlen == 7) {
+            if (strncmp(buf, "cmd=", 4) == 0) {
+                pmi_version = 1;
+            } else {
+                pmi_version = 2;
+
+                char len_str[7];
+                memcpy(len_str, buf, 6);
+                len_str[6] = '\0';
+                pmi2_cmd_len = atoi(len_str);
+            }
+        }
+        if (pmi_version == 1) {
+            if (ch == '\n') {
+                break;
+            }
+        } else if (pmi_version == 2) {
+            if (curlen == pmi2_cmd_len + 6 + 1) {
+                break;
+            }
+        }
     }
 
     /* We null terminate the string for convenience in printing */
@@ -168,6 +200,30 @@ int PMIU_readline(int fd, char *buf, int maxlen)
 
     /* Return the number of characters, not counting the null */
     return curlen - 1;
+}
+
+int PMIU_write(int fd, char *buf, int buflen)
+{
+    char *p = buf;
+    ssize_t rem = buflen;
+    ssize_t n;
+
+    while (rem > 0) {
+        do {
+            n = write(fd, p, rem);
+        } while (n == -1 && errno == EINTR);
+
+        if (n < 0) {
+            PMIU_printf(1, "PMIU_write error; fd=%d buf=:%s:\n", fd, buf);
+            perror("system msg for write_line failure ");
+            return PMI_FAIL;
+        }
+
+        rem -= n;
+        p += n;
+    };
+
+    return PMI_SUCCESS;
 }
 
 int PMIU_writeline(int fd, char *buf)

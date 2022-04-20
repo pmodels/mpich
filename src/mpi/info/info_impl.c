@@ -5,32 +5,49 @@
 
 #include "mpiimpl.h"
 
+static int info_find_key(MPIR_Info * info_ptr, const char *key)
+{
+    for (int i = 0; i < info_ptr->size; i++) {
+        if (strncmp(info_ptr->entries[i].key, key, MPI_MAX_INFO_KEY) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+const char *MPIR_Info_lookup(MPIR_Info * info_ptr, const char *key)
+{
+    if (!info_ptr) {
+        return NULL;
+    }
+
+    for (int i = 0; i < info_ptr->size; i++) {
+        if (strncmp(info_ptr->entries[i].key, key, MPI_MAX_INFO_KEY) == 0) {
+            return info_ptr->entries[i].value;
+        }
+    }
+    return NULL;
+}
+
 /* All the MPIR_Info routines may be called before initialization or after finalization of MPI. */
 int MPIR_Info_delete_impl(MPIR_Info * info_ptr, const char *key)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Info *prev_ptr, *curr_ptr;
 
-    prev_ptr = info_ptr;
-    curr_ptr = info_ptr->next;
-
-    while (curr_ptr) {
-        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-            /* MPI_Info objects are allocated by MPL_direct_malloc(), so they need to be
-             * freed by MPL_direct_free(), not MPL_free(). */
-            MPL_direct_free(curr_ptr->key);
-            MPL_direct_free(curr_ptr->value);
-            prev_ptr->next = curr_ptr->next;
-            MPIR_Info_handle_obj_free(&MPIR_Info_mem, curr_ptr);
-            break;
-        }
-        prev_ptr = curr_ptr;
-        curr_ptr = curr_ptr->next;
-    }
-
-    /* If curr_ptr is not defined, we never found the key */
-    MPIR_ERR_CHKANDJUMP1((!curr_ptr), mpi_errno, MPI_ERR_INFO_NOKEY, "**infonokey",
+    int found_index = info_find_key(info_ptr, key);
+    MPIR_ERR_CHKANDJUMP1((found_index < 0), mpi_errno, MPI_ERR_INFO_NOKEY, "**infonokey",
                          "**infonokey %s", key);
+
+    /* MPI_Info objects are allocated by MPL_direct_malloc(), so they need to be
+     * freed by MPL_direct_free(), not MPL_free(). */
+    MPL_direct_free(info_ptr->entries[found_index].key);
+    MPL_direct_free(info_ptr->entries[found_index].value);
+
+    /* move up the later entries */
+    for (int i = found_index + 1; i < info_ptr->size; i++) {
+        info_ptr->entries[i - 1] = info_ptr->entries[i];
+    }
+    info_ptr->size--;
 
   fn_exit:
     return mpi_errno;
@@ -41,36 +58,18 @@ int MPIR_Info_delete_impl(MPIR_Info * info_ptr, const char *key)
 int MPIR_Info_dup_impl(MPIR_Info * info_ptr, MPIR_Info ** new_info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Info *curr_old, *curr_new;
 
     *new_info_ptr = NULL;
     if (!info_ptr)
         goto fn_exit;
 
-    /* Note that this routine allocates info elements one at a time.
-     * In the multithreaded case, each allocation may need to acquire
-     * and release the allocation lock.  If that is ever a problem, we
-     * may want to add an "allocate n elements" routine and execute this
-     * it two steps: count and then allocate */
-    /* FIXME : multithreaded */
-    mpi_errno = MPIR_Info_alloc(&curr_new);
+    MPIR_Info *info_new;
+    mpi_errno = MPIR_Info_alloc(&info_new);
     MPIR_ERR_CHECK(mpi_errno);
-    *new_info_ptr = curr_new;
+    *new_info_ptr = info_new;
 
-    curr_old = info_ptr->next;
-    while (curr_old) {
-        mpi_errno = MPIR_Info_alloc(&curr_new->next);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        curr_new = curr_new->next;
-        /* MPI_Info objects may not be allocated by MPL_strdup() since MPL_strdup() may not be
-         * called before MPI_Init() and the allocated memory must have been freed before
-         * MPI_Finalize() while MPI-4 allows calling MPI_Info routines before MPI_Init() and
-         * after MPI_Finalize(). */
-        curr_new->key = MPL_direct_strdup(curr_old->key);
-        curr_new->value = MPL_direct_strdup(curr_old->value);
-
-        curr_old = curr_old->next;
+    for (int i = 0; i < info_ptr->size; i++) {
+        MPIR_Info_push(info_new, info_ptr->entries[i].key, info_ptr->entries[i].value);
     }
 
   fn_exit:
@@ -81,48 +80,30 @@ int MPIR_Info_dup_impl(MPIR_Info * info_ptr, MPIR_Info ** new_info_ptr)
 
 int MPIR_Info_get_impl(MPIR_Info * info_ptr, const char *key, int valuelen, char *value, int *flag)
 {
-    MPIR_Info *curr_ptr;
-    int err = 0, mpi_errno = 0;
+    int mpi_errno = MPI_SUCCESS;
 
-    curr_ptr = info_ptr->next;
-    *flag = 0;
-
-    while (curr_ptr) {
-        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-            err = MPL_strncpy(value, curr_ptr->value, valuelen + 1);
-            /* +1 because the MPI Standard says "In C, valuelen
-             * (passed to MPI_Info_get) should be one less than the
-             * amount of allocated space to allow for the null
-             * terminator*/
-            *flag = 1;
-            break;
+    const char *v = MPIR_Info_lookup(info_ptr, key);
+    if (!v) {
+        *flag = 0;
+    } else {
+        *flag = 1;
+        /* +1 because the MPI Standard says "In C, valuelen
+         * (passed to MPI_Info_get) should be one less than the
+         * amount of allocated space to allow for the null
+         * terminator*/
+        int err = MPL_strncpy(value, v, valuelen + 1);
+        if (err != 0) {
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                             MPI_ERR_INFO_VALUE, "**infovallong", NULL);
         }
-        curr_ptr = curr_ptr->next;
     }
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (err != 0) {
-        mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                 MPI_ERR_INFO_VALUE, "**infovallong", NULL);
-    }
-    /* --END ERROR HANDLING-- */
 
     return mpi_errno;
 }
 
 int MPIR_Info_get_nkeys_impl(MPIR_Info * info_ptr, int *nkeys)
 {
-    int n;
-
-    info_ptr = info_ptr->next;
-    n = 0;
-
-    while (info_ptr) {
-        info_ptr = info_ptr->next;
-        n++;
-    }
-    *nkeys = n;
+    *nkeys = info_ptr->size;
 
     return MPI_SUCCESS;
 }
@@ -130,23 +111,14 @@ int MPIR_Info_get_nkeys_impl(MPIR_Info * info_ptr, int *nkeys)
 int MPIR_Info_get_nthkey_impl(MPIR_Info * info_ptr, int n, char *key)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Info *curr_ptr;
-    int nkeys;
-
-    curr_ptr = info_ptr->next;
-    nkeys = 0;
-    while (curr_ptr && nkeys != n) {
-        curr_ptr = curr_ptr->next;
-        nkeys++;
-    }
 
     /* verify that n is valid */
-    MPIR_ERR_CHKANDJUMP2((!curr_ptr), mpi_errno, MPI_ERR_ARG, "**infonkey", "**infonkey %d %d", n,
-                         nkeys);
+    MPIR_ERR_CHKANDJUMP2((n >= info_ptr->size), mpi_errno, MPI_ERR_ARG, "**infonkey",
+                         "**infonkey %d %d", n, info_ptr->size);
 
     /* if key is MPI_MAX_INFO_KEY long, MPL_strncpy will null-terminate it for
      * us */
-    MPL_strncpy(key, curr_ptr->key, MPI_MAX_INFO_KEY);
+    MPL_strncpy(key, info_ptr->entries[n].key, MPI_MAX_INFO_KEY);
     /* Eventually, we could remember the location of this key in
      * the head using the key/value locations (and a union datatype?) */
 
@@ -158,18 +130,13 @@ int MPIR_Info_get_nthkey_impl(MPIR_Info * info_ptr, int n, char *key)
 
 int MPIR_Info_get_valuelen_impl(MPIR_Info * info_ptr, const char *key, int *valuelen, int *flag)
 {
-    MPIR_Info *curr_ptr;
+    const char *v = MPIR_Info_lookup(info_ptr, key);
 
-    curr_ptr = info_ptr->next;
-    *flag = 0;
-
-    while (curr_ptr) {
-        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-            *valuelen = (int) strlen(curr_ptr->value);
-            *flag = 1;
-            break;
-        }
-        curr_ptr = curr_ptr->next;
+    if (!v) {
+        *flag = 0;
+    } else {
+        *valuelen = (int) strlen(v);
+        *flag = 1;
     }
 
     return MPI_SUCCESS;
@@ -178,40 +145,17 @@ int MPIR_Info_get_valuelen_impl(MPIR_Info * info_ptr, const char *key, int *valu
 int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Info *curr_ptr, *prev_ptr;
-
     MPIR_FUNC_ENTER;
 
-    prev_ptr = info_ptr;
-    curr_ptr = info_ptr->next;
-
-    while (curr_ptr) {
-        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-            /* Key already present; replace value */
-
-            /* MPI_Info objects may not be allocated by MPL_strdup() since MPL_strdup() may not be
-             * called before MPI_Init() and the allocated memory must have been freed before
-             * MPI_Finalize() while MPI-4 allows calling MPI_Info routines before MPI_Init() and
-             * after MPI_Finalize().  For the same reason, we need to use free, not MPL_free(). */
-            MPL_direct_free(curr_ptr->value);
-            curr_ptr->value = MPL_direct_strdup(value);
-            break;
-        }
-        prev_ptr = curr_ptr;
-        curr_ptr = curr_ptr->next;
-    }
-
-    if (!curr_ptr) {
+    int found_index = info_find_key(info_ptr, key);
+    if (found_index < 0) {
         /* Key not present, insert value */
-        mpi_errno = MPIR_Info_alloc(&curr_ptr);
+        mpi_errno = MPIR_Info_push(info_ptr, key, value);
         MPIR_ERR_CHECK(mpi_errno);
-
-        /*printf("Inserting new elm %x at %x\n", curr_ptr->id, prev_ptr->id); */
-        prev_ptr->next = curr_ptr;
-        /* MPI_Info objects must be allocated by MPL_direct_strdup(), not MPL_strdup() because
-         * this function may be called before MPI_Init() and after MPI_Finalize(). */
-        curr_ptr->key = MPL_direct_strdup(key);
-        curr_ptr->value = MPL_direct_strdup(value);
+    } else {
+        /* Key already present; replace value */
+        MPL_direct_free(info_ptr->entries[found_index].value);
+        info_ptr->entries[found_index].value = MPL_direct_strdup(value);
     }
 
   fn_exit:
@@ -225,28 +169,22 @@ int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
 int MPIR_Info_get_string_impl(MPIR_Info * info_ptr, const char *key, int *buflen, char *value,
                               int *flag)
 {
-    MPIR_Info *curr_ptr;
+    const char *v = MPIR_Info_lookup(info_ptr, key);
+    if (!v) {
+        *flag = 0;
+    } else {
+        *flag = 1;
 
-    curr_ptr = info_ptr->next;
-    *flag = 0;
-
-    while (curr_ptr) {
-        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-            int old_buflen = *buflen;
-            /* It needs to include a terminator. */
-            int new_buflen = (int) (strlen(curr_ptr->value) + 1);
-            if (old_buflen > 0) {
-                /* Copy the value. */
-                MPL_strncpy(value, curr_ptr->value, old_buflen);
-                /* No matter whether MPL_strncpy() returns an error or not
-                 * (i.e., whether curr_ptr->value fits value or not),
-                 * it is not an error. */
-            }
-            *buflen = new_buflen;
-            *flag = 1;
-            break;
+        int old_buflen = *buflen;
+        /* It needs to include a terminator. */
+        int new_buflen = (int) (strlen(v) + 1);
+        if (old_buflen > 0) {
+            /* Copy the value. */
+            MPL_strncpy(value, v, old_buflen);
+            /* No matter whether MPL_strncpy() returns an error or not
+             * (i.e., whether value fits or not), it is not an error. */
         }
-        curr_ptr = curr_ptr->next;
+        *buflen = new_buflen;
     }
 
     return MPI_SUCCESS;

@@ -623,59 +623,51 @@ void *MPID_Alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     MPIR_FUNC_ENTER;
 
-    char val[MPI_MAX_INFO_VAL + 1];
     MPIR_hwtopo_gid_t mem_gid = MPIR_HWTOPO_GID_ROOT;
     alloc_mem_buf_type_e buf_type = ALLOC_MEM_BUF_TYPE__UNSET;
     void *user_buf = NULL;
     void *real_buf;
     int alignment = MAX_ALIGNMENT;
 
-    MPIR_Info *curr_info;
-    LL_FOREACH(info_ptr, curr_info) {
-        if (curr_info->key == NULL)
-            continue;
-
-        int flag = 0;
-        MPIR_Info_get_impl(info_ptr, "mpich_buf_type", MPI_MAX_INFO_VAL, val, &flag);
-
-        if (flag) {
-            if (!strcmp(val, "ddr")) {
-                mem_gid = MPIR_hwtopo_get_obj_by_type(MPIR_HWTOPO_TYPE__DDR);
-                if (mem_gid == MPIR_HWTOPO_GID_ROOT) {
-                    buf_type = ALLOC_MEM_BUF_TYPE__UNSET;
-                } else {
-                    buf_type = ALLOC_MEM_BUF_TYPE__DDR;
-                }
-            } else if (!strcmp(val, "hbm")) {
-                mem_gid = MPIR_hwtopo_get_obj_by_type(MPIR_HWTOPO_TYPE__HBM);
-                if (mem_gid == MPIR_HWTOPO_GID_ROOT) {
-                    /* if mem_gid = MPIR_HWTOPO_GID_ROOT and mem_type
-                     * is non-default (DDR) it can mean either that
-                     * the requested memory type is not available in
-                     * the system or the requested memory type is
-                     * available but there are many devices of such
-                     * type and the process requesting memory is not
-                     * bound to any of them. Regardless the reason we
-                     * do not fall back to the default allocation and
-                     * return a NULL pointer to the upper layer
-                     * instead. */
-                    goto fn_exit;
-                } else {
-                    buf_type = ALLOC_MEM_BUF_TYPE__HBM;
-                }
-            } else if (!strcmp(val, "network")) {
-                buf_type = ALLOC_MEM_BUF_TYPE__NETMOD;
-            } else if (!strcmp(val, "shmem")) {
-                buf_type = ALLOC_MEM_BUF_TYPE__SHMMOD;
+    const char *val;
+    val = MPIR_Info_lookup(info_ptr, "mpich_buf_type");
+    if (val) {
+        if (!strcmp(val, "ddr")) {
+            mem_gid = MPIR_hwtopo_get_obj_by_type(MPIR_HWTOPO_TYPE__DDR);
+            if (mem_gid == MPIR_HWTOPO_GID_ROOT) {
+                buf_type = ALLOC_MEM_BUF_TYPE__UNSET;
             } else {
-                assert(0);
+                buf_type = ALLOC_MEM_BUF_TYPE__DDR;
             }
+        } else if (!strcmp(val, "hbm")) {
+            mem_gid = MPIR_hwtopo_get_obj_by_type(MPIR_HWTOPO_TYPE__HBM);
+            if (mem_gid == MPIR_HWTOPO_GID_ROOT) {
+                /* if mem_gid = MPIR_HWTOPO_GID_ROOT and mem_type
+                 * is non-default (DDR) it can mean either that
+                 * the requested memory type is not available in
+                 * the system or the requested memory type is
+                 * available but there are many devices of such
+                 * type and the process requesting memory is not
+                 * bound to any of them. Regardless the reason we
+                 * do not fall back to the default allocation and
+                 * return a NULL pointer to the upper layer
+                 * instead. */
+                goto fn_exit;
+            } else {
+                buf_type = ALLOC_MEM_BUF_TYPE__HBM;
+            }
+        } else if (!strcmp(val, "network")) {
+            buf_type = ALLOC_MEM_BUF_TYPE__NETMOD;
+        } else if (!strcmp(val, "shmem")) {
+            buf_type = ALLOC_MEM_BUF_TYPE__SHMMOD;
+        } else {
+            assert(0);
         }
+    }
 
-        MPIR_Info_get_impl(info_ptr, "mpi_minimum_memory_alignment", MPI_MAX_INFO_VAL, val, &flag);
-        if (flag) {
-            alignment = atoi(val);
-        }
+    val = MPIR_Info_lookup(info_ptr, "mpi_minimum_memory_alignment");
+    if (val) {
+        alignment = atoi(val);
     }
 
     switch (buf_type) {

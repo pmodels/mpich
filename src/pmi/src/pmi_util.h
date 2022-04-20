@@ -6,6 +6,8 @@
 #ifndef SIMPLE_PMIUTIL_H_INCLUDED
 #define SIMPLE_PMIUTIL_H_INCLUDED
 
+#include "mpl.h"
+
 /* maximum sizes for arrays */
 #define PMIU_MAXLINE 1024
 #define PMIU_IDSIZE    32
@@ -48,6 +50,7 @@ void PMIU_Set_rank(int PMI_rank);
 void PMIU_SetServer(void);
 void PMIU_printf(int print_flag, const char *fmt, ...);
 int PMIU_readline(int fd, char *buf, int max);
+int PMIU_write(int fd, char *buf, int buflen);
 int PMIU_writeline(int fd, char *buf);
 int PMIU_parse_keyvals(char *st);
 void PMIU_dump_keyvals(void);
@@ -63,6 +66,16 @@ void PMIU_chgval(const char *keystr, char *valstr);
 
 #define PMIU_TRUE 1
 #define PMIU_FALSE 0
+
+/* We assume the following error codes are the same as PMI and PMI2 equivalent,
+ * i.e. PMIU_SUCCESS == PMI_SUCCESS == PMI2_SUCCESS
+ *
+ * FIXME: add some mechanism to ensure this.
+ */
+
+#define PMIU_SUCCESS   0
+#define PMIU_FAIL     -1
+#define PMIU_ERR_NOMEM 2
 
 extern int PMIU_verbose;        /* Set this to true to print PMI debugging info */
 #define printf_d(...)  do { if (PMIU_verbose) printf(__VA_ARGS__); } while (0)
@@ -193,5 +206,28 @@ extern int PMIU_verbose;        /* Set this to true to print PMI debugging info 
                                   "**nomem2","**nomem2 %d %s",(size_),PMIU_QUOTE(ptr_));       \
         (ptr_) = realloc_tmp_;                                                                  \
     } while (0)
+
+extern int PMIU_is_threaded;
+extern MPL_thread_mutex_t PMIU_mutex;
+
+void PMIU_thread_init(void);
+void PMIU_cs_enter(void);
+void PMIU_cs_exit(void);
+
+#define PMIU_CS_ENTER do { \
+    if (PMIU_is_threaded) { \
+        int err; \
+        MPL_thread_mutex_lock(&PMIU_mutex, &err, MPL_THREAD_PRIO_HIGH); \
+        PMIU_Assert(err == 0); \
+    } \
+} while (0)
+
+#define PMIU_CS_EXIT do { \
+    if (PMIU_is_threaded) { \
+        int err; \
+        MPL_thread_mutex_unlock(&PMIU_mutex, &err); \
+        PMIU_Assert(err == 0); \
+    } \
+} while (0)
 
 #endif /* SIMPLE_PMIUTIL_H_INCLUDED */

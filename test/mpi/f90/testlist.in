@@ -13,4 +13,4 @@ f90types
 @spawndir@
 timer
 topo
-profile
+@f90profile@

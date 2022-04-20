@@ -140,125 +140,107 @@ static void update_winattr_after_set_info(MPIR_Win * win)
         MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_MR_PREFERRED);
 }
 
+#define INFO_GET_BOOL(info, key, var) do { \
+    const char *_val = MPIR_Info_lookup(info, key); \
+    if (_val) { \
+        if (!strcmp(_val, "true")) \
+            var = 1; \
+        else if (!strcmp(_val, "false")) \
+            var = 0; \
+    } \
+} while (0)
+
 static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIR_Info *curr_ptr;
-    char *value, *token, *savePtr = NULL;
-    int save_ordering;
+    const char *val;
 
-    curr_ptr = info->next;
+    INFO_GET_BOOL(info, "no_locks", MPIDIG_WIN(win, info_args).no_locks);
 
-    while (curr_ptr) {
-        if (!strcmp(curr_ptr->key, "no_locks")) {
-            if (!strcmp(curr_ptr->value, "true"))
-                MPIDIG_WIN(win, info_args).no_locks = 1;
-            else if (!strcmp(curr_ptr->value, "false"))
-                MPIDIG_WIN(win, info_args).no_locks = 0;
-        } else if (!strcmp(curr_ptr->key, "accumulate_ordering")) {
-            save_ordering = MPIDIG_WIN(win, info_args).accumulate_ordering;
-            MPIDIG_WIN(win, info_args).accumulate_ordering = 0;
-            if (!strcmp(curr_ptr->value, "none")) {
-                /* For MPI-3, "none" means no ordering and is not default. */
-                goto next;
-            }
+    val = MPIR_Info_lookup(info, "accumulate_ordering");
+    if (val && strcmp(val, "none") == 0) {
+        /* For MPI-3, "none" means no ordering and is not default. */
+        MPIDIG_WIN(win, info_args).accumulate_ordering = 0;
+    } else if (val) {
+        int save_ordering = MPIDIG_WIN(win, info_args).accumulate_ordering;
+        MPIDIG_WIN(win, info_args).accumulate_ordering = 0;
 
-            /* value can never be NULL. */
-            MPIR_Assert(curr_ptr->value);
+        char *value, *token, *savePtr = NULL;
+        value = MPL_strdup(val);
+        token = (char *) strtok_r(value, ",", &savePtr);
 
-            value = curr_ptr->value;
-            token = (char *) strtok_r(value, ",", &savePtr);
-
-            while (token) {
-                if (!memcmp(token, "rar", 3))
-                    MPIDIG_WIN(win, info_args).accumulate_ordering =
-                        (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDIG_ACCU_ORDER_RAR);
-                else if (!memcmp(token, "raw", 3))
-                    MPIDIG_WIN(win, info_args).accumulate_ordering =
-                        (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDIG_ACCU_ORDER_RAW);
-                else if (!memcmp(token, "war", 3))
-                    MPIDIG_WIN(win, info_args).accumulate_ordering =
-                        (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDIG_ACCU_ORDER_WAR);
-                else if (!memcmp(token, "waw", 3))
-                    MPIDIG_WIN(win, info_args).accumulate_ordering =
-                        (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDIG_ACCU_ORDER_WAW);
-                else
-                    MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**info");
-
-                token = (char *) strtok_r(NULL, ",", &savePtr);
-            }
-
-            if (MPIDIG_WIN(win, info_args).accumulate_ordering == 0)
-                MPIDIG_WIN(win, info_args).accumulate_ordering = save_ordering;
-        } else if (!strcmp(curr_ptr->key, "accumulate_ops")) {
-            if (!strcmp(curr_ptr->value, "same_op"))
-                MPIDIG_WIN(win, info_args).accumulate_ops = MPIDIG_ACCU_SAME_OP;
-            else if (!strcmp(curr_ptr->value, "same_op_no_op"))
-                MPIDIG_WIN(win, info_args).accumulate_ops = MPIDIG_ACCU_SAME_OP_NO_OP;
-        } else if (!strcmp(curr_ptr->key, "same_disp_unit")) {
-            if (!strcmp(curr_ptr->value, "true"))
-                MPIDIG_WIN(win, info_args).same_disp_unit = 1;
-            else if (!strcmp(curr_ptr->value, "false"))
-                MPIDIG_WIN(win, info_args).same_disp_unit = 0;
-        } else if (!strcmp(curr_ptr->key, "same_size")) {
-            if (!strcmp(curr_ptr->value, "true"))
-                MPIDIG_WIN(win, info_args).same_size = 1;
-            else if (!strcmp(curr_ptr->value, "false"))
-                MPIDIG_WIN(win, info_args).same_size = 0;
-        } else if (!strcmp(curr_ptr->key, "alloc_shared_noncontig")) {
-            if (!strcmp(curr_ptr->value, "true"))
-                MPIDIG_WIN(win, info_args).alloc_shared_noncontig = 1;
-            else if (!strcmp(curr_ptr->value, "false"))
-                MPIDIG_WIN(win, info_args).alloc_shared_noncontig = 0;
-        } else if (!strcmp(curr_ptr->key, "alloc_shm")) {
-            if (!strcmp(curr_ptr->value, "true"))
-                MPIDIG_WIN(win, info_args).alloc_shm = 1;
-            else if (!strcmp(curr_ptr->value, "false"))
-                MPIDIG_WIN(win, info_args).alloc_shm = 0;
-        } else if (!strcmp(curr_ptr->key, "optimized_mr")) {
-            if (!strcmp(curr_ptr->value, "true"))
-                MPIDIG_WIN(win, info_args).optimized_mr = true;
+        while (token) {
+            if (!memcmp(token, "rar", 3))
+                MPIDIG_WIN(win, info_args).accumulate_ordering =
+                    (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDIG_ACCU_ORDER_RAR);
+            else if (!memcmp(token, "raw", 3))
+                MPIDIG_WIN(win, info_args).accumulate_ordering =
+                    (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDIG_ACCU_ORDER_RAW);
+            else if (!memcmp(token, "war", 3))
+                MPIDIG_WIN(win, info_args).accumulate_ordering =
+                    (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDIG_ACCU_ORDER_WAR);
+            else if (!memcmp(token, "waw", 3))
+                MPIDIG_WIN(win, info_args).accumulate_ordering =
+                    (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDIG_ACCU_ORDER_WAW);
             else
-                MPIDIG_WIN(win, info_args).optimized_mr = false;
+                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**info");
+
+            token = (char *) strtok_r(NULL, ",", &savePtr);
         }
-        /* We allow the user to set the following atomics hint only at window init time,
-         * all future updates by win_set_info are ignored. This is because we do not
-         * have a good way to ensure all outstanding atomic ops have been completed
-         * on all processes especially in passive-target epochs. */
-        else if (is_init && !strcmp(curr_ptr->key, "which_accumulate_ops")) {
-            parse_info_accu_ops_str(curr_ptr->value,
-                                    &MPIDIG_WIN(win, info_args).which_accumulate_ops);
-        } else if (is_init && !strcmp(curr_ptr->key, "accumulate_noncontig_dtype")) {
-            if (!strcmp(curr_ptr->value, "true"))
-                MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype = true;
-            else if (!strcmp(curr_ptr->value, "false"))
-                MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype = false;
-        } else if (is_init && !strcmp(curr_ptr->key, "accumulate_max_bytes")) {
-            if (!strcmp(curr_ptr->value, "unlimited") || !strcmp(curr_ptr->value, "-1"))
-                MPIDIG_WIN(win, info_args).accumulate_max_bytes = -1;
-            else {
-                long max_bytes = atol(curr_ptr->value);
-                if (max_bytes >= 0)
-                    MPIDIG_WIN(win, info_args).accumulate_max_bytes = max_bytes;
-            }
-        } else if (is_init && !strcmp(curr_ptr->key, "disable_shm_accumulate")) {
-            if (!strcmp(curr_ptr->value, "true"))
-                MPIDIG_WIN(win, info_args).disable_shm_accumulate = true;
-            else
-                MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
-        } else if (is_init && !strcmp(curr_ptr->key, "coll_attach")) {
-            if (!strcmp(curr_ptr->value, "true"))
-                MPIDIG_WIN(win, info_args).coll_attach = true;
-            else
-                MPIDIG_WIN(win, info_args).coll_attach = false;
-        } else if (is_init && !strcmp(curr_ptr->key, "perf_preference")) {
-            parse_info_perf_preference_str(curr_ptr->value,
-                                           &MPIDIG_WIN(win, info_args).perf_preference);
+
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering == 0)
+            MPIDIG_WIN(win, info_args).accumulate_ordering = save_ordering;
+
+        MPL_free(value);
+    }
+
+    val = MPIR_Info_lookup(info, "accumulate_ops");
+    if (val) {
+        if (!strcmp(val, "same_op"))
+            MPIDIG_WIN(win, info_args).accumulate_ops = MPIDIG_ACCU_SAME_OP;
+        else if (!strcmp(val, "same_op_no_op"))
+            MPIDIG_WIN(win, info_args).accumulate_ops = MPIDIG_ACCU_SAME_OP_NO_OP;
+    }
+
+    INFO_GET_BOOL(info, "same_disp_unit", MPIDIG_WIN(win, info_args).same_disp_unit);
+    INFO_GET_BOOL(info, "same_size", MPIDIG_WIN(win, info_args).same_size);
+    INFO_GET_BOOL(info, "alloc_shared_noncontig",
+                  MPIDIG_WIN(win, info_args).alloc_shared_noncontig);
+    INFO_GET_BOOL(info, "alloc_shm", MPIDIG_WIN(win, info_args).alloc_shm);
+    INFO_GET_BOOL(info, "optimized_mr", MPIDIG_WIN(win, info_args).optimized_mr);
+
+    /* We allow the user to set the following atomics hint only at window init time,
+     * all future updates by win_set_info are ignored. This is because we do not
+     * have a good way to ensure all outstanding atomic ops have been completed
+     * on all processes especially in passive-target epochs. */
+    val = MPIR_Info_lookup(info, "which_accumulate_ops");
+    if (val) {
+        parse_info_accu_ops_str(val, &MPIDIG_WIN(win, info_args).which_accumulate_ops);
+    }
+
+    INFO_GET_BOOL(info, "accumulate_noncontig_dtype",
+                  MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype);
+
+    val = MPIR_Info_lookup(info, "accumulate_max_bytes");
+    if (val) {
+        if (!strcmp(val, "unlimited") || !strcmp(val, "-1"))
+            MPIDIG_WIN(win, info_args).accumulate_max_bytes = -1;
+        else {
+            long max_bytes = atol(val);
+            if (max_bytes >= 0)
+                MPIDIG_WIN(win, info_args).accumulate_max_bytes = max_bytes;
         }
-      next:
-        curr_ptr = curr_ptr->next;
+    }
+
+    INFO_GET_BOOL(info, "disable_shm_accumulate",
+                  MPIDIG_WIN(win, info_args).disable_shm_accumulate);
+    INFO_GET_BOOL(info, "coll_attach", MPIDIG_WIN(win, info_args).coll_attach);
+
+    val = MPIR_Info_lookup(info, "perf_preference");
+    if (val) {
+        parse_info_perf_preference_str(val, &MPIDIG_WIN(win, info_args).perf_preference);
     }
 
   fn_exit:
