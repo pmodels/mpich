@@ -960,6 +960,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpl_ze_init_device_fds: mpl_ze_init_device_fds failed
 **mpl_ze_mmap_device_ptr:  MPL_ze_mmap_device_pointer failed
 **mpl_gpu_fast_memcpy:  MPL_gpu_fast_memcpy failed
+**mpl_gpu_get_dev_id_from_attr: MPL_gpu_get_dev_id_from_attr failed
+**mpl_gpu_imemcpy: MPL_gpu_imemcpy failed
+**mpl_gpu_test: MPL_gpu_test failed
 
 ## GAVL tree related error messages
 **mpl_gavl_search: mpl_gavl_search failed
