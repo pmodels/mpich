@@ -133,6 +133,9 @@ typedef struct MPII_Genutil_sched_t {
     /* array of buffers allocated for schedule execution */
     UT_array buffers;
 
+    /* list of vtcs with no incoming dependencies */
+    UT_array *start_vtcs;
+
     /* issued vertices linked list */
     struct MPII_Genutil_vtx_t *issued_head;
     struct MPII_Genutil_vtx_t *issued_tail;

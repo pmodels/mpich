@@ -9,6 +9,7 @@
 #include "ch4_impl.h"
 #include "ch4_proc.h"
 #include "ch4_coll_impl.h"
+#include "ch4_nb_coll_impl.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -95,6 +96,57 @@ cvars:
         1 NM + SHM with explicit send-recv between rank 0 and root
         2 NM + SHM without the explicit send-recv
         3 NM only
+
+    - name        : MPIR_CVAR_IBCAST_COMPOSITION
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Select composition (inter_node + intra_node) for Ibcast with gentran scheduler only.
+        0 Auto selection
+        1 NM + SHM with explicit send-recv between rank 0 and root
+        2 NM + SHM without the explicit send-recv
+        3 NM only
+
+    - name        : MPIR_CVAR_IBCAST_COMPOSITION_PIPELINE_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 4096
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Message is split into chunks of the selected size at the composition level (in bytes).
+        Broadcast of several chunks is pipelined. Set value to 0 to disable pipelining. This CVAR is
+        to be used with MPIR_CVAR_IBCAST_COMPOSITION = {1, 2}
+
+    - name        : MPIR_CVAR_IBCAST_COMPOSITION_WINDOW_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 4
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Sliding window size in Ibcast compositions. To be used with CVARs
+        MPIR_CVAR_IBCAST_COMPOSITION={1,2}. Inter-node sub-schedule of chunk (i+window_size)
+        depends on inter-node sub-schedule of chunk i.
+
+    - name        : MPIR_CVAR_IBARRIER_COMPOSITION
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Select composition (inter_node + intra_node) for Ibarrier with gentran scheduler only.
+        0 Auto selection
+        1 NM + SHM.
+        2 NM only.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -1555,29 +1607,238 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallw(const void *sendbuf,
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ibarrier_allcomm_composition_json(MPIR_Comm * comm,
+                                                                     MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__IBARRIER,
+        .comm_ptr = comm,
+    };
+
+    const MPIDI_Csel_container_s *cnt = NULL;
+    cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
+
+    if (cnt == NULL) {
+        mpi_errno = MPIR_Ibarrier_impl(comm, req);
+        goto fn_exit;
+    }
+
+    switch (cnt->id) {
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibarrier_intra_composition_alpha:
+            mpi_errno = MPIDI_Ibarrier_intra_composition_alpha(comm, req);
+            break;
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibarrier_intra_composition_beta:
+            mpi_errno = MPIDI_Ibarrier_intra_composition_beta(comm, req);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPID_Ibarrier(MPIR_Comm * comm, MPIR_Request ** req)
 {
-    int ret;
-
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_NM_mpi_ibarrier(comm, req);
 
+    switch (MPIR_CVAR_IBARRIER_COMPOSITION) {
+        case 1:        /* NM + SHM using gentran scheduler */
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+                                           comm->hierarchy_kind ==
+                                           MPIR_COMM_HIERARCHY_KIND__PARENT, mpi_errno,
+                                           "Ibarrier composition alpha cannot be applied.\n");
+            mpi_errno = MPIDI_Ibarrier_intra_composition_alpha(comm, req);
+            break;
+        case 2:        /* NM only using gentran scheduler */
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+                                           comm->hierarchy_kind ==
+                                           MPIR_COMM_HIERARCHY_KIND__PARENT, mpi_errno,
+                                           "Ibarrier composition beta cannot be applied.\n");
+            mpi_errno = MPIDI_Ibarrier_intra_composition_beta(comm, req);
+            break;
+        default:
+            mpi_errno = MPIDI_Ibarrier_allcomm_composition_json(comm, req);
+            break;
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+        mpi_errno = MPIR_Ibarrier_impl(comm, req);
+    else
+        mpi_errno = MPIDI_Ibarrier_intra_composition_beta(comm, req);
+
+  fn_exit:
     MPIR_FUNC_EXIT;
-    return ret;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ibcast_allcomm_composition_json(void *buffer, int count,
+                                                                   MPI_Datatype datatype, int root,
+                                                                   MPIR_Comm * comm,
+                                                                   MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__IBCAST,
+        .comm_ptr = comm,
+        .u.bcast.buffer = buffer,
+        .u.bcast.count = count,
+        .u.bcast.datatype = datatype,
+        .u.bcast.root = root,
+    };
+
+    const MPIDI_Csel_container_s *cnt = NULL;
+    cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
+
+    if (cnt == NULL) {
+        mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, root, comm, req);
+        goto fn_exit;
+    }
+
+    switch (cnt->id) {
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibcast_intra_composition_alpha:     /* Gentran scheduler */
+            mpi_errno =
+                MPIDI_Ibcast_intra_composition_alpha(buffer, count, datatype, root, comm, req);
+            break;
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibcast_intra_composition_beta:      /* Gentran scheduler */
+            mpi_errno =
+                MPIDI_Ibcast_intra_composition_beta(buffer, count, datatype, root, comm, req);
+            break;
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibcast_intra_composition_gamma:     /* Gentran scheduler */
+            mpi_errno =
+                MPIDI_Ibcast_intra_composition_gamma(buffer, count, datatype, root, comm, req);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ibcast(void *buffer, MPI_Aint count, MPI_Datatype datatype,
                                          int root, MPIR_Comm * comm, MPIR_Request ** req)
 {
-    int ret;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_NM_mpi_ibcast(buffer, count, datatype, root, comm, req);
+    /* TODO: Add workq support for MPI_THREAD_MULTIPLE with handoff */
+    switch (MPIR_CVAR_IBCAST_COMPOSITION) {
+        case 1:        /* NM + SHM using gentran scheduler */
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+                                           comm->hierarchy_kind ==
+                                           MPIR_COMM_HIERARCHY_KIND__PARENT, mpi_errno,
+                                           "Ibcast composition alpha cannot be applied.\n");
+            mpi_errno =
+                MPIDI_Ibcast_intra_composition_alpha(buffer, count, datatype, root, comm, req);
+            break;
+        case 2:        /* NM + SHM using gentran scheduler */
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+                                           comm->hierarchy_kind ==
+                                           MPIR_COMM_HIERARCHY_KIND__PARENT, mpi_errno,
+                                           "Ibcast composition beta cannot be applied.\n");
+            mpi_errno =
+                MPIDI_Ibcast_intra_composition_beta(buffer, count, datatype, root, comm, req);
+            break;
+        case 3:        /* NM using gentran scheduler */
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           comm->comm_kind == MPIR_COMM_KIND__INTRACOMM,
+                                           mpi_errno,
+                                           "Ibcast composition gamma cannot be applied.\n");
+            mpi_errno =
+                MPIDI_Ibcast_intra_composition_gamma(buffer, count, datatype, root, comm, req);
+            break;
+        default:
+            mpi_errno =
+                MPIDI_Ibcast_allcomm_composition_json(buffer, count, datatype, root, comm, req);
+            break;
+    }
 
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+        mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, root, comm, req);
+    else
+        mpi_errno = MPIDI_Ibcast_intra_composition_gamma(buffer, count, datatype, root, comm, req);
+
+  fn_exit:
     MPIR_FUNC_EXIT;
-    return ret;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Ibcast_sched_intra_composition_json(void *buffer, int count,
+                                                                       MPI_Datatype datatype,
+                                                                       int root, MPIR_Comm * comm,
+                                                                       MPIR_TSP_sched_t sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__BCAST,
+        .comm_ptr = comm,
+        .u.bcast.buffer = buffer,
+        .u.bcast.count = count,
+        .u.bcast.datatype = datatype,
+        .u.bcast.root = root,
+    };
+
+    const MPIDI_Csel_container_s *cnt = NULL;
+    cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
+
+    /* inter-comms */
+    MPIR_Assert(cnt != NULL);
+
+    switch (cnt->id) {
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibcast_intra_composition_alpha:     /* Gentran scheduler */
+            mpi_errno =
+                MPIDI_Ibcast_sched_intra_composition_alpha(buffer, count, datatype, root,
+                                                           comm, sched, true);
+            break;
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibcast_intra_composition_beta:      /* Gentran scheduler */
+            mpi_errno =
+                MPIDI_Ibcast_sched_intra_composition_beta(buffer, count, datatype, root, comm,
+                                                          sched, true);
+            break;
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibcast_intra_composition_gamma:     /* Gentran scheduler */
+            mpi_errno =
+                MPIDI_Ibcast_sched_intra_composition_gamma(buffer, count, datatype, root,
+                                                           comm, sched, true);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iallgather(const void *sendbuf, MPI_Aint sendcount,

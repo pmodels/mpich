@@ -36,6 +36,11 @@ typedef struct {
         MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_alpha,
         MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_beta,
         MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha,
+        MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibcast_intra_composition_alpha,
+        MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibcast_intra_composition_beta,
+        MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibcast_intra_composition_gamma,
+        MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibarrier_intra_composition_alpha,
+        MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Ibarrier_intra_composition_beta,
     } id;
 } MPIDI_Csel_container_s;
 

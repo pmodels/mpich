@@ -18,6 +18,17 @@ cvars:
         Maximum number of collective operations at a time that the
         progress engine should make progress on
 
+    - name        : MPIR_CVAR_TSP_MAX_IRECVS
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum number of irecv to be posted by GenTran at a time.
+        This CVAR is used when gentran optimization is called.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
