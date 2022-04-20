@@ -370,9 +370,6 @@ int MPID_Init(int requested, int *provided)
 
     choose_netmod();
 
-    mpi_errno = MPIR_pmi_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Create all ch4-layer granular locks.
      * Note: some locks (e.g. MPIDIU_THREAD_HCOLL_MUTEX) may be unused due to configuration.
      * It is harmless to create them anyway rather than adding #ifdefs.

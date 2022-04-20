@@ -108,6 +108,8 @@ static pmix_proc_t pmix_proc;
 static pmix_proc_t pmix_wcproc;
 #endif
 
+static char *hwloc_topology_xmlfile;
+
 int MPIR_pmi_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -226,6 +228,8 @@ void MPIR_pmi_finalize(void)
     MPL_free(MPIR_Process.node_map);
     MPL_free(MPIR_Process.node_root_map);
     MPL_free(MPIR_Process.node_local_map);
+
+    MPL_free(hwloc_topology_xmlfile);
 }
 
 void MPIR_pmi_abort(int exit_code, const char *error_msg)
@@ -259,6 +263,46 @@ int MPIR_pmi_max_key_size(void)
 int MPIR_pmi_max_val_size(void)
 {
     return pmi_max_val_size;
+}
+
+char *MPIR_pmi_get_hwloc_xmlfile(void)
+{
+    char *valbuf = NULL;
+
+    /* try to get hwloc topology file */
+    if (hwloc_topology_xmlfile == NULL && MPIR_Process.local_size > 1) {
+        valbuf = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
+        if (!valbuf) {
+            goto fn_exit;
+        }
+#ifdef USE_PMI1_API
+        int pmi_errno = PMI_KVS_Get(pmi_kvs_name, "PMI_hwloc_xmlfile", valbuf, pmi_max_val_size);
+        if (pmi_errno != MPI_SUCCESS) {
+            goto fn_exit;
+        }
+
+        /* we either get "unavailable" or a valid filename */
+        if (strcmp(valbuf, "unavailable") != 0) {
+            hwloc_topology_xmlfile = MPL_strdup(valbuf);
+        }
+#elif defined USE_PMI2_API
+        int found;
+        int pmi_errno = PMI2_Info_GetJobAttr("PMI_hwloc_xmlfile", valbuf, pmi_max_val_size,
+                                             &found);
+        if (pmi_errno != MPI_SUCCESS) {
+            MPL_free(valbuf);
+            goto fn_exit;
+        }
+
+        if (found) {
+            hwloc_topology_xmlfile = MPL_strdup(valbuf);
+        }
+#endif
+    }
+
+  fn_exit:
+    MPL_free(valbuf);
+    return hwloc_topology_xmlfile;
 }
 
 const char *MPIR_pmi_job_id(void)
