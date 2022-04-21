@@ -696,6 +696,9 @@ def process_func_parameters(func):
                 if RE.match(r'mpi_startall', func['name'], re.IGNORECASE):
                     impl_arg_list.append(ptrs_name)
                     impl_param_list.append("MPIR_Request **%s" % ptrs_name)
+                else:
+                    impl_arg_list.append(name)
+                    impl_param_list.append("MPI_Request %s[]" % name)
             else:
                 print("Unhandled handle array: " + name, file=sys.stderr)
         elif "code-handle_ptr-tail" in func and name in func['code-handle_ptr-tail']:
