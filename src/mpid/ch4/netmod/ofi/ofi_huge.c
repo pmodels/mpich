@@ -384,8 +384,7 @@ int MPIDI_OFI_huge_chunk_done_event(int vni, struct fi_cq_tagged_entry *wc, void
     MPIR_cc_decr(chunk_req->chunks_outstanding, &c);
 
     if (c == 0) {
-        /* cast to suppress warning -- discard volatile qualifier */
-        MPL_free((void *) chunk_req->chunks_outstanding);
+        MPL_free(chunk_req->chunks_outstanding);
         mpi_errno = get_huge_complete(chunk_req->localreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
