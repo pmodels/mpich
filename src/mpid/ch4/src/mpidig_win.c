@@ -473,9 +473,6 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_ENTER;
 
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
     win = *win_ptr;
     *base_ptr = NULL;
 
@@ -527,8 +524,21 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     } else
         total_shm_size = size;
 
-    /* try global symm heap only when multiple processes exist */
-    if (comm_ptr->local_size > 1) {
+    bool win_shared_ok = false;
+    if (comm_ptr->local_size == 1) {
+        win_shared_ok = true;
+    } else if (shm_comm_ptr && comm_ptr->local_size == shm_comm_ptr->local_size) {
+        win_shared_ok = true;
+    }
+
+    if (shm_option == SHM_WIN_REQUIRED && !win_shared_ok) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+    }
+
+    if (win_shared_ok) {
+        /* No need to try global symm heap if there is only one node */
+        global_symheap_flag = false;
+    } else if (comm_ptr->local_size > 1) {
         /* global symm heap can be successful only when any of the following conditions meet.
          * Thus, we can skip unnecessary global symm heap retry based on condition check.
          * - no shared memory node (i.e., single process per node)
@@ -539,8 +549,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
         mpi_errno = MPIR_Allreduce(&symheap_flag, &global_symheap_flag, 1, MPI_C_BOOL,
                                    MPI_LAND, comm_ptr, &errflag);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-    } else
-        global_symheap_flag = false;
+    }
 
     /* because MPI_shm follows a create & attach mode, we need to set the
      * size of entire shared memory segment on each node as the size of
