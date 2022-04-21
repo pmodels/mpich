@@ -80,6 +80,17 @@ static int peek_empty_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request
     return MPI_SUCCESS;
 }
 
+static int MPIDI_OFI_coll_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
+{
+    int c;
+
+    MPIR_cc_decr(sreq->cc_ptr, &c);
+    if (c == 0) {
+        MPIR_Request_free(sreq);
+    }
+    return MPI_SUCCESS;
+}
+
 static int send_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -475,6 +486,9 @@ int MPIDI_OFI_dispatch_function(int vni, struct fi_cq_tagged_entry *wc, MPIR_Req
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_READ)) {
         mpi_errno = am_read_event(vni, wc, req);
+        goto fn_exit;
+    } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_COLL)) {
+        mpi_errno = MPIDI_OFI_coll_done_event(wc, req);
         goto fn_exit;
     } else if (unlikely(1)) {
         switch (MPIDI_OFI_REQUEST(req, event_id)) {

@@ -46,19 +46,28 @@ def dump_tests(Out, key, testlist, algos, algo_params, special=None):
         for test in testlist:
             for algo in algos[key]:
                 segs = [test]
+                # blocking over nonblocking
                 if special == "nb":
                     segs.append("env=MPIR_CVAR_%s_DEVICE_COLLECTIVE=0" % NAME)
                     segs.append("env=MPIR_CVAR_%s_%s_ALGORITHM=nb" % (NAME, INTRA))
-                    segs.append("env=MPIR_CVAR_I%s_DEVICE_COLLECTIVE=0" % NAME)
-                    segs.append("env=MPIR_CVAR_I%s_%s_ALGORITHM=%s" % (NAME, INTRA, algo))
-                elif RE.match(r'composition:(\w+)', algo):
+                # ch4 selection
+                if RE.match(r'composition:(\w+)', algo):
                     segs.append("env=MPIR_CVAR_%s_COMPOSITION=%s" % (NAME, RE.m.group(1)))
+                # ofi/posix selection
                 elif RE.match(r'(\w+):(\w+)', algo):
                     DEVICE = RE.m.group(1).upper()
-                    segs.append("env=MPIR_CVAR_%s_%s_%s_ALGORITHM=%s" % (NAME, DEVICE, INTRA, RE.m.group(2)))
+                    if special == "nb":
+                        segs.append("env=MPIR_CVAR_I%s_%s_%s_ALGORITHM=%s" % (NAME, DEVICE, INTRA, RE.m.group(2)))
+                    else:
+                        segs.append("env=MPIR_CVAR_%s_%s_%s_ALGORITHM=%s" % (NAME, DEVICE, INTRA, RE.m.group(2)))
+                # mpir selection
                 else:
-                    segs.append("env=MPIR_CVAR_%s_DEVICE_COLLECTIVE=0" % NAME)
-                    segs.append("env=MPIR_CVAR_%s_%s_ALGORITHM=%s" % (NAME, INTRA, algo))
+                    if special == "nb":
+                        segs.append("env=MPIR_CVAR_I%s_DEVICE_COLLECTIVE=0" % NAME)
+                        segs.append("env=MPIR_CVAR_I%s_%s_ALGORITHM=%s" % (NAME, INTRA, algo))
+                    else:
+                        segs.append("env=MPIR_CVAR_%s_DEVICE_COLLECTIVE=0" % NAME)
+                        segs.append("env=MPIR_CVAR_%s_%s_ALGORITHM=%s" % (NAME, INTRA, algo))
                 algo_key = key + "-" + algo
                 if algo_key in algo_params:
                     count = count_algo_params(algo_params[algo_key], test)

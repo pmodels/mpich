@@ -316,6 +316,16 @@ cvars:
         enabled. It the underlying OFI provider supports auto data progress, this value is ignored.
         If the value is -1, this optimization will be turned off.
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_OFI_COLLECTIVE
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, enable OFI collectives for MPI collectives.
+
     - name        : MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX
       category    : CH4_OFI
       type        : int
@@ -715,6 +725,15 @@ static void *create_container(struct json_object *obj)
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_small_blocking;
             container->u.bcast.triggered_small_blocking.k = 2;
+        } else if (!strcmp(ckey, "algorithm=BCAST_INTRA_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_switch_offload;
+        } else if (!strcmp(ckey, "algorithm=IBCAST_INTRA_tsp_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Ibcast_intra_switch_offload;
+        } else if (!strcmp(ckey, "algorithm=IALLREDUCE_INTRA_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Iallreduce_intra_switch_offload;
         } else if (!strcmp(ckey, "algorithm=ALLREDUCE_INTRA_triggered_tagged")) {
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_triggered_tagged;
@@ -734,11 +753,32 @@ static void *create_container(struct json_object *obj)
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_triggered_tree_small_message;
             container->u.allreduce.triggered_tree_small_message.k = 2;
+        } else if (!strcmp(ckey, "algorithm=ALLREDUCE_INTRA_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_switch_offload;
         } else if (!strcmp(ckey, "algorithm=BARRIER_INTRA_triggered_tagged")) {
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Barrier_intra_triggered_tagged;
             container->u.barrier.triggered_tagged.k = 2;
             container->u.barrier.triggered_tagged.tree_type = 0;
+        } else if (!strcmp(ckey, "algorithm=BARRIER_INTRA_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Barrier_intra_switch_offload;
+        } else if (!strcmp(ckey, "algorithm=IBARRIER_INTRA_tsp_auto")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibarrier_sched_intra_tsp_auto;
+        } else if (!strcmp(ckey, "algorithm=IBARRIER_INTRA_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Ibarrier_intra_switch_offload;
+        } else if (!strcmp(ckey, "algorithm=IBCAST_INTRA_tsp_auto")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_sched_intra_tsp_auto;
+        } else if (!strcmp(ckey, "algorithm=IALLREDUCE_INTRA_tsp_auto")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_sched_intra_tsp_auto;
+        } else {
+            fprintf(stderr, "unrecognized key %s\n", key);
+            MPIR_Assert(0);
         }
 
         MPL_free(ckey);
@@ -748,6 +788,22 @@ static void *create_container(struct json_object *obj)
     parse_container_params(json_object_object_get(obj, key), container);
 
     return (void *) container;
+}
+
+static int init_libfabric_collectives(struct fid_domain *domain)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int err;
+    struct fi_collective_attr attr;
+
+    attr.op = FI_NOOP;
+    attr.datatype = FI_VOID;
+    attr.mode = 0;
+    err = fi_query_collective(domain, FI_BARRIER, &attr, 0);
+    if (err == 0)
+        MPIDI_OFI_global.support_barrier = 1;
+
+    return mpi_errno;
 }
 
 static void set_sep_counters(int nic)
@@ -909,6 +965,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
                                                   &MPIDI_OFI_global.per_vni[vni].pack_buf_pool);
         MPIR_ERR_CHECK(mpi_errno);
     }
+
+    if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+        init_libfabric_collectives(MPIDI_OFI_global.ctx[0].domain);
 
     ofi_am_init();
     ofi_am_post_recv(0, 0);
@@ -1255,6 +1314,22 @@ static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx, struc
 static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av, int nic);
 static int open_local_av(struct fid_domain *p_domain, struct fid_av **p_av);
 
+static int create_eq(struct fid_ep *ep, struct fid_eq **eq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct fi_eq_attr eq_attr = {
+        .wait_obj = FI_WAIT_UNSPEC
+    };
+
+    MPIDI_OFI_CALL(fi_eq_open(MPIDI_OFI_global.fabric, &eq_attr, eq, NULL), fi_eq_open);
+    MPIDI_OFI_CALL(fi_ep_bind(ep, &(*eq)->fid, 0), bind);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* This function creates a vni context which includes all of the OFI-level objects needed to
  * initialize OFI (e.g. domain, address vector, endpoint, etc.). This function takes two arguments:
  *
@@ -1293,6 +1368,7 @@ static int create_vni_context(int vni, int nic)
     struct fid_av *av;
     struct fid_cntr *rma_cmpl_cntr;
     struct fid_cq *cq;
+    struct fid_eq *eq;
 
     struct fid_ep *ep;
     struct fid_ep *tx;
@@ -1307,6 +1383,10 @@ static int create_vni_context(int vni, int nic)
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         MPIDI_OFI_CALL(fi_scalable_ep(domain, prov_use, &ep, NULL), ep);
         MPIDI_OFI_CALL(fi_scalable_ep_bind(ep, &av->fid, 0), bind);
+        if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE) {
+            mpi_errno = create_eq(ep, &eq);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
         MPIDI_OFI_CALL(fi_enable(ep), ep_enable);
 
         mpi_errno = create_sep_tx(ep, 0, &tx, cq, rma_cmpl_cntr, nic);
@@ -1326,6 +1406,10 @@ static int create_vni_context(int vni, int nic)
         }
 
         MPIDI_OFI_CALL(fi_ep_bind(ep, &rma_cmpl_cntr->fid, FI_READ | FI_WRITE), bind);
+        if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE) {
+            mpi_errno = create_eq(ep, &eq);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
         MPIDI_OFI_CALL(fi_enable(ep), ep_enable);
         tx = ep;
         rx = ep;
@@ -1339,6 +1423,8 @@ static int create_vni_context(int vni, int nic)
     MPIDI_OFI_global.ctx[ctx_idx].cq = cq;
     MPIDI_OFI_global.ctx[ctx_idx].tx = tx;
     MPIDI_OFI_global.ctx[ctx_idx].rx = rx;
+    if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+        MPIDI_OFI_global.ctx[ctx_idx].eq = eq;
 
 #else /* MPIDI_OFI_VNI_USE_SEPCTX */
     /* Endpoints are used to bundle together all VNIs. In addition, we have to duplicate these
@@ -1362,7 +1448,6 @@ static int create_vni_context(int vni, int nic)
         if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
             MPIDI_OFI_CALL(fi_scalable_ep(domain, prov_use, &ep, NULL), ep);
             MPIDI_OFI_CALL(fi_scalable_ep_bind(ep, &av->fid, 0), bind);
-            MPIDI_OFI_CALL(fi_enable(ep), ep_enable);
         } else {
             MPIDI_OFI_CALL(fi_endpoint(domain, prov_use, &ep, NULL), ep);
             MPIDI_OFI_CALL(fi_ep_bind(ep, &av->fid, 0), bind);
@@ -1376,11 +1461,17 @@ static int create_vni_context(int vni, int nic)
             }
 
             MPIDI_OFI_CALL(fi_ep_bind(ep, &rma_cmpl_cntr->fid, FI_READ | FI_WRITE), bind);
-            MPIDI_OFI_CALL(fi_enable(ep), ep_enable);
         }
+        if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE) {
+            mpi_errno = create_eq(ep, &eq);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        MPIDI_OFI_CALL(fi_enable(ep), ep_enable);
     } else {
         ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
         ep = MPIDI_OFI_global.ctx[ctx_idx].ep;
+        if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+            eq = MPIDI_OFI_global.ctx[ctx_idx].eq;
     }
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
@@ -1409,6 +1500,8 @@ static int create_vni_context(int vni, int nic)
     MPIDI_OFI_global.ctx[ctx_idx].cq = cq;
     MPIDI_OFI_global.ctx[ctx_idx].tx = tx;
     MPIDI_OFI_global.ctx[ctx_idx].rx = rx;
+    if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+        MPIDI_OFI_global.ctx[ctx_idx].eq = eq;
 #endif
 
   fn_exit:
@@ -1453,6 +1546,8 @@ static int destroy_vni_context(int vni, int nic)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].rma_cmpl_cntr->fid), cntrclose);
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].domain->fid), domainclose);
     }
+    if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].eq->fid), eqclose);
 
 #else /* MPIDI_OFI_VNI_USE_SEPCTX */
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
@@ -1464,6 +1559,8 @@ static int destroy_vni_context(int vni, int nic)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].av->fid), avclose);
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].rma_cmpl_cntr->fid), cntrclose);
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].domain->fid), domainclose);
+            if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+                MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].eq->fid), eqclose);
         }
     } else {    /* normal endpoint */
         MPIR_Assert(vni == 0);
@@ -1472,6 +1569,8 @@ static int destroy_vni_context(int vni, int nic)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].av->fid), avclose);
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].rma_cmpl_cntr->fid), cntrclose);
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].domain->fid), domainclose);
+        if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[ctx_num].eq->fid), eqclose);
     }
 #endif
 
@@ -1621,7 +1720,7 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av, i
         av_attr.type = FI_AV_MAP;
     }
     av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
-    av_attr.count = MPIR_Process.size;
+    av_attr.count = MPIR_Process.size * MPIDI_OFI_global.num_nics;
 
     char av_name[128];
     MPL_snprintf(av_name, sizeof(av_name), "FI_NAMED_AV_%d\n", MPIR_Process.appnum);
@@ -1658,7 +1757,7 @@ static int open_local_av(struct fid_domain *p_domain, struct fid_av **p_av)
         av_attr.type = FI_AV_MAP;
     }
     av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
-    av_attr.count = MPIR_Process.size;
+    av_attr.count = MPIR_Process.size * MPIDI_OFI_global.num_nics;
 
     av_attr.name = NULL;
     av_attr.flags = 0;
@@ -1739,6 +1838,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_ENABLE_RMA: %d\n", MPIDI_OFI_ENABLE_RMA);
     fprintf(stdout, "MPIDI_OFI_ENABLE_ATOMICS: %d\n", MPIDI_OFI_ENABLE_ATOMICS);
     fprintf(stdout, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d\n", MPIDI_OFI_FETCH_ATOMIC_IOVECS);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_OFI_COLLECTIVE: %d\n", MPIDI_OFI_ENABLE_OFI_COLLECTIVE);
     fprintf(stdout, "MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS: %d\n",
             MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS: %d\n",

@@ -16,6 +16,7 @@
 #include <rdma/fi_cm.h>
 #include <rdma/fi_errno.h>
 #include <rdma/fi_trigger.h>
+#include <rdma/fi_collective.h>
 #include "ofi_capability_sets.h"
 
 /* Defines */
@@ -77,6 +78,13 @@ typedef struct {
 } MPIDI_OFI_trig_allred_blocking_small_msg;
 
 typedef struct {
+    struct fid_av_set *av_set;
+    struct fid_mc *coll_mc;
+    fi_addr_t coll_addr;
+    MPIR_Request *req;
+} MPIDI_OFI_switch_coll;
+
+typedef struct {
     /* support for connection */
     int conn_id;
     int enable_striping;        /* Flag to enable striping per communicator. */
@@ -85,6 +93,7 @@ typedef struct {
     void *csel_comm;            /* collective selection handle */
     MPIDI_OFI_trig_bcast_blocking_small_msg *blk_sml_bcast;     /* struct per communicator for triggered ops based blocking Bcast */
     MPIDI_OFI_trig_allred_blocking_small_msg *blk_sml_allred;   /* struct per communicator for triggered ops based blocking Allreduce */
+    MPIDI_OFI_switch_coll offload_coll; /* offload collectives */
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_NONE = 0,

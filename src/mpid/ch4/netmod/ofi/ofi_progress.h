@@ -108,6 +108,23 @@ static inline int MPIDI_NM_progress(int vci, int blocking)
         }
     }
 
+    if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE && vci == 0) {
+        do {
+            uint32_t ev = -1;
+            struct fi_eq_entry entry;
+            ret = fi_eq_read(MPIDI_OFI_global.ctx[0].eq, &ev, &entry, sizeof(entry), 0);
+            if (ret >= 0) {
+                if (ev == FI_JOIN_COMPLETE) {
+                    int c;
+                    MPIR_Request *req;
+                    req = MPIDI_OFI_context_to_request(entry.context);
+                    MPIR_cc_decr(req->cc_ptr, &c);
+                    MPIR_Request_free(req);
+                }
+            }
+        } while (ret > 0);
+    }
+
     MPIR_FUNC_EXIT;
 
     return mpi_errno;
