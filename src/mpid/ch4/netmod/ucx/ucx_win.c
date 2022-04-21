@@ -14,11 +14,6 @@ struct ucx_share {
 static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void **base_ptr);
 static int win_init(MPIR_Win * win);
 
-#define MPIDI_UCX_WIN_VNI(win, vni_) \
-    do { \
-        vni_ = MPIDI_get_vci(SRC_VCI_FROM_SENDER, (win)->comm_ptr, 0, 0, 0); \
-    } while (0)
-
 static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void **base_ptr)
 {
 
@@ -110,7 +105,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
      * and remote windows (at least now). If win_create is used, the key cannot be unpackt -
      * then we need our fallback-solution */
 
-    int vni = MPIDI_UCX_WIN(win).vni;
+    int vni = MPIDI_WIN(win, am_vci);
     bool all_reachable = true, none_reachable = true;
     for (i = 0; i < comm_ptr->local_size; i++) {
         /* Skip unmapped remote region. */
@@ -184,7 +179,6 @@ static int win_init(MPIR_Win * win)
     MPIR_Assert(MPIDI_WIN(win, am_vci) < MPIDI_UCX_global.num_vnis);
 
     memset(&MPIDI_UCX_WIN(win), 0, sizeof(MPIDI_UCX_win_t));
-    MPIDI_UCX_WIN_VNI(win, MPIDI_UCX_WIN(win).vni);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

@@ -129,7 +129,7 @@ int MPIDI_POSIX_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_
 
 static void posix_win_init_common(MPIR_Win * win)
 {
-    MPIDI_WIN(win, am_vci) %= MPIDI_POSIX_global.num_vsis;
+    MPIR_Assert(MPIDI_WIN(win, am_vci) < MPIDI_POSIX_global.num_vsis);
 
     MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
     posix_win->shm_mutex_ptr = NULL;

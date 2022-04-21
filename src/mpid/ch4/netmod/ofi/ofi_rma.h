@@ -197,7 +197,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
     MPIDI_Datatype_check_contig_size_extent_lb(target_datatype, target_count, target_contig,
                                                target_bytes, target_extent, target_true_lb);
 
-    int vni = MPIDI_OFI_WIN(win).vni;
+    int vni = MPIDI_WIN(win, am_vci);
 
     /* zero-byte messages */
     if (unlikely(origin_bytes == 0))
@@ -387,7 +387,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
     MPIDI_Datatype_check_contig_size_extent_lb(target_datatype, target_count, target_contig,
                                                target_bytes, target_extent, target_true_lb);
 
-    int vni = MPIDI_OFI_WIN(win).vni;
+    int vni = MPIDI_WIN(win, am_vci);
 
     /* zero-byte messages */
     if (unlikely(target_bytes == 0))
@@ -588,7 +588,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
     struct fi_msg_atomic msg;
     int nic = 0;
 
-    int vni = MPIDI_OFI_WIN(win).vni;
+    int vni = MPIDI_WIN(win, am_vci);
 
     if (
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -714,7 +714,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
     if (origin_bytes == 0)
         goto null_op_exit;
 
-    int vni = MPIDI_OFI_WIN(win).vni;
+    int vni = MPIDI_WIN(win, am_vci);
 
     /* prepare remote addr and mr key.
      * Continue native path only when all segments are in the same registered memory region */
@@ -858,7 +858,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
     if (target_bytes == 0)
         goto null_op_exit;
 
-    int vni = MPIDI_OFI_WIN(win).vni;
+    int vni = MPIDI_WIN(win, am_vci);
 
     /* contiguous messages */
     if (origin_contig && target_contig && result_contig) {
@@ -1093,7 +1093,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     struct fi_msg_atomic msg;
     MPIR_FUNC_ENTER;
 
-    int vni = MPIDI_OFI_WIN(win).vni;
+    int vni = MPIDI_WIN(win, am_vci);
     int nic = 0;
 
     if (
