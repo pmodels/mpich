@@ -115,7 +115,8 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
             continue;
         }
 
-        status = ucp_ep_rkey_unpack(MPIDI_UCX_WIN_TO_EP(win, i, vni),
+        int vni_target = MPIDI_WIN_TARGET_VCI(win, i);
+        status = ucp_ep_rkey_unpack(MPIDI_UCX_WIN_TO_EP(win, i, vni, vni_target),
                                     &rkey_recv_buff[recv_disps[i]],
                                     &(MPIDI_UCX_WIN_INFO(win, i).rkey));
         if (status == UCS_ERR_UNREACHABLE) {

@@ -208,7 +208,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
 
         ucs_status_t ucp_status;
         int vni = MPIDI_WIN(win, am_vci);
-        ucp_ep_h ep = MPIDI_UCX_WIN_TO_EP(win, rank, vni);
+        int vni_target = MPIDI_WIN_TARGET_VCI(win, rank);
+        ucp_ep_h ep = MPIDI_UCX_WIN_TO_EP(win, rank, vni, vni_target);
         /* only flush the endpoint */
         MPIDI_UCX_THREAD_CS_ENTER_VCI(vni);
         ucp_status = ucp_ep_flush(ep);
@@ -234,7 +235,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_
         ucs_status_t ucp_status;
 
         int vni = MPIDI_WIN(win, am_vci);
-        ucp_ep_h ep = MPIDI_UCX_WIN_TO_EP(win, rank, vni);
+        int vni_target = MPIDI_WIN_TARGET_VCI(win, rank);
+        ucp_ep_h ep = MPIDI_UCX_WIN_TO_EP(win, rank, vni, vni_target);
         /* currently, UCP does not support local flush, so we have to call
          * a global flush. This is not good for performance - but OK for now */
         MPIDI_UCX_THREAD_CS_ENTER_VCI(vni);

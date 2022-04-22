@@ -340,6 +340,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     /* we need consistent vci to run am operations.
      * Note: netmod and shm may further hash it down */
     MPIDI_WIN(win, am_vci) = MPIDI_get_vci(SRC_VCI_FROM_SENDER, win->comm_ptr, 0, 0, 0);
+    MPIDI_WIN(win, vci_table) = NULL;
 
     /* set winattr for performance optimization at fast path:
      * - check if comm is COMM_WORLD or dup of COMM_WORLD
