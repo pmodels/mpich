@@ -202,6 +202,7 @@ int main(int argc, char *argv[])
     int varclass;
     int readonly, continuous, atomic;
     MPI_T_enum enumtype;
+    int nsc_continuous, nrc_continuous, snsc_continuous, snrc_continuous;
     int nsc_idx = -1, nrc_idx = -1, snsc_idx = -1, snrc_idx = -1;
     int num_nics = 1;
 
@@ -277,15 +278,19 @@ int main(int argc, char *argv[])
 
         if (0 == strcmp(name, "nic_sent_bytes_count")) {
             nsc_idx = i;
+            nsc_continuous = continuous;
         }
         if (0 == strcmp(name, "nic_recvd_bytes_count")) {
             nrc_idx = i;
+            nrc_continuous = continuous;
         }
         if (0 == strcmp(name, "striped_nic_sent_bytes_count")) {
             snsc_idx = i;
+            snsc_continuous = continuous;
         }
         if (0 == strcmp(name, "striped_nic_recvd_bytes_count")) {
             snrc_idx = i;
+            snrc_continuous = continuous;
         }
     }
 
@@ -316,10 +321,16 @@ int main(int argc, char *argv[])
         assert(count = 1);
         assert(snrc_handle != MPI_T_PVAR_HANDLE_NULL);
 
-        if (!continuous) {
+        if (!nsc_continuous) {
             MPI_T_pvar_start(session, nsc_handle);
+        }
+        if (!nrc_continuous) {
             MPI_T_pvar_start(session, nrc_handle);
+        }
+        if (!snsc_continuous) {
             MPI_T_pvar_start(session, snsc_handle);
+        }
+        if (!snrc_continuous) {
             MPI_T_pvar_start(session, snrc_handle);
         }
     }
@@ -350,10 +361,16 @@ int main(int argc, char *argv[])
 
     /* execute only when PVARs are enabled */
     if (nsc_idx != -1 && nrc_idx != -1 && snsc_idx != -1 && snrc_idx != -1) {
-        if (!continuous) {
+        if (!nrc_continuous) {
             MPI_T_pvar_stop(session, nrc_handle);
+        }
+        if (!nsc_continuous) {
             MPI_T_pvar_stop(session, nsc_handle);
+        }
+        if (!snrc_continuous) {
             MPI_T_pvar_stop(session, snrc_handle);
+        }
+        if (!snsc_continuous) {
             MPI_T_pvar_stop(session, snsc_handle);
         }
 
