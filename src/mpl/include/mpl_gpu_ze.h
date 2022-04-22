@@ -14,6 +14,8 @@ typedef struct {
 } ze_alloc_attr_t;
 
 typedef ze_ipc_mem_handle_t MPL_gpu_ipc_mem_handle_t;
+typedef ze_ipc_event_pool_handle_t MPL_gpu_ipc_event_pool_handle_t;
+typedef ze_event_pool_handle_t MPL_gpu_event_pool_handle_t;
 typedef ze_device_handle_t MPL_gpu_device_handle_t;
 typedef ze_alloc_attr_t MPL_gpu_device_attr;
 
@@ -48,5 +50,10 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t ipc_handle, int shared_
 int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
                                MPL_gpu_device_handle_t device, void **mmaped_ptr);
 int MPL_ze_mmap_handle_unmap(void *ptr, int dev_id);
+int MPL_ze_ipc_event_pool_handle_create(MPL_gpu_ipc_event_pool_handle_t * ipc_event_pool_handle);
+int MPL_ze_ipc_event_pool_handle_size(void);
+int MPL_ze_ipc_event_pool_handle_open(MPL_gpu_ipc_event_pool_handle_t gpu_ipc_event_pool_handle,
+                                      MPL_gpu_event_pool_handle_t * gpu_event_pool_handle);
+int MPL_ze_ipc_event_pool_handle_close(MPL_gpu_event_pool_handle_t gpu_event_pool_handle);
 
 #endif /* ifndef MPL_GPU_ZE_H_INCLUDED */

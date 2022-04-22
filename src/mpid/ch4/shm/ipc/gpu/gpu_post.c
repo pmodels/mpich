@@ -400,3 +400,80 @@ int MPIDI_GPU_ipc_fast_memcpy(MPIDI_IPCI_ipc_handle_t ipc_handle, void *dest_vad
     return mpi_errno;
 #endif
 }
+
+int MPIDI_GPU_ipc_event_pool_handle_create(MPIDI_GPU_ipc_event_pool_handle_t *
+                                           ipc_event_pool_handle)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef MPL_HAVE_ZE
+    MPIR_FUNC_ENTER;
+    int mpl_err = MPL_SUCCESS;
+
+    mpl_err =
+        MPL_ze_ipc_event_pool_handle_create(&ipc_event_pool_handle->gpu_ipc_event_pool_handle);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                        "**gpu_ipc_event_pool_handle_create");
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+    return mpi_errno;
+#endif
+
+}
+
+int MPIDI_GPU_ipc_event_pool_handle_open(MPL_gpu_ipc_event_pool_handle_t ipc_event_pool_handle,
+                                         MPL_gpu_event_pool_handle_t * mapped_event_pool_handle)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef MPL_HAVE_ZE
+    MPIR_FUNC_ENTER;
+    int mpl_err = MPL_SUCCESS;
+
+    mpl_err = MPL_ze_ipc_event_pool_handle_open(ipc_event_pool_handle, mapped_event_pool_handle);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                        "**gpu_ipc_event_pool_handle_open");
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+    return mpi_errno;
+#endif
+}
+
+int MPIDI_GPU_ipc_event_pool_handle_close(MPL_gpu_event_pool_handle_t mapped_event_pool_handle)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef MPL_HAVE_ZE
+    MPIR_FUNC_ENTER;
+    int mpl_err = MPL_SUCCESS;
+
+    mpl_err = MPL_ze_ipc_event_pool_handle_close(mapped_event_pool_handle);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                        "**gpu_ipc_event_pool_handle_close");
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+    return mpi_errno;
+#endif
+}
+
+int MPIDI_GPU_ipc_event_pool_handle_size(void)
+{
+#ifdef MPL_HAVE_ZE
+    return MPL_ze_ipc_event_pool_handle_size();
+#else
+    return 0;
+#endif
+}
