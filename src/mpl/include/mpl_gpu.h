@@ -98,4 +98,8 @@ int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id);
 int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
                         MPL_pointer_attr_t * dest_attr, size_t size);
 
+int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev, int engine,
+                    MPL_gpu_request * req, bool commit);
+int MPL_gpu_test(MPL_gpu_request * req, int *completed);
+
 #endif /* ifndef MPL_GPU_H_INCLUDED */

@@ -339,6 +339,17 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
     return MPL_ERR_GPU_INTERNAL;
 }
 
+int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev, MPL_gpu_request * req,
+                    bool commit)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_test(MPL_gpu_request * req, int *completed)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}
+
 static void gpu_free_hooks_cb(void *dptr)
 {
     gpu_free_hook_s *current = free_hook_chain;
