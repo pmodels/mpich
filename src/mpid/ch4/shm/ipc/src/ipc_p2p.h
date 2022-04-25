@@ -185,34 +185,36 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
         MPIR_ERR_CHECK(mpi_errno);
         /* skip unmap */
     } else if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__GPU) {
-        /* try fast memcpy first */
-        int fast_copy = 0;
-        if (src_data_sz <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE) {
-            MPIDI_Datatype_check_contig(MPIDIG_REQUEST(rreq, datatype), dt_contig);
-            if (ipc_hdr->is_contig && dt_contig) {
-                mpi_errno =
-                    MPIDI_GPU_ipc_fast_memcpy(ipc_hdr->ipc_handle, MPIDIG_REQUEST(rreq, buffer),
-                                              src_data_sz, MPIDIG_REQUEST(rreq, datatype));
-                if (mpi_errno == MPI_SUCCESS)
-                    fast_copy = 1;
-            }
-        }
-        if (!fast_copy) {
-            MPL_pointer_attr_t attr;
-            MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
-            int dev_id = MPL_gpu_get_dev_id_from_attr(&attr);
-            int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id,
-                                                    MPIDIG_REQUEST(rreq, datatype));
-            mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_hdr->ipc_handle.gpu, map_dev, &src_buf, false);
+#ifdef MPL_HAVE_ZE
+        bool do_mmap = (src_data_sz <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE);
+#else
+        bool do_mmap = false;
+#endif
+        MPL_pointer_attr_t attr;
+        MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
+        MPIDI_Datatype_check_contig(MPIDIG_REQUEST(rreq, datatype), dt_contig);
+        int dev_id = MPL_gpu_get_dev_id_from_attr(&attr);
+        int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id,
+                                                MPIDIG_REQUEST(rreq, datatype));
+        mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_hdr->ipc_handle.gpu, map_dev, &src_buf, do_mmap);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* copy */
+        if (ipc_hdr->is_contig && dt_contig) {
+            mpi_errno = MPIR_Localcopy_gpu(src_buf, src_data_sz, MPI_BYTE, NULL,
+                                           MPIDIG_REQUEST(rreq, buffer),
+                                           MPIDIG_REQUEST(rreq, count),
+                                           MPIDIG_REQUEST(rreq, datatype), &attr,
+                                           MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, true);
             MPIR_ERR_CHECK(mpi_errno);
-            /* copy */
+        } else {
             /* TODO: get sender datatype and call MPIR_Typerep_op with mapped_device set to dev_id */
             mpi_errno = MPIDI_IPCI_copy_data(ipc_hdr, rreq, src_buf, src_data_sz);
             MPIR_ERR_CHECK(mpi_errno);
-            /* unmap */
-            mpi_errno = MPIDI_GPU_ipc_handle_unmap(src_buf, ipc_hdr->ipc_handle.gpu, 0);
-            MPIR_ERR_CHECK(mpi_errno);
         }
+
+        /* unmap */
+        mpi_errno = MPIDI_GPU_ipc_handle_unmap(src_buf, ipc_hdr->ipc_handle.gpu, 0);
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__NONE) {
         /* no-op */
     } else {
