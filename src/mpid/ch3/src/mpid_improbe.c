@@ -9,10 +9,11 @@ int (*MPIDI_Anysource_improbe_fn)(int tag, MPIR_Comm * comm, int context_offset,
                                   int *flag, MPIR_Request **message,
                                   MPI_Status * status) = NULL;
 
-int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int context_offset,
+int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int attr,
                  int *flag, MPIR_Request **message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int context_id = comm->recvcontext_id + context_offset;
 
     *message = NULL;

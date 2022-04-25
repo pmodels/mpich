@@ -10,7 +10,7 @@
 #include "ch4_impl.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe(int source,
-                                          int tag, MPIR_Comm * comm, int context_offset,
+                                          int tag, MPIR_Comm * comm, int attr,
                                           MPIDI_av_entry_t * av, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -23,17 +23,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe(int source,
 #endif
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
+    mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, attr, av, flag, status);
 #else
     if (unlikely(source == MPI_ANY_SOURCE)) {
-        mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, context_offset, flag, status);
+        mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, attr, flag, status);
         MPIR_ERR_CHECK(mpi_errno);
         if (!*flag)
-            mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
+            mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, attr, av, flag, status);
     } else if (MPIDI_rank_is_local(source, comm)) {
-        mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, context_offset, flag, status);
+        mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, attr, flag, status);
     } else {
-        mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
+        mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, attr, av, flag, status);
     }
 #endif
     MPIR_ERR_CHECK(mpi_errno);
@@ -48,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe(int source,
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_improbe(int source,
                                            int tag, MPIR_Comm * comm,
-                                           int context_offset,
+                                           int attr,
                                            MPIDI_av_entry_t * av,
                                            int *flag, MPIR_Request ** message, MPI_Status * status)
 {
@@ -62,30 +62,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe(int source,
 #endif
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
+    mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, attr, av, flag, message, status);
     MPIR_ERR_CHECK(mpi_errno);
 #else
     if (unlikely(source == MPI_ANY_SOURCE)) {
-        mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
+        mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, attr, flag, message, status);
         MPIR_ERR_CHECK(mpi_errno);
         if (*flag) {
             MPIDI_REQUEST(*message, is_local) = 1;
         } else {
-            mpi_errno =
-                MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
+            mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, attr, av, flag, message, status);
             MPIR_ERR_CHECK(mpi_errno);
             if (*flag) {
                 MPIDI_REQUEST(*message, is_local) = 0;
             }
         }
     } else if (MPIDI_av_is_local(av)) {
-        mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
+        mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, attr, flag, message, status);
         MPIR_ERR_CHECK(mpi_errno);
         if (*flag)
             MPIDI_REQUEST(*message, is_local) = 1;
     } else {
-        mpi_errno =
-            MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
+        mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, attr, av, flag, message, status);
         MPIR_ERR_CHECK(mpi_errno);
         if (*flag)
             MPIDI_REQUEST(*message, is_local) = 0;
@@ -101,8 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe(int source,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
-                                        int tag, MPIR_Comm * comm, int context_offset,
-                                        MPI_Status * status)
+                                        int tag, MPIR_Comm * comm, int attr, MPI_Status * status)
 {
     int mpi_errno, flag = 0;
     MPIR_FUNC_ENTER;
@@ -110,7 +107,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
     if (MPIDI_is_self_comm(comm)) {
         /* There better be another thread sending the self message */
         while (!flag) {
-            mpi_errno = MPIDI_Self_iprobe(source, tag, comm, context_offset, &flag, status);
+            mpi_errno = MPIDI_Self_iprobe(source, tag, comm, attr, &flag, status);
             MPIR_ERR_CHECK(mpi_errno);
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         }
@@ -118,7 +115,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
         MPIDI_av_entry_t *av =
             (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
         while (!flag) {
-            mpi_errno = MPIDI_iprobe(source, tag, comm, context_offset, av, &flag, status);
+            mpi_errno = MPIDI_iprobe(source, tag, comm, attr, av, &flag, status);
             MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno = MPID_Progress_test(NULL);
@@ -138,8 +135,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
 MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
                                          int tag,
                                          MPIR_Comm * comm,
-                                         int context_offset, MPIR_Request ** message,
-                                         MPI_Status * status)
+                                         int attr, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS, flag = 0;
     MPIR_FUNC_ENTER;
@@ -147,8 +143,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
     if (MPIDI_is_self_comm(comm)) {
         /* There better be another thread sending the self message */
         while (!flag) {
-            mpi_errno =
-                MPIDI_Self_improbe(source, tag, comm, context_offset, &flag, message, status);
+            mpi_errno = MPIDI_Self_improbe(source, tag, comm, attr, &flag, message, status);
             MPIR_ERR_CHECK(mpi_errno);
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         }
@@ -156,8 +151,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
         MPIDI_av_entry_t *av =
             (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
         while (!flag) {
-            mpi_errno =
-                MPIDI_improbe(source, tag, comm, context_offset, av, &flag, message, status);
+            mpi_errno = MPIDI_improbe(source, tag, comm, attr, av, &flag, message, status);
             MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno = MPID_Progress_test(NULL);
@@ -175,21 +169,21 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
 MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
                                           int tag,
                                           MPIR_Comm * comm,
-                                          int context_offset,
+                                          int attr,
                                           int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     if (MPIDI_is_self_comm(comm)) {
-        mpi_errno = MPIDI_Self_improbe(source, tag, comm, context_offset, flag, message, status);
+        mpi_errno = MPIDI_Self_improbe(source, tag, comm, attr, flag, message, status);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         *flag = 0;
         MPIDI_av_entry_t *av =
             (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
 
-        mpi_errno = MPIDI_improbe(source, tag, comm, context_offset, av, flag, message, status);
+        mpi_errno = MPIDI_improbe(source, tag, comm, attr, av, flag, message, status);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (!*flag) {
@@ -207,22 +201,21 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
                                          int tag,
-                                         MPIR_Comm * comm,
-                                         int context_offset, int *flag, MPI_Status * status)
+                                         MPIR_Comm * comm, int attr, int *flag, MPI_Status * status)
 {
 
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
     if (MPIDI_is_self_comm(comm)) {
-        mpi_errno = MPIDI_Self_iprobe(source, tag, comm, context_offset, flag, status);
+        mpi_errno = MPIDI_Self_iprobe(source, tag, comm, attr, flag, status);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         *flag = 0;
         MPIDI_av_entry_t *av =
             (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
 
-        mpi_errno = MPIDI_iprobe(source, tag, comm, context_offset, av, flag, status);
+        mpi_errno = MPIDI_iprobe(source, tag, comm, attr, av, flag, status);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (!*flag) {

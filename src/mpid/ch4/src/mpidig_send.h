@@ -117,51 +117,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
                                               int rank,
                                               int tag, MPIR_Comm * comm, int context_offset,
                                               MPIDI_av_entry_t * addr, int src_vci, int dst_vci,
-                                              MPIR_Request ** request)
+                                              MPIR_Request ** request,
+                                              bool syncflag, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    uint8_t flags = syncflag ? MPIDIG_AM_SEND_FLAGS_SYNC : MPIDIG_AM_SEND_FLAGS_NONE;
     mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                  MPIDIG_AM_SEND_FLAGS_NONE, src_vci, dst_vci,
-                                  request, MPIR_ERR_NONE);
-
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}
-
-
-MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_coll(const void *buf, MPI_Aint count,
-                                               MPI_Datatype datatype, int rank,
-                                               int tag, MPIR_Comm * comm, int context_offset,
-                                               MPIDI_av_entry_t * addr, int src_vci, int dst_vci,
-                                               MPIR_Request ** request, MPIR_Errflag_t * errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                  MPIDIG_AM_SEND_FLAGS_NONE, src_vci, dst_vci, request, *errflag);
-
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}
-
-
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_issend(const void *buf,
-                                               MPI_Aint count,
-                                               MPI_Datatype datatype,
-                                               int rank,
-                                               int tag, MPIR_Comm * comm, int context_offset,
-                                               MPIDI_av_entry_t * addr,
-                                               int src_vci, int dst_vci, MPIR_Request ** request)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                  MPIDIG_AM_SEND_FLAGS_SYNC, src_vci, dst_vci,
-                                  request, MPIR_ERR_NONE);
+                                  flags, src_vci, dst_vci, request, errflag);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
