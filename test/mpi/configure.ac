@@ -676,14 +676,14 @@ if test "X${pac_have_cuda}" = "Xyes" ; then
         fi
     fi
 
-    if test -n "$NVCC" ; then
+    if test -z "$NVCC" ; then
         if test -n "${with_cuda}" -a "$with_cuda" != "no" ; then
             AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found], [$with_cuda/bin:$PATH])
         else
             AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found])
         fi
-        if test "$NVCC" != "nvcc_not_found" -a -n "$CXX" ; then
-            NVCC="$NVCC -ccbin $CXX"
+        if test "$NVCC" != "nvcc_not_found" -a -n "$save_CXX" ; then
+            NVCC="$NVCC -ccbin $save_CXX"
         fi
     fi
     cuda_LIBS="-lcudart"
