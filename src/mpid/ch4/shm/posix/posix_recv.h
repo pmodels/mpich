@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_imrecv(void *buf, MPI_Aint count,
 #endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     mpi_errno = MPIDIG_mpi_imrecv(buf, count, datatype, message);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
 
     return mpi_errno;
 }
