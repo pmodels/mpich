@@ -38,6 +38,7 @@ int rma_op = OP_INVALID;
 int world_rank;
 MPI_Comm *thread_wins;
 double *t_elapsed;
+int num_threads;
 
 MTEST_THREAD_RETURN_TYPE thread_fn(void *arg);
 
@@ -66,6 +67,14 @@ MTEST_THREAD_RETURN_TYPE thread_fn(void *arg)
     error = posix_memalign(&result_buf, BUFFER_ALIGNMENT, MESSAGE_SIZE * sizeof(char));
     if (error) {
         fprintf(stderr, "Thread %d: Error in allocating result buffer\n", tid);
+    }
+
+    /* skip barrier in single-threaded baseline run */
+    static bool first = true;
+    if (first) {
+        first = false;
+    } else {
+        MTest_thread_barrier(num_threads);
     }
 
     /* Benchmark */
@@ -107,7 +116,6 @@ int main(int argc, char *argv[])
 {
     int size;
     int provided;
-    int num_threads;
     double onethread_msg_rate, multithread_msg_rate;
     int errors;
 
