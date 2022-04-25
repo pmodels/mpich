@@ -60,10 +60,13 @@ int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
 
         /* TODO: proper conversion for each gpu stream type */
         const char *s_value = MPIR_Info_lookup(info_ptr, "value");
-        MPIR_Assertp(s_value);
+        MPIR_ERR_CHKANDJUMP(!s_value, mpi_errno, MPI_ERR_OTHER, "**missinggpustream");
+
         mpi_errno =
             MPIR_Info_decode_hex(s_value, &stream_ptr->u.gpu_stream, sizeof(MPL_gpu_stream_t));
         MPIR_ERR_CHECK(mpi_errno);
+        MPIR_ERR_CHKANDJUMP(!MPL_gpu_stream_is_valid(stream_ptr->u.gpu_stream),
+                            mpi_errno, MPI_ERR_OTHER, "**invalidgpustream");
     } else {
         stream_ptr->type = MPIR_STREAM_GENERAL;
     }
