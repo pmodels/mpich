@@ -372,4 +372,9 @@ int MPL_gpu_launch_hostfn(int stream, MPL_gpu_hostfn fn, void *data)
     return -1;
 }
 
+bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
+{
+    return false;
+}
+
 #endif /* MPL_HAVE_ZE */
