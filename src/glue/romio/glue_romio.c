@@ -18,19 +18,30 @@ int MPIR_Ext_dbg_romio_terse_enabled = 0;
 int MPIR_Ext_dbg_romio_typical_enabled = 0;
 int MPIR_Ext_dbg_romio_verbose_enabled = 0;
 
+/* mutex states */
+#define ROMIO_MUTEX_UNINIT 0
+#define ROMIO_MUTEX_INITIALIZING 1
+#define ROMIO_MUTEX_READY 2
+
 /* NOTE: we'll lazily initialize this mutex */
 static MPL_thread_mutex_t romio_mutex;
-static MPL_atomic_int_t romio_mutex_initialized = MPL_ATOMIC_INT_T_INITIALIZER(0);
+static MPL_atomic_int_t romio_mutex_initialized = MPL_ATOMIC_INT_T_INITIALIZER(ROMIO_MUTEX_UNINIT);
 
 void MPIR_Ext_mutex_init(void)
 {
 #if defined(MPICH_IS_THREADED)
-    if (!MPL_atomic_load_int(&romio_mutex_initialized)) {
-        int err;
-        MPL_thread_mutex_create(&romio_mutex, &err);
-        MPIR_Assert(err == 0);
+    while (MPL_atomic_load_int(&romio_mutex_initialized) != ROMIO_MUTEX_READY) {
+        /* only one thread will change the state from UNINIT->INITIALIZING,
+         * others will wait for READY */
+        int oldval = MPL_atomic_cas_int(&romio_mutex_initialized, ROMIO_MUTEX_UNINIT,
+                                        ROMIO_MUTEX_INITIALIZING);
+        if (oldval == ROMIO_MUTEX_UNINIT) {
+            int err;
+            MPL_thread_mutex_create(&romio_mutex, &err);
+            MPIR_Assert(err == 0);
 
-        MPL_atomic_store_int(&romio_mutex_initialized, 1);
+            MPL_atomic_store_int(&romio_mutex_initialized, ROMIO_MUTEX_READY);
+        }
     }
 #endif
 }
@@ -38,12 +49,12 @@ void MPIR_Ext_mutex_init(void)
 void MPIR_Ext_mutex_finalize(void)
 {
 #if defined(MPICH_IS_THREADED)
-    if (MPL_atomic_load_int(&romio_mutex_initialized)) {
+    if (MPL_atomic_load_int(&romio_mutex_initialized) == ROMIO_MUTEX_READY) {
         int err;
         MPL_thread_mutex_destroy(&romio_mutex, &err);
         MPIR_Assert(err == 0);
 
-        MPL_atomic_store_int(&romio_mutex_initialized, 0);
+        MPL_atomic_store_int(&romio_mutex_initialized, ROMIO_MUTEX_UNINIT);
     }
 #endif
 }
