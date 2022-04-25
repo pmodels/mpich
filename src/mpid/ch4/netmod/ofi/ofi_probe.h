@@ -125,7 +125,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
                                                   int tag,
                                                   MPIR_Comm * comm,
-                                                  int context_offset, MPIDI_av_entry_t * addr,
+                                                  int attr, MPIDI_av_entry_t * addr,
                                                   int *flag, MPIR_Request ** message,
                                                   MPI_Status * status)
 {
@@ -133,6 +133,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 
     MPIR_FUNC_ENTER;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vni_src, vni_dst;
     MPIDI_OFI_PROBE_VNIS(vni_src, vni_dst);
 
@@ -154,12 +155,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
                                                  int tag,
                                                  MPIR_Comm * comm,
-                                                 int context_offset, MPIDI_av_entry_t * addr,
+                                                 int attr, MPIDI_av_entry_t * addr,
                                                  int *flag, MPI_Status * status)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vni_src, vni_dst;
     MPIDI_OFI_PROBE_VNIS(vni_src, vni_dst);
 
