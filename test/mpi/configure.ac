@@ -46,6 +46,9 @@ AM_MAINTAINER_MODE([enable])
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+# save CXX before we overwrite it. We need it for NVCC's -ccbin
+save_CXX="$CXX"
+
 if test -z "$mpich_top_srcdir" ; then
     if test -z "$top_srcdir" ; then
        use_top_srcdir=$srcdir
@@ -671,9 +674,17 @@ if test "X${pac_have_cuda}" = "Xyes" ; then
         else
             cuda_LDFLAGS="-L${with_cuda}/lib"
         fi
-        AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found], [$with_cuda/bin:$PATH])
-    else
-        AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found])
+    fi
+
+    if test -z "$NVCC" ; then
+        if test -n "${with_cuda}" -a "$with_cuda" != "no" ; then
+            AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found], [$with_cuda/bin:$PATH])
+        else
+            AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found])
+        fi
+        if test "$NVCC" != "nvcc_not_found" -a -n "$save_CXX" ; then
+            NVCC="$NVCC -ccbin $save_CXX"
+        fi
     fi
     cuda_LIBS="-lcudart"
 

@@ -82,7 +82,17 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        Sets the number of VCIs that user needs (should be a subset of MPIDI_CH4_MAX_VCIS).
+        Sets the number of VCIs to be implicitly used (should be a subset of MPIDI_CH4_MAX_VCIS).
+
+    - name        : MPIR_CVAR_CH4_RESERVE_VCIS
+      category    : CH4
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Sets the number of VCIs that user can explicitly allocate (should be a subset of MPIDI_CH4_MAX_VCIS).
 
     - name        : MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE
       category    : COLLECTIVE
@@ -360,9 +370,6 @@ int MPID_Init(int requested, int *provided)
 
     choose_netmod();
 
-    mpi_errno = MPIR_pmi_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Create all ch4-layer granular locks.
      * Note: some locks (e.g. MPIDIU_THREAD_HCOLL_MUTEX) may be unused due to configuration.
      * It is harmless to create them anyway rather than adding #ifdefs.
@@ -404,16 +411,17 @@ int MPID_Init(int requested, int *provided)
 
     /* Initialize multiple VCIs */
     /* TODO: add checks to ensure MPIDI_vci_t is padded or aligned to MPL_CACHELINE_SIZE */
-    MPIDI_global.n_vcis = 1;
-    if (MPIR_CVAR_CH4_NUM_VCIS > 1) {
-        MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
-        /* There are configured maxes that we need observe. */
-        /* TODO: check them at configure time to avoid discrepancy */
-        MPIR_Assert(MPIDI_global.n_vcis <= MPIDI_CH4_MAX_VCIS);
-        MPIR_Assert(MPIDI_global.n_vcis <= MPIR_REQUEST_NUM_POOLS);
-    }
+    MPIR_Assert(MPIR_CVAR_CH4_NUM_VCIS >= 1);   /* number of vcis used in implicit vci hashing */
+    MPIR_Assert(MPIR_CVAR_CH4_RESERVE_VCIS >= 0);       /* maximum number of vcis can be reserved */
 
-    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+    MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
+    MPIDI_global.n_total_vcis = MPIDI_global.n_vcis + MPIR_CVAR_CH4_RESERVE_VCIS;
+    MPIDI_global.n_reserved_vcis = 0;
+
+    MPIR_Assert(MPIDI_global.n_total_vcis <= MPIDI_CH4_MAX_VCIS);
+    MPIR_Assert(MPIDI_global.n_total_vcis <= MPIR_REQUEST_NUM_POOLS);
+
+    for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
         int err;
         MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
@@ -507,6 +515,40 @@ int MPID_InitCompleted(void)
     goto fn_exit;
 }
 
+int MPID_Allocate_vci(int *vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *vci = 0;
+#if MPIDI_CH4_MAX_VCIS == 1
+    MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**ch4nostream");
+#else
+
+    if (MPIDI_global.n_vcis + MPIDI_global.n_reserved_vcis >= MPIDI_global.n_total_vcis) {
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**outofstream");
+    } else {
+        MPIDI_global.n_reserved_vcis++;
+        for (int i = MPIDI_global.n_vcis; i < MPIDI_global.n_total_vcis; i++) {
+            if (!MPIDI_VCI(i).allocated) {
+                MPIDI_VCI(i).allocated = true;
+                *vci = i;
+                break;
+            }
+        }
+    }
+#endif
+    return mpi_errno;
+}
+
+int MPID_Deallocate_vci(int vci)
+{
+    MPIR_Assert(vci < MPIDI_global.n_total_vcis && vci >= MPIDI_global.n_vcis);
+    MPIR_Assert(MPIDI_VCI(vci).allocated);
+    MPIDI_VCI(vci).allocated = false;
+    MPIDI_global.n_reserved_vcis--;
+    return MPI_SUCCESS;
+}
+
 int MPID_Finalize(void)
 {
     int mpi_errno;
@@ -539,7 +581,7 @@ int MPID_Finalize(void)
         MPIR_Assert(err == 0);
     }
 
-    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+    for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
         int err;
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);

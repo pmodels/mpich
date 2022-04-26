@@ -47,7 +47,8 @@ extern int global_vci_poll_count;
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
 {
-    if (MPIDI_global.n_vcis == 1 || !MPIDI_global.is_initialized || !MPIR_CVAR_CH4_GLOBAL_PROGRESS) {
+    if (MPIDI_global.n_total_vcis == 1 || !MPIDI_global.is_initialized ||
+        !MPIR_CVAR_CH4_GLOBAL_PROGRESS) {
         return 0;
     } else {
         global_vci_poll_count++;
@@ -153,7 +154,7 @@ static inline int MPIDI_progress_test(MPID_Progress_state * state, int wait)
 #else
     /* multiple vci */
     if (MPIDI_do_global_progress()) {
-        for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
+        for (int vci = 0; vci < MPIDI_global.n_total_vcis; vci++) {
             MPIDI_PROGRESS(vci);
             if (wait) {
                 MPIDI_check_progress_made_vci(state, vci);
@@ -201,10 +202,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_progress_state_init(MPID_Progress_state * st
         state->vci_count = 1;
     } else {
         /* global progress by default */
-        for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
             state->vci[i] = i;
         }
-        state->vci_count = MPIDI_global.n_vcis;
+        state->vci_count = MPIDI_global.n_total_vcis;
     }
 }
 
@@ -215,8 +216,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_progress_state_init_count(MPID_Progress_stat
 #if MPIDI_CH4_MAX_VCIS == 1
     state->progress_counts[0] = MPL_atomic_relaxed_load_int(&MPIDI_VCI(0).progress_count);
 #else
-    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
-        state->progress_counts[i] = MPL_atomic_relaxed_load_int(&MPIDI_VCI(i).progress_count);
+    for (int i = 0; i < state->vci_count; i++) {
+        state->progress_counts[i] =
+            MPL_atomic_relaxed_load_int(&MPIDI_VCI(state->vci[i]).progress_count);
     }
 #endif
 }

@@ -104,21 +104,14 @@ Non Native API:
 
 Native API:
   mpi_isend : int
-      NM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p
-     SHM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p
-  isend_coll : int
-      NM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p, errflag
-     SHM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p, errflag
-  mpi_issend : int
-      NM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p
-     SHM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p
+      NM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p
+     SHM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p
   mpi_cancel_send : int
       NM*: sreq
      SHM*: sreq
   mpi_irecv : int
-      NM*: buf-2, count, datatype, rank, tag, comm, context_offset, addr, req_p, partner
-     SHM*: buf-2, count, datatype, rank, tag, comm, context_offset, req_p
-     MPIDIG: buf-2, count, datatype, rank, tag, comm, context_offset, vci, req_p
+      NM*: buf-2, count, datatype, rank, tag, comm, attr-2, addr, req_p, partner
+     SHM*: buf-2, count, datatype, rank, tag, comm, attr-2, req_p
   mpi_imrecv : int
       NM*: buf-2, count, datatype, message
      SHM*: buf-2, count, datatype, message
@@ -150,11 +143,11 @@ Native API:
       NM : ptr
      SHM : ptr
   mpi_improbe : int
-      NM*: source, tag, comm, context_offset, addr, flag, message_p, status
-     SHM*: source, tag, comm, context_offset, flag, message_p, status
+      NM*: source, tag, comm, attr-2, addr, flag, message_p, status
+     SHM*: source, tag, comm, attr-2, flag, message_p, status
   mpi_iprobe : int
-      NM*: source, tag, comm, context_offset, addr, flag, status
-     SHM*: source, tag, comm, context_offset, flag, status
+      NM*: source, tag, comm, attr-2, addr, flag, status
+     SHM*: source, tag, comm, attr-2, flag, status
   mpi_win_set_info : int
       NM : win, info
      SHM : win, info
@@ -409,6 +402,7 @@ PARAM:
     appnum: int
     assert: int
     attr: uint32_t
+    attr-2: int
     av: MPIDI_av_entry_t *
     base: void *
     base-2: const void *
@@ -422,7 +416,6 @@ PARAM:
     comm_ptr: MPIR_Comm *
     compare_addr: const void *
     context_id: MPIR_Context_id_t
-    context_offset: int
     count: MPI_Aint
     data: const void *
     data_sz: MPI_Aint

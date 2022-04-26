@@ -532,6 +532,9 @@ int MPID_Init(int required, int *provided);
 
 int MPID_InitCompleted( void );
 
+int MPID_Allocate_vci(int *vci);
+int MPID_Deallocate_vci(int vci);
+
 int MPID_Finalize(void);
 
 int MPID_Abort( MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );
@@ -557,60 +560,60 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_grou
 int MPID_Comm_revoke(MPIR_Comm *comm, int is_remote);
 
 int MPID_Send( const void *buf, MPI_Aint count, MPI_Datatype datatype,
-	       int dest, int tag, MPIR_Comm *comm, int context_offset,
+	       int dest, int tag, MPIR_Comm *comm, int attr,
 	       MPIR_Request **request );
 
 int MPID_Send_coll( const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                    int dest, int tag, MPIR_Comm *comm, int context_offset,
+                    int dest, int tag, MPIR_Comm *comm, int attr,
                     MPIR_Request **request, MPIR_Errflag_t * errflag );
 
 int MPID_Rsend( const void *buf, int count, MPI_Datatype datatype,
-		int dest, int tag, MPIR_Comm *comm, int context_offset,
+		int dest, int tag, MPIR_Comm *comm, int attr,
 		MPIR_Request **request );
 
 int MPID_Ssend( const void *buf, MPI_Aint count, MPI_Datatype datatype,
-		int dest, int tag, MPIR_Comm *comm, int context_offset,
+		int dest, int tag, MPIR_Comm *comm, int attr,
 		MPIR_Request **request );
 
 int MPID_Isend( const void *buf, MPI_Aint count, MPI_Datatype datatype,
-		int dest, int tag, MPIR_Comm *comm, int context_offset,
+		int dest, int tag, MPIR_Comm *comm, int attr,
 		MPIR_Request **request );
 
 int MPID_Isend_coll( const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                     int dest, int tag, MPIR_Comm *comm, int context_offset,
+                     int dest, int tag, MPIR_Comm *comm, int attr,
                      MPIR_Request **request, MPIR_Errflag_t * errflag );
 
 int MPID_Irsend( const void *buf, int count, MPI_Datatype datatype,
-		 int dest, int tag, MPIR_Comm *comm, int context_offset,
+		 int dest, int tag, MPIR_Comm *comm, int attr,
 		 MPIR_Request **request );
 
 int MPID_Issend( const void *buf, int count, MPI_Datatype datatype,
-		 int dest, int tag, MPIR_Comm *comm, int context_offset,
+		 int dest, int tag, MPIR_Comm *comm, int attr,
 		 MPIR_Request **request );
 
 int MPID_Recv( void *buf, MPI_Aint count, MPI_Datatype datatype,
-	       int source, int tag, MPIR_Comm *comm, int context_offset,
+	       int source, int tag, MPIR_Comm *comm, int attr,
 	       MPI_Status *status, MPIR_Request **request );
 
 int MPID_Irecv( void *buf, MPI_Aint count, MPI_Datatype datatype,
-		int source, int tag, MPIR_Comm *comm, int context_offset,
+		int source, int tag, MPIR_Comm *comm, int attr,
 		MPIR_Request **request );
 
 int MPID_Send_init( const void *buf, int count, MPI_Datatype datatype,
-		    int dest, int tag, MPIR_Comm *comm, int context_offset,
+		    int dest, int tag, MPIR_Comm *comm, int attr,
 		    MPIR_Request **request );
 
 int MPID_Bsend_init(const void *, int, MPI_Datatype, int, int, MPIR_Comm *,
 		   int, MPIR_Request **);
 int MPID_Rsend_init( const void *buf, int count, MPI_Datatype datatype,
-		     int dest, int tag, MPIR_Comm *comm, int context_offset,
+		     int dest, int tag, MPIR_Comm *comm, int attr,
 		     MPIR_Request **request );
 int MPID_Ssend_init( const void *buf, int count, MPI_Datatype datatype,
-		     int dest, int tag, MPIR_Comm *comm, int context_offset,
+		     int dest, int tag, MPIR_Comm *comm, int attr,
 		     MPIR_Request **request );
 
 int MPID_Recv_init( void *buf, int count, MPI_Datatype datatype,
-		    int source, int tag, MPIR_Comm *comm, int context_offset,
+		    int source, int tag, MPIR_Comm *comm, int attr,
 		    MPIR_Request **request );
 
 int MPID_Startall(int count, MPIR_Request *requests[]);
@@ -708,13 +711,13 @@ int MPID_Neighbor_alltoallw_init(const void *sendbuf, const MPI_Aint sendcounts[
                                  const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
                                  MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request);
 
-int MPID_Probe(int, int, MPIR_Comm *, int, MPI_Status *);
-int MPID_Iprobe(int, int, MPIR_Comm *, int, int *, MPI_Status *);
+int MPID_Probe(int source, int tag, MPIR_Comm *comm, int attr, MPI_Status * status);
+int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int attr, int *flag, MPI_Status *status);
 
-int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
+int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int attr,
                 MPIR_Request **message, MPI_Status *status);
 
-int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int context_offset,
+int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int attr,
                  int *flag, MPIR_Request **message, MPI_Status *status);
 
 int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,

@@ -243,18 +243,6 @@ cvars:
         minor version of the OFI library used with MPICH. If using this CVAR,
         it is recommended that the user also specifies a specific OFI provider.
 
-    - name        : MPIR_CVAR_CH4_OFI_MAX_VNIS
-      category    : CH4_OFI
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If set to positive, this CVAR specifies the maximum number of CH4 VNIs
-        that OFI netmod exposes. If set to 0 (the default) or bigger than
-        MPIR_CVAR_CH4_NUM_VCIS, the number of exposed VNIs is set to MPIR_CVAR_CH4_NUM_VCIS.
-
     - name        : MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX
       category    : CH4_OFI
       type        : int
@@ -914,22 +902,10 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* Create transport level communication contexts.                           */
     /* ------------------------------------------------------------------------ */
 
-    int num_vnis = 1;
-    if (MPIR_CVAR_CH4_OFI_MAX_VNIS == 0 || MPIR_CVAR_CH4_OFI_MAX_VNIS > MPIDI_global.n_vcis) {
-        num_vnis = MPIDI_global.n_vcis;
-    } else {
-        num_vnis = MPIR_CVAR_CH4_OFI_MAX_VNIS;
-    }
-
-    /* TODO: update num_vnis according to provider capabilities, such as
-     * prov_use->domain_attr->{tx,rx}_ctx_cnt
+    /* TODO: check provider capabilities, such as prov_use->domain_attr->{tx,rx}_ctx_cnt,
+     *       abort if we can't support the requested number of vnis.
      */
-    if (num_vnis > MPIDI_OFI_MAX_VNIS) {
-        num_vnis = MPIDI_OFI_MAX_VNIS;
-    }
-    /* for best performance, we ensure 1-to-1 vci/vni mapping. ref: MPIDI_OFI_vci_to_vni */
-    /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. override MPIDI_global.n_vcis */
-    MPIR_Assert(num_vnis == MPIDI_global.n_vcis);
+    int num_vnis = MPIDI_global.n_total_vcis;
 
     /* Multiple vni without using domain require MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS */
 #ifndef MPIDI_OFI_VNI_USE_DOMAIN

@@ -571,46 +571,66 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
 
     HYDU_FUNC_ENTER();
 
-    HYDU_ASSERT(binding, status);
+    if (hwloc_initialized) {
+        goto fn_exit;
+    }
 
     hwloc_topology_init(&topology);
     hwloc_topology_set_io_types_filter(topology, HWLOC_TYPE_FILTER_KEEP_ALL);
     hwloc_topology_load(topology);
 
+    /* share topology with processes on the node via XML file */
+    char *xmlenv = getenv("HWLOC_XMLFILE");
+    if (xmlenv == NULL) {
+        char topofile[] = "/tmp/hydra_hwloc_xmlfile_XXXXXX";
+        int xmlfd = MPL_mkstemp(topofile);
+        if (xmlfd != -1) {
+            if (HYDT_topo_info.debug) {
+                HYDU_dump(stdout, "created hwloc xml file %s\n", topofile);
+            }
+            hwloc_topology_export_xml(topology, topofile, 0);
+            HYDT_topo_hwloc_info.xml_topology_file = MPL_strdup(topofile);
+        } else if (HYDT_topo_info.debug) {
+            HYDU_dump(stdout, "hwloc xml file creation failed\n");
+        }
+    }
+
     HYDT_topo_hwloc_info.total_num_pus = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
 
     hwloc_initialized = 1;
 
-    /* bindings that don't require mapping */
-    if (!strncmp(binding, "user:", strlen("user:"))) {
-        status = handle_user_binding(binding + strlen("user:"));
-        HYDU_ERR_POP(status, "error binding to %s\n", binding);
-        goto fn_exit;
-    } else if (!strcmp(binding, "rr")) {
-        status = handle_rr_binding();
-        HYDU_ERR_POP(status, "error binding to %s\n", binding);
-        goto fn_exit;
-    }
+    if (binding) {
+        /* bindings that don't require mapping */
+        if (!strncmp(binding, "user:", strlen("user:"))) {
+            status = handle_user_binding(binding + strlen("user:"));
+            HYDU_ERR_POP(status, "error binding to %s\n", binding);
+            goto fn_exit;
+        } else if (!strcmp(binding, "rr")) {
+            status = handle_rr_binding();
+            HYDU_ERR_POP(status, "error binding to %s\n", binding);
+            goto fn_exit;
+        }
 
-    status = handle_bitmap_binding(binding, mapping ? mapping : binding);
-    HYDU_ERR_POP(status, "error binding with bind \"%s\" and map \"%s\"\n", binding,
-                 mapping ? mapping : "NULL");
+        status = handle_bitmap_binding(binding, mapping ? mapping : binding);
+        HYDU_ERR_POP(status, "error binding with bind \"%s\" and map \"%s\"\n", binding,
+                     mapping ? mapping : "NULL");
 
 
-    /* Memory binding options */
-    if (membind == NULL)
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_DEFAULT;
-    else if (!strcmp(membind, "firsttouch"))
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_FIRSTTOUCH;
-    else if (!strcmp(membind, "nexttouch"))
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_NEXTTOUCH;
-    else if (!strncmp(membind, "bind:", strlen("bind:"))) {
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_BIND;
-    } else if (!strncmp(membind, "interleave:", strlen("interleave:"))) {
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_INTERLEAVE;
-    } else {
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "unrecognized membind policy \"%s\"\n", membind);
+        /* Memory binding options */
+        if (membind == NULL)
+            HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_DEFAULT;
+        else if (!strcmp(membind, "firsttouch"))
+            HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_FIRSTTOUCH;
+        else if (!strcmp(membind, "nexttouch"))
+            HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_NEXTTOUCH;
+        else if (!strncmp(membind, "bind:", strlen("bind:"))) {
+            HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_BIND;
+        } else if (!strncmp(membind, "interleave:", strlen("interleave:"))) {
+            HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_INTERLEAVE;
+        } else {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "unrecognized membind policy \"%s\"\n", membind);
+        }
     }
 
   fn_exit:
@@ -669,8 +689,17 @@ HYD_status HYDT_topo_hwloc_finalize(void)
 
     HYDU_FUNC_ENTER();
 
-    if (hwloc_initialized)
+    if (hwloc_initialized) {
         hwloc_topology_destroy(topology);
+
+        if (HYDT_topo_hwloc_info.xml_topology_file != NULL) {
+            unlink(HYDT_topo_hwloc_info.xml_topology_file);
+            if (HYDT_topo_info.debug) {
+                HYDU_dump(stdout, "removed file %s\n", HYDT_topo_hwloc_info.xml_topology_file);
+            }
+            MPL_free(HYDT_topo_hwloc_info.xml_topology_file);
+        }
+    }
 
     HYDU_FUNC_EXIT();
     return status;

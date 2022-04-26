@@ -310,19 +310,7 @@ dnl request handle to encode pool index
 AC_ARG_WITH(ch4-max-vcis,
     [--with-ch4-max-vcis=<N>
        Select max number of VCIs to configure (default is 1; minimum is 1; maximum is 64)],
-    [], [with_ch4_max_vcis=default])
-
-if test "$with_ch4_max_vcis" = "default" ; then
-    if test $thread_granularity = MPICH_THREAD_GRANULARITY__VCI ; then
-        with_ch4_max_vcis=64
-    else
-        with_ch4_max_vcis=1
-    fi
-else
-    if test $thread_granularity != MPICH_THREAD_GRANULARITY__VCI ; then
-        AC_MSG_ERROR(Option --with-ch4-max-vcis requires --enable-thread-cs=per-vci)
-    fi
-fi
+    [], [with_ch4_max_vcis=64])
 
 if test $with_ch4_max_vcis -lt 1 -o $with_ch4_max_vcis -gt 64; then
    AC_MSG_ERROR(Number of VCIs must be between 1 and 64)

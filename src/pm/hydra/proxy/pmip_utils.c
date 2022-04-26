@@ -27,8 +27,6 @@ void HYD_pmcd_pmip_send_signal(int sig)
             kill(HYD_pmcd_pmip.downstream.pid[i], sig);
 #endif
         }
-
-    HYD_pmcd_pmip.downstream.forced_cleanup = 1;
 }
 
 static HYD_status control_port_fn(char *arg, char ***argv)
@@ -721,3 +719,119 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
   fn_fail:
     goto fn_exit;
 }
+
+#ifdef HAVE_HWLOC
+#include "topo_hwloc.h"
+
+HYD_status HYD_pmip_get_hwloc_xmlfile_resp_v1(char **response)
+{
+    HYD_status status = HYD_SUCCESS;
+    char *xmlfile;
+
+    HYDU_FUNC_ENTER();
+
+    *response = NULL;
+
+    /* lazy init */
+    status = HYDT_topo_hwloc_init(NULL, NULL, NULL);
+    HYDU_ERR_POP(status, "unable to initialize hwloc\n");
+    xmlfile = HYDT_topo_hwloc_info.xml_topology_file;
+    if (xmlfile != NULL) {
+        int strlen = MPL_snprintf(NULL, 0, "cmd=get_result rc=0 msg=success value=%s\n", xmlfile);
+        ++strlen;       /* for null char */
+        HYDU_MALLOC_OR_JUMP(*response, char *, strlen, status);
+        MPL_snprintf(*response, strlen, "cmd=get_result rc=0 msg=success value=%s\n", xmlfile);
+    } else {
+        /* we know about the key but no file is available */
+        *response = MPL_strdup("cmd=get_result rc=0 msg=success value=unavailable\n");
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    MPL_free(*response);
+    *response = NULL;
+    goto fn_exit;
+}
+
+HYD_status HYD_pmip_get_hwloc_xmlfile_resp_v2(char *thrid, char **response)
+{
+    HYD_status status = HYD_SUCCESS;
+    char *xmlfile;
+    struct HYD_string_stash stash;
+
+    HYDU_FUNC_ENTER();
+
+    *response = NULL;
+
+    /* lazy init */
+    status = HYDT_topo_hwloc_init(NULL, NULL, NULL);
+    HYDU_ERR_POP(status, "unable to initialize hwloc\n");
+    xmlfile = HYDT_topo_hwloc_info.xml_topology_file;
+
+    HYD_STRING_STASH_INIT(stash);
+    HYD_STRING_STASH(stash, MPL_strdup("cmd=info-getjobattr-response;"), status);
+    if (thrid) {
+        HYD_STRING_STASH(stash, MPL_strdup("thrid="), status);
+        HYD_STRING_STASH(stash, MPL_strdup(thrid), status);
+        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+    }
+
+    if (xmlfile != NULL) {
+        HYD_STRING_STASH(stash, MPL_strdup("found=TRUE;value="), status);
+        HYD_STRING_STASH(stash, MPL_strdup(HYDT_topo_hwloc_info.xml_topology_file), status);
+        HYD_STRING_STASH(stash, MPL_strdup(";rc=0;"), status);
+    } else {
+        HYD_STRING_STASH(stash, MPL_strdup("found=FALSE;rc=0;"), status);
+    }
+
+    HYD_STRING_SPIT(stash, *response, status);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    MPL_free(*response);
+    *response = NULL;
+    goto fn_exit;
+}
+#else
+HYD_status HYD_pmip_get_hwloc_xmlfile_resp_v1(char **response)
+{
+    HYDU_FUNC_ENTER();
+
+    *response = MPL_strdup("cmd=get_result rc=0 msg=success value=unavailable\n");
+
+    HYDU_FUNC_EXIT();
+    return HYD_SUCCESS;
+}
+
+HYD_status HYD_pmip_get_hwloc_xmlfile_resp_v2(char *thrid, char **response)
+{
+    HYD_status status = HYD_SUCCESS;
+    struct HYD_string_stash stash;
+
+    HYDU_FUNC_ENTER();
+
+    *response = NULL;
+
+    HYD_STRING_STASH_INIT(stash);
+    HYD_STRING_STASH(stash, MPL_strdup("cmd=info-getjobattr-response;"), status);
+    if (thrid) {
+        HYD_STRING_STASH(stash, MPL_strdup("thrid="), status);
+        HYD_STRING_STASH(stash, MPL_strdup(thrid), status);
+        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+    }
+    HYD_STRING_STASH(stash, MPL_strdup("found=FALSE;rc=0;"), status);
+    HYD_STRING_SPIT(stash, *response, status);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+#endif

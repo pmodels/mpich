@@ -34,11 +34,9 @@
 
 /* a couple of globals keep things simple */
 int ADIOI_cb_config_list_keyval = MPI_KEYVAL_INVALID;
-static char *yylval;
-static char *token_ptr;
 
 /* internal stuff */
-static int get_max_procs(int cb_nodes);
+static int get_max_procs(int cb_nodes, char *yylval, char **token_ptr);
 static int match_procs(char *name, int max_per_proc, char *procnames[],
                        char used_procnames[],
                        int nr_procnames, int ranks[], int nr_ranks, int *nr_ranks_allocated);
@@ -47,7 +45,7 @@ static int match_this_proc(char *name, int cur_proc, int max_matches,
                            int nr_procnames, int ranks[], int nr_ranks, int nr_ranks_allocated);
 static int find_name(char *name, char *procnames[], char used_procnames[],
                      int nr_procnames, int start_ind);
-static int cb_config_list_lex(void);
+static int cb_config_list_lex(char *yylval, char **token_ptr);
 
 
 /* ADIOI_cb_bcast_rank_map() - broadcast the rank array
@@ -263,6 +261,8 @@ int ADIOI_cb_config_list_parse(char *config_list,
     int token, max_procs, cur_rank = 0, nr_procnames;
     char *cur_procname, *cur_procname_p, **procnames;
     char *used_procnames;
+    char *yylval;
+    char *token_ptr;
 
     nr_procnames = array->namect;
     procnames = array->names;
@@ -316,7 +316,7 @@ int ADIOI_cb_config_list_parse(char *config_list,
     }
 
     while (cur_rank < cb_nodes) {
-        token = cb_config_list_lex();
+        token = cb_config_list_lex(yylval, &token_ptr);
 
         if (token == AGG_EOS) {
             ADIOI_Free(cur_procname);
@@ -346,7 +346,7 @@ int ADIOI_cb_config_list_parse(char *config_list,
         }
 
         /* after we have saved the current procname, we can grab max_procs */
-        max_procs = get_max_procs(cb_nodes);
+        max_procs = get_max_procs(cb_nodes, yylval, &token_ptr);
 
 #ifdef CB_CONFIG_LIST_DEBUG
         if (token == AGG_WILDCARD) {
@@ -630,19 +630,19 @@ static int find_name(char *name,
  *
  * Returns # of processes, or -1 on error.
  */
-static int get_max_procs(int cb_nodes)
+static int get_max_procs(int cb_nodes, char *yylval, char **token_ptr)
 {
     int token, max_procs = -1;
     char *errptr;
 
-    token = cb_config_list_lex();
+    token = cb_config_list_lex(yylval, token_ptr);
 
     switch (token) {
         case AGG_EOS:
         case AGG_COMMA:
             return 1;
         case AGG_COLON:
-            token = cb_config_list_lex();
+            token = cb_config_list_lex(yylval, token_ptr);
             if (token != AGG_WILDCARD && token != AGG_STRING)
                 return -1;
             if (token == AGG_WILDCARD)
@@ -655,7 +655,7 @@ static int get_max_procs(int cb_nodes)
                 }
             }
             /* strip off next comma (if there is one) */
-            token = cb_config_list_lex();
+            token = cb_config_list_lex(yylval, token_ptr);
             if (token != AGG_COMMA && token != AGG_EOS)
                 return -1;
 
@@ -686,28 +686,29 @@ static int get_max_procs(int cb_nodes)
 #define DELIMS ":,"
 #endif
 
-static int cb_config_list_lex(void)
+static int cb_config_list_lex(char *yylval, char **token_ptr)
 {
     int slen;
+    char *token = *token_ptr;
 
-    if (*token_ptr == '\0')
+    if (*token == '\0')
         return AGG_EOS;
 
-    slen = (int) strcspn(token_ptr, DELIMS);
+    slen = (int) strcspn(token, DELIMS);
 
-    if (*token_ptr == COLON) {
-        token_ptr++;
+    if (*token == COLON) {
+        *token_ptr = token + 1;
         return AGG_COLON;
     }
-    if (*token_ptr == COMMA) {
-        token_ptr++;
+    if (*token == COMMA) {
+        *token_ptr = token + 1;
         return AGG_COMMA;
     }
 
-    if (*token_ptr == '*') {
+    if (*token == '*') {
         /* make sure that we don't have characters after the '*' */
         if (slen == 1) {
-            token_ptr++;
+            *token_ptr = token + 1;
             return AGG_WILDCARD;
         } else
             return AGG_ERROR;
@@ -720,8 +721,8 @@ static int cb_config_list_lex(void)
      * should ensure that no one tries to use wildcards with strings
      * (e.g. "ccn*").
      */
-    ADIOI_Strncpy(yylval, token_ptr, slen);
+    ADIOI_Strncpy(yylval, token, slen);
     yylval[slen] = '\0';
-    token_ptr += slen;
+    *token_ptr = token + slen;
     return AGG_STRING;
 }

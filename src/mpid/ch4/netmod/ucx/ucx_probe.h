@@ -11,7 +11,7 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
                                                   int tag,
                                                   MPIR_Comm * comm,
-                                                  int context_offset,
+                                                  int attr,
                                                   MPIDI_av_entry_t * addr,
                                                   int *flag, MPIR_Request ** message,
                                                   MPI_Status * status)
@@ -23,7 +23,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
     ucp_tag_message_h message_h;
     MPIR_Request *req = NULL;
 
-    int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_RECVER, comm, source, comm->rank, tag);
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
+    int vni_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, source, comm->rank, tag);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
 
     tag_mask = MPIDI_UCX_tag_mask(tag, source);
@@ -59,7 +61,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
                                                  int tag,
                                                  MPIR_Comm * comm,
-                                                 int context_offset,
+                                                 int attr,
                                                  MPIDI_av_entry_t * addr, int *flag,
                                                  MPI_Status * status)
 {
@@ -69,7 +71,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
     ucp_tag_recv_info_t info;
     ucp_tag_message_h message_h;
 
-    int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_RECVER, comm, source, comm->rank, tag);
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
+    int vni_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, source, comm->rank, tag);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
 
     tag_mask = MPIDI_UCX_tag_mask(tag, source);

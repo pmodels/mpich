@@ -17,6 +17,11 @@ static int win_init_global(MPIR_Win * win);
 static int win_init(MPIR_Win * win);
 static void win_init_am(MPIR_Win * win);
 
+#define MPIDI_OFI_WIN_VNI(win, vni_) \
+    do { \
+        vni_ = MPIDI_get_vci(SRC_VCI_FROM_SENDER, (win)->comm_ptr, 0, 0, 0); \
+    } while (0)
+
 static void load_acc_hint(MPIR_Win * win)
 {
     int op_index = 0, i;
@@ -160,7 +165,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     }
 
     /* we need register mr on the correct domain for the vni */
-    int vni = MPIDI_OFI_get_win_vni(win);
+    int vni = MPIDI_OFI_WIN(win).vni;
     int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
     /* Register the allocated win buffer or MPI_BOTTOM (NULL) for dynamic win.
@@ -310,7 +315,7 @@ static int win_set_per_win_sync(MPIR_Win * win)
 
 static void win_init_am(MPIR_Win * win)
 {
-    MPIDI_WIN(win, am_vci) %= MPIDI_OFI_global.num_vnis;
+    MPIR_Assert(MPIDI_WIN(win, am_vci) < MPIDI_OFI_global.num_vnis);
 }
 
 /*
@@ -616,7 +621,7 @@ static int win_init(MPIR_Win * win)
      * NOTE: we could assign vni per epoch, then we need run `win_init_{sep,stx,global}`
      * at start of every epoch.
      */
-    MPIDI_OFI_WIN(win).vni = MPIDI_OFI_get_win_vni(win);
+    MPIDI_OFI_WIN_VNI(win, MPIDI_OFI_WIN(win).vni);
 
     /* First, try to enable scalable EP. */
     if (MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS && MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX > 0) {
