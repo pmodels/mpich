@@ -13,6 +13,27 @@
 #define MPIDI_Request_get_vci(req) MPIR_REQUEST_POOL(req)
 #define MPIDI_VCI_INVALID (-1)
 
+/* Check for explicit vcis (stream comm and direct attr) */
+#define MPIDI_EXPLICIT_VCIS(comm, attr, src_rank, dst_rank, vci_src, vci_dst) \
+    do { \
+        if ((comm)->stream_comm_type == MPIR_STREAM_COMM_NONE) { \
+            vci_src = 0; \
+            vci_dst = 0; \
+        } else if ((comm)->stream_comm_type == MPIR_STREAM_COMM_SINGLE) { \
+            vci_src = (comm)->stream_comm.single.vci_table[src_rank]; \
+            vci_dst = (comm)->stream_comm.single.vci_table[dst_rank]; \
+        } else { \
+            MPIR_Assert(0); \
+            vci_src = 0; \
+            vci_dst = 0; \
+        } \
+    } while (0)
+
+/* vci above implicit vci pool are always explciitly allocated by user. It is
+ * always under serial execution context and we can skip thread synchronizations.
+ */
+#define MPIDI_VCI_IS_EXPLICIT(vci) (vci >= MPIDI_global.n_vcis)
+
 /* VCI hashing function (fast path) */
 
 /* For consistent hashing, we may need differentiate between src and dst vci and whether

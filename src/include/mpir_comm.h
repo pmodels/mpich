@@ -244,6 +244,20 @@ struct MPIR_Comm {
     MPIR_Comm_map_t *mapper_head;
     MPIR_Comm_map_t *mapper_tail;
 
+    enum { MPIR_STREAM_COMM_NONE, MPIR_STREAM_COMM_SINGLE, MPIR_STREAM_COMM_MULTIPLEX }
+        stream_comm_type;
+    union {
+        struct {
+            struct MPIR_Stream *stream;
+            int *vci_table;
+        } single;
+        struct {
+            struct MPIR_Stream **local_streams;
+            int *vci_displs;
+            int *vci_table;
+        } multiplex;
+    } stream_comm;
+
     /* Other, device-specific information */
 #ifdef MPID_DEV_COMM_DECL
      MPID_DEV_COMM_DECL
@@ -253,6 +267,8 @@ extern MPIR_Object_alloc_t MPIR_Comm_mem;
 
 /* this function should not be called by normal code! */
 int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr);
+void MPIR_stream_comm_init(MPIR_Comm * comm_ptr);
+void MPIR_stream_comm_free(MPIR_Comm * comm_ptr);
 
 #define MPIR_Comm_add_ref(comm_p_) \
     do { MPIR_Object_add_ref((comm_p_)); } while (0)
