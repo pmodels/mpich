@@ -47,6 +47,7 @@
 #define MPIR_Request_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Request,ptr,MPI_ERR_REQUEST,err)
 #define MPII_Keyval_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Keyval,ptr,MPI_ERR_KEYVAL,err)
 #define MPIR_Session_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Session,ptr,MPI_ERR_SESSION,err)
+#define MPIR_Stream_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Stream,ptr,MPIX_ERR_STREAM,err)
 
 
 /* Assigns (src_) to (dst_), checking that (src_) fits in (dst_) without

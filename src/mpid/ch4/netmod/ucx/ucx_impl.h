@@ -23,6 +23,20 @@
 #define MPIDI_UCX_WIN(win) ((win)->dev.netmod.ucx)
 #define MPIDI_UCX_WIN_INFO(win, rank) MPIDI_UCX_WIN(win).info_table[rank]
 
+#define MPIDI_UCX_THREAD_CS_ENTER_VCI(vci) \
+    do { \
+        if (!MPIDI_VCI_IS_EXPLICIT(vci)) { \
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock); \
+        } \
+    } while (0)
+
+#define MPIDI_UCX_THREAD_CS_EXIT_VCI(vci) \
+    do { \
+        if (!MPIDI_VCI_IS_EXPLICIT(vci)) { \
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock); \
+        } \
+    } while (0)
+
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_init_tag(MPIR_Context_id_t contextid, int source,
                                                      uint64_t tag)
 {

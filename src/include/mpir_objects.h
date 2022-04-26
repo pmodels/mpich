@@ -136,6 +136,9 @@
   Attribute-DS
   E*/
 typedef enum MPII_Object_kind {
+    /* NOTE: if we modify these, make sure update mpi.h for all the builtin constants */
+    MPIR_INTERNAL = 0x0,        /* used for various MPICH internal objects that
+                                 * do not require a handle */
     MPIR_COMM = 0x1,
     MPIR_GROUP = 0x2,
     MPIR_DATATYPE = 0x3,
@@ -150,8 +153,7 @@ typedef enum MPII_Object_kind {
     MPIR_VCONN = 0xc,
     MPIR_GREQ_CLASS = 0xd,
     MPIR_SESSION = 0xe,
-    MPIR_INTERNAL = 0xf,        /* used for various MPICH internal objects that
-                                 * do not require a handle */
+    MPIR_STREAM = 0xf,
 } MPII_Object_kind;
 
 
@@ -521,6 +523,7 @@ static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
 #define MPIR_Info_get_ptr(a,ptr)       MPIR_Getb_ptr(Info,INFO,a,0x03ffffff,ptr)
 #define MPIR_Win_get_ptr(a,ptr)        MPIR_Get_ptr(Win,a,ptr)
 #define MPIR_Session_get_ptr(a,ptr)    MPIR_Get_ptr(Session,a,ptr)
+#define MPIR_Stream_get_ptr(a,ptr)     MPIR_Get_ptr(Stream,a,ptr)
 /* Request objects are handled differently. See mpir_request.h */
 #define MPIR_Grequest_class_get_ptr(a,ptr) MPIR_Get_ptr(Grequest_class,a,ptr)
 /* Keyvals have a special format. This is roughly MPIR_Get_ptrb, but
