@@ -589,7 +589,9 @@ static int win_lock_advance(MPIR_Win * win)
         else
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rmasync");
 
-        CH4_CALL(am_send_hdr_reply(win->comm_ptr, lock->rank, handler_id, &msg, sizeof(msg), 0, 0),
+        int vci = MPIDI_WIN(win, am_vci);
+        CH4_CALL(am_send_hdr_reply
+                 (win->comm_ptr, lock->rank, handler_id, &msg, sizeof(msg), vci, vci),
                  MPIDI_rank_is_local(lock->rank, win->comm_ptr), mpi_errno);
         MPIR_ERR_CHECK(mpi_errno);
         MPL_free(lock);
@@ -667,8 +669,9 @@ static void win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, int is_local, M
     msg.win_id = MPIDIG_WIN(win, win_id);
     msg.origin_rank = win->comm_ptr->rank;
 
+    int vci = MPIDI_WIN(win, am_vci);
     CH4_CALL(am_send_hdr_reply(win->comm_ptr, info->origin_rank, MPIDIG_WIN_UNLOCK_ACK,
-                               &msg, sizeof(msg), 0, 0), is_local, mpi_errno);
+                               &msg, sizeof(msg), vci, vci), is_local, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_EXIT;
