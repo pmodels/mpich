@@ -367,7 +367,7 @@ def dump_f08_wrappers_f(func, is_large):
             arg_1 = ":STATUS:"
             arg_2 = ":STATUS:"
             length = p['_array_length']
-            if RE.match(r'mpi_(test|wait)some', func['name'], re.IGNORECASE):
+            if RE.match(r'mpix?_(test|wait)some', func['name'], re.IGNORECASE):
                 length = "outcount_c"
             p['_status_convert'] = "%s(1:%s) = %s_c(1:%s)" % (p['name'], length, p['name'], length)
         else:
@@ -571,7 +571,7 @@ def dump_f08_wrappers_f(func, is_large):
             if RE.match(r'in|inout', p['param_direction']):
                 convert_list_1.append("%s = %s" % (argv_2, argv_1))
             if RE.match(r'out|inout', p['param_direction']):
-                if RE.match(r'mpi_(test|wait)some', func['name'], re.IGNORECASE) and p['name'] == "array_of_indices":
+                if RE.match(r'mpix?_(test|wait)some', func['name'], re.IGNORECASE) and p['name'] == "array_of_indices":
                     argv_1 = "array_of_indices(1:outcount_c)"
                     argv_2 = "array_of_indices_c(1:outcount_c)"
                 convert_list_2.append("%s = %s" % (argv_1, argv_2))
@@ -1495,9 +1495,9 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
     def get_array_decl():
         # Arrays: we'll use assumptions (since only with limited num of functions)
         length = get_F_decl_length(p)
-        if RE.match(r'mpi_(Test|Wait)(all|any)', func['name'], re.IGNORECASE):
+        if RE.match(r'mpix?_(Test|Wait)(all|any)', func['name'], re.IGNORECASE):
             length = 'count'
-        elif RE.match(r'mpi_(Test|Wait)(some)', func['name'], re.IGNORECASE):
+        elif RE.match(r'mpix?_(Test|Wait)(some)', func['name'], re.IGNORECASE):
             length = 'incount'
         elif RE.match(r'mpi_cart_(rank|sub)', func['name'], re.IGNORECASE):
             length = 'cart_dim'

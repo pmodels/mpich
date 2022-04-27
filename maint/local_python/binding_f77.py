@@ -617,9 +617,9 @@ def dump_f77_c_func(func):
                 if p['param_direction'] == 'out':
                     if p['length'] is None:
                         dump_status(p['name'], False, True)
-                    elif RE.match(r'mpi_(wait|test)all', func['name'], re.IGNORECASE):
+                    elif RE.match(r'mpix?_(wait|test)all', func['name'], re.IGNORECASE):
                         dump_statuses(p['name'], "(*count)", "(*count)", False, True)
-                    elif RE.match(r'mpi_(wait|test)some', func['name'], re.IGNORECASE):
+                    elif RE.match(r'mpix?_(wait|test)some', func['name'], re.IGNORECASE):
                         dump_statuses(p['name'], "(*incount)", "(*outcount)", False, True)
                     else:
                         raise Exception("Unhandled: %s - %s" % (func['name'], p['name']))
