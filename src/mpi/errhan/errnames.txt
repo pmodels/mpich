@@ -955,6 +955,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **ch4nostream:No streams available. Configure --enable-thread-cs=per-vci and --with-ch4-max-vcis=# to enable streams.
 **outofstream:No streams available. Use MPIR_CVAR_CH4_RESERVE_VCIS to reserve the number of streams can be allocated.
 **cannotfreestream:The stream is still in use, cannot be freed.
+**missinggpustream:Info hint 'type' is set, but info hint 'value' is missing.
+**invalidgpustream:Info hint 'type' is set, but info hint 'value' is invalid.
+**notgpustream:The communicator does not have a local gpu stream attached.
 
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 

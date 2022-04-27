@@ -91,4 +91,11 @@ int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source
                     bool source_is_packed, int mapped_device);
 int MPIR_Typerep_reduce(const void *in_buf, void *out_buf, MPI_Aint count, MPI_Datatype datatype,
                         MPI_Op op);
+
+int MPIR_Typerep_pack_stream(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
+                             MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
+                             MPI_Aint * actual_pack_bytes, void *stream);
+int MPIR_Typerep_unpack_stream(const void *inbuf, MPI_Aint insize,
+                               void *outbuf, MPI_Aint outcount, MPI_Datatype datatype,
+                               MPI_Aint outoffset, MPI_Aint * actual_unpack_bytes, void *stream);
 #endif /* MPIR_TYPEREP_H_INCLUDED */

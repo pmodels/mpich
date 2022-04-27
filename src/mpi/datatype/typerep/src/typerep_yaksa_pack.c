@@ -579,3 +579,49 @@ static int typerep_op_pack(void *source_buf, void *target_buf, MPI_Aint count,
   fn_fail:
     goto fn_exit;
 }
+
+int MPIR_Typerep_pack_stream(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
+                             MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
+                             MPI_Aint * actual_pack_bytes, void *stream)
+{
+    MPIR_FUNC_ENTER;
+
+    int mpi_errno = MPI_SUCCESS;
+    int rc;
+
+    yaksa_type_t type = MPII_Typerep_get_yaksa_type(datatype);
+    uintptr_t packed_bytes;;
+    rc = yaksa_pack_stream(inbuf, incount, type, inoffset, outbuf, max_pack_bytes,
+                           &packed_bytes, NULL, YAKSA_OP__REPLACE, stream);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+    *actual_pack_bytes = packed_bytes;
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Typerep_unpack_stream(const void *inbuf, MPI_Aint insize, void *outbuf,
+                               MPI_Aint outcount, MPI_Datatype datatype, MPI_Aint outoffset,
+                               MPI_Aint * actual_unpack_bytes, void *stream)
+{
+    MPIR_FUNC_ENTER;
+
+    int mpi_errno = MPI_SUCCESS;
+    int rc;
+
+    yaksa_type_t type = MPII_Typerep_get_yaksa_type(datatype);
+    uintptr_t unpacked_bytes;;
+    rc = yaksa_unpack_stream(inbuf, insize, outbuf, outcount, type, outoffset,
+                             &unpacked_bytes, NULL, YAKSA_OP__REPLACE, stream);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+    *actual_unpack_bytes = unpacked_bytes;
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}

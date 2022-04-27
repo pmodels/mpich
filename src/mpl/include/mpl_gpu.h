@@ -81,4 +81,8 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len);
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr));
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id);
 
+typedef void (*MPL_gpu_hostfn) (void *data);
+int MPL_gpu_launch_hostfn(MPL_gpu_stream_t stream, MPL_gpu_hostfn fn, void *data);
+bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream);
+
 #endif /* ifndef MPL_GPU_H_INCLUDED */
