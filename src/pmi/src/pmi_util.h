@@ -78,7 +78,7 @@ void PMIU_chgval(const char *keystr, char *valstr);
 #define PMIU_ERR_NOMEM 2
 
 extern int PMIU_verbose;        /* Set this to true to print PMI debugging info */
-#define printf_d(x...)  do { if (PMIU_verbose) printf(x); } while (0)
+#define printf_d(...)  do { if (PMIU_verbose) printf(__VA_ARGS__); } while (0)
 
 /* error reporting macros */
 /* NOTE: we assume error codes are matching between PMI-1 and PMI-2 */
