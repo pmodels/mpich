@@ -92,6 +92,8 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
         hnd->accum = (char *) (hnd) + sizeof(*hnd);
         hnd->offset = (char *) (hnd) + sizeof(*hnd) + bytes * cnt;
         hnd->current = (char *) (hnd) + sizeof(*hnd) + bytes * cnt * 2;
+        /* Initialize the SUM counters, i.e., accum, with zero. */
+        memset(hnd->accum, 0, hnd->bytes * hnd->count);
     }
 
     if (MPIR_T_pvar_is_continuous(hnd))
@@ -100,7 +102,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     /* Set starting value of a continuous SUM */
     if (MPIR_T_pvar_is_continuous(hnd) && MPIR_T_pvar_is_sum(hnd)) {
         /* Cache current value of a SUM in offset.
-         * accum is zero since we called CALLOC before.
+         * accum is zero since we initialized it above.
          */
         if (hnd->get_value == NULL)
             MPIR_Memcpy(hnd->offset, hnd->addr, bytes * cnt);
