@@ -409,3 +409,20 @@ cudaError_t CUDARTAPI cudaFree(void *dptr)
     result = sys_cudaFree(dptr);
     return result;
 }
+
+int MPL_gpu_launch_hostfn(cudaStream_t stream, MPL_gpu_hostfn fn, void *data)
+{
+    cudaError_t result;
+    result = cudaLaunchHostFunc(stream, fn, data);
+    return result;
+}
+
+bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
+{
+    cudaError_t result;
+    /* CUDA may blindly dereference the stream as pointer, which may segfault
+     * if the wrong value is passed in. This is still better than segfault later
+     * upon using the stream. */
+    result = cudaStreamQuery(stream);
+    return (result != cudaErrorInvalidResourceHandle);
+}

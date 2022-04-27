@@ -97,3 +97,13 @@ int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
 {
     return MPL_SUCCESS;
 }
+
+int MPL_gpu_launch_hostfn(int stream, MPL_gpu_hostfn fn, void *data)
+{
+    return -1;
+}
+
+bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
+{
+    return false;
+}
