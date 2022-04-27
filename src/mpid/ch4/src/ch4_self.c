@@ -25,6 +25,7 @@ static MPIR_Request *self_recv_queue;
 
 #define ENQUEUE_SELF(req_, buf_, count_, datatype_, tag_, context_id_, queue) \
     do { \
+        MPIR_Request_add_ref(req_); \
         req_->dev.ch4.self.buf = (char *) buf_; \
         req_->dev.ch4.self.count = count_; \
         req_->dev.ch4.self.datatype = datatype_; \
@@ -128,9 +129,9 @@ int MPIDI_Self_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
     if (rreq) {
         SELF_COPY(buf, count, datatype, rreq->dev.ch4.self.buf,
                   rreq->dev.ch4.self.count, rreq->dev.ch4.self.datatype, rreq->status, tag);
-        MPIR_cc_set(&rreq->cc, 0);
         /* comm will be released by MPIR_Request_free(rreq) */
         MPIR_Datatype_release_if_not_builtin(rreq->dev.ch4.self.datatype);
+        MPIR_Request_complete(rreq);
         sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
     } else {
         sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
@@ -163,9 +164,9 @@ int MPIDI_Self_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
                   sreq->dev.ch4.self.count,
                   sreq->dev.ch4.self.datatype,
                   buf, count, datatype, rreq->status, sreq->dev.ch4.self.tag);
-        MPIR_cc_set(&sreq->cc, 0);
         /* comm will be released by MPIR_Request_free(sreq) */
         MPIR_Datatype_release_if_not_builtin(sreq->dev.ch4.self.datatype);
+        MPIR_Request_complete(sreq);
         MPIR_cc_set(&rreq->cc, 0);
         MPII_UNEXPQ_FORGET(sreq);
     } else {
@@ -254,9 +255,9 @@ int MPIDI_Self_imrecv(char *buf, MPI_Aint count, MPI_Datatype datatype,
               sreq->dev.ch4.self.count,
               sreq->dev.ch4.self.datatype,
               buf, count, datatype, rreq->status, sreq->dev.ch4.self.tag);
-    MPIR_cc_set(&sreq->cc, 0);
     /* comm will be released by MPIR_Request_free(sreq) */
     MPIR_Datatype_release_if_not_builtin(sreq->dev.ch4.self.datatype);
+    MPIR_Request_complete(sreq);
     MPIR_cc_set(&rreq->cc, 0);
 
     *request = rreq;
@@ -297,7 +298,7 @@ int MPIDI_Self_cancel(MPIR_Request * request)
         }
         MPIR_STATUS_SET_CANCEL_BIT(request->status, TRUE);
         MPIR_STATUS_SET_COUNT(request->status, 0);
-        MPIR_cc_set(&request->cc, 0);
+        MPIR_Request_complete(request);
     }
 
   fn_exit:
