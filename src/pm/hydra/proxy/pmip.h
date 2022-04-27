@@ -59,8 +59,6 @@ struct HYD_pmcd_pmip_s {
         int *pmi_rank;
         int *pmi_fd;
         int *pmi_fd_active;
-
-        int forced_cleanup;
     } downstream;
 
     /* Proxy details */
@@ -87,7 +85,12 @@ extern struct HYD_pmcd_pmip_s HYD_pmcd_pmip;
 extern struct HYD_arg_match_table HYD_pmcd_pmip_match_table[];
 
 HYD_status HYD_pmcd_pmip_get_params(char **t_argv);
+
+#define PMIP_EXIT_STATUS_UNSET -1
 void HYD_pmcd_pmip_send_signal(int sig);
+
 HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp);
+HYD_status HYD_pmip_get_hwloc_xmlfile_resp_v1(char **response);
+HYD_status HYD_pmip_get_hwloc_xmlfile_resp_v2(char *thrid, char **response);
 
 #endif /* PMIP_H_INCLUDED */

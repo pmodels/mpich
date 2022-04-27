@@ -316,8 +316,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             vni_dst_ = 0; \
         } else { \
             /* NOTE: hashing is based on target rank */ \
-            vni_src_ = MPIDI_OFI_get_vni(SRC_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
-            vni_dst_ = MPIDI_OFI_get_vni(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
+            vni_src_ = MPIDI_get_vci(SRC_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
+            vni_dst_ = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
         } \
     } while (0)
 
@@ -331,19 +331,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     MPIDI_av_entry_t *av;
     MPIR_FUNC_ENTER;
 
+    int vci = MPIDI_Request_get_vci(message);
+    MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci);
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDIG_mpi_imrecv(buf, count, datatype, message);
     } else {
         rreq = message;
-        int vci = MPIDI_Request_get_vci(rreq);
-        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci);
         av = MPIDIU_comm_rank_to_av(rreq->comm, message->status.MPI_SOURCE);
         /* FIXME: need get vni_src in the request */
         mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, message->status.MPI_SOURCE,
                                        message->status.MPI_TAG, rreq->comm, 0, av, 0, vci,
                                        &rreq, MPIDI_OFI_USE_EXISTING, FI_CLAIM | FI_COMPLETION);
-        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);
     }
+    MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -354,28 +354,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
-                                                MPIR_Comm * comm, int context_offset,
+                                                MPIR_Comm * comm, int attr,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request,
                                                 MPIR_Request * partner)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vni_src, vni_dst;
     MPIDI_OFI_RECV_VNIS(vni_src, vni_dst);
+
     /* For anysource recv, we may be called while holding the vci lock of shm request (to
      * prevent shm progress). Therefore, recursive locking is allowed here */
+    MPIDI_OFI_THREAD_CS_ENTER_REC_VCI_OPTIONAL(vni_dst);
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
                                      vni_dst, request, 0, partner);
     } else {
-        MPIDI_OFI_THREAD_CS_ENTER_REC_VCI_OPTIONAL(vni_dst);
         mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
                                        context_offset, addr, vni_src, vni_dst, request,
                                        MPIDI_OFI_ON_HEAP, 0ULL);
         MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
-        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_dst);
     }
+    MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vni_dst);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

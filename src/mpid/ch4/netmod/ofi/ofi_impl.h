@@ -41,27 +41,6 @@ ATTRIBUTE((unused));
 int MPIDI_OFI_progress_uninlined(int vni);
 int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
 
-/* vni mapping */
-/* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
- * we may get away with bit mask */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
-                                               int src_rank, int dst_rank, int tag)
-{
-#if MPIDI_CH4_MAX_VCIS == 1
-    return 0;
-#else
-    return MPIDI_get_vci(flag, comm_ptr, src_rank, dst_rank, tag) % MPIDI_OFI_global.num_vnis;
-#endif
-}
-
-/* for RMA, vni need be persistent with window */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_win_vni(MPIR_Win * win)
-{
-    int win_idx = 0;
-    return MPIDI_get_vci(SRC_VCI_FROM_SENDER, win->comm_ptr, 0, 0, win_idx) %
-        MPIDI_OFI_global.num_vnis;
-}
-
 /*
  * Helper routines and macros for request completion
  */

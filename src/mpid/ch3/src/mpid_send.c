@@ -9,7 +9,7 @@
  * MPID_Send()
  */
 int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
-	      int tag, MPIR_Comm * comm, int context_offset,
+	      int tag, MPIR_Comm * comm, int attr,
 	      MPIR_Request ** request)
 {
     intptr_t data_sz;
@@ -26,6 +26,7 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 
     MPIR_FUNC_ENTER;
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                 "rank=%d, tag=%d, context=%d", 
 		rank, tag, comm->context_id + context_offset));
@@ -182,7 +183,7 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 }
 
 int MPID_Send_coll(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
-                   MPIR_Comm * comm, int context_offset, MPIR_Request ** request,
+                   MPIR_Comm * comm, int attr, MPIR_Request ** request,
                    MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -199,7 +200,7 @@ int MPID_Send_coll(const void *buf, MPI_Aint count, MPI_Datatype datatype, int r
         MPIR_TAG_SET_ERROR_BIT(tag);
     }
 
-    mpi_errno = MPID_Send(buf, count, datatype, rank, tag, comm, context_offset, request);
+    mpi_errno = MPID_Send(buf, count, datatype, rank, tag, comm, attr, request);
 
     MPIR_FUNC_EXIT;
 

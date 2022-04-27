@@ -361,16 +361,16 @@ int main(int argc, char *argv[])
 
     /* execute only when PVARs are enabled */
     if (nsc_idx != -1 && nrc_idx != -1 && snsc_idx != -1 && snrc_idx != -1) {
-        if (!nsc_continuous) {
+        if (!nrc_continuous) {
             MPI_T_pvar_stop(session, nrc_handle);
         }
-        if (!nrc_continuous) {
+        if (!nsc_continuous) {
             MPI_T_pvar_stop(session, nsc_handle);
         }
-        if (!snsc_continuous) {
+        if (!snrc_continuous) {
             MPI_T_pvar_stop(session, snrc_handle);
         }
-        if (!snrc_continuous) {
+        if (!snsc_continuous) {
             MPI_T_pvar_stop(session, snsc_handle);
         }
 

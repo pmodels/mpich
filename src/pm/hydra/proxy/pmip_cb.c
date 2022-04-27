@@ -266,7 +266,7 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL;
-    int closed, repeat, sent, i = -1, linelen, pid = -1;
+    int closed, repeat, sent, linelen, pid = -1;
     struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
@@ -275,7 +275,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     HYD_pmcd_init_header(&hdr);
 
     /* Try to find the PMI FD */
-    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+    for (int i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
         if (HYD_pmcd_pmip.downstream.pmi_fd[i] == fd) {
             pid = i;
             break;
@@ -305,12 +305,6 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
          * active" (which means that this is an MPI application).
          */
         if (pid != -1 && HYD_pmcd_pmip.downstream.pmi_fd_active[pid]) {
-            /* If this is not a forced cleanup, store a temporary
-             * erroneous exit status. In case the application does not
-             * return a non-zero exit status, we will use this. */
-            if (HYD_pmcd_pmip.downstream.forced_cleanup == 0)
-                HYD_pmcd_pmip.downstream.exit_status[pid] = 1;
-
             /* Deregister failed socket */
             status = HYDT_dmx_deregister_fd(fd);
             HYDU_ERR_POP(status, "unable to deregister fd\n");
@@ -318,6 +312,13 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
             if (HYD_pmcd_pmip.user_global.auto_cleanup) {
                 /* kill all processes */
+                /* preset all exit_status except for the closed pid */
+                for (int i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+                    if (i != pid &&
+                        HYD_pmcd_pmip.downstream.exit_status[i] == PMIP_EXIT_STATUS_UNSET) {
+                        HYD_pmcd_pmip.downstream.exit_status[i] = 0;
+                    }
+                }
                 HYD_pmcd_pmip_send_signal(SIGKILL);
             } else {
                 /* If the user doesn't want to automatically cleanup,
@@ -492,7 +493,7 @@ static HYD_status singleton_init(void)
     HYD_pmcd_pmip.downstream.out[0] = 0;
     HYD_pmcd_pmip.downstream.err[0] = 0;
     HYD_pmcd_pmip.downstream.pid[0] = HYD_pmcd_pmip.user_global.singleton_pid;
-    HYD_pmcd_pmip.downstream.exit_status[0] = -1;
+    HYD_pmcd_pmip.downstream.exit_status[0] = PMIP_EXIT_STATUS_UNSET;
     HYD_pmcd_pmip.downstream.pmi_rank[0] = 0;
     HYD_pmcd_pmip.downstream.pmi_fd[0] = HYD_FD_UNSET;
     HYD_pmcd_pmip.downstream.pmi_fd_active[0] = 1;
@@ -580,7 +581,7 @@ static HYD_status launch_procs(void)
     /* Initialize the PMI_FD and PMI FD active state, and exit status */
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
         /* The exit status is populated when the processes terminate */
-        HYD_pmcd_pmip.downstream.exit_status[i] = -1;
+        HYD_pmcd_pmip.downstream.exit_status[i] = PMIP_EXIT_STATUS_UNSET;
 
         /* If we use PMI_FD, the pmi_fd and pmi_fd_active arrays will
          * be filled out in this function. But if we are using

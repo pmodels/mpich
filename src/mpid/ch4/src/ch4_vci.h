@@ -13,12 +13,7 @@
 #define MPIDI_Request_get_vci(req) MPIR_REQUEST_POOL(req)
 #define MPIDI_VCI_INVALID (-1)
 
-/* VCI hashing function (fast path)
- * NOTE: The returned vci should always MOD NUMVCIS, where NUMVCIS is
- *       the number of VCIs determined at init time
- *       Potentially, we'd like to make it config constants of power of 2
- * TODO: move the MOD here.
- */
+/* VCI hashing function (fast path) */
 
 /* For consistent hashing, we may need differentiate between src and dst vci and whether
  * it is being called from sender side or receiver side (consdier intercomm). We use an
@@ -47,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
                                            int src_rank, int dst_rank, int tag)
 {
-    return comm_ptr->seq;
+    return comm_ptr->seq % MPIDI_global.n_vcis;
 }
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__TAG
@@ -59,13 +54,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
                                            int src_rank, int dst_rank, int tag)
 {
+    int vci;
     if (!(flag & 0x1)) {
         /* src */
-        return (tag == MPI_ANY_TAG) ? 0 : ((tag >> 10) & 0x1f);
+        vci = (tag == MPI_ANY_TAG) ? 0 : ((tag >> 10) & 0x1f);
     } else {
         /* dst */
-        return (tag == MPI_ANY_TAG) ? 0 : ((tag >> 5) & 0x1f);
+        vci = (tag == MPI_ANY_TAG) ? 0 : ((tag >> 5) & 0x1f);
     }
+    return vci % MPIDI_global.n_vcis;
 }
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__IMPLICIT
@@ -183,7 +180,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_receiver_vci(MPIR_Comm * comm,
     if (is_vci_restricted_to_zero(comm)) {
         vci_idx = 0;
     } else if (use_user_defined_vci) {
-        vci_idx = comm->hints[MPIR_COMM_HINT_RECEIVER_VCI];
+        vci_idx = comm->hints[MPIR_COMM_HINT_RECEIVER_VCI] % MPIDI_global.n_vcis;
     } else {
         /* If mpi_any_tag and mpi_any_source can be used for recv, all messages
          * should be received on a single vci. Otherwise, messages sent from a

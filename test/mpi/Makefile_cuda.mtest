@@ -29,4 +29,4 @@ LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 
 # How to compile .cu files -- compile with mpicc, but using nvcc
 .cu.o:
-	MPICH_CC=$(NVCC) $(CC) -c -o $@ $<
+	MPICH_CC="$(NVCC)" $(CC) -c -o $@ $<

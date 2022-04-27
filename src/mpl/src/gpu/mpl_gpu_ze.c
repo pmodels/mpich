@@ -144,7 +144,6 @@ typedef struct {
 } MPL_ze_engine_entry_t;
 
 typedef struct {
-    ze_command_queue_group_properties_t *queueProperties;
     MPL_ze_engine_entry_t *engines;
     unsigned int numQueueGroups;
 } MPL_ze_device_entry_t;
@@ -772,7 +771,7 @@ static int gpu_ze_init_driver(void)
         ZE_ERR_CHECK(ret);
         ze_command_queue_group_properties_t *queueProperties =
             (ze_command_queue_group_properties_t *)
-            malloc(sizeof(ze_command_queue_group_properties_t) * numQueueGroups);
+            MPL_malloc(sizeof(ze_command_queue_group_properties_t) * numQueueGroups, MPL_MEM_OTHER);
         ret =
             zeDeviceGetCommandQueueGroupProperties(ze_devices_handle[0], &numQueueGroups,
                                                    queueProperties);
@@ -811,7 +810,7 @@ static int gpu_ze_init_driver(void)
                 device_state->engines[i].cmdList_pool = NULL;
             }
         }
-        device_state->queueProperties = queueProperties;
+        MPL_free(queueProperties);
     }
 
     ze_event_pool_desc_t pool_desc;
@@ -926,6 +925,9 @@ int MPL_gpu_finalize(void)
         MPL_free(device_state->engines);
     }
     MPL_free(device_states);
+
+    zeEventPoolDestroy(eventPool);
+    zeEventPoolDestroy(local_event_pool);
 
     return MPL_SUCCESS;
 }

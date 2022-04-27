@@ -8,9 +8,10 @@
 int (*MPIDI_Anysource_iprobe_fn)(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                  MPI_Status * status) = NULL;
 
-int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
+int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int attr,
 		int *flag, MPI_Status *status)
 {
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     const int context = comm->recvcontext_id + context_offset;
     int found = 0;
     int mpi_errno = MPI_SUCCESS;

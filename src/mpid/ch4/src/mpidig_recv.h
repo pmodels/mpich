@@ -294,10 +294,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-    int vci = MPIDI_Request_get_vci(message);
-#endif
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
     MPIDIG_REQUEST(message, req->rreq.mrcv_buffer) = buf;
     MPIDIG_REQUEST(message, req->rreq.mrcv_count) = count;
@@ -321,7 +317,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
@@ -339,16 +334,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-    /* For anysource recv, we may be called while holding the vci lock of shm request (to
-     * prevent shm progress). Therefore, recursive locking is allowed here */
-    MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(vci).lock);
 
     mpi_errno = MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, vci,
                                 request, 1, 0ULL);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIDI_REQUEST_SET_LOCAL(*request, is_local, partner);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:

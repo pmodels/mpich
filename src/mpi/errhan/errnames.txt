@@ -380,6 +380,7 @@ be in the range 0 to %d
 **infonkey %d %d:Requested key %d but this MPI_Info only has %d keys
 **infonoteq:MPI_Info key value are not consistent for all processes
 **infonoteq %s:MPI_Info value with key %s is not consistent for all processes
+**infohexinvalid:MPI_Info key value is invalid
 **io:Other I/O error 
 **io %s:Other I/O error %s
 **iobadoverlap: write voilates monotonically non-decreasing
@@ -967,6 +968,11 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **parse_thread_affinity %s:Failed to parse async thread affinity string [%s]
 **set_thread_affinity:Failed to set the async thread affinity
 **set_thread_affinity %d:Failed to set the async thread affinity to the logical processor [%d]
+
+## MPIX_Stream
+**ch3nostream:Stream is not supported in ch3.
+**ch4nostream:No streams available. Configure --enable-thread-cs=per-vci and --with-ch4-max-vcis=# to enable streams.
+**outofstream:No streams available. Use MPIR_CVAR_CH4_RESERVE_VCIS to reserve the number of streams can be allocated.
 
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 

@@ -50,7 +50,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
                                                         int rank,
                                                         int tag,
                                                         MPIR_Comm * comm_ptr,
-                                                        int context_offset,
+                                                        int attr,
                                                         MPIDI_av_entry_t * addr,
                                                         MPI_Status * status,
                                                         MPIR_Request * request,
@@ -59,6 +59,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
                                                         MPL_atomic_int_t * processed)
 {
     MPIDI_workq_elemt_t *pt2pt_elemt;
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
 
     MPIR_Assert(request != NULL);
 
@@ -170,13 +171,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_csend_enqueue(MPIDI_workq_op_t op,
                                                         int rank,
                                                         int tag,
                                                         MPIR_Comm * comm_ptr,
-                                                        int context_offset,
+                                                        int attr,
                                                         MPIDI_av_entry_t * addr,
                                                         MPIR_Request * request,
                                                         MPIR_Errflag_t * errflag)
 {
     MPIDI_workq_elemt_t *pt2pt_elemt;
     struct MPIDI_workq_csend *wd;
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
 
     MPIR_Assert(request != NULL);
     MPIR_Assert(op == CSEND || op == ICSEND);
