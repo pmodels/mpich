@@ -797,8 +797,9 @@ sub RunMPIProgram {
 
     if ($found_error) {
         &RunTestFailed($test_opt, $inline, $runtime );
-    }
-    else { 
+    } elsif ($inline =~ /Test Skipped/) {
+        &SkippedTest($test_opt, "missing feature");
+    } else { 
         &RunTestPassed($test_opt, $runtime);
     }
     &RunPostMsg($test_opt);
@@ -992,16 +993,14 @@ sub TestNormal {
         elsif (/^srun: error: .*: signal: Communication connection failure/) {
             # skip
         }
-        elsif (!/^\s*Test Passed\s*$/ && !/requesting checkpoint\s*$/ && !/checkpoint completed\s*$/) {
+        elsif (!/^\s*Test (Passed|Skipped)\s*$/ && !/requesting checkpoint\s*$/ && !/checkpoint completed\s*$/) {
             print STDERR "Unexpected output in $programname: $_";
-            if (!$found_error) {
-                $found_error = 1;
-            }
+            $found_error = 1;
         }
     }
     if ($found_noerror == 0) {
-        print STDERR "Program $programname exited without No Errors\n";
-        if (!$found_error) {
+        if ($inline !~ /Test Skipped/) {
+            print STDERR "Program $programname exited without No Errors\n";
             $found_error = 1;
         }
     }

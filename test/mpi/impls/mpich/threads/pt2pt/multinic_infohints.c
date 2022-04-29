@@ -12,12 +12,10 @@
 
 /* This test only works for ch4:ofi */
 #ifndef MPICH_CH4_OFI
-int main(int argc, char *argv[])
+int main(void)
 {
-    int errs = 0;
-    MTest_Init(&argc, &argv);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    printf("Test Skipped\n");
+    return 0;
 }
 #else
 
