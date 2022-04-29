@@ -102,6 +102,44 @@ int main(void)
         errs += check_result(y);
     }
 
+    /* Test again with MPIX_Isend_enqueue and MPIX_Wait_enqueue */
+    if (rank == 0) {
+        for (int i = 0; i < N; i++) {
+            x[i] = x_val;
+        }
+        /* we are directly sending from x in this test */
+        MPI_Request req;
+        mpi_errno = MPIX_Isend_enqueue(x, N, MPI_FLOAT, 1, 0, stream_comm, &req);
+        assert(mpi_errno == MPI_SUCCESS);
+        /* req won't reset to MPI_REQUEST_NULL, but user shouldn't use it afterward */
+        mpi_errno = MPIX_Wait_enqueue(&req, MPI_STATUS_IGNORE);
+        assert(mpi_errno == MPI_SUCCESS);
+
+        cudaStreamSynchronize(stream);
+    } else if (rank == 1) {
+        /* reset d_x, d_y */
+        for (int i = 0; i < N; i++) {
+            x[i] = 0.0;
+            y[i] = y_val;
+        }
+        cudaMemcpyAsync(d_x, x, N*sizeof(float), cudaMemcpyHostToDevice, stream);
+        cudaMemcpyAsync(d_y, y, N*sizeof(float), cudaMemcpyHostToDevice, stream);
+
+        MPI_Request req;
+        mpi_errno = MPIX_Irecv_enqueue(d_x, N, MPI_FLOAT, 0, 0, stream_comm, &req);
+        assert(mpi_errno == MPI_SUCCESS);
+        mpi_errno = MPIX_Waitall_enqueue(1, &req, MPI_STATUSES_IGNORE);
+        assert(mpi_errno == MPI_SUCCESS);
+
+        saxpy<<<(N+255)/256, 256, 0, stream>>>(N, a, d_x, d_y);
+
+        cudaMemcpyAsync(y, d_y, N*sizeof(float), cudaMemcpyDeviceToHost, stream);
+
+        cudaStreamSynchronize(stream);
+        errs += check_result(y);
+    }
+
+
     MPI_Comm_free(&stream_comm);
     MPIX_Stream_free(&mpi_stream);
 
