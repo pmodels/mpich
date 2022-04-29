@@ -37,10 +37,6 @@ typedef int MPL_gpu_stream_t;
 #define MPL_GPU_STREAM_DEFAULT 0
 #define MPL_GPU_DEVICE_INVALID NULL
 
-#define MPL_GPU_ZE_COMPUTE_ENGINE_TYPE                 0
-#define MPL_GPU_ZE_MAIN_COPY_ENGINE_TYPE               1
-#define MPL_GPU_ZE_LINK_COPY_ENGINE_TYPE               2
-
 /* ZE specific function */
 int MPL_ze_init_device_fds(int *num_fds, int *device_fds);
 void MPL_ze_set_fds(int num_fds, int *fds);
