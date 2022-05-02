@@ -8,3 +8,6 @@ comm_info_hint 1 arg=-hint=mpi_assert_exact_length arg=-value=true
 comm_info_hint 1 arg=-hint=multi_nic_pref_nic arg=-value=0
 @ch4_ofi_tests@comm_info_hint 1 arg=-hint=eagain arg=-value=true
 comm_dup 1
+stream      2 env=MPIR_CVAR_CH4_RESERV_VCIS=4
+stream_comm 4 env=MPIR_CVAR_CH4_RESERV_VCIS=4
+stream_multiplex 4 env=MPIR_CVAR_CH4_RESERV_VCIS=4

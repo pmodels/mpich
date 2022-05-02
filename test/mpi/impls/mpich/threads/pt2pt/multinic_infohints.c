@@ -3,12 +3,21 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#include "mpitest.h"
 #include "mpi.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "mpitest.h"
+
+/* This test only works for ch4:ofi */
+#ifndef MPICH_CH4_OFI
+int main(void)
+{
+    printf("Test Skipped\n");
+    return 0;
+}
+#else
 
 #define MAX_NICS_SUPPORTED 8
 
@@ -26,53 +35,39 @@ static int enable_striping = 1;
 static int enable_multiplexing = 0;
 static int nprocs = 0;
 
-static int compare_vars(int rank, int target, int num_nics)
+static int check_nic_pvar(int rank, int num_nics, unsigned long long *nic_pvar_bytes_count)
 {
     int idx;
 
-    /* expected output */
-    struct ExpectedMapNicTestOutput {
-        unsigned long long nic_sent_bytes_count[MAX_NICS_SUPPORTED];
-        unsigned long long nic_recvd_bytes_count[MAX_NICS_SUPPORTED];
-    };
-
+    unsigned long long nic_expected_bytes_count[MAX_NICS_SUPPORTED];
     unsigned long long total_elems_byte_size = elems * sizeof(float);
 
-    /* expected byte count numbers based on the number of NICs in use */
-    /* the number of send and recv byte count between each pair must match */
-    struct ExpectedMapNicTestOutput expected_mapping[2] = { 0 };
-    /* The expected counts are determined assuming multi-nic striping and hashing are disabled
-     * because this test uses multi_nic_pref_nic hint to select nics. */
+    /* Expected byte count numbers based on the number of NICs in use.
+     * /* The expected counts are determined assuming multi-nic striping and
+     * * hashing are disabled because this test uses multi_nic_pref_nic hint
+     * * to select nics. */
     assert(!enable_multiplexing && !enable_striping);
     for (idx = 0; idx < num_nics; ++idx) {
-        if (rank == 0) {
-            expected_mapping[0].nic_sent_bytes_count[idx] = total_elems_byte_size;
-        } else {
-            expected_mapping[1].nic_recvd_bytes_count[idx] = total_elems_byte_size;
-        }
+        nic_expected_bytes_count[idx] = total_elems_byte_size;
     }
 
-    /* read the pvars from the session */
-    MPI_T_pvar_read(session, nsc_handle, &nic_sent_bytes_count);
-    MPI_T_pvar_read(session, nrc_handle, &nic_recvd_bytes_count);
-
     for (idx = 0; idx < num_nics; ++idx) {
-        /* if the actual byte count does not match with any of the expected count in the list */
+        /* If the actual byte count does not match with any of the expected count in the list */
         /* return with error */
         if (rank == 0) {
-            if (expected_mapping[0].nic_sent_bytes_count[idx] != nic_sent_bytes_count[idx]) {
+            if (nic_expected_bytes_count[idx] != nic_pvar_bytes_count[idx]) {
                 printf
-                    ("rank=%d --> target=%d: Actual sent byte count=%ld through NIC %d does not match with the "
-                     "expected sent byte count=%ld\n", rank, target, nic_sent_bytes_count[idx], idx,
-                     expected_mapping[0].nic_sent_bytes_count[idx]);
+                    ("rank=%d --> target=1: Actual sent byte count=%ld through NIC %d does not match with the "
+                     "expected sent byte count=%ld\n", rank, nic_pvar_bytes_count[idx], idx,
+                     nic_expected_bytes_count[idx]);
                 return -1;
             }
         } else {
-            if (expected_mapping[1].nic_recvd_bytes_count[idx] != nic_recvd_bytes_count[idx]) {
+            if (nic_expected_bytes_count[idx] != nic_pvar_bytes_count[idx]) {
                 printf
-                    ("rank=%d --> target=%d: Actual received byte count=%ld through NIC %d does not match with the "
-                     "expected received byte count=%ld\n", rank, target, nic_recvd_bytes_count[idx],
-                     idx, expected_mapping[1].nic_recvd_bytes_count[idx]);
+                    ("rank=%d --> target=0: Actual received byte count=%ld through NIC %d does not match with the "
+                     "expected received byte count=%ld\n", rank, nic_pvar_bytes_count[idx],
+                     idx, nic_expected_bytes_count[idx]);
                 return -1;
             }
         }
@@ -260,8 +255,14 @@ int main(int argc, char *argv[])
         if (!nrc_continuous)
             MPI_T_pvar_stop(session, nsc_handle);
 
-        /* Compare actual the output with the expected output */
-        assert(0 == compare_vars(rank, target, num_nics));
+        /* read the pvars from the session and compare with expected counts */
+        if (rank == 0) {
+            MPI_T_pvar_read(session, nsc_handle, &nic_sent_bytes_count);
+            assert(0 == check_nic_pvar(rank, num_nics, nic_sent_bytes_count));
+        } else {        /* rank == 1 */
+            MPI_T_pvar_read(session, nrc_handle, &nic_recvd_bytes_count);
+            assert(0 == check_nic_pvar(rank, num_nics, nic_recvd_bytes_count));
+        }
 
         /* Cleanup */
         MPI_T_pvar_handle_free(session, &nrc_handle);
@@ -276,3 +277,4 @@ int main(int argc, char *argv[])
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
 }
+#endif /* MPICH_CH4_OFI */

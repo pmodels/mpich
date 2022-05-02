@@ -210,3 +210,25 @@ int MPIR_Typerep_reduce(const void *in_buf, void *out_buf, MPI_Aint count, MPI_D
 
     return mpi_errno;
 }
+
+int MPIR_Typerep_pack_stream(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
+                             MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
+                             MPI_Aint * actual_pack_bytes, void *stream)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(0);
+
+    return mpi_errno;
+}
+
+int MPIR_Typerep_unpack_stream(const void *inbuf, MPI_Aint insize, void *outbuf,
+                               MPI_Aint outcount, MPI_Datatype datatype, MPI_Aint outoffset,
+                               MPI_Aint * actual_unpack_bytes, void *stream)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(0);
+
+    return mpi_errno;
+}

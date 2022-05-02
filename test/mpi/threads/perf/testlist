@@ -1,1 +1,3 @@
 mt_pt2pt_msgrate 2 arg=-nthreads=4
+mt_rma_msgrate 2 arg=-nthreads=4 -sync=lockall
+mt_rma_msgrate 2 arg=-nthreads=4 -sync=fence

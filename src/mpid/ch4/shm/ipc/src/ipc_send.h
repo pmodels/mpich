@@ -27,7 +27,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     /* note: MPIDI_POSIX_SEND_VSIS defined in posix_send.h */
     MPIDI_POSIX_SEND_VSIS(vsi_src, vsi_dst);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vsi_src).lock);
+    MPIDI_POSIX_THREAD_CS_ENTER_VCI(vsi_src);
 
     if (rank == comm->rank) {
         goto fn_exit;
@@ -128,7 +128,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
          * threshold may be required to tradeoff the flattening overhead.*/
     }
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vsi_src).lock);
+    MPIDI_POSIX_THREAD_CS_EXIT_VCI(vsi_src);
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:

@@ -102,4 +102,8 @@ int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev, int eng
                     MPL_gpu_request * req, bool commit);
 int MPL_gpu_test(MPL_gpu_request * req, int *completed);
 
+typedef void (*MPL_gpu_hostfn) (void *data);
+int MPL_gpu_launch_hostfn(MPL_gpu_stream_t stream, MPL_gpu_hostfn fn, void *data);
+bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream);
+
 #endif /* ifndef MPL_GPU_H_INCLUDED */

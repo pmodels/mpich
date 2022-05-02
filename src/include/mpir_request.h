@@ -65,6 +65,7 @@ typedef enum MPIR_Request_kind_t {
     MPIR_REQUEST_KIND__PART_SEND,       /* Partitioned send req returned to user */
     MPIR_REQUEST_KIND__PART_RECV,       /* Partitioned recv req returned to user */
     MPIR_REQUEST_KIND__PART,    /* Partitioned pt2pt internal reqs */
+    MPIR_REQUEST_KIND__ENQUEUE, /* enqueued (to gpu stream) request */
     MPIR_REQUEST_KIND__GREQUEST,
     MPIR_REQUEST_KIND__COLL,
     MPIR_REQUEST_KIND__MPROBE,  /* see NOTE-R1 */
@@ -220,6 +221,12 @@ struct MPIR_Request {
             MPL_atomic_int_t active_flag;       /* flag indicating whether in a start-complete active period.
                                                  * Value is 0 or 1. */
         } part;                 /* kind : MPIR_REQUEST_KIND__PART_SEND or MPIR_REQUEST_KIND__PART_RECV */
+        struct {
+            MPL_gpu_stream_t gpu_stream;
+            struct MPIR_Request *real_request;
+            bool is_send;
+            void *data;
+        } enqueue;
         struct {
             MPIR_Win *win;
         } rma;                  /* kind : MPIR_REQUEST_KIND__RMA */

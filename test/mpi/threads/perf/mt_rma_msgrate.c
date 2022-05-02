@@ -34,10 +34,37 @@ enum RMA_OPs {
     OP_INVALID
 };
 
+enum SYNC_MODE {
+    USE_WIN_FENCE,
+    USE_WIN_LOCK_ALL,
+    SYNC_INVALID,
+};
+
+#define EPOCH_START()                                   \
+    if (sync_mode == USE_WIN_FENCE) {                   \
+        MPI_Win_fence(0, my_win);                       \
+    } else if (sync_mode == USE_WIN_LOCK_ALL) {         \
+        MPI_Win_lock_all(MPI_MODE_NOCHECK, my_win);     \
+    }
+
+#define COMPLETE_OPS()                                                  \
+    if (sync_mode == USE_WIN_FENCE) {                                   \
+        MPI_Win_fence(0, my_win);                                       \
+    } else if (sync_mode == USE_WIN_LOCK_ALL && world_rank == 0) {      \
+        MPI_Win_flush(1, my_win);                                       \
+    }
+
+#define EPOCH_END()                             \
+    if (sync_mode == USE_WIN_LOCK_ALL) {        \
+        MPI_Win_unlock_all(my_win);             \
+    }
+
 int rma_op = OP_INVALID;
+int sync_mode = SYNC_INVALID;
 int world_rank;
 MPI_Comm *thread_wins;
 double *t_elapsed;
+int num_threads;
 
 MTEST_THREAD_RETURN_TYPE thread_fn(void *arg);
 
@@ -68,11 +95,19 @@ MTEST_THREAD_RETURN_TYPE thread_fn(void *arg)
         fprintf(stderr, "Thread %d: Error in allocating result buffer\n", tid);
     }
 
+    /* skip barrier in single-threaded baseline run */
+    static bool first = true;
+    if (first) {
+        first = false;
+    } else {
+        MTest_thread_barrier(num_threads);
+    }
+
     /* Benchmark */
     t_start = MPI_Wtime();
 
+    EPOCH_START();
     for (win_post_i = 0; win_post_i < win_posts; win_post_i++) {
-        MPI_Win_fence(0, my_win);
         if (world_rank == 0) {
             for (win_i = 0; win_i < WINDOW_SIZE; win_i++) {
                 if (rma_op == OP_PUT) {
@@ -89,8 +124,9 @@ MTEST_THREAD_RETURN_TYPE thread_fn(void *arg)
                 }
             }
         }
-        MPI_Win_fence(0, my_win);
+        COMPLETE_OPS();
     }
+    EPOCH_END();
 
     if (world_rank == 0) {
         t_end = MPI_Wtime();
@@ -107,12 +143,11 @@ int main(int argc, char *argv[])
 {
     int size;
     int provided;
-    int num_threads;
     double onethread_msg_rate, multithread_msg_rate;
     int errors;
 
-    if (argc > 2) {
-        fprintf(stderr, "Can support at most only the -nthreads argument.\n");
+    if (argc > 4) {
+        fprintf(stderr, "Too many arguments.\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
@@ -149,6 +184,15 @@ int main(int argc, char *argv[])
         rma_op = OP_GACC;
     } else {
         fprintf(stderr, "Invalid op - %s\n", tmp_str);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+    tmp_str = MTestArgListGetString_with_default(head, "sync", "fence");
+    if (strcmp(tmp_str, "fence") == 0) {
+        sync_mode = USE_WIN_FENCE;
+    } else if (strcmp(tmp_str, "lockall") == 0) {
+        sync_mode = USE_WIN_LOCK_ALL;
+    } else {
+        fprintf(stderr, "Invalid sync type - %s\n", tmp_str);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 

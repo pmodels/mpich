@@ -18,8 +18,11 @@
 
 #define MPIDI_POSIX_SEND_VSIS(vsi_src_, vsi_dst_) \
     do { \
-        vsi_src_ = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
-        vsi_dst_ = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+        MPIDI_EXPLICIT_VCIS(comm, attr, comm->rank, rank, vsi_src_, vsi_dst_); \
+        if (vsi_src_ == 0 && vsi_dst_ == 0) { \
+            vsi_src_ = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+            vsi_dst_ = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+        } \
     } while (0)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint count,
@@ -36,10 +39,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
     int vsi_src, vsi_dst;
     MPIDI_POSIX_SEND_VSIS(vsi_src, vsi_dst);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vsi_src).lock);
+    MPIDI_POSIX_THREAD_CS_ENTER_VCI(vsi_src);
     mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                  vsi_src, vsi_dst, request, syncflag, errflag);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vsi_src).lock);
+    MPIDI_POSIX_THREAD_CS_EXIT_VCI(vsi_src);
 
     return mpi_errno;
 }

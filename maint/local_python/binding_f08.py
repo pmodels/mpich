@@ -266,7 +266,7 @@ def dump_f08_wrappers_f(func, is_large):
             convert_list_2.append("END IF")
 
         # ----
-        if RE.match(r'TYPE\(MPI_\w+\)', f08_mapping[p['kind']], re.IGNORECASE):
+        if RE.match(r'TYPE\(MPIX?_\w+\)', f08_mapping[p['kind']], re.IGNORECASE):
             arg_1 = p['name'] + "%MPI_VAL"
         else:
             arg_1 = p['name']
@@ -367,7 +367,7 @@ def dump_f08_wrappers_f(func, is_large):
             arg_1 = ":STATUS:"
             arg_2 = ":STATUS:"
             length = p['_array_length']
-            if RE.match(r'mpi_(test|wait)some', func['name'], re.IGNORECASE):
+            if RE.match(r'mpix?_(test|wait)some', func['name'], re.IGNORECASE):
                 length = "outcount_c"
             p['_status_convert'] = "%s(1:%s) = %s_c(1:%s)" % (p['name'], length, p['name'], length)
         else:
@@ -571,7 +571,7 @@ def dump_f08_wrappers_f(func, is_large):
             if RE.match(r'in|inout', p['param_direction']):
                 convert_list_1.append("%s = %s" % (argv_2, argv_1))
             if RE.match(r'out|inout', p['param_direction']):
-                if RE.match(r'mpi_(test|wait)some', func['name'], re.IGNORECASE) and p['name'] == "array_of_indices":
+                if RE.match(r'mpix?_(test|wait)some', func['name'], re.IGNORECASE) and p['name'] == "array_of_indices":
                     argv_1 = "array_of_indices(1:outcount_c)"
                     argv_2 = "array_of_indices_c(1:outcount_c)"
                 convert_list_2.append("%s = %s" % (argv_1, argv_2))
@@ -933,7 +933,7 @@ def dump_F_uses(uses):
             mpi_f08_list_3.append(a)
         elif re.match(r'MPI_[A-Z_]+$', a):
             mpi_f08_list_2.append(a)
-        elif re.match(r'MPI_\w+', a):
+        elif re.match(r'MPIX?_\w+', a):
             mpi_f08_list_1.append(a)
         elif re.match(r'assignment', a):
             mpi_f08_list_1.append(a)
@@ -1114,9 +1114,9 @@ def dump_mpi_f08_types():
     def dump_handle_types():
         for a in G.handle_list:
             G.out.append("")
-            G.out.append("TYPE, bind(C) :: MPI_%s" % a)
+            G.out.append("TYPE, bind(C) :: %s" % a)
             G.out.append("    INTEGER :: MPI_VAL")
-            G.out.append("END TYPE MPI_%s" % a)
+            G.out.append("END TYPE %s" % a)
 
     def dump_handle_interface():
         for op in ["eq", "neq"]:
@@ -1127,15 +1127,15 @@ def dump_mpi_f08_types():
             G.out.append("")
             G.out.append("INTERFACE operator(%s)" % op_sym)
             for a in G.handle_list:
-                G.out.append("    module procedure MPI_%s_%s" % (a, op))
-                G.out.append("    module procedure MPI_%s_f08_%s_f" % (a, op))
-                G.out.append("    module procedure MPI_%s_f_%s_f08" % (a, op))
+                G.out.append("    module procedure %s_%s" % (a, op))
+                G.out.append("    module procedure %s_f08_%s_f" % (a, op))
+                G.out.append("    module procedure %s_f_%s_f08" % (a, op))
             G.out.append("END INTERFACE")
             G.out.append("")
             for a in G.handle_list:
-                G.out.append("private :: MPI_%s_%s" % (a, op))
-                G.out.append("private :: MPI_%s_f08_%s_f" % (a, op))
-                G.out.append("private :: MPI_%s_f_%s_f08" % (a, op))
+                G.out.append("private :: %s_%s" % (a, op))
+                G.out.append("private :: %s_f08_%s_f" % (a, op))
+                G.out.append("private :: %s_f_%s_f08" % (a, op))
 
     def dump_handle_routines():
         for op in ["eq", "neq"]:
@@ -1143,21 +1143,21 @@ def dump_mpi_f08_types():
             for a in G.handle_list:
                 # e.g. MPI_Comm_eq
                 G.out.append("")
-                G.out.append("elemental FUNCTION MPI_%s_%s(x, y) result(res)" % (a, op))
-                G.out.append("    TYPE(MPI_%s), INTENT(in) :: x, y" % a)
+                G.out.append("elemental FUNCTION %s_%s(x, y) result(res)" % (a, op))
+                G.out.append("    TYPE(%s), INTENT(in) :: x, y" % a)
                 G.out.append("    LOGICAL :: res")
                 if op == "eq":
                     G.out.append("    res = (x%MPI_VAL == y%MPI_VAL)")
                 else:
                     G.out.append("    res = (x%MPI_VAL /= y%MPI_VAL)")
-                G.out.append("END FUNCTION MPI_%s_%s" % (a, op))
+                G.out.append("END FUNCTION %s_%s" % (a, op))
                 # e.g. MPI_Comm_f08_eq_f, MPI_Comm_f_eq_f08
                 G.out.append("")
                 for p in [("f08", "f"), ("f", "f08")]:
-                    func_name = "MPI_%s_%s_%s_%s" % (a, p[0], op, p[1])
+                    func_name = "%s_%s_%s_%s" % (a, p[0], op, p[1])
                     G.out.append("")
                     G.out.append("elemental FUNCTION %s(%s, %s) result(res)" % (func_name, p[0], p[1]))
-                    G.out.append("    TYPE(MPI_%s), INTENT(in) :: f08" % a)
+                    G.out.append("    TYPE(%s), INTENT(in) :: f08" % a)
                     G.out.append("    INTEGER, INTENT(in) :: f")
                     G.out.append("    LOGICAL :: res")
                     if op == "eq":
@@ -1167,18 +1167,20 @@ def dump_mpi_f08_types():
                     G.out.append("END FUNCTION %s" % func_name)
         # e.g. MPI_Comm_f2c
         for a in G.handle_list:
-            if a == "File":
+            if a == "MPI_File":
                 continue
+            if RE.match(r'MPIX?_(\w+)', a):
+                c_name = "c_" + RE.m.group(1)
             for p in [("f", "c"), ("c", "f")]:
-                func_name = "MPI_%s_%s2%s" % (a, p[0], p[1])
+                func_name = "%s_%s2%s" % (a, p[0], p[1])
                 G.out.append("")
                 G.out.append("FUNCTION %s(x) result(res)" % func_name)
-                G.out.append("    USE mpi_c_interface_types, ONLY: c_%s" % a)
+                G.out.append("    USE mpi_c_interface_types, ONLY: %s" % c_name)
                 if p[0] == "f":
                     G.out.append("    INTEGER, VALUE :: x")
-                    G.out.append("    INTEGER(c_%s) :: res" % a)
+                    G.out.append("    INTEGER(%s) :: res" % c_name)
                 else:
-                    G.out.append("    INTEGER(c_%s), VALUE :: x" % a)
+                    G.out.append("    INTEGER(%s), VALUE :: x" % c_name)
                     G.out.append("    INTEGER :: res")
                 G.out.append("    res = x")
                 G.out.append("END FUNCTION %s" % func_name)
@@ -1431,7 +1433,7 @@ def get_F_c_interface_decl(func, p, f_mapping, c_mapping):
         return s
 
     # ----
-    if RE.match(r'TYPE\(MPI_(\w+)\)', t_f, re.IGNORECASE):
+    if RE.match(r'TYPE\(MPIX?_(\w+)\)', t_f, re.IGNORECASE):
         if RE.m.group(1) == 'Status':
             return c_ptr
         elif p['param_direction'] == 'in' and p['length'] is None and func['name'] != "MPI_Cancel":
@@ -1493,9 +1495,9 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
     def get_array_decl():
         # Arrays: we'll use assumptions (since only with limited num of functions)
         length = get_F_decl_length(p)
-        if RE.match(r'mpi_(Test|Wait)(all|any)', func['name'], re.IGNORECASE):
+        if RE.match(r'mpix?_(Test|Wait)(all|any)', func['name'], re.IGNORECASE):
             length = 'count'
-        elif RE.match(r'mpi_(Test|Wait)(some)', func['name'], re.IGNORECASE):
+        elif RE.match(r'mpix?_(Test|Wait)(some)', func['name'], re.IGNORECASE):
             length = 'incount'
         elif RE.match(r'mpi_cart_(rank|sub)', func['name'], re.IGNORECASE):
             length = 'cart_dim'
@@ -1536,7 +1538,7 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
         elif p['kind'] == 'STATUS':
             p['_array_convert'] = "STATUS"
             return "TYPE(c_Status), TARGET :: %s_c(%s)" % (p['name'], length)
-        elif RE.match(r'(REQUEST|DATATYPE|INFO)', p['kind']):
+        elif RE.match(r'(REQUEST|DATATYPE|INFO|STREAM)', p['kind']):
             t = RE.m.group(1)
             c_type = "c_" + t[0].upper() + t[1:].lower()
             p['_array_convert'] = "MPI_VAL"
@@ -1569,7 +1571,7 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
         return get_array_decl()
     elif t_c == 'int':
         return "INTEGER(c_int) :: %s_c" % p['name']
-    elif RE.match(r'TYPE\(MPI_(\w+)\)', t_f, re.IGNORECASE):
+    elif RE.match(r'TYPE\(MPIX?_(\w+)\)', t_f, re.IGNORECASE):
         if RE.m.group(1) == 'Status':
             return "TYPE(c_%s), TARGET :: %s_c" % (RE.m.group(1), p['name'])
         else:
