@@ -10,6 +10,15 @@
 #include <stdio.h>
 #include <string.h>
 
+/* This test only works for ch4:ofi */
+#ifndef MPICH_CH4_OFI
+int main(void)
+{
+    printf("Test Skipped\n");
+    return 0;
+}
+#else
+
 #define MAX_NICS_SUPPORTED 8
 
 /* Multinic Support: Using pref_close_nic user info hint set */
@@ -268,3 +277,4 @@ int main(int argc, char *argv[])
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
 }
+#endif /* MPICH_CH4_OFI */

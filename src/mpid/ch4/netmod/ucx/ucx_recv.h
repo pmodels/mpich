@@ -135,7 +135,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
 #define MPIDI_UCX_RECV_VNIS(vni_dst_) \
     do { \
         int vni_src_tmp; \
-        MPIDI_EXPLICIT_VCIS(comm, 0, rank, comm->rank, vni_src_tmp, vni_dst_); \
+        MPIDI_EXPLICIT_VCIS(comm, attr, rank, comm->rank, vni_src_tmp, vni_dst_); \
         if (vni_src_tmp == 0 && vni_dst_ == 0) { \
             vni_dst_ = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
         } \

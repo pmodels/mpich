@@ -436,6 +436,26 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[return 1 + MPICH;])],
     [MPI_IS_MPICH=yes],[MPI_IS_MPICH=no])
 AC_MSG_RESULT($MPI_IS_MPICH)
 
+if test "$MPI_IS_MPICH" = "yes" ; then
+    # probe device and netmod features
+    cat << EOF > conftest.c
+#include "mpi.h"
+int main(void) {MPI_Init(0,0);MPI_Finalize();return 0;}
+EOF
+    mpicc -o conftest conftest.c
+    MPIR_CVAR_DEBUG_SUMMARY=1 ./conftest > conftest.output
+
+    if grep libfabric conftest.output > /dev/null ; then
+        AC_MSG_NOTICE([Detected MPICH with ch4:ofi netmod])
+        AC_DEFINE(MPICH_CH4_OFI, 1, [define if it is mpich with ch4:ofi])
+    elif grep UCX conftest.output > /dev/null ; then
+        AC_MSG_NOTICE([Detected MPICH with ch4:ucx netmod])
+        AC_DEFINE(MPICH_CH4_UCX, 1, [define if it is mpich with ch4:ucx])
+    fi
+
+    rm conftest conftest.c conftest.output
+fi
+
 # First, determine whether we are/can support the language bindings
 #
 # Since F90/F90FLAGS are replaced by FC/FCFLAGS, rather than silently
