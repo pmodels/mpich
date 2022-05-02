@@ -1558,9 +1558,6 @@ case "$with_pmi" in
     AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
     ;;
   pmix)  
-    if test "${device_name}" != "ch4" ; then
-        AC_MSG_ERROR([$device_name does not support PMIx])
-    fi
     AC_DEFINE(USE_PMIX_API, 1, [Define if PMIx API must be used])
     ;;
 esac
