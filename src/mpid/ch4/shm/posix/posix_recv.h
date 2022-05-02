@@ -14,7 +14,7 @@
 #define MPIDI_POSIX_RECV_VSI(vsi_) \
     do { \
         int vsi_src_tmp; \
-        MPIDI_EXPLICIT_VCIS(comm, 0, rank, comm->rank, vsi_src_tmp, vsi_); \
+        MPIDI_EXPLICIT_VCIS(comm, attr, rank, comm->rank, vsi_src_tmp, vsi_); \
         if (vsi_src_tmp == 0 && vsi_ == 0) { \
             vsi_ = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
         } \

@@ -18,7 +18,7 @@
 
 #define MPIDI_POSIX_SEND_VSIS(vsi_src_, vsi_dst_) \
     do { \
-        MPIDI_EXPLICIT_VCIS(comm, 0, comm->rank, rank, vsi_src_, vsi_dst_); \
+        MPIDI_EXPLICIT_VCIS(comm, attr, comm->rank, rank, vsi_src_, vsi_dst_); \
         if (vsi_src_ == 0 && vsi_dst_ == 0) { \
             vsi_src_ = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
             vsi_dst_ = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
