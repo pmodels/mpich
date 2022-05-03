@@ -82,12 +82,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_check_progress_made_vci(MPID_Progress_state 
 }
 
 #define MPIDI_THREAD_CS_ENTER_VCI_OPTIONAL(vci)         \
-    if (!(state->flag & MPIDI_PROGRESS_NM_LOCKLESS)) {	\
+    if (!MPIDI_VCI_IS_EXPLICIT(vci) && !(state->flag & MPIDI_PROGRESS_NM_LOCKLESS)) {	\
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock); \
     }
 
 #define MPIDI_THREAD_CS_EXIT_VCI_OPTIONAL(vci)          \
-    if (!(state->flag & MPIDI_PROGRESS_NM_LOCKLESS)) {  \
+    if (!MPIDI_VCI_IS_EXPLICIT(vci) && !(state->flag & MPIDI_PROGRESS_NM_LOCKLESS)) {  \
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);	\
     } while (0)
 

@@ -114,6 +114,8 @@ def dump_f90_func(func):
 
 def dump_f90_constants():
     def get_op_procname(a, op):
+        if RE.match(r'MPIX?_(\w+)', a):
+            a = RE.m.group(1)
         if op == '.EQ.':
             return a.lower() + 'eq'
         elif op == '.NE.':
@@ -132,9 +134,9 @@ def dump_f90_constants():
 
     for a in G.handle_list:
         G.out.append("")
-        dump_F_type_open("MPI_%s" % a)
+        dump_F_type_open("%s" % a)
         G.out.append("INTEGER :: MPI_VAL")
-        dump_F_type_close("MPI_%s" % a)
+        dump_F_type_close("%s" % a)
 
     for op in ['.EQ.', '.NE.']:
         G.out.append("")
@@ -150,7 +152,7 @@ def dump_f90_constants():
             procname = get_op_procname(a, op)
             G.out.append("")
             G.out.append("LOGICAL FUNCTION %s(lhs, rhs)" % procname)
-            G.out.append("    TYPE(MPI_%s), INTENT(IN) :: lhs, rhs" % a)
+            G.out.append("    TYPE(%s), INTENT(IN) :: lhs, rhs" % a)
             G.out.append("    %s = lhs%%MPI_VAL %s rhs%%MPI_VAL" % (procname, op))
             G.out.append("END FUNCTION %s" % procname)
 

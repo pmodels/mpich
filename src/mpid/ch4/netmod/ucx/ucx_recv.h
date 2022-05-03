@@ -132,6 +132,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     goto fn_exit;
 }
 
+#define MPIDI_UCX_RECV_VNIS(vni_dst_) \
+    do { \
+        int vni_src_tmp; \
+        MPIDI_EXPLICIT_VCIS(comm, attr, rank, comm->rank, vni_src_tmp, vni_dst_); \
+        if (vni_src_tmp == 0 && vni_dst_ == 0) { \
+            vni_dst_ = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
+        } \
+    } while (0)
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Aint count,
                                                  MPI_Datatype datatype, MPIR_Request * message)
@@ -147,7 +156,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 
     MPIR_FUNC_ENTER;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     ucp_request_param_t param = {
@@ -180,7 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     MPIDI_UCX_REQ(message).ucp_request = ucp_request;
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
@@ -197,18 +206,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPIR_Request * partner)
 {
     int mpi_errno;
-
-    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-    int vni_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag);
-
     MPIR_FUNC_ENTER;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
+
+    int vni_dst;
+    MPIDI_UCX_RECV_VNIS(vni_dst);
+
+    MPIDI_UCX_THREAD_CS_ENTER_VCI(vni_dst);
     mpi_errno =
         MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, vni_dst,
                        request);
     MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_dst).lock);
+    MPIDI_UCX_THREAD_CS_EXIT_VCI(vni_dst);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

@@ -502,8 +502,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
             vni_src_ = 0; \
             vni_dst_ = 0; \
         } else { \
-            vni_src_ = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
-            vni_dst_ = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+            MPIDI_EXPLICIT_VCIS(comm, attr, comm->rank, rank, vni_src_, vni_dst_); \
+            if (vni_src_ == 0 && vni_dst_ == 0) { \
+                vni_src_ = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+                vni_dst_ = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+            } \
         } \
     } while (0)
 

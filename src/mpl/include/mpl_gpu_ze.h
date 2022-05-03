@@ -31,6 +31,10 @@ typedef struct {
     MPL_cmdlist_pool_t *cmdList;
 } MPL_gpu_request;
 
+/* FIXME: implement ze stream */
+typedef int MPL_gpu_stream_t;
+
+#define MPL_GPU_STREAM_DEFAULT 0
 #define MPL_GPU_DEVICE_INVALID NULL
 
 #define MPL_GPU_ZE_COMPUTE_ENGINE_TYPE                 0

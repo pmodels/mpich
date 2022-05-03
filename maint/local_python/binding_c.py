@@ -536,7 +536,7 @@ def process_func_parameters(func):
             if kind == "REQUEST":
                 if RE.match(r'mpi_startall', func_name, re.IGNORECASE):
                     do_handle_ptr = 3
-                elif RE.match(r'mpi_(wait|test)', func_name, re.IGNORECASE):
+                elif RE.match(r'mpix?_(wait|test)', func_name, re.IGNORECASE):
                     do_handle_ptr = 3
             elif kind == "RANK":
                 validation_list.append({'kind': "RANK-ARRAY", 'name': name})
@@ -588,8 +588,10 @@ def process_func_parameters(func):
             do_handle_ptr = 1
             if kind == "INFO" and not RE.match(r'mpi_(info_.*|.*_set_info)$', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_INFO_NULL"
-            elif kind == "REQUEST" and RE.match(r'mpi_(wait|test|request_get_status|parrived)', func_name, re.IGNORECASE):
+            elif kind == "REQUEST" and RE.match(r'mpix?_(wait|test|request_get_status|parrived)', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_REQUEST_NULL"
+            elif kind == "STREAM" and RE.match(r'mpix?_stream_comm_create', func_name, re.IGNORECASE):
+                p['can_be_null'] = "MPIX_STREAM_NULL"
         elif kind == "RANK" and name == "root":
             validation_list.insert(0, {'kind': "ROOT", 'name': name})
         elif RE.match(r'(COUNT|TAG)$', kind):
@@ -694,6 +696,9 @@ def process_func_parameters(func):
                 if RE.match(r'mpi_startall', func['name'], re.IGNORECASE):
                     impl_arg_list.append(ptrs_name)
                     impl_param_list.append("MPIR_Request **%s" % ptrs_name)
+                else:
+                    impl_arg_list.append(name)
+                    impl_param_list.append("MPI_Request %s[]" % name)
             else:
                 print("Unhandled handle array: " + name, file=sys.stderr)
         elif "code-handle_ptr-tail" in func and name in func['code-handle_ptr-tail']:
@@ -1574,7 +1579,7 @@ def get_fn_fail_create_code(func):
     mapping = get_kind_map('C', func['_is_large'])
 
     (fmts, args, err_fmts) = ([], [], [])
-    fmt_codes = {'RANK': "i", 'TAG': "t", 'COMMUNICATOR': "C", 'ASSERT': "A", 'DATATYPE': "D", 'ERRHANDLER': "E", 'FILE': "F", 'GROUP': "G", 'INFO': "I", 'OPERATION': "O", 'REQUEST': "R", 'WINDOW': "W", 'SESSION': "S", 'KEYVAL': "K", "GREQUEST_CLASS": "x"}
+    fmt_codes = {'RANK': "i", 'TAG': "t", 'COMMUNICATOR': "C", 'ASSERT': "A", 'DATATYPE': "D", 'ERRHANDLER': "E", 'FILE': "F", 'GROUP': "G", 'INFO': "I", 'OPERATION': "O", 'REQUEST': "R", 'WINDOW': "W", 'SESSION': "S", 'KEYVAL': "K", "GREQUEST_CLASS": "x", "STREAM": "x"}
     for p in func['c_parameters']:
         kind = p['kind']
         name = p['name']
@@ -1669,7 +1674,7 @@ def dump_early_return_pt2pt_proc_null(func):
 def dump_handle_ptr_var(func, p):
     (kind, name) = (p['kind'], p['name'])
     if kind == "REQUEST" and p['length']:
-        if RE.match(r'mpi_(test|wait)all', func['name'], re.IGNORECASE):
+        if RE.match(r'mpix?_(test|wait)all', func['name'], re.IGNORECASE):
             # FIXME:we do not convert pointers for MPI_Testall and MPI_Waitall
             #       (for performance reasons). This probably this can be changed
             pass
@@ -1743,7 +1748,7 @@ def dump_convert_handle(func, p):
         name = "*" + p['name']
 
     if kind == "REQUEST" and p['length']:
-        if RE.match(r'mpi_(test|wait)all', func['name'], re.IGNORECASE):
+        if RE.match(r'mpix?_(test|wait)all', func['name'], re.IGNORECASE):
             # We do not convert pointers for MPI_Testall and MPI_Waitall
             pass
         else:
@@ -1787,7 +1792,7 @@ def dump_validate_handle_ptr(func, p):
     mpir = G.handle_mpir_types[kind]
     if kind == "REQUEST" and p['length']:
         G.err_codes['MPI_ERR_REQUEST'] = 1
-        if RE.match(r'mpi_(test|wait)all', func['name'], re.IGNORECASE):
+        if RE.match(r'mpix?_(test|wait)all', func['name'], re.IGNORECASE):
             # MPI_Testall and MPI_Waitall do pointer conversion inside MPIR_{Test,Wait}all
             pass
         else:

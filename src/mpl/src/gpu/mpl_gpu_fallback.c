@@ -125,3 +125,13 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
 {
     return MPL_ERR_GPU_INTERNAL;
 }
+
+int MPL_gpu_launch_hostfn(int stream, MPL_gpu_hostfn fn, void *data)
+{
+    return -1;
+}
+
+bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
+{
+    return false;
+}

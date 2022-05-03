@@ -1,0 +1,194 @@
+# vim: set ft=c:
+
+MPIX_Stream_create:
+    info: INFO, [info argument]
+    stream: STREAM, direction=out, [stream object created]
+
+MPIX_Stream_free:
+    stream: STREAM, direction=inout, [stream object]
+
+MPIX_Stream_comm_create:
+    comm: COMMUNICATOR, [communicator]
+    stream: STREAM, [stream object]
+    newcomm: COMMUNICATOR, direction=out, [new stream-associated communicator]
+
+MPIX_Stream_comm_create_multiplex:
+    comm: COMMUNICATOR, [communicator]
+    count: ARRAY_LENGTH_NNI, [list length]
+    array_of_streams: STREAM, length=count, [stream object array]
+    newcomm: COMMUNICATOR, direction=out, [new stream-associated communicator]
+
+MPIX_Stream_send:
+    buf: BUFFER, constant=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    source_stream_index: INDEX
+    dest_stream_index: INDEX
+{
+    MPIR_Request *request_ptr = NULL;
+
+    int attr;
+    mpi_errno = MPIR_Stream_comm_set_attr(comm_ptr, comm_ptr->rank, dest,
+                                          source_stream_index, dest_stream_index, &attr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPID_Send(buf, count, datatype, dest, tag, comm_ptr, attr, &request_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (request_ptr == NULL) {
+        goto fn_exit;
+    }
+
+    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = request_ptr->status.MPI_ERROR;
+    MPIR_Request_free(request_ptr);
+
+    MPIR_ERR_CHECK(mpi_errno);
+}
+
+MPIX_Stream_isend:
+    buf: BUFFER, asynchronous=True, constant=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    source_stream_index: INDEX
+    dest_stream_index: INDEX
+    request: REQUEST, direction=out
+{
+    MPIR_Request *request_ptr = NULL;
+
+    int attr;
+    mpi_errno = MPIR_Stream_comm_set_attr(comm_ptr, comm_ptr->rank, dest,
+                                          source_stream_index, dest_stream_index, &attr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr,
+                           attr, &request_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
+
+    /* return the handle of the request to the user */
+    /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for isend, lower-level access is
+     * responsible for its own consistency, while upper-level field access is
+     * controlled by the completion counter */
+    *request = request_ptr->handle;
+}
+
+MPIX_Stream_recv:
+    buf: BUFFER, direction=out, [initial address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    datatype: DATATYPE, [datatype of each receive buffer element]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    source_stream_index: INDEX
+    dest_stream_index: INDEX
+    status: STATUS, direction=out
+{
+    MPIR_Request *request_ptr = NULL;
+
+    int attr;
+    mpi_errno = MPIR_Stream_comm_set_attr(comm_ptr, source, comm_ptr->rank,
+                                          source_stream_index, dest_stream_index, &attr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPID_Recv(buf, count, datatype, source, tag, comm_ptr,
+                          attr, status, &request_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (request_ptr == NULL) {
+        goto fn_exit;
+    }
+
+    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = request_ptr->status.MPI_ERROR;
+    MPIR_Request_extract_status(request_ptr, status);
+    MPIR_Request_free(request_ptr);
+
+    MPIR_ERR_CHECK(mpi_errno);
+}
+
+MPIX_Stream_irecv:
+    buf: BUFFER, direction=out, asynchronous=True, suppress=f08_intent, [initial address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    datatype: DATATYPE, [datatype of each receive buffer element]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    source_stream_index: INDEX
+    dest_stream_index: INDEX
+    request: REQUEST, direction=out
+{
+    MPIR_Request *request_ptr = NULL;
+
+    int attr;
+    mpi_errno = MPIR_Stream_comm_set_attr(comm_ptr, source, comm_ptr->rank,
+                                          source_stream_index, dest_stream_index, &attr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr,
+                           attr, &request_ptr);
+
+    *request = request_ptr->handle;
+    MPIR_ERR_CHECK(mpi_errno);
+}
+
+MPIX_Send_enqueue:
+    buf: BUFFER, constant=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+
+MPIX_Recv_enqueue:
+    buf: BUFFER, direction=out, [initial address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    datatype: DATATYPE, [datatype of each receive buffer element]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    status: STATUS, direction=out
+
+MPIX_Isend_enqueue:
+    buf: BUFFER, constant=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+
+MPIX_Irecv_enqueue:
+    buf: BUFFER, direction=out, [initial address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    datatype: DATATYPE, [datatype of each receive buffer element]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+
+MPIX_Wait_enqueue:
+    request: REQUEST, direction=inout, [request]
+    status: STATUS, direction=out
+
+MPIX_Waitall_enqueue:
+    count: ARRAY_LENGTH_NNI, [lists length]
+    array_of_requests: REQUEST, direction=inout, length=count, [array of requests]
+    array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects]
+{ -- error_check -- array_of_statuses
+    if (count > 0) {
+        MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
+    }
+}

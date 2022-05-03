@@ -148,6 +148,9 @@ typedef struct MPIR_Topology MPIR_Topology;
 struct MPIR_Session;
 typedef struct MPIR_Session MPIR_Session;
 
+struct MPIR_Stream;
+typedef struct MPIR_Stream MPIR_Stream;
+
 /*****************************************************************************/
 /******************* PART 3: DEVICE INDEPENDENT HEADERS **********************/
 /*****************************************************************************/
@@ -174,6 +177,7 @@ typedef struct MPIR_Session MPIR_Session;
 #include "mpir_pt2pt.h"
 #include "mpir_ext.h"
 #include "mpir_gpu.h"
+#include "mpir_stream.h"
 
 #ifdef HAVE_CXX_BINDING
 #include "mpii_cxxinterface.h"
@@ -198,6 +202,7 @@ typedef struct MPIR_Session MPIR_Session;
 /*****************************************************************************/
 
 #include "mpir_thread.h"        /* come first as mutexes are often depended on, e.g. request */
+#include "mpir_err.h"
 #include "mpir_attr.h"
 #include "mpir_group.h"
 #include "mpir_comm.h"
@@ -207,7 +212,6 @@ typedef struct MPIR_Session MPIR_Session;
 #include "mpir_coll.h"
 #include "mpir_csel.h"
 #include "mpir_func.h"
-#include "mpir_err.h"
 #include "mpir_nbc.h"
 #include "mpir_bsend.h"
 #include "mpir_process.h"
