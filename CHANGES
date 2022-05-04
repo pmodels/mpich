@@ -4,6 +4,35 @@
 
 # Testsuite (test/mpi) is configured separately from mpich configure.
 
+# Added options in autogen to accelerate CI builds, including using pre-built
+  sub-modules. Added -yaksa-depth option to generate shallower yaksa pup code
+  for faster build and smaller binaries.
+
+# Support singleton init using hydra.
+
+# On OSX, link option flat_namespace is no longer turned on by default.
+
+# Generate mpi.mod Fortran interfaces using Python 3. For many compilers,
+  including gfortran, flags such as -fallow-mismatched-args is no longer
+  necessary.
+
+# Fixed message queue debugger interface in ch4.
+
+# PMI (src/pmi) is refactored as a subdir and can be separately distributed.
+
+# Added MPIX_Comm_get_failed.
+
+# Experimental MPIX stream API to enable explicit thread contexts.
+
+# Experimental MPIX gpu enqueue API. It currently only supports CUDA streams.
+
+# Delays GPU resource allocation in yaksa.
+
+# CH3 nemesis ofi netmod is removed.
+
+# New collective algorithms. All collective algorithms are listed in
+  src/mpi/coll/coll_algorithms.txt
+
 ===============================================================================
                                Changes in 4.0
 ===============================================================================
