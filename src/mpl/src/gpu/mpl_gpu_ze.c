@@ -47,6 +47,8 @@ static uint32_t *subdevice_count = NULL;
 static int shared_device_fd_count = 0;
 static int *shared_device_fds = NULL;
 
+static int *engine_conversion = NULL;
+
 /* pidfd */
 #ifndef __NR_pidfd_open
 #define __NR_pidfd_open 434     /* System call # on most architectures */
@@ -528,6 +530,12 @@ int MPL_gpu_init(MPL_gpu_info_t * info)
         MPL_gpu_free_hook_register(MPL_ze_ipc_remove_cache_handle);
     }
 
+    /* Initialize gpu engine mapping */
+    engine_conversion = (int *) MPL_malloc(sizeof(int) * MPL_GPU_ENGINE_NUM_TYPES, MPL_MEM_OTHER);
+    engine_conversion[MPL_GPU_ENGINE_TYPE_COMPUTE] = 0; // Compute engine
+    engine_conversion[MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH] = 1;     // Main copy engine
+    engine_conversion[MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY] = 2;        // Link copy engine
+
     mypid = getpid();
 
     gpu_mem_hook_init();
@@ -925,6 +933,7 @@ int MPL_gpu_finalize(void)
         MPL_free(device_state->engines);
     }
     MPL_free(device_states);
+    MPL_free(engine_conversion);
 
     zeEventPoolDestroy(eventPool);
     zeEventPoolDestroy(local_event_pool);
@@ -1512,8 +1521,8 @@ static int get_cmdlist(int dev, int engine, MPL_cmdlist_pool_t ** cl_entry)
    commit = false is append only
    commit = true will close the command list and submit to command queue
 */
-int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev, int engine,
-                    MPL_gpu_request * req, bool commit)
+int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
+                    MPL_gpu_engine_type_t engine_type, MPL_gpu_request * req, bool commit)
 {
     static int pool_idx = 0;
     static ze_event_handle_t prev_event = NULL;
@@ -1523,6 +1532,7 @@ int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev, int eng
     ze_event_handle_t event = NULL;
     int mpl_err = MPL_SUCCESS;
     int ret;
+    int engine = engine_conversion[engine_type];
 
     if (dest_ptr && src_ptr) {
         ze_event_desc_t event_desc = {
