@@ -49,7 +49,7 @@ get_c_sizes_direct(\@c_types);
 
 # tuple list of [ range, kind, size ]
 my $range_kind_list = get_f90_kinds_direct();
-my @f77_types=qw(INTEGER REAL DOUBLE_PRECISION);
+my @f77_types=qw(INTEGER REAL DOUBLE_PRECISION LOGICAL);
 my $i = -1;
 foreach my $t (@$range_kind_list){
     $i++;
