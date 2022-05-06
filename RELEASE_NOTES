@@ -12,6 +12,10 @@
    - Test failures differ based on experimental setup and network
      support built in.
 
+ * libfabric psm3 provider may cause segfaults at exit
+   - psm3 provider may cause segfaults in exit handlers. Configure
+     with --disable-psm3 if this occurs.
+
 ### OS/X
 
  * C++ bindings - Exception handling in C++ bindings is broken because
@@ -24,15 +28,7 @@
 
  * Multiple VCIs (--enable-thread-cs=per-vci) is only supported in ch4.
 
- * ch3:sock does not (and will not) support fine-grained threading.
-
- * MPI-IO APIs are not currently thread-safe when using fine-grained
-   threading (--enable-thread-cs=per-object).
-
- * ch3:nemesis:tcp fine-grained threading is still experimental and may
-   have correctness or performance issues.  Known correctness issues
-   include dynamic process support and generalized request support.
-
+ * ch3 does not (and will not) support fine-grained threading.
 
 ### Lacking channel-specific features
 
