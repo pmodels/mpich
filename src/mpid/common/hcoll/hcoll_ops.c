@@ -21,7 +21,7 @@ int hcoll_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
     return rc;
 }
 
-int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
+int hcoll_Bcast(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                 MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
     dte_data_representation_t dtype;
@@ -48,8 +48,8 @@ int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
     return rc;
 }
 
-int hcoll_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
-                 int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
+int hcoll_Reduce(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
+                 MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
     dte_data_representation_t dtype;
     hcoll_dte_op_t *Op;
@@ -79,7 +79,7 @@ int hcoll_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
     return rc;
 }
 
-int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+int hcoll_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
                     MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
     dte_data_representation_t Dtype;
@@ -177,9 +177,10 @@ int hcoll_Alltoall(const void *sbuf, int scount, MPI_Datatype sdtype,
     return rc;
 }
 
-int hcoll_Alltoallv(const void *sbuf, const int *scounts, const int *sdispls, MPI_Datatype sdtype,
-                    void *rbuf, const int *rcounts, const int *rdispls, MPI_Datatype rdtype,
-                    MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
+int hcoll_Alltoallv(const void *sbuf, const MPI_Aint * scounts, const MPI_Aint * sdispls,
+                    MPI_Datatype sdtype, void *rbuf, const MPI_Aint * rcounts,
+                    const MPI_Aint * rdispls, MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
+                    MPIR_Errflag_t * err)
 {
     MPI_Comm comm = comm_ptr->handle;
     dte_data_representation_t stype;
