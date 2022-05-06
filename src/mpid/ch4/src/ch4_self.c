@@ -231,6 +231,7 @@ int MPIDI_Self_improbe(int rank, int tag, MPIR_Comm * comm, int attr,
         *message = MPIR_Request_create(MPIR_REQUEST_KIND__MPROBE);
         (*message)->dev.ch4.self.match_req = sreq;
         (*message)->comm = sreq->comm;  /* set so we can check it in MPI_{M,Im}recv */
+        MPIR_Comm_add_ref((*message)->comm);
         MPII_UNEXPQ_FORGET(sreq);
     } else {
         *flag = FALSE;
@@ -245,8 +246,6 @@ int MPIDI_Self_imrecv(char *buf, MPI_Aint count, MPI_Datatype datatype,
 {
     MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SELF_MUTEX);
-
-    message->comm = NULL;       /* was set in MPIDI_Self_improbe */
 
     MPIR_Request *sreq = message->dev.ch4.self.match_req;
     MPIR_Request *rreq = message;
