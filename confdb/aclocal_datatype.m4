@@ -5,7 +5,9 @@ AC_DEFUN([PAC_DATATYPE_UTILS], [
 # Take decimal and turn it into two hex digits
 to_hex() {
     len=$[]1
-    if test $len -le 9 ; then
+    if test -z $len ; then
+        pac_retval="00"
+    elif test $len -le 9 ; then
         dnl avoid subshell for speed
         pac_retval="0${len}"
     elif test $len -eq 16 ; then
@@ -89,7 +91,7 @@ dnl Multiplier can be used to define double types
 dnl     e.g. PAC_SET_MPI_TYPE(48, MPI_COMPLEX, $pac_cv_f77_sizeof_real, 2)
 dnl
 AC_DEFUN([PAC_SET_MPI_TYPE], [
-    if test $3 = 0 ; then
+    if test -z "$3" -o $3 = 0 ; then
         $2=MPI_DATATYPE_NULL
         F77_$2=MPI_DATATYPE_NULL
         F08_$2=MPI_DATATYPE_NULL%MPI_VAL
