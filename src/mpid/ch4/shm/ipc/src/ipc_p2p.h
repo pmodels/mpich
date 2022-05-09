@@ -202,10 +202,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
         MPIR_ERR_CHECK(mpi_errno);
         /* copy */
         if (ipc_hdr->is_contig && dt_contig) {
-            mpi_errno = MPIR_Localcopy_gpu(src_buf, src_data_sz, MPI_BYTE, NULL,
+            mpi_errno = MPIR_Localcopy_gpu(src_buf, src_data_sz, MPI_BYTE, 0, NULL,
                                            MPIDIG_REQUEST(rreq, buffer),
                                            MPIDIG_REQUEST(rreq, count),
-                                           MPIDIG_REQUEST(rreq, datatype), &attr,
+                                           MPIDIG_REQUEST(rreq, datatype), 0, &attr,
                                            MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, true);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
