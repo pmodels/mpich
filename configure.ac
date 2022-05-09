@@ -1558,9 +1558,6 @@ case "$with_pmi" in
     AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
     ;;
   pmix)  
-    if test "${device_name}" != "ch4" ; then
-        AC_MSG_ERROR([$device_name does not support PMIx])
-    fi
     AC_DEFINE(USE_PMIX_API, 1, [Define if PMIx API must be used])
     ;;
 esac
@@ -2989,9 +2986,11 @@ if test "$enable_f77" = yes ; then
     CROSS_F77_SIZEOF_INTEGER=${CROSS_F77_SIZEOF_INTEGER:-0}
     CROSS_F77_SIZEOF_REAL=${CROSS_F77_SIZEOF_REAL:-0}
     CROSS_F77_SIZEOF_DOUBLE_PRECISION=${CROSS_F77_SIZEOF_DOUBLE_PRECISION:-0}
+    CROSS_F77_SIZEOF_LOGICAL=${CROSS_F77_SIZEOF_LOGICAL:-0}
     PAC_PROG_F77_CHECK_SIZEOF_EXT(integer,$CROSS_F77_SIZEOF_INTEGER)
     PAC_PROG_F77_CHECK_SIZEOF_EXT(real,$CROSS_F77_SIZEOF_REAL)
     PAC_PROG_F77_CHECK_SIZEOF_EXT(double precision,$CROSS_F77_SIZEOF_DOUBLE_PRECISION)
+    PAC_PROG_F77_CHECK_SIZEOF_EXT(logical,$CROSS_F77_SIZEOF_LOGICAL)
     AC_LANG([Fortran 77])
     # If we have sizes for real and double, we do not need to call
     # mpir_get_fsize at run time.
@@ -3575,7 +3574,7 @@ PAC_SET_MPI_TYPE(19, MPI_UNSIGNED_LONG_LONG, $ac_cv_sizeof_long_long)
 PAC_SET_MPI_TYPE(1a, MPI_CHARACTER, $pac_cv_f77_sizeof_character)
 PAC_SET_MPI_TYPE(1b, MPI_INTEGER, $pac_cv_f77_sizeof_integer)
 PAC_SET_MPI_TYPE(1c, MPI_REAL, $pac_cv_f77_sizeof_real)
-PAC_SET_MPI_TYPE(1d, MPI_LOGICAL, $pac_cv_f77_sizeof_integer)
+PAC_SET_MPI_TYPE(1d, MPI_LOGICAL, $pac_cv_f77_sizeof_logical)
 PAC_SET_MPI_TYPE(1e, MPI_COMPLEX, $pac_cv_f77_sizeof_real, 2)
 PAC_SET_MPI_TYPE(1f, MPI_DOUBLE_PRECISION, $pac_cv_f77_sizeof_double_precision)
 PAC_SET_MPI_TYPE(20, MPI_2INTEGER, $pac_cv_f77_sizeof_integer, 2)

@@ -1868,7 +1868,7 @@ static void dump_global_settings(void)
 
 static void dump_dynamic_settings(void)
 {
-    fprintf(stdout, "==== OFI dyanamic settings ====\n");
+    fprintf(stdout, "==== OFI dynamic settings ====\n");
     fprintf(stdout, "num_vnis: %d\n", MPIDI_OFI_global.num_vnis);
     fprintf(stdout, "num_nics: %d\n", MPIDI_OFI_global.num_nics);
     fprintf(stdout, "======================================\n");
