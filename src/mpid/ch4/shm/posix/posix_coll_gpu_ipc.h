@@ -122,8 +122,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
                                      my_ipc_handle.gpu.global_dev_id);
 
         /* copy data from root */
-        mpi_errno = MPIR_Localcopy_gpu(remote_buf, count, datatype, NULL,
-                                       mem_addr, count, datatype, &ipc_attr.gpu_attr,
+        mpi_errno = MPIR_Localcopy_gpu(remote_buf, count, datatype, 0, NULL,
+                                       mem_addr, count, datatype, 0, &ipc_attr.gpu_attr,
                                        MPL_GPU_COPY_D2D_INCOMING, engine_type, true);
         MPIR_ERR_CHECK(mpi_errno);
     }

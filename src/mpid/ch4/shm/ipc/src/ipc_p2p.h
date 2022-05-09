@@ -230,9 +230,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
             MPL_gpu_engine_type_t engine =
                 MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
             mpi_errno =
-                MPIR_Localcopy_gpu(src_buf, src_data_sz, MPI_BYTE, NULL,
+                MPIR_Localcopy_gpu(src_buf, src_data_sz, MPI_BYTE, 0, NULL,
                                    MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                                   MPIDIG_REQUEST(rreq, datatype), &attr,
+                                   MPIDIG_REQUEST(rreq, datatype), 0, &attr,
                                    MPL_GPU_COPY_DIRECTION_NONE, engine, true);
             MPIR_ERR_CHECK(mpi_errno);
         } else {

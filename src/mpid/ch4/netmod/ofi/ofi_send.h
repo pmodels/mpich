@@ -291,10 +291,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                 MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
             if (dt_contig && engine != MPL_GPU_ENGINE_TYPE_LAST &&
                 MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
-                mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, &attr,
+                mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr,
                                                MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
-                                               data_sz, MPI_BYTE, NULL, MPL_GPU_COPY_DIRECTION_NONE,
-                                               engine, true);
+                                               data_sz, MPI_BYTE, 0, NULL,
+                                               MPL_GPU_COPY_DIRECTION_NONE, engine, true);
                 MPIR_ERR_CHECK(mpi_errno);
             } else {
                 MPI_Aint actual_pack_bytes;
@@ -553,9 +553,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                         MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
                     if (dt_contig && engine != MPL_GPU_ENGINE_TYPE_LAST &&
                         MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
-                        mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, &attr, host_buf,
-                                                       data_sz, MPI_BYTE, NULL,
-                                                       MPL_GPU_COPY_DIRECTION_NONE, engine, true);
+                        mpi_errno =
+                            MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr, host_buf,
+                                               data_sz, MPI_BYTE, 0, NULL,
+                                               MPL_GPU_COPY_DIRECTION_NONE, engine, true);
                         MPIR_ERR_CHECK(mpi_errno);
                         actual_pack_bytes = data_sz;
                     } else {

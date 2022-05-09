@@ -109,7 +109,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
             actual_unpack_bytes = wc->len;
             mpi_errno =
                 MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
-                                   MPI_BYTE, NULL, recv_buf, count, MPI_BYTE, &attr,
+                                   MPI_BYTE, 0, NULL, recv_buf, count, MPI_BYTE, 0, &attr,
                                    MPL_GPU_COPY_DIRECTION_NONE, engine, true);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
