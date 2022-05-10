@@ -116,7 +116,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
     if (winattr & MPIDI_WINATTR_MR_PREFERRED) {
         /* If MR-preferred is set, switch to nonblocking version which may slightly
          * increase per-op+flush overhead. */
-        MPIR_Typerep_req typerep_req = MPIR_TYPEREP_REQ_NULL;
+        MPIR_Typerep_req typerep_req = { MPIR_TYPEREP_REQ_NULL, NULL };
         mpi_errno = MPIR_Ilocalcopy(origin_addr, origin_count, origin_datatype,
                                     (char *) base + disp_unit * target_disp, target_count,
                                     target_datatype, &typerep_req);
@@ -170,7 +170,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
     if (winattr & MPIDI_WINATTR_MR_PREFERRED) {
         /* If MR-preferred is set, switch to nonblocking version which may slightly
          * increase per-op+flush overhead. */
-        MPIR_Typerep_req typerep_req = MPIR_TYPEREP_REQ_NULL;
+        MPIR_Typerep_req typerep_req = { MPIR_TYPEREP_REQ_NULL, NULL };
         mpi_errno = MPIR_Ilocalcopy((char *) base + disp_unit * target_disp, target_count,
                                     target_datatype, origin_addr, origin_count, origin_datatype,
                                     &typerep_req);

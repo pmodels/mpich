@@ -441,8 +441,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
 
     if (host_recvbuf != NULL) {
         recvbuf = in_recvbuf;
-        mpi_errno = MPIR_Localcopy_gpu(host_recvbuf, count, datatype, NULL,
-                                       recvbuf, count, datatype, &recv_attr,
+        mpi_errno = MPIR_Localcopy_gpu(host_recvbuf, count, datatype, 0, NULL,
+                                       recvbuf, count, datatype, 0, &recv_attr,
                                        MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, true);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);
@@ -488,8 +488,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
 
     if (host_recvbuf != NULL) {
         recvbuf = in_recvbuf;
-        mpi_errno = MPIR_Localcopy_gpu(host_recvbuf, count, datatype, NULL,
-                                       recvbuf, count, datatype, &recv_attr,
+        mpi_errno = MPIR_Localcopy_gpu(host_recvbuf, count, datatype, 0, NULL,
+                                       recvbuf, count, datatype, 0, &recv_attr,
                                        MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, true);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);
@@ -538,8 +538,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void 
 
     if (host_recvbuf != NULL) {
         recvbuf = in_recvbuf;
-        mpi_errno = MPIR_Localcopy_gpu(host_recvbuf, count, datatype, NULL,
-                                       recvbuf, count, datatype, &recv_attr,
+        mpi_errno = MPIR_Localcopy_gpu(host_recvbuf, count, datatype, 0, NULL,
+                                       recvbuf, count, datatype, 0, &recv_attr,
                                        MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, true);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);

@@ -60,15 +60,35 @@ extern MPL_initlock_t MPIR_init_lock;
 
 #include "typerep_pre.h"        /* needed for MPIR_Typerep_req */
 
+typedef enum {
+    MPIR_NULL_REQUEST = 0,
+    MPIR_TYPEREP_REQUEST,
+    MPIR_GPU_REQUEST,
+} MPIR_request_type_t;
+
+typedef struct {
+    union {
+        MPIR_Typerep_req y_req;
+        MPL_gpu_request gpu_req;
+    } u;
+    MPIR_request_type_t type;
+} MPIR_gpu_req;
+
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
 int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                     void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                     MPIR_Typerep_req * typereq_req);
 int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                       MPL_pointer_attr_t * sendattr, void *recvbuf, MPI_Aint recvcount,
-                       MPI_Datatype recvtype, MPL_pointer_attr_t * recvattr,
-                       MPL_gpu_engine_type_t enginetype, bool commit);
+                       MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
+                       MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
+                       MPL_pointer_attr_t * recvattr, MPL_gpu_engine_type_t enginetype,
+                       bool commit);
+int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                        MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
+                        MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
+                        MPL_pointer_attr_t * recvattr, MPL_gpu_engine_type_t enginetype,
+                        bool commit, MPIR_gpu_req * req);
 
 /* Contiguous datatype calculates buffer address with `(char *) buf + dt_true_lb`.
  * However, dt_true_lb is treated as ptrdiff_t (signed), and when buf is MPI_BOTTOM
