@@ -210,12 +210,12 @@ int main(int argc, char *argv[])
 
         nsc_handle = MPI_T_PVAR_HANDLE_NULL;
         MPI_T_pvar_handle_alloc(session, nsc_idx, NULL, &nsc_handle, &count);
-        assert(count = 1);
+        assert(count >= num_nics);
         assert(nsc_handle != MPI_T_PVAR_HANDLE_NULL);
 
         nrc_handle = MPI_T_PVAR_HANDLE_NULL;
         MPI_T_pvar_handle_alloc(session, nrc_idx, NULL, &nrc_handle, &count);
-        assert(count = 1);
+        assert(count >= num_nics);
         assert(nrc_handle != MPI_T_PVAR_HANDLE_NULL);
 
         if (!nsc_continuous)
