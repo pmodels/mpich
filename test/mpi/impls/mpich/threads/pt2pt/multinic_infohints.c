@@ -137,6 +137,7 @@ int main(int argc, char *argv[])
     } else {
         num_nics = atoi(buf);
     }
+    MTestPrintfMsg(1, "detected %d nics at rank %d\n", num_nics, rank);
 
     /* Determine the striping optimization is enabled */
     MPI_Info_get(comm_info_out, "enable_multi_nic_striping", MPI_MAX_INFO_VAL, buf, &flag);
