@@ -19,26 +19,21 @@ This is an evaluation release of mpich provided by Intel Corporation.
 2. NEW FEATURES
 -------------------------------------------------------------------------------
 
-* Added support for switch based collectives.
-* Added support to bypass Yaksa for transferring and copying contiguous buffers.
-* Added support to GPU offload based collectives.
-* Optimized GPU pipelining for PVC.
-* Optimized performance of small message broadcast with GPU buffers.
-* Fixed bugs caused by use of multi_nic_pref_nic communicator info hint when used
-  with MPI_THREAD_MULTIPLE.
+* Improved intra-node performance with Intel GPUs.
+* Optimized performance of broadcast and allreduce with GPU buffers. 
+* Fixed bugs with multi-nic communicator.
 
 -------------------------------------------------------------------------------
 2.1 DETAILS
 -------------------------------------------------------------------------------
 
-* Intel compilers updated to use oneAPI 2021.3
 
 
 -------------------------------------------------------------------------------
 2.2 KNOWN ISSUES
 -------------------------------------------------------------------------------
 
-* Message transfers using multi-NIC striping fail with MPI_THREAD_MULTIPLE
+* Message transfers using multi-NIC striping fail with MPI_THREAD_MULTIPLE.
 
 * Allowing compute engines as subdevices when defining ZE_AFFINITY_MASK is not
   currently supported. EngineInstancedSubDevices=0 is set in the modulefiles to
