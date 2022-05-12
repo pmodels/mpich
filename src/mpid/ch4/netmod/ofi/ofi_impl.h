@@ -1005,7 +1005,6 @@ static int MPIDI_OFI_gpu_progress_task(int vni)
                                       (void *) &chunk_req->context), vni,
                                      fi_tsenddata, FALSE /* eagain */);
                 DL_DELETE(MPIDI_OFI_global.gpu_queue[vni], task);
-                /* Append after removing from gpu_queue to properly manage prev/next pointers */
                 MPL_free(task);
             } else {
                 MPIR_Assert(task->type == MPIDI_OFI_PIPELINE_RECV ||
