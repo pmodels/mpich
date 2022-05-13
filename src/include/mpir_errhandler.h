@@ -66,7 +66,6 @@ typedef struct MPIR_Errhandler {
 } MPIR_Errhandler;
 extern MPIR_Object_alloc_t MPIR_Errhandler_mem;
 /* Preallocated errhandler objects */
-#define MPIR_ERRHANDLER_N_BUILTIN 3
 extern MPIR_Errhandler MPIR_Errhandler_builtin[];
 extern MPIR_Errhandler MPIR_Errhandler_direct[];
 

@@ -6,10 +6,6 @@
 #include "mpiimpl.h"
 
 /* preallocated grequest classes */
-#ifndef MPIR_GREQ_CLASS_PREALLOC
-#define MPIR_GREQ_CLASS_PREALLOC 2
-#endif
-
 MPIR_Grequest_class MPIR_Grequest_class_direct[MPIR_GREQ_CLASS_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Grequest_class_mem = { 0, 0, 0, 0, 0, 0, MPIR_GREQ_CLASS,

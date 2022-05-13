@@ -202,6 +202,82 @@ const char *MPIR_Handle_get_kind_str(int kind);
 #define HANDLE_MASK 0x03FFFFFF
 #define HANDLE_INDEX(a) ((a)& HANDLE_MASK)
 
+/* Define N_BUILTIN and PREALLOC for all kinds of objects */
+#define MPIR_COMM_N_BUILTIN 3
+#ifdef MPID_COMM_PREALLOC
+#define MPIR_COMM_PREALLOC MPID_COMM_PREALLOC
+#else
+#define MPIR_COMM_PREALLOC 8
+#endif
+
+#define MPIR_GROUP_N_BUILTIN 1
+#ifdef MPID_GROUP_PREALLOC
+#define MPIR_GROUP_PREALLOC MPID_GROUP_PREALLOC
+#else
+#define MPIR_GROUP_PREALLOC 8
+#endif
+
+#define MPIR_DATATYPE_N_BUILTIN 71
+#ifdef MPID_DATATYPE_PREALLOC
+#define MPIR_DATATYPE_PREALLOC MPID_DATATYPE_PREALLOC
+#else
+#define MPIR_DATATYPE_PREALLOC 8
+#endif
+
+#define MPIR_ERRHANDLER_N_BUILTIN 3
+#ifdef MPID_ERRHANDLER_PREALLOC
+#define MPIR_ERRHANDLER_PREALLOC MPID_ERRHANDLER_PREALLOC
+#else
+#define MPIR_ERRHANDLER_PREALLOC 8
+#endif
+
+#define MPIR_INFO_N_BUILTIN 2
+#ifdef MPID_INFO_PREALLOC
+#define MPIR_INFO_PREALLOC MPID_INFO_PREALLOC
+#else
+#define MPIR_INFO_PREALLOC 8
+#endif
+
+#define MPIR_OP_N_BUILTIN 15
+#ifdef MPID_OP_PREALLOC
+#define MPIR_OP_PREALLOC MPID_OP_PREALLOC
+#else
+#define MPIR_OP_PREALLOC 16
+#endif
+
+#define MPIR_REQUEST_N_BUILTIN 0x11
+#define MPIR_REQUEST_PREALLOC 8
+
+#ifdef MPID_ATTR_PREALLOC
+#define MPIR_ATTR_PREALLOC MPID_ATTR_PREALLOC
+#else
+#define MPIR_ATTR_PREALLOC 32
+#endif
+
+#ifdef MPID_SESSION_PREALLOC
+#define MPIR_SESSION_PREALLOC MPID_SESSION_PREALLOC
+#else
+#define MPIR_SESSION_PREALLOC 2
+#endif
+
+#ifdef MPID_GREQ_CLASS_PREALLOC
+#define MPIR_GREQ_CLASS_PREALLOC MPID_GREQ_CLASS_PREALLOC
+#else
+#define MPIR_GREQ_CLASS_PREALLOC 2
+#endif
+
+#ifdef MPID_WIN_PREALLOC
+#define MPIR_WIN_PREALLOC MPID_WIN_PREALLOC
+#else
+#define MPIR_WIN_PREALLOC 8
+#endif
+
+#ifdef MPID_STREAM_PREALLOC
+#define MPIR_STREAM_PREALLOC MPID_STREAM_PREALLOC
+#else
+#define MPIR_STREAM_PREALLOC 8
+#endif
+
 #if defined (MPL_USE_DBG_LOGGING)
 extern MPL_dbg_class MPIR_DBG_HANDLE;
 #endif /* MPL_USE_DBG_LOGGING */
@@ -481,6 +557,7 @@ static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
             ptr=MPIR_##kind##_builtin+((a)&(bmsk));                     \
             break;                                                      \
         case HANDLE_KIND_DIRECT:                                        \
+            MPIR_Assert(HANDLE_INDEX(a) < MPIR_##KIND##_PREALLOC);      \
             ptr=MPIR_##kind##_direct+HANDLE_INDEX(a);                   \
             break;                                                      \
         case HANDLE_KIND_INDIRECT:                                      \

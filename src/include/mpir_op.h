@@ -42,8 +42,6 @@ typedef enum MPIR_Op_kind {
     MPIR_OP_KIND__USER_LARGE = 35
 } MPIR_Op_kind;
 
-#define MPIR_OP_N_BUILTIN 15
-
 /*S
   MPIR_User_function - Definition of a user function for MPI_Op types.
 

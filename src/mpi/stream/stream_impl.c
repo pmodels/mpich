@@ -5,10 +5,6 @@
 
 #include "mpiimpl.h"
 
-#ifndef MPIR_STREAM_PREALLOC
-#define MPIR_STREAM_PREALLOC 8
-#endif
-
 #define GPU_STREAM_USE_SINGLE_VCI
 
 #ifdef GPU_STREAM_USE_SINGLE_VCI
