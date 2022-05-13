@@ -9,9 +9,6 @@
 
 /* This is the utility file for info that contains the basic info items
    and storage management */
-#ifndef MPIR_INFO_PREALLOC
-#define MPIR_INFO_PREALLOC 8
-#endif
 
 /* Preallocated info objects */
 MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN];

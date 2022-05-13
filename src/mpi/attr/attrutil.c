@@ -25,10 +25,6 @@ MPIR_Object_alloc_t MPII_Keyval_mem = { 0, 0, 0, 0, 0, 0, MPIR_KEYVAL,
     NULL, {0}
 };
 
-#ifndef MPIR_ATTR_PREALLOC
-#define MPIR_ATTR_PREALLOC 32
-#endif
-
 /* Preallocated keyval objects */
 MPIR_Attribute MPID_Attr_direct[MPIR_ATTR_PREALLOC];
 

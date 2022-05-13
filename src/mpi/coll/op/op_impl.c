@@ -5,10 +5,6 @@
 
 #include "mpiimpl.h"
 
-#ifndef MPIR_OP_PREALLOC
-#define MPIR_OP_PREALLOC 16
-#endif
-
 /* Preallocated op objects */
 MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
 MPIR_Op MPIR_Op_direct[MPIR_OP_PREALLOC];

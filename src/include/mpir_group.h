@@ -84,7 +84,6 @@ struct MPIR_Group {
 
 extern MPIR_Object_alloc_t MPIR_Group_mem;
 /* Preallocated group objects */
-#define MPIR_GROUP_N_BUILTIN 1
 extern MPIR_Group MPIR_Group_builtin[MPIR_GROUP_N_BUILTIN];
 extern MPIR_Group MPIR_Group_direct[];
 
