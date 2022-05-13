@@ -11,13 +11,8 @@
  * predefined datatype handles, take the greatest one, and convert it to decimal
  * here. */
 /* FIXME: I will fix this by refactor the current datatype code out-of configure.ac */
-#define MPIR_DATATYPE_N_BUILTIN 71
 #define MPIR_DATATYPE_PAIRTYPE 5
 #define MPIR_DATATYPE_N_PREDEFINED (MPIR_DATATYPE_N_BUILTIN + MPIR_DATATYPE_PAIRTYPE)
-
-#ifndef MPIR_DATATYPE_PREALLOC
-#define MPIR_DATATYPE_PREALLOC 8
-#endif /* MPIR_DATATYPE_PREALLOC */
 
 /*S
   MPIR_Datatype_contents - Holds envelope and contents data for a given

@@ -131,10 +131,6 @@ static int checkForUserErrcode(int);
  * in MPICH
  */
 
-#ifndef MPIR_ERRHANDLER_PREALLOC
-#define MPIR_ERRHANDLER_PREALLOC 8
-#endif
-
 /* Preallocated errorhandler objects */
 MPIR_Errhandler MPIR_Errhandler_builtin[MPIR_ERRHANDLER_N_BUILTIN];
 MPIR_Errhandler MPIR_Errhandler_direct[MPIR_ERRHANDLER_PREALLOC];

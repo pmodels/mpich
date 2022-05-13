@@ -820,6 +820,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_pending_recv_t
     MPIDI_OFI_gpu_pending_recv_t *task =
         (MPIDI_OFI_gpu_pending_recv_t *) MPL_malloc(sizeof(MPIDI_OFI_gpu_pending_recv_t),
                                                     MPL_MEM_OTHER);
+    MPIR_Assert(task);
     task->req = req;
     task->idx = idx;
     task->n_chunks = n_chunks;
@@ -840,6 +841,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_pending_send_t *MPIDI_OFI_create_send_tas
     MPIDI_OFI_gpu_pending_send_t *task =
         (MPIDI_OFI_gpu_pending_send_t *) MPL_malloc(sizeof(MPIDI_OFI_gpu_pending_send_t),
                                                     MPL_MEM_OTHER);
+    MPIR_Assert(task);
     task->sreq = req;
     task->attr = attr;
     task->send_buf = send_buf;
@@ -992,6 +994,7 @@ static int MPIDI_OFI_gpu_progress_task(int vni)
             if (task->type == MPIDI_OFI_PIPELINE_SEND) {
                 MPIDI_OFI_gpu_pipeline_request *chunk_req = (MPIDI_OFI_gpu_pipeline_request *)
                     MPL_malloc(sizeof(MPIDI_OFI_gpu_pipeline_request), MPL_MEM_BUFFER);
+                MPIR_Assert(chunk_req);
                 chunk_req->parent = request;
                 chunk_req->event_id = MPIDI_OFI_EVENT_SEND_GPU_PIPELINE;
                 chunk_req->buf = task->buf;

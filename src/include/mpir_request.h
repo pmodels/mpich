@@ -87,8 +87,6 @@ typedef enum MPIR_Request_kind_t {
 
 #define MPIR_REQUEST_NULL_RECV     (MPI_Request)0x6c000010
 
-#define MPIR_REQUEST_BUILTIN_COUNT      0x11
-
 /* This currently defines a single structure type for all requests.
    Eventually, we may want a union type, as used in MPICH-1 */
 /* Typedefs for Fortran generalized requests */
@@ -273,11 +271,10 @@ void MPIR_Persist_coll_free_cb(MPIR_Request * request);
 #define REQUEST_NUM_INDICES  1024
 
 #define MPIR_REQUEST_NUM_POOLS REQUEST_POOL_MAX
-#define MPIR_REQUEST_PREALLOC 8
 
 #define MPIR_REQUEST_POOL(req_) (((req_)->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT)
 
-extern MPIR_Request MPIR_Request_builtins[MPIR_REQUEST_BUILTIN_COUNT];
+extern MPIR_Request MPIR_Request_builtin[MPIR_REQUEST_N_BUILTIN];
 extern MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
 extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 
@@ -290,8 +287,8 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
             if (a == MPI_MESSAGE_NO_PROC) { \
                 ptr = NULL; \
             } else { \
-                MPIR_Assert(HANDLE_INDEX(a) < MPIR_REQUEST_BUILTIN_COUNT); \
-                ptr = MPIR_Request_builtins + HANDLE_INDEX(a); \
+                MPIR_Assert(HANDLE_INDEX(a) < MPIR_REQUEST_N_BUILTIN); \
+                ptr = MPIR_Request_builtin + HANDLE_INDEX(a); \
             } \
             break; \
         case HANDLE_KIND_DIRECT: \
@@ -484,7 +481,7 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *get_builtin_req(int idx, MPIR_Request_kind_t kind)
 {
-    return MPIR_Request_builtins + (idx);
+    return MPIR_Request_builtin + (idx);
 }
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request_kind_t kind)

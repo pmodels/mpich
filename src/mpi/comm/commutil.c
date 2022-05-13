@@ -12,14 +12,11 @@
 
 /* This is the utility file for comm that contains the basic comm items
    and storage management */
-#ifndef MPID_COMM_PREALLOC
-#define MPID_COMM_PREALLOC 8
-#endif
 
 /* Preallocated comm objects */
 /* initialized in initthread.c */
 MPIR_Comm MPIR_Comm_builtin[MPIR_COMM_N_BUILTIN];
-MPIR_Comm MPIR_Comm_direct[MPID_COMM_PREALLOC];
+MPIR_Comm MPIR_Comm_direct[MPIR_COMM_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Comm_mem = {
     0,
@@ -31,7 +28,7 @@ MPIR_Object_alloc_t MPIR_Comm_mem = {
     MPIR_COMM,
     sizeof(MPIR_Comm),
     MPIR_Comm_direct,
-    MPID_COMM_PREALLOC,
+    MPIR_COMM_PREALLOC,
     NULL, {0}
 };
 
