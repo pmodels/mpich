@@ -72,7 +72,9 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
      * the programmer once that memory is no longer required */
     if (num_children > 0) {
         child_buffer = MPIR_TSP_sched_malloc(sizeof(void *) * num_children, sched);
+        MPIR_Assert(child_buffer != NULL);
         child_buffer[0] = MPIR_TSP_sched_malloc(extent * count, sched);
+        MPIR_Assert(child_buffer[0] != NULL);
         child_buffer[0] = (void *) ((char *) child_buffer[0] - type_lb);
         for (i = 1; i < num_children; i++) {
             if (buffer_per_child) {
