@@ -95,7 +95,6 @@ struct MPIR_Info {
 
 extern MPIR_Object_alloc_t MPIR_Info_mem;
 /* Preallocated info objects */
-#define MPIR_INFO_N_BUILTIN 2
 extern MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN];
 extern MPIR_Info MPIR_Info_direct[];
 
