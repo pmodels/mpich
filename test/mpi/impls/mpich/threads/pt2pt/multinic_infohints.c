@@ -60,7 +60,7 @@ static int check_nic_pvar(int rank, int num_nics, unsigned long long *nic_pvar_b
                     ("rank=%d --> target=1: Actual sent byte count=%ld through NIC %d does not match with the "
                      "expected sent byte count=%ld\n", rank, nic_pvar_bytes_count[idx], idx,
                      nic_expected_bytes_count[idx]);
-                return -1;
+                return 1;
             }
         } else {
             if (nic_expected_bytes_count[idx] != nic_pvar_bytes_count[idx]) {
@@ -68,7 +68,7 @@ static int check_nic_pvar(int rank, int num_nics, unsigned long long *nic_pvar_b
                     ("rank=%d --> target=0: Actual received byte count=%ld through NIC %d does not match with the "
                      "expected received byte count=%ld\n", rank, nic_pvar_bytes_count[idx],
                      idx, nic_expected_bytes_count[idx]);
-                return -1;
+                return 1;
             }
         }
     }
@@ -137,6 +137,7 @@ int main(int argc, char *argv[])
     } else {
         num_nics = atoi(buf);
     }
+    MTestPrintfMsg(1, "detected %d nics at rank %d\n", num_nics, rank);
 
     /* Determine the striping optimization is enabled */
     MPI_Info_get(comm_info_out, "enable_multi_nic_striping", MPI_MAX_INFO_VAL, buf, &flag);
@@ -210,12 +211,12 @@ int main(int argc, char *argv[])
 
         nsc_handle = MPI_T_PVAR_HANDLE_NULL;
         MPI_T_pvar_handle_alloc(session, nsc_idx, NULL, &nsc_handle, &count);
-        assert(count = 1);
+        assert(count >= num_nics);
         assert(nsc_handle != MPI_T_PVAR_HANDLE_NULL);
 
         nrc_handle = MPI_T_PVAR_HANDLE_NULL;
         MPI_T_pvar_handle_alloc(session, nrc_idx, NULL, &nrc_handle, &count);
-        assert(count = 1);
+        assert(count >= num_nics);
         assert(nrc_handle != MPI_T_PVAR_HANDLE_NULL);
 
         if (!nsc_continuous)
@@ -258,10 +259,10 @@ int main(int argc, char *argv[])
         /* read the pvars from the session and compare with expected counts */
         if (rank == 0) {
             MPI_T_pvar_read(session, nsc_handle, &nic_sent_bytes_count);
-            assert(0 == check_nic_pvar(rank, num_nics, nic_sent_bytes_count));
+            errs += check_nic_pvar(rank, num_nics, nic_sent_bytes_count);
         } else {        /* rank == 1 */
             MPI_T_pvar_read(session, nrc_handle, &nic_recvd_bytes_count);
-            assert(0 == check_nic_pvar(rank, num_nics, nic_recvd_bytes_count));
+            errs += check_nic_pvar(rank, num_nics, nic_recvd_bytes_count);
         }
 
         /* Cleanup */

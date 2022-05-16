@@ -3289,6 +3289,7 @@ else
     pac_cv_f77_sizeof_integer=0
     pac_cv_f77_sizeof_real=0
     pac_cv_f77_sizeof_double_precision=0
+    pac_cv_f77_sizeof_logical=0
     pac_cv_f77_sizeof_integer1=0
     pac_cv_f77_sizeof_integer2=0
     pac_cv_f77_sizeof_integer4=0

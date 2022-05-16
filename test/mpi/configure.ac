@@ -442,7 +442,7 @@ if test "$MPI_IS_MPICH" = "yes" ; then
 #include "mpi.h"
 int main(void) {MPI_Init(0,0);MPI_Finalize();return 0;}
 EOF
-    mpicc -o conftest conftest.c
+    $CC -o conftest conftest.c
     MPIR_CVAR_DEBUG_SUMMARY=1 ./conftest > conftest.output
 
     if grep libfabric conftest.output > /dev/null ; then

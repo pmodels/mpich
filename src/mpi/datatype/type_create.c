@@ -37,12 +37,19 @@
         new_dtp->typerep.handle = MPIR_TYPEREP_HANDLE_NULL; \
     } while (0)
 
+static bool type_size_is_zero(MPI_Datatype dt)
+{
+    MPI_Aint dt_size;
+    MPIR_Datatype_get_size_macro(dt, dt_size);
+    return dt_size == 0;
+}
+
 int MPIR_Type_contiguous(MPI_Aint count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *new_dtp;
 
-    if (count == 0)
+    if (type_size_is_zero(oldtype) || count == 0)
         return MPII_Type_zerolen(newtype);
 
     CREATE_NEW_DTP(new_dtp);
@@ -67,7 +74,7 @@ int MPIR_Type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *new_dtp;
 
-    if (count == 0)
+    if (type_size_is_zero(oldtype) || count == 0)
         return MPII_Type_zerolen(newtype);
 
     CREATE_NEW_DTP(new_dtp);
@@ -99,7 +106,7 @@ int MPIR_Type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
 
     MPIR_Datatype *new_dtp;
 
-    if (count == 0)
+    if (type_size_is_zero(oldtype) || count == 0)
         return MPII_Type_zerolen(newtype);
 
     CREATE_NEW_DTP(new_dtp);
@@ -131,7 +138,7 @@ int MPIR_Type_indexed(MPI_Aint count, const MPI_Aint * blocklength_array,
     MPIR_Datatype *new_dtp;
     MPI_Aint i;
 
-    if (count == 0)
+    if (type_size_is_zero(oldtype) || count == 0)
         return MPII_Type_zerolen(newtype);
 
     /* sanity check that blocklens are all non-negative */

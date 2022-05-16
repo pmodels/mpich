@@ -1155,13 +1155,13 @@ int MPII_compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info
      * its hint_str size to the global max, and makes sure that this
      * comparison is successful on all processes. */
     mpi_errno =
-        MPID_Allreduce(&hint_str_size, &hint_str_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
+        MPIR_Allreduce(&hint_str_size, &hint_str_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     hint_str_equal = (hint_str_size == hint_str_size_max);
 
     mpi_errno =
-        MPID_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
+        MPIR_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
                        comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -1174,14 +1174,14 @@ int MPII_compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info
     hint_str_global = (char *) MPL_malloc(strlen(hint_str), MPL_MEM_OTHER);
 
     mpi_errno =
-        MPID_Allreduce(hint_str, hint_str_global, strlen(hint_str), MPI_CHAR,
+        MPIR_Allreduce(hint_str, hint_str_global, strlen(hint_str), MPI_CHAR,
                        MPI_MAX, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     hint_str_equal = !memcmp(hint_str, hint_str_global, strlen(hint_str));
 
     mpi_errno =
-        MPID_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
+        MPIR_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
                        comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
