@@ -231,6 +231,7 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
                 MPIDI_OFI_gpu_pipeline_request *chunk_req;
                 chunk_req = (MPIDI_OFI_gpu_pipeline_request *)
                     MPL_malloc(sizeof(MPIDI_OFI_gpu_pipeline_request), MPL_MEM_BUFFER);
+                MPIR_Assert(chunk_req);
                 chunk_req->event_id = MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_PACKED;
                 chunk_req->parent = rreq;
                 chunk_req->buf = host_buf;
