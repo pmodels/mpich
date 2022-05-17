@@ -5,6 +5,7 @@
 
 mpi_core_sources +=             \
     src/mpi/errhan/errhan_impl.c \
+    src/mpi/errhan/errhan_file.c \
     src/mpi/errhan/errutil.c    \
     src/mpi/errhan/dynerrutil.c
 
