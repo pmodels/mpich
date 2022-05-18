@@ -10,4 +10,4 @@ init
 comm
 ext
 topo
-profile
+@f77profile@
