@@ -203,6 +203,11 @@ test-clean:
 ## better approach might be to have each Makefile.mk append to a
 ## common set of rules.
 install-exec-hook:
+	if test -e lib/lib@PMPILIBNAME@.la ; then \
+	    . lib/lib@PMPILIBNAME@.la ; \
+	elif test -e lib/lib@MPILIBNAME@.la ; then \
+	    . lib/lib@MPILIBNAME@.la ; \
+	fi ; \
 	for e in ${DESTDIR}${bindir}/@MPICC_NAME@ ${DESTDIR}${bindir}/@MPICXX_NAME@ \
 		${DESTDIR}${bindir}/@MPIF77_NAME@ ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; do \
 		if test -e $${e} ; then \
@@ -210,7 +215,8 @@ install-exec-hook:
 				-e 's|__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${exec_prefix}|g' \
 				-e 's|__SYSCONFDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${sysconfdir}|g' \
 				-e 's|__INCLUDEDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${includedir}|g' \
-				-e 's|__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${libdir}|g' $${e} > $${e}.tmp ; \
+				-e 's|__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${libdir}|g' \
+				-e "s|__LIBS_TO_BE_FILLED_AT_INSTALL_TIME__|$$dependency_libs|g" $${e} > $${e}.tmp ; \
 			$(INSTALL_SCRIPT) $${e}.tmp $${e} ; \
 			rm -f $${e}.tmp ; \
 		fi ; \
