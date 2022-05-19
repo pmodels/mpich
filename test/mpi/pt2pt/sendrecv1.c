@@ -18,12 +18,11 @@ static char MTEST_Descrip[] = "Send-Recv";
 int world_rank, world_size;
 
 static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const char *basic_type,
-                     mtest_mem_type_e sendmem, mtest_mem_type_e recvmem)
+                     mtest_mem_type_e sendmem, mtest_mem_type_e recvmem, int source)
 {
     int errs = 0;
     int err;
-    int rank, size, source, dest;
-    int minsize = 2;
+    int rank, size;
     MPI_Aint sendcount, recvcount;
     MPI_Comm comm;
     MPI_Datatype sendtype, recvtype;
@@ -52,7 +51,7 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
      * run through a selection of communicators and datatypes.
      * Use subsets of these for tests that do not involve combinations
      * of communicators, datatypes, and counts of datatypes */
-    while (MTestGetIntracommGeneral(&comm, minsize, 1)) {
+    while (MTestGetIntracommGeneral(&comm, 2, 1)) {
         if (comm == MPI_COMM_NULL) {
             /* for NULL comms, make sure these processes create the
              * same number of objects, so the target knows what
@@ -65,8 +64,8 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
         /* Determine the sender and receiver */
         MPI_Comm_rank(comm, &rank);
         MPI_Comm_size(comm, &size);
-        source = 0;
-        dest = size - 1;
+
+        int dest = (source + size - 1) % size;
 
         /* To improve reporting of problems about operations, we
          * change the error handler to errors return */
@@ -129,15 +128,26 @@ int main(int argc, char *argv[])
     MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    if (world_size < 2) {
+        printf("This test requires 2 processes\n");
+        errs++;
+        goto fn_exit;
+    }
 
     struct dtp_args dtp_args;
     dtp_args_init(&dtp_args, MTEST_DTP_PT2PT, argc, argv);
     while (dtp_args_get_next(&dtp_args)) {
-        errs += sendrecv1(dtp_args.seed, dtp_args.testsize,
-                          dtp_args.count, dtp_args.u.pt2pt.recvcnt,
-                          dtp_args.basic_type, dtp_args.u.pt2pt.sendmem, dtp_args.u.pt2pt.recvmem);
+        for (int source_rank = 0; source_rank < 2; source_rank++) {
+            MTestPrintfMsg(1, "Test with source rank = %d\n", source_rank);
+            errs += sendrecv1(dtp_args.seed, dtp_args.testsize,
+                              dtp_args.count, dtp_args.u.pt2pt.recvcnt,
+                              dtp_args.basic_type, dtp_args.u.pt2pt.sendmem,
+                              dtp_args.u.pt2pt.recvmem, source_rank);
+        }
     }
     dtp_args_finalize(&dtp_args);
+
+  fn_exit:
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
 }
