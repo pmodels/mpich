@@ -344,6 +344,27 @@ int MPIR_Stream_comm_create_multiplex_impl(MPIR_Comm * comm_ptr,
     goto fn_exit;
 }
 
+int MPIR_Comm_get_stream_impl(MPIR_Comm * comm_ptr, int idx, MPIR_Stream ** stream_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *stream_out = NULL;
+    if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
+        if (idx == 0) {
+            *stream_out = comm_ptr->stream_comm.single.stream;
+        }
+    } else if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
+        int rank = comm_ptr->rank;
+        MPI_Aint *displs = comm_ptr->stream_comm.multiplex.vci_displs;
+        int num_streams = displs[rank + 1] - displs[rank];
+        if (idx >= 0 && idx < num_streams) {
+            *stream_out = comm_ptr->stream_comm.multiplex.local_streams[displs[rank] + idx];
+        }
+    }
+
+    return mpi_errno;
+}
+
 /* ---- CUDA stream send/recv enqueue ---- */
 
 static int get_local_gpu_stream(MPIR_Comm * comm_ptr, MPL_gpu_stream_t * gpu_stream)
