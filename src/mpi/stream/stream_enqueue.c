@@ -539,3 +539,147 @@ static int allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req)
 
     return mpi_errno;
 }
+
+/* allreduce enqueue */
+struct allreduce_data {
+    const void *sendbuf;
+    void *recvbuf;
+    MPI_Aint count;
+    MPI_Datatype datatype;
+    MPI_Op op;
+    MPIR_Comm *comm_ptr;
+
+    void *host_sendbuf;
+    void *host_recvbuf;
+    MPI_Aint data_sz;
+    MPI_Aint actual_pack_bytes;
+};
+
+static void allreduce_enqueue_cb(void *data)
+{
+    int mpi_errno;
+
+    struct allreduce_data *p = data;
+    void *sendbuf = (void *) p->sendbuf;
+    void *recvbuf = p->recvbuf;
+
+    int is_contig;
+    MPI_Aint true_lb;
+    MPIR_Datatype_is_contig(p->datatype, &is_contig);
+    MPIR_Datatype_get_true_lb(p->datatype, &true_lb);
+
+    if (p->host_sendbuf || p->host_recvbuf) {
+        if (p->host_sendbuf) {
+            MPIR_Assertp(p->actual_pack_bytes == p->data_sz);
+            if (is_contig) {
+                sendbuf = (char *) p->host_sendbuf - true_lb;
+            } else {
+                sendbuf = MPIR_alloc_buffer(p->count, p->datatype);
+                MPIR_Assertp(sendbuf);
+                MPI_Aint actual_unpack_bytes;
+                MPIR_Typerep_unpack(p->host_sendbuf, p->data_sz, sendbuf, p->count, p->datatype,
+                                    0, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
+                MPIR_Assertp(actual_unpack_bytes == p->data_sz);
+            }
+        }
+        if (p->host_recvbuf) {
+            if (is_contig) {
+                recvbuf = (char *) p->host_recvbuf - true_lb;
+            } else {
+                recvbuf = MPIR_alloc_buffer(p->count, p->datatype);
+                MPIR_Assertp(recvbuf);
+            }
+        }
+    }
+
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, p->count, p->datatype, p->op, p->comm_ptr,
+                               &errflag);
+    MPIR_Assertp(mpi_errno == MPI_SUCCESS);
+
+    if (p->host_sendbuf) {
+        if (!is_contig) {
+            MPL_free(sendbuf);
+        }
+        MPIR_gpu_free_host(p->host_sendbuf);
+    }
+
+    if (p->host_recvbuf) {
+        if (!is_contig) {
+            MPI_Aint actual_pack_bytes;
+            MPIR_Typerep_pack(recvbuf, p->count, p->datatype, 0, p->host_recvbuf, p->data_sz,
+                              &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+            MPIR_Assertp(actual_pack_bytes == p->data_sz);
+            MPL_free(recvbuf);
+        }
+        /* unpack stream + cleanup_cb */
+    } else {
+        /* we are done */
+        MPL_free(p);
+    }
+}
+
+static void allred_stream_cleanup_cb(void *data)
+{
+    struct allreduce_data *p = data;
+    MPIR_Assertp(p->actual_pack_bytes == p->data_sz);
+
+    MPIR_gpu_free_host(p->host_recvbuf);
+    MPL_free(data);
+}
+
+int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
+                                MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
+                                MPIR_Comm * comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPL_gpu_stream_t gpu_stream;
+    mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    struct allreduce_data *p;
+    p = MPL_malloc(sizeof(struct allreduce_data), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    p->sendbuf = sendbuf;
+    p->recvbuf = recvbuf;
+    p->count = count;
+    p->datatype = datatype;
+    p->op = op;
+    p->comm_ptr = comm_ptr;
+
+    p->host_sendbuf = NULL;
+    p->host_recvbuf = NULL;
+
+    MPI_Aint dt_size;
+    MPIR_Datatype_get_size_macro(datatype, dt_size);
+    p->data_sz = dt_size * count;
+
+    if (MPIR_GPU_query_pointer_is_dev(sendbuf)) {
+        MPIR_gpu_malloc_host(&p->host_sendbuf, p->data_sz);
+        mpi_errno = MPIR_Typerep_pack_stream(sendbuf, count, datatype, 0,
+                                             p->host_sendbuf, p->data_sz,
+                                             &p->actual_pack_bytes, &gpu_stream);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    if (MPIR_GPU_query_pointer_is_dev(recvbuf)) {
+        MPIR_gpu_malloc_host(&p->host_recvbuf, p->data_sz);
+    }
+
+    MPL_gpu_launch_hostfn(gpu_stream, allreduce_enqueue_cb, p);
+
+    if (p->host_recvbuf) {
+        mpi_errno = MPIR_Typerep_unpack_stream(p->host_recvbuf, p->data_sz,
+                                               recvbuf, count, datatype, 0,
+                                               &p->actual_pack_bytes, &gpu_stream);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPL_gpu_launch_hostfn(gpu_stream, allred_stream_cleanup_cb, p);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}

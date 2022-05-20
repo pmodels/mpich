@@ -197,3 +197,11 @@ MPIX_Waitall_enqueue:
         MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
     }
 }
+
+MPIX_Allreduce_enqueue:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [data type of elements of send buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
