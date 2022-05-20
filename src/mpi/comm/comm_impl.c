@@ -655,34 +655,29 @@ int MPIR_Comm_create_group_impl(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, in
 
 int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 {
-    return MPIR_Comm_dup_with_info_impl(comm_ptr, NULL, newcomm_ptr);
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPII_Comm_dup(comm_ptr, NULL, newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Comm_copy_stream(comm_ptr, *newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Attribute *new_attributes = 0;
 
-    /* Copy attributes, executing the attribute copy functions */
-    /* This accesses the attribute dup function through the perprocess
-     * structure to prevent comm_dup from forcing the linking of the
-     * attribute functions.  The actual function is (by default)
-     * MPIR_Attr_dup_list
-     */
-    if (MPIR_Process.attr_dup) {
-        mpi_errno = MPIR_Process.attr_dup(comm_ptr->handle, comm_ptr->attributes, &new_attributes);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-
-    /* Generate a new context value and a new communicator structure */
-    /* We must use the local size, because this is compared to the
-     * rank of the process in the communicator.  For intercomms,
-     * this must be the local size */
-    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, info, newcomm_ptr);
+    mpi_errno = MPII_Comm_dup(comm_ptr, info, newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    (*newcomm_ptr)->attributes = new_attributes;
+    mpi_errno = MPIR_Comm_copy_stream(comm_ptr, *newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -881,6 +876,9 @@ int MPIR_Comm_idup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info,
     }
 
     mpi_errno = MPII_Comm_copy_data(comm_ptr, info, newcommp);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Comm_copy_stream(comm_ptr, *newcommp);
     MPIR_ERR_CHECK(mpi_errno);
 
     (*newcommp)->attributes = new_attributes;
