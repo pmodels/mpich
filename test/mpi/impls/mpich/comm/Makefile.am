@@ -17,7 +17,8 @@ noinst_PROGRAMS = \
     comm_dup \
     stream \
     stream_comm \
-    stream_multiplex
+    stream_multiplex \
+    stream_comm_dup
 
 # Copied from cxx/rma/Makefile.am
 #BINDIR=${bindir}
