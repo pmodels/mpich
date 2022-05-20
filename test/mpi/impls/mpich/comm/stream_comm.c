@@ -77,7 +77,7 @@ static int test_stream_comm(MPIX_Stream stream)
 #define DATA_VAL 42
 
     /* test send/recv */
-    if (rank == 0) {
+    if (rank == src) {
         int data = DATA_VAL;
         mpi_errno = MPI_Send(&data, 1, MPI_INT, dst, tag, stream_comm);
         CHECK_MPI_ERROR;
@@ -89,7 +89,7 @@ static int test_stream_comm(MPIX_Stream stream)
             printf("Expect receive data = %d, got %d\n", DATA_VAL, data);
             errs++;
         }
-    } else if (rank == 1) {
+    } else if (rank == dst) {
         int data = -1;
         mpi_errno = MPI_Recv(&data, 1, MPI_INT, src, tag, stream_comm, MPI_STATUS_IGNORE);
         CHECK_MPI_ERROR;
