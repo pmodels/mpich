@@ -35,6 +35,21 @@ def dump_mpi_c(func, is_large=False):
         for a in func['error'].split(", "):
             G.err_codes[a] = 1
 
+    # Some routines, e.g. MPIR_Comm_split_filesystem, are defined in romio or libromio.la, but are
+    # only referenced from libpmpi.la. This causes an issue in static linking when weak symbols are
+    # not available.
+    #
+    # As an hack, we reference these symbols in selected routines to force the inclusion of romio
+    # routines.
+    def dump_romio_reference(name):
+        G.out.append("#if defined(HAVE_ROMIO) && defined(MPICH_MPI_FROM_PMPI)")
+        G.out.append("void *dummy_refs_%s[] = {" % name)
+        G.out.append("    (void *) MPIR_Comm_split_filesystem,")
+        G.out.append("    (void *) MPIR_ROMIO_Get_file_errhand,")
+        G.out.append("    (void *) MPIR_ROMIO_Set_file_errhand,")
+        G.out.append("};")
+        G.out.append("#endif")
+
     # -- "dump" accumulates output lines in G.out
     if not is_large:
         # only include once (skipping "BIG")
@@ -42,6 +57,10 @@ def dump_mpi_c(func, is_large=False):
         if 'include' in func:
             for a in func['include'].replace(',', ' ').split():
                 G.out.append("#include \"%s\"" % a)
+
+        # hack to get romio routines to work with static linking + no-weak-symbols
+        if re.match(r'mpi_(init|get_library_version|session_init|t_init_thread)', func['name'], re.IGNORECASE):
+            dump_romio_reference(func['name'])
 
     G.out.append("")
 

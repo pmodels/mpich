@@ -27,6 +27,13 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 /* for user-definde reduce operator */
 #include "adio_extern.h"
 
+/* */
+#if !defined(HAVE_WEAK_SYMBOLS) && !defined(MPIO_BUILD_PROFILING)
+void *dummy_refs_MPI_File_open[] = {
+    (void *) ADIO_ImmediateOpen,
+    (void *) MPIU_datatype_full_size,
+};
+#endif
 
 extern int ADIO_Init_keyval;
 

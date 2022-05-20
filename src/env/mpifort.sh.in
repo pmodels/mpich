@@ -357,7 +357,7 @@ final_ldflags="@MPICH_MPIFORT_LDFLAGS@ @WRAPPER_LDFLAGS@"
 final_libs="@MPICH_MPIFORT_LIBS@"
 if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
     final_ldflags="${final_ldflags} @LDFLAGS@"
-    final_libs="${final_libs} @LIBS@ @WRAPPER_LIBS@"
+    final_libs="${final_libs} __LIBS_TO_BE_FILLED_AT_INSTALL_TIME__"
 fi
 
 extra_f77_flags="@WRAPPER_EXTRA_F77_FLAGS@"
