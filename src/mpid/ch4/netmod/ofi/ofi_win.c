@@ -606,6 +606,9 @@ static int win_init(MPIR_Win * win)
 
     MPIDI_OFI_WIN(win).win_id =
         MPIDI_OFI_mr_key_alloc(MPIDI_OFI_COLL_MR_KEY, win->comm_ptr->context_id);
+    MPIR_ERR_CHKANDJUMP(MPIDI_OFI_WIN(win).win_id == MPIDI_OFI_INVALID_MR_KEY, mpi_errno,
+                        MPI_ERR_OTHER, "**ofid_mr_key");
+
     if (MPIDI_OFI_WIN(win).win_id == -1ULL) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to get global mr key.\n");
         mpi_errno = MPIDI_OFI_ENAVAIL;
@@ -643,6 +646,8 @@ static int win_init(MPIR_Win * win)
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Callback of MPL_gavl_tree_create to delete local registered MR for dynamic window */
@@ -933,8 +938,11 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
         goto fn_exit;
 
     uint64_t requested_key = 0ULL;
-    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY)
+    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         requested_key = MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
+        MPIR_ERR_CHKANDJUMP(requested_key == MPIDI_OFI_INVALID_MR_KEY, mpi_errno,
+                            MPI_ERR_OTHER, "**ofid_mr_key");
+    }
 
     int rc = 0, allrc = 0;
     struct fid_mr *mr = NULL;
