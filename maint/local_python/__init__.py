@@ -155,6 +155,7 @@ class MPI_API_Global:
     ]
 
     def parse_cmdline():
+        print("  [", " ".join(sys.argv), "]")
         for a in sys.argv[1:]:
             if RE.match(r'--?([\w-]+)=(.*)', a):
                 MPI_API_Global.opts[RE.m.group(1)] = RE.m.group(2)
