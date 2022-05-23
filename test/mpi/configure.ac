@@ -1280,6 +1280,48 @@ if test "$enable_fc" = yes ; then
     AC_LANG_POP([Fortran])
 fi
 
+# The f77/profile tests will failed to link if we are doing static linking and using
+# libmpi+libpmpi. The compiler will complain of multiple definition of the profiled
+# profiled routines. It still can be built if we pass the -Wl,--allow-multiple-definition
+# flag. For simplicity, we disable the test for this case.
+#
+f77profile=
+AC_SUBST(f77profile)
+if test "$f77dir" = "f77" ; then
+    AC_MSG_CHECKING([that f77/profile tests can be built])
+    AC_LANG_PUSH([Fortran])
+    AC_LINK_IFELSE([
+        AC_LANG_SOURCE([
+            program main
+            integer ierr
+            integer msg(1)
+            call mpi_init(ierr)
+            call mpi_send(msg, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, ierr)
+            call mpi_finalize(ierr)
+            end
+
+            subroutine mpi_send(msg, count, dtype, dest, tag, comm, ierr)
+            include "mpif.h"
+            integer count, dtype, dest, tag, comm, ierr
+            integer msg(count)
+            call pmpi_send(msg, count, dtype, dest, tag, comm, ierr)
+            return
+            end
+        ])
+    ],[
+        AC_MSG_RESULT(yes)
+        f77profile="profile"
+    ],[
+        AC_MSG_RESULT(no)
+    ])
+    AC_LANG_POP([Fortran])
+fi
+
+# The f90/profile tests uses the mechanism of e.g. "use mpi, skip_mpi_send => mpi_send".
+# If mpi.mod doesn't contain the routine interface, for example, when ignore TKR isn't
+# available, it need use the f77 mechanism of direct linking. For simplicity, here we
+# disable the profile test if that's the case.
+#
 f90profile=
 AC_SUBST(f90profile)
 if test "$f90dir" = "f90" ; then

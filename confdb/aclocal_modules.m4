@@ -95,14 +95,6 @@ AC_DEFUN([PAC_CONFIG_HWLOC],[
             fi
             PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/hwloc/include],[CPPFLAGS])
             PAC_APPEND_FLAG([-I${main_top_builddir}/modules/hwloc/include],[CPPFLAGS])
-
-            # capture the line -- S["HWLOC_EMBEDDED_LIBS"]="-lm "
-            hwloc_embedded_libs=$(awk -F'"' '/^S."HWLOC_EMBEDDED_LIBS"/ {print $[]4}' modules/hwloc/config.status)
-            echo "hwloc_embedded_libs = $hwloc_embedded_libs"
-            if test -n "$hwloc_embedded_libs" ; then
-                dnl TODO: split and add individual lib
-                PAC_LIBS_ADD([$hwloc_embedded_libs])
-            fi
         ], [
             dnl ---- sub-configure (hydra) ----
             if test "$FROM_MPICH" = "yes"; then
