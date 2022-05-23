@@ -2265,6 +2265,8 @@ if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
         fi
     else
         cmd_f90="$PYTHON $srcdir/maint/gen_binding_f90.py"
+        # pass in type sizes for MPI_SIZEOF
+        cmd_f90="$cmd_f90 -f-logical-size=$pac_cv_f77_sizeof_logical"
         if test "$pac_fc_ignore_tkr" != "no" ; then
             cmd_f90="$cmd_f90 -ignore-tkr=$pac_fc_ignore_tkr"
         fi
