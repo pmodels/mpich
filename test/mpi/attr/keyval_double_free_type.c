@@ -10,8 +10,8 @@
 
 /* tests multiple invocations of MPI_Type_free_keyval on the same keyval */
 
-int delete_fn(MPI_Comm comm, int keyval, void *attr, void *extra);
-int delete_fn(MPI_Comm comm, int keyval, void *attr, void *extra)
+int delete_fn(MPI_Datatype comm, int keyval, void *attr, void *extra);
+int delete_fn(MPI_Datatype comm, int keyval, void *attr, void *extra)
 {
     MPI_Type_free_keyval(&keyval);
     return MPI_SUCCESS;
