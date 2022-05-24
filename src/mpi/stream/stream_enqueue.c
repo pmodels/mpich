@@ -5,6 +5,9 @@
 
 #include "mpiimpl.h"
 
+/* Allow per-thread level disabling GPU path */
+MPL_TLS bool MPIR_disable_gpu = false;
+
 static int get_local_gpu_stream(MPIR_Comm * comm_ptr, MPL_gpu_stream_t * gpu_stream);
 static int allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req);
 
@@ -559,6 +562,9 @@ static void allreduce_enqueue_cb(void *data)
 {
     int mpi_errno;
 
+    /* avoid GPU functions */
+    MPIR_disable_gpu = true;
+
     struct allreduce_data *p = data;
     void *sendbuf = (void *) p->sendbuf;
     void *recvbuf = p->recvbuf;
@@ -601,7 +607,6 @@ static void allreduce_enqueue_cb(void *data)
         if (!is_contig) {
             MPL_free(sendbuf);
         }
-        MPIR_gpu_free_host(p->host_sendbuf);
     }
 
     if (p->host_recvbuf) {
@@ -616,6 +621,12 @@ static void allreduce_enqueue_cb(void *data)
     } else {
         /* we are done */
         MPL_free(p);
+    }
+
+    MPIR_disable_gpu = false;
+
+    if (p->host_sendbuf) {
+        MPIR_gpu_free_host(p->host_sendbuf);
     }
 }
 
