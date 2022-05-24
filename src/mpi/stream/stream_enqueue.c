@@ -649,6 +649,15 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
     mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
+#ifndef MPL_HAS_TLS
+    /* FIXME: check for non-contig case and bail. We can't ensure the callback
+     *        won't call GPU functions.
+     */
+    int is_contig;
+    MPIR_Datatype_is_contig(datatype, &is_contig);
+    MPIR_ERR_CHKANDJUMP(!is_contig, mpi_errno, MPI_ERR_OTHER, "**gpu_enqueue_noncontig");
+#endif
+
     struct allreduce_data *p;
     p = MPL_malloc(sizeof(struct allreduce_data), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
