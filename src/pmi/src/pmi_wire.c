@@ -4,10 +4,10 @@
  */
 
 #include "pmi_config.h"
+#include "mpl.h"
 #include "pmi_util.h"
 #include "pmi_common.h"
 #include "pmi_wire.h"
-#include "mpl.h"
 
 #include <ctype.h>
 

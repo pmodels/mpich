@@ -12,6 +12,7 @@
 */
 
 #include "pmi_config.h"
+#include "mpl.h"
 
 #include <stdio.h>
 #ifdef HAVE_STDLIB_H
@@ -25,8 +26,6 @@
 #include <unistd.h>
 #endif
 #include <errno.h>
-
-#include "mpl.h"
 
 #include "pmi.h"
 #include "pmi_util.h"
