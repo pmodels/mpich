@@ -63,26 +63,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-    if (rreq->comm && MPIDI_is_self_comm(rreq->comm)) {
-        mpi_errno = MPIDI_Self_cancel(rreq);
-    } else {
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
+    mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
 #else
-        if (MPIDI_REQUEST(rreq, is_local)) {
-            MPIR_Request *partner_rreq = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
-            if (unlikely(partner_rreq)) {
-                /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
-                mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq);
-                MPIR_ERR_CHECK(mpi_errno);
-                MPIDI_CH4_REQUEST_FREE(partner_rreq);
-            }
-            mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
-        } else {
-            mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
+    if (MPIDI_REQUEST(rreq, is_local)) {
+        MPIR_Request *partner_rreq = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
+        if (unlikely(partner_rreq)) {
+            /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
+            mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIDI_CH4_REQUEST_FREE(partner_rreq);
         }
-#endif
+        mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
+    } else {
+        mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
     }
+#endif
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -344,7 +340,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request * rreq)
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDI_cancel_recv_safe(rreq);
+    if (rreq->comm && MPIDI_is_self_comm(rreq->comm)) {
+        mpi_errno = MPIDI_Self_cancel(rreq);
+    } else {
+        mpi_errno = MPIDI_cancel_recv_safe(rreq);
+    }
 
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
