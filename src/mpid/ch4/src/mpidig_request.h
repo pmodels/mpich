@@ -105,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
                  * ref count here to prevent free since here we will check
                  * the request status */
                 MPIR_Request_add_ref(anysrc_partner);
-                mpi_errno = MPIDI_NM_mpi_cancel_recv(anysrc_partner);
+                mpi_errno = MPIDI_NM_mpi_cancel_recv(anysrc_partner, true);     /* blocking */
                 MPIR_ERR_CHECK(mpi_errno);
                 if (!MPIR_STATUS_GET_CANCEL_BIT(anysrc_partner->status)) {
                     /* either complete or failed, cancel SHM rreq instead
