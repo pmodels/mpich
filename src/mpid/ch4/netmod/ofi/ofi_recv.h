@@ -380,6 +380,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
                         (MPL_DBG_FDEST, "Request not found. Assuming already cancelled"));
         goto fn_exit;
     } else if (ret < 0) {
+        /* Some provider, e.g. psm3, return -FI_EAGAIN when they should return -FI_ENOENT.
+         * work around until they fix it */
+        if (ret == -FI_EAGAIN) {
+            goto fn_exit;
+        }
         MPIR_ERR_CHKANDJUMP4(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ofid_cancel",
                              "**ofid_cancel %s %d %s %s", __SHORT_FILE__, __LINE__, __func__,
                              fi_strerror(-ret));
