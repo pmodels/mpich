@@ -66,6 +66,8 @@ MPIR_Object_alloc_t MPIR_Stream_mem = { 0, 0, 0, 0, 0, 0, MPIR_STREAM,
     NULL, {0}
 };
 
+/* utilities for managing streams in a communicator */
+
 void MPIR_stream_comm_init(MPIR_Comm * comm)
 {
     comm->stream_comm_type = MPIR_STREAM_COMM_NONE;
@@ -94,6 +96,73 @@ void MPIR_stream_comm_free(MPIR_Comm * comm)
         MPL_free(comm->stream_comm.multiplex.vci_table);
     }
 }
+
+int MPIR_Comm_copy_stream(MPIR_Comm * oldcomm, MPIR_Comm * newcomm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    newcomm->stream_comm_type = oldcomm->stream_comm_type;
+    if (oldcomm->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
+        MPIR_Stream *stream_ptr = oldcomm->stream_comm.single.stream;
+
+        int *vci_table;
+        vci_table = MPL_malloc(oldcomm->local_size * sizeof(int), MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(!vci_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+        for (int i = 0; i < oldcomm->local_size; i++) {
+            vci_table[i] = oldcomm->stream_comm.single.vci_table[i];
+        }
+
+        newcomm->stream_comm.single.stream = stream_ptr;
+        newcomm->stream_comm.single.vci_table = vci_table;
+
+        if (stream_ptr) {
+            MPIR_Object_add_ref_always(stream_ptr);
+        }
+    } else if (oldcomm->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
+        int size = oldcomm->local_size;
+        int rank = oldcomm->rank;
+
+        MPI_Aint *displs;
+        /* note: we allocate (size + 1) so the counts can be calculated from displs table */
+        displs = MPL_malloc((size + 1) * sizeof(MPI_Aint), MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(!displs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        for (int i = 0; i < size + 1; i++) {
+            displs[i] = oldcomm->stream_comm.multiplex.vci_displs[i];
+        }
+
+        int num_total = displs[size];
+        int num_streams = displs[rank + 1] - displs[rank];
+
+        int *vci_table;
+        vci_table = MPL_malloc(num_total * sizeof(int), MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(!vci_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        for (int i = 0; i < num_total; i++) {
+            vci_table[i] = oldcomm->stream_comm.multiplex.vci_table[i];
+        }
+
+        MPIR_Stream **local_streams;
+        local_streams = MPL_malloc(num_streams * sizeof(MPIR_Stream *), MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(!local_streams, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        for (int i = 0; i < num_streams; i++) {
+            local_streams[i] = oldcomm->stream_comm.multiplex.local_streams[i];
+            if (local_streams[i]) {
+                MPIR_Object_add_ref_always(local_streams[i]);
+            }
+        }
+
+        newcomm->stream_comm.multiplex.local_streams = local_streams;
+        newcomm->stream_comm.multiplex.vci_displs = displs;
+        newcomm->stream_comm.multiplex.vci_table = vci_table;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* Impl routines */
 
 int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
 {
@@ -165,7 +234,7 @@ int MPIR_Stream_comm_create_impl(MPIR_Comm * comm_ptr, MPIR_Stream * stream_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, newcomm_ptr);
+    mpi_errno = MPII_Comm_dup(comm_ptr, NULL, newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     int vci, *vci_table;
@@ -209,7 +278,7 @@ int MPIR_Stream_comm_create_multiplex_impl(MPIR_Comm * comm_ptr,
         streams = &stream_default;
     }
 
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, newcomm_ptr);
+    mpi_errno = MPII_Comm_dup(comm_ptr, NULL, newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPI_Aint *num_table;
@@ -273,6 +342,27 @@ int MPIR_Stream_comm_create_multiplex_impl(MPIR_Comm * comm_ptr,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Comm_get_stream_impl(MPIR_Comm * comm_ptr, int idx, MPIR_Stream ** stream_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *stream_out = NULL;
+    if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
+        if (idx == 0) {
+            *stream_out = comm_ptr->stream_comm.single.stream;
+        }
+    } else if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
+        int rank = comm_ptr->rank;
+        MPI_Aint *displs = comm_ptr->stream_comm.multiplex.vci_displs;
+        int num_streams = displs[rank + 1] - displs[rank];
+        if (idx >= 0 && idx < num_streams) {
+            *stream_out = comm_ptr->stream_comm.multiplex.local_streams[displs[rank] + idx];
+        }
+    }
+
+    return mpi_errno;
 }
 
 /* ---- CUDA stream send/recv enqueue ---- */
