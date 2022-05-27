@@ -55,13 +55,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_irecv(void *buf,
 {
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
 
+    bool need_lock;
     int vsi;
-    MPIDI_POSIX_RECV_VSI(vsi);
-
-    MPIDI_POSIX_THREAD_CS_ENTER_VCI(vsi);
+    if (*request) {
+        need_lock = false;
+        vsi = MPIDI_Request_get_vci(*request);
+    } else {
+        need_lock = true;
+        MPIDI_POSIX_RECV_VSI(vsi);
+        MPIDI_POSIX_THREAD_CS_ENTER_VCI(vsi);
+    }
     int mpi_errno = MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
                                      vsi, request, 1, NULL);
-    MPIDI_POSIX_THREAD_CS_EXIT_VCI(vsi);
+    if (need_lock) {
+        MPIDI_POSIX_THREAD_CS_EXIT_VCI(vsi);
+    }
 
     MPIDI_POSIX_recv_posted_hook(*request, rank, comm);
     return mpi_errno;
