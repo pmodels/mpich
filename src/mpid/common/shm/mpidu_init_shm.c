@@ -223,9 +223,6 @@ int MPIDU_Init_shm_finalize(void)
         goto fn_exit;
     }
 
-    mpi_errno = Init_shm_barrier();
-    MPIR_ERR_CHECK(mpi_errno);
-
     if (local_size == 1)
         MPL_free(memory.base_addr);
     else {
