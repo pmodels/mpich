@@ -170,6 +170,52 @@ int MPII_Comm_check_hints(MPIR_Comm * comm)
     return MPI_SUCCESS;
 }
 
+/*
+=== BEGIN_INFO_HINT_BLOCK ===
+hints:
+    - name        : mpi_assert_no_any_tag
+      functions   : MPI_Comm_dup_with_info, MPI_Comm_idup_with_info, MPI_Comm_set_info
+      type        : boolean
+      default     : false
+      description : >-
+        If set to true, user promises that MPI_ANY_TAG will not be used with
+        the communicator. This potentially allows MPICH to treat messages with
+        different tags independent and seek to improve performance, e.g. by
+        employ multiple network context.
+
+    - name        : mpi_assert_no_any_source
+      functions   : MPI_Comm_dup_with_info, MPI_Comm_idup_with_info, MPI_Comm_set_info
+      type        : boolean
+      default     : false
+      description : >-
+        If set to true, user promises that MPI_ANY_SOURCE will not be used with
+        the communicator. This potentially allows MPICH to treat messages send
+        to different ranks or receive from different ranks independent and
+        seek to improve performance, e.g. by employ multiple network context.
+
+    - name        : mpi_assert_exact_length
+      functions   : MPI_Comm_dup_with_info, MPI_Comm_idup_with_info, MPI_Comm_set_info
+      type        : boolean
+      default     : false
+      description : >-
+        If set to true, user promises that the lengths of messages received
+        by the process will always equal to the size of the corresponding
+        receive buffers.
+
+    - name        : mpi_assert_allow_overtaking
+      functions   : MPI_Comm_dup_with_info, MPI_Comm_idup_with_info, MPI_Comm_set_info
+      type        : boolean
+      default     : false
+      description : >-
+        If set to true, user asserts that send operations are not required
+        to be matched at the receiver in the order in which the send operations
+        were performed by the sender, and receive operations are not required
+        to be matched in the order in which they were performed by the
+        receivers.
+
+=== END_INFO_HINT_BLOCK ===
+*/
+
 void MPIR_Comm_hint_init(void)
 {
     MPIR_Comm_register_hint(MPIR_COMM_HINT_NO_ANY_TAG, "mpi_assert_no_any_tag",
