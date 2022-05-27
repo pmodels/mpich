@@ -256,14 +256,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
         }
     }
 
-    if (*request != NULL) {
-        rreq = *request;
-        MPIDIG_request_init(rreq, MPIR_REQUEST_KIND__RECV);
-    } else {
+    if (*request == NULL) {
         rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2, vci, -1);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         rreq->comm = comm;
         MPIR_Comm_add_ref(comm);
+    } else {
+        rreq = *request;
+        MPIDIG_request_init(rreq, vci, -1);
+        if (!rreq->comm) {
+            rreq->comm = comm;
+            MPIR_Comm_add_ref(comm);
+        }
     }
 
     *request = rreq;
