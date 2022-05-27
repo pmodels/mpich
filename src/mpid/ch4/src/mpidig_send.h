@@ -49,19 +49,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
                                                MPIR_Request ** request, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = *request;
+    MPIR_Request *sreq;
 
     MPIR_FUNC_ENTER;
 
-    if (sreq == NULL) {
+    if (*request == NULL) {
         sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2, src_vci, dst_vci);
         MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         *request = sreq;
+        sreq->comm = comm;
+        MPIR_Comm_add_ref(comm);
     } else {
-        MPIDIG_request_init(sreq, MPIR_REQUEST_KIND__SEND);
+        sreq = *request;
+        MPIDIG_request_init(sreq, src_vci, dst_vci);
+        if (!sreq->comm) {
+            sreq->comm = comm;
+            MPIR_Comm_add_ref(comm);
+        }
     }
-    sreq->comm = comm;
-    MPIR_Comm_add_ref(comm);
 
     MPIDIG_hdr_t am_hdr;
     am_hdr.src_rank = comm->rank;

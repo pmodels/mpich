@@ -192,7 +192,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                              int rank, int tag, MPIR_Comm * comm,
                                              int context_offset, int vci, MPIR_Request ** request,
-                                             int alloc_req, uint64_t flags)
+                                             uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
@@ -256,17 +256,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
         }
     }
 
-    if (*request != NULL) {
-        rreq = *request;
-        MPIDIG_request_init(rreq, MPIR_REQUEST_KIND__RECV);
-    } else if (alloc_req) {
+    if (*request == NULL) {
         rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2, vci, -1);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         rreq->comm = comm;
         MPIR_Comm_add_ref(comm);
     } else {
         rreq = *request;
-        MPIR_Assert(0);
+        MPIDIG_request_init(rreq, vci, -1);
+        if (!rreq->comm) {
+            rreq->comm = comm;
+            MPIR_Comm_add_ref(comm);
+        }
     }
 
     *request = rreq;
@@ -336,7 +337,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
     MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, vci,
-                                request, 1, 0ULL);
+                                request, 0ULL);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIDI_REQUEST_SET_LOCAL(*request, is_local, partner);

@@ -20,6 +20,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
     MPII_Dist_graph_topology *dist_graph_ptr = NULL;
     int **rin = NULL, *rin_sizes, *rin_idx;
     int **rout = NULL, *rout_sizes, *rout_idx;
+    int *buf = NULL;
 
     int comm_size = comm_ptr->local_size;
     MPIR_CHKLMEM_DECL(8);
@@ -195,31 +196,25 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
     for (int i = 0; i < in_out_peers[0]; ++i) {
         MPI_Status status;
         MPI_Aint count;
-        int *buf;
         /* receive inbound edges */
         mpi_errno = MPIC_Probe(MPI_ANY_SOURCE, MPIR_TOPO_A_TAG, comm_ptr->handle, &status);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Get_count_impl(&status, MPI_INT, &count);
-        /* can't use CHKLMEM macros b/c we are in a loop */
-        /* FIXME: Why not - there is only one allocated at a time. Is it only
-         * that there is no defined macro to pop and free an item? */
+
         buf = MPL_malloc(count * sizeof(int), MPL_MEM_COMM);
         MPIR_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_A_TAG,
                               comm_ptr, MPI_STATUS_IGNORE, &errflag);
-        /* FIXME: buf is never freed on error! */
         MPIR_ERR_CHECK(mpi_errno);
 
         for (int j = 0; j < count / 2; ++j) {
             int deg = dist_graph_ptr->indegree++;
             if (deg >= in_capacity) {
                 in_capacity *= 2;
-                /* FIXME: buf is never freed on error! */
                 MPIR_REALLOC_ORJUMP(dist_graph_ptr->in, in_capacity * sizeof(int), MPL_MEM_COMM,
                                     mpi_errno);
                 if (dist_graph_ptr->is_weighted)
-                    /* FIXME: buf is never freed on error! */
                     MPIR_REALLOC_ORJUMP(dist_graph_ptr->in_weights, in_capacity * sizeof(int),
                                         MPL_MEM_COMM, mpi_errno);
             }
@@ -228,36 +223,31 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
                 dist_graph_ptr->in_weights[deg] = buf[2 * j + 1];
         }
         MPL_free(buf);
+        buf = NULL;
     }
 
     for (int i = 0; i < in_out_peers[1]; ++i) {
         MPI_Status status;
         MPI_Aint count;
-        int *buf;
         /* receive outbound edges */
         mpi_errno = MPIC_Probe(MPI_ANY_SOURCE, MPIR_TOPO_B_TAG, comm_ptr->handle, &status);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Get_count_impl(&status, MPI_INT, &count);
-        /* can't use CHKLMEM macros b/c we are in a loop */
-        /* Why not? */
+
         buf = MPL_malloc(count * sizeof(int), MPL_MEM_COMM);
         MPIR_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        mpi_errno =
-            MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_B_TAG, comm_ptr,
-                      MPI_STATUS_IGNORE, &errflag);
-        /* FIXME: buf is never freed on error! */
+        mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_B_TAG,
+                              comm_ptr, MPI_STATUS_IGNORE, &errflag);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (int j = 0; j < count / 2; ++j) {
             int deg = dist_graph_ptr->outdegree++;
             if (deg >= out_capacity) {
                 out_capacity *= 2;
-                /* FIXME: buf is never freed on error! */
                 MPIR_REALLOC_ORJUMP(dist_graph_ptr->out, out_capacity * sizeof(int), MPL_MEM_COMM,
                                     mpi_errno);
                 if (dist_graph_ptr->is_weighted)
-                    /* FIXME: buf is never freed on error! */
                     MPIR_REALLOC_ORJUMP(dist_graph_ptr->out_weights, out_capacity * sizeof(int),
                                         MPL_MEM_COMM, mpi_errno);
             }
@@ -266,6 +256,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
                 dist_graph_ptr->out_weights[deg] = buf[2 * j + 1];
         }
         MPL_free(buf);
+        buf = NULL;
     }
 
     mpi_errno = MPIC_Waitall(idx, reqs, MPI_STATUSES_IGNORE, &errflag);
@@ -296,6 +287,9 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
+    if (buf) {
+        MPL_free(buf);
+    }
     if (dist_graph_ptr) {
         MPL_free(dist_graph_ptr->in);
         MPL_free(dist_graph_ptr->in_weights);
