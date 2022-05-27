@@ -153,6 +153,7 @@ void MPIR_Err_init(void)
     MPIR_Errhandler_builtin[0].handle = MPI_ERRORS_ARE_FATAL;
     MPIR_Errhandler_builtin[1].handle = MPI_ERRORS_RETURN;
     MPIR_Errhandler_builtin[2].handle = MPIR_ERRORS_THROW_EXCEPTIONS;
+    MPIR_Errhandler_builtin[3].handle = MPI_ERRORS_ABORT;
 
 #if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG__ALL
     MPIR_Err_stack_init();
