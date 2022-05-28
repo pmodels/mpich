@@ -61,7 +61,7 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         if (mpi_errno != MPI_SUCCESS)
             goto fn_exit;
         /* --END ERROR HANDLING-- */
-        if (MPIR_Typerep_reduce_is_supported(op, datatype)) {
+        if (ENABLE_GPU && MPIR_Typerep_reduce_is_supported(op, datatype)) {
             mpi_errno = MPIR_Typerep_reduce(inbuf, inoutbuf, count, datatype, op);
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_exit;

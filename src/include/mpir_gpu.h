@@ -32,11 +32,16 @@ cvars:
 */
 
 extern int MPIR_CVAR_ENABLE_GPU;
+extern MPL_TLS bool MPIR_disable_gpu;   /* per-thread level locally disable gpu */
 
 #undef ENABLE_GPU
 
 #ifdef MPL_HAVE_GPU
+#ifdef MPL_HAS_TLS
+#define ENABLE_GPU MPIR_CVAR_ENABLE_GPU && !MPIR_disable_gpu
+#else
 #define ENABLE_GPU MPIR_CVAR_ENABLE_GPU
+#endif
 #else
 #define ENABLE_GPU FALSE
 #endif
