@@ -26,15 +26,9 @@ MPIR_Object_alloc_t MPIDI_workq_elemt_mem = {
 
 /* progress */
 
-#ifdef MPL_TLS
+/* NOTE: MPL_TLS may be empty if it is unavailable. Since we just need ensure global
+ * progress happen, so some race condition or even corruption can be tolerated.  */
 MPL_TLS int global_vci_poll_count = 0;
-#elif defined(MPL_COMPILER_TLS)
-MPL_COMPILER_TLS int global_vci_poll_count;
-#else
-/* We just need ensure global progress happen, so some race condition or even corruption
- * can be tolerated.  */
-int global_vci_poll_count = 0;
-#endif
 
 /* ** HACK **
  * Hack to workaround an Intel compiler bug on macOS. Touching
