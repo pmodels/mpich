@@ -161,5 +161,5 @@ int main(int argc, char **argv)
     free(buf);
     free(filename);
     MPI_Finalize();
-    return 0;
+    return (flag > 0);
 }
