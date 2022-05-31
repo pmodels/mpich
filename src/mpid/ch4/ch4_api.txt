@@ -116,7 +116,7 @@ Native API:
       NM*: buf-2, count, datatype, message
      SHM*: buf-2, count, datatype, message
   mpi_cancel_recv : int
-      NM*: rreq
+      NM*: rreq, is_blocking
      SHM*: rreq
   mpi_psend_init : int
       NM: buf, partitions, count, datatype, rank, tag, comm, info, av, req_p
@@ -433,6 +433,7 @@ PARAM:
     info: MPIR_Info *
     info_p: MPIR_Info **
     iov_len: size_t
+    is_blocking: bool
     is_remote: bool
     length: MPI_Aint
     length-2: int

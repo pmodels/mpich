@@ -2254,22 +2254,6 @@ if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
     # Check whether additional libraries are needed when linking with C
     PAC_PROG_FC_AND_C_STDIO_LIBS
     AC_SUBST(FC_OTHER_LIBS)
-
-    PAC_FC_CHECK_IGNORE_TKR
-
-    if test -z "$PYTHON" ; then
-        if test -f src/binding/fortran/use_mpi/mpi_base.f90 ; then
-            AC_MSG_NOTICE([Use pre-generated Fortran mpi binding. To prevent issues, install Python 3 and re-run configure.])
-        else
-            AC_MSG_ERROR([Python 3 is required to generate F90 bindings but not found!])
-        fi
-    else
-        cmd_f90="$PYTHON $srcdir/maint/gen_binding_f90.py"
-        if test "$pac_fc_ignore_tkr" != "no" ; then
-            cmd_f90="$cmd_f90 -ignore-tkr=$pac_fc_ignore_tkr"
-        fi
-        AC_CONFIG_COMMANDS([gen_binding_f90], [$cmd_gen_binding_f90], [cmd_gen_binding_f90="$cmd_f90"])
-    fi
 fi
 
 if test "X$modincdir" = "X" ; then
@@ -3214,71 +3198,6 @@ if test "$enable_f77" = yes ; then
 
     DLLIMPORT=""
     AC_SUBST(DLLIMPORT)
-
-    # FIXME:
-    # We also need to include
-    # SIZEOF_FC_MPI_OFFSET
-    # SIZEOF_FC_MPI_AINT
-    #
-    # If other "kinds" are supported, MPI_SIZEOF needs to identify
-    # those as well.  This is very difficult to do in a general way.
-
-    # To start with, we use the sizes determined for the Fortran 77 values.
-    # These must be the same as for the Fortran 90 values.
-    CROSS_F90_SIZEOF_INTEGER=${CROSS_F90_SIZEOF_INTEGER:-0}
-    CROSS_F90_SIZEOF_REAL=${CROSS_F90_SIZEOF_REAL:-0}
-    CROSS_F90_SIZEOF_DOUBLE_PRECISION=${CROSS_F90_SIZEOF_DOUBLE_PRECISION:-0}
-    SIZEOF_FC_INTEGER=$CROSS_F90_SIZEOF_INTEGER
-    SIZEOF_FC_REAL=$CROSS_F90_SIZEOF_REAL
-    SIZEOF_FC_CHARACTER=1
-    SIZEOF_FC_DOUBLE_PRECISION=$CROSS_F90_SIZEOF_DOUBLE_PRECISION
-    if test "$pac_cv_f77_sizeof_integer" -gt 0 -a \
-	    "$SIZEOF_FC_INTEGER" = "0" ; then
-        SIZEOF_FC_INTEGER=$pac_cv_f77_sizeof_integer
-    fi
-    if test "$pac_cv_f77_sizeof_real" -gt 0 -a "$SIZEOF_FC_REAL" = "0" ; then
-        SIZEOF_FC_REAL=$pac_cv_f77_sizeof_real
-    fi
-    if test "$pac_cv_f77_sizeof_double_precision" -gt 0 -a \
-       "$SIZEOF_FC_DOUBLE_PRECISION" = "0" ; then
-        SIZEOF_FC_DOUBLE_PRECISION=$pac_cv_f77_sizeof_double_precision
-    fi
-    AC_SUBST(SIZEOF_FC_INTEGER)
-    AC_SUBST(SIZEOF_FC_REAL)
-    AC_SUBST(SIZEOF_FC_DOUBLE_PRECISION)
-    AC_SUBST(SIZEOF_FC_CHARACTER)
-
-    # REQD is short for "real equal double precision" and is set to the
-    # Fortran 90 comment character if true.  This is necessary to
-    # allow the mpi_sizeofs module to be built, since if this part of the
-    # Fortran standard is violated by the compiler (unfortunately common,
-    # as some applications are written to require this non-standard
-    # version), the double precision versions of the MPI_SIZEOF routine
-    # must be commented out of the module (!).
-    REQD=
-    if test "$SIZEOF_FC_REAL" = "$SIZEOF_FC_DOUBLE_PRECISION" ; then
-        REQD="!"
-    fi
-    AC_SUBST(REQD)
-    # Is integer*1 supported, and is it a different size than integer?
-    REQI1="!"
-    if test "$pac_cv_fort_integer1" = yes -a "$SIZEOF_FC_INTEGER" != 1 ; then
-        REQI1=
-    fi
-    AC_SUBST(REQI1)
-    # Is integer*2 supported, and is it a different size than integer?
-    REQI2="!"
-    if test "$pac_cv_fort_integer2" = yes -a "$SIZEOF_FC_INTEGER" != 2 ; then
-        REQI2=
-    fi
-    AC_SUBST(REQI2)
-    # Is integer*8 supported, and is it a different size than integer?
-    REQI8="!"
-    if test "$pac_cv_fort_integer8" = yes -a "$SIZEOF_FC_INTEGER" != 8 ; then
-        REQI8=
-    fi
-    AC_SUBST(REQI8)
-    #
 
     AC_LANG([C])
 else
@@ -4260,8 +4179,26 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
+if test "$enable_f90" = "yes" ; then
+    PAC_FC_CHECK_IGNORE_TKR
+    if test -z "$PYTHON" ; then
+        if test -f src/binding/fortran/use_mpi/mpi_base.f90 ; then
+            AC_MSG_NOTICE([Use pre-generated Fortran mpi binding. To prevent issues, install Python 3 and re-run configure.])
+        else
+            AC_MSG_ERROR([Python 3 is required to generate F90 bindings but not found!])
+        fi
+    else
+        cmd_f90="$PYTHON $srcdir/maint/gen_binding_f90.py"
+        # pass in type sizes for MPI_SIZEOF
+        cmd_f90="$cmd_f90 -f-logical-size=$pac_cv_f77_sizeof_logical"
+        if test "$pac_fc_ignore_tkr" != "no" ; then
+            cmd_f90="$cmd_f90 -ignore-tkr=$pac_fc_ignore_tkr"
+        fi
+        AC_CONFIG_COMMANDS([gen_binding_f90], [$cmd_gen_binding_f90], [cmd_gen_binding_f90="$cmd_f90"])
+    fi
+fi
+
 if test "$enable_f08" = "yes" ; then
-    PAC_CHECK_PYTHON
     PAC_FC_CHECK_REAL128
     if test -z "$PYTHON" ; then
         if test -f src/binding/fortran/use_mpi_f08/mpi_f08.f90 ; then

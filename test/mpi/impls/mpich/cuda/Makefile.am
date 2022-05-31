@@ -9,4 +9,5 @@ LDADD += -lm
 
 noinst_PROGRAMS = \
     saxpy \
-    stream
+    stream \
+    stream_allred

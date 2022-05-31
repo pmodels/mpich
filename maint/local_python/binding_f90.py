@@ -161,7 +161,10 @@ def dump_f90_sizeofs():
     # deprecated in MPI-4, replaced by Fortran intrinsic c_sizeof() and storage_size()
     types = {}  # list of types we support
     types['CH1'] = "CHARACTER"
-    types['L4'] = "LOGICAL"
+    types["L%d" % int(G.opts['f-logical-size'])] = "LOGICAL"
+    # NOTE: we assume the fixed-size types are available. The alternative is to use
+    #       integer kind and real kind. MPI_SIZEOF is deprecated. We'll keep it simple
+    #       until we encounter compilers doesn't support fixed-size types.
     types['I1'] = "INTEGER*1"
     types['I2'] = "INTEGER*2"
     types['I4'] = "INTEGER*4"
@@ -170,15 +173,6 @@ def dump_f90_sizeofs():
     types['R8'] = "REAL*8"
     types['CX8'] = "COMPLEX*8"
     types['CX16'] = "COMPLEX*16"
-    # we may need to configure grom G.opts if types such as INTEGER*4 is not available
-    if False:
-        k = "I%d" % G.opts['fint-size']
-        types[k] = "INTEGER"
-        # assuming REAL is 4-byte and DOUBLE PRECISION is 8-byte
-        types['R4'] = "REAL"
-        types['R8'] = "DOUBLE PRECISION"
-        types['CX8'] = "COMPLEX"
-        types['CX16'] = "DOUBLE COMPLEX"
 
     G.out.append("PUBLIC :: MPI_SIZEOF")
     G.out.append("INTERFACE MPI_SIZEOF")

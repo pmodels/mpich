@@ -311,15 +311,12 @@ static int send_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request 
         huge_send_mrs = MPIDI_OFI_REQUEST(sreq, huge.send_mrs);
 
         /* Clean up the memory region */
-        if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-            for (int i = 0; i < num_nics; i++) {
-                uint64_t key = fi_mr_key(huge_send_mrs[i]);
+        for (int i = 0; i < num_nics; i++) {
+            uint64_t key = fi_mr_key(huge_send_mrs[i]);
+            MPIDI_OFI_CALL(fi_close(&huge_send_mrs[i]->fid), mr_unreg);
+            if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
                 MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, key);
             }
-        }
-
-        for (int i = 0; i < num_nics; i++) {
-            MPIDI_OFI_CALL(fi_close(&huge_send_mrs[i]->fid), mr_unreg);
         }
         MPL_free(huge_send_mrs);
 
@@ -827,6 +824,8 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret)
                     req = MPIDI_OFI_context_to_request(e.op_context);
                     MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(req, datatype));
                     MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
+                    MPIR_STATUS_SET_COUNT(req->status, 0);
+                    MPIDIU_request_complete(req);
                     break;
 
                 case FI_ENOMSG:

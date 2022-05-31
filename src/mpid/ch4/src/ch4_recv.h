@@ -15,20 +15,24 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
                                              MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int need_unlock = 0;
+
+    /* Need critical section to prevent shmmem progress in-between
+     * 1. Enter VCI lock and pre-allocate request for shm receive.
+     * 2. MPIDI_SHM_mpi_irecv with pre-allocated request
+     * 3. MPIDI_NM_mpi_irecv need use recursive locking in case it share the shm vci lock
+     */
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    int vsi;
+    MPIDI_POSIX_RECV_VSI(vsi);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vsi).lock);
+
+    *request = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vsi, 1);
+    MPIR_Assert(*request);
+#endif
 
     mpi_errno = MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, request);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_Assert(*request);
-    /* 1. hold shm vci lock to prevent shm progress while we establish netmod request.
-     * 2. MPIDI_NM_mpi_irecv need use recursive locking in case it share the shm vci lock
-     */
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-    int shm_vci = MPIDI_Request_get_vci(*request);
-#endif
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(shm_vci).lock);
-    need_unlock = 1;
     if (!MPIR_Request_is_complete(*request) && !MPIDIG_REQUEST_IN_PROGRESS(*request)) {
         MPIR_Request *nm_rreq = NULL;
         mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr,
@@ -49,9 +53,9 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
         }
     }
   fn_exit:
-    if (need_unlock) {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(shm_vci).lock);
-    }
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vsi).lock);
+#endif
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -63,26 +67,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-    if (rreq->comm && MPIDI_is_self_comm(rreq->comm)) {
-        mpi_errno = MPIDI_Self_cancel(rreq);
-    } else {
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
+    mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq, false);
 #else
-        if (MPIDI_REQUEST(rreq, is_local)) {
-            MPIR_Request *partner_rreq = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
-            if (unlikely(partner_rreq)) {
-                /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
-                mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq);
-                MPIR_ERR_CHECK(mpi_errno);
-                MPIDI_CH4_REQUEST_FREE(partner_rreq);
-            }
-            mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
-        } else {
-            mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
+    if (MPIDI_REQUEST(rreq, is_local)) {
+        MPIR_Request *partner_rreq = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
+        if (unlikely(partner_rreq)) {
+            /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
+            mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq, false);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIDI_CH4_REQUEST_FREE(partner_rreq);
         }
-#endif
+        mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
+    } else {
+        mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq, false);
     }
+#endif
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -326,7 +326,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request * rreq)
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDI_cancel_recv_safe(rreq);
+    if (rreq->comm && MPIDI_is_self_comm(rreq->comm)) {
+        mpi_errno = MPIDI_Self_cancel(rreq);
+    } else {
+        mpi_errno = MPIDI_cancel_recv_safe(rreq);
+    }
 
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:

@@ -18,6 +18,11 @@ MPIX_Stream_comm_create_multiplex:
     array_of_streams: STREAM, length=count, [stream object array]
     newcomm: COMMUNICATOR, direction=out, [new stream-associated communicator]
 
+MPIX_Comm_get_stream:
+    comm: COMMUNICATOR, [communicator]
+    idx: INDEX
+    stream: STREAM, direction=out, [stream object]
+
 MPIX_Stream_send:
     buf: BUFFER, constant=True, [initial address of send buffer]
     count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
@@ -192,3 +197,11 @@ MPIX_Waitall_enqueue:
         MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
     }
 }
+
+MPIX_Allreduce_enqueue:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [data type of elements of send buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
