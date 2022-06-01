@@ -141,8 +141,8 @@
 #define ROMIO_NEEDS_ADIOPARENTDIR
 static void ADIO_FileSysType_parentdir(const char *filename, char **dirnamep);
 #endif
-static void ADIO_FileSysType_prefix(const char *filename, int *fstype,
-                                    ADIOI_Fns ** ops, int *error_code);
+static int ADIO_FileSysType_prefix(const char *filename, int *fstype,
+                                   ADIOI_Fns ** ops, int *error_code);
 static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *error_code);
 struct ADIO_FSTypes {
     ADIOI_Fns *fileops;         /* function table */
@@ -156,6 +156,7 @@ struct ADIO_FSTypes {
  *    - add to the table below
  *    - add a constant for your ADIO in include/adio.h
  *    - add a guarded include in include/adioi_fs_proto.h
+ *    - add your prefix to the 'fstype_prefix' array
  */
 static struct ADIO_FSTypes fstypes[] = {
 #ifdef ROMIO_UFS
@@ -200,6 +201,24 @@ static struct ADIO_FSTypes fstypes[] = {
     {0, 0, 0, 0}        /* guard entry */
 };
 
+/* File system type prefix name recognized by ROMIO: this is slightly different
+ * from the 'fstypes' table above -- this is any kind of file system romio
+ * might know about, whereas the 'fstype' table is populated only by file
+ * systems enabled when ROMIO was built */
+static const char *fstype_prefix[] = {
+    "ufs",
+    "nfs",
+    "xfs",
+    "pvfs2",
+    "gpfs",
+    "panfs",
+    "lustre",
+    "daos",
+    "testfs",
+    "ime",
+    "quobyte",
+    NULL        /* guard entry */
+};
 
 /*
  ADIO_FileSysType_parentdir - determines a string pathname for the
@@ -502,37 +521,75 @@ Output Parameters:
   Returns MPI_SUCCESS in error_code on success.  Filename not having a prefix
   is considered an error. Except for on Windows systems where the default is NTFS.
 
+Return value:
+. 1 - a known file system prefix name is found
+. 0 - otherwise
  */
-static void ADIO_FileSysType_prefix(const char *filename, int *fstype,
-                                    ADIOI_Fns ** ops, int *error_code)
+static int ADIO_FileSysType_prefix(const char *filename, int *fstype,
+                                   ADIOI_Fns ** ops, int *error_code)
 {
-    int i;
+    char *prefix, *colon;
+    int i, known_prefix = 0;
     static char myname[] = "ADIO_FileSysType_prefix";
 
     *error_code = MPI_SUCCESS;
     *fstype = -1;
 
-    /* search table for prefix */
+    /* check if there is a prefix on the filename and if so, could it possibly
+     * be a ROMIO file system? (Trying to avoid cases where the file name has a
+     * colon for non-ROMIO reasons -- such as an HH:MM:SS formatted time stamp */
 
+    prefix = (char *) filename;
+
+    colon = strchr(prefix, ':');
+    if (colon == NULL) {        /* no prefix */
+        /* there may be situations where one cannot override the file system
+         * detection with a prefix -- maybe the file name is passed to both
+         * posix and MPI-IO routines, or maybe the file name is hard-coded into
+         * an application.
+         * Assumes all processes set the same environment varialble.  Values:
+         * the same prefix you would stick on a file path. e.g. pvfs2: --
+         * including the colon!
+         */
+        prefix = getenv("ROMIO_FSTYPE_FORCE");
+        if (prefix != NULL)
+            colon = strchr(prefix, ':');
+    }
+    if (colon != NULL) {        /* there is a prefix end with : */
+        size_t prefix_len = colon - prefix;
+        /* check if prefix is one of recognized file system types */
+        i = 0;
+        while (fstype_prefix[i] != NULL) {
+            if (!strncmp(prefix, fstype_prefix[i], prefix_len)) {
+                known_prefix = 1;
+                break;
+            }
+            i++;
+        }
+    }
+    if (!known_prefix)  /* prefix is not meant for file system type */
+        return 0;
+
+    /* for a known prefix, check if it file system is enabled */
     i = 0;
     while (fstypes[i].fileops) {
-        if (!strncasecmp(fstypes[i].prefix, filename, strlen(fstypes[i].prefix))) {
+        if (!strncasecmp(fstypes[i].prefix, prefix, strlen(fstypes[i].prefix))) {
             *fstype = fstypes[i].fstype;
             *ops = fstypes[i].fileops;
             break;
         }
         ++i;
     }
-
     if (-1 == *fstype) {
         *fstype = 0;
         /* --BEGIN ERROR HANDLING-- */
         *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__, MPI_ERR_IO,
                                            "**iofstypeunsupported",
-                                           "*iofstypeunsupported %s", filename);
+                                           "*iofstypeunsupported %s", prefix);
         /* --END ERROR HANDLING-- */
     }
+    return 1;
 }
 
 /*@
@@ -548,29 +605,42 @@ Output Parameters:
 . ops - (address of) pointer to table of valid file operations
 . error_code - (pointer to) int holding error code
 
+Return value:
+. 1 - a known file system prefix name is found
+. 0 - otherwise
+
 Notes:
 This code used to be in MPI_File_open(), but it has been moved into here in
 order to clean things up.  The goal is to separate all this "did we compile
 for this fs type" code from the MPI layer and also to introduce the ADIOI_Fns
 tables in a reasonable way. -- Rob, 06/06/2001
 @*/
-void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
-                          ADIOI_Fns ** ops, int *error_code)
+int ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
+                         ADIOI_Fns ** ops, int *error_code)
 {
     int myerrcode, file_system, min_code, max_code;
-    char *tmp;
-    int i;
+    int i, known_fstype = 0;
     static char myname[] = "ADIO_RESOLVEFILETYPE";
-    char *p;
     *ops = 0;
 
     file_system = -1;
     if (filename == NULL) {
         *error_code = ADIOI_Err_create_code(myname, filename, ENOENT);
-        return;
+        return known_fstype;
     }
-    tmp = strchr(filename, ':');
-    if (!tmp) {
+
+    /* check prefix for known file system types; just match via prefix and
+     * assume everyone got the same thing.
+     *
+     * perhaps we should have this code go through the allreduce as well?
+     */
+    known_fstype = ADIO_FileSysType_prefix(filename, &file_system, ops, &myerrcode);
+    if (myerrcode != MPI_SUCCESS) {
+        *error_code = myerrcode;
+        return known_fstype;
+    }
+
+    if (file_system == -1) {    /* filename contains no known file system prefix */
         int have_nfs_enabled = 0;
         *error_code = MPI_SUCCESS;
         /* no prefix; use system-dependent function call to determine type */
@@ -598,7 +668,7 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
             ADIO_FileSysType_fncall_scalable(comm, filename, &file_system, &myerrcode);
             if (myerrcode != MPI_SUCCESS) {
                 *error_code = myerrcode;
-                return;
+                return known_fstype;
             }
         } else {
             ADIO_FileSysType_fncall(filename, &file_system, &myerrcode);
@@ -617,41 +687,15 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
             MPI_Allreduce(&myerrcode, &max_code, 1, MPI_INT, MPI_MAX, comm);
             if (max_code != MPI_SUCCESS) {
                 *error_code = max_code;
-                return;
+                return known_fstype;
             }
             /* ensure everyone came up with the same file system type */
             MPI_Allreduce(&file_system, &min_code, 1, MPI_INT, MPI_MIN, comm);
             if (min_code == ADIO_NFS)
                 file_system = ADIO_NFS;
         }
-    } else {
-        /* prefix specified; just match via prefix and assume everyone got
-         * the same thing.
-         *
-         * perhaps we should have this code go through the allreduce as well?
-         */
-        ADIO_FileSysType_prefix(filename, &file_system, ops, &myerrcode);
-        if (myerrcode != MPI_SUCCESS) {
-            *error_code = myerrcode;
-            return;
-        }
     }
 
-    /* lastly, there may be situations where one cannot override the file
-     * system detection with a prefix -- maybe the file name is passed to both
-     * posix and MPI-IO routines, or maybe the file name is hard-coded into an
-     * application.
-     * Assumes all processes set the same environment varialble.
-     * Values: the same prefix you would stick on a file path. e.g. pvfs2: --
-     * including the colon! */
-    p = getenv("ROMIO_FSTYPE_FORCE");
-    if (p != NULL) {
-        ADIO_FileSysType_prefix(p, &file_system, ops, &myerrcode);
-        if (myerrcode != MPI_SUCCESS) {
-            *error_code = myerrcode;
-            return;
-        }
-    }
     if (!(*ops)) {
         for (i = 0; fstypes[i].fileops; i++)
             if (file_system == fstypes[i].fstype) {
@@ -663,10 +707,10 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
         *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__, MPI_ERR_IO,
                                            "**iofstypeunsupported", 0);
-        return;
+        return known_fstype;
     }
 
     *error_code = MPI_SUCCESS;
     *fstype = file_system;
-    return;
+    return known_fstype;
 }
