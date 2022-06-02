@@ -174,7 +174,8 @@ int MPIR_Session_set_errhandler_impl(MPIR_Session * session_ptr, MPIR_Errhandler
     return MPI_SUCCESS;
 }
 
-static int call_errhandler(MPIR_Errhandler * errhandler, int errorcode, int handle)
+static int call_errhandler(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler, int errorcode,
+                           int handle)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -183,6 +184,9 @@ static int call_errhandler(MPIR_Errhandler * errhandler, int errorcode, int hand
     /* Check for predefined error handlers */
     if (!errhandler || errhandler->handle == MPI_ERRORS_ARE_FATAL ||
         errhandler->handle == MPI_ERRORS_ABORT) {
+        if (!errhandler || errhandler->handle == MPI_ERRORS_ARE_FATAL) {
+            comm_ptr = NULL;
+        }
         const char *fcname = NULL;
         if (kind == MPIR_COMM) {
             fcname = "MPI_Comm_call_errhandler";
@@ -191,7 +195,7 @@ static int call_errhandler(MPIR_Errhandler * errhandler, int errorcode, int hand
         } else if (kind == MPIR_SESSION) {
             fcname = "MPI_Session_call_errhandler";
         }
-        MPIR_Handle_fatal_error(NULL, fcname, errorcode);
+        MPIR_Handle_fatal_error(comm_ptr, fcname, errorcode);
         /* not expected to return */
         goto fn_exit;
     } else if (errhandler->handle == MPI_ERRORS_RETURN) {
@@ -258,7 +262,7 @@ int MPIR_Comm_call_errhandler_impl(MPIR_Comm * comm_ptr, int errorcode)
     MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
     MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
 
-    mpi_errno = call_errhandler(comm_ptr->errhandler, errorcode, comm_ptr->handle);
+    mpi_errno = call_errhandler(comm_ptr, comm_ptr->errhandler, errorcode, comm_ptr->handle);
 
     MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
     MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
@@ -272,7 +276,7 @@ int MPIR_Win_call_errhandler_impl(MPIR_Win * win_ptr, int errorcode)
     MPID_THREAD_CS_ENTER(POBJ, win_ptr->mutex);
     MPID_THREAD_CS_ENTER(VCI, win_ptr->mutex);
 
-    mpi_errno = call_errhandler(win_ptr->errhandler, errorcode, win_ptr->handle);
+    mpi_errno = call_errhandler(win_ptr->comm_ptr, win_ptr->errhandler, errorcode, win_ptr->handle);
 
     MPID_THREAD_CS_EXIT(POBJ, win_ptr->mutex);
     MPID_THREAD_CS_EXIT(VCI, win_ptr->mutex);
@@ -283,7 +287,7 @@ int MPIR_Session_call_errhandler_impl(MPIR_Session * session_ptr, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = call_errhandler(session_ptr->errhandler, errorcode, session_ptr->handle);
+    mpi_errno = call_errhandler(NULL, session_ptr->errhandler, errorcode, session_ptr->handle);
 
     return mpi_errno;
 }
