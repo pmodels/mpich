@@ -167,6 +167,52 @@ int MPII_Comm_check_hints(MPIR_Comm * comm)
     return MPI_SUCCESS;
 }
 
+/*
+=== BEGIN_INFO_HINT_BLOCK ===
+hints:
+    - name        : mpi_assert_no_any_tag
+      functions   : MPI_Comm_dup_with_info, MPI_Comm_idup_with_info, MPI_Comm_set_info
+      type        : boolean
+      default     : false
+      description : >-
+        If set to true, user promises that MPI_ANY_TAG will not be used with
+        the communicator. This potentially allows MPICH to treat messages with
+        different tags independent and seek to improve performance, e.g. by
+        employ multiple network context.
+
+    - name        : mpi_assert_no_any_source
+      functions   : MPI_Comm_dup_with_info, MPI_Comm_idup_with_info, MPI_Comm_set_info
+      type        : boolean
+      default     : false
+      description : >-
+        If set to true, user promises that MPI_ANY_SOURCE will not be used with
+        the communicator. This potentially allows MPICH to treat messages send
+        to different ranks or receive from different ranks independent and
+        seek to improve performance, e.g. by employ multiple network context.
+
+    - name        : mpi_assert_exact_length
+      functions   : MPI_Comm_dup_with_info, MPI_Comm_idup_with_info, MPI_Comm_set_info
+      type        : boolean
+      default     : false
+      description : >-
+        If set to true, user promises that the lengths of messages received
+        by the process will always equal to the size of the corresponding
+        receive buffers.
+
+    - name        : mpi_assert_allow_overtaking
+      functions   : MPI_Comm_dup_with_info, MPI_Comm_idup_with_info, MPI_Comm_set_info
+      type        : boolean
+      default     : false
+      description : >-
+        If set to true, user asserts that send operations are not required
+        to be matched at the receiver in the order in which the send operations
+        were performed by the sender, and receive operations are not required
+        to be matched in the order in which they were performed by the
+        receivers.
+
+=== END_INFO_HINT_BLOCK ===
+*/
+
 void MPIR_Comm_hint_init(void)
 {
     MPIR_Comm_register_hint(MPIR_COMM_HINT_NO_ANY_TAG, "mpi_assert_no_any_tag",
@@ -795,6 +841,41 @@ int MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
     }
 
     return 1;
+}
+
+/* Duplicate a communicator without copying the streams. This is the common
+ * part called by both MPIR_Comm_dup_with_info_impl and MPIR_Stream_comm_create_impl.
+ */
+int MPII_Comm_dup(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Attribute *new_attributes = 0;
+
+    /* Copy attributes, executing the attribute copy functions */
+    /* This accesses the attribute dup function through the perprocess
+     * structure to prevent comm_dup from forcing the linking of the
+     * attribute functions.  The actual function is (by default)
+     * MPIR_Attr_dup_list
+     */
+    if (MPIR_Process.attr_dup) {
+        mpi_errno = MPIR_Process.attr_dup(comm_ptr->handle, comm_ptr->attributes, &new_attributes);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+
+    /* Generate a new context value and a new communicator structure */
+    /* We must use the local size, because this is compared to the
+     * rank of the process in the communicator.  For intercomms,
+     * this must be the local size */
+    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, info, newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    (*newcomm_ptr)->attributes = new_attributes;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /*

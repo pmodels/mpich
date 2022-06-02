@@ -4,9 +4,9 @@
  */
 
 #include "pmi_config.h"
+#include "mpl.h"
 
 #include "pmi_util.h"
-#include "mpl.h"
 #include "pmi2.h"
 #include "pmi_wire.h"
 #include "pmi_common.h"

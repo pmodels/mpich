@@ -445,7 +445,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool is_blocking)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -472,22 +472,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
                         (MPL_DBG_FDEST, "Request not found. Assuming already cancelled"));
         goto fn_exit;
     } else if (ret < 0) {
+        /* Some provider, e.g. psm3, return -FI_EAGAIN when they should return -FI_ENOENT.
+         * work around until they fix it */
+        if (ret == -FI_EAGAIN) {
+            goto fn_exit;
+        }
         MPIR_ERR_CHKANDJUMP4(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ofid_cancel",
                              "**ofid_cancel %s %d %s %s", __SHORT_FILE__, __LINE__, __func__,
                              fi_strerror(-ret));
     }
 
-    if (ret == 0) {
-        while ((!MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) && (!MPIR_cc_is_complete(&rreq->cc))) {
-            /* The cancel is local and must complete, so only poll this device (not global progress) */
+    if (is_blocking) {
+        while (!MPIR_cc_is_complete(&rreq->cc)) {
             mpi_errno = MPIDI_OFI_progress_uninlined(vni);
             MPIR_ERR_CHECK(mpi_errno);
-        }
-
-        if (MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) {
-            MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
-            MPIR_STATUS_SET_COUNT(rreq->status, 0);
-            MPIDIU_request_complete(rreq);
         }
     }
 

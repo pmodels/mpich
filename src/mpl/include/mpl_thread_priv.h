@@ -6,7 +6,7 @@
 #ifndef MPL_THREAD_PRIV_H_INCLUDED
 #define MPL_THREAD_PRIV_H_INCLUDED
 
-#if !defined(MPL_TLS)
+#if !defined(MPL_HAS_TLS)
 /* We need to provide a function that will cleanup the storage attached
  * to the key.  */
 void MPLI_cleanup_tls(void *a);
@@ -73,7 +73,7 @@ void MPLI_cleanup_tls(void *a);
         MPL_thread_tls_destroy(&(key), err_ptr_);              \
     } while (0)
 
-#else /* defined(MPL_TLS) */
+#else /* defined(MPL_HAS_TLS) */
 
 #define MPL_TLS_KEY_CREATE(...)
 #define MPL_TLS_KEY_RETRIEVE(key, var, addr, err_ptr_)           \

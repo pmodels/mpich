@@ -269,6 +269,7 @@ extern MPIR_Object_alloc_t MPIR_Comm_mem;
 int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr);
 void MPIR_stream_comm_init(MPIR_Comm * comm_ptr);
 void MPIR_stream_comm_free(MPIR_Comm * comm_ptr);
+int MPIR_Comm_copy_stream(MPIR_Comm * oldcomm, MPIR_Comm * newcomm);
 
 #define MPIR_Comm_add_ref(comm_p_) \
     do { MPIR_Object_add_ref((comm_p_)); } while (0)
@@ -420,6 +421,7 @@ int MPII_Comm_init(MPIR_Comm *);
 int MPII_Comm_is_node_consecutive(MPIR_Comm *);
 int MPII_Comm_is_node_balanced(MPIR_Comm *, int *, bool *);
 
+int MPII_Comm_dup(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr);
 int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm ** outcomm_ptr);
 int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** outcomm_ptr);
 
