@@ -246,14 +246,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
     if (origin_contig && target_contig) {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         if (sigreq) {
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-            if (*sigreq) {
-                MPIR_Request_add_ref(*sigreq);
-            } else
-#endif
-            {
-                MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
-            }
+            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
             flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
         } else {
             flags = FI_DELIVERY_COMPLETE;
@@ -422,14 +415,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
     if (origin_contig && target_contig) {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         if (sigreq) {
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-            if (*sigreq) {
-                MPIR_Request_add_ref(*sigreq);
-            } else
-#endif
-            {
-                MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
-            }
+            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
             flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
         } else {
             flags = 0;
@@ -762,14 +748,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         uint64_t flags;
         if (sigreq) {
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-            if (*sigreq) {
-                MPIR_Request_add_ref(*sigreq);
-            } else
-#endif
-            {
-                MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
-            }
+            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
             flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
         } else {
             flags = FI_DELIVERY_COMPLETE;
@@ -907,14 +886,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         uint64_t flags;
         if (sigreq) {
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-            if (*sigreq) {
-                MPIR_Request_add_ref(*sigreq);
-            } else
-#endif
-            {
-                MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
-            }
+            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
             flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
         } else {
             flags = FI_DELIVERY_COMPLETE;

@@ -391,9 +391,6 @@ int MPID_Init(int requested, int *provided)
         fprintf(stdout, "==== Various sizes and limits ====\n");
         fprintf(stdout, "sizeof(MPIDI_per_vci_t): %d\n", (int) sizeof(MPIDI_per_vci_t));
     }
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPIDI_workq_init(&MPIDI_global.workqueue);
-#endif /* #ifdef MPIDI_CH4_USE_WORK_QUEUES */
 
     /* These mutex are used for the lockless MT model. */
     if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
