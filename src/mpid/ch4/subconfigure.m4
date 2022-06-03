@@ -362,7 +362,6 @@ AC_ARG_ENABLE(ch4-mt,
     [--enable-ch4-mt=model
        Select model for multi-threading
          direct    - Each thread directly accesses lower-level fabric (default)
-         handoff   - Use the hand-off model (spawns progress thread)
          lockless  - Use the thread safe serialization model supported by the provider
          runtime   - Determine the model at runtime through a CVAR
     ],,enable_ch4_mt=direct)
@@ -371,10 +370,6 @@ case $enable_ch4_mt in
      direct)
          AC_DEFINE([MPIDI_CH4_USE_MT_DIRECT], [1],
             [Define to enable direct multi-threading model])
-        ;;
-     handoff)
-         AC_DEFINE([MPIDI_CH4_USE_MT_HANDOFF], [1],
-            [Define to enable hand-off multi-threading model])
         ;;
      lockless)
          AC_DEFINE([MPIDI_CH4_USE_MT_LOCKLESS], [1],
@@ -388,20 +383,6 @@ case $enable_ch4_mt in
         AC_MSG_ERROR([Multi-threading model ${enable_ch4_mt} is unknown])
         ;;
 esac
-
-#
-# Dependency checks for CH4 MT modes
-# Currently, "handoff" and "runtime" require the following:
-# - izem linked in (--with-zm-prefix)
-# - enable-thread-cs=per-vci
-#
-if test "$enable_ch4_mt" != "direct" -a "$enable_ch4_mt" != "lockless"; then
-    if test "${with_zm_prefix}" == "no" -o "${with_zm_prefix}" == "none" -o "${enable_izem_queue}" != "yes" ; then
-        AC_MSG_ERROR([Multi-threading model `${enable_ch4_mt}` requires izem queue. Set `--enable-izem={queue|all} --with-zm-prefix` and retry.])
-    elif test "${enable_thread_cs}" != "per-vci" -a "${enable_thread_cs}" != "per_vci"; then
-        AC_MSG_ERROR([Multi-threading model `${enable_ch4_mt}` requires `--enable-thread-cs=per-vci`.])
-    fi
-fi
 
 AC_CHECK_HEADERS(sys/mman.h sys/stat.h fcntl.h)
 AC_CHECK_FUNC(mmap, [], [AC_MSG_ERROR(mmap is required to build CH4)])
