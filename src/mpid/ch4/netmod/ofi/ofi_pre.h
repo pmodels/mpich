@@ -250,7 +250,6 @@ typedef struct {
     struct fid_ep *ep;          /* EP with counter & completion */
     int sep_tx_idx;             /* transmit context index for scalable EP,
                                  * -1 means using non scalable EP. */
-    int vni;
 #if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
     MPL_atomic_uint64_t *issued_cntr;   /* atomic counter in support of lockless and runtime mt models */
 #else

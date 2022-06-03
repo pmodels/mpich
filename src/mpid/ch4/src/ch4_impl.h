@@ -620,6 +620,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci);
 #define MPIDIG_EPOCH_FENCE_EVENT(win, massert) do {} while (0)
 #endif /* HAVE_ERROR_CHECKING */
 
+#define MPIDI_WIN_TARGET_VCI(win, rank) \
+    (MPIDI_WIN(win, vci_table) ? MPIDI_WIN(win, vci_table)[rank] : MPIDI_WIN(win, am_vci))
+
 /*
   Calculate base address of the target window at the origin side
   Return zero to let the target side calculate the actual address
