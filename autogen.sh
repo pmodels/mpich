@@ -56,7 +56,6 @@ do_atdir_check=no
 do_atver_check=yes
 do_subcfg_m4=yes
 do_hwloc=yes
-do_izem=yes
 do_ofi=yes
 do_ucx=yes
 do_json=yes
@@ -77,7 +76,6 @@ for arg in "$@" ; do
         do_quick=yes
         do_hwloc=no
         do_json=no
-        do_izem=no
         do_ofi=no
         do_ucx=no
         do_yaksa=no
@@ -218,11 +216,6 @@ set_externals() {
         if [ "yes" = "$do_hwloc" ] ; then
             check_submodule_presence modules/hwloc
             externals="${externals} modules/hwloc"
-        fi
-
-        if [ "yes" = "$do_izem" ] ; then
-            check_submodule_presence modules/izem
-            externals="${externals} modules/izem"
         fi
 
         if [ "yes" = "$do_ucx" ] ; then
