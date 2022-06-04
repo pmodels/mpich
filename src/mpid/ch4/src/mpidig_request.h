@@ -88,7 +88,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
 
     *is_cancelled = 1;  /* overwrite if cancel fails */
 
-    MPIR_Request *anysrc_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
+    MPIR_Request *anysrc_partner = rreq->dev.anysrc_partner;
     if (unlikely(anysrc_partner)) {
         if (!MPIR_STATUS_GET_CANCEL_BIT(anysrc_partner->status)) {
             if (MPIDI_REQUEST(rreq, is_local)) {
@@ -116,8 +116,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
                     /* NM partner is not user-visible, free it now, which means
                      * explicit SHM code can skip MPIDI_anysrc_free_partner
                      */
-                    MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-                    MPIDI_REQUEST_ANYSOURCE_PARTNER(anysrc_partner) = NULL;
+                    rreq->dev.anysrc_partner = NULL;
+                    anysrc_partner->dev.anysrc_partner = NULL;
                     /* cancel freed it once, freed once more on behalf of mpi-layer */
                     MPIDI_CH4_REQUEST_FREE(anysrc_partner);
                 }
@@ -145,12 +145,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
 {
-    MPIR_Request *anysrc_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
+    MPIR_Request *anysrc_partner = rreq->dev.anysrc_partner;
     if (unlikely(anysrc_partner)) {
         if (!MPIDI_REQUEST(rreq, is_local)) {
             /* NM, complete and free SHM partner */
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(anysrc_partner) = NULL;
+            rreq->dev.anysrc_partner = NULL;
+            anysrc_partner->dev.anysrc_partner = NULL;
             /* copy status to SHM partner */
             anysrc_partner->status = rreq->status;
             MPID_Request_complete(anysrc_partner);
