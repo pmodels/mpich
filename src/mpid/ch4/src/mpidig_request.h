@@ -15,6 +15,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_request_init_internal(MPIR_Request * req,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    req->dev.type = MPIDI_REQ_TYPE_AM;
     MPIDI_NM_am_request_init(req);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_SHM_am_request_init(req);

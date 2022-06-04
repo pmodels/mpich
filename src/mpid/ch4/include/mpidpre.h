@@ -272,6 +272,11 @@ typedef struct {
     MPIR_Request *match_req;    /* for mrecv */
 } MPIDI_self_request_t;
 
+typedef enum {
+    MPIDI_REQ_TYPE_NONE = 0,
+    MPIDI_REQ_TYPE_AM,
+} MPIDI_REQ_TYPE;
+
 typedef struct MPIDI_Devreq_t {
     /* completion notification counter: this must be decremented by
      * the request completion routine, when the completion count hits
@@ -287,6 +292,8 @@ typedef struct MPIDI_Devreq_t {
     struct MPIR_Request *anysrc_partner;
 #endif
 
+    /* initialized to MPIDI_REQ_TYPE_NONE, set when one of the union field is set */
+    MPIDI_REQ_TYPE type;
     union {
         /* The first fields are used by the MPIDIG apis */
         MPIDIG_req_t am;
@@ -309,6 +316,7 @@ typedef struct MPIDI_Devreq_t {
 #endif
     } ch4;
 } MPIDI_Devreq_t;
+
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDIG_REQUEST(req,field)       (((req)->dev.ch4.am).field)
