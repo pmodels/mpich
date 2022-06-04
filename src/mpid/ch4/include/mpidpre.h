@@ -273,6 +273,12 @@ typedef struct {
 } MPIDI_self_request_t;
 
 typedef struct MPIDI_Devreq_t {
+    /* completion notification counter: this must be decremented by
+     * the request completion routine, when the completion count hits
+     * zero.  this counter allows us to keep track of the completion
+     * of multiple requests in a single place. */
+    MPIR_cc_t *completion_notification;
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
     /* Anysource handling. Netmod and shm specific requests are cross

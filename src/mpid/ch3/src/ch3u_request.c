@@ -545,10 +545,6 @@ int MPID_Request_complete(MPIR_Request *req)
 
     MPIDI_CH3U_Request_decrement_cc(req, &incomplete);
     if (!incomplete) {
-        /* decrement completion_notification counter */
-        if (req->completion_notification)
-            MPIR_cc_dec(req->completion_notification);
-
 	MPIR_Request_free(req);
     }
 

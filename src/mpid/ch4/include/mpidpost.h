@@ -13,6 +13,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(MPIR_Request * req)
 {
     MPIR_FUNC_ENTER;
 
+    req->dev.completion_notification = NULL;
     MPIDIG_REQUEST(req, req) = NULL;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
