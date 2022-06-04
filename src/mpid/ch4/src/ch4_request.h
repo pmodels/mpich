@@ -85,7 +85,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
             MPIR_cc_dec(req->dev.completion_notification);
         }
 
-        if (MPIDIG_REQUEST(req, req)) {
+        if (req->dev.type == MPIDI_REQ_TYPE_AM) {
             /* FIXME: refactor mpidig code into ch4r_request.h */
             int vci = MPIDI_Request_get_vci(req);
             MPIDU_genq_private_pool_free_cell(MPIDI_global.per_vci[vci].request_pool,
