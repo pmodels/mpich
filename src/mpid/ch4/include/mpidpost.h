@@ -31,14 +31,6 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(MPIR_Request * req)
     int count = MPL_atomic_relaxed_load_int(&MPIDI_VCI(vci).progress_count);
     MPL_atomic_relaxed_store_int(&MPIDI_VCI(vci).progress_count, count + 1);
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    /* FIXME: I don't think persistent request will ever need anysrc_partner. It is
-     * handled by its real_request. Add assertion for now. Remove once confirmed. */
-    MPIR_Assert(req->kind != MPIR_REQUEST_KIND__PREQUEST_RECV || req->dev.anysrc_partner == NULL);
-    if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV && NULL != req->dev.anysrc_partner)
-        MPIR_Request_free(req->dev.anysrc_partner);
-#endif
-
     MPIR_FUNC_EXIT;
     return;
 }
