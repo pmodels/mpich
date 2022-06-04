@@ -596,7 +596,7 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret)
                     MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(req, datatype));
                     MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
                     MPIR_STATUS_SET_COUNT(req->status, 0);
-                    MPIDIU_request_complete(req);
+                    MPIDI_Request_complete_fast(req);
                     break;
 
                 case FI_ENOMSG:
