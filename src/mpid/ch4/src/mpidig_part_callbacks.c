@@ -149,7 +149,7 @@ int MPIDIG_part_send_data_target_msg_cb(void *am_hdr, void *data,
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = part_send_data_target_cmpl_cb;
 
     /* Set part_rreq complete when am request completes but not decrease part_rreq refcnt */
-    rreq->completion_notification = &part_rreq->cc;
+    rreq->dev.completion_notification = &part_rreq->cc;
     /* Will update part_sreq status when the AM request completes.
      * TODO: can we get rid of the pointer? */
     MPIDIG_REQUEST(rreq, req->part_am_req.part_req_ptr) = part_rreq;
