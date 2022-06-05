@@ -146,7 +146,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
         }
 
         if (MPIR_IS_THREADED) {
-#if MPICH_IS_THREADED
+#ifdef MPICH_IS_THREADED
             if (MPIDI_CH3I_progress_blocked == TRUE) {
                 /*
                  * Another thread is already blocking in the progress engine.
@@ -197,7 +197,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
      * that would need to be buffered.
      */
 
-#if MPICH_IS_THREADED
+#ifdef MPICH_IS_THREADED
     {
         /*
          * Awaken any threads which are waiting for the progress that just
