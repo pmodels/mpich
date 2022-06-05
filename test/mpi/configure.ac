@@ -499,6 +499,21 @@ AC_SUBST(comm_overlap)
 
 # The multi-thread tests can be disabled by --disable-threads
 threadsdir="threads"
+if test "$enable_threads" != "no" ; then
+    AC_MSG_CHECKING([whether MPI_THREAD_MULTIPLE is supported])
+    AC_RUN_IFELSE([
+            AC_LANG_PROGRAM([#include "mpi.h"],[
+                int provided;
+                MPI_Init_thread(0,0, MPI_THREAD_MULTIPLE, &provided);
+                MPI_Finalize();
+                if (provided != MPI_THREAD_MULTIPLE) {
+                    exit(1);
+                }
+            ])
+        ],[enable_threads=yes],[enable_threads=no])
+    AC_MSG_RESULT($enable_threads)
+fi
+
 if test "$enable_threads" = "no"; then
     threadsdir=""
 fi
