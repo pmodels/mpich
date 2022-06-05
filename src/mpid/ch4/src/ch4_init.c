@@ -745,7 +745,7 @@ int MPID_Free_mem(void *user_buf)
 #ifdef MAP_ANON
             MPL_munmap(container->real_buf, container->size, MPL_MEM_USER);
 #else
-            MPL_free(container->real_buf, MPL_MEM_USER);
+            MPL_free(container->real_buf);
 #endif
             break;
 
