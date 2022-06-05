@@ -6,6 +6,7 @@
 #include "mpiimpl.h"
 #include "namepub.h"
 
+#include <fcntl.h>
 
 #ifdef HAVE_ERRNO_H
 #include <errno.h>      /* needed for read/write error codes */
