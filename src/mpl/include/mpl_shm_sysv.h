@@ -36,6 +36,6 @@ typedef MPLI_shm_lghnd_t *MPL_shm_hnd_t;
 #define MPL_SHM_SEG_ALREADY_EXISTS EEXIST
 
 /* Nothing to be done at close */
-#define MPLI_shm_lhnd_close(hnd)    0
+#define MPLI_shm_lhnd_close(hnd)    do { } while (0)
 
 #endif /* MPL_SHM_SYSV_H_INCLUDED */
