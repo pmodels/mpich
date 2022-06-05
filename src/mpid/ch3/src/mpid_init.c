@@ -292,6 +292,8 @@ static int init_pg(int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
     char *pg_id;
     MPIDI_PG_t *pg = 0;
 
+    *pg_rank_p = -1;
+
     /* See if the channel will provide the PMI values.  The channel
      is responsible for defining HAVE_CH3_PRE_INIT and providing 
     the MPIDI_CH3_Pre_init function.  */
