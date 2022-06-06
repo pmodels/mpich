@@ -10,7 +10,8 @@
 #include "mpitest.h"
 
 #define DATA_NELTS  1000
-#define NUM_WIN     1000
+/* NOTE: with sysv, there is a limit on shared memory IDs */
+#define NUM_WIN     500
 #define DATA_SZ     (DATA_NELTS*sizeof(int))
 
 int main(int argc, char **argv)
