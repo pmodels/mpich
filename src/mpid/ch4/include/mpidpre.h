@@ -513,6 +513,7 @@ typedef struct {
     MPIDIG_win_t am;
     int am_vci;                 /* both netmod and shm have to use the same vci for am operations or
                                  * we won't be able to effectively progress at synchronization */
+    int *vci_table;
     union {
     MPIDI_NM_WIN_DECL} netmod;
 #ifndef MPIDI_CH4_DIRECT_NETMOD

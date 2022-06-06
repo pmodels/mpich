@@ -251,7 +251,7 @@ MPI_Type_get_contents:
 
 MPI_Type_get_envelope:
     .desc: get type envelope
-    .skip: ThreadSafe
+    .skip: global_cs
 
 MPI_Type_get_extent:
     .desc: Get the lower bound and extent for a Datatype

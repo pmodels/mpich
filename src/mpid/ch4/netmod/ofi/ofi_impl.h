@@ -289,10 +289,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_mr_bind(struct fi_info *prov, struct fid_
     if (prov->domain_attr->mr_mode == FI_MR_ENDPOINT) {
         /* Bind the memory region to the endpoint */
         MPIDI_OFI_CALL(fi_mr_bind(mr, &ep->fid, 0ULL), mr_bind);
-        /* Bind the memory region to the counter */
-        if (cntr != NULL) {
-            MPIDI_OFI_CALL(fi_mr_bind(mr, &cntr->fid, 0ULL), mr_bind);
-        }
         MPIDI_OFI_CALL(fi_mr_enable(mr), mr_enable);
     }
 

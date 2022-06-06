@@ -449,7 +449,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
 {
 
     int mpi_errno = MPI_SUCCESS;
-    ssize_t ret;
     MPIR_FUNC_ENTER;
 
     int vni = MPIDI_Request_get_vci(rreq);
@@ -460,29 +459,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
         goto fn_exit;
     }
 
-    /* Not using the OFI_CALL macro because there are error cases here that we want to catch */
-    ret = fi_cancel((fid_t) MPIDI_OFI_global.ctx[ctx_idx].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
-    if (ret == -FI_ENOENT) {
-        /* The context was not found inside libfabric which means it was matched previously and has
-         * already been handled. Note that it is impossible to tell the difference in this case
-         * between a request that was previously matched and one that never existed. So this will
-         * probably never return an error if the user tries to cancel a request that was not
-         * previously started. */
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
-                        (MPL_DBG_FDEST, "Request not found. Assuming already cancelled"));
-        goto fn_exit;
-    } else if (ret < 0) {
-        /* Some provider, e.g. psm3, return -FI_EAGAIN when they should return -FI_ENOENT.
-         * work around until they fix it */
-        if (ret == -FI_EAGAIN) {
-            goto fn_exit;
-        }
-        MPIR_ERR_CHKANDJUMP4(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ofid_cancel",
-                             "**ofid_cancel %s %d %s %s", __SHORT_FILE__, __LINE__, __func__,
-                             fi_strerror(-ret));
-    }
+    /* We can't rely on the return code of fi_cancel, assume always successful.
+     * ref: https://github.com/ofiwg/libfabric/issues/7795
+     */
+    fi_cancel((fid_t) MPIDI_OFI_global.ctx[ctx_idx].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
 
     if (is_blocking) {
+        /* progress until the rreq complets, either with cancel-bit set,
+         * or with message received */
         while (!MPIR_cc_is_complete(&rreq->cc)) {
             mpi_errno = MPIDI_OFI_progress_uninlined(vni);
             MPIR_ERR_CHECK(mpi_errno);

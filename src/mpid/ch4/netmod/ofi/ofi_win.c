@@ -17,11 +17,6 @@ static int win_init_global(MPIR_Win * win);
 static int win_init(MPIR_Win * win);
 static void win_init_am(MPIR_Win * win);
 
-#define MPIDI_OFI_WIN_VNI(win, vni_) \
-    do { \
-        vni_ = MPIDI_get_vci(SRC_VCI_FROM_SENDER, (win)->comm_ptr, 0, 0, 0); \
-    } while (0)
-
 static void load_acc_hint(MPIR_Win * win)
 {
     int op_index = 0, i;
@@ -165,7 +160,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     }
 
     /* we need register mr on the correct domain for the vni */
-    int vni = MPIDI_OFI_WIN(win).vni;
+    int vni = MPIDI_WIN(win, am_vci);
     int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
     /* Register the allocated win buffer or MPI_BOTTOM (NULL) for dynamic win.
@@ -275,7 +270,8 @@ static int win_set_per_win_sync(MPIR_Win * win)
 {
     int ret, mpi_errno = MPI_SUCCESS;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, MPIDI_OFI_WIN(win).vni, nic);
+    int vni = MPIDI_WIN(win, am_vci);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
     MPIR_FUNC_ENTER;
 
@@ -332,7 +328,7 @@ static int win_init_sep(MPIR_Win * win)
     int i, ret, mpi_errno = MPI_SUCCESS;
     struct fi_info *finfo;
     int nic = 0;
-    int vni = MPIDI_OFI_WIN(win).vni;
+    int vni = MPIDI_WIN(win, am_vci);
     int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
     MPIR_FUNC_ENTER;
@@ -460,7 +456,7 @@ static int win_init_stx(MPIR_Win * win)
     struct fi_info *finfo;
     bool have_per_win_cntr = false;
     int nic = 0;
-    int vni = MPIDI_OFI_WIN(win).vni;
+    int vni = MPIDI_WIN(win, am_vci);
     int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
     MPIR_FUNC_ENTER;
@@ -574,7 +570,7 @@ static int win_init_global(MPIR_Win * win)
 {
     MPIR_FUNC_ENTER;
 
-    int vni = MPIDI_OFI_WIN(win).vni;
+    int vni = MPIDI_WIN(win, am_vci);
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
@@ -606,6 +602,9 @@ static int win_init(MPIR_Win * win)
 
     MPIDI_OFI_WIN(win).win_id =
         MPIDI_OFI_mr_key_alloc(MPIDI_OFI_COLL_MR_KEY, win->comm_ptr->context_id);
+    MPIR_ERR_CHKANDJUMP(MPIDI_OFI_WIN(win).win_id == MPIDI_OFI_INVALID_MR_KEY, mpi_errno,
+                        MPI_ERR_OTHER, "**ofid_mr_key");
+
     if (MPIDI_OFI_WIN(win).win_id == -1ULL) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to get global mr key.\n");
         mpi_errno = MPIDI_OFI_ENAVAIL;
@@ -616,12 +615,6 @@ static int win_init(MPIR_Win * win)
 
     MPIDI_OFI_WIN(win).sep_tx_idx = -1; /* By default, -1 means not using scalable EP. */
     MPIDI_OFI_WIN(win).progress_counter = 1;
-
-    /* Assign vni to window.
-     * NOTE: we could assign vni per epoch, then we need run `win_init_{sep,stx,global}`
-     * at start of every epoch.
-     */
-    MPIDI_OFI_WIN_VNI(win, MPIDI_OFI_WIN(win).vni);
 
     /* First, try to enable scalable EP. */
     if (MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS && MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX > 0) {
@@ -643,6 +636,8 @@ static int win_init(MPIR_Win * win)
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Callback of MPL_gavl_tree_create to delete local registered MR for dynamic window */
@@ -923,7 +918,8 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     dwin_target_mr_t *target_mrs;
     int mpl_err = MPL_SUCCESS, i;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, MPIDI_OFI_WIN(win).vni, nic);
+    int vni = MPIDI_WIN(win, am_vci);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
 
     MPIR_FUNC_ENTER;
 
@@ -933,8 +929,11 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
         goto fn_exit;
 
     uint64_t requested_key = 0ULL;
-    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY)
+    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         requested_key = MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
+        MPIR_ERR_CHKANDJUMP(requested_key == MPIDI_OFI_INVALID_MR_KEY, mpi_errno,
+                            MPI_ERR_OTHER, "**ofid_mr_key");
+    }
 
     int rc = 0, allrc = 0;
     struct fid_mr *mr = NULL;
@@ -1067,7 +1066,7 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_ENTER;
 
     if (MPIDI_OFI_ENABLE_RMA) {
-        int vni = MPIDI_OFI_WIN(win).vni;
+        int vni = MPIDI_WIN(win, am_vci);
         int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
         MPIDI_OFI_mr_key_free(MPIDI_OFI_COLL_MR_KEY, MPIDI_OFI_WIN(win).win_id);
         MPIDIU_map_erase(MPIDI_OFI_global.win_map, MPIDI_OFI_WIN(win).win_id);

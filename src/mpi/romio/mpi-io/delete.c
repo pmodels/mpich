@@ -35,7 +35,7 @@ Input Parameters:
 @*/
 int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
 {
-    int error_code, file_system;
+    int error_code, file_system, known_fstype;
     char *tmp;
     ADIOI_Fns *fsops;
 #ifdef MPI_hpux
@@ -53,7 +53,7 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
         goto fn_exit;
 
     /* resolve file system type from file name; this is a collective call */
-    ADIO_ResolveFileType(MPI_COMM_SELF, filename, &file_system, &fsops, &error_code);
+    known_fstype = ADIO_ResolveFileType(MPI_COMM_SELF, filename, &file_system, &fsops, &error_code);
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS) {
@@ -67,13 +67,16 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
     }
     /* --END ERROR HANDLING-- */
 
-    /* skip prefixes on file names if they have more than one character;
-     * single-character prefixes are assumed to be windows drive
-     * specifications (e.g. c:\foo) and are left alone.
-     */
-    tmp = strchr(filename, ':');
-    if (tmp > filename + 1)
-        filename = tmp + 1;
+    if (known_fstype) {
+        /* filename contains a known file system type prefix, such as "ufs:".
+         * skip prefixes on file names if they have more than one character;
+         * single-character prefixes are assumed to be windows drive
+         * specifications (e.g. c:\foo) and are left alone.
+         */
+        tmp = strchr(filename, ':');
+        if (tmp > filename + 1)
+            filename = tmp + 1;
+    }
 
     /* call the fs-specific delete function */
     (fsops->ADIOI_xxx_Delete) (filename, &error_code);

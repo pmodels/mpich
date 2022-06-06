@@ -337,9 +337,27 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIDIG_WIN(win, win_id) = MPIDIG_generate_win_id(comm_ptr);
     MPIDIU_map_set(MPIDI_global.win_map, MPIDIG_WIN(win, win_id), win, MPL_MEM_RMA);
 
-    /* we need consistent vci to run am operations.
-     * Note: netmod and shm may further hash it down */
-    MPIDI_WIN(win, am_vci) = MPIDI_get_vci(SRC_VCI_FROM_SENDER, win->comm_ptr, 0, 0, 0);
+    if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_NONE) {
+        MPIDI_WIN(win, am_vci) = MPIDI_get_vci(SRC_VCI_FROM_SENDER, win->comm_ptr, 0, 0, 0);
+        MPIDI_WIN(win, vci_table) = NULL;
+    } else if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
+        int *vci_table = MPL_malloc(comm_ptr->local_size * sizeof(int), MPL_MEM_OTHER);
+        for (int i = 0; i < comm_ptr->local_size; i++) {
+            vci_table[i] = comm_ptr->stream_comm.single.vci_table[i];
+        }
+        MPIDI_WIN(win, am_vci) = vci_table[comm_ptr->rank];
+        MPIDI_WIN(win, vci_table) = vci_table;
+    } else if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
+        int *vci_table = MPL_malloc(comm_ptr->local_size * sizeof(int), MPL_MEM_OTHER);
+        for (int i = 0; i < comm_ptr->local_size; i++) {
+            int displ = comm_ptr->stream_comm.multiplex.vci_displs[i];
+            vci_table[i] = comm_ptr->stream_comm.multiplex.vci_table[displ];
+        }
+        MPIDI_WIN(win, am_vci) = vci_table[comm_ptr->rank];
+        MPIDI_WIN(win, vci_table) = vci_table;
+    } else {
+        MPIR_Assert(0);
+    }
 
     /* set winattr for performance optimization at fast path:
      * - check if comm is COMM_WORLD or dup of COMM_WORLD
@@ -406,6 +424,8 @@ static int win_finalize(MPIR_Win ** win_ptr)
             (MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) == 0) &&
             all_local_completed && all_remote_completed;
     } while (all_completed != 1);
+
+    MPL_free(MPIDI_WIN(win, vci_table));
 
     mpi_errno = MPIDI_NM_mpi_win_free_hook(win);
     MPIR_ERR_CHECK(mpi_errno);
