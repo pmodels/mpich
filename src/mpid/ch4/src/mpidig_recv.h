@@ -229,6 +229,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
                  * Record the passed `*request` to `match_req` so that we can complete it
                  * later when `unexp_req` completes.
                  * See MPIDI_recv_target_cmpl_cb for actual completion handler. */
+                MPIDIG_request_init(*request, vci, -1);
+                if (!(*request)->comm) {
+                    (*request)->comm = comm;
+                    MPIR_Comm_add_ref(comm);
+                }
                 MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
             }
             MPIDIG_REQUEST(unexp_req, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
@@ -246,6 +251,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
                 /* Enqueuing path: CH4 already allocated request as `*request`.
                  * Since the real operations has completed in `unexp_req`, here we
                  * simply copy the status to `*request` and complete it. */
+                MPIDIG_request_init(*request, vci, -1);
+                if (!(*request)->comm) {
+                    (*request)->comm = comm;
+                    MPIR_Comm_add_ref(comm);
+                }
                 (*request)->status = unexp_req->status;
                 MPIR_Request_add_ref(*request);
                 MPID_Request_complete(*request);
