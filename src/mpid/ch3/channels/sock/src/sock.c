@@ -1235,7 +1235,6 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set **sock_setp)
 {
     struct MPIDI_CH3I_Sock_set *sock_set = NULL;
     int mpi_errno = MPI_SUCCESS;
-    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     MPIR_FUNC_ENTER;
 
@@ -1284,6 +1283,7 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set **sock_setp)
         struct pollinfo *pollinfo;
         long flags;
         int rc;
+        char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
         /*
          * Acquire a pipe (the interrupter) to wake up a blocking poll should

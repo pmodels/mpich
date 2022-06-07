@@ -309,6 +309,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     int i, k;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int mpi_errno = MPI_SUCCESS;
+    int mpl_err = 0;
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_ENTER;
@@ -327,17 +328,17 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
 
     (*win_ptr)->info_shm_segment_len = comm_size * sizeof(MPIDI_Win_basic_info_t);
 
-    mpi_errno = MPL_shm_hnd_init(&(*win_ptr)->info_shm_segment_handle);
-    MPIR_ERR_CHECK(mpi_errno);
+    mpl_err = MPL_shm_hnd_init(&(*win_ptr)->info_shm_segment_handle);
+    MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
     if (node_rank == 0) {
         char *serialized_hnd_ptr = NULL;
 
         /* create shared memory region for all processes in win and map. */
-        mpi_errno = MPL_shm_seg_create_and_attach((*win_ptr)->info_shm_segment_handle,
+        mpl_err = MPL_shm_seg_create_and_attach((*win_ptr)->info_shm_segment_handle,
                                                     (*win_ptr)->info_shm_segment_len,
                                                     &(*win_ptr)->info_shm_base_addr, 0);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
         /* serialize handle and broadcast it to the other processes in win */
         mpi_errno =
@@ -357,8 +358,8 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         /* unlink shared memory region so it gets deleted when all processes exit */
-        mpi_errno = MPL_shm_seg_remove((*win_ptr)->info_shm_segment_handle);
-        MPIR_ERR_CHECK(mpi_errno);
+        mpl_err = MPL_shm_seg_remove((*win_ptr)->info_shm_segment_handle);
+        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
     }
     else {
         char serialized_hnd[MPL_SHM_GHND_SZ] = { 0 };
@@ -370,16 +371,15 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
-        mpi_errno = MPL_shm_hnd_deserialize((*win_ptr)->info_shm_segment_handle, serialized_hnd,
+        mpl_err = MPL_shm_hnd_deserialize((*win_ptr)->info_shm_segment_handle, serialized_hnd,
                                               strlen(serialized_hnd));
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
         /* attach to shared memory region created by rank 0 */
-        mpi_errno =
-            MPL_shm_seg_attach((*win_ptr)->info_shm_segment_handle,
-                                 (*win_ptr)->info_shm_segment_len,
-                                 &(*win_ptr)->info_shm_base_addr, 0);
-        MPIR_ERR_CHECK(mpi_errno);
+        mpl_err = MPL_shm_seg_attach((*win_ptr)->info_shm_segment_handle,
+                                     (*win_ptr)->info_shm_segment_len,
+                                     &(*win_ptr)->info_shm_base_addr, 0);
+        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
         mpi_errno = MPIR_Barrier(node_comm_ptr, &errflag);
         MPIR_ERR_CHECK(mpi_errno);
@@ -429,6 +429,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
                                        MPIR_Comm * comm_ptr, void *base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpl_err = 0;
     void **base_pp = (void **) base_ptr;
     int i, node_size, node_rank;
     MPIR_Comm *node_comm_ptr;
@@ -495,8 +496,8 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
     }
 
     else {
-        mpi_errno = MPL_shm_hnd_init(&(*win_ptr)->shm_segment_handle);
-        MPIR_ERR_CHECK(mpi_errno);
+        mpl_err = MPL_shm_hnd_init(&(*win_ptr)->shm_segment_handle);
+        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
         if (node_rank == 0) {
             char *serialized_hnd_ptr = NULL;
@@ -526,9 +527,8 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
             /* unlink shared memory region so it gets deleted when all processes exit */
-            mpi_errno = MPL_shm_seg_remove((*win_ptr)->shm_segment_handle);
-            MPIR_ERR_CHECK(mpi_errno);
-
+            mpl_err = MPL_shm_seg_remove((*win_ptr)->shm_segment_handle);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
         }
         else {
             char serialized_hnd[MPL_SHM_GHND_SZ] = { 0 };
@@ -546,10 +546,10 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             MPIR_ERR_CHECK(mpi_errno);
 
             /* attach to shared memory region created by rank 0 */
-            mpi_errno =
-                MPL_shm_seg_attach((*win_ptr)->shm_segment_handle, (*win_ptr)->shm_segment_len,
-                                     &(*win_ptr)->shm_base_addr, 0);
-            MPIR_ERR_CHECK(mpi_errno);
+            mpl_err = MPL_shm_seg_attach((*win_ptr)->shm_segment_handle,
+                                         (*win_ptr)->shm_segment_len,
+                                         &(*win_ptr)->shm_base_addr, 0);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
             mpi_errno = MPIR_Barrier(node_comm_ptr, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
@@ -557,8 +557,8 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
         }
 
         /* Allocated the interprocess mutex segment. */
-        mpi_errno = MPL_shm_hnd_init(&(*win_ptr)->shm_mutex_segment_handle);
-        MPIR_ERR_CHECK(mpi_errno);
+        mpl_err = MPL_shm_hnd_init(&(*win_ptr)->shm_mutex_segment_handle);
+        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
         if (node_rank == 0) {
             char *serialized_hnd_ptr = NULL;
@@ -590,8 +590,8 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
             /* unlink shared memory region so it gets deleted when all processes exit */
-            mpi_errno = MPL_shm_seg_remove((*win_ptr)->shm_mutex_segment_handle);
-            MPIR_ERR_CHECK(mpi_errno);
+            mpl_err = MPL_shm_seg_remove((*win_ptr)->shm_mutex_segment_handle);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
         }
         else {
             char serialized_hnd[MPL_SHM_GHND_SZ] = { 0 };
@@ -609,11 +609,10 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             MPIR_ERR_CHECK(mpi_errno);
 
             /* attach to shared memory region created by rank 0 */
-            mpi_errno =
-                MPL_shm_seg_attach((*win_ptr)->shm_mutex_segment_handle,
-                                     sizeof(MPIDI_CH3I_SHM_MUTEX), (void **) &(*win_ptr)->shm_mutex,
-                                     0);
-            MPIR_ERR_CHECK(mpi_errno);
+            mpl_err = MPL_shm_seg_attach((*win_ptr)->shm_mutex_segment_handle,
+                                         sizeof(MPIDI_CH3I_SHM_MUTEX),
+                                         (void **) &(*win_ptr)->shm_mutex, 0);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
             mpi_errno = MPIR_Barrier(node_comm_ptr, &errflag);
             MPIR_ERR_CHECK(mpi_errno);

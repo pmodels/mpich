@@ -24,8 +24,10 @@ int MPIR_Ext_dbg_romio_verbose_enabled = 0;
 #define ROMIO_MUTEX_READY 2
 
 /* NOTE: we'll lazily initialize this mutex */
+#if defined(MPICH_IS_THREADED)
 static MPL_thread_mutex_t romio_mutex;
 static MPL_atomic_int_t romio_mutex_initialized = MPL_ATOMIC_INT_T_INITIALIZER(ROMIO_MUTEX_UNINIT);
+#endif
 
 void MPIR_Ext_mutex_init(void)
 {

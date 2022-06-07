@@ -306,6 +306,8 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src
 {
     int mpi_errno = MPI_SUCCESS;
 
+    *attr_out = MPIR_CONTEXT_INTRA_PT2PT;
+
     MPIR_ERR_CHKANDJUMP(comm->stream_comm_type != MPIR_STREAM_COMM_MULTIPLEX,
                         mpi_errno, MPI_ERR_OTHER, "**streamcomm_notmult");
 
@@ -319,10 +321,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src
     int src_vci = comm->stream_comm.multiplex.vci_table[displs[src_rank] + src_index];
     int dst_vci = comm->stream_comm.multiplex.vci_table[displs[src_rank] + dst_index];
 
-    int attr = MPIR_CONTEXT_INTRA_PT2PT;
-    MPIR_PT2PT_ATTR_SET_VCIS(attr, src_vci, dst_vci);
-
-    *attr_out = attr;
+    MPIR_PT2PT_ATTR_SET_VCIS(*attr_out, src_vci, dst_vci);
 
   fn_exit:
     return mpi_errno;
