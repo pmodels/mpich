@@ -443,10 +443,10 @@ if test "$MPI_IS_MPICH" = "yes" ; then
     if test -n "$MPICHVERSION" ; then
         $MPICHVERSION > conftest.output
         # netmod
-        if grep 'MPICH Device:[[:blank:]]*ch4:ofi' conftest.output > /dev/null ; then
+        if [grep 'MPICH Device:[[:blank:]]*ch4:ofi' conftest.output > /dev/null] ; then
             AC_MSG_NOTICE([Detected MPICH with ch4:ofi netmod])
             AC_DEFINE(MPICH_CH4_OFI, 1, [define if it is mpich with ch4:ofi])
-        elif grep 'MPICH Device:[[:blank:]]*ch4:ucx' conftest.output > /dev/null ; then
+        elif [grep 'MPICH Device:[[:blank:]]*ch4:ucx' conftest.output > /dev/null] ; then
             AC_MSG_NOTICE([Detected MPICH with ch4:ucx netmod])
             AC_DEFINE(MPICH_CH4_UCX, 1, [define if it is mpich with ch4:ucx])
         fi
