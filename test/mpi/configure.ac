@@ -448,12 +448,20 @@ if test "$MPI_IS_MPICH" = "yes" ; then
         elif [grep 'MPICH Device:[[:blank:]]*ch4:ucx' conftest.output > /dev/null] ; then
             AC_MSG_NOTICE([Detected MPICH with ch4:ucx netmod])
             AC_DEFINE(MPICH_CH4_UCX, 1, [define if it is mpich with ch4:ucx])
+            enable_spawn=no
         fi
 
         # enable_checkerrors
         if test "$enable_checkerrors" != "no" ; then
             if grep 'disable-error-checking\|enable-error-checking=no' conftest.output > /dev/null ; then
                 enable_checkerrors=no
+            fi
+        fi
+
+        #enable_spawn
+        if test "$enable_spawn" != "no" ; then
+            if grep 'enable-ch4-am-only' conftest.output > /dev/null ; then
+                enable_spawn=no
             fi
         fi
 
