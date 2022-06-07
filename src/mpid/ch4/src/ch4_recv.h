@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
     MPIDI_POSIX_RECV_VSI(vsi);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vsi).lock);
 
-    *request = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vsi, 1);
+    MPIDI_CH4_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vsi, 1);
     MPIR_Assert(*request);
 #endif
 
