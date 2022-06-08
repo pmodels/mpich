@@ -7,6 +7,7 @@
 #define CH4_PROGRESS_H_INCLUDED
 
 #include "ch4_impl.h"
+#include "stream_workq.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -281,6 +282,31 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_poke(void)
 
     MPIR_FUNC_EXIT;
     return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Stream_progress(MPIR_Stream * stream_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    if (stream_ptr == NULL) {
+        MPID_Progress_test(NULL);
+    } else {
+        MPID_Progress_state state;
+        state.flag = MPIDI_PROGRESS_ALL;
+        /* For lockless, no VCI lock is needed during NM progress */
+        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
+            state.flag |= MPIDI_PROGRESS_NM_LOCKLESS;
+        }
+
+        state.progress_made = 0;
+        state.vci[0] = stream_ptr->vci;
+        state.vci_count = 1;
+        MPID_Progress_test(&state);
+    }
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
 }
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
