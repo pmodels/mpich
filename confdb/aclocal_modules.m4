@@ -60,7 +60,7 @@ AC_DEFUN([PAC_CONFIG_HWLOC_EMBEDDED],[
 ])
 
 AC_DEFUN([PAC_CONFIG_HWLOC],[
-    dnl minor difference from e.g. mpl and zm -- we'll prioritize system hwloc by default
+    dnl minor difference from e.g. mpl -- we'll prioritize system hwloc by default
     PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
     if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
         AC_MSG_CHECKING([if hwloc meets minimum version requirement])

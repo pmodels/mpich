@@ -1,6 +1,3 @@
-[submodule "modules/izem"]
-	path = modules/izem
-	url = https://github.com/pmodels/izem
 [submodule "modules/libfabric"]
 	path = modules/libfabric
 	url = https://github.com/pmodels/libfabric

@@ -22,12 +22,16 @@
 #endif
 #include "uthash.h"
 #include "ch4_csel_container.h"
-#include "ch4i_workq_types.h"
+
+enum {
+    MPIDI_CH4_MT_DIRECT,
+    MPIDI_CH4_MT_LOCKLESS,
+
+    MPIDI_CH4_NUM_MT_MODELS,
+};
 
 #ifdef MPIDI_CH4_USE_MT_DIRECT
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_DIRECT
-#elif defined MPIDI_CH4_USE_MT_HANDOFF
-#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_HANDOFF
 #elif defined MPIDI_CH4_USE_MT_LOCKLESS
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_LOCKLESS
 #elif defined MPIDI_CH4_USE_MT_RUNTIME
@@ -297,10 +301,6 @@ typedef struct MPIDI_Devreq_t {
         union {
         MPIDI_SHM_REQUEST_DECL} shm;
 #endif
-
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-        MPIDI_workq_elemt_t command;
-#endif
     } ch4;
 } MPIDI_Devreq_t;
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
@@ -311,13 +311,7 @@ typedef struct MPIDI_Devreq_t {
 #define MPIDIG_PART_REQUEST(req, field)   (((req)->dev.ch4.part_req).am.field)
 #define MPIDI_SELF_REQUEST(req, field)  (((req)->dev.ch4.self).field)
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-/* `(r)->dev.ch4.am.req` might not be allocated right after SHM_mpi_recv when
- * the operations are enqueued with the handoff model. */
-#define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req && ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS))
-#else
 #define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)
-#endif /* #ifdef MPIDI_CH4_USE_WORK_QUEUES */
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #define MPIDI_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
