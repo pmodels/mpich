@@ -182,6 +182,7 @@ static inline int MPID_Progress_test(MPID_Progress_state * state) /* state is un
     return MPIDI_CH3_Progress_test();
 }
 #define MPID_Progress_poke()		     MPIDI_CH3_Progress_poke()
+#define MPID_Stream_progress(stream)         MPIDI_CH3_Progress_poke()
 
 /* Dynamic process support */
 int MPIDI_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
