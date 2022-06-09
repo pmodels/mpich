@@ -112,6 +112,8 @@ RunTest error 1 "**** Testing error.c ****" "-fname $FILENAME"
 
 RunTest status 1 "**** Testing status.c ****" "-fname $FILENAME"
 
+RunTest status 1 "**** Testing fstype_prefix.c ****"
+
 #
 # Run Fortran tests ONLY if Fortran available
 if [ @HAS_FORTRAN@ = 1 ] ; then 

@@ -371,6 +371,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             for (int i = 0; i < num_nics; i++) {
                 rma_keys[i] =
                     MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
+                MPIR_ERR_CHKANDJUMP(rma_keys[i] == MPIDI_OFI_INVALID_MR_KEY, mpi_errno,
+                                    MPI_ERR_OTHER, "**ofid_mr_key");
             }
         } else {
             /* zero them to avoid warnings */

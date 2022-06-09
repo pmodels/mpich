@@ -130,10 +130,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_vci_to_vni(int vci)
 
 /* Need both local and remote vni to be the same, or the synchronization call
  * may blocked at flushing the remote ep (due to missing remote progress) */
-#define MPIDI_UCX_WIN_TO_EP(win,rank,vni) \
-    MPIDI_UCX_AV(MPIDIU_comm_rank_to_av(win->comm_ptr, rank)).dest[vni][vni]
+#define MPIDI_UCX_WIN_TO_EP(win,rank,vni,vni_target) \
+    MPIDI_UCX_AV(MPIDIU_comm_rank_to_av(win->comm_ptr, rank)).dest[vni][vni_target]
 
-#define MPIDI_UCX_WIN_AV_TO_EP(av, vni) MPIDI_UCX_AV((av)).dest[vni][vni]
+#define MPIDI_UCX_WIN_AV_TO_EP(av, vni, vni_target) MPIDI_UCX_AV((av)).dest[vni][vni_target]
 
 ucs_status_t MPIDI_UCX_am_handler(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
                                   unsigned flags);
