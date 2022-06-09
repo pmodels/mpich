@@ -4,6 +4,7 @@ dnl MPICH_SUBCFG_BEFORE=src/mpid/common/datatype
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/thread
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/bc
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/genq
+dnl MPICH_SUBCFG_BEFORE=src/mpid/common/stream_workq
 
 dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 [#] expansion is: PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX
@@ -25,6 +26,7 @@ build_mpid_common_datatype=yes
 build_mpid_common_thread=yes
 build_mpid_common_bc=yes
 build_mpid_common_genq=yes
+build_mpid_common_stream_workq=yes
 
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
 MPID_MAX_PROCESSOR_NAME=128
