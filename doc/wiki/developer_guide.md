@@ -97,7 +97,7 @@ Since this layer is mostly generated, we also refer to this layer as binding
 layer, which widely also apply to the Fortran/CXX bindings.
 
 Reference:
-* [notes on binding generation](../notes/binding_c.md)
+* [notes on binding generation](notes/binding_c.md)
 * [mpi_standard_api.txt](../../src/binding/mpi_standard_api.txt)
   [api_mapping.txt](../../src/binding/api_mapping.txt)
 * [MPI Specification](https://www.mpi-forum.org/docs/drafts/mpi-2020-draft-report.pdf)
@@ -214,9 +214,9 @@ need allow both fully inlined build and nonlined build using function tables.
 We use script to generate most of these API files.
 
 Reference:
-* [Notes on ch4 api autogen](../notes/ch4_api.md)
-* [Notes on ch4 inline mechanism](../notes/ch4_inline.txt)
-* [Notes on ch4 namespace convention](../notes/ch4_namespace.txt)
+* [Notes on ch4 api autogen](notes/ch4_api.md)
+* [Notes on ch4 inline mechanism](notes/ch4_inline.txt)
+* [Notes on ch4 namespace convention](notes/ch4_namespace.txt)
 * [ch4_api.txt](../../src/mpid/ch4/ch4_api.txt)
 * [request.md](notes/request.md)
 
@@ -394,13 +394,13 @@ variables in code during runtime as well (however, it is rather clunky
 thus not widely used).
 
 Reference:
-* [notes on CVAR](../notes/cvar.md)
+* [notes on CVAR](notes/cvar.md)
 
 ## PM and PMI
 References:
-* [Notes on Process Manager](../notes/pm.md)
-* [Notes on Process Manager Interface](../notes/pmi.md)
-* [Notes on Namepub](../notes/namepub.md)
+* [Notes on Process Manager](notes/pm.md)
+* [Notes on Process Manager Interface](notes/pmi.md)
+* [Notes on Namepub](notes/namepub.md)
 * [Using the Hydra Process Manager](how_to/Using_the_Hydra_Process_Manager.md)
 
 ## Test Suite
