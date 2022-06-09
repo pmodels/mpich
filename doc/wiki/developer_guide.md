@@ -218,7 +218,7 @@ Reference:
 * [Notes on ch4 inline mechanism](../notes/ch4_inline.txt)
 * [Notes on ch4 namespace convention](../notes/ch4_namespace.txt)
 * [ch4_api.txt](../../src/mpid/ch4/ch4_api.txt)
-* [request.md](../notes/request.md)
+* [request.md](notes/request.md)
 
 #### Active Message
 

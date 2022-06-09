@@ -18,7 +18,7 @@ and code layers. It is by far the most complex part of MPICH code -- thus the
 need for this separate note.
 
 The MPIR_Request struct is defined in
-[mpir_request.h](../src/include/mpir_request.h#L168-L225). Other than the
+[mpir_request.h](../../../src/include/mpir_request.h#L168-L225). Other than the
 common fields, we have a big union to support different kinds of request.
 However, like an iceberg, more complex fields are hidden by the device layer
 macro `MPID_DEV_REQUEST_DECL`. We use the macro to add device-layer fields
@@ -34,16 +34,16 @@ frustration -- it is easy for a developer to lose hours simply to trace what
 is what, again and again.
 
 Here are some pointers:
-* Top-level: [mpir_request.h](../src/include/mpir_request.h#L168-L225)
-* Ch4-level: [mpidpre.h](../src/mpid/ch4/include/mpidpre.h#L272-L304)<br/>
+* Top-level: [mpir_request.h](../../../src/include/mpir_request.h#L168-L225)
+* Ch4-level: [mpidpre.h](../../../src/mpid/ch4/include/mpidpre.h#L272-L304)<br/>
   Defines `MPIDI_REQUEST(req, field) -> req->dev.field` <br/>
   The most complex part of the union are `MPIDIG_req_t` and
   `MPIDI_OFI_request_t` (inside `netmod` union).
-* AM: [mpidpre.h](../src/mpid/ch4/include/mpidpre.h#L207-L222)<br/>
+* AM: [mpidpre.h](../../../src/mpid/ch4/include/mpidpre.h#L207-L222)<br/>
   `MPIDIG_req_t` not only nests additional device layer (`netmod_am`,
   `shm_am`), it also allocates additional buffer `MPIDIG_req_ext_t`, which is
   a complex struct/union with definitions cover all AM protocols.
-* OFI: [ofi_pre.h](../src/mpid/ch4/netmod/ofi/ofi_pre.h#L170-L188)<br/>
+* OFI: [ofi_pre.h](../../../src/mpid/ch4/netmod/ofi/ofi_pre.h#L170-L188)<br/>
   The fixed fields `context` and `event_id` allows passing into libfabric API
   as context.
 * UCX and POSIX are simple. UCX doesn't pass part of the request as context,
