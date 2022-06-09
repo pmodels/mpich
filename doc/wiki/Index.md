@@ -10,6 +10,7 @@
     - [Version Control Systems & Git](source_code/Version_Control_System.md)
     - [Coding Standards](source_code/Coding_Standards.md)
         - [Code Formatting And Cleanup Script](source_code/Code_Formatting_And_Cleanup_Script.md)
+    - [Developer Guide](developer_guide.md)
 
 - [Creating New Bug Reports](source_code/Bug_Tickets.md)
 - [Using the Hydra Process Manager](how_to/Using_the_Hydra_Process_Manager.md)
