@@ -126,9 +126,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     if (ipc_attr.threshold.send_lmt_sz < 0 || ipc_attr.ipc_type == MPIDI_IPCI_TYPE__NONE) {
         goto fn_exit;
     }
-    if (data_sz < ipc_attr.threshold.send_lmt_sz && !MPIDI_IPCI_is_repeat_addr(mem_addr)) {
-        goto fn_exit;
-    }
 
     bool do_ipc = false;
     if (dt_contig) {
