@@ -177,6 +177,7 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
                             "**gpu_ipc_handle_create");
         ipc_attr->ipc_handle.gpu.handle_status = MPIDI_GPU_IPC_HANDLE_REMAP_REQUIRED;
     } else {
+        ipc_attr->ipc_handle.gpu.ipc_handle = handle_obj->ipc_handle;
         ipc_attr->ipc_handle.gpu.handle_status = MPIDI_GPU_IPC_HANDLE_VALID;
     }
 
@@ -191,6 +192,11 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
     ipc_attr->ipc_handle.gpu.offset = (uintptr_t) vaddr - (uintptr_t) pbase;
 
     ipc_attr->ipc_handle.gpu.global_dev_id = global_dev_id;
+
+    if (handle_obj == NULL) {
+        mpi_errno = MPIDI_GPU_ipc_handle_cache_insert(rank, comm, ipc_attr->ipc_handle.gpu);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
   fn_fail:
 #else
     /* Do not support IPC data transfer */
