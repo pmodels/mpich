@@ -60,6 +60,10 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
 int MPL_gpu_init(MPL_gpu_info_t * info)
 {
     int mpl_err;
+    int fd = -1, pidfd = -1, dupfd = -1;
+    char tmp_fname[] = "/tmp/mpich_ze_pidfd_getXXXXXXXXXX";
+    char *chosen_fname = tmp_fname;
+
     mpl_err = gpu_ze_init_driver();
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
@@ -80,6 +84,21 @@ int MPL_gpu_init(MPL_gpu_info_t * info)
 
     gpu_initialized = 1;
 
+    /* Test if ipc can be supported via pidfd_open/pidfd_get */
+    fd = MPL_mkstemp(chosen_fname);
+    if (fd == -1)
+        goto fn_fail;
+
+    pidfd = syscall(__NR_pidfd_open, mypid, 0);
+    if (pidfd == -1)
+        goto fn_fail;
+
+    dupfd = syscall(__NR_pidfd_getfd, pidfd, fd, 0);
+    if (pidfd == -1)
+        goto fn_fail;
+
+    info->enable_ipc = true;
+
     if (info->debug_summary) {
         printf("==== GPU Init (ZE) ====\n");
         printf("device_count: %d\n", device_count);
@@ -87,6 +106,14 @@ int MPL_gpu_init(MPL_gpu_info_t * info)
     }
 
   fn_exit:
+    if (dupfd)
+        close(dupfd);
+    if (pidfd)
+        close(pidfd);
+    if (fd) {
+        close(fd);
+        unlink(chosen_fname);
+    }
     return mpl_err;
   fn_fail:
     goto fn_exit;
