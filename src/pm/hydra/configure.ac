@@ -253,7 +253,7 @@ for hydra_bss_name in ${hydra_bss_names}; do
 	pbs)
 		hydra_bss_external=true
 		# Check if TM library support is available
-		PAC_CHECK_HEADER_LIB_OPTIONAL(pbs, tm.h, torque, tm_init)
+		PAC_CHECK_HEADER_LIB_OPTIONAL(pbs, tm.h, [torque pbs], tm_init)
                 if test "$pac_have_pbs" = "yes" ; then
 		    available_launchers="$available_launchers pbs"
                 fi
