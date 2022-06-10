@@ -35,21 +35,19 @@ static int gpu_ze_init_driver(void);
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
 {
     int ret = MPL_SUCCESS;
-    if (!gpu_initialized) {
-        ret = MPL_gpu_init(0);
-    }
-
     *dev_cnt = device_count;
     *dev_id = max_dev_id;
     return ret;
 }
 
-int MPL_gpu_init(int debug_summary)
+int MPL_gpu_init(MPL_gpu_info_t * info)
 {
     int mpl_err;
     mpl_err = gpu_ze_init_driver();
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
+
+    info->enable_ipc = false;
 
     device_count = global_ze_device_count;
     max_dev_id = device_count - 1;
@@ -63,7 +61,7 @@ int MPL_gpu_init(int debug_summary)
 
     gpu_initialized = 1;
 
-    if (debug_summary) {
+    if (info->debug_summary) {
         printf("==== GPU Init (ZE) ====\n");
         printf("device_count: %d\n", device_count);
         printf("=========================\n");

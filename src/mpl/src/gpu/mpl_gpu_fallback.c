@@ -64,8 +64,9 @@ int MPL_gpu_free(void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_init(int debug_summary)
+int MPL_gpu_init(MPL_gpu_info_t * info)
 {
+    info->enable_ipc = false;
     return MPL_SUCCESS;
 }
 
