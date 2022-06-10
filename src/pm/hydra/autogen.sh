@@ -6,14 +6,14 @@
 
 autoreconf=${AUTORECONF:-autoreconf}
 
-if test -d "mpl" ; then
-    echo "=== running autoreconf in 'mpl' ==="
-    (cd mpl && $autoreconf ${autoreconf_args:-"-vif"}) || exit 1
+if test -d "modules/mpl" ; then
+    echo "=== running autoreconf in 'modules/mpl' ==="
+    (cd modules/mpl && $autoreconf ${autoreconf_args:-"-vif"}) || exit 1
 fi
 
-if test -d "tools/topo/hwloc/hwloc" ; then
-    echo "=== running autoreconf in 'tools/topo/hwloc/hwloc' ==="
-    (cd tools/topo/hwloc/hwloc && ./autogen.sh) || exit 1
+if test -d "modules/hwloc" ; then
+    echo "=== running autoreconf in 'modules/hwloc' ==="
+    (cd modules/hwloc && ./autogen.sh) || exit 1
 fi
 
 echo "=== running autoreconf in '.' ==="
