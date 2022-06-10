@@ -1,3 +1,35 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+#
+# This file defines ch4 netmod/shm API. It is used by maint/gen_ch4_api.py
+# to generate a sets of boilerplate headers, including
+#   - src/mpid/ch4/netmod/{ofi,ucx,stubnm}/func_table.c
+#   - src/mpid/ch4/netmod/{ofi,ucx,stubnm}/{ofi,ucx,stubnm}_noinline.h.c
+#   - src/mpid/ch4/shm/src/shm_noinline.h
+#   - src/mpid/ch4/shm/posix/posix_noinline.h
+#   - src/mpid/ch4/shm/stubshm/shm_noinline.h
+# It also gnerates the stub codes in 
+#   - src/mpid/ch4/netmod/stubnm
+#   - src/mpid/ch4/shm/stubshm
+#
+# There are 3 parts, "Non Native API", "Native API", and "PARAM".
+# The API part format follows the following pattern:
+#   api_name: return_type
+#      NM or SHM [*] : parameter list
+# Note:
+#  - The leading space is necessary, but the number of spaces are insignificant.
+#  - Parameters just lists name, its type is specified in the "PARAM" section.
+#  - Either SHM or NM may be omitted, and they don't have to have the same parameters.
+#  - Use a '*' to note the inline functions, e.g.  "  NM*: param list"
+#
+# The PARAM section lists type as a dictionary to parameter names. If the same name
+# is used in different APIs with different types, differentiate them with suffix
+# such as "-x". The suffixes are not part of the name and is only used to differentiate
+# parameters. As a guideline, try use unique name for different types.
+#
+
 Non Native API:
   init_local: int
       NM : tag_bits
