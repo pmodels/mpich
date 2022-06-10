@@ -215,11 +215,11 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     /* Initialize gpu in mpl in order to support shm gpu module initialization
      * inside MPID_Init */
     if (MPIR_CVAR_ENABLE_GPU) {
-        int debug_summary = 0;
+        MPL_gpu_info_t info = { 0 };
         if (MPIR_CVAR_DEBUG_SUMMARY) {
-            debug_summary = (MPIR_Process.rank == 0);
+            info.debug_summary = (MPIR_Process.rank == 0);
         }
-        int mpl_errno = MPL_gpu_init(debug_summary);
+        int mpl_errno = MPL_gpu_init(&info);
         MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
 
         int device_count, max_dev_id;
@@ -228,6 +228,11 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
 
         if (device_count <= 0) {
             MPIR_CVAR_ENABLE_GPU = 0;
+        } else {
+            /* If the MPL backend doesn't support IPC, disable it for the upper layer */
+            if (!info.enable_ipc) {
+                MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD = -1;
+            }
         }
     }
 
