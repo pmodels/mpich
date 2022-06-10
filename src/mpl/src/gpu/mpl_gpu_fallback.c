@@ -80,6 +80,7 @@ int MPL_gpu_free(void *ptr)
 
 int MPL_gpu_init(int debug_summary)
 {
+    MPL_gpu_info.enable_ipc = false;
     return MPL_SUCCESS;
 }
 

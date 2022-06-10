@@ -165,6 +165,9 @@ int MPL_gpu_init(int debug_summary)
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
 
+    MPL_gpu_info.debug_summary = debug_summary;
+    MPL_gpu_info.enable_ipc = false;
+
     device_count = global_ze_device_count;
     max_dev_id = device_count - 1;
 
@@ -177,7 +180,7 @@ int MPL_gpu_init(int debug_summary)
 
     gpu_initialized = 1;
 
-    if (debug_summary) {
+    if (MPL_gpu_info.debug_summary) {
         printf("==== GPU Init (ZE) ====\n");
         printf("device_count: %d\n", device_count);
         printf("=========================\n");

@@ -188,7 +188,7 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
 #else
     /* Do not support IPC data transfer */
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
-    ipc_attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
+    ipc_attr->threshold.send_lmt_sz = -1;
 #endif
 
     MPIR_FUNC_EXIT;
