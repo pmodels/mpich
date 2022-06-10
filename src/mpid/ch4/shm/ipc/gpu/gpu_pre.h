@@ -11,6 +11,7 @@
 enum {
     MPIDI_GPU_IPC_HANDLE_VALID,
     MPIDI_GPU_IPC_HANDLE_REMAP_REQUIRED,
+    MPIDI_GPU_IPC_HANDLE_INVALID,
 };
 
 typedef struct MPIDI_GPU_ipc_handle {
