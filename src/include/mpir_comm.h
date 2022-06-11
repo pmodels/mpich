@@ -401,7 +401,6 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * user_comm_ptr, int key, const 
    a private (non-user accessible) dup of comm world that is provided
    if needed in MPI_Finalize.  Having a separate version of comm_world
    avoids possible interference with User code */
-#define MPIR_COMM_N_BUILTIN 3
 extern MPIR_Comm MPIR_Comm_builtin[MPIR_COMM_N_BUILTIN];
 extern MPIR_Comm MPIR_Comm_direct[];
 /* This is the handle for the internal MPI_COMM_WORLD .  The "2" at the end

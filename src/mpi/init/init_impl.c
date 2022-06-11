@@ -112,10 +112,6 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
                            MPIR_Session ** session_ptr);
 
 /* Global variables */
-#ifndef MPIR_SESSION_PREALLOC
-#define MPIR_SESSION_PREALLOC 2
-#endif
-
 MPIR_Session MPIR_Session_direct[MPIR_SESSION_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Session_mem = { 0, 0, 0, 0, 0, 0,
