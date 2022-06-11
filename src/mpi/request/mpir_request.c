@@ -7,7 +7,7 @@
 
 /* style:PMPIuse:PMPI_Status_f2c:2 sig:0 */
 
-MPIR_Request MPIR_Request_builtins[MPIR_REQUEST_BUILTIN_COUNT];
+MPIR_Request MPIR_Request_builtin[MPIR_REQUEST_N_BUILTIN];
 MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
 
@@ -41,17 +41,17 @@ void MPII_init_request(void)
 
     /* lightweight request, one for each kind */
     for (int i = 0; i < MPIR_REQUEST_KIND__LAST; i++) {
-        req = &MPIR_Request_builtins[i];
+        req = &MPIR_Request_builtin[i];
         init_builtin_request(req, MPIR_REQUEST_COMPLETE + i, (MPIR_Request_kind_t) i);
     }
-    MPII_REQUEST_CLEAR_DBG(&MPIR_Request_builtins[MPIR_REQUEST_KIND__SEND]);
-    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.errflag = MPIR_ERR_NONE;
-    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_sendbuf = NULL;
-    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_recvbuf = NULL;
-    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.coll.datatype = MPI_DATATYPE_NULL;
+    MPII_REQUEST_CLEAR_DBG(&MPIR_Request_builtin[MPIR_REQUEST_KIND__SEND]);
+    MPIR_Request_builtin[MPIR_REQUEST_KIND__COLL].u.nbc.errflag = MPIR_ERR_NONE;
+    MPIR_Request_builtin[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_sendbuf = NULL;
+    MPIR_Request_builtin[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_recvbuf = NULL;
+    MPIR_Request_builtin[MPIR_REQUEST_KIND__COLL].u.nbc.coll.datatype = MPI_DATATYPE_NULL;
 
     /* for recv from MPI_PROC_NULL */
-    req = MPIR_Request_builtins + HANDLE_INDEX(MPIR_REQUEST_NULL_RECV);
+    req = MPIR_Request_builtin + HANDLE_INDEX(MPIR_REQUEST_NULL_RECV);
     init_builtin_request(req, MPIR_REQUEST_NULL_RECV, MPIR_REQUEST_KIND__RECV);
     MPIR_Status_set_procnull(&req->status);
 }
