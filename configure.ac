@@ -1034,46 +1034,6 @@ AC_SUBST([mpllib])
 m4_define([mpl_embedded_dir],[src/mpl])
 PAC_CONFIG_MPL
 
-# Izem
-
-AC_ARG_ENABLE([izem-queue],[  --enable-izem-queue],,[enable_izem_queue=no])
-if test "${enable_izem_queue}" = "yes" ; then
-    AC_DEFINE(ENABLE_IZEM_QUEUE,1,[Define to enable using Izem queues])
-fi
-
-AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (default: "zm")])
-ZMLIBNAME=${ZMLIBNAME:-"zm"}
-export ZMLIBNAME
-AC_SUBST(ZMLIBNAME)
-zmsrcdir=""
-AC_SUBST([zmsrcdir])
-zmlibdir=""
-AC_SUBST([zmlibdir])
-zmlib=""
-AC_SUBST([zmlib])
-
-m4_define([zm_embedded_dir],[modules/izem])
-PAC_CHECK_HEADER_LIB_EXPLICIT([zm],[lock/zm_ticket.h],[$ZMLIBNAME],[zm_ticket_init])
-if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; then
-    if test "$with_zm" = "embedded" ; then
-        if test -e "${use_top_srcdir}/modules/izem" ; then
-            zmlib="modules/izem/src/lib${ZMLIBNAME}.la"
-            if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$zmlib"; then
-                zmsrcdir=""
-            else
-                zm_subdir_args="--enable-embedded"
-                PAC_CONFIG_SUBDIR_ARGS([modules/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
-                zmsrcdir="${main_top_builddir}/modules/izem"
-            fi
-            PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/izem/src/include],[CPPFLAGS])
-            PAC_APPEND_FLAG([-I${main_top_builddir}/modules/izem/src/include],[CPPFLAGS])
-        else
-            AC_MSG_WARN([Attempted to use the embedded Izem source tree in "modules/izem", but it is missing.  Configuration or compilation may fail later.])
-        fi
-    fi
-fi
-
-
 # json-c
 
 jsonsrcdir=""
@@ -4251,7 +4211,6 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpifort.bash \
           src/env/parkill \
           src/include/mpi.h \
-          doc/design/Makefile \
           doc/installguide/Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \

@@ -138,15 +138,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_FUNC_ENTER;
 
     if (mode == MPIDI_OFI_ON_HEAP) {    /* Branch should compile out */
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-        /* TODO: what cases when *request is NULL under workq? */
-        if (*request) {
-            MPIR_Request_add_ref(*request);
-        } else
-#endif
-        {
-            MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vni_dst);
-        }
+        MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vni_dst);
         rreq = *request;
 
         /* Need to set the source to UNDEFINED for anysource matching */

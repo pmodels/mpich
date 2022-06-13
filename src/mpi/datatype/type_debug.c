@@ -278,7 +278,7 @@ char *MPIR_Datatype_combiner_to_string(int combiner)
  */
 void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
 {
-#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
+#if (defined HAVE_ERROR_CHECKING) && (defined MPL_USE_DBG_LOGGING)
     const char *string;
 #endif
     MPIR_Datatype *dtp ATTRIBUTE((unused));
@@ -291,7 +291,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
                         (MPL_DBG_FDEST, "# MPIU_Datatype_debug: MPI_Datatype = MPI_DATATYPE_NULL"));
         return;
     }
-#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
+#if (defined HAVE_ERROR_CHECKING) && (defined MPL_USE_DBG_LOGGING)
     if (HANDLE_IS_BUILTIN(type)) {
         string = MPIR_Datatype_builtin_to_string(type);
         MPIR_Assert(string != NULL);
@@ -309,7 +309,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
     MPIR_Datatype_get_ptr(type, dtp);
     MPIR_Assert(dtp != NULL);
 
-#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
+#if (defined HAVE_ERROR_CHECKING) && (defined MPL_USE_DBG_LOGGING)
     string = MPIR_Datatype_builtin_to_string(dtp->basic_type);
     MPIR_Assert(string != NULL);
 
@@ -371,7 +371,7 @@ static void contents_printf(MPI_Datatype type, int depth, int array_ct)
     int *ints = NULL;
     MPI_Aint *counts = NULL;
 
-#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
+#if (defined HAVE_ERROR_CHECKING) && (defined MPL_USE_DBG_LOGGING)
     if (HANDLE_IS_BUILTIN(type)) {
         const char *string = MPIR_Datatype_builtin_to_string(type);
         MPIR_Assert(string != NULL);
@@ -394,7 +394,7 @@ static void contents_printf(MPI_Datatype type, int depth, int array_ct)
     /* FIXME: large count datatype need processed separately */
     MPIR_Assert(cp->nr_counts == 0);
 
-#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
+#if (defined HAVE_ERROR_CHECKING) && (defined MPL_USE_DBG_LOGGING)
     {
         const char *string = MPIR_Datatype_combiner_to_string(cp->combiner);
         MPIR_Assert(string != NULL);

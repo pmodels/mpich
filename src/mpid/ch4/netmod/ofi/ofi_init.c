@@ -967,11 +967,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPIR_Assert(num_vnis == 1 || MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
 #endif
 
-    /* WorkQ only works with single vni for now */
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPIR_Assert(num_vnis == 1);
-#endif
-
     MPIDI_OFI_global.num_vnis = num_vnis;
 
     /* set rx_ctx_cnt and tx_ctx_cnt for nic 0 */

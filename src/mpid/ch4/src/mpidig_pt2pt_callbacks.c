@@ -140,7 +140,6 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
          * that came from CH4 (e.g. MPIDI_recv_safe) */
         MPIR_Request *sigreq = MPIDIG_REQUEST(rreq, req->rreq.match_req);
         sigreq->status = rreq->status;
-        MPIR_Request_add_ref(sigreq);
         MPID_Request_complete(sigreq);
         /* Free the unexpected request on behalf of the user */
         MPIDI_CH4_REQUEST_FREE(rreq);
