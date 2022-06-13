@@ -42,7 +42,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
 static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn);
 static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn);
 
-static int adjust_iov(struct iovec ** iovp, int *countp, size_t nb);
+static int adjust_iov(struct iovec **iovp, int *countp, size_t nb);
 
 static int MPIDI_CH3i_Progress_test(void)
 {
@@ -701,7 +701,7 @@ static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 }
 
 /* FIXME: What is this routine for? */
-static int adjust_iov(struct iovec ** iovp, int *countp, size_t nb)
+static int adjust_iov(struct iovec **iovp, int *countp, size_t nb)
 {
     struct iovec *const iov = *iovp;
     const int count = *countp;
