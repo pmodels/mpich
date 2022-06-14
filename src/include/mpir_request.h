@@ -184,12 +184,6 @@ struct MPIR_Request {
      * 32 bytes and 32-bit integers */
     MPIR_cc_t cc;
 
-    /* completion notification counter: this must be decremented by
-     * the request completion routine, when the completion count hits
-     * zero.  this counter allows us to keep track of the completion
-     * of multiple requests in a single place. */
-    MPIR_cc_t *completion_notification;
-
     /* A comm is needed to find the proper error handler */
     MPIR_Comm *comm;
     /* Status is needed for wait/test/recv */
@@ -414,8 +408,6 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
     req->kind = kind;
     MPIR_cc_set(&req->cc, 1);
     req->cc_ptr = &req->cc;
-
-    req->completion_notification = NULL;
 
     req->status.MPI_ERROR = MPI_SUCCESS;
     MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);

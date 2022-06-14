@@ -48,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(MPIR_Request * part_sreq,
     am_hdr.rreq_ptr = MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr);
 
     /* Complete partitioned req at am request completes */
-    sreq->completion_notification = &part_sreq->cc;
+    sreq->dev.completion_notification = &part_sreq->cc;
     /* Will update part_sreq status when the AM request completes
      * TODO: can we get rid of the pointer? */
     MPIDIG_REQUEST(sreq, req->part_am_req.part_req_ptr) = part_sreq;

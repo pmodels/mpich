@@ -17,7 +17,6 @@ static void init_builtin_request(MPIR_Request * req, int handle, MPIR_Request_ki
     req->kind = kind;
     MPIR_cc_set(&req->cc, 0);
     req->cc_ptr = &req->cc;
-    req->completion_notification = NULL;
     req->status.MPI_ERROR = MPI_SUCCESS;
     MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
     req->comm = NULL;
