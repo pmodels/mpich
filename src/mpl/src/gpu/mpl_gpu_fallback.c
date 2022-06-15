@@ -147,3 +147,11 @@ bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
 {
     return false;
 }
+
+void MPL_gpu_enqueue_trigger(volatile int *var, MPL_gpu_stream_t stream)
+{
+}
+
+void MPL_gpu_enqueue_wait(volatile int *var, MPL_gpu_stream_t stream)
+{
+}

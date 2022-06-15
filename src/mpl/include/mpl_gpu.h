@@ -126,5 +126,7 @@ int MPL_gpu_test(MPL_gpu_request * req, int *completed);
 typedef void (*MPL_gpu_hostfn) (void *data);
 int MPL_gpu_launch_hostfn(MPL_gpu_stream_t stream, MPL_gpu_hostfn fn, void *data);
 bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream);
+void MPL_gpu_enqueue_trigger(volatile int *var, MPL_gpu_stream_t stream);
+void MPL_gpu_enqueue_wait(volatile int *var, MPL_gpu_stream_t stream);
 
 #endif /* ifndef MPL_GPU_H_INCLUDED */
