@@ -202,6 +202,9 @@ int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
     mpi_errno = allocate_vci(&stream_ptr->vci, stream_ptr->type == MPIR_STREAM_GPU);
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPID_Stream_create_hook(stream_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
     *p_stream_ptr = stream_ptr;
   fn_exit:
     return mpi_errno;
@@ -219,6 +222,9 @@ int MPIR_Stream_free_impl(MPIR_Stream * stream_ptr)
     int ref_cnt;
     MPIR_Object_release_ref(stream_ptr, &ref_cnt);
     if (ref_cnt == 0) {
+        mpi_errno = MPID_Stream_free_hook(stream_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+
         if (stream_ptr->vci) {
             mpi_errno = deallocate_vci(stream_ptr->vci);
         }
