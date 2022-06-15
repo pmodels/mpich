@@ -1,4 +1,4 @@
-# Version Control System (VCS)
+# Git Workflow
 
 To help get everyone up to speed on the way we use version control, specifically Git
 on projects like MPICH, we've put together this Wiki page as a
