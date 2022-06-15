@@ -61,20 +61,7 @@ The pages for the wiki.mpich.org site were converted to match
 the format for github wiki pages, where the site will be migrated
 to due to end of life of the mediawiki at ANL.
 ```
-## Git
-### Why Git?
-
-Git was chosen over another system due to it having arguably the 
-largest slice of the distributed VCS market right now. More of the world 
-will know how to use it to , thus being able to interact with our project.
-It is also heavily documented as well as having numerous examples and tutorials.
-
-### Using Git
-
-Until January 7, 2013, MPICH used Subversion (SVN) for its version
-control system (VCS). Now we use git. This page documents important
-information about the use of git within MPICH. Historical information
-about the SVN repository [can be found here](SVN.md).
+## Using Git
 
 #### Important URLs
 | Type                                   | URL                               |
@@ -158,7 +145,7 @@ You can also add other repositories to your local clone. If you have
 forked the MPICH repo, for example, you can add it using:
 
 ```
-git remote add <username> git@github.com:raffenet/mpich --fetch
+git remote add <username> git@github.com:<username>/mpich --fetch
 ```
 
 Once this is done, you should be able to see branches from both
@@ -180,15 +167,16 @@ Any number of such remote repositories can be added as needed.
 
 MPICH depends on several external libraries. They are imported as
 submodules in the MPICH project repository. Below is the list of the
-dependencies of the current master branch.
+dependencies of the current main branch.
 
 
 | Library   | Repository                           | Location in MPICH source |
 | --------- | ------------------------------------ | ------------------------ |
 | hwloc     | <https://github.com/open-mpi/hwloc>  | `modules/hwloc`          |
-| izem      | <https://github.com/pmodels/izem>    | `modules/izem`           |
+| json-c    | <https://github.com/pmodels/json-c>  | `modules/json-c`         |
 | Libfabric | <https://github.com/ofiwg/libfabric> | `modules/libfabric`      |
 | UCX       | <https://github.com/openucx/ucx>     | `modules/ucx`            |
+| Yaksa     | <https://github.com/pmodels/yaksa>   | `modules/yaksa`          |
 
 When using the aforementioned command (`git clone`) to check out the
 MPICH code, the `--recursive` option ensures these dependencies are also
@@ -246,7 +234,7 @@ Check the status of your local git clone:
 
 ```
 git status
-# On branch master
+# On branch main
 # Changes not staged for commit:
 #   (use "git add <file>..." to update what will be committed)
 #   (use "git checkout -- <file>..." to discard changes in working directory)
@@ -279,7 +267,7 @@ staged for a commit.
 
 ```
 git status
-# On branch master
+# On branch main
 # Changes to be committed:
 #   (use "git reset HEAD <file>..." to unstage)
 #
@@ -299,7 +287,7 @@ You can also add foo.c to be staged for a commit:
 git add foo.c  # This allows git to stage it for a commit
 
 git status
-# On branch master
+# On branch main
 # Changes to be committed:
 #   (use "git reset HEAD <file>..." to unstage)
 #
@@ -313,7 +301,7 @@ using:
 
 ```
 git commit -m 'fixed bug in foo.c, using new bar.c to do so'
-[master f36baae] fixed bug in foo.c, using new bar.c to do so
+[main f36baae] fixed bug in foo.c, using new bar.c to do so
  1 file changed, 1 insertion(+)
  create mode 100644 bar.c
 ```
@@ -371,38 +359,43 @@ c18320d3 Fix '--with-openpa-prefix=DIR' so it actually works.
 
 #### Local Branches
 
-To be comfortable with git compared to svn, you need to view your
-commits as a graph, rather than a linear order as specified by svn. Each
-commit hash is a vertex (I'll use "vertex" and "hash" interchangeably in
-the below text). Branching creates a new linear ordering of vertices
-which does not affect any other branch.
-
 Some simple steps first. When you cloned your repository, you have a
-bunch of remote branches and one local branch (master). Something like
+bunch of remote branches and one local branch (main). Something like
 this --
 
 ```
 git branch -a
-* master
-  remotes/mpich/HEAD -> mpich/master
-  remotes/mpich/master
+  main
+  remotes/origin/3.1.x
+  remotes/origin/3.2.x
+  remotes/origin/3.3.x
+  remotes/origin/3.4.x
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/ecp-ft
+  remotes/origin/main
+  remotes/upstream/2111_test_ucx
+  remotes/upstream/3.1.x
+  remotes/upstream/3.2.x
+  remotes/upstream/3.3.x
+  remotes/upstream/3.4.x
+  remotes/upstream/4.0.x
+  remotes/upstream/ecp-ft
+  remotes/upstream/main
 ```
 
-The local "master" branch has a bunch of commits:
+The local "main" branch has a bunch of commits:
 
 ```
-% git graph --since='4 hours ago'
-* 1be61fbc (HEAD, mpich/master, mpich/HEAD, master) Allow f90 mod files to be installed in an arbitrary directory
-* 3b8afffb Add '--with-mpl-prefix=DIR' configure option.
-* c18320d3 Fix '--with-openpa-prefix=DIR' so it actually works.
-* 9164d3db Allow pkgconfig files to be installed in an arbitrary directory.
-* 9d291d1e Add ability to customize the PAMI library name
-* 2bfe261f Add ability to customize the MPL library name
-* 11702389 Add ability to customize the OpenPA library name
-* 47ea4740 Add ability to customize the mpich fortran 90 library name
+git log --format=oneline --abbrev-commit --since='4 hours ago'
+6484107e5 (upstream/main, main) Merge pull request #6046 from hzhou/2206_ch4_req
+74c35404b ch4: move and rename MPIDIU_request_complete
+741e89745 ch4: add MPIDI_REQ_TYPE
+7e2ba6876 ch4: remove checking of anysrc_partner in PREQUEST_RECV
+c0521cbf0 ch4: remove macro MPIDI_REQUEST_ANYSOURCE_PARTNER
+03ab07fff request: move completion_notification into ch4
 ```
 
-You can create a new branch called "foobar" from master and checkout
+You can create a new branch called "foobar" from main and checkout
 this new branch using:
 
 ```
@@ -413,71 +406,51 @@ git checkout foobar
 
 (or `git checkout -b foobar` for short)
 
-Now, foobar is in the same state as master:
+Now, foobar is in the same state as main:
 
 ```
-git graph --since='4 hours ago'
-* 1be61fbc (HEAD, mpich/master, mpich/HEAD, master, foobar) Allow f90 mod files to be installed in an arbitrary d
-* 3b8afffb Add '--with-mpl-prefix=DIR' configure option.
-* c18320d3 Fix '--with-openpa-prefix=DIR' so it actually works.
-* 9164d3db Allow pkgconfig files to be installed in an arbitrary directory.
-* 9d291d1e Add ability to customize the PAMI library name
-* 2bfe261f Add ability to customize the MPL library name
-* 11702389 Add ability to customize the OpenPA library name
-* 47ea4740 Add ability to customize the mpich fortran 90 library name
+git log --format=oneline --abbrev-commit --since='4 hours ago'
+6484107e5 (upstream/main, main, foobar) Merge pull request #6046 from hzhou/2206_ch4_req
+74c35404b ch4: move and rename MPIDIU_request_complete
+741e89745 ch4: add MPIDI_REQ_TYPE
+7e2ba6876 ch4: remove checking of anysrc_partner in PREQUEST_RECV
+c0521cbf0 ch4: remove macro MPIDI_REQUEST_ANYSOURCE_PARTNER
+03ab07fff request: move completion_notification into ch4
 ```
 
 Notice that "foobar" is listed on the top-most hash together with
-"master".
+"main".
 
 Now, let's say, you make some changes and commit them into this foobar
 branch:
 
 ```
-git graph --since='4 hours ago'
-* cc47a7e3 (HEAD, foobar) demo change 2 on branch foobar
-* 81b8e89d demo change 1 on branch foobar
-* 1be61fbc (mpich/master, mpich/HEAD, master) Allow f90 mod files to be installed in an arbitrary directory.
-* 3b8afffb Add '--with-mpl-prefix=DIR' configure option.
-* c18320d3 Fix '--with-openpa-prefix=DIR' so it actually works.
-* 9164d3db Allow pkgconfig files to be installed in an arbitrary directory.
-* 9d291d1e Add ability to customize the PAMI library name
-* 2bfe261f Add ability to customize the MPL library name
-* 11702389 Add ability to customize the OpenPA library name
-* 47ea4740 Add ability to customize the mpich fortran 90 library name
+git log --format=oneline --abbrev-commit --since='4 hours ago'
+cc47a7e3 (HEAD -> foobar) demo change 2 on branch foobar
+6484107e5 (upstream/main, main) Merge pull request #6046 from hzhou/2206_ch4_req
+74c35404b ch4: move and rename MPIDIU_request_complete
+741e89745 ch4: add MPIDI_REQ_TYPE
+7e2ba6876 ch4: remove checking of anysrc_partner in PREQUEST_RECV
+c0521cbf0 ch4: remove macro MPIDI_REQUEST_ANYSOURCE_PARTNER
+03ab07fff request: move completion_notification into ch4
 ```
 
-Notice that "foobar" has two new hashes \[cc47a7e3\] and \[81b8e89d\]
-that do not belong to "master".
-
-Now you can go back to master and make some other changes.
-
-```
-git checkout master
-
-... make some changes and commit ...
-
-git graph --all --since='4 hours ago'
-* 98fdfcd0 (HEAD, master) demo change 2 on branch master
-* bc0f4051 demo change 1 on branch master
-| * cc47a7e3 (foobar) demo change 2 on branch foobar
-| * 81b8e89d demo change 1 on branch foobar
-|/
-* 1be61fbc (mpich/master, mpich/HEAD) Allow f90 mod files to be installed in an arbitrary directory.
-* 3b8afffb Add '--with-mpl-prefix=DIR' configure option.
-* c18320d3 Fix '--with-openpa-prefix=DIR' so it actually works.
-* 9164d3db Allow pkgconfig files to be installed in an arbitrary directory.
-* 9d291d1e Add ability to customize the PAMI library name
-* 2bfe261f Add ability to customize the MPL library name
-* 11702389 Add ability to customize the OpenPA library name
-* 47ea4740 Add ability to customize the mpich fortran 90 library name
-```
-
-Notice that "master" has two new hashes \[bc0f4051\] and \[98fdfcd0\]
-that are on a different linear path than the "foobar" branch, though
-both of them started at the same vertex \[1be61fbc\].
+Notice that "foobar" has a new hashes `cc47a7e3` that does not belong to
+"main".
 
 #### Updating Your Local Clone With Remote Changes
+
+The main MPICH branch can continue to receive chances from various contributors
+while you are working on your own Pull Request (PR). Before you submit a PR you
+must apply those changes to your working branch. Below is how to do that:
+
+```
+git checkout main
+git pull upstream main
+git checkout <Your Branch>
+git rebase main
+git push -f
+```
 
 #### Handling Rebase Conflicts
 
@@ -485,7 +458,7 @@ Let's assume we have a conflict on one of the files, `foo.c`, while
 performing a rebase.
 
 ```
-git rebase mpich/master
+git rebase upstream/main
 First, rewinding head to replay your work on top of it...
 Applying: fixed bug in foo.c, using new bar.c to do so
 Using index info to reconstruct a base tree...
@@ -550,23 +523,6 @@ will be **mpich**.
 local tag, or other non-SHA-1 forms of references (e.g., HEAD, HEAD\~3,
 etc.).
 
-Alternatively, you can use a local SHA-1 hash (called <local_ref>) for
-pushing commits as:
-
-```
-git push <repo> <local_ref>:refs/heads/<remote_branch>
-```
-
-Either of the above commands will push the commit corresponding to
-`local_ref`, and all other commits on which this commit depends (i.e.,
-all other commits that come before this commit and have a path to it in
-the graph).
-
-`remote_branch` refers to the name of the remote branch to which the
-commits are pushed. If `remote_branch` does not exist, a new remote
-branch with that name is created. If no `local_ref` is specified, the
-remote branch is deleted.
-
 #### Pull Requests
 
 Changes should be submitted in the form of a "pull request". More info on pull requests can be found 
@@ -584,11 +540,11 @@ Some of the more relevant sections for outside collaborators are:
         - Describe the underlying issue, whether it be a bug or a new
           feature.
         - Describe the user-visible impact it will have.
-    - Separate your changes so that there is one logical change per patch.
-        - Each patch should stand on its own merits. If a patch depends on
+    - Separate your changes so that there is one logical change per commit.
+        - Each commit should stand on its own merits. If a commit depends on
           a previous one, it is helpful to note that in the commit
           message.
-        - Each patch in a series should be able to compile and run. This
+        - Each commit in a series should be able to compile and run. This
           way bugs can be traced down using `git bisect` in the future.
 
 #### Dealing With Development Branches/Repositories
@@ -617,7 +573,7 @@ Unpacking objects: 100% (89/89), done.
 From git.mpich.org:mpich-dev
  * [new branch]        fix-rma-types -> mpich-dev/fix-rma-types
  * [new branch]        large-count -> mpich-dev/large-count
- * [new branch]        master     -> mpich-dev/master
+ * [new branch]        main     -> mpich-dev/main
  * [new branch]        portals-work -> mpich-dev/portals-work
 ```
 
@@ -675,10 +631,10 @@ Below is a sample workflow for committing changes to the MPICH github
 repository:
 
 1. For each new bug fix or feature, create and checkout a new local
-branch (say ticket-1234) based on mpich/master:
+branch (say ticket-1234) based on upstream/main:
 
 ```
-git checkout -b ticket-1234 mpich/master
+git checkout -b ticket-1234 upstream/main
 ```
 
 2. Make changes as one or more commits on this branch.
@@ -688,11 +644,11 @@ any of the following keywords to make GitHub do magic to automatically
 attach commits to issues (if your branch is fixing an issue).
 
 ```
-Fix `<project>`#1234
-Fixes `<project>`#1234
-Resolves `<project>`#1234
-See `<project>`#1234
-<project>`#1234
+Fix <project>#1234
+Fixes <project>#1234
+Resolves <project>#1234
+See <project>#1234
+<project>#1234
 ```
 
 Where project is: `pmodels/mpich`
@@ -709,39 +665,47 @@ git fetch --all --prune
 - Move your commits to sit on top of the new changes from other users:
 
 ```
-git rebase mpich/master /* If this detects any conflicts, it'll tell you how to resolve them */
+git rebase upstream/main 
+// If this detects any conflicts, it'll tell you how to resolve them
 ```
 
-4. Push your changes to your private github fork and open a pull
-request to the main MPICH repo. See GitHub docs on how to fork a repo:
+4. Push your changes to your private github fork and open a pull request (PR)
+to the main MPICH repo. See GitHub docs on how to fork a repo:
 <https://help.github.com/articles/fork-a-repo/>
 
-Depending on how your changes are related to, say, the tcp and mxm
-netmods, you can test them using the tcp job queue, the mxm job queue,
-or both by adding a comment to the pull request. **Note: only repo
-admins can trigger Jenkins tests with these phrases.**
+Your PR will automatically be tested with the following tests:
+
+- `contribution-checker`
+- `mpich-warnings`
+- `spell-checker`
+- `whitespace-checker`
+
+More tests are available to run, which can be found on our
+[Jenkins MPICH-Review](https://jenkins-pmrs.cels.anl.gov/view/mpich-review/)
+page. To run one of these tests, simply add a comment to your PR in the
+following format:
 
 ```
-test:jenkins/ch3/tcp /* Only tested by the ch3:tcp job queue*/
-test:jenkins/ch3/mxm /* Only tested by the ch3:mxm job queue*/
-test:jenkins/ch3/all /* Tested by all ch3 queues review jobs */
+test:mpich/ch3/most
+test:mpich/ch4/most
 ```
 
-The results of the review jobs will be added to the status of the pull
-request.
+This will now run both tests against your PR chances. 
+The results of the review jobs will be added to the status of the PR. 
+**Note: only repo admins can trigger Jenkins tests with these phrases.**
 
-5. Assign your pull request for someone to review.
+5. Assign your PR for someone(s) to review.
 
-6. The reviewer should review the patch using the GitHub review
-interface. Comments can be added to specific lines of the patch, and
-changes requested before the patch is accepted. Updating the branch in
-your github fork will automatically update the pull request. Changes
-should be re-tested and re-reviewed as necessary.
+6. The reviewer(s) should review the PR using the GitHub review interface.
+Comments can be added to specific lines of each file changed, and can request 
+changes to the file before it is accepted. Updating the branch in your github
+fork will automatically update the PR. Changes should be re-tested and
+re-reviewed as necessary.
 
-7. Once the patch is approved, an MPICH maintainer will click the
-button to merge the pull request to the target branch in MPICH. Make
-sure to add "Approved-by: " tags in the merge commit message to preserve
-any review history in the git log.
+7. Once the PR is approved by the reviewer(s), an MPICH maintainer will click
+the button to merge the PR to the target branch in MPICH. Make sure to add
+`Approved-by: <Reviewer(s)>` tag in the merge commit message to preserve any
+review history in the git log.
 
 ```
 commit cb944baeb07061759f7c22d85704cc9c673056f9
@@ -756,31 +720,30 @@ Date:   Wed Dec 4 13:18:48 2019 -0600
     Approved-by: Ken Raffenetti <raffenet@mcs.anl.gov>
 ```
 
-8. Delete any local/remote branches you may have.
-
-```
-/* Delete local branches */
-git checkout master
-git branch -D ticket-1234
-```
-
-9. Fetch the changes you just pushed to your local master branch:
-
-```
-git fetch --all --prune
-git rebase mpich/master
-```
-
 ## VCS History
 
-### SVN History
+### Git
+
+Until January 7, 2013, MPICH used Subversion (SVN) for its version
+control system (VCS). Now we use git. This page documents important
+information about the use of git within MPICH.
+
+#### Why Git?
+
+Git was chosen over another system due to it having arguably the 
+largest slice of the distributed VCS market right now. More of the world 
+will know how to use it to , thus being able to interact with our project.
+It is also heavily documented as well as having numerous examples and tutorials.
+
+
+### SVN
 #### What has been imported?
 
 Much of the history from our previous SVN repository has been migrated
 over to git. This includes:
 
 - All trunk history, with commit messages prefixed by "`[svn-rXXXX]`".
-  This history lives in the `master` branch, which is the git
+  This history lives in the `main` branch, which is the git
   convention corresponding to SVN's `trunk`. The oldest history that
   was present in SVN was 1.0.6, so that's as far back as the git
   history goes.
@@ -793,7 +756,7 @@ over to git. This includes:
 
 The SVN URL for the original MPICH2 trunk was:
 <https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk>. In place of `trunk`,
-there were `branches` and <code>tags<code>. Within those two directories
+there were `branches` and `tags`. Within those two directories
 there were also two subdirectories, `dev` and `release`. Particular
 branches and tags were subdirectories of these.
 
@@ -834,7 +797,7 @@ education issue is unfortunate, but this was an issue that simply must
 be overcome every time that a VCS becomes obsolete (it occurred for the
 CVS--\>SVN migration).
 
-### CVS-era MPICH history
+### CVS
 
 When we converted to Subversion in November 2007 we simply made a clean
 break with history. The scripts and tools at the time simply could not
@@ -854,16 +817,16 @@ One could add it to one's remote repositories like so:
 git remote add mpich-cvs <https://xgitlab.cels.anl.gov/robl/mpich-cvs.git>
 ```
 
-We cannot rebase today's git master onto this historical record. If we
+We cannot rebase today's git main onto this historical record. If we
 were to do so, it would be like rebasing local changes after having
 published them: everyone "downstream" would have a giant headache next
-time they picked up changes to the master repository. Instead, we can
+time they picked up changes to the main repository. Instead, we can
 use
 [git-replace](https://www.kernel.org/pub/software/scm/git/docs/git-replace.html).
 
-In our mpich-master tree every commit has a parent commit... except
-[6a1cbdcfc42](https://github.com/pmodels/mpich/commit/6a1cbdcfc42). And in
-mpich-CVS.git, the main-line tree stops at
+In our mpich-main tree every commit has a parent commit... except
+[6a1cbdcfc42](https://github.com/pmodels/mpich/commit/6a1cbdcfc42).
+And in mpich-CVS.git, the main-line tree stops at
 [7e0e4d706c32cd73e](https://github.com/pmodels/mpich-cvs/commit/7e0e4d706c32cd73e).
 Actually, there are two post-conversion commits to the CVS repository.
 We should not use those, but they were made in 2009 so they are easy to
