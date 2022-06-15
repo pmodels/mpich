@@ -642,6 +642,16 @@ int MPID_Deallocate_vci(int vci)
     return MPI_SUCCESS;
 }
 
+int MPID_Stream_create_hook(MPIR_Stream * stream)
+{
+    return MPI_SUCCESS;
+}
+
+int MPID_Stream_free_hook(MPIR_Stream * stream)
+{
+    return MPI_SUCCESS;
+}
+
 int MPID_Finalize(void)
 {
     int mpi_errno;
