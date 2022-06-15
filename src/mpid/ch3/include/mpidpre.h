@@ -840,4 +840,14 @@ int MPID_Type_free_hook(MPIR_Datatype * type);
 int MPID_Op_commit_hook(MPIR_Op * op);
 int MPID_Op_free_hook(MPIR_Op * op);
 
+MPL_STATIC_INLINE_PREFIX int MPID_Stream_create_hook(MPIR_Stream * stream)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Stream_free_hook(MPIR_Stream * stream)
+{
+    return MPI_SUCCESS;
+}
+
 #endif /* MPIDPRE_H_INCLUDED */
