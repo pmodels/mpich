@@ -23,6 +23,7 @@ int MPIR_Get_address_impl(const void *location, MPI_Aint * address)
      * between them, so this gives the number of chars between location
      * and ptr.  As long as sizeof(char) represents one byte,
      * of bytes from 0 to location */
+    MPIR_Assert(location);
     *address = (MPI_Aint) ((char *) location - (char *) MPI_BOTTOM);
 #endif
     /* The same code is used in MPI_Address */
