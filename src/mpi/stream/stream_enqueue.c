@@ -514,12 +514,7 @@ static int get_local_gpu_stream(MPIR_Comm * comm_ptr, MPL_gpu_stream_t * gpu_str
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Stream *stream_ptr = NULL;
-    if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
-        stream_ptr = comm_ptr->stream_comm.single.stream;
-    } else if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
-        stream_ptr = comm_ptr->stream_comm.multiplex.local_streams[comm_ptr->rank];
-    }
+    MPIR_Stream *stream_ptr = MPIR_stream_comm_get_local_stream(comm_ptr);
 
     MPIR_ERR_CHKANDJUMP(!stream_ptr || stream_ptr->type != MPIR_STREAM_GPU,
                         mpi_errno, MPI_ERR_OTHER, "**notgpustream");
@@ -535,13 +530,9 @@ static int allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Stream *stream_ptr = NULL;
-    if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
-        stream_ptr = comm_ptr->stream_comm.single.stream;
-    } else if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
-        stream_ptr = comm_ptr->stream_comm.multiplex.local_streams[comm_ptr->rank];
-    }
-    MPIR_Assert(stream_ptr);
+    MPIR_Stream *stream_ptr = MPIR_stream_comm_get_local_stream(comm_ptr);
+    MPIR_ERR_CHKANDJUMP(!stream_ptr || stream_ptr->type != MPIR_STREAM_GPU,
+                        mpi_errno, MPI_ERR_OTHER, "**notgpustream");
 
     int vci = stream_ptr->vci;
     MPIR_Assert(vci > 0);
@@ -551,7 +542,10 @@ static int allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req)
     (*req)->u.enqueue.gpu_stream = stream_ptr->u.gpu_stream;
     (*req)->u.enqueue.real_request = NULL;
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* ---- collectives --------------------- */
