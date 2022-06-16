@@ -215,7 +215,7 @@ We use script to generate most of these API files.
 
 Reference:
 * [Notes on ch4 api autogen](notes/ch4_api.md)
-* [Notes on ch4 inline mechanism](notes/ch4_inline.txt)
+* [Notes on ch4 inline mechanism](notes/ch4_inline.md)
 * [Notes on ch4 namespace convention](notes/ch4_namespace.txt)
 * [ch4_api.txt](../../src/mpid/ch4/ch4_api.txt)
 * [request.md](notes/request.md)
