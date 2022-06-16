@@ -72,6 +72,3 @@ noinst_HEADERS +=                   \
     src/include/mpir_hwtopo.h       \
     src/include/mpir_gpu.h          \
     src/include/mpir_nettopo.h
-
-src/include/mpir_cvars.h:
-	$(top_srcdir)/maint/extractcvars --dirs="`cat $(top_srcdir)/maint/cvardirs`"
