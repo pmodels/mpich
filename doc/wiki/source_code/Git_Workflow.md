@@ -669,25 +669,6 @@ hello balaji, this is git@caveat running gitolite3 v3.2-13-gf89408a on git 1.7.0
 The Pro Git book has more information about 
 [working with remotes](http://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes).
 
-#### Important Dos and Don'ts
-
-Do:
-
-- Update your repository with remote changes using `git fetch --all
-  --prune` to fetch remote changes to your local clone, followed by an
-  explicit `git rebase` to base your local changes on top of the
-  remote changes.
-
-Don't:
-
-- cherry-pick excessively. Cherry-picking should be a rare activity,
-  not a frequent one.
-- merge just for the sake of merging. If you have a long-running,
-  published topic branch, then don't merge from `master` (for
-  example), just because "it's been a while". Instead, only merge to
-  pick up specific features/fixes that are not suitable for
-  cherry-picking. Name this feature/fix in the merge commit message.
-
 #### Overall Workflow
 
 Below is a sample workflow for committing changes to the MPICH github
