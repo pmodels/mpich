@@ -194,8 +194,8 @@ To make it easy to sync between descriptions and actual usages, the
 centralized parameter (cvar) file is abandoned. Instead, cvar
 descriptions are spread out to their corresponding source \*.h or \*c
 files as special comment blocks. A script (extractcvars) then parses
-source files (under specified directories specified in file
-maint/cvardirs ) to extract the descriptions and generates C code
+source files (under specified directories specified in the script)
+to extract the descriptions and generates C code
 (src/util/cvar/mpich_cvars.c ) to setup cvars and categories.
 
 A cvar description block has the following format
