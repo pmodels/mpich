@@ -35,7 +35,6 @@ dist_noinst_DATA +=                        \
     maint/Version.base.m4                  \
     maint/docnotes                         \
     maint/errmsgdirs                       \
-    maint/cvardirs                         \
     maint/gccimpgen.cpp                    \
     maint/local_perl/README                \
     maint/local_perl/YAML-Tiny-1.41.tar.gz \

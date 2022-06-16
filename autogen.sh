@@ -421,7 +421,7 @@ fn_getcvars() {
         fn_maint_configure
     fi
 
-    if ./maint/extractcvars --dirs="`cat maint/cvardirs`"; then
+    if ./maint/extractcvars ; then
         echo "done"
     else
         echo "failed"
