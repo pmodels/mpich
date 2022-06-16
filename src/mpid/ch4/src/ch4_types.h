@@ -222,7 +222,7 @@ typedef struct {
 
 #define MPIDIU_THREAD_SCHED_LIST_MUTEX    MPIDI_global.m[3]
 #define MPIDIU_THREAD_TSP_QUEUE_MUTEX     MPIDI_global.m[4]
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
 #define MPIDIU_THREAD_HCOLL_MUTEX         MPIDI_global.m[5]
 #endif
 
