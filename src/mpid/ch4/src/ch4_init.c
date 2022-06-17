@@ -7,6 +7,7 @@
 #include "mpidch4r.h"
 #include "datatype.h"
 #include "mpidu_init_shm.h"
+#include "stream_workq.h"
 
 #include <strings.h>    /* for strncasecmp */
 #ifdef HAVE_SIGNAL_H
@@ -537,6 +538,9 @@ int MPID_Init(int requested, int *provided)
 
     register_comm_hints();
 
+    mpi_errno = MPIDU_stream_workq_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -604,12 +608,36 @@ int MPID_Deallocate_vci(int vci)
 
 int MPID_Stream_create_hook(MPIR_Stream * stream)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    if (stream->type == MPIR_STREAM_GPU) {
+        mpi_errno = MPIDU_stream_workq_alloc(&stream->dev.workq, stream->vci);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPID_Stream_free_hook(MPIR_Stream * stream)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    if (stream->dev.workq) {
+        mpi_errno = MPIDU_stream_workq_dealloc(stream->dev.workq);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPID_Finalize(void)
@@ -634,6 +662,9 @@ int MPID_Finalize(void)
     MPIDIU_avt_destroy();
 
     mpi_errno = MPIDU_Init_shm_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDU_stream_workq_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_pmi_finalize();
