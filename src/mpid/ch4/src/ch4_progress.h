@@ -127,11 +127,6 @@ static inline int MPIDI_progress_test(MPID_Progress_state * state, int wait)
     }
     /* todo: progress unexp_list */
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    mpi_errno = MPIDI_workq_vci_progress();
-    MPIR_ERR_CHECK(mpi_errno);
-#endif
-
 #if MPIDI_CH4_MAX_VCIS == 1
     /* fast path for single vci */
     MPIDI_PROGRESS(0);
@@ -300,12 +295,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
 
     MPIR_FUNC_ENTER;
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    mpi_errno = MPID_Progress_test(state);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIDI_PROGRESS_YIELD();
-
-#else
     state->progress_made = 0;
     while (1) {
         mpi_errno = MPIDI_progress_test(state, 1);
@@ -316,7 +305,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
         MPIDI_PROGRESS_YIELD();
     }
 
-#endif
     MPIR_FUNC_EXIT;
 
   fn_exit:

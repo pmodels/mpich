@@ -42,7 +42,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
 static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn);
 static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn);
 
-static int adjust_iov(struct iovec ** iovp, int *countp, size_t nb);
+static int adjust_iov(struct iovec **iovp, int *countp, size_t nb);
 
 static int MPIDI_CH3i_Progress_test(void)
 {
@@ -146,7 +146,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
         }
 
         if (MPIR_IS_THREADED) {
-#if MPICH_IS_THREADED
+#ifdef MPICH_IS_THREADED
             if (MPIDI_CH3I_progress_blocked == TRUE) {
                 /*
                  * Another thread is already blocking in the progress engine.
@@ -197,7 +197,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
      * that would need to be buffered.
      */
 
-#if MPICH_IS_THREADED
+#ifdef MPICH_IS_THREADED
     {
         /*
          * Awaken any threads which are waiting for the progress that just
@@ -701,7 +701,7 @@ static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 }
 
 /* FIXME: What is this routine for? */
-static int adjust_iov(struct iovec ** iovp, int *countp, size_t nb)
+static int adjust_iov(struct iovec **iovp, int *countp, size_t nb)
 {
     struct iovec *const iov = *iovp;
     const int count = *countp;

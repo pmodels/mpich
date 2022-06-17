@@ -1,0 +1,30 @@
+CC = mpic++
+LD = mpic++
+OBJ = kmeans.o
+SRC = kmeans.cpp
+EXEC = kmeans
+LDFLAGS = -lm
+CFLAGS = -I /usr/local/include/eigen3
+
+# all: CFLAGS += -O3 -mtune=native
+# all: $(EXEC)
+all: prof
+
+debug: CFLAGS += -g
+debug: $(EXEC)
+
+prof: CFLAGS += -O3 -mtune=native
+prof: LDFLAGS += -mpilog -mpicc='mpic++'
+prof: LD = mpecc
+prof: $(EXEC)
+
+$(EXEC): ${OBJ}
+	$(LD) $(LDFLAGS) $< -o $(EXEC)
+
+kmeans.o: ${SRC}
+	$(CC) $(CFLAGS) -c -std=c++11 kmeans.cpp
+
+clean:
+	$(RM) ${OBJ} $(EXEC)
+	$(RM) *.clog2 *.slog2
+

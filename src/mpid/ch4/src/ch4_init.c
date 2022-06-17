@@ -71,7 +71,6 @@ cvars:
       description : >-
         Specifies the CH4 multi-threading model. Possible values are:
         direct (default)
-        handoff
         lockless
 
     - name        : MPIR_CVAR_CH4_NUM_VCIS
@@ -244,7 +243,6 @@ static int set_runtime_configurations(void);
 
 static const char *mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
     "direct",
-    "handoff",
     "lockless",
 };
 
@@ -391,9 +389,6 @@ int MPID_Init(int requested, int *provided)
         fprintf(stdout, "==== Various sizes and limits ====\n");
         fprintf(stdout, "sizeof(MPIDI_per_vci_t): %d\n", (int) sizeof(MPIDI_per_vci_t));
     }
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPIDI_workq_init(&MPIDI_global.workqueue);
-#endif /* #ifdef MPIDI_CH4_USE_WORK_QUEUES */
 
     /* These mutex are used for the lockless MT model. */
     if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
@@ -784,7 +779,7 @@ int MPID_Free_mem(void *user_buf)
 #ifdef MAP_ANON
             MPL_munmap(container->real_buf, container->size, MPL_MEM_USER);
 #else
-            MPL_free(container->real_buf, MPL_MEM_USER);
+            MPL_free(container->real_buf);
 #endif
             break;
 

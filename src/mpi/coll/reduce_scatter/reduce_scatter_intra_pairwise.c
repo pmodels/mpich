@@ -37,7 +37,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
     {
         int is_commutative;
         is_commutative = MPIR_Op_is_commutative(op);
-        MPIR_Assert(is_commutative);
+        MPIR_Assertp(is_commutative);
     }
 #endif /* HAVE_ERROR_CHECKING */
 

@@ -8,10 +8,10 @@
  * using a file written to a shared file system to communication the
  * data.
  */
+#include "mpiimpl.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "mpiimpl.h"
 #include "namepub.h"
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

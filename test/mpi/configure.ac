@@ -437,23 +437,36 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[return 1 + MPICH;])],
 AC_MSG_RESULT($MPI_IS_MPICH)
 
 if test "$MPI_IS_MPICH" = "yes" ; then
-    # probe device and netmod features
-    cat << EOF > conftest.c
-#include "mpi.h"
-int main(void) {MPI_Init(0,0);MPI_Finalize();return 0;}
-EOF
-    $CC -o conftest conftest.c
-    MPIR_CVAR_DEBUG_SUMMARY=1 ./conftest > conftest.output
+    # try mpichversion
+    AC_PATH_PROG(MPICHVERSION, mpichversion, [], [$PATH:$with_mpi/bin])
+    if test -n "$MPICHVERSION" ; then
+        $MPICHVERSION > conftest.output
+        # netmod
+        if [grep 'MPICH Device:[[:blank:]]*ch4:ofi' conftest.output > /dev/null] ; then
+            AC_MSG_NOTICE([Detected MPICH with ch4:ofi netmod])
+            AC_DEFINE(MPICH_CH4_OFI, 1, [define if it is mpich with ch4:ofi])
+        elif [grep 'MPICH Device:[[:blank:]]*ch4:ucx' conftest.output > /dev/null] ; then
+            AC_MSG_NOTICE([Detected MPICH with ch4:ucx netmod])
+            AC_DEFINE(MPICH_CH4_UCX, 1, [define if it is mpich with ch4:ucx])
+            enable_spawn=no
+        fi
 
-    if grep libfabric conftest.output > /dev/null ; then
-        AC_MSG_NOTICE([Detected MPICH with ch4:ofi netmod])
-        AC_DEFINE(MPICH_CH4_OFI, 1, [define if it is mpich with ch4:ofi])
-    elif grep UCX conftest.output > /dev/null ; then
-        AC_MSG_NOTICE([Detected MPICH with ch4:ucx netmod])
-        AC_DEFINE(MPICH_CH4_UCX, 1, [define if it is mpich with ch4:ucx])
+        # enable_checkerrors
+        if test "$enable_checkerrors" != "no" ; then
+            if grep 'disable-error-checking\|enable-error-checking=no' conftest.output > /dev/null ; then
+                enable_checkerrors=no
+            fi
+        fi
+
+        #enable_spawn
+        if test "$enable_spawn" != "no" ; then
+            if grep 'enable-ch4-am-only' conftest.output > /dev/null ; then
+                enable_spawn=no
+            fi
+        fi
+
+        rm conftest.output
     fi
-
-    rm conftest conftest.c conftest.output
 fi
 
 # First, determine whether we are/can support the language bindings
@@ -499,6 +512,21 @@ AC_SUBST(comm_overlap)
 
 # The multi-thread tests can be disabled by --disable-threads
 threadsdir="threads"
+if test "$enable_threads" != "no" ; then
+    AC_MSG_CHECKING([whether MPI_THREAD_MULTIPLE is supported])
+    AC_RUN_IFELSE([
+            AC_LANG_PROGRAM([#include "mpi.h"],[
+                int provided;
+                MPI_Init_thread(0,0, MPI_THREAD_MULTIPLE, &provided);
+                MPI_Finalize();
+                if (provided != MPI_THREAD_MULTIPLE) {
+                    exit(1);
+                }
+            ])
+        ],[enable_threads=yes],[enable_threads=no])
+    AC_MSG_RESULT($enable_threads)
+fi
+
 if test "$enable_threads" = "no"; then
     threadsdir=""
 fi
@@ -524,6 +552,22 @@ MPILIBLOC=""
 AC_SUBST(MPILIBLOC)
 
 namepub_tests="#"
+if test "$enable_namepub" != "no" ; then
+    AC_MSG_CHECKING([whether MPI_Publish_name is supported])
+    AC_RUN_IFELSE([
+            AC_LANG_PROGRAM([#include "mpi.h"],[
+                int rc;
+                MPI_Init(0,0);
+                rc = MPI_Publish_name("servname", MPI_INFO_NULL, "otherhost:122");
+                MPI_Finalize();
+                if (rc) {
+                    exit(1);
+                }
+            ])
+        ],[enable_namepub=yes],[enable_namepub=no])
+    AC_MSG_RESULT($enable_namepub)
+fi
+
 if test "$enable_namepub" = "yes" ; then
     namepub_tests=""
 fi

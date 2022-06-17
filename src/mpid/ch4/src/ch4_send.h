@@ -20,16 +20,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend(const void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    *(req) = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, 0, 1);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    MPIDI_workq_pt2pt_enqueue(ISEND, buf, NULL /*recv_buf */ , count, datatype,
-                              rank, tag, comm, attr, av, NULL /*status */ , *req, NULL /*flag */ ,
-                              NULL /*message */ , NULL /*processed */);
-#else
     *(req) = NULL;
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, attr, av, req);
@@ -43,7 +33,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend(const void *buf,
         MPIDI_REQUEST(*req, is_local) = r;
 #endif
     MPIR_ERR_CHECK(mpi_errno);
-#endif
 
   fn_exit:
     MPIR_FUNC_EXIT;
