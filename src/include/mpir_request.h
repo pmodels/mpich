@@ -465,6 +465,8 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
     return req;
 }
 
+int MPIR_allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req);
+
 #define MPIR_Request_add_ref(req_p_) \
     do { MPIR_Object_add_ref(req_p_); } while (0)
 
