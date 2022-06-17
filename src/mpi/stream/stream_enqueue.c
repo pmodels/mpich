@@ -8,9 +8,6 @@
 /* Allow per-thread level disabling GPU path */
 MPL_TLS bool MPIR_disable_gpu = false;
 
-static int get_local_gpu_stream(MPIR_Comm * comm_ptr, MPL_gpu_stream_t * gpu_stream);
-static int allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req);
-
 /* send enqueue */
 struct send_data {
     const void *buf;
@@ -62,7 +59,7 @@ int MPIR_Send_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     int mpi_errno = MPI_SUCCESS;
 
     MPL_gpu_stream_t gpu_stream;
-    mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
+    mpi_errno = MPIR_get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct send_data *p;
@@ -160,7 +157,7 @@ int MPIR_Recv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
 
     MPL_gpu_stream_t gpu_stream;
-    mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
+    mpi_errno = MPIR_get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct recv_data *p;
@@ -230,14 +227,14 @@ int MPIR_Isend_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype dataty
     int mpi_errno = MPI_SUCCESS;
 
     MPL_gpu_stream_t gpu_stream;
-    mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
+    mpi_errno = MPIR_get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct send_data *p;
     p = MPL_malloc(sizeof(struct send_data), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    mpi_errno = allocate_enqueue_request(comm_ptr, req);
+    mpi_errno = MPIR_allocate_enqueue_request(comm_ptr, req);
     MPIR_ERR_CHECK(mpi_errno);
     (*req)->u.enqueue.is_send = true;
     (*req)->u.enqueue.data = p;
@@ -299,14 +296,14 @@ int MPIR_Irecv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
 
     MPL_gpu_stream_t gpu_stream;
-    mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
+    mpi_errno = MPIR_get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct recv_data *p;
     p = MPL_malloc(sizeof(struct recv_data), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    mpi_errno = allocate_enqueue_request(comm_ptr, req);
+    mpi_errno = MPIR_allocate_enqueue_request(comm_ptr, req);
     MPIR_ERR_CHECK(mpi_errno);
     (*req)->u.enqueue.is_send = false;
     (*req)->u.enqueue.data = p;
@@ -508,46 +505,6 @@ int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
     goto fn_exit;
 }
 
-/* static utility */
-
-static int get_local_gpu_stream(MPIR_Comm * comm_ptr, MPL_gpu_stream_t * gpu_stream)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_Stream *stream_ptr = MPIR_stream_comm_get_local_stream(comm_ptr);
-
-    MPIR_ERR_CHKANDJUMP(!stream_ptr || stream_ptr->type != MPIR_STREAM_GPU,
-                        mpi_errno, MPI_ERR_OTHER, "**notgpustream");
-    *gpu_stream = stream_ptr->u.gpu_stream;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_Stream *stream_ptr = MPIR_stream_comm_get_local_stream(comm_ptr);
-    MPIR_ERR_CHKANDJUMP(!stream_ptr || stream_ptr->type != MPIR_STREAM_GPU,
-                        mpi_errno, MPI_ERR_OTHER, "**notgpustream");
-
-    int vci = stream_ptr->vci;
-    MPIR_Assert(vci > 0);
-
-    /* stream vci are only accessed within a serialized context */
-    (*req) = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__ENQUEUE, vci, 1);
-    (*req)->u.enqueue.gpu_stream = stream_ptr->u.gpu_stream;
-    (*req)->u.enqueue.real_request = NULL;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 /* ---- collectives --------------------- */
 
 /* Buffer swapping macros for collectives */
@@ -688,7 +645,7 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
     int mpi_errno = MPI_SUCCESS;
 
     MPL_gpu_stream_t gpu_stream;
-    mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
+    mpi_errno = MPIR_get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
     int is_contig;
