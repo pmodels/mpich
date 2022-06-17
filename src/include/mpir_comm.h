@@ -6,7 +6,7 @@
 #ifndef MPIR_COMM_H_INCLUDED
 #define MPIR_COMM_H_INCLUDED
 
-#if defined HAVE_LIBHCOLL
+#if defined HAVE_HCOLL
 #include "../mpid/common/hcoll/hcollpre.h"
 #endif
 
@@ -234,9 +234,9 @@ struct MPIR_Comm {
     } coll;
 
     void *csel_comm;            /* collective selector handle */
-#if defined HAVE_LIBHCOLL
+#if defined HAVE_HCOLL
     hcoll_comm_priv_t hcoll_priv;
-#endif                          /* HAVE_LIBHCOLL */
+#endif                          /* HAVE_HCOLL */
 
     /* the mapper is temporarily filled out in order to allow the
      * device to setup its network addresses.  it will be freed after
