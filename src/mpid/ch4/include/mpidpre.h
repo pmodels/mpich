@@ -651,10 +651,15 @@ typedef struct {
     MPIDI_NM_OP_DECL} netmod;
 } MPIDI_Devop_t;
 
+typedef struct {
+    struct MPIDU_stream_workq *workq;
+} MPIDI_Devstream_t;
+
 #define MPID_DEV_REQUEST_DECL    MPIDI_Devreq_t  dev;
 #define MPID_DEV_WIN_DECL        MPIDI_Devwin_t  dev;
 #define MPID_DEV_COMM_DECL       MPIDI_Devcomm_t dev;
 #define MPID_DEV_OP_DECL         MPIDI_Devop_t   dev;
+#define MPID_DEV_STREAM_DECL     MPIDI_Devstream_t dev;
 
 typedef struct MPIDI_av_entry {
     union {

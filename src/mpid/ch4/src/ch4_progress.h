@@ -292,6 +292,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Stream_progress(MPIR_Stream * stream_ptr)
     if (stream_ptr == NULL) {
         MPID_Progress_test(NULL);
     } else {
+        if (stream_ptr->type == MPIR_STREAM_GPU) {
+            MPIDU_stream_workq_progress_ops(stream_ptr->vci);
+        }
         MPID_Progress_state state;
         state.flag = MPIDI_PROGRESS_ALL;
         /* For lockless, no VCI lock is needed during NM progress */
@@ -303,6 +306,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Stream_progress(MPIR_Stream * stream_ptr)
         state.vci[0] = stream_ptr->vci;
         state.vci_count = 1;
         MPID_Progress_test(&state);
+
+        if (stream_ptr->type == MPIR_STREAM_GPU) {
+            MPIDU_stream_workq_progress_wait_list(stream_ptr->vci);
+        }
     }
 
     MPIR_FUNC_EXIT;
