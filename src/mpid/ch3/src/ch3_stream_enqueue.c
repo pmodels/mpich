@@ -1,0 +1,12 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
+#include "mpidimpl.h"
+
+int MPID_Send_enqueue(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                      int dest, int tag, MPIR_Comm * comm_ptr)
+{
+    return MPIR_Send_enqueue_impl(buf, count, datatype, dest, tag, comm_ptr);
+}

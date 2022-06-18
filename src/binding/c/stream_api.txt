@@ -165,6 +165,8 @@ MPIX_Send_enqueue:
     dest: RANK, [rank of destination]
     tag: TAG, [message tag]
     comm: COMMUNICATOR
+    .impl: mpid
+    .decl: MPIR_Send_enqueue_impl
 
 MPIX_Recv_enqueue:
     buf: BUFFER, direction=out, [initial address of receive buffer]
