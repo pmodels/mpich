@@ -7,7 +7,7 @@
         - [UCX](source_code/Summit.md)
 
 - [Contributing To MPICH](source_code/Contributing_to_MPICH.md)
-    - [Version Control Systems & Git](source_code/Version_Control_System.md)
+    - [Git Workflow](source_code/Git_Workflow.md)
     - [Coding Standards](source_code/Coding_Standards.md)
         - [Code Formatting And Cleanup Script](source_code/Code_Formatting_And_Cleanup_Script.md)
     - [Developer Guide](developer_guide.md)
