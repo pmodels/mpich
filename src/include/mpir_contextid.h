@@ -65,6 +65,7 @@ typedef uint16_t MPIR_Context_id_t;
 #define MPIR_CONTEXT_PARENT_OFFSET    (0 << MPIR_CONTEXT_SUBCOMM_SHIFT)
 #define MPIR_CONTEXT_INTRANODE_OFFSET (1 << MPIR_CONTEXT_SUBCOMM_SHIFT)
 #define MPIR_CONTEXT_INTERNODE_OFFSET (2 << MPIR_CONTEXT_SUBCOMM_SHIFT)
+#define MPIR_CONTEXT_MULTILEADS_OFFSET (3 << MPIR_CONTEXT_SUBCOMM_SHIFT)
 
 /* this field (IS_LOCALCOM) is used to derive a context ID for local
  * communicators of intercommunicators without communication */
