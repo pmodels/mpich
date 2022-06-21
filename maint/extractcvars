@@ -14,7 +14,7 @@ use Data::Dumper;
 use Getopt::Long;
 
 # Help perl find the YAML parsing module
-use lib '@abs_srcdir@/local_perl/lib';
+use lib 'maint/local_perl/lib';
 use YAML::Tiny qw();
 
 # To format README file
@@ -23,13 +23,14 @@ $Text::Wrap::unexpand = 0; # disable hard tabs in output
 
 ##################################################
 
+my @dirs = qw(src/mpi src/mpi_t src/nameserv src/util src/binding src/include src/mpid src/pmi);
+
 # set true to enable debug output
 my $debug = 0;
 my @cvars = ();
 my %cvars; # used for duplication detection
 my @categories=();
 my $yaml = YAML::Tiny->new();
-my @dirs = ();
 my @cfiles = ();
 my %skipfiles = ();
 
@@ -45,9 +46,9 @@ my $dep_ns = "MPICH";
 # Default :output source files
 # NOTE: it's important to use single quote. abs_srcdir may contain sigils
 #   e.g. /var/lib/jenkins/workspace/hzhou-custom@2/config/ch3-sock/label/centos64
-my $header_file = '@abs_srcdir@/../src/include/mpir_cvars.h';
-my $c_file      = '@abs_srcdir@/../src/util/mpir_cvars.c';
-my $readme_file = '@abs_srcdir@/../README.envvar';
+my $header_file = 'src/include/mpir_cvars.h';
+my $c_file      = 'src/util/mpir_cvars.c';
+my $readme_file = 'README.envvar';
 
 sub Usage {
     print <<EOT;
@@ -62,7 +63,6 @@ Supported options:
     --header=STR        - specify the header file name (optional, default=$header_file)
     --c-file=STR        - specify the C file name (optional, default=$c_file)
     --readme-file=STR   - specify the readme file name (optional, default=$readme_file)
-    --dirs=STR          - recursively parse C or header files under the directories as specified
     --skip=STR          - skip parsing files as specified (optional)
 
 EOT
@@ -70,7 +70,6 @@ EOT
 }
 
 # Step 1: Process options
-my $dirline;
 my $skipline = "";
 GetOptions(
     "help!"           => \&Usage,
@@ -80,14 +79,8 @@ GetOptions(
     "header=s"        => \$header_file,
     "c-file=s"        => \$c_file,
     "readme-file=s"   => \$readme_file,
-    "dirs=s"          => \$dirline,
     "skips=s"         => \$skipline
 ) or Usage();
-
-Usage unless $dirline;
-
-print "dirline = $dirline\n" if $debug;
-@dirs = split(/[:,;\s]+/, $dirline);
 
 my @skips = split(/[:,;\s]+/, $skipline);
 %skipfiles = map {$_ => 1} @skips;

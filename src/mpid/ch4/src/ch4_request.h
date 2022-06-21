@@ -81,11 +81,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
     /* if we hit a zero completion count, free up AM-related
      * objects */
     if (!incomplete) {
-        /* decrement completion_notification counter */
-        if (req->completion_notification)
-            MPIR_cc_dec(req->completion_notification);
+        if (req->dev.completion_notification) {
+            MPIR_cc_dec(req->dev.completion_notification);
+        }
 
-        if (MPIDIG_REQUEST(req, req)) {
+        if (req->dev.type == MPIDI_REQ_TYPE_AM) {
             /* FIXME: refactor mpidig code into ch4r_request.h */
             int vci = MPIDI_Request_get_vci(req);
             MPIDU_genq_private_pool_free_cell(MPIDI_global.per_vci[vci].request_pool,
@@ -101,6 +101,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_Request_complete_fast(MPIR_Request * req)
+{
+    int incomplete;
+    MPIR_cc_decr(req->cc_ptr, &incomplete);
+    if (!incomplete) {
+        MPIDI_CH4_REQUEST_FREE(req);
+    }
 }
 
 MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)

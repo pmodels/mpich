@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #endif
 
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
 #include "hcoll/api/hcoll_dte.h"
 #endif
 
@@ -41,7 +41,7 @@ enum {
 #endif
 
 typedef struct {
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     hcoll_datatype_t hcoll_datatype;
 #endif
     union {
@@ -272,15 +272,28 @@ typedef struct {
     MPIR_Request *match_req;    /* for mrecv */
 } MPIDI_self_request_t;
 
+typedef enum {
+    MPIDI_REQ_TYPE_NONE = 0,
+    MPIDI_REQ_TYPE_AM,
+} MPIDI_REQ_TYPE;
+
 typedef struct MPIDI_Devreq_t {
+    /* completion notification counter: this must be decremented by
+     * the request completion routine, when the completion count hits
+     * zero.  this counter allows us to keep track of the completion
+     * of multiple requests in a single place. */
+    MPIR_cc_t *completion_notification;
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
     /* Anysource handling. Netmod and shm specific requests are cross
      * referenced. This must be present all of the time to avoid lots of extra
      * ifdefs in the code. */
-    struct MPIR_Request *anysource_partner_request;
+    struct MPIR_Request *anysrc_partner;
 #endif
 
+    /* initialized to MPIDI_REQ_TYPE_NONE, set when one of the union field is set */
+    MPIDI_REQ_TYPE type;
     union {
         /* The first fields are used by the MPIDIG apis */
         MPIDIG_req_t am;
@@ -303,6 +316,7 @@ typedef struct MPIDI_Devreq_t {
 #endif
     } ch4;
 } MPIDI_Devreq_t;
+
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDIG_REQUEST(req,field)       (((req)->dev.ch4.am).field)
@@ -314,14 +328,12 @@ typedef struct MPIDI_Devreq_t {
 #define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-#define MPIDI_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
 #define MPIDI_REQUEST_SET_LOCAL(req, is_local_, partner_) \
     do { \
         (req)->dev.is_local = is_local_; \
-        (req)->dev.anysource_partner_request = partner_; \
+        (req)->dev.anysrc_partner = partner_; \
     } while (0)
 #else
-#define MPIDI_REQUEST_ANYSOURCE_PARTNER(req)  NULL
 #define MPIDI_REQUEST_SET_LOCAL(req, is_local_, partner_)  do { } while (0)
 #endif
 
