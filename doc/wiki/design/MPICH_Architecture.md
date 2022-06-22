@@ -1,3 +1,3 @@
 # MPICH Architecture
 
-![Mpich-arch.png](../images/Mpich-arch.png "Mpich-arch.png")
+![MPICH-arch.jpg](../images/MPICH-arch.jpg "MPICH-arch.jpg")
