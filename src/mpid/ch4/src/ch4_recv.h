@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
         mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr,
                                        av, &nm_rreq, *request);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_REQUEST_ANYSOURCE_PARTNER(*request) = nm_rreq;
+        (*request)->dev.anysrc_partner = nm_rreq;
 
         /* cancel the shm request if netmod/am handles the request from unexpected queue. */
         if (MPIR_Request_is_complete(nm_rreq)) {
@@ -71,7 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
     mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq, false);
 #else
     if (MPIDI_REQUEST(rreq, is_local)) {
-        MPIR_Request *partner_rreq = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
+        MPIR_Request *partner_rreq = rreq->dev.anysrc_partner;
         if (unlikely(partner_rreq)) {
             /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
             mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq, false);

@@ -13,9 +13,10 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(MPIR_Request * req)
 {
     MPIR_FUNC_ENTER;
 
-    MPIDIG_REQUEST(req, req) = NULL;
+    req->dev.completion_notification = NULL;
+    req->dev.type = MPIDI_REQ_TYPE_NONE;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
+    req->dev.anysrc_partner = NULL;
 #endif
 
     MPIR_FUNC_EXIT;
@@ -29,12 +30,6 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(MPIR_Request * req)
     /* Increment MPIDI_global.vci[vci].vci.progress_count. */
     int count = MPL_atomic_relaxed_load_int(&MPIDI_VCI(vci).progress_count);
     MPL_atomic_relaxed_store_int(&MPIDI_VCI(vci).progress_count, count + 1);
-
-    /* This is tricky. I think the only solution is to expose partner
-     * to the upper layer */
-    if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV &&
-        NULL != MPIDI_REQUEST_ANYSOURCE_PARTNER(req))
-        MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(req));
 
     MPIR_FUNC_EXIT;
     return;

@@ -7,7 +7,7 @@
 #define UCX_COLL_H_INCLUDED
 
 #include "ucx_impl.h"
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
 #include "../../../common/hcoll/hcoll.h"
 #endif
 
@@ -16,7 +16,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Err
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     mpi_errno = hcoll_Barrier(comm_ptr, errflag);
     if (mpi_errno != MPI_SUCCESS)
 #endif
@@ -35,7 +35,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, MPI_Aint count, MP
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     mpi_errno = hcoll_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
     if (mpi_errno != MPI_SUCCESS)
 #endif
@@ -55,7 +55,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *r
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     mpi_errno = hcoll_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     if (mpi_errno != MPI_SUCCESS)
 #endif
@@ -75,7 +75,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allgather(const void *sendbuf, MPI_Ain
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     mpi_errno = hcoll_Allgather(sendbuf, sendcount, sendtype, recvbuf,
                                 recvcount, recvtype, comm_ptr, errflag);
     if (mpi_errno != MPI_SUCCESS)
@@ -178,7 +178,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_alltoall(const void *sendbuf, MPI_Aint
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     mpi_errno = hcoll_Alltoall(sendbuf, sendcount, sendtype, recvbuf,
                                recvcount, recvtype, comm_ptr, errflag);
     if (mpi_errno != MPI_SUCCESS)
@@ -201,7 +201,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_alltoallv(const void *sendbuf,
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     mpi_errno = hcoll_Alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
                                 recvcounts, rdispls, recvtype, comm_ptr, errflag);
     if (mpi_errno != MPI_SUCCESS)
@@ -240,7 +240,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recv
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     mpi_errno = hcoll_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
     if (mpi_errno != MPI_SUCCESS)
 #endif

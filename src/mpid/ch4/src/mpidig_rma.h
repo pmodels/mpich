@@ -69,7 +69,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
 
     /* Increase local and remote completion counters and set the local completion
      * counter in request, thus it can be decreased at request completion. */
-    MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->dev.completion_notification);
     MPIDIG_REQUEST(sreq, u.origin.target_rank) = target_rank;
 
     int is_contig;
@@ -218,7 +218,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
 
     /* Increase local and remote completion counters and set the local completion
      * counter in request, thus it can be decreased at request completion. */
-    MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->dev.completion_notification);
 
     int is_contig;
     MPIR_Datatype_is_contig(target_datatype, &is_contig);
@@ -319,7 +319,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 
     /* Increase local and remote completion counters and set the local completion
      * counter in request, thus it can be decreased at request completion. */
-    MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->dev.completion_notification);
     /* Increase remote completion counter for acc. */
     MPIDIG_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
@@ -473,7 +473,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
     /* Increase local and remote completion counters and set the local completion
      * counter in request, thus it can be decreased at request completion. */
-    MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->dev.completion_notification);
     /* Increase remote completion counter for acc. */
     MPIDIG_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
@@ -803,7 +803,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     am_hdr.src_rank = win->comm_ptr->rank;
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
-    MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->dev.completion_notification);
     /* Increase remote completion counter for acc. */
     MPIDIG_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
