@@ -17,6 +17,16 @@ cvars:
       description : >-
         Shared memory region per rank for multi-leaders based composition for MPI_Alltoall (in bytes)
 
+    - name        : MPIR_CVAR_ALLGATHER_SHM_PER_RANK
+      category    : COLLECTIVE
+      type        : int
+      default     : 4096
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Shared memory region per rank for multi-leaders based composition for MPI_Allgather (in bytes)
+
     - name        : MPIR_CVAR_NUM_MULTI_LEADS
       category    : COLLECTIVE
       type        : int
@@ -1070,6 +1080,139 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void 
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void *sendbuf,
+                                                                     int sendcount,
+                                                                     MPI_Datatype sendtype,
+                                                                     void *recvbuf,
+                                                                     int recvcount,
+                                                                     MPI_Datatype recvtype,
+                                                                     MPIR_Comm * comm_ptr,
+                                                                     MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
+    int my_node_comm_rank = MPIR_Comm_rank(comm_ptr->node_comm);
+    MPI_Aint type_size, extent, true_extent, lb;
+    int is_contig, offset;
+    bool mapfail_flag = false;
+
+    if (sendcount < 1 && sendbuf != MPI_IN_PLACE)
+        goto fn_exit;
+
+    if (sendbuf != MPI_IN_PLACE) {
+        MPIR_Datatype_get_size_macro(sendtype, type_size);
+    } else {
+        MPIR_Datatype_get_size_macro(recvtype, type_size);
+    }
+
+    if (sendbuf == MPI_IN_PLACE) {
+        sendcount = recvcount;
+        sendtype = recvtype;
+    }
+
+    MPIR_Type_get_extent_impl(sendtype, &lb, &extent);
+    MPIR_Type_get_true_extent_impl(sendtype, &lb, &true_extent);
+    extent = MPL_MAX(extent, true_extent);
+
+    MPIR_Datatype_is_contig(sendtype, &is_contig);
+
+    if (is_contig) {
+        MPIR_Datatype_get_size_macro(sendtype, type_size);
+    } else {
+        MPIR_Pack_size_impl(1, sendtype, comm_ptr, &type_size);
+    }
+
+    /* Using MPL_MAX handles non-contiguous datatype as well */
+    offset = MPL_MAX(type_size, extent) * sendcount;
+
+    /* When using MPI_IN_PLACE, the "senddata" from each rank is at its receive index */
+    if (sendbuf == MPI_IN_PLACE)
+        sendbuf = (char *) recvbuf + MPIR_Comm_rank(comm_ptr) * offset;
+
+    if (MPIDI_COMM(comm_ptr, multi_leads_comm) == NULL) {
+        /* Create multi-leaders comm in a lazy manner */
+        mpi_errno = MPIDI_Comm_create_multi_leaders(comm_ptr);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
+    }
+
+    /* Allocate the shared memory buffer per node, if it is not already done */
+    if (MPIDI_COMM(comm_ptr, allgather_comp_info->shm_addr) == NULL) {
+        mpi_errno =
+            MPIDU_shm_alloc(comm_ptr->node_comm, node_comm_size * MPIR_CVAR_ALLGATHER_SHM_PER_RANK,
+                            (void **) &MPIDI_COMM_ALLGATHER(comm_ptr, shm_addr), &mapfail_flag);
+        if (mpi_errno || mapfail_flag) {
+            /* for communication errors, just record the error but continue */
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
+    }
+
+    /* Barrier to make sure that the shm buffer can be reused after the previous call to Allgather */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_barrier(comm_ptr->node_comm, errflag);
+#else
+    mpi_errno = MPIDI_NM_mpi_barrier(comm_ptr->node_comm, errflag);
+#endif
+    if (mpi_errno) {
+        /* for communication errors, just record the error but continue */
+        *errflag =
+            MPIX_ERR_PROC_FAILED ==
+            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
+
+    /* Copy data to shm buffers */
+    mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
+                               (char *) MPIDI_COMM_ALLGATHER(comm_ptr,
+                                                             shm_addr) + my_node_comm_rank * offset,
+                               recvcount, recvtype);
+
+    if (mpi_errno) {
+        /* for communication errors, just record the error but continue */
+        *errflag =
+            MPIX_ERR_PROC_FAILED ==
+            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
+
+    /* Barrier to make sure all the ranks in a node_comm copied data to shm buffer */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_barrier(comm_ptr->node_comm, errflag);
+#else
+    mpi_errno = MPIDI_NM_mpi_barrier(comm_ptr->node_comm, errflag);
+#endif
+
+    /* Perform inter-node allgather on the multi leader comms */
+    mpi_errno =
+        MPIDI_NM_mpi_allgather((char *) MPIDI_COMM_ALLGATHER(comm_ptr, shm_addr),
+                               sendcount * node_comm_size, sendtype,
+                               recvbuf, recvcount * node_comm_size, recvtype,
+                               MPIDI_COMM(comm_ptr, multi_leads_comm), errflag);
+    if (mpi_errno) {
+        /* for communication errors, just record the error but continue */
+        *errflag =
+            MPIX_ERR_PROC_FAILED ==
+            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno_ret;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_beta(const void *sendbuf,

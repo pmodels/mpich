@@ -195,6 +195,7 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     MPIDI_COMM(comm, intra_node_leads_comm) = NULL;
     MPIDI_COMM(comm, spanned_num_nodes) = -1;
     MPIDI_COMM(comm, alltoall_comp_info) = NULL;
+    MPIDI_COMM(comm, allgather_comp_info) = NULL;
     MPIDI_COMM(comm, allreduce_comp_info) = NULL;
 
     mpi_errno = MPIDIG_init_comm(comm);
@@ -279,6 +280,16 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
             }
         }
         MPL_free(MPIDI_COMM(comm, alltoall_comp_info));
+    }
+    if (MPIDI_COMM(comm, allgather_comp_info) != NULL) {
+        /* Destroy the associated shared memory region used by multi-leads Allgather */
+        if (MPIDI_COMM_ALLGATHER(comm, shm_addr) != NULL) {
+            mpi_errno = MPIDU_shm_free(MPIDI_COMM_ALLGATHER(comm, shm_addr));
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
+        }
+        MPL_free(MPIDI_COMM(comm, allgather_comp_info));
     }
     if (MPIDI_COMM(comm, allreduce_comp_info) != NULL) {
         /* Destroy the associated shared memory region used by multi-leads Allreduce */
